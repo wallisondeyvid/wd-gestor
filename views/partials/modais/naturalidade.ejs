@@ -1,0 +1,35 @@
+<!-- Modal Naturalidade -->
+<div class="modal fade modal-sheet theme-blue modal-naturalidade" id="modalNaturalidade" tabindex="-1" aria-labelledby="modalNaturalidadeLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalNaturalidadeLabel">Selecionar Naturalidade</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="d-flex flex-wrap naturalidade-grid">
+          <div class="mb-2 flex-fill col-uf">
+            <label for="selectEstadoNaturalidade" class="form-label">Estado</label>
+            <select id="selectEstadoNaturalidade" class="form-select"></select>
+          </div>
+          <div class="mb-2 flex-fill col-cid">
+            <label for="selectCidadeNaturalidade" class="form-label">Cidade</label>
+            <select id="selectCidadeNaturalidade" class="form-select"></select>
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <label for="inputCodigoIbgeNaturalidade" class="form-label">Código IBGE</label>
+          <input id="inputCodigoIbgeNaturalidade" class="form-control" readonly>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-warning" id="btnLimparNaturalidade">Limpar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnConfirmarNaturalidade">Selecionar</button>
+      </div>
+    </div>
+  </div>
+</div>

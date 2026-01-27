@@ -1,0 +1,8 @@
+[
+  { "codigo": "1", "descricao": "Branca" },
+  { "codigo": "2", "descricao": "Preta" },
+  { "codigo": "3", "descricao": "Parda" },
+  { "codigo": "4", "descricao": "Amarela" },
+  { "codigo": "5", "descricao": "Indígena" },
+  { "codigo": "6", "descricao": "Não informado" }
+]

@@ -1,0 +1,194 @@
+<% /* Consulta de Relatórios — segue padrão visual das demais páginas */ %>
+<% const _bpDash='/escalas'; %>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Consulta de Relatórios</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bpDash }) %>
+  <%- include('../shared/partials/theme-esc-blue') %>
+  <style>
+    html, body{ background: radial-gradient(1400px 800px at 20% -10%, #e9f2ff 0%, rgba(233,242,255,0) 55%), var(--c-bg,#f5f9ff); }
+    .wdg-page-title{ font-weight: 600; }
+    .card .card-header{ background:#e9f2ff; border-bottom:1px solid #cfe2ff; }
+    .form-select, .form-control{ border-color: #d6e3f8; }
+    .form-select:focus, .form-control:focus{ border-color:#2563eb; box-shadow: 0 0 0 .2rem rgba(37,99,235,.15); }
+    .btn-primary{ background: linear-gradient(180deg, #1d4ed8, #2563eb); border-color:#1d4ed8; }
+    .btn-primary:hover{ background: linear-gradient(180deg, #1e3a8a, #1d4ed8); border-color:#1e3a8a; }
+    .input-group .btn{ border-color:#d6e3f8; }
+    .small-help{ color:#64748b; }
+    /* Agrupadores visuais */
+    .group-box{ background:#f8fbff; border:1px solid #dbeafe; border-radius:.5rem; padding:12px; margin-top:.5rem; }
+    .group-title{ font-weight:600; color:#1f2937; margin-bottom:6px; font-size:.95rem; }
+  </style>
+  <% if (typeof meta !== 'undefined' && meta && meta.basePath) { %>
+    <script>window.__perfilBasePath='<%= meta.basePath %>';</script>
+  <% } else { %>
+    <script>window.__perfilBasePath='<%= _bpDash %>';</script>
+  <% } %>
+</head>
+<body class="wdg-theme-blue">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bpDash, moduleLabel:'Escalas' }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bpDash,
+        moduleLabel: 'Escalas',
+        prefixMenuPaths: true,
+        menuLabel: 'Menu',
+        menuTree: [
+          { label: 'Escalas', children: [
+            { label: 'Ordinária', children: [
+              { label: 'Nova', path: '/ordinaria/nova' },
+              { label: 'Pesquisar', path: '/ordinaria/pesquisar' }
+            ]},
+            { label: 'Extraodinária', children: [
+              { label: 'Nova', path: '/extraordinaria/nova' },
+              { label: 'Pesquisar', path: '/extraordinaria/pesquisar' }
+            ]},
+            { label: 'Escala Diária', path: '/diaria' }
+          ]},
+          { label: 'Gestão', children: [
+            { label: 'Férias', path: '/gestao/ferias' },
+            { label: 'Ausências', path: '/gestao/ausencias' }
+          ]},
+          { label: 'Relatórios', children: [
+            { label: 'Consulta de Relatórios', path: '/relatorios/consulta' }
+          ]}
+        ],
+        adminItems: []
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bpDash, moduleLabel: 'Escalas' }) %>
+
+  <div class="container mt-3">
+    <div id="alertsTopRight" class="position-fixed top-0 end-0 p-3" style="z-index:1080; pointer-events:none;"></div>
+    <h5 class="mb-3 wdg-page-title">Consulta de Relatórios</h5>
+
+    <div class="card mb-3 mx-auto" style="max-width: 840px;">
+      <div class="card-header py-2"><strong>Parâmetros</strong></div>
+      <div class="card-body py-3">
+        <form id="formConsultaRel" class="container-fluid p-0">
+          <!-- Linha 1: Tipo de relatório (checkboxes) -->
+          <div class="row g-3 align-items-end">
+            <div class="col-12">
+              <label class="form-label mb-1">Tipo de relatório</label>
+              <div class="d-flex flex-wrap gap-4 small">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkTipoAloc" checked>
+                  <label class="form-check-label" for="chkTipoAloc">Relatório de alocação</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkTipoHoras">
+                  <label class="form-check-label" for="chkTipoHoras">Relatório de horas</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkTipoLogs">
+                  <label class="form-check-label" for="chkTipoLogs">Relatório de logs</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grupo: Filtro principal (Unidade/Funcionário) -->
+          <div class="group-box">
+            <div class="group-title">Filtro principal</div>
+            <div class="row g-3 align-items-end">
+              <div class="col-lg-6 col-12">
+                <div class="d-flex align-items-center justify-content-between">
+                  <label class="form-label mb-1 m-0" for="unidadeSel">Unidade</label>
+                  <div class="form-check mb-1">
+                    <input class="form-check-input" type="checkbox" id="chkIncluirSubord" />
+                    <label class="form-check-label small" for="chkIncluirSubord">Incluir unid. subord.</label>
+                  </div>
+                </div>
+                <select id="unidadeSel" class="form-select form-select-sm">
+                  <option value="" selected>Selecione...</option>
+                </select>
+              </div>
+              <div class="col-lg-6 col-12">
+                <label class="form-label mb-1" for="campoFuncionario">Funcionário</label>
+                <div class="input-group input-group-sm">
+                  <input id="campoFuncionario" type="text" class="form-control" placeholder="Selecione..." readonly>
+                  <button class="btn btn-outline-secondary" type="button" id="btnSelecionarFuncionario" aria-label="Selecionar funcionário"><i class="bi bi-search"></i></button>
+                  <button class="btn btn-outline-danger" type="button" id="btnLimparFuncionario" title="Limpar seleção"><i class="bi bi-x"></i></button>
+                </div>
+                <input type="hidden" id="funcionarioId" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Grupo: Período -->
+          <div class="group-box">
+            <div class="group-title">Período</div>
+            <div class="row g-3 align-items-end">
+              <div class="col-md-3 col-12">
+                <label class="form-label mb-1" for="dataInicial">Data inicial</label>
+                <input type="text" id="dataInicial" class="form-control form-control-sm date-br text-center" placeholder="dd/mm/aaaa" readonly>
+              </div>
+              <div class="col-md-3 col-12">
+                <label class="form-label mb-1" for="dataFinal">Data final</label>
+                <input type="text" id="dataFinal" class="form-control form-control-sm date-br text-center" placeholder="dd/mm/aaaa" readonly>
+              </div>
+              <div class="col-md-6 col-12" id="secPeriodoPor">
+                <label class="form-label mb-1" for="periodoPor">Período por (somente logs)</label>
+                <select id="periodoPor" class="form-select form-select-sm">
+                  <option value="dia" selected>Dia da alocação</option>
+                  <option value="em">Data/hora do evento (avançado)</option>
+                </select>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- Grupo: Parâmetros do Relatório de Logs -->
+          <div class="group-box" id="secLogsAdv">
+            <div class="group-title">Parâmetros do Relatório de Logs</div>
+            <div class="row g-3 align-items-end">
+              <div class="col-lg-4 col-12">
+                <label class="form-label mb-1" for="usuarioIdLog">Usuário (ObjectId)</label>
+                <input type="text" id="usuarioIdLog" class="form-control form-control-sm" placeholder="Opcional: 24 caracteres (ObjectId)">
+                
+              </div>
+              <div class="col-lg-4 col-md-6 col-12">
+                <label class="form-label mb-1" for="acaoLog">Ação</label>
+                <select id="acaoLog" class="form-select form-select-sm">
+                  <option value="">Todas</option>
+                  <option value="INSERCAO">INSERÇÃO</option>
+                  <option value="EXCLUSAO">EXCLUSÃO</option>
+                  <option value="MUDANCA">MUDANÇA</option>
+                </select>
+              </div>
+              <div class="col-lg-4 col-md-6 col-12">
+                <label class="form-label mb-1" for="contextoLog">Contexto</label>
+                <select id="contextoLog" class="form-select form-select-sm">
+                  <option value="">Todos</option>
+                  <option value="atribuicao">Atribuição</option>
+                  <option value="alocacao_recurso">Alocação de recurso</option>
+                  <option value="alocacao_equipe">Alocação de equipe</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ações -->
+          <div class="row mt-3">
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <button type="button" id="btnGerar" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-pdf"></i> Gerar Relatório</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+  <script src="<%= _bpDash %>/js/perfil-modulo.js" defer></script>
+  <%- include('./modais_popups/modal_pesquisar_efetivo') %>
+  <script src="<%= _bpDash %>/js/modais_popups/modal_pesquisar_efetivo.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bpDash %>/js/consulta_relatorios.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

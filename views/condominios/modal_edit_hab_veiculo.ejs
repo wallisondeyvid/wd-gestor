@@ -1,0 +1,311 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalEditHabVeiculo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content wdg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Gerenciar veículos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <span class="fw-semibold">Habitação:</span>
+          <span id="veicHabLabel" class="text-muted small"></span>
+        </div>
+        <div class="mb-3">
+          <span class="fw-semibold">Proprietário:</span>
+          <span id="veicPropLabel" class="text-muted small"></span>
+        </div>
+
+        <form id="formVeiculo" class="wdg-card wdg-card-hover p-2 mb-3" autocomplete="off" novalidate>
+          <div class="fw-semibold text-center mb-3">Dados do veículo</div>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label" for="veicPlaca">Placa</label>
+              <input type="text" class="form-control text-uppercase" id="veicPlaca" maxlength="8" autocomplete="off" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="veicChassi">Chassi</label>
+              <input type="text" class="form-control text-uppercase" id="veicChassi" maxlength="30" autocomplete="off">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="veicRenavam">RENAVAM</label>
+              <input type="text" class="form-control" id="veicRenavam" maxlength="11" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="veicEstado">Estado (emplacamento)</label>
+              <select class="form-select" id="veicEstado" required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="veicMunicipio">Município (emplacamento)</label>
+              <select class="form-select" id="veicMunicipio" disabled required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="veicTipo">Tipo de veículo</label>
+              <select class="form-select" id="veicTipo" required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="veicMarca">Marca</label>
+              <select class="form-select" id="veicMarca" required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="col-md-6 d-none" id="veicMarcaExtraWrap">
+              <label class="form-label" for="veicMarcaExtra">Especificar marca</label>
+              <input type="text" class="form-control text-uppercase" id="veicMarcaExtra" maxlength="60" autocomplete="off">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="veicModelo">Modelo</label>
+              <input type="text" class="form-control text-uppercase" id="veicModelo" maxlength="80" autocomplete="off" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="veicCor">Cor</label>
+              <input type="text" class="form-control text-uppercase" id="veicCor" maxlength="40" autocomplete="off" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="veicAnoModelo">Ano/Modelo</label>
+              <input type="text" class="form-control" id="veicAnoModelo" placeholder="2025/2026" maxlength="9" autocomplete="off" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="veicCrlv">Anexar CRLV</label>
+              <input type="file" class="form-control" id="veicCrlv" accept="application/pdf,image/*">
+              <div class="form-text">PDF ou imagem. Tamanho máximo ~2MB.</div>
+              <div id="veicCrlvPreview" class="small text-muted mt-2 d-none">
+                <span id="veicCrlvPreviewLabel"></span>
+                <a id="veicCrlvPreviewLink" class="ms-2 d-none" target="_blank" rel="noopener">Abrir arquivo</a>
+                <span id="veicCrlvPreviewSize" class="ms-2"></span>
+                <button type="button" class="btn btn-sm btn-link p-0 ms-3" id="btnVeicCrlvRemover">Remover arquivo</button>
+              </div>
+            </div>
+            <div class="w-100 d-none d-md-block"></div>
+            <div class="col-12 col-md-6 mx-auto">
+              <label class="form-label" for="veicFotos">Fotos do veículo</label>
+              <input type="file" class="form-control" id="veicFotos" accept="image/*" multiple>
+            </div>
+            <div class="col-12">
+              <div id="veicFotosPreview" class="wdg-fotos-preview d-flex flex-wrap gap-2 justify-content-center mt-2 d-none" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div class="wdg-card wdg-card-hover p-2 mt-4">
+            <div class="fw-semibold mb-3 text-center">Proprietário do veículo</div>
+            <div class="row g-3 justify-content-center text-center">
+              <div class="col-12 col-md-6">
+                <label class="form-label d-block">Tipo</label>
+                <div class="d-flex justify-content-center gap-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="veicOwnerTipo" id="veicOwnerMorador" value="morador" checked>
+                    <label class="form-check-label" for="veicOwnerMorador">Morador</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="veicOwnerTipo" id="veicOwnerExterno" value="externo">
+                    <label class="form-check-label" for="veicOwnerExterno">Não morador</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="veicOwnerMoradorFields" class="row g-3 mt-1">
+              <div class="col-md-5">
+                <label class="form-label" for="veicOwnerEmail">Buscar por e-mail</label>
+                <input type="email" class="form-control" id="veicOwnerEmail" placeholder="usuario@exemplo.com" autocomplete="off">
+              </div>
+              <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="button" class="btn btn-outline-primary" id="btnVeicOwnerBuscar">Buscar</button>
+                <button type="button" class="btn btn-outline-secondary" id="btnVeicOwnerLimpar">Limpar</button>
+              </div>
+              <div class="col-12">
+                <div id="veicOwnerMoradorInfo" class="small text-muted"></div>
+              </div>
+            </div>
+
+            <div id="veicOwnerCampos" class="row g-3 mt-1">
+              <div class="col-md-6">
+                <label class="form-label" for="veicOwnerNome">Nome</label>
+                <input type="text" class="form-control" id="veicOwnerNome" maxlength="120" autocomplete="off">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="veicOwnerCpf">CPF</label>
+                <input type="text" class="form-control" id="veicOwnerCpf" maxlength="14" autocomplete="off">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="veicOwnerNascimento">Data de nascimento</label>
+                <div class="input-group">
+                  <input type="date" class="form-control" id="veicOwnerNascimento" autocomplete="off">
+                  <button type="button" class="btn btn-outline-secondary" id="btnVeicOwnerNascimentoPicker" title="Abrir calendário">
+                    <span class="visually-hidden">Abrir calendário</span>
+                    <span aria-hidden="true">Cal</span>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="veicOwnerCnh">Nº CNH</label>
+                <input type="text" class="form-control" id="veicOwnerCnh" maxlength="11" autocomplete="off">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="veicOwnerCateg">Categoria</label>
+                <select class="form-select" id="veicOwnerCateg">
+                  <option value="">Selecione...</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="AB">AB</option>
+                  <option value="C">C</option>
+                  <option value="AC">AC</option>
+                  <option value="D">D</option>
+                  <option value="AD">AD</option>
+                  <option value="E">E</option>
+                  <option value="AE">AE</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="veicOwnerCnhFile">Anexar CNH</label>
+                <input type="file" class="form-control" id="veicOwnerCnhFile" accept="application/pdf,image/*">
+                <div class="form-text">PDF ou imagem. Tamanho máximo ~2MB.</div>
+                <div id="veicOwnerCnhPreview" class="small text-muted mt-2 d-none">
+                  <span id="veicOwnerCnhPreviewLabel"></span>
+                  <a id="veicOwnerCnhPreviewLink" class="ms-2 d-none" target="_blank" rel="noopener">Abrir arquivo</a>
+                  <span id="veicOwnerCnhPreviewSize" class="ms-2"></span>
+                  <button type="button" class="btn btn-sm btn-link p-0 ms-3" id="btnVeicOwnerCnhRemover">Remover arquivo</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wdg-card wdg-card-hover p-2 mt-4">
+            <div class="fw-semibold mb-3 text-center">Vincular à garagem</div>
+            <div class="row g-3 justify-content-center text-center">
+              <div class="col-12 d-flex justify-content-center">
+                <div class="d-flex flex-column flex-sm-row align-items-center gap-3">
+                  <label class="form-label mb-0" for="veicGaragemVinculo">Vincular?</label>
+                  <div class="form-check form-switch d-inline-flex align-items-center gap-3 mb-0">
+                    <input class="form-check-input" type="checkbox" id="veicGaragemVinculo">
+                    <label class="form-check-label ms-2" for="veicGaragemVinculo">Sim</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-6 col-md-8 mx-auto">
+                <label class="form-label" for="veicGaragemSelect">Garagem vinculada à habitação</label>
+                <select class="form-select" id="veicGaragemSelect" disabled>
+                  <option value="">Selecione...</option>
+                </select>
+                <div id="veicGaragemInfo" class="form-text"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline-secondary" id="btnVeicLimpar">Limpar</button>
+            <button type="button" class="btn btn-outline-secondary d-none" id="btnVeicCancelarEdicao">Cancelar edição</button>
+            <button type="button" class="btn btn-primary" id="btnVeicInserir">Inserir</button>
+          </div>
+        </form>
+
+        <div class="wdg-card wdg-card-hover p-2">
+          <div class="mb-2 text-center">
+            <div class="fw-semibold">Veículos vinculados à habitação</div>
+          </div>
+          <div class="d-flex align-items-center gap-2 justify-content-end mb-3">
+            <label for="veicPageSize" class="form-label mb-0">Mostra</label>
+            <select id="veicPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span>itens</span>
+          </div>
+          <div class="table-responsive wdg-scroll-2">
+            <table class="table table-sm align-middle wdg-table-centered wdg-sticky-head wdg-actions-lastcol">
+              <thead>
+                <tr>
+                  <th>Placa</th>
+                  <th>Tipo</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>Cor</th>
+                  <th>Ano/Modelo</th>
+                  <th>Proprietário</th>
+                  <th>Garagem</th>
+                  <th>Documentos</th>
+                  <th class="actions-col">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="veicListaBody">
+                <!-- preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div id="veicPager" class="wdg-pager mt-2"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" id="btnVeiculosFechar" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-primary" id="btnVeiculosSalvar">Salvar alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Garante que o CSS compartilhado de modais esteja carregado
+  (function ensureModalCss(){
+    if(!document.getElementById('wdgModalsCSS')){
+      var l = document.createElement('link');
+      l.id = 'wdgModalsCSS';
+      l.rel = 'stylesheet';
+      l.href = '/gestor/css/modals.css';
+      document.head.appendChild(l);
+    }
+    // Fallback: se por algum motivo a folha não carregar, injeta regras mínimas inline
+    setTimeout(function(){
+      try{
+        var probe = document.createElement('div'); probe.className='wdg-table-centered';
+        var applied=false; document.body.appendChild(probe);
+        applied = !!getComputedStyle(probe).textAlign && getComputedStyle(probe).textAlign==='center';
+        document.body.removeChild(probe);
+        if(!applied){
+          var st = document.createElement('style'); st.id='wdgModalsCSSFallback';
+          st.textContent = '.wdg-modal{border-radius:10px;overflow:hidden}.wdg-table-centered th,.wdg-table-centered td{text-align:center}.wdg-sticky-head thead th{position:sticky;top:0;z-index:3;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06)}.wdg-actions-lastcol tbody td:last-child{white-space:nowrap}.wdg-scroll-2{max-height:160px;overflow-y:auto}.wdg-card{border:1px solid rgba(0,0,0,.08);border-radius:10px;background:#fff;box-shadow:0 6px 14px rgba(2,6,23,.06)}';
+          document.head.appendChild(st);
+        }
+      }catch(_e){}
+    }, 800);
+  })();
+
+  (function initMasks(){
+    function maskDate(el){
+      if(!el || el.type === 'date') return;
+      el.addEventListener('input', function(){
+        var v = (el.value||'').replace(/\D+/g,'').slice(0,8);
+        var out = '';
+        if(v.length >= 2){ out = v.slice(0,2); }
+        else { out = v; }
+        if(v.length > 2){ out += '/' + v.slice(2,4); }
+        if(v.length > 4){ out += '/' + v.slice(4,8); }
+        el.value = out;
+      });
+      el.addEventListener('blur', function(){
+        var v = (el.value||'').replace(/\D+/g,'');
+        if(v.length !== 8) return;
+        el.value = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4,8);
+      });
+    }
+    function maskAnoModelo(el){
+      if(!el) return;
+      el.addEventListener('input', function(){
+        var v = (el.value||'').replace(/\D+/g,'').slice(0,8);
+        if(v.length <= 4){ el.value = v; return; }
+        el.value = v.slice(0,4) + '/' + v.slice(4);
+      });
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+      maskDate(document.getElementById('veicOwnerNascimento'));
+      maskAnoModelo(document.getElementById('veicAnoModelo'));
+    });
+  })();
+</script>

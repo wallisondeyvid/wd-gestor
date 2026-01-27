@@ -1,0 +1,76 @@
+<div class="modal fade" id="modalSelecionarFuncao" tabindex="-1" aria-labelledby="modalSelecionarFuncaoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content modal-sheet theme-blue" id="modalSelecionarFuncaoContent">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalSelecionarFuncaoLabel">Selecionar Função</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <style>
+          /* Escopo restrito ao modal via id raiz */
+          #modalSelecionarFuncaoContent .search-wrap { position: relative; }
+          #modalSelecionarFuncaoContent .search-wrap .search-icon { position:absolute; top:50%; left:.65rem; transform:translateY(-50%); opacity:.55; }
+          #modalSelecionarFuncaoContent .search-wrap input { padding-left:2.1rem !important; }
+          #modalSelecionarFuncaoContent .list-header { display:flex; font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:#5b6470; border:1px solid #d9dee3; border-bottom:none; border-radius:.5rem .5rem 0 0; background:linear-gradient(#f8f9fa,#f1f3f5); } 
+          #modalSelecionarFuncaoContent .list-header > div { padding:.55rem .75rem; display:flex; align-items:center; }
+          #modalSelecionarFuncaoContent .col-sel { flex:0 0 54px; text-align:center; }
+          #modalSelecionarFuncaoContent .col-cod { flex:0 0 120px; font-variant-numeric:tabular-nums; }
+          #modalSelecionarFuncaoContent .col-nome { flex:1 1 auto; }
+          #modalSelecionarFuncaoContent .list-scroll { max-height:340px; overflow:auto; border:1px solid #d9dee3; border-top:none; border-radius:0 0 .5rem .5rem; }
+          #modalSelecionarFuncaoContent .list-group { border:0; }
+          #modalSelecionarFuncaoContent .list-group-item { border:0; border-bottom:1px solid #edf0f2; padding:0; background:#fff; }
+          #modalSelecionarFuncaoContent .list-group-item:last-child { border-bottom:0; }
+          #modalSelecionarFuncaoContent .item-row { display:flex; align-items:stretch; width:100%; padding:.55rem .75rem; gap:0; }
+          #modalSelecionarFuncaoContent .item-row .col-sel { display:flex; justify-content:center; align-items:center; }
+          #modalSelecionarFuncaoContent .item-row:hover { background:#f6f9fc; }
+          #modalSelecionarFuncaoContent input[type=radio] { cursor:pointer; }
+          #modalSelecionarFuncaoContent .list-empty { text-align:center; font-size:.85rem; color:#6c757d; }
+          #modalSelecionarFuncaoContent .item-row span { display:flex; align-items:center; }
+          /* Responsividade menor que 520px: empilha código/descrição */
+          @media (max-width: 520px) {
+            #modalSelecionarFuncaoContent .col-cod { flex:0 0 90px; }
+            #modalSelecionarFuncaoContent .item-row { flex-wrap:wrap; }
+            #modalSelecionarFuncaoContent .item-row .col-nome { flex:1 1 100%; padding-top:.25rem; }
+          }
+        </style>
+  <!-- Selecionar Unidade (apenas a unidade escolhida na aba principal) -->
+        <div class="mb-3">
+          <label for="modalSelectUnidade" class="form-label">Selecionar Unidade</label>
+          <select id="modalSelectUnidade" class="form-select">
+            <option value="">Selecione uma unidade...</option>
+          </select>
+          <div class="form-text" data-hint-unidade>
+            Listando somente as funções da unidade selecionada na aba Identificação.
+          </div>
+        </div>
+
+        <!-- Busca -->
+        <div class="search-wrap has-icon-left mb-3">
+          <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Pesquisar" class="icon icon-sm search-icon" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary\' style=\'font-size:16px;\'\x3e\x3c/i\x3e'" />
+          <input type="text" class="form-control ps-4" id="funcaoPesquisa" placeholder="Buscar função (código/nome)..." autocomplete="off">
+        </div>
+
+        <!-- Cabeçalho da listagem -->
+        <div class="list-header">
+          <div class="col-sel">Sel.</div>
+          <div class="col-cod">Código</div>
+          <div class="col-nome">Nome</div>
+        </div>
+
+        <!-- Lista -->
+        <div class="list-scroll">
+          <ul class="list-group" id="listaFuncoes">
+            <li class="list-group-item list-empty"><span class="col-nome">Selecione uma unidade para carregar as funções...</span></li>
+          </ul>
+        </div>
+        <div class="mt-2 small text-muted" data-note-origem></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnConfirmarFuncao" disabled>Selecionar</button>
+      </div>
+    </div>
+  </div>
+</div>

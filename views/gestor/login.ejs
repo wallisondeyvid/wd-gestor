@@ -1,0 +1,40 @@
+<!-- Login do módulo Gestor -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Gestor</title>
+  <!-- Usando folha unificada de estilos de login -->
+  <% const _bp = typeof basePath !== 'undefined' ? basePath : (typeof basePath === 'string' ? basePath : ''); %>
+  <link rel="stylesheet" href="<%= _bp %>/css/login.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login - Gestor</h2>
+    <% const erro = (typeof query !== 'undefined' && query.erro) ? query.erro : (typeof erro !== 'undefined' ? erro : (typeof req !== 'undefined' && req.query ? req.query.erro : null)); %>
+    <% const min = (typeof query !== 'undefined' && query.min) ? query.min : (typeof req !== 'undefined' && req.query ? req.query.min : null); %>
+    <% if (erro) { %>
+      <div class="login-alert" style="margin:10px 0;padding:10px;border-radius:4px;font-size:0.9rem;line-height:1.3; <%= erro==='bloqueado' ? 'background:#ffe9e9;color:#8a1f1f;border:1px solid #e0a0a0;' : 'background:#fff3cd;color:#664d03;border:1px solid #ffe69c;' %>">
+        <% if (erro === 'usuario') { %>
+          Usuário não encontrado ou inativo.
+        <% } else if (erro === 'senha') { %>
+          Senha incorreta. Verifique e tente novamente.
+        <% } else if (erro === 'bloqueado') { %>
+          Sua conta está temporariamente bloqueada por tentativas inválidas.<br>
+          <% if (min) { %>Tente novamente em aproximadamente <strong><%= min %></strong> minuto(s).<% } else { %>Aguarde alguns minutos antes de tentar novamente.<% } %>
+        <% } else if (erro === 'servidor') { %>
+          Ocorreu um erro interno. Tente novamente em instantes.
+        <% } else { %>
+          Não foi possível autenticar. Verifique os dados e tente novamente.
+        <% } %>
+      </div>
+    <% } %>
+  <form method="POST" action="<%= _bp %>/login">
+      <input type="text" id="email" name="email" placeholder="E-mail" required autofocus />
+      <input type="password" id="senha" name="senha" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+  <script src="<%= _bp %>/js/gestor/pages/login.js"></script>
+</body>
+</html>

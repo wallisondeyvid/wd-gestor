@@ -1,0 +1,143 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalEditHabPet" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content wdg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Gerenciar pets</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <span class="fw-semibold">Habitação:</span>
+          <span id="petHabLabel" class="text-muted small"></span>
+        </div>
+        <div class="mb-3">
+          <span class="fw-semibold">Proprietário:</span>
+          <span id="petPropLabel" class="text-muted small"></span>
+        </div>
+
+        <form id="formPet" class="wdg-card wdg-card-hover p-2 mb-3" autocomplete="off" novalidate>
+          <div class="fw-semibold text-center mb-3">Dados do pet</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="petEspecie">Espécie</label>
+              <select class="form-select" id="petEspecie" required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="petRaca">Raça</label>
+              <input type="text" class="form-control" id="petRaca" maxlength="80" autocomplete="off">
+            </div>
+            <div class="col-12 d-none" id="petEspecieOutroWrap">
+              <label class="form-label" for="petEspecieOutro">Especificar espécie</label>
+              <input type="text" class="form-control" id="petEspecieOutro" maxlength="60" autocomplete="off">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="petNome">Nome</label>
+              <input type="text" class="form-control" id="petNome" maxlength="80" autocomplete="off" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="petPeso">Peso (kg)</label>
+              <input type="text" class="form-control" id="petPeso" maxlength="20" autocomplete="off" placeholder="00,00 kg" inputmode="decimal">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="petCor">Cor / Pelagem</label>
+              <input type="text" class="form-control" id="petCor" maxlength="60" autocomplete="off">
+            </div>
+            <div class="col-12">
+              <div class="d-flex flex-column align-items-center text-center">
+                <label class="form-label mb-2 text-nowrap">Auxílio em Nec. Especiais</label>
+                <div class="wdg-toggle btn-group mx-auto" role="group" aria-label="Auxílio em necessidades especiais">
+                  <input class="btn-check" type="radio" name="petAuxNeedsRadio" id="petAuxYes" value="sim">
+                  <label class="btn wdg-toggle-option" for="petAuxYes">Sim</label>
+                  <input class="btn-check" type="radio" name="petAuxNeedsRadio" id="petAuxNo" value="nao" checked>
+                  <label class="btn wdg-toggle-option" for="petAuxNo">Não</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="wdg-pet-foto-field mx-auto text-center">
+                <label class="form-label" for="petFoto">Foto</label>
+                <input type="file" class="form-control" id="petFoto" accept="image/*">
+                <div class="form-text">PNG, JPG ou WEBP até 4MB.</div>
+                <div id="petFotoPreview" class="wdg-pet-foto-preview d-none">
+                  <img id="petFotoPreviewImg" src="" alt="Foto do pet" class="rounded shadow-sm">
+                  <div id="petFotoPreviewLabel" class="small fw-semibold"></div>
+                  <div id="petFotoPreviewInfo" class="small text-muted"></div>
+                  <button type="button" class="btn btn-sm btn-link p-0" id="btnPetFotoRemover">Remover foto</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline-secondary" id="btnPetLimpar">Limpar</button>
+            <button type="button" class="btn btn-outline-secondary d-none" id="btnPetCancelarEdicao">Cancelar edição</button>
+            <button type="button" class="btn btn-primary" id="btnPetInserir">Inserir</button>
+          </div>
+        </form>
+
+        <div class="wdg-card wdg-card-hover p-2">
+          <div class="mb-2 text-center">
+            <div class="fw-semibold">Pets vinculados à habitação</div>
+          </div>
+          <div class="d-flex align-items-center gap-2 justify-content-end mb-3">
+            <label for="petPageSize" class="form-label mb-0">Mostra</label>
+            <select id="petPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+            </select>
+            <span>itens</span>
+          </div>
+          <div class="table-responsive wdg-scroll-2">
+            <table class="table table-sm align-middle wdg-table-centered wdg-sticky-head wdg-actions-lastcol">
+              <thead>
+                <tr>
+                  <th>Espécie</th>
+                  <th>Raça</th>
+                  <th>Nome</th>
+                  <th class="actions-col">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="petListaBody">
+                <!-- preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div id="petPager" class="wdg-pager mt-2"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" id="btnPetsFechar" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-primary" id="btnPetsSalvar">Salvar alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function ensureModalCss(){
+    if(!document.getElementById('wdgModalsCSS')){
+      var l = document.createElement('link');
+      l.id = 'wdgModalsCSS';
+      l.rel = 'stylesheet';
+      l.href = '/gestor/css/modals.css';
+      document.head.appendChild(l);
+    }
+    setTimeout(function(){
+      try{
+        var probe = document.createElement('div'); probe.className='wdg-table-centered';
+        var applied=false; document.body.appendChild(probe);
+        applied = !!getComputedStyle(probe).textAlign && getComputedStyle(probe).textAlign==='center';
+        document.body.removeChild(probe);
+        if(!applied && !document.getElementById('wdgModalsCSSFallback')){
+          var st = document.createElement('style'); st.id='wdgModalsCSSFallback';
+          st.textContent = '.wdg-modal{border-radius:10px;overflow:hidden}.wdg-table-centered th,.wdg-table-centered td{text-align:center}.wdg-sticky-head thead th{position:sticky;top:0;z-index:3;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06)}.wdg-actions-lastcol tbody td:last-child{white-space:nowrap}.wdg-scroll-2{max-height:160px;overflow-y:auto}.wdg-card{border:1px solid rgba(0,0,0,.08);border-radius:10px;background:#fff;box-shadow:0 6px 14px rgba(2,6,23,.06)}';
+          document.head.appendChild(st);
+        }
+      }catch(_e){}
+    }, 800);
+  })();
+</script>

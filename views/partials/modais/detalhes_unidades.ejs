@@ -1,0 +1,150 @@
+<div class="modal fade" id="detalhesModal" tabindex="-1" aria-labelledby="detalhesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+  <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detalhesModalLabel">
+          <img src="/gestor/images/detalhe.png" alt="Detalhes" class="icon-title icon-left" style="width:24px;height:24px;object-fit:contain;"> Detalhes da Unidade
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+    <div class="modal-body">
+  <div class="row g-4 detalhes-layout-row">
+          <!-- LADO ESQUERDO: logo + ações -->
+          <aside class="col-12 col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body text-center">
+                <div class="profile-avatar-wrap mb-3">
+                  <img id="detalhesLogoPreview" src="/gestor/img/placeholder-logo.svg" alt="Logo da unidade" class="avatar-xxl rounded" onerror="this.src='/gestor/img/placeholder-logo.svg'" />
+                </div>
+                <div class="d-grid gap-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" id="btnTrocarLogoDetalhes">Alterar Logo</button>
+                  <div class="d-none" id="grupoConfirmarLogoDetalhes">
+                    <div class="btn-group w-100">
+                      <button type="button" class="btn btn-success btn-sm" id="btnConfirmarLogoDetalhes">Salvar Logo</button>
+                      <button type="button" class="btn btn-outline-danger btn-sm" id="btnCancelarLogoDetalhes">Cancelar</button>
+                    </div>
+                  </div>
+                  <input type="file" id="inputLogoDetalhes" accept="image/*" class="d-none">
+                </div>
+                <div id="statusLogoDetalhes" class="mt-2 small text-muted"></div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- LADO DIREITO: informações em grade -->
+          <section class="col-12 col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body detalhes-dados">
+                <div id="detalhesAccordion" class="ud-accordion"><!-- preenchido via JS --></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Estilos locais de alta especificidade para garantir aplicação do acordeão e layout -->
+<style>
+  /* Escopo estrito ao modal de detalhes da Unidade */
+  #detalhesModal .modal-content{ height:62.5vh !important; max-height:62.5vh !important; display:flex; flex-direction:column; overflow:hidden; }
+  #detalhesModal .modal-body{ flex:1 1 auto; display:flex; flex-direction:column; overflow:hidden; min-height:0 !important; padding:1rem; }
+  #detalhesModal .modal-body > .detalhes-layout-row{ flex:1 1 auto; min-height:0 !important; }
+  #detalhesModal .detalhes-layout-row{ align-items:stretch !important; height:100%; min-height:0; }
+  #detalhesModal .detalhes-layout-row .col-md-8{ display:flex !important; flex:1 1 auto !important; min-height:0 !important; height:100% !important; overflow:hidden; }
+  /* Card da direita é apenas flex container; quem rola é .detalhes-dados */
+  #detalhesModal .detalhes-layout-row .col-md-8 > .card{ display:flex !important; flex-direction:column !important; flex:1 1 auto !important; min-height:0 !important; overflow:visible !important; }
+  /* .detalhes-dados ocupa e rola */
+  #detalhesModal .detalhes-dados{ flex:1 1 auto !important; min-height:0 !important; max-height:100% !important; height:auto; overflow-y:scroll !important; overflow-x:hidden !important; scrollbar-gutter:stable both-edges; -webkit-overflow-scrolling: touch; overscroll-behavior:contain; }
+  /* Scrollbar visível na área de dados */
+  #detalhesModal .detalhes-dados{ scrollbar-width: thin; scrollbar-color:#cbd5e1 #f1f5f9; }
+  #detalhesModal .detalhes-dados::-webkit-scrollbar{ width:10px; }
+  #detalhesModal .detalhes-dados::-webkit-scrollbar-track{ background:#f1f5f9; }
+  #detalhesModal .detalhes-dados::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:8px; }
+  #detalhesModal .detalhes-dados::-webkit-scrollbar-thumb:hover{ background:#b6c2cc; }
+
+  /* Acordeão (aparência igual ao do Funcionário) */
+  #detalhesModal .ud-accordion{ width:100%; }
+  #detalhesModal .ud-accordion .ud-section + .ud-section{ margin-top:.5rem; }
+  #detalhesModal .ud-toggle{
+    -webkit-appearance:none !important; appearance:none !important; outline:none !important;
+    width:100% !important; display:flex !important; align-items:center; gap:.5rem; text-align:left; cursor:pointer; box-sizing:border-box;
+    padding:.65rem .95rem; border-radius:.75rem; border:1px solid #c7dbf7 !important;
+    background:linear-gradient(180deg,#f0f7ff 0%, #e6f1ff 100%) !important;
+    color:#0d6efd !important; font-weight:600 !important;
+    box-shadow:0 1px 0 rgba(13,110,253,.05), inset 0 1px 0 rgba(255,255,255,.6) !important;
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    min-height:42px;
+  }
+  #detalhesModal .ud-toggle:hover{ background:#e8f2ff !important; border-color:#b7cff1 !important; }
+  #detalhesModal .ud-toggle.collapsed{ background:linear-gradient(180deg,#f0f7ff 0%, #e6f1ff 100%) !important; border-color:#dbe7fb !important; color:#1d3b72 !important; }
+  #detalhesModal .ud-toggle:focus{ outline:0; box-shadow:0 0 0 .2rem rgba(13,110,253,.18) !important; }
+  #detalhesModal .ud-caret{ font-size:1rem; transition: transform .2s ease; }
+  #detalhesModal .ud-caret::before{ content:'\203A'; display:inline-block; transform-origin:center; }
+  #detalhesModal .ud-toggle:not(.collapsed) .ud-caret{ transform:rotate(90deg); }
+  #detalhesModal .ud-body{ padding:.9rem 1rem; background:#f8fbff; border:1px solid #e6edf7; border-top:0; border-radius:0 0 .75rem .75rem; box-shadow:inset 0 1px 0 rgba(255,255,255,.6); }
+  #detalhesModal .ud-section .collapse{ transition: height .2s ease; }
+  #detalhesModal .profile-dl{ grid-template-columns: 180px minmax(0,1fr); }
+  #detalhesModal .profile-dl dd{ white-space: normal !important; overflow-wrap:anywhere; word-break:break-word; hyphens:auto; }
+  #detalhesModal .profile-avatar-wrap .avatar-xxl{ width:132px; height:132px; object-fit:cover; border:4px solid #fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.08); background:#f8f9fa; }
+  @media (min-width:992px){ #detalhesModal .profile-avatar-wrap .avatar-xxl{ width:150px; height:150px; } }
+
+  /* Botão Alterar Logo (menor) */
+  #detalhesModal #btnTrocarLogoDetalhes{
+    font-size: .75rem; /* menor que .btn-sm padrão */
+    padding: .22rem .5rem; /* reduz a altura do botão */
+    border-radius: .35rem; /* levemente menor */
+    width: auto !important; /* não ocupar 100% */
+    display: inline-block; /* permitir encolher ao conteúdo */
+    justify-self: center !important; /* centralizar no grid */
+    margin: 0 auto; /* fallback de centralização */
+  }
+</style>
+
+<script>
+  (function(){
+    const modal = document.getElementById('detalhesModal');
+    function getScrollBox(){
+      // Prioriza a área de dados rolável; fallback para o card da direita
+      return modal?.querySelector('.detalhes-dados') || modal?.querySelector('.detalhes-layout-row .col-md-8 > .card');
+    }
+    function wheelHandler(e){
+      const box = getScrollBox(); if(!box) return;
+      const rightCol = modal?.querySelector('.detalhes-layout-row .col-md-8');
+      // Se o ponteiro está em qualquer região da coluna direita, rola o box
+      if (box.contains(e.target) || (rightCol && rightCol.contains(e.target))){
+        const before = box.scrollTop;
+        const unit = (e.deltaMode === 1 ? 16 : (e.deltaMode === 2 ? box.clientHeight : 1));
+        box.scrollTop += e.deltaY * unit;
+        if (box.scrollTop !== before){ e.preventDefault(); e.stopPropagation(); }
+      }
+    }
+    function keyHandler(e){
+      const box = getScrollBox(); if(!box) return;
+      if (!modal.contains(document.activeElement)) return;
+      const keys = ['PageDown','PageUp','Home','End','ArrowDown','ArrowUp'];
+      if (!keys.includes(e.key)) return;
+      let delta = 0;
+      const view = box.clientHeight;
+      switch(e.key){
+        case 'PageDown': delta = view * 0.9; break;
+        case 'PageUp':   delta = -view * 0.9; break;
+        case 'Home':     box.scrollTop = 0; e.preventDefault(); return;
+        case 'End':      box.scrollTop = box.scrollHeight; e.preventDefault(); return;
+        case 'ArrowDown': delta = 40; break;
+        case 'ArrowUp':   delta = -40; break;
+      }
+      const before = box.scrollTop;
+      box.scrollTop = Math.max(0, Math.min(box.scrollTop + delta, box.scrollHeight));
+      if (box.scrollTop !== before){ e.preventDefault(); e.stopPropagation(); }
+    }
+    if (modal){
+      modal.addEventListener('wheel', wheelHandler, { passive:false });
+      modal.addEventListener('keydown', keyHandler, { passive:false });
+    }
+  })();
+  </script>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Erro</title>
+  <%- include('./gestor/../partials/favicon') %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-header bg-danger text-white">Ocorreu um erro</div>
+          <div class="card-body">
+            <p><%= typeof errorMessage !== 'undefined' ? errorMessage : 'Erro inesperado.' %></p>
+            <a href="/" class="btn btn-primary">Voltar ao início</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

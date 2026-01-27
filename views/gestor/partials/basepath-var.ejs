@@ -1,0 +1,14 @@
+<% /* Partial: basepath-var
+   Uso: incluir no <head> (logo após outras variáveis) para garantir que _basePath esteja definido e exposto a scripts.
+   Convenção: se "basePath" vier vazio, "/" ou não for string => fallback '/gestor'.
+   Resultado: define const _basePath (EJS) + window._BASE_PATH (JS global) apenas uma vez.
+*/ %>
+<% /* Se _basePath ainda não estiver no escopo, resolve agora */
+   const __resolvedBasePath = (typeof _basePath !== 'undefined')
+      ? _basePath
+      : ((typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor');
+   if (typeof _basePath === 'undefined') { const _basePath = __resolvedBasePath; }
+%>
+<script>
+   if(!window._BASE_PATH){ window._BASE_PATH = '<%= __resolvedBasePath %>'; }
+</script>

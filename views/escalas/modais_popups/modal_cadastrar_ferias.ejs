@@ -1,0 +1,36 @@
+<div class="modal fade" id="modalCadastrarFerias" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header py-2 bg-primary text-white">
+        <h6 class="modal-title mb-0">Cadastrar Férias</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body small">
+        <form id="formCadastrarFerias">
+          <div class="mb-2">
+            <label class="form-label mb-1">Funcionário</label>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="cadFeriasFuncionario" placeholder="Selecionar" readonly>
+              <button class="btn btn-outline-secondary" type="button" id="btnCadFeriasBuscar"><i class="bi bi-search"></i></button>
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label mb-1" for="cadFeriasInicio">Início</label>
+              <input type="text" class="form-control form-control-sm date-br text-center" id="cadFeriasInicio" placeholder="dd/mm/aaaa" autocomplete="off" data-calendar="flatpickr" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label mb-1" for="cadFeriasFim">Término</label>
+              <input type="text" class="form-control form-control-sm date-br text-center" id="cadFeriasFim" placeholder="dd/mm/aaaa" autocomplete="off" data-calendar="flatpickr" required>
+            </div>
+          </div>
+        </form>
+        <div class="mt-2 text-muted"><em>Validações de conflitos serão implementadas posteriormente.</em></div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnSalvarFerias">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>

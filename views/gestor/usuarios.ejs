@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <% const _basePath = (typeof basePath === 'string' && basePath) ? basePath : (typeof moduleBasePath === 'string' && moduleBasePath) ? moduleBasePath : '/gestor'; %>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários - WDGestor</title>
+  <%- include('partials/favicon') %>
+
+  <!-- Bootstrap / Icons (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Estilos centrais Gestor -->
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _basePath }) %>
+  <!-- Tema moderno (paridade com Unidades / Condomínios) -->
+  <link rel="stylesheet" href="/condominios/css/condominios-modern.css?v=1">
+  <!-- Botões de ação padronizados por ícone -->
+  <link rel="stylesheet" href="<%= _basePath %>/css/icon-buttons.css?v=1">
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+  <!-- Ajustes específicos da tabela de usuários -->
+  <style>
+    .wdg-users-table th,
+    .wdg-users-table td{
+      white-space: nowrap;     /* não quebrar linhas */
+      text-align: center;      /* centralizar conteúdo */
+      vertical-align: middle;
+    }
+    .wdg-users-table .col-email{ min-width: 300px; }
+    .wdg-users-table .col-nome { min-width: 140px; }
+    .wdg-users-table .col-role { min-width: 130px; }
+    .wdg-users-table .col-ativo{ min-width: 110px; }
+    .wdg-users-table .col-vinc { min-width: 160px; }
+  .wdg-users-table .col-acoes{ width: 160px; } /* espaço otimizado para ícones */
+  </style>
+ </head>
+<body class="wdg-layout">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
+  <%- include('../shared/partials/navbar-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
+
+  <div class="wdg-page">
+    <h4 class="mb-3 text-center page-main-title">Gerenciar Usuários</h4>
+    <div class="gestor-divider"></div>
+
+    <!-- Contêiner para alertas -->
+    <div id="alerts-container" class="mt-3"></div>
+
+    <% if (typeof dbOffline !== 'undefined' && dbOffline) { %>
+      <div class="alert alert-warning mt-3" role="alert">
+        Banco de dados em reconexão (modo leve). A lista pode aparecer vazia temporariamente; recarregue em alguns instantes.
+      </div>
+    <% } %>
+
+    <div class="wdg-card content wdg-card-hover">
+      <div class="wdg-card-body wdg-form wdg-tight">
+
+        <!-- FORM: grid limpo e responsivo -->
+  <form id="formNovoUsuario" method="POST" action="<%= _basePath %>/api/usuarios" class="row gy-3 wdg-form auto-colon" onsubmit="return submitUsuarioForm(event)">
+          <!-- Linha 1 -->
+          <div class="col-12 col-lg-6">
+            <label class="form-label">Nome</label>
+            <input name="nome" type="text" class="form-control" placeholder="Nome completo" autocomplete="name">
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <label class="form-label">E-mail</label>
+            <input name="email" type="email" required class="form-control" placeholder="E-mail" autocomplete="email">
+          </div>
+
+          <!-- Linha 2 -->
+          <div class="col-6 col-lg-3">
+            <label class="form-label">CPF</label>
+            <input name="cpf" id="cpfUsuario" type="text" class="form-control" placeholder="CPF" maxlength="14" autocomplete="off">
+          </div>
+
+          <div class="col-12 col-sm-6 col-lg-5">
+            <label class="form-label">Senha inicial</label>
+            <div class="input-group">
+              <input name="senha" id="senhaInicial" type="text" class="form-control" placeholder="Deixe vazio para gerar automaticamente" autocomplete="new-password">
+              <button class="btn btn-outline-primary" type="button" id="btnGerarSenha">Gerar</button>
+            </div>
+            <div class="form-text text-muted" id="senhaHelpText">
+              <small>Se vazio, uma senha provisória será gerada automaticamente</small>
+            </div>
+          </div>
+
+          <div class="col-6 col-lg-4">
+            <label class="form-label">Nível de acesso</label>
+            <select name="role" id="roleSelect" class="form-select">
+              <option value="admin">Admin</option>
+              <option value="diretor">Diretor</option>
+              <option value="user" selected>User</option>
+            </select>
+          </div>
+
+          <!-- Linha 3 -->
+          <div class="col-12 col-lg-6">
+            <label class="form-label" id="unidadeLabel">Unidade vinculada</label>
+            <select name="unidade_id" id="unidadeSelect" class="form-select">
+              <option value="">-- Selecionar --</option>
+              <% if (typeof unidadesFiltradas !== 'undefined') { (unidadesFiltradas||[]).forEach(u => { %>
+                <option value="<%= u._id %>"><%= (u.codigo && u.nome) ? u.codigo + ' - ' + u.nome : (u.nome || u.codigo || u._id) %></option>
+              <% }) } %>
+            </select>
+            <div class="form-text text-muted" id="unidadeHelpText">
+              <small>Campo obrigatório para usuários e diretores</small>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <label class="form-label">Funcionário existente</label>
+            <select name="funcionario_id" id="funcionarioSelect" class="form-select">
+              <option value="">-- Selecione uma unidade primeiro --</option>
+            </select>
+          </div>
+
+          <!-- Linha 4 -->
+          <div class="col-12 col-lg-6 d-flex align-items-center">
+            <div class="form-check mt-1">
+              <input class="form-check-input" type="checkbox" id="criarNovoFuncionario" name="criarNovoFuncionario">
+              <label class="form-check-label" for="criarNovoFuncionario">Criar novo funcionário</label>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6 d-flex justify-content-end align-items-center">
+            <!-- alinhado à direita em todas as larguras -->
+            <div class="d-block ms-auto">
+              <button type="submit" class="btn btn-primary" id="btnSubmitUsuario" data-mode="create">
+                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Cadastrar
+              </button>
+            </div>
+          </div>
+        </form>
+        <!-- /FORM -->
+
+      </div>
+    </div>
+
+  <h5 class="mb-1 text-center wdg-section-title" style="margin-top:18px">Usuários cadastrados</h5>
+
+    <!-- Controles da lista de usuários -->
+    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
+      <div class="d-flex align-items-center gap-2">
+        <label for="uPageSize" class="form-label mb-0">Mostra</label>
+        <select id="uPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="300">300</option>
+          <option value="400">400</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+        </select>
+        <span class="ms-1">itens</span>
+      </div>
+    </div>
+
+    <div class="wdg-card content wdg-card-hover wdg-table wdg-users-table">
+      <div id="wrapperTabelaUsuarios" class="table-responsive table-vert-max">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th class="col-email">E-mail</th>
+              <th class="col-nome">Nome</th>
+              <th class="col-role">Níveis de acesso</th>
+              <th class="col-ativo">Ativo</th>
+              <th class="col-vinc">Vinc. Funcionário</th>
+              <th class="col-acoes">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% (usuarios||[]).forEach(u => { %>
+        <tr data-user-id="<%= u._id %>"
+          data-user-email="<%= u.email %>"
+          data-user-nome="<%= u.nome || '' %>"
+                  data-user-role="<%= u.role %>"
+                  data-user-cpf="<%= u.cpf || '' %>"
+                  data-user-unidade="<%= u.unidade_id || '' %>"
+                  data-user-funcionario="<%= u.funcionario_id || '' %>">
+                <td class="col-email"><%= u.email %></td>
+                <td class="col-nome"><%= u.nome || '-' %></td>
+                <td class="col-role"><%= u.role %></td>
+
+                <!-- Dica: para não escapar HTML em EJS use &lt;%- ... %&gt; -->
+                <td class="col-ativo">
+                  <%- u.ativo
+                        ? '<span class="badge bg-success">Sim</span>'
+                        : '<span class="badge bg-secondary">Não</span>' %>
+                </td>
+
+                <td class="col-vinc"><%= u.funcionario_id || '-' %></td>
+                <td class="col-acoes">
+                  <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                    <% const localUser = (typeof user !== 'undefined' && user) ? user : (typeof sessionUser !== 'undefined' ? sessionUser : null); %>
+                    <% const isMasterRow = (u && (u.isMaster === true || String(u.role || '').toLowerCase() === 'master')); %>
+                    <% if (!isMasterRow) { %>
+                      <form method="POST" action="<%= _basePath %>/api/usuarios/<%= u._id %>/toggle" class="wdg-user-action-form" data-action="toggle" data-user-id="<%= u._id %>">
+                        <button class="wdg-icon-btn wdg-btn-toggle" type="submit" title="<%= u.ativo ? 'Desativar' : 'Ativar' %>" aria-label="<%= u.ativo ? 'Desativar' : 'Ativar' %>">
+                          <img src="<%= _basePath %>/images/ativar.png" alt="<%= u.ativo ? 'Desativar' : 'Ativar' %>" onerror="this.outerHTML='&lt;i class=\'bi bi-power\'&gt;&lt;/i&gt;'">
+                        </button>
+                      </form>
+                    <% } %>
+                    <% if (localUser && (localUser.isMaster || localUser.role === 'admin')) { %>
+                      <button type="button" class="wdg-icon-btn btn-edit-user" title="Editar" aria-label="Editar">
+                        <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'">
+                      </button>
+                    <% } %>
+                    <% const isSelf = (localUser && (String(localUser._id) === String(u._id))); %>
+                    <% if (localUser && localUser.isMaster && !isMasterRow && !isSelf) { %>
+                      <form method="POST" action="<%= _basePath %>/api/usuarios/<%= u._id %>/delete" class="wdg-user-action-form" data-action="delete" data-user-id="<%= u._id %>">
+                        <button class="wdg-icon-btn wdg-btn-delete" type="submit" title="Excluir" aria-label="Excluir">
+                          <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'">
+                        </button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="uPaginas" class="wdg-pager mt-2"></div>
+  </div>
+
+  <!-- Modal de confirmação de vinculação de Funcionário -->
+  <div class="modal fade" id="modalMatchFuncionario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Vincular ao Funcionário existente?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="matchFuncionarioResumo" class="mb-2"></div>
+          <div class="small text-muted">Detectamos um Funcionário correspondente. Você deseja vincular este usuário a ele?</div>
+          <div id="matchFuncionarioAviso" class="text-danger mt-2 d-none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="btnCancelarMatch">Cancelar</button>
+          <button type="button" class="btn btn-outline-primary" id="btnConfirmarMatch">Vincular</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Usuário -->
+  <div class="modal fade modal-sheet theme-blue" id="modalEditarUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+  <form method="POST" id="formEditarUsuario" class="wdg-form auto-colon">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar Usuário</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body row g-2 wdg-form wdg-tight">
+            <input type="hidden" name="_id" id="editUserId">
+            <div class="col-12 col-sm-6 col-lg-4">
+              <label class="form-label">E-mail</label>
+              <input type="text" id="editUserEmail" class="form-control" disabled>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+              <label class="form-label">Nome</label>
+              <input type="text" name="nome" id="editUserNome" class="form-control" autocomplete="name">
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+              <label class="form-label">CPF</label>
+              <input type="text" name="cpf" id="editUserCpf" class="form-control" maxlength="14" autocomplete="off">
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+              <label class="form-label">Nível de acesso</label>
+              <select name="role" id="editUserRole" class="form-select">
+                <option value="admin">Admin</option>
+                <option value="diretor">Diretor</option>
+                <option value="user">User</option>
+              </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+              <label class="form-label">Unidade vinculada</label>
+              <select name="unidade_id" id="editUserUnidade" class="form-select">
+                <option value="">-- Nenhuma --</option>
+                <% if (typeof unidadesFiltradas !== 'undefined') { (unidadesFiltradas||[]).forEach(u2 => { %>
+                  <option value="<%= u2._id %>"><%= (u2.codigo && u2.nome) ? u2.codigo + ' - ' + u2.nome : (u2.nome || u2.codigo || u2._id) %></option>
+                <% }) } %>
+              </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+              <label class="form-label">Funcionário</label>
+              <select name="funcionario_id" id="editUserFuncionario" class="form-select">
+                <option value="">-- Selecione uma unidade primeiro --</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-outline-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+    <!-- Utilitários de máscaras e validações (CPF, CNPJ, etc.) -->
+  <script src="<%= _basePath %>/js/core/masks.js" defer></script>
+
+  <style>
+    /* Correções específicas para o modal Editar Usuário: evitar overflow e garantir responsividade */
+    #modalEditarUsuario .modal-dialog { max-width: 820px; width: calc(100% - 1rem); margin: .75rem auto; }
+    #modalEditarUsuario .modal-content { overflow: hidden; }
+    #modalEditarUsuario .modal-body { max-height: 72vh; overflow-y: auto; }
+    #modalEditarUsuario .form-control, #modalEditarUsuario .form-select, #modalEditarUsuario .input-group { max-width: 100%; min-width: 0; }
+  </style>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function(){
+    // Base path resolvido no servidor e exposto no window; evitar uso de `${_basePath}` que gera ReferenceError
+    const basePath = (window.__perfilBasePath || '<%= _basePath %>').replace(/\/$/, '');
+    // =============================================================
+    // AÇÕES USUÁRIOS (Toggle / Delete) via AJAX
+    // =============================================================
+    const tableBody = document.querySelector('.wdg-users-table tbody');
+    function flashRow(tr, color){
+      if(!tr) return; const orig = tr.style.backgroundColor; tr.style.backgroundColor = color||'#fff3cd';
+      setTimeout(()=>{ tr.style.transition='background-color .6s'; tr.style.backgroundColor=orig||''; setTimeout(()=>{ tr.style.transition=''; },700); }, 80);
+    }
+    async function postJsonOrForm(url){
+      const res = await fetch(url, { method:'POST', headers:{ 'X-Requested-With':'XMLHttpRequest' } });
+      let data = null; try { data = await res.json(); } catch(_){ }
+      return { ok: res.ok, status: res.status, data };
+    }
+    function updateActiveBadge(tr, ativo){
+      const td = tr.querySelector('.col-ativo'); if(!td) return;
+      td.innerHTML = ativo ? '<span class="badge bg-success">Sim</span>' : '<span class="badge bg-secondary">Não</span>';
+      // Atualiza tooltip/título do botão toggle
+      const btn = tr.querySelector('.wdg-btn-toggle');
+      if(btn){
+        btn.title = ativo ? 'Desativar' : 'Ativar';
+        btn.setAttribute('aria-label', btn.title);
+      }
+    }
+    tableBody?.addEventListener('submit', async (e)=>{
+      const form = e.target.closest('.wdg-user-action-form');
+      if(!form) return; e.preventDefault();
+      const action = form.getAttribute('data-action');
+      const tr = form.closest('tr');
+      const url = form.getAttribute('action');
+      if(action === 'delete'){
+        if(!confirm('Confirmar exclusão do usuário?')) return;
+      }
+      form.classList.add('disabled');
+      const { ok, data } = await postJsonOrForm(url);
+      form.classList.remove('disabled');
+      if(!ok){
+        const msg = (data && (data.error||data.message)) || 'Falha na operação';
+        if(window.showAlert) window.showAlert(msg, 'error'); else alert(msg);
+        return;
+      }
+      if(action === 'toggle'){
+        const ativo = data?.ativo;
+        updateActiveBadge(tr, ativo);
+        flashRow(tr, ativo ? '#d1f7d6' : '#ececec');
+        if(window.showAlert) window.showAlert('Status atualizado', 'success');
+      } else if(action === 'delete'){
+        tr.remove();
+        if(window.showAlert) window.showAlert('Usuário excluído', 'success');
+      }
+    });
+
+    // =============================================================
+    // FIM AÇÕES USUÁRIOS
+    // =============================================================
+    // =============================================================
+    // Paginação (oculta/exibe linhas existentes)
+    // =============================================================
+    (function initUsersPagination(){
+      const tbody = document.querySelector('.wdg-users-table tbody');
+      const pager = document.getElementById('uPaginas');
+      const pageSizeSel = document.getElementById('uPageSize');
+      if (!tbody || !pager || !pageSizeSel) return;
+      let allRows = Array.from(tbody.querySelectorAll('tr[data-user-id]'));
+      // Scroll-limit e cabeçalho sticky
+      const wrapper = document.getElementById('wrapperTabelaUsuarios');
+      if(wrapper){ const dataRows = allRows; if(dataRows.length > 4){ wrapper.classList.add('scroll-limit'); } }
+      function getPageSize(){ const v=parseInt(pageSizeSel.value,10); return (!isNaN(v)&&v>0)? v : 50; }
+      const state = { page: 0 };
+      function mkBtn(label, go, dis){ const b=document.createElement('button'); b.type='button'; b.textContent=label; b.disabled=!!dis; b.addEventListener('click', ()=>{ state.page=go; render(); }); return b; }
+      function buildPager(totalPages, totalItems){
+        pager.innerHTML='';
+        if (totalPages <= 1){
+          const info=document.createElement('div'); info.className='w-100 text-center mt-1'; info.style.fontSize='.7rem'; info.textContent='Total: '+totalItems+' usuário(s)'; pager.appendChild(info); return;
+        }
+        const win=5; let start=Math.max(0, state.page-Math.floor(win/2)); let end=Math.min(totalPages-1, start+win-1);
+        pager.appendChild(mkBtn('<<',0,state.page===0)); pager.appendChild(mkBtn('<',state.page-1,state.page===0));
+        if(start>0){ const b0=mkBtn('1',0,false); if(state.page===0) b0.classList.add('active'); pager.appendChild(b0); const dots=document.createElement('span'); dots.textContent='...'; dots.style.padding='0 .4rem'; pager.appendChild(dots); }
+        for(let p=start;p<=end;p++){ const b=mkBtn(String(p+1),p,false); if(p===state.page) b.classList.add('active'); pager.appendChild(b); }
+        if(end<totalPages-1){ const dots2=document.createElement('span'); dots2.textContent='...'; dots2.style.padding='0 .4rem'; pager.appendChild(dots2); const blast=mkBtn(String(totalPages), totalPages-1,false); if(state.page===totalPages-1) blast.classList.add('active'); pager.appendChild(blast); }
+        pager.appendChild(mkBtn('>', state.page+1, state.page===totalPages-1)); pager.appendChild(mkBtn('>>', totalPages-1, state.page===totalPages-1));
+        const info2=document.createElement('div'); info2.className='w-100 text-center mt-1'; info2.style.fontSize='.7rem'; info2.textContent='Total: '+totalItems+' usuário(s)'; pager.appendChild(info2);
+      }
+      function render(){
+        const size = getPageSize();
+        const totalPages = Math.ceil(allRows.length / size) || 1;
+        if (state.page < 0) state.page = 0; if (state.page >= totalPages) state.page = totalPages - 1;
+        const start = state.page * size; const end = Math.min(allRows.length, start + size);
+        allRows.forEach((tr, idx)=>{ tr.style.display = (idx>=start && idx<end) ? '' : 'none'; });
+        buildPager(totalPages, allRows.length);
+      }
+      pageSizeSel.addEventListener('change', ()=>{ state.page=0; render(); });
+      render();
+    })();
+      // Máscaras e validações vêm de window.WDMasks (utils/masks.js)
+
+    const gerarSenha = (len=8) => {
+      const chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+      if (window.crypto?.getRandomValues) {
+        const arr=new Uint32Array(len); crypto.getRandomValues(arr);
+        return Array.from(arr,n=>chars[n%chars.length]).join('');
+      }
+      return Math.random().toString(36).replace(/[^a-zA-Z0-9!@#$%^&*]/gi,'').slice(-len);
+    };
+
+    // Novo usuário
+    const btnGerar = document.getElementById('btnGerarSenha');
+    const senhaEl  = document.getElementById('senhaInicial');
+    const senhaHelpText = document.getElementById('senhaHelpText');
+    const criarNovoFuncionarioEl = document.getElementById('criarNovoFuncionario');
+    const funcionarioSelect = document.getElementById('funcionarioSelect');
+
+    btnGerar?.addEventListener('click', ()=>{
+      const novaSenha = gerarSenha(8);
+      senhaEl.value = novaSenha;
+      // Mostrar feedback temporário
+      const originalText = senhaHelpText.innerHTML;
+      senhaHelpText.innerHTML = '<small class="text-success">✅ Senha gerada: ' + novaSenha + '</small>';
+      setTimeout(() => {
+        senhaHelpText.innerHTML = originalText;
+      }, 3000);
+    });
+
+    // Função para atualizar o estado do campo senha baseado nas seleções
+    function atualizarEstadoSenha() {
+      const criarNovoFuncionario = criarNovoFuncionarioEl.checked;
+      const funcionarioSelecionado = funcionarioSelect.value && !criarNovoFuncionario;
+
+      if (funcionarioSelecionado) {
+        // Se funcionário existente selecionado, desabilitar campo e mostrar mensagem
+        senhaEl.disabled = true;
+        senhaEl.placeholder = "Será gerada automaticamente";
+        senhaHelpText.innerHTML = '<small class="text-info">🔐 Senha será gerada automaticamente para funcionário existente</small>';
+        senhaEl.value = ''; // Limpar qualquer valor
+      } else {
+        // Habilitar campo normalmente
+        senhaEl.disabled = false;
+        senhaEl.placeholder = "Deixe vazio para gerar automaticamente";
+        senhaHelpText.innerHTML = '<small>Se vazio, uma senha provisória será gerada automaticamente</small>';
+      }
+    }
+
+    // Event listeners para atualizar estado da senha
+    criarNovoFuncionarioEl.addEventListener('change', atualizarEstadoSenha);
+    funcionarioSelect.addEventListener('change', atualizarEstadoSenha);
+
+    // Atualizar estado inicial
+    atualizarEstadoSenha();
+
+    // Função para atualizar o campo unidade baseado no role selecionado
+    function atualizarCampoUnidade() {
+      const roleSelect = document.getElementById('roleSelect');
+      const unidadeLabel = document.getElementById('unidadeLabel');
+      const unidadeSelect = document.getElementById('unidadeSelect');
+      const unidadeHelpText = document.getElementById('unidadeHelpText');
+
+      if (!roleSelect || !unidadeLabel || !unidadeSelect || !unidadeHelpText) return;
+
+      const selectedRole = roleSelect.value;
+
+      if (selectedRole === 'admin') {
+        // Para admin: campo opcional
+        unidadeLabel.textContent = 'Unidade vinculada (opcional)';
+        unidadeSelect.required = false;
+        unidadeHelpText.innerHTML = '<small>Campo opcional para administradores</small>';
+        unidadeHelpText.className = 'form-text text-muted';
+      } else {
+        // Para user e diretor: campo obrigatório
+        unidadeLabel.textContent = 'Unidade vinculada *';
+        unidadeSelect.required = true;
+        unidadeHelpText.innerHTML = '<small class="text-danger">Campo obrigatório para usuários e diretores</small>';
+        unidadeHelpText.className = 'form-text text-danger';
+      }
+    }
+
+    // Event listener para mudança no role
+    const roleSelect = document.getElementById('roleSelect');
+    if (roleSelect) {
+      roleSelect.addEventListener('change', atualizarCampoUnidade);
+    }
+
+    // Atualizar estado inicial do campo unidade
+    atualizarCampoUnidade();
+
+    const cpfNovo = document.getElementById('cpfUsuario');
+    if (cpfNovo && window.WDMasks) {
+      window.WDMasks.bindCPFMask(cpfNovo);
+    }
+
+    // Modal editar
+    const editCpf = document.getElementById('editUserCpf');
+    if (editCpf && window.WDMasks) {
+      window.WDMasks.bindCPFMask(editCpf);
+    }
+
+    document.querySelectorAll('.btn-edit-user').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const tr = btn.closest('tr'); if (!tr) return;
+        const id = tr.getAttribute('data-user-id');
+
+        document.getElementById('editUserId').value = id;
+    document.getElementById('formEditarUsuario').action = basePath + '/api/usuarios/' + id + '/update';
+        document.getElementById('editUserEmail').value = tr.getAttribute('data-user-email');
+        document.getElementById('editUserNome').value  = tr.getAttribute('data-user-nome') || '';
+  const rawCpf = tr.getAttribute('data-user-cpf') || '';
+  document.getElementById('editUserCpf').value   = rawCpf ? (window.WDMasks ? window.WDMasks.formatCPF(rawCpf) : rawCpf) : '';
+        document.getElementById('editUserRole').value  = tr.getAttribute('data-user-role');
+        document.getElementById('editUserUnidade').value     = tr.getAttribute('data-user-unidade') || '';
+        document.getElementById('editUserFuncionario').value = tr.getAttribute('data-user-funcionario') || '';
+
+        // Carregar funcionários da unidade selecionada
+        const unidadeId = tr.getAttribute('data-user-unidade') || '';
+        const funcionarioId = tr.getAttribute('data-user-funcionario') || '';
+        if (unidadeId) {
+          carregarFuncionariosDisponiveisEdicao(unidadeId, funcionarioId);
+        } else {
+          editUserFuncionario.innerHTML = '<option value="">-- Selecione uma unidade primeiro --</option>';
+        }
+
+        new bootstrap.Modal(document.getElementById('modalEditarUsuario')).show();
+      });
+    });
+
+    // Guarda de segurança: evita submissão acidental do formulário de edição sem ID/ação válidos
+    const formEditar = document.getElementById('formEditarUsuario');
+    formEditar?.addEventListener('submit', function(e){
+      try {
+        const id = document.getElementById('editUserId')?.value?.trim();
+        const action = String(this.action || '');
+        const okAction = /\/api\/usuarios\/[a-fA-F0-9]{24}\/update/.test(action);
+        if (!id || !okAction) {
+          e.preventDefault();
+          if (typeof window.showAlert === 'function') window.showAlert('Selecione um usuário para editar antes de salvar.', 'warning');
+          else alert('Selecione um usuário para editar antes de salvar.');
+          return false;
+        }
+      } catch(_){ /* noop */ }
+    });
+
+    // Hover desabilitado: manter apenas clique para abrir/fechar dropdown (padrão Bootstrap)
+
+    // Carregamento dinâmico de funcionários baseado na unidade selecionada
+    const unidadeSelect = document.getElementById('unidadeSelect');
+
+    async function carregarFuncionariosDisponiveis(unidadeId) {
+      if (!unidadeId) {
+        funcionarioSelect.innerHTML = '<option value="">-- Selecione uma unidade primeiro --</option>';
+        return;
+      }
+
+      try {
+        // Mostrar loading
+        funcionarioSelect.innerHTML = '<option value="">Carregando...</option>';
+
+    const response = await fetch(basePath + '/api/funcionarios/disponiveis/' + unidadeId);
+        const data = await response.json();
+
+        if (data.success) {
+          let options = '<option value="">-- Nenhum --</option>';
+
+          if (data.funcionarios && data.funcionarios.length > 0) {
+            data.funcionarios.forEach(func => {
+              options += `<option value="${func._id}">${func.nome} - ${func.cpf}</option>`;
+            });
+          } else {
+            options += '<option value="" disabled>Nenhum funcionário disponível nesta unidade</option>';
+          }
+
+          funcionarioSelect.innerHTML = options;
+        } else {
+          console.error('Erro ao carregar funcionários:', data.error);
+          funcionarioSelect.innerHTML = '<option value="">Erro ao carregar funcionários</option>';
+        }
+      } catch (error) {
+        console.error('Erro na requisição:', error);
+        funcionarioSelect.innerHTML = '<option value="">Erro ao carregar funcionários</option>';
+      }
+    }
+
+    // Event listener para mudança na unidade
+    unidadeSelect.addEventListener('change', function() {
+      const unidadeId = this.value;
+      carregarFuncionariosDisponiveis(unidadeId);
+    });
+
+    // Funcionalidade para o modal de edição
+    const editUserUnidade = document.getElementById('editUserUnidade');
+    const editUserFuncionario = document.getElementById('editUserFuncionario');
+
+    async function carregarFuncionariosDisponiveisEdicao(unidadeId, funcionarioAtual = null) {
+      if (!unidadeId) {
+        editUserFuncionario.innerHTML = '<option value="">-- Selecione uma unidade primeiro --</option>';
+        return;
+      }
+
+      try {
+        // Mostrar loading
+        editUserFuncionario.innerHTML = '<option value="">Carregando...</option>';
+
+        let url = basePath + '/api/funcionarios/disponiveis/' + unidadeId;
+        if (funcionarioAtual) url += '?include=' + encodeURIComponent(funcionarioAtual);
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success) {
+          let options = '<option value="">-- Nenhum --</option>';
+
+          if (data.funcionarios && data.funcionarios.length > 0) {
+            data.funcionarios.forEach(func => {
+              const selected = funcionarioAtual === func._id ? ' selected' : '';
+              options += `<option value="${func._id}"${selected}>${func.nome} - ${func.cpf}</option>`;
+            });
+          } else {
+            options += '<option value="" disabled>Nenhum funcionário disponível nesta unidade</option>';
+          }
+
+          editUserFuncionario.innerHTML = options;
+        } else {
+          console.error('Erro ao carregar funcionários:', data.error);
+          editUserFuncionario.innerHTML = '<option value="">Erro ao carregar funcionários</option>';
+        }
+      } catch (error) {
+        console.error('Erro na requisição:', error);
+        editUserFuncionario.innerHTML = '<option value="">Erro ao carregar funcionários</option>';
+      }
+    }
+
+    // Event listener para mudança na unidade no modal de edição
+    editUserUnidade.addEventListener('change', function() {
+      const unidadeId = this.value;
+      carregarFuncionariosDisponiveisEdicao(unidadeId);
+    });
+
+    // Função para mostrar alertas bonitos
+    function showAlert(message, type = 'error') {
+      // Remover alertas existentes
+      const existingAlerts = document.querySelectorAll('.custom-alert');
+      existingAlerts.forEach(alert => alert.remove());
+
+      // Criar novo alerta
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'custom-alert';
+
+      let bgColor, icon, title;
+      switch(type) {
+        case 'success':
+          bgColor = '#28a745';
+          icon = '✅';
+          title = 'Sucesso';
+          break;
+        case 'warning':
+          bgColor = '#ffc107';
+          icon = '⚠️';
+          title = 'Atenção';
+          break;
+        case 'info':
+          bgColor = '#17a2b8';
+          icon = 'ℹ️';
+          title = 'Informação';
+          break;
+        default: // error
+          bgColor = '#dc3545';
+          icon = '❌';
+          title = 'Erro';
+      }
+
+      alertDiv.style.cssText = `
+        background: ${bgColor};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 100%;
+        border-left: 4px solid rgba(255,255,255,0.3);
+        animation: slideInDown 0.3s ease-out;
+        margin-bottom: 15px;
+      `;
+
+      alertDiv.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <span style="font-size: 20px; line-height: 1; flex-shrink: 0;">${icon}</span>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; margin-bottom: 4px; font-size: 16px;">${title}</div>
+            <div style="font-size: 14px; line-height: 1.4; opacity: 0.95;">${message}</div>
+          </div>
+          <button onclick="this.parentElement.parentElement.remove()" style="
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 0;
+            opacity: 0.8;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: -2px;
+            transition: opacity 0.2s;
+          " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">&times;</button>
+        </div>
+      `;
+
+      // Adicionar ao contêiner específico
+      const container = document.getElementById('alerts-container');
+      if (container) {
+        container.appendChild(alertDiv);
+      } else {
+        // Fallback para body se o contêiner não existir
+        alertDiv.style.cssText += `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 10000;
+          min-width: 300px;
+          max-width: 400px;
+        `;
+        document.body.appendChild(alertDiv);
+      }
+
+      // Adicionar animação CSS
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideInDown {
+          from {
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .custom-alert {
+          transition: all 0.3s ease-out;
+        }
+        .custom-alert.fade-out {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      `;
+      if (!document.head.querySelector('style[data-alert-styles]')) {
+        style.setAttribute('data-alert-styles', 'true');
+        document.head.appendChild(style);
+      }
+
+      // Auto-remover após 8 segundos
+      setTimeout(() => {
+        if (alertDiv.parentNode) {
+          alertDiv.classList.add('fade-out');
+          setTimeout(() => {
+            if (alertDiv.parentNode) {
+              alertDiv.remove();
+            }
+          }, 300);
+        }
+      }, 8000);
+    }
+
+    // Helper: modal de confirmação de vinculação (Promise-based)
+    function confirmarVinculoFuncionario(funcionario, matchType){
+      return new Promise(resolve => {
+        try {
+          const modalEl = document.getElementById('modalMatchFuncionario');
+          const resumo = document.getElementById('matchFuncionarioResumo');
+          const aviso = document.getElementById('matchFuncionarioAviso');
+          aviso.classList.add('d-none'); aviso.textContent='';
+          const cpfFmt = (window.WDMasks && funcionario?.cpf) ? window.WDMasks.formatCPF(funcionario.cpf) : (funcionario?.cpf || '-');
+          const linha1 = `<strong>${(funcionario?.nome||'Funcionário')}</strong>`;
+          const linha2 = `CPF: ${cpfFmt}${funcionario?.email? ' · E-mail: ' + funcionario.email : ''}`;
+          const linha3 = matchType ? `<span class="badge text-bg-secondary">match: ${matchType}</span>` : '';
+          resumo.innerHTML = `${linha1}<br><small>${linha2}</small><div class="mt-1">${linha3}</div>`;
+
+          const modal = new bootstrap.Modal(modalEl);
+          const btnOk = document.getElementById('btnConfirmarMatch');
+          const btnCancel = document.getElementById('btnCancelarMatch');
+
+          const onOk = ()=>{ cleanup(); resolve(true); };
+          const onCancel = ()=>{ cleanup(); resolve(false); };
+          function onHide(){ cleanup(); resolve(false); }
+          function cleanup(){
+            btnOk.removeEventListener('click', onOk);
+            btnCancel.removeEventListener('click', onCancel);
+            modalEl.removeEventListener('hidden.bs.modal', onHide);
+          }
+
+          btnOk.addEventListener('click', onOk);
+          btnCancel.addEventListener('click', onCancel);
+          modalEl.addEventListener('hidden.bs.modal', onHide);
+          modal.show();
+        } catch(_e){ resolve(false); }
+      });
+    }
+
+    // Função para submeter formulário via AJAX (com pré-checagem de Funcionário correspondente)
+    window.submitUsuarioForm = async function(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const btnSubmit = document.getElementById('btnSubmitUsuario');
+      const spinner = btnSubmit.querySelector('.spinner-border');
+
+  // Mostrar loading
+  btnSubmit.disabled = true;
+  spinner.classList.remove('d-none');
+
+  // Helper para encerrar estado de loading em early-returns
+  const stopLoading = () => { try { btnSubmit.disabled = false; spinner.classList.add('d-none'); } catch(_){} };
+
+      try {
+        // Coletar dados do formulário manualmente
+        const formData = new FormData(form);
+        const data = {};
+
+        for (let [key, value] of formData.entries()) {
+          // Converter valores vazios para null quando apropriado
+          if (value === '' && ['unidade_id', 'funcionario_id'].includes(key)) {
+            data[key] = null;
+          } else {
+            data[key] = value;
+          }
+        }
+
+        // Validação básica de e-mail (o atributo required do HTML não é acionado pois interceptamos o submit)
+        const emailVal = (data.email || '').trim().toLowerCase();
+        if (!emailVal) {
+          showAlert('E-mail é obrigatório.', 'warning');
+          stopLoading();
+          return false;
+        }
+        data.email = emailVal;
+
+        // Validação: unidade obrigatória para user e diretor
+        const userRole = data.role;
+        const unidadeId = data.unidade_id;
+
+        if ((userRole === 'user' || userRole === 'diretor') && (!unidadeId || unidadeId === '')) {
+          showAlert('Para usuários e diretores, é obrigatório selecionar uma unidade vinculada.', 'warning');
+          stopLoading();
+          return false;
+        }
+
+        // Validação de CPF (se informado)
+        if (data.cpf && window.WDMasks && !window.WDMasks.isValidCPF(data.cpf)) {
+          showAlert('CPF inválido. Corrija o CPF antes de continuar.', 'warning');
+          stopLoading();
+          return false;
+        }
+
+        // Lógica para senha inicial
+        const senhaInicial = data.senha;
+        const criarNovoFuncionario = data.criarNovoFuncionario === 'on';
+        const funcionarioId = data.funcionario_id;
+
+        // Se senha estiver vazia OU se for criado a partir de funcionário, gerar senha automaticamente
+        if (!senhaInicial || senhaInicial.trim() === '' || (funcionarioId && !criarNovoFuncionario)) {
+          data.senha = gerarSenha(8);
+          console.log('Senha provisória gerada automaticamente:', data.senha);
+        } else {
+          // Validar senha fornecida manualmente
+          const senhaFornecida = senhaInicial.trim();
+          if (senhaFornecida.length < 6) {
+            showAlert('A senha deve ter pelo menos 6 caracteres.', 'warning');
+            stopLoading();
+            return false;
+          }
+          data.senha = senhaFornecida;
+          console.log('Usando senha inicial fornecida pelo usuário');
+        }
+
+        // Pré-checagem: se não foi escolhido um funcionario_id explicitamente, mas há CPF+unidade ou e-mail,
+        // consultar endpoint de match e oferecer opção de vincular
+        const emailNorm = (data.email || '').toLowerCase();
+        const cpfDigits = (data.cpf || '').replace(/\D/g,'');
+        const canPrecheck = (!data.funcionario_id || data.funcionario_id === '') && ((cpfDigits && unidadeId) || emailNorm);
+        if (canPrecheck) {
+          try {
+            const qs = new URLSearchParams();
+            if (cpfDigits) qs.set('cpf', cpfDigits);
+            if (unidadeId) qs.set('unidade_id', unidadeId);
+            if (emailNorm) qs.set('email', emailNorm);
+            const resMatch = await fetch(basePath + '/api/funcionarios/match?' + qs.toString(), { headers: { 'X-Requested-With':'XMLHttpRequest' } });
+            let matchJson = null; try { matchJson = await resMatch.json(); } catch(_){ matchJson = null; }
+            const payload = matchJson && (matchJson.data || matchJson); // compat: ok() envolve em {success,data}
+            if (resMatch.ok && payload?.exists && payload?.funcionario) {
+              if (payload.canLink) {
+                const aceitar = await confirmarVinculoFuncionario(payload.funcionario, payload.matchType);
+                if (!aceitar) {
+                  // Usuário optou por não vincular; cancelar criação
+                  showAlert('Criação cancelada pelo operador.', 'info');
+                  stopLoading();
+                  return false;
+                }
+                // Vincular: força funcionario_id e desmarca criação de novo funcionário
+                data.funcionario_id = payload.funcionario._id;
+                if (data.criarNovoFuncionario) delete data.criarNovoFuncionario;
+              } else {
+                showAlert('Já existe um Funcionário correspondente, porém ele já está vinculado a outro usuário.', 'warning');
+                stopLoading();
+                return false;
+              }
+            }
+          } catch (e) {
+            console.warn('[precheck match] falhou:', e);
+            // Em caso de falha na checagem, seguir fluxo normal
+          }
+        }
+
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+  let result = null;
+  try { result = await response.json(); } catch(_e){ result = null; }
+
+        if (response.ok) {
+          // Sucesso - mostrar mensagem e recarregar página
+          showAlert('Usuário criado com sucesso!', 'success');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          // Erro - mostrar mensagem específica baseada no tipo de erro
+          let errorMessage = 'Erro desconhecido ao criar usuário';
+          const serverCode = result && (result.code || result.errorCode || result.error_code);
+          const serverMsg = result && (result.error || result.message);
+          console.warn('[usuarios][criarUsuario] 400/erro', { status: response.status, code: serverCode, serverMsg, payload: result });
+          if (serverMsg) {
+            // Mapear mensagens de erro específicas com verificação mais precisa
+            const errorText = String(serverMsg).toLowerCase();
+
+            if (serverCode === 'EMAIL_REQUIRED' || errorText.includes('email obrigatório') || errorText.includes('e-mail obrigatório')) {
+              errorMessage = 'E-mail é obrigatório';
+            } else if (serverCode === 'EMAIL_DUPLICATE' || errorText.includes('usuário já cadastrado') || errorText.includes('usuário já existe') || errorText.includes('email já cadastrado')) {
+              errorMessage = 'Este e-mail já está cadastrado para outro usuário';
+            } else if (serverCode === 'UNIT_REQUIRED' || errorText.includes('unidade é obrigatória') || errorText.includes('campo obrigatório para usuários e diretores')) {
+              errorMessage = 'Selecione uma unidade para usuários e diretores';
+            } else if (serverCode === 'CPF_REQUIRED' || errorText.includes('cpf é obrigatório')) {
+              errorMessage = 'Informe um CPF válido para criar o funcionário automaticamente';
+            } else if (errorText.includes('cpf já cadastrado')) {
+              errorMessage = 'Este CPF já está cadastrado para outro usuário nesta unidade';
+            } else if (errorText.includes('falha ao criar usuário') || errorText.includes('erro interno')) {
+              errorMessage = 'Erro interno do servidor. Tente novamente em alguns instantes';
+            } else {
+              // Usar a mensagem de erro do servidor se não for uma das específicas
+              errorMessage = serverMsg;
+            }
+          }
+
+          showAlert(errorMessage, 'error');
+        }
+      } catch (error) {
+        console.error('Erro na requisição:', error);
+        showAlert('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
+      } finally {
+        // Esconder loading
+        btnSubmit.disabled = false;
+        spinner.classList.add('d-none');
+      }
+
+      return false;
+    };
+
+    // Expor função global para testes (remover em produção)
+    window.showAlert = showAlert;
+
+    // Exemplo de uso (descomente para testar):
+    // setTimeout(() => showAlert('Este é um exemplo de alerta de erro!', 'error'), 1000);
+    // setTimeout(() => showAlert('Este é um exemplo de alerta de sucesso!', 'success'), 3000);
+    // setTimeout(() => showAlert('Este é um exemplo de alerta de informação!', 'info'), 5000);
+
+  });
+  </script>
+
+  <style>
+  /* Scroll-limit padrão Unidades */
+  #wrapperTabelaUsuarios.scroll-limit{ max-height:360px; overflow-y:auto; }
+  #wrapperTabelaUsuarios.scroll-limit thead th{ position:sticky; top:0; background:#f8f9fa; z-index:2; box-shadow:0 1px 0 rgba(0,0,0,.06); }
+  </style>
+
+  <!-- Script de perfil modular -->
+  <script>window.__perfilBasePath='<%= _basePath %>';</script>
+  <script src="<%= _basePath %>/js/perfil-modulo.js"></script>
+</body>
+</html>

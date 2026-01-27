@@ -1,0 +1,27 @@
+<link rel="stylesheet" href="/gestor/css/icons.css">
+<style>
+  :root{ --wd-hero-height: 160px; }
+  /* Mantém altura fixa mesmo em telas menores (sem reduzir) */
+  @media (max-width: 992px){ :root{ --wd-hero-height: 160px; } }
+  @media (max-width: 576px){ :root{ --wd-hero-height: 160px; } }
+  .hero-wd{
+    position:relative; overflow:hidden; z-index:1;
+    height: var(--wd-hero-height); /* altura fixa do cabeçalho */
+    /* Fundo neutro caso a imagem não carregue */
+    background: #f8f9fa;
+  }
+  .hero-wd .hero-bg{
+    position:absolute; inset:0; display:block;
+    width:100%; height:100%;
+    object-fit: cover; /* ocupa toda a área do header, cortando lateralmente quando necessário */
+    object-position: left center; /* mantém foco à esquerda (logo visível) */
+    opacity:1; filter:none;
+  }
+</style>
+
+<header class="hero-wd" role="banner" aria-label="Cabeçalho WDGestor">
+  <!-- nova arte; sem fallback para cabecalho.jpg -->
+  <img src="/images/cabecalho.png"
+    alt="Cabeçalho WDGestor" class="hero-bg"
+    onerror="this.remove()"> <!-- se faltar a imagem, fica o fundo neutro -->
+</header>

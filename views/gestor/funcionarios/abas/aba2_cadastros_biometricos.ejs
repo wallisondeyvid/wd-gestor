@@ -1,0 +1,357 @@
+<div class="tab-pane fade" id="aba2" role="tabpanel" aria-labelledby="tab-aba2">
+  <div class="card mb-3">
+    <div class="card-header text-center fw-bold">Cadastros Biométricos</div>
+    <div class="card-body">
+
+      <!-- Orientação de instalação do FingerprintAgent (Windows) -->
+      <div class="alert alert-secondary" role="alert">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>
+            <div class="fw-semibold mb-1">Captura de biometria digital neste computador</div>
+            <div class="small text-muted">
+              Para usar o leitor de digitais, é necessário instalar o aplicativo FingerprintAgent. Ele permite que este sistema se comunique com o leitor de forma segura no seu computador.
+            </div>
+            <ol class="small mt-2 mb-0 ps-3">
+              <li>Clique em “Baixar FingerprintAgent (Windows x64)” e conclua a instalação.</li>
+              <li>Após instalar, recarregue esta página.</li>
+              <li>Use “Testar conexão” para verificar se o agente está ativo.</li>
+              <li>Com o agente ativo, use “Capturar / Revisar” para registrar as digitais.</li>
+            </ol>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-sm btn-primary" target="_blank" rel="noopener" href="<%= (typeof basePath==='string'&&basePath?basePath:'/gestor') + '/downloads/fingerprint-agent' %>">
+              Baixar FingerprintAgent (Windows x64)
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnTestarAgente" title="Verificar se o agente está em execução neste computador">
+              <span class="btn-label">Testar conexão</span>
+              <span class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info mb-3" role="alert">
+        Selecione o funcionário na lista de cadastrados e clique em editar para realizar os cadastramentos biométricos.
+      </div>
+
+      <div class="row g-3">
+        <!-- Foto 3x4 -->
+        <div class="col-md-4">
+          <label class="form-label no-colon d-flex align-items-center justify-content-between">
+            <span>Foto 3x4</span>
+            <span class="badge bg-secondary" style="font-weight:500">1 arquivo</span>
+          </label>
+          <div class="face-bio-wrapper border rounded p-2 foto-wrapper text-center">
+            <input type="file" name="foto" id="foto" accept="image/*" class="form-control form-control-sm mb-2" />
+            <div class="foto3x4-slot face-bio-slot mx-auto mb-2" style="width:130px" id="foto3x4Slot">
+              <div class="slot-thumb" id="foto3x4Thumb"><span>Vazio</span></div>
+              <div class="slot-meta"><span class="slot-label">Atual</span><code class="slot-hash" id="foto3x4Info">—</code></div>
+            </div>
+            <div class="d-flex justify-content-center gap-2 mb-2">
+              <button type="button" class="btn btn-sm btn-outline-danger d-none" id="btnExcluirFoto" title="Excluir foto atual">Excluir</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnVerFoto" data-bs-toggle="modal" data-bs-target="#modalFotoFuncionario">Ver</button>
+            </div>
+            <div class="small text-muted" id="foto_legenda_arquivo"></div>
+          </div>
+        </div>
+
+        <!-- Biométrica Digital (10 slots) -->
+        <div class="col-md-4">
+          <label class="form-label no-colon d-flex align-items-center justify-content-between">
+            <span>Padrão Biométrico Digital</span>
+            <span class="badge bg-secondary" style="font-weight:500">10 capturas</span>
+          </label>
+          <div class="face-bio-wrapper border rounded p-2 text-center" id="fpWrapper">
+            <input name="biometrico" id="hash_biometria_digital" class="form-control form-control-sm mb-2 text-center" readonly placeholder="hash1|hash2|…|hash10" style="font-family:monospace">
+            <div class="d-flex justify-content-center gap-2 flex-wrap mb-2">
+              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalBiometriaDigitalPro" id="btnAbrirModalDigital">Capturar / Revisar</button>
+              <button type="button" class="btn btn-sm btn-outline-warning" id="btnLimparDigital">Limpar</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCopiarDigitalHashes" title="Copiar hashes">Copiar</button>
+              <span class="face-bio-status small text-muted" id="fpStatusResumo">Aguardando</span>
+            </div>
+            <div class="fp-bio-slots grid-10 mb-2 mx-auto" id="fpBioSlots" style="max-width:390px">
+              <% for (let i=0;i<10;i++){ %>
+              <div class="face-bio-slot fp-slot" data-slot="<%= i %>">
+                <div class="slot-thumb"><span><%= i+1 %></span></div>
+                <div class="slot-meta"><span class="slot-label">Dedo <%= i+1 %></span><code class="slot-hash">—</code></div>
+              </div>
+              <% } %>
+            </div>
+            <div class="small text-muted" id="fpHashesResumo" style="font-family:monospace"></div>
+          </div>
+        </div>
+
+        <!-- Hiddens da digital -->
+        <input type="hidden" id="fp_template_b64"    name="fp_template_b64">
+        <input type="hidden" id="fp_template_sha256" name="fp_template_sha256">
+        <input type="hidden" id="fp_imagem"          name="fp_imagem">
+        <input type="hidden" id="fp_dedo"            name="fp_dedo">
+  <input type="hidden" id="fp_capturas_json"   name="fp_capturas_json" value="">
+
+        <!-- Hidden para exclusão da foto -->
+        <input type="hidden" id="excluir_foto" name="excluir_foto" value="false">
+
+        <!-- Biométrica Facial -->
+        <div class="col-md-4">
+          <label class="form-label no-colon d-flex align-items-center justify-content-between">
+            <span>Padrão Biométrico Facial</span>
+            <span class="badge bg-secondary" style="font-weight:500">3 capturas</span>
+          </label>
+          <div class="face-bio-wrapper border rounded p-2 text-center">
+            <input name="biometrico_face" id="hash_biometria_facial" class="form-control form-control-sm mb-2 text-center" readonly placeholder="hash1|hash2|hash3" style="font-family:monospace">
+            <div class="d-flex justify-content-center gap-2 flex-wrap mb-2">
+              <button type="button" class="btn btn-sm btn-primary" id="btnAbrirModalFacial" data-bs-toggle="modal" data-bs-target="#modalBiometriaFacial">Cadastrar / Revisar</button>
+              <button type="button" class="btn btn-sm btn-outline-warning" id="btnLimparFacialCampo">Limpar</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCopiarFacialHashes" title="Copiar hashes">Copiar</button>
+              <span class="face-bio-status small text-muted" id="faceBioStatusResumo">Aguardando</span>
+            </div>
+            <div class="face-bio-slots d-flex gap-2 mb-2 justify-content-center" id="faceBioSlots" style="max-width:360px;margin:0 auto">
+              <div class="face-bio-slot" data-slot="0">
+                <div class="slot-thumb"></div>
+                <div class="slot-meta"><span class="slot-label">Frontal</span><code class="slot-hash">—</code></div>
+              </div>
+              <div class="face-bio-slot" data-slot="1">
+                <div class="slot-thumb"></div>
+                <div class="slot-meta"><span class="slot-label">Direita</span><code class="slot-hash">—</code></div>
+              </div>
+              <div class="face-bio-slot" data-slot="2">
+                <div class="slot-thumb"></div>
+                <div class="slot-meta"><span class="slot-label">Esquerda</span><code class="slot-hash">—</code></div>
+              </div>
+            </div>
+            <div class="face-bio-foot small text-muted" style="font-family:monospace" id="faceHashesResumo"></div>
+          </div>
+        </div>
+
+        <!-- Hiddens da face -->
+        <input type="hidden" id="face_template_b64"    name="face_template_b64">
+        <input type="hidden" id="face_template_sha256" name="face_template_sha256">
+        <input type="hidden" id="face_imagem"          name="face_imagem">
+  <input type="hidden" id="face_capturas_json"   name="face_capturas_json" value="">
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal da foto 3x4 -->
+  <div class="modal fade modal-zoom" id="modalFotoFuncionario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:90vw">
+      <div class="modal-content bg-transparent border-0 shadow-none">
+        <img id="modal_foto_img"
+             alt="Foto 3x4"
+             class="img-fluid rounded"
+             style="max-height:85vh; display:block; margin:auto; transition:transform .2s; cursor:zoom-in;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Esconde a miniatura quando não houver src válido */
+  #preview_foto_funcionario:not([src]),
+  #preview_foto_funcionario[src=""],
+  #preview_foto_funcionario[src="#"] { display: none !important; }
+
+  /* Zoom no modal */
+  #modal_foto_img.zoomed { transform: scale(1.5); cursor: zoom-out; }
+
+  /* Modal de teste do agente – estilo caprichado */
+  .fp-health-modal .modal-content { border: 0; overflow: hidden; }
+  .fp-health-hero {
+    background: linear-gradient(135deg, #0d6efd 0%, #20c997 100%);
+    padding: 20px 18px; color: #fff;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .fp-health-hero .icon { width: 48px; height: 48px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.15); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.25); }
+  .fp-health-hero .icon svg { width: 28px; height: 28px; color: #fff; }
+  .fp-health-body { padding: 18px; }
+  .fp-health-ok { color: #198754; }
+  .fp-health-bad { color: #dc3545; }
+  .fp-health-details code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+</style>
+
+<script>
+(() => {
+  const fileInput = document.getElementById('foto');
+  const preview   = document.getElementById('preview_foto_funcionario');
+  const legend    = document.getElementById('foto_legenda_arquivo');
+  const modalEl   = document.getElementById('modalFotoFuncionario');
+  const modalImg  = document.getElementById('modal_foto_img');
+
+  let objectURL = null;
+
+  function clearPreview() {
+    if (objectURL) { URL.revokeObjectURL(objectURL); objectURL = null; }
+    preview && (preview.src = '');
+    preview && preview.classList.add('d-none');
+    legend && (legend.textContent = '');
+    modalImg && (modalImg.src = '');
+    modalImg && modalImg.classList.remove('zoomed');
+    const thumbSlot = document.getElementById('foto3x4Thumb');
+    if (thumbSlot){ thumbSlot.innerHTML = '<span>Vazio</span>'; }
+    const info = document.getElementById('foto3x4Info');
+    if (info){ info.textContent='—'; info.removeAttribute('title'); }
+    btnExcluirFoto?.classList.add('d-none');
+    document.getElementById('btnVerFoto')?.classList.add('d-none');
+  }
+
+  function setPreviewFromURL(url, labelText = '') {
+    if (!url) return clearPreview();
+    preview && (preview.src = url);
+    preview && preview.classList.remove('d-none');
+    legend && (legend.textContent = labelText);
+    modalImg && (modalImg.src = url);
+    modalImg && modalImg.classList.remove('zoomed');
+    const thumbSlot = document.getElementById('foto3x4Thumb');
+    if (thumbSlot){
+      thumbSlot.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = url; img.alt='Foto 3x4';
+      img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
+      thumbSlot.appendChild(img);
+      const info = document.getElementById('foto3x4Info');
+      if (info){ info.textContent = (labelText||'').slice(0,12) || 'OK'; info.title = labelText; }
+    }
+    // Mostrar botões
+    btnExcluirFoto?.classList.remove('d-none');
+    const btnVer = document.getElementById('btnVerFoto');
+    btnVer?.classList.remove('d-none');
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return clearPreview();
+    if (objectURL) { URL.revokeObjectURL(objectURL); objectURL = null; }
+    objectURL = URL.createObjectURL(file);
+    setPreviewFromURL(objectURL, file.name);
+  }
+
+  // Clique na imagem do modal: alterna zoom
+  modalImg?.addEventListener('click', () => {
+    modalImg.classList.toggle('zoomed');
+  });
+  // Ao abrir, começa sem zoom
+  modalEl?.addEventListener('shown.bs.modal', () => {
+    modalImg.classList.remove('zoomed');
+  });
+  // Ao fechar, remove zoom (e não mexe no preview)
+  modalEl?.addEventListener('hidden.bs.modal', () => {
+    modalImg.classList.remove('zoomed');
+  });
+
+  // Input de arquivo
+  fileInput?.addEventListener('change', handleFileChange);
+
+  // Botão de excluir foto
+  const btnExcluirFoto = document.getElementById('btnExcluirFoto');
+  const excluirFotoHidden = document.getElementById('excluir_foto');
+
+  btnExcluirFoto?.addEventListener('click', function() {
+    if (confirm('Tem certeza que deseja excluir a foto atual? Esta ação não pode ser desfeita.')) {
+      // Limpar preview
+      clearPreview();
+
+      // Limpar o input file
+      fileInput.value = '';
+
+      // Marcar para exclusão no backend
+      if (excluirFotoHidden) {
+        excluirFotoHidden.value = 'true';
+      }
+
+      console.log('[FOTO] Foto marcada para exclusão');
+    }
+  });
+
+  // Reset do formulário limpa a prévia
+  document.getElementById('formFuncionario')?.addEventListener('reset', clearPreview);
+
+  // Exponho um helper global para preencher a miniatura a partir de URL já existente (edição)
+  window.__setFoto3x4FromURL = setPreviewFromURL;
+})();
+
+// ===== Teste do agente (modal bonito) =====
+(function(){
+  const btn = document.getElementById('btnTestarAgente');
+  if (!btn) return;
+  const spinner = btn.querySelector('.spinner-border');
+
+  function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstChild; }
+
+  // Cria modal sob demanda para evitar poluir o DOM inicial
+  let modalEl = null; let modalInst = null; let heroIconOk, heroIconBad, msgTitle, msgText, detailsWrap;
+  function ensureModal(){
+    if (modalEl) return modalEl;
+    const markup = `
+    <div class="modal fade fp-health-modal" id="modalAgenteSaude" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="fp-health-hero">
+            <div class="icon" id="healthIconOk" aria-hidden="true" style="display:none">${okSvg()}</div>
+            <div class="icon" id="healthIconBad" aria-hidden="true" style="display:none">${badSvg()}</div>
+            <div>
+              <div class="h5 mb-0" id="healthTitle"></div>
+            </div>
+          </div>
+          <div class="fp-health-body">
+            <p class="mb-2" id="healthText"></p>
+            <div class="fp-health-details small text-muted" id="healthDetails" style="display:none"></div>
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+              <a class="btn btn-primary" href="<%= (typeof basePath==='string'&&basePath?basePath:'/gestor') + '/downloads/fingerprint-agent' %>" target="_blank" rel="noopener">Baixar FingerprintAgent</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    modalEl = el(markup);
+    document.body.appendChild(modalEl);
+    heroIconOk = modalEl.querySelector('#healthIconOk');
+    heroIconBad= modalEl.querySelector('#healthIconBad');
+    msgTitle   = modalEl.querySelector('#healthTitle');
+    msgText    = modalEl.querySelector('#healthText');
+    detailsWrap= modalEl.querySelector('#healthDetails');
+    modalInst  = (window.bootstrap && window.bootstrap.Modal) ? window.bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+    return modalEl;
+  }
+
+  function okSvg(){ return `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm-1 14.59-4.3-4.3 1.41-1.41L11 13.77l5.89-5.88 1.41 1.41Z"/></svg>`; }
+  function badSvg(){ return `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm4.24 13.66-1.41 1.41L12 13.24l-2.83 2.83-1.41-1.41L10.59 12 7.76 9.17l1.41-1.41L12 10.59l2.83-2.83 1.41 1.41L13.41 12Z"/></svg>`; }
+
+  async function testAgent(){
+    ensureModal();
+    btn.disabled = true; spinner?.classList.remove('d-none');
+    const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 5000);
+    let ok=false, data=null, errMsg='';
+    try{
+      const res = await fetch('http://127.0.0.1:17890/health', { cache:'no-store', mode:'cors', signal: ctrl.signal });
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      data = await res.json(); ok = !!data.ok;
+    }catch(e){ errMsg = (e && e.message) ? e.message : 'Falha na comunicação'; }
+    clearTimeout(t); btn.disabled=false; spinner?.classList.add('d-none');
+
+    // Monta modal
+    if (ok){
+      heroIconOk.style.display='inline-flex'; heroIconBad.style.display='none';
+      msgTitle.textContent = 'Está tudo certo!';
+      msgText.innerHTML = 'O seu computador está preparado para a captura de padrões biométricos digitais.';
+      detailsWrap.style.display = data?.version ? 'block' : 'none';
+      if (data?.version){ detailsWrap.innerHTML = `Versão do agente: <code>${escapeHtml(String(data.version))}</code>`; }
+    } else {
+      heroIconOk.style.display='none'; heroIconBad.style.display='inline-flex';
+      msgTitle.textContent = 'Não foi possível confirmar a conexão';
+      msgText.innerHTML = 'Verifique se o FingerprintAgent está instalado e em execução neste computador. Se necessário, clique em “Baixar FingerprintAgent” para instalar e tente novamente.';
+      detailsWrap.style.display = 'block';
+      detailsWrap.textContent = errMsg || 'Agente indisponível no momento.';
+    }
+    if (modalInst) modalInst.show(); else modalEl.classList.add('show');
+  }
+
+  function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[c])); }
+
+  btn.addEventListener('click', testAgent);
+})();
+</script>

@@ -1,0 +1,48 @@
+<div class="modal fade" id="modalSelecionarSetor" tabindex="-1" aria-labelledby="modalSelecionarSetorLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content modal-sheet theme-blue" id="modalSelecionarSetorContent">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalSelecionarSetorLabel">Selecionar Setor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Selecionar Unidade (grupo da unidade escolhida na aba) -->
+        <div class="mb-3">
+          <label for="modalSelectUnidadeSetor" class="form-label">Selecionar Unidade</label>
+          <select id="modalSelectUnidadeSetor" class="form-select">
+            <option value="">Selecione uma unidade...</option>
+          </select>
+          <div class="form-text">
+            Mostrando a matriz e filiais do grupo da unidade escolhida em "Unidade" (aba Identificação).
+          </div>
+        </div>
+
+        <!-- Busca -->
+        <div class="search-wrap has-icon-left mb-3">
+          <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Pesquisar" class="icon icon-sm search-icon" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary\' style=\'font-size:16px;\'\x3e\x3c/i\x3e'" />
+          <input type="text" class="form-control ps-4" id="setorPesquisa" placeholder="Buscar setor (nome/descrição)..." autocomplete="off">
+        </div>
+
+        <!-- Cabeçalho da listagem -->
+        <div class="list-header">
+          <span class="col-sel">Sel.</span>
+          <span class="col-cod">Nome</span>
+          <span class="col-desc">Descrição</span>
+        </div>
+
+        <!-- Lista -->
+        <div class="list-scroll">
+          <ul class="list-group" id="listaSetores">
+            <li class="list-group-item list-empty"><span class="col-desc">Selecione uma unidade para carregar os setores...</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnConfirmarSetor" disabled>Selecionar</button>
+      </div>
+    </div>
+  </div>
+</div>

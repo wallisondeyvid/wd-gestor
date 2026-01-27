@@ -1,0 +1,14 @@
+[
+  { "codigo": "01", "descricao": "Analfabeto" },
+  { "codigo": "02", "descricao": "Até o 5º ano incompleto do ensino fundamental (antigo primário ou 1ª a 4ª série)" },
+  { "codigo": "03", "descricao": "5º ano completo do ensino fundamental" },
+  { "codigo": "04", "descricao": "6º ao 9º ano incompleto do ensino fundamental (antigo ginásio ou 5ª a 8ª série)" },
+  { "codigo": "05", "descricao": "Ensino fundamental completo" },
+  { "codigo": "06", "descricao": "Ensino médio incompleto" },
+  { "codigo": "07", "descricao": "Ensino médio completo" },
+  { "codigo": "08", "descricao": "Educação superior incompleta" },
+  { "codigo": "09", "descricao": "Educação superior completa" },
+  { "codigo": "10", "descricao": "Pós-graduação completa – Mestrado" },
+  { "codigo": "11", "descricao": "Pós-graduação completa – Doutorado" },
+  { "codigo": "12", "descricao": "Pós-graduação completa – Especialização" }
+]

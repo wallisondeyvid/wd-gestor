@@ -1,0 +1,129 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalDetalhesPet" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content wdg-modal wdg-modal-pet-det">
+      <div class="modal-header border-0">
+        <div class="d-flex align-items-center gap-3">
+          <div class="wdg-pet-avatar" id="detPetFotoFrame">
+            <img id="detPetFoto" src="" alt="Foto do pet" class="d-none">
+            <span id="detPetFotoInicial" class="wdg-pet-avatar-initial">P</span>
+          </div>
+          <div>
+            <h5 class="modal-title fw-semibold" id="detPetNome">Detalhes do pet</h5>
+            <p class="text-muted mb-0 small" id="detPetHabInfo">Habitação não informada</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <div class="wdg-pet-hero mb-4">
+          <div class="wdg-pet-hero-photo">
+            <div class="wdg-pet-hero-frame" id="detPetHeroFrame" role="button" aria-label="Ver foto do pet" tabindex="0">
+              <img id="detPetHeroImg" src="" alt="Foto principal do pet" class="d-none">
+              <span id="detPetHeroInitial" class="wdg-pet-hero-initial">🐾</span>
+              <span id="detPetHeroAuxBadge" class="wdg-pet-hero-aux d-none">Necessidades especiais</span>
+            </div>
+          </div>
+          <div class="wdg-pet-hero-info">
+            <div class="wdg-pet-species" id="detPetEspecieLabel">Espécie não informada</div>
+            <div class="wdg-pet-subtitle" id="detPetResumo">Informações resumidas aparecerão aqui.</div>
+            <div class="wdg-pet-badges" id="detPetBadgeList"></div>
+          </div>
+        </div>
+
+        <div class="wdg-pet-card">
+          <h6 class="wdg-pet-card-title">Ficha do pet</h6>
+          <div id="detPetInfoGrid" class="wdg-pet-info-grid"></div>
+        </div>
+
+        <div class="wdg-pet-card mt-3 wdg-pet-card-left">
+          <h6 class="wdg-pet-card-title text-center">Habitação &amp; responsável</h6>
+          <ul class="wdg-pet-meta-list">
+            <li><span class="label">Habitação:</span> <span id="detPetHabResumo">—</span></li>
+            <li><span class="label">Proprietário:</span> <span id="detPetPropNome">—</span></li>
+            <li><span class="label">Contato:</span> <span id="detPetPropContato">—</span></li>
+            <li><span class="label">Criado em:</span> <span id="detPetCriado">—</span></li>
+            <li><span class="label">Atualizado em:</span> <span id="detPetAtualizado">—</span></li>
+          </ul>
+        </div>
+
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wdg-modal-pet-det .modal-header{padding:1.25rem 1.5rem 0;}
+  .wdg-modal-pet-det .modal-header > .d-flex{width:auto;flex:1;flex-direction:row;align-items:center;justify-content:flex-start;text-align:left;}
+  .wdg-modal-pet-det .modal-title{width:auto;text-align:left;}
+  .wdg-modal-pet-det .modal-body{padding:1rem 1.5rem 1.2rem;background:linear-gradient(180deg,#f7f9ff 0,#ffffff 160px);} 
+  .wdg-modal-pet-det .wdg-pet-avatar{width:60px;height:60px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#0d6efd,#67a6ff);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(13,110,253,.25);} 
+  .wdg-modal-pet-det .wdg-pet-avatar img{width:100%;height:100%;object-fit:cover;} 
+  .wdg-modal-pet-det .wdg-pet-avatar-initial{font-size:1.5rem;font-weight:700;color:#fff;} 
+  .wdg-modal-pet-det .wdg-pet-hero{display:flex;gap:1.5rem;flex-wrap:wrap;background:linear-gradient(135deg,#eef4ff,#ffffff);border:1px solid rgba(13,110,253,.12);border-radius:18px;padding:1.25rem;box-shadow:0 12px 32px rgba(14,74,161,.12);} 
+  .wdg-modal-pet-det .wdg-pet-hero-photo{width:180px;max-width:100%;} 
+  .wdg-modal-pet-det .wdg-pet-hero-frame{position:relative;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#dbe8ff,#f5f8ff);min-height:200px;display:flex;align-items:center;justify-content:center;cursor:zoom-in;} 
+  .wdg-modal-pet-det .wdg-pet-hero-frame img{width:100%;height:100%;object-fit:cover;} 
+  .wdg-modal-pet-det .wdg-pet-hero-initial{font-size:3.5rem;color:#0b3c84;opacity:.4;} 
+  .wdg-modal-pet-det .wdg-pet-hero-aux{position:absolute;top:12px;left:12px;padding:.25rem .6rem;border-radius:999px;background:#fde68a;color:#7c2d12;font-size:.75rem;font-weight:600;box-shadow:0 6px 18px rgba(124,45,18,.25);} 
+  .wdg-modal-pet-det .wdg-pet-hero-info{flex:1;min-width:220px;display:flex;flex-direction:column;gap:.75rem;text-align:left;align-items:flex-start;}
+  .wdg-modal-pet-det .wdg-pet-species{text-transform:uppercase;font-size:.8rem;letter-spacing:.14em;color:#0d6efd;font-weight:700;text-align:left;}
+  .wdg-modal-pet-det .wdg-pet-subtitle{font-size:1.15rem;font-weight:600;color:#0f172a;text-align:left;}
+  .wdg-modal-pet-det .wdg-pet-badges{display:flex;flex-wrap:wrap;gap:.45rem;justify-content:flex-start;}
+  .wdg-modal-pet-det .wdg-pet-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .75rem;border-radius:12px;background:rgba(13,110,253,.08);color:#0f172a;font-weight:600;font-size:.85rem;} 
+  .wdg-modal-pet-det .wdg-pet-card{background:#fff;border-radius:16px;border:1px solid rgba(13,110,253,.12);padding:1.25rem;box-shadow:0 12px 30px rgba(15,23,42,.08);text-align:center;}
+  .wdg-modal-pet-det .wdg-pet-card-left{text-align:left;}
+  .wdg-modal-pet-det .wdg-pet-card-title{font-size:.9rem;font-weight:700;color:#0f172a;letter-spacing:.02em;text-transform:uppercase;letter-spacing:.16em;margin-bottom:.75rem;text-align:center;} 
+  .wdg-modal-pet-det .wdg-pet-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.9rem;align-items:start;max-width:780px;margin:0 auto;text-align:left;}
+  .wdg-modal-pet-det .wdg-pet-info-item{background:none;border:none;padding:.35rem .4rem;border-radius:10px;display:flex;flex-direction:column;gap:.3rem;align-items:flex-start;text-align:left;width:100%;min-height:auto;box-shadow:none;}
+  .wdg-modal-pet-det .wdg-pet-info-item .label{text-transform:uppercase;font-size:.68rem;letter-spacing:.14em;color:#2563eb;font-weight:600;}
+  .wdg-modal-pet-det .wdg-pet-info-item .value{font-size:1rem;font-weight:600;color:#0f172a;}
+  .wdg-modal-pet-det .wdg-pet-meta-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.6rem;}
+  .wdg-modal-pet-det .wdg-pet-meta-list .label{font-weight:600;color:#1e3a8a;text-transform:uppercase;font-size:.7rem;letter-spacing:.12em;margin-right:.4rem;}
+  .wdg-modal-pet-det .wdg-pet-meta-list li{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;}
+  .wdg-modal-pet-det .wdg-pet-meta-list .wdg-pet-wa-icon{margin-left:.35rem;font-size:1rem;vertical-align:middle;}
+  .wdg-modal-pet-det .wdg-pet-meta-list .wdg-pet-mail{color:#0f172a;font-weight:600;}
+  .wdg-modal-pet-det .wdg-pet-chip-list{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;} 
+  .wdg-modal-pet-det .wdg-pet-chip{padding:.35rem .75rem;background:rgba(16,185,129,.1);color:#047857;border-radius:999px;font-size:.78rem;font-weight:600;} 
+  .wdg-modal-pet-det .wdg-pet-chip[data-tone="alert"]{background:rgba(244,63,94,.12);color:#b91c1c;} 
+  .wdg-modal-pet-det .wdg-pet-chip[data-tone="info"]{background:rgba(14,165,233,.12);color:#0369a1;} 
+  .wdg-modal-pet-det .wdg-pet-chip[data-tone="calm"]{background:rgba(16,185,129,.12);color:#047857;} 
+  .wdg-modal-pet-det .wdg-pet-saude-list{display:grid;gap:.75rem;} 
+  .wdg-modal-pet-det .wdg-pet-saude-section{background:rgba(13,110,253,.06);border-radius:12px;padding:.75rem;text-align:center;} 
+  .wdg-modal-pet-det .wdg-pet-saude-title{font-size:.75rem;text-transform:uppercase;letter-spacing:.14em;color:#0d47a1;font-weight:700;margin-bottom:.35rem;text-align:center;} 
+  .wdg-modal-pet-det .wdg-pet-saude-items{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;} 
+  .wdg-modal-pet-det .wdg-pet-saude-pill{padding:.3rem .65rem;border-radius:999px;background:#fff;color:#0f172a;font-size:.78rem;font-weight:600;box-shadow:0 6px 16px rgba(15,23,42,.12);} 
+  .wdg-modal-pet-det .wdg-pet-docs{display:flex;flex-wrap:wrap;gap:.5rem;} 
+  .wdg-modal-pet-det .wdg-pet-badge i{font-size:.95rem;color:#0d47a1;} 
+  .wdg-modal-pet-det .wdg-pet-doc-link{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .85rem;border-radius:12px;background:rgba(14,165,233,.12);color:#0369a1;font-weight:600;text-decoration:none;font-size:.8rem;border:1px solid rgba(14,165,233,.25);} 
+  .wdg-modal-pet-det .wdg-pet-doc-link i{font-size:1rem;} 
+  .wdg-modal-pet-det .wdg-pet-doc-link:hover{background:#0ea5e9;color:#fff;} 
+  @media (max-width:768px){
+    .wdg-modal-pet-det .modal-header{padding:1rem 1.1rem 0;}
+    .wdg-modal-pet-det .modal-body{padding:1rem 1.1rem 1.2rem;}
+    .wdg-modal-pet-det .wdg-pet-hero{padding:1rem;}
+    .wdg-modal-pet-det .wdg-pet-hero-photo{width:100%;}
+  }
+</style>
+
+<script>
+  (function ensureModalCss(){
+    if(document.getElementById('wdgModalsCSS')) return;
+    var hrefs = ['/gestor/css/modals.css','<%= _bp %>/css/modals.css'];
+    for(var i=0;i<hrefs.length;i++){
+      var href = hrefs[i];
+      if(!href) continue;
+      if(document.querySelector('link[href="'+href.replace(/["']/g,'')+'"]')){ return; }
+      var link = document.createElement('link');
+      link.id = 'wdgModalsCSS';
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.onerror = function(){ try{ this.remove(); }catch(_e){} };
+      document.head.appendChild(link);
+      break;
+    }
+  })();
+</script>

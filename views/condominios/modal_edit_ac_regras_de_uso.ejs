@@ -1,0 +1,176 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalEditACRegrasUso" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content wdg-modal wdg-modal-uso">
+      <div class="modal-header border-0">
+        <div class="wdg-uso-head">
+          <span class="wdg-uso-head-pre">Termo de uso</span>
+          <h5 class="modal-title">Regras de uso da área comum</h5>
+          <p class="wdg-uso-head-sub">Defina e organize as orientações que os condôminos devem seguir ao utilizar esta área. Você pode registrar múltiplas regras e atualizá-las sempre que necessário.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <section class="wdg-uso-context" aria-live="polite">
+          <div class="wdg-uso-context-item">
+            <span class="wdg-uso-context-label">Condomínio</span>
+            <strong id="acUsoContextUnidade">&mdash;</strong>
+          </div>
+          <div class="wdg-uso-context-item">
+            <span class="wdg-uso-context-label">Área comum</span>
+            <strong id="acUsoContextArea">&mdash;</strong>
+          </div>
+        </section>
+
+        <section class="wdg-uso-editor" aria-labelledby="acUsoEditorTitle">
+          <header class="wdg-uso-editor-head">
+            <div>
+              <span class="wdg-uso-editor-pre">Nova regra</span>
+              <h6 id="acUsoEditorTitle" class="wdg-uso-editor-title">Cadastrar regra de uso</h6>
+            </div>
+            <div class="wdg-uso-counter" id="acUsoCharCounter">0 / 8000</div>
+          </header>
+          <div id="acUsoFeedback" class="wdg-uso-feedback" role="alert" aria-live="assertive"></div>
+          <label class="form-label wdg-uso-label" for="acUsoTextarea">Regra</label>
+          <textarea id="acUsoTextarea" class="form-control wdg-uso-textarea" rows="4" maxlength="8000" placeholder="Descreva a orientação para utilização da área"></textarea>
+          <div class="wdg-uso-editor-actions">
+            <button type="button" class="btn btn-outline-secondary" id="acUsoClearBtn">Limpar</button>
+            <button type="button" class="btn btn-primary" id="acUsoInsertBtn">Inserir</button>
+          </div>
+        </section>
+
+        <section class="wdg-uso-list" aria-labelledby="acUsoListaTitulo">
+          <header class="wdg-uso-list-head">
+            <div>
+              <span class="wdg-uso-list-pre">Regras cadastradas</span>
+              <h6 id="acUsoListaTitulo" class="wdg-uso-list-title">Regras da área comum</h6>
+            </div>
+            <span class="badge rounded-pill text-bg-primary" id="acUsoTotalBadge">0</span>
+          </header>
+          <div class="wdg-uso-list-controls">
+            <label for="acUsoPageSize" class="wdg-uso-list-label">Mostrar</label>
+            <select id="acUsoPageSize" class="form-select form-select-sm wdg-uso-page-size">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+            </select>
+            <span class="wdg-uso-list-suffix">itens</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle wdg-uso-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="wdg-uso-table-order" aria-label="Mover ordem">Mover</th>
+                  <th scope="col">Regra</th>
+                  <th scope="col" class="wdg-uso-table-actions">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="acUsoRulesBody"></tbody>
+            </table>
+          </div>
+          <div id="acUsoEmpty" class="wdg-uso-empty" role="status">Nenhuma regra cadastrada para esta área.</div>
+          <div id="acUsoPager" class="wdg-pager wdg-uso-pager"></div>
+        </section>
+      </div>
+      <div class="modal-footer border-0 pt-0 wdg-uso-footer">
+        <div class="wdg-uso-footer-left">
+          <span id="acUsoDirtyHint" class="wdg-uso-dirty" hidden>Alterações pendentes não salvas</span>
+        </div>
+        <div class="wdg-uso-footer-actions">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="acUsoCancelBtn">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="acUsoSaveBtn">Salvar regras</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wdg-modal-uso{border-radius:22px;border:0;box-shadow:0 28px 60px rgba(15,23,42,.15);background:linear-gradient(160deg,rgba(247,250,255,.98) 0%,rgba(232,240,255,.94) 55%,rgba(224,236,255,.92) 100%);overflow:hidden;}
+  .wdg-modal-uso .btn-close{background:rgba(255,255,255,.75);border-radius:14px;width:38px;height:38px;opacity:1;box-shadow:0 14px 28px -12px rgba(15,23,42,.35);position:relative;}
+  .wdg-modal-uso .btn-close::before{content:'\00d7';display:block;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.7rem;line-height:1;color:#0f172a;font-weight:700;pointer-events:none;}
+  .wdg-modal-uso .btn-close:hover{background:linear-gradient(135deg,#2563eb,#0ea5e9);box-shadow:0 16px 32px -16px rgba(37,99,235,.4);}
+  .wdg-modal-uso .btn-close:focus{outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.3);}
+  .wdg-uso-head{display:flex;flex-direction:column;gap:.35rem;padding:1.5rem 1.7rem 0;}
+  .wdg-uso-head-pre{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:#2563eb;}
+  .wdg-uso-head-sub{margin:0;color:#475569;font-size:.9rem;max-width:640px;}
+  .wdg-modal-uso .modal-body{padding:1.4rem 1.7rem 1.8rem;display:flex;flex-direction:column;gap:1.4rem;}
+  .wdg-uso-context{display:flex;flex-wrap:wrap;gap:1rem;background:#fff;border-radius:16px;border:1px solid rgba(148,163,184,.2);padding:.9rem 1.1rem;box-shadow:0 12px 24px rgba(37,99,235,.08);}
+  .wdg-uso-context-item{display:flex;flex-direction:column;gap:.25rem;min-width:180px;}
+  .wdg-uso-context-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.16em;color:#2563eb;font-weight:700;}
+  .wdg-uso-editor{background:#fff;border-radius:18px;border:1px solid rgba(37,99,235,.12);padding:1.1rem 1.25rem;box-shadow:0 12px 32px rgba(15,23,42,.12);display:flex;flex-direction:column;gap:.85rem;}
+  .wdg-uso-editor-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+  .wdg-uso-editor-pre{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.16em;color:#1d4ed8;font-weight:700;}
+  .wdg-uso-editor-title{margin:0;font-size:1.05rem;font-weight:700;color:#0f172a;}
+  .wdg-uso-counter{font-size:.75rem;font-weight:600;color:#1d4ed8;background:rgba(37,99,235,.12);border-radius:999px;padding:.2rem .8rem;}
+  .wdg-uso-label{font-size:.82rem;font-weight:600;color:#1e293b;}
+  .wdg-uso-textarea{resize:vertical;min-height:120px;border-radius:14px;border:1px solid rgba(148,163,184,.45);box-shadow:0 4px 12px rgba(15,23,42,.08);line-height:1.45;}
+  .wdg-uso-textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.2);}
+  .wdg-uso-help{font-size:.78rem;color:#64748b;}
+  .wdg-uso-editor-actions{display:flex;justify-content:flex-end;gap:.75rem;flex-wrap:wrap;}
+  .wdg-uso-feedback{min-height:36px;font-size:.82rem;font-weight:600;border-radius:12px;padding:.55rem .85rem;display:none;}
+  .wdg-uso-feedback[data-status]{display:block;}
+  .wdg-uso-feedback[data-status="success"]{background:rgba(34,197,94,.16);color:#0f5132;border:1px solid rgba(34,197,94,.32);}
+  .wdg-uso-feedback[data-status="warning"]{background:rgba(250,204,21,.18);color:#92400e;border:1px solid rgba(250,204,21,.35);}
+  .wdg-uso-feedback[data-status="danger"]{background:rgba(248,113,113,.18);color:#b91c1c;border:1px solid rgba(248,113,113,.32);}
+  .wdg-uso-feedback[data-status="info"]{background:rgba(14,165,233,.15);color:#0369a1;border:1px solid rgba(14,165,233,.28);}
+  .wdg-uso-list{background:#fff;border-radius:18px;border:1px solid rgba(37,99,235,.1);padding:1.05rem 1.15rem 1.2rem;box-shadow:0 12px 28px rgba(15,23,42,.1);display:flex;flex-direction:column;gap:.85rem;max-height:340px;min-height:220px;overflow:hidden;}
+
+  .wdg-uso-list .table-responsive {
+    max-height: 180px;
+    overflow-y: auto;
+    border-radius: 12px;
+  }
+  .wdg-uso-list-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+  .wdg-uso-list-pre{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.16em;color:#2563eb;font-weight:700;}
+  .wdg-uso-list-title{margin:0;font-size:.98rem;font-weight:700;color:#0f172a;}
+  .wdg-uso-list-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.8rem;color:#475569;}
+  .wdg-uso-list-label{margin:0;font-weight:600;}
+  .wdg-uso-page-size{width:auto;min-width:70px;}
+  .wdg-uso-list-suffix{opacity:.8;}
+  .wdg-uso-table{margin:0;border-collapse:collapse;}
+  .wdg-uso-table thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:#475569;background:rgba(240,244,255,.9);border-bottom:1px solid rgba(148,163,184,.35);padding:.55rem .8rem;text-align:left;}
+  .wdg-uso-table tbody tr{border-bottom:1px solid rgba(148,163,184,.25);}
+  .wdg-uso-table tbody tr:last-child{border-bottom:none;}
+  .wdg-uso-table tbody td{background:transparent;border:none;padding:.75rem .8rem;vertical-align:middle;}
+  .wdg-uso-table tbody tr:hover td{background:rgba(241,245,255,.65);}
+  .wdg-uso-rule-cell{padding-right:1rem;}
+  .wdg-uso-rule-wrap{display:flex;align-items:flex-start;gap:.55rem;}
+  .wdg-uso-rule-text{flex:1;font-size:.88rem;color:#0f172a;white-space:pre-wrap;word-break:break-word;}
+  .wdg-uso-table-order{width:72px;text-align:center;}
+  .wdg-uso-table-actions{text-align:center;width:120px;}
+  .wdg-uso-order{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;}
+  .wdg-uso-order .wdg-icon-btn{padding:2px;border-radius:8px;}
+  .wdg-uso-order .wdg-icon-btn img{width:20px;height:20px;display:block;}
+  .wdg-uso-icon-fallback{font-size:.95rem;color:#1d4ed8;font-weight:700;display:block;min-width:18px;text-align:center;}
+  .wdg-uso-actions{display:flex;gap:.4rem;justify-content:center;align-items:center;}
+  .wdg-uso-action-btn{background:transparent;border:none;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;transition:transform .12s ease;}
+  .wdg-uso-action-btn:hover{transform:translateY(-1px);}
+  .wdg-uso-action-btn img{width:20px;height:20px;display:block;}
+  .wdg-uso-action-btn:focus-visible{outline:2px solid rgba(37,99,235,.4);outline-offset:2px;}
+  .wdg-uso-action-btn[disabled]{opacity:.45;cursor:not-allowed;}
+  .wdg-uso-empty{display:none;text-align:center;font-size:.85rem;color:#94a3b8;font-weight:600;border:1px dashed rgba(148,163,184,.32);padding:.85rem;border-radius:12px;}
+  .wdg-uso-empty.is-visible{display:block;}
+  .wdg-uso-row-editing td{background:rgba(191,219,254,.35);outline:2px dashed rgba(37,99,235,.5);}
+  .wdg-uso-row-flash td{animation:wdgUsoFlash 1.2s ease;}
+  @keyframes wdgUsoFlash{0%{box-shadow:0 0 0 0 rgba(37,99,235,.32);}45%{box-shadow:0 0 0 8px rgba(37,99,235,.16);}100%{box-shadow:0 0 0 0 rgba(37,99,235,0);}}
+  .wdg-uso-footer{width:100%;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;}
+  .wdg-uso-footer-left{display:flex;flex-direction:column;gap:.35rem;align-items:flex-start;}
+  .wdg-uso-dirty{display:inline-flex;align-items:center;gap:.35rem;background:rgba(37,99,235,.16);color:#1d4ed8;padding:.3rem .85rem;border-radius:999px;font-size:.75rem;font-weight:600;box-shadow:0 6px 18px rgba(37,99,235,.2);}
+  .wdg-uso-dirty[hidden]{display:none;}
+  .wdg-uso-footer-actions{display:flex;gap:.75rem;align-items:center;}
+  .wdg-uso-footer-actions .btn{min-width:140px;}
+  .wdg-uso-pager{margin-top:.25rem;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:.35rem;font-size:.78rem;}
+  .wdg-uso-pager .wdg-pager-btn{min-width:32px;height:28px;font-size:.78rem;padding:0 .35rem;}
+  .wdg-uso-pager .wdg-pager-info{flex:1 1 100%;text-align:right;font-size:.74rem;color:#64748b;}
+  @media (max-width:768px){
+    .wdg-modal-uso .modal-dialog{margin:1rem auto;}
+    .wdg-modal-uso .modal-body{padding:1.2rem 1.2rem 1.4rem;}
+    .wdg-uso-editor{padding:1rem 1.1rem;}
+    .wdg-uso-list{padding:1rem 1.1rem;}
+    .wdg-uso-table-actions{width:120px;}
+    .wdg-uso-order{flex-direction:row;}
+    .wdg-uso-footer-actions{width:100%;justify-content:flex-end;}
+    .wdg-uso-footer{align-items:flex-start;}
+  }
+</style>

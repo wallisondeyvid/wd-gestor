@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financeiro do Condomínio - WDGestor</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <%
+    const _isFinanceScopeAll = Boolean(user && (user.isMaster || user.role === 'master' || user.role === 'admin'));
+    const _userUnitObject = (user && user.unidade_id && typeof user.unidade_id === 'object') ? user.unidade_id : null;
+    const _userUnitId = user && user.unidade_id ? (user.unidade_id._id || user.unidade_id) : '';
+    const _userUnitName = (user && (user.unidade_nome || user.unidadeNome))
+      || (_userUnitObject && (_userUnitObject.nome || _userUnitObject.nomeFantasia || _userUnitObject.razaoSocial))
+      || '';
+  %>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <style>
+    body.wdg-financeiro{background:#f5f7fb;}
+    .wdg-fin-hero{background:linear-gradient(135deg,#0f172a,#3b82f6);color:#fff;border-radius:28px;padding:2rem 2.75rem;margin-bottom:2rem;box-shadow:0 30px 80px rgba(15,23,42,.35);}
+    .wdg-fin-hero h1{font-weight:700;font-size:2rem;margin-bottom:.35rem;}
+    .wdg-fin-hero p{margin:0;max-width:720px;color:rgba(255,255,255,.9);}    
+    .wdg-fin-tabs .nav-link{border-radius:999px;font-weight:600;padding:.55rem 1.35rem;color:#0f172a;background:#fff;border:1px solid rgba(15,23,42,.08);margin-right:.65rem;box-shadow:0 12px 30px rgba(15,23,42,.08);}
+    .wdg-fin-tabs .nav-link.active{background:#0f172a;color:#fff;border-color:#0f172a;box-shadow:0 14px 40px rgba(15,23,42,.25);}  
+    .wdg-fin-panel{background:#fff;border-radius:26px;padding:1.8rem 2.25rem;box-shadow:0 35px 90px rgba(15,23,42,.12);margin-bottom:2rem;}
+    .wdg-fin-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem;}
+    .wdg-fin-card{border-radius:20px;padding:1.35rem;border:1px solid rgba(15,23,42,.08);background:#f8fafc;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);}    
+    .wdg-fin-card h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.2em;color:#64748b;margin-bottom:.5rem;}
+    .wdg-fin-card .value{font-size:1.8rem;font-weight:700;color:#0f172a;}
+    .wdg-fin-trend{display:flex;align-items:center;gap:.45rem;font-weight:600;font-size:.85rem;margin-top:.35rem;}
+    .wdg-fin-trend.positive{color:#16a34a;}
+    .wdg-fin-trend.negative{color:#dc2626;}
+    .wdg-chart-card{background:#fff;border-radius:24px;padding:1.5rem;border:1px solid rgba(15,23,42,.08);box-shadow:0 24px 60px rgba(15,23,42,.14);min-height:320px;display:flex;flex-direction:column;}
+    .wdg-chart-shell{position:relative;flex:1;min-height:260px;}
+    .wdg-chart-shell canvas{width:100%!important;height:260px!important;max-height:320px;}
+    .wdg-chart-card h4{font-weight:600;margin-bottom:.35rem;color:#0f172a;}
+    .wdg-table{border-radius:22px;border:1px solid rgba(15,23,42,.08);overflow:hidden;box-shadow:0 20px 55px rgba(15,23,42,.12);}    
+    .wdg-table thead{background:#f1f5f9;text-transform:uppercase;font-size:.72rem;letter-spacing:.18em;color:#475569;}
+    .wdg-table th,.wdg-table td{padding:.95rem 1.15rem;vertical-align:middle;}
+    .wdg-table-center table th,.wdg-table-center table td{text-align:center;}
+    .wdg-tag{padding:.2rem .65rem;border-radius:999px;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:.25rem;}
+    .wdg-tag.success{background:rgba(16,185,129,.12);color:#0f766e;}
+    .wdg-tag.warning{background:rgba(251,191,36,.15);color:#b45309;}
+    .wdg-tag.danger{background:rgba(239,68,68,.15);color:#b91c1c;}
+    .wdg-fin-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;}
+    .wdg-fin-form .form-control,.wdg-fin-form .form-select{border-radius:14px;border:1px solid rgba(15,23,42,.12);padding:.65rem .85rem;}
+    .wdg-fin-form .form-label{text-transform:uppercase;font-size:.7rem;letter-spacing:.15em;color:#475569;font-weight:600;}
+    .wdg-fin-form-vertical .form-control,.wdg-fin-form-vertical .form-select,.wdg-fin-form-vertical textarea{border-radius:14px;border:1px solid rgba(15,23,42,.12);padding:.65rem .85rem;}
+    .wdg-fin-form-vertical .form-label{text-transform:uppercase;font-size:.7rem;letter-spacing:.15em;color:#475569;font-weight:600;display:block;margin-bottom:.35rem;}
+    .wdg-fin-actions{display:flex;justify-content:flex-end;gap:.75rem;flex-wrap:wrap;}
+    .wdg-field-plaintext{background:#f8fafc;border:1px solid rgba(15,23,42,.12);border-radius:14px;padding:.65rem .85rem;color:#0f172a;font-weight:600;}
+    .wdg-fin-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;}
+    .grid-span-2{grid-column:span 2;}
+    .wdg-empty-state{padding:2rem;border:1px dashed rgba(15,23,42,.2);border-radius:20px;text-align:center;color:#94a3b8;font-weight:600;}
+    .table-pagination{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:14px;padding:.65rem 1rem;margin-top:.65rem;box-shadow:0 10px 24px rgba(15,23,42,.08);gap:1rem;}
+    .table-pagination .pagination-info{font-size:.85rem;color:#475569;font-weight:600;}
+    .table-pagination .btn{border-radius:999px;padding:.35rem .85rem;font-size:.85rem;}
+    .table-pagination .btn.active{background:#0f172a;color:#fff;border-color:#0f172a;}
+    .table-pagination-hidden{display:none;}
+    @media(max-width:768px){
+      .wdg-fin-hero{padding:1.5rem;}
+      .wdg-fin-panel{padding:1.2rem;}
+      .grid-span-2{grid-column:span 1;}
+    }
+  </style>
+</head>
+<body class="wdg-layout wdg-financeiro" data-module="financeiro">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Gestão de Condomínios',
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+
+    <main class="container py-4" id="financasApp"
+      data-base-path="<%= _bp %>"
+      data-user-role="<%= (user && user.role) ? user.role : '' %>"
+      data-user-name="<%= user && user.nome ? user.nome : '' %>"
+      data-unidade-id="<%= _userUnitId %>"
+      data-unidade-nome="<%= _userUnitName %>"
+      data-scope-all="<%= _isFinanceScopeAll ? 'true' : 'false' %>">
+    <section class="wdg-fin-hero">
+      <h1>Painel Financeiro</h1>
+      <p>Visão integrada de receitas, despesas, fundos e inadimplência para decisões rápidas na administração condominial.</p>
+    </section>
+
+    <div class="wdg-fin-tabs mb-4">
+      <ul class="nav nav-pills" id="financasTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#pane-dashboard" type="button" role="tab">Dashboard</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-fundos" data-bs-toggle="pill" data-bs-target="#pane-fundos" type="button" role="tab">Fundos</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-receitas" data-bs-toggle="pill" data-bs-target="#pane-receitas" type="button" role="tab">Receitas</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-despesas" data-bs-toggle="pill" data-bs-target="#pane-despesas" type="button" role="tab">Despesas</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-rateio" data-bs-toggle="pill" data-bs-target="#pane-rateio" type="button" role="tab">Rateio/Mensalidades</button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="tab-content">
+      <section class="tab-pane fade show active" id="pane-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
+        <div class="wdg-fin-panel">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+            <div>
+              <h2 class="h4 mb-0">Resumo financeiro</h2>
+              <small class="text-muted">Atualizado em tempo real a partir dos lançamentos do módulo</small>
+            </div>
+            <div class="text-end">
+              <span class="text-muted text-uppercase" style="letter-spacing:.18em;font-size:.72rem;">Período</span>
+              <p class="mb-0 fw-bold" id="financasPeriodoAtivo">Mês atual</p>
+            </div>
+          </div>
+          <div class="wdg-fin-cards" id="financasResumoCards"></div>
+        </div>
+        <div class="row g-4 mb-4">
+          <div class="col-xl-6">
+            <div class="wdg-chart-card">
+              <h4>Evolução de receitas</h4>
+              <div class="wdg-chart-shell"><canvas id="chartReceitas" aria-label="Gráfico de receitas" role="img"></canvas></div>
+            </div>
+          </div>
+          <div class="col-xl-6">
+            <div class="wdg-chart-card">
+              <h4>Evolução de despesas</h4>
+              <div class="wdg-chart-shell"><canvas id="chartDespesas" aria-label="Gráfico de despesas" role="img"></canvas></div>
+            </div>
+          </div>
+          <div class="col-xl-6">
+            <div class="wdg-chart-card mt-4 mt-xl-0">
+              <h4>Composição dos fundos</h4>
+              <div class="wdg-chart-shell"><canvas id="chartFundos" aria-label="Gráfico de fundos" role="img"></canvas></div>
+            </div>
+          </div>
+          <div class="col-xl-6">
+            <div class="wdg-chart-card mt-4 mt-xl-0">
+              <h4>Contas a pagar (30 dias)</h4>
+              <div id="listaContasPagar" class="d-flex flex-column gap-3"></div>
+            </div>
+          </div>
+        </div>
+        <div class="wdg-fin-panel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h5 mb-0">Habitações inadimplentes</h3>
+            <button class="btn btn-outline-primary btn-sm" data-action="export-inadimplentes">Exportar relatório</button>
+          </div>
+          <div class="table-responsive wdg-table">
+            <table class="table mb-0" id="tabelaInadimplentes">
+              <thead>
+                <tr>
+                  <th>Habitação</th>
+                  <th>Responsável</th>
+                  <th>Período em aberto</th>
+                  <th>Valor devido</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-pagination table-pagination-hidden" id="pagerInadimplentes"></div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="pane-fundos" role="tabpanel" aria-labelledby="tab-fundos">
+        <div class="wdg-fin-panel mb-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+            <div class="flex-grow-1 text-center">
+              <h2 class="h4 mb-0">Cadastro de fundos</h2>
+            </div>
+          </div>
+          <form class="wdg-fin-form-vertical" id="formFundo" autocomplete="off">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label" for="fundoCondominio">Condomínio</label>
+                <% if (_isFinanceScopeAll) { %>
+                  <select class="form-select" id="fundoCondominio" name="fundoCondominio">
+                    <option value="">Carregando unidades...</option>
+                  </select>
+                <% } else { %>
+                  <input type="text" class="form-control wdg-field-plaintext" id="fundoCondominioNome" value="<%= _userUnitName || 'Unidade vinculada' %>" readonly>
+                  <input type="hidden" id="fundoCondominio" name="fundoCondominio" value="<%= _userUnitId %>">
+                  <small class="text-muted d-block mt-1">Vinculado ao seu acesso</small>
+                <% } %>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="fundoNome">Nome do fundo</label>
+                <input type="text" id="fundoNome" class="form-control" placeholder="Ex.: Reserva de Obras" required>
+              </div>
+              <div class="col-12">
+                <div class="row g-3 align-items-start">
+                  <div class="col-lg-8 col-md-7">
+                    <label class="form-label" for="fundoObjetivo">Objetivo</label>
+                    <input type="text" id="fundoObjetivo" class="form-control" placeholder="Uso previsto" required>
+                  </div>
+                  <div class="col-lg-4 col-md-5">
+                    <label class="form-label" for="fundoSaldo">Saldo inicial</label>
+                    <input type="text" id="fundoSaldo" class="form-control" placeholder="R$ 0,00" inputmode="decimal" autocomplete="off">
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="fundoObservacao">Observações</label>
+                <textarea id="fundoObservacao" class="form-control" rows="3" placeholder="Regras adicionais, prazos, restrições"></textarea>
+              </div>
+              <div class="col-12">
+                <div class="wdg-fin-actions">
+                  <button type="reset" class="btn btn-outline-secondary" data-action="limpar-fundo">Limpar</button>
+                  <button type="button" class="btn btn-primary" data-action="salvar-fundo"><i class="bi bi-save me-2"></i>Salvar</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="wdg-fin-panel mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="flex-grow-1 text-center">
+              <h3 class="h5 mb-0">Fundos cadastrados</h3>
+            </div>
+          </div>
+          <div class="table-responsive wdg-table wdg-table-center">
+            <table class="table mb-0" id="tabelaFundosCadastrados">
+              <thead>
+                <tr>
+                  <th>Condomínio</th>
+                  <th>Nome do fundo</th>
+                  <th>Saldo inicial</th>
+                  <th>Objetivo</th>
+                  <th>Saldo</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-pagination table-pagination-hidden" id="pagerFundosCadastrados"></div>
+        </div>
+
+        <div class="wdg-fin-panel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="flex-grow-1 text-center">
+              <h3 class="h5 mb-0">Movimentações dos fundos</h3>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-outline-secondary btn-sm" data-action="nova-entrada">Registrar entrada</button>
+              <button class="btn btn-outline-secondary btn-sm" data-action="nova-saida">Registrar saída</button>
+            </div>
+          </div>
+          <div class="table-responsive wdg-table wdg-table-center">
+            <table class="table mb-0" id="tabelaFundos">
+              <thead>
+                <tr>
+                  <th>Fundo</th>
+                  <th>Tipo</th>
+                  <th>Data</th>
+                  <th>Origem</th>
+                  <th>Valor</th>
+                  <th>Responsável</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-pagination table-pagination-hidden" id="pagerFundos"></div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="pane-receitas" role="tabpanel" aria-labelledby="tab-receitas">
+        <div class="wdg-fin-panel mb-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+            <div>
+              <h2 class="h4 mb-0">Receitas</h2>
+              <small class="text-muted">Cobranças em aberto, previstas e recebidas</small>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-outline-secondary btn-sm" data-action="importar-receitas">Importar planilha</button>
+              <button class="btn btn-primary btn-sm" data-action="nova-receita"><i class="bi bi-plus-lg me-2"></i>Lançar receita</button>
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label" for="receitaPeriodo">Período</label>
+              <select class="form-select" id="receitaPeriodo">
+                <option value="mes">Mês atual</option>
+                <option value="trim">Último trimestre</option>
+                <option value="ano">Ano corrente</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="receitaStatus">Status</label>
+              <select class="form-select" id="receitaStatus">
+                <option value="todos">Todos</option>
+                <option value="prevista">Prevista</option>
+                <option value="liquidada">Liquidada</option>
+                <option value="atrasada">Em atraso</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="receitaBusca">Busca rápida</label>
+              <input type="search" id="receitaBusca" class="form-control" placeholder="Unidade, morador, referência">
+            </div>
+          </div>
+          <div class="table-responsive wdg-table">
+            <table class="table mb-0" id="tabelaReceitas">
+              <thead>
+                <tr>
+                  <th>Habitação</th>
+                  <th>Competência</th>
+                  <th>Vencimento</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th>Última atualização</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-pagination table-pagination-hidden" id="pagerReceitas"></div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="pane-despesas" role="tabpanel" aria-labelledby="tab-despesas">
+        <div class="wdg-fin-panel mb-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+            <div>
+              <h2 class="h4 mb-0">Despesas recorrentes</h2>
+              <small class="text-muted">Modelagem inspirada em apps como Superlógica, CondoConta e uCondo: categorize por centro de custo, conta pagadora e método de rateio.</small>
+            </div>
+            <button class="btn btn-primary btn-sm" data-action="salvar-despesa-recorrente"><i class="bi bi-repeat me-2"></i>Salvar recorrência</button>
+          </div>
+          <form class="row g-3" id="formDespesaRecorrente">
+            <div class="col-md-4">
+              <label class="form-label" for="recorrenteNome">Despesa</label>
+              <input type="text" class="form-control" id="recorrenteNome" name="recorrenteNome" placeholder="Ex.: Energia áreas comuns" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="recorrenteCategoria">Categoria</label>
+              <select class="form-select" id="recorrenteCategoria" name="recorrenteCategoria">
+                <option value="energia">Energia</option>
+                <option value="agua">Água e saneamento</option>
+                <option value="portaria">Portaria/Segurança</option>
+                <option value="limpeza">Limpeza</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="recorrenteFrequencia">Frequência</label>
+              <select class="form-select" id="recorrenteFrequencia" name="recorrenteFrequencia">
+                <option value="mensal">Mensal</option>
+                <option value="bimestral">Bimestral</option>
+                <option value="trimestral">Trimestral</option>
+                <option value="anual">Anual</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="recorrenteConta">Conta pagadora</label>
+              <select class="form-select" id="recorrenteConta" name="recorrenteConta">
+                <option value="geral">Caixa único do condomínio</option>
+                <option value="administracao">Conta da administração</option>
+                <option value="area-comum">Conta específica por área comum</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="recorrenteVencimento">Dia padrão de vencimento</label>
+              <input type="number" min="1" max="31" class="form-control" id="recorrenteVencimento" name="recorrenteVencimento" value="10">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="recorrenteMetodo">Método de rateio</label>
+              <select class="form-select" id="recorrenteMetodo" name="recorrenteMetodo">
+                <option value="fracao">Fração ideal</option>
+                <option value="consumo">Por leitura/consumo</option>
+                <option value="igual">Valor igual por unidade</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="recorrenteConsumo">Última leitura (kWh, m³ etc.)</label>
+              <input type="number" step="0.01" class="form-control" id="recorrenteConsumo" name="recorrenteConsumo" placeholder="Preencher quando a despesa varia por consumo">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="recorrenteValorEstimado">Valor estimado</label>
+              <input type="number" step="0.01" class="form-control" id="recorrenteValorEstimado" name="recorrenteValorEstimado" placeholder="0,00">
+            </div>
+          </form>
+          <div class="table-responsive wdg-table mt-4">
+            <table class="table mb-0" id="tabelaDespesasRecorrentes">
+              <thead>
+                <tr>
+                  <th>Despesa</th>
+                  <th>Conta</th>
+                  <th>Frequência</th>
+                  <th>Vencimento</th>
+                  <th>Método de rateio</th>
+                  <th>Último valor</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-pagination table-pagination-hidden" id="pagerDespesasRecorrentes"></div>
+        </div>
+        <div class="wdg-fin-panel mb-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+            <div>
+              <h2 class="h4 mb-0">Despesas</h2>
+              <small class="text-muted">Controle de contratos, notas e pagamentos</small>
+            </div>
+            <button class="btn btn-primary btn-sm" data-action="nova-despesa"><i class="bi bi-receipt-cutoff me-2"></i>Registrar despesa</button>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label" for="despesaCentro">Centro de custo</label>
+              <select class="form-select" id="despesaCentro">
+                <option value="todos">Todos</option>
+                <option value="limpeza">Limpeza</option>
+                <option value="portaria">Portaria</option>
+                <option value="manutencao">Manutenção</option>
+                <option value="admin">Administrativo</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="despesaSituacao">Situação</label>
+              <select class="form-select" id="despesaSituacao">
+                <option value="pagas">Pagas</option>
+                <option value="pendentes">Pendentes</option>
+                <option value="vencidas">Vencidas</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="despesaFornecedor">Fornecedor</label>
+              <input type="text" class="form-control" id="despesaFornecedor" placeholder="Buscar por razão social">
+            </div>
+          </div>
+          <div class="table-responsive wdg-table">
+            <table class="table mb-0" id="tabelaDespesas">
+              <thead>
+                <tr>
+                  <th>Fornecedor</th>
+                  <th>Descrição</th>
+                  <th>Vencimento</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-pagination table-pagination-hidden" id="pagerDespesas"></div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="pane-rateio" role="tabpanel" aria-labelledby="tab-rateio">
+        <div class="wdg-fin-panel mb-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+            <div>
+              <h2 class="h4 mb-0">Geração de mensalidades</h2>
+              <small class="text-muted">Distribua despesas recorrentes e extraordinárias por habitação com base em fração ideal, consumo ou valor fixo.</small>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-outline-secondary btn-sm" data-action="simular-rateio">Simular rateio</button>
+              <button class="btn btn-primary btn-sm" data-action="gerar-mensalidades"><i class="bi bi-lightning-charge me-1"></i>Gerar mensalidades</button>
+            </div>
+          </div>
+          <form class="wdg-fin-form" id="formRateio">
+            <div>
+              <label class="form-label" for="rateioCompetencia">Competência</label>
+              <input type="month" class="form-control" id="rateioCompetencia" name="rateioCompetencia" value="2025-11">
+            </div>
+            <div>
+              <label class="form-label" for="rateioBase">Base de cálculo</label>
+              <select class="form-select" id="rateioBase" name="rateioBase">
+                <option value="previsto">Orçamento previsto</option>
+                <option value="realizado">Realizado do período</option>
+                <option value="custom">Customizado</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="rateioMetodo">Método de rateio padrão</label>
+              <select class="form-select" id="rateioMetodo" name="rateioMetodo">
+                <option value="fracao">Fração ideal</option>
+                <option value="consumo">Consumo medido</option>
+                <option value="unidade">Valor igual por unidade</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="rateioIncluir">Incluir centros</label>
+              <select class="form-select" id="rateioIncluir" name="rateioIncluir" multiple size="3">
+                <option value="portaria">Portaria/Segurança</option>
+                <option value="limpeza">Limpeza</option>
+                <option value="energia">Energia</option>
+                <option value="manutencao">Manutenção</option>
+                <option value="fundos">Fundos especiais</option>
+              </select>
+            </div>
+            <div class="grid-span-2">
+              <label class="form-label" for="rateioObservacao">Regras específicas</label>
+              <textarea class="form-control" id="rateioObservacao" name="rateioObservacao" rows="2" placeholder="Ex.: Cobertura paga 1.5x no consumo de água."></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="wdg-fin-panel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h5 mb-0">Prévia da mensalidade por habitação</h3>
+            <button class="btn btn-outline-primary btn-sm" data-action="exportar-mensalidades">Exportar planilha</button>
+          </div>
+          <div class="table-responsive wdg-table">
+            <table class="table mb-0" id="tabelaMensalidades">
+              <thead>
+                <tr>
+                  <th>Habitação</th>
+                  <th>Fração ideal</th>
+                  <th>Consumo (se aplicável)</th>
+                  <th>Valor base</th>
+                  <th>Fundo</th>
+                  <th>Total sugerido</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-pagination table-pagination-hidden" id="pagerMensalidades"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="<%= _bp %>/js/condominios/financas.js?v=1"></script>
+</body>
+</html>

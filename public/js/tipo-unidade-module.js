@@ -1,0 +1,54 @@
+// tipo-unidade-module.js - controla checkboxes Matriz/Filial e popup de endereço
+(function(){
+  function abrirPopupEndereco(){
+    try {
+      const valorAtual = document.getElementById('endereco')?.value || '';
+      const w = 960, h = 720;
+      const y = window.top?.outerHeight ? Math.max(0,(window.top.outerHeight - h)/2 + (window.top.screenY||0)) : 50;
+      const x = window.top?.outerWidth  ? Math.max(0,(window.top.outerWidth  - w)/2 + (window.top.screenX||0)) : 50;
+      const url = `/endereco?endereco=${encodeURIComponent(valorAtual)}`;
+      window.open(url,'popupEndereco',`width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes`);
+    } catch(e){ console.warn('[tipo-unidade] Falha abrir popup endereço', e); }
+  }
+
+  function aplicarEstadoTipo(e){
+    const matriz = document.getElementById('matriz');
+    const filial = document.getElementById('filial');
+    const selWrap = document.getElementById('unidadePrincipalSelect');
+    const hiddenPrincipal = document.getElementById('hiddenPrincipal');
+    const hiddenSub = document.getElementById('hiddenSubunidade');
+    if(!matriz || !filial) return;
+
+    // Se usuário clicou em Filial para marcar, desmarca Matriz
+    if(e && e.target === filial && filial.checked){ matriz.checked = false; }
+    // Se usuário clicou em Matriz para marcar, desmarca Filial
+    else if(e && e.target === matriz && matriz.checked){ filial.checked = false; }
+
+    // Garante que pelo menos um fique marcado
+    if(!matriz.checked && !filial.checked){
+      if(!matriz.disabled){ matriz.checked = true; } else { filial.checked = true; }
+    }
+
+    const ehMatriz = matriz.checked && !matriz.disabled;
+    if (selWrap) selWrap.style.display = ehMatriz ? 'none' : 'block';
+    if (hiddenPrincipal) hiddenPrincipal.value = ehMatriz ? 'true' : 'false';
+    if (hiddenSub) hiddenSub.value = ehMatriz ? 'false' : 'true';
+  }
+
+  function bind(){
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('[data-action="abrirPopupEndereco"]');
+      if(btn){ e.preventDefault(); abrirPopupEndereco(); }
+    });
+    const matriz = document.getElementById('matriz');
+    const filial = document.getElementById('filial');
+  if(matriz) matriz.addEventListener('change', aplicarEstadoTipo);
+  if(filial) filial.addEventListener('change', aplicarEstadoTipo);
+  aplicarEstadoTipo();
+    console.debug('[tipo-unidade-module] inicializado');
+  }
+
+  document.addEventListener('DOMContentLoaded', bind);
+  if (document.readyState !== 'loading') setTimeout(bind,0);
+  window.TipoUnidadeModule = { aplicarEstadoTipo };
+})();

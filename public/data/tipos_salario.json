@@ -1,0 +1,9 @@
+[
+  { "codigo": "1", "descricao": "Salário Mensalista (pago uma vez ao mês)" },
+  { "codigo": "2", "descricao": "Salário Quinzenalista (pago duas vezes ao mês)" },
+  { "codigo": "3", "descricao": "Salário Semanalista (pago uma vez por semana)" },
+  { "codigo": "4", "descricao": "Salário Diarista (pago por dia)" },
+  { "codigo": "5", "descricao": "Salário Horista (pago por hora)" },
+  { "codigo": "6", "descricao": "Salário Tarefa (pago por produção ou tarefa concluída)" },
+  { "codigo": "7", "descricao": "Salário Variável (comissão, prêmios etc.)" }
+]

@@ -1,0 +1,12 @@
+[
+  { "codigo": "1", "descricao": "Prazo indeterminado" },
+  { "codigo": "2", "descricao": "Prazo determinado – experiência" },
+  { "codigo": "3", "descricao": "Prazo determinado – contrato por prazo certo (Lei 9.601/98)" },
+  { "codigo": "4", "descricao": "Prazo determinado – contrato de obra certa" },
+  { "codigo": "5", "descricao": "Prazo determinado – contrato de safra" },
+  { "codigo": "6", "descricao": "Prazo determinado – contrato de atleta profissional de futebol (Lei 9.615/98)" },
+  { "codigo": "7", "descricao": "Contrato de aprendizagem (Lei 10.097/2000)" },
+  { "codigo": "8", "descricao": "Contrato de trabalho temporário (Lei 6.019/1974)" },
+  { "codigo": "9", "descricao": "Contrato de experiência convertido em prazo indeterminado" },
+  { "codigo": "10", "descricao": "Contrato intermitente (art. 452-A da CLT)" }
+]

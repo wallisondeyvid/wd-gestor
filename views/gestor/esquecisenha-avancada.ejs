@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <% /* Template compartilhado (versão avançada) Esqueci Minha Senha.
+       Parâmetros esperados: moduleLabel (default WDGestor), basePath, sucesso, erro */ %>
+  <% const _moduleLabel = typeof moduleLabel !== 'undefined' ? moduleLabel : 'WDGestor'; %>
+  <% const _basePath = (typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor'; %>
+  <%- include('partials/basepath-var') %>
+  <title>Recuperar Acesso - <%= _moduleLabel %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="<%= _basePath %>/css/login.css?v=<%= Date.now() %>">
+  <style>.login-bg{background:linear-gradient(180deg,#4a90e2 0%,#63a4ff 35%,#8bb8ff 70%,#b3d1ff 100%)!important;min-height:100vh!important;}</style>
+</head>
+<body class="login-bg">
+  <main class="min-vh-100 d-flex align-items-center justify-content-center px-3">
+    <div class="login-card card shadow-lg border-0 w-100" style="max-width:560px;">
+      <div class="card-body p-4 p-sm-5">
+        <div class="text-center mb-4">
+          <img src="<%= _basePath %>/images/logoWDGestor.png" alt="<%= _moduleLabel %>" class="brand-logo mb-2" />
+          <p class="text-muted m-0">Recuperar Acesso (<%= _moduleLabel %>)</p>
+        </div>
+        <div class="d-flex justify-content-end mb-3">
+          <button type="button" id="infoCpfBtn" class="btn btn-sm btn-outline-info" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom" title="Ajuda" data-bs-content="Informe seu CPF. Se houver múltiplos usuários, será necessário confirmar o e-mail.">
+            <i class="bi bi-info-circle me-1"></i> Ajuda
+          </button>
+        </div>
+        <form id="esqueciSenhaAvancForm" method="POST" action="<%= _basePath %>/esquecisenha-avancado">
+          <div class="mb-4">
+            <label for="cpf" class="form-label fw-medium"><i class="bi bi-person-vcard me-2"></i>CPF</label>
+            <input type="text" class="form-control form-control-lg" id="cpf" name="cpf" required placeholder="000.000.000-00" maxlength="14" autocomplete="off">
+            <div class="form-text">Digite seu CPF para localizar sua conta.</div>
+          </div>
+          <div id="emailsWrapper" class="mb-3 d-none">
+            <label class="form-label fw-medium"><i class="bi bi-envelope-at me-2"></i>Selecione seu e-mail</label>
+            <div id="emailsLista" class="list-group small mb-2"></div>
+            <div>
+              <label for="emailConfirm" class="form-label small mb-1">Confirme digitando o e-mail escolhido</label>
+              <input type="email" class="form-control" id="emailConfirm" name="emailConfirm" placeholder="email@empresa.com" autocomplete="off" />
+              <div class="form-text">Precisamos que digite exatamente o e-mail selecionado para confirmar.</div>
+            </div>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg" id="btnEnviar">
+              <i class="bi bi-envelope-arrow-up me-2"></i>Solicitar Redefinição
+            </button>
+          </div>
+        </form>
+        <div class="text-center mt-4">
+          <a href="<%= _basePath %>/login" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Voltar ao Login</a>
+        </div>
+        <% if (typeof sucesso !== 'undefined' && sucesso) { %>
+          <div class="alert alert-success mt-4 mb-0" role="alert">
+            <i class="bi bi-check-circle me-1"></i> Se os dados conferirem, enviaremos um e-mail com instruções (caso exista usuário ativo).
+          </div>
+        <% } %>
+        <% if (typeof erro !== 'undefined' && erro) { %>
+          <div class="alert alert-danger mt-4 mb-0" role="alert">
+            <i class="bi bi-x-circle me-1"></i> <%= erro %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function(){
+      const cpfInput = document.getElementById('cpf');
+      const emailsWrapper = document.getElementById('emailsWrapper');
+      const emailsLista = document.getElementById('emailsLista');
+      const emailConfirm = document.getElementById('emailConfirm');
+      function maskCPF(v){ return v.replace(/\D/g,'').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'); }
+      cpfInput.addEventListener('input', ()=>{ cpfInput.value = maskCPF(cpfInput.value); emailsWrapper.classList.add('d-none'); emailsLista.innerHTML=''; emailConfirm.value=''; });
+      cpfInput.addEventListener('blur', async ()=>{
+        const digits = cpfInput.value.replace(/\D/g,'');
+        if (digits.length !== 11) return;
+        try {
+          const r = await fetch(`<%= _basePath %>/esquecisenha-avancado/listar-emails?cpf=`+digits);
+          if (!r.ok) return; const data = await r.json();
+          if (Array.isArray(data.emails) && data.emails.length > 1) {
+            emailsLista.innerHTML='';
+            data.emails.forEach(em=>{
+              const obfusc = em.replace(/(^.).+(@.*$)/,(m,a,b)=> a+'***'+b);
+              const btn = document.createElement('button');
+              btn.type='button'; btn.className='list-group-item list-group-item-action';
+              btn.textContent=obfusc; btn.dataset.email=em;
+              btn.addEventListener('click',()=>{ emailConfirm.value=''; [...emailsLista.children].forEach(c=>c.classList.remove('active')); btn.classList.add('active'); emailConfirm.focus(); });
+              emailsLista.appendChild(btn);
+            });
+            emailsWrapper.classList.remove('d-none');
+          } else {
+            emailsWrapper.classList.add('d-none'); emailsLista.innerHTML=''; emailConfirm.value='';
+          }
+        } catch {}
+      });
+      document.getElementById('esqueciSenhaAvancForm').addEventListener('submit', (e)=>{
+        const digits = cpfInput.value.replace(/\D/g,'');
+        if (digits.length !== 11) { e.preventDefault(); alert('CPF inválido'); return; }
+        if (!emailsWrapper.classList.contains('d-none')) {
+          const active = emailsLista.querySelector('.active');
+          if (!active) { e.preventDefault(); alert('Selecione um e-mail da lista.'); return; }
+          const chosen = active.dataset.email;
+          if (emailConfirm.value.trim().toLowerCase() !== chosen.toLowerCase()) {
+            e.preventDefault(); alert('Confirme digitando exatamente o e-mail selecionado.'); return; }
+        }
+      });
+      const btnInfo=document.getElementById('infoCpfBtn'); if(btnInfo){ new bootstrap.Popover(btnInfo); }
+    })();
+  </script>
+</body>
+</html>

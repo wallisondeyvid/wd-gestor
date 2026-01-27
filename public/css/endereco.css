@@ -1,0 +1,72 @@
+/* === Popup Endereço – tema azul (consistente com modais) === */
+:root {
+  --wd-blue: #0d6efd;
+  --wd-blue-50: rgba(13,110,253,.05);
+  --wd-blue-70: rgba(13,110,253,.07);
+  --wd-blue-12: rgba(13,110,253,.12);
+  --wd-blue-18: rgba(13,110,253,.18);
+}
+
+html, body { height: 100%; background: #f6f8fb; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+               Arial, "Noto Sans", "Liberation Sans", "Apple Color Emoji",
+               "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+}
+
+/* Caixa principal */
+.popup-shell {
+  max-width: 980px;
+  margin: 16px auto;
+  padding: 0 12px;
+}
+.popup-card {
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow:
+    0 20px 40px var(--wd-blue-18),
+    0 8px 16px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+
+/* Cabeçalho */
+.popup-header {
+  border-bottom: 1px solid rgba(13,110,253,.15);
+  background: linear-gradient(180deg, var(--wd-blue-70), var(--wd-blue-50));
+  padding: .75rem 1rem;
+}
+.popup-title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--wd-blue);
+  font-size: 1.125rem;
+}
+
+/* Corpo */
+.popup-body { padding: 12px; }
+.popup-body .row.g-3 { --bs-gutter-y: .5rem; --bs-gutter-x: .75rem; }
+.popup-body .mb-2, .popup-body .mb-3 { margin-bottom: .5rem !important; }
+label.form-label { margin-bottom: .25rem; font-size: .875rem; }
+.form-control, .form-select { padding: .42rem .6rem; font-size: .9rem; }
+
+/* Campo com ícone (CEP) */
+.with-icon { position: relative; }
+.with-icon > i {
+  position: absolute; left: .6rem; top: 50%; transform: translateY(-50%);
+  color: #6c757d; pointer-events: none; font-size: 1rem;
+}
+.with-icon > .form-control { padding-left: 2rem; }
+
+/* Rodapé (botões) */
+.popup-footer {
+  border-top: 1px solid var(--wd-blue-12);
+  background: linear-gradient(180deg, rgba(13,110,253,.02), transparent);
+  padding: .75rem 1rem;
+  display: flex; justify-content: center; gap: .5rem;
+}
+.popup-footer .btn-primary { box-shadow: 0 6px 14px rgba(13,110,253,.25); }
+.popup-footer .btn { padding: .42rem 1rem; font-size: .9rem; }
+
+/* Estados de validação simplificados */
+.invalid { border-color: #dc3545 !important; }

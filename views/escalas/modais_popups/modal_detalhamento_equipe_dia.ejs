@@ -1,0 +1,48 @@
+<div class="modal fade" id="modalDetalhamentoEquipeDia" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2" style="background:linear-gradient(#0e6fb1,#0a4f80);">
+        <h6 class="modal-title text-white mb-0">Detalhamento da equipe no dia</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body p-3">
+        <style>
+          /* Ajustes específicos do modal de detalhamento: reduzir largura do nome e ampliar unidade com ellipsis */
+          #modalDetalhamentoEquipeDia #tabelaDetalhamentoEquipeDia th.col-nome,
+          #modalDetalhamentoEquipeDia #tabelaDetalhamentoEquipeDia td.col-nome { width:220px; max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+          #modalDetalhamentoEquipeDia #tabelaDetalhamentoEquipeDia th.col-unidade,
+          #modalDetalhamentoEquipeDia #tabelaDetalhamentoEquipeDia td.col-unidade { width:320px; max-width:320px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+          #modalDetalhamentoEquipeDia #tabelaDetalhamentoEquipeDia td.col-unidade { text-align:left; }
+          #modalDetalhamentoEquipeDia #tabelaDetalhamentoEquipeDia td.col-nome { text-align:left; }
+        </style>
+        <div class="row g-2 mb-2 small">
+          <div class="col-12 col-md-4"><strong>Período:</strong> <span id="detEqDiaPeriodo" class="text-muted">-</span></div>
+          <div class="col-6 col-md-2"><strong>Equipe:</strong> <span id="detEqDiaEquipe" class="text-primary">-</span></div>
+          <div class="col-6 col-md-2"><strong>Dia:</strong> <span id="detEqDiaData" class="text-muted">-</span></div>
+          <div class="col-12 col-md-4"><strong>Situação:</strong> <span id="detEqDiaSituacao" class="badge bg-secondary">-</span></div>
+          <div class="col-12 col-md-4"><strong>Turno:</strong> <span id="detEqDiaTurno" class="text-muted">-</span></div>
+        </div>
+        <div class="table-responsive border rounded">
+          <table class="table table-sm table-bordered mb-0 align-middle" id="tabelaDetalhamentoEquipeDia">
+            <thead>
+              <tr class="table-primary text-center align-middle" style="font-size:.75rem;">
+                <th style="width:110px;">Código</th>
+                <th class="col-nome">Nome do Funcionário</th>
+                <th class="col-unidade">Unidade</th>
+                <th style="width:140px;">Possui outra alocação</th>
+                <th style="width:140px;">Efetivo Indisponível</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="text-muted"><td class="text-center" colspan="5">Nenhum componente carregado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-2 small" id="detEqDiaObservacoes" style="min-height:24px;"></div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><i class="bi bi-x"></i> Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>

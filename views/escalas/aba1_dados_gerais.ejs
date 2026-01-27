@@ -1,0 +1,42 @@
+<div class="tab-pane fade show active" id="aba-gerais" role="tabpanel">
+  <form id="formDadosGerais" class="row g-3">
+    <!-- Linha 1: Classificação -->
+    <div class="col-12 col-md-4">
+      <label class="form-label req">Classificação da Escala</label>
+      <input type="text" class="form-control" id="classificacaoEscala" readonly>
+    </div>
+    <!-- Linha 2: Descrição (full width) -->
+    <div class="col-12">
+      <label class="form-label req" for="descricaoEscala">Descrição</label>
+      <input type="text" id="descricaoEscala" class="form-control" maxlength="80">
+    </div>
+    <!-- Linha 3: Unidade -->
+    <div class="col-12 col-md-4">
+      <label class="form-label req" for="unidadeEscala">Unidade</label>
+      <select id="unidadeEscala" class="form-select"></select>
+    </div>
+    <!-- Linha 4: Período -->
+    <div class="col-12 col-md-6">
+      <label class="form-label req">Período</label>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <input type="text" id="dataInicio" class="form-control date-br text-center" data-calendar="flatpickr" data-allow-future="1" placeholder="dd/mm/aaaa" autocomplete="off" style="max-width:170px" readonly>
+        <span class="text-muted">até</span>
+        <input type="text" id="dataFim" class="form-control date-br text-center" data-calendar="flatpickr" data-allow-future="1" placeholder="dd/mm/aaaa" autocomplete="off" style="max-width:170px" readonly>
+      </div>
+      <div class="mini-help">O período pode ter no máximo 31 dias (inclusive).</div>
+    </div>
+    <!-- Linha 5: Responsável -->
+    <div class="col-12 col-md-6">
+      <label class="form-label req">Responsável pela Escala</label>
+      <div class="input-group">
+        <input type="text" id="responsavelNome" class="form-control" placeholder="Selecione..." readonly>
+        <button class="btn btn-outline-primary" type="button" id="btnSelecionarResponsavel"><i class="bi bi-search"></i></button>
+      </div>
+    </div>
+    <!-- Ações -->
+    <div class="col-12 d-flex justify-content-end gap-2">
+      <a href="javascript:history.back()" class="btn btn-outline-secondary"><i class="bi bi-x-circle"></i> Cancelar</a>
+      <button type="button" id="btnSalvarSecDados" class="btn btn-success"><i class="bi bi-check2"></i> Salvar Dados</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,221 @@
+<%- include('../../../partials/modais/modal_sindicato_detalhes.ejs') %>
+<div class="tab-pane fade" id="aba3">
+  <!-- Linha 1 -->
+  <div class="row g-3">
+    <div class="col-md-3">
+      <label class="form-label">Data de Admissão *</label>
+      <input name="data_admissao" id="data_admissao" type="text" class="form-control date-br"
+             data-calendar="flatpickr" placeholder="dd/mm/aaaa" autocomplete="off" required>
+    </div>
+  </div>
+
+  <!-- Linha 2 -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label">Tipo de Admissão</label>
+      <select name="tipo_admissao" id="extra_tipo_admissao" class="form-select" required>
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">Categoria do Trabalhador</label>
+      <div class="input-group">
+        <input name="categoria_trabalhador" id="extra_categoria_trabalhador" class="form-control" readonly>
+       <button type="button" class="btn btn-outline-primary"
+        data-bs-toggle="modal" data-bs-target="#modalCategoriaTrabalhador">
+        Selecionar
+        </button>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Tipo de Contrato</label>
+      <div class="input-group">
+        <input name="tipo_contrato" id="extra_tipo_contrato" class="form-control" readonly>
+<button type="button"
+  class="btn btn-outline-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#modalTipoContrato">
+  Selecionar
+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Linha 3 -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label">Data de Término</label>
+      <input name="data_termino" id="data_termino" type="text" class="form-control date-br"
+             data-calendar="flatpickr" placeholder="dd/mm/aaaa" autocomplete="off">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Objeto determinante</label>
+      <input name="objeto_determinante" id="extra_objeto_determinante" type="text" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Cláusula assecuratória (S/N)</label>
+      <select name="clausula_assecuratoria" id="extra_clausula_assecuratoria" class="form-select">
+        <option value="">Selecione...</option>
+        <option value="S">Sim</option>
+        <option value="N">Não</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Linha 4 -->
+<!-- Linha 4 -->
+<div class="row g-3 mt-2">
+  <div class="col-md-4">
+    <label class="form-label" for="extra_cargo">Cargo</label>
+    <input name="cargo" id="extra_cargo" class="form-control">
+  </div>
+  <div class="col-md-4">
+    <label class="form-label" for="extra_cbo">CBO</label>
+    <div class="input-group">
+      <input name="cbo" id="extra_cbo" class="form-control" readonly>
+      <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCBO">
+        Selecionar
+      </button>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Departamento/Setor</label>
+    <div class="input-group">
+      <input name="setor_nome" id="setor" class="form-control" readonly placeholder="Selecione um setor...">
+      <input type="hidden" name="departamento" id="setor_id_hidden">
+      <button type="button" class="btn btn-outline-primary" id="btnSelecionarSetor">Selecionar</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Linha 5 -->
+<!-- Linha 5 -->
+<div class="row g-3 mt-2">
+  <div class="col-md-4">
+    <label class="form-label" for="extra_regime_contratacao">Regime de Contratação</label>
+    <select name="regime_contratacao" id="extra_regime_contratacao" class="form-select"></select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label" for="extra_regime_jornada">Regime de Jornada</label>
+    <select name="regime_jornada" id="extra_regime_jornada" class="form-select"></select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label" for="extra_carga_semanal">Carga Semanal (h)</label>
+    <input name="carga_semanal" id="extra_carga_semanal" class="form-control" type="number" min="0" step="1" inputmode="numeric">
+  </div>
+</div>
+
+  <!-- Linha 6 -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label">Salário Base</label>
+  <input name="salario_base" id="extra_salario_base" class="form-control moeda-mask"
+             type="text" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Tipo de Salário</label>
+      <select name="tipo_salario" id="extra_tipo_salario" class="form-select"></select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Forma de Pagamento</label>
+      <select name="forma_pagamento" id="extra_forma_pagamento" class="form-select"></select>
+    </div>
+    <div class="col-md-3">
+  <label class="form-label no-colon">Descrição formas de pag.:</label>
+      <input name="forma_pagamento_desc" id="extra_forma_pagamento_desc"
+             class="form-control" type="text" disabled>
+    </div>
+  </div>
+
+  <!-- Linha 7 -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label">Banco</label>
+<div class="input-group">
+  <input name="banco" id="extra_banco" class="form-control" readonly>
+  <button class="btn btn-outline-primary"
+          type="button"
+          data-bs-toggle="modal"
+          data-bs-target="#modalBanco">
+    Selecionar
+  </button>
+</div>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Agência</label>
+      <div class="input-group">
+        <input name="agencia_num" id="extra_agencia_num" class="form-control"
+               placeholder="Número" inputmode="numeric">
+        <input name="agencia_dv" id="extra_agencia_dv" class="form-control"
+               placeholder="DV" style="max-width:60px;" maxlength="2"
+               inputmode="numeric" pattern="[0-9Xx]{1,2}">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Conta</label>
+      <div class="input-group">
+        <input name="conta_num" id="extra_conta_num" class="form-control"
+               placeholder="Número" inputmode="numeric">
+        <input name="conta_dv" id="extra_conta_dv" class="form-control"
+               placeholder="DV" style="max-width:60px;" maxlength="2"
+               inputmode="numeric" pattern="[0-9Xx]{1,2}">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Tipo de Conta</label>
+      <select name="tipo_conta" id="extra_tipo_conta" class="form-select"></select>
+    </div>
+  </div>
+
+  <!-- Linha 8 -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label class="form-label">Sindicato</label>
+      <div class="input-group">
+        <input name="sindicato" id="extra_sindicato" class="form-control" readonly>
+        <!-- troque o botão atual por este -->
+<button
+  class="btn btn-outline-primary"
+  type="button"
+  id="btnAbrirModalSindicato"
+  data-bs-toggle="modal"
+  data-bs-target="#modalSindicato">
+  Selecionar
+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FGTS -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label">FGTS Optante</label>
+      <select name="fgts_optante" id="extra_fgts_optante" class="form-select">
+        <option value="">Selecione...</option>
+        <option value="1">Optante pelo FGTS</option>
+        <option value="2">Não optante pelo FGTS</option>
+        <option value="3">Não optante – trabalhador com idade igual ou superior a 70 anos</option>
+      </select>
+    </div>
+    <div class="col-md-3" id="wrap_fgts_data_opcao">
+      <label class="form-label">Data da Opção</label>
+      <input name="fgts_data" id="extra_fgts_data" type="text" class="form-control date-br"
+             data-calendar="flatpickr" placeholder="dd/mm/aaaa" autocomplete="off" disabled>
+    </div>
+  </div>
+
+  <!-- Regime Previdenciário -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+  <label class="form-label no-colon">Regime Previdenciário:</label>
+      <select name="regime_previdenciario" id="extra_regime_previdenciario" class="form-select"></select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Tipo Especial</label>
+      <select name="tipo_especial" id="extra_tipo_especial" class="form-select"></select>
+    </div>
+  </div>
+
+  <!-- Scripts de modais removidos (já carregados globalmente em funcionarios_index.ejs) -->
+
+</div>

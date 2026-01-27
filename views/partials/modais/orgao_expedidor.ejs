@@ -1,0 +1,61 @@
+<!-- Modal Órgão Expedidor -->
+
+<div class="modal fade modal-sheet theme-blue modal-orgao" id="modalOrgaoExpedidor"
+  tabindex="-1" aria-labelledby="modalOrgaoExpedidorLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalOrgaoExpedidorLabel">Selecionar Órgão Expedidor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Busca com ícone -->
+        <div class="search-wrap has-icon-left mb-2">
+          <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Pesquisar" class="icon icon-sm search-icon" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary\' style=\'font-size:16px;\'\x3e\x3c/i\x3e'" />
+          <input type="text" id="pesquisaOrgaoExpedidor" class="form-control ps-4" placeholder="Pesquisar órgão...">
+        </div>
+
+        <!-- Lista com cabeçalho em grade -->
+        <div id="wrapOrgaos">
+          <div class="sheet-head">
+            <div class="col-sel">Seleção</div>
+            <div class="col-cod">Código</div>
+            <div class="col-nom">Órgão</div>
+          </div>
+
+          <ul id="orgaosExpedidorList" class="list-group list-group-flush" aria-live="polite">
+            <!-- linhas renderizadas via JS -->
+          </ul>
+        </div>
+
+        <!-- Outro -->
+        <div id="orgaoOutroRow" class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" id="orgaoOutroCheck">
+          <label class="form-check-label" for="orgaoOutroCheck">Outro</label>
+        </div>
+
+        <div id="manualOrgaoWrap" class="d-none">
+          <div class="row g-2 mt-1">
+            <div class="col-sm-4">
+              <label for="orgaoOutroCodigo" class="form-label">Código</label>
+              <input type="text" id="orgaoOutroCodigo" class="form-control" placeholder="Ex.: SSP">
+            </div>
+            <div class="col-sm-8">
+              <label for="orgaoOutroNome" class="form-label">Órgão</label>
+              <input type="text" id="orgaoOutroNome" class="form-control" placeholder="Ex.: Secretaria de Segurança Pública">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" title="Cancelar" aria-label="Cancelar">Cancelar</button>
+        <button type="button" class="btn btn-outline-warning" id="modalOrgaoExpedidorLimpar" title="Limpar" aria-label="Limpar">Limpar</button>
+        <button type="button" class="btn btn-outline-primary" id="modalOrgaoExpedidorConfirmar" title="Selecionar" aria-label="Selecionar">Selecionar</button>
+      </div>
+
+    </div>
+  </div>
+</div>

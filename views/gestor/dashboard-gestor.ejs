@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WDGestor - Módulo Gestor</title>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <% const _bpDash = (typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor'; %>
+  <% const _basePath = _bpDash; %>
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bpDash %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bpDash %>/images/logoWDGestor.png?v=4">
+  <!-- Bootstrap / Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Estilos centrais Gestor -->
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bpDash }) %>
+  <style>
+    .header-img { width: 100%; height: 150px; object-fit: cover; }
+    .nav-line { background-color: #e9ecef; padding: 10px; }
+    .content { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .dashboard-logo {
+      height: 200px; /* maior para dar destaque */
+      width: auto;
+      max-width: 90%;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.15));
+    }
+    @media (max-width: 576px){ .dashboard-logo { height: 160px; } }
+  </style>
+</head>
+<body class="wdg-layout" data-base-path="<%= _bpDash %>">
+  <!-- Componentes compartilhados -->
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bpDash, moduleLabel: 'Gestor', user }) %>
+  <%- include('../shared/partials/navbar-shared', {
+    moduleBasePath: _bpDash,
+        moduleLabel: 'Gestor',
+        user,
+    prefixMenuPaths: false,
+        menuItemsGeneral: [
+          { path: 'unidades', label: 'Unidades' },
+          { path: 'funcoes', label: 'Funções' },
+          { path: 'setores', label: 'Setores' },
+          { path: 'funcionarios', label: 'Funcionários' },
+          { path: 'recursos', label: 'Recursos' }
+        ],
+        adminItems: [ { path: 'modulos', label: 'Módulos' }, { path: 'usuarios', label: 'Usuários' } ]
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bpDash, moduleLabel: 'Gestor', user }) %>
+  
+  <!-- Conteúdo específico da página -->
+  <div class="container d-flex justify-content-center align-items-center" style="min-height:50vh;">
+    <div class="content text-center" style="max-width:600px;">
+  <img src="<%= _bpDash %>/images/logoWDGestor.png" alt="WDGestor" class="dashboard-logo mb-4" />
+  <h3 class="mb-3">Bem-vindo ao Módulo Gestor!</h3>
+      <p class="lead mb-0">Selecione uma opção no menu acima.</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[dashboard] DOM carregado, inicializando comportamentos');
+
+      // Navbar: estrutura atual usa offcanvas (data-bs-target="#menuMobile").
+      // Mantemos compatibilidade caso um dia volte a existir #navbarNav.
+      const navbarToggler = document.querySelector('.navbar-toggler');
+      const navbarCollapse = document.querySelector('#navbarNav');
+      if (navbarToggler && navbarCollapse) {
+        navbarToggler.addEventListener('click', () => {
+          navbarCollapse.classList.toggle('show');
+          console.log('[dashboard] toggle legacy navbar, aberto:', navbarCollapse.classList.contains('show'));
+        });
+      } else {
+        console.debug('[dashboard] navbar collapse padrão (#navbarNav) ausente — usando offcanvas Bootstrap (nenhuma ação extra necessária)');
+      }
+
+      // Comportamento por clique (padrão do Bootstrap) — hover desabilitado para estabilidade da navegação
+    });
+  </script>
+
+  <!-- Script de perfil modular -->
+  <script>window.__perfilBasePath='<%= _bpDash %>';</script>
+  <script src="<%= _bpDash %>/js/perfil-modulo.js"></script>
+</body>
+</html>

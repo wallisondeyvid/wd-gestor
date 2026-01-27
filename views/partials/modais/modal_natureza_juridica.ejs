@@ -1,0 +1,36 @@
+<div class="modal fade modal-sheet theme-blue" id="modalNaturezaJuridica" tabindex="-1" aria-labelledby="modalNaturezaJuridicaLabel" aria-hidden="true">
+  <div class="modal-dialog" style="--bs-modal-width:720px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalNaturezaJuridicaLabel">Selecionar Natureza Jurídica</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+<div class="modal-body">
+  <!-- Busca -->
+  <div class="search-wrap has-icon-left mb-2">
+  <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Pesquisar" class="icon icon-sm search-icon" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary\' style=\'font-size:16px;\'\x3e\x3c/i\x3e'" />
+    <input type="text" class="form-control ps-4" id="filtroNaturezaJuridica" placeholder="Pesquisar natureza jurídica...">
+  </div>
+
+  <!-- Cabeçalho (3 colunas) -->
+  <div class="sheet-head three-cols">
+    <div class="col-sel">Seleção</div>
+    <div class="col-cod">Código</div>
+    <div>Natureza Jurídica</div>
+  </div>
+
+  <!-- Lista rolável -->
+  <div class="list-scroll">
+    <ul id="listaNaturezasJuridicas" class="list-group list-group-flush"></ul>
+  </div>
+</div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" title="Cancelar" aria-label="Cancelar">Cancelar</button>
+        <button type="button" class="btn btn-outline-warning" id="btnLimparNaturezaJuridica" title="Limpar" aria-label="Limpar">Limpar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnInserirNaturezaJuridica" title="Selecionar" aria-label="Selecionar">Selecionar</button>
+      </div>
+    </div>
+  </div>
+</div>

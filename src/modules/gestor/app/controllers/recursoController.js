@@ -1,0 +1,22 @@
+// Controller de Recursos (migrado)
+import Unidade from '#models/unidade.js';
+export async function listarRecursos(req, res) {
+  try {
+    let unidadesFiltradas = [];
+    if (req.user.isMaster) {
+      unidadesFiltradas = await Unidade.find().lean();
+    } else {
+      let principalId = req.user.unidade_principal_id;
+      if (!principalId && req.user.unidade_id) {
+        const u = await Unidade.findById(req.user.unidade_id).lean();
+        if (u) principalId = u.is_principal ? u._id : u.unidade_principal_id;
+      }
+      const cond = principalId ? { $or: [{ _id: principalId }, { unidade_principal_id: principalId }] } : {};
+      unidadesFiltradas = await Unidade.find(cond).lean();
+    }
+    return res.render('recursos', { unidadesFiltradas, user: req.user || { nome: 'Usuário Desconhecido', id: null } });
+  } catch (error) {
+    return res.status(500).render('erro', { errorMessage: 'Erro ao carregar recursos: ' + error.message });
+  }
+}
+export default { listarRecursos };

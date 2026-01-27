@@ -1,0 +1,142 @@
+/* ===== Modal Tipo de Contrato ===== */
+#modalTipoContrato .modal-content {
+  border-radius: 12px;
+  border: 1px solid #e7ecf3;
+  background: linear-gradient(180deg, #f6f9ff 0%, #ffffff 26%);
+  box-shadow: 0 12px 28px rgba(0,0,0,.18);
+}
+
+#modalTipoContrato .modal-header {
+  padding: .9rem 1rem;
+  border-bottom: 1px solid #e5e9f2;
+}
+
+#modalTipoContrato .modal-title {
+  font-weight: 600;
+  color: #1d2b4e;
+}
+
+#modalTipoContrato #tipoContratoPesquisa {
+  border-radius: 10px;
+  height: 42px;
+}
+
+#modalTipoContrato .list-header {
+  display: grid;
+  grid-template-columns: 72px 110px 1fr;
+  align-items: center;
+  column-gap: 12px;
+  user-select: none;
+  padding: .55rem calc(.75rem + var(--sbw,0px)) .55rem .75rem;
+  background: #f4f7fc;
+  color: #4b5565;
+  border: 1px solid #e7ecf3;
+  border-radius: 10px;
+  box-sizing: border-box;
+  margin-bottom: .5rem;
+}
+
+#modalTipoContrato .list-header .col-sel,
+#modalTipoContrato .list-header .col-cod {
+  text-align: center;
+  justify-self: center;
+}
+
+#modalTipoContrato #listaTipoContrato {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid #e7ecf3;
+  border-radius: 10px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#modalTipoContrato #listaTipoContrato::-webkit-scrollbar {
+  width: 10px;
+}
+
+#modalTipoContrato #listaTipoContrato::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.12);
+  border-radius: 8px;
+}
+
+#modalTipoContrato #listaTipoContrato:hover::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.22);
+}
+
+#modalTipoContrato #listaTipoContrato > li.list-group-item {
+  border: none;
+  border-bottom: 1px solid #edf1f7;
+  padding: 0;
+}
+
+#modalTipoContrato #listaTipoContrato > li.list-group-item:last-child {
+  border-bottom: 0;
+}
+
+#modalTipoContrato .item-row {
+  display: grid;
+  grid-template-columns: 72px 110px 1fr;
+  align-items: center;
+  column-gap: 12px;
+  min-height: 42px;
+  padding: .55rem .75rem;
+}
+
+#modalTipoContrato .item-row:hover {
+  background: #f7fbff;
+}
+
+#modalTipoContrato .item-row.is-selected {
+  background: #e7f1ff;
+  border-left: 3px solid #3b82f6;
+}
+
+#modalTipoContrato .col-sel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#modalTipoContrato .col-sel .form-check-input {
+  margin: 0;
+}
+
+#modalTipoContrato .col-cod {
+  text-align: center;
+  white-space: nowrap;
+  color: #334155;
+  font-variant-numeric: tabular-nums;
+}
+
+#modalTipoContrato .col-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #1f2937;
+}
+
+#modalTipoContrato .modal-footer {
+  padding: .8rem 1rem 1rem;
+  border-top: 1px solid #eef2f7;
+}
+
+#modalTipoContrato .modal-footer .btn {
+  min-width: 92px;
+}
+
+#modalTipoContrato.modal {
+  z-index: 1055;
+}
+
+.modal-backdrop {
+  z-index: 1050;
+}
+
+@media (max-width: 576px) {
+  #modalTipoContrato .list-header,
+  #modalTipoContrato .item-row {
+    grid-template-columns: 64px 96px 1fr;
+    column-gap: 8px;
+  }
+}

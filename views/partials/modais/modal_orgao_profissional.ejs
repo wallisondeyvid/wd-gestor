@@ -1,0 +1,58 @@
+<!-- Modal Órgão Profissional -->
+<link rel="stylesheet" href="/gestor/css/modais.css">
+
+<div class="modal fade modal-sheet theme-blue modal-orgao" id="modalOrgaoProfissional"
+     tabindex="-1" aria-labelledby="modalOrgaoProfissionalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalOrgaoProfissionalLabel">Selecionar Órgão Profissional</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Busca com ícone (padrão dos modais) -->
+        <div class="search-wrap mb-2 position-relative">
+          <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Pesquisar" class="icon icon-sm position-absolute" style="left:.75rem;top:50%;transform:translateY(-50%);pointer-events:none;" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary position-absolute\' style=\'left:.75rem;top:50%;transform:translateY(-50%);font-size:16px;opacity:.75;\'\x3e\x3c/i\x3e'" />
+          <input type="text" id="modalOrgaoProfissionalPesquisa" class="form-control ps-4" placeholder="Pesquisar órgão...">
+        </div>
+
+        <!-- Cabeçalho “planilha” + lista rolável -->
+        <div id="wrapOrgaoProfissional" class="list-scroll">
+          <div class="sheet-head">
+            <div class="col-sel">Seleção</div>
+            <div class="col-cod">Código</div>
+            <div class="col-desc">Órgão</div>
+          </div>
+          <ul id="modalOrgaoProfissionalLista" class="list-group" aria-live="polite"></ul>
+        </div>
+
+        <!-- Outro -->
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" id="modalOrgaoProfissionalOutroCheck">
+          <label class="form-check-label" for="modalOrgaoProfissionalOutroCheck">Outro</label>
+        </div>
+
+        <div id="modalOrgaoProfissionalOutroWrap" class="d-none">
+          <div class="outro-grid">
+            <div>
+              <label for="modalOrgaoProfissionalOutroCodigo" class="form-label">Código</label>
+              <input type="text" id="modalOrgaoProfissionalOutroCodigo" class="form-control" placeholder="Ex.: CRM">
+            </div>
+            <div>
+              <label for="modalOrgaoProfissionalOutroNome" class="form-label">Órgão</label>
+              <input type="text" id="modalOrgaoProfissionalOutroNome" class="form-control" placeholder="Ex.: Conselho Regional de Medicina">
+            </div>
+          </div>
+        </div>
+      </div><!-- /modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-warning" id="modalOrgaoProfissionalLimpar">Limpar</button>
+        <button type="button" class="btn btn-outline-primary" id="modalOrgaoProfissionalConfirmar">Selecionar</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+<style>
+  :root{
+    --esc-blue-1:#0e6fb1;
+    --esc-blue-2:#0a4f80;
+    --esc-blue-3:#0d6efd;
+    --esc-gray-2:#eef3f7;
+  }
+  body.wdg-theme-blue{ background: linear-gradient(180deg, var(--esc-gray-2), #fff 28%); }
+  /* Cards padrão (Parâmetros) */
+  body.wdg-theme-blue .card{ border-radius:.5rem; box-shadow:0 6px 18px rgba(13,110,253,.08), 0 1px 3px rgba(13,110,253,.08); border:1px solid rgba(10,79,128,.15); }
+  body.wdg-theme-blue .card-header{ background: linear-gradient(var(--esc-blue-1), var(--esc-blue-2)); color:#fff; border-bottom:1px solid var(--esc-blue-2); border-top-left-radius:.5rem; border-top-right-radius:.5rem; }
+  /* Botões padrão tema azul/verde */
+  body.wdg-theme-blue .btn-primary{ background: linear-gradient(180deg, #2a86d1, var(--esc-blue-1)); border-color: var(--esc-blue-1); }
+  body.wdg-theme-blue .btn-primary:hover{ filter: brightness(1.05); }
+  body.wdg-theme-blue .btn-success{ background: linear-gradient(180deg, #35b56b, #2aa35f); border-color:#239454; }
+  body.wdg-theme-blue .btn-success:hover{ filter: brightness(1.05); }
+  /* Tabelas no tema azul */
+  body.wdg-theme-blue .wdg-table thead th{ background:linear-gradient(var(--esc-blue-1),var(--esc-blue-2)); color:#fff; border-color:var(--esc-blue-2); text-align:center; }
+  body.wdg-theme-blue .wdg-zebra tbody tr:nth-child(odd){ background:#e2e2e2; }
+  body.wdg-theme-blue .wdg-zebra tbody tr:nth-child(even){ background:#d6d6d6; }
+  body.wdg-theme-blue .table-sm th, body.wdg-theme-blue .table-sm td{ vertical-align:middle; }
+  body.wdg-theme-blue .wdg-page-title, body.wdg-theme-blue .page-title{ text-align:center; }
+  body.wdg-theme-blue .wdg-page-title, body.wdg-theme-blue .page-title{
+    color: var(--esc-blue-2);
+    font-weight:600;
+    letter-spacing:.5px;
+  }
+  /* Utilitários de formulário padronizados para Parâmetros */
+  body.wdg-theme-blue .wdg-params .form-control-sm,
+  body.wdg-theme-blue .wdg-params .form-select-sm{ border-radius:.35rem; }
+  body.wdg-theme-blue .wdg-params .date-br{ max-width:160px; }
+</style>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <circle cx="60" cy="60" r="50" fill="#ccc"/>
+  <circle cx="60" cy="45" r="20" fill="#999"/>
+  <path d="M30 90 Q30 75 45 75 L75 75 Q90 75 90 90 Z" fill="#999"/>
+  <text x="60" y="110" text-anchor="middle" font-family="Arial" font-size="12" fill="#666">Usuário</text>
+</svg>

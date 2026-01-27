@@ -1,0 +1,125 @@
+/* MOVIDO de public/css/gestor-app.css (escopo módulo Gestor) */
+/* =========================
+   WDGestor — Padrão de Páginas
+   ========================= */
+:root{
+  --wdg-primary: #0d6efd;
+  --wdg-primary-600: #0b5ed7;
+  --wdg-primary-grad: linear-gradient(135deg,#0a2a6b 0%, #0e51a7 45%, #1aa0ff 100%);
+  --wdg-bg: #f5f8ff;
+  --wdg-card-bg: #ffffff;
+  --wdg-border: #e7eefc;
+  --wdg-muted: #6b7280;
+  --wdg-radius: 14px;
+  --wdg-shadow: 0 18px 38px rgba(2,6,23,.08), 0 8px 18px rgba(2,6,23,.05);
+}
+
+/* Área padrão da página */
+.wdg-page{ max-width: 1100px; margin: 26px auto 48px; padding: 0 16px; }
+
+/* Título da página */
+.wdg-page-title{
+  text-align:center; margin: 0 0 16px; font-weight: 700; letter-spacing:.2px;
+  color:#0b2e66;
+}
+.wdg-page-title + .wdg-title-underline{
+  width:min(560px,85%); height:4px; margin: 6px auto 18px; border-radius: 999px;
+  background: var(--wdg-primary-grad);
+  box-shadow: 0 2px 12px rgba(13,110,253,.35);
+}
+
+/* Cartões estruturais (em vez de .card genérico) */
+.wdg-card{ background:var(--wdg-card-bg); border:1px solid var(--wdg-border);
+  border-radius: var(--wdg-radius); box-shadow: var(--wdg-shadow); margin-bottom: 22px; }
+.wdg-card-header{
+  padding:.85rem 1rem; border-bottom:1px solid var(--wdg-border);
+  background: linear-gradient(180deg,#eef5ff 0,#f9fbff 65%,#fff 100%);
+  color:#0b5ed7; font-weight:600;
+}
+.wdg-card-body{ padding: 1rem; }
+.wdg-card-footer{ padding:.85rem 1rem; border-top:1px solid var(--wdg-border); background:#fbfdff; }
+
+/* Formulários — coerência visual */
+.wdg-form .form-label{ font-weight:600; color:#1f2a44; }
+.wdg-form.auto-colon .form-label:not(.no-colon)::after{ content: ':'; margin-left:.15rem; }
+/* Não aplicar em labels de checkbox/radio e afins */
+.wdg-form.auto-colon .form-check-label::after{ content: none; }
+.wdg-form .form-control,
+.wdg-form .form-select{ min-height:42px; border-radius:.6rem; }
+.wdg-form .form-control:focus,
+.wdg-form .form-select:focus{
+  border-color:#9ec5fe; box-shadow:0 0 0 .22rem rgba(13,110,253,.15);
+}
+
+/* Gridzinho rápido para inputs quando quiser sem usar col-md-* */
+.wdg-form-grid{ display:grid; gap:.75rem; }
+.wdg-2col{ grid-template-columns: 1fr 1fr; }
+.wdg-3col{ grid-template-columns: repeat(3,1fr); }
+@media (max-width: 768px){ .wdg-2col,.wdg-3col{ grid-template-columns: 1fr; } }
+
+/* Tabelas */
+.wdg-table{
+  border:1px solid var(--wdg-border); border-radius:12px; overflow:hidden; background:#fff;
+}
+.wdg-table table{ margin:0; }
+.wdg-table thead th{
+  background:#eef5ff; color:#334155; border-bottom:1px solid #dbe6ff; font-weight:600;
+}
+.wdg-table tbody tr:hover td{ background:#f7fbff; }
+.wdg-table tbody tr td{ background:#ffffff !important; }
+.wdg-table .table>:not(caption)>*>*{ padding:.65rem .8rem; vertical-align:middle; }
+
+/* Nav tabs "pílulas" (funcionários) */
+.wdg-tabs{
+  background: linear-gradient(180deg,#eff6ff 0,#ffffff 80%);
+  border: 1px solid #dbe6ff; border-radius: 12px; padding: .35rem;
+  box-shadow: 0 6px 18px rgba(2,6,23,.05);
+}
+.wdg-tabs .nav-link{
+  border:0; color:#0b2e66; font-weight:600; border-radius: 10px; padding:.45rem .8rem;
+}
+.wdg-tabs .nav-link.active{
+  color:#0b5ed7; background:#eaf2ff; box-shadow: inset 0 0 0 1px #cfe2ff;
+}
+
+/* Conteúdo das abas */
+.wdg-tab-content{
+  border:1px solid var(--wdg-border); border-radius: 12px; background:#fff; margin-top: .75rem;
+  box-shadow: var(--wdg-shadow);
+}
+
+/* Barra de ações fixa (opcional) */
+.wdg-sticky-actions{
+  position: sticky; bottom: 16px; z-index: 1010;
+  display:flex; gap:.5rem; justify-content:flex-end;
+  background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.95));
+  backdrop-filter: blur(4px);
+  border:1px solid var(--wdg-border); border-radius:12px; padding:.5rem .6rem;
+  box-shadow: 0 10px 26px rgba(2,6,23,.15);
+}
+
+/* Badges “suaves” */
+.wdg-badge{
+  display:inline-flex; align-items:center; gap:.35rem; padding:.25rem .5rem; border-radius:999px;
+  background:#eef5ff; color:#0b5ed7; border:1px solid #cfe2ff; font-weight:600; font-size:.85rem;
+}
+
+/* Avisos/empty state */
+.wdg-empty{
+  color:#64748b; text-align:center; padding:1rem; background:#f8fbff; border:1px dashed #dbe6ff; border-radius:12px;
+}
+
+/* Ajustes finos */
+.wdg-tight .row.g-3{ --bs-gutter-x: .75rem; --bs-gutter-y: .6rem; }
+.wdg-muted{ color: var(--wdg-muted)!important; }
+
+  .wdg-users-table .table { margin: 0; }
+  .wdg-users-table th, .wdg-users-table td{
+    white-space: nowrap; text-align: center; vertical-align: middle;
+  }
+  .wdg-users-table .col-email{ min-width: 280px; }
+  .wdg-users-table .col-nome { min-width: 140px; }
+  .wdg-users-table .col-role { min-width: 130px; }
+  .wdg-users-table .col-ativo{ min-width: 110px; }
+  .wdg-users-table .col-vinc { min-width: 160px; }
+  .wdg-users-table .col-acoes{ width: 260px; }

@@ -1,0 +1,32 @@
+<div class="tab-pane fade" id="aba-equipes" role="tabpanel">
+  <div class="small text-muted mb-2" id="ctxEquipes"></div>
+  <form id="formEquipes" class="row g-2 mb-3 align-items-end">
+    <div class="col-6 col-md-1">
+      <label class="form-label req" for="nomeEquipe">Nome</label>
+      <input type="text" id="nomeEquipe" maxlength="3" class="form-control uppercase" style="text-align:left; padding-left:6px;" autocomplete="off">
+    </div>
+    <div class="col-12 col-md-7 col-lg-8">
+      <label class="form-label" for="descricaoEquipe">Descrição</label>
+      <input type="text" id="descricaoEquipe" maxlength="30" class="form-control" autocomplete="off">
+    </div>
+    <div class="col-6 col-md-3 col-lg-2 ms-auto text-end d-flex justify-content-end align-items-end">
+      <button type="button" id="btnAddEquipe" class="btn btn-primary btn-sm btn-add-equipe"><i class="bi bi-plus-lg"></i> Inserir</button>
+    </div>
+  </form>
+  <div class="mb-2">
+    <h6 class="mb-0 text-center">Equipes</h6>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered mb-0" id="tabelaEquipes">
+      <thead>
+        <tr>
+          <th class="eq-col-nome">Nome</th>
+          <th class="eq-col-desc">Descrição</th>
+          <th class="eq-col-comp">Componentes</th>
+          <th class="eq-col-acoes">Ações</th>
+        </tr>
+      </thead>
+      <tbody><tr class="text-muted"><td colspan="4" class="text-center">Nenhuma equipe cadastrada.</td></tr></tbody>
+    </table>
+  </div>
+</div>

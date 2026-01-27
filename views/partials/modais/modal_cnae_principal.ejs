@@ -1,0 +1,34 @@
+<div class="modal fade modal-sheet theme-blue modal-cnae" id="modalCnaePrincipal" tabindex="-1" aria-labelledby="modalCnaePrincipalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCnaePrincipalLabel">Selecionar CNAE Principal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+<div class="modal-body">
+  <!-- Busca -->
+  <div class="search-wrap position-relative has-icon-left">
+  <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Pesquisar" class="icon icon-sm search-icon" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary\' style=\'font-size:16px;\'\x3e\x3c/i\x3e'" />
+    <input type="text" class="form-control ps-4" id="filtroCnaePrincipal" placeholder="Pesquisar CNAE por código ou descrição...">
+  </div>
+
+  <!-- Lista rolável com cabeçalho único -->
+  <div class="list-scroll">
+    <div class="sheet-head three-cols">
+      <div class="col-sel">Seleção</div>
+      <div class="col-cod">Código</div>
+      <div class="col-desc">Descrição do CNAE</div>
+    </div>
+    <ul id="listaCnaePrincipalList" class="cnae-list" ></ul>
+  </div>
+</div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" title="Cancelar" aria-label="Cancelar">Cancelar</button>
+        <button type="button" class="btn btn-outline-warning" id="btnLimparCnaePrincipal" title="Limpar" aria-label="Limpar">Limpar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnConfirmarCnaePrincipal" title="Selecionar" aria-label="Selecionar">Selecionar</button>
+      </div>
+    </div>
+  </div>
+</div>

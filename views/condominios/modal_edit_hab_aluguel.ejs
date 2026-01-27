@@ -1,0 +1,183 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalEditHabAluguel" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+  <div class="modal-content wdg-modal">
+      
+      <div class="modal-header">
+        <h5 class="modal-title">Gerenciar aluguel</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <span class="fw-semibold">Habitação:</span>
+          <span id="alugHabLabel" class="text-muted small"></span>
+        </div>
+        <div class="mb-3">
+          <span class="fw-semibold">Proprietário:</span>
+          <span id="alugPropLabel" class="text-muted small"></span>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="alugadoSwitch">
+          <label class="form-check-label" for="alugadoSwitch">Alugado</label>
+        </div>
+
+        <div class="mb-3">
+          <div class="mb-2 text-center">
+            <div class="fw-semibold">Moradores</div>
+          </div>
+          <div class="table-responsive wdg-scroll-2">
+            <table class="table table-sm align-middle wdg-table-centered wdg-sticky-head wdg-actions-lastcol">
+              <thead>
+                <tr>
+                  <th style="width: 1%;">Inquilino</th>
+                  <th>Nome</th>
+                  <th style="width: 1%;">Resp. financeiro</th>
+                  <th class="actions-col">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="alugMoradoresBody">
+                <!-- preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="wdg-card wdg-card-hover p-2 mb-3">
+          <div class="fw-semibold mb-2 text-center">Dados contratuais de locação</div>
+          <div class="row g-3 mb-3 justify-content-center">
+            <div class="col-auto">
+              <label for="locacaoInicio" class="form-label">Período inicial</label>
+              <input type="text" class="form-control datepicker date-br w-auto" id="locacaoInicio" placeholder="DD/MM/AAAA" autocomplete="off" data-formato="br" inputmode="numeric" maxlength="10" style="max-width:160px">
+            </div>
+            <div class="col-auto">
+              <label for="locacaoFim" class="form-label">Período final</label>
+              <input type="text" class="form-control datepicker date-br w-auto" id="locacaoFim" placeholder="DD/MM/AAAA" autocomplete="off" data-formato="br" inputmode="numeric" maxlength="10" style="max-width:160px">
+            </div>
+          </div>
+          <div class="mb-2 contrato-file-wrap">
+            <label for="contratoFile" class="form-label">Anexar contrato</label>
+            <input type="file" class="form-control" id="contratoFile" accept="application/pdf,image/*">
+            <div class="form-text">PDF ou imagem. Tamanho máximo ~2MB.</div>
+          </div>
+          <div id="contratoFilePreview" class="small text-muted mt-2 d-none">
+            <span id="contratoFilePreviewLabel"></span>
+            <a id="contratoFilePreviewLink" class="ms-2 d-none" target="_blank" rel="noopener">Abrir arquivo</a>
+            <span id="contratoFilePreviewSize" class="ms-2"></span>
+            <button type="button" id="btnContratoFileRemover" class="btn btn-sm btn-link p-0 ms-3">Remover arquivo</button>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" id="btnContratoLimpar">Limpar</button>
+            <button type="button" class="btn btn-success" id="btnContratoInserir">Inserir</button>
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <div class="mb-2 text-center">
+            <div class="fw-semibold">Contratos de locação</div>
+          </div>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <label for="contratosPageSize" class="form-label mb-0">Mostra</label>
+            <select id="contratosPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span>itens</span>
+          </div>
+          <div class="table-responsive wdg-scroll-2">
+            <table class="table table-sm align-middle wdg-table-centered wdg-sticky-head wdg-actions-lastcol">
+              <thead>
+                <tr>
+                  <th>Período inicial</th>
+                  <th>Período final</th>
+                  <th>Contrato</th>
+                  <th>Vigente</th>
+                  <th class="actions-col">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="alugContratosListBody">
+                <!-- preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div id="contratosPaginas" class="wdg-pager mt-2"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" id="btnAluguelLimpar">Limpar</button>
+        <button type="button" class="btn btn-primary" id="btnAluguelSalvar">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <script>
+  // Garante que o CSS compartilhado de modais esteja carregado
+  (function ensureModalCss(){
+    if(!document.getElementById('wdgModalsCSS')){
+      var l = document.createElement('link');
+      l.id = 'wdgModalsCSS';
+      l.rel = 'stylesheet';
+      l.href = '/gestor/css/modals.css';
+      document.head.appendChild(l);
+    }
+    // Fallback: se por algum motivo a folha não carregar, injeta regras mínimas inline
+    setTimeout(function(){
+      try{
+        var probe = document.createElement('div'); probe.className='wdg-table-centered';
+        var applied=false; document.body.appendChild(probe);
+        applied = !!getComputedStyle(probe).textAlign && getComputedStyle(probe).textAlign==='center';
+        document.body.removeChild(probe);
+        if(!applied){
+          var st = document.createElement('style'); st.id='wdgModalsCSSFallback';
+          st.textContent = '.wdg-modal{border-radius:10px;overflow:hidden}.wdg-table-centered th,.wdg-table-centered td{text-align:center}.wdg-sticky-head thead th{position:sticky;top:0;z-index:3;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06)}.wdg-actions-lastcol tbody td:last-child{white-space:nowrap}.wdg-scroll-2{max-height:160px;overflow-y:auto}.wdg-card{border:1px solid rgba(0,0,0,.08);border-radius:10px;background:#fff;box-shadow:0 6px 14px rgba(2,6,23,.06)}';
+          document.head.appendChild(st);
+        }
+      }catch(_e){}
+    }, 800);
+  })();
+
+  // Garante que o calendário seja carregado mesmo quando este modal é inserido dinamicamente
+  (function ensureDatepicker(){
+    var hasScript = !!document.querySelector('script[src*="/gestor/js/core/simple-datepicker.js"]');
+    if(!hasScript){
+      var s = document.createElement('script');
+      s.src = '/gestor/js/core/simple-datepicker.js';
+      s.onload = function(){ /* simple-datepicker auto-inicializa ao carregar */ };
+      document.head.appendChild(s);
+    }
+  })();
+
+      (function(){
+        function maskDateInput(el){
+          function format(v){
+            v = (v||'').replace(/\D+/g,'').slice(0,8);
+            const p1 = v.slice(0,2);
+            const p2 = v.slice(2,4);
+            const p3 = v.slice(4,8);
+            let out = p1;
+            if(p2) out += '/' + p2;
+            if(p3) out += '/' + p3;
+            return out;
+          }
+          function onInput(){
+            const cur = el.value;
+            const f = format(cur);
+            if(cur !== f) el.value = f;
+          }
+          el.addEventListener('input', onInput);
+          el.addEventListener('blur', onInput);
+        }
+        document.addEventListener('DOMContentLoaded', function(){
+          var ini = document.getElementById('locacaoInicio');
+          var fim = document.getElementById('locacaoFim');
+          if(ini) maskDateInput(ini);
+          if(fim) maskDateInput(fim);
+        });
+      })();
+
+      // Handlers de inserção/salvamento ficam no JS público (public/js/condominios/modal_edit_hab_aluguel.js)
+    </script>

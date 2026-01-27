@@ -1,0 +1,205 @@
+<div class="tab-pane fade" id="aba7" role="tabpanel" aria-labelledby="tab-aba7">
+  <div class="row g-3">
+    <div class="col-md-12">
+      <label class="form-label" for="observacoes">Observações</label>
+      <textarea name="observacoes" id="observacoes" class="form-control" rows="3"></textarea>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-md-12">
+      <label class="form-label" for="anexos">Anexos</label>
+      <div class="input-group">
+  <input type="file" name="anexos" id="anexos" class="form-control" multiple>
+        <button type="button" class="btn btn-outline-primary" data-action="inserir-anexos">Inserir</button>
+      </div>
+      <ul class="list-group mt-2" id="listaAnexos"></ul>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const inputAnexos = document.getElementById('anexos');
+    const btnInserir = document.querySelector('[data-action="inserir-anexos"]');
+    const listaAnexos = document.getElementById('listaAnexos');
+    let anexos = [];
+
+    function atualizarLista() {
+      listaAnexos.innerHTML = '';
+      anexos.forEach((file, idx) => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+        const isExisting = file.existente === true;
+
+        li.innerHTML = `
+          <span>${file.name} ${isExisting ? '<small class="text-muted">(existente)</small>' : ''}</span>
+          <div>
+            <button type="button" class="btn btn-sm btn-outline-success me-2" data-idx="${idx}" data-action="visualizar">Visualizar</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-idx="${idx}" data-action="excluir">Excluir</button>
+          </div>
+        `;
+        listaAnexos.appendChild(li);
+      });
+    }
+
+    btnInserir.addEventListener('click', function () {
+      if (!inputAnexos.files.length) return;
+      if (anexos.length >= 10) {
+        alert('Limite de 10 anexos atingido!');
+        return;
+      }
+      if (inputAnexos.files.length + anexos.length > 10) {
+        alert('Você selecionou mais arquivos do que o permitido. O máximo são 10 anexos.');
+        return;
+      }
+      const tiposPermitidos = [
+        'image/jpeg','image/png','image/gif','image/bmp','image/webp',
+        'application/pdf',
+        'application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/plain'
+      ];
+      for (let i = 0; i < inputAnexos.files.length; i++) {
+        const file = inputAnexos.files[i];
+        if (!tiposPermitidos.includes(file.type)) {
+          alert('O arquivo "' + file.name + '" não é permitido. Apenas imagens, documentos e PDFs podem ser anexados.');
+          continue;
+        }
+        if (anexos.length >= 10) break;
+        anexos.push(file);
+      }
+      atualizarLista();
+      // Limpar o campo de input após adicionar à lista
+      inputAnexos.value = null;
+      console.log('[ABA7] Arquivos adicionados à lista, campo limpo');
+    });
+
+    listaAnexos.addEventListener('click', function (e) {
+      const idx = e.target.getAttribute('data-idx');
+      const action = e.target.getAttribute('data-action');
+      if (idx == null) return;
+
+      const file = anexos[idx];
+
+      if (action === 'excluir') {
+        // Para arquivos existentes, confirmar exclusão
+        if (file.existente) {
+          if (confirm(`Tem certeza que deseja excluir o arquivo "${file.name}"? Esta ação não pode ser desfeita.`)) {
+            console.log(`[EXCLUIR] Removendo arquivo existente: ${file.name} (caminho: ${file.caminho})`);
+            anexos.splice(idx, 1);
+            atualizarLista();
+          }
+        } else {
+          // Para arquivos novos, remover sem confirmação
+          anexos.splice(idx, 1);
+          atualizarLista();
+        }
+      }
+      if (action === 'visualizar') {
+        if (file.existente && file.caminho) {
+          // Usa rota protegida com índice baseado na posição atual
+          try {
+            // Precisamos do ID do funcionário em edição
+            const form = document.getElementById('formFuncionario');
+            let id = null;
+            // Tenta extrair da action /funcionarios/:id
+            if(form && form.action){
+              const m2 = form.action.match(/funcionarios\/([a-fA-F0-9]{24})/);
+              if(m2) id = m2[1];
+            }
+            if(!id){
+              // tenta a partir de hidden _id se existir
+              const hid = form?.querySelector('input[name="_id"]');
+              if(hid && hid.value) id = hid.value;
+            }
+            if(!id){
+              console.warn('[VISUALIZAR] ID do funcionário não identificado; fallback para caminho direto');
+              const fallback = '/' + file.caminho.replace(/^\/+/, '');
+              window.open(fallback,'_blank');
+              return;
+            }
+            const basePath = (window.__basePath || window.__WD_BASE_PATH || '/gestor').replace(/\/$/,'');
+            const apiUrl = `${basePath}/api/funcionarios/${id}/anexo/${idx}`;
+            console.log('[VISUALIZAR] Abrindo via API:', apiUrl);
+            window.open(apiUrl,'_blank');
+          } catch(err){
+            console.warn('[VISUALIZAR] Falha ao construir URL protegida, fallback direto', err);
+            const url = '/' + file.caminho.replace(/^\/+/, '');
+            window.open(url,'_blank');
+          }
+        } else {
+          // arquivo novo (File/Blob)
+            const url = URL.createObjectURL(file);
+            window.open(url, '_blank');
+            setTimeout(() => URL.revokeObjectURL(url), 15000);
+        }
+      }
+    });
+
+    let anexosOriginais = []; // Para rastrear arquivos originais carregados
+
+    // Carregar anexos existentes (para edição)
+    function carregarAnexosExistentes(anexosExistentes) {
+      console.log('[CARREGAR] Anexos existentes recebidos:', anexosExistentes);
+      if (!Array.isArray(anexosExistentes)) return;
+      anexosOriginais = anexosExistentes.map(a => ({
+        nome: a.nome,
+        caminho: a.caminho
+      }));
+      anexos = anexosExistentes.map(a => {
+        console.log('[CARREGAR] Processando anexo:', { nome: a.nome, caminho: a.caminho });
+        return {
+          name: a.nome,
+          size: a.tamanho,
+          type: a.mime,
+          caminho: a.caminho,
+          existente: true
+        };
+      });
+      atualizarLista();
+    }
+
+    // Ao enviar o form, manter apenas os arquivos NOVOS no input file
+    const form = document.getElementById('formFuncionario');
+    // Função global para ser chamada manualmente antes de montar FormData
+    window.__collectAnexosForSubmit = function(currentForm){
+      const targetForm = currentForm || form;
+      if(!targetForm) return [];
+      const novos = anexos.filter(f => !f.existente);
+      const existentes = anexos.filter(f => f.existente);
+      // Hidden anexos_existentes
+      let hiddenExist = document.getElementById('anexos_existentes');
+      if(existentes.length){
+        if(!hiddenExist){
+          hiddenExist = document.createElement('input');
+          hiddenExist.type='hidden';
+          hiddenExist.name='anexos_existentes';
+          hiddenExist.id='anexos_existentes';
+          targetForm.appendChild(hiddenExist);
+        }
+        hiddenExist.value = JSON.stringify(existentes.map(a=>({ nome:a.name, tamanho:a.size, mime:a.type, caminho:a.caminho })));
+      } else if(hiddenExist){ hiddenExist.remove(); }
+      // Hidden anexos_excluidos
+      const anexosExcluidos = anexosOriginais.filter(original => !anexos.some(atual => atual.existente && atual.caminho === original.caminho));
+      let hiddenExc = document.getElementById('anexos_excluidos');
+      if(anexosExcluidos.length){
+        if(!hiddenExc){
+          hiddenExc = document.createElement('input');
+          hiddenExc.type='hidden';
+          hiddenExc.name='anexos_excluidos';
+          hiddenExc.id='anexos_excluidos';
+          targetForm.appendChild(hiddenExc);
+        }
+        hiddenExc.value = JSON.stringify(anexosExcluidos);
+      } else if(hiddenExc){ hiddenExc.remove(); }
+      console.log('[ABA7][COLLECT] novos:', novos.length, 'existentes:', existentes.length, 'excluidos:', anexosExcluidos.length);
+      return novos;
+    };
+
+    // expõe função global para modo edição
+    window.carregarAnexosAba7 = carregarAnexosExistentes;
+  });
+  </script>
+</div>

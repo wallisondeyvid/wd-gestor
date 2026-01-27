@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <% const _basePath = (typeof basePath === 'string' && basePath) ? basePath : (typeof moduleBasePath === 'string' && moduleBasePath) ? moduleBasePath : '/gestor'; %>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unidades - WDGestor</title>
+  <%- include('partials/favicon') %>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="<%= _basePath %>/css/vendor/flatpickr.min.css">
+  <link rel="stylesheet" href="<%= _basePath %>/css/vendor/flatpickr.custom.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Estilos centrais Gestor -->
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _basePath }) %>
+  <!-- Tema moderno (igual ao módulo Condomínios) e pager unificado -->
+  <link rel="stylesheet" href="/condominios/css/condominios-modern.css?v=1">
+  <!-- CSS específico desta página -->
+  <link rel="stylesheet" href="<%= _basePath %>/css/modais-funcionarios.css?v=1">
+  <!-- Padrão de botões de ação por ícone (unificado) -->
+  <link rel="stylesheet" href="<%= _basePath %>/css/icon-buttons.css?v=1">
+  <link rel="stylesheet" href="<%= _basePath %>/css/gestor-app.css?v=1">
+
+  <!-- JS base -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+  <!-- Migrado: masks.js legado -> gestor/core -->
+  <script src="<%= _basePath %>/js/core/masks.js"></script>
+</head>
+<body class="wdg-layout" data-base-path="<%= _basePath %>">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
+  <%- include('../shared/partials/navbar-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
+
+  <div class="wdg-page">
+    <!-- Título alinhado ao tema Condomínios -->
+    <h4 class="mb-3 text-center page-main-title">Cadastrar Unidades</h4>
+    <div class="gestor-divider"></div>
+
+    <!-- Card do formulário (visual moderno) -->
+    <div class="wdg-card content wdg-card-hover">
+      <div class="wdg-card-body wdg-form wdg-tight">
+  <form id="cadastroUnidadeForm" class="needs-validation wdg-form auto-colon" novalidate>
+          <input type="hidden" id="unidadeId" name="unidadeId">
+
+          <ul class="nav nav-tabs" id="tabsCadastroUnidade" role="tablist">
+            <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" type="button" data-bs-target="#abaDadosGerais" role="tab">Dados Gerais</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" type="button" data-bs-target="#abaDadosEmpresariais" role="tab">Dados Empresariais</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" type="button" data-bs-target="#abaContatos" role="tab">Contatos</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" type="button" data-bs-target="#abaBancarios" role="tab">Dados Bancários</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" type="button" data-bs-target="#abaCredenciais" role="tab">Credenciais do Sistema</button></li>
+          </ul>
+
+          <div class="tab-content pt-3">
+            <!-- Aba 1: Dados Gerais -->
+            <div class="tab-pane fade show active" id="abaDadosGerais" role="tabpanel">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="nomeFantasia" class="form-label no-colon">Nome Fantasia:</label>
+                  <input type="text" class="form-control" id="nomeFantasia" name="nomeFantasia" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="razaoSocial" class="form-label no-colon">Razão Social:</label>
+                  <input type="text" class="form-control" id="razaoSocial" name="razaoSocial" required>
+                </div>
+
+                <!-- Matriz / Filial -->
+                <div class="col-md-12">
+                  <div class="d-flex align-items-center gap-4 flex-wrap">
+                    <% if (user && user.role === 'diretor') { %>
+                      <!-- Para diretores: sempre filial, não pode alterar -->
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" id="matriz" name="tipoUnidade" value="matriz" disabled>
+                        <label class="form-check-label" for="matriz">Matriz</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" id="filial" name="tipoUnidade" value="filial" checked disabled>
+                        <label class="form-check-label" for="filial">Filial</label>
+                        <small class="text-info ms-2">(Diretores só podem criar filiais)</small>
+                      </div>
+                    <% } else { %>
+                      <!-- Para admin/master: pode escolher -->
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" id="matriz" name="tipoUnidade" value="matriz" checked>
+                        <label class="form-check-label" for="matriz">Matriz</label>
+                      </div>
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input" type="radio" id="filial" name="tipoUnidade" value="filial">
+                        <label class="form-check-label" for="filial">Filial</label>
+                      </div>
+                    <% } %>
+                  </div>
+                </div>
+
+                <!-- Select Matriz (sempre visível para diretores, condicional para outros) -->
+                <div class="col-12" id="unidadePrincipalSelect" <% if (user && user.role === 'diretor') { %>style="display: block;"<% } %>>
+                  <div style="width:50%; min-width:300px;">
+                    <label for="unidadePrincipal" class="form-label no-colon">
+                      <% if (user && user.role === 'diretor') { %>
+                        Selecione a Matriz <span class="text-danger">*</span>
+                      <% } else { %>
+                        Selecione a Matriz:
+                      <% } %>
+                    </label>
+                    <select id="unidadePrincipal" name="unidadePrincipal" class="form-select" <% if (user && user.role === 'diretor') { %>required<% } %>>
+                      <option value="">Selecione...</option>
+          <% const listaPrincipais = (typeof principalUnits !== 'undefined' && Array.isArray(principalUnits) && principalUnits.length)
+            ? principalUnits
+            : (Array.isArray(unidadesFiltradas) ? unidadesFiltradas.filter(u => (u.is_principal === true) || (u.subunidade === false || u.subunidade === 'false')) : []); %>
+                      <% if (listaPrincipais && listaPrincipais.length) { %>
+                        <% listaPrincipais.forEach(function(unidade){ %>
+                          <option value="<%= unidade._id %>" data-cnpj="<%= unidade.cnpj %>"><%= (unidade.codigo && unidade.nome) ? unidade.codigo + ' - ' + unidade.nome : unidade.nome %></option>
+                        <% }); %>
+                      <% } else { %>
+                        <option value="" disabled>Nenhuma Matriz encontrada</option>
+                      <% } %>
+                    </select>
+                    <% if (!(listaPrincipais && listaPrincipais.length)) { %>
+                      <small class="text-danger">Sem matriz cadastrada. Filiais não poderão ser salvas até existir uma Matriz.</small>
+                    <% } %>
+                  </div>
+                </div>
+
+                <!-- Tipo de Pessoa -->
+                <div class="col-12">
+                  <div class="d-flex align-items-center gap-4 flex-wrap">
+                    <div class="form-check form-check-inline mb-0">
+                      <input class="form-check-input" type="radio" id="pessoaFisica" name="pessoaTipo" value="pf" checked>
+                      <label class="form-check-label" for="pessoaFisica">Pessoa Física</label>
+                    </div>
+                    <div class="form-check form-check-inline mb-0">
+                      <input class="form-check-input" type="radio" id="pessoaJuridica" name="pessoaTipo" value="pj">
+                      <label class="form-check-label" for="pessoaJuridica">Pessoa Jurídica</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CPF / CNPJ -->
+                <div class="col-md-6">
+                  <label for="cpf" class="form-label no-colon">CPF:</label>
+                  <input type="text" class="form-control" id="cpf" name="cpf">
+                </div>
+
+                <div class="col-md-6">
+                  <label for="cnpj" class="form-label no-colon">CNPJ:</label>
+                  <input type="text" class="form-control" id="cnpj" name="cnpj" disabled>
+                </div>
+
+                <!-- Endereço -->
+                <div class="col-12">
+                  <label for="endereco" class="form-label no-colon">Endereço:</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="endereco" name="endereco" required readonly style="background-color:#f8f9fa; cursor:not-allowed;">
+                    <button type="button" class="btn btn-outline-primary" data-action="abrirPopupEndereco" data-field="endereco" title="Pesquisar endereço" aria-label="Pesquisar endereço">Pesquisar</button>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-2">
+                  <button class="btn btn-outline-primary" data-nav="next" type="button" title="Próximo" aria-label="Próximo">Próximo</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Aba 2: Empresariais -->
+            <div class="tab-pane fade" id="abaDadosEmpresariais" role="tabpanel">
+              <div class="row g-3 mt-2">
+                <div class="col-md-6">
+                  <label for="naturezaJuridica" class="form-label no-colon">Natureza Jurídica:</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="naturezaJuridica" name="naturezaJuridica" readonly required>
+                    <button type="button" class="btn btn-outline-primary" id="btnSelecionarNaturezaJuridica" title="Selecionar natureza jurídica" aria-label="Selecionar natureza jurídica">Selecionar</button>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label for="cnaePrincipal" class="form-label no-colon">CNAE Principal:</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="cnaePrincipal" name="cnaePrincipal" readonly>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCnaePrincipal" title="Selecionar CNAE principal" aria-label="Selecionar CNAE principal">Selecionar</button>
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <label for="cnaeSecundarios" class="form-label no-colon">CNAE Secundários:</label>
+                  <div class="input-group">
+                    <textarea class="form-control" id="cnaeSecundarios" name="cnaeSecundarios" rows="2" readonly style="resize: vertical; min-height: 38px; max-height: 120px;"></textarea>
+                    <button type="button" class="btn btn-outline-primary" id="btnPesquisarCnaeSecundario" data-bs-toggle="modal" data-bs-target="#modalCnaeSecundario" title="Selecionar CNAEs secundários" aria-label="Selecionar CNAEs secundários">Selecionar</button>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label for="inscricaoEstadual" class="form-label no-colon">Inscrição Estadual:</label>
+                  <input type="text" class="form-control" id="inscricaoEstadual" name="inscricaoEstadual">
+                </div>
+                <div class="col-md-3">
+                  <label for="inscricaoMunicipal" class="form-label no-colon">Inscrição Municipal:</label>
+                  <input type="text" class="form-control" id="inscricaoMunicipal" name="inscricaoMunicipal">
+                </div>
+                <div class="col-md-3">
+                  <label for="regimeTributario" class="form-label no-colon">Regime Tributário:</label>
+                  <select class="form-select" id="regimeTributario" name="regimeTributario">
+                    <option value="">Selecione...</option>
+                    <option value="Simples Nacional">Simples Nacional</option>
+                    <option value="Lucro Presumido">Lucro Presumido</option>
+                    <option value="Lucro Real">Lucro Real</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="dataAbertura" class="form-label no-colon">Data de Abertura:</label>
+                  <input type="text" class="form-control date-br" data-calendar="flatpickr" id="dataAbertura" name="dataAbertura" placeholder="dd/mm/aaaa" autocomplete="off">
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                  <button class="btn btn-outline-secondary" data-nav="prev" type="button" title="Voltar" aria-label="Voltar">Voltar</button>
+                  <button class="btn btn-outline-primary" data-nav="next" type="button" title="Próximo" aria-label="Próximo">Próximo</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Aba 3: Contatos -->
+            <div class="tab-pane fade" id="abaContatos" role="tabpanel">
+              <div class="row g-3 mt-2">
+                <div class="col-md-3">
+                  <label for="telefoneFixo" class="form-label no-colon">Telefone Fixo:</label>
+                  <input type="text" class="form-control" id="telefoneFixo" name="telefoneFixo" data-action="formatarTelefoneFixo">
+                </div>
+                <div class="col-md-3">
+                  <label for="telefoneCelular" class="form-label no-colon">Telefone Celular:</label>
+                  <input type="text" class="form-control" id="telefoneCelular" name="telefoneCelular" required data-action="formatarTelefoneCelular">
+                </div>
+                <div class="col-md-3">
+                  <label for="emailPrincipal" class="form-label no-colon">E-mail Principal:</label>
+                  <input type="email" class="form-control" id="emailPrincipal" name="emailPrincipal" required>
+                </div>
+                <div class="col-md-3">
+                  <label for="emailFiscal" class="form-label no-colon">E-mail Fiscal:</label>
+                  <input type="email" class="form-control" id="emailFiscal" name="emailFiscal">
+                </div>
+                <div class="col-md-6">
+                  <label for="site" class="form-label no-colon">Site:</label>
+                  <input type="url" class="form-control" id="site" name="site" placeholder="https://www.suaempresa.com">
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                  <button class="btn btn-outline-secondary" data-nav="prev" type="button" title="Voltar" aria-label="Voltar">Voltar</button>
+                  <button class="btn btn-outline-primary" data-nav="next" type="button" title="Próximo" aria-label="Próximo">Próximo</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Aba 4: Bancários -->
+            <div class="tab-pane fade" id="abaBancarios" role="tabpanel">
+              <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                  <label for="banco" class="form-label no-colon">Banco:</label>
+                  <div class="input-group">
+                    <input name="banco" id="banco" class="form-control" readonly>
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalBanco" title="Selecionar banco" aria-label="Selecionar banco">Selecionar</button>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="agenciaNumero" class="form-label no-colon">Agência:</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="agenciaNumero" placeholder="Número" maxlength="5" inputmode="numeric" autocomplete="off">
+                    <span class="input-group-text">-</span>
+                    <input type="text" class="form-control" id="agenciaDV" placeholder="DV" maxlength="2" style="max-width:70px;" autocomplete="off">
+                  </div>
+                  <div class="form-text">Ex: 1234-5 (DV pode ser X)</div>
+                </div>
+                <div class="col-md-4">
+                  <label for="contaNumero" class="form-label no-colon">C/C:</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="contaNumero" placeholder="Número" maxlength="12" inputmode="numeric" autocomplete="off">
+                    <span class="input-group-text">-</span>
+                    <input type="text" class="form-control" id="contaDV" placeholder="DV" maxlength="2" style="max-width:70px;" autocomplete="off">
+                  </div>
+                  <div class="form-text">Ex: 123456-7</div>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-label no-colon" id="tipoPixLabel">Tipo de Chave Pix:</div>
+                  <div class="form-check form-check-inline" role="group" aria-labelledby="tipoPixLabel">
+                    <input class="form-check-input" type="radio" name="tipoPix" id="pixCpf" value="cpf" required>
+                    <label class="form-check-label" for="pixCpf">CPF</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="tipoPix" id="pixCnpj" value="cnpj">
+                    <label class="form-check-label" for="pixCnpj">CNPJ</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="tipoPix" id="pixTelefone" value="telefone">
+                    <label class="form-check-label" for="pixTelefone">Telefone</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="tipoPix" id="pixEmail" value="email">
+                    <label class="form-check-label" for="pixEmail">E-mail</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="tipoPix" id="pixAleatoria" value="aleatoria">
+                    <label class="form-check-label" for="pixAleatoria">Aleatória</label>
+                  </div>
+                  <div class="form-check form-switch d-inline-flex align-items-center ms-3">
+                    <input class="form-check-input" type="checkbox" id="pixAuto" checked>
+                    <label class="form-check-label ms-1" for="pixAuto">Auto</label>
+                  </div>
+                  <input type="hidden" id="tipoPixHidden" name="tipoPixHidden" value="">
+                  <div class="mt-2">
+                    <label for="pixChave" class="form-label no-colon">PIX (chave):</label>
+                    <input type="text" class="form-control" id="pixChave" name="pixChave" autocomplete="off">
+                    <div class="form-text" id="pixHelp"></div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="api-cred-card mt-2">
+                    <div class="d-flex flex-wrap align-items-start gap-3">
+                      <div>
+                        <span class="api-cred-badge">Integração bancária</span>
+                        <h6 class="mb-1">Credenciais da API Bancária (Genérico)</h6>
+                        <p class="text-muted small mb-0">
+                          Informe apenas o necessário para o banco autenticar as requisições do WD Gestor. 
+                          Esta configuração será usada por qualquer módulo desta unidade.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="row g-3 mt-3">
+                      <div class="col-md-4">
+                        <label for="tipoAutenticacaoAPI" class="form-label no-colon">Modo de autenticação:</label>
+                        <select class="form-select" id="tipoAutenticacaoAPI" name="tipoAutenticacaoAPI">
+                          <option value="">Nenhuma</option>
+                          <option value="api-key-header">API Key (Header)</option>
+                          <option value="api-key-query">API Key (Query)</option>
+                          <option value="basic">Basic Auth</option>
+                          <option value="oauth2">OAuth2 – Client Credentials</option>
+                          <option value="mtls">mTLS</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- API Key em header -->
+                    <div class="row g-3 mt-1 api-cred-section d-none" data-auth-section="api-key-header">
+                      <div class="col-md-4">
+                        <label for="apiHeaderName" class="form-label no-colon">Nome do header:</label>
+                        <input type="text" class="form-control" id="apiHeaderName" name="apiHeaderName" placeholder="Ex.: x-api-key">
+                      </div>
+                      <div class="col-md-8">
+                        <label for="apiHeaderValue" class="form-label no-colon">Valor da API Key:</label>
+                        <input type="text" class="form-control" id="apiHeaderValue" name="apiHeaderValue" autocomplete="off">
+                      </div>
+                    </div>
+
+                    <!-- API Key em querystring -->
+                    <div class="row g-3 mt-1 api-cred-section d-none" data-auth-section="api-key-query">
+                      <div class="col-md-4">
+                        <label for="apiQueryParamName" class="form-label no-colon">Nome do parâmetro:</label>
+                        <input type="text" class="form-control" id="apiQueryParamName" name="apiQueryParamName" placeholder="Ex.: api_key">
+                      </div>
+                      <div class="col-md-8">
+                        <label for="apiQueryParamValue" class="form-label no-colon">Valor da API Key:</label>
+                        <input type="text" class="form-control" id="apiQueryParamValue" name="apiQueryParamValue" autocomplete="off">
+                      </div>
+                    </div>
+
+                    <!-- Basic Auth -->
+                    <div class="row g-3 mt-1 api-cred-section d-none" data-auth-section="basic">
+                      <div class="col-md-6">
+                        <label for="apiBasicUser" class="form-label no-colon">Usuário:</label>
+                        <input type="text" class="form-control" id="apiBasicUser" name="apiBasicUser" autocomplete="off">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="apiBasicPassword" class="form-label no-colon">Senha:</label>
+                        <input type="password" class="form-control" id="apiBasicPassword" name="apiBasicPassword" autocomplete="new-password">
+                      </div>
+                    </div>
+
+                    <!-- OAuth2 Client Credentials -->
+                    <div class="row g-3 mt-1 api-cred-section d-none" data-auth-section="oauth2">
+                      <div class="col-md-4">
+                        <label for="apiOauthClientId" class="form-label no-colon">Client ID:</label>
+                        <input type="text" class="form-control" id="apiOauthClientId" name="apiOauthClientId">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="apiOauthClientSecret" class="form-label no-colon">Client Secret:</label>
+                        <input type="password" class="form-control" id="apiOauthClientSecret" name="apiOauthClientSecret" autocomplete="new-password">
+                      </div>
+                      <div class="col-md-4">
+                        <label for="apiOauthScope" class="form-label no-colon">Scope:</label>
+                        <input type="text" class="form-control" id="apiOauthScope" name="apiOauthScope" placeholder="Ex.: cobranca-bancaria">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="apiOauthTokenUrl" class="form-label no-colon">Token URL:</label>
+                        <input type="url" class="form-control" id="apiOauthTokenUrl" name="apiOauthTokenUrl" placeholder="https://banco.com/oauth/token">
+                      </div>
+                    </div>
+
+                    <!-- mTLS -->
+                    <div class="row g-3 mt-1 api-cred-section d-none" data-auth-section="mtls">
+                      <div class="col-md-6">
+                        <label for="apiMtlsCertFile" class="form-label no-colon">Certificado (.PFX /.P12):</label>
+                        <input type="file" class="form-control" id="apiMtlsCertFile" name="apiMtlsCertFile" accept=".pfx,.p12">
+                        <div class="form-text" id="apiMtlsFileName">Nenhum arquivo selecionado</div>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="apiMtlsPassword" class="form-label no-colon">Senha do certificado:</label>
+                        <input type="password" class="form-control" id="apiMtlsPassword" name="apiMtlsPassword" autocomplete="new-password">
+                      </div>
+                    </div>
+
+                    <!-- URLs genéricas -->
+                    <div class="row g-3 mt-3">
+                      <div class="col-md-6">
+                        <label for="apiBaseUrl" class="form-label no-colon">Base URL da API:</label>
+                        <input type="url" class="form-control" id="apiBaseUrl" name="apiBaseUrl" placeholder="https://api.banco.com.br">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="apiTokenUrlGenerica" class="form-label no-colon">Token URL (opcional):</label>
+                        <input type="url" class="form-control" id="apiTokenUrlGenerica" name="apiTokenUrlGenerica" placeholder="https://api.banco.com.br/token">
+                        <div class="form-text">Use se o banco tiver um endpoint de token separado.</div>
+                      </div>
+                    </div>
+
+                    <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+                      <button type="button" id="btnTestarBanco" class="btn btn-outline-secondary btn-sm">
+                        Testar conexão com o banco
+                      </button>
+                      <span id="statusTesteBanco" class="small text-muted"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-2">
+                  <button class="btn btn-outline-secondary" data-nav="prev" type="button" title="Voltar" aria-label="Voltar">Voltar</button>
+                  <button class="btn btn-outline-primary" data-nav="next" type="button" title="Próximo" aria-label="Próximo">Próximo</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Aba 5: Credenciais -->
+            <div class="tab-pane fade" id="abaCredenciais" role="tabpanel">
+              <div class="row g-4 mt-2 align-items-start">
+                <!-- Bloco Logo da Unidade -->
+                <div class="col-md-3 text-center">
+                  <label for="inputLogoUnidade" class="form-label no-colon d-block text-center">Logo da Unidade:</label>
+                  <div class="d-flex flex-column align-items-center gap-2">
+                    <div id="logoPreviewWrapper" class="position-relative" style="width:128px;height:128px;border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#f8f9fa;display:flex;align-items:center;justify-content:center;">
+                      <img id="logoUnidadePreview" src="<%= _basePath %>/img/placeholder-logo.svg" alt="Logo" style="max-width:100%;max-height:100%;object-fit:cover;display:block;" onerror="this.src='<%= _basePath %>/img/placeholder-logo.svg'">
+                      <button type="button" id="btnSelecionarLogo" class="btn btn-sm btn-outline-primary position-absolute bottom-0 start-0 m-1" title="Selecionar arquivo" aria-label="Selecionar arquivo"><i class="bi bi-image"></i></button>
+                      <div id="grupoConfirmarLogo" class="btn-group position-absolute bottom-0 end-0 m-1 d-none" role="group">
+                        <button type="button" class="btn btn-sm btn-success" id="btnConfirmarLogo" title="Enviar" aria-label="Enviar"><i class="bi bi-check"></i></button>
+                        <button type="button" class="btn btn-sm btn-secondary" id="btnCancelarLogo" title="Cancelar" aria-label="Cancelar"><i class="bi bi-x"></i></button>
+                      </div>
+                    </div>
+                    <div id="statusLogoUnidade" class="small text-muted text-center"></div>
+                    <input type="file" id="inputLogoUnidade" accept="image/*" class="d-none">
+                    <input type="hidden" id="logoAtual" name="logoAtual" value="">
+                  </div>
+                </div>
+                <div class="col-md-5 text-center">
+                  <label for="modulosAcessiveis" class="form-label no-colon text-center">Módulos acessíveis a esta unidade:</label>
+                  <select id="modulosAcessiveis" name="modulosAcessiveis" class="form-select mx-auto" multiple disabled aria-readonly="true" style="min-height: 140px; max-width: 420px;" title="Selecione os módulos pelo botão Gerenciar; este campo é apenas exibição."></select>
+                  <div class="mt-2 d-flex flex-column align-items-center">
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalModulos" title="Gerenciar módulos" aria-label="Gerenciar módulos">Gerenciar</button>
+                    <small class="text-muted d-block mt-1">Abra o gerenciador para selecionar os módulos.</small>
+                  </div>
+                </div>
+
+                <% if ((isMaster || user.role === 'admin')) { %>
+                <div class="col-md-4" id="blocoDiretor" style="display:none;">
+                  <label class="form-label no-colon">Diretor vinculado (somente leitura):</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="diretorUsuarioDisplay" placeholder="Será exibido ao editar uma unidade principal" readonly>
+                    <input type="hidden" id="diretor_usuario_id" name="diretor_usuario_id">
+                  </div>
+                </div>
+                <% } %>
+
+                <div class="row mt-3">
+                  <div class="col-6 d-flex">
+                    <button class="btn btn-outline-secondary" data-nav="prev" type="button" title="Voltar" aria-label="Voltar">Voltar</button>
+                  </div>
+                  <div class="col-6 d-flex justify-content-end gap-2">
+                    <button type="reset" class="btn btn-outline-secondary" title="Limpar" aria-label="Limpar">Limpar</button>
+                    <% if (user && (user.role === 'admin' || user.role === 'diretor' || user.isMaster)) { %>
+                      <!-- Botão principal muda dinamicamente para Salvar no modo edição -->
+                      <button type="submit" id="btnSubmitUnidade" class="btn btn-primary" data-mode="create" title="Cadastrar" aria-label="Cadastrar">Cadastrar</button>
+                    <% } else { %>
+                      <button type="button" class="btn btn-outline-secondary" disabled title="Você não tem permissão para cadastrar unidades" aria-label="Você não tem permissão para cadastrar unidades">Cadastrar</button>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div><!-- /tab-content -->
+        </form>
+      </div>
+    </div>
+
+  <!-- Título lista -->
+  <h5 class="mb-1 text-center wdg-section-title" style="margin-top:18px">Unidades cadastradas</h5>
+
+    <!-- Lista de Unidades -->
+  <div class="wdg-card content wdg-card-hover wdg-table wdg-table-bordered">
+      <div class="wdg-card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
+          <div class="d-flex align-items-center gap-2">
+            <label for="uPageSize" class="form-label mb-0">Mostra</label>
+            <select id="uPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+              <option value="300">300</option>
+              <option value="400">400</option>
+              <option value="500">500</option>
+              <option value="1000">1000</option>
+            </select>
+            <span class="ms-1">itens</span>
+          </div>
+        </div>
+  <div id="wrapperTabelaUnidades" class="table-responsive table-vert-max mb-0" style="overflow-x:auto; white-space:nowrap;">
+          <table class="table table-bordered table-hover align-middle mb-0" id="tabelaUnidades" style="min-width:1400px;">
+            <thead class="table-light text-center align-middle">
+              <tr>
+                <th style="width:50px;">&nbsp;</th>
+                <th style="min-width:110px;">Código</th>
+                <th style="min-width:220px;">Nome Fantasia</th>
+                <th style="min-width:130px;">Tipo de Unidade</th>
+                <th style="min-width:170px;">CPF/CNPJ</th>
+                <th style="min-width:300px;">Endereço</th>
+                <th class="col-acoes" style="min-width:160px;">Ação</th>
+              </tr>
+            </thead>
+            <tbody class="text-center">
+              <% const mapFiliaisCount = new Map(); (unidadesFiltradas||[]).forEach(function(x){ if(x.subunidade && x.unidade_principal_id){ const k = String(x.unidade_principal_id); mapFiliaisCount.set(k, (mapFiliaisCount.get(k) || 0) + 1); } }); %>
+              <% (unidadesFiltradas || []).forEach(function(u){ %>
+                <tr class="unidade-row <%= u.subunidade ? ('filial-row filial-of-'+ (u.unidade_principal_id || '')) : '' %>"
+                    data-id="<%= u._id %>"
+                    data-principal="<%= u.is_principal %>"
+                    data-unidade-principal-id="<%= u.unidade_principal_id || '' %>"
+                    data-is-active="true">
+                  <td>
+                    <% const hasFiliais = !!mapFiliaisCount.get(String(u._id)); %>
+                    <% if(u.is_principal && hasFiliais){ %>
+                      <button type="button" class="btn btn-sm btn-outline-secondary toggle-filiais"
+                              data-principal-id="<%= u._id %>" data-state="collapsed"
+                              aria-expanded="false" title="Expandir filiais"
+                              style="line-height:1; padding:2px 6px; font-weight:bold;">&#9656;</button>
+                    <% } %>
+                  </td>
+                  <td><%= u.codigo || '' %></td>
+                  <td class="td-nome"><span><%= u.nome || '' %></span></td>
+                  <td><%= u.subunidade ? 'Filial' : 'Matriz' %></td>
+                  <td>
+                    <% const isPf = (u.pessoaTipo === 'pf'); %>
+                    <% if (isPf) { %>
+                      <% const cpf = (u.cpf||'').replace(/\D/g,''); %>
+                      <% if (cpf.length===11) { %>
+                        <%= cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4') %>
+                      <% } else { %>
+                        <%= u.cpf || '' %>
+                      <% } %>
+                    <% } else { %>
+                      <% const cnpj = (u.cnpj||'').replace(/\D/g,''); %>
+                      <% if(cnpj.length===14){ %>
+                        <%= cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') %>
+                      <% } else { %>
+                        <%= u.cnpj || '' %>
+                      <% } %>
+                    <% } %>
+                  </td>
+                  <td><%= u.endereco || '' %></td>
+                  <td>
+                    <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                      <button type="button" class="wdg-icon-btn" data-action="abrirDetalhes" data-id="<%= u._id %>" title="Detalhes" aria-label="Detalhes">
+                        <img src="<%= _basePath %>/images/detalhe.png" alt="Detalhes" onerror="this.replaceWith(document.createElement('i')); this.previousSibling?.remove();">
+                      </button>
+                      <% if (user && (user.role === 'admin' || user.role === 'diretor' || user.isMaster)) { %>
+                        <% if (u.is_principal && user.role === 'diretor') { %>
+                          <button type="button" class="wdg-icon-btn" data-action="editar" data-id="<%= u._id %>" title="Editar" aria-label="Editar">
+                            <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
+                          </button>
+                          <button type="button" class="wdg-icon-btn" disabled title="Diretores não podem excluir unidades principais" aria-label="Diretores não podem excluir unidades principais">
+                            <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'">
+                          </button>
+                        <% } else { %>
+                          <button type="button" class="wdg-icon-btn" data-action="editar" data-id="<%= u._id %>" title="Editar" aria-label="Editar">
+                            <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
+                          </button>
+                          <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="<%= u._id %>" title="Excluir" aria-label="Excluir">
+                            <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
+                          </button>
+                        <% } %>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+              <% if (!unidadesFiltradas || !unidadesFiltradas.length){ %>
+                <tr><td colspan="7" class="text-center text-muted">Nenhuma unidade cadastrada.</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <div id="uPaginas" class="wdg-pager mt-2"></div>
+      </div>
+    </div>
+
+    <style>
+      .gestor-divider{ height:2px; width:300px; margin:6px auto 18px; background:#0d6efd; border-radius:2px; }
+      #tabelaUnidades th, #tabelaUnidades td { vertical-align:middle; white-space:nowrap; }
+      #tabelaUnidades tbody tr.filial-row.filial-hidden { display:none; }
+      button.toggle-filiais { transition: transform .2s ease; }
+      .tabela-wrapper-altura { max-height: 420px; overflow-y: auto; border:1px solid #dee2e6; border-top:none; }
+      .filial-expanded-highlight { animation: flashBg 2s ease; }
+      @keyframes flashBg { 0% { background:#fff3cd; } 100% { background:inherit; } }
+      #tabelaUnidades .col-acoes { width: 160px; }
+  /* Diferenciação visual das filiais por cor (aplicar no TD para sobrepor Bootstrap) */
+  /* Linhas sempre brancas (inclusive filiais) */
+  #tabelaUnidades tbody tr > td { background-color: #ffffff !important; }
+  #tabelaUnidades tbody tr:hover > td { background-color: #f5f9ff !important; }
+    /* Logo upload (aba credenciais) */
+    #logoPreviewWrapper:hover button#btnSelecionarLogo { opacity:1; }
+    #logoPreviewWrapper button#btnSelecionarLogo { transition:opacity .2s; opacity:.85; }
+    /* Modal detalhes logo hover */
+    #detalhesModal .position-relative:hover #btnTrocarLogoDetalhes { opacity:1; }
+    #btnTrocarLogoDetalhes { opacity:.9; transition:opacity .2s; }
+    /* Scroll limit após 4 registros (sem contar cabeçalho) */
+    #wrapperTabelaUnidades.scroll-limit { max-height: 360px; overflow-y: auto; }
+    #wrapperTabelaUnidades.scroll-limit thead th { position: sticky; top: 0; z-index: 2; background: #f8f9fa; }
+    .api-cred-card {
+      background:#fefefe;
+      border:1px solid rgba(13,110,253,.15);
+      border-radius:20px;
+      padding:1.5rem;
+      box-shadow:0 10px 30px rgba(13,110,253,.06);
+    }
+    .api-cred-badge {
+      font-size:.75rem;
+      letter-spacing:.12em;
+      font-weight:600;
+      text-transform:uppercase;
+      color:#0d6efd;
+      display:inline-block;
+    }
+    .api-cred-section {
+      transition:opacity .2s ease;
+    }
+    .api-cred-section.d-none {
+      opacity:0;
+    }
+    </style>
+    </style>
+  </div><!-- /.wdg-page -->
+
+  <!-- MODAIS -->
+  <%- include('../partials/modais/detalhes_unidades') %>
+  <%- include('../partials/modais/modal_banco') %>
+  <%- include('../partials/modais/modal_cnae_principal') %>
+  <%- include('../partials/modais/modal_cnae_secundario') %>
+  <%- include('../partials/modais/modal_natureza_juridica') %>
+  <%- include('../partials/modais/modal_selecionar_modulos') %>
+  <%- include('../partials/modais/modal_diretor') %>
+
+  <!-- DADOS (JSON) -->
+  <script type="application/json" id="unidadesJson"><%- JSON.stringify(Array.isArray(unidadesFiltradas) ? unidadesFiltradas : []) %></script>
+  <script type="application/json" id="modulosJson"><%- JSON.stringify(Array.isArray(modulos) ? modulos : (modulos || [])) %></script>
+  <script type="application/json" id="diretoresJson"><%- JSON.stringify(Array.isArray(usuariosDiretor) ? usuariosDiretor : (usuariosDiretor || [])) %></script>
+  <script>
+    (function() {
+      try {
+        const unidadesEl = document.getElementById('unidadesJson');
+        const modulosEl  = document.getElementById('modulosJson');
+        const dirsEl     = document.getElementById('diretoresJson');
+        window.unidadesFiltradas = unidadesEl ? JSON.parse(unidadesEl.textContent || '[]') : [];
+        window.todosModulos      = modulosEl  ? JSON.parse(modulosEl.textContent  || '[]') : [];
+        window.usuariosDiretor   = dirsEl     ? JSON.parse(dirsEl.textContent     || '[]') : [];
+      } catch (e) {
+        console.warn('[unidades.ejs] falha ao parsear JSON embutido:', e);
+        window.unidadesFiltradas = window.unidadesFiltradas || [];
+        window.todosModulos = window.todosModulos || [];
+        window.usuariosDiretor = window.usuariosDiretor || [];
+      }
+      window.userRole = '<%= user ? user.role : "" %>';
+    })();
+  </script>
+
+  <!-- Flatpickr com loader (usa local e fallback CDN) -->
+  <script src="<%= _basePath %>/js/core/flatpickr-loader.js?v=3"></script>
+  <!-- Inicialização centralizada do flatpickr -->
+  <script src="<%= _basePath %>/js/core/datepicker-init.js?v=3"></script>
+  <script src="<%= _basePath %>/js/core/dates.js?v=3"></script>
+  <script src="<%= _basePath %>/js/core/dates-global.js?v=3"></script>
+
+  <!-- Cleave (para máscaras) + masks-global se ainda não carregado -->
+  <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/addons/cleave-phone.br.js"></script>
+  <script src="<%= _basePath %>/js/core/masks-global.js?v=3"></script>
+
+  <!-- Helper para paths dinâmicos de dados (versão com cache-buster) -->
+  <!-- Utilidades (usar /js/gestor para garantir que venha de public/gestor/js) -->
+  <script src="<%= _basePath %>/js/utils/data-url.js?v=3"></script>
+  <script src="<%= _basePath %>/js/utils/fetch-json.js?v=5"></script>
+  <script>console.info('[unidades] build assets v3', { basePath: '<%= _basePath %>' });</script>
+
+  <!-- JS dos MODAIS (namespace gestor) -->
+  <!-- Modais (versão gestor) -->
+  <script src="<%= _basePath %>/js/modals/banco.js?v=5"></script>
+  <script src="<%= _basePath %>/js/modals/cnae_principal.js?v=5"></script>
+  <script src="<%= _basePath %>/js/modals/cnae_secundario.js?v=5"></script>
+  <script src="<%= _basePath %>/js/modals/natureza_juridica.js?v=5"></script>
+  <!-- Versões gestor padronizadas (v5) substituindo legacy /js/modals -->
+  <script src="<%= _basePath %>/js/modals/selecionar_modulos.js?v=5"></script>
+  <script src="<%= _basePath %>/js/modals/diretor.js?v=5"></script>
+  <script src="<%= _basePath %>/js/modals/detalhes_unidades.js?v=<%= Date.now() %>"></script>
+  <!-- Ajuste: script endereco real em /js/modals -->
+  <script src="<%= _basePath %>/js/modals/endereco.js?v=6"></script>
+
+  <!-- Script de perfil modular -->
+  <script>window.__perfilBasePath='/gestor';</script>
+  <script src="<%= _basePath %>/js/perfil-modulo.js"></script>
+
+  <!-- Utilitários necessários (gestor) -->
+  <script src="/gestor/js/core/validators.js"></script>
+
+  <!-- Scripts de submissão de formulário (gestor) -->
+  <script src="<%= _basePath %>/js/pages/form-submit-unidade.js?v=<%= Date.now() %>"></script>
+
+  <!-- Script principal da página (gestor) -->
+  <script src="<%= _basePath %>/js/pages/unidades.js?v=<%= Date.now() %>"></script>
+  <script>
+    // Ajuste dinâmico botão cadastrar/salvar (modo edição vs criação)
+    (function(){
+      const form = document.getElementById('cadastroUnidadeForm');
+      const idField = document.getElementById('unidadeId');
+      const btn = document.getElementById('btnSubmitUnidade');
+      if(form && idField && btn){
+        const updateState = () => {
+          const editing = !!(idField.value && idField.value.trim());
+          if(editing){
+            btn.textContent = 'Salvar';
+            btn.title = 'Salvar alterações';
+            btn.setAttribute('aria-label','Salvar alterações');
+            btn.dataset.mode = 'edit';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-success');
+          } else {
+            btn.textContent = 'Cadastrar';
+            btn.title = 'Cadastrar';
+            btn.setAttribute('aria-label','Cadastrar');
+            btn.dataset.mode = 'create';
+            btn.classList.remove('btn-outline-success');
+            btn.classList.add('btn-primary');
+          }
+        };
+        // Observa mudanças programáticas no hidden usando MutationObserver + eventos customizados
+        const observer = new MutationObserver(updateState);
+        observer.observe(idField, { attributes:true, attributeFilter:['value'] });
+        ['change','input'].forEach(ev=> idField.addEventListener(ev, updateState));
+        // Expor helper global para scripts externos atualizarem
+        window.__unidadeUpdateSubmitState = updateState;
+        updateState();
+      }
+    })();
+    // Scroll limit: ativa se mais de 4 registros reais (exclui linha "Nenhuma")
+    (function(){
+      const wrapper = document.getElementById('wrapperTabelaUnidades');
+      if(!wrapper) return;
+      const rows = wrapper.querySelectorAll('#tabelaUnidades tbody tr');
+      let count = 0;
+      rows.forEach(r=>{ if(!r.querySelector('.text-muted')) count++; });
+      if(count > 4){ wrapper.classList.add('scroll-limit'); }
+    })();
+  </script>
+</body>
+</html>

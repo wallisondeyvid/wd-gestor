@@ -1,0 +1,5 @@
+[
+  { "codigo": "F", "descricao": "Feminino" },
+  { "codigo": "M", "descricao": "Masculino" },
+  { "codigo": "N", "descricao": "Não Declarado" }
+]

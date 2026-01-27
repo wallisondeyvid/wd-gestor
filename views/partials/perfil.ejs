@@ -1,0 +1,159 @@
+<% const __pb = (typeof __perfilBase !== 'undefined' && __perfilBase) ? __perfilBase : (typeof moduleBasePath !== 'undefined' && moduleBasePath) ? moduleBasePath : (typeof _basePath !== 'undefined' ? _basePath : '/gestor'); %>
+
+<!-- Modal de Perfil -->
+<div class="modal fade" id="modalPerfil" data-perfil-base="<%= __pb %>" tabindex="-1" aria-labelledby="modalPerfilLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalPerfilLabel">
+          <img src="<%= __pb %>/images/perfil.png" alt="Perfil" class="icon-title icon-left"> Perfil do Usuário
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body profile-modal">
+        <div class="row g-4 align-items-start">
+          <!-- LADO ESQUERDO: avatar + ações -->
+          <aside class="col-12 col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body text-center">
+                <div class="profile-avatar-wrap mb-3">
+                  <img id="fotoPerfil" src="<%= __pb %>/img/user-placeholder.svg" alt="Foto do perfil"
+                       class="avatar-xxl rounded-circle" onerror="this.classList.add('is-fallback'); this.src='<%= __pb %>/images/perfil.png';" />
+                </div>
+                <div class="d-grid gap-2" id="perfilFotoBotoes">
+                  <button type="button" class="btn btn-outline-primary btn-sm" id="btnAlterarFoto" onclick="iniciarAlteracaoFoto()">Alterar Foto</button>
+                  <div class="d-none" id="grupoConfirmarFoto">
+                    <div class="btn-group w-100">
+                      <button type="button" class="btn btn-success btn-sm" id="btnSalvarFoto" onclick="confirmarAlteracaoFoto()">Salvar Alterações</button>
+                      <button type="button" class="btn btn-outline-danger btn-sm" id="btnCancelarFoto" onclick="cancelarAlteracaoFoto()">Cancelar</button>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="alterarSenha()">Alterar Senha</button>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- LADO DIREITO: informações em grade -->
+          <section class="col-12 col-md-8">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <!-- bloco 1 -->
+                <div id="perfilStatus" class="mb-2 small text-muted" style="display:none"></div>
+                <dl class="row profile-dl mb-0" id="perfilDados">
+                  <dt class="col-sm-5 col-lg-4">Nome</dt>
+                  <dd class="col-sm-7 col-lg-8 text-break" id="perfilNome"><span class="placeholder-glow"><span class="placeholder col-8"></span></span></dd>
+
+                  <dt class="col-sm-5 col-lg-4">CPF</dt>
+                  <dd class="col-sm-7 col-lg-8" id="perfilCPF"><span class="placeholder-glow"><span class="placeholder col-6"></span></span></dd>
+
+                  <dt class="col-sm-5 col-lg-4">Unidade</dt>
+                  <dd class="col-sm-7 col-lg-8 text-break" id="perfilUnidade"><span class="placeholder-glow"><span class="placeholder col-7"></span></span></dd>
+
+                  <dt class="col-sm-5 col-lg-4">Nível de Acesso</dt>
+                  <dd class="col-sm-7 col-lg-8" id="perfilRole"><span class="placeholder-glow"><span class="placeholder col-5"></span></span></dd>
+
+                  <dt class="col-sm-5 col-lg-4">Telefone</dt>
+                  <dd class="col-sm-7 col-lg-8" id="perfilTelefone"><span class="placeholder-glow"><span class="placeholder col-4"></span></span></dd>
+
+                  <dt class="col-sm-5 col-lg-4">E-mail</dt>
+                  <dd class="col-sm-7 col-lg-8 text-break" id="perfilEmail"><span class="placeholder-glow"><span class="placeholder col-9"></span></span></dd>
+                </dl>
+
+                <hr class="my-3">
+
+                <!-- módulos -->
+                <div class="mb-1">
+                  <div class="profile-section-title mb-2">Módulos Acessíveis</div>
+                  <div id="perfilModulos" class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-secondary">Carregando...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnFecharPerfil">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Alterar Senha -->
+<div class="modal fade" id="modalAlterarSenha" tabindex="-1" aria-labelledby="modalAlterarSenhaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAlterarSenhaLabel">
+          <img src="<%= __pb %>/images/senha.png" alt="Senha" class="icon icon-left"> Alterar Senha
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formAlterarSenha">
+          <!-- Campo username oculto para melhorar acessibilidade de formulários de senha -->
+          <input type="text" name="username" id="perfilUsernameHidden" class="visually-hidden" tabindex="-1" aria-hidden="true" autocomplete="username">
+          <div class="mb-3">
+            <label for="senhaAtual" class="form-label">Senha Atual</label>
+            <input type="password" class="form-control" id="senhaAtual" required autocomplete="current-password">
+          </div>
+          <div class="mb-3">
+            <label for="novaSenha" class="form-label">Nova Senha</label>
+            <input type="password" class="form-control" id="novaSenha" required autocomplete="new-password">
+            <div class="form-text">Mínimo 6 caracteres</div>
+          </div>
+          <div class="mb-3">
+            <label for="confirmarSenha" class="form-label">Confirmar Nova Senha</label>
+            <input type="password" class="form-control" id="confirmarSenha" required autocomplete="new-password">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-primary" onclick="salvarNovaSenha()">Salvar Senha</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+      <script>
+        // Helpers de estado do modal perfil (fallback caso script principal demore)
+        window.__perfilState = {
+          setStatus(msg, kind) {
+            const el = document.getElementById('perfilStatus');
+            if (!el) return; if (!msg) { el.style.display='none'; el.textContent=''; el.className='mb-2 small text-muted'; return; }
+            el.style.display='block';
+            el.textContent = msg;
+            el.className = 'mb-2 small ' + (kind === 'error' ? 'text-danger' : 'text-muted');
+          },
+          fill(data) {
+            const safe = (v, dash='Não informado') => (v===null||v===undefined||v==='')?dash:v;
+            if (data) {
+              document.getElementById('perfilNome').textContent = safe(data.nome);
+              document.getElementById('perfilCPF').textContent = safe(data.cpf);
+              document.getElementById('perfilUnidade').textContent = (data.role==='master')? '—' : safe(data.unidade_codigo && data.unidade_nome ? `${data.unidade_codigo} - ${data.unidade_nome}` : (data.unidade_nome||data.unidade));
+              document.getElementById('perfilRole').textContent = safe(data.role);
+              document.getElementById('perfilTelefone').textContent = safe(data.telefone);
+              document.getElementById('perfilEmail').textContent = safe(data.email);
+            }
+            this.setStatus(null);
+          }
+        };
+        // Defesa extra: garantir que avatar não passe de 170/160px
+        (function(){
+          function clampAvatar(){
+            const av = document.getElementById('fotoPerfil');
+            if(!av) return;
+            const max = window.matchMedia('(min-width:1400px)').matches ? 160 : (window.matchMedia('(min-width:992px)').matches ? 150 : (window.matchMedia('(min-width:576px)').matches ? 132 : 118));
+            if(av.naturalWidth > max*1.4 || av.clientWidth > max){
+              av.style.width = max+'px';
+              av.style.height = max+'px';
+            }
+          }
+          document.addEventListener('shown.bs.modal', e=>{ if(e.target && e.target.id==='modalPerfil'){ setTimeout(clampAvatar,30); }});
+          window.addEventListener('resize', clampAvatar);
+          clampAvatar();
+        })();
+      </script>

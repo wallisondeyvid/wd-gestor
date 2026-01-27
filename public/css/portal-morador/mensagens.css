@@ -1,0 +1,1252 @@
+/*
+  Portal do Morador — Caixa de Mensagens
+  - Estilos escopados para não afetar o restante do Portal.
+  - Usa somente tokens já definidos em public/css/condominios-modern.css
+*/
+
+body.pm-home-body.wdg-msg {
+  /* Mantém a identidade do módulo (sem alterar HTML): fundo com profundidade usando tokens WDG */
+  --wdg-msg-radius-xl: 18px;
+  --wdg-msg-soft-border: rgba(var(--wdg-primary-rgb), .16);
+  --wdg-msg-soft-bg: rgba(var(--wdg-primary-rgb), .07);
+  /* “Vidro”: fallbacks seguros (tokens podem variar por tema) */
+  --wdg-msg-glass-bg: rgba(255, 255, 255, .62);
+  --wdg-msg-glass-bg-hover: rgba(255, 255, 255, .72);
+  --wdg-msg-glass-border: rgba(255, 255, 255, .38);
+  --wdg-msg-glass-border-strong: rgba(var(--wdg-primary-rgb), .22);
+  --wdg-msg-glass-shadow: 0 18px 48px rgba(15, 23, 42, .10);
+  background:
+    radial-gradient(1100px 600px at 86% -10%, rgba(var(--wdg-accent-rgb), .18), transparent 65%),
+    radial-gradient(820px 480px at -12% 42%, rgba(var(--wdg-accent-rgb), .12), transparent 62%),
+    var(--wdg-bg);
+}
+
+/* Microinterações consistentes (respeita acessibilidade) */
+body.pm-home-body.wdg-msg :where(.wdg-card, .pm-panel, .btn, .form-control, .form-select, .list-group-item) {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.pm-home-body.wdg-msg :where(.wdg-card, .pm-panel, .btn, .form-control, .form-select, .list-group-item) {
+    transition: none;
+  }
+}
+
+/* Layout mais organizado no conteúdo */
+body.pm-home-body.wdg-msg .pm-content-inner {
+  max-width: 1200px;
+}
+
+/* Menu de perfil (topbar) no módulo Mensagens */
+body.pm-home-body.wdg-msg .pm-user-menu {
+  width: 380px;
+}
+
+body.pm-home-body.wdg-msg .pm-user-menu .pm-user-menu-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+body.pm-home-body.wdg-msg .pm-user-menu .pm-user-menu-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  body.pm-home-body.wdg-msg .pm-user-menu {
+    width: auto;
+  }
+  body.pm-home-body.wdg-msg .pm-user-menu .pm-user-menu-actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* Painel "Selecionar caixa" */
+body.pm-home-body.wdg-msg .pm-msg-mailbox-panel {
+  padding: 12px 16px;
+  background: var(--wdg-msg-glass-bg);
+  border: 1px solid var(--wdg-msg-glass-border);
+  border-radius: var(--wdg-radius-lg);
+  box-shadow: var(--wdg-shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  body.pm-home-body.wdg-msg .pm-msg-mailbox-panel {
+    background: rgba(255, 255, 255, .46);
+    -webkit-backdrop-filter: blur(14px) saturate(135%);
+    backdrop-filter: blur(14px) saturate(135%);
+  }
+}
+
+body.pm-home-body.wdg-msg .pm-msg-mailbox-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px 220px at 14% 0%, rgba(var(--wdg-primary-rgb), .10), transparent 55%);
+  pointer-events: none;
+}
+
+body.pm-home-body.wdg-msg .pm-msg-mailbox-panel:hover {
+  box-shadow: var(--wdg-shadow);
+  border-color: rgba(var(--wdg-primary-rgb), .20);
+  transform: translateY(-1px);
+}
+
+body.pm-home-body.wdg-msg .pm-msg-mailbox-panel .form-label {
+  color: var(--wdg-text);
+  font-weight: 600;
+}
+
+body.pm-home-body.wdg-msg .pm-msg-mailbox-panel .form-select {
+  border-radius: var(--wdg-radius);
+}
+
+body.pm-home-body.wdg-msg .pm-msg-mailbox-panel .form-select:focus {
+  box-shadow: var(--wdg-focus-ring);
+}
+
+/* Card principal */
+body.pm-home-body.wdg-msg .pm-msg-main {
+  margin-top: 12px;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel {
+  padding: 1.1rem 1.15rem;
+  border-radius: var(--wdg-radius-lg);
+  background: var(--wdg-msg-glass-bg);
+  border: 1px solid var(--wdg-msg-glass-border);
+  box-shadow: var(--wdg-msg-glass-shadow);
+  position: relative;
+  /* Precisa ser visível para dropdowns (marcadores) não serem cortados */
+  overflow: visible;
+  isolation: isolate;
+}
+
+/* Mantém o “vidro” contido no raio mesmo com overflow visível */
+body.pm-home-body.wdg-msg .wdg-msg-panel::before,
+body.pm-home-body.wdg-msg .wdg-msg-panel::after {
+  clip-path: inset(0 round var(--wdg-radius-lg));
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  body.pm-home-body.wdg-msg .wdg-msg-panel {
+    background: rgba(255, 255, 255, .44);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+  }
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel::before {
+  /* “Brilho” de vidro (sem faixa azul) */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .44), transparent 55%),
+    radial-gradient(900px 360px at 86% 0%, rgba(var(--wdg-primary-rgb), .08), transparent 62%);
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: .85;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(900px 420px at 12% 100%, rgba(var(--wdg-accent-rgb), .06), transparent 60%);
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: .85;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel:hover {
+  box-shadow: 0 26px 80px rgba(15, 23, 42, .16);
+  transform: translateY(-1px);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-wrap: wrap;
+  padding-bottom: .65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .40);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel-head > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: var(--wdg-text);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel p.lead {
+  margin: .35rem 0 0;
+  font-size: .95rem;
+  color: var(--wdg-text-light);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  border: 1px solid rgba(255, 255, 255, .42);
+  background: rgba(255, 255, 255, .55);
+  color: var(--wdg-text);
+  border-radius: 999px;
+  padding: .35rem .65rem;
+  font-weight: 600;
+  font-size: .82rem;
+  box-shadow: 0 1px 2px rgba(var(--wdg-primary-rgb), .12);
+}
+
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  body.pm-home-body.wdg-msg .wdg-msg-chip {
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+  }
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-chip i {
+  color: var(--wdg-accent);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body {
+  margin-top: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Mensagem vazia / placeholders */
+body.pm-home-body.wdg-msg .wdg-msg-empty {
+  padding: 16px;
+  border: 1px dashed rgba(var(--wdg-primary-rgb), .22);
+  border-radius: var(--wdg-radius);
+  background: rgba(var(--wdg-primary-rgb), .04);
+  color: var(--wdg-text-light);
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+/* Inputs e botões dentro da área de mensagens */
+body.pm-home-body.wdg-msg .wdg-msg-body .form-control,
+body.pm-home-body.wdg-msg .wdg-msg-body .form-select {
+  border-color: var(--wdg-border);
+  border-radius: var(--wdg-radius);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .form-control:focus,
+body.pm-home-body.wdg-msg .wdg-msg-body .form-select:focus {
+  border-color: var(--wdg-primary);
+  box-shadow: var(--wdg-focus-ring);
+}
+
+/* Busca + toolbar (na listagem): glass “uma peça só” */
+body.pm-home-body.wdg-msg .wdg-msg-panel .input-group {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .45);
+  background: rgba(255, 255, 255, .55);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, .10);
+  overflow: hidden;
+}
+
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  body.pm-home-body.wdg-msg .wdg-msg-panel .input-group {
+    background: rgba(255, 255, 255, .42);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel .input-group .input-group-text {
+  border: 0;
+  background: transparent;
+  color: var(--wdg-text-light);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel .input-group .form-control {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-top: .85rem;
+  padding-bottom: .85rem;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel .input-group .form-control::placeholder {
+  color: rgba(15, 23, 42, .40);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel .btn.btn-outline-secondary {
+  border-radius: 12px;
+  border-color: rgba(255, 255, 255, .55);
+  background: rgba(255, 255, 255, .55);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-panel .btn.btn-outline-secondary:hover {
+  background: rgba(var(--wdg-primary-rgb), .10);
+  border-color: rgba(var(--wdg-primary-rgb), .22);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .btn {
+  border-radius: var(--wdg-radius);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .btn:focus-visible {
+  box-shadow: var(--wdg-focus-ring);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .btn-primary {
+  box-shadow: 0 2px 10px rgba(var(--wdg-primary-rgb), .22);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .btn-primary:hover {
+  box-shadow: 0 6px 18px rgba(var(--wdg-primary-rgb), .28);
+  transform: translateY(-1px);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .btn-outline-secondary:hover {
+  transform: translateY(-1px);
+}
+
+/* Tabelas e listas (Entrada/Saída/Arquivo/Lixeira) */
+body.pm-home-body.wdg-msg .wdg-msg-body .table-responsive {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, .45);
+  background: rgba(255, 255, 255, .40);
+  box-shadow: 0 22px 70px rgba(15, 23, 42, .12);
+  /* Não cortar dropdowns dentro da listagem */
+  overflow: visible;
+  padding: 10px;
+}
+
+/* Dropdown sempre acima das caixas/tabelas */
+body.pm-home-body.wdg-msg .wdg-msg-body .dropdown-menu {
+  z-index: 2000;
+}
+
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  body.pm-home-body.wdg-msg .wdg-msg-body .table-responsive {
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+  }
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table {
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0 .55rem;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table thead th {
+  position: sticky;
+  top: var(--wdg-msg-top-offset, 0px);
+  z-index: 2;
+  background: rgba(255, 255, 255, .45);
+  border-bottom: 0;
+  color: var(--wdg-text-light);
+  text-align: center;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border-radius: 12px;
+}
+
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  body.pm-home-body.wdg-msg .wdg-msg-body .table thead th {
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+  }
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table tbody tr {
+  transition: transform .18s ease, filter .18s ease;
+  filter: drop-shadow(0 10px 22px rgba(15, 23, 42, .08));
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table-hover tbody tr:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 18px 40px rgba(15, 23, 42, .14));
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table tbody td {
+  vertical-align: middle;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table tbody tr td {
+  background: rgba(255, 255, 255, .56);
+  border-top: 1px solid rgba(255, 255, 255, .50);
+  border-bottom: 1px solid rgba(255, 255, 255, .32);
+  padding: .85rem .75rem;
+}
+
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  body.pm-home-body.wdg-msg .wdg-msg-body .table tbody tr td {
+    background: rgba(255, 255, 255, .42);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+  }
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table tbody tr td:first-child {
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table tbody tr td:last-child {
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table-hover tbody tr:hover td {
+  background: rgba(var(--wdg-primary-rgb), .08);
+  border-color: rgba(var(--wdg-primary-rgb), .18);
+}
+
+/* Mensagens não lidas: negrito + destaque por linha (sem "pintar" a tabela inteira) */
+body.pm-home-body.wdg-msg .wdg-msg-body .table tbody tr.wdg-msg-row--unread td {
+  background: rgba(var(--wdg-primary-rgb), .10);
+  border-color: rgba(var(--wdg-primary-rgb), .22);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table tbody tr.wdg-msg-row--unread td:first-child {
+  box-shadow: inset 4px 0 0 rgba(var(--wdg-primary-rgb), .70);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .table-hover tbody tr.wdg-msg-row--unread:hover td {
+  background: rgba(var(--wdg-primary-rgb), .14);
+  border-color: rgba(var(--wdg-primary-rgb), .28);
+}
+
+/* ===== Leitor (thread) — “mais sal” sem quebrar Bootstrap ===== */
+body.pm-home-body.wdg-msg .wdg-msg-body #msgThreadHost .card {
+  border-radius: var(--wdg-msg-radius-xl);
+  border: 1px solid var(--wdg-msg-glass-border);
+  background: var(--wdg-msg-glass-bg);
+  box-shadow: var(--wdg-msg-glass-shadow);
+  /* Precisa ser visível para o dropdown (menu “mais” no leitor) não ser cortado */
+  overflow: visible;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body #msgThreadHost .card:hover {
+  box-shadow: 0 22px 64px rgba(15, 23, 42, .14);
+  border-color: var(--wdg-msg-glass-border-strong);
+  background: var(--wdg-msg-glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body #msgThreadHost .card-body {
+  padding: 1rem 1.05rem;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  body.pm-home-body.wdg-msg .wdg-msg-body #msgThreadHost .card {
+    background: rgba(255, 255, 255, .46);
+    -webkit-backdrop-filter: blur(14px) saturate(135%);
+    backdrop-filter: blur(14px) saturate(135%);
+  }
+  body.pm-home-body.wdg-msg .wdg-msg-body #msgThreadHost .card:hover {
+    background: rgba(255, 255, 255, .54);
+  }
+}
+
+/* Avatar com “anel” leve */
+body.pm-home-body.wdg-msg .wdg-msg-body #msgThreadHost img[onerror][style*="border-radius:999px"] {
+  border: 1px solid rgba(var(--wdg-primary-rgb), .18) !important;
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, .06),
+    0 0 0 3px rgba(var(--wdg-primary-rgb), .06);
+}
+
+/* Badges de Para/Cópia mais elegantes */
+body.pm-home-body.wdg-msg .wdg-msg-body #msgThreadHost .badge.text-bg-light.border.text-dark {
+  background: var(--wdg-msg-soft-bg) !important;
+  border-color: var(--wdg-msg-soft-border) !important;
+  color: var(--wdg-text) !important;
+  border-radius: 999px;
+  font-weight: 700;
+  padding: .35rem .55rem;
+}
+
+/* Botões de ações no header do leitor (ícones) */
+body.pm-home-body.wdg-msg .wdg-msg-body :is(#msgActArchive, #msgActPin, #msgActTrash, #msgActRestore, #msgMoreBtn).btn {
+  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body :is(#msgActArchive, #msgActPin, #msgActTrash, #msgActRestore, #msgMoreBtn).btn:hover {
+  background: rgba(var(--wdg-primary-rgb), .10);
+  border-color: rgba(var(--wdg-primary-rgb), .22);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body #msgDetailBack.btn {
+  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .45);
+  border: 1px solid rgba(var(--wdg-primary-rgb), .16);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body #msgDetailBack.btn:hover {
+  background: rgba(var(--wdg-primary-rgb), .10);
+  border-color: rgba(var(--wdg-primary-rgb), .26);
+}
+
+/* Título (assunto) mais responsivo (o JS define inline 32px; aqui só limitamos no mobile) */
+@media (max-width: 520px) {
+  body.pm-home-body.wdg-msg .wdg-msg-body .fw-bold[style*="font-size:32px"] {
+    font-size: 1.45rem !important;
+  }
+}
+
+/* Prompt de resposta: cara de “campo clicável” */
+body.pm-home-body.wdg-msg .wdg-msg-body [data-inline-prompt="1"].card {
+  border-radius: var(--wdg-msg-radius-xl);
+  border: 1px dashed rgba(var(--wdg-primary-rgb), .35);
+  background: rgba(var(--wdg-primary-rgb), .05);
+  box-shadow: var(--wdg-shadow-sm);
+  cursor: text;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body [data-inline-prompt="1"].card:hover {
+  border-color: rgba(var(--wdg-primary-rgb), .55);
+  background: rgba(var(--wdg-primary-rgb), .08);
+}
+
+/* Prompt "Clique aqui para responder": sem negrito */
+body.pm-home-body.wdg-msg .wdg-msg-body [data-inline-prompt="1"] .text-muted {
+  font-weight: 500;
+}
+
+/* Dropdown (3 pontinhos) com “cara de app” */
+body.pm-home-body.wdg-msg .wdg-msg-body .dropdown-menu {
+  border-radius: 14px;
+  border: 1px solid var(--wdg-border);
+  box-shadow: var(--wdg-shadow-hover, var(--wdg-shadow));
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .dropdown-item {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .dropdown-item:hover {
+  background: var(--wdg-primary-soft, rgba(var(--wdg-primary-rgb), .10));
+}
+
+/* Ícones em PNG nos botões (ações/toolbar) */
+body.pm-home-body.wdg-msg img.msg-action-ico {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,.55));
+}
+
+body.pm-home-body.wdg-msg .btn-sm img.msg-action-ico {
+  width: 20px;
+  height: 20px;
+}
+
+/* Botões icon-only (sem “retângulo”) */
+body.pm-home-body.wdg-msg .msg-icon-btn {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  width: 30px;
+  height: 30px;
+  min-width: 0;
+  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.pm-home-body.wdg-msg .msg-icon-btn:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  body.pm-home-body.wdg-msg .msg-icon-btn:hover {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+body.pm-home-body.wdg-msg .msg-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--wdg-focus-ring) !important;
+}
+
+/* Estado ativo (Somente não lidas) */
+body.pm-home-body.wdg-msg .msg-icon-btn.msg-icon-btn-active {
+  background: transparent !important;
+}
+
+/* Alguns PNGs (arquivar/fixar) tinham mais “respiro” interno.
+   Como o tamanho agora é ajustado via JS, não aplicamos escala extra aqui. */
+body.pm-home-body.wdg-msg :is(#msgActArchive, #msgActPin) img.msg-action-ico {
+  transform: none;
+}
+
+/* Opcional: remove a seta padrão do dropdown para ficar mais clean */
+body.pm-home-body.wdg-msg .msg-icon-btn.dropdown-toggle::after {
+  display: none;
+}
+
+/* Conteúdo da mensagem renderizada */
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card {
+  border: 1px solid var(--wdg-border);
+  border-radius: var(--wdg-msg-radius-xl);
+  border-color: var(--wdg-msg-glass-border);
+  background: var(--wdg-msg-glass-bg);
+  box-shadow: var(--wdg-msg-glass-shadow);
+  padding: 14px 14px 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card :is(.msg-top, .two-cols) {
+  position: relative;
+  z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  body.pm-home-body.wdg-msg .wdg-msg-body .msg-card {
+    background: rgba(255, 255, 255, .46);
+    -webkit-backdrop-filter: blur(14px) saturate(135%);
+    backdrop-filter: blur(14px) saturate(135%);
+  }
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card .msg-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card .sender {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card .sender img {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(var(--wdg-primary-rgb), .18);
+  box-shadow: 0 0 0 3px rgba(var(--wdg-primary-rgb), .06);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card .sender-name {
+  font-weight: 800;
+  color: var(--wdg-text);
+  letter-spacing: .2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card .msg-meta {
+  text-align: right;
+  color: var(--wdg-text-light);
+  font-weight: 600;
+  font-size: .9rem;
+  white-space: nowrap;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card .kv {
+  color: var(--wdg-text-light);
+  font-size: .92rem;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card .kv .label {
+  color: var(--wdg-text-light);
+  font-weight: 800;
+  letter-spacing: .15px;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card hr {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--wdg-primary-rgb), .22), transparent);
+  margin: 12px 0;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-card:hover {
+  box-shadow: var(--wdg-shadow);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-body {
+  color: var(--wdg-text);
+  line-height: 1.45;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-body a {
+  color: var(--wdg-accent);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body .msg-body a:hover {
+  color: var(--wdg-primary);
+}
+
+/* Anexos */
+body.pm-home-body.wdg-msg .wdg-msg-body [data-att-root="1"] {
+  border-color: var(--wdg-border) !important;
+  border-radius: var(--wdg-radius) !important;
+  background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+  box-shadow: var(--wdg-shadow-sm);
+  overflow: hidden;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-body [data-att-root="1"]:hover {
+  box-shadow: var(--wdg-shadow);
+}
+
+/* Menu interno do módulo (quando existir) */
+body.pm-home-body.wdg-msg #msgMenu .list-group-item {
+  border-color: var(--wdg-border);
+  background: var(--wdg-surface);
+}
+
+body.pm-home-body.wdg-msg #msgMenu .list-group-item:hover {
+  background: var(--wdg-primary-soft);
+  border-color: rgba(var(--wdg-primary-rgb), .22);
+}
+
+body.pm-home-body.wdg-msg #msgMenu .list-group-item.active {
+  background: rgba(var(--wdg-primary-rgb), .12);
+  border-color: rgba(var(--wdg-primary-rgb), .30);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-ico-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--wdg-primary-rgb), .08);
+  border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-ico {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+body.pm-home-body.wdg-msg .wdg-msg-caret {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid rgba(var(--wdg-primary-rgb), .40);
+  border-bottom: 2px solid rgba(var(--wdg-primary-rgb), .40);
+  transform: rotate(-45deg);
+}
+
+/* Grupos */
+body.pm-home-body.wdg-msg .wdg-grp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+  padding: .75rem;
+  border: 1px solid var(--wdg-border);
+  border-radius: var(--wdg-radius);
+  background: var(--wdg-glass);
+  box-shadow: var(--wdg-shadow-sm);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-btnplus {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-btn-ico {
+  width: 18px;
+  height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+  object-fit: contain;
+  display: block;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-create {
+  margin-top: .75rem;
+  padding: .85rem;
+  border-radius: var(--wdg-radius);
+  border: 1px solid var(--wdg-border);
+  background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-card {
+  margin-top: .85rem;
+  border: 1px solid var(--wdg-border);
+  border-radius: var(--wdg-radius-lg);
+  background: var(--wdg-surface);
+  box-shadow: var(--wdg-shadow-sm);
+  padding: .85rem;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-card:hover {
+  box-shadow: var(--wdg-shadow);
+  transform: translateY(-1px);
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-card-title {
+  font-weight: 800;
+  color: var(--wdg-text);
+  letter-spacing: .2px;
+  margin-bottom: .5rem;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  align-items: center;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-member {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .35rem .45rem;
+  border-radius: 999px;
+  border: 1px solid var(--wdg-border);
+  background: var(--wdg-surface-alt);
+  box-shadow: var(--wdg-shadow-sm);
+  max-width: 100%;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-member img {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--wdg-border);
+  background: var(--wdg-surface);
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-member-name {
+  /* Destinatários (chips) em Para/Cópia: sem negrito */
+  font-weight: 500;
+  color: var(--wdg-text);
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Botões na Caixa de Mensagem (Portal): evitar negrito */
+body.pm-home-body.wdg-msg #msgBody .btn {
+  font-weight: 500;
+}
+
+/* Rótulos do formulário (Para/Cópia/Assunto/etc): sem negrito */
+body.pm-home-body.wdg-msg #msgBody .form-label {
+  font-weight: 600;
+}
+
+/* Botões principais do composer (Responder/Encaminhar/Anexar/Limpar/Enviar) */
+body.pm-home-body.wdg-msg #msgBody [data-inline-top-left="1"] .btn,
+body.pm-home-body.wdg-msg #msgBody [data-compose-attach-header="1"] .btn,
+body.pm-home-body.wdg-msg #msgBody form[id$="msgCompose"] .d-flex.justify-content-end .btn {
+  font-weight: 500 !important;
+}
+
+/* Destinatários (badges) em Para/Cópia na thread: sem negrito */
+body.pm-home-body.wdg-msg #msgBody #msgThreadHost .badge.text-bg-light.border.text-dark {
+  font-weight: 500;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-member-remove {
+  border: 0;
+  background: transparent;
+  color: var(--wdg-text-light);
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-member-remove:hover {
+  background: rgba(var(--wdg-primary-rgb), .10);
+  color: var(--wdg-text);
+}
+
+/* Dropdown de importação (Grupos) */
+body.pm-home-body.wdg-msg .wdg-grp-import { position: relative; }
+body.pm-home-body.wdg-msg .wdg-grp-import-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 280px;
+  max-width: min(460px, 92vw);
+  max-height: 320px;
+  overflow: auto;
+  padding: .35rem;
+  border-radius: var(--wdg-radius);
+  border: 1px solid var(--wdg-border);
+  background: var(--wdg-surface);
+  box-shadow: var(--wdg-shadow-hover);
+  z-index: 90;
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-import-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: .55rem .6rem;
+  border-radius: var(--wdg-radius);
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-import-item:hover {
+  background: var(--wdg-primary-soft);
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-import-title {
+  display: block;
+  font-weight: 800;
+  color: var(--wdg-text);
+}
+
+body.pm-home-body.wdg-msg .wdg-grp-import-sub {
+  display: block;
+  font-weight: 600;
+  color: var(--wdg-text-light);
+  font-size: .85rem;
+}
+
+/* ===== Configurações > Caixas (precisa do mesmo polimento do módulo Condomínios) ===== */
+body.pm-home-body.wdg-msg .wdg-cfg-top,
+body.pm-home-body.wdg-msg .wdg-cfg-box {
+  border-radius: var(--wdg-radius-lg);
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-top-title,
+body.pm-home-body.wdg-msg .wdg-cfg-title,
+body.pm-home-body.wdg-msg .wdg-cfg-title-big {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: .2px;
+  line-height: 1.2;
+  margin-bottom: .35rem;
+  color: var(--wdg-text);
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-row { cursor: pointer; }
+body.pm-home-body.wdg-msg .wdg-cfg-row:hover { background: var(--wdg-primary-soft); }
+body.pm-home-body.wdg-msg .wdg-cfg-row.active { background: rgba(var(--wdg-primary-rgb), .12); }
+
+body.pm-home-body.wdg-msg .wdg-cfg-layout .table-responsive {
+  border-radius: var(--wdg-radius);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--wdg-border);
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-layout .table {
+  --bs-table-bg: transparent;
+  margin-bottom: 0;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-layout .table thead th {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--wdg-text-light);
+  font-weight: 600;
+  border-bottom: 1px solid var(--wdg-border);
+  background: linear-gradient(180deg, var(--wdg-surface-alt), var(--wdg-surface));
+  white-space: nowrap;
+  text-align: center;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-layout .table tbody td {
+  border-top: 1px solid var(--wdg-border);
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* Ações + edição inline */
+body.pm-home-body.wdg-msg .wdg-cfg-namecell { display: flex; align-items: center; gap: .55rem; }
+body.pm-home-body.wdg-msg .wdg-cfg-iconbtn {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+body.pm-home-body.wdg-msg .wdg-cfg-iconbtn[disabled] { opacity: .55; cursor: not-allowed; }
+body.pm-home-body.wdg-msg .wdg-cfg-icon { width: 22px; height: 22px; object-fit: contain; display: block; }
+body.pm-home-body.wdg-msg .wdg-cfg-nameinput { max-width: 360px; }
+
+/* Operadores: checkbox maior */
+body.pm-home-body.wdg-msg #cfgOpsTable .form-check-input {
+  transform: scale(1.65);
+  transform-origin: center;
+}
+body.pm-home-body.wdg-msg #cfgOpsTable td { padding-top: .5rem; padding-bottom: .5rem; }
+
+/* Bloco Usuários e Permissões: tipografia e altura estáveis */
+body.pm-home-body.wdg-msg #cfgOpsForm {
+  font-size: .92rem;
+}
+
+body.pm-home-body.wdg-msg #cfgOpsEditor {
+  min-height: 240px;
+}
+
+body.pm-home-body.wdg-msg #cfgOpsEditor .wdg-msg-empty {
+  min-height: 240px;
+}
+
+/* Editor (Usuários e Permissões): busca + lista paginada + scroll vertical */
+body.pm-home-body.wdg-msg .wdg-cfg-ops-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-ops-search {
+  flex: 1 1 auto;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-ops-search .form-control {
+  min-height: 40px;
+}
+
+/* Após 3 itens, rolagem vertical (altura aproximada de 3 linhas + header) */
+body.pm-home-body.wdg-msg .wdg-cfg-ops-tablewrap {
+  margin-top: .5rem;
+  border: 1px solid var(--wdg-border);
+  border-radius: var(--wdg-radius);
+  overflow: hidden;
+  max-height: 285px;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-ops-tablewrap .table-responsive {
+  border: 0;
+  border-radius: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 285px;
+}
+
+/* Paginação fixa sempre visível */
+body.pm-home-body.wdg-msg .wdg-cfg-ops-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  padding-top: .65rem;
+  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-ops-pager-left {
+  font-size: .85rem;
+  color: var(--wdg-text-light);
+  text-align: center;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-ops-pager-right {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+body.pm-home-body.wdg-msg #cfgOpsTable {
+  font-size: .9rem;
+}
+
+body.pm-home-body.wdg-msg #cfgOpsTable thead th {
+  font-size: .66rem;
+  line-height: 1.15;
+}
+
+/* Editor de permissões: 3 colunas e grid interno */
+body.pm-home-body.wdg-msg #cfgOpsTable td.wdg-cfg-td-user,
+body.pm-home-body.wdg-msg #cfgOpsTable td.wdg-cfg-td-perms {
+  text-align: left;
+}
+
+body.pm-home-body.wdg-msg #cfgOpsTable td.wdg-cfg-td-action {
+  text-align: center;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-permscols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .35rem 1.1rem;
+  align-items: start;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-permscol {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-permitem {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  min-height: 28px;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-permitem .form-check-input {
+  transform: scale(1.35);
+  transform-origin: center;
+  margin-top: 0;
+}
+
+body.pm-home-body.wdg-msg .wdg-cfg-permlabel {
+  font-size: .86rem;
+  line-height: 1.15;
+  color: var(--wdg-text);
+  white-space: nowrap;
+}
+
+body.pm-home-body.wdg-msg #cfgOpsTable .wdg-userpick input.form-control {
+  min-height: 40px;
+  font-size: .92rem;
+  padding-top: .45rem;
+  padding-bottom: .45rem;
+}
+
+/* Seletor de usuário/caixa (dropdown) */
+body.pm-home-body.wdg-msg .wdg-userpick { position: relative; }
+body.pm-home-body.wdg-msg .wdg-userpick input.form-control { min-height: 44px; }
+
+body.pm-home-body.wdg-msg .wdg-userpick-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow: auto;
+  background: var(--wdg-surface);
+  border: 1px solid var(--wdg-border);
+  border-radius: var(--wdg-radius);
+  box-shadow: var(--wdg-shadow);
+  z-index: 80;
+  padding: .25rem;
+}
+
+body.pm-home-body.wdg-msg #cfgOpsEditor { position: relative; z-index: 5; }
+body.pm-home-body.wdg-msg #cfgOpsEditor .table-responsive {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Garante rolagem vertical especificamente no wrapper paginado */
+body.pm-home-body.wdg-msg #cfgOpsEditor .wdg-cfg-ops-tablewrap .table-responsive {
+  overflow-y: auto !important;
+}
+
+body.pm-home-body.wdg-msg .wdg-userpick-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .45rem .55rem;
+  border-radius: var(--wdg-radius);
+  text-align: left;
+}
+body.pm-home-body.wdg-msg .wdg-userpick-item:hover { background: var(--wdg-primary-soft); }
+
+body.pm-home-body.wdg-msg .wdg-userpick-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--wdg-border);
+  background: var(--wdg-surface-alt);
+  flex: 0 0 auto;
+}
+
+body.pm-home-body.wdg-msg .wdg-userpick-meta { display: flex; flex-direction: column; min-width: 0; }
+body.pm-home-body.wdg-msg .wdg-userpick-name {
+  font-weight: 700;
+  color: var(--wdg-text);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.pm-home-body.wdg-msg .wdg-userpick-email {
+  font-weight: 600;
+  color: var(--wdg-text-light);
+  font-size: .85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.pm-home-body.wdg-msg .wdg-userpick.wdg-userpick-compact { display: inline-block; }
+body.pm-home-body.wdg-msg .wdg-userpick.wdg-userpick-compact input.form-control {
+  min-height: 34px;
+  width: auto !important;
+  min-width: 34px;
+  max-width: 360px;
+  padding: .2rem .45rem;
+}
+body.pm-home-body.wdg-msg .wdg-userpick.wdg-userpick-compact .wdg-userpick-menu { min-width: 320px; }

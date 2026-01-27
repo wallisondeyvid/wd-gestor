@@ -1,0 +1,194 @@
+<%- include('../../../partials/modais/modal_orgao_profissional.ejs') %>
+<div class="tab-pane fade" id="aba4" role="tabpanel" aria-labelledby="tab-aba4">
+  <!-- Certificado Militar -->
+  <div class="row g-3">
+    <div class="col-md-3">
+  <label class="form-label">Certificado Militar</label>
+      <input name="cert_militar" id="extra_cert_militar" class="form-control">
+    </div>
+    <div class="col-md-3">
+  <label class="form-label">Órgão Emissor</label>
+  <input name="cert_militar_orgao" id="extra_cert_militar_orgao" class="form-control">
+    </div>
+    <div class="col-md-3">
+  <label class="form-label">UF Órgão</label>
+      <select name="cert_militar_uf" id="extra_cert_militar_uf" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+  <label class="form-label">Emissão</label>
+      <input name="cert_militar_data" id="extra_cert_militar_data" type="text"
+        class="form-control date-br" data-calendar="flatpickr"
+        placeholder="dd/mm/aaaa" autocomplete="off">
+    </div>
+  </div> <!-- /row -->
+
+  <!-- Título de Eleitor -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+  <label class="form-label">Título de Eleitor</label>
+    <input name="titulo" id="extra_titulo" class="form-control titulo-eleitor-mask"
+        placeholder="0000 0000 0000">
+    </div>
+    <div class="col-md-3">
+  <label class="form-label">Zona</label>
+  <input name="titulo_zona" id="extra_titulo_zona" class="form-control zona-eleitoral-mask" maxlength="4">
+    </div>
+    <div class="col-md-3">
+  <label class="form-label">Seção</label>
+  <input name="titulo_secao" id="extra_titulo_secao" class="form-control secao-eleitoral-mask" maxlength="4">
+    </div>
+  </div> <!-- /row -->
+
+  <!-- CNH -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label">Nº CNH</label>
+      <input name="cnh" id="extra_cnh" class="form-control cnh-mask"
+        inputmode="numeric">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Categoria CNH</label>
+      <select name="cnh_categoria" id="extra_cnh_categoria" class="form-select">
+        <option value="">Selecione...</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+        <option>D</option>
+        <option>E</option>
+        <option>AB</option>
+        <option>AC</option>
+        <option>AD</option>
+        <option>AE</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Validade CNH</label>
+      <input name="cnh_validade" id="extra_cnh_validade" type="text"
+        class="form-control date-br" data-calendar="flatpickr"
+        placeholder="dd/mm/aaaa" autocomplete="off">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">UF CNH</label>
+      <select name="cnh_uf" id="extra_cnh_uf" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+  </div> <!-- /row -->
+
+  <!-- RNE / Passaporte -->
+  <div class="row g-3 mt-2">
+  </div> <!-- /row -->
+
+  <!-- Registro Profissional -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-6">
+      <label class="form-label">Órgão Registro Profissional</label>
+      <div class="input-group">
+    <input name="orgao_prof" id="extra_orgao_prof" class="form-control" readonly>
+  <button class="btn btn-outline-primary" type="button" id="btnAbrirModalOrgaoProfissional">Selecionar</button>
+    </div>
+  <!-- Script orgao_profissional removido aqui (já incluído globalmente em funcionarios_index.ejs) -->
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">UF</label>
+      <select name="orgao_prof_uf" id="extra_orgao_prof_uf" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Nº Registro Profissional</label>
+      <input name="orgao_prof_numero" id="extra_orgao_prof_num" class="form-control" autocomplete="off" placeholder="Informe o número">
+      <small class="text-muted" id="hintRegistro"></small>
+    </div>
+  </div> <!-- /row -->
+</div>
+<script>
+  // Padrões por órgão
+  window.MASKS = window.MASKS || {
+    OAB: { pattern: "OAB/{UF} 000.000", label: "Ex.: OAB/MG 123.456", minDigits: 5, maxDigits: 6 },
+    CRM: { pattern: "000000/{UF}", label: "Ex.: 123456/MG", minDigits: 6, maxDigits: 6 },
+    CREA: { pattern: "{UF} 000000", label: "Ex.: MG 123456", minDigits: 6, maxDigits: 6 },
+    COREN: { pattern: "{UF}-000000", label: "Ex.: MG-123456", minDigits: 6, maxDigits: 6 },
+    CRO:   { pattern: "{UF} 00000",  label: "Ex.: MG 12345",  minDigits: 5, maxDigits: 5 },
+    CRF:   { pattern: "{UF} 00000",  label: "Ex.: MG 12345",  minDigits: 5, maxDigits: 5 },
+    CRC:   { pattern: "{UF} 000000", label: "Ex.: MG 123456", minDigits: 6, maxDigits: 6 },
+    CRA:   { pattern: "{UF} 000000", label: "Ex.: MG 123456", minDigits: 6, maxDigits: 6 },
+    CAU:   { pattern: "{UF} 000000-0", label: "Ex.: MG 123456-7", minDigits: 7, maxDigits: 7 },
+    CRP:   { pattern: "{UF} 00000",  label: "Ex.: MG 12345",  minDigits: 5, maxDigits: 5 },
+    OUTRO: { pattern: "{UF} 000000", label: "Ex.: UF 123456", minDigits: 4, maxDigits: 10 },
+    DEFAULT: { pattern: "{UF} 000000", label: "Ex.: UF 123456", minDigits: 4, maxDigits: 10 }
+  };
+
+  function getMask() {
+    const org = (document.getElementById('extra_orgao_prof').value || "").toUpperCase();
+  return window.MASKS[org] || window.MASKS.DEFAULT;
+  }
+
+  function compilePattern(pattern, uf) {
+    return pattern.replaceAll('{UF}', (uf || '').toUpperCase());
+  }
+
+  function formatWithMask(digits, patternStr) {
+    let out = '', di = 0;
+    for (const ch of patternStr) {
+      if (ch === '0') {
+        if (di < digits.length) out += digits[di++];
+        else break;
+      } else {
+        out += ch;
+      }
+    }
+    return out;
+  }
+
+  function onlyDigits(s){ return (s || '').replace(/\D+/g, ''); }
+
+  function refreshMask(reformatExisting = true) {
+  const mask = getMask();
+    const uf = document.getElementById('extra_orgao_prof_uf').value || '';
+    const input = document.getElementById('extra_orgao_prof_num');
+    const hint = document.getElementById('hintRegistro');
+    const pat = compilePattern(mask.pattern, uf);
+    input.placeholder = pat.replace(/0/g, '0');
+    hint.textContent = mask.label || '';
+    input.maxLength = pat.length;
+
+    if (reformatExisting) {
+      const raw = onlyDigits(input.value || input.dataset.raw || '');
+      const trimmed = raw.slice(0, mask.maxDigits ?? 20);
+      input.value = formatWithMask(trimmed, pat);
+      input.dataset.raw = trimmed;
+      checkValidity();
+    }
+  }
+
+  function checkValidity(){
+  const mask = getMask();
+    const input = document.getElementById('extra_orgao_prof_num');
+    const raw = input.dataset.raw || '';
+    const min = mask.minDigits ?? 1;
+    const max = mask.maxDigits ?? 99;
+    const ok = raw.length >= min && raw.length <= max;
+    input.setCustomValidity(ok ? '' : `Informe ${min} a ${max} dígitos.`);
+  }
+
+  document.getElementById('extra_orgao_prof').addEventListener('change', () => refreshMask(true));
+  document.getElementById('extra_orgao_prof_uf').addEventListener('change', () => refreshMask(true));
+  document.getElementById('extra_orgao_prof_num').addEventListener('input', () => {
+    const mask = getMask();
+    const uf = document.getElementById('extra_orgao_prof_uf').value || '';
+    const input = document.getElementById('extra_orgao_prof_num');
+    const pat = compilePattern(mask.pattern, uf);
+    const rawDigits = onlyDigits(input.value);
+    const trimmed = rawDigits.slice(0, mask.maxDigits ?? 20);
+    input.value = formatWithMask(trimmed, pat);
+    input.dataset.raw = trimmed;
+    checkValidity();
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    refreshMask(false);
+  });
+</script>

@@ -1,0 +1,168 @@
+<!-- Página Gestão Férias (layout alinhado ao dashboard de escalas) -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WDGestor - Gestão de Férias</title>
+  <% const _bp = (meta && meta.basePath) ? meta.basePath : '/escalas'; %>
+  <%- include('../gestor/partials/favicon', { basePath: _bp }) %>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <%- include('../shared/partials/theme-esc-blue') %>
+  <style>
+    :root{
+      --esc-blue-1:#0e6fb1;
+      --esc-blue-2:#0a4f80;
+      --esc-gray-2:#eef3f7;
+    }
+    /* Ajustes específicos da página */
+    .ferias-form .form-control[readonly]{ background:#f8f9fa; }
+    .ferias-tabela-wrapper{ min-height:160px; }
+    table#tabelaFerias thead th{ white-space:nowrap; font-size:.72rem; background:linear-gradient(var(--esc-blue-1),var(--esc-blue-2)); color:#fff; border-color:var(--esc-blue-2); text-align:center; }
+    table#tabelaFerias tbody td{ vertical-align:middle; font-size:.78rem; text-align:center; }
+    table#tabelaFerias tbody tr:nth-child(odd){ background:#e2e2e2; }
+    table#tabelaFerias tbody tr:nth-child(even){ background:#d6d6d6; }
+  table#tabelaFerias tbody td:first-child{ width:38%; white-space:nowrap; }
+  table#tabelaFerias thead th:first-child{ width:38%; }
+  table#tabelaFerias thead th:nth-child(2),
+  table#tabelaFerias thead th:nth-child(3){ width:12%; }
+  table#tabelaFerias thead th:nth-child(4){ width:16%; }
+    .wdg-page-title{ font-weight:600; letter-spacing:.5px; text-align:center; }
+    .wdg-section{ background:#fff; border-radius:8px; padding:18px 20px; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+  body.wdg-layout{ background: linear-gradient(180deg, var(--esc-gray-2), #fff 28%); }
+  /* Campo Ano menor */
+  .wdg-ano-field{ max-width:100px; }
+    /* Layout estreito tipo mobile para o quadro de parâmetros */
+    .wdg-narrow-form{ max-width:480px; margin:0 auto; }
+    @media (max-width:576px){ .wdg-narrow-form{ max-width:100%; } }
+    /* Botões no tema azul/verde para consistência */
+    .btn-primary{ background: linear-gradient(180deg, #2a86d1, var(--esc-blue-1)); border-color: var(--esc-blue-1); }
+    .btn-primary:hover{ filter: brightness(1.05); }
+    .btn-success{ background: linear-gradient(180deg, #35b56b, #2aa35f); border-color:#239454; }
+    .btn-success:hover{ filter: brightness(1.05); }
+  </style>
+</head>
+<body class="wdg-layout wdg-theme-blue" data-base-path="<%= _bp %>">
+  <!-- Cabeçalho / Navbar / Perfil compartilhados -->
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel:'Escalas' }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Escalas',
+        prefixMenuPaths: true,
+        menuLabel: 'Menu',
+        menuTree: [
+          { label: 'Escalas', children: [
+            { label: 'Ordinária', children:[
+              { label: 'Nova', path: '/ordinaria/nova' },
+              { label: 'Pesquisar', path: '/ordinaria/pesquisar' }
+            ]},
+            { label: 'Extraodinária', children:[
+              { label: 'Nova', path: '/extraordinaria/nova' },
+              { label: 'Pesquisar', path: '/extraordinaria/pesquisar' }
+            ]},
+            { label: 'Escala Diária', path: '/diaria' }
+          ]},
+          { label: 'Gestão', children:[
+            { label: 'Férias', path: '/gestao/ferias' },
+            { label: 'Ausências', path: '/gestao/ausencias' }
+          ]},
+          { label: 'Relatórios', children:[
+            { label: 'Consulta de Relatórios', path: '/relatorios/consulta' }
+          ]}
+        ],
+        adminItems: []
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel:'Escalas' }) %>
+
+  <div class="container mt-4" id="appFerias" data-basepath="<%= _bp %>">
+    <div class="mb-3"><h4 class="wdg-page-title mb-0">Gestão de Férias</h4></div>
+
+    <div class="card wdg-params mb-4 mx-auto" style="max-width:780px;">
+      <div class="card-header py-2"><strong>Parâmetros</strong></div>
+      <div class="card-body py-3">
+      <form id="formPesquisaFerias" class="ferias-form small">
+        <!-- Linha 1: Unidade -->
+        <div class="row g-3 mb-2">
+          <div class="col-12">
+            <label for="feriasUnidade" class="form-label mb-1">Unidade</label>
+            <select id="feriasUnidade" class="form-select form-select-sm" required>
+              <option value="">Carregando...</option>
+            </select>
+          </div>
+        </div>
+        <!-- Linha 2: Funcionário -->
+        <div class="row g-3 mb-2">
+          <div class="col-12">
+            <label for="feriasFuncionario" class="form-label mb-1">Funcionário</label>
+            <div class="input-group input-group-sm">
+              <input type="text" id="feriasFuncionario" class="form-control" placeholder="Selecione..." readonly>
+              <button type="button" class="btn btn-outline-secondary" id="btnPesquisarFuncionario" title="Pesquisar"><i class="bi bi-search"></i></button>
+              <button type="button" class="btn btn-outline-danger" id="btnLimparFuncionario" title="Limpar seleção">&times;</button>
+            </div>
+          </div>
+        </div>
+        <!-- Linha 3: Ano -->
+        <div class="row g-3 mb-2">
+          <div class="col-12">
+            <label for="feriasAno" class="form-label mb-1">Ano</label>
+            <% const anoAtual=new Date().getFullYear(); %>
+            <input type="number" id="feriasAno" class="form-control form-control-sm wdg-ano-field" value="<%= anoAtual %>" min="1990" max="2100" step="1" />
+          </div>
+        </div>
+        <!-- Linha 4: Botões -->
+        <div class="row g-3">
+          <div class="col-12 d-flex gap-2 align-items-center flex-wrap justify-content-end">
+            <button type="button" id="btnPesquisarFerias" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" title="Pesquisar">
+              <img src="<%= _bp %>/images/pesquisar.png" alt="Pesquisar" style="height:20px; width:auto;" />
+              <span class="d-none d-md-inline">Pesquisar</span>
+            </button>
+            <button type="button" id="btnRelatorioFerias" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Relatório">
+              <img src="<%= _bp %>/images/relatorio.png" alt="Relatório" style="height:20px; width:auto;" />
+              <span class="d-none d-md-inline">Relatório</span>
+            </button>
+          </div>
+        </div>
+      </form>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end mb-2">
+      <button type="button" class="btn btn-sm btn-success d-flex align-items-center gap-1" id="btnInserirFerias" title="Inserir">
+        <img src="<%= _bp %>/images/adicionar.png" alt="Inserir" style="height:20px; width:auto;" />
+        <span class="d-none d-md-inline">Inserir</span>
+      </button>
+    </div>
+
+    <div class="wdg-section ferias-tabela-wrapper">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover mb-0 wdg-table wdg-zebra" id="tabelaFerias">
+          <thead class="text-center align-middle">
+            <tr>
+              <th>Nome do Funcionário</th>
+              <th>Início</th>
+              <th>Término</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modais reutilizados -->
+  <%- include('modais_popups/modal_pesquisar_efetivo') %>
+  <%- include('modais_popups/modal_cadastrar_ferias') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>window.__perfilBasePath='<%= _bp %>';</script>
+  <script src="<%= _bp %>/js/perfil-modulo.js"></script>
+  <script src="<%= _bp %>/js/modais_popups/modal_pesquisar_efetivo.js"></script>
+  <script src="<%= _bp %>/js/ferias.js"></script>
+  <script src="<%= _bp %>/js/cadastrar_ferias.js"></script>
+</body>
+</html>

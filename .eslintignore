@@ -1,0 +1,3 @@
+# Ignorar arquivos EJS para o ESLint
+*.ejs
+views/**/*.ejs

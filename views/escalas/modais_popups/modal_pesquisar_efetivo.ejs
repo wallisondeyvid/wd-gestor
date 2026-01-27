@@ -1,0 +1,88 @@
+<div class="modal fade" id="modalPesquisarEfetivo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h5 class="modal-title">Pesquisar Efetivo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formBuscaEfetivo" class="mb-3">
+          <table class="w-100 align-middle" style="table-layout:fixed;">
+            <colgroup>
+              <col style="width:38%;">
+              <col style="width:38%;">
+              <col style="width:24%;">
+            </colgroup>
+            <tbody>
+              <tr>
+                <td>
+                  <label class="form-label">Unidade</label>
+                  <select class="form-select" id="filtroEfetivoUnidade">
+                    <option value="" disabled selected>Selecione...</option>
+                  </select>
+                </td>
+                <td>
+                  <label class="form-label d-block">&nbsp;</label>
+                  <div class="form-check mt-1">
+                    <input class="form-check-input" type="checkbox" id="chkEfetivoIncluirFiliais">
+                    <label class="form-check-label small" for="chkEfetivoIncluirFiliais">Incluir unidades filiais</label>
+                  </div>
+                </td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>
+                  <label class="form-label">Código</label>
+                  <input type="text" class="form-control" id="filtroEfetivoCodigo" maxlength="30" autocomplete="off" placeholder="Código">
+                </td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>
+                  <label class="form-label">CPF</label>
+                  <input type="text" class="form-control" id="filtroEfetivoCPF" maxlength="14" autocomplete="off" placeholder="___.___.___-__">
+                </td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <label class="form-label">Nome</label>
+                  <input type="text" class="form-control" id="filtroEfetivoNome" autocomplete="off" placeholder="Nome ou parte do nome">
+                </td>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+                <td class="text-start text-lg-end pt-2">
+                  <div class="d-flex gap-2 flex-wrap justify-content-start justify-content-lg-end">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimparFiltroEfetivo">Limpar</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btnPesquisarEfetivo"><i class="bi bi-search"></i> Pesquisar</button>
+                  </div>
+                </td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </form>
+        <div class="table-responsive border rounded">
+          <table class="table table-sm table-hover mb-0 text-center align-middle" id="tabelaResultadosEfetivo" style="table-layout:fixed;">
+            <thead class="table-light"><tr>
+              <th style="width:40px"></th>
+              <th style="width:200px" class="text-center">Nome</th>
+              <th style="width:140px" class="text-center">Código</th>
+              <th style="width:140px" class="text-center">CPF</th>
+              <th style="width:380px" class="text-center">Unidade</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="btnInserirEfetivo" disabled><i class="bi bi-check2"></i> Inserir</button>
+      </div>
+    </div>
+  </div>
+</div>

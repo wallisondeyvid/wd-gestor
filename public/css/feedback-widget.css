@@ -1,0 +1,711 @@
+/* Feedback Widget (WD Gestor)
+   - Estiliza apenas o HTML existente em views/shared/partials/feedback-widget.ejs
+   - Sem dependência de JS (mas preparado para estados via aria-expanded/data-open)
+*/
+
+.wdg-feedback-widget{
+  --wdg-fb-z: 9999;
+  --wdg-fb-fab: 72px;
+  --wdg-fb-fab-expanded-w: 320px;
+  --wdg-fb-gap: 16px;
+  --wdg-fb-drawer-max-h: 1120px;
+  /* Topo seguro (px) calculado via JS: base da navbar/topbar do módulo */
+  --wdg-fb-safe-top: 0px;
+  /* Compensa a scrollbar lateral do browser (Windows) para o drawer não ficar “por baixo” */
+  --wdg-fb-drawer-right-offset: 16px;
+  --wdg-fb-avatar: 176px;
+  --wdg-fb-avatar-outset: 24px;
+  /* Quanto do avatar deve “entrar” no header (resto fica para fora, evitando cobrir o body) */
+  --wdg-fb-avatar-inset-y: 64px;
+  /* Ajuste fino: compensa a “faixa” da scrollbar no Windows durante a expansão */
+  --wdg-fb-hover-nudge-x: -16px;
+  --wdg-fb-border: 1px solid rgba(0,0,0,.10);
+  --wdg-fb-drawer-bg: #ffffff;
+  --wdg-fb-drawer-radius: 14px;
+  --wdg-fb-drawer-shadow: 0 16px 40px rgba(0,0,0,.22);
+  --wdg-fb-text: #0f172a;
+  --wdg-fb-muted: rgba(15,23,42,.70);
+  --wdg-fb-accent: #1aa0ff;
+  --wdg-fb-dur: 240ms;
+  --wdg-fb-ease: cubic-bezier(.2,.8,.2,1);
+}
+
+/* Container fixo no canto inferior direito */
+.wdg-feedback-widget{
+  position: fixed !important;
+  right: 0 !important;
+  bottom: var(--wdg-fb-gap) !important;
+  left: auto !important;
+  top: auto !important;
+  inset: auto 0 var(--wdg-fb-gap) auto !important;
+  z-index: var(--wdg-fb-z) !important;
+  display: block;
+  overflow: visible;
+  transform: none !important;
+  translate: none !important;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  width: var(--wdg-fb-fab);
+  height: var(--wdg-fb-fab);
+  transition: width var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+/* RESET AGRESSIVO APENAS do launcher (para não “achatar” o drawer) */
+.wdg-feedback-widget .wdg-feedback-fab,
+.wdg-feedback-widget .wdg-feedback-fab *{
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border-radius: 0 !important;
+}
+
+.wdg-feedback-widget .wdg-feedback-fab{
+  line-height: 0 !important;
+  font-size: 0 !important;
+}
+
+.wdg-feedback-widget .wdg-feedback-fab{
+  text-decoration: none !important;
+  color: transparent !important;
+  cursor: pointer;
+}
+
+.wdg-feedback-widget .wdg-feedback-fab *::before,
+.wdg-feedback-widget .wdg-feedback-fab *::after{
+  content: none !important;
+  display: none !important;
+}
+
+.wdg-feedback-widget .wdg-feedback-fab img{
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+/* Launcher (a imagem é o botão) */
+.wdg-feedback-widget .wdg-feedback-fab{
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  position: relative;
+  transform-origin: right center;
+  overflow: visible;
+}
+
+.wdg-feedback-widget .wdg-feedback-fab:focus{
+  outline: none;
+}
+
+.wdg-feedback-widget .wdg-feedback-fab:focus-visible{
+  outline: 3px solid rgba(26,160,255,.35);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine){
+  .wdg-feedback-widget:hover{
+    width: var(--wdg-fb-fab-expanded-w);
+    margin-right: var(--wdg-fb-hover-nudge-x) !important;
+  }
+}
+
+/* Mantém o launcher expandido enquanto o drawer estiver aberto (não depende de hover) */
+.wdg-feedback-widget[data-open="1"]{
+  width: var(--wdg-fb-fab-expanded-w);
+  margin-right: var(--wdg-fb-hover-nudge-x) !important;
+}
+
+.wdg-feedback-widget .wdg-feedback-fab-icon{
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  object-position: right center;
+  display: block !important;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+/* Estado recolhido/expandido (apenas hover visual) */
+.wdg-feedback-widget .wdg-feedback-fab-icon--expanded{ opacity: 0; }
+
+@media (hover: hover) and (pointer: fine){
+  .wdg-feedback-widget:hover .wdg-feedback-fab-icon--expanded{ opacity: 1; }
+  .wdg-feedback-widget:hover .wdg-feedback-fab-icon--collapsed{ opacity: 0; }
+}
+
+/* Enquanto aberto: manter a arte expandida visível */
+.wdg-feedback-widget[data-open="1"] .wdg-feedback-fab-icon--expanded{ opacity: 1; }
+.wdg-feedback-widget[data-open="1"] .wdg-feedback-fab-icon--collapsed{ opacity: 0; }
+
+/* Drawer: abre acima do ícone, cresce de baixo para cima */
+.wdg-feedback-widget .wdg-feedback-drawer{
+  position: absolute;
+  right: var(--wdg-fb-drawer-right-offset);
+  bottom: calc(var(--wdg-fb-fab) + 10px);
+  width: 360px;
+  max-width: calc(100vw - (var(--wdg-fb-gap) * 2));
+  max-height: min(
+    var(--wdg-fb-drawer-max-h),
+    calc(100vh - var(--wdg-fb-safe-top) - var(--wdg-fb-gap) - var(--wdg-fb-fab) - 12px)
+  );
+  display: flex;
+  flex-direction: column;
+  color: var(--wdg-fb-text);
+  background: var(--wdg-fb-drawer-bg);
+  border: var(--wdg-fb-border);
+  border-radius: var(--wdg-fb-drawer-radius);
+  box-shadow: var(--wdg-fb-drawer-shadow);
+  /* Permite o avatar extrapolar o container no topo/esquerda */
+  overflow: visible !important;
+
+  /* Animação de "crescer" de baixo pra cima */
+  transform-origin: bottom right;
+  transform: translateY(12px);
+  opacity: 0;
+  transition: transform var(--wdg-fb-dur) var(--wdg-fb-ease),
+              opacity var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+/* Por padrão o HTML usa [hidden]; quando removido, aparece.
+   (A transição acontece assim que o atributo é removido.) */
+.wdg-feedback-widget .wdg-feedback-drawer[hidden]{
+  display: none;
+}
+
+/* Estado aberto (preparado para JS futuro) */
+.wdg-feedback-widget[data-open="1"] .wdg-feedback-drawer,
+.wdg-feedback-widget .wdg-feedback-fab[aria-expanded="true"] + .wdg-feedback-drawer{
+  /* Faz a caixa “encostar” no topo seguro (base da barra) e preencher até acima do launcher */
+  height: max(
+    420px,
+    calc(100vh - var(--wdg-fb-safe-top) - (var(--wdg-fb-gap) * 2) - var(--wdg-fb-fab) - 10px)
+  );
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Header */
+.wdg-feedback-widget .wdg-feedback-header{
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+  background: linear-gradient(135deg, rgba(26,160,255,.14), rgba(255,255,255,0));
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+
+.wdg-feedback-widget .wdg-feedback-assistant{
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-width: 0;
+  /* Espaço para o avatar absoluto (dobrado), com limite para não esmagar o texto */
+  padding-left: clamp(56px, calc(var(--wdg-fb-avatar) - var(--wdg-fb-avatar-outset)), 120px);
+  position: relative;
+  z-index: 1;
+}
+
+.wdg-feedback-widget .wdg-feedback-avatar{
+  width: var(--wdg-fb-avatar);
+  height: var(--wdg-fb-avatar);
+  /* Evita “cortar” a cabeça/borda do PNG quando a arte não é quadrada */
+  object-fit: contain;
+  object-position: left top;
+  flex: 0 0 auto;
+  position: absolute;
+  left: calc(-1 * var(--wdg-fb-avatar-outset));
+  /* Sobe o avatar para que ele não invada o body (opções) */
+  top: calc(-1 * (var(--wdg-fb-avatar) - var(--wdg-fb-avatar-inset-y)));
+  z-index: 0;
+  pointer-events: none;
+}
+
+.wdg-feedback-widget .wdg-feedback-header-text{
+  min-width: 0;
+}
+
+.wdg-feedback-widget .wdg-feedback-header-title{
+  margin: 0;
+  font-weight: 900;
+  font-size: clamp(18px, 2.2vw, 22px);
+  line-height: 1.1;
+}
+
+.wdg-feedback-widget .wdg-feedback-greeting{
+  margin: 0;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+/* No modo chat (WhatsApp), o topo mostra apenas o título */
+.wdg-feedback-widget[data-chat-ui="1"] .wdg-feedback-header-text .wdg-feedback-greeting{
+  display: none;
+}
+
+.wdg-feedback-widget .wdg-feedback-subtitle{
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--wdg-fb-muted);
+}
+
+.wdg-feedback-widget .wdg-feedback-close{
+  width: 36px;
+  height: 36px;
+  border: 0 !important;
+  padding: 0;
+  margin: 0;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  color: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--wdg-fb-dur) var(--wdg-fb-ease),
+              opacity var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+.wdg-feedback-widget .wdg-feedback-close:hover{ opacity: .92; transform: translateY(-1px); }
+.wdg-feedback-widget .wdg-feedback-close:active{ transform: translateY(0); opacity: .88; }
+.wdg-feedback-widget .wdg-feedback-close:focus,
+.wdg-feedback-widget .wdg-feedback-close:focus-visible{ outline: 0 !important; box-shadow: none !important; }
+
+.wdg-feedback-widget .wdg-feedback-close-icon{
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+}
+
+/* Body */
+.wdg-feedback-widget .wdg-feedback-body{
+  padding: 12px 14px 14px;
+  overflow: auto;
+  max-height: inherit;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ==============================
+   Chat (estilo WhatsApp)
+   ============================== */
+.wdg-feedback-widget[data-chat-ui="1"] .wdg-feedback-body{
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #efeae2;
+}
+
+.wdg-feedback-widget[data-chat-ui="1"] .wdg-feedback-screen{ display: none; }
+.wdg-feedback-widget[data-chat-ui="1"] .wdg-feedback-chat{ display: flex; }
+
+.wdg-feedback-widget .wdg-feedback-chat{
+  display: none;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-log{
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px 12px;
+  overflow: auto;
+}
+
+.wdg-feedback-widget .wdg-feedback-msg{
+  display: flex;
+  margin: 6px 0;
+}
+
+.wdg-feedback-widget .wdg-feedback-msg--in{ justify-content: flex-start; }
+.wdg-feedback-widget .wdg-feedback-msg--out{ justify-content: flex-end; }
+
+.wdg-feedback-widget .wdg-feedback-bubble{
+  max-width: 86%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.35;
+  box-shadow: 0 1px 0 rgba(0,0,0,.08);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.wdg-feedback-widget .wdg-feedback-msg--in .wdg-feedback-bubble{
+  background: #ffffff;
+  border-top-left-radius: 6px;
+}
+
+.wdg-feedback-widget .wdg-feedback-msg--out .wdg-feedback-bubble{
+  background: #d9fdd3;
+  border-top-right-radius: 6px;
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-quick{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 10px 10px;
+}
+
+.wdg-feedback-widget .wdg-feedback-quick-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.95);
+  border-radius: 999px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--wdg-fb-dur) var(--wdg-fb-ease),
+              border-color var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+.wdg-feedback-widget .wdg-feedback-quick-btn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(26,160,255,.35);
+}
+
+.wdg-feedback-widget .wdg-feedback-quick-icon{
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  display: block;
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-compose{
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 10px;
+  background: #f0f2f5;
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-file{ display: none; }
+
+.wdg-feedback-widget .wdg-feedback-chat-input{
+  flex: 1 1 auto;
+  min-height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  padding: 8px 12px;
+  font-size: 13px;
+  background: #ffffff;
+  resize: none;
+  overflow-y: hidden;
+  line-height: 18px;
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-input:focus{
+  outline: 3px solid rgba(26,160,255,.18);
+  outline-offset: 2px;
+  border-color: rgba(26,160,255,.45);
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-send{
+  width: 36px;
+  height: 36px;
+  border: 0 !important;
+  padding: 0;
+  margin: 0;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  color: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-send-icon{
+  width: 36px;
+  height: 36px;
+  display: block;
+  object-fit: contain;
+  background: transparent;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-send:focus{ outline: none !important; }
+.wdg-feedback-widget .wdg-feedback-chat-send:focus-visible{ outline: none !important; }
+
+.wdg-feedback-widget .wdg-feedback-chat-send:hover,
+.wdg-feedback-widget .wdg-feedback-chat-send:active{
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-send:disabled{
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.wdg-feedback-widget .wdg-feedback-title{
+  margin: 0 0 6px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.wdg-feedback-widget .wdg-feedback-muted{
+  margin: 0;
+  font-size: 12px;
+  color: var(--wdg-fb-muted);
+}
+
+/* Opções iniciais */
+.wdg-feedback-widget .wdg-feedback-options{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.wdg-feedback-widget .wdg-feedback-option{
+  border: 1px solid rgba(0,0,0,.10);
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform var(--wdg-fb-dur) var(--wdg-fb-ease),
+              border-color var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+.wdg-feedback-widget .wdg-feedback-option-icon{
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.wdg-feedback-widget .wdg-feedback-option:hover{
+  transform: translateY(-1px);
+  border-color: rgba(26,160,255,.35);
+}
+
+.wdg-feedback-widget .wdg-feedback-option:focus-visible{
+  outline: 3px solid rgba(26,160,255,.35);
+  outline-offset: 2px;
+}
+
+/* Campos */
+.wdg-feedback-widget .wdg-feedback-field{ margin: 10px 0 12px; }
+
+.wdg-feedback-widget .wdg-feedback-label{
+  display: block;
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(15,23,42,.82);
+}
+
+.wdg-feedback-widget .wdg-feedback-input,
+.wdg-feedback-widget .wdg-feedback-textarea,
+.wdg-feedback-widget .wdg-feedback-select{
+  width: 100%;
+  border: 1px solid rgba(0,0,0,.12);
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--wdg-fb-text);
+  transition: border-color var(--wdg-fb-dur) var(--wdg-fb-ease),
+              color var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+.wdg-feedback-widget .wdg-feedback-textarea{ resize: vertical; min-height: 96px; }
+
+.wdg-feedback-widget .wdg-feedback-input:focus,
+.wdg-feedback-widget .wdg-feedback-textarea:focus,
+.wdg-feedback-widget .wdg-feedback-select:focus{
+  outline: 3px solid rgba(26,160,255,.22);
+  outline-offset: 2px;
+  border-color: rgba(26,160,255,.65);
+}
+
+.wdg-feedback-widget .wdg-feedback-file{
+  width: 100%;
+}
+
+.wdg-feedback-widget .wdg-feedback-help{
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--wdg-fb-muted);
+}
+
+/* Avatares inline e perguntas */
+.wdg-feedback-widget .wdg-feedback-avatar-inline{
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  display: inline-block;
+}
+
+.wdg-feedback-widget .wdg-feedback-question{
+  margin: 10px 0 8px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* Ações */
+.wdg-feedback-widget .wdg-feedback-actions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.wdg-feedback-widget .wdg-feedback-btn{
+  border: 0;
+  padding: 10px 12px;
+  font-weight: 800;
+  border: 1px solid rgba(26,160,255,.65);
+  color: rgba(26,160,255,.92);
+  cursor: pointer;
+  transition: transform var(--wdg-fb-dur) var(--wdg-fb-ease),
+              filter var(--wdg-fb-dur) var(--wdg-fb-ease),
+              border-color var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+.wdg-feedback-widget .wdg-feedback-btn:hover{ filter: brightness(0.97); transform: translateY(-1px); border-color: rgba(26,160,255,.90); }
+.wdg-feedback-widget .wdg-feedback-btn:focus-visible{ outline: 3px solid rgba(26,160,255,.35); outline-offset: 2px; }
+
+.wdg-feedback-widget .wdg-feedback-btn--secondary{
+  color: rgba(15,23,42,.92);
+  border-color: rgba(15,23,42,.22);
+}
+
+.wdg-feedback-widget .wdg-feedback-btn--secondary:hover{ border-color: rgba(15,23,42,.40); }
+
+/* Lista de acompanhamento */
+.wdg-feedback-widget .wdg-feedback-list{
+  margin-top: 10px;
+}
+
+.wdg-feedback-widget .wdg-feedback-empty{
+  border: 1px dashed rgba(0,0,0,.18);
+  padding: 12px;
+  color: var(--wdg-fb-muted);
+}
+
+/* Detalhes */
+.wdg-feedback-widget .wdg-feedback-dl{
+  margin: 10px 0 12px;
+}
+
+.wdg-feedback-widget .wdg-feedback-dl-row{
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+
+.wdg-feedback-widget .wdg-feedback-dl-row dt{
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(15,23,42,.82);
+}
+
+.wdg-feedback-widget .wdg-feedback-dl-row dd{
+  margin: 0;
+  font-size: 12px;
+  color: rgba(15,23,42,.82);
+  word-break: break-word;
+}
+
+.wdg-feedback-widget .wdg-feedback-readonly{
+  border: 1px solid rgba(0,0,0,.10);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: rgba(15,23,42,.88);
+  white-space: pre-wrap;
+}
+
+.wdg-feedback-widget .wdg-feedback-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--wdg-fb-accent);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.wdg-feedback-widget .wdg-feedback-link:hover{ text-decoration: underline; }
+
+/* Footer (se vier a ser exibido) */
+.wdg-feedback-widget .wdg-feedback-footer{
+  padding: 10px 14px 14px;
+  border-top: 1px solid rgba(0,0,0,.06);
+}
+
+/* Fullscreen no mobile */
+@media (max-width: 768px){
+  .wdg-feedback-widget{
+    --wdg-fb-fab: 72px;
+    --wdg-fb-gap: 16px;
+    --wdg-fb-avatar: 140px;
+    --wdg-fb-avatar-inset-y: 58px;
+  }
+
+  .wdg-feedback-widget .wdg-feedback-drawer{
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    max-height: none;
+    border: 0;
+
+    transform-origin: bottom center;
+    transform: translateY(12px);
+  }
+
+  .wdg-feedback-widget .wdg-feedback-body{
+    max-height: calc(100vh - 72px);
+  }
+
+  .wdg-feedback-widget .wdg-feedback-dl-row{
+    grid-template-columns: 110px 1fr;
+  }
+}

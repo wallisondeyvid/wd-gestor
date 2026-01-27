@@ -1,0 +1,22 @@
+<div class="modal fade" id="modalPesquisarPessoa" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pesquisar pessoa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" id="psqPessoaQuery" placeholder="Nome, CPF, e-mail...">
+          <button class="btn btn-outline-secondary" type="button" id="psqPessoaBtn">Buscar</button>
+        </div>
+        <div id="psqPessoaInfo" class="text-muted small">Busca simulada (backend ainda não integrado).</div>
+        <div class="list-group mt-2" id="psqPessoaResultados"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/start.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "public/**",
+          "images/**",
+          "views/**",
+          "src/core/models/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    { "src": "^/gestor/login/?$", "methods": ["GET", "HEAD"], "dest": "/src/start.js" },
+    { "src": "^/gestor/primeiroacesso/?$", "methods": ["GET", "HEAD"], "dest": "/src/start.js" },
+    { "src": "^/(portal-morador|portal_morador)/login/?$", "methods": ["POST"], "dest": "/src/start.js" },
+    { "src": "^/(portal-morador|portal_morador)/primeiroacesso/?$", "methods": ["POST"], "dest": "/src/start.js" },
+    { "src": "/gestor/js/(.*)", "dest": "/js/$1" },
+    { "src": "/gestor/css/(.*)", "dest": "/css/$1" },
+    { "src": "/gestor/img/(.*)", "dest": "/img/$1" },
+    { "src": "/gestor/images/(.*)", "dest": "/images/$1" },
+    { "src": "/gestor/uploads/(.*)", "dest": "/uploads/$1" },
+    { "src": "/condominios/js/(.*)", "dest": "/js/$1" },
+    { "src": "/condominios/css/(.*)", "dest": "/css/$1" },
+    { "src": "/condominios/img/(.*)", "dest": "/img/$1" },
+    { "src": "/condominios/images/(.*)", "dest": "/images/$1" },
+    { "src": "/condominios/uploads/(.*)", "dest": "/uploads/$1" },
+    { "src": "/escalas/js/pages/login.js", "dest": "/src/start.js" },
+    { "src": "/escalas/js/(.*)", "dest": "/src/start.js" },
+    { "src": "/escalas/uploads/(.*)", "dest": "/src/start.js" },
+    { "src": "/escalas/images/(.*)", "dest": "/src/start.js" },
+    { "src": "/escalas/img/(.*)", "dest": "/img/$1" },
+    { "src": "/escalas/css/(.*)", "dest": "/css/$1" },
+    { "src": "/escalas/js/escalas/(.*)", "dest": "/escalas/js/escalas/$1" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/src/start.js" }
+  ]
+}

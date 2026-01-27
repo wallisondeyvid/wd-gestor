@@ -1,0 +1,149 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalDetalhesVeiculo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content wdg-modal wdg-modal-veic-det">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title fw-semibold" id="detVeicTitulo">Detalhes do veículo</h5>
+          <p class="text-muted mb-0" id="detVeicHabInfo"></p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <div class="wdg-det-summary mb-4">
+          <div class="wdg-det-summary-item">
+            <span class="wdg-det-label">Placa</span>
+            <span class="wdg-det-value" id="detVeicPlaca">-</span>
+          </div>
+          <div class="wdg-det-summary-item">
+            <span class="wdg-det-label">Tipo</span>
+            <span class="wdg-det-value" id="detVeicTipo">-</span>
+          </div>
+          <div class="wdg-det-summary-item">
+            <span class="wdg-det-label">Marca / Modelo</span>
+            <span class="wdg-det-value" id="detVeicMarcaModelo">-</span>
+          </div>
+          <div class="wdg-det-summary-item">
+            <span class="wdg-det-label">Ano / Modelo</span>
+            <span class="wdg-det-value" id="detVeicAnoModelo">-</span>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-lg-4">
+            <div class="wdg-det-card">
+              <h6 class="wdg-det-card-title">Identificação</h6>
+              <dl class="row">
+                <dt class="col-5">Chassi</dt>
+                <dd class="col-7" id="detVeicChassi">-</dd>
+                <dt class="col-5">RENAVAM</dt>
+                <dd class="col-7" id="detVeicRenavam">-</dd>
+                <dt class="col-5">Estado</dt>
+                <dd class="col-7" id="detVeicEstado">-</dd>
+                <dt class="col-5">Município</dt>
+                <dd class="col-7" id="detVeicMunicipio">-</dd>
+                <dt class="col-5">Situação</dt>
+                <dd class="col-7" id="detVeicSituacao">Ativo</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="wdg-det-card">
+              <h6 class="wdg-det-card-title">Proprietário</h6>
+              <dl class="row">
+                <dt class="col-5">Tipo</dt>
+                <dd class="col-7" id="detVeicOwnerTipo">-</dd>
+                <dt class="col-5">Nome</dt>
+                <dd class="col-7" id="detVeicOwnerNome">-</dd>
+                <dt class="col-5">CPF</dt>
+                <dd class="col-7" id="detVeicOwnerCpf">-</dd>
+                <dt class="col-5">E-mail</dt>
+                <dd class="col-7" id="detVeicOwnerEmail">-</dd>
+                <dt class="col-5">Nascimento</dt>
+                <dd class="col-7" id="detVeicOwnerNascimento">-</dd>
+                <dt class="col-5">CNH</dt>
+                <dd class="col-7" id="detVeicOwnerCnh">-</dd>
+              </dl>
+              <div class="wdg-det-action" id="detVeicOwnerDocArea"></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="wdg-det-card">
+              <h6 class="wdg-det-card-title">Vinculações</h6>
+              <dl class="row">
+                <dt class="col-5">Garagem</dt>
+                <dd class="col-7" id="detVeicGaragem">-</dd>
+                <dt class="col-5">Criado em</dt>
+                <dd class="col-7" id="detVeicCriado">-</dd>
+                <dt class="col-5">Atualizado</dt>
+                <dd class="col-7" id="detVeicAtualizado">-</dd>
+              </dl>
+              <div class="wdg-det-action" id="detVeicCrlvArea"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wdg-det-card mt-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h6 class="wdg-det-card-title mb-0">Observações e descrição</h6>
+            <span class="badge rounded-pill bg-light text-dark" id="detVeicDocsResumo"></span>
+          </div>
+          <p class="mb-0 text-muted" id="detVeicDescricao">Nenhuma descrição informada.</p>
+        </div>
+
+        <div class="wdg-det-card mt-4" id="detVeicFotosWrap">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h6 class="wdg-det-card-title mb-0">Galeria do veículo</h6>
+            <span class="text-muted small" id="detVeicFotosCount"></span>
+          </div>
+          <div id="detVeicFotosGrid" class="row g-3"></div>
+          <p class="text-muted text-center mb-0 d-none" id="detVeicFotosEmpty">Nenhuma foto anexada.</p>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wdg-modal-veic-det .wdg-det-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;background:#f6f9ff;border-radius:10px;padding:1rem 1.2rem;border:1px solid rgba(13,110,253,.15);} 
+  .wdg-modal-veic-det .wdg-det-summary-item{display:flex;flex-direction:column;gap:.25rem;} 
+  .wdg-modal-veic-det .wdg-det-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#6c757d;font-weight:600;} 
+  .wdg-modal-veic-det .wdg-det-value{font-size:1rem;font-weight:600;color:#0a2a66;} 
+  .wdg-modal-veic-det .wdg-det-card{background:#fff;border:1px solid rgba(13,110,253,.12);border-radius:12px;padding:1rem;box-shadow:0 6px 18px rgba(15,38,143,.08);} 
+  .wdg-modal-veic-det .wdg-det-card-title{font-size:.9rem;font-weight:600;color:#0a2a66;margin-bottom:.75rem;} 
+  .wdg-modal-veic-det dl{margin-bottom:0;font-size:.9rem;} 
+  .wdg-modal-veic-det dt{font-weight:600;color:#6c757d;} 
+  .wdg-modal-veic-det dd{margin-bottom:.35rem;font-weight:500;color:#0a2a66;} 
+  .wdg-modal-veic-det .wdg-det-action{margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.5rem;} 
+  .wdg-modal-veic-det .wdg-det-action a{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .75rem;border-radius:999px;font-size:.82rem;font-weight:600;text-decoration:none;color:#0d6efd;background:rgba(13,110,253,.1);border:1px solid rgba(13,110,253,.15);} 
+  .wdg-modal-veic-det .wdg-det-action a:hover{background:#0d6efd;color:#fff;} 
+  .wdg-modal-veic-det .wdg-foto-card{position:relative;overflow:hidden;border-radius:12px;background:#f1f4fb;border:1px solid rgba(13,110,253,.12);} 
+  .wdg-modal-veic-det .wdg-foto-card img{width:100%;height:180px;object-fit:cover;display:block;} 
+  .wdg-modal-veic-det .wdg-foto-card a{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:flex-end;padding:.35rem .5rem;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.65) 100%);color:#fff;text-decoration:none;font-size:.75rem;font-weight:600;} 
+  .wdg-modal-veic-det .wdg-foto-card a:hover{text-decoration:underline;} 
+  @media (max-width: 768px){
+    .wdg-modal-veic-det .wdg-foto-card img{height:150px;}
+  }
+</style>
+
+<script>
+  (function ensureModalCss(){
+    if(document.getElementById('wdgModalsCSS')) return;
+    var hrefs = ['/gestor/css/modals.css','<%= _bp %>/css/modals.css'];
+    for(var i=0;i<hrefs.length;i++){
+      var href = hrefs[i];
+      if(!href) continue;
+      if(document.querySelector('link[href="'+href.replace(/["']/g,'')+'"]')){ return; }
+      var link = document.createElement('link');
+      link.id = 'wdgModalsCSS';
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.onerror = function(){ try{ this.remove(); }catch(_e){} };
+      document.head.appendChild(link);
+      break;
+    }
+  })();
+</script>

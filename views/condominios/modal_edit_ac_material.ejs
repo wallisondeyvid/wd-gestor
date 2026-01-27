@@ -1,0 +1,181 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<% const _contextEndpoint = (locals && typeof locals.materialContextEndpoint === 'string') ? locals.materialContextEndpoint : ''; %>
+<% const _transferEndpoint = (locals && typeof locals.materialTransferEndpoint === 'string') ? locals.materialTransferEndpoint : ''; %>
+<% const _receiveEndpoint = (locals && typeof locals.materialReceiveEndpoint === 'string') ? locals.materialReceiveEndpoint : ''; %>
+<% const _cancelEndpoint = (locals && typeof locals.materialCancelEndpoint === 'string') ? locals.materialCancelEndpoint : ''; %>
+<div class="modal fade" id="modalEditACMaterial" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-base-path="<%= _bp %>" data-context-endpoint="<%= _contextEndpoint %>" data-transfer-endpoint="<%= _transferEndpoint %>" data-receive-endpoint="<%= _receiveEndpoint %>" data-cancel-endpoint="<%= _cancelEndpoint %>">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable wdg-material-dialog">
+    <div class="modal-content wdg-material-modal">
+      <div class="modal-header wdg-material-header">
+        <div class="wdg-material-header__titles">
+          <h5 class="modal-title">Gerenciar materiais da área comum</h5>
+          <p class="wdg-material-header__subtitle">Transfira materiais entre áreas, registre empréstimos e acompanhe o histórico de movimentações.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" data-action="dismiss"></button>
+      </div>
+      <div class="modal-body wdg-material-body">
+        <div class="wdg-material-tabs-wrapper">
+          <div class="wdg-material-tabs-nav">
+            <ul class="nav nav-tabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tabMaterialOperacao-tab" data-bs-toggle="tab" data-bs-target="#tabMaterialOperacao" type="button" role="tab" aria-controls="tabMaterialOperacao" aria-selected="true">Materiais</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabMaterialLogs-tab" data-bs-toggle="tab" data-bs-target="#tabMaterialLogs" type="button" role="tab" aria-controls="tabMaterialLogs" aria-selected="false">Logs de movimentação</button>
+              </li>
+            </ul>
+          </div>
+          <div class="tab-content wdg-material-tabs" id="tabsMaterialContent">
+            <div class="tab-pane fade show active" id="tabMaterialOperacao" role="tabpanel" aria-labelledby="tabMaterialOperacao-tab" tabindex="0">
+              <div class="wdg-resumo-area">
+                <div class="wdg-resumo-line"><strong>Condomínio:</strong> <span data-role="resumo-unidade">&mdash;</span></div>
+                <div class="wdg-resumo-line"><strong>Área Comum:</strong> <span data-role="resumo-area">&mdash;</span></div>
+              </div>
+              <section class="wdg-material-block">
+                <div class="wdg-material-block__header">
+                  <div class="wdg-material-block__title-wrap w-100">
+                    <h6 class="wdg-material-block__title wdg-material-block__title--center">Materiais da área comum</h6>
+                  </div>
+                  <div class="wdg-material-block__subheader w-100">
+                    <div class="wdg-material-search">
+                      <span class="wdg-material-search__icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="20" y1="20" x2="16.65" y2="16.65"></line></svg>
+                      </span>
+                      <input type="search" class="form-control" placeholder="Buscar material..." data-role="material-search" autocomplete="off">
+                    </div>
+                    <span class="wdg-material-counter" data-role="area-counter">0 itens</span>
+                  </div>
+                </div>
+                <div id="listaMateriaisArea" class="wdg-material-collection wdg-placeholder-box"></div>
+              </section>
+
+              <section class="wdg-material-block">
+                <div class="wdg-material-block__header">
+                  <div class="wdg-material-block__title-wrap w-100">
+                    <h6 class="wdg-material-block__title wdg-material-block__title--center">Materiais a serem recebidos</h6>
+                  </div>
+                  <div class="wdg-material-block__subheader w-100">
+                    <span class="wdg-material-counter ms-auto" data-role="receber-counter">0 itens</span>
+                  </div>
+                </div>
+                <div id="listaMateriaisReceber" class="wdg-material-collection wdg-placeholder-box"></div>
+              </section>
+
+              <section class="wdg-material-block">
+                <div class="wdg-material-block__header">
+                  <div class="wdg-material-block__title-wrap w-100">
+                    <h6 class="wdg-material-block__title wdg-material-block__title--center">Materiais transferidos</h6>
+                  </div>
+                  <div class="wdg-material-block__subheader w-100">
+                    <span class="wdg-material-counter ms-auto" data-role="transferidos-counter">0 itens</span>
+                  </div>
+                </div>
+                <div id="listaMateriaisTransferidos" class="wdg-material-collection wdg-placeholder-box"></div>
+              </section>
+            </div>
+            <div class="tab-pane fade" id="tabMaterialLogs" role="tabpanel" aria-labelledby="tabMaterialLogs-tab" tabindex="0">
+              <div class="wdg-material-logs">
+                <div class="wdg-material-logs__header">
+                  <div class="wdg-material-logs__title-wrap">
+                    <h6 class="wdg-material-block__title wdg-material-block__title--center mb-0">Logs de movimentação</h6>
+                  </div>
+                  <button type="button" class="btn btn-outline-primary btn-sm" data-role="logs-refresh">
+                    <span class="wdg-material-refresh__icon" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.37 4.36A9 9 0 0019.5 15"></path></svg>
+                    </span> Atualizar
+                  </button>
+                </div>
+                <div id="listaMaterialLogs" class="wdg-material-loglist wdg-placeholder-box"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer wdg-material-footer">
+        <div class="wdg-material-footer__status" data-role="status-label"></div>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-action="dismiss">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wdg-material-dialog{max-width:min(1120px,96vw);width:100%;}
+  .wdg-material-modal{border-radius:22px;border:0;box-shadow:0 28px 64px rgba(15,23,42,.18);background:linear-gradient(165deg,rgba(255,255,255,.97) 0%,rgba(243,247,255,.94) 45%,rgba(232,240,255,.92) 100%);overflow:hidden;position:relative;}
+  .wdg-material-modal::before{content:'';position:absolute;inset:-60% 55% auto auto;width:48%;min-width:280px;aspect-ratio:1/1;background:radial-gradient(circle at center,rgba(37,99,235,.18) 0%,transparent 70%);filter:blur(38px);opacity:.6;pointer-events:none;}
+  .wdg-material-header{padding:1.4rem 1.8rem;border:0;background:linear-gradient(130deg,rgba(37,99,235,.12),rgba(37,99,235,.04));display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;}
+  .wdg-material-header .btn-close{border-radius:14px;background:rgba(255,255,255,.7);box-shadow:0 12px 24px -12px rgba(15,23,42,.35);width:38px;height:38px;opacity:1;transition:all .24s ease;position:relative;}
+  .wdg-material-header .btn-close::before,
+  .wdg-material-header .btn-close::after{content:'';position:absolute;inset:50% auto auto 50%;width:16px;height:2px;border-radius:999px;background:#1f2937;transform-origin:center;}
+  .wdg-material-header .btn-close::before{transform:translate(-50%,-50%) rotate(45deg);} 
+  .wdg-material-header .btn-close::after{transform:translate(-50%,-50%) rotate(-45deg);} 
+  .wdg-material-header .btn-close:hover{background:linear-gradient(135deg,#2563eb,#0ea5e9);box-shadow:0 16px 32px -18px rgba(37,99,235,.46);transform:scale(1.05);} 
+  .wdg-material-header .btn-close:hover::before,
+  .wdg-material-header .btn-close:hover::after{background:#fff;} 
+  .wdg-material-header__titles{display:flex;flex-direction:column;gap:.3rem;} 
+  .wdg-material-header__titles h5{margin:0;font-weight:700;color:#0f172a;} 
+  .wdg-material-header__subtitle{margin:0;color:#475569;font-size:.9rem;} 
+  .wdg-material-body{padding:1.7rem 1.8rem 1.8rem;display:flex;flex-direction:column;gap:1.4rem;} 
+  .wdg-material-tabs-wrapper{display:flex;flex-direction:column;gap:1.2rem;} 
+  .wdg-material-tabs-nav .nav-link{font-weight:600;letter-spacing:.02em;} 
+  .wdg-material-tabs{padding-top:1.25rem;} 
+  .wdg-material-block{display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.4rem;} 
+  .wdg-material-block:last-of-type{margin-bottom:0;} 
+  .wdg-material-block__header{display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;} 
+  .wdg-material-block__title{margin:0;text-transform:uppercase;font-size:.84rem;font-weight:700;letter-spacing:.12em;color:#0f172a;} 
+  .wdg-material-block__title--center{text-align:center;width:100%;} 
+  .wdg-material-block__title-wrap{flex:1;display:flex;justify-content:center;} 
+  .wdg-material-block__subheader{display:flex;align-items:center;justify-content:space-between;gap:.75rem;} 
+  .wdg-material-block__hint{margin:0;color:#5b6b7d;font-size:.82rem;} 
+  .wdg-material-search{position:relative;display:flex;align-items:center;} 
+  .wdg-material-search__icon{position:absolute;left:.65rem;color:#94a3b8;display:inline-flex;} 
+  .wdg-material-search__icon svg{display:block;} 
+  .wdg-material-refresh__icon{display:inline-flex;margin-right:.35rem;} 
+  .wdg-material-refresh__icon svg{display:block;} 
+  .wdg-material-search .form-control{padding-left:2.1rem;min-width:220px;} 
+  .wdg-material-counter{font-size:.78rem;font-weight:600;color:#1d4ed8;} 
+  .wdg-material-transfer{border:1px solid rgba(148,163,184,.45);border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:.75rem;background:#fff;} 
+  .wdg-material-transfer__label{font-weight:600;color:#0f172a;} 
+  .wdg-material-transfer__controls{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;} 
+  .wdg-material-transfer__controls .form-select{min-width:260px;} 
+  .wdg-material-collection{display:flex;flex-direction:column;gap:.75rem;} 
+  .wdg-material-collection.wdg-placeholder-box{justify-content:center;align-items:center;min-height:120px;} 
+  .wdg-material-item{display:flex;flex-direction:column;gap:.6rem;border:1px solid rgba(148,163,184,.35);border-radius:14px;padding:.85rem 1rem;background:#fff;box-shadow:0 4px 12px rgba(15,23,42,.06);} 
+  .wdg-material-item__headline{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.45rem;align-items:flex-start;} 
+  .wdg-material-item__name{font-weight:700;color:#0f172a;} 
+  .wdg-material-item__meta{display:flex;flex-wrap:wrap;gap:.5rem;font-size:.78rem;color:#64748b;} 
+  .wdg-material-item__meta span{display:inline-flex;align-items:center;gap:.3rem;} 
+  .wdg-material-item__badges{display:flex;flex-wrap:wrap;gap:.35rem;} 
+  .wdg-material-item__badge{padding:.2rem .55rem;border-radius:999px;font-size:.72rem;font-weight:600;color:#2563eb;background:rgba(37,99,235,.12);} 
+  .wdg-material-item__actions{display:flex;flex-wrap:wrap;gap:.5rem;} 
+  .wdg-material-item__actions .btn{font-size:.75rem;padding:.35rem .7rem;} 
+  .wdg-material-item__footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.45rem;font-size:.75rem;color:#64748b;} 
+  .wdg-material-item__description{font-size:.78rem;color:#4b5563;} 
+  .wdg-material-logs{display:flex;flex-direction:column;gap:1rem;} 
+  .wdg-material-logs__header{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;} 
+  .wdg-material-logs__title-wrap{flex:1;display:flex;justify-content:center;} 
+  .wdg-material-loglist{display:flex;flex-direction:column;gap:.75rem;} 
+  .wdg-material-loglist.wdg-placeholder-box{justify-content:center;align-items:center;min-height:160px;} 
+  .wdg-material-log{border:1px solid rgba(148,163,184,.35);border-radius:14px;padding:.9rem 1rem;background:#fff;display:flex;flex-direction:column;gap:.45rem;box-shadow:0 4px 12px rgba(15,23,42,.05);} 
+  .wdg-material-log__head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;font-size:.78rem;color:#475569;} 
+  .wdg-material-log__overview{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem;} 
+  .wdg-material-log__title{font-weight:700;color:#0f172a;} 
+  .wdg-material-log__patrimonio{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:600;color:#1d4ed8;background:rgba(37,99,235,.15);padding:.15rem .55rem;border-radius:999px;} 
+  .wdg-material-log__time{font-size:.74rem;color:#64748b;} 
+  .wdg-material-log__meta{display:flex;flex-wrap:wrap;gap:.5rem;font-size:.75rem;color:#64748b;} 
+  .wdg-material-log__note{font-size:.76rem;color:#475569;} 
+  .wdg-material-footer{padding:1.1rem 1.8rem;border:0;background:linear-gradient(180deg,rgba(37,99,235,.05),transparent);} 
+  .wdg-material-footer__status{font-size:.78rem;color:#475569;margin-right:auto;transition:color .2s ease;} 
+  .wdg-material-footer__status.is-success{color:#15803d;} 
+  .wdg-material-footer__status.is-warning{color:#b45309;} 
+  .wdg-material-footer__status.is-error{color:#b91c1c;} 
+  .wdg-material-footer__status.is-info{color:#1d4ed8;} 
+  .modal.is-loading{cursor:progress;} 
+  .modal.is-loading .btn{pointer-events:none;opacity:.75;} 
+  @media (max-width:768px){
+    .wdg-material-body{padding:1.4rem 1.2rem;}
+    .wdg-material-transfer__controls{flex-direction:column;align-items:stretch;}
+    .wdg-material-transfer__controls .form-select{width:100%;}
+    .wdg-material-search .form-control{min-width:180px;}
+  }
+</style>

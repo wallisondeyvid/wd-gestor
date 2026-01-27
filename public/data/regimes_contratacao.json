@@ -1,0 +1,11 @@
+[
+  { "codigo": "1", "descricao": "CLT (Consolidação das Leis do Trabalho)" },
+  { "codigo": "2", "descricao": "Estatutário (servidores públicos com vínculo efetivo)" },
+  { "codigo": "3", "descricao": "Trabalhador Avulso Portuário" },
+  { "codigo": "4", "descricao": "Trabalhador Avulso Não Portuário" },
+  { "codigo": "5", "descricao": "Contrato de Aprendizagem" },
+  { "codigo": "6", "descricao": "Estágio" },
+  { "codigo": "7", "descricao": "Mandato eletivo" },
+  { "codigo": "8", "descricao": "Lei 9.608/1998 – Trabalho voluntário" },
+  { "codigo": "9", "descricao": "Militar (Forças Armadas, PM, Bombeiros)" }
+]

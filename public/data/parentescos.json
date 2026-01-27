@@ -1,0 +1,11 @@
+[
+  {"codigo":"01","descricao":"Cônjuge"},
+  {"codigo":"02","descricao":"Companheiro(a) com filho ou união estável"},
+  {"codigo":"03","descricao":"Filho(a) ou enteado(a)"},
+  {"codigo":"06","descricao":"Irmão(ã), neto(a) ou bisneto(a) sob guarda judicial"},
+  {"codigo":"09","descricao":"Pais, avós e bisavós"},
+  {"codigo":"10","descricao":"Menor sob guarda judicial"},
+  {"codigo":"11","descricao":"Absolutamente incapaz (tutela/curatela)"},
+  {"codigo":"12","descricao":"Ex-cônjuge"},
+  {"codigo":"99","descricao":"Agregado/Outros"}
+]

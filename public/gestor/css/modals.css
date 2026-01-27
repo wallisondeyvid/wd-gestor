@@ -1,0 +1,518 @@
+/* WDGestor - Estilos reutilizáveis para modais
+   Uso: adicione a classe `wdg-modal` no container `.modal-content` e
+   (opcionalmente) as utilitárias abaixo conforme necessário. 
+*/
+
+/* Aparência geral do modal */
+.wdg-modal {
+  border-radius: 10px;
+  overflow: hidden;
+}
+.wdg-modal .modal-header {
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+.wdg-modal .modal-footer {
+  background: #fff;
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+.wdg-modal .modal-body {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+/* Oculta ícone do simple-datepicker quando desejado */
+.wdg-modal .btn-date-icon { display: none !important; }
+
+/* Tabelas utilitárias */
+.wdg-table-centered th,
+.wdg-table-centered td {
+  text-align: center;
+}
+
+/* Cabeçalho fixo dentro de containers com overflow */
+.wdg-sticky-head thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+
+/* Coluna Ações sem quebra */
+.actions-col,
+.wdg-actions-nowrap { white-space: nowrap; }
+
+/* Tornar a última coluna (Ações) sem quebra quando a tabela indica isso */
+.wdg-actions-lastcol tbody td:last-child { white-space: nowrap; }
+
+/* Wrapper com rolagem ideal para tabelas com muitas linhas */
+/* Altura pensada para começar a rolar a partir de ~2-3 itens dependendo da linha */
+.wdg-scroll-2 { max-height: 160px; overflow-y: auto; }
+
+/* Espaçamentos menores em tabelas compactas */
+.wdg-table-compact.table > :not(caption) > * > * {
+  padding-top: .35rem;
+  padding-bottom: .35rem;
+}
+
+/* Cartões leves para seções dentro do modal */
+.wdg-card{
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(2,6,23,.06);
+}
+.wdg-card-hover:hover{ box-shadow: 0 10px 24px rgba(2,6,23,.10); }
+
+/* ===== Modal Gerenciar Aluguel ====================================== */
+#modalEditHabAluguel .modal-dialog,
+#modalEditHabVeiculo .modal-dialog,
+#modalEditHabPet .modal-dialog {
+  margin-top: 3.5vh;
+}
+
+#modalEditHabAluguel .modal-header,
+#modalEditHabVeiculo .modal-header,
+#modalEditHabPet .modal-header {
+  padding: .95rem 1.25rem .85rem;
+  background: linear-gradient(180deg,#f2f6ff 0,#ffffff 68%,#f9fbff 100%);
+  border-bottom: 1px solid #dbe6ff;
+}
+
+#modalEditHabAluguel .modal-title,
+#modalEditHabVeiculo .modal-title,
+#modalEditHabPet .modal-title {
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #0b5ed7;
+}
+
+#modalEditHabAluguel .modal-body,
+#modalEditHabVeiculo .modal-body,
+#modalEditHabPet .modal-body {
+  background: linear-gradient(180deg,#f7faff 0,#ffffff 160px);
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+#modalEditHabAluguel .modal-footer,
+#modalEditHabVeiculo .modal-footer,
+#modalEditHabPet .modal-footer {
+  padding: .85rem 1.25rem 1.1rem;
+  border-top: 1px solid #dbe6ff;
+  background: linear-gradient(180deg,rgba(13,110,253,.03),transparent);
+}
+
+#modalEditHabAluguel .modal-footer .btn-primary,
+#modalEditHabVeiculo .modal-footer .btn-primary,
+#modalEditHabPet .modal-footer .btn-primary {
+  box-shadow: 0 10px 24px rgba(13,110,253,.18);
+}
+
+#modalEditHabAluguel .modal-body .fw-semibold,
+#modalEditHabVeiculo .modal-body .fw-semibold,
+#modalEditHabPet .modal-body .fw-semibold {
+  color: #1d2b4e;
+  letter-spacing: .18px;
+}
+
+#modalEditHabAluguel #alugHabLabel,
+#modalEditHabAluguel #alugPropLabel,
+#modalEditHabVeiculo #veicHabLabel,
+#modalEditHabVeiculo #veicPropLabel,
+#modalEditHabPet #petHabLabel,
+#modalEditHabPet #petPropLabel {
+  display: inline;
+  margin-left: .35rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #1d2b4e;
+  font-size: .95rem;
+}
+
+#modalEditHabAluguel #alugadoSwitch,
+#modalEditHabVeiculo #veicGaragemVinculo {
+  width: 52px;
+  height: 26px;
+}
+
+#modalEditHabVeiculo .form-switch{
+  padding-left: 0;
+}
+
+#modalEditHabVeiculo .form-switch .form-check-input{
+  margin-left: 0;
+}
+
+#modalEditHabAluguel .form-check-input:checked,
+#modalEditHabVeiculo .form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 .2rem rgba(13,110,253,.2);
+}
+
+#modalEditHabAluguel .form-check-label,
+#modalEditHabVeiculo .form-check-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+#modalEditHabAluguel .wdg-card,
+#modalEditHabVeiculo .wdg-card,
+#modalEditHabPet .wdg-card {
+  border-radius: 12px;
+  border-color: rgba(13,110,253,.18);
+  background: linear-gradient(180deg,#f8fbff 0,#ffffff 65%,#fbfdff 100%);
+  box-shadow: 0 10px 28px rgba(15,23,42,.08);
+}
+
+#modalEditHabAluguel .wdg-card .form-label,
+#modalEditHabVeiculo .wdg-card .form-label,
+#modalEditHabPet .wdg-card .form-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+#modalEditHabAluguel .wdg-card .form-text,
+#modalEditHabVeiculo .wdg-card .form-text,
+#modalEditHabPet .wdg-card .form-text {
+  color: #64748b;
+}
+
+#modalEditHabAluguel .wdg-card .btn,
+#modalEditHabVeiculo .wdg-card .btn,
+#modalEditHabPet .wdg-card .btn {
+  min-width: 110px;
+}
+
+#modalEditHabPet .wdg-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(13,110,253,.18);
+  background: linear-gradient(180deg,#f8fbff 0,#eef5ff 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+}
+
+#modalEditHabPet .wdg-toggle-option {
+  border-radius: 999px !important;
+  padding: .35rem 1.35rem;
+  font-weight: 600;
+  color: #0b5ed7;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 4px 10px rgba(13,110,253,.12);
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+#modalEditHabPet .wdg-toggle-option:hover {
+  color: #0a58ca;
+  background: rgba(13,110,253,.12);
+}
+
+#modalEditHabPet .btn-check:checked + .wdg-toggle-option,
+#modalEditHabPet .wdg-toggle-option.active {
+  background: #0b5ed7;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(13,110,253,.24);
+}
+
+#modalEditHabPet .btn-check:focus + .wdg-toggle-option,
+#modalEditHabPet .wdg-toggle-option:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 .2rem rgba(13,110,253,.25);
+}
+
+#modalEditHabPet .wdg-pet-foto-field {
+  max-width: 320px;
+  width: 100%;
+}
+
+#modalEditHabPet .wdg-pet-foto-field .form-control {
+  text-align: center;
+}
+
+#modalEditHabPet .wdg-pet-foto-preview {
+  margin-top: .85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .45rem;
+}
+
+#modalEditHabPet .wdg-pet-foto-preview img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(15,23,42,.14);
+}
+
+#modalEditHabPet .wdg-pet-foto-preview button {
+  color: #0b5ed7;
+}
+
+#modalEditHabPet .wdg-pet-foto-preview button:hover {
+  color: #0a58ca;
+}
+
+#modalEditHabAluguel .wdg-card .contrato-file-wrap {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+#modalEditHabAluguel #contratoFile {
+  max-width: 100%;
+}
+
+#modalEditHabAluguel #contratoFilePreview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .55rem;
+  padding: .55rem .65rem;
+  border-radius: 8px;
+  background: rgba(13,110,253,.04);
+  border: 1px dashed rgba(13,110,253,.22);
+}
+
+#modalEditHabAluguel #contratoFilePreviewLabel {
+  font-weight: 600;
+  color: #1d2b4e;
+}
+
+#modalEditHabAluguel #contratoFilePreviewLink {
+  font-weight: 600;
+  color: #0b5ed7;
+}
+
+#modalEditHabAluguel #contratoFilePreviewSize {
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+}
+
+#modalEditHabAluguel #btnContratoFileRemover {
+  color: #dc3545;
+}
+
+#modalEditHabAluguel .wdg-scroll-2,
+#modalEditHabVeiculo .wdg-scroll-2,
+#modalEditHabPet .wdg-scroll-2 {
+  max-height: 220px;
+  border: 1px solid rgba(13,110,253,.12);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+#modalEditHabVeiculo .wdg-fotos-preview {
+  border: 1px dashed rgba(13,110,253,.25);
+  border-radius: 12px;
+  padding: .6rem;
+  background: rgba(13,110,253,.04);
+  min-height: 76px;
+}
+
+#modalEditHabVeiculo .wdg-foto-thumb-item {
+  position: relative;
+  width: 96px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(180deg,rgba(15,23,42,.08),rgba(15,23,42,.15));
+  box-shadow: 0 6px 16px rgba(15,23,42,.18);
+  cursor: pointer;
+}
+
+#modalEditHabVeiculo .wdg-foto-thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+#modalEditHabVeiculo .wdg-foto-thumb-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(220,53,69,.95);
+  color: #fff;
+  font-size: 1.05rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(220,53,69,.32);
+  transition: transform .15s ease;
+}
+
+#modalEditHabVeiculo .wdg-foto-thumb-remove:hover {
+  transform: scale(1.1);
+}
+
+#modalEditHabVeiculo .wdg-foto-thumb-remove:focus-visible {
+  outline: 2px solid rgba(220,53,69,.6);
+  outline-offset: 2px;
+}
+
+#modalEditHabAluguel .wdg-sticky-head thead th,
+#modalEditHabVeiculo .wdg-sticky-head thead th,
+#modalEditHabPet .wdg-sticky-head thead th {
+  text-transform: uppercase;
+  font-size: .75rem;
+  letter-spacing: .08em;
+  color: #0b5ed7;
+  background: linear-gradient(180deg,#eef5ff 0,#ffffff 100%);
+  border-bottom: 1px solid #dbe6ff;
+}
+
+#modalEditHabAluguel table tbody tr,
+#modalEditHabVeiculo table tbody tr,
+#modalEditHabPet table tbody tr {
+  transition: background-color .18s ease, box-shadow .18s ease;
+}
+
+#modalEditHabAluguel table tbody tr:hover,
+#modalEditHabVeiculo table tbody tr:hover,
+#modalEditHabPet table tbody tr:hover {
+  background: rgba(13,110,253,.06);
+  box-shadow: inset 1px 0 0 rgba(13,110,253,.12);
+}
+
+#modalEditHabAluguel table tbody td,
+#modalEditHabVeiculo table tbody td,
+#modalEditHabPet table tbody td {
+  color: #1f2937;
+}
+
+#modalEditHabAluguel table tbody td .badge {
+  font-size: .75rem;
+  letter-spacing: .03em;
+}
+
+#modalEditHabAluguel #contratosPageSize,
+#modalEditHabVeiculo #veicPageSize,
+#modalEditHabPet #petPageSize {
+  border-radius: 999px;
+  padding: .25rem .85rem;
+  background: #fff;
+  border: 1px solid rgba(13,110,253,.3);
+  color: #0b5ed7;
+  font-weight: 600;
+}
+
+#modalEditHabAluguel .wdg-pager,
+#modalEditHabVeiculo .wdg-pager,
+#modalEditHabPet .wdg-pager {
+  display: flex;
+  justify-content: flex-end;
+  gap: .4rem;
+}
+
+#modalEditHabAluguel .wdg-pager button,
+#modalEditHabVeiculo .wdg-pager button,
+#modalEditHabPet .wdg-pager button {
+  min-width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(13,110,253,.3);
+  background: #fff;
+  color: #0b5ed7;
+  font-weight: 600;
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+#modalEditHabAluguel .wdg-pager button:hover,
+#modalEditHabVeiculo .wdg-pager button:hover,
+#modalEditHabPet .wdg-pager button:hover {
+  background: rgba(13,110,253,.08);
+  box-shadow: 0 6px 14px rgba(13,110,253,.18);
+}
+
+#modalEditHabAluguel .wdg-pager button.is-active,
+#modalEditHabAluguel .wdg-pager button:focus,
+#modalEditHabVeiculo .wdg-pager button.is-active,
+#modalEditHabVeiculo .wdg-pager button:focus,
+#modalEditHabPet .wdg-pager button.is-active,
+#modalEditHabPet .wdg-pager button:focus {
+  background: #0b5ed7;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(13,110,253,.25);
+}
+
+#modalEditHabAluguel .wdg-pager button:focus-visible,
+#modalEditHabVeiculo .wdg-pager button:focus-visible,
+#modalEditHabPet .wdg-pager button:focus-visible {
+  outline: 2px solid rgba(13,110,253,.45);
+  outline-offset: 2px;
+}
+
+#modalEditHabAluguel .btn-outline-secondary,
+#modalEditHabVeiculo .btn-outline-secondary,
+#modalEditHabPet .btn-outline-secondary {
+  color: #0b5ed7;
+  border-color: rgba(13,110,253,.35);
+  background: linear-gradient(180deg,#f8fbff 0,#eef5ff 100%);
+}
+
+#modalEditHabAluguel .btn-outline-secondary:hover,
+#modalEditHabVeiculo .btn-outline-secondary:hover,
+#modalEditHabPet .btn-outline-secondary:hover {
+  background: #0b5ed7;
+  color: #fff;
+}
+
+@media (max-width: 992px) {
+  #modalEditHabAluguel .modal-dialog,
+  #modalEditHabVeiculo .modal-dialog {
+    margin: 1.5rem auto;
+  }
+
+  #modalEditHabAluguel .modal-body,
+  #modalEditHabVeiculo .modal-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  #modalEditHabAluguel .wdg-scroll-2,
+  #modalEditHabVeiculo .wdg-scroll-2 {
+    max-height: 180px;
+  }
+
+  #modalEditHabAluguel #alugHabLabel,
+  #modalEditHabAluguel #alugPropLabel,
+  #modalEditHabVeiculo #veicHabLabel,
+  #modalEditHabVeiculo #veicPropLabel {
+    display: inline;
+    margin-left: .35rem;
+  }
+
+  #modalEditHabAluguel .wdg-card .row.g-3,
+  #modalEditHabVeiculo .wdg-card .row.g-3 {
+    row-gap: 1rem;
+  }
+
+  #modalEditHabAluguel .modal-footer,
+  #modalEditHabVeiculo .modal-footer {
+    flex-direction: column-reverse;
+    gap: .6rem;
+    align-items: stretch;
+  }
+
+  #modalEditHabAluguel .modal-footer .btn,
+  #modalEditHabVeiculo .modal-footer .btn {
+    width: 100%;
+  }
+}

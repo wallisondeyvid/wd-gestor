@@ -1,0 +1,50 @@
+<% /* Perfil compartilhado - reutiliza mesmo modal. Apenas garante caminho de CSS com basePath (opcional). */ %>
+<% const __pb = (moduleBasePath || typeof _basePath !== 'undefined' && _basePath) ? (moduleBasePath || _basePath) : '/gestor'; %>
+<link rel="stylesheet" href="<%= __pb %>/css/perfil.css?v=<%= (typeof assetVersion!=='undefined' ? assetVersion : '') %>">
+<div data-perfil-base="<%= __pb %>">
+	<%- include('../../partials/perfil', { __perfilBase: __pb }) %>
+</div>
+
+<script>
+	var __perfilDesiredBasePath = '<%= __pb %>';
+	// Expõe a base do módulo para o script modular (fallback e compatibilidade)
+	window.__perfilBasePath = __perfilDesiredBasePath;
+	(function syncPerfilBasePath(){
+		function applyBase(){
+			if (typeof window.__setPerfilBasePath === 'function') {
+				try { window.__setPerfilBasePath(__perfilDesiredBasePath); } catch(_applyErr){}
+				return true;
+			}
+			return false;
+		}
+		if (applyBase()) return;
+		function handleReady(){
+			applyBase();
+		}
+		window.addEventListener('perfil-modular:ready', handleReady, { once: true });
+	})();
+	// Pré-carrega o script modular de perfil se ainda não carregado
+	(function(){
+		try {
+			// Já carregado? (verifica função global ou tag existente)
+			if (window.__perfilScriptIncluded === true || typeof window.abrirModalPerfil === 'function' || typeof window.buildUserFotoUrl === 'function') {
+				window.__perfilScriptIncluded = true; // garante flag
+				return;
+			}
+			var existing = document.querySelector('script[src$="/js/perfil-modulo.js"], script[src*="/js/perfil-modulo.js?"]');
+			if (existing) { window.__perfilScriptIncluded = true; return; }
+			// Injeta apenas uma vez
+			const s = document.createElement('script');
+			s.src = '<%= __pb %>/js/perfil-modulo.js';
+			s.defer = true;
+			s.onload = function(){ try{ window.__perfilScriptIncluded = true; }catch(_){ } };
+			document.head.appendChild(s);
+		} catch(_e) { /* silencioso */ }
+	})();
+	// Ajusta avatar do modal ao abrir
+	document.addEventListener('show.bs.modal', function(e){
+		if(e.target && e.target.id==='modalPerfil'){
+			try { if(typeof window.carregarDadosPerfil==='function') window.carregarDadosPerfil(); } catch(_){}
+		}
+	});
+</script>

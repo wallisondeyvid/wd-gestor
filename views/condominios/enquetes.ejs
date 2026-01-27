@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enquetes - WDGestor</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <style>
+    body.wdg-enquetes{background:#f5f7fb;}
+    .wdg-enq-hero{background:radial-gradient(1200px 800px at 10% 10%, rgba(99,102,241,.35), transparent 60%),
+                 radial-gradient(900px 700px at 90% 20%, rgba(16,185,129,.25), transparent 55%),
+                 linear-gradient(135deg,#0f172a,#111827);color:#fff;border-radius:28px;padding:2.2rem 2.6rem;margin-bottom:1.8rem;box-shadow:0 35px 90px rgba(15,23,42,.30);position:relative;overflow:hidden;}
+    .wdg-enq-hero h1{font-weight:800;letter-spacing:-.02em;font-size:2.05rem;margin:0 0 .35rem;}
+    .wdg-enq-hero p{margin:0;max-width:860px;color:rgba(255,255,255,.86);}
+    .wdg-enq-hero .wdg-enq-chip{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:.4rem .75rem;font-weight:700;font-size:.82rem;margin-top:1rem;}
+
+    .wdg-enq-panel{background:#fff;border-radius:26px;padding:1.7rem 2.1rem;box-shadow:0 28px 90px rgba(15,23,42,.12);margin-bottom:1.6rem;border:1px solid rgba(15,23,42,.08);} 
+    .wdg-enq-panel h2{font-size:1.05rem;font-weight:800;letter-spacing:-.01em;margin:0;}
+    .wdg-enq-sub{color:#64748b;font-weight:600;font-size:.92rem;margin-top:.35rem;}
+
+    .wdg-enq-form-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:1.1rem;}
+    @media(max-width: 992px){ .wdg-enq-form-grid{grid-template-columns:1fr;} }
+    .wdg-enq-card{background:#f8fafc;border:1px solid rgba(15,23,42,.08);border-radius:22px;padding:1.25rem 1.35rem;}
+    .wdg-enq-card-title{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.6rem;}
+    .wdg-enq-section-label{font-size:.74rem;text-transform:uppercase;letter-spacing:.18em;color:#64748b;font-weight:800;}
+
+    .wdg-enq-option-row{margin-bottom:.75rem;}
+    .wdg-enq-option-row:last-child{margin-bottom:0;}
+    .wdg-enq-option-main{min-width:0;}
+    .wdg-enq-photo-line{display:flex;align-items:center;gap:.6rem;margin-top:.4rem;}
+    .wdg-enq-photo-line .form-control{font-size:.9rem;}
+    .wdg-enq-photo-preview{margin-top:.45rem;}
+    .wdg-enq-photo-preview img{display:block;max-width:100%;max-height:220px;object-fit:cover;border-radius:16px;border:1px solid rgba(15,23,42,.08);background:#fff;}
+    .wdg-enq-photo-preview .btn{border-radius:12px;font-weight:900;}
+
+    .wdg-enq-ico{width:36px;height:36px;object-fit:contain;vertical-align:middle;}
+
+    .wdg-enq-icon-btn{border:0;background:transparent;padding:.35rem;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
+    .wdg-enq-icon-btn:hover{background:#f1f5f9;}
+    .wdg-enq-icon-btn:disabled{opacity:.35;pointer-events:none;}
+    .wdg-enq-icon-btn img{width:36px;height:36px;object-fit:contain;display:block;}
+
+    .wdg-enq-opt-block{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:18px;padding:.85rem 1rem;}
+    .wdg-enq-opt-block-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.85rem;margin-bottom:.6rem;}
+    .wdg-enq-opt-block-title{font-weight:900;color:#0f172a;}
+    .wdg-enq-opt-tools{display:flex;align-items:center;gap:.25rem;}
+    .wdg-enq-opt-text{resize:vertical;min-height:56px;}
+
+    .wdg-enq-picker{position:relative;}
+    .wdg-enq-picker-box{min-height:42px;display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.5rem .65rem;border-radius:.5rem;border:1px solid #dee2e6;background:#fff;cursor:text;}
+    .wdg-enq-picker-box:focus{outline:none;box-shadow:0 0 0 .25rem rgba(13,110,253,.12);border-color:rgba(13,110,253,.35);}
+    .wdg-enq-token{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;border:1px solid rgba(15,23,42,.10);background:#f1f5f9;color:#0f172a;padding:.22rem .55rem;font-weight:800;font-size:.82rem;}
+    .wdg-enq-token button{border:0;background:transparent;padding:0;margin:0;line-height:1;color:#64748b;font-weight:900;}
+    .wdg-enq-token button:hover{color:#0f172a;}
+    .wdg-enq-picker-input{border:0;outline:none;flex:1;min-width:180px;font-weight:700;font-size:.92rem;background:transparent;}
+    .wdg-enq-picker-placeholder{color:#94a3b8;font-weight:700;font-size:.92rem;user-select:none;}
+    .wdg-enq-picker-menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:60;background:#fff;border:1px solid rgba(15,23,42,.12);border-radius:16px;box-shadow:0 18px 60px rgba(15,23,42,.18);max-height:280px;overflow:auto;padding:.35rem;}
+    .wdg-enq-picker-item{display:flex;align-items:center;justify-content:flex-start;gap:.8rem;width:100%;text-align:left;border:0;background:transparent;border-radius:12px;padding:.55rem .7rem;font-weight:700;color:#0f172a;}
+    .wdg-enq-picker-item:hover{background:#f8fafc;}
+    .wdg-enq-picker-item small{color:#64748b;font-weight:800;}
+
+    .wdg-pick-avatar{
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      background:#e9ecef;
+      color:#495057;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 34px;
+      font-weight:700;
+      font-size:12px;
+      overflow:hidden;
+    }
+    .wdg-pick-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .wdg-pick-lines{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      line-height:1.2;
+    }
+    .wdg-pick-name{
+      font-weight:700;
+      color:#212529;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .wdg-pick-hab{
+      font-size:12px;
+      color:#6c757d;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .wdg-enq-option-add{border-radius:12px;border:1px dashed rgba(15,23,42,.22);background:#fff;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;}
+    .wdg-enq-option-add:hover{background:#eef2ff;border-color:rgba(99,102,241,.35);} 
+    .wdg-enq-option-del{border-radius:12px;border:1px solid rgba(239,68,68,.25);background:#fff;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;}
+
+    .wdg-enq-actions{display:flex;gap:.8rem;justify-content:flex-end;flex-wrap:wrap;margin-top:1.1rem;}
+    .wdg-enq-actions .btn{border-radius:14px;font-weight:800;}
+    .wdg-enq-actions #btnLimpar,
+    .wdg-enq-actions #btnEnviar{font-weight:400;}
+
+    /* Lista: 3 colunas e "slots" fixos */
+    .wdg-enq-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.05rem;}
+    @media(max-width: 1200px){ .wdg-enq-list{grid-template-columns:repeat(2,minmax(0,1fr));} }
+    @media(max-width: 768px){ .wdg-enq-list{grid-template-columns:1fr;} }
+    .wdg-enq-item{background:#fff;border-radius:22px;border:1px solid rgba(15,23,42,.08);box-shadow:0 20px 60px rgba(15,23,42,.10);padding:1rem 1.05rem;display:flex;flex-direction:column;height:210px;}
+    .wdg-enq-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;min-height:34px;}
+    .wdg-enq-top-left{min-width:0;}
+    .wdg-enq-top-right{flex:0 0 auto;}
+    .wdg-enq-mid{flex:1;display:flex;align-items:center;justify-content:center;padding:.25rem 0;}
+    .wdg-enq-mid h3{font-size:1.05rem;font-weight:900;margin:0;letter-spacing:-.01em;text-align:center;line-height:1.2;}
+    .wdg-enq-badge{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;padding:.28rem .65rem;font-size:.78rem;font-weight:900;border:1px solid rgba(15,23,42,.10);}
+
+    /* Vigência (período): sem negrito e sem quebra de linha */
+    .wdg-enq-top-left .wdg-enq-badge{
+      font-weight:700;
+      font-size:.70rem;
+      padding:.24rem .52rem;
+      white-space:nowrap;
+      max-width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .wdg-enq-badge--ativa{background:#dcfce7;color:#166534;border-color:rgba(22,101,52,.18);} 
+    .wdg-enq-badge--agendada{background:#dbeafe;color:#1e40af;border-color:rgba(30,64,175,.18);} 
+    .wdg-enq-badge--encerrada{background:#e2e8f0;color:#0f172a;border-color:rgba(15,23,42,.18);} 
+    .wdg-enq-badge--finalizada{background:#f1f5f9;color:#334155;border-color:rgba(51,65,85,.18);} 
+
+
+
+    .wdg-enq-toolbar{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:auto;justify-content:center;}
+    .wdg-enq-tool{display:inline-flex;align-items:center;justify-content:center;border-radius:14px;border:0;padding:.35rem;background:transparent;line-height:1;}
+    .wdg-enq-tool:hover{background:#f1f5f9;}
+    .wdg-enq-tool img{width:42px;height:42px;object-fit:contain;display:block;}
+    .wdg-enq-tool[disabled]{opacity:.35;pointer-events:none;}
+
+    .wdg-enq-retencao{color:#64748b;font-weight:700;font-size:.9rem;margin-top:.25rem;}
+    .wdg-enq-pager{display:flex;align-items:center;justify-content:center;gap:.45rem;flex-wrap:wrap;margin-top:1.1rem;}
+    .wdg-enq-page{border-radius:12px;border:1px solid rgba(15,23,42,.10);background:#fff;padding:.4rem .7rem;font-weight:900;color:#0f172a;min-width:42px;}
+    .wdg-enq-page:hover{background:#f8fafc;}
+    .wdg-enq-page[disabled]{opacity:.45;pointer-events:none;}
+    .wdg-enq-page.is-active{background:#0f172a;color:#fff;border-color:#0f172a;}
+
+    /* Modal moderno */
+    .wdg-enq-modal .modal-content{border-radius:26px;border:1px solid rgba(15,23,42,.10);box-shadow:0 40px 120px rgba(15,23,42,.35);overflow:hidden;}
+    .wdg-enq-modal .modal-header{border:0;background:radial-gradient(900px 600px at 5% 20%, rgba(99,102,241,.35), transparent 60%),
+                                 radial-gradient(900px 600px at 95% 10%, rgba(16,185,129,.22), transparent 55%),
+                                 linear-gradient(135deg,#0f172a,#111827);color:#fff;padding:1.35rem 1.45rem;}
+    .wdg-enq-modal .modal-title{font-weight:900;letter-spacing:-.02em;}
+    .wdg-enq-modal .modal-body{background:linear-gradient(180deg,#ffffff, #f8fafc);padding:1.25rem 1.45rem;}
+    .wdg-enq-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin:.6rem 0 1.05rem;}
+    @media(max-width: 700px){ .wdg-enq-kpi{grid-template-columns:1fr;} }
+    .wdg-enq-kpi-card{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:18px;padding:.85rem 1rem;}
+    .wdg-enq-kpi-card small{display:block;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:.18em;font-size:.7rem;}
+    .wdg-enq-kpi-card strong{display:block;font-size:1.15rem;font-weight:900;color:#0f172a;margin-top:.15rem;}
+
+    .wdg-enq-opt{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:18px;padding:.85rem 1rem;margin-bottom:.75rem;}
+    .wdg-enq-opt:last-child{margin-bottom:0;}
+    .wdg-enq-opt-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+    .wdg-enq-opt-left{display:flex;align-items:center;gap:.8rem;min-width:0;}
+    .wdg-enq-opt-thumb{width:56px;height:56px;border-radius:14px;overflow:hidden;border:1px solid rgba(15,23,42,.10);background:#fff;flex:0 0 auto;}
+    .wdg-enq-opt-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+    .wdg-enq-opt-title{font-weight:900;color:#0f172a;}
+    .wdg-enq-opt-meta{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
+    .wdg-enq-mini{border-radius:999px;padding:.22rem .6rem;font-weight:900;font-size:.76rem;border:1px solid rgba(15,23,42,.12);background:#f1f5f9;color:#0f172a;}
+    .wdg-enq-bar{height:10px;border-radius:999px;background:#e2e8f0;overflow:hidden;margin-top:.6rem;}
+    .wdg-enq-bar > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#6366f1,#22c55e);}
+    .wdg-enq-voters{margin-top:.75rem;border-top:1px dashed rgba(15,23,42,.18);padding-top:.75rem;display:none;}
+    .wdg-enq-voters.is-open{display:block;}
+    .wdg-enq-voters ul{list-style:none;padding:0;margin:0;display:grid;gap:.5rem;}
+    .wdg-enq-voters li{background:#f8fafc;border:1px solid rgba(15,23,42,.08);border-radius:14px;padding:.6rem .75rem;display:flex;justify-content:space-between;gap:1rem;}
+    .wdg-enq-voters .who{font-weight:900;color:#0f172a;}
+    .wdg-enq-voters .where{color:#64748b;font-weight:800;font-size:.82rem;}
+    .wdg-enq-voters .when{color:#94a3b8;font-weight:800;font-size:.78rem;white-space:nowrap;}
+
+    .wdg-empty{padding:1.8rem;border:1px dashed rgba(15,23,42,.2);border-radius:20px;text-align:center;color:#94a3b8;font-weight:800;background:#fff;}
+
+    .wdg-enq-qmedia{margin:.5rem 0 1rem;}
+    .wdg-enq-qmedia-frame{border-radius:20px;overflow:hidden;border:1px solid rgba(15,23,42,.10);background:#fff;box-shadow:0 18px 60px rgba(15,23,42,.12);}
+    .wdg-enq-qmedia-frame img{width:100%;max-height:260px;object-fit:cover;display:block;}
+    .wdg-enq-qmedia-frame img,.wdg-enq-opt-thumb img{cursor:zoom-in;}
+
+    .wdg-enq-imgviewer{position:fixed;inset:0;z-index:2000;background:rgba(15,23,42,.72);display:flex;align-items:center;justify-content:center;padding:18px;}
+    .wdg-enq-imgviewer[hidden]{display:none;}
+    .wdg-enq-imgviewer-card{position:relative;max-width:min(1080px, 96vw);max-height:92vh;}
+    .wdg-enq-imgviewer-card img{max-width:100%;max-height:92vh;display:block;border-radius:18px;background:#fff;border:1px solid rgba(255,255,255,.18);}
+    .wdg-enq-imgviewer-close{position:absolute;top:-14px;right:-14px;width:44px;height:44px;border-radius:999px;border:0;background:#ffffff;color:#0f172a;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 18px 40px rgba(15,23,42,.35);}
+    .wdg-enq-imgviewer-close:hover{filter:brightness(.98);}
+
+    @media(max-width:768px){
+      .wdg-enq-hero{padding:1.55rem;}
+      .wdg-enq-panel{padding:1.25rem;}
+    }
+  </style>
+</head>
+<body class="wdg-layout wdg-enquetes" data-base-path="<%= _bp %>" data-user-unit="<%= user && user.unidade_id ? (user.unidade_id._id || user.unidade_id || user.unidadeId || '') : '' %>" data-scope-all="<%= (user && (user.isMaster || user.role === 'master' || user.role === 'admin')) ? 'true' : 'false' %>">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Gestão de Condomínios',
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+
+  <main class="container py-4" id="enquetesApp" data-base-path="<%= _bp %>">
+    <section class="wdg-enq-hero">
+      <h1>Enquetes</h1>
+      <p>Crie votações rápidas com vigência, restrições e acompanhamento em tempo real. Ideal para legitimar decisões do condomínio com transparência e trilha de auditoria.</p>
+      <div class="wdg-enq-chip"><i class="bi bi-shield-check" aria-hidden="true"></i><span>Administração · Enquetes</span></div>
+    </section>
+
+    <section class="wdg-enq-panel" aria-label="Formulário de enquete">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+          <h2>Nova enquete</h2>
+        </div>
+        <div class="text-end">
+          <div class="wdg-enq-section-label">Enquetes cadastradas</div>
+          <div class="display-6" style="font-size:2rem;font-weight:900;color:#0f172a;margin:0;" data-enq-count>0</div>
+        </div>
+      </div>
+
+      <form id="enqForm" autocomplete="off">
+        <input type="hidden" id="enqId" value="">
+
+        <div class="wdg-enq-form-grid">
+          <div class="wdg-enq-card">
+            <div class="wdg-enq-card-title">
+              <div>
+                <div class="wdg-enq-section-label">Vigência</div>
+              </div>
+              <span class="text-muted" style="font-weight:800;font-size:.85rem;">Ativa no período</span>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-bold" for="enqUnidadeSelect">Condomínio</label>
+                <select class="form-select" id="enqUnidadeSelect"></select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold" for="vigInicio">Início</label>
+                <input class="form-control" type="datetime-local" id="vigInicio" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold" for="vigFim">Fim</label>
+                <input class="form-control" type="datetime-local" id="vigFim" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-bold" for="pergunta">Questionamento</label>
+                <textarea class="form-control" id="pergunta" rows="3" required></textarea>
+              </div>
+              <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <label class="form-label fw-bold" for="perguntaFoto" style="margin:0">Foto do questionamento (opcional)</label>
+                  <button class="wdg-enq-icon-btn" type="button" id="perguntaFotoToggle" title="Adicionar imagem" aria-label="Adicionar imagem">
+                    <img class="wdg-enq-ico" src="<%= _bp %>/images/foto.png" alt="">
+                  </button>
+                </div>
+                <div id="perguntaFotoWrap" hidden>
+                  <input class="form-control mt-2" type="file" id="perguntaFoto" accept="image/png,image/jpeg,image/webp" />
+                  <div class="form-text">PNG/JPG/WebP (até ~2MB).</div>
+                  <div class="wdg-enq-photo-preview" id="perguntaFotoPreviewWrap" hidden>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                      <div class="wdg-enq-section-label" style="margin:0">Pré-visualização</div>
+                      <button class="wdg-enq-icon-btn" type="button" id="perguntaFotoRemover" title="Remover foto" aria-label="Remover foto">
+                        <img class="wdg-enq-ico" src="<%= _bp %>/images/remover.png" alt="">
+                      </button>
+                    </div>
+                    <img id="perguntaFotoPreview" alt="" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wdg-enq-card">
+            <div class="wdg-enq-card-title">
+              <div>
+                <div class="wdg-enq-section-label">Restrições</div>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="rNaoExibirDesabitadas">
+                  <label class="form-check-label fw-semibold" for="rNaoExibirDesabitadas">Não exibir para habitações desabitadas</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="rApenasResponsavel">
+                  <label class="form-check-label fw-semibold" for="rApenasResponsavel">Exibir apenas responsável da habitação</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="rApenasProprietario">
+                  <label class="form-check-label fw-semibold" for="rApenasProprietario">Exibir apenas proprietário</label>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-bold" for="rExcluirHabitacoes">Não exibir para habitações</label>
+                <div class="wdg-enq-picker" data-enq-picker="habitacoes">
+                  <div class="wdg-enq-picker-box" tabindex="0" data-enq-picker-box>
+                    <div data-enq-picker-tokens></div>
+                    <input class="wdg-enq-picker-input" type="text" data-enq-picker-input placeholder="" autocomplete="off" />
+                    <div class="wdg-enq-picker-placeholder" data-enq-picker-placeholder hidden></div>
+                  </div>
+                  <div class="wdg-enq-picker-menu" data-enq-picker-menu hidden></div>
+                  <textarea class="form-control" id="rExcluirHabitacoes" rows="2" hidden></textarea>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-bold" for="rExcluirMoradores">Não exibir para moradores</label>
+                <div class="wdg-enq-picker" data-enq-picker="moradores">
+                  <div class="wdg-enq-picker-box" tabindex="0" data-enq-picker-box>
+                    <div data-enq-picker-tokens></div>
+                    <input class="wdg-enq-picker-input" type="text" data-enq-picker-input placeholder="" autocomplete="off" />
+                    <div class="wdg-enq-picker-placeholder" data-enq-picker-placeholder hidden></div>
+                  </div>
+                  <div class="wdg-enq-picker-menu" data-enq-picker-menu hidden></div>
+                  <textarea class="form-control" id="rExcluirMoradores" rows="2" hidden></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wdg-enq-card mt-3">
+          <div class="wdg-enq-card-title">
+            <div>
+              <div class="wdg-enq-section-label">Alternativas</div>
+            </div>
+          </div>
+          <div id="opcoesWrap"></div>
+        </div>
+
+        <div class="wdg-enq-actions">
+          <button type="button" class="btn btn-outline-secondary" id="btnLimpar">Limpar</button>
+          <button type="submit" class="btn btn-primary" id="btnEnviar">Enviar enquete</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="wdg-enq-panel" aria-label="Lista de enquetes">
+      <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+        <div>
+          <h2>Enquetes cadastradas</h2>
+        </div>
+      </div>
+
+      <div id="enqList" class="wdg-enq-list" hidden></div>
+      <div id="enqEmpty" class="wdg-empty">Nenhuma enquete cadastrada ainda.</div>
+      <div id="enqPager" class="wdg-enq-pager" hidden aria-label="Paginação"></div>
+    </section>
+  </main>
+
+  <!-- Modal detalhes -->
+  <div class="modal fade wdg-enq-modal" id="enqDetalhesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <div class="wdg-enq-section-label" style="color:rgba(255,255,255,.75)">Detalhes da enquete</div>
+            <h5 class="modal-title" id="enqDetalhesTitle">Carregando...</h5>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="wdg-enq-kpi" id="enqDetalhesKpi"></div>
+          <div class="mb-3">
+            <div class="wdg-enq-qmedia" id="enqDetalhesFotoWrap" hidden>
+              <div class="wdg-enq-qmedia-frame">
+                <img id="enqDetalhesFoto" alt="" data-enq-img />
+              </div>
+            </div>
+            <div class="wdg-enq-section-label">Pergunta</div>
+            <div class="fw-bold" style="font-size:1.05rem;color:#0f172a;" id="enqDetalhesPergunta"></div>
+          </div>
+
+          <div class="wdg-enq-section-label mb-2">Alternativas</div>
+          <div id="enqDetalhesOpcoes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal confirmar finalização -->
+  <div class="modal fade wdg-enq-modal" id="enqFinalizarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <div class="wdg-enq-section-label" style="color:rgba(255,255,255,.75)">Confirmação</div>
+            <h5 class="modal-title">Finalizar enquete</h5>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div style="font-weight:800;color:#0f172a;font-size:1.02rem;">Deseja finalizar esta enquete agora?</div>
+          <div style="margin-top:.35rem;color:#64748b;font-weight:700;">Essa ação encerra a enquete e impede novos votos.</div>
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="btnEnqConfirmFinalizar">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wdg-enq-imgviewer" id="enqImgViewer" hidden aria-hidden="true">
+    <div class="wdg-enq-imgviewer-card" role="dialog" aria-modal="true" aria-label="Imagem ampliada">
+      <button type="button" class="wdg-enq-imgviewer-close" id="enqImgViewerClose" aria-label="Fechar">×</button>
+      <img id="enqImgViewerImg" alt="" />
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<%= _bp %>/js/condominios/enquetes.js?v=5"></script>
+</body>
+</html>

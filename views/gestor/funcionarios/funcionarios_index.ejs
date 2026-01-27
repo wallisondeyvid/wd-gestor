@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <% const _basePath = (typeof basePath === 'string' && basePath) ? basePath : (typeof moduleBasePath === 'string' && moduleBasePath) ? moduleBasePath : '/gestor'; %>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Funcionários - WDGestor</title>
+
+  <%- include('../partials/favicon') %>
+
+  <!-- CSS base -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Estilos centrais Gestor -->
+  <%- include('../../shared/partials/head-styles-gestor', { moduleBasePath: _basePath }) %>
+  <!-- Tema moderno + padrões de botões (paridade com Unidades/Recursos) -->
+  <link rel="stylesheet" href="/condominios/css/condominios-modern.css?v=1">
+  <link rel="stylesheet" href="<%= _basePath %>/css/icon-buttons.css?v=1">
+  <link rel="stylesheet" href="<%= _basePath %>/css/gestor-app.css?v=1">
+
+  <!-- CSSs específicos existentes -->
+  <link rel="stylesheet" href="<%= _basePath %>/css/vendor/flatpickr.min.css">
+  <link rel="stylesheet" href="<%= _basePath %>/css/vendor/flatpickr.custom.css">
+  <link rel="stylesheet" href="<%= _basePath %>/css/modais-funcionarios.css?v=1">
+  <link rel="stylesheet" href="<%= _basePath %>/css/gestor-modais.css?v=1">
+
+  <style>
+    /* Tabela de funcionários – linhas brancas, centralização e hover suave */
+    .wdg-func-table .table th,
+    .wdg-func-table .table td { vertical-align: middle; text-align: center; white-space: nowrap; }
+    .wdg-func-table .col-nome { min-width: 240px; }
+    .wdg-func-table .col-cpf  { min-width: 140px; }
+    .wdg-func-table .col-unid { min-width: 220px; }
+    .wdg-func-table .col-func { min-width: 220px; }
+    .wdg-func-table .col-stat { width: 110px; }
+    .wdg-func-table .col-acoes { width: 160px; }
+    .wdg-func-table tbody tr > td { background:#ffffff !important; }
+    .wdg-func-table tbody tr:hover > td { background:#f5f9ff !important; }
+    /* Scroll-limit após 4 registros reais */
+    #wrapperTabelaFuncionarios.scroll-limit{ max-height:360px; overflow-y:auto; }
+    #wrapperTabelaFuncionarios.scroll-limit thead th{ position:sticky; top:0; background:#f8f9fa; z-index:2; box-shadow:0 1px 0 rgba(0,0,0,.06); }
+    .gestor-divider{ height:2px; width:300px; margin:6px auto 18px; background:#0d6efd; border-radius:2px; }
+    /* Ajustes do wizard nav para combinar tema */
+    #wizardNav { border-top:1px solid #dee2e6; }
+    /* Modal z-index */
+    .modal-backdrop { z-index:1050 !important; }
+    .modal { z-index:1065 !important; }
+  </style>
+</head>
+  <body class="wdg-layout" data-unidade-default="<%= user && user.unidade_id ? user.unidade_id.toString() : '' %>" data-base-path="<%= _basePath %>">
+  <%- include('../../shared/partials/header-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
+  <%- include('../../shared/partials/navbar-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
+  <%- include('../../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
+
+  <div class="wdg-page">
+    <!-- Título padronizado -->
+    <h4 class="mb-3 text-center page-main-title" id="tituloFormFuncionario">Cadastrar Funcionário</h4>
+    <div class="gestor-divider"></div>
+
+    <div class="wdg-card content wdg-card-hover mb-4">
+      <div class="wdg-card-body wdg-form wdg-tight">
+        <div id="alertArea" class="mb-2" aria-live="polite"></div>
+  <form id="formFuncionario" action="<%= _basePath %>/api/funcionarios" method="POST" enctype="multipart/form-data" autocomplete="off" novalidate>
+          <ul class="nav nav-tabs flex-wrap" id="tabsFuncionario" role="tablist" aria-label="Abas do cadastro de funcionário">
+            <li class="nav-item" role="presentation">
+              <button id="tab-aba1" class="nav-link active" type="button"
+                      data-bs-toggle="tab" data-bs-target="#aba1"
+                      role="tab" aria-controls="aba1" aria-selected="true">
+                Identificação
+              </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+              <button id="tab-aba2" class="nav-link" type="button"
+                      data-bs-toggle="tab" data-bs-target="#aba2"
+                      role="tab" aria-controls="aba2" aria-selected="false">
+                Biométricos
+              </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+              <button id="tab-aba3" class="nav-link" type="button"
+                      data-bs-toggle="tab" data-bs-target="#aba3"
+                      role="tab" aria-controls="aba3" aria-selected="false">
+                Dados Contratuais
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button id="tab-aba4" class="nav-link" type="button"
+                      data-bs-toggle="tab" data-bs-target="#aba4"
+                      role="tab" aria-controls="aba4" aria-selected="false">
+                Documentos
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button id="tab-aba5" class="nav-link" type="button"
+                      data-bs-toggle="tab" data-bs-target="#aba5"
+                      role="tab" aria-controls="aba5" aria-selected="false">
+                Dependentes
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button id="tab-aba6" class="nav-link" type="button"
+                      data-bs-toggle="tab" data-bs-target="#aba6"
+                      role="tab" aria-controls="aba6" aria-selected="false">
+                Benefícios
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button id="tab-aba7" class="nav-link" type="button"
+                      data-bs-toggle="tab" data-bs-target="#aba7"
+                      role="tab" aria-controls="aba7" aria-selected="false">
+                Observações
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content pt-3 wdg-form wdg-tight auto-colon">
+            <%- include('abas/aba1_identificacao', { unidadesFiltradas, funcoesFiltradas }) %>
+            <%- include('abas/aba2_cadastros_biometricos') %>
+            <%- include('abas/aba3_dados_contratuais', { setoresFiltrados }) %>
+            <%- include('abas/aba4_documentos') %>
+            <%- include('abas/aba5_dependentes') %>
+            <%- include('abas/aba6_beneficios') %>
+            <%- include('abas/aba7_observacoes') %>
+          </div>
+
+          <!-- ========= HIDDENs DE ENDEREÇO (objeto) ========= -->
+          <input type="hidden" name="endereco[cep]"             id="end_cep">
+          <input type="hidden" name="endereco[tipo_logradouro]" id="end_tipo">
+          <input type="hidden" name="endereco[logradouro]"      id="end_logr">
+          <input type="hidden" name="endereco[numero]"          id="end_num">
+          <input type="hidden" name="endereco[complemento]"     id="end_comp">
+          <input type="hidden" name="endereco[bairro]"          id="end_bairro">
+          <input type="hidden" name="endereco[estado]"          id="end_uf">
+          <input type="hidden" name="endereco[cidade]"          id="end_cidade">
+          <input type="hidden" name="endereco[codigo_ibge]"     id="end_ibge">
+
+          <!-- ========= HIDDENs para serialização das tabelas ========= -->
+          <input type="hidden" name="dependentes_json" id="dependentes_json">
+          <input type="hidden" name="beneficios_json"  id="beneficios_json">
+
+          <div id="wizardNav" class="d-flex justify-content-between align-items-center pt-2 mt-3">
+            <button type="button" id="btnVoltar" class="btn btn-outline-secondary" data-action="wizard-prev" title="Voltar" aria-label="Voltar">Voltar</button>
+            <div class="d-flex gap-2 align-items-center">
+              <button type="reset" id="btnLimpar" class="btn btn-outline-secondary d-none" title="Limpar" aria-label="Limpar">Limpar</button>
+              <button type="button" id="btnCancelarEdicao" class="btn btn-outline-secondary d-none" title="Cancelar edição e iniciar novo cadastro" aria-label="Cancelar edição e iniciar novo cadastro">Cancelar</button>
+              <button type="button" id="btnProximo" class="btn btn-outline-primary" data-action="wizard-next" title="Próximo" aria-label="Próximo">Próximo</button>
+              <button type="submit" id="btnFinalizar" class="btn btn-outline-primary d-none" title="Cadastrar" aria-label="Cadastrar">Cadastrar</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <h5 class="mb-1 text-center wdg-section-title" style="margin-top:6px">Funcionários cadastrados</h5>
+
+    <!-- Controles de paginação -->
+    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
+      <div class="d-flex align-items-center gap-2">
+        <label for="fPageSize" class="form-label mb-0">Mostra</label>
+        <select id="fPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="300">300</option>
+          <option value="400">400</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+        </select>
+        <span class="ms-1">itens</span>
+      </div>
+    </div>
+
+    <div class="wdg-card content wdg-card-hover wdg-table wdg-func-table">
+      <div id="wrapperTabelaFuncionarios" class="table-responsive table-vert-max">
+        <table class="table table-sm align-middle" id="tabelaFuncionarios">
+          <thead>
+            <tr>
+              <th class="col-nome">Nome</th>
+              <th class="col-cpf">CPF</th>
+              <th class="col-unid">Unidade</th>
+              <th class="col-func">Função</th>
+              <th class="col-stat">Status</th>
+              <th class="col-acoes">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="funcionariosTableBody">
+            <!-- Debug: <%= (funcionarios||[]).length %> funcionários -->
+            <% if ((funcionarios||[]).length === 0) { %>
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  <i class="bi bi-info-circle me-2"></i>
+                  Nenhum funcionário cadastrado ainda.
+                </td>
+              </tr>
+            <% } else { %>
+              <% (funcionarios||[]).forEach(f => { %>
+                <tr data-func-id="<%= f._id %>">
+                  <td class="col-nome"><%= f.nome %></td>
+                  <td class="col-cpf"><%= f.cpf %></td>
+                  <td class="col-unid"><%= f.unidade_id ? ((f.unidade_id.codigo && f.unidade_id.nome) ? f.unidade_id.codigo + ' - ' + f.unidade_id.nome : f.unidade_id.nome) : '-' %></td>
+                  <td class="col-func"><%= f.funcao_id?.nome || f.funcao_nome || '-' %></td>
+                  <td class="col-stat">
+                    <%- f.ativo ? '<span class="badge bg-success">Ativo</span>' : '<span class="badge bg-secondary">Inativo</span>' %>
+                  </td>
+                  <td class="col-acoes">
+                    <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                      <button type="button" class="wdg-icon-btn btn-detalhes-func" data-action="detalhes" data-id="<%= f._id %>" title="Detalhes" aria-label="Detalhes">
+                        <img src="<%= _basePath %>/images/detalhe.png" alt="Detalhes" onerror="this.outerHTML='&lt;i class=\'bi bi-info-circle\'&gt;&lt;/i&gt;'">
+                      </button>
+                      <button type="button" class="wdg-icon-btn btn-edit-func" data-action="editar" data-id="<%= f._id %>" title="Editar" aria-label="Editar">
+                        <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'">
+                      </button>
+                      <form method="POST" action="<%= _basePath %>/api/funcionarios/<%= f._id %>/delete" class="d-inline js-form-delete-func" style="margin:0; padding:0;">
+                        <button type="submit" class="wdg-icon-btn" data-action="excluir" title="Excluir" aria-label="Excluir">
+                          <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'">
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="fPaginas" class="wdg-pager mt-2"></div>
+  </div>
+
+  <!-- JS base -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/addons/cleave-phone.br.js"></script>
+
+  <!-- Helpers de dados -->
+  <script src="<%= _basePath %>/js/gestor/utils/data-url.js?v=3"></script>
+  <script src="<%= _basePath %>/js/gestor/utils/fetch-json.js?v=5"></script>
+
+  <!-- Flatpickr (gestor) via loader com fallback -->
+  <script src="<%= _basePath %>/js/core/flatpickr-loader.js"></script>
+  <script src="<%= _basePath %>/js/core/datepicker-init.js"></script>
+
+  <!-- Utils (gestor) -->
+  <script src="<%= _basePath %>/js/core/dates.js"></script>
+  <script src="<%= _basePath %>/js/core/masks.js"></script>
+  <script src="<%= _basePath %>/js/core/dates-global.js"></script>
+  <!-- Validators deve vir antes de masks-global para telefone/email -->
+  <script src="<%= _basePath %>/js/validators.js?v=1"></script>
+  <script src="<%= _basePath %>/js/core/masks-global.js"></script>
+
+  <!-- Páginas & Modais (gestor) -->
+  <script src="<%= _basePath %>/js/gestor/pages/funcionarios_selects.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/orgao_profissional.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/sindicato.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/banco.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/CBO.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/tipo_contrato.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/categoria_trabalhador.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/pais_nascimento.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/naturalidade.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/orgao_expedidor.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/cadastro_bio_digital.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/cadastro_bio_facial.js?v=5"></script>
+  <script src="<%= _basePath %>/js/gestor/modals/selecionar_setor.js?v=5"></script>
+  <!-- Ajuste: script de endereço está em /js/modals e não em /js/gestor/modals -->
+  <script src="<%= _basePath %>/js/modals/endereco.js?v=6"></script>
+  <!-- Caminho ajustado: arquivo real está em /js/modals/ -->
+  <script src="/gestor/js/modals/funcionario_detalhes.js?v=12"></script>
+  <script src="<%= _basePath %>/js/gestor/pages/funcionarios_index.js?v=5"></script>
+
+  <!-- Carregamento condicional do script completo de preenchimento (legado aprimorado) -->
+  <script>
+    (function(){
+      if(typeof window.fillFormWithFuncionario === 'function') return; // já disponível
+      var s = document.createElement('script');
+      s.src = '<%= _basePath %>/js/funcionarios/funcionarios_index.js?v=full';
+      s.defer = true;
+      document.head.appendChild(s);
+      console.log('[FUNCIONARIOS] Script completo de edição carregado (fallback)');
+    })();
+  </script>
+
+  <!-- Ajustes dinâmicos: estado do botão Cadastrar/Salvar + paginação + scroll-limit -->
+  <script>
+  (function(){
+    // Botão cadastrar/salvar (detecta edição pela action contendo /funcionarios/:id)
+    const form = document.getElementById('formFuncionario');
+    const submitBtn = document.getElementById('btnFinalizar');
+    if(form && submitBtn){
+      const updateState = () => {
+        const action = form.getAttribute('action') || '';
+        const editing = /\/funcionarios\/[a-f0-9]{24}(?:$|\?.*)/i.test(action);
+        if(editing){
+          submitBtn.textContent = 'Salvar';
+          submitBtn.title = 'Salvar alterações';
+          submitBtn.setAttribute('aria-label','Salvar alterações');
+          submitBtn.classList.remove('btn-outline-primary');
+          submitBtn.classList.add('btn-outline-success');
+        } else {
+          submitBtn.textContent = 'Cadastrar';
+          submitBtn.title = 'Cadastrar';
+          submitBtn.setAttribute('aria-label','Cadastrar');
+          submitBtn.classList.remove('btn-outline-success');
+          submitBtn.classList.add('btn-outline-primary');
+        }
+      };
+      updateState();
+      const obs = new MutationObserver(updateState);
+      obs.observe(form, { attributes:true, attributeFilter:['action'] });
+      window.__funcionarioUpdateSubmitState = updateState;
+    }
+
+    // Paginação da tabela de funcionários (client-side) – similar a recursos/unidades
+    const tbody = document.getElementById('funcionariosTableBody');
+    const pagerEl = document.getElementById('fPaginas');
+    const selectSize = document.getElementById('fPageSize');
+    if(tbody && pagerEl && selectSize){
+      let rows = Array.from(tbody.querySelectorAll('tr[data-func-id]'));
+      const state = { page:1, size: parseInt(selectSize.value,10)||50, total: rows.length };
+      function render(){
+        rows = Array.from(tbody.querySelectorAll('tr[data-func-id]'));
+        state.total = rows.length;
+        const maxPage = Math.max(1, Math.ceil(state.total / state.size));
+        if(state.page > maxPage) state.page = maxPage;
+        const start = (state.page - 1) * state.size;
+        const end = start + state.size;
+        rows.forEach((r,i)=>{ r.style.display = (i>=start && i<end) ? '' : 'none'; });
+        buildPager(maxPage);
+      }
+      function buildPager(maxPages){
+        if(!pagerEl) return;
+        if(state.total <= state.size){ pagerEl.innerHTML=''; return; }
+        const windowSize = 7;
+        const realMax = Math.max(1, Math.ceil(state.total / state.size));
+        let start = Math.max(1, state.page - Math.floor(windowSize/2));
+        let end = start + windowSize - 1;
+        if (end > realMax) { end = realMax; start = Math.max(1, end - windowSize + 1); }
+        const frag = document.createDocumentFragment();
+        const btnFirst = makeBtn('«', ()=>{ state.page=1; render(); }, state.page===1);
+        const btnPrev  = makeBtn('‹', ()=>{ if(state.page>1){ state.page--; render(); } }, state.page===1);
+        frag.appendChild(btnFirst); frag.appendChild(btnPrev);
+        for(let p=start; p<=end; p++) frag.appendChild(makeBtn(String(p), ()=>{ state.page=p; render(); }, false, p===state.page));
+        const isLast = state.page===realMax;
+        const btnNext = makeBtn('›', ()=>{ if(!isLast){ state.page++; render(); } }, isLast);
+        const btnLast = makeBtn('»', ()=>{ if(!isLast){ state.page=realMax; render(); } }, isLast);
+        frag.appendChild(btnNext); frag.appendChild(btnLast);
+        pagerEl.innerHTML=''; pagerEl.appendChild(frag);
+      }
+      function makeBtn(label, onClick, disabled, active){
+        const b = document.createElement('button');
+        b.type='button'; b.className='wdg-pager-btn'; b.textContent=label;
+        if(disabled) b.disabled=true;
+        if(active) b.classList.add('active');
+        b.addEventListener('click', onClick);
+        return b;
+      }
+      selectSize.addEventListener('change', ()=>{ state.size = parseInt(selectSize.value,10)||50; state.page=1; render(); });
+      render();
+      // Scroll-limit se mais de 4 visíveis (exclui linha de "Nenhum")
+      (function(){
+        const wrapper = document.getElementById('wrapperTabelaFuncionarios');
+        if(!wrapper) return;
+        const realCount = rows.filter(r=> !r.querySelector('.text-muted')).length;
+        if(realCount > 4){ wrapper.classList.add('scroll-limit'); }
+      })();
+    }
+  })();
+  </script>
+
+  <!-- Modais compartilhados -->
+  <%- include('partials/modais/modal_categoria_trabalhador') %>
+  <%- include('partials/modais/modal_tipo_contrato') %>
+  <%- include('partials/modais/modal_cbo') %>
+  <%- include('partials/modais/modal_banco') %>
+  <%- include('partials/modais/modal_sindicato') %>
+  <%- include('partials/modais/modal_sindicato_detalhes') %>
+  <%- include('partials/modais/modal_pais_nascimento') %>
+  <%- include('partials/modais/modal_selecionar_funcao') %>
+  <%- include('partials/modais/modal_selecionar_setor') %>
+  <%- include('partials/modais/naturalidade') %>
+  <%- include('partials/modais/orgao_expedidor') %>
+  <%- include('partials/modais/modal_biometria_digital') %>
+  <%- include('partials/modais/modal_biometria_facial') %>
+
+  <!-- Modal Detalhes do Funcionário -->
+  <%- include('partials/modais/modal_funcionario_detalhes') %>
+
+  <!-- Script do modal Selecionar Função movido para depois dos includes de modais -->
+  <script src="<%= _basePath %>/js/modals/selecionar_funcao.js"></script>
+
+  <!-- Script de perfil modular -->
+  <script>window.__perfilBasePath='<%= _basePath %>';</script>
+  <script src="<%= _basePath %>/js/perfil-modulo.js"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<div class="modal fade" id="modalLocalizarRecurso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+  <h5 class="modal-title">Localizar Recurso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-2">
+        <style>
+          /* Centraliza títulos e conteúdo da tabela de resultados */
+          #tabelaResultadosRecursosGestor th,
+          #tabelaResultadosRecursosGestor td { text-align: center; vertical-align: middle; }
+        </style>
+        <form id="formBuscaRecursoGestor" class="mb-2">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label">Placa</label>
+              <input type="text" class="form-control" id="buscaRecursoPlaca" maxlength="20" placeholder="Placa">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Unidade</label>
+              <select class="form-select" id="buscaRecursoUnidade">
+                <option value="" selected>Selecione...</option>
+              </select>
+            </div>
+            <div class="col-md-3 d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Pesquisar</button>
+            </div>
+          </div>
+        </form>
+        <div class="table-responsive border rounded" style="max-height:420px;">
+          <table class="table table-sm table-hover mb-0 text-center" id="tabelaResultadosRecursosGestor">
+            <thead class="table-light"><tr>
+              <th style="width:40px;"></th>
+              <th style="width:140px;">Placa</th>
+              <th style="width:160px;">Marca</th>
+              <th style="width:160px;">Modelo</th>
+              <th>Unidade</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+  <button type="button" class="btn btn-outline-secondary" id="btnCancelarLocalizarRecurso" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="btnSelecionarRecursoGestor" disabled>Selecionar</button>
+      </div>
+    </div>
+  </div>
+</div>

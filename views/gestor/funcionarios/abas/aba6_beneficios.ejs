@@ -1,0 +1,486 @@
+<div class="tab-pane fade" id="aba6" role="tabpanel" aria-labelledby="tab-aba6">
+  <% const _basePath = (typeof basePath === 'string' && basePath) ? basePath : (typeof moduleBasePath === 'string' && moduleBasePath) ? moduleBasePath : '/gestor'; %>
+  <!-- Primeira linha -->
+  <div class="row g-3 mb-2">
+    <div class="col-lg-6 col-md-8">
+      <label class="form-label" for="beneficio_tipo">Tipo de Benefício</label>
+      <select name="beneficio_tipo" id="beneficio_tipo" class="form-select">
+        <option value="">Selecione...</option>
+        <option value="VT">Vale Transporte</option>
+        <option value="VA">Vale Alimentação</option>
+        <option value="VR">Vale Refeição</option>
+        <option value="PS">Plano de Saúde</option>
+        <option value="OUTRO">Outro</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Segunda linha -->
+  <div class="row g-3 mb-2">
+    <div class="col-lg-6 col-md-8">
+  <label class="form-label no-colon" for="beneficio_descricao">Nome/Descrição:</label>
+      <input type="text" name="beneficio_descricao" id="beneficio_descricao" class="form-control" disabled>
+    </div>
+    <div class="col-lg-6 col-md-4">
+  <label class="form-label no-colon" for="beneficio_cnpj_plano">CNPJ Plano de Saúde:</label>
+      <input type="text" name="beneficio_cnpj_plano" id="beneficio_cnpj_plano"
+             class="form-control" maxlength="18" inputmode="numeric" disabled>
+    </div>
+  </div>
+
+  <!-- Terceira linha -->
+  <div class="row g-3 mb-2 align-items-end">
+    <div class="col-lg-3 col-md-4">
+      <label class="form-label mb-2 d-block">Tipo</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="beneficio_tipo_valor" id="beneficio_tipo_rs" value="rs" checked>
+        <label class="form-check-label" for="beneficio_tipo_rs">R$</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="beneficio_tipo_valor" id="beneficio_tipo_pct" value="pct">
+        <label class="form-check-label" for="beneficio_tipo_pct">%</label>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4">
+  <label class="form-label no-colon" for="beneficio_valor">Valor/Porcentagem:</label>
+      <div class="input-group">
+        <span class="input-group-text" id="beneficio_valor_prefix">R$</span>
+  <input type="text" name="beneficio_valor" id="beneficio_valor" class="form-control" aria-describedby="beneficio_valor_prefix">
+      </div>
+    </div>
+  </div>
+
+  <!-- Quarta linha -->
+  <div class="row g-3 mb-2 align-items-end">
+    <div class="col-lg-3 col-md-4">
+  <label class="form-label mb-2 d-block no-colon">Início:</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="beneficio_inicio_tipo" id="beneficio_inicio_adm" value="admissao" checked>
+        <label class="form-check-label" for="beneficio_inicio_adm">Admissão</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="beneficio_inicio_tipo" id="beneficio_inicio_outra" value="outra">
+        <label class="form-check-label" for="beneficio_inicio_outra">Outra data</label>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4">
+      <label class="form-label" for="beneficio_data_inicio">Data de Início</label>
+      <input type="text" name="beneficio_data_inicio" id="beneficio_data_inicio"
+             class="form-control date-br" data-calendar="flatpickr"
+             placeholder="dd/mm/aaaa" autocomplete="off" disabled>
+    </div>
+  </div>
+
+  <!-- Botão Inserir -->
+  <div class="row">
+    <div class="col-12 d-flex justify-content-end gap-2">
+      <button type="button" id="btnLimparBeneficio" class="btn btn-outline-secondary">Limpar</button>
+      <button type="button" id="btnInserirBeneficio" class="btn btn-outline-primary">Inserir</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="mt-3">
+    <h6>Benefícios cadastrados</h6>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped mb-0">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Nome/Descrição</th>
+            <th>CNPJ Plano</th>
+            <th>Tipo Valor</th>
+            <th>Valor</th>
+            <th>Início</th>
+            <th>Data Início</th>
+            <th class="col-acoes">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyBeneficios"><!-- preenchido via JS --></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/gestor/js/core/masks.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Função para limpar todos os campos do formulário de benefícios
+  function limparCamposBeneficio() {
+    selectTipo.value = '';
+    atualizarDescricaoECNPJ();
+    descricaoInput.value = '';
+    cnpjInput.value = '';
+    tipoRs.checked = true;
+    aplicarMascaraValor();
+    valorInput.value = '';
+    inicioAdm.checked = true;
+    atualizarDataInicio();
+    dataInicioInput.value = '';
+    trEditando = null;
+    atualizarTextoBotao();
+  }
+
+  // Evento do botão Limpar
+  const btnLimpar = document.getElementById('btnLimparBeneficio');
+  if (btnLimpar) {
+    btnLimpar.addEventListener('click', limparCamposBeneficio);
+  }
+  const selectTipo      = document.getElementById('beneficio_tipo');
+  const descricaoInput  = document.getElementById('beneficio_descricao');
+  const cnpjInput       = document.getElementById('beneficio_cnpj_plano');
+  const tipoRs          = document.getElementById('beneficio_tipo_rs');
+  const tipoPct         = document.getElementById('beneficio_tipo_pct');
+  const valorInput      = document.getElementById('beneficio_valor');
+  const inicioAdm       = document.getElementById('beneficio_inicio_adm');
+  const inicioOutra     = document.getElementById('beneficio_inicio_outra');
+  const dataInicioInput = document.getElementById('beneficio_data_inicio');
+  const btnInserir      = document.getElementById('btnInserirBeneficio');
+  const tbody           = document.getElementById('tbodyBeneficios');
+
+  // ----- Máscara CNPJ + validação -----
+  function aplicarMascaraCNPJ(input) {
+    function onInput() {
+      let v = input.value.replace(/\D/g, '');
+      if (v.length > 14) v = v.slice(0, 14);
+      v = v.replace(/(\d{2})(\d)/, '$1.$2')
+           .replace(/(\d{3})(\d)/, '$1.$2')
+           .replace(/(\d{3})(\d)/, '$1/$2')
+           .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+      input.value = v;
+    }
+    input.addEventListener('input', onInput);
+    return () => input.removeEventListener('input', onInput);
+  }
+  function validarCNPJ(cnpj) {
+    cnpj = cnpj.replace(/\D/g, '');
+    if (cnpj.length !== 14) return false;
+    let tamanho = 12, numeros = cnpj.substring(0, tamanho), digitos = cnpj.substring(tamanho);
+    let soma = 0, pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) { soma += numeros.charAt(tamanho - i) * pos--; if (pos < 2) pos = 9; }
+    let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado != digitos.charAt(0)) return false;
+    tamanho++; numeros = cnpj.substring(0, tamanho); soma = 0; pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) { soma += numeros.charAt(tamanho - i) * pos--; if (pos < 2) pos = 9; }
+    resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    return resultado == digitos.charAt(1);
+  }
+  const detachCnpjMask = aplicarMascaraCNPJ(cnpjInput);
+  cnpjInput.addEventListener('blur', () => {
+    if (cnpjInput.value && !validarCNPJ(cnpjInput.value)) alert('CNPJ inválido!');
+  });
+
+  // ----- Mostrar/limpar campos por tipo -----
+  function atualizarDescricaoECNPJ() {
+    const tipo = selectTipo.value;
+    const precisaDescricao = (tipo === 'OUTRO' || tipo === 'PS');
+    const precisaCNPJ      = (tipo === 'PS');
+
+    descricaoInput.disabled = !precisaDescricao;
+    if (!precisaDescricao) descricaoInput.value = '';
+
+    cnpjInput.disabled = !precisaCNPJ;
+    if (!precisaCNPJ) cnpjInput.value = '';
+  }
+
+  // ----- Início: admissão vs outra data -----
+  function atualizarDataInicio() {
+    if (inicioOutra.checked) {
+      dataInicioInput.disabled = false;
+      dataInicioInput.value = '';
+    } else {
+      dataInicioInput.disabled = true;
+      // Preencher com data de admissão se disponível
+      if (window.dataAdmissaoFuncionario) {
+        dataInicioInput.value = window.dataAdmissaoFuncionario;
+      } else {
+        dataInicioInput.value = '';
+      }
+    }
+  }
+
+  // ----- Máscara Valor (R$ ou %) REFEITA -----
+  let modoValor = 'RS';
+  function formatMoedaFromDigits(d){
+    d = d.replace(/\D/g,'');
+    if(!d) return '';
+    if(d.length>13) d = d.slice(0,13); // limite de segurança
+    while(d.length<3) d='0'+d; // garante pelo menos 0,00
+    let intPartRaw = d.slice(0,-2);
+    const decPart = d.slice(-2);
+    // Remover zeros à esquerda mantendo pelo menos um zero
+    intPartRaw = intPartRaw.replace(/^0+(?=\d)/,'');
+    if (intPartRaw === '') intPartRaw = '0';
+    // Aplicar separador de milhar somente quando > 3 dígitos
+    const intFmt = intPartRaw.length > 3 ? intPartRaw.replace(/\B(?=(\d{3})+(?!\d))/g,'.') : intPartRaw;
+    return intFmt+','+decPart;
+  }
+  function formatPercentFromDigits(d){
+    d = d.replace(/\D/g,'');
+    if(!d) return '';
+    if(d.length>5) d = d.slice(0,5); // 999,99 máx antes do clamp
+    while(d.length<3) d='0'+d;
+    let intPart = d.slice(0,-2).replace(/^0+(?=\d)/,'') || '0';
+    let decPart = d.slice(-2);
+    let numeric = parseInt(intPart,10) + parseInt(decPart,10)/100;
+    if (numeric>100) { intPart='100'; decPart='00'; }
+    return intPart+','+decPart;
+  }
+  function aplicarMascaraValor(){
+    const prefix = document.getElementById('beneficio_valor_prefix');
+    modoValor = tipoRs.checked ? 'RS' : 'PCT';
+    if (modoValor==='RS') { if(prefix) prefix.textContent='R$'; valorInput.placeholder='0,00'; }
+    else { if(prefix) prefix.textContent='%'; valorInput.placeholder='0,00'; }
+    valorInput.value='';
+    valorInput.classList.remove('is-valid','is-invalid');
+  }
+  function onValorInput(){
+    const digits = valorInput.value.replace(/\D/g,'');
+    valorInput.value = (modoValor==='RS') ? formatMoedaFromDigits(digits) : formatPercentFromDigits(digits);
+  }
+  function onValorBlur(){
+    if(!valorInput.value.trim()) { valorInput.classList.remove('is-valid','is-invalid'); return; }
+    if(modoValor==='PCT') {
+      // já clamped
+      valorInput.classList.remove('is-invalid');
+    }
+  }
+  // Marcar flag para evitar alguma automáscara externa futura
+  valorInput.dataset.beneficioValorMask = '1';
+  valorInput.addEventListener('input', onValorInput);
+  valorInput.addEventListener('blur', onValorBlur);
+  tipoRs.addEventListener('change', aplicarMascaraValor);
+  tipoPct.addEventListener('change', aplicarMascaraValor);
+
+  // ----- Inserir/Editar/Remover -----
+  let trEditando = null;
+  function dispatchBeneficiosChanged(){
+    document.dispatchEvent(new CustomEvent('beneficios:changed'));
+  }
+
+  function atualizarTextoBotao() {
+    const btn = document.getElementById('btnInserirBeneficio');
+    if (trEditando) {
+      // Em modo de edição manter padrão azul (outline) e apenas alterar texto
+      btn.textContent = 'Atualizar';
+      btn.classList.remove('btn-success', 'btn-primary');
+      btn.classList.add('btn-outline-primary');
+    } else {
+      btn.textContent = 'Inserir';
+      btn.classList.remove('btn-success', 'btn-primary');
+      btn.classList.add('btn-outline-primary');
+    }
+  }
+
+  function buscarValorPorTexto(selectId, texto) {
+    const select = document.getElementById(selectId);
+    for (const opt of select.options) {
+      if (opt.text === texto) return opt.value;
+    }
+    return '';
+  }
+
+  btnInserir.addEventListener('click', function () {
+    const tipoBeneficioText = selectTipo.options[selectTipo.selectedIndex]?.text || '';
+    const descVal   = descricaoInput.value.trim();
+    const cnpjVal   = cnpjInput.value.trim();
+    const tipoVal   = tipoRs.checked ? 'R$' : '%';
+    const valorVal  = valorInput.value.trim();
+    const inicioVal = inicioAdm.checked ? 'Admissão' : 'Outra data';
+    const dataVal   = dataInicioInput.value.trim();
+
+    if (!selectTipo.value) return alert('Selecione o tipo de benefício!');
+    if ((selectTipo.value === 'OUTRO' || selectTipo.value === 'PS') && !descVal) return alert('Preencha o campo Nome/Descrição!');
+    if (selectTipo.value === 'PS' && !cnpjVal) return alert('Preencha o CNPJ do Plano de Saúde!');
+    if (!valorVal) return alert('Preencha o campo Valor/Porcentagem!');
+    if (inicioOutra.checked && !dataVal) return alert('Preencha a Data de Início!');
+
+    if (trEditando) {
+      const tds = trEditando.querySelectorAll('td');
+      tds[0].textContent = tipoBeneficioText;
+      tds[1].textContent = descVal;
+      tds[2].textContent = cnpjVal;
+      tds[3].textContent = tipoVal;
+      tds[4].textContent = valorVal;
+      tds[5].textContent = inicioVal;
+      // Se início = Admissão, preencher com data de admissão global (se houver)
+      if (inicioAdm.checked) {
+        tds[6].textContent = window.dataAdmissaoFuncionario || '';
+      } else {
+        tds[6].textContent = dataVal;
+      }
+      trEditando.classList.remove('editing-beneficio');
+      trEditando = null;
+      atualizarTextoBotao();
+      dispatchBeneficiosChanged();
+    } else {
+      const bp = document.body.getAttribute('data-base-path') || '<%= _basePath %>';
+      const tr = document.createElement('tr');
+      // Atribui um índice sequencial simples para depuração/edição
+      const indexAtual = tbody.querySelectorAll('tr').length;
+      tr.setAttribute('data-benef-index', indexAtual);
+      tr.innerHTML = `
+        <td>${tipoBeneficioText}</td>
+        <td>${descVal}</td>
+        <td>${cnpjVal}</td>
+        <td>${tipoVal}</td>
+        <td>${valorVal}</td>
+        <td>${inicioVal}</td>
+        <td>${inicioAdm.checked ? (window.dataAdmissaoFuncionario || '') : dataVal}</td>
+        <td class="col-acoes">
+          <div class="d-inline-flex gap-1">
+            <button type="button" data-acao="editar" class="btn btn-sm btn-outline-primary btn-icon btnEditarBeneficio" title="Editar" aria-label="Editar">
+              <span class="ico-wrapper" style="display:inline-flex;align-items:center;gap:2px;">
+                <img src="${bp}/images/editar.png" alt="Editar" width="16" height="16" onerror="this.onerror=null;this.outerHTML='<i class=\\'bi bi-pencil\\'></i>'" />
+              </span>
+            </button>
+            <button type="button" data-acao="remover" class="btn btn-sm btn-outline-danger btn-icon btnRemoverBeneficio" title="Remover" aria-label="Remover">
+              <span class="ico-wrapper" style="display:inline-flex;align-items:center;gap:2px;">
+                <img src="${bp}/images/excluir.png" alt="Remover" width="16" height="16" onerror="this.onerror=null;this.outerHTML='<i class=\\'bi bi-trash\\'></i>'" />
+              </span>
+            </button>
+          </div>
+        </td>`;
+      tbody.appendChild(tr);
+      dispatchBeneficiosChanged();
+    }
+
+    // reset básico
+    if (selectTipo.value === 'OUTRO' || selectTipo.value === 'PS') descricaoInput.value = '';
+    if (selectTipo.value === 'PS') cnpjInput.value = '';
+    valorInput.value = '';
+    inicioAdm.checked = true;
+    atualizarDescricaoECNPJ();
+    atualizarDataInicio();
+    aplicarMascaraValor();
+  });
+
+  tbody.addEventListener('click', function (e) {
+    // Normaliza o alvo para capturar cliques na imagem ou span dentro do botão
+    const rawTarget = e.target;
+    const btnRem = rawTarget.closest('.btnRemoverBeneficio');
+    const btnEdit = rawTarget.closest('.btnEditarBeneficio');
+    if (!btnRem && !btnEdit) return; // nada relevante
+
+    console.debug('[BENEFICIOS][click]', {
+      tag: rawTarget.tagName,
+      classList: rawTarget.className,
+      isEdit: !!btnEdit,
+      isRemove: !!btnRem
+    });
+    if (btnRem) {
+      btnRem.closest('tr').remove();
+      if (trEditando) trEditando = null;
+      atualizarTextoBotao();
+      // Limpa campos do formulário de benefícios
+      selectTipo.value = '';
+      atualizarDescricaoECNPJ();
+      descricaoInput.value = '';
+      cnpjInput.value = '';
+      tipoRs.checked = true;
+      aplicarMascaraValor();
+      valorInput.value = '';
+      inicioAdm.checked = true;
+      atualizarDataInicio();
+      dataInicioInput.value = '';
+      dispatchBeneficiosChanged();
+      return;
+    }
+    if (btnEdit) {
+      const tr = btnEdit.closest('tr');
+      if(!tr){ console.warn('[BENEFICIOS] Linha não encontrada para editar'); return; }
+      const tds = tr.querySelectorAll('td');
+      // volta valores pro formulário
+      document.getElementById('beneficio_tipo').value = buscarValorPorTexto('beneficio_tipo', tds[0].textContent);
+      atualizarDescricaoECNPJ();
+      descricaoInput.value = tds[1].textContent;
+      cnpjInput.value = tds[2].textContent;
+      if (tds[3].textContent === 'R$') tipoRs.checked = true; else tipoPct.checked = true;
+      aplicarMascaraValor();
+      valorInput.value = tds[4].textContent;
+      if (tds[5].textContent === 'Admissão') {
+        inicioAdm.checked = true;
+      } else {
+        inicioOutra.checked = true;
+      }
+      atualizarDataInicio();
+      dataInicioInput.value = tds[6].textContent;
+      if (trEditando) trEditando.classList.remove('editing-beneficio');
+      trEditando = tr;
+      trEditando.classList.add('editing-beneficio');
+      atualizarTextoBotao();
+      // Foco e seleção no primeiro campo relevante
+      setTimeout(()=>{
+        if (selectTipo) selectTipo.focus();
+        if (descricaoInput && (selectTipo.value==='OUTRO'||selectTipo.value==='PS')) {
+          descricaoInput.focus();
+          descricaoInput.select();
+        } else if (valorInput) {
+          valorInput.focus();
+          valorInput.select();
+        }
+      },0);
+    }
+  });
+
+  // Atualiza campos ao mudar tipo de benefício
+  selectTipo.addEventListener('change', atualizarDescricaoECNPJ);
+
+  // Eventos para ativar/desativar campo data de início
+  inicioAdm.addEventListener('change', atualizarDataInicio);
+  inicioOutra.addEventListener('change', atualizarDataInicio);
+
+  // Sincroniza data de admissão da aba3
+  function syncDataAdmissao() {
+    var campoAdmissao = document.getElementById('data_admissao');
+    if (campoAdmissao) {
+      window.dataAdmissaoFuncionario = campoAdmissao.value;
+    }
+  }
+  function atualizarDatasAdmissaoNaTabela() {
+    if (!window.dataAdmissaoFuncionario) return;
+    Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+      const tds = tr.querySelectorAll('td');
+      if (tds.length < 7) return;
+      const inicioTxt = (tds[5].textContent || '').trim().toLowerCase();
+      const dataIniTd = tds[6];
+      if ((inicioTxt === 'admissão' || inicioTxt === 'admissao') && !(dataIniTd.textContent || '').trim()) {
+        dataIniTd.textContent = window.dataAdmissaoFuncionario;
+      }
+    });
+  }
+  // Executa ao carregar e ao mudar campo admissão
+  syncDataAdmissao();
+  var campoAdmissao = document.getElementById('data_admissao');
+  if (campoAdmissao) {
+    campoAdmissao.addEventListener('input', function() {
+      window.dataAdmissaoFuncionario = campoAdmissao.value;
+      atualizarDataInicio();
+      atualizarDatasAdmissaoNaTabela();
+    });
+  }
+
+  atualizarDescricaoECNPJ();
+  atualizarDataInicio();
+  aplicarMascaraValor();
+  atualizarTextoBotao();
+  // Listener global para auto-serializar (como dependentes)
+  document.addEventListener('beneficios:changed', () => {
+    try { if (typeof serializeBeneficiosToJSON === 'function') serializeBeneficiosToJSON(); } catch(e){ console.warn('Falha ao serializar benefícios automaticamente', e); }
+    // Garantir preenchimento visual após serialização
+    atualizarDatasAdmissaoNaTabela();
+  });
+  // Chamada inicial caso já exista linha pré-carregada sem data
+  atualizarDatasAdmissaoNaTabela();
+});
+</script>
+
+<style>
+/* Coluna de ações com largura otimizada para ícones */
+#aba6 .col-acoes { width: 140px; }
+/* Destaque visual para linha em edição (mesmo estilo usado em dependentes) */
+#aba6 tr.editing-beneficio > td { background: #fff4d6 !important; box-shadow: inset 0 0 0 1px #e7b347; }
+/* Centralização do conteúdo da tabela de benefícios */
+#aba6 table.table thead th,
+#aba6 table.table tbody td { text-align: center; vertical-align: middle; }
+</style>

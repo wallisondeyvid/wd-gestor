@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <% /* Normaliza base path dinâmico */ const _basePath = (typeof basePath === 'string' && basePath) ? basePath : (typeof moduleBasePath === 'string' && moduleBasePath) ? moduleBasePath : '/gestor'; %>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WDGestor - Funções · Módulo Gestor</title>
+  <%- include('partials/favicon') %>
+
+  <!-- Vendor (mantidos fora da partial por CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <!-- Estilos centrais Gestor -->
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _basePath }) %>
+  <!-- Tema moderno idêntico ao módulo Condomínios -->
+  <link rel="stylesheet" href="/condominios/css/condominios-modern.css?v=1"/>
+  <link rel="stylesheet" href="<%= _basePath %>/css/icon-buttons.css?v=1"/>
+  <link rel="stylesheet" href="<%= _basePath %>/css/gestor-app.css?v=1"/>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+
+  <style>
+    /* Ajustes específicos mantendo tipografia do tema moderno */
+    .wdg-funcoes-table .table th,
+    .wdg-funcoes-table .table td{ vertical-align: middle; text-align: center; white-space: nowrap; }
+    .wdg-funcoes-table .col-desc{ max-width: 520px; }
+    .wdg-funcoes-table .col-mods{ max-width: 420px; }
+    .wdg-funcoes-table .col-acoes{ width:160px; }
+    select#modulosAcessiveis.disabled, select#modulosAcessiveis[disabled]{ background:#f1f5f9!important; color:#6b7b8c!important; opacity:1; cursor:not-allowed; }
+    select#modulosAcessiveis.disabled option{ color:#6b7b8c; }
+    .page-main-title, .wdg-section-title{ font-weight:600; letter-spacing:.5px; color:#1f2d3d; }
+    .funcoes-divider{ height:2px; width:300px; margin:6px auto 18px; background:#0d6efd; border-radius:2px; }
+  </style>
+</head>
+<body class="wdg-layout">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
+  <%- include('../shared/partials/navbar-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
+
+  <div class="wdg-page">
+  <!-- Título alinhado ao estilo de cadastrar_habitacao -->
+  <h4 class="mb-3 text-center page-main-title">Gerenciar Funções</h4>
+  <div class="funcoes-divider"></div>
+
+    <!-- Card do formulário (padronizado como Unidades) -->
+  <div class="wdg-card content wdg-card-hover mb-4">
+      <div class="wdg-card-body wdg-form wdg-tight auto-colon">
+  <form id="formFuncao" action="<%= _basePath %>/api/funcoes" method="POST" class="row gy-3">
+          <input type="hidden" id="funcao_edit_id" name="funcao_edit_id" value=""/>
+
+          <div class="col-12 col-lg-4">
+            <label for="nome" class="form-label">Nome da Função</label>
+            <input type="text" class="form-control" id="nome" name="nome" required placeholder="Ex.: Analista RH, Supervisor, ..."/>
+          </div>
+
+          <div class="col-12 col-lg-4">
+            <label for="unidade_principal_id" class="form-label">Unidade Principal</label>
+            <select class="form-select" id="unidade_principal_id" name="unidade_principal_id" required>
+              <option value="">Selecione...</option>
+              <% (unidadesPrincipaisFiltradas || []).forEach(function(unidade){ %>
+                <option value="<%= unidade.id || unidade._id %>"><%= (unidade.codigo && unidade.nome) ? unidade.codigo + ' - ' + unidade.nome : unidade.nome %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label for="descricao" class="form-label">Descrição</label>
+            <textarea class="form-control" id="descricao" name="descricao" rows="2" placeholder="Breve descrição das responsabilidades"></textarea>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <label for="modulosAcessiveis" class="form-label">Módulos habilitados</label>
+            <div class="input-group">
+              <select id="modulosAcessiveis" name="modulosAcessiveis" class="form-select" multiple></select>
+              <button class="btn btn-outline-primary" type="button" id="btnGerenciarModulos" data-bs-toggle="modal" data-bs-target="#modalModulos" title="Gerenciar módulos" aria-label="Gerenciar módulos">Gerenciar</button>
+            </div>
+            <div class="form-text" id="hintModulosSelecao">Use o gerenciador para buscar/filtrar módulos. No mínimo, selecione os módulos relevantes.</div>
+            <div class="form-text text-muted" id="hintModulosUnidade" style="display:none">Selecione a unidade para habilitar os módulos.</div>
+            <input type="hidden" id="modulos_habilitados" name="modulos_habilitados"/>
+          </div>
+
+          <div class="col-12 col-lg-4 d-flex align-items-end justify-content-lg-end gap-2">
+            <button type="button" id="btnCancelarEdicao" class="btn btn-outline-secondary d-none" title="Cancelar edição" aria-label="Cancelar edição">Cancelar</button>
+            <button type="reset"  id="btnResetForm"     class="btn btn-outline-secondary" title="Limpar" aria-label="Limpar">Limpar</button>
+            <button type="submit" id="btnSubmitFuncao"  class="btn btn-primary" title="Cadastrar" aria-label="Cadastrar">Cadastrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lista -->
+  <h5 class="mb-1 text-center wdg-section-title" id="funcoesTituloLista">Funções cadastradas</h5>
+
+    <!-- Controles da lista de funções -->
+    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
+      <div class="d-flex align-items-center gap-2">
+        <label for="fPageSize" class="form-label mb-0">Mostra</label>
+        <select id="fPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="300">300</option>
+          <option value="400">400</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+        </select>
+        <span class="ms-1">itens</span>
+      </div>
+    </div>
+
+  <div class="content wdg-card wdg-card-hover wdg-table wdg-funcoes-table" id="funcoesLista">
+    <div id="wrapperTabelaFuncoes" class="table-responsive table-vert-max">
+  <table class="table table-sm align-middle table-funcoes">
+          <thead>
+            <tr>
+              <th class="col-cod">Código</th>
+              <th class="col-nome">Nome</th>
+              <th class="col-desc">Descrição</th>
+              <th class="col-unid">Unidade Principal</th>
+              <th class="col-mods">Módulos Habilitados</th>
+              <th class="col-acoes">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% (funcoesFiltradas || []).forEach(function(funcao){ %>
+              <tr>
+                <td><%= funcao.codigo %></td>
+                <td><%= funcao.nome %></td>
+                <td class="col-desc">
+                  <div class="text-truncate"><%= funcao.descricao || '-' %></div>
+                </td>
+                <td>
+                  <%= (funcao.unidade_principal_nome)
+                        || (funcao.unidade_principal_id && funcao.unidade_principal_id.nome)
+                        || '' %>
+                </td>
+                <td class="col-mods">
+                  <% if (funcao.modulos_habilitados && funcao.modulos_habilitados.length) { %>
+                    <div class="text-truncate">
+                      <%= funcao.modulos_habilitados.map(m => (m && (m.nome || m.label || m.slug)) || '').filter(Boolean).join(', ') %>
+                    </div>
+                  <% } else { %>
+                    <span class="text-muted">Nenhum</span>
+                  <% } %>
+                </td>
+                <td class="col-acoes">
+                  <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                    <button type="button" class="wdg-icon-btn" onclick="editar('<%= funcao._id %>')" title="Editar" aria-label="Editar">
+                      <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
+                    </button>
+                    <button type="button" class="wdg-icon-btn" onclick="excluir('<%= funcao._id %>')" title="Excluir" aria-label="Excluir">
+                      <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+            <% if (!(funcoesFiltradas && funcoesFiltradas.length)) { %>
+              <tr><td colspan="6" class="text-center text-muted">Nenhuma função cadastrada.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <div id="fPaginas" class="wdg-pager mt-2"></div>
+  </div>
+
+  <!-- ============ Modais & Dados ============ -->
+  <%- include('../partials/modais/modal_selecionar_modulos.ejs') %>
+
+  <script type="application/json" id="modulosJson"><%- JSON.stringify(modulosFiltrados || []) %></script>
+  <script>
+    // Disponibiliza todos os módulos no escopo global
+    window.todosModulos = JSON.parse(document.getElementById('modulosJson').textContent || '[]');
+  </script>
+
+  <!-- Script do gerenciador de módulos (seu arquivo compartilhado) -->
+  <script src="<%= _basePath %>/js/modals/selecionar_modulos.js" defer></script>
+
+  <!-- ============ JS da página ============ -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // BasePath resolvido no servidor (evita ReferenceError de _basePath em runtime)
+  const BASE = '<%= _basePath %>' || '';
+  if(!BASE && !window.__warnedBasePathFuncoes){ console.warn('[funcoes] BASE vazio; assumindo raiz'); window.__warnedBasePathFuncoes=true; }
+  // --- Referências
+  const form        = document.getElementById('formFuncao');
+  const hiddenId    = document.getElementById('funcao_edit_id');
+  const btnSubmit   = document.getElementById('btnSubmitFuncao');
+  const btnCancel   = document.getElementById('btnCancelarEdicao');
+  const selectMods  = document.getElementById('modulosAcessiveis');
+  const hiddenMods  = document.getElementById('modulos_habilitados');
+  const selectUnid  = document.getElementById('unidade_principal_id');
+  const btnGerenciar= document.getElementById('btnGerenciarModulos');
+  const hintSelecao = document.getElementById('hintModulosSelecao');
+  const hintUnidade = document.getElementById('hintModulosUnidade');
+  // Campo de módulos é sempre somente exibição; seleção apenas via modal
+  selectMods.setAttribute('disabled', 'disabled');
+  selectMods.classList.add('disabled');
+  selectMods.setAttribute('aria-readonly','true');
+  selectMods.setAttribute('aria-disabled','true');
+  selectMods.title = selectUnid.value ? 'Selecione via botão Gerenciar' : 'Selecione a unidade primeiro';
+  if (!selectUnid.value) {
+    if (hintUnidade) hintUnidade.style.display = '';
+    if (hintSelecao) hintSelecao.style.display = 'none';
+  } else {
+    if (hintUnidade) hintUnidade.style.display = 'none';
+    if (hintSelecao) hintSelecao.style.display = '';
+  }
+
+  // Mapa por id para lookup rápido de nome/status
+  const todos = Array.isArray(window.todosModulos) ? window.todosModulos : [];
+  const byId  = new Map(todos.map(m => [String(m._id || m.id || m.value || ''), m]));
+
+  // --- (NOVA REGRA) Renderiza SÓ os selecionados no <select>
+  function renderModulosSelect(selectedIds = []) {
+    selectMods.innerHTML = '';
+    (selectedIds || []).map(String).forEach(id => {
+      const m = byId.get(id);
+      if (!m) return;
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = (m.nome || m.label || m.slug || id) + (m.status === 'inativo' ? ' (inativo)' : '');
+      opt.selected = true;
+      selectMods.appendChild(opt);
+    });
+  }
+
+  // --- Mantém o hidden sincronizado com o <select>
+  function syncHiddenFromSelect() {
+    const ids = Array.from(selectMods.options).filter(o => o.selected).map(o => o.value);
+    hiddenMods.value = ids.join(',');
+    return ids;
+  }
+
+  // Observa alterações nas <option> (o modal recria o conteúdo programaticamente)
+  const mo = new MutationObserver(() => syncHiddenFromSelect());
+  mo.observe(selectMods, { childList: true });
+
+  // Estado inicial: VAZIO
+  renderModulosSelect([]);
+  syncHiddenFromSelect();
+
+  // Também sincroniza em mudanças manuais (se ocorrerem)
+  // Bloqueia interação manual para não perder seleção individualmente
+  function bloquearInteracaoSelect(){
+    // Impede que o usuário desmarque clicando nas opções; seleção só via modal
+    selectMods.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); return false; });
+    selectMods.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); return false; });
+    selectMods.addEventListener('keydown', (e) => { e.preventDefault(); e.stopPropagation(); return false; });
+  }
+  bloquearInteracaoSelect();
+  // Ainda sincronizamos caso script externo altere
+  selectMods.addEventListener('change', syncHiddenFromSelect);
+
+  // Ao resetar o formulário, garantir que fique vazio
+  document.getElementById('btnResetForm')?.addEventListener('click', () => {
+    // esperar o reset nativo aplicar
+    setTimeout(() => { renderModulosSelect([]); syncHiddenFromSelect(); }, 0);
+  });
+
+  // --- Integração opcional com evento customizado (se algum código o disparar)
+  // window.dispatchEvent(new CustomEvent('modulos:aplicar', { detail:{ selecionados:[{_id, nome}, ...] } }))
+  window.addEventListener('modulos:aplicar', (ev) => {
+    try {
+      const mods = (ev.detail && ev.detail.selecionados) || [];
+      const ids  = mods.map(m => String(m._id || m.id || m.value || '')).filter(Boolean);
+      renderModulosSelect(ids);
+      syncHiddenFromSelect();
+      bloquearInteracaoSelect();
+    } catch(_) {}
+  });
+
+  // --- Entrar / Sair do modo edição
+  function entrarModoEdicao(){
+    btnSubmit.textContent = 'Salvar';
+    btnSubmit.title = 'Salvar';
+    btnSubmit.setAttribute('aria-label', 'Salvar');
+    btnSubmit.classList.remove('btn-primary');
+    btnSubmit.classList.add('btn-outline-success');
+    btnCancel.classList.remove('d-none');
+  }
+  function cancelarEdicao(){
+    hiddenId.value = '';
+    form.reset();
+    renderModulosSelect([]);
+    syncHiddenFromSelect();
+    btnSubmit.textContent = 'Cadastrar';
+    btnSubmit.title = 'Cadastrar';
+    btnSubmit.setAttribute('aria-label', 'Cadastrar');
+    btnSubmit.classList.remove('btn-outline-success');
+    btnSubmit.classList.add('btn-primary');
+    btnCancel.classList.add('d-none');
+  }
+  btnCancel.addEventListener('click', cancelarEdicao);
+
+  // Se clicar em "Limpar" enquanto estiver editando, volta ao modo cadastro
+  document.getElementById('btnResetForm')?.addEventListener('click', () => {
+    if (hiddenId.value) cancelarEdicao();
+  });
+
+  // --- Intercepta submit para PUT quando editando
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const isUpdate = !!hiddenId.value;
+    const payload = {
+      nome: document.getElementById('nome').value.trim(),
+      descricao: document.getElementById('descricao').value.trim(),
+      unidade_principal_id: document.getElementById('unidade_principal_id').value,
+      // envia array de ids
+      modulos_habilitados: syncHiddenFromSelect()
+    };
+
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = isUpdate ? 'Salvando...' : 'Cadastrando...';
+    btnSubmit.title = btnSubmit.textContent;
+    btnSubmit.setAttribute('aria-label', btnSubmit.textContent);
+
+  const url = isUpdate ? (BASE + '/api/funcoes/' + encodeURIComponent(hiddenId.value)) : (BASE + '/api/funcoes');
+    const method = isUpdate ? 'PUT' : 'POST';
+
+    fetch(url, {
+      method,
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    })
+      .then(async r => {
+        const text = await r.text();
+        let json;
+        try { json = text ? JSON.parse(text) : {}; } catch(_) { json = {}; }
+        if (!r.ok) {
+          const msg = (json && (json.error || json.mensagem)) || text || 'Erro ao salvar';
+          throw new Error(msg);
+        }
+        // checar envelope de erro mesmo com 2xx
+        if (json && typeof json === 'object'){
+          const okFlag = (typeof json.success === 'boolean') ? json.success
+                        : (typeof json.sucesso === 'boolean') ? json.sucesso
+                        : true;
+          if (okFlag === false) {
+            throw new Error(json.error || json.mensagem || 'Falha ao salvar');
+          }
+        }
+        return json;
+      })
+      .then(() => {
+        // após criar/atualizar, ficar na mesma página e focar na lista
+        try { location.hash = '#funcoesLista'; } catch(_) {}
+        location.reload();
+      })
+      .catch(err => {
+        alert('Erro: ' + (err?.message || 'Falha ao salvar'));
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = isUpdate ? 'Salvar' : 'Cadastrar';
+        btnSubmit.title = btnSubmit.textContent;
+        btnSubmit.setAttribute('aria-label', btnSubmit.textContent);
+      });
+  });
+
+  // --- Globais editar / excluir
+  window.editar = function(id){
+  fetch(BASE + '/api/funcoes/' + encodeURIComponent(id))
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(payload => {
+        // Compat: aceita { success, data } ou { sucesso, dados } ou objeto direto
+        if (payload && typeof payload === 'object') {
+          const okFlag = (typeof payload.success === 'boolean') ? payload.success
+                        : (typeof payload.sucesso === 'boolean') ? payload.sucesso
+                        : true; // assume ok se não vier envelope
+          if (okFlag === false) {
+            const msg = payload.error || payload.mensagem || 'Falha ao carregar função.';
+            throw new Error(msg);
+          }
+        }
+
+        const data = (payload && typeof payload === 'object')
+          ? (payload.data ?? payload.dados ?? payload)
+          : payload;
+
+        if (!data || typeof data !== 'object') {
+          throw new Error('Resposta inválida da API.');
+        }
+        hiddenId.value = data._id || id;
+        document.getElementById('nome').value = data.nome || '';
+        document.getElementById('descricao').value = data.descricao || '';
+        document.getElementById('unidade_principal_id').value =
+          (data.unidade_principal_id && (data.unidade_principal_id._id || data.unidade_principal_id.id))
+          || data.unidade_principal_id
+          || '';
+
+        // Ao entrar em edição, carregue os módulos permitidos pela unidade selecionada
+        const unidId = document.getElementById('unidade_principal_id').value;
+        if (unidId) {
+          // Mantém somente exibição; apenas ajusta dicas
+          if (hintUnidade) hintUnidade.style.display = 'none';
+          if (hintSelecao) hintSelecao.style.display = '';
+          selectMods.title = 'Selecione via botão Gerenciar';
+          carregarModulosPermitidos(unidId).then(() => {
+            const selecionados = (data.modulos_habilitados || []).map(m => String(m && (m._id || m.id || m)));
+            renderModulosSelect(selecionados.filter(id => byId.has(id)));
+            syncHiddenFromSelect();
+            bloquearInteracaoSelect();
+          }).catch(() => {
+            const selecionados = (data.modulos_habilitados || []).map(m => String(m && (m._id || m.id || m)));
+            renderModulosSelect(selecionados);
+            syncHiddenFromSelect();
+            bloquearInteracaoSelect();
+          });
+        } else {
+          const selecionados = (data.modulos_habilitados || []).map(m => String(m && (m._id || m.id || m)));
+          renderModulosSelect(selecionados);
+          syncHiddenFromSelect();
+          bloquearInteracaoSelect();
+          selectMods.title = 'Selecione a unidade primeiro';
+        }
+
+        entrarModoEdicao();
+        form.scrollIntoView({ behavior:'smooth', block:'start' });
+      })
+      .catch((err) => {
+        console.error('[funcoes] erro ao carregar função:', err);
+        alert('Falha ao carregar função. ' + (err?.message ? ('\n\n' + err.message) : ''));
+      });
+  };
+
+  window.excluir = function(id){
+    if (!confirm('Confirma exclusão?')) return;
+  fetch(BASE + '/api/funcoes/' + encodeURIComponent(id), { method:'DELETE', headers:{'Accept':'application/json'} })
+      .then(r => r.ok ? location.reload() : r.text().then(t => { throw new Error(t || 'Erro ao excluir'); }))
+      .catch(err => alert('Erro: ' + err.message));
+  };
+
+  // ---- Carregar módulos permitidos pela unidade selecionada
+  function normalizarEnvelope(payload){
+    if (payload && typeof payload === 'object') {
+      const okFlag = (typeof payload.success === 'boolean') ? payload.success
+                    : (typeof payload.sucesso === 'boolean') ? payload.sucesso
+                    : true;
+      if (okFlag === false) {
+        const msg = payload.error || payload.mensagem || 'Falha ao carregar módulos.';
+        throw new Error(msg);
+      }
+    }
+    return (payload && typeof payload === 'object') ? (payload.data ?? payload.dados ?? payload) : payload;
+  }
+
+  async function carregarModulosPermitidos(unidadeId){
+    // Desabilita botão enquanto carrega
+    if (btnGerenciar) btnGerenciar.disabled = true;
+    try {
+  const r = await fetch(BASE + '/api/unidades/' + encodeURIComponent(unidadeId) + '/modulos', { headers:{'Accept':'application/json'} });
+      const text = await r.text();
+      const json = text ? JSON.parse(text) : [];
+      if (!r.ok) throw new Error((json && (json.error || json.mensagem)) || text || 'Erro');
+      const data = normalizarEnvelope(json) || [];
+      // Atualiza fonte global e mapa por id
+      window.modulosPermitidos = Array.isArray(data) ? data : [];
+      // Recria o mapa byId com base nos permitidos (mantendo nomes corretos)
+      const fonte = Array.isArray(window.modulosPermitidos) ? window.modulosPermitidos : [];
+      byId.clear();
+      fonte.forEach(m => byId.set(String(m._id || m.id || m.value || ''), m));
+    } catch (e) {
+      // Em erro, zera a lista permitida mas mantém todos como fallback visual
+      window.modulosPermitidos = [];
+      byId.clear();
+      (Array.isArray(window.todosModulos) ? window.todosModulos : []).forEach(m => byId.set(String(m._id || m.id || m.value || ''), m));
+      console.warn('[funcoes] falha ao carregar módulos da unidade:', e);
+    } finally {
+      if (btnGerenciar) btnGerenciar.disabled = false;
+    }
+  }
+
+  // Observa mudança de unidade para filtrar módulos
+  if (selectUnid) {
+    selectUnid.addEventListener('change', async (e) => {
+      const unidId = e.target.value;
+      // Controla disponibilidade do botão Gerenciar
+      if (btnGerenciar) btnGerenciar.disabled = !unidId;
+
+      // Mantém o select sempre somente exibição; apenas ajusta dicas/título
+      if (!unidId) {
+        if (hintUnidade) hintUnidade.style.display = '';
+        if (hintSelecao) hintSelecao.style.display = 'none';
+        selectMods.title = 'Selecione a unidade primeiro';
+      } else {
+        if (hintUnidade) hintUnidade.style.display = 'none';
+        if (hintSelecao) hintSelecao.style.display = '';
+        selectMods.title = 'Carregando módulos...';
+      }
+
+      // Guarda seleção atual antes de recarregar
+      const selecionadosAtuais = syncHiddenFromSelect();
+
+      if (!unidId) {
+        // Sem unidade: remove filtro permitido e limpa seleção
+        window.modulosPermitidos = undefined;
+        byId.clear();
+        (Array.isArray(window.todosModulos) ? window.todosModulos : []).forEach(m => byId.set(String(m._id || m.id || m.value || ''), m));
+        renderModulosSelect([]);
+        syncHiddenFromSelect();
+        return;
+      }
+      // Carrega permitidos e aplica interseção com a seleção atual
+      await carregarModulosPermitidos(unidId);
+      const permitidosSet = new Set(Array.from(byId.keys()));
+      const intersec = selecionadosAtuais.filter(id => permitidosSet.has(String(id)));
+      renderModulosSelect(intersec);
+      syncHiddenFromSelect();
+      if (unidId) {
+        if (hintUnidade) hintUnidade.style.display = 'none';
+        if (hintSelecao) hintSelecao.style.display = '';
+        selectMods.title = 'Selecione via botão Gerenciar';
+        bloquearInteracaoSelect();
+      }
+    });
+  }
+
+  // Estado inicial do botão Gerenciar baseado na unidade selecionada
+  if (btnGerenciar && selectUnid) {
+    btnGerenciar.disabled = !selectUnid.value;
+  }
+  // Se a unidade inicial já estiver selecionada, mantém somente exibição mas ajusta dicas
+  if (selectUnid.value) {
+    if (hintUnidade) hintUnidade.style.display = 'none';
+    if (hintSelecao) hintSelecao.style.display = '';
+    selectMods.title = 'Selecione via botão Gerenciar';
+  }
+
+  // Hover desabilitado — manter clique padrão do Bootstrap
+  
+  // =============================================================
+  // Paginação da tabela de Funções (oculta/exibe linhas)
+  // =============================================================
+  (function initFuncoesPagination(){
+    const tbody = document.querySelector('#funcoesLista tbody');
+    const pager = document.getElementById('fPaginas');
+    const pageSizeSel = document.getElementById('fPageSize');
+    if (!tbody || !pager || !pageSizeSel) return;
+    let allRows = Array.from(tbody.querySelectorAll('tr'));
+    // Aplica limite de altura com scroll quando > 4 itens reais (ignora linha 'Nenhuma função')
+    const emptyRow = allRows.find(r => r.querySelector('.text-muted'));
+    const dataRows = emptyRow ? allRows.filter(r => r!==emptyRow) : allRows;
+    const wrapper = document.getElementById('wrapperTabelaFuncoes');
+    if (wrapper && dataRows.length > 4){ wrapper.classList.add('scroll-limit'); }
+    function getPageSize(){ const v=parseInt(pageSizeSel.value,10); return (!isNaN(v)&&v>0)? v : 50; }
+    const state = { page: 0 };
+    function mkBtn(label, go, dis){ const b=document.createElement('button'); b.type='button'; b.textContent=label; b.disabled=!!dis; b.addEventListener('click', ()=>{ state.page=go; render(); }); return b; }
+    function buildPager(totalPages, totalItems){
+      pager.innerHTML='';
+      if (totalPages <= 1){
+        const info=document.createElement('div'); info.className='w-100 text-center mt-1'; info.style.fontSize='.7rem'; info.textContent='Total: '+totalItems+' função(ões)'; pager.appendChild(info); return;
+      }
+      const win=5; let start=Math.max(0, state.page-Math.floor(win/2)); let end=Math.min(totalPages-1, start+win-1);
+      pager.appendChild(mkBtn('<<',0,state.page===0)); pager.appendChild(mkBtn('<',state.page-1,state.page===0));
+      if(start>0){ const b0=mkBtn('1',0,false); if(state.page===0) b0.classList.add('active'); pager.appendChild(b0); const dots=document.createElement('span'); dots.textContent='...'; dots.style.padding='0 .4rem'; pager.appendChild(dots); }
+      for(let p=start;p<=end;p++){ const b=mkBtn(String(p+1),p,false); if(p===state.page) b.classList.add('active'); pager.appendChild(b); }
+      if(end<totalPages-1){ const dots2=document.createElement('span'); dots2.textContent='...'; dots2.style.padding='0 .4rem'; pager.appendChild(dots2); const blast=mkBtn(String(totalPages), totalPages-1,false); if(state.page===totalPages-1) blast.classList.add('active'); pager.appendChild(blast); }
+      pager.appendChild(mkBtn('>', state.page+1, state.page===totalPages-1)); pager.appendChild(mkBtn('>>', totalPages-1, state.page===totalPages-1));
+      const info2=document.createElement('div'); info2.className='w-100 text-center mt-1'; info2.style.fontSize='.7rem'; info2.textContent='Total: '+totalItems+' função(ões)'; pager.appendChild(info2);
+    }
+    function render(){
+      const size = getPageSize();
+      const totalPages = Math.ceil(allRows.length / size) || 1;
+      if (state.page < 0) state.page = 0; if (state.page >= totalPages) state.page = totalPages - 1;
+      const start = state.page * size; const end = Math.min(allRows.length, start + size);
+      allRows.forEach((tr, idx)=>{ tr.style.display = (idx>=start && idx<end) ? '' : 'none'; });
+      buildPager(totalPages, allRows.length);
+    }
+    pageSizeSel.addEventListener('change', ()=>{ state.page=0; render(); });
+    render();
+  })();
+});
+</script>
+<style>
+/* Scroll vertical a partir de 4 itens (padronizado como Unidades) */
+#wrapperTabelaFuncoes.scroll-limit{ max-height:360px; overflow-y:auto; }
+#wrapperTabelaFuncoes.scroll-limit thead th{ position:sticky; top:0; background:#f8f9fa; z-index:2; box-shadow:0 1px 0 rgba(0,0,0,.06); }
+.table-funcoes thead th{ font-size:.72rem; text-transform:uppercase; font-weight:600; letter-spacing:.5px; color:#6b7b8c; }
+/* Linhas sempre brancas */
+.table-funcoes tbody tr td{ background:#ffffff !important; }
+.table-funcoes tbody tr:hover td{ background:#f5f9ff !important; }
+</style>
+
+<!-- Script de perfil modular -->
+<script>window.__perfilBasePath='<%= _basePath %>';</script>
+<script src="<%= _basePath %>/js/perfil-modulo.js"></script>
+<script>
+// Ajuste dinâmico do botão principal (Cadastrar/Salvar) baseado no hidden de edição
+document.addEventListener('DOMContentLoaded', function(){
+  const hiddenId = document.getElementById('funcao_edit_id');
+  const btn = document.getElementById('btnSubmitFuncao');
+  const btnCancel = document.getElementById('btnCancelarEdicao');
+  if(!hiddenId || !btn) return;
+  function updateState(){
+    const editing = !!(hiddenId.value && hiddenId.value.trim());
+    if(editing){
+      btn.textContent='Salvar'; btn.title='Salvar'; btn.setAttribute('aria-label','Salvar');
+      btn.classList.remove('btn-primary'); btn.classList.add('btn-outline-success');
+      if(btnCancel) btnCancel.classList.remove('d-none');
+    } else {
+      btn.textContent='Cadastrar'; btn.title='Cadastrar'; btn.setAttribute('aria-label','Cadastrar');
+      btn.classList.remove('btn-outline-success'); btn.classList.add('btn-primary');
+      if(btnCancel) btnCancel.classList.add('d-none');
+    }
+  }
+  const mo = new MutationObserver(updateState);
+  mo.observe(hiddenId, { attributes:true, attributeFilter:['value'] });
+  ['change','input'].forEach(ev => hiddenId.addEventListener(ev, updateState));
+  updateState();
+});
+</script>
+</body>
+</html>

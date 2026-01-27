@@ -1,0 +1,122 @@
+<div class="modal fade" id="modalDetMateriaisCad" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content mat-det-modal">
+      <div class="modal-header mat-det-header">
+        <div>
+          <p class="mat-det-overline">Detalhes do Material</p>
+          <h5 class="modal-title">Ficha técnica</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body mat-det-body">
+        <div class="mat-det-summary">
+          <div>
+            <span class="mat-det-label">Condomínio</span>
+            <strong id="detMatUnidade">-</strong>
+          </div>
+          <div class="mat-det-badges">
+            <span class="mat-det-badge" id="detMatTipo">-</span>
+            <span class="mat-det-badge" id="detMatNome">-</span>
+          </div>
+        </div>
+
+        <div class="mat-det-grid">
+          <div class="mat-det-field">
+            <span class="mat-det-label">Nº Patrimônio</span>
+            <strong id="detMatSerie">-</strong>
+          </div>
+          <div class="mat-det-field">
+            <span class="mat-det-label">Marca</span>
+            <strong id="detMatMarca">-</strong>
+          </div>
+          <div class="mat-det-field">
+            <span class="mat-det-label">Modelo</span>
+            <strong id="detMatModelo">-</strong>
+          </div>
+          <div class="mat-det-field">
+            <span class="mat-det-label">Nº Série</span>
+            <strong id="detMatNumSerie">-</strong>
+          </div>
+          <div class="mat-det-field">
+            <span class="mat-det-label">Peso</span>
+            <strong id="detMatPeso">-</strong>
+          </div>
+          <div class="mat-det-field">
+            <span class="mat-det-label">Cor</span>
+            <strong id="detMatCor">-</strong>
+          </div>
+          <div class="mat-det-field">
+            <span class="mat-det-label">Data de aquisição</span>
+            <strong id="detMatData">-</strong>
+          </div>
+        </div>
+
+        <div class="mat-det-sections">
+          <div class="mat-det-card">
+            <div class="mat-det-card-head">
+              <h6>Áreas vinculadas</h6>
+            </div>
+            <div id="detMatAreas" class="mat-det-card-content">-</div>
+          </div>
+          <div class="mat-det-card">
+            <div class="mat-det-card-head">
+              <h6>Anexos / Nota fiscal</h6>
+            </div>
+            <div id="detMatAnexos" class="mat-det-card-content">-</div>
+          </div>
+          <div class="mat-det-card mat-det-card-full">
+            <div class="mat-det-card-head">
+              <h6>Descrição</h6>
+            </div>
+            <div id="detMatDesc" class="mat-det-desc">-</div>
+          </div>
+        </div>
+
+        <div class="mat-det-photo">
+          <div class="mat-det-photo-head">
+            <h6>Foto</h6>
+          </div>
+          <div id="detMatFotoWrap" class="mat-det-photo-frame">
+            <img id="detMatFoto" class="d-none" alt="Foto do material">
+            <div id="detMatFotoVazio" class="mat-det-photo-empty">Sem foto.</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer mat-det-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .mat-det-modal{border:0;border-radius:22px;box-shadow:0 24px 60px rgba(15,23,42,.16);overflow:hidden;background:linear-gradient(180deg,#f8fbff 0%,#ffffff 65%);} 
+  .mat-det-header{border:0;padding:1.5rem 1.8rem;background:linear-gradient(135deg,rgba(37,99,235,.1),rgba(37,99,235,.02));align-items:center;}
+  .mat-det-overline{text-transform:uppercase;font-size:.72rem;letter-spacing:.2em;color:#64748b;margin:0 0 .2rem;font-weight:700;}
+  .mat-det-body{padding:1.75rem 1.8rem 1.2rem;display:flex;flex-direction:column;gap:1.4rem;}
+  .mat-det-summary{display:flex;justify-content:space-between;gap:1.2rem;flex-wrap:wrap;align-items:center;}
+  .mat-det-summary strong{font-size:1.05rem;color:#0f172a;}
+  .mat-det-badges{display:flex;gap:.5rem;flex-wrap:wrap;}
+  .mat-det-badge{background:rgba(37,99,235,.12);color:#1d4ed8;border:1px solid rgba(37,99,235,.25);border-radius:999px;padding:.3rem .85rem;font-size:.78rem;font-weight:600;}
+  .mat-det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.85rem;background:#fff;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:1rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.5);}
+  .mat-det-field{display:flex;flex-direction:column;gap:.15rem;}
+  .mat-det-label{text-transform:uppercase;font-size:.68rem;letter-spacing:.18em;color:#64748b;font-weight:700;}
+  .mat-det-field strong{font-size:.95rem;color:#0f172a;}
+  .mat-det-sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;}
+  .mat-det-card{background:#fff;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:1rem;box-shadow:0 10px 24px rgba(15,23,42,.08);display:flex;flex-direction:column;gap:.6rem;min-width:0;}
+  .mat-det-card-full{grid-column:1/-1;}
+  .mat-det-card-head h6{margin:0;font-size:.9rem;text-transform:uppercase;letter-spacing:.18em;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mat-det-card-content{font-size:.88rem;color:#0f172a;line-height:1.4;}
+  .mat-det-card-content a{color:#2563eb;font-weight:600;}
+  .mat-det-desc{min-height:80px;border:1px dashed rgba(148,163,184,.4);border-radius:14px;padding:.85rem;font-size:.9rem;background:rgba(248,250,252,.8);color:#0f172a;}
+  .mat-det-photo{background:#fff;border:1px solid rgba(148,163,184,.2);border-radius:18px;padding:1rem 1.2rem;box-shadow:0 12px 28px rgba(37,99,235,.1);}
+  .mat-det-photo-head h6{margin:0 0 .6rem;font-size:.9rem;text-transform:uppercase;letter-spacing:.18em;color:#64748b;}
+  .mat-det-photo-frame{border:2px dashed rgba(148,163,184,.4);border-radius:18px;min-height:220px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(148,163,184,.08),rgba(255,255,255,.9));padding:1rem;}
+  .mat-det-photo-frame img{max-height:260px;width:auto;border-radius:14px;box-shadow:0 18px 32px rgba(15,23,42,.3);}
+  .mat-det-photo-empty{color:#94a3b8;font-size:.9rem;font-weight:600;}
+  .mat-det-footer{border:0;padding:1.2rem 1.8rem;background:linear-gradient(90deg,rgba(37,99,235,.08),rgba(37,99,235,.02));}
+  @media (max-width:576px){
+    .mat-det-body{padding:1.25rem;}
+    .mat-det-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}
+  }
+</style>

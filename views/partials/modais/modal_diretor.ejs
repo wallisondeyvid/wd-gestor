@@ -1,0 +1,35 @@
+<div class="modal fade" id="modalDiretor" tabindex="-1" aria-labelledby="modalDiretorLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content modal-sheet theme-blue">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDiretorLabel">Selecionar Diretor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- busca -->
+        <div class="search-wrap has-icon-left mb-2">
+          <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Buscar" class="icon icon-sm search-icon" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary\' style=\'font-size:16px;\'\x3e\x3c/i\x3e'" />
+          <input type="text" id="buscaDiretor" class="form-control ps-4" placeholder="Buscar por nome, e-mail ou perfil...">
+        </div>
+
+        <!-- cabeçalho harmonizado (list-header) -->
+        <div class="list-header d-grid" role="row" aria-label="Cabeçalho da lista de diretores" style="grid-template-columns:90px 1fr 320px;">
+          <div class="col-sel text-center" role="columnheader">Seleção</div>
+          <div class="col-desc" role="columnheader">Diretor</div>
+          <div class="text-center" role="columnheader">E-mail</div>
+        </div>
+
+        <!-- lista com borda/scroll como modulos -->
+        <div class="list-scroll border rounded-bottom" style="max-height:320px; overflow:auto; border-top:0;">
+          <ul class="list-group ms-list" id="listaDiretores" aria-label="Lista de diretores"><!-- via JS --></ul>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnSelecionarDiretorModal">Selecionar</button>
+      </div>
+    </div>
+  </div>
+</div>

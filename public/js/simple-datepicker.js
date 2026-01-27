@@ -1,0 +1,149 @@
+// simple-datepicker.js - calendário mínimo vanilla para inputs type=date (formato YYYY-MM-DD)
+(function(){
+  const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function formatISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  let abertoRef = null; // referência do calendário aberto
+  // Injeta CSS mínimo apenas uma vez
+  (function injectCss(){ if(document.getElementById('simpleDatepickerCSS')) return; const css=`.simple-datepicker table td{font-size:11px}`; const st=document.createElement('style'); st.id='simpleDatepickerCSS'; st.textContent=css; document.head.appendChild(st); })();
+
+  function fecharCalendario(){ if(abertoRef && abertoRef.wrap && abertoRef.wrap.parentNode){ abertoRef.wrap.parentNode.removeChild(abertoRef.wrap); document.removeEventListener('mousedown', abertoRef.outside, true); window.removeEventListener('resize', abertoRef.posicionar); window.removeEventListener('scroll', abertoRef.posicionar, true); abertoRef=null; } }
+
+  function detectarFormato(input){
+    if(input.dataset.formato === 'br') return 'br';
+    if(/DD\/MM\/AAAA/i.test(input.placeholder)) return 'br';
+    if(/\d{2}\/\d{2}\/\d{4}/.test(input.value)) return 'br';
+    return 'iso';
+  }
+  function formatDateOut(date, formato){
+    if(formato==='br') return pad(date.getDate())+'/'+pad(date.getMonth()+1)+'/'+date.getFullYear();
+    return formatISO(date);
+  }
+  function parseExisting(input){
+    const formato=detectarFormato(input);
+    const v=(input.value||'').trim();
+    if(formato==='br' && /\d{2}\/\d{2}\/\d{4}/.test(v)){
+      const [d,m,y]=v.split('/').map(Number); return new Date(y, m-1, d);
+    }
+    if(/\d{4}-\d{2}-\d{2}/.test(v)) return new Date(v+'T00:00:00');
+    return new Date();
+  }
+  function buildPicker(input){
+    try { if(typeof input.showPicker === 'function'){ // se o navegador tem picker nativo moderno, usa direto
+        input.showPicker(); return; }
+    } catch(_){}
+    // Fecha anterior
+    fecharCalendario();
+  const formato = detectarFormato(input);
+  let current = parseExisting(input);
+    let viewYear = current.getFullYear();
+    let viewMonth = current.getMonth();
+
+  const wrap = document.createElement('div');
+    wrap.className = 'simple-datepicker';
+    wrap.style.position = 'absolute';
+    wrap.style.zIndex = 3000;
+    wrap.style.background = '#fff';
+    wrap.style.border = '1px solid #ccc';
+    wrap.style.borderRadius = '4px';
+    wrap.style.boxShadow = '0 4px 12px rgba(0,0,0,.15)';
+    wrap.style.fontSize = '12px';
+    wrap.style.padding = '6px';
+    wrap.style.userSelect = 'none';
+    wrap.style.width = '230px';
+
+    function render(){
+      wrap.innerHTML = '';
+  const header = document.createElement('div');
+  header.style.display='flex';
+  header.style.gap='4px';
+  header.style.justifyContent='space-between';
+  header.style.alignItems='center';
+  header.style.marginBottom='4px';
+  function navBtn(txt,dir){ const b=document.createElement('button'); b.type='button'; b.textContent=txt; b.style.background='none'; b.style.border='1px solid #ccc'; b.style.borderRadius='4px'; b.style.padding='0 6px'; b.style.height='26px'; b.style.cursor='pointer'; b.style.fontWeight='bold'; b.onclick=function(){ if(dir==='prev'){ viewMonth--; if(viewMonth<0){ viewMonth=11; viewYear--; } } else { viewMonth++; if(viewMonth>11){ viewMonth=0; viewYear++; } } render(); }; return b; }
+  const monthSel=document.createElement('select'); monthSel.style.flex='1'; monthSel.style.height='26px'; monthSel.style.fontSize='12px'; monthSel.style.padding='0 4px'; MONTHS.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; if(i===viewMonth) o.selected=true; monthSel.appendChild(o); }); monthSel.onchange=()=>{ viewMonth=parseInt(monthSel.value,10); render(); };
+  const yearInput=document.createElement('input'); yearInput.type='number'; yearInput.value=viewYear; yearInput.min='1900'; yearInput.max='2100'; yearInput.style.width='72px'; yearInput.style.height='26px'; yearInput.style.fontSize='12px'; yearInput.style.padding='0 4px'; yearInput.onchange=()=>{ let y=parseInt(yearInput.value,10); if(isNaN(y)) y=new Date().getFullYear(); if(y<1900) y=1900; if(y>2100) y=2100; viewYear=y; render(); };
+  header.appendChild(navBtn('<','prev'));
+  header.appendChild(monthSel);
+  header.appendChild(yearInput);
+  header.appendChild(navBtn('>','next'));
+  wrap.appendChild(header);
+
+      const table = document.createElement('table'); table.style.width='100%'; table.style.borderCollapse='collapse'; table.style.tableLayout='fixed';
+      const thead = document.createElement('thead'); const trh=document.createElement('tr'); ['D','S','T','Q','Q','S','S'].forEach(d=>{ const th=document.createElement('th'); th.textContent=d; th.style.fontWeight='500'; th.style.padding='2px 0'; th.style.color='#666'; trh.appendChild(th);}); thead.appendChild(trh); table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      const firstDay = new Date(viewYear, viewMonth,1); const startWeekDay = firstDay.getDay();
+      let day = 1; const daysInMonth = new Date(viewYear, viewMonth+1,0).getDate();
+      for(let r=0;r<6;r++){
+        const tr=document.createElement('tr');
+        for(let c=0;c<7;c++){
+          const td=document.createElement('td'); td.style.textAlign='center'; td.style.padding='2px'; td.style.cursor='pointer'; td.style.borderRadius='4px'; td.style.height='26px'; td.style.verticalAlign='middle';
+          if(r===0 && c<startWeekDay || day>daysInMonth){ td.textContent=''; td.style.cursor='default'; }
+          else {
+            const thisDate = new Date(viewYear, viewMonth, day);
+            td.textContent = day;
+            const escolhido = (formato==='br'? input.value.replace(/\//g,'') : input.value);
+            const isoCurrent = formatISO(thisDate);
+            const chaveComparar = formato==='br'? pad(thisDate.getDate())+pad(thisDate.getMonth()+1)+thisDate.getFullYear() : isoCurrent;
+            if(chaveComparar === escolhido.replace(/\//g,'')) { td.style.background='#0d6efd'; td.style.color='#fff'; }
+            else if(formatISO(thisDate) === formatISO(new Date())){ td.style.background='#e7f1ff'; }
+            td.onmouseenter = ()=>{ if(td.style.background==='' || td.style.background==='e7f1ff') td.style.background='#eee'; };
+            td.onmouseleave = ()=>{ if(formatISO(thisDate) === input.value){ td.style.background='#0d6efd'; td.style.color='#fff'; } else if(formatISO(thisDate) === formatISO(new Date())) { td.style.background='#e7f1ff'; td.style.color='#000'; } else { td.style.background=''; td.style.color='#000'; } };
+            td.onclick = ()=>{ input.value = formatDateOut(thisDate, formato); fechar(); input.dispatchEvent(new Event('change',{bubbles:true})); };
+            day++;
+          }
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      wrap.appendChild(table);
+
+      const footer=document.createElement('div'); footer.style.display='flex'; footer.style.justifyContent='space-between'; footer.style.marginTop='4px';
+  const hojeBtn=document.createElement('button'); hojeBtn.type='button'; hojeBtn.textContent='Hoje'; hojeBtn.className='btn btn-sm btn-light'; hojeBtn.style.fontSize='11px'; hojeBtn.onclick=()=>{ const d=new Date(); viewYear=d.getFullYear(); viewMonth=d.getMonth(); input.value=formatDateOut(d, formato); render(); };
+      const limparBtn=document.createElement('button'); limparBtn.type='button'; limparBtn.textContent='Limpar'; limparBtn.className='btn btn-sm btn-outline-secondary'; limparBtn.style.fontSize='11px'; limparBtn.onclick=()=>{ input.value=''; fechar(); input.dispatchEvent(new Event('change',{bubbles:true})); };
+      footer.appendChild(hojeBtn); footer.appendChild(limparBtn); wrap.appendChild(footer);
+    }
+
+  function posicionar(){ const rect = input.getBoundingClientRect(); wrap.style.top = (window.scrollY + rect.bottom + 4)+'px'; wrap.style.left = (window.scrollX + rect.left)+'px'; const vw = document.documentElement.clientWidth; const rw = wrap.getBoundingClientRect().width; if(rect.left + rw > vw - 8){ wrap.style.left = (window.scrollX + Math.max(0, rect.right - rw))+'px'; } }
+  function fechar(){ fecharCalendario(); }
+  function outside(ev){ if(!wrap.contains(ev.target) && ev.target!==input){ fechar(); } }
+
+    render();
+    document.body.appendChild(wrap); posicionar();
+    const outsideBound = outside; const posBound = posicionar;
+    document.addEventListener('mousedown', outsideBound, true);
+    window.addEventListener('resize', posBound);
+    window.addEventListener('scroll', posBound, true);
+    abertoRef = { wrap, outside: outsideBound, posicionar: posBound };
+  }
+
+  function enhance(){
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    document.querySelectorAll('input[type="date"], input.datepicker, input[placeholder*="DD/MM/AAAA"]').forEach(inp => {
+      if(inp.__simpleDateBound) return; inp.__simpleDateBound=true;
+      const formato = detectarFormato(inp);
+      if(!isMobile){ // no desktop substitui por text para evitar UI nativa inconsistente
+        try { inp.setAttribute('data-original-type','date'); inp.type='text'; } catch(_){}
+        if(!inp.placeholder){ inp.placeholder = (formato==='br'?'DD/MM/AAAA':'AAAA-MM-DD'); }
+      }
+      // adiciona botão ícone
+      if(!inp.parentNode.classList.contains('position-relative')){
+        const wrap = document.createElement('div'); wrap.style.position='relative';
+        inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+      }
+      if(!inp.nextSibling || !(inp.nextSibling.classList && inp.nextSibling.classList.contains('btn-date-icon'))){
+        const btn = document.createElement('button'); btn.type='button'; btn.innerHTML='\u{1F4C5}'; btn.title='Calendário'; btn.className='btn-date-icon';
+        btn.style.position='absolute'; btn.style.right='6px'; btn.style.top='50%'; btn.style.transform='translateY(-50%)'; btn.style.border='none'; btn.style.background='transparent'; btn.style.cursor='pointer'; btn.style.fontSize='16px'; btn.style.lineHeight='1';
+        btn.addEventListener('click', function(e){ e.preventDefault(); buildPicker(inp); });
+        inp.parentNode.appendChild(btn);
+      }
+      function abrir(){ buildPicker(inp); }
+      inp.addEventListener('focus', abrir);
+      inp.addEventListener('click', abrir);
+      inp.addEventListener('keydown', e=>{ if(e.key==='ArrowDown'){ e.preventDefault(); buildPicker(inp); } });
+    });
+  }
+  document.addEventListener('DOMContentLoaded', enhance);
+  if(document.readyState !== 'loading') setTimeout(enhance,0);
+})();

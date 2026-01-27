@@ -1,0 +1,31 @@
+<div class="modal fade" id="modalEfetivoRecursoDia" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Inserir efetivo no recurso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEfetivoRecursoDia" class="vstack gap-2">
+          <div>
+            <label class="form-label small">Funcionário</label>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="erd_func_nome" placeholder="Selecione o funcionário" readonly>
+              <button class="btn btn-outline-secondary" type="button" id="erd_btn_buscar"><i class="bi bi-search"></i> Selecionar</button>
+            </div>
+            <input type="hidden" id="erd_func_id">
+          </div>
+          <div>
+            <label class="form-label small" for="erd_atribuicao">Atribuição</label>
+            <input type="text" class="form-control form-control-sm" id="erd_atribuicao" maxlength="80" placeholder="Ex.: Motorista" required>
+            <div class="form-text">Campo obrigatório.</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="erd_btn_confirmar" disabled>Inserir</button>
+      </div>
+    </div>
+  </div>
+</div>

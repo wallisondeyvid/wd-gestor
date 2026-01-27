@@ -1,0 +1,391 @@
+<link rel="stylesheet" href="/gestor/css/icons.css">
+<style>
+  /* ===== Navbar WD (gradiente azul + sticky) ===== */
+  .navbar-wd{
+    position: sticky; top: 0; z-index: 1030;
+    background-image:
+      radial-gradient(120% 180% at 0% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 60%),
+      linear-gradient(135deg, #0a2a6b 0%, #0e51a7 45%, #1aa0ff 100%);
+    box-shadow: 0 6px 28px rgba(26,160,255,.12);
+    border: 0;
+  }
+  .navbar-wd .navbar-brand{ color:#fff; font-weight:700; letter-spacing:.2px; }
+  .navbar-wd .navbar-logo{
+    height:44px; /* maior para dar presença */
+    width:auto; display:block;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,.25));
+  }
+  /* Logo no offcanvas (mobile): tamanho controlado */
+  .offcanvas-wd .navbar-logo{
+    height:36px; width:auto; display:block;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,.25));
+  }
+  @media (max-width: 575.98px){
+    .navbar-wd .navbar-logo{ height:36px; }
+  }
+  .navbar-wd .logo-dot{
+    width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:.35rem;
+    background:#a0d8ff; box-shadow:0 0 0 6px rgba(160,216,255,.18), 0 0 18px rgba(26,160,255,.45);
+  }
+  .navbar-wd .nav-link{
+    color:rgba(255,255,255,.9);
+    border-radius:.7rem; padding:.6rem .9rem; transition:all .2s ease;
+  }
+  .navbar-wd .nav-link:hover,
+  .navbar-wd .nav-link.show{ color:#fff; background:rgba(255,255,255,.10); }
+  .navbar-wd .nav-link:focus{ outline:none; }
+  .navbar-wd .nav-link:focus-visible{ box-shadow:0 0 0 .25rem rgba(26,160,255,.35); }
+  .navbar-wd .nav-link i{ margin-right:.35rem; opacity:.9; }
+  .navbar-wd .menu-icon{ width:18px; height:18px; object-fit:contain; margin-right:.35rem; vertical-align:middle; }
+  /* Avatar levemente maior (navbar e offcanvas) */
+  .navbar-wd .avatar-img,
+  .offcanvas-wd .avatar-img{
+    width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:.35rem; background:rgba(255,255,255,.2);
+  }
+
+  .btn-light-ghost{
+    background:transparent; color:#fff;
+    border:1px solid rgba(255,255,255,.38);
+    padding:.45rem .8rem; border-radius:.8rem; transition:all .25s ease;
+  }
+  .btn-light-ghost:hover{ background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.55); color:#fff; }
+
+  .dropdown-menu-wd{
+    border-radius:1rem; padding:.35rem;
+    border:1px solid rgba(9,103,210,.25);
+    backdrop-filter: blur(6px) saturate(120%);
+  }
+  .dropdown-menu-wd .dropdown-item{ border-radius:.6rem; padding:.55rem .9rem; }
+  .dropdown-menu-wd .dropdown-item i{ width:1.1rem; }
+  .dropdown-menu-wd .dropdown-item:hover{ background:rgba(13,110,253,.12); }
+
+  /* Ícone sair maior (consistência com navbar compartilhada) */
+  .menu-icon { width: 22px; height: 22px; }
+  @media (max-width: 575.98px){ .menu-icon { width: 18px; height: 18px; } }
+
+  /* Chip central “Módulo Gestor” */
+  .center-chip{
+    display:inline-flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; letter-spacing:.1px;
+    padding:.38rem .9rem; border-radius:999px;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.22);
+    backdrop-filter: blur(4px);
+    white-space:nowrap;
+  }
+  .center-chip .dot{
+    width:8px;height:8px;border-radius:999px;display:inline-block;margin-right:.5rem;
+    background:#1aa0ff; box-shadow:0 0 0 4px rgba(26,160,255,.18);
+  }
+  @media (max-width:575.98px){ .center-chip{ display:none; } }
+
+  /* Cronômetro de inatividade (badge ao lado do módulo) */
+  .idle-timer{ font-weight:700; letter-spacing:.3px; }
+  @media (max-width:575.98px){ #nbIdleTimer{ display:none !important; } }
+
+  /* Offcanvas (mobile) no mesmo tema */
+  .offcanvas-wd{
+    background: linear-gradient(135deg, #0a2a6b 0%, #0e51a7 45%, #1aa0ff 100%);
+    color:#fff;
+  }
+  .offcanvas-wd .offcanvas-body{
+    display:flex; flex-direction:column; min-height:100%; gap:.25rem;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .offcanvas-wd .list-group-nav{
+    flex:1 1 auto; overflow:auto;
+  }
+  .offcanvas-wd .offcanvas-footer{
+    margin-top:auto; padding-top:.5rem; border-top:1px solid rgba(255,255,255,.12);
+    /* eleva bem o rodapé para longe da borda inferior */
+    padding-bottom: max(56px, env(safe-area-inset-bottom));
+  }
+  .offcanvas-wd .list-group-item{
+    background:transparent; color:#fff; border-color: rgba(255,255,255,.12);
+  }
+  .offcanvas-wd .list-group-item:hover{ background: rgba(255,255,255,.10); }
+
+  /* Normaliza altura/alinhamento: perfil (nav-link) e sair (btn) com mesma altura */
+  .navbar-wd .navbar-nav > .nav-item > .nav-link { display:inline-flex; align-items:center; height:44px; padding-top:0; padding-bottom:0; }
+  .navbar-wd .btn-light-ghost { display:inline-flex; align-items:center; height:44px; padding-top:0; padding-bottom:0; }
+  @media (max-width: 575.98px){
+    .navbar-wd .navbar-nav > .nav-item > .nav-link { height:36px; }
+    .navbar-wd .btn-light-ghost { height:36px; }
+  }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-wd" data-has-user="<%= user ? '1':'0' %>">
+  <div class="container-xl d-flex flex-row align-items-center justify-content-between">
+
+    <!-- Toggler (abre offcanvas no mobile) -->
+    <button class="navbar-toggler border-0 p-2 me-2"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#menuMobile"
+            aria-controls="menuMobile"
+            aria-label="Abrir menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Esquerda: Logo + menu desktop -->
+    <div class="d-flex flex-row align-items-center flex-shrink-0" style="min-width:260px;">
+      <a class="navbar-brand d-flex align-items-center gap-2 me-2" href="/dashboard" aria-label="WDGestor - Dashboard">
+        <img src="/images/logobranco.png" alt="WDGestor" class="navbar-logo" />
+      </a>
+
+      <!-- Menu desktop -->
+      <div class="d-none d-lg-block">
+        <ul class="navbar-nav flex-row gap-lg-1">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="cadastrosDropdown"
+               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <img src="/images/cadastro.png" alt="Cadastros" class="menu-icon"> Cadastros Gerais
+            </a>
+            <ul class="dropdown-menu dropdown-menu-wd shadow-lg" aria-labelledby="cadastrosDropdown">
+              <li><a class="dropdown-item" href="/unidades"><img src="/images/unidade.png" alt="Unidades" class="menu-icon"> Unidades</a></li>
+              <li><a class="dropdown-item" href="/funcoes"><img src="/images/funcao.png" alt="Funções" class="menu-icon"> Funções</a></li>
+              <li><a class="dropdown-item" href="/setores"><img src="/images/setor.png" alt="Setores" class="menu-icon"> Setores</a></li>
+              <li><a class="dropdown-item" href="/funcionarios"><img src="/images/funcionario.png" alt="Funcionários" class="menu-icon"> Funcionários</a></li>
+              <li><a class="dropdown-item" href="/recursos"><img src="/images/recurso.png" alt="Recursos" class="menu-icon"> Recursos</a></li>
+              <% if (user && (user.isMaster || user.role === 'admin' || user.role === 'master')) { %>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/modulos"><img src="/images/modulo.png" alt="Módulos" class="menu-icon"> Módulos</a></li>
+                <li><a class="dropdown-item" href="/usuarios"><img src="/images/usuario.png" alt="Usuários" class="menu-icon"> Usuários</a></li>
+              <% } %>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Centro -->
+    <div class="flex-grow-1 text-center">
+      <span class="center-chip">
+        <span class="dot"></span>Módulo Gestor
+      </span>
+      <span id="nbIdleTimer" class="idle-timer badge rounded-pill bg-warning text-dark ms-2" title="Tempo restante para sair por inatividade" style="vertical-align:middle; display:none;">30:00</span>
+    </div>
+
+    <!-- Direita -->
+    <div class="d-flex flex-row align-items-center flex-shrink-0 ms-auto">
+  <ul class="navbar-nav align-items-center flex-row">
+        <% if (user) { %>
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center" href="#" onclick="abrirModalPerfil()" data-bs-toggle="modal" data-bs-target="#modalPerfil">
+              <% 
+                let _foto = (user && user.foto) ? String(user.foto).trim() : '';
+                let _src = '';
+                if (_foto) {
+                  if (/^https?:\/\//i.test(_foto) || _foto.startsWith('/')) { _src = _foto; }
+                  else if (_foto.startsWith('uploads/')) { _src = '/' + _foto; }
+                  else if (_foto.startsWith('users/')) { _src = '/uploads/' + _foto; }
+                  else { _src = '/' + _foto; }
+                } else {
+                  _src = '/images/perfil.png';
+                }
+              %>
+              <img id="navbarAvatar" src="<%= _src %>" alt="Perfil" class="avatar-img" data-user-foto="<%= _foto %>"> <span><%= user.nome || 'Perfil' %></span>
+            </a>
+          </li>
+          <li class="nav-item ms-lg-2">
+            <a class="btn btn-sm btn-light-ghost" href="/logout"><img src="/images/sair.png" alt="Sair" class="menu-icon"> Sair</a>
+          </li>
+        <% } else { %>
+          <li class="nav-item">
+            <a class="btn btn-sm btn-light-ghost" href="/login"><i class="bi bi-box-arrow-in-right"></i> Entrar</a>
+          </li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Offcanvas Mobile -->
+<div class="offcanvas offcanvas-start offcanvas-wd" tabindex="-1" id="menuMobile" aria-labelledby="menuMobileLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title d-flex align-items-center gap-2" id="menuMobileLabel">
+      <img src="/images/logobranco.png" alt="WDGestor" class="navbar-logo" />
+    </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="list-group list-group-flush list-group-nav">
+      <a class="list-group-item list-group-item-action" href="/unidades"><img src="/images/unidade.png" alt="Unidades" class="menu-icon"> Unidades</a>
+      <a class="list-group-item list-group-item-action" href="/funcoes"><img src="/images/funcao.png" alt="Funções" class="menu-icon"> Funções</a>
+      <a class="list-group-item list-group-item-action" href="/setores"><img src="/images/setor.png" alt="Setores" class="menu-icon"> Setores</a>
+      <a class="list-group-item list-group-item-action" href="/funcionarios"><img src="/images/funcionario.png" alt="Funcionários" class="menu-icon"> Funcionários</a>
+      <a class="list-group-item list-group-item-action" href="/recursos"><img src="/images/recurso.png" alt="Recursos" class="menu-icon"> Recursos</a>
+  <% if (user && (user.isMaster || user.role === 'admin' || user.role === 'master')) { %>
+        <div class="list-group-item border-0 pb-0 pt-2 text-white-50">Admin</div>
+        <a class="list-group-item list-group-item-action" href="/modulos"><img src="/images/modulo.png" alt="Módulos" class="menu-icon"> Módulos</a>
+        <a class="list-group-item list-group-item-action" href="/usuarios"><img src="/images/usuario.png" alt="Usuários" class="menu-icon"> Usuários</a>
+      <% } %>
+    </div>
+
+    <div class="offcanvas-footer">
+      <div class="list-group list-group-flush">
+        <% if (user) { %>
+          <% 
+            let _foto2 = (user && user.foto) ? String(user.foto).trim() : '';
+            let _src2 = '';
+            if (_foto2) {
+              if (/^https?:\/\//i.test(_foto2) || _foto2.startsWith('/')) { _src2 = _foto2; }
+              else if (_foto2.startsWith('uploads/')) { _src2 = '/' + _foto2; }
+              else if (_foto2.startsWith('users/')) { _src2 = '/uploads/' + _foto2; }
+              else { _src2 = '/' + _foto2; }
+            } else {
+              _src2 = '/images/perfil.png';
+            }
+          %>
+          <a class="list-group-item list-group-item-action d-flex align-items-center" href="#" onclick="abrirModalPerfil()" data-bs-toggle="modal" data-bs-target="#modalPerfil">
+            <img id="offcanvasAvatar" src="<%= _src2 %>" alt="Perfil" class="avatar-img" data-user-foto="<%= _foto2 %>"> <span><%= user.nome || 'Perfil' %></span>
+          </a>
+          <a class="list-group-item list-group-item-action" href="/logout"><img src="/images/sair.png" alt="Sair" class="menu-icon"> Sair</a>
+        <% } else { %>
+          <a class="list-group-item list-group-item-action" href="/login"><i class="bi bi-box-arrow-in-right me-2"></i> Entrar</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Dropdown por CLIQUE (remove comportamento de abrir por hover para melhorar navegação)
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      // Remove quaisquer listeners antigos de hover (se existirem) e confia no comportamento padrão do Bootstrap (click para abrir/fechar)
+      document.querySelectorAll('.navbar .dropdown [data-bs-toggle="dropdown"]').forEach((toggle) => {
+        // Garante instância
+        bootstrap.Dropdown.getOrCreateInstance(toggle);
+        // Evita que cliques no link '#' rolem a página
+        toggle.addEventListener('click', (ev) => { ev.preventDefault(); });
+      });
+      // Fecha dropdowns ao clicar fora (Bootstrap já faz, mas reforçamos para casos de customizações futuras)
+      document.addEventListener('click', (ev) => {
+        if (!ev.target.closest('.navbar .dropdown-menu') && !ev.target.closest('.navbar .dropdown-toggle')) {
+          document.querySelectorAll('.navbar .dropdown .show').forEach(el => {
+            if (el.classList.contains('dropdown-menu')) {
+              // Fecha via API para manter aria-* consistentes
+              const toggle = el.parentElement?.querySelector('[data-bs-toggle="dropdown"]');
+              if (toggle) { const inst = bootstrap.Dropdown.getOrCreateInstance(toggle); inst.hide(); }
+            }
+          });
+        }
+      });
+    } catch(_) { /* no-op */ }
+
+    // Garantir favicon em todas as páginas (força atualização e bust de cache)
+    try {
+      const setFaviconAll = (href) => {
+        // Remove ícones existentes para forçar o navegador a pegar o novo
+        document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="mask-icon"]').forEach(el => el.parentNode.removeChild(el));
+
+        const link1 = document.createElement('link');
+        link1.setAttribute('rel', 'icon');
+        link1.setAttribute('type', 'image/png');
+        link1.setAttribute('href', href);
+        document.head.appendChild(link1);
+
+        const link2 = document.createElement('link');
+        link2.setAttribute('rel', 'shortcut icon');
+        link2.setAttribute('type', 'image/png');
+        link2.setAttribute('href', href);
+        document.head.appendChild(link2);
+      };
+      // usa a logo colorida; bust de cache com versão
+  // Detecta basePath (ex: /gestor) se fornecido via atributo body ou variável global
+  let bp = '';
+  try { bp = document.body?.getAttribute('data-base-path') || window.__APP_BASE_PATH__ || ''; } catch(_){}
+  if (!bp || bp === '/') bp = '/gestor';
+  setFaviconAll(bp + '/images/logoWDGestor.png?v=5');
+    } catch (e) { /* noop */ }
+  });
+
+  // Atualização dinâmica da foto após alteração confirmada no modal de perfil
+  window.addEventListener('perfil:fotoAtualizada', async () => {
+    try {
+      // Reconsulta usuário para obter caminho definitivo (caso backend trate renomeação)
+      const resp = await fetch('/api/usuario', { credentials:'same-origin', cache:'no-store' });
+      if (!resp.ok) return;
+      const raw = await resp.json();
+      const user = raw?.data || raw?.usuario || raw;
+      if (!user || !user.foto) return;
+      // Resolver src similar ao template EJS
+      let f = String(user.foto).trim();
+      let src = '';
+      if (/^https?:\/\//i.test(f) || f.startsWith('/')) src = f; else if (f.startsWith('uploads/')) src='/' + f; else if (f.startsWith('users/')) src='/uploads/' + f; else src='/' + f;
+      // Cache-buster
+      if (src) {
+        if (/^data:/i.test(src)) {
+          document.querySelectorAll('.navbar .avatar-img, .offcanvas-wd .avatar-img').forEach(img => { img.src = src; });
+        } else {
+          const sep = src.includes('?') ? '&' : '?';
+          const bust = src + sep + 'v=' + Date.now();
+          document.querySelectorAll('.navbar .avatar-img, .offcanvas-wd .avatar-img').forEach(img => { img.src = bust; });
+        }
+      }
+    } catch (e) { console.warn('[navbar] falha atualizar avatar pós alteração de foto', e); }
+  });
+
+  // Ajuste inicial: se existir buildUserFotoUrl no global, reconstroi URLs para garantir consistência de basePath
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      if (typeof window.buildUserFotoUrl === 'function') {
+        ['navbarAvatar','offcanvasAvatar'].forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+            const f = el.getAttribute('data-user-foto');
+            if (f) {
+              let url = window.buildUserFotoUrl(f);
+              if (/^data:/i.test(url)) {
+                el.src = url;
+              } else {
+                const sep = url.includes('?') ? '&' : '?';
+                el.src = url + sep + 'v=' + Date.now();
+              }
+            }
+        });
+      }
+    } catch(e){ console.warn('[navbar] falha ajuste inicial avatar', e); }
+  });
+
+  // Cronômetro de inatividade (30min) com reset a cada atividade
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      var nav = document.querySelector('.navbar.navbar-wd');
+      var HAS_USER = !!(nav && nav.getAttribute('data-has-user')==='1');
+      if(!HAS_USER) return;
+      var LIMIT_MS = 30 * 60 * 1000;
+      var LS_KEY = 'wdgIdleLastActivity';
+      var LS_LOGOUT_KEY = 'wdgIdleLogoutAt';
+      var el = document.getElementById('nbIdleTimer');
+      if(!el) return;
+      el.style.display = '';
+      var now0 = Date.now();
+      if(!localStorage.getItem(LS_KEY)) localStorage.setItem(LS_KEY, String(now0));
+      var last = Number(localStorage.getItem(LS_KEY)) || now0;
+      var lastWrite = 0;
+      function bump(ts){ var now = ts || Date.now(); last = now; if(now - lastWrite > 1000){ lastWrite = now; try{ localStorage.setItem(LS_KEY, String(now)); }catch(_){ } } }
+  ['click','keydown','mousemove','scroll','touchstart','wheel'].forEach(function(ev){ document.addEventListener(ev, function(){ bump(); }, { passive:true }); });
+      window.addEventListener('storage', function(e){
+        if(e && e.key===LS_KEY && e.newValue){ last = Number(e.newValue) || last; }
+        if(e && e.key===LS_LOGOUT_KEY && e.newValue){ try{ if(location.pathname!=='/login') location.href = '/logout'; }catch(_){ } }
+      });
+      function fmt(t){ t = Math.max(0, t|0); var m=Math.floor(t/60), s=t%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+      // Atualiza imediatamente
+      (function initialPaint(){
+        var rem = Math.ceil((LIMIT_MS - (Date.now() - last))/1000);
+        el.textContent = fmt(rem);
+      })();
+      var tick = setInterval(function(){
+        try{
+          var now = Date.now();
+          var remMs = LIMIT_MS - (now - last);
+          var rem = Math.ceil(remMs/1000);
+          if(rem<=0){ clearInterval(tick); try{ localStorage.setItem(LS_LOGOUT_KEY, String(Date.now())); }catch(_){ } location.href = '/logout'; return; }
+          el.textContent = fmt(rem);
+        }catch(_){ }
+      }, 1000);
+    }catch(e){ console.warn('[navbar] idle timer error', e); }
+  });
+</script>

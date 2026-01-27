@@ -1,0 +1,96 @@
+body.wdg-layout{ --wdg-spacing-page-x:26px; }
+@media (max-width: 992px){ body.wdg-layout{ --wdg-spacing-page-x:16px; } }
+
+body.wdg-layout .wdg-page{ padding:18px var(--wdg-spacing-page-x) 40px var(--wdg-spacing-page-x); }
+body.wdg-layout .wdg-page-title{ margin:4px 0 6px; font-weight:600; letter-spacing:.5px; text-align:center; }
+body.wdg-layout .wdg-title-underline{ height:3px; width:100%; max-width:380px; background:linear-gradient(90deg,#0d6efd,#45b2ff); border-radius:2px; margin:0 auto 14px; }
+
+body.wdg-layout .nav-tabs .nav-link{ font-weight:500; padding:.55rem .9rem; }
+
+body.wdg-layout .wdg-form.auto-colon label.form-label:not(.no-colon)::after{ content:':'; margin-left:2px; }
+body.wdg-layout .wdg-form.auto-colon .form-text{ margin-top:2px; }
+
+body.wdg-layout .table>thead>tr>th, body.wdg-layout .table>tbody>tr>td{ padding:.55rem .65rem; }
+
+/* =============================================================
+  HERO / HEADER PADRÃO
+  Agora: 160px é o padrão global (como o dashboard)
+  Use .wdg-hero-compact no body para reduzir para ~90px quando precisar.
+  Mantido .wdg-hero-large apenas como alias retrocompatível.
+  ============================================================= */
+body.wdg-layout .hero-wd{ min-height:160px; }
+/* Variante compacta opcional */
+body.wdg-layout.wdg-hero-compact .hero-wd{ min-height:90px; }
+/* Alias antigo (continua 160px – pode ser removido no futuro) */
+body.wdg-layout.wdg-hero-large .hero-wd{ min-height:160px; }
+
+body.wdg-layout .wdg-table .btn{ --bs-btn-padding-y:.25rem; --bs-btn-padding-x:.55rem; }
+body.wdg-layout .wdg-table .table-responsive{ scrollbar-width:thin; }
+body.wdg-layout .wdg-table .table-responsive::-webkit-scrollbar{ height:10px; }
+body.wdg-layout .wdg-table .table-responsive::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.15); border-radius:10px; }
+
+body.wdg-layout .hero-wd + .navbar-wd{ margin-top:0; }
+body.wdg-layout .navbar-wd{ transition:box-shadow .25s ease, background .35s ease; }
+body.wdg-layout .navbar-wd.scrolled{ box-shadow:0 4px 18px rgba(0,0,0,.18); }
+
+body.wdg-layout .wdg-card{ background:#fff; border:1px solid #e5ebf3; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.05); margin-bottom:22px; }
+body.wdg-layout .wdg-card-body{ padding:1rem 1.1rem 1.25rem; }
+
+@media (max-width: 768px){
+  body.wdg-layout .wdg-form .row>[class*='col-']{ margin-bottom:.9rem; }
+}
+
+/* =====================================================================
+  LARGURA / CONTAINERS PADRÃO
+  ===================================================================== */
+/* Container de página: largura confortável para formulários complexos.
+  Ajusta-se gradualmente em breakpoints grandes. */
+body.wdg-layout .wdg-page{ width:100%; margin:0 auto; }
+@media (min-width:1400px){ body.wdg-layout .wdg-page{ max-width:1500px; } }
+@media (min-width:1700px){ body.wdg-layout .wdg-page{ max-width:1600px; } }
+/* Cartões nunca ultrapassam a largura da página. */
+body.wdg-layout .wdg-page .wdg-card{ max-width:100%; }
+
+/* Variante para páginas que realmente precisam ser full-width (ex: relatórios) */
+body.wdg-layout .wdg-page.wdg-page-fluid{ max-width:none !important; }
+/* Cartão que deve ocupar 100% sem limite adicional dentro de page (ex: tabelas extralargas) */
+body.wdg-layout .wdg-card.wdg-card-full{ width:100%; max-width:none; }
+
+/* Centraliza especificamente grupos de cards isolados (opcional) */
+body.wdg-layout .wdg-page .wdg-card-group-center{ display:flex; flex-direction:column; gap:24px; }
+
+/* Scroll horizontal suave apenas se realmente extrapolar viewport */
+body.wdg-layout .wdg-table .table-responsive{ width:100%; }
+/* Tabelas padrão com borda leve e radius consistente */
+/* Variante com borda: aplicar apenas se wrapper tiver .wdg-table-bordered */
+body.wdg-layout .wdg-table.wdg-table-bordered .table{ border:1px solid #dbe2ea; border-radius:8px; overflow:hidden; background:#fff; }
+body.wdg-layout .wdg-table.wdg-table-bordered .table thead th{ background:#f3f7fb; border-bottom:1px solid #dbe2ea; }
+body.wdg-layout .wdg-table.wdg-table-bordered .table tbody tr:last-child td{ border-bottom:0; }
+
+/* =====================================================================
+  ÍCONES / BOTÕES DE AÇÃO
+  ===================================================================== */
+/* Padrões gerais para imagens de ícone usadas nas ações */
+body.wdg-layout img.icon{ width:18px; height:18px; object-fit:contain; display:inline-block; }
+body.wdg-layout img.icon.icon-sm, body.wdg-layout img.icon-sm{ width:16px; height:16px; }
+/* Ícones Bootstrap (<i class="bi ...">) alinhados ao mesmo grid */
+body.wdg-layout .btn .bi{ font-size:18px; line-height:1; display:inline-block; vertical-align:middle; }
+body.wdg-layout .btn .bi.bi-trash,
+body.wdg-layout .btn .bi.bi-pencil,
+body.wdg-layout .btn .bi.bi-info-circle,
+body.wdg-layout .btn .bi.bi-power{ font-size:18px; }
+/* Variante pequena quando botão tem .btn-sm e ícone tinha class icon-sm */
+body.wdg-layout .btn.btn-sm img.icon-sm, body.wdg-layout .btn.btn-sm .bi.icon-sm{ width:16px; height:16px; font-size:16px; }
+/* Ajuste de espaçamento caso exista classe utilitária icon-left (garantir padding consistente) */
+body.wdg-layout img.icon.icon-left, body.wdg-layout .bi.icon-left{ margin-right:2px; }
+/* Altura mínima dos botões de ação para centralizar ícones */
+body.wdg-layout .btn.btn-icon{ display:inline-flex; align-items:center; justify-content:center; gap:4px; }
+body.wdg-layout .wdg-table .btn.btn-icon{ min-width:32px; min-height:30px; }
+/* Reduz leve brilho de imagens png para harmonizar com ícones vetoriais */
+body.wdg-layout .btn img.icon{ filter:contrast(1.05) saturate(1.1); }
+/* Se fallback trocar <img> por <i class="bi ..."> manter alinhamento */
+body.wdg-layout .btn .bi{ position:relative; top:-1px; }
+
+/* Ícones menores nas tabelas sem borda (visual mais leve) */
+body.wdg-layout .wdg-table:not(.wdg-table-bordered) img.icon,
+body.wdg-layout .wdg-table:not(.wdg-table-bordered) .bi{ width:16px; height:16px; font-size:16px; }

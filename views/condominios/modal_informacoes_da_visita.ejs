@@ -1,0 +1,205 @@
+<div class="modal fade" id="wdgVisitaInfoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content wdg-hab-modal wdg-visita-modal">
+      <div class="modal-header border-0 pb-0">
+        <div class="wdg-visita-modal-head">
+          <div class="wdg-visita-modal-badge" aria-hidden="true">
+            <i class="bi bi-person-badge"></i>
+          </div>
+          <div>
+            <h5 class="modal-title wdg-modal-title" id="wdgVisitaInfoTitle">Informações da visita</h5>
+            <p class="text-muted wdg-modal-subtitle mb-0" id="wdgVisitaInfoSubtitle"></p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body pt-3 pb-4 px-4">
+        <div class="d-flex align-items-center justify-content-end gap-2 mb-3">
+          <button type="button" class="btn btn-primary fw-semibold" id="wdgVisitaInfoComunicarChegadaBtn">Comunicar chegada</button>
+        </div>
+
+        <div class="wdg-visita-kpi" id="wdgVisitaInfoKpi" hidden>
+          <div class="wdg-visita-kpi__label">Permissão</div>
+          <div class="wdg-visita-kpi__value" id="wdgVisitaInfoWindow"></div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="wdg-visita-card">
+              <div class="wdg-visita-card__label">Visitante</div>
+              <div class="wdg-visita-card__value" id="wdgVisitaInfoNome">—</div>
+              <div class="wdg-visita-card__sub" id="wdgVisitaInfoFinalidade"></div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="wdg-visita-card">
+              <div class="wdg-visita-card__label">Habitação</div>
+              <div class="wdg-visita-card__value" id="wdgVisitaInfoHabitacao">—</div>
+              <div class="wdg-visita-card__sub" id="wdgVisitaInfoMorador"></div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="wdg-visita-card">
+              <div class="wdg-visita-card__label">Período</div>
+              <div class="wdg-visita-card__value" id="wdgVisitaInfoPeriodo">—</div>
+              <div class="wdg-visita-card__sub" id="wdgVisitaInfoCriadoEm"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="wdg-visita-card">
+              <div class="wdg-visita-card__label">RG</div>
+              <div class="wdg-visita-card__value" id="wdgVisitaInfoRg">—</div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="wdg-visita-card">
+              <div class="wdg-visita-card__label">CPF</div>
+              <div class="wdg-visita-card__value" id="wdgVisitaInfoCpf">—</div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="wdg-visita-card">
+              <div class="wdg-visita-card__label">Telefone</div>
+              <div class="wdg-visita-card__value" id="wdgVisitaInfoTel">—</div>
+            </div>
+          </div>
+
+          <div class="col-12" id="wdgVisitaInfoObsWrap" hidden>
+            <div class="wdg-visita-card">
+              <div class="wdg-visita-card__label">Observações</div>
+              <div class="wdg-visita-card__value wdg-visita-pre" id="wdgVisitaInfoObs"></div>
+            </div>
+          </div>
+
+          <div class="col-12" id="wdgVisitaInfoVeiculoWrap" hidden>
+            <div class="wdg-visita-card">
+              <div class="wdg-visita-card__label">Veículo</div>
+              <div class="wdg-visita-vehicle-grid">
+                <div><span>Tipo</span><strong id="wdgVisitaInfoVeicTipo">—</strong></div>
+                <div><span>Placa</span><strong id="wdgVisitaInfoVeicPlaca">—</strong></div>
+                <div><span>Marca</span><strong id="wdgVisitaInfoVeicMarca">—</strong></div>
+                <div><span>Modelo</span><strong id="wdgVisitaInfoVeicModelo">—</strong></div>
+                <div><span>Cor</span><strong id="wdgVisitaInfoVeicCor">—</strong></div>
+                <div><span>Ano</span><strong id="wdgVisitaInfoVeicAno">—</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="wdg-modal-section">
+              <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                <div>
+                  <div class="wdg-modal-section-title">Comunicações de entradas e saídas</div>
+                  <div class="text-muted small">Acompanhe o status da chegada, autorização de entrada e saída.</div>
+                </div>
+              </div>
+
+              <div id="wdgVisitaInfoCommsEmpty" class="wdg-empty-card" hidden>
+                <div class="wdg-empty-card__title">Nenhuma comunicação registrada</div>
+                <div class="wdg-empty-card__desc">Após comunicar a chegada, o morador poderá confirmar a entrada pelo Portal do Morador.</div>
+              </div>
+
+              <div id="wdgVisitaInfoCommsList" class="d-grid gap-2 overflow-auto" style="max-height: 340px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 pt-0 px-4 pb-4">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="wdgVisitaAutorizarManualModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content wdg-hab-modal wdg-visita-modal">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title wdg-modal-title" id="wdgVisitaAutorizarManualTitle">Autorizar entrada manualmente</h5>
+          <p class="text-muted wdg-modal-subtitle mb-0" id="wdgVisitaAutorizarManualSubtitle">Informe a justificativa (será registrada no histórico).</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body pt-3 pb-4 px-4">
+        <div class="wdg-modal-section" id="wdgVisitaAutorizarManualWhenWrap">
+          <label class="form-label fw-semibold" id="wdgVisitaAutorizarManualWhenLabel" for="wdgVisitaAutorizarManualWhen">Data e hora</label>
+          <input class="form-control" id="wdgVisitaAutorizarManualWhen" type="datetime-local" step="60">
+        </div>
+
+        <div class="wdg-modal-section">
+          <div id="wdgVisitaAutorizarManualJustWrap">
+            <label class="form-label fw-semibold" for="wdgVisitaAutorizarManualJustificativa">Justificativa</label>
+            <textarea class="form-control" id="wdgVisitaAutorizarManualJustificativa" rows="4" placeholder="Ex.: Morador não atende, autorização feita por ligação."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4">
+        <button type="button" class="btn btn-primary fw-semibold" id="wdgVisitaAutorizarManualConfirmBtn">Confirmar</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="wdgVisitaCommsDetalhesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content wdg-hab-modal wdg-visita-modal">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title wdg-modal-title" id="wdgVisitaCommsDetalhesTitle">Detalhes do ingressante</h5>
+          <p class="text-muted wdg-modal-subtitle mb-0" id="wdgVisitaCommsDetalhesSubtitle"></p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body pt-3 pb-4 px-4">
+        <div class="wdg-modal-section">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-person"></i>
+            <div class="fw-semibold">Ingressante</div>
+            <span class="ms-auto" id="wdgVisitaCommsDetalhesBadge"></span>
+          </div>
+          <div class="wdg-visita-card">
+            <div class="wdg-visita-card__value" id="wdgVisitaCommsDetalhesNome"></div>
+            <div class="wdg-visita-card__sub" id="wdgVisitaCommsDetalhesDocs"></div>
+          </div>
+        </div>
+
+        <div class="wdg-modal-section" id="wdgVisitaCommsDetalhesVeiculoWrap" hidden>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-car-front"></i>
+            <div class="fw-semibold">Veículo</div>
+          </div>
+          <div class="wdg-visita-card">
+            <div class="wdg-visita-vehicle-grid">
+              <div><span>Tipo</span><strong id="wdgVisitaCommsDetalhesVeicTipo">—</strong></div>
+              <div><span>Placa</span><strong id="wdgVisitaCommsDetalhesVeicPlaca">—</strong></div>
+              <div><span>Marca</span><strong id="wdgVisitaCommsDetalhesVeicMarca">—</strong></div>
+              <div><span>Modelo</span><strong id="wdgVisitaCommsDetalhesVeicModelo">—</strong></div>
+              <div><span>Cor</span><strong id="wdgVisitaCommsDetalhesVeicCor">—</strong></div>
+              <div><span>Ano</span><strong id="wdgVisitaCommsDetalhesVeicAno">—</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wdg-modal-section">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-clock-history"></i>
+            <div class="fw-semibold">Registros</div>
+          </div>
+          <div id="wdgVisitaCommsDetalhesRegistros" class="list-group"></div>
+          <div class="text-muted" id="wdgVisitaCommsDetalhesRegistrosEmpty" hidden>Sem registros para este ingressante.</div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,9 @@
+[
+  { "codigo": "01", "descricao": "Crédito em conta bancária" },
+  { "codigo": "02", "descricao": "Cheque" },
+  { "codigo": "03", "descricao": "Espécie (dinheiro em espécie)" },
+  { "codigo": "04", "descricao": "Ordem de Pagamento" },
+  { "codigo": "05", "descricao": "Depósito judicial" },
+  { "codigo": "06", "descricao": "Pagamento eletrônico (ex.: carteira digital, PIX, aplicativos de pagamento)" },
+  { "codigo": "99", "descricao": "Outros" }
+]

@@ -1,0 +1,85 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : (typeof moduleBasePath === 'string' && moduleBasePath ? moduleBasePath : '/condominios'); %>
+<div class="modal fade" id="modalTransferirMaterial" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-base-path="<%= _bp %>">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content wdg-transfer-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Transferir material</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="wdg-transfer-banner">
+          <div class="wdg-transfer-banner__signal" aria-hidden="true"></div>
+          <div class="wdg-transfer-banner__text">
+            <p class="wdg-transfer-banner__title">Defina o novo destino deste material</p>
+            <p class="wdg-transfer-banner__subtitle">Confirme a movimentação e informe a área comum que irá recebê-lo. A transferência entra na fila pendente até o aceite do destino.</p>
+          </div>
+        </div>
+        <div class="wdg-transfer-section">
+          <h6 class="wdg-transfer-title">Material selecionado</h6>
+          <dl class="wdg-transfer-grid">
+            <div class="wdg-transfer-row"><dt>Nome</dt><dd data-role="material-nome">&mdash;</dd></div>
+            <div class="wdg-transfer-row"><dt>Patrim&ocirc;nio</dt><dd data-role="material-patrimonio">&mdash;</dd></div>
+            <div class="wdg-transfer-row"><dt>Quantidade</dt><dd data-role="material-quantidade">&mdash;</dd></div>
+            <div class="wdg-transfer-row"><dt>Tipo</dt><dd data-role="material-tipo">&mdash;</dd></div>
+            <div class="wdg-transfer-row" data-role="material-descricao-wrap"><dt>Descri&ccedil;&atilde;o</dt><dd data-role="material-descricao">&mdash;</dd></div>
+          </dl>
+        </div>
+        <div class="wdg-transfer-section">
+          <h6 class="wdg-transfer-title">Destino</h6>
+          <div class="wdg-transfer-origin">
+            <span class="wdg-transfer-origin__label">Origem atual</span>
+            <span class="wdg-transfer-origin__value" data-role="origem-legenda"></span>
+          </div>
+          <label class="form-label" for="transferDestinoSelect">Selecione a &aacute;rea de destino</label>
+          <select class="form-select" id="transferDestinoSelect" data-role="destino-select">
+            <option value="">Selecione...</option>
+          </select>
+          <div class="form-text">A transfer&ecirc;ncia fica pendente at&eacute; a confirma&ccedil;&atilde;o da &aacute;rea receptora.</div>
+          <div class="wdg-transfer-hints">
+            <div class="text-primary small d-none" data-role="destino-loading">Carregando &aacute;reas dispon&iacute;veis...</div>
+            <div class="text-muted small d-none" data-role="destino-empty">Nenhuma outra &aacute;rea comum encontrada para receber este material.</div>
+          </div>
+          <div class="text-danger mt-2" data-role="feedback" role="alert"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-role="cancelar">Cancelar</button>
+        <button type="button" class="btn btn-primary" data-role="confirmar">Transferir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #modalTransferirMaterial .modal-dialog{max-width:960px;width:95vw;}
+  #modalTransferirMaterial .modal-body{max-height:70vh;overflow-y:auto;}
+  .wdg-transfer-modal{border-radius:22px;border:0;box-shadow:0 32px 80px rgba(15,23,42,.2);background:linear-gradient(160deg,rgba(247,250,255,.98) 0%,rgba(232,240,255,.94) 55%,rgba(224,236,255,.92) 100%);}
+  .wdg-transfer-modal .modal-header{justify-content:center;position:relative;}
+  .wdg-transfer-modal .modal-header .modal-title{flex:1;text-align:center;}
+  .wdg-transfer-modal .modal-header .btn-close{position:absolute;right:1rem;top:1rem;width:1.7rem;height:1.7rem;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;background-image:none;background-color:rgba(226,232,240,.48);opacity:1;transition:background-color .2s ease,opacity .2s ease;}
+  .wdg-transfer-modal .modal-header .btn-close::before{content:'\00d7';font-size:1.2rem;line-height:1;color:#0f172a;font-weight:600;}
+  .wdg-transfer-modal .modal-header .btn-close:hover{background-color:rgba(148,163,184,.5);opacity:1;}
+  .wdg-transfer-modal .modal-header .btn-close:focus{box-shadow:0 0 0 2px rgba(59,130,246,.35);}
+  .wdg-transfer-banner{display:flex;gap:.9rem;align-items:center;padding:1.1rem 1.3rem;border-radius:18px;background:linear-gradient(135deg,rgba(37,99,235,.14),rgba(14,165,233,.08));margin-bottom:1.4rem;border:1px solid rgba(37,99,235,.18);box-shadow:0 20px 40px rgba(37,99,235,.15);} 
+  .wdg-transfer-banner__signal{width:16px;height:16px;border-radius:50%;background:#2563eb;position:relative;top:0;box-shadow:0 0 0 8px rgba(37,99,235,.12);} 
+  .wdg-transfer-banner__text{flex:1;text-align:center;}
+  .wdg-transfer-banner__title{margin:0;font-weight:600;color:#0f172a;font-size:.9rem;text-align:center;} 
+  .wdg-transfer-banner__subtitle{margin:.15rem 0 0;font-size:.8rem;color:#475569;text-align:center;} 
+  .wdg-transfer-section{margin-bottom:1.5rem;padding:1rem 1.2rem;border-radius:18px;background:#fff;border:1px solid rgba(148,163,184,.2);box-shadow:0 14px 30px rgba(15,23,42,.08);} 
+  .wdg-transfer-section:last-of-type{margin-bottom:0;}
+  .wdg-transfer-title{font-size:.92rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#0f172a;margin-bottom:.75rem;text-align:center;}
+  .wdg-transfer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.45rem .75rem;margin:0;}
+  .wdg-transfer-row{display:flex;flex-direction:column;padding:.35rem .5rem;border:1px solid rgba(148,163,184,.35);border-radius:10px;background:#f8fafc;min-height:72px;}
+  .wdg-transfer-row dt{font-size:.72rem;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:.25rem;}
+  .wdg-transfer-row dd{margin:0;font-size:.85rem;color:#0f172a;word-break:break-word;}
+  .wdg-transfer-row[data-role="material-descricao-wrap"]{grid-column:1/-1;}
+  .wdg-transfer-row[data-role="material-descricao-wrap"] dd{white-space:pre-wrap;}
+  .wdg-transfer-origin{display:flex;flex-direction:column;gap:.25rem;padding:.8rem .9rem;border:1px solid rgba(148,163,184,.28);border-radius:14px;background:#f1f5f9;margin-bottom:.9rem;box-shadow:0 10px 22px rgba(15,23,42,.08);}
+  .wdg-transfer-origin__label{font-size:.72rem;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.06em;}
+  .wdg-transfer-origin__value{font-size:.83rem;color:#1f2937;}
+  .wdg-transfer-hints{min-height:1.2rem;margin-top:.35rem;font-size:.78rem;}
+  @media (max-width:576px){
+    .wdg-transfer-grid{grid-template-columns:1fr;}
+    .wdg-transfer-banner{flex-direction:column;}
+  }
+</style>

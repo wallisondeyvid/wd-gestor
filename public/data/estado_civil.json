@@ -1,0 +1,8 @@
+[
+  { "codigo": "1", "descricao": "Solteiro(a)" },
+  { "codigo": "2", "descricao": "Casado(a)" },
+  { "codigo": "3", "descricao": "Divorciado(a)" },
+  { "codigo": "4", "descricao": "Viúvo(a)" },
+  { "codigo": "5", "descricao": "Separado(a)" },
+  { "codigo": "6", "descricao": "União Estável" }
+]

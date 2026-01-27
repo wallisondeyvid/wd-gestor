@@ -1,0 +1,28 @@
+<!-- Modal Selecionar Módulos (padrão pages Funções / Unidades) -->
+<div class="modal fade" id="modalModulos" tabindex="-1" aria-labelledby="modalModulosLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalModulosLabel">Selecionar Módulos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="buscaModulos" class="form-label">Buscar</label>
+          <input type="text" class="form-control" id="buscaModulos" placeholder="Digite parte do nome ou descrição..." autocomplete="off" />
+        </div>
+        <div class="border rounded" id="listaModulos" style="max-height:420px; overflow-y:auto;">
+          <!-- Itens renderizados dinamicamente por selecionar_modulos.js -->
+          <div class="text-muted small p-3">Carregando lista de módulos...</div>
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-between flex-wrap gap-2">
+        <div class="small text-muted">Marcados serão aplicados ao salvar.</div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btnSalvarModulos" aria-label="Salvar seleção">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

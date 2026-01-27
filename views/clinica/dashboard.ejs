@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WDGestor - Módulo Clínica</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/clinica'; %>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <style>
+    .content { background: #fff; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .dashboard-logo { height: 180px; width: auto; max-width: 90%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.15)); }
+  </style>
+  <script>
+    // Define menu tree para a navbar compartilhada
+    window.__CLINICA_MENU__ = [
+      { label: 'Empresas', path: '/empresas' },
+      { label: 'Pacientes', path: '/pacientes' },
+      { label: 'Profissionais de saúde', path: '/profissionais' },
+      { label: 'Planos/Convênios', path: '/planos' },
+      { label: 'Procedimentos/Exames', path: '/procedimentos' }
+    ];
+  </script>
+  <script>
+    // Helper para expor menuTree no EJS inline
+  </script>
+</head>
+<body class="wdg-layout" data-base-path="<%= _bp %>">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Clínica', user }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Clínica',
+        user,
+    menuLabel: 'Cadastros',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Empresas', path: '/empresas' },
+          { label: 'Pacientes', path: '/pacientes' },
+          { label: 'Profissionais de saúde', path: '/profissionais' },
+          { label: 'Planos/Convênios', path: '/planos' },
+          { label: 'Procedimentos/Exames', path: '/procedimentos' }
+        ]
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Clínica', user }) %>
+
+  <div class="container d-flex justify-content-center align-items-center" style="min-height:50vh;">
+    <div class="content text-center" style="max-width:600px;">
+      <img src="<%= _bp %>/images/logoWDGestor.png" alt="WDGestor" class="dashboard-logo mb-4" />
+      <h3 class="mb-3">Bem-vindo ao Módulo Clínica!</h3>
+      <p class="lead mb-0">Selecione uma opção no menu acima.</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

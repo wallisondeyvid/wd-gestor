@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title || "Funcionários - WDGestor" %></title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="/css/modal-categoria.css" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <style>
+    .content-card { background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08); margin-top:20px; }
+    .nav-line { background:#e9ecef; padding:10px; }
+  </style>
+</head>
+<body data-base-path="<%= _basePath || '/gestor' %>">
+  <%- include('../../shared/partials/header-shared', { moduleBasePath: '/gestor', moduleLabel: 'Gestor', user }) %>
+  <%- include('../../shared/partials/navbar-shared', { moduleBasePath: '/gestor', moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
+  <%- include('../../shared/partials/perfil-shared', { moduleBasePath: '/gestor', moduleLabel: 'Gestor', user }) %>
+  <main class="container my-3">
+    <%- body %>
+  </main>
+  <!-- Modais da página de funcionários -->
+  <%- include('../funcionarios_modais/modal_tipo_admissao') %>
+  <%- include('../funcionarios_modais/modal_categoria_trabalhador') %>
+  <%- include('../partials/modais/modal_biometria_digital') %>
+  <%- include('../partials/modais/modal_biometria_facial') %>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/addons/cleave-phone.br.js" defer></script>
+  <!-- Flatpickr via loader com fallback -->
+  <script src="/gestor/js/utils/data-url.js" defer></script>
+  <script src="/gestor/js/core/flatpickr-loader.js" defer></script>
+  <script src="/gestor/js/core/datepicker-init.js" defer></script>
+  <script src="/gestor/js/core/dates.js" defer></script>
+  <script src="/gestor/js/core/dates-global.js" defer></script>
+  <script src="/gestor/js/core/modal-a11y-fix.js" defer></script>
+  <!-- Migrado: utils/masks.js -> gestor/core/masks.js -->
+  <script src="/gestor/js/core/masks.js"></script>
+  <!-- Validators (necessário antes de masks-global) -->
+  <script src="/gestor/js/core/validators.js"></script>
+  <!-- TODO: app.js legado não encontrado; se necessário migrar lógica para gestor/js/core/gestor-app-init.js futuramente -->
+  <!-- Removido /js/app.js (inexistente); caso surja quebra, revisar origem da referência -->
+  <!-- Index de funcionarios legado substituído por funcionarios_index.js gestor -->
+  <script src="/gestor/js/pages/funcionarios_index.js" type="module"></script>
+  <!-- Migrado: masks-global -> gestor/core -->
+  <script src="/gestor/js/core/masks-global.js"></script>
+
+  <!-- Removido: abertura por hover do dropdown para melhorar usabilidade. O Bootstrap já abre por clique. -->
+
+  <!-- Perfil modular -->
+  <script>window.__perfilBasePath='/gestor';</script>
+  <script src="<%= _basePath || '/gestor' %>/js/perfil-modulo.js"></script>
+</body>
+</html>

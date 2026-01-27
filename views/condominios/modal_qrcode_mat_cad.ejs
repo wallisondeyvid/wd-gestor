@@ -1,0 +1,53 @@
+<div class="modal fade" id="modalQrMatCad" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">QR Code do Material</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body p-4" style="background:#f9fafb">
+        <style>
+          #modalQrMatCad .qr-helper-text{ font-size:.75rem; color:#64748b; }
+          /* Estiliza apenas o QR (canvas/img) dentro de #qrReal, não os ícones dos botões */
+          #modalQrMatCad #qrReal canvas, #modalQrMatCad #qrReal img{ box-shadow:0 4px 18px -6px rgba(0,0,0,.35); background:#fff; border-radius:12px; }
+          #modalQrMatCad .qr-link-field{ max-width:100%; }
+          #modalQrMatCad .qr-actions .btn{ white-space:nowrap; }
+          #modalQrMatCad .qr-fixed-note{ font-size:.65rem; color:#64748b; text-transform:uppercase; letter-spacing:.5px; }
+          /* Ícones planos sem elipse e hover neutro */
+          #modalQrMatCad .qr-actions .btn-icon{ background:transparent; border:none; box-shadow:none; padding:4px; display:flex; align-items:center; justify-content:center; }
+          #modalQrMatCad .qr-actions .btn-icon:hover,
+          #modalQrMatCad .qr-actions .btn-icon:focus{ background:transparent; color:inherit; box-shadow:none; }
+          #modalQrMatCad .qr-actions .btn-icon img{ width:28px; height:28px; display:block; border-radius:0; background:transparent; box-shadow:none; }
+        </style>
+        <div id="qrCreateSection" class="text-center">
+          <p class="qr-helper-text mb-3">Gere o QR Code permanente para este material. Após criar não poderá ser modificado.</p>
+          <button type="button" class="btn btn-primary px-4" id="btnCriarQR"><img src="/images/codigo-qr.png" alt="" style="height:18px;margin-right:6px">Criar QR Code</button>
+        </div>
+        <div id="qrViewSection" class="text-center d-none">
+          <div class="mb-3 d-flex justify-content-center"><div id="qrReal" style="width:240px;height:240px;display:flex;align-items:center;justify-content:center"></div></div>
+          <div class="mb-2">
+            <input type="text" id="qrUrlInput" class="form-control form-control-sm qr-link-field" readonly>
+            <div class="qr-fixed-note mt-1">Link permanente</div>
+          </div>
+          <div class="qr-actions d-flex justify-content-center flex-wrap gap-2 mt-2">
+            <button type="button" class="btn btn-icon" id="btnCopiarQR" title="Copiar link" aria-label="Copiar link">
+              <img src="/images/copiar-link.png" alt="Copiar link"/>
+            </button>
+            <button type="button" class="btn btn-icon" id="btnAbrirQR" title="Abrir link" aria-label="Abrir link">
+              <img src="/images/link.png" alt="Abrir link"/>
+            </button>
+            <button type="button" class="btn btn-icon" id="btnCompartilharQR" title="Compartilhar" aria-label="Compartilhar">
+              <img src="/images/compartilhar.png" alt="Compartilhar"/>
+            </button>
+            <a id="btnBaixarQR" class="btn btn-icon" download="qrcode-material.png" title="Baixar PNG" aria-label="Baixar PNG">
+              <img src="/images/download.png" alt="Baixar PNG"/>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>

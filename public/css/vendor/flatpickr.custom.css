@@ -1,0 +1,54 @@
+/* Fundo branco no calendário */
+.flatpickr-calendar {
+  background: #fff !important;
+  border: 1px solid #b2b2b2;
+}
+
+/* Dias do mês */
+.flatpickr-day {
+  background: #f5f5f5;
+  color: #333;
+  border-radius: 4px;
+}
+
+/* Dia selecionado */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: #ffe066 !important;
+  color: #222 !important;
+}
+
+/* Dia hoje */
+.flatpickr-day.today {
+  border: 1px solid #ffe066;
+}
+
+/* Cabeçalho (mês/ano) */
+.flatpickr-months .flatpickr-month {
+  background: #fff;
+  color: #333;
+}
+
+/* Dropdowns */
+.flatpickr-monthDropdown-months,
+.flatpickr-yearDropdown-years {
+  background: #fff;
+  color: #333;
+}
+
+/* Botão limpar */
+.flatpickr-clear {
+  background: #e0e0e0;
+  color: #333;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+/* Seta navegação */
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  color: #333;
+}

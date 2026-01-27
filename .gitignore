@@ -1,0 +1,52 @@
+# Arquivos de configuração sensíveis
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+appsettings.json
+appsettings.Development.json
+
+# Dependências do Node.js
+node_modules/
+
+# Arquivos de build e logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# Arquivos temporários do VS Code
+.vscode/
+
+# Arquivos de cache do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários e uploads
+tmp/
+uploads/
+cookies.txt
+pid.txt
+
+# Arquivos de backup
+backupparaanalise/
+
+# Binários do .NET
+bin/
+obj/
+
+# Repositórios Git embutidos
+cleave.js/
+
+# Arquivos específicos do projeto
+*.sln.DotSettings.user
+
+# Runtime e cache
+.cache/
+.npm/
+.yarn/
+coverage/
+.nyc_output/
+.vercel

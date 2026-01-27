@@ -1,0 +1,85 @@
+<div class="modal fade" id="modalEfetivoEquipe" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h5 class="modal-title" style="font-size:1rem;">Edição de Efetivo – Equipe <span id="efetivoEquipeNome" class="text-primary"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-3 pb-2">
+        <div class="row g-3 mb-3">
+          <div class="col-12 d-flex flex-wrap align-items-end">
+            <div class="me-3" style="max-width:325px;">
+              <label class="form-label mb-1" title="Aceita código interno (ex: FUNC00012) ou CPF apenas números">Pesquisar funcionário por código:</label>
+              <div class="input-group input-group-sm" title="Digite código (ex: FUNC00012) ou CPF e pressione Enter ou clique na lupa">
+                <input type="text" id="efetivoCodigo" class="form-control" placeholder="Código ou CPF" autocomplete="off" title="Código interno ou CPF">
+                <button class="btn btn-outline-secondary" type="button" id="btnBuscarFuncionario" title="Buscar por código ou CPF" onclick="try{ var m=document.getElementById('modalEfetivoEquipe'); if(window.__efAddByCodigo){ window.__efAddByCodigo(m); } else if(window.__EF_addFromInput){ window.__EF_addFromInput(); } }catch(e){}"><i class="bi bi-search"></i></button>
+              </div>
+            </div>
+            <div class="ms-auto mb-1">
+              <button class="btn btn-sm btn-success" type="button" id="btnAdicionarEfetivo" onclick="try{ if(window.__abrirPesquisaEfetivoFromBtn){ window.__abrirPesquisaEfetivoFromBtn(this); return false; } var mp=document.getElementById('modalPesquisarEfetivo'); if(mp && window.bootstrap && window.bootstrap.Modal){ try{ var ef=document.getElementById('modalEfetivoEquipe'); if(ef){ var ph=function(e){ try{ e.preventDefault(); }catch(_){} }; if(!ef.__preventHideBound){ ef.addEventListener('hide.bs.modal', ph); ef.__preventHideBound = ph; } window.__EF_PESQ_OPENED_FROM_EQ__ = true; } }catch(_){} window.bootstrap.Modal.getOrCreateInstance(mp).show(); try{ if(window.WDG && typeof WDG.abrirModalPesquisarEfetivo==='function'){ WDG.abrirModalPesquisarEfetivo({ mode:'multi' }); } }catch(_w){} return false; } }catch(_e){}"><i class="bi bi-plus-circle"></i> Adicionar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive border rounded">
+          <table class="table table-sm mb-0 align-middle text-center" id="tabelaEfetivoEquipe">
+            <thead>
+              <tr>
+                <th class="text-center" style="width:40%;">Funcionário</th>
+                <th class="text-center" style="width:40%;">Período Disponível</th>
+                <th class="text-center" style="width:20%;">Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+  
+      </div>
+      <div class="modal-footer py-2">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" type="button">Cancelar</button>
+        <button class="btn btn-primary btn-sm" id="btnSalvarEfetivoEquipe" type="button" onclick="try{ window.__EF_save && window.__EF_save(); }catch(e){}">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Shim local do modal: garante botões habilitados e recálculo ao abrir (cobertura extra em modo edição)
+(function(){
+  try {
+    var el = document.getElementById('modalEfetivoEquipe');
+    if(!el || el.__localShimBound) return; el.__localShimBound = true;
+    function onOpen(){
+      try {
+        // Desbloquear controles do modal (caso algum bloqueio global tenha afetado)
+        ['efetivoCodigo','btnBuscarFuncionario','btnAdicionarEfetivo','btnSalvarEfetivoEquipe'].forEach(function(id){
+          var c=document.getElementById(id); if(!c) return; try { c.removeAttribute('disabled'); c.removeAttribute('readonly'); c.style.pointerEvents=''; } catch(_){}
+        });
+        // Política: só carregar componentes se existirem na escala; caso contrário, manter vazio
+        try {
+          // Se já há lista pré-carregada no modal (via ABA3), respeite-a e não modifique
+          var hasList = Array.isArray(el.__efList) && el.__efList.length>0;
+          if(!hasList){
+            // Só exiba vazio; não tente carregar nada aqui
+            var st = window.__ESCALA_STATE__ || {};
+            var eqId = (el && el.dataset && el.dataset.eqId) || (window.__LAST_EQ_FOR_EFETIVO__ && window.__LAST_EQ_FOR_EFETIVO__.id) || (window.__LAST_EQ_BTN_EQID__||null);
+            var eq = (Array.isArray(st.equipes) ? st.equipes.find(function(e){ return String(e && (e.id||e._id)) === String(eqId||''); }) : null);
+            var temComps = !!(eq && Array.isArray(eq.componentes) && eq.componentes.length);
+            if(!temComps){
+              try { el.__efList = []; el.__editingList = []; } catch(_cl){}
+              var tbody = el.querySelector('#tabelaEfetivoEquipe tbody');
+              if(tbody){ tbody.innerHTML = '<tr class="text-muted"><td colspan="3" class="text-center small">Sem componentes.</td></tr>'; }
+            }
+          }
+        } catch(_pol){}
+        // Força recálculo do período disponível após abertura
+        setTimeout(function(){ try { window.__efForceRefreshLista && window.__efForceRefreshLista(); }catch(_e){} }, 0);
+        setTimeout(function(){ try { window.__efForceRefreshLista && window.__efForceRefreshLista(); }catch(_e){} }, 80);
+        setTimeout(function(){ try { window.__efForceRefreshLista && window.__efForceRefreshLista(); }catch(_e){} }, 250);
+      } catch(_){ }
+    }
+    el.addEventListener('show.bs.modal', onOpen);
+    el.addEventListener('shown.bs.modal', onOpen);
+  } catch(_err){}
+})();
+</script>

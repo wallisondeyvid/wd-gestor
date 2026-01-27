@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WDGestor - Cadastrar Garagens · Gestão de Condomínios</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= _bp %>/css/condominios-modern.css?v=1">
+  <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+</head>
+<body class="wdg-layout" data-base-path="<%= _bp %>">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: (moduleLabel||'Gestão de Condomínios'),
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
+
+  <div class="container py-3">
+    <div class="content mb-3 wdg-card wdg-card-hover">
+      <h4 class="mb-3 text-center page-main-title">Estruturar Condomínio · Garagem</h4>
+      <form id="formVaga" class="row g-2" novalidate>
+        <!-- Linha 1: Condomínio, Nome da Vaga e Vincular na mesma linha -->
+        <div class="col-md-4">
+          <label class="form-label">Condomínio</label>
+          <select class="form-select" id="gUnidade">
+            <% if ((unidadesOptions||[]).length === 0) { %>
+              <option value="">Selecione...</option>
+            <% } %>
+            <% (unidadesOptions||[]).forEach(u => { %>
+              <option value="<%= u._id %>"><%= u.codigo ? (u.codigo + ' - ' + u.nome) : u.nome %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Nome da Vaga</label>
+          <input type="text" class="form-control" id="gNome" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Vincular</label>
+          <select class="form-select" id="gVinc">
+            <option value="">(Opcional) Selecione o vínculo</option>
+          </select>
+        </div>
+        <div class="w-100"></div>
+        <!-- Linha 3: Foto (centralizada) -->
+        <div class="col-md-8 mx-auto">
+          <label class="form-label">Foto</label>
+          <div class="d-flex gap-2">
+            <input type="file" class="form-control" id="gFoto" accept="image/*">
+            <button type="button" class="btn btn-outline-secondary" id="gFotoLimpar">Limpar</button>
+          </div>
+          <div class="mt-2 text-center"><img id="gFotoPrev" class="preview-thumb d-none" alt="Pré-visualização"></div>
+        </div>
+        <div class="w-100"></div>
+        <!-- Linha 4: Observações -->
+        <div class="col-12">
+          <label class="form-label">Observações</label>
+          <textarea id="gObs" class="form-control" rows="4" maxlength="4000" placeholder="Até 4000 caracteres..."></textarea>
+          <div class="char-count"><span id="gObsCount">0</span>/4000</div>
+        </div>
+        <div class="col-12 d-flex gap-2 justify-content-end">
+          <button type="button" class="btn btn-outline-secondary" id="gLimpar">Limpar</button>
+          <button type="button" class="btn btn-outline-warning d-none" id="gCancelarEdicao">Cancelar edição</button>
+          <button type="button" class="btn btn-primary" id="gSalvar">Cadastrar</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="content wdg-card wdg-card-hover">
+      <h5 class="mb-1 text-center wdg-section-title">Vagas cadastradas</h5>
+      <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
+        <div class="d-flex align-items-center gap-2">
+          <label for="gPageSize" class="form-label mb-0">Mostra</label>
+          <select id="gPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="300">300</option>
+            <option value="400">400</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+          </select>
+          <span class="ms-1">itens</span>
+        </div>
+      </div>
+      <div class="table-responsive table-vert-max" id="garTableWrap">
+        <table class="table table-sm align-middle text-center" id="garTable">
+          <thead>
+            <tr>
+              <th data-sort="unidade">Condomínio</th>
+              <th data-sort="nome">Nome</th>
+              <th data-sort="habitacao">Habitação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="gLista"></tbody>
+        </table>
+      </div>
+      <div id="gPaginas" class="wdg-pager mt-2"></div>
+    </div>
+  </div>
+
+  <%- include('modal_detalhes_gar_cad') %>
+  <div class="modal fade" id="modalFotoGar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Foto da Vaga</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex justify-content-center mb-3 gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-zoom="out">-</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-zoom="reset">100%</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-zoom="in">+</button>
+          </div>
+          <div class="zoom-img-container">
+            <img id="fotoGarZoom" alt="Foto vaga">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<%= _bp %>/js/condominios/common/habitacao_utils.js?v=1"></script>
+  <script id="unidadesOptionsData" type="application/json"><%- JSON.stringify(unidadesOptions||[]) %></script>
+  <script src="<%= _bp %>/js/condominios/cadastrar_garagem.js?v=1"></script>
+  <script src="<%= _bp %>/js/condominios/modal_foto_gar.js?v=1"></script>
+  <script src="<%= _bp %>/js/condominios/modal_detalhes_gar_cad.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!-- Favicon (robusto) -->
+<% 
+	/* Detecta basePath seguro para cenários onde o app está montado em /gestor ou /escalas */
+	const _bp = (typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor';
+	const _ver = '5'; // incrementar para bust de cache quando necessário
+	// Permite habilitar explicitamente os links absolutos de raiz quando necessário
+	const _includeRoot = (typeof includeRoot !== 'undefined') ? !!includeRoot : false;
+%>
+<!-- Prioriza PNG específico do módulo -->
+<link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=<%= _ver %>">
+<link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=<%= _ver %>">
+<!-- Fallback absoluto raiz (opcional) -->
+<% if (_includeRoot) { %>
+<link rel="icon" type="image/png" sizes="32x32" href="/images/logoWDGestor.png?v=<%= _ver %>">
+<link rel="shortcut icon" type="image/png" href="/images/logoWDGestor.png?v=<%= _ver %>">
+<% } %>
+<!-- ICO raiz (alguns browsers antigos ainda consultam) -->
+<link rel="icon" href="/favicon.ico?v=<%= _ver %>" sizes="any">
+<!-- Apple Touch -->
+<link rel="apple-touch-icon" href="<%= _bp %>/images/logoWDGestor.png?v=<%= _ver %>">
+<meta name="theme-color" content="#0d6efd">
+<script>
+// Ajuste runtime: se já existir script que redefine favicon depois (navbar), deixa; senão garante um cache-buster extra.
+(function(){
+	try {
+		var had = document.querySelector('link[rel="icon"][data-fav-init]');
+		if (had) return;
+		// Marca o primeiro para evitar duplicidade
+		var first = document.querySelector('link[rel="icon"]');
+		if (first) first.setAttribute('data-fav-init','1');
+	} catch(e){}
+})();
+</script>

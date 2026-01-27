@@ -1,0 +1,12 @@
+<% /* Partial padronizado de estilos para páginas do módulo Gestor.
+   Assume _basePath já definido no template pai. Se não existir, tenta derivar do moduleBasePath ou cai em '/gestor'. */ %>
+<% const __headBase = (typeof _basePath === 'string' && _basePath)
+  || (typeof moduleBasePath === 'string' && moduleBasePath)
+  || '/gestor'; %>
+<link rel="stylesheet" href="<%= __headBase %>/css/gestor-app.css">
+<link rel="stylesheet" href="/css/layout-modulos.css">
+<link rel="stylesheet" href="<%= __headBase %>/css/modais.css?v=1">
+<link rel="stylesheet" href="<%= __headBase %>/css/icons.css">
+<link rel="stylesheet" href="/css/gestor-fixes.css">
+<!-- Estilos do overlay de captura facial -->
+<link rel="stylesheet" href="/css/face-capture.css">

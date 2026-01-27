@@ -1,0 +1,106 @@
+/* Tema branco clean para Flatpickr - inspirado no seu print  */
+:root{
+  --fp-bg:#ffffff;
+  --fp-surface:#f8fafc;
+  --fp-border:#e5e7eb;
+  --fp-text:#111827;
+  --fp-muted:#6b7280;
+  --fp-accent:#0ea5a6;           /* toque teal */
+  --fp-accent-weak:#e6fbfb;      /* fundo do "hoje" */
+  --fp-hover:#f1f5f9;
+  --fp-shadow:0 8px 24px rgba(0,0,0,.12);
+  --fp-radius:10px;
+}
+
+.flatpickr-calendar{
+  background:var(--fp-bg);
+  border:1px solid var(--fp-border);
+  border-radius:var(--fp-radius);
+  box-shadow:var(--fp-shadow);
+  font-size:14px; line-height:1.5;
+  position:absolute; top:100%; left:0;
+  z-index:99999; display:none; min-width:272px;
+}
+.flatpickr-calendar.open{display:block}
+.flatpickr-calendar.inline{position:static;box-shadow:none}
+.flatpickr-calendar *{box-sizing:border-box}
+
+/* Cabeçalho */
+.flatpickr-months{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 10px; border-bottom:1px solid var(--fp-border);
+  background:var(--fp-bg);
+  border-top-left-radius:var(--fp-radius);
+  border-top-right-radius:var(--fp-radius);
+}
+.flatpickr-month{display:flex; gap:.5rem; align-items:center}
+.flatpickr-current-month{font-weight:600; color:var(--fp-text)}
+.flatpickr-prev-month,.flatpickr-next-month{
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:8px;
+  color:var(--fp-accent); background:var(--fp-surface); border:1px solid var(--fp-border);
+}
+.flatpickr-prev-month:hover,.flatpickr-next-month:hover{background:var(--fp-hover)}
+.flatpickr-monthDropdown-months,.flatpickr-monthDropdown-years{
+  appearance:none; background:#fff; border:1px solid var(--fp-border);
+  border-radius:8px; padding:4px 8px; font-size:14px; color:var(--fp-text);
+}
+.flatpickr-monthDropdown-months:focus,.flatpickr-monthDropdown-years:focus{
+  outline:2px solid var(--fp-accent); outline-offset:2px;
+}
+
+/* Dias da semana */
+.flatpickr-weekdays{display:flex; justify-content:space-between; padding:6px 12px 0}
+.flatpickr-weekday{width:32px; text-align:center; color:var(--fp-muted); font-weight:600; opacity:.9}
+
+/* Grid de dias */
+.flatpickr-days{
+  display:grid !important; grid-template-columns:repeat(7,1fr) !important;
+  gap:4px !important; padding:8px 12px 12px; background:var(--fp-bg);
+}
+.flatpickr-day{
+  width:36px !important; height:36px !important; line-height:36px;
+  text-align:center; cursor:pointer; border-radius:8px; margin:0 !important;
+  transition:background .15s,color .15s,border-color .15s;
+  border:1px solid transparent; background:#fff; color:var(--fp-text);
+}
+.flatpickr-day:hover{background:var(--fp-hover)}
+.flatpickr-day.prevMonthDay,.flatpickr-day.nextMonthDay{color:#c4c8cf}
+.flatpickr-day.today{
+  background:var(--fp-accent-weak); border-color:var(--fp-accent);
+  color:var(--fp-text); font-weight:600;
+}
+.flatpickr-day.selected{
+  background:var(--fp-accent); border-color:var(--fp-accent); color:#fff;
+}
+.flatpickr-day.disabled,.flatpickr-day.disabled:hover{
+  color:#cbd5e1; cursor:not-allowed; background:#fff; border-color:transparent;
+}
+
+/* Time picker (se usar) */
+.flatpickr-time{
+  display:flex; justify-content:center; align-items:center;
+  padding:8px 10px; border-top:1px solid var(--fp-border); background:var(--fp-bg);
+}
+.flatpickr-time input{
+  width:44px; text-align:center; border:1px solid var(--fp-border);
+  border-radius:6px; margin:0 4px; padding:4px 6px; background:#fff;
+}
+.flatpickr-time .flatpickr-time-separator{margin:0 2px; color:var(--fp-muted)}
+
+/* Rodapé com botão Limpar */
+.flatpickr-footer{
+  padding:10px 12px; border-top:1px solid var(--fp-border); background:var(--fp-bg);
+  display:flex; justify-content:flex-end; gap:8px;
+  border-bottom-left-radius:var(--fp-radius); border-bottom-right-radius:var(--fp-radius);
+}
+.flatpickr-clear{
+  cursor:pointer; border:1px solid var(--fp-border); background:var(--fp-surface);
+  border-radius:8px; padding:6px 10px; color:var(--fp-text);
+}
+.flatpickr-clear:hover{background:var(--fp-hover)}
+.flatpickr-close{
+  cursor:pointer; border:1px solid transparent; background:var(--fp-accent);
+  border-radius:8px; padding:6px 10px; color:#fff;
+}
+.flatpickr-close:hover{filter:brightness(.95)}

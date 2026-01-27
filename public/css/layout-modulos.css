@@ -1,0 +1,78 @@
+:root{ --wd-hero-height:160px; }
+@media (max-width:992px){ :root{ --wd-hero-height:140px; } }
+@media (max-width:576px){ :root{ --wd-hero-height:120px; } }
+.hero-wd{ position:relative; overflow:hidden; z-index:1; min-height:var(--wd-hero-height); background:#f8f9fa; }
+.hero-wd .hero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:left center; }
+.navbar-wd{ position:sticky; top:0; z-index:1030; background-image:radial-gradient(120% 180% at 0% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 60%), linear-gradient(135deg,#0a2a6b 0%,#0e51a7 45%,#1aa0ff 100%); box-shadow:0 6px 28px rgba(26,160,255,.12); }
+.navbar-wd .navbar-logo{ height:44px; width:auto; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+@media (max-width:575.98px){ .navbar-wd .navbar-logo{ height:36px; } }
+.navbar-wd .nav-link{ color:rgba(255,255,255,.9); border-radius:.7rem; padding:.6rem .9rem; }
+.navbar-wd .nav-link:hover,.navbar-wd .nav-link.show{ color:#fff; background:rgba(255,255,255,.10); }
+.menu-icon{ width:18px; height:18px; object-fit:contain; margin-right:.35rem; }
+.center-chip{ display:inline-flex; align-items:center; color:#fff; font-weight:700; padding:.38rem .9rem; border-radius:999px; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.22); }
+@media (max-width:575.98px){ .center-chip{ display:none; } }
+
+/* Desktop: mantém o nome do módulo fixo no centro (não se move quando a direita expande) */
+@media (min-width: 992px){
+	.navbar-wd .navbar-collapse{ position: relative; }
+	.navbar-wd .navbar-wd-center{
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: max-content;
+		pointer-events: none;
+	}
+}
+
+/* Ações do lado direito do navbar (ícones/perfil/sair) */
+.navbar-wd .navbar-wd-actions{ gap:.25rem; flex-wrap: nowrap; }
+.navbar-wd .navbar-wd-actions .nav-link{ padding-left:.65rem; padding-right:.65rem; }
+.navbar-wd .navbar-wd-actions .nav-wd-icon-link{ width:44px; padding-left:.45rem; padding-right:.45rem; }
+.navbar-wd .navbar-wd-actions .nav-wd-text{ white-space:nowrap; }
+
+/* Desktop: limita o texto para não estourar o layout */
+@media (min-width: 992px){
+	.navbar-wd .navbar-wd-actions .nav-wd-text{
+		display: inline-block;
+		max-width: 220px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		vertical-align: middle;
+	}
+}
+
+/* Em telas menores, evite overflow: esconda textos e mantenha ícones/avatar */
+@media (max-width:575.98px){
+	.navbar-wd .navbar-wd-actions .nav-wd-text{ display:none; }
+}
+
+/* Perfil: por padrão só a foto; no hover expande o nome para a esquerda, EMPURRANDO os itens */
+@media (hover:hover) and (min-width: 992px){
+	.navbar-wd .navbar-wd-actions a.nav-wd-profile{
+		flex-direction: row; /* nome expande para a direita */
+		gap: .45rem !important;
+	}
+
+	/* Nome colapsado (não ocupa espaço) */
+	.navbar-wd .navbar-wd-actions a.nav-wd-profile .nav-wd-profile-name{
+		display: inline-block;
+		max-width: 0;
+		opacity: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		transition: max-width .18s ease, opacity .12s ease;
+	}
+
+	/* Hover/focus: nome aparece e passa a ocupar espaço, movendo os ícones à esquerda */
+	.navbar-wd .navbar-wd-actions a.nav-wd-profile:hover .nav-wd-profile-name,
+	.navbar-wd .navbar-wd-actions a.nav-wd-profile:focus .nav-wd-profile-name,
+	.navbar-wd .navbar-wd-actions a.nav-wd-profile:focus-visible .nav-wd-profile-name{
+		max-width: 260px;
+		opacity: 1;
+	}
+}
+
+/* Logout: sempre somente ícone */
+.navbar-wd .navbar-wd-actions a.nav-wd-logout{ justify-content:center; }

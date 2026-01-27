@@ -1,0 +1,227 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalEditAreaRestricoes" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content wdg-modal wdg-modal-ac-restr">
+      <div class="modal-header border-0">
+        <div class="wdg-ac-restr-head">
+          <span class="wdg-ac-restr-head-pre">Calendário de bloqueios</span>
+          <h5 class="modal-title">Restrições de uso da área comum</h5>
+          <p class="wdg-ac-restr-head-sub">Cadastre os períodos em que a área ficará indisponível para cessão. Informe a data, o intervalo e uma justificativa clara para os condôminos.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="wdg-ac-restr-layout">
+          <aside class="wdg-ac-restr-sidebar">
+            <div class="wdg-ac-restr-card wdg-ac-restr-focus">
+              <span class="wdg-ac-restr-card-label">Área selecionada</span>
+              <div id="acRestrAreaNome" class="wdg-ac-restr-area">—</div>
+              <div id="acRestrAreaUnidade" class="wdg-ac-restr-unit text-muted">—</div>
+            </div>
+
+            <div class="wdg-ac-restr-card wdg-ac-restr-summary">
+              <div class="wdg-ac-restr-summary-head">
+                <span class="wdg-ac-restr-summary-pre">Painel de agenda</span>
+                <strong>Monitoramento rápido</strong>
+              </div>
+              <div class="wdg-ac-restr-stats">
+                <div class="wdg-ac-restr-stat">
+                  <span class="wdg-ac-restr-stat-value" id="acRestrBadgeTotal">0</span>
+                  <span class="wdg-ac-restr-stat-label">Restrições cadastradas</span>
+                </div>
+                <div class="wdg-ac-restr-stat">
+                  <span class="wdg-ac-restr-stat-value" id="acRestrBadgeProximas">0</span>
+                  <span class="wdg-ac-restr-stat-label">Próximas no calendário</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="wdg-ac-restr-card wdg-ac-restr-note-card">
+              <div class="wdg-ac-restr-note" id="acRestrResumo">Nenhuma restrição registrada.</div>
+              <ul class="wdg-ac-restr-tips">
+                <li>Use justificativas objetivas para reduzir dúvidas.</li>
+                <li>Cadastre bloqueios recorrentes com antecedência.</li>
+                <li>Evite sobrepor horários já confirmados.</li>
+              </ul>
+            </div>
+          </aside>
+
+          <section class="wdg-ac-restr-editor">
+            <article class="wdg-ac-restr-panel wdg-ac-restr-panel-form">
+              <header class="wdg-ac-restr-editor-head">
+                <div>
+                  <span class="wdg-ac-restr-editor-pre" id="acRestrEditorStatus">Nova restrição</span>
+                  <h6 class="wdg-ac-restr-editor-title">Período de indisponibilidade</h6>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-action="reset-form" id="acRestrResetBtn" disabled>Limpar formulário</button>
+              </header>
+
+              <div id="acRestrFeedback" class="wdg-ac-restr-feedback" role="alert" aria-live="polite"></div>
+
+              <div class="wdg-ac-restr-form" aria-describedby="acRestrFeedback">
+                <div class="wdg-ac-restr-field">
+                  <label class="form-label" for="acRestrData">Data</label>
+                  <input type="text" id="acRestrData" class="form-control datepicker date-br wdg-input-compact" placeholder="DD/MM/AAAA" autocomplete="off" data-formato="br" inputmode="numeric">
+                </div>
+                <div class="wdg-ac-restr-field">
+                  <label class="form-label" for="acRestrHoraInicio">Início</label>
+                  <input type="time" id="acRestrHoraInicio" class="form-control" autocomplete="off" placeholder="00:00">
+                </div>
+                <div class="wdg-ac-restr-field">
+                  <label class="form-label" for="acRestrHoraFim">Fim</label>
+                  <input type="time" id="acRestrHoraFim" class="form-control" autocomplete="off" placeholder="00:00">
+                </div>
+                <div class="wdg-ac-restr-field wdg-ac-restr-field-textarea">
+                  <label class="form-label" for="acRestrObservacao">Justificativa</label>
+                  <textarea id="acRestrObservacao" class="form-control" rows="3" maxlength="600" placeholder="Ex.: Manutenção preventiva da churrasqueira"></textarea>
+                  <div class="form-text"><span id="acRestrObsCount">0</span>/600 caracteres</div>
+                </div>
+                <div class="wdg-ac-restr-form-actions">
+                  <button type="button" class="btn btn-outline-danger" data-action="cancel-edit" id="acRestrCancelEdit" hidden>Cancelar edição</button>
+                  <button type="button" class="btn btn-primary" data-action="apply" id="acRestrApplyBtn">Adicionar restrição</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="wdg-ac-restr-panel wdg-ac-restr-panel-list">
+              <header class="wdg-ac-restr-panel-head">
+                <div>
+                  <span class="wdg-ac-restr-panel-pre">Timeline</span>
+                  <h6 class="wdg-ac-restr-panel-title">Agenda de restrições</h6>
+                </div>
+                <div class="wdg-ac-restr-view-switch" aria-hidden="true">
+                  <span class="wdg-ac-restr-chip is-active">Em vigor</span>
+                  <span class="wdg-ac-restr-chip">Concluídas</span>
+                </div>
+              </header>
+              <p class="wdg-ac-restr-panel-sub">A lista abaixo reflete os períodos bloqueados e seus respectivos motivos. Utilize os botões de ação em cada item para ajustar ou remover qualquer registro.</p>
+              <div class="wdg-ac-restr-list" id="acRestrList" aria-label="Restrições cadastradas"></div>
+              <div class="wdg-ac-restr-empty" id="acRestrEmpty">Nenhum período restrito foi definido.</div>
+            </article>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-action="cancel" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" data-action="save">Salvar restrições</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #modalEditAreaRestricoes .modal-dialog{max-width:1080px;width:96vw;}
+  #modalEditAreaRestricoes .modal-body{max-height:72vh;overflow-y:auto;}
+  .wdg-modal-ac-restr .modal-header{padding:1.2rem 1.4rem 0;}
+  .wdg-modal-ac-restr .modal-body{padding:1.25rem 1.4rem 1.6rem;background:linear-gradient(180deg,#f8fafc 0,#fff 200px);} 
+  .wdg-ac-restr-head-pre{display:inline-block;font-size:.75rem;text-transform:uppercase;letter-spacing:.14em;color:#2563eb;font-weight:700;line-height:1;}
+  .wdg-ac-restr-head-sub{margin:0;color:#475569;font-size:.9rem;max-width:640px;}
+  .wdg-ac-restr-layout{display:grid;grid-template-columns:300px 1fr;gap:1.75rem;align-items:stretch;}
+  .wdg-ac-restr-sidebar{display:flex;flex-direction:column;gap:1rem;position:sticky;top:0;align-self:stretch;}
+  .wdg-ac-restr-card{background:#fff;border-radius:20px;border:1px solid rgba(37,99,235,.12);padding:1rem 1.15rem;box-shadow:0 18px 40px rgba(15,23,42,.09);} 
+  .wdg-ac-restr-focus{background:linear-gradient(135deg,rgba(37,99,235,.16),rgba(255,255,255,.94));}
+  .wdg-ac-restr-card-label{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.18em;color:#1d4ed8;font-weight:700;margin-bottom:.4rem;}
+  .wdg-ac-restr-area{font-size:1.08rem;font-weight:700;color:#0f172a;line-height:1.25;}
+  .wdg-ac-restr-unit{font-size:.82rem;}
+  .wdg-ac-restr-summary{background:linear-gradient(135deg,rgba(37,99,235,.06),rgba(255,255,255,1));}
+  .wdg-ac-restr-summary-head{display:flex;flex-direction:column;gap:.1rem;margin-bottom:.75rem;}
+  .wdg-ac-restr-summary-pre{font-size:.7rem;text-transform:uppercase;letter-spacing:.2em;color:#1d4ed8;font-weight:700;}
+  .wdg-ac-restr-stats{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:.65rem;}
+  .wdg-ac-restr-stat{display:flex;flex-direction:column;gap:.25rem;padding:.85rem 1rem;border-radius:16px;background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(14,165,233,.05));border:1px solid rgba(37,99,235,.14);box-shadow:0 14px 26px rgba(37,99,235,.12);} 
+  .wdg-ac-restr-stat-value{font-size:1.25rem;font-weight:700;color:#1d4ed8;}
+  .wdg-ac-restr-stat-label{font-size:.78rem;color:#334155;}
+  .wdg-ac-restr-note-card{background:linear-gradient(135deg,#fff,rgba(226,232,240,.6));}
+  .wdg-ac-restr-note{font-size:.78rem;line-height:1.45;margin-bottom:.5rem;}
+  .wdg-ac-restr-tips{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.4rem;font-size:.78rem;color:#475569;}
+
+  .wdg-ac-restr-editor{display:flex;flex-direction:column;gap:1.4rem;}
+  .wdg-ac-restr-panel{background:#fff;border-radius:26px;border:1px solid rgba(37,99,235,.12);padding:1.35rem 1.5rem;box-shadow:0 30px 60px rgba(15,23,42,.12);}
+  .wdg-ac-restr-panel-form{position:relative;overflow:hidden;}
+  .wdg-ac-restr-panel-form:after{content:'';position:absolute;right:-60px;top:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle at center,rgba(37,99,235,.18),rgba(37,99,235,0));opacity:.45;pointer-events:none;}
+  .wdg-ac-restr-panel-list{padding-bottom:1.75rem;}
+  .wdg-ac-restr-editor-head{display:flex;align-items:center;justify-content:space-between;gap:.85rem;flex-wrap:wrap;}
+  .wdg-ac-restr-editor-pre{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.18em;color:#2563eb;font-weight:700;}
+  .wdg-ac-restr-editor-title{margin:0;font-size:1.05rem;font-weight:700;color:#0f172a;}
+
+  .wdg-ac-restr-panel-head{display:flex;align-items:center;justify-content:space-between;gap:.85rem;flex-wrap:wrap;}
+  .wdg-ac-restr-panel-pre{font-size:.7rem;text-transform:uppercase;letter-spacing:.24em;color:#2563eb;font-weight:700;display:block;}
+  .wdg-ac-restr-panel-title{margin:0;font-size:1.05rem;font-weight:700;color:#0f172a;}
+  .wdg-ac-restr-panel-sub{margin:.35rem 0 1rem;font-size:.85rem;color:#475569;}
+  .wdg-ac-restr-view-switch{display:flex;gap:.35rem;}
+  .wdg-ac-restr-chip{padding:.25rem .85rem;border-radius:999px;border:1px solid rgba(37,99,235,.25);font-size:.72rem;font-weight:600;color:#1d4ed8;opacity:.5;}
+  .wdg-ac-restr-chip.is-active{background:#1d4ed8;color:#fff;opacity:1;}
+
+  .wdg-ac-restr-feedback{min-height:36px;border-radius:12px;padding:.6rem .9rem;font-size:.82rem;font-weight:600;display:none;}
+  .wdg-ac-restr-feedback[data-status]{display:block;}
+  .wdg-ac-restr-feedback[data-status="success"]{background:rgba(34,197,94,.16);color:#0f5132;border:1px solid rgba(34,197,94,.32);} 
+  .wdg-ac-restr-feedback[data-status="warning"]{background:rgba(250,204,21,.18);color:#92400e;border:1px solid rgba(250,204,21,.35);} 
+  .wdg-ac-restr-feedback[data-status="danger"]{background:rgba(248,113,113,.18);color:#b91c1c;border:1px solid rgba(248,113,113,.32);} 
+  .wdg-ac-restr-feedback[data-status="info"]{background:rgba(14,165,233,.15);color:#0369a1;border:1px solid rgba(14,165,233,.28);} 
+
+  .wdg-ac-restr-form{display:grid;grid-template-columns:repeat(3,minmax(0,150px));gap:1rem 1.1rem;align-items:end;background:linear-gradient(135deg,rgba(148,163,184,.08),rgba(255,255,255,.85));border-radius:18px;padding:1rem 1.1rem;}
+  .wdg-ac-restr-field .form-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:#475569;}
+  .wdg-ac-restr-field-textarea{grid-column:1 / -1;}
+  .wdg-ac-restr-field-textarea textarea{resize:vertical;min-height:110px;border-radius:14px;}
+  .wdg-ac-restr-form .form-control{border-radius:12px;border:1px solid rgba(148,163,184,.32);padding:.55rem .75rem;box-shadow:none;}
+  .wdg-ac-restr-form .form-control:focus{border-color:#2563eb;box-shadow:0 0 0 .2rem rgba(37,99,235,.15);} 
+  .wdg-ac-restr-form .form-text{font-size:.72rem;color:#64748b;margin-top:.35rem;}
+  .wdg-ac-restr-form-actions{grid-column:1 / -1;display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap;}
+  #acRestrApplyBtn{min-width:220px;}
+
+  .wdg-ac-restr-empty{display:none;font-size:.85rem;color:#94a3b8;font-weight:600;text-align:center;border:1px dashed rgba(148,163,184,.4);padding:.95rem;border-radius:12px;background:rgba(248,250,252,.9);}
+  .wdg-ac-restr-empty.is-visible{display:block;}
+
+  .wdg-ac-restr-list{display:grid;gap:1.15rem;position:relative;padding-left:1.65rem;}
+  .wdg-ac-restr-list:before{content:'';position:absolute;left:.45rem;top:.2rem;bottom:.2rem;width:2px;background:linear-gradient(180deg,rgba(37,99,235,.2),rgba(148,163,184,.15));}
+  .wdg-ac-restr-item{position:relative;border-radius:22px;padding:1rem 1.25rem;background:rgba(15,23,42,.04);border:1px solid rgba(15,23,42,.08);box-shadow:0 24px 44px rgba(15,23,42,.12);display:flex;flex-direction:column;gap:.55rem;} 
+  .wdg-ac-restr-item:before{content:'';position:absolute;left:-1.25rem;top:18px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid rgba(37,99,235,.55);box-shadow:0 0 0 5px rgba(37,99,235,.12);} 
+  .wdg-ac-restr-item[data-upcoming="true"]{border-color:rgba(37,99,235,.45);background:rgba(37,99,235,.1);} 
+  .wdg-ac-restr-item-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
+  .wdg-ac-restr-date{display:flex;align-items:center;gap:.55rem;font-weight:700;color:#0f172a;font-size:1rem;}
+  .wdg-ac-restr-date .badge{background:#1d4ed8;color:#fff;font-size:.78rem;border-radius:999px;padding:.25rem .65rem;}
+  .wdg-ac-restr-time{font-size:.85rem;color:#1f2937;font-weight:600;letter-spacing:.04em;}
+  .wdg-ac-restr-obs{font-size:.88rem;color:#374151;line-height:1.45;}
+  .wdg-ac-restr-actions{display:flex;gap:.45rem;}
+  .wdg-ac-restr-action{border:none;border-radius:999px;padding:.4rem .8rem;font-weight:600;font-size:.78rem;cursor:pointer;transition:all .15s ease;}
+  .wdg-ac-restr-action[data-role="edit"]{background:rgba(37,99,235,.16);color:#1d4ed8;}
+  .wdg-ac-restr-action[data-role="edit"]:hover{background:#1d4ed8;color:#fff;}
+  .wdg-ac-restr-action[data-role="remove"]{background:rgba(248,113,113,.16);color:#b91c1c;}
+  .wdg-ac-restr-action[data-role="remove"]:hover{background:#dc2626;color:#fff;}
+  .wdg-ac-restr-action:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px;}
+
+  @media (max-width:1199px){
+    .wdg-ac-restr-layout{grid-template-columns:1fr;}
+    .wdg-ac-restr-sidebar{position:static;flex-direction:row;flex-wrap:wrap;}
+    .wdg-ac-restr-sidebar > *{flex:1 1 260px;}
+  }
+  @media (max-width:768px){
+    .wdg-modal-ac-restr .modal-dialog{margin:1rem auto;}
+    .wdg-modal-ac-restr .modal-body{padding:1.15rem 1.05rem 1.3rem;}
+    .wdg-ac-restr-form{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .wdg-ac-restr-field:nth-child(3){grid-column:1 / -1;}
+    .wdg-ac-restr-form-actions{justify-content:stretch;}
+    #acRestrApplyBtn{width:100%;}
+    .wdg-ac-restr-list{padding-left:.75rem;}
+    .wdg-ac-restr-list:before{left:-.15rem;}
+    .wdg-ac-restr-item:before{left:-.95rem;}
+  }
+</style>
+
+<script>
+  (function ensureModalCss(){
+    if(document.getElementById('wdgModalsCSS')) return;
+    var hrefs = ['/gestor/css/modals.css','<%= _bp %>/css/modals.css'];
+    for(var i=0;i<hrefs.length;i++){
+      var href = hrefs[i];
+      if(!href) continue;
+      if(document.querySelector('link[href="'+href.replace(/["']/g,'')+'"]')){ return; }
+      var link = document.createElement('link');
+      link.id = 'wdgModalsCSS';
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.onerror = function(){ try{ this.remove(); }catch(_e){} };
+      document.head.appendChild(link);
+      break;
+    }
+  })();
+</script>

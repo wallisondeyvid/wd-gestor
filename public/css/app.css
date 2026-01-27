@@ -1,0 +1,68 @@
+/* app.css básico para garantir que não sobrescreva Bootstrap */
+body {
+  background: #f8f9fa;
+}
+
+/* ===== Navbar WD (azul moderno) ===== */
+
+.navbar-wd {
+  background: linear-gradient(135deg, #0a2a6b 0%, #0e51a7 45%, #1aa0ff 100%) !important;
+  --bs-navbar-padding-y: .6rem;
+  position: sticky; top: 0; z-index: 1030;
+  border-bottom: 0;
+  box-shadow: 0 4px 24px rgba(26,160,255,.08);
+}
+
+.navbar-wd .navbar-brand{
+  letter-spacing:.2px;
+  font-weight:700;
+  color:#fff;
+}
+.navbar-wd .logo-dot{
+  width:10px;height:10px;border-radius:999px;display:inline-block;
+  background:#a0d8ff; box-shadow:0 0 0 6px rgba(160,216,255,.18), 0 0 18px rgba(26,160,255,.45);
+}
+
+.navbar-wd .navbar-nav .nav-link{
+  color: rgba(255,255,255,.9);
+  padding:.6rem .9rem;
+  border-radius:.7rem;
+  transition: all .2s ease;
+}
+.navbar-wd .navbar-nav .nav-link:hover,
+.navbar-wd .navbar-nav .nav-link:focus,
+.navbar-wd .navbar-nav .nav-link.show{
+  color:#fff;
+  background: rgba(255,255,255,.10);
+}
+.navbar-wd .navbar-nav .nav-link i{
+  margin-right:.35rem; opacity:.9;
+}
+
+/* botão claro fantasma à direita */
+.btn-light-ghost{
+  background: transparent;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.38);
+  padding:.45rem .8rem; border-radius:.8rem;
+  transition: all .25s ease;
+}
+.btn-light-ghost:hover{ background: rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.55); }
+
+/* Dropdown elegante */
+.dropdown-menu-wd{
+  border-radius: 1rem;
+  padding:.35rem;
+  border:1px solid rgba(9,103,210,.25);
+  backdrop-filter: blur(6px) saturate(120%);
+}
+.dropdown-menu-wd .dropdown-item{
+  border-radius:.6rem;
+  padding:.55rem .9rem;
+}
+.dropdown-menu-wd .dropdown-item:hover{
+  background: rgba(13,110,253,.12);
+}
+
+/* Toggler visível no fundo escuro */
+.navbar-wd .navbar-toggler{ box-shadow:none !important; }

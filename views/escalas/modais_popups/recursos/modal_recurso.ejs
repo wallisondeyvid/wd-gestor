@@ -1,0 +1,197 @@
+<div class="modal fade" id="modalRecurso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen-sm-down modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h5 class="modal-title">Recurso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-2">
+        <!-- Abas -->
+        <ul class="nav nav-tabs" id="tabsRecurso" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-dadosgerais" data-bs-toggle="tab" data-bs-target="#pane-dadosgerais" type="button" role="tab">Dados Gerais</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-alocacao" data-bs-toggle="tab" data-bs-target="#pane-alocacao" type="button" role="tab">Alocação</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-atribuicao" data-bs-toggle="tab" data-bs-target="#pane-atribuicao" type="button" role="tab">Atribuição</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-refeicao" data-bs-toggle="tab" data-bs-target="#pane-refeicao" type="button" role="tab">Refeição</button>
+          </li>
+        </ul>
+
+        <!-- Cabeçalho informativo (reposicionado abaixo das abas principais) -->
+        <div class="small mb-2 mt-2" id="infoEscalaRecurso">
+          <div><strong>Escala:</strong> <span data-field="tipo"></span> - <span data-field="periodo"></span> - <span data-field="unidade"></span> - <span data-field="descricao"></span></div>
+          <div><strong>Recurso:</strong> <span data-field="recursoLabel" class="text-muted">(novo)</span></div>
+        </div>
+
+        <div class="tab-content border border-top-0 p-3 bg-white" id="tabsRecursoContent" style="min-height:420px;">
+          <!-- Dados Gerais -->
+          <div class="tab-pane fade show active" id="pane-dadosgerais" role="tabpanel">
+            <form id="formDadosGeraisRecurso" autocomplete="off">
+              <div class="mb-3">
+                <div><span class="form-label fw-semibold me-1" style="margin-bottom:0;">Unidade:</span><span id="recursoUnidadeLabel">-</span></div>
+              </div>
+              <div class="mb-3">
+                <div><span class="form-label fw-semibold me-1" style="margin-bottom:0;">Período:</span><span id="recursoPeriodoLabel">-</span></div>
+              </div>
+              <div class="mb-3" style="max-width:260px;">
+                <label class="form-label">Equipe</label>
+                <select class="form-select" id="recursoEquipeSelect">
+                  <option value="" disabled selected>Selecione...</option>
+                </select>
+              </div>
+              <div class="mb-3" style="max-width:420px;">
+                <label class="form-label">Nome do recurso</label>
+                <input type="text" class="form-control" id="recursoNome" maxlength="120" placeholder="Descrição livre do recurso">
+              </div>
+              <div class="mb-2" style="max-width:420px;">
+                <label class="form-label">Recurso</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="campoPesquisarRecurso" placeholder="Placa - Marca - Modelo" readonly>
+                  <button class="btn btn-outline-secondary" type="button" id="btnAbrirLocalizarRecurso" data-open-localizar-recurso="1"><i class="bi bi-search"></i></button>
+                  <button class="btn btn-outline-danger" type="button" id="btnLimparRecursoSelecionado" title="Limpar" style="display:none;"><i class="bi bi-x"></i></button>
+                </div>
+                <input type="hidden" id="recursoSelecionadoId">
+                <input type="hidden" id="recursoSelecionadoPlaca">
+                <input type="hidden" id="recursoSelecionadoMarca">
+                <input type="hidden" id="recursoSelecionadoModelo">
+              </div>
+              <div class="mb-3" style="max-width:420px;">
+                <div class="d-flex justify-content-end gap-2">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-primary" id="btnSalvarDadosGeraisRecurso">Salvar</button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Alocação -->
+          <div class="tab-pane fade" id="pane-alocacao" role="tabpanel">
+            <div class="alert alert-info py-2 small" id="msgAlocacaoRecursoVazia">Salve os dados gerais para carregar a matriz de alocação.</div>
+            <div id="containerMatrizAlocacaoRecurso" class="d-none">
+              <div id="wrapGruposAlocacaoRecurso"><!-- blocos de grupos dinamicos --></div>
+              <div class="d-flex justify-content-end gap-2 mt-2" id="acoesAlocacaoRecurso" style="display:none;">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCancelarAlocacaoRecurso">Cancelar</button>
+                <!-- Removido: salvamento geral. Agora salvamento é por grupo de alocação -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Atribuição -->
+          <div class="tab-pane fade" id="pane-atribuicao" role="tabpanel">
+            <div class="alert alert-info py-2 small" id="msgAtribuicaoRecursoVazia">Salve os dados gerais e marque alocações na aba Alocação para atribuir integrantes.</div>
+            <div id="containerAtribuicoes" class="d-none">
+              <div class="mb-2 overflow-auto" id="wrapAbasAtribuicao" style="white-space:nowrap;">
+                <ul class="nav nav-tabs flex-nowrap" id="listaAbasAtribuicao" role="tablist" style="min-height:58px;">
+                  <!-- abas geradas -->
+                </ul>
+              </div>
+              <div class="border rounded p-3" id="painelAtribuicaoAtual" style="min-height:300px;">
+                <!-- Conteúdo dinâmico da alocação selecionada -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Refeição -->
+          <div class="tab-pane fade" id="pane-refeicao" role="tabpanel">
+            <div class="alert alert-info py-2 small" id="msgRefeicaoVazia">Salve os dados gerais para gerenciar intervalos de refeição.</div>
+            <div id="containerRefeicoes" class="d-none">
+              <div class="table-responsive border rounded" style="max-height:380px;">
+                <table class="table table-sm table-striped align-middle mb-0" id="tabelaRefeicoesRecurso">
+                  <thead class="table-light"><tr>
+                    <th style="width:120px;">Data</th>
+                    <th style="width:160px;">Turno</th>
+                    <th>Intervalos de refeição</th>
+                    <th style="width:120px;">Ações</th>
+                  </tr></thead>
+                  <tbody><!-- dinamico --></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-success" id="btnSalvarRecursoFinal">Salvar Recurso</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Container de Toasts (alertas canto superior direito) -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index:1090; width:340px;" id="toastRecursoContainer"></div>
+
+
+
+<!-- Modal Intervalos de Refeição -->
+<div class="modal fade" id="modalIntervalosRefeicao" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title">Intervalos de Refeição</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="small mb-2" id="infoRefeicaoAlocacao"></div>
+        <form id="formIntervaloRefeicao" autocomplete="off">
+          <div class="row g-2 align-items-end mb-2">
+            <div class="col-md-2 col-6">
+              <label class="form-label">Computável</label>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="intervaloComputavel" checked>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <label class="form-label">Início</label>
+              <input type="time" class="form-control form-control-sm input-time-simples" id="intervaloInicio">
+            </div>
+            <div class="col-md-3 col-6">
+              <label class="form-label">Término</label>
+              <input type="time" class="form-control form-control-sm input-time-simples" id="intervaloFim">
+            </div>
+            <div class="col-md-3 col-6 d-grid">
+              <label class="form-label invisible">Adicionar</label>
+              <button type="button" class="btn btn-primary btn-sm" id="btnAdicionarIntervalo"><i class="bi bi-plus"></i> Adicionar</button>
+            </div>
+          </div>
+        </form>
+        <div class="table-responsive border rounded" style="max-height:240px;">
+          <table class="table table-sm table-hover mb-0" id="tabelaIntervalosRefeicao">
+            <thead class="table-light">
+              <tr><th style="width:120px;">Computável?</th><th style="width:110px;">Início</th><th style="width:110px;">Término</th><th style="width:120px;">Duração</th><th style="width:70px;">Ações</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="mt-3 small border rounded p-2">
+          <div class="fw-semibold mb-1">Aplicar intervalos a outras alocações:</div>
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="radio" name="escopoIntervalo" id="escopoIntervalo_atual" value="atual" checked>
+              <label class="form-check-label" for="escopoIntervalo_atual">Somente atual</label>
+            </div>
+            <div class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="radio" name="escopoIntervalo" id="escopoIntervalo_seg" value="seguintes">
+              <label class="form-check-label" for="escopoIntervalo_seg">Atuais + seguintes</label>
+            </div>
+            <div class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="radio" name="escopoIntervalo" id="escopoIntervalo_todas" value="todas">
+              <label class="form-check-label" for="escopoIntervalo_todas">Todas</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-success btn-sm" id="btnSalvarIntervalosRefeicao">Salvar Intervalos</button>
+      </div>
+    </div>
+  </div>
+</div>
+

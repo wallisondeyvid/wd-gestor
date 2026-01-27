@@ -1,0 +1,519 @@
+(() => {
+  const DEBUG = false;
+  const log   = (...a) => { if (DEBUG) console.log(...a); };
+  const warn  = (...a) => { if (DEBUG) console.warn(...a); };
+
+  log('[masks.js] Iniciando módulo WDMasks');
+  console.log('[MASKS DEBUG] utils/masks.js carregado, definindo WDMasks');
+  const NS = (window.WDMasks = window.WDMasks || {});
+  console.log('[MASKS DEBUG] WDMasks definido:', !!window.WDMasks);
+
+  // ================= IE por UF =================
+  const IEMasks = {
+    SP: { regex:/^P?\d{12}$/, clean:v=>v.toUpperCase().replace(/[^0-9P]/g,''), mask:v=>v.toUpperCase().replace(/[^0-9P]/g,'').replace(/^(P?)(\d{0,3})(\d{0,3})(\d{0,3})(\d{0,3}).*$/,(_,p,a,b,c,d)=>[p,a,a&&b?'.':'',b,b&&c?'.':'',c,c&&d?'.':'',d].join('')) },
+    RJ: { regex:/^\d{8}$/,     clean:v=>v.replace(/\D/g,''),                           mask:v=>v.replace(/\D/g,'').replace(/^(\d{0,2})(\d{0,6}).*$/,(_,a,b)=>[a,a&&b?'.':'',b].join('')) },
+    MG: { regex:/^\d{13}$/,    clean:v=>v.replace(/\D/g,''),                           mask:v=>v.replace(/\D/g,'').replace(/^(\d{0,3})(\d{0,3})(\d{0,3})(\d{0,4}).*$/,(_,a,b,c,d)=>[a,a&&b?'.':'',b,b&&c?'.':'',c,c&&d?'/':'',d].join('')) },
+    RS: { regex:/^\d{10}$/,    clean:v=>v.replace(/\D/g,''),                           mask:v=>v.replace(/\D/g,'').replace(/^(\d{0,3})(\d{0,7}).*$/,(_,a,b)=>[a,a&&b?'/':'',b].join('')) },
+    DEFAULT: { regex:/^\d+$/,  clean:v=>v.replace(/\D/g,''),                           mask:v=>v.replace(/\D/g,'') }
+  };
+  NS.getUFMaskIE = (uf) => IEMasks[(uf||'').toUpperCase()] || IEMasks.DEFAULT;
+
+  NS.bindIEMask = (inputEl, ufProvider) => {
+    if (!inputEl) return;
+    const getUF = () => (typeof ufProvider === 'function' ? ufProvider() : ufProvider || '').toUpperCase();
+
+    const applyMask = () => {
+      const m = NS.getUFMaskIE(getUF());
+      const raw = (m.clean ? m.clean(inputEl.value) : inputEl.value);
+      inputEl.value = m.mask(raw);
+      inputEl.classList.remove('is-valid','is-invalid');
+    };
+    const validate = () => {
+      const m = NS.getUFMaskIE(getUF());
+      const raw = (m.clean ? m.clean(inputEl.value) : inputEl.value);
+      NS.setValidity(inputEl, m.regex.test(raw));
+      inputEl.value = m.mask(raw);
+    };
+
+    inputEl.addEventListener('input', applyMask);
+    inputEl.addEventListener('blur',  validate);
+  };
+
+  // ================= Utils =================
+  NS.onlyDigits = (s) => String(s || '').replace(/\D/g, '');
+  NS.setValidity = (el, valid) => {
+    if (!el) return;
+    if (String(el.value || '').trim() === '') { el.classList.remove('is-valid','is-invalid'); return; }
+    el.classList.toggle('is-valid', !!valid);
+    el.classList.toggle('is-invalid', !valid);
+  };
+
+  // ================= CPF =================
+  NS.formatCPF = (v) => {
+    if (!v) return '';
+    const d = String(v).replace(/\D/g,'').slice(0,11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
+    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+  };
+  NS.isValidCPF = (cpf) => {
+    if (!cpf) return false;
+    const d = String(cpf).replace(/\D/g,'');
+    if (d.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(d)) return false;
+    let s = 0; for (let i=0;i<9;i++) s += parseInt(d[i])* (10-i);
+    let r = s % 11; const dig1 = r < 2 ? 0 : 11-r;
+    s = 0; for (let i=0;i<10;i++) s += parseInt(d[i])* (11-i);
+    r = s % 11; const dig2 = r < 2 ? 0 : 11-r;
+    return parseInt(d[9])===dig1 && parseInt(d[10])===dig2;
+  };
+  NS.bindCPFMask = (inputEl) => {
+    if (!inputEl || inputEl._cpfMaskApplied) return;
+    const apply = () => {
+      const old = inputEl.value, neo = NS.formatCPF(old);
+      if (old !== neo) {
+        const pos = inputEl.selectionStart || old.length;
+        inputEl.value = neo;
+        const diff = neo.length - old.length;
+        setTimeout(()=> inputEl.setSelectionRange?.(Math.max(0,pos+diff), Math.max(0,pos+diff)),0);
+      }
+    };
+    const validate = () => NS.setValidity(inputEl, NS.isValidCPF(inputEl.value));
+    if (inputEl.value) apply();
+    inputEl.addEventListener('input', apply);
+    inputEl.addEventListener('blur',  validate);
+    inputEl._cpfMaskApplied = true;
+  };
+
+  // ================= CNPJ =================
+  NS.formatCNPJ = (v) => {
+    if (!v) return '';
+    const d = String(v).replace(/\D/g,'').slice(0,14);
+    if (d.length <= 2) return d;
+    if (d.length <= 5) return `${d.slice(0,2)}.${d.slice(2)}`;
+    if (d.length <= 8) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5)}`;
+    if (d.length <=12) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8)}`;
+    return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`;
+  };
+  NS.isValidCNPJ = (cnpj) => {
+    if (!cnpj) return false;
+    const d = String(cnpj).replace(/\D/g,'');
+    if (d.length !== 14) return false;
+    if (/^(\d)\1{13}$/.test(d)) return false;
+    let s=0,f=5; for (let i=0;i<12;i++){ s+=parseInt(d[i])*f; f = f===2?9:f-1; }
+    let r = s%11; const dig1 = r<2?0:11-r;
+    s=0; f=6; for (let i=0;i<13;i++){ s+=parseInt(d[i])*f; f = f===2?9:f-1; }
+    r = s%11; const dig2 = r<2?0:11-r;
+    return parseInt(d[12])===dig1 && parseInt(d[13])===dig2;
+  };
+  NS.bindCNPJMask = (inputEl) => {
+    if (!inputEl || inputEl._cnpjMaskApplied) return;
+    const apply = () => {
+      const old = inputEl.value, neo = NS.formatCNPJ(old);
+      if (old !== neo) {
+        const pos = inputEl.selectionStart || old.length;
+        inputEl.value = neo;
+        const diff = neo.length - old.length;
+        setTimeout(()=> inputEl.setSelectionRange?.(Math.max(0,pos+diff), Math.max(0,pos+diff)),0);
+      }
+    };
+    const validate = () => NS.setValidity(inputEl, NS.isValidCNPJ(inputEl.value));
+    if (inputEl.value) apply();
+    inputEl.addEventListener('input', apply);
+    inputEl.addEventListener('blur',  validate);
+    inputEl._cnpjMaskApplied = true;
+  };
+
+  // ================= Telefone & Email =================
+  NS.formatTelefone = (v) => {
+    if (!v) return '';
+    const d = String(v).replace(/\D/g,'').slice(0,11);
+    if (d.length <= 2) return d;
+    if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+    if (d.length <=10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  };
+  NS.applyPhoneMask = (inputEl) => {
+    if (!inputEl) return;
+    const apply = () => {
+      const start = inputEl.selectionStart, end = inputEl.selectionEnd;
+      const old = inputEl.value, neo = NS.formatTelefone(old);
+      if (old !== neo) {
+        inputEl.value = neo;
+        if (start === end) {
+          const digitsBefore = old.substring(0,start).replace(/\D/g,'');
+          let newPos = 0, count=0;
+          for (let i=0;i<neo.length && count<digitsBefore.length;i++) {
+            if (/\d/.test(neo[i])) count++;
+            newPos = i+1;
+          }
+          inputEl.setSelectionRange(newPos,newPos);
+        } else inputEl.setSelectionRange(neo.length, neo.length);
+      }
+    };
+    inputEl.addEventListener('input', apply);
+    if (inputEl.value) apply();
+  };
+
+  NS.isValidEmail = (email) => {
+    if (!email) return true;
+    const t = String(email).trim();
+    if (!t) return true;
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t);
+  };
+  NS.validateEmail = (el) => { const v = NS.isValidEmail(el?.value); NS.setValidity(el, v); return v; };
+
+  // ================= URL =================
+  NS.formatURL = (v) => {
+    if (!v) return '';
+    let url = String(v).trim().replace(/^\s+/, '');
+    if (!/^https?:\/\//i.test(url)) url = (url.startsWith('www.') ? 'https://' : 'https://') + url;
+    return url;
+  };
+  NS.isValidURL = (u) => {
+    if (!u) return true;
+    try { const o = new URL(u); return ['http:','https:'].includes(o.protocol); } catch { return false; }
+  };
+  NS.applyURLMask = (inputEl) => {
+    if (!inputEl) return;
+    const apply = () => {
+      const old = inputEl.value, neo = NS.formatURL(old);
+      if (old !== neo) {
+        const pos = inputEl.selectionStart || 0;
+        inputEl.value = neo;
+        const diff = neo.length - old.length;
+        inputEl.setSelectionRange(Math.max(0,pos+diff), Math.max(0,pos+diff));
+      }
+      NS.setValidity(inputEl, NS.isValidURL(neo));
+    };
+    inputEl.addEventListener('input', apply);
+    inputEl.addEventListener('blur', () => NS.setValidity(inputEl, NS.isValidURL(inputEl.value)));
+    if (inputEl.value) apply();
+  };
+
+  // ================= PIS/PASEP =================
+  NS.formatPIS = (v) => {
+    if (!v) return '';
+    const d = String(v).replace(/\D/g,'').slice(0,11);
+    if (d.length <= 3) return d;
+    if (d.length <= 8) return `${d.slice(0,3)}.${d.slice(3)}`;
+    if (d.length <=10) return `${d.slice(0,3)}.${d.slice(3,8)}.${d.slice(8)}`;
+    return `${d.slice(0,3)}.${d.slice(3,8)}.${d.slice(8,10)}-${d.slice(10)}`;
+  };
+  NS.isValidPIS = (pis) => {
+    if (!pis) return false;
+    const d = String(pis).replace(/\D/g,'');
+    if (d.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(d)) return false;
+    let s=0,f=3; for (let i=0;i<10;i++){ s+=parseInt(d[i])*f; f = f===2?9:f-1; }
+    const r = s%11; const dig = r<2?0:11-r;
+    return parseInt(d[10])===dig;
+  };
+  NS.bindPisMask = (inputEl) => {
+    if (!inputEl || inputEl._pisMaskApplied) return;
+    const apply = () => {
+      const old = inputEl.value, neo = NS.formatPIS(old);
+      if (old !== neo) {
+        const pos = inputEl.selectionStart || old.length;
+        inputEl.value = neo;
+        const diff = neo.length - old.length;
+        setTimeout(()=> inputEl.setSelectionRange?.(Math.max(0,pos+diff), Math.max(0,pos+diff)),0);
+      }
+    };
+    const validate = () => NS.setValidity(inputEl, NS.isValidPIS(inputEl.value));
+    if (inputEl.value) apply();
+    inputEl.addEventListener('input', apply);
+    inputEl.addEventListener('blur',  validate);
+    inputEl._pisMaskApplied = true;
+  };
+
+  // ================= CTPS =================
+  NS.formatCTPS = (v) => {
+    if (!v) return '';
+    const d = String(v).replace(/\D/g,'').slice(0,7);
+    if (d.length <= 5) return d;
+    return `${d.slice(0,5)}-${d.slice(5)}`;
+  };
+  NS.bindCtpsMask = (inputEl) => {
+    if (!inputEl) return;
+    const apply = () => {
+      const old = inputEl.value, neo = NS.formatCTPS(old);
+      if (old !== neo) {
+        const pos = inputEl.selectionStart || 0;
+        inputEl.value = neo;
+        const diff = neo.length - old.length;
+        inputEl.setSelectionRange(Math.max(0,pos+diff), Math.max(0,pos+diff));
+      }
+    };
+    inputEl.addEventListener('input', apply);
+    if (inputEl.value) apply();
+  };
+
+  // ================= CNH =================
+  NS.formatCNH = (v) => {
+    if (!v) return '';
+    const d = String(v).replace(/\D/g,'').slice(0,11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
+    return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+  };
+  NS.isValidCNH = (cnh) => {
+    if (!cnh) return false;
+    const v = String(cnh).replace(/\D/g,'');
+    if (v.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(v)) return false; // todos iguais
+
+    const d = v.split('').map(Number);
+
+    // Primeiro dígito verificador (DV10)
+    // Soma dos 9 primeiros dígitos com pesos 9,8,7,6,5,4,3,2,1
+    let s1 = 0;
+    for (let i = 0, p = 9; i < 9; i++, p--) {
+      s1 += d[i] * p;
+    }
+    let r1 = s1 % 11;
+    const dv10 = r1 >= 10 ? 0 : r1;
+    const dsc = r1 >= 10 ? 2 : 0; // ajuste para o segundo dígito
+
+    // Segundo dígito verificador (DV11)
+    // Soma dos 9 primeiros dígitos com pesos 1,2,3,4,5,6,7,8,9
+    let s2 = 0;
+    for (let i = 0, p = 1; i < 9; i++, p++) {
+      s2 += d[i] * p;
+    }
+    let x = (s2 % 11) - dsc;
+    if (x < 0) x += 11;
+    const dv11 = x >= 10 ? 0 : x;
+
+    // Verificar se os dígitos calculados coincidem com os da CNH
+    return dv10 === d[9] && dv11 === d[10];
+  };
+  NS.bindCnhMask = (inputEl) => {
+    if (!inputEl) return;
+    inputEl.removeAttribute('maxlength');
+
+    let validationTimeout;
+
+    const apply = () => {
+      const digitsOnly = inputEl.value.replace(/\D/g,'');
+      if (digitsOnly.length > 11) inputEl.value = digitsOnly.slice(0,11);
+      const old = inputEl.value, neo = NS.formatCNH(old);
+      if (old !== neo) {
+        const pos = inputEl.selectionStart || 0;
+        inputEl.value = neo;
+        const diff = neo.length - old.length;
+        inputEl.setSelectionRange(Math.max(0,pos+diff), Math.max(0,pos+diff));
+      }
+
+      // Aguardar um pouco antes de validar para garantir que a máscara foi aplicada
+      clearTimeout(validationTimeout);
+      validationTimeout = setTimeout(validate, 100);
+    };
+
+    const validate = () => {
+      const value = inputEl.value;
+      const digitsOnly = value.replace(/\D/g,'');
+
+      // Se o campo estiver vazio, não validar
+      if (!value.trim()) {
+        NS.setValidity(inputEl, true);
+        return;
+      }
+
+      // Se tiver menos de 11 dígitos, considerar válido (usuário ainda digitando)
+      if (digitsOnly.length < 11) {
+        NS.setValidity(inputEl, true);
+        return;
+      }
+
+      // Só validar quando tiver exatamente 11 dígitos
+      const isValid = NS.isValidCNH(value);
+      NS.setValidity(inputEl, isValid);
+    };
+
+    inputEl.addEventListener('input', apply);
+    inputEl.addEventListener('blur', () => {
+      clearTimeout(validationTimeout);
+      validate();
+    });
+
+    if (inputEl.value) apply();
+  };
+
+  // ================= Título/Seção/Zona =================
+  NS.formatZonaEleitoral  = (v) => String(v||'').replace(/\D/g,'').slice(0,4);
+  NS.formatSecaoEleitoral = (v) => String(v||'').replace(/\D/g,'').slice(0,4);
+  NS.formatTituloEleitor  = (v) => {
+    if (!v) return '';
+    const d = String(v).replace(/\D/g,'').slice(0,12);
+    if (d.length <= 4) return d;
+    if (d.length <= 8) return `${d.slice(0,4)} ${d.slice(4)}`;
+    return `${d.slice(0,4)} ${d.slice(4,8)} ${d.slice(8)}`;
+  };
+
+  NS.bindZonaEleitoralMask = (el) => {
+    if (!el) return;
+    const apply = () => { el.value = NS.formatZonaEleitoral(el.value); };
+    el.addEventListener('input', apply);
+    el.addEventListener('blur', () => NS.setValidity(el, NS.formatZonaEleitoral(el.value).length === 4));
+    if (el.value) apply();
+  };
+  NS.bindSecaoEleitoralMask = (el) => {
+    if (!el) return;
+    const apply = () => { el.value = NS.formatSecaoEleitoral(el.value); };
+    el.addEventListener('input', apply);
+    el.addEventListener('blur', () => NS.setValidity(el, NS.formatSecaoEleitoral(el.value).length === 4));
+    if (el.value) apply();
+  };
+  NS.bindTituloEleitorMask = (el) => {
+    if (!el) return;
+    el.removeAttribute('maxlength');
+    const apply = () => {
+      const oldRaw = el.value;
+      const digitsOnly = oldRaw.replace(/\D/g,'');
+      const limited = digitsOnly.slice(0,12);
+      const pos = el.selectionStart || 0;
+      const formatted = NS.formatTituloEleitor(limited);
+      if (el.value !== formatted) {
+        // Heurística de ajuste de cursor: conta quantos separadores existem antes da posição original
+        const digitsBefore = oldRaw.slice(0,pos).replace(/\D/g,'').length;
+        el.value = formatted;
+        // Recalcula posição: percorre formatted contando dígitos até digitsBefore
+        let newPos = 0, count = 0;
+        while (newPos < formatted.length && count < digitsBefore) {
+          if (/\d/.test(formatted[newPos])) count++;
+          newPos++;
+        }
+        // Se acabou de inserir um espaço de grupo, mantém depois dele
+        el.setSelectionRange(newPos, newPos);
+      }
+    };
+    el.addEventListener('input', apply);
+    if (el.value) apply();
+  };
+
+  // ================= Moeda & % =================
+  NS.formatMoeda = (v) => {
+    if (!v) return '';
+    const n = String(v).replace(/\D/g,'');
+    if (!n) return '';
+    return (parseInt(n)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+  };
+  NS.bindMoedaMask = (el) => {
+    if (!el) return;
+    const apply = () => {
+      const old = el.value, neo = NS.formatMoeda(old);
+      if (old !== neo) {
+        const pos = el.selectionStart || 0;
+        el.value = neo;
+        const diff = neo.length - old.length;
+        el.setSelectionRange(Math.max(0,pos+diff), Math.max(0,pos+diff));
+      }
+    };
+    el.addEventListener('input', apply);
+    if (el.value) apply();
+  };
+
+  NS.formatPorcentagem = (v) => {
+    if (!v) return '';
+    const n = String(v).replace(/\D/g,'');
+    if (!n) return '';
+    return (parseInt(n)/100).toLocaleString('pt-BR',{style:'percent',minimumFractionDigits:2,maximumFractionDigits:2});
+  };
+  NS.bindPorcentagemMask = (el) => {
+    if (!el) return;
+    const apply = () => {
+      const old = el.value, neo = NS.formatPorcentagem(old);
+      if (old !== neo) {
+        const pos = el.selectionStart || 0;
+        el.value = neo;
+        const diff = neo.length - old.length;
+        el.setSelectionRange(Math.max(0,pos+diff), Math.max(0,pos+diff));
+      }
+    };
+    el.addEventListener('input', apply);
+    if (el.value) apply();
+  };
+
+  // ================= Agência/Conta =================
+  NS.isValidAgencia = (ag, dv) => {
+    if (!ag) return true;
+    const a = String(ag).replace(/\D/g,'');
+    if (a.length < 1 || a.length > 5) return false;
+    if (dv) return /^[0-9X]$/i.test(String(dv));
+    return true;
+  };
+  NS.isValidConta = (conta, dv) => {
+    if (!conta) return true;
+    const c = String(conta).replace(/\D/g,'');
+    if (c.length < 1 || c.length > 12) return false;
+    if (dv) return /^[0-9X]$/i.test(String(dv));
+    return true;
+  };
+  NS.bindAgenciaMask = (el) => {
+    if (!el) return;
+    const apply = () => {
+      const d = el.value.replace(/\D/g,'').slice(0,5);
+      if (el.value !== d) {
+        const pos = el.selectionStart || 0;
+        el.value = d;
+        el.setSelectionRange(Math.min(pos,d.length), Math.min(pos,d.length));
+      }
+    };
+    el.addEventListener('input', apply);
+    el.addEventListener('blur', () => NS.setValidity(el, NS.isValidAgencia(el.value)));
+    if (el.value) apply();
+  };
+  NS.bindContaMask = (el) => {
+    if (!el) return;
+    const apply = () => {
+      const d = el.value.replace(/\D/g,'').slice(0,12);
+      if (el.value !== d) {
+        const pos = el.selectionStart || 0;
+        el.value = d;
+        el.setSelectionRange(Math.min(pos,d.length), Math.min(pos,d.length));
+      }
+    };
+    el.addEventListener('input', apply);
+    el.addEventListener('blur', () => NS.setValidity(el, NS.isValidConta(el.value)));
+    if (el.value) apply();
+  };
+
+  // ================= Inicialização dinâmica IE (depende de #endereco) =================
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const ieEl = document.getElementById('inscricaoEstadual');
+      const enderecoEl = document.getElementById('endereco');
+      if (!ieEl || !enderecoEl) { warn('[masks.js] IE/endereco não encontrados'); return; }
+
+      function extractUF() {
+        const val = String(enderecoEl.value || '').toUpperCase();
+        const dash = val.match(/-\s*([A-Z]{2})\b/);
+        if (dash?.[1]) return dash[1];
+        const cidUf = val.match(/[,\/]\s*([A-Z]{2})\b/);
+        if (cidUf?.[1]) return cidUf[1];
+        const m = val.match(/\b([A-Z]{2})\b/g);
+        const valid = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+        if (m?.length) for (let i=m.length-1;i>=0;i--) if (valid.includes(m[i])) return m[i];
+        return '';
+      }
+
+      let last = '';
+      const updateIfNeeded = () => {
+        const uf = extractUF();
+        if (uf !== last) { NS.bindIEMask(ieEl, extractUF); last = uf; }
+      };
+
+      NS.bindIEMask(ieEl, extractUF);
+      last = extractUF();
+
+      enderecoEl.addEventListener('input', updateIfNeeded);
+      const observer = new MutationObserver(updateIfNeeded);
+      observer.observe(enderecoEl, { attributes: true, attributeFilter: ['value'] });
+    }, 100);
+  });
+
+  log('[masks.js] Módulo WDMasks pronto');
+})();

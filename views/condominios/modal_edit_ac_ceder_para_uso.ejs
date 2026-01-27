@@ -1,0 +1,692 @@
+<div class="modal fade" id="modalEditACCederParaUso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable wdg-cessao-dialog">
+    <div class="modal-content wdg-cessao-modal">
+      <div class="modal-header wdg-cessao-header">
+        <div class="wdg-cessao-header__main">
+          <h5 class="modal-title">Ceder área comum para uso</h5>
+          <p class="wdg-cessao-header__subtitle">Configure as informações da cessão antes de salvar.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" data-action="dismiss"></button>
+      </div>
+      <div class="modal-body wdg-cessao-body">
+        <div class="wdg-cessao-tabs-wrapper">
+          <div class="wdg-cessao-tabs-nav">
+            <ul class="nav nav-tabs" id="tabsCederParaUso" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tabReserva-tab" data-bs-toggle="tab" data-bs-target="#tabReserva" type="button" role="tab" aria-controls="tabReserva" aria-selected="true">Dados da reserva</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabCessionario-tab" data-bs-toggle="tab" data-bs-target="#tabCessionario" type="button" role="tab" aria-controls="tabCessionario" aria-selected="false">Cessionário</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabPreposto-tab" data-bs-toggle="tab" data-bs-target="#tabPreposto" type="button" role="tab" aria-controls="tabPreposto" aria-selected="false">Preposto</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabMateriais-tab" data-bs-toggle="tab" data-bs-target="#tabMateriais" type="button" role="tab" aria-controls="tabMateriais" aria-selected="false">Materiais</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabTaxas-tab" data-bs-toggle="tab" data-bs-target="#tabTaxas" type="button" role="tab" aria-controls="tabTaxas" aria-selected="false">Taxas e custos</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabForo-tab" data-bs-toggle="tab" data-bs-target="#tabForo" type="button" role="tab" aria-controls="tabForo" aria-selected="false">Foro</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabContrato-tab" data-bs-toggle="tab" data-bs-target="#tabContrato" type="button" role="tab" aria-controls="tabContrato" aria-selected="false">Contrato</button>
+              </li>
+            </ul>
+          </div>
+          <div class="tab-content wdg-cessao-tabs" id="tabsCederParaUsoContent">
+          <div class="tab-pane fade show active" id="tabReserva" role="tabpanel" aria-labelledby="tabReserva-tab" tabindex="0">
+            <div class="wdg-resumo-area">
+              <div class="wdg-resumo-line"><strong>Condomínio:</strong> <span data-role="resumo-unidade">&mdash;</span></div>
+              <div class="wdg-resumo-line"><strong>Área Comum:</strong> <span data-role="resumo-area">&mdash;</span></div>
+            </div>
+            <form id="formCederReserva" class="row g-2 g-md-3 wdg-section-form wdg-section-form--overlay align-items-end wdg-reserva-grid" autocomplete="off" novalidate>
+              <div class="col-xl-4 col-md-6">
+                <label class="form-label" for="cederDataInicial">Data inicial</label>
+                <input type="text" class="form-control datepicker date-br wdg-input-compact" id="cederDataInicial" name="data_inicial" placeholder="DD/MM/AAAA" autocomplete="off" data-formato="br" inputmode="numeric">
+              </div>
+              <div class="col-xl-4 col-md-6">
+                <label class="form-label" for="cederHoraInicial">Hora inicial</label>
+                <input type="time" class="form-control wdg-input-compact" id="cederHoraInicial" name="hora_inicial" autocomplete="off" step="60">
+              </div>
+              <div class="col-xl-4 col-md-6">
+                <label class="form-label" for="cederHoraFinal">Hora final</label>
+                <input type="time" class="form-control wdg-input-compact" id="cederHoraFinal" name="hora_final" autocomplete="off" step="60">
+              </div>
+              <div class="col-12 wdg-reserva-repeat">
+                <label class="form-label" for="cederDatasRepeticao">Repetir em outras datas</label>
+                <input type="hidden" id="cederDatasRepeticao" name="datas_repeticao" autocomplete="off">
+                <div class="wdg-repeat-control" data-role="repeat-control">
+                  <button type="button" class="wdg-repeat-open" data-role="repeat-open" aria-haspopup="dialog" aria-expanded="false" aria-controls="cederRepeatCalendar">
+                    <span class="wdg-repeat-open__icon" aria-hidden="true">&#128197;</span>
+                    <span class="wdg-repeat-open__label">Selecionar datas</span>
+                  </button>
+                  <div class="wdg-repeat-chips" data-role="repeat-chips" aria-live="polite" aria-atomic="false"></div>
+                  <button type="button" class="btn btn-link btn-sm wdg-repeat-clear" data-role="repeat-clear">Limpar seleção</button>
+                </div>
+                <div class="wdg-repeat-calendar" id="cederRepeatCalendar" data-role="repeat-calendar" hidden aria-hidden="true" role="dialog" aria-modal="false" aria-label="Selecionar datas de repetição" tabindex="-1">
+                  <div class="wdg-repeat-calendar__header">
+                    <button type="button" class="wdg-repeat-calendar__nav" data-role="repeat-prev-month" aria-label="Mês anterior">
+                      <span aria-hidden="true">&#10094;</span>
+                    </button>
+                    <div class="wdg-repeat-calendar__month" data-role="repeat-month">&nbsp;</div>
+                    <button type="button" class="wdg-repeat-calendar__nav" data-role="repeat-next-month" aria-label="Próximo mês">
+                      <span aria-hidden="true">&#10095;</span>
+                    </button>
+                    <button type="button" class="wdg-repeat-calendar__close" data-role="repeat-close" aria-label="Fechar calendário">&times;</button>
+                  </div>
+                  <div class="wdg-repeat-calendar__weekdays" aria-hidden="true">
+                    <span>Dom</span>
+                    <span>Seg</span>
+                    <span>Ter</span>
+                    <span>Qua</span>
+                    <span>Qui</span>
+                    <span>Sex</span>
+                    <span>Sáb</span>
+                  </div>
+                  <div class="wdg-repeat-calendar__grid" data-role="repeat-grid"></div>
+                </div>
+                <div class="form-text wdg-reserva-repeat__hint">Selecione datas adicionais no calendário. As repetições usam o mesmo horário do período principal.</div>
+              </div>
+              <div class="col-12 d-flex justify-content-end mt-2">
+                <button class="btn btn-primary" type="button" data-section="reserva">Inserir</button>
+              </div>
+            </form>
+            <div class="wdg-section-list">
+              <h6 class="wdg-reserva-periodo__title">Período da reserva</h6>
+              <div id="listaCederReserva" class="wdg-placeholder-box wdg-reserva-periodo__container" data-base-path="<%= typeof _basePath !== 'undefined' ? _basePath : (typeof bp !== 'undefined' ? bp : '') %>">Nenhum registro cadastrado.</div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabCessionario" role="tabpanel" aria-labelledby="tabCessionario-tab" tabindex="0">
+            <div class="wdg-resumo-area">
+              <div class="wdg-resumo-line"><strong>Condomínio:</strong> <span data-role="resumo-unidade">&mdash;</span></div>
+              <div class="wdg-resumo-line"><strong>Área Comum:</strong> <span data-role="resumo-area">&mdash;</span></div>
+            </div>
+            <form id="formCederCessionario" class="row g-3 wdg-section-form" autocomplete="off" novalidate>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-xl-6 col-lg-6">
+                    <label class="form-label" for="acCessCessionarioHab">Habitação</label>
+                    <select class="form-select" id="acCessCessionarioHab" name="cessionario_habitacao">
+                      <option value="">Selecione...</option>
+                    </select>
+                  </div>
+                  <div class="col-xl-6 col-lg-6">
+                    <label class="form-label" for="acCessCessionarioMoradores">Morador</label>
+                    <select class="form-select" id="acCessCessionarioMoradores" name="cessionario_morador" disabled>
+                      <option value="">Selecione uma habitação</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="acCessCessionarioNome">Nome</label>
+                <input type="text" class="form-control" id="acCessCessionarioNome" name="cessionario_nome" readonly>
+              </div>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label" for="acCessCessionarioPai">Pai</label>
+                    <input type="text" class="form-control" id="acCessCessionarioPai" name="cessionario_pai" readonly>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="acCessCessionarioMae">Mãe</label>
+                    <input type="text" class="form-control" id="acCessCessionarioMae" name="cessionario_mae" readonly>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="acCessCessionarioRG">RG</label>
+                    <input type="text" class="form-control" id="acCessCessionarioRG" name="cessionario_rg" readonly>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="acCessCessionarioCPF">CPF</label>
+                    <input type="text" class="form-control" id="acCessCessionarioCPF" name="cessionario_cpf" readonly>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="acCessCessionarioNascimento">Data de nascimento</label>
+                    <input type="text" class="form-control" id="acCessCessionarioNascimento" name="cessionario_nascimento" readonly>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="acCessCessionarioSexo">Sexo</label>
+                    <select class="form-select" id="acCessCessionarioSexo" name="cessionario_sexo">
+                      <option value="">Selecione...</option>
+                      <option value="F">Feminino</option>
+                      <option value="M">Masculino</option>
+                      <option value="O">Outro</option>
+                      <option value="N">Não informado</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="acCessCessionarioEstadoCivil">Estado civil</label>
+                    <select class="form-select" id="acCessCessionarioEstadoCivil" name="cessionario_estado_civil">
+                      <option value="">Selecione...</option>
+                    </select>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="acCessCessionarioProfissao">Profissão</label>
+                    <input type="text" class="form-control" id="acCessCessionarioProfissao" name="cessionario_profissao" maxlength="120">
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="acCessCessionarioNacionalidade">Nacionalidade</label>
+                    <select class="form-select" id="acCessCessionarioNacionalidade" name="cessionario_nacionalidade">
+                      <option value="">Selecione...</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="acCessCessionarioEndereco">Endereço</label>
+                <input type="text" class="form-control" id="acCessCessionarioEndereco" name="cessionario_endereco" maxlength="240" placeholder="Endereço do condomínio + Bloco / Andar / Nº da habitação">
+              </div>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-lg-6">
+                    <label class="form-label" for="acCessCessionarioEmail">E-mail</label>
+                    <input type="email" class="form-control" id="acCessCessionarioEmail" name="cessionario_email" maxlength="180">
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="form-label" for="acCessCessionarioTelefone">Telefone</label>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                      <input type="tel" class="form-control flex-grow-1" id="acCessCessionarioTelefone" name="cessionario_telefone" maxlength="32">
+                      <div class="form-check m-0">
+                        <input class="form-check-input" type="checkbox" id="acCessCessionarioWhatsapp" name="cessionario_whatsapp">
+                        <label class="form-check-label" for="acCessCessionarioWhatsapp">WhatsApp</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <button type="button" class="btn btn-link btn-sm text-muted" data-role="cessionario-cancel-edit" hidden>Cancelar edição</button>
+                <div class="d-flex flex-wrap gap-2 ms-auto">
+                  <button type="button" class="btn btn-outline-secondary" data-role="cessionario-clear">Limpar</button>
+                  <button class="btn btn-primary" type="button" data-section="cessionario" data-role="cessionario-submit">Inserir</button>
+                </div>
+              </div>
+            </form>
+            <div class="wdg-section-list">
+              <div class="wdg-section-list__header">
+                <h6 class="wdg-section-list__title">Cessionários cadastrados</h6>
+              </div>
+              <div id="listaCederCessionario" class="wdg-placeholder-box">Nenhum cessionário adicionado.</div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabPreposto" role="tabpanel" aria-labelledby="tabPreposto-tab" tabindex="0">
+            <div class="wdg-resumo-area">
+              <div class="wdg-resumo-line"><strong>Condomínio:</strong> <span data-role="resumo-unidade">&mdash;</span></div>
+              <div class="wdg-resumo-line"><strong>Área Comum:</strong> <span data-role="resumo-area">&mdash;</span></div>
+            </div>
+            <form id="formCederPreposto" class="row g-3 wdg-section-form" autocomplete="off" novalidate>
+              <div class="col-12 col-lg-4 col-md-5">
+                <label class="form-label" for="acPrepostoColaborador">Colaborador</label>
+                <select class="form-select" id="acPrepostoColaborador" name="preposto_colaborador">
+                  <option value="">Selecione...</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="acPrepostoNome">Nome</label>
+                <input type="text" class="form-control" id="acPrepostoNome" name="preposto_nome" readonly>
+              </div>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label" for="acPrepostoPai">Pai</label>
+                    <input type="text" class="form-control" id="acPrepostoPai" name="preposto_pai" readonly>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="acPrepostoMae">Mãe</label>
+                    <input type="text" class="form-control" id="acPrepostoMae" name="preposto_mae" readonly>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="acPrepostoRG">RG</label>
+                    <input type="text" class="form-control" id="acPrepostoRG" name="preposto_rg" readonly>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="acPrepostoCPF">CPF</label>
+                    <input type="text" class="form-control" id="acPrepostoCPF" name="preposto_cpf" readonly>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="acPrepostoNascimento">Data de nascimento</label>
+                    <input type="text" class="form-control" id="acPrepostoNascimento" name="preposto_nascimento" readonly>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="acPrepostoSexo">Sexo</label>
+                    <select class="form-select" id="acPrepostoSexo" name="preposto_sexo">
+                      <option value="">Selecione...</option>
+                      <option value="F">Feminino</option>
+                      <option value="M">Masculino</option>
+                      <option value="O">Outro</option>
+                      <option value="N">Não informado</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="acPrepostoEstadoCivil">Estado civil</label>
+                    <select class="form-select" id="acPrepostoEstadoCivil" name="preposto_estado_civil">
+                      <option value="">Selecione...</option>
+                    </select>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="acPrepostoProfissao">Profissão</label>
+                    <input type="text" class="form-control" id="acPrepostoProfissao" name="preposto_profissao" maxlength="120">
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="acPrepostoNacionalidade">Nacionalidade</label>
+                    <select class="form-select" id="acPrepostoNacionalidade" name="preposto_nacionalidade">
+                      <option value="">Selecione...</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="acPrepostoEndereco">Endereço</label>
+                <input type="text" class="form-control" id="acPrepostoEndereco" name="preposto_endereco" maxlength="240" placeholder="Endereço do colaborador">
+              </div>
+              <div class="col-12">
+                <div class="row g-3">
+                  <div class="col-lg-6">
+                    <label class="form-label" for="acPrepostoEmail">E-mail</label>
+                    <input type="email" class="form-control" id="acPrepostoEmail" name="preposto_email" maxlength="180">
+                  </div>
+                  <div class="col-lg-6">
+                    <label class="form-label" for="acPrepostoTelefone">Telefone</label>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                      <input type="tel" class="form-control flex-grow-1" id="acPrepostoTelefone" name="preposto_telefone" maxlength="32">
+                      <div class="form-check m-0">
+                        <input class="form-check-input" type="checkbox" id="acPrepostoWhatsapp" name="preposto_whatsapp">
+                        <label class="form-check-label" for="acPrepostoWhatsapp">WhatsApp</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <button type="button" class="btn btn-link btn-sm text-muted" data-role="preposto-cancel-edit" hidden>Cancelar edição</button>
+                <div class="d-flex flex-wrap gap-2 ms-auto">
+                  <button type="button" class="btn btn-outline-secondary" data-role="preposto-clear">Limpar</button>
+                  <button class="btn btn-primary" type="button" data-role="preposto-submit">Inserir</button>
+                </div>
+              </div>
+            </form>
+            <div class="wdg-section-list">
+              <div class="wdg-section-list__header">
+                <h6 class="wdg-section-list__title">Prepostos cadastrados</h6>
+              </div>
+              <div id="listaCederPreposto" class="wdg-placeholder-box">Nenhum preposto vinculado.</div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabMateriais" role="tabpanel" aria-labelledby="tabMateriais-tab" tabindex="0">
+            <div class="wdg-resumo-area">
+              <div class="wdg-resumo-line"><strong>Condomínio:</strong> <span data-role="resumo-unidade">&mdash;</span></div>
+              <div class="wdg-resumo-line"><strong>Área Comum:</strong> <span data-role="resumo-area">&mdash;</span></div>
+            </div>
+            <form id="formCederMateriais" class="row g-4 wdg-section-form" autocomplete="off" novalidate>
+              <div class="col-12 col-lg-6">
+                <div class="wdg-material-card">
+                  <div class="wdg-section-list__header">
+                    <h6 class="wdg-section-list__title mb-0">Materiais na área comum</h6>
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-role="materiais-extrair" disabled>Extrair selecionados</button>
+                  </div>
+                  <div id="listaMateriaisDisponiveis" class="wdg-material-list"></div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-6">
+                <div class="wdg-material-card">
+                  <div class="wdg-section-list__header">
+                    <h6 class="wdg-section-list__title mb-0">Materiais retirados da área comum</h6>
+                  </div>
+                  <div id="listaMateriaisExtraidos" class="wdg-material-list"></div>
+                </div>
+              </div>
+              <div class="col-12 d-flex justify-content-end">
+                <button class="btn btn-primary" type="button" data-role="materiais-inserir">Inserir</button>
+              </div>
+              <div class="col-12">
+                <div class="wdg-material-card">
+                  <div class="wdg-section-list__header">
+                    <h6 class="wdg-section-list__title mb-0">Materiais constantes na cessão para uso</h6>
+                  </div>
+                  <div id="listaMateriaisCessao" class="wdg-material-list"></div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="tabTaxas" role="tabpanel" aria-labelledby="tabTaxas-tab" tabindex="0">
+            <div class="wdg-resumo-area">
+              <div class="wdg-resumo-line"><strong>Condomínio:</strong> <span data-role="resumo-unidade">&mdash;</span></div>
+              <div class="wdg-resumo-line"><strong>Área Comum:</strong> <span data-role="resumo-area">&mdash;</span></div>
+            </div>
+            <form id="formCederTaxas" class="row g-3 wdg-section-form" autocomplete="off" novalidate>
+              <div class="col-12">
+                <div class="row g-3 align-items-end">
+                  <div class="col-lg-4 col-md-6">
+                    <label class="form-label" for="acTaxaTipo">Tipo de cobrança</label>
+                    <select class="form-select" id="acTaxaTipo" name="taxa_tipo">
+                      <option value="">Selecione...</option>
+                      <option value="isencao">Isenção de taxa</option>
+                      <option value="cobranca">Cobrança de taxa</option>
+                    </select>
+                  </div>
+                  <div class="col-lg-4 col-md-6 d-none" data-role="taxa-valor-group">
+                    <label class="form-label" for="acTaxaValor">Valor da taxa (R$)</label>
+                    <input type="number" class="form-control wdg-input-compact" id="acTaxaValor" name="taxa_valor" min="0" step="0.01" placeholder="0,00">
+                  </div>
+                  <div class="col-lg-4 col-md-6 d-none" data-role="taxa-vencimento-group">
+                    <label class="form-label" for="acTaxaVencimento">Data de vencimento</label>
+                    <input type="text" class="form-control datepicker date-br wdg-input-compact" id="acTaxaVencimento" name="taxa_vencimento" placeholder="DD/MM/AAAA" autocomplete="off" inputmode="numeric">
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-6">
+                <label class="form-label" for="acTaxaFundo">Fundo de destinação</label>
+                <input type="text" class="form-control" id="acTaxaFundo" name="taxa_fundo" maxlength="120">
+              </div>
+              <div class="col-12 col-lg-6">
+                <label class="form-label" for="acTaxaFundamento">Fundamento deliberativo</label>
+                <textarea class="form-control" id="acTaxaFundamento" name="taxa_fundamento" rows="2" maxlength="360"></textarea>
+              </div>
+              <div class="col-12">
+                <div class="wdg-boleto-card">
+                  <div class="wdg-boleto-card__header">
+                    <div>
+                      <h6 class="wdg-boleto-card__title">Geração de boleto</h6>
+                      <p class="wdg-boleto-card__subtitle">Habilite a cobrança bancária e defina como o boleto será emitido.</p>
+                    </div>
+                    <div class="form-check form-switch m-0">
+                      <input class="form-check-input" type="checkbox" id="acTaxaBoletoHabilitado" name="taxa_boleto_habilitado">
+                      <label class="form-check-label" for="acTaxaBoletoHabilitado">Habilitar</label>
+                    </div>
+                  </div>
+                  <div class="row g-3 mt-1 wdg-boleto-config d-none" data-role="taxa-boleto-config">
+                    <div class="col-xl-4 col-lg-4 col-md-6">
+                      <label class="form-label" for="acTaxaBoletoBanco">Banco emissor</label>
+                      <input type="text" class="form-control" id="acTaxaBoletoBanco" name="taxa_boleto_banco" maxlength="120" placeholder="Ex.: Banco 756 / Sicoob">
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-md-6">
+                      <label class="form-label" for="acTaxaBoletoCarteira">Carteira / Convênio</label>
+                      <input type="text" class="form-control" id="acTaxaBoletoCarteira" name="taxa_boleto_carteira" maxlength="60" placeholder="Ex.: 109 / 31-9">
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-md-6">
+                      <label class="form-label" for="acTaxaBoletoDocumento">Nosso número / Documento</label>
+                      <input type="text" class="form-control" id="acTaxaBoletoDocumento" name="taxa_boleto_documento" maxlength="60" placeholder="Identificador interno">
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="acTaxaBoletoInstrucao">Instruções no boleto</label>
+                      <textarea class="form-control" id="acTaxaBoletoInstrucao" name="taxa_boleto_instrucao" rows="2" maxlength="360" placeholder="Mensagem para o pagador, regras de multa ou canais para dúvidas"></textarea>
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-md-6">
+                      <label class="form-label" for="acTaxaBoletoMulta">Multa após vencimento (%)</label>
+                      <input type="number" class="form-control" id="acTaxaBoletoMulta" name="taxa_boleto_multa" min="0" max="20" step="0.01" placeholder="0,00">
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-md-6">
+                      <label class="form-label" for="acTaxaBoletoJuros">Juros ao mês (%)</label>
+                      <input type="number" class="form-control" id="acTaxaBoletoJuros" name="taxa_boleto_juros" min="0" max="20" step="0.01" placeholder="0,00">
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-md-6">
+                      <span class="form-label wdg-boleto-send-label">Envio automático</span>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="acTaxaBoletoEnviarEmail" name="taxa_boleto_enviar_email">
+                        <label class="form-check-label" for="acTaxaBoletoEnviarEmail">Enviar por e-mail</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="acTaxaBoletoEnviarWhatsapp" name="taxa_boleto_enviar_whatsapp">
+                        <label class="form-check-label" for="acTaxaBoletoEnviarWhatsapp">Enviar por WhatsApp</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="wdg-section-list__header flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-2">
+                  <h6 class="wdg-section-list__title mb-0">Abatimentos / descontos</h6>
+                  <small class="text-muted">Cadastre os abatimentos aplicáveis à taxa.</small>
+                </div>
+                <div class="row g-3 align-items-end">
+                  <div class="col-xl-4 col-lg-4 col-md-6">
+                    <label class="form-label" for="acAbatimentoTitulo">Título / referência</label>
+                    <input type="text" class="form-control" id="acAbatimentoTitulo" name="abatimento_titulo" maxlength="120">
+                  </div>
+                  <div class="col-xl-2 col-lg-3 col-md-6">
+                    <label class="form-label" for="acAbatimentoPercentual">Percentual (%)</label>
+                    <input type="number" class="form-control" id="acAbatimentoPercentual" name="abatimento_percentual" min="0" max="100" step="0.01" placeholder="0">
+                  </div>
+                  <div class="col-xl-6 col-lg-5">
+                    <label class="form-label" for="acAbatimentoDescricao">Descrição / condições</label>
+                    <textarea class="form-control" id="acAbatimentoDescricao" name="abatimento_descricao" rows="1" maxlength="240"></textarea>
+                  </div>
+                  <div class="col-12 d-flex flex-wrap gap-2 justify-content-end">
+                    <button type="button" class="btn btn-link btn-sm text-muted" data-role="abatimento-cancel-edit" hidden>Cancelar edição</button>
+                    <button type="button" class="btn btn-outline-primary" data-role="abatimento-submit">Adicionar abatimento</button>
+                  </div>
+                </div>
+                <div id="listaTaxaAbatimentos" class="wdg-placeholder-box mt-2">Nenhum abatimento informado.</div>
+              </div>
+              <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <button type="button" class="btn btn-link btn-sm text-muted" data-role="taxa-cancel-edit" hidden>Cancelar edição</button>
+                <div class="d-flex flex-wrap gap-2 ms-auto">
+                  <button type="button" class="btn btn-outline-secondary" data-role="taxa-clear">Limpar</button>
+                  <button type="button" class="btn btn-primary" data-role="taxa-submit">Inserir</button>
+                </div>
+              </div>
+            </form>
+            <div class="wdg-section-list">
+              <div class="wdg-section-list__header">
+                <h6 class="wdg-section-list__title">Taxas / Custos / Abatimentos</h6>
+              </div>
+              <div id="listaCederTaxas" class="wdg-placeholder-box">Nenhuma taxa cadastrada.</div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabForo" role="tabpanel" aria-labelledby="tabForo-tab" tabindex="0">
+            <div class="wdg-resumo-area">
+              <div class="wdg-resumo-line"><strong>Condomínio:</strong> <span data-role="resumo-unidade">&mdash;</span></div>
+              <div class="wdg-resumo-line"><strong>Área Comum:</strong> <span data-role="resumo-area">&mdash;</span></div>
+            </div>
+            <form id="formCederForo" class="row g-3 wdg-section-form" autocomplete="off" novalidate>
+              <div class="col-lg-4 col-md-6">
+                <label class="form-label" for="acForoEstado">Estado</label>
+                <select class="form-select" id="acForoEstado" name="foro_estado">
+                  <option value="">Selecione...</option>
+                </select>
+              </div>
+              <div class="col-lg-4 col-md-6">
+                <label class="form-label" for="acForoMunicipio">Município</label>
+                <select class="form-select" id="acForoMunicipio" name="foro_municipio" disabled>
+                  <option value="">Selecione um estado</option>
+                </select>
+              </div>
+              <div class="col-lg-4 col-md-6">
+                <label class="form-label" for="acForoVara">Vara</label>
+                <input type="text" class="form-control text-uppercase" id="acForoVara" name="foro_vara" maxlength="160" placeholder="Ex: 5ª VARA CÍVEL">
+              </div>
+              <div class="col-12 d-flex flex-wrap justify-content-end align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary" data-role="foro-clear">Limpar</button>
+                <button type="button" class="btn btn-primary" data-role="foro-submit">Inserir</button>
+              </div>
+            </form>
+            <div class="wdg-section-list">
+              <div class="wdg-section-list__header">
+                <h6 class="wdg-section-list__title">Foro cadastrado</h6>
+              </div>
+              <div id="listaCederForo" class="wdg-placeholder-box">Nenhum foro cadastrado.</div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabContrato" role="tabpanel" aria-labelledby="tabContrato-tab" tabindex="0">
+            <div class="wdg-resumo-area">
+              <div class="wdg-resumo-line"><strong>Condomínio:</strong> <span data-role="resumo-unidade">&mdash;</span></div>
+              <div class="wdg-resumo-line"><strong>Área Comum:</strong> <span data-role="resumo-area">&mdash;</span></div>
+            </div>
+            <form id="formCederContrato" class="row g-3 wdg-section-form" autocomplete="off" novalidate>
+              <div class="col-12">
+                <p class="wdg-placeholder-text">Campos do contrato serão definidos posteriormente.</p>
+              </div>
+            </form>
+            <div class="wdg-section-list">
+              <div class="wdg-section-list__header">
+                <h6 class="wdg-section-list__title">Contratos relacionados</h6>
+                <button class="btn btn-outline-primary btn-sm" type="button" data-section="contrato">Adicionar contrato</button>
+              </div>
+              <div id="listaCederContrato" class="wdg-placeholder-box">Nenhum contrato vinculado.</div>
+            </div>
+          </div>
+          </div>
+          <div class="wdg-cessao-tabs-actions">
+            <button type="button" class="btn btn-outline-secondary" data-role="tab-prev" disabled>Anterior</button>
+            <button type="button" class="btn btn-primary" data-role="tab-next">Próximo</button>
+          </div>
+        </div>
+        <section class="wdg-cessoes-wrapper">
+          <div class="wdg-cessoes-header">
+            <h5 class="wdg-cessoes-title">Cessões de Uso</h5>
+          </div>
+          <div id="listaCessoesUso" class="wdg-placeholder-box">Nenhuma cessão cadastrada.</div>
+        </section>
+      </div>
+      <div class="modal-footer wdg-cessao-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-action="dismiss">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wdg-cessao-modal{border:0;border-radius:22px;box-shadow:0 28px 64px rgba(15,23,42,.18);overflow:hidden;}
+  .wdg-cessao-header{border:0;padding:1.4rem 1.8rem;background:linear-gradient(135deg,rgba(37,99,235,.12),rgba(37,99,235,.04));align-items:flex-start;}
+  .wdg-cessao-header__main{display:flex;flex-direction:column;gap:.35rem;}
+  .wdg-cessao-header__main h5{margin:0;font-weight:700;color:#0f172a;}
+  .wdg-cessao-header__subtitle{margin:0;font-size:.85rem;color:#475569;}
+  .wdg-cessao-body{padding:1.5rem 1.8rem 1.8rem;display:flex;flex-direction:column;gap:1.6rem;}
+  .wdg-cessao-tabs-wrapper{display:flex;flex-direction:column;gap:1.2rem;}
+  .wdg-cessao-tabs-nav .nav-link{font-weight:600;}
+  .wdg-cessao-tabs{padding:1.35rem 0 0;}
+  .wdg-cessao-tabs-actions{display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+  .wdg-cessao-tabs-actions .btn{min-width:140px;}
+  .wdg-section-form{margin-bottom:1.25rem;}
+  .wdg-placeholder-text{margin:0;font-size:.88rem;color:#475569;}
+  .wdg-section-list{display:flex;flex-direction:column;gap:.75rem;}
+  .wdg-section-list__header{display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+  .wdg-section-list__title{margin:0;font-size:.9rem;font-weight:600;color:#0f172a;text-transform:uppercase;letter-spacing:.08em;}
+  .wdg-boleto-card{border:1px solid rgba(148,163,184,.45);border-radius:16px;padding:1rem 1.2rem;background:#f8fafc;box-shadow:inset 0 1px 0 rgba(255,255,255,.6);}
+  .wdg-boleto-card__header{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;}
+  .wdg-boleto-card__title{margin:0;font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0f172a;}
+  .wdg-boleto-card__subtitle{margin:0;font-size:.82rem;color:#475569;}
+  .wdg-boleto-config.d-none{display:none!important;}
+  .wdg-boleto-send-label{font-size:.7rem;letter-spacing:.12em;color:#475569;text-transform:uppercase;margin-bottom:.35rem;display:block;}
+  .wdg-placeholder-box{border:1px dashed rgba(148,163,184,.6);border-radius:14px;padding:1.1rem;color:#64748b;font-size:.85rem;background:#f8fafc;min-height:72px;display:flex;align-items:center;justify-content:center;text-align:center;}
+  .wdg-cessoes-wrapper{display:flex;flex-direction:column;gap:.9rem;}
+  .wdg-cessoes-header{display:flex;justify-content:flex-start;align-items:center;gap:1rem;}
+  .wdg-cessoes-title{margin:0;font-size:1rem;font-weight:700;color:#0f172a;}
+  .wdg-material-card{display:flex;flex-direction:column;gap:.75rem;border:1px solid rgba(148,163,184,.35);border-radius:14px;padding:1rem;background:#fff;min-height:160px;}
+  .wdg-material-list{display:flex;flex-direction:column;gap:.75rem;}
+  .wdg-material-row{display:flex;align-items:center;gap:1rem;border:1px solid rgba(148,163,184,.25);border-radius:12px;padding:.65rem .9rem;background:#f8fafc;}
+  .wdg-material-row .form-check{margin:0;}
+  .wdg-material-row .form-check-input{margin-top:0;}
+  .wdg-material-name{font-weight:600;color:#0f172a;display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;}
+  .wdg-material-qty{display:inline-flex;align-items:center;gap:.25rem;font-size:.75rem;color:#2563eb;background:rgba(37,99,235,.12);border-radius:999px;padding:.15rem .55rem;font-weight:600;}
+  .wdg-material-detail{font-size:.8rem;color:#64748b;}
+  .wdg-material-actions{display:flex;gap:.5rem;align-items:center;}
+  .wdg-material-card .wdg-placeholder-box{margin:0;}
+  .wdg-cessao-footer{border:0;padding:1.2rem 1.8rem;background:linear-gradient(90deg,rgba(37,99,235,.06),rgba(37,99,235,.02));}
+  .wdg-cessao-modal .btn-date-icon{display:none !important;}
+  .wdg-input-compact{max-width:150px;}
+  .wdg-cessao-modal input[type="time"]::-webkit-calendar-picker-indicator{display:none;}
+  .wdg-cessao-modal input[type="time"]::-webkit-clear-button{display:none;}
+  .wdg-cessao-modal input[type="time"]{padding-right:.5rem;}
+  .wdg-resumo-area{display:flex;flex-direction:column;gap:.25rem;margin-bottom:1rem;font-size:.9rem;color:#1f2937;}
+  .wdg-resumo-line strong{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:#475569;margin-right:.35rem;}
+  .wdg-resumo-line span{font-weight:600;color:#0f172a;}
+  .wdg-reserva-grid{--bs-gutter-x:.75rem;max-width:75%;margin:0 auto;}
+  .wdg-reserva-repeat{margin-top:.25rem;position:relative;display:flex;flex-direction:column;gap:.4rem;}
+  .wdg-reserva-repeat__hint{margin-top:.2rem;color:#64748b;font-size:.75rem;}
+  .wdg-repeat-control{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;border:1px solid rgba(148,163,184,.6);border-radius:12px;padding:.55rem .75rem;background:#fff;transition:border-color .2s ease,box-shadow .2s ease;}
+  .wdg-repeat-control.is-open{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+  .wdg-repeat-control.has-selection{border-color:rgba(37,99,235,.55);}
+  .wdg-repeat-control:focus-within{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+  .wdg-repeat-open{display:inline-flex;align-items:center;gap:.4rem;border:0;background:transparent;font-weight:600;color:#2563eb;border-radius:10px;padding:.4rem .55rem;transition:background-color .2s ease,color .2s ease;}
+  .wdg-repeat-open:hover{background:rgba(37,99,235,.08);color:#1d4ed8;}
+  .wdg-repeat-open:focus{outline:0;box-shadow:0 0 0 2px rgba(37,99,235,.25);}
+  .wdg-repeat-open__icon{font-size:1.1rem;line-height:1;}
+  .wdg-repeat-open__label{white-space:nowrap;}
+  .wdg-repeat-chips{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;min-height:32px;flex:1;}
+  .wdg-repeat-placeholder{color:#94a3b8;font-size:.8rem;}
+  .wdg-repeat-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .55rem;border-radius:999px;background:rgba(37,99,235,.12);color:#1d4ed8;font-size:.8rem;font-weight:600;line-height:1;}
+  .wdg-repeat-chip__remove{border:0;background:rgba(37,99,235,.15);width:18px;height:18px;border-radius:50%;color:#1d4ed8;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color .2s ease,color .2s ease;}
+  .wdg-repeat-chip__remove:hover{background:#1d4ed8;color:#fff;}
+  .wdg-repeat-chip__remove:focus{outline:0;box-shadow:0 0 0 2px rgba(37,99,235,.3);}
+  .wdg-repeat-clear{padding:0 .25rem;white-space:nowrap;color:#64748b;text-decoration:none;}
+  .wdg-repeat-clear:hover{color:#1d4ed8;text-decoration:underline;}
+  .wdg-repeat-control:not(.has-selection) .wdg-repeat-clear{display:none;}
+  .wdg-repeat-calendar{position:absolute;top:calc(100% + .5rem);left:0;background:#fff;border-radius:18px;border:1px solid rgba(148,163,184,.5);box-shadow:0 20px 40px rgba(15,23,42,.2);padding:1rem;display:flex;flex-direction:column;gap:.65rem;min-width:290px;width:min(320px,100%);z-index:120;}
+  .wdg-repeat-calendar[hidden]{display:none !important;}
+  .wdg-repeat-calendar__header{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:.4rem;}
+  .wdg-repeat-calendar__month{text-align:center;font-weight:700;color:#0f172a;font-size:.95rem;}
+  .wdg-repeat-calendar__nav{border:0;background:rgba(37,99,235,.08);color:#1d4ed8;border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:background-color .2s ease,color .2s ease;}
+  .wdg-repeat-calendar__nav:hover{background:#1d4ed8;color:#fff;}
+  .wdg-repeat-calendar__nav:focus{outline:0;box-shadow:0 0 0 2px rgba(37,99,235,.25);}
+  .wdg-repeat-calendar__close{justify-self:end;border:0;background:transparent;color:#94a3b8;font-size:1.25rem;line-height:1;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color .2s ease,color .2s ease;}
+  .wdg-repeat-calendar__close:hover{background:rgba(148,163,184,.16);color:#1f2937;}
+  .wdg-repeat-calendar__close:focus{outline:0;box-shadow:0 0 0 2px rgba(148,163,184,.4);}
+  .wdg-repeat-calendar__weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;font-size:.7rem;text-transform:uppercase;color:#94a3b8;font-weight:600;letter-spacing:.08em;}
+  .wdg-repeat-calendar__grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem;}
+  .wdg-repeat-calendar__day{border:0;border-radius:10px;padding:.55rem 0;background:#f8fafc;color:#0f172a;font-weight:600;font-size:.85rem;cursor:pointer;transition:background-color .2s ease,color .2s ease,box-shadow .2s ease;}
+  .wdg-repeat-calendar__day:hover:not(:disabled){background:#dbeafe;}
+  .wdg-repeat-calendar__day:focus{outline:0;box-shadow:0 0 0 2px rgba(37,99,235,.25);}
+  .wdg-repeat-calendar__day.is-outside{color:#94a3b8;background:#f1f5f9;}
+  .wdg-repeat-calendar__day.is-today{box-shadow:0 0 0 2px rgba(37,99,235,.35);}
+  .wdg-repeat-calendar__day.is-selected{background:#2563eb;color:#fff;box-shadow:0 6px 18px rgba(37,99,235,.35);}
+  .wdg-repeat-calendar__day.is-base{background:rgba(148,163,184,.25);color:#6b7280;cursor:not-allowed;box-shadow:none;}
+  .wdg-repeat-calendar__day:disabled{opacity:.45;cursor:not-allowed;}
+  .wdg-reserva-periodo__actions{display:flex;justify-content:flex-end;margin-bottom:.35rem;}
+  .wdg-reserva-periodo__title{text-align:center;margin:0 0 .65rem;font-size:.9rem;font-weight:600;color:#0f172a;text-transform:uppercase;letter-spacing:.08em;}
+  .wdg-reserva-periodo__container{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:.75rem;min-height:15.5rem;}
+  .wdg-reserva-periodo__container.has-items{border-style:solid;padding:1rem;gap:.8rem;align-items:stretch;}
+  .wdg-reserva-periodo__container.is-empty{border-style:dashed;}
+  .wdg-reserva-periodo__scroll{flex:1;display:flex;flex-direction:column;gap:.65rem;width:100%;align-items:center;justify-content:center;}
+  .wdg-reserva-periodo__container.has-items .wdg-reserva-periodo__scroll{align-items:stretch;justify-content:flex-start;}
+  .wdg-reserva-periodo__container.is-scrollable .wdg-reserva-periodo__scroll{max-height:11.75rem;overflow-y:auto;padding-right:.35rem;}
+  .wdg-reserva-periodo__scroll--empty{justify-content:center;align-items:center;}
+  .wdg-reserva-periodo__footer{margin-top:auto;width:100%;display:flex;flex-direction:column;align-items:center;gap:.25rem;}
+  .wdg-reserva-periodo__scroll::-webkit-scrollbar{width:6px;}
+  .wdg-reserva-periodo__scroll::-webkit-scrollbar-track{background:transparent;}
+  .wdg-reserva-periodo__scroll::-webkit-scrollbar-thumb{background:rgba(148,163,184,.45);border-radius:6px;}
+  .wdg-reserva-periodo__scroll:hover::-webkit-scrollbar-thumb{background:rgba(37,99,235,.45);}
+  .wdg-reserva-periodo__item{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.85rem 1rem;border:1px solid rgba(148,163,184,.4);border-radius:10px;background:#fff;text-align:left;color:#0f172a;font-size:.85rem;box-shadow:0 1px 2px rgba(15,23,42,.06);width:100%;}
+  .wdg-reserva-periodo__text{flex:1;font-weight:600;}
+  .wdg-reserva-periodo__buttons{display:flex;align-items:center;gap:.45rem;}
+  .wdg-reserva-periodo__pager{width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:.35rem;margin-top:0;}
+  .wdg-reserva-periodo__page-btn{border:1px solid rgba(37,99,235,.45);background:#fff;color:#2563eb;font-weight:600;padding:.35rem .7rem;border-radius:999px;transition:all .2s ease;cursor:pointer;min-width:38px;}
+  .wdg-reserva-periodo__page-btn.active{background:#2563eb;color:#fff;border-color:#2563eb;box-shadow:0 2px 6px rgba(37,99,235,.2);}
+  .wdg-reserva-periodo__page-btn:hover:not(:disabled){background:rgba(37,99,235,.08);box-shadow:0 0 0 2px rgba(37,99,235,.1);}
+  .wdg-reserva-periodo__page-btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;background:rgba(148,163,184,.25);border-color:rgba(148,163,184,.35);color:#475569;}
+  .wdg-reserva-periodo__pager-ellipsis{display:inline-flex;align-items:center;padding:0 .35rem;font-size:.75rem;color:#475569;}
+  .wdg-reserva-periodo__total{width:100%;text-align:center;font-size:.72rem;color:#475569;}
+  @media (max-width:992px){
+    .wdg-reserva-grid{max-width:100%;}
+  }
+  @media (max-width:768px){
+    .wdg-cessao-body{padding:1.3rem 1.2rem 1.6rem;}
+    .wdg-cessao-header{padding:1.2rem 1.2rem;}
+    .wdg-cessao-footer{padding:1rem 1.2rem;}
+    .wdg-cessao-tabs-actions{flex-direction:column;align-items:stretch;}
+    .wdg-cessao-tabs-actions .btn{width:100%;}
+    .wdg-reserva-periodo__toolbar{flex-direction:column;align-items:stretch;gap:.5rem;}
+    .wdg-reserva-periodo__actions{justify-content:flex-start;}
+    .wdg-reserva-periodo__page-size{justify-content:flex-start;}
+    .wdg-repeat-calendar{position:fixed;top:auto;bottom:1.5rem;left:50%;transform:translateX(-50%);width:min(360px,calc(100vw - 2.4rem));max-width:360px;z-index:1055;}
+    .wdg-repeat-control{align-items:flex-start;}
+  }
+</style>

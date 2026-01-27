@@ -1,0 +1,267 @@
+<div class="tab-pane fade show active" id="aba1">
+  <!-- 1ª linha: Unidade -->
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label no-colon">Unidade:</label>
+<select name="unidade_id" id="unidade" class="form-select" required>
+  <option value="">Selecione...</option>
+  <% (unidadesFiltradas || []).forEach(u => { 
+       const cod  = (u.codigo || '').toString().trim();
+       const nome = (u.nome   || '').toString().trim();
+       const label = [cod, nome].filter(Boolean).join(' - ');
+  %>
+    <option 
+      value="<%= u._id %>"
+      data-codigo="<%= cod %>"
+      data-nome="<%= nome %>">
+      <%= label %>
+    </option>
+  <% }) %>
+</select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Função</label>
+      <div class="input-group">
+        <input name="funcao_nome" id="funcao" class="form-control" readonly placeholder="Selecione uma função...">
+        <input type="hidden" name="funcao_id" id="funcao_id_hidden">
+        <button type="button" class="btn btn-outline-primary" id="btnSelecionarFuncao">
+          Selecionar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2ª linha: Nome e Nome Social -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-6">
+      <label class="form-label no-colon">Nome:</label>
+      <input name="nome" id="nome" class="form-control" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label no-colon">Nome Social:</label>
+      <input name="nome_social" id="extra_nome_social" class="form-control">
+    </div>
+  </div>
+
+  <!-- 3ª linha: Pai e Mãe -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-6">
+      <label class="form-label no-colon">Nome da Mãe:</label>
+      <input name="nome_mae" id="extra_nome_mae" class="form-control">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label no-colon">Nome do Pai:</label>
+      <input name="nome_pai" id="extra_nome_pai" class="form-control">
+    </div>
+  </div>
+
+  <!-- 4ª linha: RG, Órgão expedidor, UF RG, Data de expedição -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label no-colon">RG:</label>
+      <input name="rg" id="rg" maxlength="14" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">Órgão Expedidor:</label>
+      <div class="input-group">
+        <input name="rg_orgao" id="extra_orgao_expedidor" class="form-control" readonly>
+  <button type="button" class="btn btn-outline-primary"
+                id="btnAbrirModalOrgaoExpedidor"
+                data-bs-toggle="modal" data-bs-target="#modalOrgaoExpedidor">
+          Selecionar
+        </button>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">UF RG:</label>
+      <select name="rg_uf" id="rg_uf" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">Data de Expedição:</label>
+      <input name="rg_data_expedicao" id="extra_rg_data_expedicao" type="text" class="form-control date-br" placeholder="dd/mm/aaaa" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- 5ª linha: CPF/PIS -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label no-colon">CPF:</label>
+      <input name="cpf" id="cpf" class="form-control cpf-mask" required maxlength="14" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off">
+      <div class="invalid-feedback" id="cpfError">CPF inválido.</div>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">PIS/PASEP/NIS:</label>
+      <input name="pis" id="extra_pis" class="form-control pis-mask" maxlength="14" placeholder="000.00000.00-0" autocomplete="off" inputmode="numeric">
+      <div class="invalid-feedback" id="pisError">O número do PIS/PASEP/NIS deve conter 11 dígitos válidos.</div>
+    </div>
+  </div>
+
+  <!-- 6ª linha: Data de nascimento, Sexo, Estado Civil -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-3">
+      <label class="form-label no-colon">Data de Nascimento:</label>
+      <input name="data_nascimento" id="data_nascimento" type="text" class="form-control date-br" placeholder="dd/mm/aaaa" autocomplete="off" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">Sexo:</label>
+      <select name="sexo" id="sexo" class="form-select" required>
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">Estado Civil:</label>
+      <select name="estado_civil" id="estado_civil" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 7ª linha: Raça/Cor, Escolaridade -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label class="form-label no-colon">Raça/Cor:</label>
+      <select name="raca_cor" id="raca_cor" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label no-colon">Escolaridade:</label>
+      <select name="escolaridade" id="escolaridade" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 8ª linha: Nacionalidade, País de Nascimento, Data de Chegada -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label class="form-label no-colon">Nacionalidade:</label>
+      <select name="nacionalidade" id="nacionalidade" class="form-select" style="min-width:180px;">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="col-md-4" id="wrap_pais_nascimento">
+  <label class="form-label no-colon">País de Nascimento:</label>
+      <div class="input-group">
+        <input type="text" name="pais_nascimento" id="pais_nascimento" class="form-control">
+  <button type="button"
+    class="btn btn-outline-primary"
+                id="btnPaisNascimento"
+                data-bs-toggle="modal"
+                data-bs-target="#modalPaisNascimento">
+          Selecionar
+        </button>
+      </div>
+    </div>
+
+    <div class="col-md-4" id="wrap_data_chegada_brasil">
+      <label class="form-label no-colon">Data de Chegada ao Brasil:</label>
+      <input name="data_chegada_brasil" id="extra_data_chegada_brasil" type="text" class="form-control date-br" placeholder="dd/mm/aaaa" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- 9ª linha: Naturalidade -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-6">
+      <label class="form-label no-colon">Naturalidade:</label>
+      <div class="input-group">
+        <input name="naturalidade" id="naturalidade" class="form-control" readonly>
+  <button type="button" class="btn btn-outline-primary"
+                data-bs-toggle="modal" data-bs-target="#modalNaturalidade">
+          Selecionar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Endereço (campo exibido + popup). O objeto é enviado pelos HIDDENs -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-12">
+      <label class="form-label">Endereço</label>
+      <div class="input-group">
+        <input name="endereco_resumo" id="endereco_resumo" class="form-control" required readonly style="background-color:#f8f9fa; cursor:not-allowed;">
+  <button type="button"
+    class="btn btn-outline-primary"
+                data-action="abrirPopupEndereco"
+                data-target-input="#endereco_resumo">Pesquisar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Telefones e E-mail -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label class="form-label">Telefone Principal</label>
+      <input name="telefone" id="telefone" class="form-control telefone-mask" maxlength="15" placeholder="(00) 00000-0000">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Telefone Secundário</label>
+      <input name="telefone2" id="telefone2" class="form-control telefone-mask" maxlength="15" placeholder="(00) 00000-0000">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">E-mail (Login) *</label>
+      <input name="email" id="email" type="email" class="form-control email-mask" required>
+    </div>
+  </div>
+
+  <!-- Linha CTPS -->
+  <div class="row g-3 mt-2 align-items-end">
+    <div class="col-md-3">
+      <label class="form-label no-colon">Tipo CTPS:</label>
+      <div class="d-flex align-items-center gap-3">
+        <div class="form-check mb-0">
+          <input class="form-check-input" type="radio" name="tipo_ctps" id="ctpsFisico" value="FISICO" checked>
+          <label class="form-check-label" for="ctpsFisico">Físico</label>
+        </div>
+        <div class="form-check mb-0">
+          <input class="form-check-input" type="radio" name="tipo_ctps" id="ctpsDigital" value="DIGITAL">
+          <label class="form-check-label" for="ctpsDigital">Digital</label>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">Nº CTPS:</label>
+      <input name="ctps_numero" id="extra_ctps_numero" class="form-control" maxlength="7" inputmode="numeric" autocomplete="off">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">Série CTPS:</label>
+      <input name="ctps_serie" id="extra_ctps_serie" class="form-control" maxlength="4" inputmode="numeric" autocomplete="off">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label no-colon">UF CTPS:</label>
+      <select name="ctps_uf" id="extra_ctps_uf" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 10ª linha: PCD, CID -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label class="form-label no-colon">PCD:</label>
+      <select name="pcd" id="extra_pcd" class="form-select">
+        <option value="">Selecione...</option>
+        <option value="S">S - Sim</option>
+        <option value="N">N - Não</option>
+      </select>
+    </div>
+    <div class="col-md-4" id="wrap_tipo_deficiencia">
+      <label class="form-label no-colon">Tipo de Deficiência:</label>
+      <select name="tipo_deficiencia" id="extra_tipo_deficiencia" class="form-select">
+        <option value="">Selecione...</option>
+        <option value="1">1 - Física</option>
+        <option value="2">2 - Auditiva</option>
+        <option value="3">3 - Visual</option>
+        <option value="4">4 - Intelectual</option>
+        <option value="5">5 - Múltipla</option>
+        <option value="6">6 - Reabilitado (INSS)</option>
+      </select>
+    </div>
+    <div class="col-md-4" id="wrap_cid">
+      <label class="form-label no-colon">CID:</label>
+      <input name="cid" id="extra_cid" class="form-control" placeholder="Classificação Internacional de Doenças (CID)">
+    </div>
+  </div>
+</div>

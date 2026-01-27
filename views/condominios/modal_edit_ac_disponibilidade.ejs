@@ -1,0 +1,221 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalEditAreaDisponibilidade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content wdg-modal wdg-modal-ac-disp">
+      <div class="modal-header border-0">
+        <div class="wdg-ac-disp-head">
+          <span class="wdg-ac-disp-head-pre">Agenda de uso</span>
+          <h5 class="modal-title">Disponibilidade da área comum</h5>
+          <p class="wdg-ac-disp-head-sub">Selecione os dias e cadastre os intervalos de horário em que esta área poderá ser emprestada ou reservada pelos condôminos.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="wdg-ac-disp-layout">
+          <aside class="wdg-ac-disp-sidebar">
+            <div class="wdg-ac-disp-card wdg-ac-disp-focus">
+              <span class="wdg-ac-disp-card-label">Área selecionada</span>
+              <div id="acDispAreaNome" class="wdg-ac-disp-area">—</div>
+              <div id="acDispAreaUnidade" class="wdg-ac-disp-unit text-muted">—</div>
+            </div>
+            <div class="wdg-ac-disp-sep"></div>
+            <h6 class="wdg-ac-disp-section">Dias da semana</h6>
+            <div class="wdg-ac-disp-daylist" id="acDispDayList">
+              <button type="button" class="wdg-ac-day" data-role="day-selector" data-day="sunday" aria-pressed="false">
+                <span class="abbr">DOM</span><span class="label">Domingo</span><span class="status" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="wdg-ac-day" data-role="day-selector" data-day="monday" aria-pressed="false">
+                <span class="abbr">SEG</span><span class="label">Segunda</span><span class="status" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="wdg-ac-day" data-role="day-selector" data-day="tuesday" aria-pressed="false">
+                <span class="abbr">TER</span><span class="label">Terça</span><span class="status" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="wdg-ac-day" data-role="day-selector" data-day="wednesday" aria-pressed="false">
+                <span class="abbr">QUA</span><span class="label">Quarta</span><span class="status" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="wdg-ac-day" data-role="day-selector" data-day="thursday" aria-pressed="false">
+                <span class="abbr">QUI</span><span class="label">Quinta</span><span class="status" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="wdg-ac-day" data-role="day-selector" data-day="friday" aria-pressed="false">
+                <span class="abbr">SEX</span><span class="label">Sexta</span><span class="status" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="wdg-ac-day" data-role="day-selector" data-day="saturday" aria-pressed="false">
+                <span class="abbr">SÁB</span><span class="label">Sábado</span><span class="status" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="wdg-ac-disp-summary mt-4">
+              <div class="wdg-ac-disp-summary-item">
+                <span class="badge" id="acDispBadgeDias">0</span>
+                <span>Dias habilitados</span>
+              </div>
+              <div class="wdg-ac-disp-summary-item">
+                <span class="badge" id="acDispBadgeSlots">0</span>
+                <span>Intervalos criados</span>
+              </div>
+            </div>
+            <div class="wdg-ac-disp-note text-muted" id="acDispResumo">Nenhum dia disponível configurado.</div>
+          </aside>
+
+          <section class="wdg-ac-disp-editor">
+            <header class="wdg-ac-disp-editor-head">
+              <div>
+                <span class="wdg-ac-disp-editor-pre">Configurando</span>
+                <h6 id="acDispCurrentDayTitle" class="wdg-ac-disp-editor-title">Segunda-feira</h6>
+              </div>
+              <div class="form-check form-switch wdg-ac-disp-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="acDispDayEnabled">
+                <label class="form-check-label" for="acDispDayEnabled">Disponibilizar este dia</label>
+              </div>
+            </header>
+
+            <div id="acDispFeedback" class="wdg-ac-disp-feedback" role="alert" aria-live="polite"></div>
+
+            <div class="wdg-ac-disp-form" aria-describedby="acDispFeedback">
+              <div class="wdg-ac-disp-field">
+                <label class="form-label" for="acDispHoraInicio">Início</label>
+                <input type="time" id="acDispHoraInicio" class="form-control" autocomplete="off" placeholder="00:00">
+              </div>
+              <div class="wdg-ac-disp-field">
+                <label class="form-label" for="acDispHoraFim">Fim</label>
+                <input type="time" id="acDispHoraFim" class="form-control" autocomplete="off" placeholder="00:00">
+              </div>
+              <div class="wdg-ac-disp-form-actions">
+                <button type="button" class="btn btn-outline-secondary" data-action="clear-day" disabled>Limpar intervalos</button>
+                <button type="button" class="btn btn-primary" data-action="add-slot" disabled>Adicionar intervalo</button>
+              </div>
+            </div>
+
+            <div class="wdg-ac-disp-list" id="acDispSlotList" aria-label="Intervalos cadastrados"></div>
+            <div class="wdg-ac-disp-empty" id="acDispSlotEmpty">Nenhum intervalo cadastrado para este dia.</div>
+
+            <div class="wdg-ac-disp-copy" aria-live="polite">
+              <div class="wdg-ac-disp-copy-head">
+                <span class="wdg-ac-disp-copy-title">Copiar configuração para outros dias</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-action="copy-day" disabled>Aplicar</button>
+              </div>
+              <div class="wdg-ac-disp-copy-list" id="acDispCopyTargets">
+                <button type="button" class="wdg-ac-copy-chip" data-role="copy-target" data-day="sunday">Dom</button>
+                <button type="button" class="wdg-ac-copy-chip" data-role="copy-target" data-day="monday">Seg</button>
+                <button type="button" class="wdg-ac-copy-chip" data-role="copy-target" data-day="tuesday">Ter</button>
+                <button type="button" class="wdg-ac-copy-chip" data-role="copy-target" data-day="wednesday">Qua</button>
+                <button type="button" class="wdg-ac-copy-chip" data-role="copy-target" data-day="thursday">Qui</button>
+                <button type="button" class="wdg-ac-copy-chip" data-role="copy-target" data-day="friday">Sex</button>
+                <button type="button" class="wdg-ac-copy-chip" data-role="copy-target" data-day="saturday">Sáb</button>
+              </div>
+              <small class="text-muted">Selecione os dias que devem receber os mesmos intervalos configurados acima.</small>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-action="cancel" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" data-action="save">Salvar disponibilidade</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wdg-modal-ac-disp .modal-header{padding:1.3rem 1.5rem 0;}
+  .wdg-modal-ac-disp .modal-body{padding:1.25rem 1.5rem 1.5rem;background:linear-gradient(180deg,#f6f8ff 0,#ffffff 220px);}
+  .wdg-ac-disp-head-pre{display:inline-block;font-size:.75rem;text-transform:uppercase;letter-spacing:.14em;color:#2563eb;font-weight:700;line-height:1;}
+  .wdg-ac-disp-head-sub{margin:0;color:#475569;font-size:.88rem;max-width:620px;}
+  .wdg-ac-disp-layout{display:grid;grid-template-columns:280px 1fr;gap:1.5rem;align-items:start;}
+  .wdg-ac-disp-sidebar{display:flex;flex-direction:column;gap:1rem;}
+  .wdg-ac-disp-card{background:#fff;border-radius:16px;border:1px solid rgba(37,99,235,.14);padding:1rem 1.1rem;box-shadow:0 10px 24px rgba(37,99,235,.08);}
+  .wdg-ac-disp-focus{background:linear-gradient(135deg,rgba(37,99,235,.12),rgba(255,255,255,.95));}
+  .wdg-ac-disp-card-label{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.18em;color:#1d4ed8;font-weight:700;margin-bottom:.35rem;}
+  .wdg-ac-disp-area{font-size:1.08rem;font-weight:700;color:#0f172a;}
+  .wdg-ac-disp-unit{font-size:.82rem;}
+  .wdg-ac-disp-sep{height:1px;background:rgba(148,163,184,.35);margin:.25rem 0 .5rem;}
+  .wdg-ac-disp-section{font-size:.75rem;text-transform:uppercase;letter-spacing:.22em;color:#1e293b;font-weight:700;margin:0;}
+  .wdg-ac-disp-daylist{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.6rem;}
+  .wdg-ac-day{position:relative;border:1px solid rgba(37,99,235,.18);background:rgba(248,250,255,.8);border-radius:14px;padding:.65rem .75rem;display:flex;flex-direction:column;gap:.25rem;align-items:flex-start;transition:all .18s ease;font-weight:600;color:#1d4ed8;box-shadow:0 6px 18px rgba(37,99,235,.12);}
+  .wdg-ac-day .abbr{font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;}
+  .wdg-ac-day .label{font-size:.85rem;color:#0f172a;font-weight:600;}
+  .wdg-ac-day .status{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:rgba(148,163,184,.45);transition:all .18s ease;}
+  .wdg-ac-day.is-active{background:#1d4ed8;color:#fff;box-shadow:0 12px 26px rgba(29,78,216,.25);} 
+  .wdg-ac-day.is-active .label{color:#fff;}
+  .wdg-ac-day.is-active .abbr{color:rgba(255,255,255,.85);}
+  .wdg-ac-day[data-enabled="true"] .status{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+  .wdg-ac-day:focus-visible{outline:2px solid #2563eb;outline-offset:3px;}
+  .wdg-ac-disp-summary{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:.6rem;}
+  .wdg-ac-disp-summary-item{display:flex;flex-direction:column;align-items:flex-start;gap:.25rem;padding:.6rem .75rem;border:1px solid rgba(15,23,42,.08);border-radius:12px;background:rgba(255,255,255,.72);}
+  .wdg-ac-disp-summary-item .badge{background:#1d4ed8;color:#fff;font-size:.85rem;font-weight:700;border-radius:999px;padding:.25rem .6rem;}
+  .wdg-ac-disp-note{font-size:.78rem;line-height:1.35;}
+
+  .wdg-ac-disp-editor{background:#fff;border-radius:18px;border:1px solid rgba(37,99,235,.12);padding:1.25rem 1.35rem;box-shadow:0 18px 38px rgba(15,23,42,.12);display:flex;flex-direction:column;gap:1rem;}
+  .wdg-ac-disp-editor-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;}
+  .wdg-ac-disp-editor-pre{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.18em;color:#2563eb;font-weight:700;}
+  .wdg-ac-disp-editor-title{margin:0;font-size:1.05rem;font-weight:700;color:#0f172a;}
+  .wdg-ac-disp-switch .form-check-input{width:3rem;height:1.5rem;border-radius:999px;background:#e2e8f0;border-color:rgba(148,163,184,.4);}
+  .wdg-ac-disp-switch .form-check-input:checked{background-color:#2563eb;border-color:#1e40af;}
+  .wdg-ac-disp-switch .form-check-label{font-weight:600;color:#1e293b;}
+
+  .wdg-ac-disp-feedback{min-height:36px;border-radius:12px;padding:.55rem .85rem;font-size:.82rem;font-weight:600;display:none;}
+  .wdg-ac-disp-feedback[data-status]{display:block;}
+  .wdg-ac-disp-feedback[data-status="success"]{background:rgba(34,197,94,.16);color:#0f5132;border:1px solid rgba(34,197,94,.32);}
+  .wdg-ac-disp-feedback[data-status="warning"]{background:rgba(250,204,21,.18);color:#92400e;border:1px solid rgba(250,204,21,.35);}
+  .wdg-ac-disp-feedback[data-status="danger"]{background:rgba(248,113,113,.18);color:#b91c1c;border:1px solid rgba(248,113,113,.35);}
+  .wdg-ac-disp-feedback[data-status="info"]{background:rgba(14,165,233,.15);color:#0369a1;border:1px solid rgba(14,165,233,.28);}
+
+  .wdg-ac-disp-form{display:grid;grid-template-columns:repeat(2,minmax(0,130px)) auto;gap:1rem 1.25rem;align-items:end;}
+  .wdg-ac-disp-field .form-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:#475569;}
+  .wdg-ac-disp-form-actions{display:flex;gap:.75rem;justify-content:flex-end;align-items:center;}
+
+  .wdg-ac-disp-list{display:grid;gap:.65rem;}
+  .wdg-ac-disp-empty{display:none;font-size:.85rem;color:#94a3b8;font-weight:600;text-align:center;border:1px dashed rgba(148,163,184,.4);padding:.85rem;border-radius:12px;}
+  .wdg-ac-disp-empty.is-visible{display:block;}
+
+  .wdg-ac-slot{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-radius:14px;background:rgba(37,99,235,.08);border:1px solid rgba(29,78,216,.18);gap:.75rem;box-shadow:0 10px 24px rgba(29,78,216,.12);} 
+  .wdg-ac-slot-info{display:flex;flex-direction:column;gap:.2rem;}
+  .wdg-ac-slot-time{font-size:1rem;font-weight:700;color:#1e3a8a;letter-spacing:.08em;}
+  .wdg-ac-slot-meta{display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:#1f2937;text-transform:uppercase;letter-spacing:.12em;}
+  .wdg-ac-slot-actions{display:flex;gap:.4rem;}
+  .wdg-ac-slot-btn{border:none;background:rgba(248,113,113,.16);color:#b91c1c;font-weight:600;font-size:.78rem;border-radius:999px;padding:.35rem .7rem;cursor:pointer;transition:all .15s ease;}
+  .wdg-ac-slot-btn:hover{background:#dc2626;color:#fff;}
+  .wdg-ac-slot-btn:focus-visible{outline:2px solid #be123c;outline-offset:2px;}
+
+  .wdg-ac-disp-copy{margin-top:.35rem;border-radius:14px;border:1px dashed rgba(148,163,184,.4);padding:1rem;background:rgba(248,250,255,.75);display:flex;flex-direction:column;gap:.75rem;}
+  .wdg-ac-disp-copy-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;}
+  .wdg-ac-disp-copy-title{font-weight:700;font-size:.9rem;color:#0f172a;}
+  .wdg-ac-disp-copy-list{display:flex;flex-wrap:wrap;gap:.45rem;}
+  .wdg-ac-copy-chip{border:1px solid rgba(148,163,184,.35);background:#fff;border-radius:999px;padding:.35rem .85rem;font-weight:600;font-size:.78rem;color:#1f2937;transition:all .15s ease;}
+  .wdg-ac-copy-chip.is-active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;box-shadow:0 8px 20px rgba(29,78,216,.22);} 
+  .wdg-ac-copy-chip:disabled{opacity:.35;cursor:not-allowed;}
+  .wdg-ac-copy-chip:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px;}
+
+  @media (max-width:1199px){
+    .wdg-ac-disp-layout{grid-template-columns:1fr;}
+    .wdg-ac-disp-sidebar{flex-direction:row;flex-wrap:wrap;}
+    .wdg-ac-disp-sidebar > *{flex:1 1 200px;}
+    .wdg-ac-disp-card{height:100%;}
+  }
+  @media (max-width:768px){
+    .wdg-modal-ac-disp .modal-dialog{margin:1rem auto;}
+    .wdg-modal-ac-disp .modal-body{padding:1.15rem 1.1rem 1.25rem;}
+    .wdg-ac-disp-form{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .wdg-ac-disp-form-actions{flex-direction:column;align-items:stretch;}
+    .wdg-ac-disp-editor{padding:1rem 1.05rem;}
+    .wdg-ac-disp-daylist{grid-template-columns:repeat(auto-fill,minmax(95px,1fr));}
+  }
+</style>
+
+<script>
+  (function ensureModalCss(){
+    if(document.getElementById('wdgModalsCSS')) return;
+    var hrefs = ['/gestor/css/modals.css','<%= _bp %>/css/modals.css'];
+    for(var i=0;i<hrefs.length;i++){
+      var href = hrefs[i];
+      if(!href) continue;
+      if(document.querySelector('link[href="'+href.replace(/["']/g,'')+'"]')){ return; }
+      var link = document.createElement('link');
+      link.id = 'wdgModalsCSS';
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.onerror = function(){ try{ this.remove(); }catch(_e){} };
+      document.head.appendChild(link);
+      break;
+    }
+  })();
+</script>

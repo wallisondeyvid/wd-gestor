@@ -1,0 +1,396 @@
+<% /*
+  Feedback Widget (partial global)
+  - Estrutura apenas (sem CSS/JS)
+  - Renderiza somente em páginas internas (usuário logado)
+
+  Parâmetros esperados (padrão do projeto):
+    moduleBasePath: string (ex: '/gestor', '/condominios', '/escalas')
+    user: objeto do usuário logado
+
+  Contrato (referência):
+    - Widget: criar feedback, listar meus, detalhar meu
+    - Sem edição após envio
+    - Anexo: 1 arquivo, png/jpg/jpeg/webp, até 5MB (validação no backend)
+*/ %>
+
+<%
+  const __fbBase = (typeof moduleBasePath === 'string' && moduleBasePath)
+    ? moduleBasePath
+    : ((typeof basePath === 'string' && basePath) ? basePath : ((typeof _basePath === 'string' && _basePath) ? _basePath : '/gestor'));
+
+  const __assetVer = (typeof assetVersion !== 'undefined' && assetVersion)
+    ? String(assetVersion)
+    : ((typeof _assetVer !== 'undefined' && _assetVer) ? String(_assetVer) : String(Date.now()));
+
+  const __hasUser = (typeof user !== 'undefined' && user) ? true : false;
+%>
+
+<% if (__hasUser) { %>
+  <aside
+    id="wdgFeedbackWidget"
+    class="wdg-feedback-widget"
+    data-feedback-widget="1"
+    data-asset-ver="<%= __assetVer %>"
+    data-module-base="<%= __fbBase %>"
+    data-endpoint-create="/api/feedback"
+    data-endpoint-upload="/api/feedback/:feedback_id/anexo"
+    data-endpoint-my-list="/api/feedback/meus"
+    data-endpoint-my-detail="/api/feedback/meus/:feedback_id"
+    data-endpoint-admin-list="/api/gestor/feedback"
+    data-endpoint-admin-detail="/api/gestor/feedback/:feedback_id"
+    data-endpoint-admin-status="/api/gestor/feedback/:feedback_id/status"
+    data-endpoint-admin-reply="/api/gestor/feedback/:feedback_id/resposta"
+    aria-label="Widget de Feedback"
+  >
+    <!-- Botão flutuante (FAB) -->
+    <button
+      type="button"
+      class="wdg-feedback-fab"
+      aria-controls="wdgFeedbackDrawer"
+      aria-expanded="false"
+      aria-label="Abrir feedback"
+    >
+      <img
+        class="wdg-feedback-fab-icon wdg-feedback-fab-icon--collapsed"
+        src="<%= __fbBase %>/images/feedbackrec.png?v=<%= __assetVer %>"
+        alt="Feedback"
+        width="56"
+        height="56"
+        loading="lazy"
+        decoding="async"
+      >
+      <img
+        class="wdg-feedback-fab-icon wdg-feedback-fab-icon--expanded"
+        src="<%= __fbBase %>/images/feedbackexp.png?v=<%= __assetVer %>"
+        alt="Feedback"
+        width="56"
+        height="56"
+        loading="lazy"
+        decoding="async"
+      >
+    </button>
+
+    <!-- Drawer (abre acima do ícone; em mobile vira fullscreen via CSS futuro) -->
+    <section
+      id="wdgFeedbackDrawer"
+      class="wdg-feedback-drawer"
+      role="dialog"
+      aria-modal="false"
+      aria-label="Assistente de feedback"
+      hidden
+    >
+      <header class="wdg-feedback-header">
+        <div class="wdg-feedback-assistant">
+          <img
+            class="wdg-feedback-avatar"
+            src="<%= __fbBase %>/images/avatarposicao1.png?v=<%= __assetVer %>"
+            alt="Assistente"
+            width="44"
+            height="44"
+            loading="lazy"
+            decoding="async"
+            data-avatar="intro"
+          >
+          <div class="wdg-feedback-header-text">
+            <p class="wdg-feedback-header-title" data-feedback-title>
+              Feedback!
+            </p>
+            <p class="wdg-feedback-greeting" data-feedback-greeting>
+              Olá! Sou o assistente do WD Gestor. Como posso ajudar?
+            </p>
+            <p class="wdg-feedback-subtitle" data-feedback-subtitle hidden></p>
+          </div>
+        </div>
+        <div class="wdg-feedback-header-actions">
+          <button type="button" class="wdg-feedback-close" aria-label="Fechar" data-feedback-close>
+            <img class="wdg-feedback-close-icon" src="<%= __fbBase %>/images/cancelar.png?v=<%= __assetVer %>" alt="" width="24" height="24" loading="lazy" decoding="async">
+          </button>
+        </div>
+      </header>
+
+      <div class="wdg-feedback-body" data-feedback-body>
+        <!-- UI: Chat estilo WhatsApp (ativado por JS) -->
+        <section class="wdg-feedback-chat" data-chat="1" aria-label="Chat de feedback" hidden>
+          <div class="wdg-feedback-chat-log" data-chat-log aria-live="polite" aria-label="Mensagens"></div>
+          <div class="wdg-feedback-chat-quick" data-chat-quick aria-label="Respostas rápidas"></div>
+          <form class="wdg-feedback-chat-compose" data-chat-compose autocomplete="off">
+            <input class="wdg-feedback-chat-file" type="file" accept="image/png,image/jpeg,image/webp" data-chat-file>
+            <textarea class="wdg-feedback-chat-input" placeholder="Mensagem" data-chat-input rows="1"></textarea>
+            <button class="wdg-feedback-chat-send" type="submit" aria-label="Enviar" data-chat-send>
+              <img class="wdg-feedback-chat-send-icon" src="<%= __fbBase %>/images/enviar.png?v=<%= __assetVer %>" alt="" width="36" height="36" loading="lazy" decoding="async">
+            </button>
+          </form>
+        </section>
+
+        <!-- TELA: Home / Triagem -->
+        <section class="wdg-feedback-screen" data-screen="home" aria-label="Opções iniciais">
+          <div class="wdg-feedback-options" role="group" aria-label="Selecione um tipo">
+            <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="bug" aria-label="Reportar bug">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/bug.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              Bug
+            </button>
+            <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="sugestao" aria-label="Enviar sugestão">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/sugestao.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              Sugestão
+            </button>
+            <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="duvida" aria-label="Enviar dúvida">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/duvida.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              Dúvida
+            </button>
+            <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="critica" aria-label="Enviar crítica">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/critica.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              Crítica
+            </button>
+            <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="elogio" aria-label="Enviar elogio">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/elogio.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              Elogio
+            </button>
+            <button type="button" class="wdg-feedback-option" data-action="track" aria-label="Acompanhar meus feedbacks">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/acompfeedback.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              Acompanhar meus feedbacks
+            </button>
+          </div>
+        </section>
+
+        <!-- TELA: Envio genérico (Sugestão / Dúvida / Crítica / Elogio) -->
+        <section class="wdg-feedback-screen" data-screen="compose-generic" aria-label="Enviar feedback" hidden>
+          <div class="wdg-feedback-field">
+            <label class="wdg-feedback-label" for="wdgFeedbackMensagem">Mensagem</label>
+            <textarea
+              id="wdgFeedbackMensagem"
+              class="wdg-feedback-textarea"
+              rows="5"
+              placeholder="Escreva aqui..."
+              data-field="mensagem"
+            ></textarea>
+          </div>
+
+          <div class="wdg-feedback-meta" aria-label="Captura automática" hidden>
+            <input type="hidden" data-field="contexto.url" value="">
+            <input type="hidden" data-field="contexto.page_label" value="">
+            <input type="hidden" data-field="contexto.viewport" value="">
+            <input type="hidden" data-field="contexto.timezone" value="">
+            <input type="hidden" data-field="contexto.user_agent" value="">
+          </div>
+
+          <div class="wdg-feedback-actions">
+            <button type="button" class="wdg-feedback-btn" data-action="submit" data-flow="generic">Enviar</button>
+            <button type="button" class="wdg-feedback-btn wdg-feedback-btn--secondary" data-action="back">Voltar</button>
+          </div>
+        </section>
+
+        <!-- TELA: Envio Bug (sequencial) -->
+        <section class="wdg-feedback-screen" data-screen="compose-bug" aria-label="Reportar bug" hidden>
+          <div class="wdg-feedback-steps" data-bug-steps>
+            <!-- Passo 1 -->
+            <section class="wdg-feedback-step" data-step="bug-1" aria-label="Módulo ou página">
+              <img
+                class="wdg-feedback-avatar-inline"
+                src="<%= __fbBase %>/images/avatarposicao3.png?v=<%= __assetVer %>"
+                alt="Assistente anotando"
+                width="36"
+                height="36"
+                loading="lazy"
+                decoding="async"
+                data-avatar="bug"
+              >
+              <p class="wdg-feedback-question">Em qual módulo ou página ocorreu?</p>
+              <div class="wdg-feedback-field">
+                <label class="wdg-feedback-label" for="wdgBugModuloPagina">Módulo/Página</label>
+                <input
+                  id="wdgBugModuloPagina"
+                  class="wdg-feedback-input"
+                  type="text"
+                  placeholder="Ex.: Escalas / Ausências"
+                  data-field="bug.modulo_ou_pagina"
+                  autocomplete="off"
+                >
+                <button type="button" class="wdg-feedback-btn wdg-feedback-btn--secondary" data-action="use-current-page">
+                  Página atual
+                </button>
+              </div>
+            </section>
+
+            <!-- Passo 2 -->
+            <section class="wdg-feedback-step" data-step="bug-2" aria-label="Tentativa" hidden>
+              <p class="wdg-feedback-question">O que você estava tentando fazer?</p>
+              <div class="wdg-feedback-field">
+                <label class="wdg-feedback-label" for="wdgBugTentativa">Tentativa</label>
+                <textarea
+                  id="wdgBugTentativa"
+                  class="wdg-feedback-textarea"
+                  rows="4"
+                  placeholder="Descreva o objetivo..."
+                  data-field="bug.tentativa"
+                ></textarea>
+              </div>
+            </section>
+
+            <!-- Passo 3 -->
+            <section class="wdg-feedback-step" data-step="bug-3" aria-label="Ocorreu" hidden>
+              <p class="wdg-feedback-question">O que aconteceu?</p>
+              <div class="wdg-feedback-field">
+                <label class="wdg-feedback-label" for="wdgBugOcorreu">Ocorreu</label>
+                <textarea
+                  id="wdgBugOcorreu"
+                  class="wdg-feedback-textarea"
+                  rows="4"
+                  placeholder="Descreva o problema..."
+                  data-field="bug.ocorreu"
+                ></textarea>
+              </div>
+            </section>
+
+            <!-- Passo 4 (anexo) -->
+            <section class="wdg-feedback-step" data-step="bug-4" aria-label="Anexo" hidden>
+              <p class="wdg-feedback-question">Anexar imagem (print)</p>
+              <div class="wdg-feedback-field">
+                <label class="wdg-feedback-label" for="wdgBugAnexo">Anexo (opcional)</label>
+                <input
+                  id="wdgBugAnexo"
+                  class="wdg-feedback-file"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  data-field="attachment.file"
+                >
+                <p class="wdg-feedback-help" aria-label="Regras do anexo">
+                  Tipos: PNG/JPG/JPEG/WEBP. Tamanho máximo: 5 MB. 1 anexo por feedback.
+                </p>
+              </div>
+            </section>
+          </div>
+
+          <div class="wdg-feedback-meta" aria-label="Captura automática" hidden>
+            <input type="hidden" data-field="contexto.url" value="">
+            <input type="hidden" data-field="contexto.page_label" value="">
+            <input type="hidden" data-field="contexto.viewport" value="">
+            <input type="hidden" data-field="contexto.timezone" value="">
+            <input type="hidden" data-field="contexto.user_agent" value="">
+          </div>
+
+          <div class="wdg-feedback-actions">
+            <button type="button" class="wdg-feedback-btn" data-action="next">Continuar</button>
+            <button type="button" class="wdg-feedback-btn" data-action="submit" data-flow="bug" hidden>Enviar</button>
+            <button type="button" class="wdg-feedback-btn wdg-feedback-btn--secondary" data-action="back">Voltar</button>
+          </div>
+        </section>
+
+        <!-- TELA: Confirmação (após envio) -->
+        <section class="wdg-feedback-screen" data-screen="sent" aria-label="Feedback enviado" hidden>
+          <img
+            class="wdg-feedback-avatar-inline"
+              src="<%= __fbBase %>/images/avatarposicao4.png?v=<%= __assetVer %>"
+            alt="Assistente confirmando"
+            width="36"
+            height="36"
+            loading="lazy"
+            decoding="async"
+            data-avatar="sent"
+          >
+          <p class="wdg-feedback-confirmation" data-feedback-confirmation>
+            Recebido! Você pode acompanhar o status aqui pelo widget.
+          </p>
+          <p class="wdg-feedback-confirmation-id" data-feedback-id-line hidden>
+            Seu ID: <strong data-feedback-id></strong>
+          </p>
+          <div class="wdg-feedback-actions">
+            <button type="button" class="wdg-feedback-btn" data-action="track">Acompanhar meus feedbacks</button>
+            <button type="button" class="wdg-feedback-btn wdg-feedback-btn--secondary" data-action="home">Início</button>
+          </div>
+        </section>
+
+        <!-- TELA: Acompanhamento (lista) -->
+        <section class="wdg-feedback-screen" data-screen="track-list" aria-label="Meus feedbacks" hidden>
+          <div class="wdg-feedback-track-header">
+            <h3 class="wdg-feedback-title">Meus feedbacks</h3>
+            <p class="wdg-feedback-muted">Somente leitura. Não é possível editar após enviar.</p>
+          </div>
+
+          <div class="wdg-feedback-track-filters" aria-label="Filtros" hidden>
+            <select class="wdg-feedback-select" data-filter="tipo" aria-label="Filtrar por tipo">
+              <option value="">Todos os tipos</option>
+              <option value="bug">Bug</option>
+              <option value="sugestao">Sugestão</option>
+              <option value="duvida">Dúvida</option>
+              <option value="critica">Crítica</option>
+              <option value="elogio">Elogio</option>
+            </select>
+            <select class="wdg-feedback-select" data-filter="status" aria-label="Filtrar por status">
+              <option value="">Todos os status</option>
+              <option value="novo">Novo</option>
+              <option value="em_analise">Em análise</option>
+              <option value="em_correcao">Em correção</option>
+              <option value="resolvido">Resolvido</option>
+              <option value="arquivado">Arquivado</option>
+            </select>
+          </div>
+
+          <div class="wdg-feedback-list" data-feedback-list aria-live="polite">
+            <div class="wdg-feedback-empty" data-feedback-empty>
+              <p>Nenhum feedback carregado.</p>
+              <p class="wdg-feedback-muted">Use esta área para listar: tipo, status e última atualização.</p>
+            </div>
+          </div>
+
+          <div class="wdg-feedback-actions">
+            <button type="button" class="wdg-feedback-btn wdg-feedback-btn--secondary" data-action="home">Início</button>
+          </div>
+        </section>
+
+        <!-- TELA: Acompanhamento (detalhe) -->
+        <section class="wdg-feedback-screen" data-screen="track-detail" aria-label="Detalhes do feedback" hidden>
+          <div class="wdg-feedback-detail" data-feedback-detail>
+            <h3 class="wdg-feedback-title">Detalhes</h3>
+
+            <dl class="wdg-feedback-dl" aria-label="Metadados">
+              <div class="wdg-feedback-dl-row">
+                <dt>ID</dt>
+                <dd><span data-detail="feedback_id">—</span></dd>
+              </div>
+              <div class="wdg-feedback-dl-row">
+                <dt>Tipo</dt>
+                <dd><span data-detail="tipo">—</span></dd>
+              </div>
+              <div class="wdg-feedback-dl-row">
+                <dt>Status</dt>
+                <dd><span data-detail="status">—</span></dd>
+              </div>
+              <div class="wdg-feedback-dl-row">
+                <dt>Última atualização</dt>
+                <dd><span data-detail="updated_at">—</span></dd>
+              </div>
+            </dl>
+
+            <section class="wdg-feedback-detail-block" aria-label="Mensagem enviada">
+              <h4 class="wdg-feedback-subtitle">Mensagem enviada</h4>
+              <div class="wdg-feedback-readonly" data-detail="mensagem">—</div>
+            </section>
+
+            <section class="wdg-feedback-detail-block" aria-label="Resposta administrativa">
+              <h4 class="wdg-feedback-subtitle">Resposta do administrador</h4>
+              <div class="wdg-feedback-readonly" data-detail="admin_reply">—</div>
+            </section>
+
+            <section class="wdg-feedback-detail-block" aria-label="Anexo" hidden>
+              <h4 class="wdg-feedback-subtitle">Anexo</h4>
+              <a class="wdg-feedback-link" href="#" data-detail="attachment_download" aria-label="Baixar anexo">
+                Baixar anexo
+              </a>
+            </section>
+          </div>
+
+          <div class="wdg-feedback-actions">
+            <button type="button" class="wdg-feedback-btn wdg-feedback-btn--secondary" data-action="track">Voltar para lista</button>
+            <button type="button" class="wdg-feedback-btn wdg-feedback-btn--secondary" data-action="home">Início</button>
+          </div>
+        </section>
+      </div>
+
+      <footer class="wdg-feedback-footer" aria-label="Rodapé" hidden>
+        <small class="wdg-feedback-muted">
+          Status possíveis: Novo, Em análise, Em correção, Resolvido, Arquivado.
+        </small>
+      </footer>
+    </section>
+  </aside>
+<% } %>

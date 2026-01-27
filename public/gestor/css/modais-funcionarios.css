@@ -1,0 +1,106 @@
+/* Padronização visual dos modais de funcionários (seletores genéricos) */
+/* Baseia-se em modais.css (.modal-sheet) acrescentando ajustes específicos */
+
+.modal-sheet.theme-blue .search-wrap.has-icon-left { position:relative; }
+.modal-sheet.theme-blue .search-wrap.has-icon-left .search-icon{ position:absolute; left:.85rem; top:50%; width:18px; height:18px; transform:translateY(-50%); opacity:.55; pointer-events:none; }
+/* Forçar tamanho consistente do ícone de pesquisa em todos os modais (caso imagem original tenha dimensões grandes) */
+#modalBanco .search-wrap.has-icon-left .search-icon{ width:18px; height:18px; object-fit:contain; }
+.modal-sheet.theme-blue .search-wrap.has-icon-left input.form-control{ padding-left:2.2rem; height:42px; border-radius:10px; }
+.modal-sheet.theme-blue .search-wrap.has-icon-left input.form-control:focus{ box-shadow:0 0 0 .25rem rgba(13,110,253,.15); }
+
+/* List headers genéricos (quando markup original não usa .sheet-head) */
+.modal-sheet .list-header{ display:grid; grid-template-columns:90px 110px 1fr; column-gap:12px; align-items:center; font-weight:600; font-size:.75rem; letter-spacing:.5px; text-transform:uppercase; padding:.55rem .9rem; background:#f1f5f9; border:1px solid #dbe1ea; border-radius:.75rem .75rem 0 0; margin-bottom:0; color:#334155; }
+.modal-sheet .list-header .col-sel,.modal-sheet .list-header .col-cod{text-align:center;}
+
+/* List groups padrão (ul > li) */
+.modal-sheet ul.list-group{ border:1px solid #dbe1ea; border-top:0; border-radius:0 0 .75rem .75rem; max-height:360px; overflow:auto; }
+.modal-sheet ul.list-group li.list-group-item{ display:grid; grid-template-columns:90px 110px 1fr; column-gap:12px; align-items:center; padding:.55rem .9rem; border:0; border-bottom:1px solid #eef2f6; font-size:.9rem; }
+.modal-sheet ul.list-group li.list-group-item:last-child{ border-bottom:0; }
+.modal-sheet ul.list-group li.list-group-item:hover{ background:#f1f7ff; }
+.modal-sheet ul.list-group li.list-group-item:has(input:checked){ background:#e6f0ff; }
+.modal-sheet ul.list-group .col-sel{text-align:center;}
+.modal-sheet ul.list-group input[type=radio]{ width:1rem; height:1rem; margin:0; }
+.modal-sheet ul.list-group input[type=radio]:checked{ box-shadow:0 0 0 .15rem rgba(13,110,253,.25); }
+
+/* Estado vazio / mensagem */
+.modal-sheet .list-empty{ padding:1.1rem .9rem; font-size:.9rem; color:#64748b; }
+
+/* Ajustes tabela (modal banco) */
+.modal-sheet .table thead th{ font-size:.72rem; letter-spacing:.5px; text-transform:uppercase; }
+.modal-sheet .table td,.modal-sheet .table th{ vertical-align:middle; }
+.modal-sheet .table-hover tbody tr:hover{ background:#f1f7ff; }
+.modal-sheet .table tbody tr:has(input:checked){ background:#e6f0ff; }
+.modal-sheet .table input[type=radio]{ width:1rem; height:1rem; margin:0; }
+.modal-sheet .table input[type=radio]:checked{ box-shadow:0 0 0 .15rem rgba(13,110,253,.25); }
+
+/* Scrollbar coerente */
+.modal-sheet ul.list-group::-webkit-scrollbar{ width:10px; }
+.modal-sheet ul.list-group::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.15); border-radius:8px; }
+.modal-sheet ul.list-group:hover::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.28); }
+
+@media (max-width:576px){
+  .modal-sheet ul.list-group li.list-group-item,
+  .modal-sheet .list-header{ grid-template-columns:70px 96px 1fr; column-gap:8px; }
+}
+
+/* Categoria Trabalhador: permitir quebra de linha na descrição sem deslocar radio/código */
+#modalCategoriaTrabalhador .list-header{ grid-template-columns:70px 90px 1fr; }
+#modalCategoriaTrabalhador ul.list-group{ max-height:420px; }
+#modalCategoriaTrabalhador ul.list-group li.list-group-item{ grid-template-columns:70px 90px 1fr; align-items:flex-start; }
+#modalCategoriaTrabalhador .col-cod, #modalCategoriaTrabalhador .col-sel{ white-space:nowrap; }
+#modalCategoriaTrabalhador .col-desc{ line-height:1.25; }
+#modalCategoriaTrabalhador .item-row{ /* removido display:contents que colapsava largura da descrição */ }
+#modalCategoriaTrabalhador .list-group-item.list-empty{ grid-template-columns:1fr; }
+
+/* Tipo de Contrato: grid ajustado e multiline */
+#modalTipoContrato .list-header{ grid-template-columns:70px 90px 1fr; }
+#modalTipoContrato .list-scroll ul.list-group{ max-height:420px; }
+#modalTipoContrato ul.list-group li.list-group-item{ grid-template-columns:70px 90px 1fr; align-items:flex-start; }
+#modalTipoContrato .col-cod, #modalTipoContrato .col-sel{ white-space:nowrap; text-align:center; }
+#modalTipoContrato .col-sel input{ margin:0 auto; display:block; }
+#modalTipoContrato .col-desc{ line-height:1.25; }
+#modalTipoContrato .item-row{ /* removido display:contents que colapsava largura da descrição */ }
+#modalTipoContrato .list-group-item.list-empty{ grid-template-columns:1fr; }
+
+/* Selecionar Setor: grid próprio (largura maior para nome), multiline descrição */
+#modalSelecionarSetor .list-header{ grid-template-columns:70px 140px 1fr; }
+#modalSelecionarSetor .list-scroll ul.list-group{ max-height:420px; }
+#modalSelecionarSetor ul.list-group li.list-group-item{ grid-template-columns:70px 140px 1fr; align-items:flex-start; }
+#modalSelecionarSetor .col-cod, #modalSelecionarSetor .col-sel{ white-space:nowrap; text-align:center; }
+#modalSelecionarSetor .col-sel input{ margin:0 auto; display:block; }
+#modalSelecionarSetor .col-desc{ line-height:1.25; }
+#modalSelecionarSetor .item-row{ display:contents; }
+#modalSelecionarSetor .list-group-item.list-empty{ grid-template-columns:1fr; }
+
+/* ------------------------------------------------------------------ */
+/* OVERRIDES CRÍTICOS: corrigir largura zero em col-desc (Categoria / Tipo Contrato) */
+/* Racional: regras anteriores com li.list-group-item em grid + .item-row display:contents
+  combinadas a outras folhas criavam condição onde a coluna 1fr não recebia largura
+  resultando em offsetWidth=0 porém scrollWidth>0 (texto existia mas não renderizava). */
+#modalCategoriaTrabalhador ul.list-group li.list-group-item,
+#modalTipoContrato ul.list-group li.list-group-item { display:block; }
+
+#modalCategoriaTrabalhador .item-row,
+#modalTipoContrato .item-row { display:flex !important; align-items:flex-start; gap:8px; width:100%; }
+
+#modalCategoriaTrabalhador .item-row .col-sel,
+#modalTipoContrato  .item-row .col-sel { width:70px; flex:0 0 70px; text-align:center; }
+
+#modalCategoriaTrabalhador .item-row .col-cod,
+#modalTipoContrato  .item-row .col-cod { width:90px; flex:0 0 90px; font-weight:600; white-space:nowrap; }
+
+#modalCategoriaTrabalhador .item-row .col-desc,
+#modalTipoContrato  .item-row .col-desc { flex:1 1 auto; min-width:120px; display:block; white-space:normal; overflow:visible; }
+
+html.debug-col-desc #modalCategoriaTrabalhador .item-row .col-desc,
+html.debug-col-desc #modalTipoContrato .item-row .col-desc { outline:2px dashed #d00; background:rgba(255,0,0,.08); }
+
+/* Fim overrides críticos */
+
+/* Modal Banco: ajustar responsividade e largura mínima das colunas */
+#modalBanco .table-responsive{ max-height:420px; }
+#modalBanco table tbody tr td:first-child{ width:72px; text-align:center; }
+#modalBanco table tbody tr td:nth-child(2){ width:110px; text-align:center; white-space:nowrap; }
+#modalBanco table thead th{ position:sticky; top:0; background:#f1f5f9; }
+#modalBanco .banco-outro-box{ border:1px solid #dbe1ea; background:#f8fafc; padding:1rem; border-radius:.75rem; }
+#modalBanco .banco-outro-box input.form-control{ height:42px; }

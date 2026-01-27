@@ -1,0 +1,79 @@
+<div class="modal fade" id="modalBiometriaFacial" tabindex="-1" aria-labelledby="modalBiometriaFacialLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalBiometriaFacialLabel">Captura Biométrica Facial</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12 d-flex align-items-end gap-2">
+            <div class="flex-grow-1">
+              <label for="cameraSelect" class="form-label mb-1">Câmera</label>
+              <select id="cameraSelect" class="form-select form-select-sm">
+                <option value="">(padrão / frontal)</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="cameraRefresh" title="Atualizar lista de dispositivos">Atualizar</button>
+          </div>
+          <div class="col-12">
+            <div class="face-steps-bar mb-2" id="faceStepsBar">
+              <div class="face-step" data-step="0">
+                <div class="icon">1</div>
+                <div class="lbl">Frontal</div>
+              </div>
+              <div class="sep"></div>
+              <div class="face-step" data-step="1">
+                <div class="icon">2</div>
+                <div class="lbl">Direita</div>
+              </div>
+              <div class="sep"></div>
+              <div class="face-step" data-step="2">
+                <div class="icon">3</div>
+                <div class="lbl">Esquerda</div>
+              </div>
+            </div>
+            <div class="face-instruction-block" id="faceInstructionBlock">
+              <div class="primary" id="faceInstructionPrimary">Inicie a captura frontal.</div>
+              <div class="secondary text-muted small" id="faceInstructionSecondary">Posicione o rosto dentro do círculo. Iluminação uniforme. Sem óculos escuros ou boné.</div>
+            </div>
+          </div>
+
+          <div class="col-md-7">
+            <div id="faceVideoWrap" class="ratio ratio-4x3 border rounded position-relative bg-dark">
+              <video id="faceVideo" autoplay playsinline muted class="w-100 h-100" style="object-fit: cover; z-index:1;"></video>
+              <div id="faceOverlay" class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events:none; box-shadow: inset 0 0 0 3px rgba(0,123,255,.6); z-index:2;"></div>
+              <canvas id="faceOverlayCanvas" class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events:none; z-index:3;"></canvas>
+            </div>
+            <canvas id="faceCanvas" class="d-none" style="width:0;height:0;visibility:hidden;"></canvas>
+            <div id="faceInstructionExternal" class="mt-2 fw-semibold small text-primary">—</div>
+            <div class="mt-2 d-flex gap-2 align-items-center">
+              <button type="button" class="btn btn-primary" id="btnFaceCapture">Capturar</button>
+              <button type="button" class="btn btn-outline-secondary" id="btnFaceClear">Limpar</button>
+              <div class="small text-muted">Mantenha o rosto alinhado conforme instruções na área do vídeo.</div>
+            </div>
+
+            <div id="faceThumbs" class="mt-2 d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="col-md-5">
+            <div class="small text-muted">Pré-visualização e dados</div>
+            <div id="faceStatus" class="form-text mb-2">Câmera não iniciada ainda…</div>
+            <ul class="list-group list-group-flush small">
+              <li class="list-group-item px-0">Imagem: <span id="faceImgSize">—</span></li>
+              <li class="list-group-item px-0">SHA-256: <code id="faceSha256">—</code></li>
+            </ul>
+            <div class="mt-2">
+              <div class="small text-muted mb-1">Hashes das Capturas</div>
+              <div id="facialHashesList" class="d-flex flex-column gap-1 small"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnConfirmarFacial" disabled>Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>

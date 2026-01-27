@@ -1,0 +1,72 @@
+<div class="modal fade" id="modalCadastrarAusencia" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header py-2 bg-primary text-white">
+        <h6 class="modal-title mb-0">Cadastrar Ausência</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body small">
+        <form id="formCadastrarAusencia" autocomplete="off">
+          <!-- Linha 1: Funcionário -->
+          <div class="mb-2">
+            <label class="form-label mb-1">Funcionário</label>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="cadAusenciaFuncionario" placeholder="Selecionar" readonly>
+              <button class="btn btn-outline-secondary" type="button" id="btnCadAusenciaBuscar"><i class="bi bi-search"></i></button>
+              <button class="btn btn-outline-danger" type="button" id="btnCadAusenciaLimpar" title="Limpar">&times;</button>
+            </div>
+          </div>
+          <!-- Linha 2: Tipo de Ausência -->
+          <div class="mb-2">
+            <label class="form-label mb-1" for="cadAusenciaTipo">Tipo de Ausência</label>
+            <select id="cadAusenciaTipo" class="form-select form-select-sm" required>
+              <option value="">Selecione...</option>
+              <option>Licença médica</option>
+              <option>Licença maternidade</option>
+              <option>Licença paternidade</option>
+              <option>Doença em família</option>
+              <option>Luto</option>
+              <option>Núpcias</option>
+              <option>Afastamento sem remuneração</option>
+              <option>Doação de Sangue</option>
+              <option>Dispensa para assuntos particulares</option>
+              <option>Suspensão</option>
+              <option>Dispensado(a) pela chefia</option>
+              <option>Aniversário</option>
+              <option>Outros</option>
+            </select>
+          </div>
+          <!-- Linha 3: Período -->
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label mb-1" for="cadAusenciaInicio">Início</label>
+              <input type="text" class="form-control form-control-sm date-br text-center" id="cadAusenciaInicio" placeholder="dd/mm/aaaa" data-calendar="flatpickr" autocomplete="off" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label mb-1" for="cadAusenciaFim">Término</label>
+              <input type="text" class="form-control form-control-sm date-br text-center" id="cadAusenciaFim" placeholder="dd/mm/aaaa" data-calendar="flatpickr" autocomplete="off" required>
+            </div>
+          </div>
+          <!-- Linha 4: Motivo -->
+          <div class="mb-2">
+            <label class="form-label mb-1" for="cadAusenciaMotivo">Motivo</label>
+            <textarea id="cadAusenciaMotivo" class="form-control form-control-sm" rows="2" placeholder="" disabled></textarea>
+          </div>
+          <!-- Linha 5: Autorizado por -->
+            <div class="mb-2">
+              <label class="form-label mb-1">Autorizado por</label>
+              <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="cadAusenciaAutorizador" placeholder="Selecionar" readonly>
+                <button class="btn btn-outline-secondary" type="button" id="btnCadAusenciaBuscarAutorizador"><i class="bi bi-search"></i></button>
+                <button class="btn btn-outline-danger" type="button" id="btnCadAusenciaLimparAutorizador" title="Limpar">&times;</button>
+              </div>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnSalvarAusencia">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>

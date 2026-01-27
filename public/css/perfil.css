@@ -1,0 +1,108 @@
+
+/* =============================================================
+   MODAL PERFIL - LAYOUT AJUSTADO
+   Objetivos:
+   - Remover duplicações
+   - Reduzir largura para caber melhor em telas médias
+   - Avatar responsivo sem exagero (máx ~220px em desktops grandes)
+   - Grade de dados consistente e quebrando graciosamente em telas estreitas
+   ============================================================= */
+
+/* Largura: manter grande, mas não excessivo */
+#modalPerfil{ --bs-modal-width: 1020px; }
+#modalPerfil .modal-dialog{ max-width: var(--bs-modal-width) !important; }
+
+/* Wrapper do body do modal para garantir espaçamentos consistentes */
+.profile-modal{ padding-top:.25rem; }
+
+/* Avatar: agora tamanho FIXO (máx 160px desktop) para evitar discrepância vista no print */
+.profile-modal .profile-avatar-wrap{ display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
+.profile-modal .profile-avatar-wrap .avatar-xxl{ width:118px !important; height:118px !important; object-fit:cover; border:4px solid #fff; box-shadow:0 4px 12px rgba(0,0,0,.08); background:#f8f9fa; }
+@media (min-width:576px){ .profile-modal .profile-avatar-wrap .avatar-xxl{ width:132px !important; height:132px !important; } }
+@media (min-width:992px){ .profile-modal .profile-avatar-wrap .avatar-xxl{ width:150px !important; height:150px !important; } }
+@media (min-width:1400px){ .profile-modal .profile-avatar-wrap .avatar-xxl{ width:160px !important; height:160px !important; } }
+.profile-modal .card{ border-radius:1rem; }
+
+/* Caso a imagem quebre (onerror substituindo por ícone), pode reduzir */
+.profile-modal .avatar-xxl.is-fallback{ width:140px !important; height:140px !important; object-fit:contain; background:var(--bs-secondary-bg); }
+
+/* 2 colunas: label FIXO + valor ocupando todo o resto */
+.profile-dl{ display:grid; grid-template-columns: 210px minmax(0,1fr); column-gap:.75rem; align-items:center; }
+.profile-dl dt,
+.profile-dl dd{
+  margin:0;
+  padding:.55rem .25rem;
+  border-bottom:1px dashed var(--bs-border-color);
+}
+
+/* última linha sem borda */
+.profile-dl dt:nth-last-child(-n+2),
+.profile-dl dd:nth-last-child(-n+2){ border-bottom:0; }
+
+/* rótulos */
+.profile-dl dt{
+  font-size:.74rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  font-weight:600;
+  color:var(--bs-secondary-color);
+  white-space:nowrap;
+}
+
+/* valores: permitem quebra em telas muito estreitas, mas mantêm uma linha normal */
+.profile-dl dd{ font-weight:600; color:var(--bs-emphasis-color); white-space:nowrap; overflow:visible; text-overflow:clip; }
+
+/* garante que o e-mail não herde regras antigas */
+#perfilEmail{
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+
+/* seção de módulos */
+.profile-section-title{
+  font-size:.8rem;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--bs-secondary-color);
+  font-weight:700;
+}
+#perfilModulos .badge{
+  border:1px solid var(--bs-border-color);
+  border-radius:999px;
+  padding:.45rem .6rem;
+  background:var(--bs-primary-bg-subtle,#eef5ff);
+  color:var(--bs-primary);
+}
+
+/* Quando usamos a classe do Bootstrap que já define texto branco, garante-se o contraste */
+#perfilModulos .badge.text-bg-primary{
+  color:#fff !important;
+}
+
+/* Responsivo: em telas muito estreitas, vira uma coluna */
+@media (max-width:575.98px){ .profile-dl{ grid-template-columns:1fr; } .profile-dl dd, .profile-dl dt{ white-space:normal; } }
+
+/* Ajuste de espaçamento inferior para separar visualmente avatar e card de dados em telas médias */
+@media (max-width:991.98px){ .profile-modal aside.col-md-4{ margin-bottom:1rem; } }
+
+/* Otimiza visual das badges (já havia duplicação) */
+#perfilModulos .badge{ border:1px solid var(--bs-border-color); border-radius:999px; padding:.45rem .6rem; background:var(--bs-primary-bg-subtle,#eef5ff); color:var(--bs-primary); }
+#perfilModulos .badge.text-bg-primary{ color:#fff !important; }
+
+/* Ícone do título do modal (evita imagem enorme no header) */
+#modalPerfil .modal-header .icon-title{ width:32px; height:32px; object-fit:contain; margin-right:6px; }
+@media (max-width:575.98px){ #modalPerfil .modal-header .icon-title{ width:26px; height:26px; } }
+
+/* Lado esquerdo: garantir que card não estique pela altura gigante do avatar anterior */
+.profile-modal aside .card{ height:auto !important; }
+.profile-modal aside .card-body{ padding:1rem .85rem 1.25rem; }
+.profile-modal #perfilFotoBotoes .btn{ font-size:.72rem; }
+
+/* Segurança extra: se alguma regra externa definir img { width:100% } dentro do modal, anulamos */
+.profile-modal img.avatar-xxl{ display:inline-block; }
+
+/* Quebra segura para valores potencialmente longos (ex.: Unidade) */
+#perfilUnidade{ white-space: normal !important; overflow-wrap:anywhere; word-break: break-word; }
+/* Opcional: nomes longos também podem quebrar com elegância */
+#perfilNome{ white-space: normal; overflow-wrap:anywhere; word-break: break-word; }

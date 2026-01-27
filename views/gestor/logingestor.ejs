@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Login - <%= (typeof moduleLabel==='string' && moduleLabel) ? ('Módulo ' + moduleLabel) : 'Módulo Gestor' %></title>
+  <% const _bp = (typeof basePath === 'string' && basePath && basePath !== '/') ? basePath : '/gestor'; %>
+  <% const _basePath = _bp; %>
+  <%- include('partials/basepath-var') %>
+  <link rel="icon" href="<%= _bp %>/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons (para os ícones nos inputs) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Seu CSS -->
+  <link rel="stylesheet" href="<%= _bp %>/css/login.css?v=<%= Date.now() %>" onerror="console.log('CSS não carregado')" />
+  <link rel="stylesheet" href="<%= _bp %>/css/icons.css" />
+  <!-- Tamanhos de logo e ícones centralizados em /css/login.css (override inline removido) -->
+  <style>
+    /* Fallback inline caso o CSS não carregue */
+    .login-bg {
+      background: linear-gradient(180deg, #4a90e2 0%, #63a4ff 35%, #8bb8ff 70%, #b3d1ff 100%) !important;
+      min-height: 100vh !important;
+    }
+  </style>
+</head>
+<body class="login-bg">
+
+  <!-- Container para toasts flutuantes (top-right) -->
+  <div id="toast-area" class="position-fixed top-0 end-0 p-3" style="z-index:1080; width: 380px; max-width: 100%;"></div>
+
+  <main class="min-vh-100 d-flex align-items-center justify-content-center px-3">
+    <div class="login-card card shadow-lg border-0">
+      <div class="card-body p-4 p-sm-5">
+
+        <!-- Marca / título -->
+        <div class="text-center mb-4">
+          <img src="<%= _bp %>/images/logoWDGestor.png" alt="WDGestor" class="brand-logo mb-2" />
+          <p class="text-muted m-0">Módulo <%= (typeof moduleLabel==='string' && moduleLabel) ? moduleLabel : 'Gestor' %></p>
+        </div>
+
+        <!-- Alertas -->
+        <% if (typeof mensagem !== 'undefined' && mensagem) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= mensagem %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+          </div>
+        <% } %>
+
+    <!-- Form -->
+  <form id="loginForm" action="<%= _basePath %>/login" method="POST" novalidate>
+          <!-- Garante roteamento correto do módulo no backend -->
+    <input type="hidden" name="modulo" value="<%= _bp.replace(/^\//,'') %>" />
+          <div class="mb-3">
+            <label for="email" class="form-label small text-muted mb-1">E-mail</label>
+            <div class="input-group">
+              <span class="input-group-text"><img src="<%= _bp %>/images/email.png" alt="E-mail" class="icon icon-sm"></span>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                placeholder="email@empresa.com"
+                autocomplete="username"
+                autofocus
+                required
+                value="<%= typeof email !== 'undefined' ? email : '' %>"
+              />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="senha" class="form-label small text-muted mb-1">Senha</label>
+            <div class="input-group">
+              <span class="input-group-text"><img src="<%= _bp %>/images/senha.png" alt="Senha" class="icon icon-sm"></span>
+              <input
+                type="password"
+                class="form-control"
+                id="senha"
+                name="senha"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                required
+              />
+              <button class="btn btn-outline-secondary toggle-pass" type="button" aria-label="Mostrar/ocultar senha">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="1" id="lembrar" name="lembrar" />
+              <label class="form-check-label" for="lembrar">Lembrar-me</label>
+            </div>
+            <a class="small" href="<%= _basePath %>/esquecisenha">Esqueci minha senha</a>
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+          </div>
+
+          <div class="text-center mt-3">
+            <span class="small text-muted">Ainda não é usuário?</span>
+            <a class="small" href="<%= _basePath %>/contato">Entre em contato</a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Forçar aplicação do fundo caso não seja aplicado
+    document.addEventListener('DOMContentLoaded', function() {
+      const body = document.body;
+      if (!body.classList.contains('login-bg')) {
+        body.classList.add('login-bg');
+      }
+      // Garantir que o CSS seja aplicado
+      body.style.background = 'linear-gradient(180deg, #4a90e2 0%, #63a4ff 35%, #8bb8ff 70%, #b3d1ff 100%)';
+      body.style.minHeight = '100vh';
+      body.style.backgroundAttachment = 'fixed';
+      body.style.backgroundSize = 'cover';
+    });
+
+    // Utilitário para criar toast
+    function showToast({title='Aviso', body='', variant='danger', autohide=true, delay=8000}) {
+      const area = document.getElementById('toast-area');
+      if (!area) return;
+      const id = 't'+Date.now()+Math.random().toString(16).slice(2);
+      const headerBg = variant==='danger' ? 'bg-danger text-white' : (variant==='warning' ? 'bg-warning text-dark' : 'bg-primary text-white');
+      const tpl = document.createElement('div');
+      tpl.className = 'toast shadow border-0 mb-2 fade';
+      tpl.id = id;
+      tpl.setAttribute('role','alert');
+      tpl.setAttribute('aria-live','assertive');
+      tpl.setAttribute('aria-atomic','true');
+      tpl.innerHTML = `
+        <div class="toast-header ${headerBg} py-2">
+          <strong class="me-auto small">${title}</strong>
+          <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+        <div class="toast-body small" style="white-space:pre-line;">${body}</div>`;
+      area.appendChild(tpl);
+      const toast = new bootstrap.Toast(tpl, { autohide, delay });
+      toast.show();
+      tpl.addEventListener('hidden.bs.toast', () => tpl.remove());
+    }
+
+    // Foco/limpeza conforme parâmetro de erro (?erro=usuario|senha|bloqueado|servidor)
+    (() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const erro = params.get('erro');
+        const min  = params.get('min');
+        const restantes = params.get('restantes');
+  const emailEl = document.getElementById('email');
+        const senhaEl = document.getElementById('senha');
+        if (erro === 'usuario') { emailEl && (emailEl.value = ''); senhaEl && (senhaEl.value = ''); emailEl?.focus(); }
+        if (erro === 'senha') {
+          senhaEl && (senhaEl.value = '');
+          senhaEl?.focus();
+          if (restantes) {
+            const r = parseInt(restantes,10);
+            if (!isNaN(r)) {
+              showToast({
+                title: 'Senha incorreta',
+                body: r > 0 ? `Verifique seus dados. Restam ${r} tentativa${r>1?'s':''} antes do bloqueio.` : 'Última tentativa restante antes do bloqueio.',
+                // Regra: amarelo (warning) para 5,4,3,2 restantes; vermelho (danger) somente quando restar 1
+                variant: r === 1 ? 'danger' : 'warning'
+              });
+            } else {
+              showToast({ title: 'Senha incorreta', body: 'Verifique seus dados e tente novamente.' });
+            }
+          } else {
+            showToast({ title: 'Senha incorreta', body: 'Verifique seus dados e tente novamente.' });
+          }
+        }
+        if (erro === 'servidor') {
+          showToast({
+            title: 'Serviço indisponível',
+            body: 'Não foi possível conectar ao servidor de dados agora. Tente novamente em alguns instantes.',
+            variant: 'warning'
+          });
+        }
+        if (erro === 'modulo') {
+          const motivo = params.get('motivo');
+          const reasons = {
+            'modulo_inexistente': 'Este módulo não está disponível no sistema.',
+            'diretor_sem_unidade': 'Seu usuário não possui unidade vinculada para acessar este módulo.',
+            'modulo_nao_habilitado_unidade': 'O módulo não está habilitado na sua unidade.',
+            'user_sem_funcionario': 'Seu usuário não está vinculado a um funcionário.',
+            'user_sem_funcao': 'Seu usuário não possui uma função associada.',
+            'funcao_inativa': 'Sua função está inativa para uso.',
+            'modulo_nao_habilitado_funcao': 'Sua função não possui permissão para este módulo.',
+            'timeout_modulo': 'Não foi possível validar as permissões a tempo. Tente novamente.',
+            'erro_interno': 'Não foi possível validar suas permissões agora. Tente novamente.'
+          };
+          const msg = reasons[motivo] || 'Você não tem permissão para acessar este módulo.';
+          showToast({ title: 'Acesso não permitido', body: msg, variant: 'warning' });
+        }
+        if (erro === 'bloqueado') {
+          const minutos = min && !isNaN(parseInt(min,10)) ? parseInt(min,10) : null;
+          showToast({
+            title: 'Conta bloqueada',
+            body: minutos ? `Sua conta está temporariamente bloqueada. Tente novamente em aproximadamente ${minutos} minuto${minutos>1?'s':''}.` : 'Sua conta está temporariamente bloqueada. Aguarde alguns minutos e tente novamente.',
+            variant: 'danger',
+            delay: 12000
+          });
+          senhaEl && (senhaEl.value = '');
+        }
+        if (erro === 'suspenso' || erro === 'usuario-desativado') {
+          // Mostrar toast para usuário suspenso/desativado no canto superior direito
+          showToast({
+            title: 'Acesso suspenso',
+            body: 'O seu login está suspenso. Faça contato com o suporte para reativar o seu acesso.',
+            variant: 'danger',
+            delay: 12000
+          });
+          // Limpar campos e focar no email
+          emailEl && (emailEl.value = '');
+          senhaEl && (senhaEl.value = '');
+          emailEl?.focus();
+        }
+        if (erro === 'rate-limit') {
+          // Mostrar alerta de rate limit
+          const alertDiv = document.createElement('div');
+          alertDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+            max-width: 300px;
+          `;
+          alertDiv.innerHTML = `
+            <strong>🚫 Muitas Tentativas</strong><br>
+            <small>Limite de tentativas excedido. Aguarde 15 minutos antes de tentar novamente.</small>
+          `;
+          document.body.appendChild(alertDiv);
+
+          // Remover alerta após 10 segundos
+          setTimeout(() => {
+            if (alertDiv.parentNode) {
+              alertDiv.remove();
+            }
+          }, 10000);
+
+          // Limpar campos e focar no email
+          emailEl && (emailEl.value = '');
+          senhaEl && (senhaEl.value = '');
+          emailEl?.focus();
+        }
+      } catch {}
+    })();
+
+    // === Lembrar-me ===
+    (function() {
+      try {
+        const LS_KEY = 'wdg_login_remember';
+        const emailEl = document.getElementById('email');
+        const senhaEl = document.getElementById('senha');
+        const chk = document.getElementById('lembrar');
+        if (!emailEl || !senhaEl || !chk) return;
+
+        function simpleEncrypt(str) {
+          // Não é criptografia forte; apenas ofuscação para não deixar plain-text imediato
+          const b64 = btoa(unescape(encodeURIComponent(str)));
+            return b64.split('').reverse().join('');
+        }
+        function simpleDecrypt(str) {
+          try {
+            const rev = str.split('').reverse().join('');
+            return decodeURIComponent(escape(atob(rev)));
+          } catch { return ''; }
+        }
+
+        // Restaurar
+        const savedRaw = localStorage.getItem(LS_KEY);
+        if (savedRaw) {
+          try {
+            const obj = JSON.parse(savedRaw);
+            if (obj.email) emailEl.value = obj.email;
+            if (obj.senha) senhaEl.value = simpleDecrypt(obj.senha);
+            if (obj.email) chk.checked = true; // marca se havia algo salvo
+          } catch {}
+        }
+
+        // Ao submeter formulário, salvar ou limpar
+        const form = emailEl.closest('form');
+        if (form) {
+          form.addEventListener('submit', () => {
+            try {
+              if (chk.checked) {
+                const payload = {
+                  email: emailEl.value.trim(),
+                  senha: senhaEl.value ? simpleEncrypt(senhaEl.value) : ''
+                };
+                localStorage.setItem(LS_KEY, JSON.stringify(payload));
+              } else {
+                localStorage.removeItem(LS_KEY);
+              }
+            } catch (e) { console.warn('Falha lembrar-me:', e.message); }
+          });
+        }
+
+        // Se desmarcar manualmente, limpa imediatamente
+        chk.addEventListener('change', () => {
+          if (!chk.checked) {
+            localStorage.removeItem(LS_KEY);
+          }
+        });
+      } catch (e) { console.warn('Erro inicializando lembrar-me:', e.message); }
+    })();
+
+    // Mostrar/ocultar senha
+    document.querySelector('.toggle-pass')?.addEventListener('click', (e) => {
+      const input = document.getElementById('senha');
+      const icon = e.currentTarget.querySelector('i');
+      if (!input) return;
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      icon.classList.toggle('bi-eye', showing);
+      icon.classList.toggle('bi-eye-slash', !showing);
+    });
+
+    // Observação: o backend já redireciona corretamente para primeiro acesso quando necessário.
+    // Mantemos submissão nativa do form para evitar loops de redirecionamento em alguns navegadores.
+  </script>
+  <!-- Padroniza validação e comportamentos do login (cache-busting para evitar CDN 404 em deploys) -->
+  <script src="<%= _bp %>/js/pages/login.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

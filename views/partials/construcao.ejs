@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= (moduleName || 'Módulo') %> • Em breve</title>
+  <!-- favicon inline para evitar [object Promise] em modo async do EJS -->
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="/images/logoWDGestor.png?v=4">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    :root{
+      --wdg-grad-a:#4a90e2; --wdg-grad-b:#63a4ff; --wdg-grad-c:#8bb8ff; --wdg-grad-d:#b3d1ff;
+    }
+    body{
+      min-height:100vh;
+      background: linear-gradient(180deg, var(--wdg-grad-a) 0%, var(--wdg-grad-b) 35%, var(--wdg-grad-c) 70%, var(--wdg-grad-d) 100%);
+      background-attachment: fixed;
+      display:flex; align-items:center; justify-content:center;
+      color:#0f2350;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .wdg-card{
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      max-width: 880px;
+      width: calc(100% - 32px);
+      overflow: hidden;
+    }
+    .wdg-hero{
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+      color:#fff;
+      padding: 28px 28px 20px;
+    }
+    .wdg-hero .badge{ background: rgba(255,255,255,.2); }
+    .wdg-body{ padding: 28px; }
+    .wdg-title{ font-weight: 800; letter-spacing:.3px; }
+    .wdg-sub{ color:#164e63; }
+    .wdg-chip{
+      display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:.45rem .75rem;
+      background:#eef2ff; color:#3730a3; border:1px solid rgba(55,48,163,.2);
+    }
+    .wdg-cta .btn{ border-radius: 999px; padding: .6rem 1rem; }
+    .wdg-illus{ position:relative; }
+    .wdg-illus .blob{
+      position:absolute; inset:-20px; filter: blur(24px); opacity:.35;
+      background: radial-gradient(120px 80px at 30% 30%, #60a5fa, rgba(96,165,250,0)),
+                  radial-gradient(120px 80px at 70% 60%, #93c5fd, rgba(147,197,253,0));
+    }
+    /* Garantir que o botão Voltar seja clicável e fique acima das ilustrações */
+    .wdg-back { position:absolute; z-index:10; }
+    .wdg-illus, .wdg-illus * { pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div class="wdg-card">
+    <div class="wdg-hero">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 position-relative">
+        <a href="<%= (basePath || '/gestor') %>/logout" class="btn btn-light wdg-back top-0 end-0 m-2 m-sm-3" style="right:0; top:0;" title="Voltar para o login">
+          Voltar
+        </a>
+        <div>
+          <span class="badge rounded-pill text-bg-light text-uppercase fw-semibold">Em breve</span>
+          <h1 class="h3 wdg-title mt-2 mb-0"><%= (moduleName || 'Módulo') %> em construção</h1>
+          <p class="mb-0 opacity-75">Estamos finalizando os últimos ajustes para liberar este módulo.</p>
+        </div>
+        <div class="wdg-illus d-none d-md-block" style="width:180px; height:120px;">
+          <div class="blob"></div>
+          <svg viewBox="0 0 24 24" width="96" height="96" fill="#fff" style="opacity:.9; position:relative;">
+            <path d="M21 18v-5a1 1 0 0 0-1-1h-4V9a1 1 0 0 0-1-1h-2V5a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1v3H3a1 1 0 0 0-1 1v3h2v6a1 1 0 0 0 1 1h10.17l1.41 1.41a1 1 0 0 0 1.42 0l3-3a1 1 0 0 0 0-1.42L19.59 17H20a1 1 0 0 0 1-1z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="wdg-body">
+      <div class="row g-4 align-items-center">
+        <div class="col-12 col-md-7">
+          <p class="lead mb-2 wdg-sub">O seu acesso será liberado assim que o módulo for publicado.</p>
+          <p class="text-muted mb-3">Obrigado pela paciência. Enquanto isso, você pode retornar ao painel ou entrar em contato com o suporte, se necessário.</p>
+          <div class="wdg-cta d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="mailto:suporte@wdgestor.app.br">Falar com o suporte</a>
+          </div>
+        </div>
+        <div class="col-12 col-md-5">
+          <div class="wdg-chip">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+              <path d="M8 3.5a.5.5 0 0 1 .5.5v4.25l3 1.8a.5.5 0 1 1-.5.866l-3.5-2.1A.5.5 0 0 1 7.5 8V4a.5.5 0 0 1 .5-.5z"/>
+              <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm0-1A7 7 0 1 1 8 1a7 7 0 0 1 0 14z"/>
+            </svg>
+            Em breve disponível para acesso
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

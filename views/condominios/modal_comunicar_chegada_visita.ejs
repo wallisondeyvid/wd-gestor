@@ -1,0 +1,38 @@
+<div class="modal fade" id="wdgChegadaVisitaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="--bs-modal-width: 1080px">
+    <div class="modal-content wdg-hab-modal wdg-chegada-modal">
+      <div class="modal-header border-0 pb-0">
+        <div class="wdg-visita-modal-head">
+          <div class="wdg-visita-modal-badge" aria-hidden="true">
+            <i class="bi bi-box-arrow-in-right"></i>
+          </div>
+          <div>
+            <h5 class="modal-title wdg-modal-title" id="wdgChegadaVisitaTitle">Comunicar chegada</h5>
+            <p class="text-muted wdg-modal-subtitle mb-0" id="wdgChegadaVisitaSubtitle"></p>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-primary btn-sm fw-semibold" id="wdgChegadaVisitaAddBtn">Adicionar visitante</button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+      </div>
+      <div class="modal-body pt-3 pb-4 px-4">
+        <div class="wdg-modal-section">
+          <div class="wdg-modal-section__title">Visitantes da chegada</div>
+          <div class="wdg-modal-section__subtitle">Adicione acompanhantes e finalize para registrar a chegada.</div>
+        </div>
+
+        <div class="wdg-chegada-list">
+          <div class="wdg-hab-inline-list" id="wdgChegadaVisitaList" role="list"></div>
+          <div class="wdg-empty-card d-none" id="wdgChegadaVisitaEmpty">
+            Nenhum visitante na lista ainda.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4">
+        <button type="button" class="btn btn-primary fw-semibold" id="wdgChegadaVisitaComunicarBtn">Comunicar visita</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>

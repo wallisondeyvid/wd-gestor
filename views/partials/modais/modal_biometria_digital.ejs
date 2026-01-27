@@ -1,0 +1,99 @@
+<div class="modal fade" id="modalBiometriaDigitalPro" tabindex="-1" aria-labelledby="modalBiometriaDigitalProLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:980px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalBiometriaDigitalProLabel">Captura Biométrica Digital</h5>
+        <div class="d-flex align-items-center gap-2">
+          <span id="fpProgress" class="badge bg-secondary" style="font-size:.55rem; letter-spacing:.5px;">0/0</span>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- CONTROLES -->
+<div class="row g-2 align-items-end mb-2">
+  <div class="col-auto">
+    <label class="form-label mb-1" for="fpPort">Porta COM</label>
+    <select id="fpPort" class="form-select form-select-sm" style="min-width:160px">
+      <option value="">(listar...)</option>
+    </select>
+  </div>
+
+  <div class="col-auto"><button type="button" class="btn btn-outline-secondary btn-sm" id="fpBtnListarPortas">Listar portas</button></div>
+  <div class="col-auto"><button type="button" class="btn btn-primary btn-sm"           id="fpBtnConectar">Conectar</button></div>
+  <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm"   id="fpBtnPesquisar" disabled>Pesquisar dedo</button></div>
+  <div class="col-auto"><button type="button" class="btn btn-success btn-sm"           id="fpBtnCadastrar">Capturar</button></div>
+  <div class="col-auto"><button type="button" class="btn btn-outline-danger btn-sm d-none" id="fpBtnCancelar">Cancelar</button></div>
+</div>
+
+  <div id="fpStatus" class="small text-muted" role="status" aria-live="polite">Desconectado.</div>
+
+        <pre id="fpLog" class="border rounded p-2 mt-2"
+             style="height:140px; overflow:auto; font-family:monospace; background:#fafafa"></pre>
+
+<!-- SELETOR DE DEDOS + FILA -->
+<div class="row g-3 mt-2" id="fpFingerBlock">
+  <div class="col-lg-7">
+    <div class="hand-photo border rounded p-2">
+      <div class="hand-wrap">
+  <img id="fpHandsImg" src="<%= typeof _basePath !== 'undefined' ? _basePath : (typeof basePath !== 'undefined' ? basePath : '/gestor') %>/images/maos.png" alt="Selecione os dedos" />
+        <!-- Botões no topo da imagem (posições em %) -->
+        <!-- MÃO ESQUERDA: 1..5 -->
+  <button class="finger-dot" data-code="5"  data-label="Dedo #5"  aria-label="Dedo #5"  data-bs-toggle="tooltip">5</button>
+  <button class="finger-dot" data-code="4"  data-label="Dedo #4"  aria-label="Dedo #4"  data-bs-toggle="tooltip">4</button>
+  <button class="finger-dot" data-code="3"  data-label="Dedo #3"  aria-label="Dedo #3"  data-bs-toggle="tooltip">3</button>
+  <button class="finger-dot" data-code="2"  data-label="Dedo #2"  aria-label="Dedo #2"  data-bs-toggle="tooltip">2</button>
+  <button class="finger-dot" data-code="1"  data-label="Dedo #1"  aria-label="Dedo #1"  data-bs-toggle="tooltip">1</button>
+        <!-- MÃO DIREITA: 6..10 -->
+  <button class="finger-dot" data-code="6"  data-label="Dedo #6"  aria-label="Dedo #6"  data-bs-toggle="tooltip">6</button>
+  <button class="finger-dot" data-code="7"  data-label="Dedo #7"  aria-label="Dedo #7"  data-bs-toggle="tooltip">7</button>
+  <button class="finger-dot" data-code="8"  data-label="Dedo #8"  aria-label="Dedo #8"  data-bs-toggle="tooltip">8</button>
+  <button class="finger-dot" data-code="9"  data-label="Dedo #9"  aria-label="Dedo #9"  data-bs-toggle="tooltip">9</button>
+  <button class="finger-dot" data-code="10" data-label="Dedo #10" aria-label="Dedo #10" data-bs-toggle="tooltip">10</button>
+      </div>
+      <div class="small text-muted mt-1 text-center">
+        Clique nos números para selecionar/desselecionar os dedos.
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="border rounded p-2 h-100">
+      <div class="fw-semibold mb-2">Fila de captura</div>
+      <ul id="fpQueue" class="list-unstyled mb-0 small"></ul>
+    </div>
+  </div>
+</div>
+
+        <!-- PRÉVIAS (grade à esquerda) + ÚLTIMA CAPTURA (direita) -->
+<div class="row g-3 mt-3 align-items-start">
+  <div class="col-md-8">
+    <div class="fp-slots-head d-flex align-items-center justify-content-between mb-2">
+      <strong>Prévia por dedo</strong>
+      <small class="text-muted">Cada captura vai para o próximo dedo pendente (ordem crescente).</small>
+    </div>
+    <div id="fpSlots" class="fp-slots"><!-- criado pelo JS --></div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="fp-slots-head mb-2"><!-- placeholder para alinhar --></div>
+    <div class="border rounded p-2 text-center fp-lastbox">
+      <canvas id="fpCanvas" width="256" height="288" class="bg-white w-100" style="max-width:260px;height:auto;"></canvas>
+      <div class="text-muted small mt-1">Última captura</div>
+    </div>
+  </div>
+</div>
+
+        <!-- HIDDENS -->
+        <input type="hidden" id="fp_template_b64" name="fp_template_b64" value="">
+        <input type="hidden" id="fp_template_sha256" name="fp_template_sha256" value="">
+        <input type="hidden" id="fp_templates_json" name="fp_templates_json" value="[]">
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-warning" id="fpBtnLimpar">Limpar</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-primary" id="fpBtnUsar" disabled>Usar esta biometria</button>
+      </div>
+    </div>
+  </div>
+</div>

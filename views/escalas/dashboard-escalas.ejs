@@ -1,0 +1,119 @@
+<!--
+  Dashboard Escalas
+  Estrutura alinhada ao dashboard do módulo Gestor para consistência visual.
+  Caso altere layout principal do Gestor (header/navbar/perfil), replicar aqui ou extrair para partials compartilhados.
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WDGestor - Módulo Escalas</title>
+  <% const _bpDash = '/escalas'; %>
+  <% const _basePath = _bpDash; %>
+  <%- include('../gestor/partials/favicon', { basePath: _bpDash }) %>
+  <!-- Bootstrap / Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Estilos centrais Gestor (reuso) -->
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bpDash }) %>
+  <style>
+    .header-img { width: 100%; height: 150px; object-fit: cover; }
+    .nav-line { background-color: #e9ecef; padding: 10px; }
+    .content { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .dashboard-logo { height: 200px; width: auto; max-width: 90%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.15)); }
+    @media (max-width: 576px){ .dashboard-logo { height: 160px; } }
+  </style>
+</head>
+<body class="wdg-layout" data-base-path="<%= _bpDash %>">
+  <!-- Partials compartilhados -->
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bpDash, moduleLabel: 'Escalas' }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bpDash,
+        moduleLabel: 'Escalas',
+        prefixMenuPaths: true,
+        menuLabel: 'Menu',
+        menuTree: [
+          { label: 'Escalas', children: [
+            { label: 'Ordinária', children: [
+              { label: 'Nova', path: '/ordinaria/nova' },
+              { label: 'Pesquisar', path: '/ordinaria/pesquisar' }
+            ]},
+            { label: 'Extraodinária', children: [
+              { label: 'Nova', path: '/extraordinaria/nova' },
+              { label: 'Pesquisar', path: '/extraordinaria/pesquisar' }
+            ]},
+            { label: 'Escala Diária', path: '/diaria' }
+          ]},
+          { label: 'Gestão', children: [
+            { label: 'Férias', path: '/gestao/ferias' },
+            { label: 'Ausências', path: '/gestao/ausencias' }
+          ]},
+          { label: 'Relatórios', children: [
+            { label: 'Consulta de Relatórios', path: '/relatorios/consulta' }
+          ]}
+        ],
+        adminItems: []
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bpDash, moduleLabel: 'Escalas' }) %>
+
+  <!-- Conteúdo -->
+  <div class="container d-flex justify-content-center align-items-center" style="min-height:50vh;">
+    <div class="content text-center" style="max-width:600px;">
+      <img src="<%= _bpDash %>/images/logoWDGestor.png" alt="WDGestor" class="dashboard-logo mb-4" />
+      <h3 class="mb-3">Bem-vindo ao Módulo Escalas!</h3>
+      <p class="lead mb-0">Selecione uma opção no menu acima.</p>
+      <div id="metrics" class="row g-3 mt-4 text-start" style="display:none;">
+        <div class="col-12"><h5 class="mb-2">Métricas de Login</h5></div>
+        <div class="col-6 col-md-3">
+          <div class="card text-bg-success"><div class="card-body">
+            <div class="fw-bold">Sucessos</div>
+            <div id="m-success" class="fs-4">0</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card text-bg-danger"><div class="card-body">
+            <div class="fw-bold">Bloqueios</div>
+            <div id="m-blocked" class="fs-4">0</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card text-bg-secondary"><div class="card-body">
+            <div class="fw-bold">Falhas</div>
+            <div id="m-failure" class="fs-4">0</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card text-bg-light"><div class="card-body">
+            <div class="fw-bold">Último sucesso</div>
+            <div id="m-lastSuccessAt" class="small text-muted">-</div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Removido comportamento de hover para estabilidade de clique -->
+  <script>/* comportamento hover removido */</script>
+  <script>window.__perfilBasePath='<%= _bpDash %>';</script>
+  <script src="<%= _bpDash %>/js/perfil-modulo.js"></script>
+  <script>
+    (async function(){
+      try{
+        const r = await fetch('<%= _bpDash %>/metrics', { credentials:'same-origin' });
+        if(!r.ok) return;
+        const m = await r.json();
+        const $ = id=>document.getElementById(id);
+        if($('#m-success')){
+          $('#m-success').textContent = m.success ?? 0;
+          $('#m-failure').textContent = m.failure ?? 0;
+          $('#m-blocked').textContent = m.blocked ?? 0;
+          $('#m-lastSuccessAt').textContent = m.lastSuccessAt ? new Date(m.lastSuccessAt).toLocaleString() : '-';
+          document.getElementById('metrics').style.display='flex';
+        }
+      }catch(e){ /* silencioso */ }
+    })();
+  </script>
+</body>
+</html>

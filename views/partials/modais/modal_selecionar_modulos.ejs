@@ -1,0 +1,37 @@
+<div class="modal fade" id="modalModulos" tabindex="-1" aria-labelledby="modalModulosLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content modal-sheet">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalModulosLabel">Gerenciar Módulos Acessíveis</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Busca com ícone PNG padronizado -->
+        <div class="position-relative mb-2">
+          <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Buscar" class="icon position-absolute" style="left:.5rem;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.8;" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary position-absolute\' style=\'left:.5rem;top:50%;transform:translateY(-50%);font-size:16px;opacity:.75;\'\x3e\x3c/i\x3e'">
+          <input type="text" class="form-control ps-4" id="buscaModulos" placeholder="Buscar por nome do módulo...">
+        </div>
+
+        <!-- Cabeçalho tipo planilha -->
+        <div class="list-header d-grid" style="grid-template-columns:72px 1fr 140px;column-gap:12px;
+             padding:.5rem .75rem;margin-bottom:.5rem;font-weight:600;color:#475569;background:#eef5ff;border:1px solid #dbe6ff;border-radius:.5rem .5rem 0 0;">
+          <div class="text-center">Seleção</div>
+          <div>Módulo</div>
+          <div class="text-center">Status</div>
+        </div>
+
+        <!-- Lista rolável (o JS preenche dentro de #listaModulos) -->
+        <div id="listaModulos" class="list-scroll border rounded-bottom"
+             style="max-height:320px; overflow:auto; border-top:0;">
+          <!-- os itens são renderizados por selecionar_modulos.js -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnSalvarModulos">Aplicar Seleção</button>
+      </div>
+    </div>
+  </div>
+</div>

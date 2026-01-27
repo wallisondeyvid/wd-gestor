@@ -1,0 +1,118 @@
+/* Estilos leves para o modal de captura facial (overlay + feedback) */
+
+.face-capture-container {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Vídeo base */
+#faceVideo, .face-capture-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #000;
+  border-radius: 8px;
+}
+
+/* Canvas de overlay acima do vídeo */
+#faceOverlayCanvas, .face-capture-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Badge de instruções flutuante (se existir) */
+.face-instructions, .face-capture-instructions {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  z-index: 4;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  line-height: 1.1rem;
+  white-space: nowrap;
+  backdrop-filter: blur(2px);
+}
+
+/* Thumbnails de capturas */
+.face-thumbs, #faceThumbs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.face-thumbs img, #faceThumbs img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: #f8f9fa;
+}
+
+/* Botões de captura/limpar (ajustes sutis) */
+.face-actions .btn {
+  min-width: 120px;
+}
+
+/* Garantir stacking da modal backdrop vs overlay (quando necessário) */
+.modal.show .modal-dialog .face-capture-overlay {
+  z-index: 1056; /* acima do conteúdo interno da modal */
+}
+.face-steps-bar{display:flex;align-items:center;justify-content:space-between;background:#f5f7fa;border:1px solid #e2e6ea;border-radius:6px;padding:6px 10px;font-size:.75rem;font-weight:600;user-select:none}
+.face-steps-bar .face-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.face-steps-bar .sep{width:32px;height:2px;background:linear-gradient(90deg,#d0d5da,#ccd1d6);margin:0 6px;border-radius:2px;flex:0}
+.face-steps-bar .face-step .icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#d9dee3;color:#444;font-weight:600;box-shadow:0 0 0 1px #c7ccd1 inset;transition:all .25s}
+.face-steps-bar .face-step.active .icon{background:#0d6efd;color:#fff;box-shadow:0 0 0 2px #0b5ed7 inset}
+.face-steps-bar .face-step.done .icon{background:#28a745;color:#fff;box-shadow:0 0 0 2px #1e7e34 inset}
+.face-steps-bar .face-step .lbl{margin-top:4px;color:#555;font-weight:500;letter-spacing:.3px}
+.face-steps-bar .face-step.active .lbl{color:#0d6efd}
+.face-steps-bar .face-step.done .lbl{color:#1e7e34}
+.face-instruction-block{background:#ffffff;border:1px solid #e2e6ea;border-radius:6px;padding:10px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:.25rem}
+.face-instruction-block .primary{font-size:.9rem;font-weight:600;color:#0d2033;line-height:1.25rem}
+.face-instruction-block .secondary{margin-top:2px}
+.face-instruction-block.success{border-color:#28a745;background:#f4fbf6}
+.face-instruction-block.error{border-color:#dc3545;background:#fef4f4}
+.face-circle-neutral{stroke:#dfe3e7!important}
+.face-circle-active{stroke:#0d6efd!important}
+.face-circle-done{stroke:#28a745!important}
+
+/* ====== Campo externo (resumo biometria facial) ====== */
+.face-bio-wrapper{background:linear-gradient(145deg,#ffffff,#f6f9fb);position:relative}
+.face-bio-wrapper:before{content:"";position:absolute;inset:0;border-radius:6px;padding:1px;background:linear-gradient(130deg,#c7d5e6,#eef3f8);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.face-bio-slots{user-select:none}
+.face-bio-slot{flex:1;min-width:0;background:#fff;border:1px solid #dbe4ec;border-radius:6px;display:flex;flex-direction:column;gap:4px;padding:6px;position:relative;transition:box-shadow .25s,border-color .25s}
+.face-bio-slot:hover{box-shadow:0 2px 6px rgba(0,0,0,.07);border-color:#b7c6d6}
+.face-bio-slot.filled{border-color:#198754;background:linear-gradient(135deg,#ffffff,#f2fcf6)}
+.face-bio-slot.filled .slot-label{color:#198754;font-weight:600}
+.face-bio-slot .slot-thumb{width:100%;aspect-ratio:1/1;border:1px dashed #c5d2df;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#95a2b1;background:#f3f7fa;overflow:hidden;position:relative}
+.face-bio-slot.filled .slot-thumb{border-style:solid;background:#fff}
+.face-bio-slot .slot-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.face-bio-slot .slot-meta{display:flex;flex-direction:column;line-height:1.1}
+.face-bio-slot .slot-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#5c6d7c}
+.face-bio-slot .slot-hash{font-size:11px;color:#6c757d;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.face-bio-slot.filled .slot-hash{color:#146c43}
+.face-hashes-resumo{display:flex;gap:8px}
+.face-hashes-resumo .hash-item{background:#fff;border:1px solid #dbe4ec;border-radius:4px;padding:2px 6px;font-size:11px;font-family:monospace;cursor:pointer;transition:background .2s,border-color .2s}
+.face-hashes-resumo .hash-item:hover{background:#f1f6fa;border-color:#b7c6d6}
+.face-hashes-resumo .hash-item.text-success{background:#e6f7ed;border-color:#198754;color:#146c43}
+.face-bio-status.done{color:#146c43;font-weight:600}
+.fp-bio-slots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.fp-bio-slots .face-bio-slot{min-width:0}
+.fp-bio-slots .slot-thumb{aspect-ratio:1/1}
+.foto-wrapper .slot-thumb{width:100%;aspect-ratio:3/4}
+.foto-wrapper .face-bio-slot{background:#fff}
+.face-bio-wrapper.text-center .slot-meta{align-items:center;text-align:center}
+.face-bio-wrapper.text-center .face-bio-slot{align-items:center}
+.face-bio-wrapper.text-center .slot-thumb span{font-size:12px}

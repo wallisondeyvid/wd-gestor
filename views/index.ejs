@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title || 'WDGestor' %></title>
+  <%- include('partials/favicon') %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --wdg-blue: #0d6efd;/* bootstrap primary */
+      --wdg-blue-2:#0a58ca;
+      --wdg-bg:#071427;
+      --wdg-card:#0d1f3a;
+      --wdg-text:#e6efff;
+      --wdg-muted:#9db6da;
+      --wdg-glow: rgba(13,110,253,.55);
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      margin:0; font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial,"Noto Sans",sans-serif;
+      color:var(--wdg-text); background: radial-gradient(1200px 800px at 100% -10%, #0b2a66 0%, transparent 60%),
+                                   radial-gradient(900px 700px at -10% 100%, #06214f 0%, transparent 55%),
+                                   linear-gradient(180deg, #031026 0%, #050e1e 100%);
+      overflow-x:hidden;
+    }
+    .hero{
+      position:relative; padding:86px 24px 46px; text-align:center;
+    }
+    /* Cabeçalho: logo maior e alinhada à esquerda */
+    .hero .brand{ display:flex; align-items:center; justify-content:flex-start; gap:16px; perspective:800px; max-width:1100px; margin:0 auto; }
+  .brand .logo-wrap{ position:relative; width:240px; height:240px; border-radius:50%; display:grid; place-items:center; transform-style: preserve-3d; }
+  .brand .logo-wrap::before{ content:""; position:absolute; inset:-8px; border-radius:inherit; background: conic-gradient(from 0deg, rgba(13,110,253,0), rgba(13,110,253,.85), rgba(13,110,253,0) 70%); filter: blur(6px); animation: spin 8s linear infinite; opacity:.9; }
+  .brand .logo-wrap::after{ content:""; position:absolute; inset:0; border-radius:inherit; border:1px solid rgba(255,255,255,.18); box-shadow: inset 0 0 40px rgba(13,110,253,.18); }
+  /* remover completamente o anel/círculo atrás da logo */
+  .brand .logo-wrap::before,
+  .brand .logo-wrap::after{ content: none !important; }
+    .brand img{ width:192px; height:192px; filter: drop-shadow(0 6px 22px rgba(13,110,253,.45)); transform: translateZ(40px); }
+    @media (max-width: 640px){
+      .brand .logo-wrap{ width:160px; height:160px; }
+      .brand img{ width:128px; height:128px; }
+    }
+  /* título removido a pedido: a marca já contém "WDGestor" */
+  .hero p{ margin:12px auto 0; max-width: 980px; color:var(--wdg-muted); font-size: clamp(14px,1.9vw,18px); }
+    .bg-bubbles{
+      position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0;
+    }
+  .bubble{ position:absolute; border-radius:50%; filter: blur(18px); opacity:.65; }
+  /* afasta a bolha do canto para não interferir na logo */
+  .b1{ width:220px; height:220px; background:#0e4ed1; top:-70px; left:-120px; opacity:.28; animation: float 14s ease-in-out infinite; }
+    .b2{ width:260px; height:260px; background:#0a3ea4; top:55%; left:-60px; animation: float 18s ease-in-out -3s infinite; }
+    .b3{ width:220px; height:220px; background:#0b63ff; top:-50px; right:12%; animation: float 16s ease-in-out -5s infinite; }
+    @keyframes float{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-24px) } }
+
+    .modules{
+      position:relative; z-index:1; padding:28px 18px 64px; max-width:1200px; margin: 0 auto;
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:22px; 
+    }
+    .about{
+      position:relative; z-index:1; max-width: 1100px; margin: 12px auto 6px; padding: 0 18px;
+    }
+    .about .card-about{
+      background: linear-gradient(155deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px 18px;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    }
+    .about h2{ margin:0 0 6px; font-size: clamp(18px, 2.6vw, 24px); letter-spacing:.2px }
+    .about p{ color:var(--wdg-muted); line-height:1.6; text-align: justify; text-justify: inter-word; }
+    .about .more{ max-height:0; overflow:hidden; transition:max-height .45s ease; }
+    .about[data-expanded="true"] .more{ max-height: 750px; }
+    .about .toggle{ margin-top:10px; display:inline-flex; align-items:center; gap:8px; cursor:pointer; color:#cfe1ff; font-weight:600 }
+    .about .toggle .chev{ transition: transform .3s ease }
+    .about[data-expanded="true"] .toggle .chev{ transform: rotate(180deg); }
+    .card{
+      position:relative; background: linear-gradient(155deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px 18px 16px; 
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      transition: transform .25s ease, box-shadow .35s ease, border-color .30s ease; 
+      min-height:220px; padding-bottom:64px; transform-style: preserve-3d;
+      overflow:hidden;
+    }
+    .card:hover{ transform: translateY(-4px); box-shadow:0 14px 40px rgba(13,110,253,.20); border-color: rgba(13,110,253,.45); }
+    .card::before{ content:""; position:absolute; inset:0; padding:1.5px; border-radius:16px; background: conic-gradient(from var(--angle,0deg), #4ea1ff, #8cc4ff, #4ea1ff);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; animation: spin 6s linear infinite; opacity:.55; pointer-events:none; }
+    .card .title{ font-weight:700; font-size:18px; margin:6px 0 6px; letter-spacing:.2px; }
+    .card .desc{ color:var(--wdg-muted); font-size:13px; line-height:1.45; min-height: 40px }
+  .status{ display:flex; justify-content:center; align-items:center; margin:2px 0 8px; }
+  .chip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); color:#cfe1ff }
+    .chip .dot{ width:8px; height:8px; border-radius:50%; background:#51ff84; box-shadow:0 0 0 4px rgba(81,255,132,.12) }
+    .chip.planned{ color:#ffd8a8; border-color: rgba(255,216,168,.3) }
+    .chip.planned .dot{ background:#ffb143; box-shadow:0 0 0 4px rgba(255,177,67,.15) }
+  .card .desc{ text-align: justify; text-justify: inter-word; }
+  .actions{ position:absolute; left:18px; bottom:16px; margin-top:0; display:flex; align-items:center; gap:10px }
+    .btn{ --bg:var(--wdg-blue); --bg2:var(--wdg-blue-2); text-decoration:none; color:#fff; padding:10px 14px; border-radius:12px; font-weight:600; letter-spacing:.2px; display:inline-block; position:relative; overflow:hidden; }
+    .btn:before{ content:""; position:absolute; inset:0; background: linear-gradient(135deg, var(--bg), var(--bg2)); opacity:.95; transition: transform .3s ease; z-index:-1; }
+    .btn:hover:before{ transform: scale(1.05); }
+  .btn.flat{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); color:var(--wdg-text) }
+  .btn[disabled], .btn.disabled{ opacity:.55; cursor:not-allowed; pointer-events:none }
+
+    .footer{ text-align:center; color:var(--wdg-muted); padding:18px 14px 32px }
+
+    /* sutil brilho em hover */
+  .glow{ position:absolute; inset:auto; width:180px; height:180px; border-radius:50%; background: radial-gradient(closest-side, var(--wdg-glow), transparent); filter: blur(30px); opacity:0; pointer-events:none; transition: opacity .3s ease; transform: translate(-50%, -50%); }
+    .card:hover .glow{ opacity:1 }
+  .shine{ position:absolute; inset:-140% -140%; pointer-events:none; background: radial-gradient(480px 220px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.12), rgba(255,255,255,0) 40%); opacity:0; transition: opacity .15s ease; }
+  .card:hover .shine{ opacity:1; }
+  @keyframes spin{ to{ --angle:360deg; } }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="bg-bubbles">
+      <div class="bubble b1"></div>
+      <div class="bubble b2"></div>
+      <div class="bubble b3"></div>
+    </div>
+    <div class="brand">
+      <div class="logo-wrap"><img src="/images/logoWDGestor.png" alt="WDGestor" /></div>
+    </div>
+    <p>Uma plataforma modular de gestão — pronta para crescer com o seu negócio. Selecione um módulo abaixo para começar.</p>
+  </header>
+
+  <section class="about" id="about" aria-label="Sobre o WDGestor">
+    <div class="card-about">
+      <h2>O que é o WD Gestor?</h2>
+      <p>
+        O WD Gestor é uma plataforma moderna, modular e integrada pensada para organizações que buscam eficiência,
+        padronização e controle nas rotinas administrativas e operacionais.
+      </p>
+      <div class="more">
+        <p>
+          Construído sobre uma arquitetura web robusta, o sistema centraliza processos em um único ambiente digital,
+          reunindo módulos que se comunicam entre si e oferecem uma visão ampla e detalhada da gestão organizacional.
+          O seu diferencial está na modularidade: cada módulo opera de forma independente e também de maneira
+          totalmente integrada, permitindo configurar o sistema conforme as particularidades do seu negócio.
+        </p>
+        <p>
+          Com interface intuitiva e recursos avançados de segurança, o WD Gestor abrange desde controle de cadastros e
+          permissões até relatórios inteligentes e dashboards analíticos, facilitando a tomada de decisão. Além disso,
+          está preparado para integrar-se a dispositivos e serviços externos — como leitores biométricos, câmeras,
+          aplicativos móveis e soluções em nuvem.
+        </p>
+        <p>
+          Mais do que um software, o WD Gestor é um ecossistema digital de gestão: transforma a rotina de trabalho em
+          processos automatizados, transparentes e altamente produtivos — alinhando tecnologia, inovação e governança em
+          um só sistema.
+        </p>
+      </div>
+      <a href="#" id="about-toggle" class="toggle" aria-expanded="false"><span class="chev">▾</span> Saiba mais</a>
+    </div>
+  </section>
+
+  <main class="modules">
+    <% (modulos || []).forEach(m => { 
+         const ativo = String(m.status||'').toLowerCase() === 'ativo';
+         const href = (m.url_base || '').replace(/\/$/, '') + '/login';
+    %>
+      <article class="card" tabindex="0" aria-label="Módulo <%= m.nome %>">
+        <div class="status">
+          <div class="chip <%= ativo ? '' : 'planned' %>">
+            <span class="dot"></span>
+            <%= ativo ? 'Ativo' : 'Em planejamento' %>
+          </div>
+        </div>
+        <h3 class="title"><%= m.nome %></h3>
+        <p class="desc"><%= m.descricao || (ativo ? 'Pronto para uso.' : 'Em desenvolvimento.') %></p>
+        <div class="actions">
+          <a class="btn" href="<%= href %>">Acessar</a>
+        </div>
+        <div class="shine"></div>
+        <div class="glow"></div>
+      </article>
+    <% }) %>
+    <% if (!(modulos && modulos.length)) { %>
+      <article class="card" aria-label="Nenhum módulo">
+        <div class="chip planned"><span class="dot"></span>Catálogo</div>
+        <h3 class="title">Nenhum módulo cadastrado</h3>
+        <p class="desc">Cadastre módulos em Gestor › Módulos para vê-los aqui automaticamente.</p>
+        <div class="actions">
+          <a class="btn" href="/gestor/login">Ir para o Gestor</a>
+        </div>
+        <div class="glow"></div>
+      </article>
+    <% } %>
+  </main>
+
+  <footer class="footer">© <%= year %> WDGestor. Todos os direitos reservados.</footer>
+
+  <script>
+    // efeito de glow seguir o mouse em cada card
+    document.querySelectorAll('.card').forEach(card => {
+      const glow = card.querySelector('.glow');
+      if (!glow) return;
+      const onMove = (e) => {
+        const r = card.getBoundingClientRect();
+        const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+        const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+        const x = cx, y = cy;
+        glow.style.left = x + 'px'; glow.style.top = y + 'px';
+        // tilt & shine
+        const px = x / r.width; const py = y / r.height;
+        const ry = (px - 0.5) * -10; const rx = (py - 0.5) * 10;
+        card.style.transform = `translateY(-2px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        card.style.setProperty('--mx', (px*100)+'%');
+        card.style.setProperty('--my', (py*100)+'%');
+      };
+      const onLeave = () => { card.style.transform = ''; };
+      card.addEventListener('mousemove', onMove);
+      card.addEventListener('mouseleave', onLeave);
+      card.addEventListener('touchmove', onMove, { passive: true });
+      card.addEventListener('touchend', onLeave);
+    });
+
+    // toggle do bloco "Saiba mais"
+    const about = document.getElementById('about');
+    const tgl = document.getElementById('about-toggle');
+    if (about && tgl) {
+      tgl.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        const exp = about.getAttribute('data-expanded') === 'true';
+        about.setAttribute('data-expanded', String(!exp));
+        tgl.setAttribute('aria-expanded', String(!exp));
+        tgl.innerHTML = (exp ? '<span class="chev">▾</span> Saiba mais' : '<span class="chev">▴</span> Mostrar menos');
+      });
+    }
+  </script>
+</body>
+</html>

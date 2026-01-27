@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Nova Escala - WDGestor</title>
+  <% const _bpDash = '/escalas'; %>
+  <%- include('../gestor/partials/favicon', { basePath: _bpDash }) %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bpDash }) %>
+  <link rel="stylesheet" href="<%= _bpDash %>/css/vendor/flatpickr.min.css">
+  <link rel="stylesheet" href="<%= _bpDash %>/css/vendor/flatpickr.custom.css">
+  <style>
+    :root{
+      --esc-blue-1:#0e6fb1;
+      --esc-blue-2:#0a4f80;
+      --esc-blue-3:#0d6efd;
+      --esc-gray-2:#eef3f7;
+    }
+    body{ background: linear-gradient(180deg, var(--esc-gray-2), #fff 28%); }
+    .tab-pane{ padding-top:1.25rem; }
+    .req::after{ content:'*'; color:#dc3545; margin-left:4px; }
+    .mini-help{ font-size:.75rem; color:#6c757d; }
+    .pointer{ cursor:pointer; }
+    .uppercase{ text-transform:uppercase; }
+    #matrizAlocacao table th, #matrizAlocacao table td { text-align:center; }
+  #tabelaGruposTurnos th, #tabelaGruposTurnos td { text-align:center; }
+  #tabelaRecursos th, #tabelaRecursos td { text-align:center; }
+  #tabelaGruposTurnos td:first-child { text-align:center; }
+    #tabelaEquipes thead th{ background:linear-gradient(#0e6fb1,#0a4f80); color:#fff; border-color:#0a4f80; }
+    #tabelaEquipes tbody tr:nth-child(odd){ background:#e2e2e2; }
+    #tabelaEquipes tbody tr:nth-child(even){ background:#d6d6d6; }
+  #tabelaEquipes td, #tabelaEquipes th{ vertical-align:middle; text-align:center; }
+  #tabelaGruposTurnos thead th,
+  #tabelaRecursos thead th,
+  #matrizAlocacao table thead th { background:linear-gradient(var(--esc-blue-1),var(--esc-blue-2)); color:#fff; border-color:var(--esc-blue-2); }
+  #tabelaGruposTurnos tbody tr:nth-child(odd),
+    #tabelaRecursos tbody tr:nth-child(odd),
+    #matrizAlocacao table tbody tr:nth-child(odd){ background:#e2e2e2; }
+  #tabelaGruposTurnos tbody tr:nth-child(even),
+    #tabelaRecursos tbody tr:nth-child(even),
+    #matrizAlocacao table tbody tr:nth-child(even){ background:#d6d6d6; }
+  #tabelaGruposTurnos td, #tabelaRecursos td, #matrizAlocacao table td{ vertical-align:middle; text-align:center; }
+    .eq-componentes-box div{ padding:2px 4px; font-size:.75rem; border:1px solid #c5c5c5; margin-bottom:2px; background:#f5f5f5; }
+    .eq-componentes-box div:last-child{ margin-bottom:0; }
+    .escala-field-locked { background:#e9ecef !important; cursor:not-allowed; color:#495057 !important; }
+    .escala-field-locked[disabled] { opacity:1; }
+    .escala-field-locked:focus { box-shadow:none !important; }
+    [data-escala-locked="1"] { background:#e9ecef !important; cursor:not-allowed !important; }
+    [data-escala-locked="1"].form-select { background:#e9ecef url("data:image/svg+xml;charset=UTF8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='gray' d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right .75rem center/16px 12px !important; }
+    .btn-acao-turno { padding:2px 6px; line-height:1; border:1px solid var(--bs-border-color,#ccc); background:#fff; }
+    .btn-acao-turno i { font-size:0.8rem; }
+    .btn-acao-turno.btn-acao-edit { color:#0d6efd; }
+    .btn-acao-turno.btn-acao-del { color:#dc3545; }
+    .btn-acao-turno:hover { background:#f2f6fa; }
+    #formEquipes .btn-add-equipe{ min-width:80px; padding:.32rem .6rem; font-size:.75rem; }
+    @media (min-width: 992px){ #formEquipes .btn-add-equipe{ min-width:82px; } }
+    #tabelaEquipes th, #tabelaEquipes td{ white-space:nowrap; }
+    #tabelaEquipes .eq-col-nome{ width:70px; }
+    #tabelaEquipes .eq-col-desc{ width:130px; max-width:130px; overflow:hidden; text-overflow:ellipsis; }
+    #tabelaEquipes .eq-col-comp{ min-width:250px; }
+    #tabelaEquipes .eq-col-acoes{ white-space:nowrap; width:1%; }
+    #tabelaEquipes td.eq-col-acoes, #tabelaEquipes th.eq-col-acoes{ white-space:nowrap; width:1%; }
+    #tabelaEquipes td.eq-col-acoes button{ margin-right:4px; padding:2px 6px; font-size:.70rem; line-height:1.1; }
+    #tabelaEquipes td.eq-col-acoes button:last-child{ margin-right:0; }
+    #tabelaGruposTurnos .grupos-col-acoes{ width:1%; white-space:nowrap; }
+    #tabelaGruposTurnos .grupos-col-acoes button{ margin-right:4px; padding:2px 6px; font-size:.70rem; line-height:1.1; }
+    #tabelaGruposTurnos .grupos-col-acoes button:last-child{ margin-right:0; }
+    #tabsEscala .nav-link.disabled{ pointer-events:none; }
+    /* Abas em tema azul */
+    #tabsEscala .nav-link.active{ background: linear-gradient(var(--esc-blue-1), var(--esc-blue-2)); color:#fff; border-color: var(--esc-blue-2); }
+    #tabsEscala .nav-link{ border-top-left-radius:.5rem; border-top-right-radius:.5rem; }
+    .btn-primary{ background: linear-gradient(180deg, #2a86d1, var(--esc-blue-1)); border-color: var(--esc-blue-1); }
+    .btn-primary:hover{ filter: brightness(1.05); }
+    .btn-success{ background: linear-gradient(180deg, #35b56b, #2aa35f); border-color:#239454; }
+    .btn-success:hover{ filter: brightness(1.05); }
+  </style>
+  <script>
+    // Define o tipo antes do core
+    (function(){
+      try {
+        var path = location.pathname.toLowerCase();
+        var tipo = path.includes('/ordinaria/')? 'ORDINÁRIA' : (path.includes('/extraordinaria/')? 'EXTRAORDINÁRIA' : '');
+        if(!tipo){ var segs = path.split('/').filter(Boolean); if(segs.includes('ordinaria')) tipo='ORDINÁRIA'; else if(segs.includes('extraordinaria')) tipo='EXTRAORDINÁRIA'; }
+        if(tipo){ document.body && (document.body.dataset.tipoEscala = tipo); window.__ESCALA_TIPO_FALLBACK__ = tipo; }
+      } catch(e){}
+    })();
+  </script>
+  <script>window.__ESCALA_BASE_PATH__ = '/escalas';</script>
+</head>
+<body class="wdg-layout" data-base-path="<%= _bpDash %>">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bpDash, moduleLabel: 'Escalas' }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bpDash,
+        moduleLabel: 'Escalas',
+        prefixMenuPaths: true,
+        menuLabel: 'Menu',
+        menuTree: [
+          { label: 'Escalas', children: [
+            { label: 'Ordinária', children: [
+              { label: 'Nova', path: '/ordinaria/nova' },
+              { label: 'Pesquisar', path: '/ordinaria/pesquisar' }
+            ]},
+            { label: 'Extraodinária', children: [
+              { label: 'Nova', path: '/extraordinaria/nova' },
+              { label: 'Pesquisar', path: '/extraordinaria/pesquisar' }
+            ]},
+            { label: 'Escala Diária', path: '/diaria' }
+          ]},
+          { label: 'Gestão', children: [
+            { label: 'Férias', path: '/gestao/ferias' },
+            { label: 'Ausências', path: '/gestao/ausencias' }
+          ]},
+          { label: 'Relatórios', children: [
+            { label: 'Consulta de Relatórios', path: '/relatorios/consulta' }
+          ]}
+        ],
+        adminItems: []
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bpDash, moduleLabel: 'Escalas' }) %>
+
+  <div class="container my-4" style="max-width:1180px;">
+    <div class="mb-3">
+      <h4 class="mb-0 text-center"><span id="tituloPrincipalEscala">Nova Escala</span> <span id="tipoEscalaLabel" class="text-muted fs-6"></span></h4>
+    </div>
+
+    <ul class="nav nav-tabs" id="tabsEscala" role="tablist">
+      <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#aba-gerais" type="button" role="tab">Dados Gerais</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link disabled" aria-disabled="true" tabindex="-1" data-bs-toggle="tab" data-bs-target="#aba-turnos" type="button" role="tab">Turnos</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link disabled" aria-disabled="true" tabindex="-1" data-bs-toggle="tab" data-bs-target="#aba-equipes" type="button" role="tab">Equipes</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link disabled" aria-disabled="true" tabindex="-1" data-bs-toggle="tab" data-bs-target="#aba-alocacao" type="button" role="tab">Alocação</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link disabled" aria-disabled="true" tabindex="-1" data-bs-toggle="tab" data-bs-target="#aba-recursos" type="button" role="tab">Recursos</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link disabled" aria-disabled="true" tabindex="-1" data-bs-toggle="tab" data-bs-target="#aba-validacao" type="button" role="tab">Validação</button></li>
+    </ul>
+    <div class="tab-content border border-top-0 p-3 bg-white rounded-bottom shadow-sm" style="min-height:420px;">
+      <%- include('aba1_dados_gerais') %>
+      <%- include('aba2_turnos') %>
+      <%- include('aba3_equipes') %>
+      <%- include('aba4_alocacao') %>
+      <%- include('aba5_recursos') %>
+      <%- include('aba6_validacao') %>
+    </div>
+  </div>
+
+  <!-- MODAIS -->
+  <%- include('modais_popups/modal_pesquisar_efetivo') %>
+  <%- include('modais_popups/modal_nome_equipe') %>
+  <%- include('modais_popups/modal_equipe') %>
+  <%- include('modais_popups/modal_detalhamento_equipe_dia') %>
+  <%- include('modais_popups/modal_selecionar_turnos') %>
+  <%- include('modais_popups/recursos/modal_recurso') %>
+  <%- include('modais_popups/recursos/localizar_recurso') %>
+  <%- include('modais_popups/recursos/editar_refeicao') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<%= _bpDash %>/js/vendor/flatpickr.min.js"></script>
+  <script src="<%= _bpDash %>/js/vendor/flatpickr.pt.js"></script>
+  <script src="<%= _bpDash %>/js/init/dates-global.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', function(){ if(window.WDG && typeof WDG.initCalendars==='function'){ WDG.initCalendars(); } });</script>
+  <!-- Removido: compat_legacy_shim.js (migrado para módulos por aba) -->
+  <!-- Abas e módulos (carregar antes do orquestrador) -->
+  <script src="/escalas/js/escalas/aba1_dados_gerais.js?v=<%= Date.now() %>"></script>
+  <script src="/escalas/js/escalas/aba2_turnos.js?v=<%= Date.now() %>"></script>
+  <script src="/escalas/js/escalas/aba3_equipes.js?v=<%= Date.now() %>"></script>
+  <script src="/escalas/js/escalas/aba4_alocacao.js?v=<%= Date.now() %>"></script>
+  <script src="/escalas/js/escalas/aba5_recursos.js?v=<%= Date.now() %>"></script>
+  <!-- alias para possível typo solicitado -->
+  <script src="/escalas/js/escalas/aba5_recusos.js?v=<%= Date.now() %>"></script>
+  <script src="/escalas/js/escalas/aba6_validacao.js?v=<%= Date.now() %>"></script>
+  <script src="/escalas/js/escalas/modais.js?v=<%= Date.now() %>"></script>
+  <script src="/escalas/js/modais_popups/modal_pesquisar_efetivo.js?v=<%= Date.now() %>"></script>
+  <script src="/escalas/js/escalas/efetivo.js?v=<%= Date.now() %>"></script>
+  <!-- Modais de Recursos (JS) -->
+  <script src="<%= _bpDash %>/js/modais_popups/recursos/modal_recurso.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bpDash %>/js/modais_popups/recursos/localizar_recurso.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bpDash %>/js/modais_popups/recursos/editar_refeicao.js?v=<%= Date.now() %>"></script>
+  <!-- Fallback leve: validação direta, se o core ainda não vinculou -->
+  <script>
+    (function(){
+      document.addEventListener('click', function(ev){
+        try {
+          var el = ev.target && (ev.target.id==='btnValidarEscala' ? ev.target : (ev.target.closest && ev.target.closest('#btnValidarEscala')));
+          if(!el) return;
+          // Só usar o fallback se o core ainda não sinalizou boot OK
+          if (window && window.__ESCALA_BOOT_OK !== true && typeof window.executarValidacaoConflitos === 'function') {
+            window.executarValidacaoConflitos();
+          } else if (window && window.__ESCALA_BOOT_OK !== true && typeof window.executarValidacaoConflitos === 'undefined') {
+            console.warn('[validacao][fallback-view] core ainda não disponível');
+          }
+        } catch(e){ }
+      }, true);
+    })();
+  </script>
+  <!-- Orquestração: após os módulos para permitir chamadas imediatas de init() -->
+  <script src="/escalas/js/escalas/escala_nova_index.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

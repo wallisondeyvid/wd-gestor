@@ -1,0 +1,95 @@
+<% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+<div class="modal fade" id="modalNovaSolicitacaoServico" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content wdg-hab-modal">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title">
+            Solicitação de serviço nº <span id="wdgServSolicProtocolo">-</span>
+            <span class="badge text-bg-primary ms-2" id="wdgServSolicNovaBadge" style="display:none;">nova</span>
+          </h5>
+          <p class="text-muted small mb-0" id="wdgServSolicSubtitle"></p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <div class="p-3 rounded-4 border bg-body-tertiary">
+              <div class="small text-uppercase text-muted" style="letter-spacing:.12em;">Habitação</div>
+              <div class="fw-semibold" id="wdgServSolicHabitacao">-</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="p-3 rounded-4 border bg-body-tertiary">
+              <div class="small text-uppercase text-muted" style="letter-spacing:.12em;">Morador</div>
+              <div class="fw-semibold" id="wdgServSolicMorador">-</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="p-3 rounded-4 border bg-body-tertiary">
+              <div class="small text-uppercase text-muted" style="letter-spacing:.12em;">Assunto</div>
+              <div class="fw-semibold" id="wdgServSolicTitulo">-</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="p-3 rounded-4 border bg-body-tertiary">
+              <div class="small text-uppercase text-muted" style="letter-spacing:.12em;">Descrição</div>
+              <div class="fw-semibold" id="wdgServSolicDescricao" style="white-space:pre-wrap;">-</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="p-3 rounded-4 border bg-body-tertiary">
+              <div class="small text-uppercase text-muted" style="letter-spacing:.12em;">Data / Hora</div>
+              <div class="fw-semibold" id="wdgServSolicCriadoEm">-</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="p-3 rounded-4 border bg-body-tertiary">
+              <div class="small text-uppercase text-muted" style="letter-spacing:.12em;">Status</div>
+              <div class="fw-semibold" id="wdgServSolicStatus">-</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+          <h6 class="mb-0">Fotos</h6>
+          <small class="text-muted" id="wdgServSolicFotosCount">0 fotos</small>
+        </div>
+        <div class="mt-2 text-muted" id="wdgServSolicFotosEmpty">Nenhuma foto anexada.</div>
+        <div class="row g-2 mt-1" id="wdgServSolicFotosGrid"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0 d-flex flex-column flex-md-row align-items-stretch gap-2">
+        <button type="button" class="btn btn-outline-secondary w-100" id="wdgServSolicGoServices">Ir para o painel de serviços</button>
+        <div class="d-flex flex-column flex-md-row gap-2 w-100">
+          <button type="button" class="btn btn-outline-danger w-100" id="wdgServSolicRejeitar">Rejeitar solicitação</button>
+          <button type="button" class="btn btn-success w-100" id="wdgServSolicAceitar">Aceitar solicitação</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalRejeitarSolicitacao" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rejeitar solicitação</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-2">Informe a justificativa. O morador será notificado.</p>
+        <textarea class="form-control" id="wdgServRejeicaoMotivo" rows="3" placeholder="Ex.: Chamado duplicado ou fora do escopo"></textarea>
+        <div class="text-end mt-2">
+          <small id="wdgServRejeicaoError" class="text-danger" style="display:none;"></small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="wdgServConfirmarRejeicao">Confirmar rejeição</button>
+      </div>
+    </div>
+  </div>
+</div>

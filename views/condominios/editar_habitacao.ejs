@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WDGestor - Editar Habitações · Gestão de Condomínios</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= _bp %>/css/condominios-modern.css?v=1">
+  <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <style>
+    .hab-search-form .form-label{ font-weight:500; }
+  .hab-results-table th{ vertical-align:middle; text-align:center; white-space:nowrap; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#475569; background:#f8fafc; }
+  .hab-results-table td{ vertical-align:middle; text-align:center; white-space:normal; background:#fff !important; padding:.85rem .9rem; border-top:1px solid rgba(148,163,184,.2); }
+    .hab-results-table tbody tr:first-child td{ border-top:none; }
+    .hab-results-table tbody tr:hover td{ background:#f5f9ff !important; }
+    #habResultadoWrap.scroll-limit{ max-height:360px; overflow-y:auto; }
+    #habResultadoWrap.scroll-limit thead th{ position:sticky; top:0; background:#f8f9fa; z-index:2; }
+    .gestor-divider{ height:2px; width:300px; margin:6px auto 18px; background:#0d6efd; border-radius:2px; }
+  /* Usar tamanho padrão de ícones definido em public/css/icon-buttons.css (24x24) */
+    .col-acoes { width: 200px; }
+  /* Moradores: cada um em uma linha */
+  .hab-col-moradores{ white-space: normal; text-align: left; }
+    .truncate{ max-width:320px; }
+
+    .wdg-hab-stack{ display:flex; flex-direction:column; gap:.25rem; align-items:center; text-align:center; }
+    .wdg-hab-primary{ font-weight:600; color:#0f172a; }
+    .wdg-hab-secondary{ font-size:.75rem; color:#64748b; }
+    .wdg-hab-chip-row{ display:flex; flex-wrap:wrap; gap:.4rem; justify-content:center; }
+    .wdg-hab-chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.35rem .75rem; border-radius:999px; font-size:.78rem; font-weight:600; border:1px solid transparent; text-decoration:none; line-height:1.2; background:rgba(148,163,184,.12); color:#1e293b; white-space:nowrap; }
+    .wdg-hab-chip i{ font-size:.9rem; }
+    .wdg-hab-chip[data-variant="accent"]{ background:rgba(37,99,235,.12); border-color:rgba(37,99,235,.28); color:#1d4ed8; }
+    .wdg-hab-chip[data-variant="success"]{ background:rgba(16,185,129,.16); border-color:rgba(16,185,129,.28); color:#047857; }
+    .wdg-hab-chip[data-variant="muted"]{ background:rgba(148,163,184,.2); border-color:rgba(148,163,184,.3); color:#475569; }
+    .wdg-hab-chip[data-variant="warning"]{ background:rgba(251,191,36,.22); border-color:rgba(251,191,36,.32); color:#92400e; }
+    .wdg-hab-chip[data-variant="danger"]{ background:rgba(248,113,113,.18); border-color:rgba(248,113,113,.28); color:#b91c1c; }
+    .wdg-hab-chip--link{ cursor:pointer; transition:all .15s ease; }
+    .wdg-hab-chip--link:hover{ background:#1d4ed8; border-color:#1d4ed8; color:#fff; text-decoration:none; }
+    button.wdg-hab-chip{ border:none; background:transparent; }
+    button.wdg-hab-chip:disabled{ opacity:.45; cursor:not-allowed; }
+    button.wdg-hab-chip:focus-visible{ outline:2px solid #2563eb; outline-offset:2px; }
+    .wdg-hab-chip-text{ display:inline-block; }
+    .wdg-hab-chip.wdg-loading{ opacity:.6; pointer-events:none; }
+    .wdg-hab-empty{ color:#94a3b8; font-weight:500; }
+  </style>
+</head>
+<body class="wdg-layout" data-base-path="<%= _bp %>">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: (moduleLabel||'Gestão de Condomínios'),
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
+
+  <div class="container py-3">
+    <h4 class="mb-3 text-center page-main-title">Editar Habitações</h4>
+    <div class="gestor-divider"></div>
+
+    <!-- Formulário de Pesquisa -->
+    <form id="formPesquisaHab" class="wdg-card wdg-card-hover p-3 mb-4 hab-search-form" autocomplete="off" novalidate>
+      <div class="row g-3 align-items-end">
+        <div class="col-lg-4 col-md-6">
+          <label class="form-label">Bloco/Torre</label>
+          <select id="fBloco" class="form-select" aria-label="Selecionar bloco" disabled>
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <label class="form-label">Andar</label>
+          <select id="fAndar" class="form-select" aria-label="Selecionar andar" disabled>
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <label class="form-label">Nº / Identificação</label>
+          <input id="fNumero" class="form-control" placeholder="Digite para buscar..." list="listaNumeros" autocomplete="off">
+          <datalist id="listaNumeros"></datalist>
+        </div>
+      </div>
+    </form>
+
+    <!-- Lista de Habitações -->
+    <div class="wdg-card wdg-card-hover p-3">
+      <h5 class="mb-2 text-center wdg-section-title">Lista de Habitações</h5>
+      <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
+        <div class="d-flex align-items-center gap-2">
+          <label for="habPageSize" class="form-label mb-0">Mostra</label>
+          <select id="habPageSize" class="form-select form-select-sm" style="width:auto; min-width:90px">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="300">300</option>
+            <option value="400">400</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+          </select>
+          <span class="ms-1">itens</span>
+        </div>
+      </div>
+      <div id="habResultadoWrap" class="table-responsive table-vert-max">
+        <table class="table table-sm align-middle hab-results-table" id="tabelaHabEdit">
+          <thead>
+            <tr>
+              <th>Habitação</th>
+              <th>Proprietário</th>
+              <th>Alugado?</th>
+              <th>Contrato Locação</th>
+              <th>Moradores</th>
+              <th>Veículos</th>
+              <th>Pets</th>
+              <th class="col-acoes">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="habResultadosBody">
+            <!-- Linhas preenchidas via JS -->
+          </tbody>
+        </table>
+      </div>
+      <div id="habPaginas" class="wdg-pager mt-2"></div>
+    </div>
+  </div>
+
+  <!-- Templates ocultos (para clonagem) -->
+  <template id="tplLinhaHab">
+    <tr>
+      <td class="hab-col-hab truncate"></td>
+      <td class="hab-col-prop truncate"></td>
+      <td class="hab-col-alugado"></td>
+      <td class="hab-col-contrato"></td>
+      <td class="hab-col-moradores hab-moradores-list"></td>
+      <td class="hab-col-veiculos"></td>
+      <td class="hab-col-pets"></td>
+      <td class="hab-col-acoes">
+        <div class="d-flex gap-1 justify-content-center flex-nowrap">
+          <button type="button" class="wdg-icon-btn" data-action="aluguel" title="Gerenciar aluguel" aria-label="Gerenciar aluguel">
+            <img src="<%= _bp %>/images/inquilino.png" alt="Aluguel" onerror="this.outerHTML='&lt;i class=\'bi bi-house\'&gt;&lt;/i&gt;'">
+          </button>
+          <button type="button" class="wdg-icon-btn" data-action="veiculos" title="Gerenciar veículos" aria-label="Gerenciar veículos">
+            <img src="<%= _bp %>/images/veiculo.png" alt="Veículos" onerror="this.outerHTML='&lt;i class=\'bi bi-car-front\'&gt;&lt;/i&gt;'">
+          </button>
+          <button type="button" class="wdg-icon-btn" data-action="pets" title="Gerenciar pets" aria-label="Gerenciar pets">
+            <img src="<%= _bp %>/images/pet.png" alt="Pets" onerror="this.outerHTML='&lt;i class=\'bi bi-heart\'&gt;&lt;/i&gt;'">
+          </button>
+        </div>
+      </td>
+    </tr>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<%= _bp %>/js/condominios/editar_habitacao.js?v=1"></script>
+  <%- include('./modal_detalhes_veiculo') %>
+  <script src="<%= _bp %>/js/condominios/modal_detalhes_veiculo.js?v=1"></script>
+  <%- include('./modal_detalhes_pet') %>
+  <script src="<%= _bp %>/js/condominios/modal_detalhes_pet.js?v=1"></script>
+  <% /* Modal: Gerenciar Aluguel */ %>
+  <%- include('./modal_edit_hab_aluguel') %>
+  <script src="<%= _bp %>/js/condominios/modal_edit_hab_aluguel.js?v=1"></script>
+  <% /* Modal: Gerenciar Veículos */ %>
+  <%- include('./modal_edit_hab_veiculo') %>
+  <script src="<%= _bp %>/js/condominios/modal_edit_hab_veiculo.js?v=1"></script>
+  <% /* Modal: Gerenciar Pets */ %>
+  <%- include('./modal_edit_hab_pet') %>
+  <script src="<%= _bp %>/js/condominios/modal_edit_hab_pet.js?v=1"></script>
+</body>
+</html>

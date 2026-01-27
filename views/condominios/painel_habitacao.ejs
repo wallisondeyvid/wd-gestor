@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Habitações - WDGestor</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <style>
+    .wdg-hab-hero{background:linear-gradient(135deg,#0f172a,#1d4ed8);color:#fff;border-radius:28px;padding:2rem 2.5rem;margin-bottom:1.8rem;box-shadow:0 30px 70px rgba(15,23,42,.35);}
+    .wdg-hab-hero h1{font-size:1.8rem;font-weight:700;margin-bottom:.35rem;}
+    .wdg-hab-hero p{margin:0;color:rgba(255,255,255,.85);max-width:720px;}
+    .wdg-hab-panel{background:#fff;border-radius:26px;padding:1.8rem 2rem;box-shadow:0 30px 90px rgba(15,23,42,.12);margin-bottom:2rem;}
+    .wdg-hab-panel h2{font-weight:700;font-size:1.3rem;margin-bottom:.25rem;color:#0f172a;}
+    .wdg-hab-panel p{margin:0;color:#475569;}
+    .wdg-hab-filters .form-label{text-transform:uppercase;font-size:.68rem;letter-spacing:.18em;font-weight:600;color:#475569;}
+    .wdg-hab-filters .form-select,.wdg-hab-filters .form-control{border-radius:14px;padding:.65rem .85rem;border:1px solid rgba(15,23,42,.12);}
+    .wdg-hab-filter-actions{display:flex;justify-content:flex-end;gap:.75rem;flex-wrap:wrap;margin-top:.5rem;}
+    .wdg-hab-chip-group{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:1rem;}
+    .wdg-hab-chip{border-radius:999px;border:1px solid rgba(15,23,42,.12);padding:.3rem .85rem;font-size:.78rem;font-weight:600;color:#0f172a;background:#f8fafc;cursor:pointer;transition:all .15s ease;}
+    .wdg-hab-chip:is(:hover,.is-active){background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+    .wdg-hab-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(720px,720px));justify-content:center;gap:2rem;}
+    .wdg-hab-stage{width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:0 4vw;}
+    .wdg-hab-card{position:relative;border-radius:26px;border:1px solid rgba(15,23,42,.08);padding:1.5rem;box-shadow:0 20px 60px rgba(15,23,42,.15);display:flex;flex-direction:column;gap:1.1rem;background:#fff;overflow:hidden;min-height:280px;transition:transform .25s ease,box-shadow .25s ease;}
+    .wdg-hab-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(30,64,175,.18),rgba(6,182,212,.12));opacity:0;transition:opacity .25s ease;z-index:0;}
+    .wdg-hab-card:hover{transform:translateY(-6px);box-shadow:0 35px 90px rgba(15,23,42,.25);}
+    .wdg-hab-card:hover::before{opacity:1;}
+    .wdg-hab-card > *{position:relative;z-index:1;}
+    .wdg-hab-card.wdg-hab-skeleton{min-height:240px;background:#f8fafc;border-style:dashed;}
+    .wdg-hab-card[data-status="locado"]{border-color:rgba(248,113,113,.35);}
+    .wdg-hab-card[data-status="proprio"]{border-color:rgba(34,197,94,.35);}
+    .wdg-hab-card[data-status="vaga"]{border-color:rgba(14,165,233,.35);}
+    .wdg-hab-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+    .wdg-hab-card-topline{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
+    .wdg-hab-card-title{margin:0;font-size:1.25rem;font-weight:700;color:#0f172a;}
+    .wdg-hab-card-meta{font-size:.86rem;color:#475569;}
+    .wdg-hab-card-status{border-radius:999px;padding:.35rem .9rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.16em;box-shadow:0 5px 18px rgba(15,23,42,.15);background:rgba(15,23,42,.85);color:#fff;}
+    .wdg-hab-card-status.status-proprio{background:rgba(34,197,94,.85);}
+    .wdg-hab-card-status.status-locado{background:rgba(248,113,113,.9);}
+    .wdg-hab-card-status.status-vaga{background:rgba(14,165,233,.9);}
+    .wdg-hab-occupancy{min-width:190px;text-align:right;padding:.35rem 0;}
+    .wdg-hab-occupancy-label{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.25rem .85rem;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+    .wdg-hab-occupancy-label.is-propria{background:rgba(34,197,94,.18);color:#0f5132;border:1px solid rgba(34,197,94,.35);}
+    .wdg-hab-occupancy-label.is-locada{background:rgba(248,113,113,.2);color:#7f1d1d;border:1px solid rgba(248,113,113,.4);}
+    .wdg-hab-occupancy-label.is-vaga{background:rgba(14,165,233,.15);color:#0c4a6e;border:1px solid rgba(14,165,233,.35);}
+    .wdg-hab-tag-row{display:flex;flex-wrap:wrap;gap:.4rem;}
+    .wdg-hab-tag{border-radius:999px;background:rgba(15,23,42,.05);padding:.25rem .75rem;font-size:.75rem;font-weight:600;color:#0f172a;border:1px solid rgba(15,23,42,.08);}
+    .wdg-hab-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.9rem;margin-top:.6rem;}
+    .wdg-hab-meta-item{padding:.85rem;border-radius:16px;border:1px solid rgba(15,23,42,.08);background:rgba(248,250,252,.8);min-height:92px;}
+    .wdg-hab-meta-item.is-wide{grid-column:1 / -1;}
+    .wdg-hab-meta-item > span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8;margin-bottom:.3rem;}
+    .wdg-hab-meta-item strong{display:block;font-size:.95rem;color:#0f172a;font-weight:700;}
+    /* Campos (slots) do painel: altura estável e rolagem interna */
+    .wdg-hab-meta-stack{display:flex;flex-direction:column;gap:.2rem;line-height:1.3;max-height:2.6em;overflow-y:auto;padding-right:.25rem;}
+    .wdg-hab-meta-item[data-scrollable="true"] .wdg-hab-meta-stack{scrollbar-width:thin;}
+    .wdg-hab-meta-line{font-size:.95rem;color:#0f172a;font-weight:700;}
+    .wdg-hab-timeline{list-style:none;margin:1.1rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:1rem;}
+    .wdg-hab-timeline li{flex:1 1 180px;border-radius:16px;padding:.85rem 1rem;background:rgba(15,23,42,.03);border:1px dashed rgba(15,23,42,.12);}
+    .wdg-hab-timeline li.is-success{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.5);}
+    .wdg-hab-timeline li.is-warning{background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.5);}
+    .wdg-hab-timeline li.is-danger{background:rgba(248,113,113,.18);border-color:rgba(248,113,113,.6);}
+    .wdg-hab-timeline small{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;margin-bottom:.25rem;}
+    .wdg-hab-timeline span{font-weight:600;color:#0f172a;}
+    .wdg-hab-card-actions{margin-top:auto;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:.35rem;}
+    .wdg-hab-card-icon-actions{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;justify-content:center;}
+    .wdg-hab-icon-pod{position:relative;display:inline-flex;}
+    .wdg-hab-icon-btn{padding:4px;border-radius:14px;background:transparent;box-shadow:none;}
+    .wdg-hab-icon-btn img{width:32px;height:32px;object-fit:contain;image-rendering:-webkit-optimize-contrast;}
+    .wdg-hab-icon-btn:disabled{opacity:.45;cursor:not-allowed;}
+    .wdg-hab-action-count{position:absolute;top:-4px;right:-4px;background:#1d4ed8;color:#fff;border-radius:999px;padding:.05rem .3rem;font-size:.68rem;font-weight:700;box-shadow:0 8px 18px rgba(29,78,216,.35);}
+    .wdg-hab-card-secondary-actions{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;align-items:center;}
+    .wdg-hab-card-secondary-actions .btn{border-radius:14px;font-weight:600;padding:.4rem .9rem;box-shadow:0 8px 18px rgba(15,23,42,.06);}
+    .wdg-hab-inline-list{display:flex;flex-direction:column;gap:.65rem;}
+    .wdg-hab-meta-item .wdg-hab-inline-list{max-height:4.8rem;overflow-y:auto;padding-right:.25rem;scrollbar-width:thin;}
+    .wdg-hab-inline-row{display:flex;align-items:center;gap:.65rem;}
+    .wdg-hab-inline-row-btn{width:100%;border:0;background:transparent;padding:0;text-align:left;cursor:pointer;}
+    .wdg-hab-inline-row-btn:focus-visible{outline:2px solid rgba(29,78,216,.45);outline-offset:4px;border-radius:14px;}
+    .wdg-hab-inline-marker{width:10px;height:10px;border-radius:999px;flex:0 0 auto;box-shadow:0 6px 14px rgba(15,23,42,.10);}
+    .wdg-hab-inline-marker.is-new{background:rgba(29,78,216,.88);border:2px solid rgba(29,78,216,.88);}
+    .wdg-hab-inline-marker.is-old{background:transparent;border:2px solid rgba(148,163,184,.95);}
+    .wdg-hab-inline-icon-btn{padding:2px;border-radius:12px;background:transparent;}
+    .wdg-hab-inline-icon-btn img{width:26px;height:26px;object-fit:contain;}
+    .wdg-hab-inline-text{display:flex;flex-direction:column;gap:.15rem;}
+    .wdg-hab-inline-text strong{font-size:.95rem;color:#0f172a;}
+    .wdg-hab-inline-text small{font-size:.78rem;color:#64748b;font-weight:600;}
+    /* Moradores: chip antes do nome, mesma linha */
+    .wdg-hab-inline-row-btn[data-action="morador-acesso"] .wdg-hab-inline-text{flex-direction:row;align-items:center;gap:.5rem;min-width:0;}
+    .wdg-hab-inline-row-btn[data-action="morador-acesso"] .wdg-hab-inline-text strong{margin:0;min-width:0;}
+    .wdg-hab-inline-row-btn[data-action="morador-acesso"] .wdg-hab-presenca-chip{flex:0 0 auto;}
+    /* Solicitações de serviço: fonte menor e sem negrito */
+    .wdg-hab-inline-row-btn[data-action="servico-portal"] .wdg-hab-inline-text strong{font-weight:400;font-size:.82rem;}
+    .wdg-hab-empty{display:none;border:1px dashed rgba(15,23,42,.25);border-radius:18px;padding:1.6rem;text-align:center;color:#64748b;font-weight:600;}
+    .wdg-hab-empty.is-visible{display:block;}
+    .wdg-hab-skeleton{animation:pulse 1.6s ease-in-out infinite;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 37%,#f1f5f9 63%);background-size:400% 100%;}
+    .wdg-hab-toast{position:fixed;bottom:20px;right:24px;background:#0f172a;color:#fff;padding:.85rem 1.2rem;border-radius:16px;box-shadow:0 20px 50px rgba(15,23,42,.35);opacity:0;transform:translateY(20px);transition:all .3s ease;pointer-events:none;z-index:1090;font-weight:600;}
+    .wdg-hab-toast.is-visible{opacity:1;transform:translateY(0);}
+    .wdg-hab-modal{border-radius:28px;border:none;box-shadow:0 30px 80px rgba(15,23,42,.35);overflow:hidden;}
+
+    /* Presença do morador (chip) */
+    .wdg-hab-presenca-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .55rem;border-radius:999px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:1px solid rgba(15,23,42,.10);background:rgba(255,255,255,.9);color:#334155;}
+    .wdg-hab-presenca-chip.is-presente{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#166534;}
+    .wdg-hab-presenca-chip.is-ausente{border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.12);color:#7f1d1d;}
+
+    /* Modal: acesso do morador */
+    .wdg-acesso-fieldset{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.9));border:1px solid rgba(15,23,42,.08);border-radius:20px;padding:1rem 1rem .95rem;}
+    .wdg-acesso-hero{border-radius:18px;border:1px solid rgba(15,23,42,.08);background:rgba(255,255,255,.92);padding:.9rem 1rem;box-shadow:0 18px 38px rgba(15,23,42,.08);margin-bottom:.85rem;}
+    .wdg-acesso-hero__row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.45rem;}
+    .wdg-acesso-question{font-weight:900;letter-spacing:-.01em;color:#0f172a;font-size:1.05rem;}
+    .wdg-acesso-pill{display:inline-flex;align-items:center;gap:.45rem;padding:.28rem .7rem;border-radius:999px;font-size:.78rem;font-weight:900;letter-spacing:.10em;text-transform:uppercase;border:1px solid rgba(15,23,42,.10);background:rgba(255,255,255,.92);color:#334155;}
+    .wdg-acesso-pill i{font-size:.95rem;}
+    .wdg-acesso-pill.is-entrada{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#166534;}
+    .wdg-acesso-pill.is-saida{border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.12);color:#7f1d1d;}
+    .wdg-acesso-badge.is-entrada{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.22);}
+    .wdg-acesso-badge.is-entrada i{color:#166534;}
+    .wdg-acesso-badge.is-saida{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.22);}
+    .wdg-acesso-badge.is-saida i{color:#7f1d1d;}
+
+    /* Tipografia padrão dos modais */
+    .wdg-modal-title{font-size:1.15rem;font-weight:800;letter-spacing:-.01em;color:#0f172a;}
+    .wdg-modal-subtitle{font-size:.85rem;font-weight:700;color:#64748b;}
+
+    /* Modais mais confortáveis no mobile */
+    @media (max-width: 768px){
+      .wdg-chegada-modal,
+      .wdg-chegada-add-modal,
+      .wdg-visita-modal{border-radius:18px;}
+    }
+    .wdg-hab-reservas-list{display:flex;flex-direction:column;gap:.9rem;margin-top:1rem;}
+    .wdg-hab-reserva-card{border-radius:18px;border:1px solid rgba(15,23,42,.08);padding:1rem 1.1rem;background:#f8fafc;box-shadow:0 18px 35px rgba(15,23,42,.1);}
+    .wdg-hab-reserva-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;margin-bottom:.6rem;}
+    .wdg-hab-reserva-top strong{font-size:1rem;color:#0f172a;}
+    .wdg-hab-reserva-top span{font-size:.85rem;color:#475569;font-weight:600;}
+    .wdg-hab-reserva-meta{display:flex;flex-wrap:wrap;gap:.65rem;font-size:.82rem;color:#0f172a;font-weight:600;}
+    .wdg-hab-reserva-meta span{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .65rem;border-radius:12px;background:#fff;border:1px solid rgba(15,23,42,.08);}
+    .wdg-hab-reserva-note{margin-top:.75rem;font-size:.85rem;color:#475569;white-space:pre-wrap;}
+    .wdg-hab-reserva-status{display:flex;flex-wrap:wrap;gap:.4rem;}
+    .wdg-hab-reserva-status .badge{font-size:.75rem;font-weight:700;padding:.35rem .65rem;border-radius:999px;}
+
+    /* Modal de informações da visita */
+    .wdg-visita-modal{background:linear-gradient(180deg,#ffffff,#f8fafc);}
+    .wdg-visita-modal-head{display:flex;align-items:center;gap:.9rem;}
+    .wdg-visita-modal-badge{width:44px;height:44px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:rgba(29,78,216,.14);border:1px solid rgba(29,78,216,.22);box-shadow:0 18px 38px rgba(15,23,42,.10);}
+    .wdg-visita-modal-badge i{font-size:1.1rem;color:#1d4ed8;}
+    .wdg-visita-kpi{border-radius:18px;border:1px solid rgba(15,23,42,.08);background:linear-gradient(135deg,rgba(29,78,216,.08),rgba(6,182,212,.08));padding:.85rem 1rem;margin-bottom:.9rem;}
+    .wdg-visita-kpi__label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:#64748b;font-weight:700;}
+    .wdg-visita-kpi__value{font-size:1rem;font-weight:500;color:#0f172a;margin-top:.15rem;}
+    .wdg-visita-card{border-radius:18px;border:1px solid rgba(15,23,42,.08);background:rgba(248,250,252,.9);padding:1rem 1.05rem;box-shadow:0 14px 32px rgba(15,23,42,.08);}
+    .wdg-visita-card__label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8;font-weight:700;margin-bottom:.25rem;}
+    .wdg-visita-card__value{font-size:1rem;color:#0f172a;font-weight:500;}
+    .wdg-visita-card__sub{font-size:.82rem;color:#64748b;font-weight:700;margin-top:.25rem;}
+    .wdg-visita-pre{white-space:pre-wrap;word-break:break-word;}
+    .wdg-visita-vehicle-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;margin-top:.5rem;}
+    .wdg-visita-vehicle-grid span{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8;font-weight:700;margin-bottom:.15rem;}
+    .wdg-visita-vehicle-grid strong{display:block;font-size:.95rem;color:#0f172a;font-weight:500;}
+    @media (max-width: 768px){
+      .wdg-visita-vehicle-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+
+    /* Modais de chegada e adicionar visitante (mesma linguagem visual) */
+    .wdg-chegada-modal,
+    .wdg-chegada-add-modal{background:linear-gradient(180deg,#ffffff,#f8fafc);}
+    .wdg-chegada-modal .modal-header,
+    .wdg-chegada-add-modal .modal-header{padding-left:1.5rem;padding-right:1.5rem;padding-top:1.25rem;}
+    .wdg-chegada-modal .modal-footer,
+    .wdg-chegada-add-modal .modal-footer{padding-left:1.5rem;padding-right:1.5rem;padding-bottom:1.25rem;}
+
+    .wdg-chegada-list{margin-top:.75rem;}
+    .wdg-chegada-modal .wdg-hab-inline-row{
+      border-radius:18px;
+      border:1px solid rgba(15,23,42,.08);
+      background:rgba(248,250,252,.9);
+      padding:.9rem 1rem;
+      box-shadow:0 14px 32px rgba(15,23,42,.08);
+    }
+    .wdg-chegada-modal .wdg-hab-inline-row:hover{box-shadow:0 18px 40px rgba(15,23,42,.10);}
+    .wdg-chegada-modal .wdg-hab-inline-text strong{font-size:1rem;}
+    .wdg-chegada-modal .wdg-hab-inline-text small{font-size:.8rem;}
+    .wdg-chegada-modal .wdg-hab-inline-icon-btn{border:1px solid rgba(15,23,42,.10);background:#fff;box-shadow:0 10px 22px rgba(15,23,42,.08);}
+    .wdg-chegada-modal .wdg-hab-inline-icon-btn:hover{background:rgba(248,250,252,.9);}
+    .wdg-chegada-modal .wdg-hab-inline-icon-btn img{width:22px;height:22px;}
+
+    .wdg-chegada-add-modal fieldset{background:rgba(255,255,255,.75);box-shadow:0 14px 32px rgba(15,23,42,.06);}
+    .wdg-chegada-add-modal .form-check-input{cursor:pointer;}
+    .wdg-chegada-add-modal textarea.form-control{resize:vertical;}
+
+    /* Tipografia/Hierarquia */
+    .wdg-modal-section{margin-bottom:.9rem;}
+    .wdg-modal-section__title{font-size:.95rem;font-weight:700;color:#0f172a;}
+    .wdg-modal-section__subtitle{font-size:.82rem;color:#64748b;font-weight:600;margin-top:.2rem;}
+
+    /* Chips / Badges */
+    .wdg-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .6rem;border-radius:999px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:1px solid rgba(15,23,42,.10);background:rgba(255,255,255,.9);color:#334155;}
+    .wdg-chip--primary{border-color:rgba(29,78,216,.22);background:rgba(29,78,216,.10);color:#1d4ed8;}
+
+    /* Empty state */
+    .wdg-empty-card{border-radius:18px;border:1px dashed rgba(15,23,42,.22);padding:1.1rem 1.2rem;text-align:center;color:#64748b;font-weight:700;background:rgba(248,250,252,.7);}
+
+    /* Ações na linha */
+    .wdg-row-actions{padding:.2rem;border-radius:999px;background:rgba(241,245,249,.85);border:1px solid rgba(15,23,42,.08);}
+
+    /* Fieldset moderno reutilizável */
+    .wdg-fieldset{border-radius:22px;border:1px solid rgba(15,23,42,.08);background:rgba(255,255,255,.75);padding:1.25rem 1.25rem;box-shadow:0 14px 32px rgba(15,23,42,.06);}
+    .wdg-fieldset__legend{float:none;width:auto;padding:0 .55rem;margin-bottom:.85rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8;font-weight:800;}
+    .wdg-chegada-add-modal .form-label{font-weight:700;color:#0f172a;font-size:.85rem;}
+    .wdg-chegada-add-modal .form-control,
+    .wdg-chegada-add-modal .form-select{border-radius:14px;border-color:rgba(15,23,42,.10);box-shadow:none;}
+    .wdg-chegada-add-modal .form-control,
+    .wdg-chegada-add-modal .form-select{padding:.7rem .85rem;font-weight:700;}
+    .wdg-chegada-add-modal textarea.form-control{padding:.8rem .9rem;}
+    .wdg-chegada-add-modal .form-control:focus,
+    .wdg-chegada-add-modal .form-select:focus{border-color:rgba(29,78,216,.35);box-shadow:0 0 0 .2rem rgba(29,78,216,.12);}
+
+    .wdg-switch-card{border-radius:18px;border:1px solid rgba(15,23,42,.08);background:linear-gradient(135deg,rgba(29,78,216,.06),rgba(6,182,212,.06));padding:.8rem .9rem;box-shadow:0 14px 32px rgba(15,23,42,.06);}
+    .wdg-switch-card__hint{margin-top:.35rem;font-size:.78rem;color:#64748b;font-weight:700;}
+    .wdg-mini-note{font-size:.78rem;color:#64748b;font-weight:700;}
+
+    /* Botões mais "app" (sem mudar paleta) */
+    .wdg-chegada-modal .btn,
+    .wdg-chegada-add-modal .btn,
+    .wdg-visita-modal .btn{border-radius:14px;font-weight:800;}
+    .wdg-chegada-modal .btn-primary,
+    .wdg-chegada-add-modal .btn-primary,
+    .wdg-visita-modal .btn-primary{box-shadow:0 14px 32px rgba(29,78,216,.22);}
+    .wdg-chegada-modal .btn-outline-secondary,
+    .wdg-chegada-add-modal .btn-outline-secondary,
+    .wdg-visita-modal .btn-outline-secondary{box-shadow:0 14px 32px rgba(15,23,42,.06);}
+
+    @keyframes pulse{0%{background-position:0% 0;}100%{background-position:-135% 0;}}
+    @media (max-width:1500px){
+      .wdg-hab-grid{grid-template-columns:repeat(auto-fit,minmax(520px,1fr));}
+    }
+    @media (max-width:1100px){
+      .wdg-hab-grid{grid-template-columns:repeat(auto-fit,minmax(420px,1fr));}
+    }
+    @media (max-width:820px){
+      .wdg-hab-grid{grid-template-columns:repeat(auto-fit,minmax(320px,1fr));}
+    }
+    @media (max-width:520px){
+      .wdg-hab-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;}
+    }
+    @media (max-width:768px){.wdg-hab-hero{padding:1.5rem;} .wdg-hab-panel{padding:1.25rem;} }
+  </style>
+</head>
+<body class="wdg-layout wdg-hab-body" data-base-path="<%= _bp %>" data-user-role="<%= (user && user.role) ? user.role : '' %>" data-user-unit="<%= user && user.unidade_id ? (user.unidade_id._id || user.unidade_id || user.unidadeId || '') : '' %>" data-user-name="<%= user && user.nome ? user.nome : '' %>" data-scope-all="<%= (user && (user.isMaster || user.role === 'master' || user.role === 'admin')) ? 'true' : 'false' %>">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Gestão de Condomínios',
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+
+  <main class="container py-4">
+    <section class="wdg-hab-hero">
+      <h1>Painel de Habitações</h1>
+      <p>Visualize rapidamente todas as unidades do condomínio, descubra quais estão locadas ou disponíveis e dispare ações operacionais em um único lugar.</p>
+    </section>
+
+    <section class="wdg-hab-panel">
+      <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+          <h2>Pesquisar habitação</h2>
+        </div>
+        <div class="text-end">
+          <div class="text-muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.18em;">Habitações</div>
+          <div class="display-6" style="font-size:2rem;font-weight:700;color:#0f172a;" id="habPanelCount">0</div>
+        </div>
+      </div>
+
+      <form id="habPanelFilters" class="wdg-hab-filters">
+        <div class="row g-3">
+          <div class="col-lg-4 col-md-6">
+            <label class="form-label" for="habFilterUnidade">Condomínio</label>
+            <select class="form-select" id="habFilterUnidade" <%= (user && !(user.isMaster || user.role === 'master' || user.role === 'admin')) ? 'disabled' : '' %>>
+              <option value="">Carregando...</option>
+            </select>
+            <% if (user && !(user.isMaster || user.role === 'master' || user.role === 'admin')) { %>
+              <small class="text-muted">Vinculado a <strong><%= user && user.unidade_nome ? user.unidade_nome : 'unidade padrão' %></strong></small>
+            <% } %>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label" for="habFilterBloco">Bloco</label>
+            <select class="form-select" id="habFilterBloco" disabled>
+              <option value="">Selecione um condomínio</option>
+            </select>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label" for="habFilterAndar">Andar</label>
+            <select class="form-select" id="habFilterAndar" disabled>
+              <option value="">Selecione um condomínio</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="habFilterSearch">Pesquisar por n° / identificação</label>
+            <input type="search" class="form-control" id="habFilterSearch" placeholder="Ex.: Bloco A - Casa 101" autocomplete="off">
+          </div>
+        </div>
+        <div class="wdg-hab-filter-actions">
+          <button type="button" class="btn btn-outline-secondary" data-action="reset">Limpar filtros</button>
+          <button type="button" class="btn btn-primary" data-action="refresh">Atualizar dados</button>
+        </div>
+      </form>
+
+      <div class="wdg-hab-chip-group" id="habQuickFilters" aria-label="Atalhos de filtro"></div>
+    </section>
+
+    <section class="wdg-hab-stage">
+      <div class="wdg-hab-grid" id="habPanelGrid" aria-live="polite"></div>
+      <div class="wdg-hab-empty" id="habPanelEmpty">Nenhuma habitação encontrada para os filtros aplicados.</div>
+    </section>
+    <div id="habPanelToast" class="wdg-hab-toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <%- include('./modal_detalhes_hab_cad', { basePath: _bp }) %>
+  <%- include('./modal_detalhes_pet', { basePath: _bp }) %>
+  <%- include('./modal_detalhes_veiculo', { basePath: _bp }) %>
+  <%- include('./modal_detalhes_gar_cad', { basePath: _bp }) %>
+  <%- include('./modal_nova_solicitacao_servico', { basePath: _bp }) %>
+  <%- include('./modal_informacoes_da_visita', { basePath: _bp }) %>
+  <%- include('./modal_comunicar_chegada_visita', { basePath: _bp }) %>
+  <%- include('./modal_adicionar_visitante_chegada', { basePath: _bp }) %>
+
+  <div class="modal fade" id="habReservasModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content wdg-hab-modal wdg-hab-reservas-modal">
+        <div class="modal-header border-0 pb-0">
+          <div>
+            <h5 class="modal-title" id="habReservasTitle">Reservas da habitação</h5>
+            <p class="text-muted small mb-0" id="habReservasSubtitle"></p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <div class="d-flex align-items-center gap-2" id="habReservasLoading">
+            <div class="spinner-border text-primary" role="status" aria-hidden="true" style="width:1.5rem;height:1.5rem;"></div>
+            <span class="text-muted">Carregando reservas...</span>
+          </div>
+          <div id="habReservasList" class="wdg-hab-reservas-list"></div>
+          <p class="text-center text-muted d-none" id="habReservasEmpty">Nenhuma reserva encontrada para esta habitação.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="habMoradorAcessoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content wdg-hab-modal">
+        <div class="modal-header border-0">
+          <div>
+            <div class="wdg-visita-modal-head">
+              <div class="wdg-visita-modal-badge wdg-acesso-badge" aria-hidden="true"><i class="bi bi-person-check" id="habMoradorAcessoIcon"></i></div>
+              <div>
+                <h5 class="modal-title wdg-modal-title" id="habMoradorAcessoTitle">Registrar acesso</h5>
+                <div class="wdg-modal-subtitle" id="habMoradorAcessoSubtitle"></div>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="wdg-fieldset wdg-acesso-fieldset">
+            <div class="wdg-fieldset__legend">Registro</div>
+
+            <div class="wdg-acesso-hero" id="habMoradorAcessoHero">
+              <div class="wdg-acesso-hero__row">
+                <span class="wdg-acesso-pill" id="habMoradorAcessoPill">
+                  <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                  <span id="habMoradorAcessoPillText">Entrada</span>
+                </span>
+              </div>
+              <div class="wdg-acesso-question" id="habMoradorAcessoPergunta"></div>
+            </div>
+
+            <label class="form-label" for="habMoradorAcessoDt">Data e hora</label>
+            <div class="input-group">
+              <span class="input-group-text" aria-hidden="true"><i class="bi bi-calendar-event"></i></span>
+              <input class="form-control" id="habMoradorAcessoDt" type="datetime-local">
+            </div>
+
+            <input type="hidden" id="habMoradorAcessoHabId" value="">
+            <input type="hidden" id="habMoradorAcessoMoradorId" value="">
+            <input type="hidden" id="habMoradorAcessoAcao" value="">
+          </div>
+          <div class="text-danger mt-2" id="habMoradorAcessoErro" style="display:none;font-weight:700;"></div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="habMoradorAcessoConfirmar">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<%= _bp %>/js/condominios/modal_detalhes_hab_cad.js?v=1"></script>
+  <script src="<%= _bp %>/js/condominios/modal_detalhes_veiculo.js?v=1"></script>
+  <script src="<%= _bp %>/js/condominios/modal_detalhes_pet.js?v=1"></script>
+  <script src="<%= _bp %>/js/condominios/modal_nova_solicitacao_servico.js?v=1"></script>
+  <script src="<%= _bp %>/js/condominios/modal_informacoes_da_visita.js?v=3"></script>
+  <script src="<%= _bp %>/js/condominios/modal_comunicar_chegada_visita.js?v=1"></script>
+  <script src="<%= _bp %>/js/condominios/painel_habitacao.js?v=1"></script>
+</body>
+</html>

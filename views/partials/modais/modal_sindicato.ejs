@@ -1,0 +1,77 @@
+<div class="modal fade modal-sindicato modal-sheet theme-blue" id="modalSindicato" tabindex="-1" aria-labelledby="modalSindicatoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" style="max-width:1180px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalSindicatoLabel">Selecionar Sindicato</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="search-wrap has-icon-left mb-3">
+          <img src="<%= (typeof _basePath !== 'undefined'? _basePath : '/gestor') %>/images/pesquisar.png" alt="Pesquisar" class="icon icon-sm search-icon" onerror="this.outerHTML='\x3ci class=\'bi bi-search text-secondary\' style=\'font-size:16px;\'\x3e\x3c/i\x3e'" />
+          <input type="text" id="modalSindicatoPesquisa" class="form-control ps-4" placeholder="Pesquisar sindicato...">
+        </div>
+
+        <div id="wrapTabelaSindicato" class="table-responsive mb-3">
+          <table class="table table-sm table-hover align-middle mb-0 wdg-sindicato-nowarp" id="modalSindicatoTabela" style="table-layout:fixed;">
+            <thead class="table-light">
+              <tr>
+                <th style="width:70px;">Seleção</th>
+                <th style="width:210px;min-width:210px;">CNPJ</th>
+                <th style="min-width:340px;">Nome</th>
+                <th style="width:300px;min-width:260px;">Município</th>
+                <th style="width:70px;">UF</th>
+              </tr>
+            </thead>
+            <tbody id="modalSindicatoLista"></tbody>
+          </table>
+        </div>
+
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" id="modalSindicatoOutroCheck">
+          <label class="form-check-label" for="modalSindicatoOutroCheck">Outro sindicato</label>
+        </div>
+
+        <div id="modalSindicatoOutro" style="display:none;">
+          <div class="row g-2 mb-2">
+            <div class="col-md-3">
+              <input
+                type="text"
+                id="modalSindicatoOutroCNPJ"
+                class="form-control cnpj-mask"
+                placeholder="00.000.000/0000-00"
+                inputmode="numeric"
+                autocomplete="off"
+                maxlength="18">
+              <div class="invalid-feedback">CNPJ inválido.</div>
+            </div>
+            <div class="col-md-6">
+              <input type="text" id="modalSindicatoOutroNome" class="form-control" placeholder="Nome do Sindicato">
+            </div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3">
+              <select id="modalSindicatoOutroUF" class="form-select">
+                <option value="">UF...</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <select id="modalSindicatoOutroMunicipio" class="form-select">
+                <option value="">Município...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-info" id="modalSindicatoDetalhes">Detalhes</button>
+        <div>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-outline-warning" id="modalSindicatoLimpar">Limpar</button>
+          <button type="button" class="btn btn-outline-primary" id="modalSindicatoConfirmar">Selecionar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

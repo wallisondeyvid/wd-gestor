@@ -1,0 +1,188 @@
+<% 
+// Variáveis esperadas: tipoEscala ('ordinaria' | 'extraordinaria'), usuario, unidades (lista opcional)
+const tipo = (typeof tipoEscala === 'string' ? tipoEscala : 'ordinaria').toLowerCase();
+const titulo = tipo === 'extraordinaria' ? 'Pesquisar Escala Extraordinária' : 'Pesquisar Escala Ordinária';
+%>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= titulo %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <!-- Flatpickr (mesmo padrão telas Ausências/Férias) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: '/escalas' }) %>
+  <%- include('../shared/partials/theme-esc-blue') %>
+  <style>
+    :root{ --esc-gray-1:#f8f9fa; --esc-gray-3:#e7eef5; }
+    body{ background: linear-gradient(180deg, var(--esc-gray-2), #fff 28%); }
+  /* Cards seguem o padrão do tema compartilhado */
+  /* Botões seguem o tema comum do partial */
+    .form-select.form-select-sm, .form-control.form-control-sm{ border-radius:.35rem; }
+    /* Centralização da tabela de escalas */
+    #tabelaEscalas thead th,
+    #tabelaEscalas tbody td { text-align: center; vertical-align: middle; }
+    /* Caso queira alguma coluna específica à esquerda no futuro, adicionar class .text-start na célula */
+    /* Cabeçalho e zebra da tabela no mesmo tema da tela de nova escala */
+  #tabelaEscalas td, #tabelaEscalas th{ white-space: nowrap; }
+  /* Título usa padrão do tema em theme-esc-blue */
+  </style>
+</head>
+<body class="wdg-layout wdg-theme-blue" data-user-master="<%= (user && (user.isMaster || user.role==='master' || user.role==='admin')) ? '1':'0' %>">
+  <% const _bpDash='/escalas'; %>
+  <!-- Reuso dos mesmos partials do dashboard para consistência -->
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bpDash, moduleLabel:'Escalas' }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bpDash,
+        moduleLabel: 'Escalas',
+        prefixMenuPaths: true,
+        menuLabel: 'Menu',
+        menuTree: [
+          { label: 'Escalas', children: [
+            { label: 'Ordinária', children: [
+              { label: 'Nova', path: '/ordinaria/nova' },
+              { label: 'Pesquisar', path: '/ordinaria/pesquisar' }
+            ]},
+            { label: 'Extraodinária', children: [
+              { label: 'Nova', path: '/extraordinaria/nova' },
+              { label: 'Pesquisar', path: '/extraordinaria/pesquisar' }
+            ]},
+            { label: 'Escala Diária', path: '/diaria' }
+          ]},
+          { label: 'Gestão', children: [
+            { label: 'Férias', path: '/gestao/ferias' },
+            { label: 'Ausências', path: '/gestao/ausencias' }
+          ]},
+          { label: 'Relatórios', children: [
+            { label: 'Consulta de Relatórios', path: '/relatorios/consulta' }
+          ]}
+        ],
+        adminItems: []
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bpDash, moduleLabel: 'Escalas' }) %>
+  <div class="container mt-3">
+    <!-- Container global para alerts canto superior direito -->
+    <div id="alertsTopRight" class="position-fixed top-0 end-0 p-3" style="z-index:1080; pointer-events:none;">
+      <!-- alerts dinâmicos -->
+    </div>
+    <div class="row">
+      <div class="col-12">
+  <h5 class="mb-3 wdg-page-title page-title"><%= titulo %></h5>
+        <!-- Quadro de Parâmetros -->
+        <div class="card mb-3 mx-auto" style="max-width: 760px;">
+          <div class="card-header py-2"><strong>Parâmetros de Pesquisa</strong></div>
+          <div class="card-body py-3">
+            <form id="formPesquisaEscalas" class="container-fluid p-0">
+              <!-- Linha 1: Unidade + checkbox -->
+              <div class="row g-2 align-items-end mb-2">
+                <div class="col-12">
+                  <label class="form-label mb-1" for="filtroUnidade">Unidade</label>
+                  <div class="d-flex align-items-center flex-wrap" style="gap:.75rem;">
+                    <select class="form-select form-select-sm" id="filtroUnidade" name="unidadeId" aria-label="Unidade" style="max-width:360px;">
+                      <option value="" disabled selected>Selecione...</option>
+                      <% if (Array.isArray(unidades) && unidades.length) { unidades.forEach(function(u){ %>
+                        <option value="<%= u._id || u.id %>"><%= (u.codigo ? (u.codigo + ' - ') : '') + (u.nome||'') %></option>
+                      <% }); } %>
+                    </select>
+                    <div class="form-check mb-1">
+                      <input class="form-check-input" type="checkbox" id="chkIncluirFiliais" />
+                      <label for="chkIncluirFiliais" class="form-check-label small">Incluir filiais</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Linha 2: Período (rótulo único) -->
+              <div class="row g-2 mb-2">
+                <div class="col-12">
+                  <label class="form-label mb-1">Período</label>
+                  <div class="d-flex flex-wrap align-items-center" style="gap:.75rem;">
+                <input type="text" class="form-control form-control-sm date-br text-center" id="periodoIni" name="inicio" aria-label="Início do período" placeholder="dd/mm/aaaa" autocomplete="off" data-calendar="flatpickr" data-allow-future="1" style="max-width:160px;" readonly>
+                    <span class="text-muted">até</span>
+                <input type="text" class="form-control form-control-sm date-br text-center" id="periodoFim" name="fim" aria-label="Fim do período" placeholder="dd/mm/aaaa" autocomplete="off" data-calendar="flatpickr" data-allow-future="1" style="max-width:160px;" readonly>
+                  </div>
+                </div>
+              </div>
+              <!-- Linha 3: Botão alinhado à direita -->
+              <div class="row mt-2">
+                <div class="col-12 d-flex justify-content-end">
+                  <button type="button" id="btnPesquisarEscalas" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Pesquisar</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mb-2">
+          <button class="btn btn-success btn-sm" id="btnNovaEscala"><i class="bi bi-plus-circle"></i> Nova</button>
+        </div>
+
+        <!-- Tabela de Resultados -->
+        <div class="table-responsive border rounded shadow-sm">
+          <table class="table table-sm align-middle mb-0 wdg-table wdg-zebra" id="tabelaEscalas">
+            <thead>
+              <tr class="text-center"><th>Descrição</th><th>Unidade</th><th>Período</th><th style="width:140px">Ações</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div><!-- col -->
+    </div><!-- row -->
+  </div><!-- container -->
+
+  <script>window.ESCALA_PESQUISA_TIPO = '<%= tipo %>';</script>
+  <script>
+    // Carregar unidades dinamicamente (mantém mesma lógica de ausências/férias)
+    (function(){
+      async function carregarUnidades(){
+        const sel = document.getElementById('filtroUnidade');
+        if(!sel) return;
+        try {
+          sel.disabled = true;
+          const r = await fetch('/escalas/api/unidades-relacionadas', { credentials:'same-origin' });
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          const js = await r.json();
+          const lista = Array.isArray(js.data)? js.data : [];
+          // Limpar opções dinâmicas preservando placeholder
+          sel.querySelectorAll('option:not([disabled])').forEach(o=>o.remove());
+          lista.forEach(u=>{
+            const opt=document.createElement('option');
+            opt.value = u.id || u._id;
+            const cod = u.codigo? (u.codigo + ' - ') : '';
+            opt.textContent = cod + (u.nome||'');
+            sel.appendChild(opt);
+          });
+        } catch(e){
+          console.warn('[pesquisar-escala] falha ao carregar unidades', e);
+        } finally { sel.disabled=false; }
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', carregarUnidades); else carregarUnidades();
+    })();
+  </script>
+  <!-- Bootstrap via CDN (sem SRI para evitar bloqueio por hash divergente na versão servida pelo CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+  <script>
+    (function(){
+      function initCalendars(){
+        if(!window.flatpickr){ return console.warn('[PESQUISAR ESCALA] flatpickr não carregado'); }
+        document.querySelectorAll('[data-calendar="flatpickr"]').forEach(el=>{
+          if(el._fp) return; // evitar dupla init
+          flatpickr(el, {
+            locale: 'pt',
+            dateFormat: 'd/m/Y',
+            allowInput: false,
+            disableMobile: true,
+            clickOpens: true
+          });
+        });
+      }
+      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCalendars); else initCalendars();
+    })();
+  </script>
+  <!-- Script da página: caminho ajustado para o arquivo existente em /escalas/js/pesquisar_escala.js -->
+  <script src="<%= _bpDash %>/js/pesquisar_escala.js"></script>
+</body>
+</html>

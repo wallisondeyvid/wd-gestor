@@ -1,0 +1,1012 @@
+<% /* Navbar compartilhada.
+    Parâmetros:
+      moduleBasePath (ex '/gestor', '/escalas')
+      moduleLabel (ex 'Gestor', 'Escalas')
+      user (obj)
+    Regras:
+      - Todos os links relativos principais partem de moduleBasePath.
+      - Rotas específicas inexistentes em um módulo podem ser escondidas via flags futuras.
+*/ %>
+<% /* Navbar não injeta mais CSS (centralizado em head-styles-gestor.ejs). Mantém apenas lógica de menu. */
+const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? moduleBasePath : '/gestor'; %>
+<%
+  const _prefix = (typeof prefixMenuPaths === 'boolean') ? prefixMenuPaths : true; // default true para módulos novos
+  const _isMaster = (user && (user.isMaster || user.role === 'master' || user.role === 'Master')) ? true : false;
+  const _displayName = _isMaster ? 'Master' : ((user && user.nome) ? user.nome : null);
+  function buildHref(p){
+    if(!p) return '#';
+    // Se estiver em modo sem prefixação automática (prefixMenuPaths:false)
+    // permitimos passar caminhos completos já (ex: '/gestor/unidades').
+    // Porém, se o caminho começa com '/' mas NÃO contém o moduleBasePath logo após a barra
+    // e não contém 'http' (externo), prefixamos manualmente para manter consistência.
+    if(!_prefix){
+      if(p.startsWith('http')) return p;
+      if(p.startsWith(__nbBase + '/')) return p; // já está correto
+      if(p === __nbBase) return p; // ex: '/gestor'
+      if(p.startsWith('/')) return __nbBase + p; // ex: '/unidades' => '/gestor/unidades'
+      // caminho relativo sem barra inicial -> anexar '/'
+      return __nbBase + (p.startsWith('/') ? '' : '/') + p;
+    }
+    // Modo prefix automático: assume p relativo ao módulo
+    return __nbBase + p;
+  }
+  // Helper global para montar URL da foto do usuário
+  function _fotoUrlEJS(f){
+    if(!f) return __nbBase + '/img/user-placeholder.svg';
+    // Sempre retornar API URL para evitar data URLs no src
+    return __nbBase + '/api/usuario/foto';
+  }
+  /* Garante que referência inexistente não quebre (Erro: menuItemsGeneral não está definido) */
+  const __rawMenu = (typeof menuItemsGeneral !== 'undefined') ? menuItemsGeneral : undefined;
+  const _items = Array.isArray(__rawMenu) ? __rawMenu : [
+    { path: '/unidades', label: 'Unidades' },
+    { path: '/funcoes', label: 'Funções' },
+    { path: '/setores', label: 'Setores' },
+    { path: '/funcionarios', label: 'Funcionários' },
+    { path: '/recursos', label: 'Recursos' }
+  ];
+  const __rawAdmin = (typeof adminItems !== 'undefined') ? adminItems : undefined;
+  const _admin = (user && (user.isMaster || user.role==='admin' || user.role==='master')) ? (Array.isArray(__rawAdmin)? __rawAdmin : [
+    { path: '/modulos', label: 'Módulos' },
+    { path: '/usuarios', label: 'Usuários' }
+  ]) : [];
+  const __menuLabel = (typeof menuLabel === 'string' && menuLabel) ? menuLabel : 'Cadastros Gerais';
+  // menuTree pode não ser fornecido em módulos antigos; faça verificação segura para evitar ReferenceError
+  function ensureServicesEntry(tree){
+    if(!Array.isArray(tree)) return tree;
+    const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
+    const desiredPath = '/servicos/servicos';
+    let servicesNode = tree.find(node => normalizeLabel(node.label) === 'serviços');
+    if(!servicesNode){
+      servicesNode = { label: 'Serviços', children: [] };
+      tree.push(servicesNode);
+    }
+    if(!Array.isArray(servicesNode.children)) servicesNode.children = [];
+    if(!servicesNode.children.some(child => child.path === desiredPath)){
+      servicesNode.children.unshift({ label: 'Serviços', path: desiredPath });
+    }
+    if(!servicesNode.children.some(child => child.path === '/servicos/solicitar')){
+      servicesNode.children.push({ label: 'Solicitações do Portal', path: '/servicos/solicitar' });
+    }
+    return tree;
+  }
+
+  function ensureEnquetesEntry(tree){
+    if(!Array.isArray(tree)) return tree;
+    const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
+    const desiredPath = '/administracao/enquetes';
+    let adminNode = tree.find(node => normalizeLabel(node.label) === 'administração' || normalizeLabel(node.label) === 'administracao');
+    if(!adminNode){
+      adminNode = { label: 'Administração', children: [] };
+      tree.push(adminNode);
+    }
+    if(!Array.isArray(adminNode.children)) adminNode.children = [];
+    if(!adminNode.children.some(child => child.path === desiredPath)){
+      adminNode.children.push({ label: 'Enquetes', path: desiredPath });
+    }
+    return tree;
+  }
+
+  function ensureComunicadosEntry(tree){
+    if(!Array.isArray(tree)) return tree;
+    const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
+    const desiredPath = '/administracao/comunicados';
+    let adminNode = tree.find(node => normalizeLabel(node.label) === 'administração' || normalizeLabel(node.label) === 'administracao');
+    if(!adminNode){
+      adminNode = { label: 'Administração', children: [] };
+      tree.push(adminNode);
+    }
+    if(!Array.isArray(adminNode.children)) adminNode.children = [];
+    if(!adminNode.children.some(child => child.path === desiredPath)){
+      adminNode.children.push({ label: 'Comunicados', path: desiredPath });
+    }
+    return tree;
+  }
+
+  function ensureCaixaMensagemEntry(tree){
+    // Somente para o módulo Gestão de Condomínios
+    if(__nbBase !== '/condominios') return tree;
+    if(!Array.isArray(tree)) return tree;
+    const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
+    const desiredPath = '/administracao/caixa-de-mensagem';
+    let adminNode = tree.find(node => normalizeLabel(node.label) === 'administração' || normalizeLabel(node.label) === 'administracao');
+    if(!adminNode){
+      adminNode = { label: 'Administração', children: [] };
+      tree.push(adminNode);
+    }
+    if(!Array.isArray(adminNode.children)) adminNode.children = [];
+    if(!adminNode.children.some(child => child.path === desiredPath)){
+      adminNode.children.push({ label: 'Caixa de Mensagem', path: desiredPath });
+    }
+    return tree;
+  }
+
+  let __menuTree = (typeof menuTree !== 'undefined' && Array.isArray(menuTree)) ? menuTree : null;
+  __menuTree = ensureServicesEntry(__menuTree);
+  __menuTree = ensureEnquetesEntry(__menuTree);
+  __menuTree = ensureComunicadosEntry(__menuTree);
+  __menuTree = ensureCaixaMensagemEntry(__menuTree);
+%>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-wd" data-has-user="<%= user ? '1':'0' %>">
+  <div class="container-fluid px-3 px-lg-4">
+  <button class="navbar-toggler border-0 p-2 me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavShared" aria-controls="offcanvasNavShared" aria-label="Abrir menu"><span class="navbar-toggler-icon"></span></button>
+    <a class="navbar-brand d-flex align-items-center gap-2" href="<%= __nbBase %>/dashboard" aria-label="Dashboard <%= moduleLabel %>">
+      <img src="<%= __nbBase %>/images/logobranco.png" alt="Logo" class="navbar-logo" />
+    </a>
+    <div class="collapse navbar-collapse" id="navbarShared">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><%= __menuLabel %></a>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-wdg-wide">
+            <% if (__menuTree) { %>
+              <% function renderFlyout(nodes){ %>
+                <% nodes.forEach(function(n){ %>
+                  <% if (n.children && n.children.length) { %>
+                    <li class="dropdown-submenu dropend">
+                      <a class="dropdown-item dropdown-toggle wdg-submenu-toggle" href="#" tabindex="-1"><%= n.label %></a>
+                      <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-wdg-narrow">
+                        <% renderFlyout(n.children); %>
+                      </ul>
+                    </li>
+                  <% } else { %>
+                    <li><a class="dropdown-item" href="<%= buildHref(n.path || '#') %>"><%= n.label %></a></li>
+                  <% } %>
+                <% }); %>
+              <% } %>
+              <% renderFlyout(__menuTree); %>
+            <% } else { %>
+              <% _items.forEach(it => { %>
+                <li><a class="dropdown-item" href="<%= buildHref(it.path) %>"><%= it.label %></a></li>
+              <% }) %>
+              <% if (_admin.length) { %>
+                <li><hr class="dropdown-divider"></li>
+                <% _admin.forEach(it => { %>
+                  <li><a class="dropdown-item" href="<%= buildHref(it.path) %>"><%= it.label %></a></li>
+                <% }) %>
+              <% } %>
+            <% } %>
+          </ul>
+        </li>
+      </ul>
+      <div class="flex-grow-1 text-center navbar-wd-center">
+        <span class="center-chip">Módulo <%= moduleLabel %></span>
+        <span id="nbIdleTimer" class="idle-timer badge rounded-pill bg-warning text-dark ms-2" title="Tempo restante para sair por inatividade" style="vertical-align:middle; display:none;">30:00</span>
+      </div>
+  <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center navbar-wd-actions">
+        <% if (user) { %>
+          <% if (__nbBase === '/condominios') { %>
+            <li class="nav-item">
+              <a class="nav-link nav-wd-icon-link position-relative d-flex align-items-center justify-content-center" id="navMsgNotifyLink" href="<%= buildHref('/administracao/caixa-de-mensagem') %>" aria-label="Caixa de Mensagem">
+                <img src="<%= __nbBase %>/images/mensagem.png" alt="Mensagens" style="width:22px;height:22px;" />
+                <span id="navMsgNotifyBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size:.70rem; line-height:1; min-width:1.4em;"></span>
+              </a>
+            </li>
+          <% } %>
+          <% 
+            let __foto = (user && user.foto) ? String(user.foto).trim() : '';
+            let __src = _fotoUrlEJS(__foto);
+          %>
+          <li class="nav-item d-flex align-items-center">
+            <a class="nav-link nav-wd-profile d-flex align-items-center gap-1" href="#" onclick="if(window.abrirModalPerfil){abrirModalPerfil();}/* fallback: modal abre via data-bs-* */" data-bs-toggle="modal" data-bs-target="#modalPerfil" aria-label="Perfil">
+              <img id="navbarAvatarShared" src="<%= __src %>" data-user-foto="<%= __foto %>" alt="Perfil" class="avatar-img" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" onerror="this.onerror=null; this.src='<%= __nbBase %>/img/user-placeholder.svg';">
+              <span class="nav-wd-text nav-wd-profile-name"><%= _displayName || 'Perfil' %></span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-wd-logout d-flex align-items-center" href="<%= __nbBase %>/logout" aria-label="Sair">
+              <img src="<%= __nbBase %>/images/sair.png" alt="Sair" class="nav-icon-sair" />
+            </a>
+          </li>
+        <% } else { %>
+          <li class="nav-item"><a class="nav-link" href="<%= __nbBase %>/login">Entrar</a></li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</nav>
+<!-- Offcanvas (menu mobile) -->
+<div class="offcanvas offcanvas-start nav-offcanvas" tabindex="-1" id="offcanvasNavShared" aria-labelledby="offcanvasNavTitle">
+  <div class="offcanvas-header align-items-center">
+    <div class="d-flex align-items-center gap-2">
+    <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-dark" style="width:32px;height:32px;overflow:hidden;">
+  <img src="<%= _fotoUrlEJS(user && user.foto ? user.foto : '') %>" alt="Avatar" style="width:32px;height:32px;object-fit:cover;" onerror="this.onerror=null; this.src='<%= __nbBase %>/img/user-placeholder.svg'">
+      </div>
+  <h6 class="m-0" id="offcanvasNavTitle"><%= user ? ('Olá, ' + (_displayName||'usuário')) : 'Olá, entre' %></h6>
+    </div>
+    <button type="button" class="btn-close btn-close-white text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+    <div class="px-3 py-2 text-uppercase small fw-semibold text-light opacity-75 border-bottom border-white border-opacity-25 text-center">
+      <%= (typeof menuLabel === 'string' && menuLabel) ? menuLabel : 'Cadastros Gerais' %>
+    </div>
+    <div class="menu-tree-mobile py-1">
+      <% let __ocAutoId = 0; function __nextOcId(){ __ocAutoId++; return 'ocgrp-' + __ocAutoId; } %>
+      <% function renderNodesMobile(nodes, level){ %>
+        <ul class="list-unstyled m-0 level-<%= level %>">
+          <% nodes.forEach(function(n){ %>
+            <li>
+              <% if (n.children && n.children.length) { %>
+                <% const cid = __nextOcId(); %>
+                <button class="list-link collapse-toggle d-flex w-100 justify-content-between align-items-center px-3 py-2" type="button" data-bs-toggle="collapse" data-bs-target="#<%= cid %>" aria-expanded="false" aria-controls="<%= cid %>">
+                  <span class="toggle-label text-uppercase small opacity-75"><%= n.label %></span>
+                  <span class="toggle-caret" aria-hidden="true"></span>
+                </button>
+                <div id="<%= cid %>" class="collapse">
+                  <% renderNodesMobile(n.children, level+1); %>
+                </div>
+              <% } else { %>
+                <a class="list-link d-block px-3 py-2" href="<%= buildHref(n.path || '#') %>" data-nav-close="1"><%= n.label %></a>
+              <% } %>
+            </li>
+          <% }); %>
+        </ul>
+      <% } %>
+      <% if (__menuTree) { %>
+        <% renderNodesMobile(__menuTree, 1); %>
+      <% } else { %>
+        <ul class="list-unstyled m-0 level-1">
+          <% _items.forEach(it => { %>
+            <li><a class="list-link d-block px-3 py-2" href="<%= buildHref(it.path) %>" data-nav-close="1"><%= it.label %></a></li>
+          <% }) %>
+          <% if (_admin.length) { %>
+            <li class="my-1"><hr class="border-white border-opacity-25 m-0"></li>
+            <% _admin.forEach(it => { %>
+              <li><a class="list-link d-block px-3 py-2" href="<%= buildHref(it.path) %>" data-nav-close="1"><%= it.label %></a></li>
+            <% }) %>
+          <% } %>
+        </ul>
+      <% } %>
+    </div>
+    <div class="mt-2 border-top border-white border-opacity-25"></div>
+  <div class="px-3 py-2">
+      <% if (user) { %>
+        <a class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center" href="<%= __nbBase %>/logout">
+          <img src="<%= __nbBase %>/images/sair.png" alt="Sair" class="nav-icon-sair me-2" />
+          Sair
+        </a>
+      <% } else { %>
+        <a class="btn btn-light w-100" href="<%= __nbBase %>/login">Entrar</a>
+      <% } %>
+    </div>
+  </div>
+  <div class="offcanvas-footer small text-center text-light opacity-50 py-2">
+    WDGestor
+  </div>
+</div>
+<script>
+  // Base do módulo injetada pelo servidor (ex: '/gestor' ou '/escalas')
+  var __NB_BASE = '<%= __nbBase %>';
+  var __NB_HAS_USER = (function(){ var nav = document.querySelector('.navbar.navbar-wd'); return !!(nav && nav.getAttribute('data-has-user')==='1'); })();
+  // Ajusta avatar pós load se helper global existir (buildUserFotoUrl)
+  document.addEventListener('DOMContentLoaded', function(){
+    try {
+      var el = document.getElementById('navbarAvatarShared');
+      if(!el) return;
+      var f = el.getAttribute('data-user-foto');
+      // Sempre força um refresh com cache-buster, mesmo se não houver 'foto' já embutida na sessão
+      (function refreshAvatar(){
+        try{
+          var url;
+          if (f && typeof window.buildUserFotoUrl === 'function') {
+            url = window.buildUserFotoUrl(f);
+          } else {
+            url = __NB_BASE + '/api/usuario/foto';
+          }
+          var sep = url.indexOf('?')>-1?'&':'?';
+          el.src = url + sep + 'v=' + Date.now();
+        } catch(_){ /* silencioso */ }
+      })();
+      el.onerror = function(){ if(!this.dataset.fallback){ this.dataset.fallback='1'; this.src = __NB_BASE + '/img/user-placeholder.svg'; } };
+    } catch(e){ console.warn('[navbar-shared] falha avatar', e); }
+    // Submenus via CLICK (remove comportamento por hover para estabilidade)
+    document.querySelectorAll('.dropdown-submenu > a.dropdown-toggle').forEach(function(trigger){
+      trigger.addEventListener('click', function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        var li = this.parentElement;
+        var submenu = li.querySelector(':scope > .dropdown-menu');
+        // Fecha irmãos
+        var siblings = li.parentElement ? li.parentElement.querySelectorAll(':scope > .dropdown-submenu.show') : [];
+        siblings.forEach(function(s){ if(s!==li){ s.classList.remove('show'); var sm = s.querySelector(':scope > .dropdown-menu'); if(sm) sm.classList.remove('show'); }});
+        li.classList.toggle('show');
+        if(submenu){ submenu.classList.toggle('show'); }
+      });
+    });
+    // Ao fechar dropdown principal, fecha submenus
+    document.querySelectorAll('.navbar .dropdown').forEach(function(dd){
+      dd.addEventListener('hide.bs.dropdown', function(){
+        this.querySelectorAll('.dropdown-submenu.show').forEach(function(s){ s.classList.remove('show'); var sm = s.querySelector(':scope > .dropdown-menu'); if(sm) sm.classList.remove('show'); });
+      });
+    });
+    // Clique fora fecha submenus
+    document.addEventListener('click', function(e){
+      if(!e.target.closest('.navbar .dropdown-menu')){
+        document.querySelectorAll('.dropdown-submenu.show').forEach(function(s){ s.classList.remove('show'); var sm = s.querySelector(':scope > .dropdown-menu'); if(sm) sm.classList.remove('show'); });
+      }
+    });
+  });
+  window.addEventListener('perfil:fotoAtualizada', function(){
+    try {
+      var el = document.getElementById('navbarAvatarShared');
+      if(!el) return;
+      fetch(__NB_BASE + '/api/usuario', { credentials:'same-origin', cache:'no-store' })
+        .then(r=> r.ok ? r.json(): null)
+        .then(data => {
+          if(!data || !data.foto) return; var f = data.foto; if(typeof window.buildUserFotoUrl==='function'){ var url = window.buildUserFotoUrl(f); var sep = url.indexOf('?')>-1?'&':'?'; el.src = url + sep + 'v=' + Date.now(); }
+        }).catch(()=>{});
+    } catch(e){ console.warn('[navbar-shared] falha refresh avatar', e); }
+  });
+  // Fecha o offcanvas ao clicar em links do menu
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if(t && t.closest && t.closest('[data-nav-close="1"]')){
+      var oc = document.getElementById('offcanvasNavShared');
+      if(oc){ try { var inst = bootstrap.Offcanvas.getInstance(oc) || new bootstrap.Offcanvas(oc); inst.hide(); } catch(_){} }
+    }
+  }, true);
+
+  // Cronômetro de inatividade (configurável). Desativado por padrão.
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      if(!__NB_HAS_USER) return; // só exibe/ativa quando logado
+      // Permite configurar via window.WDG_IDLE_LIMIT_MINUTES (número de minutos).
+      // Default: 30 minutos (quando não definido). Para desabilitar: defina explicitamente 0.
+      var LIMIT_MIN = (function(){
+        try{
+          if(typeof window.WDG_IDLE_LIMIT_MINUTES !== 'undefined' && window.WDG_IDLE_LIMIT_MINUTES !== null){
+            var n = Number(window.WDG_IDLE_LIMIT_MINUTES);
+            return Number.isFinite(n) ? n : 30;
+          }
+        } catch(_){ }
+        return 30;
+      })();
+      var LIMIT_MS = (LIMIT_MIN > 0) ? (LIMIT_MIN * 60 * 1000) : 0;
+      var LS_KEY = 'wdgIdleLastActivity';
+      var LS_LOGOUT_KEY = 'wdgIdleLogoutAt';
+      var el = document.getElementById('nbIdleTimer');
+      if(!el) return;
+      if (!LIMIT_MS) { el.style.display = 'none'; return; }
+      el.style.display = '';
+      // inicializa lastActivity e força início
+      var now0 = Date.now();
+      if(!localStorage.getItem(LS_KEY)) localStorage.setItem(LS_KEY, String(now0));
+      var last = Number(localStorage.getItem(LS_KEY)) || now0;
+      var lastWrite = 0;
+      function bumpActivity(ts){
+        var now = ts || Date.now();
+        last = now;
+        if(now - lastWrite > 1000){ // limitar gravações
+          lastWrite = now;
+          try{ localStorage.setItem(LS_KEY, String(now)); } catch(_){ }
+        }
+      }
+      // Eventos de atividade
+  var acts = ['click','keydown','mousemove','scroll','touchstart','wheel'];
+  acts.forEach(function(ev){ document.addEventListener(ev, function(){ bumpActivity(); }, { passive:true }); });
+      // Sync entre abas
+      window.addEventListener('storage', function(e){
+        if(e && e.key === LS_KEY && e.newValue){ last = Number(e.newValue) || last; }
+        if(e && e.key === LS_LOGOUT_KEY && e.newValue){
+          // outra aba iniciou logout; segue também
+          try{ if(location.pathname !== (__NB_BASE + '/login')) location.href = __NB_BASE + '/logout'; } catch(_){ }
+        }
+      });
+      // Formata mm:ss
+      function fmt(t){ t = Math.max(0, t|0); var m = Math.floor(t/60); var s = t%60; return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); }
+      // Atualização imediata de UI
+      (function initialPaint(){
+        var rem = Math.ceil((LIMIT_MS - (Date.now() - last))/1000);
+        el.textContent = fmt(rem);
+      })();
+      // Loop
+      var tick = setInterval(function(){
+        try{
+          var now = Date.now();
+          var remMs = LIMIT_MS - (now - last);
+          var rem = Math.ceil(remMs/1000);
+          if(rem <= 0){
+            clearInterval(tick);
+            try { localStorage.setItem(LS_LOGOUT_KEY, String(Date.now())); } catch(_){ }
+            // Redireciona para logout do módulo
+            location.href = __NB_BASE + '/logout';
+            return;
+          }
+          el.textContent = fmt(rem);
+        } catch(_){ }
+      }, 1000);
+    } catch(e){ console.warn('[navbar-shared] idle timer error', e); }
+  });
+
+  // Notificação de novas mensagens (som + badge) - Caixa pessoal (Entrada, não lidas)
+  document.addEventListener('DOMContentLoaded', function(){
+    try {
+      if(!__NB_HAS_USER) return;
+      // Normaliza base do módulo para que funcione também em rotas /condominios/admin/*.
+      var __NB_API_BASE = (function(){
+        try {
+          var b = String(__NB_BASE || '').trim();
+          if (b.indexOf('/condominios') === 0) return '/condominios';
+        } catch(_){ }
+        try {
+          var p = String(location && location.pathname ? location.pathname : '');
+          if (p.indexOf('/condominios') === 0) return '/condominios';
+        } catch(_2){ }
+        return '';
+      })();
+      if(__NB_API_BASE !== '/condominios') return;
+
+      var badge = document.getElementById('navMsgNotifyBadge');
+      if(!badge) return;
+
+      var LS_UNREAD_KEY = 'wdg:condominios:unreadCount';
+      function readCachedUnread(){
+        try {
+          var v = Number(localStorage.getItem(LS_UNREAD_KEY));
+          if (Number.isFinite(v) && v >= 0) return v;
+        } catch(_){ }
+        return null;
+      }
+      function writeCachedUnread(n){
+        try { localStorage.setItem(LS_UNREAD_KEY, String(Math.max(0, Number(n) || 0))); } catch(_){ }
+      }
+
+      var lastUnread = null;
+      var timer = null;
+      var audioCtx = null;
+      var audioUnlocked = false;
+      var lastBeepAt = 0;
+      var consecutiveFails = 0;
+      var audioReady = false;
+
+      var personalMailboxId = null;
+      var personalMailboxPromise = null;
+
+      function safeJsonParse(text){
+        try { return JSON.parse(String(text || '')); } catch(_){ return null; }
+      }
+
+      async function readJsonTolerant(resp){
+        try {
+          // Mesmo quando o backend manda content-type errado, tente ler json.
+          const ct = String(resp && resp.headers ? (resp.headers.get('content-type') || '') : '').toLowerCase();
+          if(ct.includes('application/json') || ct.includes('+json')){
+            return await resp.json().catch(() => null);
+          }
+          const txt = await resp.text().catch(() => '');
+          const j = safeJsonParse(txt);
+          return j;
+        } catch(_){ return null; }
+      }
+
+      async function resolvePersonalMailboxId(){
+        try {
+          if(personalMailboxId) return personalMailboxId;
+          if(personalMailboxPromise) return await personalMailboxPromise;
+
+          personalMailboxPromise = (async function(){
+            try {
+              const url = __NB_API_BASE + '/api/msg/mailboxes?_ts=' + Date.now();
+              const r = await fetch(url, {
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' }
+              });
+              const json = await readJsonTolerant(r);
+              const list = Array.isArray(json) ? json : (json && (json.data || json.mailboxes)) || [];
+              if(!Array.isArray(list) || !list.length) return null;
+
+              // Procura pela caixa pessoal
+              const norm = function(x){
+                try {
+                  return {
+                    id: String(x.id || x._id || '').trim(),
+                    name: String(x.name || x.nome || '').trim(),
+                    type: String(x.type || '').trim().toLowerCase()
+                  };
+                } catch(_){ return { id:'', name:'', type:'' }; }
+              };
+              const items = list.map(norm).filter(x => x.id);
+              const byType = items.find(x => x.type === 'pessoal' || x.type === 'personal');
+              const byName = items.find(x => (x.name || '').toLowerCase() === 'pessoal');
+              const picked = byType || byName || null;
+              return picked ? picked.id : null;
+            } catch(_){ return null; }
+          })();
+
+          const id = await personalMailboxPromise;
+          personalMailboxPromise = null;
+          if(id) personalMailboxId = id;
+          return id;
+        } catch(_){
+          personalMailboxPromise = null;
+          return null;
+        }
+      }
+
+      var beepAudio = null;
+
+      function __bytesToBase64(uint8){
+        try {
+          var CHUNK = 0x8000;
+          var index = 0;
+          var length = uint8.length;
+          var result = '';
+          while(index < length){
+            var slice = uint8.subarray(index, Math.min(index + CHUNK, length));
+            result += String.fromCharCode.apply(null, slice);
+            index += CHUNK;
+          }
+          return btoa(result);
+        } catch(_){ return null; }
+      }
+
+      function __buildBeepWavDataUri(){
+        try {
+          var sampleRate = 22050;
+          var durationSec = 0.18;
+          var frequency = 784; // G5
+          var frames = Math.max(1, Math.floor(sampleRate * durationSec));
+          var pcm = new Int16Array(frames);
+          for(var i=0;i<frames;i++){
+            var t = i / sampleRate;
+            // envelope simples (attack/release)
+            var a = Math.min(1, i / Math.max(1, Math.floor(frames * 0.12)));
+            var r = Math.min(1, (frames - 1 - i) / Math.max(1, Math.floor(frames * 0.18)));
+            var env = Math.min(a, r);
+            var v = Math.sin(2 * Math.PI * frequency * t) * 0.55 * env;
+            var s = Math.max(-1, Math.min(1, v));
+            pcm[i] = (s * 32767) | 0;
+          }
+
+          var dataBytes = pcm.byteLength;
+          var total = 44 + dataBytes;
+          var buf = new ArrayBuffer(total);
+          var dv = new DataView(buf);
+          function writeStr(off, s){ for(var j=0;j<s.length;j++) dv.setUint8(off+j, s.charCodeAt(j)); }
+
+          writeStr(0, 'RIFF');
+          dv.setUint32(4, 36 + dataBytes, true);
+          writeStr(8, 'WAVE');
+          writeStr(12, 'fmt ');
+          dv.setUint32(16, 16, true); // PCM fmt chunk
+          dv.setUint16(20, 1, true);  // PCM
+          dv.setUint16(22, 1, true);  // mono
+          dv.setUint32(24, sampleRate, true);
+          dv.setUint32(28, sampleRate * 2, true); // byte rate
+          dv.setUint16(32, 2, true); // block align
+          dv.setUint16(34, 16, true); // bits
+          writeStr(36, 'data');
+          dv.setUint32(40, dataBytes, true);
+
+          var out = new Uint8Array(buf);
+          out.set(new Uint8Array(pcm.buffer), 44);
+          var b64 = __bytesToBase64(out);
+          if(!b64) return null;
+          return 'data:audio/wav;base64,' + b64;
+        } catch(_){ return null; }
+      }
+
+      function ensureBeepAudio(){
+        try {
+          if(beepAudio) return beepAudio;
+          var uri = __buildBeepWavDataUri();
+          if(!uri) return null;
+          var a = new Audio(uri);
+          a.preload = 'auto';
+          a.volume = 1.0;
+          beepAudio = a;
+          return a;
+        } catch(_){ return null; }
+      }
+
+      function primeBeepAudio(){
+        try {
+          var a = ensureBeepAudio();
+          if(!a) return;
+          // Prime: tocar e parar rapidamente dentro do gesto do usuário
+          var p = a.play();
+          if(p && typeof p.then === 'function'){
+            p.then(function(){
+              try { a.pause(); a.currentTime = 0; } catch(_){ }
+            }).catch(function(){});
+          }
+        } catch(_){ }
+      }
+
+      var LS_NOTIFY_ENABLED = 'wdg:condominios:notifyEnabled';
+      var lastToastAt = 0;
+
+      function isNotifySupported(){
+        try { return typeof window.Notification !== 'undefined'; } catch(_){ return false; }
+      }
+
+      function isNotifyEnabled(){
+        try {
+          // default: ligado (mas depende da permissão do browser)
+          var v = localStorage.getItem(LS_NOTIFY_ENABLED);
+          if(v === null || v === undefined || v === '') return true;
+          return v === '1' || v === 'true';
+        } catch(_){ return true; }
+      }
+
+      function setNotifyEnabled(flag){
+        try { localStorage.setItem(LS_NOTIFY_ENABLED, flag ? '1' : '0'); } catch(_){ }
+      }
+
+      async function requestNotifyPermission(){
+        try {
+          if(!isNotifySupported()) return null;
+          if(Notification.permission === 'granted') return 'granted';
+          if(Notification.permission === 'denied') return 'denied';
+          // Muitos browsers exigem gesto do usuário para abrir o prompt.
+          var p = await Notification.requestPermission();
+          return p;
+        } catch(_){ return null; }
+      }
+
+      function bindNotifyPermissionToMsgIcon(){
+        try {
+          var link = document.getElementById('navMsgNotifyLink');
+          if(!link) return;
+          link.addEventListener('click', function(){
+            // clique: gesto do usuário -> podemos pedir permissão
+            requestNotifyPermission().then(function(res){
+              if(res === 'denied') setNotifyEnabled(false);
+            });
+          }, { passive:true });
+        } catch(_){ }
+      }
+
+      function showWindowsNotification(unreadCount){
+        try {
+          if(!isNotifySupported()) return;
+          if(!isNotifyEnabled()) return;
+          if(Notification.permission !== 'granted') return;
+
+          var nowMs = Date.now();
+          if(nowMs - lastToastAt < 30000) return; // anti-spam: 1 toast a cada 30s
+
+          var num = Math.max(0, Number(unreadCount) || 0);
+          if(num <= 0) return;
+
+          var title = 'WDGestor';
+          var body = (num === 1) ? 'Você tem 1 mensagem não lida.' : ('Você tem ' + num + ' mensagens não lidas.');
+          var icon = __NB_API_BASE + '/images/mensagem.png';
+
+          var n = new Notification(title, {
+            body: body,
+            icon: icon,
+            tag: 'wdg-msg-unread',
+            renotify: true,
+            silent: false
+          });
+
+          n.onclick = function(){
+            try { window.focus(); } catch(_){ }
+            try { location.href = __NB_API_BASE + '/administracao/caixa-de-mensagem'; } catch(_2){ }
+            try { n.close(); } catch(_3){ }
+          };
+
+          lastToastAt = nowMs;
+        } catch(_){ }
+      }
+
+      function setInboxCounts(n){
+        try {
+          var num = Math.max(0, Number(n) || 0);
+          var holders = Array.prototype.slice.call(document.querySelectorAll('[data-msg-inbox-count]'));
+          holders.forEach(function(el){
+            if(!el) return;
+            if(num <= 0){
+              el.style.display = 'none';
+              el.textContent = '';
+              el.setAttribute('aria-hidden','true');
+              return;
+            }
+            el.style.display = '';
+            el.textContent = (num > 99) ? '99+' : String(num);
+            el.removeAttribute('aria-hidden');
+          });
+        } catch(_){ }
+      }
+
+      function ensureAudioCtx(){
+        try {
+          if(audioCtx) return audioCtx;
+          var Ctx = window.AudioContext || window.webkitAudioContext;
+          if(!Ctx) return null;
+          audioCtx = new Ctx();
+          return audioCtx;
+        } catch { return null; }
+      }
+
+      function __doBeep(ctx){
+        try {
+          var t0 = ctx.currentTime + 0.01;
+          var master = ctx.createGain();
+          master.gain.setValueAtTime(0.0001, t0);
+          master.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02);
+          master.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.10);
+          master.connect(ctx.destination);
+
+          // "campainha" suave: um tom único com envelope
+          var o = ctx.createOscillator();
+          o.type = 'sine';
+          o.frequency.setValueAtTime(784, t0); // G5
+          o.connect(master);
+          o.start(t0);
+          o.stop(t0 + 1.2);
+          return true;
+        } catch(_){ return false; }
+      }
+
+      function unlockAudio(){
+        try {
+          if(audioUnlocked) return;
+          var ctx = ensureAudioCtx();
+          if(!ctx) return;
+          var done = function(){
+            audioUnlocked = true;
+            audioReady = (ctx.state === 'running');
+          };
+          // Alguns browsers só "desbloqueiam" de verdade após um som curto dentro do gesto.
+          var ping = function(){
+            try {
+              // ping super baixo e curtíssimo (quase inaudível)
+              var t0 = ctx.currentTime + 0.001;
+              var g = ctx.createGain();
+              g.gain.setValueAtTime(0.00001, t0);
+              g.gain.exponentialRampToValueAtTime(0.00001, t0 + 0.05);
+              g.connect(ctx.destination);
+              var o = ctx.createOscillator();
+              o.type = 'sine';
+              o.frequency.setValueAtTime(440, t0);
+              o.connect(g);
+              o.start(t0);
+              o.stop(t0 + 0.06);
+            } catch(_){ }
+          };
+
+          if(ctx.state === 'suspended') {
+            ctx.resume().then(function(){
+              ping();
+              done();
+              primeBeepAudio();
+            }).catch(function(){ done(); });
+          } else {
+            ping();
+            done();
+            primeBeepAudio();
+          }
+        } catch { /* ignore */ }
+      }
+
+      // desbloqueia áudio em primeira interação do usuário (requisito de browsers modernos)
+      window.addEventListener('pointerdown', unlockAudio, { once:true, passive:true });
+      window.addEventListener('keydown', unlockAudio, { once:true });
+
+      // Permissão de notificação: amarra no clique do ícone de mensagens
+      bindNotifyPermissionToMsgIcon();
+
+      function playBell(){
+        try {
+          var nowMs = Date.now();
+          if(nowMs - lastBeepAt < 2500) return; // evita múltiplos beeps em bursts
+
+          // Preferência: Audio element (mais confiável no Chrome após prime)
+          var a = ensureBeepAudio();
+          if(a){
+            try {
+              a.pause();
+              a.currentTime = 0;
+            } catch(_r){}
+            var pp = a.play();
+            lastBeepAt = nowMs;
+            if(pp && typeof pp.catch === 'function'){
+              pp.catch(function(){ /* fallback abaixo */ });
+            }
+            return;
+          }
+
+          var ctx = ensureAudioCtx();
+          if(!ctx) return;
+          // Se estiver suspenso, tenta retomar; se falhar (sem gesto), apenas não toca.
+          if(ctx.state === 'suspended') {
+            ctx.resume().then(function(){
+              if(ctx.state !== 'running') return;
+              if(__doBeep(ctx)) lastBeepAt = nowMs;
+            }).catch(function(){});
+            return;
+          }
+
+          if(__doBeep(ctx)) lastBeepAt = nowMs;
+        } catch { /* ignore */ }
+      }
+
+      function setBadge(n){
+        var num = Math.max(0, Number(n) || 0);
+        if(num <= 0){
+          badge.style.display = 'none';
+          badge.textContent = '';
+          badge.setAttribute('aria-hidden','true');
+          setInboxCounts(0);
+          return;
+        }
+        badge.style.display = '';
+        badge.textContent = String(num);
+        badge.removeAttribute('aria-hidden');
+        setInboxCounts(num);
+      }
+
+      async function fetchUnread(){
+        try {
+          // Usa paginação mínima e lê `total` para detectar mudanças mesmo com muitas não lidas.
+          var mbId = await resolvePersonalMailboxId();
+          var mailboxId = (mbId && String(mbId).trim()) ? String(mbId).trim() : 'pessoal';
+          var url = __NB_API_BASE + '/api/msg/messages?mailboxId=' + encodeURIComponent(mailboxId) + '&folder=entrada&status=nao_lidas&page=1&pageSize=1&_ts=' + Date.now();
+          var r = await fetch(url, {
+            credentials:'same-origin',
+            cache:'no-store',
+            headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' }
+          });
+          if(!r.ok) throw new Error('http ' + r.status);
+          var data = await readJsonTolerant(r);
+          var total = (data && typeof data.total !== 'undefined') ? Number(data.total) : NaN;
+          if (Number.isFinite(total) && total >= 0) return total;
+          var items = (data && Array.isArray(data.items)) ? data.items : [];
+          return items.length;
+        } catch { return null; }
+      }
+
+      async function tick(){
+        try {
+          var n = await fetchUnread();
+          if(n == null) {
+            consecutiveFails = Math.min(8, (consecutiveFails || 0) + 1);
+            return;
+          }
+          consecutiveFails = 0;
+          setBadge(n);
+          if(lastUnread != null && n > lastUnread) {
+            playBell();
+            showWindowsNotification(n);
+          }
+          lastUnread = n;
+          writeCachedUnread(n);
+        } catch { /* ignore */ }
+      }
+
+      function schedule(){
+        try {
+          if(timer) clearTimeout(timer);
+          var isMsgPage = false;
+          try {
+            var p = String(location && location.pathname ? location.pathname : '');
+            isMsgPage = p.indexOf(__NB_API_BASE + '/administracao/caixa-de-mensagem') === 0;
+          } catch(_){ }
+
+          // Intervalos:
+          // - Aba oculta: 60s (economia)
+          // - Na tela de mensagens: curto (menos delay perceptível)
+          // - Demais telas: 20s
+          var base = document.hidden ? 60000 : (isMsgPage ? 2000 : 20000);
+          var interval = base;
+          if(consecutiveFails && consecutiveFails > 0){
+            var exp = Math.pow(2, Math.min(6, consecutiveFails));
+            interval = Math.max(base, Math.min(120000, base * exp));
+          }
+          // jitter (evita sincronismo entre usuários/abas)
+          interval = Math.round(interval * (0.90 + Math.random() * 0.25));
+          timer = setTimeout(async function(){
+            await tick();
+            schedule();
+          }, interval);
+        } catch { /* ignore */ }
+      }
+
+      document.addEventListener('visibilitychange', function(){
+        try {
+          if(!document.hidden) { void tick(); }
+        } catch(_){ }
+        schedule();
+      });
+      window.addEventListener('focus', function(){
+        try { void tick(); } catch(_){ }
+        schedule();
+      });
+
+      // Quando a própria lista de mensagens re-renderizar, atualize o contador imediatamente.
+      // Isso elimina o delay entre "mensagem apareceu" e "badge/ícone atualizou".
+      (function bindMsgListRendered(){
+        try {
+          var lastEvtAt = 0;
+          window.addEventListener('wdg-msg:list-rendered', function(){
+            var now = Date.now();
+            if(now - lastEvtAt < 500) return; // throttle
+            lastEvtAt = now;
+            try { void tick(); } catch(_){ }
+            schedule();
+          });
+        } catch(_){ }
+      })();
+      // pinta do cache primeiro (melhora UX quando a API oscila)
+      var cached = readCachedUnread();
+      if(cached != null){
+        setBadge(cached);
+        lastUnread = cached;
+      }
+      // primeira leitura rápida
+      tick();
+      schedule();
+    } catch(e){ console.warn('[navbar-shared] notify error', e); }
+  });
+</script>
+<style>
+/* Navbar desktop: leve indentação e headers discretos */
+@media (min-width: 992px){
+  .navbar .menu-tree ul { list-style: none; padding-left: .5rem; }
+  .navbar .menu-tree .node-label { padding: .25rem .5rem; font-weight: 600; color: #ced4da; }
+}
+/* Offcanvas (mobile) visual com mesma cor/gradiente da navbar */
+.nav-offcanvas {
+  width: 300px;
+  color: #fff;
+  /* replica o mesmo fundo da .navbar-wd */
+  background-image: radial-gradient(120% 180% at 0% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 60%),
+                    linear-gradient(135deg, #0a2a6b 0%, #0e51a7 45%, #1aa0ff 100%);
+  box-shadow: 0 6px 28px rgba(26,160,255,.18);
+}
+.navbar-wd .nav-offcanvas { background: inherit; }
+.nav-offcanvas .offcanvas-header { background-color: rgba(0,0,0,.08); border-bottom: 1px solid rgba(255,255,255,.15); }
+.nav-offcanvas .offcanvas-footer { background-color: rgba(0,0,0,.08); border-top: 1px solid rgba(255,255,255,.15); }
+.nav-offcanvas .section-label { color: rgba(255,255,255,.75); letter-spacing: .02em; }
+.nav-offcanvas .list-link { color: #fff; text-decoration: none; }
+.nav-offcanvas .list-link:hover { background-color: rgba(255,255,255,.1); }
+.nav-offcanvas ul.level-2 .list-link, .nav-offcanvas ul.level-2 .collapse-toggle { padding-left: 3rem; }
+.nav-offcanvas ul.level-3 .list-link, .nav-offcanvas ul.level-3 .collapse-toggle { padding-left: 4rem; }
+.nav-offcanvas ul.level-4 .list-link, .nav-offcanvas ul.level-4 .collapse-toggle { padding-left: 5rem; }
+.nav-offcanvas .collapse .level-2 { padding-left: .5rem; }
+.nav-offcanvas .collapse .level-3 { padding-left: 1rem; }
+.nav-offcanvas .collapse .level-4 { padding-left: 1.5rem; }
+/* Collapsible (mobile) */
+.nav-offcanvas .collapse-toggle { border: 0; background: transparent; color: #fff; text-align: left; }
+.nav-offcanvas .collapse-toggle:focus { outline: none; box-shadow: none; }
+.nav-offcanvas .toggle-caret { transition: transform .2s ease; }
+.nav-offcanvas .collapse-toggle[aria-expanded="true"] .toggle-caret { transform: rotate(90deg); }
+.nav-offcanvas .toggle-caret::before { content: '\203A'; }
+/* Submenus em flyout no dropdown desktop — somente por CLIQUE (sem hover auto-open) */
+.dropdown-submenu { position: relative; }
+.dropdown-submenu > .dropdown-menu { top: 0; left: 100%; margin-left: .15rem; margin-top: -.25rem; }
+/* Removido comportamento de abrir no hover; controle é via classe .show aplicada por JS no clique */
+.dropdown-submenu > a::after { content: '\u203A'; float: right; }
+.dropdown-submenu > .dropdown-menu { display: none; }
+.dropdown-submenu.show > .dropdown-menu { display: block; }
+  /* Largura/espacamento custom para evitar sobreposição da seta com o próximo item */
+  .dropdown-menu-wdg-wide { min-width: 260px; }
+  .dropdown-menu-wdg-wide .dropdown-item { padding-right: 2rem; }
+  /* Submenus mais estreitos para caber ao lado sem invadir o item seguinte */
+  .dropdown-menu-wdg-narrow { min-width: 220px; }
+  /* Garante que a seta do item com submenu tenha espaço interno suficiente */
+  .dropdown-item.wdg-submenu-toggle { padding-right: 2rem; }
+  /* Corrige posicionamento para evitar sobrepor itens vizinhos em alguns temas */
+  .dropdown-submenu > .dropdown-menu { margin-left: .25rem; }
+  /* Tamanho consistente para o ícone de sair */
+  .nav-icon-sair { width: 22px; height: 22px; object-fit: contain; }
+  .navbar-wd .nav-link .nav-icon-sair { filter: brightness(100%); }
+  @media (max-width: 575.98px){
+    .nav-icon-sair { width: 18px; height: 18px; }
+  }
+  /* Normaliza altura e alinhamento dos itens à direita (avatar e sair) */
+  .navbar-wd .navbar-nav > .nav-item > .nav-link {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  @media (max-width: 575.98px){
+    .navbar-wd .navbar-nav > .nav-item > .nav-link { height: 36px; }
+  }
+  /* Cronômetro de inatividade: tamanho e contraste no tema da navbar */
+  .idle-timer{ font-weight:700; letter-spacing:.3px; }
+  @media (max-width:575.98px){ #nbIdleTimer{ display:none !important; } }
+</style>

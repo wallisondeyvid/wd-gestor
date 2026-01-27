@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Informação do Material</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+ :root{ --bg:#0f1216; --card:#1c2229; --card-alt:#222b33; --primary:#2563eb; --primary-grad:linear-gradient(135deg,#1d4ed8,#3b82f6); --rad:18px; --text:#e5eaf0; --text-dim:#94a3b8; --danger:#ef4444; --accent:#38bdf8; }
+ *{ box-sizing:border-box; }
+ body{ margin:0; font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif; background:radial-gradient(circle at 30% 20%,#132029,#0f1216 60%); color:var(--text); -webkit-font-smoothing:antialiased; }
+ .wrap{ max-width:480px; margin:0 auto; padding:clamp(1rem,2vh,2rem) clamp(.85rem,2vw,1.25rem) 4rem; }
+ header{ text-align:center; margin-bottom:1.25rem; }
+ header .logo-wrap{ width:120px; height:120px; margin:0 auto 1rem; border-radius:24px; background:var(--card); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; box-shadow:0 6px 18px -4px rgba(0,0,0,.5), 0 0 0 1px #27323b; }
+ header .logo-wrap img{ max-width:100%; max-height:100%; object-fit:contain; }
+ h1{ font-size:1.25rem; line-height:1.35; margin:.35rem 0 0; font-weight:700; letter-spacing:.4px; }
+ h2.section{ margin:1.75rem 0 .75rem; font-size:.85rem; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--accent); text-align:center; }
+ .card{ background:linear-gradient(145deg,var(--card),var(--card-alt)); padding:1rem 1.1rem 1.1rem; border-radius:var(--rad); position:relative; box-shadow:0 8px 28px -10px rgba(0,0,0,.65), 0 0 0 1px #27323b; }
+ .muted{ color:var(--text-dim); }
+ .kv{ display:grid; grid-template-columns:110px 1fr; gap:.4rem .75rem; font-size:.9rem; }
+ .kv div.label{ text-align:right; font-weight:500; color:var(--text-dim); }
+ .highlight{ background:rgba(56,189,248,.12); padding:.75rem .9rem; border-radius:12px; font-size:.9rem; line-height:1.5; text-align:center; }
+ .cta{ margin-top:2rem; display:flex; gap:.75rem; justify-content:center; }
+ button, .btn{ font-family:inherit; font-size:.95rem; border:none; border-radius:14px; padding:.85rem 1.25rem; cursor:pointer; font-weight:500; background:var(--primary-grad); color:#fff; box-shadow:0 4px 18px -6px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07); transition:.3s; letter-spacing:.3px; }
+ button:active{ transform:translateY(1px); }
+ .fade-in{ animation:fade .55s ease both; }
+ @keyframes fade{ from{ opacity:0; transform:translateY(8px);} to{ opacity:1; transform:translateY(0);} }
+ footer{ margin-top:3rem; text-align:center; font-size:.7rem; color:#64748b; }
+ .err{ background:#2c1c1c; color:#fca5a5; padding:.9rem 1rem; border:1px solid #7f1d1d; border-radius:14px; font-size:.85rem; }
+ </style>
+</head>
+<body>
+  <main class="wrap fade-in" id="app">
+    <header>
+      <div class="logo-wrap" id="logoSlot"><span class="muted" style="font-size:.65rem">LOGO</span></div>
+      <h1 id="tituloMaterial">Material</h1>
+    </header>
+    <section class="card" id="infoLegal">
+      <p class="highlight" id="textoLegal">Carregando informações...</p>
+    </section>
+    <h2 class="section">Identificação</h2>
+    <section class="card">
+      <div class="kv" id="kvDados">
+        <div class="label">Material:</div><div id="kvMatNome">-</div>
+        <div class="label">Marca:</div><div id="kvMatMarca">-</div>
+        <div class="label">Modelo:</div><div id="kvMatModelo">-</div>
+        <div class="label">Cor:</div><div id="kvMatCor">-</div>
+        <div class="label">Patrimônio:</div><div id="kvMatPatrimonio">-</div>
+        <div class="label">Lotação:</div><div id="kvMatLotacao">-</div>
+      </div>
+    </section>
+    <div class="cta">
+      <button id="btnFechar" type="button">Fechar</button>
+    </div>
+    <footer>
+      <div>WDGestor · Informação pública do material</div>
+    </footer>
+  </main>
+<script>
+(function(){
+  function qs(id){ return document.getElementById(id); }
+  function decodePayload(){ var h=location.hash.slice(1); if(!h) return null; try{ var json=decodeURIComponent(escape(atob(h))); return JSON.parse(json); }catch(e){ return null; } }
+  async function fetchUnidadePublic(id){
+    try {
+      var base = '/gestor'; // basePath do módulo gestor montado
+      var tries = 3; var last = null;
+      for(var i=0;i<tries;i++){
+        var resp = await fetch(base + '/api/public/unidades/' + encodeURIComponent(id), { cache:'no-store' });
+        last = resp; if(resp.status !== 503) break; // tenta honrar Retry-After
+        var ra = parseInt(resp.headers.get('Retry-After')||'',10); var ms = !isNaN(ra) ? ra*1000 : (800 + i*600);
+        await new Promise(r=>setTimeout(r, ms));
+      }
+      if(!last || !last.ok) return null;
+      var j = await last.json();
+      return j && j.success ? j.data : null;
+    } catch(e){ return null; }
+  }
+  var payload=decodePayload();
+  if(!payload){ qs('infoLegal').innerHTML='<div class="err">QR Code inválido ou dados corrompidos.</div>'; return; }
+  var unidadeId = payload.unidadeId || payload.unidade_id || '';
+  var materialId = payload.materialId || payload.material_id || '';
+  var logoSlot=qs('logoSlot');
+  qs('textoLegal').textContent='Carregando informações da unidade...';
+
+  function setLogoWithFallback(url){
+    try{
+      if(!url) return;
+      var cands=[]; var u=String(url);
+      var abs = /^https?:\/\//i.test(u) || u.indexOf('data:')===0;
+      if(abs){ cands=[u]; }
+      else {
+        // Tenta como veio, com prefixo /gestor e com origin
+        cands=[u];
+        if(u.charAt(0)==='/' && !u.startsWith('/gestor/')) cands.push('/gestor'+u);
+        if(u.charAt(0)==='/') cands.push(window.location.origin + u);
+      }
+      (function tryNext(idx){ if(idx>=cands.length) return; var im=new Image(); im.alt='Logo'; im.onload=function(){ logoSlot.innerHTML=''; logoSlot.appendChild(im); }; im.onerror=function(){ tryNext(idx+1); }; im.referrerPolicy='no-referrer'; im.src=cands[idx]; })(0);
+    }catch(_){ }
+  }
+
+  function sanitizeEndereco(endereco){
+    return String(endereco||'').replace(/,?\s*c[oó]digo\s*ibge[:\s]*\d+/i,'').replace(/\s+\./g,'.').replace(/\.+$/,'');
+  }
+
+  function formatCNPJ(cnpj){
+    try{ var s=String(cnpj||'').replace(/\D/g,'');
+      if(s.length!==14) return cnpj||'';
+      return s.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+    }catch{ return cnpj||''; }
+  }
+
+  function updateMaterialView(mat){
+    mat = mat || {};
+    if(mat.nome) payload.nome = mat.nome;
+    if(mat.marca !== undefined) payload.marca = mat.marca;
+    if(mat.modelo !== undefined) payload.modelo = mat.modelo;
+    if(mat.cor !== undefined) payload.cor = mat.cor;
+    if(mat.serie !== undefined) payload.serie = mat.serie;
+    if(mat.lotacao !== undefined) payload.lotacao = mat.lotacao;
+    if(mat.areaRotulo) payload.areaRotulo = mat.areaRotulo;
+
+    var nome = payload.nome || 'Material';
+    var serie = payload.serie || '';
+    var titulo = serie ? (nome + ' - Nº Patrimônio: ' + serie) : nome;
+    qs('tituloMaterial').textContent = titulo;
+    qs('kvMatNome').textContent = nome || '-';
+    qs('kvMatMarca').textContent = (payload.marca || '').trim() || '-';
+    qs('kvMatModelo').textContent = (payload.modelo || '').trim() || '-';
+    qs('kvMatCor').textContent = (payload.cor || '').trim() || '-';
+    qs('kvMatPatrimonio').textContent = serie || '-';
+    var lotacao = (mat && (mat.lotacao || (mat.area && (mat.area.capacidade != null ? String(mat.area.capacidade) : mat.area.nome))))
+      || payload.lotacao || payload.areaRotulo || '-';
+    qs('kvMatLotacao').textContent = lotacao || '-';
+  }
+
+  function updateLegalSection(unidade){
+    if(!unidade) return;
+    payload.unidade = payload.unidade && typeof payload.unidade === 'object'
+      ? { ...payload.unidade, ...unidade }
+      : { ...unidade };
+    if(unidade.logo) setLogoWithFallback(unidade.logo);
+    var nome = unidade.razao || unidade.razaoSocial || unidade.nome || '-';
+    var cnpjFmt = formatCNPJ(unidade.cnpj);
+    var endereco = sanitizeEndereco(unidade.endereco);
+    var telefone = unidade.telefone || unidade.telefoneFixo || unidade.telefoneCelular || '-';
+    var linha1 = 'Este material pertence a ' + nome + (cnpjFmt ? ' (CNPJ: ' + cnpjFmt + ')' : '') + '.';
+    var linha2 = endereco ? 'Localização: ' + endereco + '.' : '';
+    var linha3 = 'Em caso de extravio, por favor entre em contato: ' + telefone + '.';
+    var texto = [linha1, linha2, linha3].filter(Boolean).join(' ');
+    if(texto){ qs('textoLegal').textContent = texto; }
+  }
+
+  function mergeMaterialSnapshot(){
+    updateMaterialView(payload);
+    if(payload.unidade) updateLegalSection(payload.unidade);
+  }
+
+  async function fetchMaterialPublic(materialId, unidadeId){
+    if(!materialId) return null;
+    try{
+      var base = '/condominios';
+      var url = base + '/api/public/materiais/' + encodeURIComponent(materialId);
+      if(unidadeId){ url += '?unidade=' + encodeURIComponent(unidadeId); }
+      var tries = 3; var last = null;
+      for(var i=0;i<tries;i++){
+        var resp = await fetch(url, { cache:'no-store' });
+        last = resp;
+        if(resp.status !== 503) break;
+        var ra = parseInt(resp.headers.get('Retry-After')||'',10);
+        var waitMs = isNaN(ra) ? (800 + i*600) : (ra*1000);
+        await new Promise(function(resolve){ setTimeout(resolve, waitMs); });
+      }
+      if(!last || !last.ok) return null;
+      var data = await last.json().catch(function(){ return null; });
+      return data;
+    }catch(_e){ return null; }
+  }
+
+  mergeMaterialSnapshot();
+
+  (async function(){
+    var live = await fetchMaterialPublic(materialId, unidadeId);
+    if(live && live.material){
+      updateMaterialView(live.material);
+      if(live.unidade) updateLegalSection(live.unidade);
+      else if(unidadeId){
+        var uniFallback = await fetchUnidadePublic(unidadeId);
+        if(uniFallback) updateLegalSection(uniFallback);
+        else if(!payload.unidade){
+          qs('textoLegal').textContent='Este material pertence a uma unidade não localizada (ID inválido ou indisponível).';
+        }
+      }
+    } else if(unidadeId){
+      var uni = await fetchUnidadePublic(unidadeId);
+      if(uni) updateLegalSection(uni);
+      else if(!payload.unidade){
+        qs('textoLegal').textContent='Este material pertence a uma unidade não localizada (ID inválido ou indisponível).';
+      }
+    } else if(!payload.unidade){
+      qs('textoLegal').textContent='Este material pertence a uma unidade não localizada (ID inválido ou indisponível).';
+    }
+  })();
+  qs('btnFechar').addEventListener('click', function(){ try{ window.close(); }catch(e){} window.history.back(); });
+})();
+</script>
+</body>
+</html>

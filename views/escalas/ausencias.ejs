@@ -1,0 +1,185 @@
+<!-- Página Gestão Ausências (layout alinhado ao dashboard de escalas) -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WDGestor - Gestão de Ausências</title>
+  <% const _bp = (meta && meta.basePath) ? meta.basePath : '/escalas'; %>
+  <%- include('../gestor/partials/favicon', { basePath: _bp }) %>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <%- include('../shared/partials/theme-esc-blue') %>
+  <style>
+    :root{
+      --esc-blue-1:#0e6fb1;
+      --esc-blue-2:#0a4f80;
+      --esc-gray-2:#eef3f7;
+    }
+    .ausencias-form .form-control[readonly]{ background:#f8f9fa; }
+    .ausencias-tabela-wrapper{ min-height:160px; }
+    table#tabelaAusencias thead th{ white-space:nowrap; font-size:.72rem; background:linear-gradient(var(--esc-blue-1),var(--esc-blue-2)); color:#fff; border-color:var(--esc-blue-2); text-align:center; }
+    table#tabelaAusencias tbody td{ vertical-align:middle; font-size:.78rem; white-space:nowrap; text-align:center; }
+    table#tabelaAusencias tbody tr:nth-child(odd){ background:#e2e2e2; }
+    table#tabelaAusencias tbody tr:nth-child(even){ background:#d6d6d6; }
+    /* Redução da coluna Nome para abrir espaço para Tipo e Ações */
+    table#tabelaAusencias thead th:first-child{ width:28%; }
+    table#tabelaAusencias tbody td:first-child{ width:28%; max-width:210px; }
+    /* Ampliar Tipo e Ações */
+    table#tabelaAusencias thead th:nth-child(2){ width:18%; }
+    table#tabelaAusencias thead th:nth-child(5){ width:18%; }
+    /* Datas mantidas em largura enxuta */
+    table#tabelaAusencias thead th:nth-child(3),
+    table#tabelaAusencias thead th:nth-child(4){ width:13%; }
+    .wdg-page-title{ font-weight:600; letter-spacing:.5px; text-align:center; }
+    .wdg-section{ background:#fff; border-radius:8px; padding:18px 20px; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+  body.wdg-layout{ background: linear-gradient(180deg, var(--esc-gray-2), #fff 28%); }
+    /* Layout estreito tipo mobile para o quadro de parâmetros */
+    .wdg-narrow-form{ max-width:480px; margin:0 auto; }
+    @media (max-width:576px){ .wdg-narrow-form{ max-width:100%; } }
+    /* Botões no tema azul/verde para consistência */
+    .btn-primary{ background: linear-gradient(180deg, #2a86d1, var(--esc-blue-1)); border-color: var(--esc-blue-1); }
+    .btn-primary:hover{ filter: brightness(1.05); }
+    .btn-success{ background: linear-gradient(180deg, #35b56b, #2aa35f); border-color:#239454; }
+    .btn-success:hover{ filter: brightness(1.05); }
+  </style>
+</head>
+<body class="wdg-layout wdg-theme-blue" data-base-path="<%= _bp %>">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel:'Escalas' }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Escalas',
+        prefixMenuPaths: true,
+        menuLabel: 'Menu',
+        menuTree: [
+          { label: 'Escalas', children: [
+            { label: 'Ordinária', children:[
+              { label: 'Nova', path: '/ordinaria/nova' },
+              { label: 'Pesquisar', path: '/ordinaria/pesquisar' }
+            ]},
+            { label: 'Extraodinária', children:[
+              { label: 'Nova', path: '/extraordinaria/nova' },
+              { label: 'Pesquisar', path: '/extraordinaria/pesquisar' }
+            ]},
+            { label: 'Escala Diária', path: '/diaria' }
+          ]},
+          { label: 'Gestão', children:[
+            { label: 'Férias', path: '/gestao/ferias' },
+            { label: 'Ausências', path: '/gestao/ausencias' }
+          ]},
+          { label: 'Relatórios', children:[
+            { label: 'Consulta de Relatórios', path: '/relatorios/consulta' }
+          ]}
+        ],
+        adminItems: []
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel:'Escalas' }) %>
+
+  <div class="container mt-4" id="appAusencias" data-basepath="<%= _bp %>">
+    <div class="mb-3"><h4 class="wdg-page-title mb-0">Gestão de Ausências</h4></div>
+
+    <div class="card wdg-params mb-4 mx-auto" style="max-width:780px;">
+      <div class="card-header py-2"><strong>Parâmetros</strong></div>
+      <div class="card-body py-3">
+      <form id="formPesquisaAusencias" class="ausencias-form small">
+        <!-- Linha 1: Unidade -->
+        <div class="row g-3 mb-2">
+          <div class="col-12">
+            <label for="ausenciaUnidade" class="form-label mb-1">Unidade</label>
+            <select id="ausenciaUnidade" class="form-select form-select-sm" required>
+              <option value="">Carregando...</option>
+            </select>
+          </div>
+        </div>
+        <!-- Linha 2: Funcionário -->
+        <div class="row g-3 mb-2">
+          <div class="col-12">
+            <label for="ausenciaFuncionario" class="form-label mb-1">Funcionário</label>
+            <div class="input-group input-group-sm">
+              <input type="text" id="ausenciaFuncionario" class="form-control" placeholder="Selecione..." readonly>
+              <button type="button" class="btn btn-outline-secondary" id="btnPesquisarFuncionarioAusencia" title="Pesquisar"><i class="bi bi-search"></i></button>
+              <button type="button" class="btn btn-outline-danger" id="btnLimparFuncionarioAusencia" title="Limpar seleção">&times;</button>
+            </div>
+          </div>
+        </div>
+        <!-- Linha 3: Período -->
+        <div class="row g-3 mb-2">
+          <div class="col-12">
+            <label class="form-label mb-1">Período</label>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              <input type="text" id="ausenciaInicio" class="form-control form-control-sm date-br text-center" data-calendar="flatpickr" placeholder="dd/mm/aaaa" autocomplete="off" readonly>
+              <span class="text-muted small">até</span>
+              <input type="text" id="ausenciaFim" class="form-control form-control-sm date-br text-center" data-calendar="flatpickr" placeholder="dd/mm/aaaa" autocomplete="off" readonly>
+            </div>
+          </div>
+        </div>
+        <!-- Linha 4: Botões -->
+        <div class="row g-3">
+          <div class="col-12 d-flex gap-2 align-items-center flex-wrap justify-content-end">
+            <button type="button" id="btnPesquisarAusencias" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" title="Pesquisar">
+              <img src="<%= _bp %>/images/pesquisar.png" alt="Pesquisar" style="height:20px; width:auto;" />
+              <span class="d-none d-md-inline">Pesquisar</span>
+            </button>
+            <button type="button" id="btnRelatorioAusencias" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Relatório">
+              <img src="<%= _bp %>/images/relatorio.png" alt="Relatório" style="height:20px; width:auto;" />
+              <span class="d-none d-md-inline">Relatório</span>
+            </button>
+          </div>
+        </div>
+      </form>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end mb-2">
+      <button type="button" class="btn btn-sm btn-success d-flex align-items-center gap-1" id="btnInserirAusencia" title="Inserir">
+        <img src="<%= _bp %>/images/adicionar.png" alt="Inserir" style="height:20px; width:auto;" />
+        <span class="d-none d-md-inline">Inserir</span>
+      </button>
+    </div>
+
+    <div class="wdg-section ausencias-tabela-wrapper">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover mb-0 wdg-table wdg-zebra" id="tabelaAusencias">
+          <thead class="text-center align-middle">
+            <tr>
+              <th>Nome do Funcionário</th>
+              <th style="width:140px;">Tipo</th>
+              <th style="width:120px;">Início</th>
+              <th style="width:120px;">Término</th>
+              <th style="width:120px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reuso: modal de pesquisa de efetivo -->
+  <%- include('modais_popups/modal_pesquisar_efetivo') %>
+    <!-- Modal cadastrar ausência -->
+    <%- include('modais_popups/modal_cadastrar_ausencias') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>window.__perfilBasePath='<%= _bp %>';</script>
+  <script src="<%= _bp %>/js/perfil-modulo.js"></script>
+  <script src="<%= _bp %>/js/modais_popups/modal_pesquisar_efetivo.js"></script>
+  <script src="<%= _bp %>/js/cadastrar_ausencias.js"></script>
+  <script src="<%= _bp %>/js/ausencias.js"></script>
+  <script>
+    // Fallback de diagnóstico: após pequeno delay verificar existência dos handlers
+    setTimeout(()=>{
+      const btnFunc = document.getElementById('btnPesquisarFuncionarioAusencia');
+      const btnPesq = document.getElementById('btnPesquisarAusencias');
+      if(!btnFunc){ console.warn('[AUSENCIAS][FALLBACK] Botão funcionario não encontrado no DOM'); } else if(!btnFunc.onclick && !btnFunc._hasListener){ console.warn('[AUSENCIAS][FALLBACK] Botão funcionario sem listener direto (delegação?)'); }
+      if(!btnPesq){ console.warn('[AUSENCIAS][FALLBACK] Botão pesquisar ausencias não encontrado'); } else if(!btnPesq.onclick && !btnPesq._hasListener){ console.warn('[AUSENCIAS][FALLBACK] Botão pesquisar ausencias sem listener direto (delegação?)'); }
+      if(!(window.WDG && typeof WDG.abrirModalPesquisarEfetivo==='function')){
+        console.warn('[AUSENCIAS][FALLBACK] Função abrirModalPesquisarEfetivo ausente. Keys WDG:', window.WDG? Object.keys(WDG):'WDG undefined');
+      }
+    }, 600);
+  </script>
+</body>
+</html>

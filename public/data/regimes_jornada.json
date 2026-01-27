@@ -1,0 +1,14 @@
+[
+  { "codigo": "1", "descricao": "Jornada com horário fixo" },
+  { "codigo": "2", "descricao": "Jornada com horário fixo e compensação de jornada (Banco de Horas)" },
+  { "codigo": "3", "descricao": "Jornada com horário fixo e compensação de jornada (Acordo individual/tácito)" },
+  { "codigo": "4", "descricao": "Jornada com horário fixo e compensação de jornada (Acordo coletivo)" },
+  { "codigo": "5", "descricao": "Jornada com horário fixo e compensação de jornada (Outro tipo legal)" },
+  { "codigo": "6", "descricao": "Jornada com horário fixo e compensação de jornada (Compensação semanal)" },
+  { "codigo": "7", "descricao": "Jornada com horário flexível" },
+  { "codigo": "8", "descricao": "Regime de tempo parcial (art. 58-A da CLT)" },
+  { "codigo": "9", "descricao": "Regime de tempo intermitente (art. 452-A da CLT)" },
+  { "codigo": "10", "descricao": "Jornada de tempo integral, sem horário fixo (ex.: cargos de confiança – art. 62, II da CLT)" },
+  { "codigo": "11", "descricao": "Teletrabalho (art. 75-A da CLT)" },
+  { "codigo": "12", "descricao": "Outro regime de jornada previsto em lei específica" }
+]

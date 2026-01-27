@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal do Morador - WD Gestor</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/portal-morador'; %>
+  <% const _basePath = _bp; %>
+  <link rel="icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= _bp %>/css/portal-morador/login.css?v=<%= Date.now() %>">
+</head>
+<body class="pm-login-body">
+  <div class="pm-login-shell position-relative">
+    <div class="pm-login-card">
+      <section class="pm-login-hero">
+        <div class="pm-hero-upper">
+          <div class="pm-hero-heading">
+            <img class="pm-hero-logo" src="<%= _bp %>/images/logoWDGestorprata.png" alt="WD Gestor" loading="lazy">
+            <h1 class="pm-hero-title-3d">PORTAL DO MORADOR</h1>
+          </div>
+          <p class="pm-hero-description">Portaria, comunicados e financeiro em um só lugar, sempre acessíveis.</p>
+        </div>
+        <div class="pm-hero-pills">
+          <div class="pm-hero-pill">
+            <img src="<%= _bp %>/images/visita.png" alt="Portaria" loading="lazy">
+            <div>
+              <strong>Portaria</strong>
+              <small>Autorize e acompanhe visitantes</small>
+            </div>
+          </div>
+          <div class="pm-hero-pill">
+            <img src="<%= _bp %>/images/comunicacao.png" alt="Comunicados" loading="lazy">
+            <div>
+              <strong>Comunicados</strong>
+              <small>Avisos organizados e rápidos</small>
+            </div>
+          </div>
+          <div class="pm-hero-pill">
+            <img src="<%= _bp %>/images/financeiro.png" alt="Financeiro" loading="lazy">
+            <div>
+              <strong>Financeiro</strong>
+              <small>Boletos e histórico em um painel</small>
+            </div>
+          </div>
+          <div class="pm-hero-pill">
+            <img src="<%= _bp %>/images/cadeado.png" alt="Segurança" loading="lazy">
+            <div>
+              <strong>Segurança</strong>
+              <small>Acesso autenticado e protegido</small>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="pm-login-form">
+        <div class="pm-brand pm-brand-compact">
+          <div class="pm-brand-text">
+            <h5 class="mb-1 fw-bold">Faça o seu login aqui!</h5>
+            <small>MÓDULO GESTÃO DE CONDOMÍNIO</small>
+          </div>
+        </div>
+        <% if (typeof mensagem !== 'undefined' && mensagem) { %>
+          <div class="pm-alert"><%= mensagem %></div>
+        <% } %>
+        <form id="pmLoginForm" action="<%= _basePath %>/login" method="POST" novalidate>
+          <input type="hidden" name="modulo" value="condominios">
+
+          <div class="pm-login-step" id="pmLoginStepCredentials">
+            <div class="pm-field">
+              <label for="email">E-mail</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope-at"></i></span>
+                <input type="email" class="form-control" id="email" name="email" placeholder="email@exemplo.com" autocomplete="username" required value="<%= typeof email !== 'undefined' ? email : '' %>">
+              </div>
+            </div>
+
+            <div class="pm-field">
+              <label for="senha">Senha</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                <input type="password" class="form-control" id="senha" name="senha" placeholder="••••••••" autocomplete="current-password" required>
+                <button class="btn btn-outline-success" type="button" id="toggleSenha" aria-label="Mostrar senha"><i class="bi bi-eye"></i></button>
+              </div>
+            </div>
+
+            <div class="pm-links align-items-center">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="1" id="lembrar" name="lembrar">
+                <label class="form-check-label" for="lembrar">Lembrar-me</label>
+              </div>
+              <a class="pm-forgot" href="/gestor/esquecisenha?origem=portal-morador">Esqueci minha senha</a>
+            </div>
+
+            <div class="pm-button-row">
+              <button type="submit" class="pm-cta-btn" id="pmLoginSubmit">Entrar</button>
+            </div>
+
+            <div class="text-center text-muted pm-access-help" style="font-size:.9rem;">
+              Precisa de acesso? <a href="/gestor/contato?origem=portal-morador" class="fw-semibold" style="color:#0d4fbf;">Fale com a administração</a>
+            </div>
+
+            <div class="pm-hero-chip pm-access-chip">Acesso exclusivo para moradores</div>
+          </div>
+
+          <div class="pm-login-step" id="pmLoginStepUnidade" hidden>
+            <div class="pm-step-head">
+              <h6>Selecione o condomínio</h6>
+              <p>Escolha qual unidade você deseja acessar.</p>
+            </div>
+            <div class="pm-unit-grid" id="pmUnitGrid" aria-live="polite"></div>
+            <div class="pm-unit-pagination" id="pmUnitPagination" aria-live="polite"></div>
+          </div>
+
+          <div class="pm-login-step" id="pmLoginStepHabitacao" hidden>
+            <div class="pm-step-head">
+              <h6>Selecione a habitação</h6>
+              <p>Escolha a habitação que você deseja operar no portal.</p>
+            </div>
+            <div class="pm-hab-list" id="pmHabList" aria-live="polite"></div>
+            <div class="pm-hab-pagination" id="pmHabPagination" aria-live="polite"></div>
+          </div>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const basePath = '<%= _basePath %>';
+      const toggleBtn = document.getElementById('toggleSenha');
+      if(toggleBtn){
+        toggleBtn.addEventListener('click', ()=>{
+          const input = document.getElementById('senha');
+          if(!input) return;
+          const isPassword = input.type === 'password';
+          input.type = isPassword ? 'text' : 'password';
+          const icon = toggleBtn.querySelector('i');
+          if(icon){
+            icon.classList.toggle('bi-eye-slash', isPassword);
+            icon.classList.toggle('bi-eye', !isPassword);
+          }
+        });
+      }
+
+      const form = document.getElementById('pmLoginForm');
+      const emailEl = document.getElementById('email');
+      const senhaEl = document.getElementById('senha');
+      const submitBtn = document.getElementById('pmLoginSubmit');
+      const stepCred = document.getElementById('pmLoginStepCredentials');
+      const stepUnidade = document.getElementById('pmLoginStepUnidade');
+      const stepHabitacao = document.getElementById('pmLoginStepHabitacao');
+      const unitGrid = document.getElementById('pmUnitGrid');
+      const unitPagination = document.getElementById('pmUnitPagination');
+      const habList = document.getElementById('pmHabList');
+      const habPagination = document.getElementById('pmHabPagination');
+
+      let unidadesCache = [];
+      let currentPage = 1;
+      const PAGE_SIZE = 9;
+      let selectedUnidadeId = '';
+      let habCache = [];
+      let currentHabPage = 1;
+      const HAB_PAGE_SIZE = 16;
+      function showToast(msg, variant){
+        const box = document.createElement('div');
+        box.className = 'pm-toast ' + (variant ? `--${variant}` : '');
+        box.textContent = msg;
+        document.body.appendChild(box);
+        setTimeout(()=>{
+          box.style.opacity = '0';
+          box.style.transform = 'translateY(12px)';
+          setTimeout(()=>box.remove(), 250);
+        }, 4500);
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const erro = params.get('erro');
+      const min = params.get('min');
+      const restantes = params.get('restantes');
+      const emailFromQuery = params.get('email');
+      if(emailFromQuery && emailEl && !emailEl.value){
+        emailEl.value = emailFromQuery;
+      }
+
+      function showStep(which){
+        if(stepCred) stepCred.hidden = which !== 'cred';
+        if(stepUnidade) stepUnidade.hidden = which !== 'unidade';
+        if(stepHabitacao) stepHabitacao.hidden = which !== 'hab';
+      }
+
+      function esc(str){
+        return String(str || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function buildUnitButton(u){
+        const id = esc(u.id);
+        const nome = esc(u.nome || 'Condomínio');
+        const codigo = esc(u.codigo || '');
+        const logo = esc(u.logoUrl || '');
+        const label = `${nome}${codigo ? ` (${codigo})` : ''}`;
+        return `
+          <button type="button" class="pm-unit-btn" data-unidade-id="${id}" data-label="${label}" aria-label="${label}">
+            <div class="pm-unit-logo">${logo ? `<img src="${logo}" alt="${nome}">` : '<span class="pm-unit-logo-fallback">WD</span>'}</div>
+          </button>
+        `;
+      }
+
+      function renderUnitPage(){
+        if(!unitGrid) return;
+        const totalPages = Math.max(1, Math.ceil(unidadesCache.length / PAGE_SIZE));
+        if(currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const pageItems = unidadesCache.slice(start, start + PAGE_SIZE);
+        unitGrid.innerHTML = pageItems.length
+          ? pageItems.map(buildUnitButton).join('')
+          : '<div class="pm-step-empty">Nenhuma unidade disponível para este usuário.</div>';
+        updatePagination(totalPages);
+      }
+
+      function buildHabButton(h){
+        const hid = esc(h.id);
+        const label = esc(h.label || 'Habitação');
+        const icon = `${basePath}/images/home.png`;
+        return `
+          <button type="button" class="pm-hab-btn" data-hab-id="${hid}" data-label="${label}" aria-label="${label}">
+            <span class="pm-hab-icon"><img src="${icon}" alt="${label}"></span>
+          </button>
+        `;
+      }
+
+      function renderHabPage(){
+        if(!habList) return;
+        const totalPages = Math.max(1, Math.ceil(habCache.length / HAB_PAGE_SIZE));
+        if(currentHabPage > totalPages) currentHabPage = totalPages;
+        const start = (currentHabPage - 1) * HAB_PAGE_SIZE;
+        const pageItems = habCache.slice(start, start + HAB_PAGE_SIZE);
+        habList.innerHTML = pageItems.length
+          ? pageItems.map(buildHabButton).join('')
+          : '<div class="pm-step-empty">Nenhuma habitação encontrada nesta unidade.</div>';
+        updateHabPagination(totalPages);
+      }
+
+      function updateHabPagination(totalPages){
+        if(!habPagination) return;
+        const total = Math.max(1, totalPages || 1);
+        habPagination.innerHTML = `
+          <button type="button" class="pm-page-btn" data-page="prev" ${currentHabPage === 1 ? 'disabled' : ''}>Anterior</button>
+          <span class="pm-page-indicator">Página ${Math.min(currentHabPage, total)} de ${total}</span>
+          <button type="button" class="pm-page-btn" data-page="next" ${currentHabPage >= total ? 'disabled' : ''}>Próxima</button>
+        `;
+      }
+
+      function updatePagination(totalPages){
+        if(!unitPagination) return;
+        const total = Math.max(1, totalPages || 1);
+        unitPagination.innerHTML = `
+          <button type="button" class="pm-page-btn" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
+          <span class="pm-page-indicator">Página ${Math.min(currentPage, total)} de ${total}</span>
+          <button type="button" class="pm-page-btn" data-page="next" ${currentPage >= total ? 'disabled' : ''}>Próxima</button>
+        `;
+      }
+
+      function renderUnidades(unidades){
+        unidadesCache = Array.isArray(unidades) ? unidades : [];
+        selectedUnidadeId = '';
+        currentPage = 1;
+        if(!unidadesCache.length){
+          denyAccess();
+          return;
+        }
+        renderUnitPage();
+        showStep('unidade');
+      }
+
+      function renderHabitacoes(unidadeId){
+        selectedUnidadeId = String(unidadeId || '').trim();
+        const unidade = unidadesCache.find((u) => String(u.id) === selectedUnidadeId);
+        habCache = Array.isArray(unidade?.habitacoes) ? unidade.habitacoes : [];
+        currentHabPage = 1;
+        renderHabPage();
+        showStep('hab');
+      }
+
+      async function loadAuthContext(){
+        try {
+          const r = await fetch(`${basePath}/api/auth/context?_=${Date.now()}`, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' },
+            credentials: 'same-origin',
+            cache: 'no-store'
+          });
+          if(!r.ok) return null;
+          const j = await r.json().catch(() => null);
+          if(!j?.ok) return null;
+          if(j.needsSelection){
+            const unidades = Array.isArray(j.unidades) ? j.unidades : [];
+            // Se só existe 1 unidade, já avança para habitações.
+            if(unidades.length === 1){
+              unidadesCache = unidades;
+              renderHabitacoes(unidades[0].id);
+            } else if(unidades.length > 1){
+              renderUnidades(unidades);
+            } else {
+              denyAccess();
+            }
+          } else if(j.selected?.habitacao_id){
+            window.location.href = `${basePath}/home`;
+          }
+          return j;
+        } catch {
+          return null;
+        }
+      }
+
+      unitGrid?.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('[data-unidade-id]');
+        if(!btn) return;
+        renderHabitacoes(btn.getAttribute('data-unidade-id'));
+      });
+
+      unitPagination?.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('[data-page]');
+        if(!btn) return;
+        const action = btn.getAttribute('data-page');
+        const total = Math.max(1, Math.ceil(unidadesCache.length / PAGE_SIZE));
+        if(action === 'prev' && currentPage > 1){
+          currentPage -= 1;
+          renderUnitPage();
+        }
+        if(action === 'next' && currentPage < total){
+          currentPage += 1;
+          renderUnitPage();
+        }
+      });
+
+      habPagination?.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('[data-page]');
+        if(!btn) return;
+        const action = btn.getAttribute('data-page');
+        const total = Math.max(1, Math.ceil(habCache.length / HAB_PAGE_SIZE));
+        if(action === 'prev' && currentHabPage > 1){
+          currentHabPage -= 1;
+          renderHabPage();
+        }
+        if(action === 'next' && currentHabPage < total){
+          currentHabPage += 1;
+          renderHabPage();
+        }
+      });
+
+      habList?.addEventListener('click', async (ev) => {
+        const btn = ev.target.closest('[data-hab-id]');
+        if(!btn) return;
+        const habId = btn.getAttribute('data-hab-id');
+        try {
+          btn.disabled = true;
+          const r = await fetch(`${basePath}/api/auth/selecionar`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-Requested-With': 'fetch'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ unidade_id: selectedUnidadeId, habitacao_id: habId })
+          });
+          const j = await r.json().catch(() => null);
+          if(!r.ok || !j?.ok) throw new Error(j?.error || 'Falha ao selecionar habitação.');
+          window.location.href = j.redirect || `${basePath}/home`;
+        } catch (e){
+          showToast(e?.message || 'Falha ao selecionar habitação.', 'warning');
+          btn.disabled = false;
+        }
+      });
+
+      form?.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const email = String(emailEl?.value || '').trim();
+        const senha = String(senhaEl?.value || '').trim();
+        if(!email || !senha){
+          showToast('Preencha e-mail e senha.', 'warning');
+          return;
+        }
+        if(submitBtn){
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Entrando...';
+        }
+        try {
+          const body = new URLSearchParams();
+          body.set('email', email);
+          body.set('senha', senha);
+          const r = await fetch(`${basePath}/login`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch', 'Content-Type': 'application/x-www-form-urlencoded' },
+            credentials: 'same-origin',
+            body
+          });
+          const j = await r.json().catch(() => null);
+          if(!r.ok || !j?.ok) throw new Error(j?.error || 'Falha ao entrar.');
+          const unidades = Array.isArray(j.unidades) ? j.unidades : [];
+          if(unidades.length === 0){
+            denyAccess();
+            return;
+          }
+          if(unidades.length === 1){
+            unidadesCache = unidades;
+            renderHabitacoes(unidades[0].id);
+          } else {
+            renderUnidades(unidades);
+          }
+        } catch (e){
+          showToast(e?.message || 'Falha ao entrar.', 'warning');
+        } finally {
+          if(submitBtn){
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Entrar';
+          }
+        }
+      });
+
+      // Evita ruído (401) em logs: só consulta contexto quando a tela foi aberta
+      // especificamente para concluir seleção (ex.: redirect do middleware com ?step=select).
+      try {
+        const qp = new URLSearchParams(window.location.search || '');
+        const step = String(qp.get('step') || '').toLowerCase();
+        if (step === 'select') {
+          loadAuthContext();
+        }
+      } catch { /* noop */ }
+      if(erro === 'usuario'){
+        emailEl && (emailEl.value = '');
+        senhaEl && (senhaEl.value = '');
+        emailEl?.focus();
+        showToast('Não encontramos um usuário com esse e-mail.', 'warning');
+      }
+      if(erro === 'senha'){
+        senhaEl && (senhaEl.value = '');
+        senhaEl?.focus();
+        if(restantes){
+          const tries = parseInt(restantes, 10);
+          if(!Number.isNaN(tries)){
+            const plural = tries === 1 ? '' : 's';
+            showToast(`Senha incorreta. Você ainda possui ${tries} tentativa${plural}.`, tries === 1 ? 'error' : 'warning');
+          } else {
+            showToast('Senha incorreta. Tente novamente.', 'warning');
+          }
+        } else {
+          showToast('Senha incorreta. Tente novamente.', 'warning');
+        }
+      }
+      if(erro === 'bloqueado'){
+        const minutos = min && !Number.isNaN(parseInt(min,10)) ? parseInt(min,10) : null;
+        showToast(minutos ? `Conta temporariamente bloqueada. Aguarde aproximadamente ${minutos} minuto${minutos>1?'s':''}.` : 'Conta temporariamente bloqueada. Aguarde alguns minutos e tente novamente.', 'error');
+      }
+      if(erro === 'suspenso' || erro === 'usuario-desativado'){
+        showToast('Seu acesso está suspenso. Entre em contato com o suporte do condomínio.', 'error');
+        emailEl && (emailEl.value = '');
+        senhaEl && (senhaEl.value = '');
+      }
+      if(erro === 'primeiroacesso'){
+        showToast('Conclua o primeiro acesso usando o link enviado ao seu e-mail.', 'info');
+      }
+      if(erro === 'condominio'){
+        showToast('Selecione qual condomínio deseja acessar.', 'warning');
+      }
+      if(erro === 'servidor'){
+        showToast('Serviço indisponível no momento. Tente novamente em instantes.', 'warning');
+      }
+
+      function denyAccess(){
+        showToast('Seu usuário não possui acesso ao Portal do Morador. Entre em contato com a administração.', 'warning');
+        setTimeout(() => {
+          window.location.href = `${basePath}/logout`;
+        }, 1400);
+      }
+    })();
+  </script>
+</body>
+</html>

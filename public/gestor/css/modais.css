@@ -1,0 +1,185 @@
+/* Estilos para modais Gestor - Diretor (harmonizado com Gerenciar Módulos Acessíveis) */
+
+/* Busca com ícone à esquerda */
+.ms-search { position: relative; margin-bottom: .5rem; }
+.ms-search .ms-icon { width: 16px; height: 16px; opacity: .75; }
+.ms-search .form-control { padding-left: 2rem; }
+
+/* Cabeçalho e linhas em grid (3 colunas: Seleção | Nome | E-mail) */
+/* quando usado em list-header inline no EJS, a grade é definida via style inline; mantemos utilidades para uso geral */
+.ms-3cols-director { grid-template-columns: 72px 1fr 320px; }
+@media (max-width:576px){ .ms-3cols-director { grid-template-columns: 64px 1fr 200px; } }
+
+/* Lista */
+#listaDiretores > li.ms-row { display: grid; align-items: center; column-gap: 12px; padding: .5rem .75rem; border: 0; border-bottom: 1px solid #e9ecef; }
+#listaDiretores > li .ms-col-sel { display: flex; justify-content: center; }
+#listaDiretores > li .ms-col-name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#listaDiretores > li .ms-col-email { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#listaDiretores > li.ms-row:hover { background: #f5f9ff; }
+@supports(selector(:has(*))){
+	#listaDiretores > li.ms-row:has(input:checked){ background: #eef5ff; }
+}
+
+	/* foco do input de busca mais visível */
+	.modal .form-control:focus { box-shadow: 0 0 0 .2rem rgba(13,110,253,.15); }
+
+/* MOVIDO de public/css/modais.css (escopo módulo Gestor) */
+/* Conteúdo original preservado (trecho inicial) */
+/* ===== Modal Sindicato (migrado de modal-sindicato.css) ===== */
+.modal-sindicato{ --ms-font: var(--bs-body-font-family, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif); font-family: var(--ms-font); font-size: .95rem; line-height: 1.35; }
+.modal-sindicato .modal-content{ border: 0; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,110,253,.18), 0 8px 16px rgba(0,0,0,.08); }
+.modal-sindicato input, .modal-sindicato button, .modal-sindicato select, .modal-sindicato table, .modal-sindicato th, .modal-sindicato td, .modal-sindicato label{ font-family: var(--ms-font); }
+.modal-sindicato .modal-header{ border-bottom: 1px solid rgba(13,110,253,.15); background: linear-gradient(180deg, rgba(13,110,253,.07), rgba(13,110,253,.03)); }
+.modal-sindicato .modal-title{ font-weight: 600; color: #0d6efd; }
+.modal-sindicato .modal-footer{ border-top: 1px solid rgba(13,110,253,.12); background: linear-gradient(180deg, rgba(13,110,253,.02), transparent); }
+.modal-sindicato #modalSindicatoPesquisa{ border-radius: 10px; height: 42px; }
+.modal-sindicato .bi-search{ pointer-events: none; }
+.modal-sindicato #wrapTabelaSindicato{ max-height: 360px; overflow: auto; }
+.modal-sindicato #wrapTabelaSindicato thead th{ position: sticky; top: 0; z-index: 2; background: #f8f9fa; border-bottom: 1px solid #e9ecef; font-weight: 600; font-size: .9rem; }
+.modal-sindicato #modalSindicatoTabela{ table-layout: fixed; width: 100%; border-collapse: separate; border-spacing: 0; }
+.modal-sindicato #modalSindicatoTabela th, .modal-sindicato #modalSindicatoTabela td{ text-align: center; vertical-align: middle; padding-top: .65rem; padding-bottom: .65rem; }
+.modal-sindicato #modalSindicatoTabela th:nth-child(1), .modal-sindicato #modalSindicatoTabela td:nth-child(1){ width: 64px; min-width: 64px; }
+.modal-sindicato #modalSindicatoTabela th:nth-child(2), .modal-sindicato #modalSindicatoTabela td:nth-child(2){ width: 200px; min-width: 200px; white-space: nowrap; overflow: visible; text-overflow: clip; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "lnum" 1; }
+.modal-sindicato #modalSindicatoTabela th:nth-child(4), .modal-sindicato #modalSindicatoTabela td:nth-child(4){ width: 260px; min-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal-sindicato #modalSindicatoTabela th:nth-child(5), .modal-sindicato #modalSindicatoTabela td:nth-child(5){ width: 72px; min-width: 64px; }
+.modal-sindicato #modalSindicatoTabela td:first-child .form-check-input{ display: block; margin: 0 auto; }
+.modal-sindicato tbody .form-check-input[type="radio"]{ width: 1rem; height: 1rem; margin-top: 0; border-color: #b6c2ff; }
+.modal-sindicato tbody .form-check-input:checked{ background-color: #0d6efd; border-color: #0d6efd; box-shadow: 0 0 0 .15rem rgba(13,110,253,.2); }
+.modal-sindicato tbody tr:hover{ background: rgba(13,110,253,.06); }
+@supports(selector(:has(*))){ .modal-sindicato tbody tr:has(input[type="radio"]:checked){ background: rgba(13,110,253,.10); outline: 2px solid rgba(13,110,253,.25); outline-offset: -2px; } }
+.modal-sindicato tbody tr.is-selected{ background: rgba(13,110,253,.10); outline: 2px solid rgba(13,110,253,.25); outline-offset: -2px; }
+.modal-sindicato #modalSindicatoOutro{ border: 1px dashed rgba(13,110,253,.35); border-radius: 12px; padding: .75rem; background: rgba(13,110,253,.03); }
+.modal-sindicato .btn-primary{ box-shadow: 0 6px 14px rgba(13,110,253,.25); }
+/* (Arquivo original continua extenso — manter restante conforme fonte) */
+/* === Estilos genéricos para novas modais padronizadas (.modal-sheet) === */
+.modal-sheet .modal-content{ border-radius: 18px; border:1px solid #e2e8f0; box-shadow:0 24px 48px -12px rgba(15,23,42,.25),0 8px 16px rgba(0,0,0,.06); }
+.modal-sheet .modal-header{ border-bottom:1px solid #e2e8f0; background:linear-gradient(180deg,#f1f5f9,#ffffff 70%); padding:.85rem 1rem; }
+.modal .modal-header img{ max-height: 28px; height:auto; width:auto; }
+#detalhesModal .modal-header img{ max-height: 26px; }
+.modal-sheet .modal-title{ font-weight:600; font-size:1.05rem; color:#0d487a; }
+.modal-sheet .modal-body{ padding:1rem 1.05rem 1.1rem; background:linear-gradient(180deg,#f8fafc,#ffffff 140px); }
+.modal-sheet .modal-footer{ border-top:1px solid #e2e8f0; background:linear-gradient(180deg,#ffffff,#f8fafc); padding:.85rem 1rem 1rem; }
+.modal-sheet .btn{ font-weight:500; }
+
+/* Tema azul reutilizável */
+.modal-sheet.theme-blue .modal-title{ color:#0d6efd; }
+.modal-sheet.theme-blue .btn-outline-primary{ --bs-btn-color:#0d6efd; --bs-btn-border-color:#0d6efd; --bs-btn-hover-bg:#0d6efd; --bs-btn-hover-border-color:#0d6efd; --bs-btn-hover-color:#fff; }
+
+/* Área de busca superior */
+.modal-sheet .search-wrap{ margin-bottom:.75rem; }
+.modal-sheet .search-wrap .form-control{ height:42px; border-radius:10px; }
+.modal-sheet .search-wrap .form-control:focus{ border-color:#86b7fe; box-shadow:0 0 0 .25rem rgba(13,110,253,.2); }
+
+/* Cabeçalho de listagem (3 colunas: seleção, código, descrição) */
+.modal-sheet .sheet-head{ display:grid; grid-template-columns:90px 110px 1fr; column-gap:12px; align-items:center; font-weight:600; font-size:.8rem; letter-spacing:.5px; text-transform:uppercase; padding:.55rem .85rem; background:#f1f5f9; border:1px solid #dbe1ea; border-radius:.75rem .75rem 0 0; color:#334155; }
+.modal-sheet .sheet-head .col-sel,.modal-sheet .sheet-head .col-cod{ text-align:center; }
+
+/* Lista rolável */
+.modal-sheet .list-scroll{ max-height:360px; overflow:auto; border:1px solid #dbe1ea; border-top:0; border-radius:0 0 .75rem .75rem; }
+.modal-sheet .list-scroll ul{ list-style:none; margin:0; padding:0; }
+.modal-sheet .list-scroll li{ display:grid; grid-template-columns:90px 110px 1fr; column-gap:12px; align-items:center; padding:.6rem .85rem; border-bottom:1px solid #eef2f6; font-size:.9rem; }
+.modal-sheet .list-scroll li:last-child{ border-bottom:0; }
+.modal-sheet .list-scroll li:hover{ background:#f1f7ff; }
+.modal-sheet .list-scroll li.is-selected, .modal-sheet .list-scroll li:has(input:checked){ background:#e6f0ff; }
+.modal-sheet .list-scroll .col-sel{ text-align:center; }
+.modal-sheet .list-scroll input[type="radio"], .modal-sheet .list-scroll input[type="checkbox"]{ width:1rem; height:1rem; margin:0; cursor:pointer; }
+.modal-sheet .list-scroll input[type="radio"]:checked, .modal-sheet .list-scroll input[type="checkbox"]:checked{ box-shadow:0 0 0 .15rem rgba(13,110,253,.25); }
+
+/* Scrollbar custom (webkit) */
+.modal-sheet .list-scroll::-webkit-scrollbar{ width:10px; }
+.modal-sheet .list-scroll::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.15); border-radius:8px; }
+.modal-sheet .list-scroll:hover::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.28); }
+
+@media (max-width:576px){
+	.modal-sheet .sheet-head, .modal-sheet .list-scroll li{ grid-template-columns:70px 96px 1fr; column-gap:8px; }
+	.modal-sheet .modal-dialog{ margin:.75rem auto; }
+}
+
+/* Específico CNAE Principal: usa classes sem inline styles */
+.modal-cnae .search-wrap.has-icon-left { position:relative; }
+.modal-cnae .search-wrap .search-icon{ position:absolute; left:.75rem; top:50%; transform:translateY(-50%); pointer-events:none; }
+.modal-cnae .cnae-list{ list-style:none; margin:0; padding:0; }
+.modal-cnae .cnae-list li{ padding:0; border:0; }
+.modal-cnae .cnae-list .item-grid{ display:grid; grid-template-columns:90px 110px 1fr; column-gap:12px; align-items:center; padding:.55rem .85rem; border-bottom:1px solid #eef2f6; cursor:pointer; }
+.modal-cnae .cnae-list .item-grid.item-flex{ display:flex; gap:12px; }
+.modal-cnae .cnae-list .item-grid.item-flex .col-sel{ width:90px; flex:0 0 90px; }
+.modal-cnae .cnae-list .item-grid.item-flex .col-cod{ width:110px; flex:0 0 110px; }
+.modal-cnae .cnae-list .item-grid.item-flex .col-desc{ flex:1 1 auto; }
+.modal-cnae .cnae-list .item-grid:last-child{ border-bottom:0; }
+.modal-cnae .cnae-list .item-grid:hover{ background:#f1f7ff; }
+.modal-cnae .cnae-list .item-grid.is-selected{ background:#e6f0ff; }
+.modal-cnae .cnae-list .item-grid .col-sel{ text-align:center; }
+.modal-cnae .cnae-list input[type="radio"]{ width:1rem; height:1rem; margin:0; }
+.modal-cnae .cnae-list input[type="radio"]:checked{ box-shadow:0 0 0 .15rem rgba(13,110,253,.25); }
+.modal-cnae .cnae-list .col-desc{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.modal-cnae .cnae-list label.col-desc, .modal-cnae .cnae-list .col-desc{ margin:0; font-weight:400; cursor:pointer; display:block; min-width:0; }
+.modal-cnae .cnae-list .col-desc{ color:#1e293b; }
+.modal-cnae .cnae-list input[type="checkbox"]{ width:1rem; height:1rem; margin:0; cursor:pointer; }
+.modal-cnae .cnae-list input[type="checkbox"]:checked{ box-shadow:0 0 0 .15rem rgba(13,110,253,.25); }
+.modal-cnae .cnae-list .item-grid:has(input:checked){ background:#e6f0ff; }
+@media (max-width:576px){
+	.modal-cnae .cnae-list .item-grid{ grid-template-columns:70px 96px 1fr; column-gap:8px; }
+}
+
+/* === Detalhes da Unidade: largura e rolagem apenas nos dados === */
+#detalhesModal .modal-dialog { max-width: 960px; margin: 0 auto !important; }
+#detalhesModal .modal-dialog.modal-dialog-centered { min-height: 0 !important; }
+#detalhesModal .modal-body { padding: 1rem; }
+#detalhesModal .detalhes-layout-row { align-items: stretch !important; }
+/* Faz o row ocupar a altura disponível do modal (para a coluna direita poder rolar) */
+#detalhesModal .modal-body { flex:1 1 auto; display:flex; flex-direction:column; overflow:hidden; min-height:0 !important; }
+#detalhesModal .modal-body > .detalhes-layout-row { height: 100%; min-height: 0; }
+
+/* Mantém a coluna da foto estática e rola apenas os dados */
+#detalhesModal aside { align-self: start; }
+#detalhesModal .detalhes-layout-row .col-md-8 { display: flex !important; min-height: 0 !important; }
+#detalhesModal .detalhes-layout-row .col-md-8 > .card { display: flex !important; flex-direction: column !important; flex: 1 1 auto !important; min-height: 0 !important; }
+#detalhesModal .detalhes-dados { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; scrollbar-gutter: stable both-edges; }
+
+/* Limita a altura do modal e evita scroll global do body do modal */
+#detalhesModal .modal-content { height: 50vh !important; max-height: 50vh !important; display: flex; flex-direction: column; }
+/* já declarado acima */
+
+/* Ajustes finos para avatar e cartões */
+#detalhesModal .avatar-xxl { max-width: 100%; height: auto; }
+#detalhesModal .card { border-radius: 12px; }
+
+/* Evita extrapolação de textos longos (endereço, URLs, e-mails) */
+#detalhesModal .profile-dl{ grid-template-columns: 180px minmax(0,1fr); }
+#detalhesModal .profile-dl dd{ white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; hyphens: auto; text-overflow: unset; }
+#detalhesModal .profile-dl dd.is-endereco{ white-space: normal !important; }
+
+/* Acordeão estilo funcionário aplicado às Unidades (ud-accordion) */
+#detalhesModal .ud-accordion{ width:100%; }
+#detalhesModal .ud-accordion .ud-section + .ud-section{ margin-top:.5rem; }
+#detalhesModal .ud-toggle{
+	-webkit-appearance:none !important; appearance:none !important; outline:none !important;
+	width:100% !important; display:flex !important; align-items:center; gap:.5rem; text-align:left; cursor:pointer; box-sizing:border-box;
+	padding:.65rem .95rem; border-radius:.75rem; border:1px solid #c7dbf7 !important;
+	background:linear-gradient(180deg,#f0f7ff 0%, #e6f1ff 100%) !important;
+	color:#0d6efd !important; font-weight:600 !important;
+	box-shadow:0 1px 0 rgba(13,110,253,.05), inset 0 1px 0 rgba(255,255,255,.6) !important;
+	transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+#detalhesModal .ud-toggle{ min-height:42px; }
+#detalhesModal .ud-toggle:hover{ background:#e8f2ff !important; border-color:#b7cff1 !important; }
+/* Mantém o gradiente mesmo recolhido (como no modal de funcionário) */
+#detalhesModal .ud-toggle.collapsed{ background:linear-gradient(180deg,#f0f7ff 0%, #e6f1ff 100%) !important; border-color:#dbe7fb !important; color:#1d3b72 !important; }
+#detalhesModal .ud-toggle:focus{ outline:0; box-shadow:0 0 0 .2rem rgba(13,110,253,.18) !important; }
+#detalhesModal .ud-section .collapse.show + .ud-body{ border-top:0; }
+#detalhesModal .ud-caret{ font-size:1rem; transition: transform .2s ease; }
+#detalhesModal .ud-caret::before{ content:'\203A'; display:inline-block; transform-origin:center; }
+#detalhesModal .ud-toggle:not(.collapsed) .ud-caret{ transform:rotate(90deg); }
+#detalhesModal .ud-body{ padding:.9rem 1rem; background:#f8fbff; border:1px solid #e6edf7; border-top:0; border-radius:0 0 .75rem .75rem; box-shadow:inset 0 1px 0 rgba(255,255,255,.6); }
+#detalhesModal .ud-section .collapse{ transition: height .2s ease; }
+#detalhesModal .ud-toggle .blk-ico{ width:18px; height:18px; opacity:.75; }
+@media (max-width:575.98px){
+	#detalhesModal .ud-toggle{ padding:.6rem .85rem; }
+	#detalhesModal .ud-body{ padding:.75rem .85rem; }
+}
+
+/* Avatar do lado esquerdo: harmonizado com perfil */
+#detalhesModal .profile-avatar-wrap{ display:flex; align-items:flex-start; justify-content:center; }
+#detalhesModal .profile-avatar-wrap .avatar-xxl{ width:132px; height:132px; object-fit:cover; border:4px solid #fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.08); background:#f8f9fa; }
+@media (min-width:992px){ #detalhesModal .profile-avatar-wrap .avatar-xxl{ width:150px; height:150px; } }
+

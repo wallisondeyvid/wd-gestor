@@ -1,0 +1,35 @@
+/* MOVIDO de public/css/icons.css (escopo módulo Gestor) */
+:root{
+  --icon-size-sm: 18px;
+  --icon-size: 22px;
+  --icon-size-lg: 26px;
+  --icon-gap: .45rem;
+}
+.icon{ width:var(--icon-size); height:var(--icon-size); object-fit:contain; vertical-align:middle; }
+.icon-sm{ width:var(--icon-size-sm); height:var(--icon-size-sm); }
+.icon-lg{ width:var(--icon-size-lg); height:var(--icon-size-lg); }
+.icon-left{ margin-right:var(--icon-gap); }
+.icon-right{ margin-left:var(--icon-gap); }
+.btn-icon{ padding:.4rem .5rem; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
+.btn-icon > img.icon{ width: calc(var(--icon-size) + 2px); height: calc(var(--icon-size) + 2px); }
+.btn-sm.btn-icon{ padding:.35rem; }
+.btn-sm.btn-icon > img.icon{ width: calc(var(--icon-size) + 0px); height: calc(var(--icon-size) + 0px); }
+.table .btn.btn-sm{ display:inline-flex; align-items:center; justify-content:center; padding:.35rem; line-height:1; }
+.table .btn.btn-sm img[src^="/images/"]{ width: var(--icon-size-lg); height: var(--icon-size-lg); }
+.table td .btn:has(> img.icon){ display:inline-flex; align-items:center; justify-content:center; padding:.4rem; line-height:1; }
+.table td .btn.btn-sm:has(> img.icon){ padding:.35rem; }
+.table td .btn:has(> img.icon) > img.icon{ width: var(--icon-size-lg); height: var(--icon-size-lg); margin:0; }
+.icon-title{ width:1.5em; height:1.5em; object-fit:contain; vertical-align:middle; }
+/* Ajuste específico: ícone do título no modal de detalhes da unidade */
+#detalhesModal .modal-header .icon-title{ width:24px; height:24px; }
+@media (max-width:575.98px){
+  #detalhesModal .modal-header .icon-title{ width:20px; height:20px; }
+}
+.btn img[src^="/images/"], .dropdown-item img[src^="/images/"], .list-group-item img[src^="/images/"], .nav-link img[src^="/images/"]{ width:var(--icon-size); height:var(--icon-size); object-fit:contain; vertical-align:middle; margin-right:var(--icon-gap); }
+.btn i.bi, .dropdown-item i.bi, .list-group-item i.bi, .nav-link i.bi{ font-size:1.25rem; line-height:1; vertical-align:middle; margin-right:var(--icon-gap); }
+.btn-sm img[src^="/images/"], .btn-group-sm > .btn img[src^="/images/"]{ width:var(--icon-size-sm); height:var(--icon-size-sm); }
+.btn-lg img[src^="/images/"], .btn-group-lg > .btn img[src^="/images/"]{ width:var(--icon-size-lg); height:var(--icon-size-lg); }
+.menu-icon{ width:var(--icon-size); height:var(--icon-size); object-fit:contain; vertical-align:middle; margin-right:var(--icon-gap); }
+.modal .modal-footer .btn{ display:inline-flex; align-items:center; justify-content:center; }
+.modal .modal-footer .btn.btn-icon{ padding:.5rem; }
+.modal .modal-footer .btn img[src^="/images/"]{ width: var(--icon-size-lg); height: var(--icon-size-lg); margin-right:0; }

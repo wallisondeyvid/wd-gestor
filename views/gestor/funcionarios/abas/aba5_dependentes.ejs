@@ -1,0 +1,271 @@
+<div class="tab-pane fade" id="aba5" role="tabpanel" aria-labelledby="tab-aba5">
+  <% const _basePath = (typeof basePath === 'string' && basePath) ? basePath : (typeof moduleBasePath === 'string' && moduleBasePath) ? moduleBasePath : '/gestor'; %>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label" for="dependente_parentesco">Parentesco</label>
+      <select name="dependente_parentesco" id="dependente_parentesco" class="form-select">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label" for="dependente_nome">Nome do dependente</label>
+      <input type="text" name="dependente_nome" id="dependente_nome" class="form-control">
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label class="form-label" for="dependente_data_nascimento">Data de nascimento</label>
+      <input
+        type="text"
+        name="dependente_data_nascimento"
+        id="dependente_data_nascimento"
+        class="form-control date-br"
+        data-calendar="flatpickr"
+        placeholder="dd/mm/aaaa"
+        autocomplete="off">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label" for="dependente_cpf">CPF</label>
+      <input
+        type="text"
+        name="dependente_cpf"
+        id="dependente_cpf"
+        class="form-control cpf-mask"
+        maxlength="14"
+        placeholder="000.000.000-00"
+        inputmode="numeric"
+        autocomplete="off"
+        pattern="\d{3}\.\d{3}\.\d{3}-\d{2}">
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label" for="dependente_salario_familia">Salário Família</label>
+      <select name="dependente_salario_familia" id="dependente_salario_familia" class="form-select">
+        <option value="">Selecione...</option>
+        <option value="S">Sim</option>
+        <option value="N">Não</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label" for="dependente_irpf">Inclusão em IRPF</label>
+      <select name="dependente_irpf" id="dependente_irpf" class="form-select">
+        <option value="">Selecione...</option>
+        <option value="S">Sim</option>
+        <option value="N">Não</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <div class="col-12 text-end">
+      <button type="button" id="btnInserirDependente" class="btn btn-outline-primary">Inserir</button>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <h6>Dependentes cadastrados</h6>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Nome</th>
+            <th scope="col">Parentesco</th>
+            <th scope="col">Data Nascimento</th>
+            <th scope="col">CPF</th>
+            <th scope="col" class="col-acoes">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyDependentes"><!-- preenchido via JS --></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+  // Preencher select parentesco (via util resiliente)
+  try {
+    let lista = [];
+    if (window.wdgFetchGestorJson) {
+      const r = await window.wdgFetchGestorJson('parentescos.json');
+      if (r && r.ok && Array.isArray(r.data)) lista = r.data;
+    }
+    if (!Array.isArray(lista) || !lista.length) throw new Error('Lista vazia');
+    const select = document.getElementById('dependente_parentesco');
+    if (select) {
+      select.innerHTML = '<option value="">Selecione...</option>' +
+        lista.filter(item => item && item.codigo && item.descricao)
+             .map(item => `<option value="${item.codigo}">${item.codigo} - ${item.descricao}</option>`)
+             .join('');
+    }
+  } catch (e) {
+    const select = document.getElementById('dependente_parentesco');
+    if (select) select.innerHTML = '<option value="">Lista de parentescos não disponível</option>';
+  }
+
+  // Lógica de inserção de dependente
+  const btnInserir = document.getElementById('btnInserirDependente');
+  const tbody = document.getElementById('tbodyDependentes');
+  let trEditando = null;
+  function limparCamposDependente(){
+    const ids = ['dependente_nome','dependente_parentesco','dependente_data_nascimento','dependente_cpf'];
+    let focusEl = null;
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.value='';
+      el.classList?.remove('is-valid','is-invalid');
+      if (id === 'dependente_nome') focusEl = el;
+    });
+    // Aplicar foco após pequeno delay para garantir que reflow terminou
+    if (focusEl) setTimeout(()=> focusEl.focus(), 0);
+  }
+
+  function atualizarTextoBotao() {
+    btnInserir.textContent = trEditando ? 'Atualizar' : 'Inserir';
+  }
+
+  function cpfNormalizado(v){ return (v||'').replace(/\D/g,''); }
+  function cpfFormatado(v){ const d = cpfNormalizado(v); return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
+  function linhaPossuiCpf(cpf, ignorarTr){ const alvo = cpfNormalizado(cpf); if(!alvo) return false; return Array.from(tbody.querySelectorAll('tr')).some(tr => { if (tr===ignorarTr) return false; const tds = tr.querySelectorAll('td'); const c = cpfNormalizado(tds[3]?.textContent||''); return c && c===alvo; }); }
+  function dispatchChanged(){ document.dispatchEvent(new CustomEvent('dependentes:changed')); }
+
+  btnInserir.addEventListener('click', function() {
+    const nome = document.getElementById('dependente_nome').value.trim();
+    const parentesco = document.getElementById('dependente_parentesco');
+    const parentescoText = parentesco.options[parentesco.selectedIndex]?.text || '';
+    const dataNasc = document.getElementById('dependente_data_nascimento').value.trim();
+    const cpf = document.getElementById('dependente_cpf').value.trim();
+
+    if (!nome || !parentesco.value || !dataNasc || !cpf) {
+      alert('Preencha todos os campos obrigatórios!');
+      return;
+    }
+
+    // Validação CPF
+    const cpfDigits = cpfNormalizado(cpf);
+    if (cpfDigits && (!window.WDMasks || !window.WDMasks.isValidCPF(cpfDigits))) {
+      alert('CPF do dependente inválido.');
+      return;
+    }
+    // Duplicidade
+    if (cpfDigits && linhaPossuiCpf(cpfDigits, trEditando)) {
+      alert('Já existe um dependente com este CPF.');
+      return;
+    }
+
+    if (trEditando) {
+      // Atualizar linha existente
+      const tds = trEditando.querySelectorAll('td');
+      tds[0].textContent = nome;
+      tds[1].textContent = parentescoText;
+      tds[2].textContent = dataNasc;
+      tds[3].textContent = cpfFormatado(cpfDigits);
+      // Atualiza datasets dos flags
+      trEditando.dataset.salarioFamilia = document.getElementById('dependente_salario_familia').value || '';
+      trEditando.dataset.irpf = document.getElementById('dependente_irpf').value || '';
+      trEditando.classList.remove('editando');
+      trEditando = null;
+    } else {
+      // Inserir nova linha
+      const bp = document.body.getAttribute('data-base-path') || '<%= _basePath %>';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${nome}</td>
+        <td>${parentescoText}</td>
+        <td>${dataNasc}</td>
+        <td>${cpfFormatado(cpfDigits)}</td>
+        <td class="col-acoes">
+          <div class="d-inline-flex gap-1">
+            <button type="button" class="btn btn-sm btn-outline-primary btn-icon btnEditarDep" title="Editar" aria-label="Editar">
+              <img src="${bp}/images/editar.png" alt="Editar" width="16" height="16" onerror="this.onerror=null;this.outerHTML='<i class=\'bi bi-pencil\'></i>'" />
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger btn-icon btnRemoverDep" title="Remover" aria-label="Remover">
+              <img src="${bp}/images/excluir.png" alt="Remover" width="16" height="16" onerror="this.onerror=null;this.outerHTML='<i class=\'bi bi-trash\'></i>'" />
+            </button>
+          </div>
+        </td>`;
+      // Armazena flags nos datasets da linha
+      tr.dataset.salarioFamilia = document.getElementById('dependente_salario_familia').value || '';
+      tr.dataset.irpf = document.getElementById('dependente_irpf').value || '';
+      tbody.appendChild(tr);
+    }
+
+    // Limpar campos + reset classes de validação
+    limparCamposDependente();
+    atualizarTextoBotao();
+    dispatchChanged();
+  });
+
+  // Remover ou editar dependente (corrigido para capturar cliques no <img> dentro do botão usando closest())
+  tbody.addEventListener('click', function(e) {
+    const btnRemover = e.target.closest('.btnRemoverDep');
+    const btnEditar  = e.target.closest('.btnEditarDep');
+
+    if (btnRemover) {
+      const tr = btnRemover.closest('tr');
+      tr?.remove();
+      if (trEditando === tr) {
+        trEditando = null;
+        atualizarTextoBotao();
+      }
+      dispatchChanged();
+      return;
+    }
+
+    if (btnEditar) {
+      const tr = btnEditar.closest('tr');
+      const tds = tr.querySelectorAll('td');
+      document.getElementById('dependente_nome').value = tds[0].textContent;
+      // Parentesco: busca pelo texto exato
+      const parentescoSelect = document.getElementById('dependente_parentesco');
+      for (let opt of parentescoSelect.options) {
+        if (opt.text === tds[1].textContent) {
+          parentescoSelect.value = opt.value;
+          break;
+        }
+      }
+      document.getElementById('dependente_data_nascimento').value = tds[2].textContent;
+      document.getElementById('dependente_cpf').value = tds[3].textContent;
+      // Restaura selects dos flags a partir dos datasets da linha
+      const sf = document.getElementById('dependente_salario_familia');
+      const ir = document.getElementById('dependente_irpf');
+      if (sf) sf.value = tr.dataset.salarioFamilia || '';
+      if (ir) ir.value = tr.dataset.irpf || '';
+      if (trEditando && trEditando !== tr) trEditando.classList.remove('editando');
+      trEditando = tr;
+      trEditando.classList.add('editando');
+      atualizarTextoBotao();
+      // Foco e seleção do nome para agilizar edição
+      const nomeEl = document.getElementById('dependente_nome');
+      if (nomeEl) {
+        setTimeout(() => { nomeEl.focus(); nomeEl.select(); }, 0);
+      }
+      return;
+    }
+  });
+
+  // Listener global similar a benefícios para manter hidden atualizado em tempo real
+  document.addEventListener('dependentes:changed', () => {
+    try {
+      if (typeof serializeDependentesToJSON === 'function') serializeDependentesToJSON();
+    } catch (e) {
+      console.warn('[DEPENDENTES] Falha ao serializar automaticamente:', e);
+    }
+  });
+});
+</script>
+
+<style>
+/* Largura otimizada para as colunas de ações com ícones nas tabelas internas */
+#aba5 .col-acoes { width: 140px; }
+/* Destaque visual para linha em edição */
+#aba5 tr.editando > td { background: #fff4d6 !important; box-shadow: inset 0 0 0 1px #e7b347; }
+/* Centralização do conteúdo da tabela de dependentes */
+#aba5 table.table thead th,
+#aba5 table.table tbody td { text-align: center; vertical-align: middle; }
+</style>

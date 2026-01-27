@@ -1,0 +1,233 @@
+<% /* Escala Diária — mesma estrutura visual das telas de Férias/Ausências/Pesquisar Escala */ %>
+<% const _bpDash='/escalas'; %>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Escala Diária</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bpDash }) %>
+  <%- include('../shared/partials/theme-esc-blue') %>
+  <style>
+    :root{
+      /* Dimensões utilitárias */
+      --fr-mid-col: 540px; /* Largura do bloco de Recurso */
+      --fr-gap-col: .35rem; /* Espaço interno vertical */
+      --fr-total-col: var(--fr-mid-col);
+      /* Paleta moderna em tons de azul */
+      --c-bg: #f5f9ff;
+      --c-surface: #ffffff;
+      --c-surface-2: #f0f6ff;
+      --c-border: #d6e3f8;
+      --c-text: #0f172a;
+      --c-muted: #64748b;
+      --c-primary-700: #1e3a8a;
+      --c-primary-600: #1d4ed8;
+      --c-primary-500: #2563eb;
+      --c-primary-400: #60a5fa;
+      --c-accent: #0ea5e9;
+      --radius: 10px;
+      --shadow-sm: 0 1px 2px rgba(2,6,23,.06), 0 1px 1px rgba(2,6,23,.04);
+      --shadow-md: 0 6px 18px rgba(2,6,23,.10);
+    }
+    html, body{ background: radial-gradient(1400px 800px at 20% -10%, #e9f2ff 0%, rgba(233,242,255,0) 55%), var(--c-bg); color: var(--c-text); }
+  /* Cards seguem o padrão do tema compartilhado */
+    .escala-card-title{ background:#e9f2ff; border:1px solid #cfe2ff; padding:.5rem .75rem; border-radius:.5rem; font-weight:600; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+    .grid-turno{ border:1px solid var(--c-border); border-radius: var(--radius); margin-bottom:1.1rem; background: var(--c-surface); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .grid-turno header{ background: linear-gradient(90deg, var(--c-primary-600), var(--c-primary-500)); color:#fff; padding:.55rem .75rem; font-weight:700; letter-spacing:.2px; border-bottom:1px solid rgba(255,255,255,.15); text-align:center; text-shadow: 0 1px 0 rgba(0,0,0,.08); }
+    /* Tabela do turno: 3 colunas -> Equipe | Efetivo + Recurso | Notas */
+    .turno-table{ display:grid; grid-template-columns: 140px minmax(620px, 3.5fr) minmax(220px, 1fr); }
+    .turno-head{ display:contents; }
+    .turno-head > div{ background: #17325f; color:#e6eef8; font-weight:700; padding:.5rem .65rem; border-right:1px solid #10264a; white-space:nowrap; text-align:center; }
+    .turno-head > div:first-child{ border-left:1px solid #10264a; }
+    .turno-row{ display:contents; }
+    .turno-cell{ padding:.55rem .65rem; border-right:1px solid var(--c-border); border-bottom:1px solid var(--c-border); background: var(--c-surface); text-align:center; display:flex; align-items:center; justify-content:center; transition: background-color .15s ease, box-shadow .15s ease; }
+    .turno-cell:hover{ background: #f7fbff; }
+    .turno-cell.muted{ color: var(--c-muted); background: var(--c-surface-2); }
+    .turno-cell.recurso{ background: #fbfdff; padding-left:0; overflow:hidden; }
+    .turno-cell.equipe{ background: #f6faff; font-weight:700; white-space:nowrap; }
+    /* Coluna Ações removida do layout principal */
+    .eq-cell-wrap{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; white-space:nowrap; }
+    /* Recurso: wrap e toolbar (mesmo conceito da equipe) */
+    .rc-wrap{ display:flex; align-items:center; justify-content:space-between; gap:.5rem; white-space:nowrap; flex-wrap:nowrap; overflow:hidden; }
+    .rc-toolbar{ display:inline-flex; gap:.3rem; align-items:center; vertical-align:middle; white-space:nowrap; }
+    .rc-toolbar .btn{ --bs-btn-padding-y:.2rem; --bs-btn-padding-x:.4rem; --bs-btn-font-size:.775rem; line-height:1.1; border-radius:.5rem; box-shadow: var(--shadow-sm); }
+    .rc-toolbar .btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .rc-list{ display:block; margin-top:.25rem; }
+    .rc-list .grid-func{ padding:.12rem 0; }
+    .rc-box{ background: var(--c-surface); border:1px solid var(--c-border); border-radius:.5rem; padding:.4rem .6rem; box-shadow: inset 0 0 0 2px rgba(38,75,123,0.03); overflow:hidden; font-size:.94rem; text-align:center; }
+    .ef-box{ background: var(--c-surface); border:1px dashed #cfdcf3; border-radius:.5rem; padding:.4rem .6rem; overflow:hidden; white-space:nowrap; font-size:.94rem; text-align:center; }
+    .func-chip{ display:inline-flex; align-items:center; gap:.28rem; border:1px solid var(--c-border); border-radius:999px; padding:.1rem .45rem; margin:.08rem .18rem .08rem 0; background:#f7fbff; font-size:.84rem; white-space:nowrap; box-shadow: var(--shadow-sm); }
+    .func-chip i{ color:#23406b; }
+    .grid-func{ display:grid; grid-template-columns: minmax(0, 1fr) auto; align-items:center; gap:.35rem; padding:.18rem 0; justify-items:center; }
+    .grid-func .func-nome{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
+    .grid-func .func-atr{ grid-column: 1 / -1; font-size:.78rem; color: var(--c-muted); margin-top:.05rem; }
+    .grid-func-solo{ display:flex; align-items:center; justify-content:center; padding:.2rem 0; }
+    .grid-func-solo .func-nome{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
+    .grid-func small{ color: var(--c-muted); }
+    .notas-box{ background: var(--c-surface); border:1px dashed #cfdcf3; border-radius:.5rem; padding:.45rem .65rem; font-size:.9rem; color:#334155; text-align:center; }
+    .badge-recurso{ display:inline-block; background: linear-gradient(180deg, #e6f0ff, #dbeafe); color:#0b2e6b; border:1px solid #c6dbff; border-radius:999px; font-size:.75rem; padding:.12rem .6rem; box-shadow: var(--shadow-sm); }
+    .rc-wrap .badge-recurso{ max-width:55%; overflow:hidden; text-overflow:ellipsis; }
+    .tag-fora{ display:inline-block; background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; border-radius:999px; font-size:.78rem; padding:.12rem .6rem; box-shadow: var(--shadow-sm); }
+    .eq-toolbar{ display:inline-flex; gap:.2rem; align-items:center; vertical-align:middle; margin-right:.4rem; flex-wrap:nowrap; white-space:nowrap; }
+    .eq-toolbar .btn{ --bs-btn-padding-y:.2rem; --bs-btn-padding-x:.4rem; --bs-btn-font-size:.78rem; line-height:1.1; border-radius:.5rem; box-shadow: var(--shadow-sm); }
+    .eq-toolbar .btn i{ font-size:.95rem; }
+    .eq-name{ display:inline-block; font-weight:700; vertical-align:middle; color:#0b316b; }
+    /* Coluna combinada: Fora do recurso (esq) | Recurso completo (dir) */
+    .fr-cell{ width:100%; }
+    .fr-grid{ display:grid; width:100%; grid-template-columns: 1fr; align-items:start; justify-items:stretch; justify-content:flex-start; text-align:center; }
+    .fr-grid.only-mid{ grid-template-columns: 1fr; }
+    .fr-mid{ width: 100%; max-width: 100%; }
+    .fr-mid .rc-box{ width: 100%; }
+    /* Empilhar vários recursos da mesma equipe */
+    .rc-stack{ display:flex; flex-direction:column; gap:.4rem; width:100%; }
+    /* Bloco de funcionários fora do recurso, inserido abaixo da pilha de recursos */
+    .fora-wrap{ margin-top:.4rem; }
+    .rc-head.single{ display:grid; grid-template-columns: 1fr; }
+    .rc-grid.single{ display:grid; grid-template-columns: 1fr; gap:.4rem; justify-items:center; }
+    .rc-grid.single .rc-nomes{ width:100%; }
+    .rc-out .rc-head.single > div{ text-align:center; }
+    /* Recurso interno: Funcionário | Nome do Recurso | Botões | Notas */
+    .rc-grid, .rc-head{ display:grid; width:100%; grid-template-columns: minmax(260px, 1.8fr) minmax(160px, .8fr) minmax(160px, .8fr) minmax(220px, 1.2fr); gap:.4rem; align-items:center; justify-items:center; text-align:center; }
+    .rc-grid > div{ display:flex; align-items:center; justify-content:center; }
+    .rc-grid .rc-badge, .rc-grid .rc-notes{ display:block; }
+    .rc-grid .rc-actions .rc-toolbar{ margin: 0 auto; }
+    .rc-head{ color: var(--c-muted); font-weight:700; font-size:.74rem; margin-bottom:.25rem; }
+    .rc-grid .rc-nomes{ overflow:hidden; min-width:0; justify-self:stretch; text-align:center; width:100%; }
+    .rc-grid .rc-badge{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; justify-self:center; text-align:center; }
+    .rc-grid .rc-actions{ white-space:nowrap; justify-self:center; overflow:hidden; text-align:center; }
+    .rc-grid .rc-actions .rc-toolbar{ margin: 0 auto; }
+    .rc-grid .rc-notes{ white-space:normal; min-width:0; justify-self:center; }
+    .rc-grid .rc-notes .rc-box{ width:100%; }
+    .no-scrollbar{ -ms-overflow-style: none; scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar{ display:none; }
+    .fr-mid .rc-wrap{ margin-bottom:.25rem; }
+    /* Form e botões: toque moderno azul */
+    .form-select, .form-control{ border-color: var(--c-border); }
+    .form-select:focus, .form-control:focus{ border-color: var(--c-primary-500); box-shadow: 0 0 0 .2rem rgba(37,99,235,.15); }
+    .btn-primary{ background: linear-gradient(180deg, var(--c-primary-600), var(--c-primary-500)); border-color: var(--c-primary-600); box-shadow: var(--shadow-sm); }
+    .btn-primary:hover{ background: linear-gradient(180deg, var(--c-primary-700), var(--c-primary-600)); border-color: var(--c-primary-700); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .btn-outline-secondary{ border-color: #9fb6dd; color:#204a87; }
+    .btn-outline-secondary:hover{ background:#e9f2ff; border-color:#7aa0da; color:#163b74; }
+    /* Responsividade */
+    @media (max-width: 1024px){ .turno-table{ grid-template-columns: 160px 1fr 1fr; } .turno-head > div:nth-child(n+4), .turno-row > div:nth-child(n+4){ display:none; } }
+    @media (max-width: 640px){ .turno-table{ grid-template-columns: 140px 1fr; } .turno-head > div:nth-child(2), .turno-row > div:nth-child(2){ display:none; } .turno-head > div:nth-child(n+3), .turno-row > div:nth-child(n+3){ display:none; } }
+  </style>
+</head>
+<body class="wdg-theme-blue">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bpDash, moduleLabel:'Escalas' }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bpDash,
+        moduleLabel: 'Escalas',
+        prefixMenuPaths: true,
+        menuLabel: 'Menu',
+        menuTree: [
+          { label: 'Escalas', children: [
+            { label: 'Ordinária', children: [
+              { label: 'Nova', path: '/ordinaria/nova' },
+              { label: 'Pesquisar', path: '/ordinaria/pesquisar' }
+            ]},
+            { label: 'Extraodinária', children: [
+              { label: 'Nova', path: '/extraordinaria/nova' },
+              { label: 'Pesquisar', path: '/extraordinaria/pesquisar' }
+            ]},
+            { label: 'Escala Diária', path: '/diaria' }
+          ]},
+          { label: 'Gestão', children: [
+            { label: 'Férias', path: '/gestao/ferias' },
+            { label: 'Ausências', path: '/gestao/ausencias' }
+          ]},
+          { label: 'Relatórios', children: [
+            { label: 'Consulta de Relatórios', path: '/relatorios/consulta' }
+          ]}
+        ],
+        adminItems: []
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bpDash, moduleLabel: 'Escalas' }) %>
+
+  <div class="container mt-3">
+    <div id="alertsTopRight" class="position-fixed top-0 end-0 p-3" style="z-index:1080; pointer-events:none;"></div>
+  <h5 class="mb-3 wdg-page-title">Escala diária da unidade</h5>
+
+    <!-- Parâmetros -->
+    <div class="card mb-3 mx-auto" style="max-width: 780px;">
+      <div class="card-header py-2"><strong>Parâmetros</strong></div>
+      <div class="card-body py-3">
+        <form id="formEscalaDiaria" class="container-fluid p-0">
+          <div class="row g-2 mb-2 align-items-end">
+            <div class="col-12">
+              <label for="filtroUnidade" class="form-label mb-1">Unidade</label>
+              <div class="d-flex align-items-center flex-wrap" style="gap:.75rem;">
+                <select id="filtroUnidade" class="form-select form-select-sm" style="max-width:340px;">
+                  <option value="" disabled selected>Selecione...</option>
+                </select>
+                <div class="form-check mb-1">
+                  <input class="form-check-input" type="checkbox" id="chkIncluirFiliais" />
+                  <label class="form-check-label small" for="chkIncluirFiliais">Incluir filiais</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 2ª Linha: Classificação -->
+          <div class="row g-2 mb-2">
+            <div class="col-12">
+              <label class="form-label mb-1">Classificação</label>
+              <div class="d-flex gap-3 small">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkOrd" checked>
+                  <label class="form-check-label" for="chkOrd">Ordinária</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkExt" checked>
+                  <label class="form-check-label" for="chkExt">Extraordinária</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3ª Linha: Data -->
+          <div class="row g-2 mb-2">
+            <div class="col-12">
+              <label class="form-label mb-1" for="dataDia">Data</label>
+              <input type="text" id="dataDia" class="form-control form-control-sm date-br text-center" placeholder="dd/mm/aaaa" readonly style="max-width:150px;">
+            </div>
+          </div>
+          <!-- 4ª Linha: Botões -->
+          <div class="row mt-2">
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <button type="button" id="btnRelatorio" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-text"></i> Relatório</button>
+              <button type="button" id="btnPesquisar" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Pesquisar</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultado" class="mb-4"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+  <script>window.__perfilBasePath='<%= _bpDash %>';</script>
+  <script src="<%= _bpDash %>/js/perfil-modulo.js" defer></script>
+  <!-- Modais necessários: Notas, Recurso, Localizar Recurso, Editar Refeição, Pesquisar Efetivo -->
+  <%- include('./modais_popups/notas') %>
+  <%- include('./modais_popups/recursos/modal_recurso') %>
+  <%- include('./modais_popups/recursos/localizar_recurso') %>
+  <%- include('./modais_popups/recursos/editar_refeicao') %>
+  <%- include('./modais_popups/modal_pesquisar_efetivo') %>
+  <%- include('./modais_popups/modal_efetivo_recurso_dia') %>
+  <script src="<%= _bpDash %>/js/modais_popups/notas.js"></script>
+  <script src="<%= _bpDash %>/js/modais_popups/recursos/modal_recurso.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bpDash %>/js/modais_popups/recursos/localizar_recurso.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bpDash %>/js/modais_popups/recursos/editar_refeicao.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bpDash %>/js/modais_popups/modal_pesquisar_efetivo.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bpDash %>/js/modais_popups/modal_efetivo_recurso_dia.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bpDash %>/js/escalas/escala_diaria.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

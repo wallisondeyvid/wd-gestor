@@ -1,0 +1,30 @@
+<div class="modal fade" id="modalDetGarCad" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalhes da Vaga de Garagem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="mb-2"><strong>Condomínio:</strong> <span id="detGUnidade"></span></div>
+            <div class="mb-2"><strong>Nome da Vaga:</strong> <span id="detGNome"></span></div>
+            <div class="mb-2"><strong>Vínculo:</strong> <span id="detGVinc"></span></div>
+            <div class="mb-2"><strong>Observações:</strong><br><small class="text-muted">(Até 4000 caracteres)</small>
+              <div class="border rounded p-2 mt-1" style="min-height:80px; white-space:pre-wrap;" id="detGObs"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-2"><strong>Foto:</strong></div>
+            <img id="detGFoto" class="img-fluid rounded shadow-sm d-none" alt="Foto da vaga">
+            <div id="detGFotoVazio" class="text-muted small">Nenhuma foto anexada.</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>

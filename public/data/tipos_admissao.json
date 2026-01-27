@@ -1,0 +1,9 @@
+[
+  { "codigo": "1", "descricao": "Admissão" },
+  { "codigo": "2", "descricao": "Transferência de empresa do mesmo grupo econômico (ou entre órgãos do mesmo ente federativo)" },
+  { "codigo": "3", "descricao": "Transferência de empresa consorciada ou de consórcio" },
+  { "codigo": "4", "descricao": "Transferência por sucessão/incorporação/cisão/fusão" },
+  { "codigo": "5", "descricao": "Transferência de empregado doméstico para outro representante da mesma unidade familiar" },
+  { "codigo": "6", "descricao": "Mudança de CPF" },
+  { "codigo": "7", "descricao": "Transferência quando a empresa sucedida é considerada inapta por inexistência de fato." }
+]

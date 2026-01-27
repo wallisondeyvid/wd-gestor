@@ -1,0 +1,604 @@
+<!-- Modal Detalhes do Funcionário (accordion, tudo recolhido ao abrir) -->
+<div class="modal fade modal-func-detalhes modal-detalhes modal-sheet theme-blue"
+     id="modalFuncionarioDetalhes"
+     tabindex="-1"
+     aria-labelledby="tituloDetalhesFuncionario"
+  aria-hidden="true"
+  data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="tituloDetalhesFuncionario">Detalhes do Funcionário</h5>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-primary fs-6" data-field="codigo">—</span>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="row g-4 func-layout-row">
+          <!-- LADO ESQUERDO: foto fixa -->
+          <aside class="col-12 col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body text-center">
+                <div class="profile-avatar-wrap mb-3">
+                  <img id="detalheFoto" class="avatar-xxl rounded" alt="Foto"
+                       src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 96 96'><rect width='96' height='96' rx='12' fill='%23f1f5f9'/><circle cx='48' cy='36' r='18' fill='%23cbd5e1'/><rect x='20' y='60' width='56' height='20' rx='10' fill='%23cbd5e1'/></svg>"
+                  />
+                </div>
+                <!-- Dados básicos abaixo da foto -->
+                <div class="mb-2">
+                  <div class="fw-semibold" data-field="nome">—</div>
+                  <div class="text-muted small">
+                    <span data-field="funcao_id.nome">—</span>
+                    <span class="mx-1">•</span>
+                    <span data-field="unidade_id.nome">—</span>
+                  </div>
+                  <div class="text-muted small">CPF: <span data-field="cpf">—</span></div>
+                </div>
+                <div id="detalheFotoStatus" class="mt-1 small"></div>
+                <!-- Input hidden para upload de foto -->
+                <input type="file" id="fdFileInput" accept="image/*" style="display: none;" />
+              </div>
+            </div>
+          </aside>
+
+          <!-- LADO DIREITO: info + acordeão com rolagem -->
+          <section class="col-12 col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body func-dados">
+                <!-- ACCORDION -->
+                <div id="fd-accordion" class="fd-accordion">
+
+          <!-- Identificação -->
+          <div class="fd-section">
+            <button class="fd-toggle collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#fd-identificacao"
+                    aria-expanded="false" aria-controls="fd-identificacao">
+              <i class="bi bi-chevron-right fd-caret"></i>
+              <span>Identificação</span>
+            </button>
+            <div id="fd-identificacao" class="collapse" data-bs-parent="#fd-accordion">
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <tbody>
+                    <tr><th>Nome Social</th><td data-field="nome_social"></td></tr>
+                    <tr><th>Mãe</th><td data-field="nome_mae"></td></tr>
+                    <tr><th>Pai</th><td data-field="nome_pai"></td></tr>
+                    <tr class="fld-main" data-fld="rg">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-rg" aria-expanded="false" aria-controls="fld-rg" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        RG
+                      </th>
+                      <td><span data-field="rg"></span><span class="text-muted ms-2" data-field="rg_orgao"></span></td>
+                    </tr>
+                    <tr id="fld-rg" class="collapse fld-sub" data-parent-field="rg" data-bs-parent="#fd-identificacao">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Número:</strong> <span data-field="rg"></span></div>
+                          <div><strong>Órgão expedidor:</strong> <span data-field="rg_orgao"></span></div>
+                          <div><strong>UF:</strong> <span data-field="rg_uf"></span></div>
+                          <div><strong>Expedição:</strong> <span data-field="rg_data_expedicao"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr><th>PIS/PASEP</th><td data-field="pis"></td></tr>
+                    <tr><th>Data Nasc.</th><td data-field="data_nascimento"></td></tr>
+                    <tr><th>Sexo</th><td data-field="sexo"></td></tr>
+                    <tr><th>Estado Civil</th><td data-field="estado_civil"></td></tr>
+                    <tr><th>Raça/Cor</th><td data-field="raca_cor"></td></tr>
+                    <tr><th>Escolaridade</th><td data-field="escolaridade"></td></tr>
+                    <tr><th>Nacionalidade</th><td data-field="nacionalidade"></td></tr>
+                    <tr><th>País de Nasc.</th><td data-field="pais_nascimento"></td></tr>
+                    <tr><th>Chegada ao Brasil</th><td data-field="data_chegada_brasil"></td></tr>
+                    <tr><th>Naturalidade</th><td data-field="naturalidade"></td></tr>
+                    <tr class="fld-main" data-fld="endereco">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-endereco" aria-expanded="false" aria-controls="fld-endereco" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        Endereço
+                      </th>
+                      <td id="det_endereco">—</td>
+                    </tr>
+                    <tr id="fld-endereco" class="collapse fld-sub" data-parent-field="endereco" data-bs-parent="#fd-identificacao">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Tipo Logradouro:</strong> <span data-field="endereco.tipo_logradouro"></span></div>
+                          <div><strong>Logradouro:</strong> <span data-field="endereco.logradouro"></span></div>
+                          <div><strong>Número:</strong> <span data-field="endereco.numero"></span></div>
+                          <div><strong>Complemento:</strong> <span data-field="endereco.complemento"></span></div>
+                          <div><strong>Bairro:</strong> <span data-field="endereco.bairro"></span></div>
+                          <div><strong>Cidade:</strong> <span data-field="endereco.cidade"></span></div>
+                          <div><strong>UF:</strong> <span data-field="endereco.estado"></span></div>
+                          <div><strong>CEP:</strong> <span data-field="endereco.cep"></span></div>
+                          <div><strong>Código IBGE:</strong> <span data-field="endereco.codigo_ibge"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Telefone</th>
+                      <td><span data-field="telefone"></span> <span class="text-muted">|</span> <span data-field="telefone2"></span></td>
+                    </tr>
+                    <tr><th>E-mail</th><td data-field="email"></td></tr>
+                    <tr class="fld-main" data-fld="ctps">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-ctps" aria-expanded="false" aria-controls="fld-ctps" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        CTPS
+                      </th>
+                      <td><span data-field="ctps_numero"></span> <span class="text-muted" data-field="ctps_serie"></span></td>
+                    </tr>
+                    <tr id="fld-ctps" class="collapse fld-sub" data-parent-field="ctps" data-bs-parent="#fd-identificacao">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Tipo:</strong> <span data-field="tipo_ctps"></span></div>
+                          <div><strong>Número:</strong> <span data-field="ctps_numero"></span></div>
+                          <div><strong>Série:</strong> <span data-field="ctps_serie"></span></div>
+                          <div><strong>UF:</strong> <span data-field="ctps_uf"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="fld-main" data-fld="pcd">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-pcd" aria-expanded="false" aria-controls="fld-pcd" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        PCD
+                      </th>
+                      <td><span data-field="pcd"></span></td>
+                    </tr>
+                    <tr id="fld-pcd" class="collapse fld-sub" data-parent-field="pcd" data-bs-parent="#fd-identificacao">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Tipo Deficiência:</strong> <span data-field="tipo_deficiencia"></span></div>
+                          <div><strong>CID:</strong> <span data-field="cid"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dados Contratuais -->
+          <div class="fd-section">
+            <button class="fd-toggle collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#fd-contratuais"
+                    aria-expanded="false" aria-controls="fd-contratuais">
+              <i class="bi bi-chevron-right fd-caret"></i>
+              <span>Dados Contratuais</span>
+            </button>
+            <div id="fd-contratuais" class="collapse" data-bs-parent="#fd-accordion">
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <tbody>
+                    <tr><th>Admissão</th><td data-field="data_admissao"></td></tr>
+                    <tr><th>Tipo de Admissão</th><td data-field="tipo_admissao"></td></tr>
+                    <tr><th>Categoria do Trab.</th><td data-field="categoria_trabalhador"></td></tr>
+                    <tr><th>Tipo de Contrato</th><td data-field="tipo_contrato"></td></tr>
+                    <tr><th>Término</th><td data-field="data_termino"></td></tr>
+                    <tr><th>Objeto determinante</th><td data-field="objeto_determinante"></td></tr>
+                    <tr><th>Cláusula assecuratória</th><td data-field="clausula_assecuratoria"></td></tr>
+                    <tr><th>Cargo</th><td data-field="cargo"></td></tr>
+                    <tr><th>CBO</th><td data-field="cbo"></td></tr>
+                    <tr><th>Departamento/Setor</th><td><span data-field="departamento.nome"></span></td></tr>
+                    <tr><th>Reg. Contratação</th><td data-field="regime_contratacao"></td></tr>
+                    <tr><th>Reg. Jornada</th><td data-field="regime_jornada"></td></tr>
+                    <tr><th>Carga Semanal</th><td data-field="carga_semanal"></td></tr>
+                    <tr><th>Salário Base</th><td data-field="salario_base"></td></tr>
+                    <tr><th>Tipo de Salário</th><td data-field="tipo_salario"></td></tr>
+                    <tr><th>Forma de Pagamento</th><td data-field="forma_pagamento"></td></tr>
+                    <tr><th>Descrição pagamento</th><td data-field="forma_pagamento_desc"></td></tr>
+                    <tr class="fld-main" data-fld="banco">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-banco" aria-expanded="false" aria-controls="fld-banco" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        Banco
+                      </th>
+                      <td><span data-field="banco"></span></td>
+                    </tr>
+                    <tr id="fld-banco" class="collapse fld-sub" data-parent-field="banco" data-bs-parent="#fd-contratuais">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Agência:</strong> <span data-field="agencia_num"></span>-<span data-field="agencia_dv"></span></div>
+                          <div><strong>Conta:</strong> <span data-field="conta_num"></span>-<span data-field="conta_dv"></span></div>
+                          <div><strong>Tipo Conta:</strong> <span data-field="tipo_conta"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr><th>Sindicato</th><td data-field="sindicato"></td></tr>
+                    <tr class="fld-main" data-fld="fgts">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-fgts" aria-expanded="false" aria-controls="fld-fgts" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        FGTS Optante
+                      </th>
+                      <td><span data-field="fgts_optante"></span></td>
+                    </tr>
+                    <tr id="fld-fgts" class="collapse fld-sub" data-parent-field="fgts" data-bs-parent="#fd-contratuais">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Data Opção:</strong> <span data-field="fgts_data"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr><th>Regime Previdenciário</th><td data-field="regime_previdenciario"></td></tr>
+                    <tr><th>Tipo Especial</th><td data-field="tipo_especial"></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Documentos -->
+          <div class="fd-section">
+            <button class="fd-toggle collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#fd-documentos"
+                    aria-expanded="false" aria-controls="fd-documentos">
+              <i class="bi bi-chevron-right fd-caret"></i>
+              <span>Documentos</span>
+            </button>
+            <div id="fd-documentos" class="collapse" data-bs-parent="#fd-accordion">
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <tbody>
+                    <tr class="fld-main" data-fld="cert_militar">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-certmil" aria-expanded="false" aria-controls="fld-certmil" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        Certificado Militar
+                      </th>
+                      <td><span data-field="cert_militar"></span></td>
+                    </tr>
+                    <tr id="fld-certmil" class="collapse fld-sub" data-parent-field="cert_militar" data-bs-parent="#fd-documentos">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Número:</strong> <span data-field="cert_militar"></span></div>
+                          <div><strong>Órgão:</strong> <span data-field="cert_militar_orgao"></span></div>
+                          <div><strong>UF:</strong> <span data-field="cert_militar_uf"></span></div>
+                          <div><strong>Data:</strong> <span data-field="cert_militar_data"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="fld-main" data-fld="titulo">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-titulo" aria-expanded="false" aria-controls="fld-titulo" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        Título de Eleitor
+                      </th>
+                      <td><span data-field="titulo"></span></td>
+                    </tr>
+                    <tr id="fld-titulo" class="collapse fld-sub" data-parent-field="titulo" data-bs-parent="#fd-documentos">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Número:</strong> <span data-field="titulo"></span></div>
+                          <div><strong>Zona:</strong> <span data-field="titulo_zona"></span></div>
+                          <div><strong>Seção:</strong> <span data-field="titulo_secao"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="fld-main" data-fld="cnh">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-cnh" aria-expanded="false" aria-controls="fld-cnh" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        CNH
+                      </th>
+                      <td><span data-field="cnh"></span></td>
+                    </tr>
+                    <tr id="fld-cnh" class="collapse fld-sub" data-parent-field="cnh" data-bs-parent="#fd-documentos">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Número:</strong> <span data-field="cnh"></span></div>
+                          <div><strong>Categoria:</strong> <span data-field="cnh_categoria"></span></div>
+                          <div><strong>Validade:</strong> <span data-field="cnh_validade"></span></div>
+                          <div><strong>UF:</strong> <span data-field="cnh_uf"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="fld-main" data-fld="orgao_prof">
+                      <th>
+                        <button type="button" class="fld-toggle" data-bs-toggle="collapse" data-bs-target="#fld-orgprof" aria-expanded="false" aria-controls="fld-orgprof" title="Expandir / Recolher">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                        Órgão Prof.
+                      </th>
+                      <td><span data-field="orgao_prof"></span></td>
+                    </tr>
+                    <tr id="fld-orgprof" class="collapse fld-sub" data-parent-field="orgao_prof" data-bs-parent="#fd-documentos">
+                      <td colspan="2">
+                        <div class="fld-indent">
+                        <div class="small d-flex flex-column gap-1">
+                          <div><strong>Órgão:</strong> <span data-field="orgao_prof"></span></div>
+                          <div><strong>UF:</strong> <span data-field="orgao_prof_uf"></span></div>
+                          <div><strong>Número Registro:</strong> <span data-field="orgao_prof_numero"></span></div>
+                        </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dependentes -->
+          <div class="fd-section">
+            <button class="fd-toggle collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#fd-dependentes"
+                    aria-expanded="false" aria-controls="fd-dependentes">
+              <i class="bi bi-chevron-right fd-caret"></i>
+              <span>Dependentes</span>
+            </button>
+            <div id="fd-dependentes" class="collapse" data-bs-parent="#fd-accordion">
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead class="table-light">
+                    <tr><th>Nome</th><th>CPF</th><th>Parentesco</th><th>Nasc.</th></tr>
+                  </thead>
+                  <tbody id="listaDependentes">
+                    <tr><td colspan="4" class="text-muted">—</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Benefícios -->
+          <div class="fd-section">
+            <button class="fd-toggle collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#fd-beneficios"
+                    aria-expanded="false" aria-controls="fd-beneficios">
+              <i class="bi bi-chevron-right fd-caret"></i>
+              <span>Benefícios</span>
+            </button>
+            <div id="fd-beneficios" class="collapse" data-bs-parent="#fd-accordion">
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead class="table-light">
+                    <tr><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Início</th><th>Data Início</th></tr>
+                  </thead>
+                  <tbody id="listaBeneficios">
+                    <tr><td colspan="5" class="text-muted">—</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Observações -->
+          <div class="fd-section">
+            <button class="fd-toggle collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#fd-observacoes"
+                    aria-expanded="false" aria-controls="fd-observacoes">
+              <i class="bi bi-chevron-right fd-caret"></i>
+              <span>Observações</span>
+            </button>
+            <div id="fd-observacoes" class="collapse" data-bs-parent="#fd-accordion">
+              <div id="campoObservacoes" class="form-control-plaintext ps-0" style="white-space:pre-wrap" data-field="observacoes">—</div>
+            </div>
+          </div>
+
+          <!-- Anexos -->
+          <div class="fd-section">
+            <button class="fd-toggle collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#fd-anexos"
+                    aria-expanded="false" aria-controls="fd-anexos">
+              <i class="bi bi-chevron-right fd-caret"></i>
+              <span>Anexos</span>
+            </button>
+            <div id="fd-anexos" class="collapse" data-bs-parent="#fd-accordion">
+              <div class="mt-2">
+                <ul id="detalheAnexosList" class="list-group small"></ul>
+                <div class="text-muted small mt-2" id="detalheAnexosVazio" style="display:none;">Nenhum anexo cadastrado.</div>
+              </div>
+            </div>
+          </div>
+
+                </div><!-- /fd-accordion -->
+
+                <div class="text-muted small mt-3">Última atualização: <span data-field="updatedAt"></span></div>
+              </div><!-- /.func-dados -->
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- estilos locais do modal -->
+  <style>
+    /* Layout e altura como no modal de Unidades */
+  #modalFuncionarioDetalhes .modal-content{ height:62.5vh !important; max-height:62.5vh !important; display:flex; flex-direction:column; overflow:hidden; }
+  #modalFuncionarioDetalhes .modal-body{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0 !important; overflow:hidden !important; }
+  #modalFuncionarioDetalhes .modal-body > .func-layout-row{ flex:1 1 auto; min-height:0 !important; }
+  #modalFuncionarioDetalhes .func-layout-row{ align-items:stretch !important; height:100%; min-height:0; }
+  #modalFuncionarioDetalhes aside{ align-self:start; }
+  #modalFuncionarioDetalhes .func-layout-row .col-md-8{ display:flex !important; flex:1 1 auto !important; min-height:0 !important; height:100% !important; overflow:hidden; }
+  /* Card da direita é contêiner flex, sem rolagem; quem rola é .func-dados */
+  #modalFuncionarioDetalhes .func-layout-row .col-md-8 > .card{ display:flex !important; flex-direction:column !important; flex:1 1 auto !important; min-height:0 !important; overflow:visible !important; }
+  /* .func-dados ocupa o espaço e rola */
+  #modalFuncionarioDetalhes .func-dados{ flex:1 1 auto !important; min-height:0 !important; overflow-y:scroll !important; overflow-x:hidden !important; scrollbar-gutter:stable both-edges; -webkit-overflow-scrolling: touch; }
+  #modalFuncionarioDetalhes .func-dados{ max-height:100% !important; overscroll-behavior:contain; }
+  /* Scrollbar visível dentro da área de dados */
+  #modalFuncionarioDetalhes .func-dados{ scrollbar-width: thin; scrollbar-color:#cbd5e1 #f1f5f9; }
+  #modalFuncionarioDetalhes .func-dados::-webkit-scrollbar{ width: 10px; }
+  #modalFuncionarioDetalhes .func-dados::-webkit-scrollbar-track{ background:#f1f5f9; }
+  #modalFuncionarioDetalhes .func-dados::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:8px; }
+  #modalFuncionarioDetalhes .func-dados::-webkit-scrollbar-thumb:hover{ background:#b6c2cc; }
+
+    /* Avatar esquerdo harmonizado */
+    #modalFuncionarioDetalhes .profile-avatar-wrap{ display:flex; align-items:flex-start; justify-content:center; }
+    #modalFuncionarioDetalhes .profile-avatar-wrap .avatar-xxl{ width:132px; height:132px; object-fit:cover; border:4px solid #fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.08); background:#f8f9fa; }
+    @media (min-width:992px){ #modalFuncionarioDetalhes .profile-avatar-wrap .avatar-xxl{ width:150px; height:150px; } }
+
+    /*
+      Padrão de header:
+      Observado em outros modais (ex.: modalBanco, modalCBO) uso de classe theme-blue com header azul sólido (#0d6efd).
+      Aqui padronizado para manter consistência visual. Se o tema global mudar, ajustar somente este bloco
+      ou mover para um arquivo de estilos centralizado.
+    */
+    .fd-accordion .fd-section + .fd-section{ margin-top:.5rem; }
+
+    .fd-toggle{
+      width:100%;
+      display:flex; align-items:center; gap:.5rem;
+      padding:.65rem .95rem;
+      border-radius:.75rem;
+      border:1px solid #cfe2ff;
+      background:linear-gradient(180deg,#f4f9ff 0%, #eef6ff 100%);
+      color:#0d6efd; font-weight:600;
+      box-shadow: 0 1px 0 rgba(13,110,253,.05), inset 0 1px 0 rgba(255,255,255,.6);
+      transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .fd-toggle:hover{ background:#e8f2ff; border-color:#b6d4fe; }
+    .fd-caret{ font-size:1rem; transition: transform .2s ease; }
+    .fd-toggle:not(.collapsed) .fd-caret{ transform:rotate(90deg); }
+
+    .modal-func-detalhes .table th{
+      width:260px; color:#0d6efd; background:#f8fbff;
+    }
+    .modal-func-detalhes .table th,
+    .modal-func-detalhes .table td{ vertical-align:middle; }
+
+    /* expansões em linhas */
+    .fld-toggle{
+      background:#0d6efd;
+      color:#fff;
+      border:0;
+      width:28px;height:28px;
+      display:inline-flex;align-items:center;justify-content:center;
+      border-radius:6px;
+      margin-right:.5rem;
+      font-size:.85rem;line-height:1;
+      box-shadow:0 1px 2px rgba(0,0,0,.25);
+      transition:background .15s, transform .15s;
+    }
+    .fld-toggle:hover{background:#0b5ed7;}
+    .fld-toggle:focus{outline:0;box-shadow:0 0 0 .15rem rgba(13,110,253,.35);}    
+    .fld-toggle i{pointer-events:none;}
+    .fld-sub td{background:#f8fafc !important; border-top:0 !important; box-shadow:inset 0 1px 0 #e2e8f0;}
+    .fld-sub .row.g-2 > [class*='col-']{line-height:1.2rem;}
+    .fld-main + .fld-sub td{border-top:0;}
+    .fld-main th{position:relative;}
+    .fld-main th, .fld-main td{vertical-align:middle;}
+    .fld-main:hover td, .fld-main:hover th{background:#f5f9ff;}
+    .fld-sub strong{color:#334155;font-weight:600;}
+    .fld-sub span[data-field]{color:#0f172a;}
+    .fld-toggle[aria-expanded="true"]{background:#0b5ed7;}
+    .fld-toggle[aria-expanded="true"] i{transform:rotate(45deg);} /* vira um minus (plus girado) */
+    .fld-indent{padding-left:calc(260px - 1rem); position:relative;}
+    @media (max-width: 768px){
+      .fld-indent{padding-left:0;}
+    }
+
+    /* Ajustes de tabela geral */
+    .modal-func-detalhes .table{--fd-border:#e0e6ef;}
+    .modal-func-detalhes .table td{background:#ffffff;}
+    .modal-func-detalhes .table th{background:linear-gradient(180deg,#f4f7fb 0%,#eef2f6 100%);border-right:1px solid var(--fd-border);}
+    .modal-func-detalhes .table td,.modal-func-detalhes .table th{border-color:var(--fd-border);}
+  .modal-func-detalhes .table tr:hover td{background:#f9fbfd;}
+    .modal-func-detalhes .table-sm > :not(caption) > * > *{padding:.5rem .75rem;}
+
+    /* Header: utiliza padrão global .modal-sheet.theme-blue; abaixo apenas micro-ajustes locais (nenhum override de cor principal) */
+    .modal-func-detalhes .modal-header{display:flex;align-items:center;gap:.75rem;}
+    .modal-func-detalhes .modal-header .modal-title{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+    .modal-func-detalhes .badge.bg-primary{background:#0d6efd !important; color:#fff;}
+    .modal-func-detalhes #detalheFoto{box-shadow:0 2px 4px rgba(0,0,0,.08);}    
+    .modal-func-detalhes #detalheFotoStatus .badge{box-shadow:0 1px 2px rgba(0,0,0,.15);} 
+
+    /* Accordion cabeçalhos */
+    .fd-toggle{border-color:#c7dbf7;background:linear-gradient(180deg,#f0f7ff 0%,#e6f1ff 100%);}
+    .fd-toggle:hover{background:#e3f0ff;border-color:#b7cff1;}
+    .fd-toggle:not(.collapsed){background:#e0ecff;border-color:#a9c4ed;}
+
+    /* Badges e detalhes */
+    .modal-func-detalhes span[data-field]{font-variant-numeric:tabular-nums;}
+    .modal-func-detalhes .text-muted{color:#64748b !important;}
+    .modal-func-detalhes .badge.bg-primary{background:#1d4ed8 !important;}
+
+    /* Scrollbar suave (webkit) */
+    #modalFuncionarioDetalhes .modal-body{scrollbar-width:thin;scrollbar-color:#cbd5e1 #f1f5f9;}
+    #modalFuncionarioDetalhes .modal-body::-webkit-scrollbar{width:8px;}
+    #modalFuncionarioDetalhes .modal-body::-webkit-scrollbar-track{background:#f1f5f9;}
+    #modalFuncionarioDetalhes .modal-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px;}
+    #modalFuncionarioDetalhes .modal-body::-webkit-scrollbar-thumb:hover{background:#b6c2cc;}
+  </style>
+  <script>
+    (function(){
+      const modal = document.getElementById('modalFuncionarioDetalhes');
+      function getScrollBox(){
+        // Prioriza a área de dados rolável; fallback para o card
+        return modal?.querySelector('.func-dados') || modal?.querySelector('.func-layout-row .col-md-8 > .card');
+      }
+      function wheelHandler(e){
+        const box = getScrollBox(); if(!box) return;
+        const rightCol = modal?.querySelector('.func-layout-row .col-md-8');
+        // Se o ponteiro está dentro do contêiner de rolagem OU em qualquer área da coluna direita, rola o box
+        if (box.contains(e.target) || (rightCol && rightCol.contains(e.target))){
+          const before = box.scrollTop;
+          const unit = (e.deltaMode === 1 ? 16 : (e.deltaMode === 2 ? box.clientHeight : 1));
+          box.scrollTop += e.deltaY * unit;
+          if (box.scrollTop !== before){ e.preventDefault(); e.stopPropagation(); }
+        }
+      }
+      function keyHandler(e){
+        const box = getScrollBox(); if(!box) return;
+        // Só trata teclas quando o foco está dentro do modal
+        if (!modal.contains(document.activeElement)) return;
+        const keys = ['PageDown','PageUp','Home','End','ArrowDown','ArrowUp'];
+        if (!keys.includes(e.key)) return;
+        let delta = 0;
+        const view = box.clientHeight;
+        switch(e.key){
+          case 'PageDown': delta = view * 0.9; break;
+          case 'PageUp':   delta = -view * 0.9; break;
+          case 'Home':     box.scrollTop = 0; e.preventDefault(); return;
+          case 'End':      box.scrollTop = box.scrollHeight; e.preventDefault(); return;
+          case 'ArrowDown': delta = 40; break;
+          case 'ArrowUp':   delta = -40; break;
+        }
+        const before = box.scrollTop;
+        box.scrollTop = Math.max(0, Math.min(box.scrollTop + delta, box.scrollHeight));
+        if (box.scrollTop !== before){ e.preventDefault(); e.stopPropagation(); }
+      }
+      if (modal){
+        modal.addEventListener('wheel', wheelHandler, { passive:false });
+        modal.addEventListener('keydown', keyHandler, { passive:false });
+      }
+    })();
+  </script>
+</div>

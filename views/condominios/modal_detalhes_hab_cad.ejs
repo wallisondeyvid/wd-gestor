@@ -1,0 +1,53 @@
+<div class="modal fade" id="modalDetHabCad" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalhes da Habitação</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="border rounded p-3 h-100">
+              <h6 class="text-primary mb-3">Informações</h6>
+              <dl class="row mb-0" style="--bs-body-color: #343a40;">
+                <dt class="col-sm-5">Condomínio</dt>
+                <dd class="col-sm-7" id="detUnidade">-</dd>
+                <dt class="col-sm-5">Tipo</dt>
+                <dd class="col-sm-7" id="detTipo">-</dd>
+                <dt class="col-sm-5">Bloco/Torre</dt>
+                <dd class="col-sm-7" id="detBloco">-</dd>
+                <dt class="col-sm-5">Andar</dt>
+                <dd class="col-sm-7" id="detAndar">-</dd>
+                <dt class="col-sm-5">Número/Ident.</dt>
+                <dd class="col-sm-7" id="detNumero">-</dd>
+                <dt class="col-sm-5">Área construída</dt>
+                <dd class="col-sm-7" id="detArea">-</dd>
+                <dt class="col-sm-5">Fração ideal</dt>
+                <dd class="col-sm-7" id="detFracao">-</dd>
+                <dt class="col-sm-5">Dia venc. contribuição</dt>
+                <dd class="col-sm-7" id="detVencimento">-</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded p-3 h-100">
+              <h6 class="text-primary mb-3">Foto</h6>
+              <img id="detFoto" class="img-fluid rounded d-none" alt="Foto da fachada">
+              <div id="detFotoVazio" class="text-muted">Sem foto.</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="border rounded p-3">
+              <h6 class="text-primary mb-2">Descrição</h6>
+              <p id="detDesc" class="mb-0" style="white-space: pre-line"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>

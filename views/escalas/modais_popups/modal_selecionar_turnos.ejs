@@ -1,0 +1,71 @@
+<div class="modal fade" id="modalSelecionarTurnos" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-turnos-reduzida">
+    <div class="modal-content">
+
+      <!-- Cabeçalho: título à esquerda, ações à direita -->
+      <div class="modal-header justify-content-between">
+        <h5 class="modal-title mb-0">Edição de turnos</h5>
+
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+      </div>
+
+      <div class="modal-body p-0">
+        <style>
+          #modalSelecionarTurnos .input-hora { width:90px; }
+          #modalSelecionarTurnos input[type=time]::-webkit-calendar-picker-indicator { display:none; }
+          #modalSelecionarTurnos input[type=time] { -webkit-appearance: textfield; }
+          /* Largura reduzida do modal */
+          .modal-turnos-reduzida { max-width: 760px; }
+          @media (max-width: 820px){ .modal-turnos-reduzida { max-width: 95%; } }
+        </style>
+        <!-- Faixa de edição (como a do segundo print) -->
+        <div class="turnos-toolbar px-3 py-3 border-bottom">
+          <form id="formSelecionarTurnos" class="row g-2 align-items-end">
+            <div class="col-auto">
+              <label for="horaInicioTurno2" class="form-label fw-semibold">Início <span class="text-danger">*</span></label>
+              <input type="time" id="horaInicioTurno2" class="form-control form-control-sm input-hora" inputmode="numeric">
+            </div>
+            <div class="col-auto">
+              <label for="horaFimTurno2" class="form-label fw-semibold">Término <span class="text-danger">*</span></label>
+              <input type="time" id="horaFimTurno2" class="form-control form-control-sm input-hora" inputmode="numeric">
+            </div>
+            <div class="col ms-auto col-auto d-flex align-items-end">
+              <button type="button" class="btn btn-success btn-sm px-3" id="btnAddTurno2">
+                <i class="bi bi-plus-circle me-1"></i> Adicionar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tabela -->
+        <div class="px-3 py-3">
+          <div class="table-responsive border rounded">
+            <table class="table table-sm align-middle mb-0" id="tabelaTurnosGrupo2">
+              <thead class="table-light text-center">
+                <tr>
+                  <th style="width:120px;" class="text-center">Início</th>
+                  <th style="width:120px;" class="text-center">Término</th>
+                  <th style="width:100px;" class="text-center">Ação</th>
+                </tr>
+              </thead>
+              <tbody class="text-center">
+                <tr class="text-muted">
+                  <td colspan="3" class="text-center small">Nenhum turno ainda</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Rodapé opcional: Confirmar -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-primary" id="btnSalvar">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>

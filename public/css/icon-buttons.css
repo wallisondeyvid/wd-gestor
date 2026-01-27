@@ -1,0 +1,5 @@
+.wdg-icon-btn{background:transparent;border:none;padding:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;border-radius:4px;}
+.wdg-icon-btn img{width:24px;height:24px;display:block;}
+.wdg-icon-btn:hover,.wdg-icon-btn:focus{background:transparent;box-shadow:none;}
+.wdg-icon-btn:focus{outline:2px solid #2563eb44;outline-offset:2px;}
+.wdg-icon-btn[disabled]{opacity:.4;cursor:not-allowed;}

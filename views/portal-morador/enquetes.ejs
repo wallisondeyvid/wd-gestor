@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal do Morador - Enquetes</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/portal-morador'; %>
+  <% const _headerLogo = (typeof headerLogoUrl === 'string' && headerLogoUrl.trim().length) ? headerLogoUrl : (_bp + '/images/logoWDGestor.png'); %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= _bp %>/css/portal-morador/home.css?v=<%= Date.now() %>">
+  <link rel="stylesheet" href="<%= _bp %>/css/portal-morador/enquetes.css?v=<%= Date.now() %>">
+</head>
+<body class="pm-home-body" data-base-path="<%= _bp %>" data-hab-id="<%= habitacaoId || '' %>" data-hab-label="<%= habitacaoLabel || '' %>" data-unidade-id="<%= unidadeId || '' %>">
+  <div class="pm-shell">
+    <aside class="pm-sidebar" id="pmSidebar">
+      <div class="pm-sidebar-brand">
+        <div class="pm-sidebar-brand-logo">
+          <img src="<%= _bp %>/images/logoWDGestorprata.png" alt="Portal do Morador">
+        </div>
+        <strong>Portal do Morador</strong>
+      </div>
+      <nav class="pm-nav" aria-label="Menu principal">
+        <a class="pm-nav-item" href="<%= _bp %>/home"><img class="pm-nav-ico" src="<%= _bp %>/images/home.png" alt="" aria-hidden="true">Início</a>
+
+        <details class="pm-nav-details pm-nav-details--mensagens">
+          <summary class="pm-nav-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= _bp %>/images/mensagem.png" alt="" aria-hidden="true">Caixa de Mensagem</summary>
+          <div class="pm-nav-sub" role="group" aria-label="Caixa de Mensagem">
+            <a class="pm-nav-sub-item" href="<%= _bp %>/mensagens/nova"><img class="pm-nav-ico" src="<%= _bp %>/images/nova-mensagem.png" alt="" aria-hidden="true">Nova mensagem</a>
+            <a class="pm-nav-sub-item" href="<%= _bp %>/mensagens/entrada"><img class="pm-nav-ico" src="<%= _bp %>/images/caixa-de-entrada.png" alt="" aria-hidden="true">Caixa de entrada <span class="pm-nav-count" data-msg-inbox-count style="display:none;" aria-hidden="true"></span></a>
+            <a class="pm-nav-sub-item" href="<%= _bp %>/mensagens/saida"><img class="pm-nav-ico" src="<%= _bp %>/images/caixa-de-saida.png" alt="" aria-hidden="true">Caixa de saída</a>
+            <a class="pm-nav-sub-item" href="<%= _bp %>/mensagens/arquivo"><img class="pm-nav-ico" src="<%= _bp %>/images/arquivomensagem.png" alt="" aria-hidden="true">Arquivo</a>
+            <a class="pm-nav-sub-item" href="<%= _bp %>/mensagens/lixeira"><img class="pm-nav-ico" src="<%= _bp %>/images/lixeira.png" alt="" aria-hidden="true">Lixeira</a>
+            <details class="pm-nav-sub-details pm-nav-sub-details--grupos">
+              <summary class="pm-nav-sub-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= _bp %>/images/grupo.png" alt="" aria-hidden="true">Grupos</summary>
+              <div class="pm-nav-sub" role="group" aria-label="Grupos">
+                <a class="pm-nav-sub-item" href="<%= _bp %>/mensagens/grupos"><img class="pm-nav-ico" src="<%= _bp %>/images/editar.png" alt="" aria-hidden="true">Editar</a>
+              </div>
+            </details>
+            <details class="pm-nav-sub-details">
+              <summary class="pm-nav-sub-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= _bp %>/images/configuracao.png" alt="" aria-hidden="true">Configuração</summary>
+              <div class="pm-nav-sub" role="group" aria-label="Configuração">
+                <a class="pm-nav-sub-item" href="<%= _bp %>/mensagens/caixas"><img class="pm-nav-ico" src="<%= _bp %>/images/caixas.png" alt="" aria-hidden="true">Caixas</a>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <a class="pm-nav-item" href="<%= _bp %>/comunicados"><img class="pm-nav-ico" src="<%= _bp %>/images/comunicacao.png" alt="" aria-hidden="true">Comunicados</a>
+        <a class="pm-nav-item active" href="<%= _bp %>/enquetes"><img class="pm-nav-ico" src="<%= _bp %>/images/enquete.png" alt="" aria-hidden="true">Enquetes</a>
+        <a class="pm-nav-item" href="<%= _bp %>/home#reservas"><img class="pm-nav-ico" src="<%= _bp %>/images/reservado.png" alt="" aria-hidden="true">Reservas</a>
+        <a class="pm-nav-item" href="<%= _bp %>/home#transparencia"><img class="pm-nav-ico" src="<%= _bp %>/images/transparencia.png" alt="" aria-hidden="true">Transparência</a>
+
+        <details class="pm-nav-details">
+          <summary class="pm-nav-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= _bp %>/images/solicitacao.png" alt="" aria-hidden="true">Solicitações</summary>
+          <div class="pm-nav-sub" role="group" aria-label="Solicitações">
+            <a class="pm-nav-sub-item" href="<%= _bp %>/solicitacoes/servico"><img class="pm-nav-ico" src="<%= _bp %>/images/servicos.png" alt="" aria-hidden="true">Serviço</a>
+          </div>
+        </details>
+
+        <details class="pm-nav-details">
+          <summary class="pm-nav-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= _bp %>/images/visita.png" alt="" aria-hidden="true">Visitante</summary>
+          <div class="pm-nav-sub" role="group" aria-label="Visitante">
+            <a class="pm-nav-sub-item" href="<%= _bp %>/visitante/comunicar"><img class="pm-nav-ico" src="<%= _bp %>/images/comunicar_visita.png" alt="" aria-hidden="true">Comunicar visita</a>
+            <a class="pm-nav-sub-item" href="<%= _bp %>/visitante/historico"><img class="pm-nav-ico" src="<%= _bp %>/images/historico.png" alt="" aria-hidden="true">Histórico de acessos</a>
+          </div>
+        </details>
+
+        <details class="pm-nav-details">
+          <summary class="pm-nav-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= _bp %>/images/financeiro.png" alt="" aria-hidden="true">Financeiro</summary>
+          <div class="pm-nav-sub" role="group" aria-label="Financeiro">
+            <a class="pm-nav-sub-item" href="<%= _bp %>/financeiro/boletos"><img class="pm-nav-ico" src="<%= _bp %>/images/boleto.png" alt="" aria-hidden="true">Meus boletos</a>
+          </div>
+        </details>
+      </nav>
+      <div class="pm-sidebar-footer">Portal do Morador · WD Gestor</div>
+    </aside>
+
+    <div class="pm-main">
+      <header class="pm-topbar">
+        <div class="pm-topbar-row pm-topbar-row--top">
+          <div class="pm-topbar-left">
+            <button class="pm-nav-toggle" id="pmNavToggle" aria-label="Alternar menu" aria-expanded="false">
+              <span></span><span></span><span></span>
+            </button>
+          </div>
+          <div class="pm-topbar-logo">
+            <img src="<%= _headerLogo %>" alt="Logo do condomínio">
+          </div>
+          <div class="pm-topbar-spacer" aria-hidden="true"></div>
+        </div>
+
+        <div class="pm-topbar-row pm-topbar-row--bottom">
+          <div class="pm-topbar-actions pm-topbar-actions--main">
+            <div class="pm-bell-wrap">
+              <button class="pm-icon-btn pm-bell-btn" type="button" title="Notificações" data-bell-btn>
+                <img src="<%= _bp %>/images/notificacao.png" alt="Notificações">
+                <span class="pm-bell-badge" aria-hidden="true" data-bell-badge>0</span>
+              </button>
+              <div class="pm-bell-menu" hidden data-bell-menu>
+                <div class="pm-bell-head">
+                  <strong>Notificações</strong>
+                  <button class="pm-bell-close" type="button" aria-label="Fechar" data-bell-close>×</button>
+                </div>
+                <div class="pm-bell-list" data-bell-list role="list"></div>
+              </div>
+            </div>
+            <a class="pm-icon-btn pm-msg-btn" href="<%= _bp %>/mensagens/entrada" title="Caixa de Mensagem" aria-label="Caixa de Mensagem" data-msg-link>
+              <img src="<%= _bp %>/images/mensagem.png" alt="Mensagens">
+              <span class="pm-bell-badge" aria-hidden="true" data-msg-badge style="display:none;"></span>
+            </a>
+            <div class="pm-user-menu-wrap" data-user-name="<%= typeof userName === 'string' ? userName : '' %>">
+              <button class="pm-user-chip pm-user-chip--btn" type="button" title="Perfil do usuário" aria-haspopup="menu" aria-expanded="false">
+                <% if (avatarUrl) { %>
+                  <img src="<%= avatarUrl %>" alt="Avatar">
+                <% } else { %>
+                  <span class="pm-user-initials"><%= (typeof userName === 'string' && userName) ? userName.slice(0,2).toUpperCase() : 'ME' %></span>
+                <% } %>
+              </button>
+              <div class="pm-user-menu" role="menu" aria-label="Menu do usuário">
+                <h4>Conta</h4>
+
+                <div class="pm-user-menu-row">
+                  <label for="pmNameModeEnquetes">Exibir nome</label>
+                </div>
+                <select id="pmNameModeEnquetes" data-action="name-mode">
+                  <option value="initials">Somente iniciais</option>
+                  <option value="first">Primeiro nome</option>
+                  <option value="full">Nome completo</option>
+                </select>
+
+                <div class="pm-user-menu-actions" style="margin-top:10px">
+                  <button class="pm-user-menu-btn" type="button" data-action="avatar-pick">Alterar foto</button>
+                  <button class="pm-user-menu-btn" type="button" data-action="toggle-password">Alterar senha</button>
+                </div>
+
+                <input type="file" accept="image/*" hidden data-action="avatar-file">
+
+                <form hidden data-action="password-form" style="margin-top:10px">
+                  <input type="text" name="username" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+                  <input type="password" name="currentPassword" placeholder="Senha atual" autocomplete="current-password" style="margin-bottom:8px">
+                  <input type="password" name="newPassword" placeholder="Nova senha" autocomplete="new-password" style="margin-bottom:8px">
+                  <input type="password" name="confirmPassword" placeholder="Confirmar nova senha" autocomplete="new-password" style="margin-bottom:10px">
+                  <button class="pm-user-menu-btn" type="submit">Salvar</button>
+                </form>
+
+                <div class="pm-user-menu-status" aria-live="polite"></div>
+              </div>
+            </div>
+            <a class="pm-logout-btn pm-logout-btn--icon" href="<%= _bp %>/logout" title="Sair">
+              <img src="<%= _bp %>/images/sair.png" alt="Sair">
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <section class="pm-toolbar" id="pmToolbar">
+        <div class="pm-toolbar-body" id="pmToolbarBody">
+          <div class="pm-condo-center">
+            <small>Condomínio</small>
+            <strong><%= typeof unidadeNome === 'string' ? unidadeNome : 'Seu Condomínio' %></strong>
+            <button class="pm-hab-switch" id="pmHabSwitcher" type="button" aria-haspopup="dialog" aria-expanded="false">
+              <span class="pm-hab-switch__icon"><img src="<%= _bp %>/images/home.png" alt=""></span>
+              <span class="pm-hab-switch__label" id="pmHabSwitcherLabel"><%= habitacaoLabel || 'Habitação selecionada' %></span>
+              <i class="bi bi-chevron-down"></i>
+            </button>
+          </div>
+          <div class="pm-search" role="search" aria-label="Pesquisar no portal">
+            <i class="bi bi-search"></i>
+            <input type="search" placeholder="Procure aqui o que você precisa..." aria-label="Pesquisar">
+          </div>
+        </div>
+        <button class="pm-toolbar-toggle" id="pmToolbarToggle" type="button" aria-expanded="true" aria-label="Recolher barra">
+          <span class="pm-toolbar-toggle__chevron" aria-hidden="true"></span>
+        </button>
+      </section>
+
+      <div class="pm-hab-menu-portal" id="pmHabSwitcherMenu" hidden>
+        <div class="pm-hab-menu" role="dialog" aria-modal="true" aria-label="Selecionar habitação">
+          <div class="pm-hab-menu-head">
+            <div>
+              <small>Habitações</small>
+              <strong>Selecione para operar</strong>
+            </div>
+            <button type="button" class="pm-hab-menu-close" id="pmHabMenuClose" aria-label="Fechar">×</button>
+          </div>
+          <div class="pm-hab-menu-grid" id="pmHabMenuGrid" role="listbox" aria-label="Habitações disponíveis"></div>
+          <div class="pm-hab-menu-pager" id="pmHabMenuPager"></div>
+        </div>
+      </div>
+
+      <main class="pm-content">
+        <section class="pm-enq-hero" aria-label="Cabeçalho de enquetes">
+          <h1>Enquetes</h1>
+          <p>Participe das decisões do seu condomínio. Ao votar, você verá o resumo com a quantidade de votantes por alternativa.</p>
+          <div class="pm-enq-meta" data-enq-chips></div>
+        </section>
+
+        <section class="pm-enq-list" aria-label="Lista de enquetes" data-enq-list></section>
+        <div class="pm-enq-empty" hidden data-enq-empty>
+          <strong>Nenhuma enquete disponível.</strong>
+          <div style="margin-top:6px">Quando houver novas enquetes para sua habitação, elas vão aparecer aqui.</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="pm-enq-modal-portal" id="pmEnqModalPortal" hidden>
+    <div class="pm-enq-modal" id="pmEnqModal" role="dialog" aria-modal="true" aria-label="Enquete">
+      <div class="pm-enq-modal-head">
+        <div>
+          <h2 data-enq-modal-title>Enquete</h2>
+          <div class="pm-enq-modal-sub">Sua habitação: <b><%= habitacaoLabel || '—' %></b></div>
+        </div>
+        <button class="pm-enq-modal-close" type="button" aria-label="Fechar" data-enq-modal-close>×</button>
+      </div>
+      <div class="pm-enq-modal-body" data-enq-modal-body></div>
+    </div>
+  </div>
+
+  <script src="<%= _bp %>/js/portal_morador_nav_active.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bp %>/js/portal_morador_groups_menu.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bp %>/js/portal_morador_hab_switcher.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bp %>/js/portal_morador_user_menu.js?v=<%= Date.now() %>"></script>
+  <script src="<%= _bp %>/js/portal_morador_enquetes.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

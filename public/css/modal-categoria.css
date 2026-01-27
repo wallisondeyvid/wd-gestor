@@ -1,0 +1,71 @@
+/* Remove rolagem do modal, deixa só na lista */
+#modalCategoriaTrabalhador .modal-body {
+  overflow: visible !important;
+  max-height: none !important;
+}
+#listaCategoriaTrabalhador {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Spinner no botão "Capturar" */
+button.loading{opacity:.7;cursor:not-allowed;position:relative}
+button.loading::after{
+  content:'';display:inline-block;width:14px;height:14px;border:2px solid currentColor;
+  border-top-color:transparent;border-radius:50%;margin-left:8px;animation:spin 1s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Mãos e botões numerados */
+.hand-wrap{position:relative;max-width:640px;margin:auto}
+.hand-wrap img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.finger-dot{
+  position:absolute;z-index:2;transform:translate(-50%,-50%);
+  min-width:28px;height:28px;padding:0 6px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:999px;border:none;font-weight:600;font-size:12px;line-height:1;
+  background:#0d6efd;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;
+}
+.finger-dot:hover{filter:brightness(1.05)}
+.finger-dot.selected{background:#0a58ca}
+.finger-dot.captured{background:#198754}
+.finger-dot.current{box-shadow:0 0 0 4px rgba(13,110,253,.35)}
+
+/* Lista da fila */
+#fpQueue li{border-bottom:1px dashed #e6e6e6}
+#fpQueue li:last-child{border-bottom:none}
+
+/* Grade dos 10 slots de prévia */
+.fp-slots{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+@media (max-width:768px){.fp-slots{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.fp-slots{grid-template-columns:repeat(2,1fr)}}
+
+.fp-slot{
+  position:relative;border:1px solid #e5e7eb;border-radius:8px;background:#fff;
+  min-height:150px;padding:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.fp-slot.filled{border-color:#16a34a;box-shadow:inset 0 0 0 2px rgba(22,163,74,.12)}
+.fp-tag{
+  position:absolute;top:6px;left:6px;background:#f1f5f9;border:1px solid #e2e8f0;
+  color:#334155;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:600;
+}
+.fp-slot canvas{width:100%;height:auto;display:block;border-radius:6px}
+
+/* Efeito de “flash” quando há duplicidade */
+.fp-flash{box-shadow:0 0 0 3px rgba(245,158,11,.8) inset;animation:fpblink .8s ease-in-out 2}
+@keyframes fpblink{50%{box-shadow:0 0 0 3px rgba(245,158,11,0) inset}}
+
+/* caixa da última captura para alinhar com a grade */
+.fp-lastbox{min-height: 340px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start}
+
+/* log menor para ganhar espaço */
+#fpLog{height:110px !important}
+
+/* garante que a imagem das mãos nunca “estoure” a coluna */
+.hand-photo{height:100%}
+.hand-photo .hand-wrap{max-width:100%}
+
+/* Modal: País de Nascimento — garante largura e neutraliza transform */
+.modal-pais { --bs-modal-width: 720px; }
+.modal-pais .modal-dialog { transform: none !important; }
+.modal-pais .modal-content { display: block; }

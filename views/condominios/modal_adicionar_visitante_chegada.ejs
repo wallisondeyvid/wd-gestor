@@ -1,0 +1,111 @@
+<div class="modal fade" id="wdgChegadaAddVisitanteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="--bs-modal-width: 1080px">
+    <div class="modal-content wdg-hab-modal wdg-chegada-add-modal">
+      <form id="wdgChegadaAddVisitanteForm">
+        <div class="modal-header border-0 pb-0">
+          <div class="wdg-visita-modal-head">
+            <div class="wdg-visita-modal-badge" aria-hidden="true">
+              <i class="bi bi-person-plus"></i>
+            </div>
+            <div>
+              <h5 class="modal-title wdg-modal-title" id="wdgChegadaAddVisitanteTitle">Adicionar visitante</h5>
+              <p class="text-muted wdg-modal-subtitle mb-0" id="wdgChegadaAddVisitanteSubtitle">Visitante acompanhando a visita comunicada.</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+
+        <div class="modal-body pt-3 pb-4 px-4">
+          <div class="wdg-modal-section">
+            <div class="wdg-modal-section__title">Dados do acompanhante</div>
+            <div class="wdg-modal-section__subtitle">Preencha o básico e, se necessário, os dados do veículo.</div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-12 col-lg-6">
+              <fieldset class="wdg-fieldset">
+                <legend class="wdg-fieldset__legend">Dados pessoais</legend>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label" for="wdgChegadaAddNome">Nome completo</label>
+                    <input class="form-control" id="wdgChegadaAddNome" name="nome" autocomplete="off" required maxlength="120" />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label" for="wdgChegadaAddRg">RG</label>
+                    <input class="form-control" id="wdgChegadaAddRg" name="rg" autocomplete="off" maxlength="40" />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label" for="wdgChegadaAddCpf">CPF</label>
+                    <input class="form-control" id="wdgChegadaAddCpf" name="cpf" autocomplete="off" maxlength="40" />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label" for="wdgChegadaAddTel">Tel.</label>
+                    <input class="form-control" id="wdgChegadaAddTel" name="tel" autocomplete="off" maxlength="20" inputmode="tel" />
+                  </div>
+                </div>
+
+                <div class="wdg-switch-card mt-3">
+                  <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" id="wdgChegadaAddVeiculoToggle" />
+                    <label class="form-check-label" for="wdgChegadaAddVeiculoToggle">O visitante chegará de veículo</label>
+                  </div>
+                  <div class="wdg-switch-card__hint">Se marcar, os campos do veículo ficam disponíveis ao lado.</div>
+                </div>
+              </fieldset>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <fieldset class="wdg-fieldset" id="wdgChegadaAddVeiculoFields" style="display:none">
+                <legend class="wdg-fieldset__legend">Dados do veículo</legend>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label" for="wdgChegadaAddPlaca">Placa</label>
+                    <input class="form-control" id="wdgChegadaAddPlaca" name="placa" autocomplete="off" maxlength="7" placeholder="ABC1D23" data-vehicle-field />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label" for="wdgChegadaAddVeiculoTipo">Tipo do veículo</label>
+                    <select class="form-select" id="wdgChegadaAddVeiculoTipo" data-vehicle-field>
+                      <option value="" selected disabled>Selecione</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label" for="wdgChegadaAddMarca">Marca</label>
+                    <select class="form-select" id="wdgChegadaAddMarca" data-vehicle-field disabled>
+                      <option value="">Selecione o tipo do veículo</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="wdgChegadaAddModelo">Modelo</label>
+                    <input class="form-control" id="wdgChegadaAddModelo" name="modelo" autocomplete="off" maxlength="50" data-vehicle-field />
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label" for="wdgChegadaAddCor">Cor</label>
+                    <input class="form-control" id="wdgChegadaAddCor" name="cor" autocomplete="off" maxlength="30" data-vehicle-field />
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label" for="wdgChegadaAddAno">Ano</label>
+                    <input class="form-control" id="wdgChegadaAddAno" name="ano" type="number" min="1950" max="2100" step="1" data-vehicle-field />
+                  </div>
+                </div>
+
+                <div class="wdg-mini-note mt-3">Dica: basta informar o tipo; os demais são opcionais.</div>
+              </fieldset>
+            </div>
+
+            <div class="col-12">
+              <fieldset class="wdg-fieldset">
+                <legend class="wdg-fieldset__legend">Observações</legend>
+                <textarea class="form-control" id="wdgChegadaAddObs" name="observacoes" rows="4" maxlength="600" placeholder="Ex.: ajudante" ></textarea>
+              </fieldset>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0 px-4 pb-4">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary fw-semibold" id="wdgChegadaAddSubmit">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

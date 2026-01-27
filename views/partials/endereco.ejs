@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Endereço - WDGestor</title>
+  <%- include('./favicon') %>
+
+  <!-- Bootstrap + Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <!-- Tema do popup -->
+  <link rel="stylesheet" href="<%= typeof basePath !== 'undefined' ? basePath : '/gestor' %>/css/endereco.css">
+</head>
+<body>
+  <!-- DEBUG:endereco-legacy view=partials/endereco buildTime=<%= new Date().toISOString() %> basePath=<%= typeof basePath !== 'undefined' ? basePath : '/gestor' %> -->
+  <div class="popup-shell">
+    <div class="popup-card">
+      <div class="popup-header">
+        <h4 class="popup-title">Pesquisar Endereço</h4>
+      </div>
+
+      <div class="popup-body">
+        <form id="enderecoForm" onsubmit="return salvarEndereco(event)">
+          <!-- Linha 1: CEP + Tipo de Logradouro -->
+          <div class="row g-3 align-items-end mb-2">
+            <div class="col-md-4">
+              <label for="cep" class="form-label">CEP:</label>
+              <div class="with-icon">
+                <i class="bi bi-geo-alt"></i>
+                <input type="text" class="form-control" id="cep" name="cep"
+                       oninput="validarCEP(this)" maxlength="10" placeholder="00.000-000">
+              </div>
+            </div>
+            <div class="col-md-8">
+              <label for="tipoLogradouro" class="form-label">Tipo de Logradouro:</label>
+              <select class="form-select" id="tipoLogradouro" required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Linha 2: Logradouro + Número -->
+          <div class="row g-3 align-items-end mb-2">
+            <div class="col-md-10">
+              <label for="logradouro" class="form-label">Logradouro:</label>
+              <input type="text" class="form-control" id="logradouro" required>
+            </div>
+            <div class="col-md-2">
+              <label for="numero" class="form-label">Número:</label>
+              <input type="text" class="form-control" id="numero">
+            </div>
+          </div>
+
+          <!-- Linha 3: Complemento + Bairro -->
+          <div class="row g-3 align-items-end mb-2">
+            <div class="col-md-6">
+              <label for="complemento" class="form-label">Complemento:</label>
+              <input type="text" class="form-control" id="complemento">
+            </div>
+            <div class="col-md-6">
+              <label for="bairro" class="form-label">Bairro:</label>
+              <input type="text" class="form-control" id="bairro" required>
+            </div>
+          </div>
+
+          <!-- Linha 4: Estado + Cidade + Código IBGE -->
+          <div class="row g-3 align-items-end mb-2">
+            <div class="col-md-4">
+              <label for="estado" class="form-label">Estado:</label>
+              <select class="form-select" id="estado" name="estado" onchange="carregarCidades()">
+                <option value="">Selecione um estado</option>
+                <% (estados || []).forEach(estado => { %>
+                  <option value="<%= estado.sigla %>"><%= estado.nome %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-5">
+              <label for="cidade" class="form-label">Cidade:</label>
+              <select class="form-select" id="cidade" name="cidade" required onchange="atualizarIbge()">
+                <option value="">Selecione uma cidade</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="codigoIbge" class="form-label">Código IBGE:</label>
+              <input type="text" class="form-control" id="codigoIbge" name="codigoIbge" readonly>
+            </div>
+          </div>
+
+          <!-- Rodapé -->
+          <div class="popup-footer">
+            <button type="submit" class="btn btn-outline-primary" title="Inserir" aria-label="Inserir">Inserir</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.close()" title="Fechar" aria-label="Fechar">Fechar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  // -------- utilitários --------
+  const onlyDigits = (s) => String(s || '').replace(/\D/g, '');
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+  // -------- estados/municípios --------
+  let cidadesPorEstado = {}; // { "SP": ["São Paulo", ...], ... }
+
+  async function carregarMapeamentoCidades() {
+    if (Object.keys(cidadesPorEstado).length) return;
+    // 1) JSON leve pronto
+    try {
+  const __BP_FALLBACK = '<%= (typeof basePath!=="undefined"? basePath : "/gestor") %>';
+  const basePath = (window.opener && window.opener.document?.body?.getAttribute('data-base-path')) || (document.body.getAttribute('data-base-path')) || __BP_FALLBACK;
+  const r = await fetch(basePath + '/data/municipios_por_uf.json', { cache: 'no-store' });
+      if (r.ok) {
+        const j = await r.json();
+        if (j && typeof j === 'object') {
+          Object.keys(j).forEach(uf => j[uf].sort((a,b)=>a.localeCompare(b,'pt-BR')));
+          cidadesPorEstado = j;
+          return;
+        }
+      }
+    } catch {}
+    // 2) fallback: deriva do municipios_ibge.json
+    try {
+  const r2 = await fetch(basePath + '/data/municipios_ibge.json', { cache: 'no-store' });
+      if (!r2.ok) throw 0;
+      const arr = await r2.json(); // [{ uf, nome, codigo }]
+      const map = {};
+      (arr || []).forEach(m => {
+        if (!map[m.uf]) map[m.uf] = [];
+        map[m.uf].push(m.nome);
+      });
+      Object.keys(map).forEach(uf => map[uf].sort((a,b)=>a.localeCompare(b,'pt-BR')));
+      cidadesPorEstado = map;
+    } catch (e) {
+      console.error('[Endereço] Não foi possível carregar municípios.', e);
+      cidadesPorEstado = {};
+    }
+  }
+
+  async function popularCidades() {
+    const uf = document.getElementById('estado')?.value || '';
+    const sel = document.getElementById('cidade');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Selecione uma cidade</option>';
+    if (uf && cidadesPorEstado[uf]) {
+      const frag = document.createDocumentFragment();
+      cidadesPorEstado[uf].forEach(nome => {
+        const o = document.createElement('option');
+        o.value = nome; o.textContent = nome;
+        frag.appendChild(o);
+      });
+      sel.appendChild(frag);
+      // selecionar a cidade que veio do pré-preenchimento (se houver)
+      const pendente = sel.getAttribute('data-cidade-preenchida');
+      if (pendente) {
+        const alvo = pendente.toLowerCase();
+        const opt = Array.from(sel.options).find(o => o.value.toLowerCase() === alvo);
+        if (opt) sel.value = opt.value;
+        sel.removeAttribute('data-cidade-preenchida');
+      }
+    }
+  }
+
+  // expõe a função usada no atributo onchange do HTML
+  window.carregarCidades = async function carregarCidades() {
+    await popularCidades();
+    const ibgeEl = document.getElementById('codigoIbge');
+    if (ibgeEl) ibgeEl.value = '';
+    ajustarAlturaJanela();
+  };
+
+  // -------- tipos de logradouro --------
+  const URL_TIPOS = '/data/tipos_logradouro.json';
+  const TIPOS_FALLBACK = ["Rua","Avenida","Travessa","Alameda","Praça","Estrada","Rodovia","Viela","Via"];
+
+  async function carregarTiposLogradouro() {
+    const sel = document.getElementById('tipoLogradouro');
+    if (!sel) return;
+    try {
+      const r = await fetch(URL_TIPOS, { cache: 'no-store' });
+      if (!r.ok) throw 0;
+      const arr = await r.json();
+      const list = Array.isArray(arr) && arr.length ? [...new Set(arr.map(String))] : TIPOS_FALLBACK;
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        list.map(t => `<option value="${t}">${t}</option>`).join('');
+      if (prev && list.includes(prev)) sel.value = prev;
+    } catch {
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        TIPOS_FALLBACK.map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+  }
+
+  // -------- máscara de CEP + ViaCEP --------
+  function validarCEP(input) {
+    let cep = onlyDigits(input.value);
+    if (cep.length > 8) cep = cep.slice(0, 8);
+
+    if (cep.length > 5)       input.value = cep.replace(/^(\d{2})(\d{3})(\d{0,3})$/, '$1.$2-$3');
+    else if (cep.length > 2)  input.value = cep.replace(/^(\d{2})(\d{0,3})$/, '$1.$2');
+    else                      input.value = cep;
+
+    input.classList.toggle('invalid', cep.length > 0 && cep.length !== 8);
+  }
+  // Disponibiliza para o atributo oninput do HTML
+  window.validarCEP = validarCEP;
+
+  function inferirTipoELogradouro(texto) {
+    if (!texto) return { tipo: '', logradouro: '' };
+    const t = texto.trim();
+    const m = t.match(/^(Alameda|Área|Acesso|Aeroporto|Avenida|Av\.?|Beco|Boulevard|Caminho|Conjunto|Condomínio|Distrito|Estrada|Eixo|Esplanada|Favela|Fazenda|Ferrovia|Jardim|Ladeira|Largo|Loteamento|Morro|Núcleo|Parque|Passeio|Passarela|Passagem|Pátio|Praça|Praca|Quadra|Recanto|Rodovia|Rua|R\.?|Servidão|Setor|Sítio|Trecho|Travessa|Trv\.?|Trevo|Vala|Vila|Viela|Via)\s+(.*)$/i);
+    if (m) {
+      let tipo = m[1];
+      if (/^av/i.test(tipo)) tipo = 'Avenida';
+      if (/^r\.?$/i.test(tipo)) tipo = 'Rua';
+      if (/^trv/i.test(tipo)) tipo = 'Travessa';
+      if (/^praca$/i.test(tipo)) tipo = 'Praça';
+      return { tipo, logradouro: m[2] };
+    }
+    return { tipo: '', logradouro: t };
+  }
+
+  async function buscarEnderecoPorCEP(cepDigits) {
+    const cep = onlyDigits(cepDigits);
+    if (cep.length !== 8) return;
+    try {
+      const resp = await fetch(`/api/cep/${cep}`);
+      if (!resp.ok) throw new Error(`ViaCEP HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (data?.erro) throw new Error('CEP não encontrado');
+
+      const tipoLogEl = document.getElementById('tipoLogradouro');
+      const logEl     = document.getElementById('logradouro');
+      const bairroEl  = document.getElementById('bairro');
+      const complEl   = document.getElementById('complemento');
+      const ufEl      = document.getElementById('estado');
+      const cidadeEl  = document.getElementById('cidade');
+      const ibgeEl    = document.getElementById('codigoIbge');
+      const cepEl     = document.getElementById('cep');
+
+      if (cepEl) { validarCEP(cepEl); cepEl.classList.remove('invalid'); }
+
+      if (data.logradouro) {
+        const { tipo, logradouro } = inferirTipoELogradouro(data.logradouro);
+        if (tipo && tipoLogEl) tipoLogEl.value = tipo;
+        if (logEl) logEl.value = logradouro || data.logradouro;
+      }
+      if (bairroEl && data.bairro)      bairroEl.value = data.bairro;
+      if (complEl && data.complemento)  complEl.value = data.complemento;
+
+      if (ufEl && data.uf) {
+        ufEl.value = data.uf;
+        await carregarMapeamentoCidades();
+        await popularCidades();
+        if (cidadeEl && data.localidade) {
+          const alvo = data.localidade.toLowerCase();
+          const opt = Array.from(cidadeEl.options).find(o => o.value.toLowerCase() === alvo);
+          if (opt) cidadeEl.value = opt.value;
+        }
+      }
+
+      if (ibgeEl) ibgeEl.value = data.ibge || '';
+      if (ibgeEl && !String(ibgeEl.value || '').trim()) {
+        await atualizarIbge();
+      }
+      ajustarAlturaJanela();
+    } catch (e) {
+      console.warn('Falha ao buscar CEP:', e?.message || e);
+      const cepEl = document.getElementById('cep');
+      if (cepEl) cepEl.classList.add('invalid');
+    }
+  }
+
+  // -------- IBGE por UF/Cidade --------
+  async function atualizarIbge() {
+    const estado = document.getElementById('estado')?.value || '';
+    const cidade = document.getElementById('cidade')?.value || '';
+    const codigoIbgeInput = document.getElementById('codigoIbge');
+    if (!codigoIbgeInput) return;
+    if (!estado || !cidade) { codigoIbgeInput.value = ''; return; }
+    try {
+      const r = await fetch(`/api/ibge?estado=${encodeURIComponent(estado)}&cidade=${encodeURIComponent(cidade)}`);
+      if (!r.ok) throw 0;
+      const j = await r.json();
+      codigoIbgeInput.value = j?.codigoIbge || j?.ibge || '';
+    } catch {
+      codigoIbgeInput.value = '';
+    }
+  }
+  window.atualizarIbge = atualizarIbge;
+
+  // -------- parse do resumo e pré-preenchimento --------
+  function parseResumoEndereco(resumo) {
+    const out = { cep:'', tipo:'', logradouro:'', numero:'', complemento:'', bairro:'', cidade:'', uf:'', ibge:'' };
+    if (!resumo) return out;
+
+    const txt = String(decodeURIComponent(resumo)).trim();
+
+    // CEP
+    const mCEP = txt.match(/(?:CEP[: ]*)?(\d{2}\.\d{3}-\d{3}|\d{5}-\d{3}|\b\d{8}\b)/i);
+    if (mCEP) out.cep = mCEP[1].replace(/\D/g, '');
+
+    // IBGE
+    const mIBGE = txt.match(/(?:Código\s*IBGE|IBGE)\s*:\s*(\d{7})/i);
+    if (mIBGE) out.ibge = mIBGE[1];
+
+    // Quebra em partes por vírgula
+    const partes = txt.split(/\s*,\s*/).filter(Boolean);
+
+    // Cidade - UF
+    const idxCidUf = partes.findIndex(p => /\s-\s*[A-Z]{2}\b/.test(p));
+    if (idxCidUf >= 0) {
+      const m = partes[idxCidUf].match(/^(.*)\s-\s*([A-Z]{2})\b/);
+      if (m) { out.cidade = m[1].trim(); out.uf = m[2].trim(); }
+    }
+
+    // Primeira parte: Tipo + Logradouro
+    if (partes.length >= 1) {
+      const p0 = partes[0];
+      const mTL = p0.match(/^(Alameda|Área|Acesso|Aeroporto|Avenida|Av\.?|Beco|Boulevard|Caminho|Conjunto|Condomínio|Distrito|Estrada|Eixo|Esplanada|Favela|Fazenda|Ferrovia|Jardim|Ladeira|Largo|Loteamento|Morro|Núcleo|Parque|Passeio|Passarela|Passagem|Pátio|Praça|Praca|Quadra|Recanto|Rodovia|Rua|R\.?|Servidão|Setor|Sítio|Trecho|Travessa|Trv\.?|Trevo|Vala|Vila|Viela|Via)\s+(.*)$/i);
+      if (mTL) {
+        let tipo = mTL[1];
+        if (/^av/i.test(tipo)) tipo = 'Avenida';
+        if (/^r\.?$/i.test(tipo)) tipo = 'Rua';
+        if (/^trv/i.test(tipo)) tipo = 'Travessa';
+        if (/^praca$/i.test(tipo)) tipo = 'Praça';
+        out.tipo = tipo;
+        out.logradouro = mTL[2].trim();
+      } else {
+        out.logradouro = p0.trim();
+      }
+    }
+
+    // Número: primeiro item que pareça número/SN após a 1ª parte
+    const ehNumero = (s) => /^\s*(\d{1,7}|S\/?N|SN)\s*$/i.test(s);
+    let idxNumero = -1;
+    for (let i = 1; i < partes.length; i++) {
+      if (ehNumero(partes[i])) { out.numero = partes[i].trim(); idxNumero = i; break; }
+    }
+
+    // Bairro: normalmente vem antes de "Cidade - UF"
+    let idxBairro = (idxCidUf > 0) ? idxCidUf - 1 : -1;
+    if (idxBairro > 0) {
+      const candidato = partes[idxBairro];
+      if (!/CEP[: ]/i.test(candidato)) out.bairro = candidato.trim();
+    }
+
+    // Complemento: o que sobrar entre número e bairro
+    if (idxNumero > 0 && idxBairro > 0 && idxBairro - idxNumero >= 2) {
+      const fatia = partes.slice(idxNumero + 1, idxBairro)
+        .filter(p => !/^(CEP|Código\s*IBGE|IBGE)\b/i.test(p));
+      out.complemento = fatia.join(', ').trim();
+    } else if (idxNumero < 0 && idxBairro > 1) {
+      const fatia2 = partes.slice(1, idxBairro)
+        .filter(p => !/^(CEP|Código\s*IBGE|IBGE)\b/i.test(p));
+      out.complemento = fatia2.join(', ').trim();
+    }
+
+    return out;
+  }
+
+  function preencherCampos(endereco) {
+    const parsed = parseResumoEndereco(endereco);
+
+    // CEP
+    const cepEl = document.getElementById('cep');
+    if (cepEl) {
+      cepEl.value = parsed.cep ? parsed.cep.replace(/^(\d{2})(\d{3})(\d{3})$/, '$1.$2-$3') : '';
+      validarCEP(cepEl);
+      cepEl.classList.remove('invalid');
+    }
+
+    // Tipo / Logradouro
+    const tipoEl = document.getElementById('tipoLogradouro');
+    const logEl  = document.getElementById('logradouro');
+    if (tipoEl && parsed.tipo) tipoEl.value = parsed.tipo;
+    if (logEl)  logEl.value = parsed.logradouro || '';
+
+    // Número / Complemento / Bairro
+    const numEl  = document.getElementById('numero');
+    const compEl = document.getElementById('complemento');
+    const baiEl  = document.getElementById('bairro');
+    if (numEl)  numEl.value  = parsed.numero || '';
+    if (compEl) compEl.value = parsed.complemento || '';
+    if (baiEl)  baiEl.value  = parsed.bairro || '';
+
+    // UF + Cidade (cidade selecionada depois de popularCidades)
+    const ufEl = document.getElementById('estado');
+    const cidEl = document.getElementById('cidade');
+    if (ufEl && parsed.uf) ufEl.value = parsed.uf;
+    if (cidEl && parsed.cidade) cidEl.setAttribute('data-cidade-preenchida', parsed.cidade);
+
+    // IBGE
+    const ibgeEl = document.getElementById('codigoIbge');
+    if (ibgeEl) ibgeEl.value = parsed.ibge || '';
+  }
+
+  // -------- ajuste do tamanho da janela --------
+  function ajustarAlturaJanela(retry) {
+    try {
+      const content = document.querySelector('.popup-card') || document.body;
+      if (!window.resizeTo || !content) return;
+      const desiredH = clamp(content.scrollHeight + 110, 520, 640);
+      const desiredW = clamp(content.scrollWidth  + 80, 760, 900);
+      if (Math.abs(window.outerHeight - desiredH) > 12 || Math.abs(window.outerWidth - desiredW) > 12) {
+        window.resizeTo(desiredW, desiredH);
+      }
+      if (!retry) setTimeout(() => ajustarAlturaJanela(true), 180);
+    } catch {}
+  }
+
+  // ajuda: pega o id do campo alvo vindo na query
+  function getTargetFieldId() {
+    try { return new URLSearchParams(location.search).get('field') || 'endereco'; }
+    catch { return 'endereco'; }
+  }
+
+  function writeBackToOpener(value) {
+    const doc = window.opener?.document;
+    if (!doc) return false;
+
+    const field = getTargetFieldId();
+    const selectors = [
+      `#${field}`, `[name="${field}"]`,
+      '#endereco', '[name="endereco"]',
+      '#edit-endereco', '[name="edit-endereco"]'
+    ];
+
+    for (const sel of selectors) {
+      const el = doc.querySelector(sel);
+      if (el) {
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  window.salvarEndereco = function salvarEndereco(event) {
+    event.preventDefault();
+
+    function setInOpener(nameOrId, value) {
+      const d = window.opener?.document;
+      if (!d) return false;
+      const el = d.getElementById(nameOrId) || d.querySelector(`[name="${nameOrId}"]`);
+      if (!el) return false;
+      el.value = value ?? '';
+      el.dispatchEvent(new Event('input',  { bubbles:true }));
+      el.dispatchEvent(new Event('change', { bubbles:true }));
+      return true;
+    }
+
+    function writeResumoToOpener(targetField, resumo) {
+      const d = window.opener?.document;
+      if (!d) return false;
+      const sel = [
+        `#${targetField}`, `[name="${targetField}"]`,
+        '#endereco_resumo', '[name="endereco_resumo"]',
+        '#endereco', '[name="endereco"]'
+      ];
+      for (const s of sel) {
+        const el = d.querySelector(s);
+        if (el) {
+          el.value = resumo;
+          el.dispatchEvent(new Event('input',  { bubbles:true }));
+          el.dispatchEvent(new Event('change', { bubbles:true }));
+          return true;
+        }
+      }
+      return false;
+    }
+
+    const tipo_logradouro = document.getElementById('tipoLogradouro').value.trim();
+    const logradouro      = document.getElementById('logradouro').value.trim();
+    const numero          = document.getElementById('numero').value.trim();
+    const complemento     = document.getElementById('complemento').value.trim();
+    const bairro          = document.getElementById('bairro').value.trim();
+    const cidade          = document.getElementById('cidade').value.trim();
+    const estado          = document.getElementById('estado').value.trim();
+    const cepFmt          = document.getElementById('cep').value.trim();
+    const codigo_ibge     = document.getElementById('codigoIbge').value.trim();
+
+    if (!tipo_logradouro || !logradouro || !bairro || !cidade || !estado || !cepFmt) {
+      alert('Preencha CEP, Tipo de Logradouro, Logradouro, Bairro, Cidade e Estado.');
+      return false;
+    }
+
+    const cep = onlyDigits(cepFmt);
+
+    const resumo =
+      `${tipo_logradouro} ${logradouro}, ${numero || ''}`.replace(/,\s*$/,'') +
+      `${complemento ? ', ' + complemento : ''}, ${bairro}, ` +
+      `${cidade} - ${estado}, CEP: ${cepFmt}` +
+      `${codigo_ibge ? ', Código IBGE: ' + codigo_ibge : ''}`;
+
+    // escreve campo de resumo na janela pai
+    const field = new URLSearchParams(location.search).get('field') || 'endereco_resumo';
+    writeResumoToOpener(field, resumo);
+
+    // preenche TODOS os hiddens esperados no form pai
+    setInOpener('end_cep',    cep);
+    setInOpener('end_tipo',   tipo_logradouro);
+    setInOpener('end_logr',   logradouro);
+    setInOpener('end_num',    numero);
+    setInOpener('end_comp',   complemento);
+    setInOpener('end_bairro', bairro);
+    setInOpener('end_uf',     estado);
+    setInOpener('end_cidade', cidade);
+    setInOpener('end_ibge',   codigo_ibge);
+
+    // também tenta pelos names com colchetes (caso IDs sejam outros)
+    setInOpener('endereco[cep]',             cep);
+    setInOpener('endereco[tipo_logradouro]', tipo_logradouro);
+    setInOpener('endereco[logradouro]',      logradouro);
+    setInOpener('endereco[numero]',          numero);
+    setInOpener('endereco[complemento]',     complemento);
+    setInOpener('endereco[bairro]',          bairro);
+    setInOpener('endereco[estado]',          estado);
+    setInOpener('endereco[cidade]',          cidade);
+    setInOpener('endereco[codigo_ibge]',     codigo_ibge);
+
+    window.close();
+    return false;
+  };
+
+  // -------- boot --------
+  document.addEventListener('DOMContentLoaded', async () => {
+    await carregarTiposLogradouro();
+    await carregarMapeamentoCidades();
+
+    // Pré-preenchimento robusto: querystring -> janela pai
+    const qs = new URLSearchParams(window.location.search);
+    let enderecoParam = qs.get('endereco') || '';
+
+    if (!enderecoParam && window.opener?.document) {
+      const d = window.opener.document;
+      const fieldId = qs.get('field') || 'endereco_resumo';
+      enderecoParam =
+          d.getElementById(fieldId)?.value
+       || d.getElementById('endereco_resumo')?.value
+       || d.getElementById('endereco')?.value
+       || d.querySelector('[name="endereco_resumo"]')?.value
+       || d.querySelector('[name="endereco"]')?.value
+       || '';
+    }
+
+    preencherCampos(enderecoParam);
+    await popularCidades();
+
+    // listeners CEP
+    const cepEl = document.getElementById('cep');
+    if (cepEl) {
+      cepEl.addEventListener('input', () => {
+        validarCEP(cepEl);
+        const digits = onlyDigits(cepEl.value);
+        if (digits.length === 8 && digits !== cepEl.dataset.lastCep) {
+          cepEl.dataset.lastCep = digits;
+          buscarEnderecoPorCEP(digits);
+        }
+      });
+      cepEl.addEventListener('blur', () => {
+        const digits = onlyDigits(cepEl.value);
+        if (digits.length === 8) buscarEnderecoPorCEP(digits);
+      });
+    }
+
+    // listeners UF/Cidade
+    document.getElementById('estado')?.addEventListener('change', carregarCidades);
+    document.getElementById('cidade')?.addEventListener('change', atualizarIbge);
+
+    // primeira regulagem de tamanho
+    setTimeout(ajustarAlturaJanela, 80);
+  });
+})();
+</script>
+</body>
+</html>
