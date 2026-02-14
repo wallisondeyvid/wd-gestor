@@ -2,14 +2,15 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 
 // Preparar ambiente para montar módulo Escalas e usar DB em memória
 process.env.ENABLE_ESCALAS = '1';
-process.env.SKIP_AUTH = '1';
 process.env.MONGO_MEMORY = '1';
 
 import { createServer } from '../src/server/createServer.js';
 import Escala from '../src/core/models/escala.js';
+import User from '../src/core/models/user.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
 
 after(async () => {
@@ -19,8 +20,35 @@ after(async () => {
 // Util helpers
 function oid(v){ return new mongoose.Types.ObjectId(v); }
 
+async function loginReal(app) {
+  const email = `teste.escala.diaria.${Date.now()}@example.com`;
+  const senha = 'Senha@123456';
+  const cpf = String(Date.now()).slice(-11).padStart(11, '0');
+  const senhaHash = await bcrypt.hash(senha, 10);
+  await User.create({
+    email,
+    senha: senhaHash,
+    cpf,
+    role: 'master',
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: 'Teste Escala Diaria'
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await agent
+    .post('/gestor/login')
+    .type('form')
+    .send({ email, senha });
+
+  assert.ok(loginRes.status >= 300 && loginRes.status < 400, `Login real deve redirecionar, recebido ${loginRes.status}`);
+  return agent;
+}
+
 test('GET /escalas/api/escalas/diaria retorna atribuicoes/refeicoes do mapa legado para o dia/turno', async (t) => {
   const { app } = await createServer();
+  const agent = await loginReal(app);
 
   const unidadeId = oid();
   const dia = '2025-10-12';
@@ -68,7 +96,7 @@ test('GET /escalas/api/escalas/diaria retorna atribuicoes/refeicoes do mapa lega
   });
 
   // Chamar endpoint diário
-  const res = await request(app)
+  const res = await agent
     .get('/escalas/api/escalas/diaria')
     .query({ unidadeId: String(unidadeId), dia })
     .expect(200);
@@ -105,6 +133,7 @@ test('GET /escalas/api/escalas/diaria retorna atribuicoes/refeicoes do mapa lega
 
 test('GET diária respeita filtro por unidade e dia', async () => {
   const { app } = await createServer();
+  const agent = await loginReal(app);
   const unidade1 = oid();
   const unidade2 = oid();
   const dia = '2025-10-13';
@@ -119,7 +148,7 @@ test('GET diária respeita filtro por unidade e dia', async () => {
     equipes: []
   });
 
-  const res = await request(app)
+  const res = await agent
     .get('/escalas/api/escalas/diaria')
     .query({ unidadeId: String(unidade1), dia })
     .expect(200);

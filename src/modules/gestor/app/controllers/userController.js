@@ -2,6 +2,7 @@
 import User from '#models/user.js';
 import Unidade from '#models/unidade.js';
 import Funcionario from '#models/Funcionario.js';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 // Usamos o util do módulo Gestor para manter a chave `error` nas respostas 4xx/5xx
 import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/app/utils/apiResponse.js';
@@ -308,14 +309,21 @@ export async function obterUsuarioAtual(req, res) {
 		return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
 	}
 	try {
+		const sessionIdRaw = req.session?.user?.id;
+		if (!sessionIdRaw || !mongoose.Types.ObjectId.isValid(String(sessionIdRaw))) {
+			return res.status(401).json({ success:false, error:'Sessão inválida', code:'UNAUTHORIZED' });
+		}
+
 		// Recarregar usuário do banco para garantir populates consistentes
-		let targetId = req.user._id || req.user.id;
+		const objectId = new mongoose.Types.ObjectId(String(sessionIdRaw));
+		let targetId = objectId;
 		let baseUser = null;
 		if (targetId) {
-			baseUser = await User.findById(targetId)
+			const user = await User.findById(targetId)
 			.populate({ path: 'unidade_id', select: '_id codigo nome' })
 			.populate({ path: 'funcionario_id', select: '_id nome cpf telefone unidade_id', populate: { path: 'unidade_id', select: '_id codigo nome' } })
 			.lean();
+			baseUser = user;
 		}
 		// Fallback: se id ausente ou não encontrado, tentar por e-mail
 		if (!baseUser) {

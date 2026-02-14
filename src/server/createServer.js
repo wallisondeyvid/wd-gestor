@@ -16,6 +16,7 @@ import { centralErrorHandler, notFoundHandler } from '#core/middlewares/errorHan
 import { envelopeNormalizer } from '#core/middlewares/envelopeNormalizer.js';
 import { rememberRestore } from '#core/middlewares/rememberRestore.js';
 import { isWidgetEnabledCached } from '#core/utils/widgetSettings.js';
+import User from '#core/models/user.js';
 import verificacaoRoutes from '#routes/verificacao.routes.js';
 import * as gestorModule from '#modules/gestor/index.js';
 import * as clinicaModule from '#modules/clinica/index.js';
@@ -36,28 +37,8 @@ export async function createServer(options = {}) {
   const config = options.config || loadConfig();
   const skipDb = options.skipDb === true;
   const skipDbForced = options.skipDb === true;
-  // skipAuth só deve ser habilitado explicitamente via options OU por variáveis de ambiente em cenários de teste/CI.
-  // Isso evita que ambientes de desenvolvimento/produção fiquem acidentalmente com um usuário fake (test@example.com).
-  const envWantsSkip = (String(process.env.SKIP_AUTH||'').trim()==='1') || (String(process.env.BYPASS_AUTH||'').trim()==='1');
-  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipAuth === true || options.skipDb === true || envWantsSkip;
-  const skipAuth = options.skipAuth === true || envWantsSkip;
+  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipDb === true;
   const app = express();
-
-  // Em modo de testes sem autenticação, injeta sessão fake cedo para evitar redirects em guards globais.
-  if (skipAuth) {
-    console.warn('[auth] SKIP_AUTH ativo (ambiente de teste) — injetando sessão fake test@example.com');
-    app.use((req, _res, next) => {
-      req.skipAuth = true;
-      if (!req.session) req.session = {};
-      if (!req.session.user) {
-        req.session.user = { email: 'test@example.com', nome: 'Test', role: 'master' };
-      }
-      if (!req.user) {
-        req.user = { email: req.session.user.email, role: 'master', isMaster: true };
-      }
-      next();
-    });
-  }
 
   // Widgets: injeta flag de visibilidade (por módulo) para os templates EJS.
   // Default: habilitado; se DB indisponível, mantém habilitado (não quebra páginas).
@@ -940,6 +921,41 @@ export async function createServer(options = {}) {
   app.use(cookieParser());
   app.use(rememberRestore);
 
+  // Reidrata req.user a partir da sessão real (id/email) para middlewares/rotas que dependem de role/isMaster.
+  // Não altera contrato da sessão: continua mínima em req.session.user.
+  app.use(async (req, _res, next) => {
+    try {
+      if (req.user) return next();
+      const sess = req.session?.user;
+      if (!sess || (!sess.id && !sess.email)) return next();
+      if (mongoose.connection.readyState !== 1) return next();
+
+      let userDoc = null;
+      if (sess.id && mongoose.Types.ObjectId.isValid(String(sess.id))) {
+        userDoc = await User.findById(String(sess.id)).lean();
+      }
+      if (!userDoc && sess.email) {
+        userDoc = await User.findOne({ email: String(sess.email).toLowerCase() }).lean();
+      }
+      if (!userDoc) return next();
+
+      req.user = {
+        _id: userDoc._id,
+        id: userDoc._id,
+        email: userDoc.email,
+        nome: userDoc.nome || null,
+        role: userDoc.role,
+        isMaster: String(userDoc.role || '').toLowerCase() === 'master',
+        unidade_id: userDoc.unidade_id || null,
+        funcionario_id: userDoc.funcionario_id || null,
+        foto: userDoc.foto || null,
+      };
+    } catch {
+      // noop
+    }
+    return next();
+  });
+
   // Interceptador de módulos com status 'planejado' -> renderiza página de construção
   // Modos de operação:
   //  - post: somente após login detectado via sessão (comportamento original)
@@ -1053,8 +1069,6 @@ export async function createServer(options = {}) {
   try {
     app.use('/escalas/js/escalas', express.static(path.join(ROOT, 'public/escalas/js/escalas')));
   } catch(_e) { /* noop */ }
-
-  // Sessão de teste (skipAuth) já é injetada no início da cadeia de middlewares.
 
   // Habilitar módulo Escalas somente sob flag explícita
   if (process.env.ENABLE_ESCALAS === '1') {
@@ -1564,7 +1578,7 @@ export async function createServer(options = {}) {
   }
 
   const close = async ({ stopMemoryServer = true } = {}) => {
-    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test') || String(process.env.SKIP_AUTH || '').trim() === '1';
+    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test');
     if (!isTestLike) return;
     await disconnectMongo({ stopMemoryServer });
   };

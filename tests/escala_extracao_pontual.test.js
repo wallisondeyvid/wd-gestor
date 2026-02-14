@@ -2,14 +2,15 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 
 // Preparar ambiente de teste
 process.env.ENABLE_ESCALAS = '1';
-process.env.SKIP_AUTH = '1';
 process.env.MONGO_MEMORY = '1';
 
 import { createServer } from '../src/server/createServer.js';
 import Escala from '../src/core/models/escala.js';
+import User from '../src/core/models/user.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
 
 after(async () => {
@@ -18,8 +19,35 @@ after(async () => {
 
 function oid(v){ return new mongoose.Types.ObjectId(v); }
 
+async function loginReal(app) {
+  const email = `teste.extracao.pontual.${Date.now()}@example.com`;
+  const senha = 'Senha@123456';
+  const cpf = String(Date.now()).slice(-11).padStart(11, '0');
+  const senhaHash = await bcrypt.hash(senha, 10);
+  await User.create({
+    email,
+    senha: senhaHash,
+    cpf,
+    role: 'master',
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: 'Teste Extracao Pontual'
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await agent
+    .post('/gestor/login')
+    .type('form')
+    .send({ email, senha });
+
+  assert.ok(loginRes.status >= 300 && loginRes.status < 400, `Login real deve redirecionar, recebido ${loginRes.status}`);
+  return agent;
+}
+
 test('Extração pontual persiste e aparece em "sem recurso" apenas na alocação alvo', async () => {
   const { app } = await createServer();
+  const agent = await loginReal(app);
 
   const unidadeId = oid();
   const dia = '2025-10-12';
@@ -59,8 +87,8 @@ test('Extração pontual persiste e aparece em "sem recurso" apenas na alocaçã
   });
 
   // 1) Extração pontual do funcionario do recurso no dia/turno alvo
-  const delRes = await request(app)
-    .post(`/api/escalas/${String(doc._id)}/equipes/${equipeId}/recursos/${recursoId}/atribuicoes/${String(funcId)}/delete`)
+  const delRes = await agent
+    .post(`/escalas/api/escalas/${String(doc._id)}/equipes/${equipeId}/recursos/${recursoId}/atribuicoes/${String(funcId)}/delete`)
     .send({ dia, turnoId: turno, extrair: true, escopo: 'alocacao' })
     .expect(200);
   assert.equal(delRes.body.ok, true, 'DELETE alias deve retornar ok=true');
@@ -68,7 +96,7 @@ test('Extração pontual persiste e aparece em "sem recurso" apenas na alocaçã
   assert.equal(String(delRes.body.moved.id), String(funcId), 'moved.id deve ser o funcionário extraído');
 
   // 2) GET diária no dia/turno extraído -> deve listar em funcionariosFora
-  const res1 = await request(app)
+  const res1 = await agent
     .get('/escalas/api/escalas/diaria')
     .query({ unidadeId: String(unidadeId), dia })
     .expect(200);
@@ -99,13 +127,13 @@ test('Extração pontual persiste e aparece em "sem recurso" apenas na alocaçã
   }
 
   // 4) Remover da lista "fora" usando DELETE componentes com dia/turno -> deve sumir
-  const remFora = await request(app)
-    .delete(`/api/escalas/${String(doc._id)}/equipes/${equipeId}/componentes/${String(funcId)}`)
+  const remFora = await agent
+    .delete(`/escalas/api/escalas/${String(doc._id)}/equipes/${equipeId}/componentes/${String(funcId)}`)
     .query({ dia, turnoId: turno })
     .expect(200);
   assert.equal(remFora.body.ok, true, 'Remoção do fora deve retornar ok');
 
-  const res2 = await request(app)
+  const res2 = await agent
     .get('/escalas/api/escalas/diaria')
     .query({ unidadeId: String(unidadeId), dia })
     .expect(200);

@@ -45,7 +45,7 @@ export async function rememberRestore(req, res, next) {
 
     const sessPayload = { id: user._id, email: user.email, nome: user.nome, role: user.role, funcionario_id: user.funcionario_id || null, unidade_id: user.unidade_id || null };
     const isEscalas = req.originalUrl && req.originalUrl.startsWith('/escalas');
-    if (isEscalas) req.session.escalasUser = sessPayload; else req.session.user = sessPayload;
+    if (isEscalas) req.session.escalasUser = sessPayload;
     rt.lastUsedAt = new Date();
     await rt.save();
     return next();

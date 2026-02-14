@@ -25,6 +25,7 @@ import { buildPortalSessionPayload, verifyPortalPassword, setPortalPassword } fr
 import { setPortalSessionCookie } from './lib/portalSessionCookie.js';
 import { portalLoginPost, portalLogout, portalAuthContextGet, portalSelectVinculoPost } from './controllers/authController.js';
 import { getPortalVapidPublicKey, savePortalPushSubscription, sendPortalPush } from '#modules/portal-morador/lib/pushNotifications.js';
+import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
 import fetch from 'node-fetch';
 
 let sharpPromise = null;
@@ -547,9 +548,35 @@ app.use('/api', (_req, res, next) => {
   next();
 });
 
-// IMPORTANTE: não montar o router `gestorUserApi` aqui.
-// Ele aplica `requireLogin` em "/api/*" e intercepta as rotas do Portal ("/portal-morador/api/*"),
-// causando 401 mesmo com cookie do Portal válido.
+// Delegação seletiva para API de usuário do Gestor, sem interceptar APIs próprias do Portal.
+app.use((req, res, next) => {
+  try {
+    const method = String(req.method || 'GET').toUpperCase();
+    const pathOnly = String(req.path || (req.originalUrl || req.url || '')).split('?')[0];
+    const isObjectId = (s) => /^[0-9a-fA-F]{24}$/.test(String(s || ''));
+
+    const shouldDelegate = (() => {
+      if (!pathOnly.startsWith('/api/')) return false;
+
+      if (pathOnly === '/api/usuario') return true;
+      if (pathOnly === '/api/usuario/foto') return true;
+      if (pathOnly === '/api/usuario/senha') return true;
+      if (pathOnly === '/api/modulos' && method === 'GET') return true;
+
+      if (pathOnly === '/api/usuarios' && method === 'POST') return true;
+
+      const m = pathOnly.match(/^\/api\/usuarios\/([^\/]+)\/(update|toggle|delete|status)$/i);
+      if (m && isObjectId(m[1])) return true;
+
+      return false;
+    })();
+
+    if (!shouldDelegate) return next();
+    return gestorUserApi(req, res, next);
+  } catch {
+    return next();
+  }
+});
 
 app.get('/', (req, res) => res.redirect((req.baseUrl || '/portal-morador') + '/login'));
 app.get('/dashboard', (req, res) => {

@@ -1,23 +1,45 @@
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 import { createServer } from '../src/server/createServer.js';
+import User from '../src/core/models/user.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
 
 process.env.MONGO_MEMORY = '1';
 
-let app; let registerErrorHandlers; let closeServer;
+let app; let registerErrorHandlers; let closeServer; let agent;
 
 async function setupServer() {
   // Habilita módulo Escalas no servidor de teste
   process.env.ENABLE_ESCALAS = '1';
-  // Bypass de auth no ambiente de teste
   process.env.NODE_ENV = 'test';
-  process.env.SKIP_AUTH = '1';
   // Usa DB real/local (fallback padrão já cuida se não houver URI)
-  const built = await createServer({ skipDb: false, skipAuth: true, deferErrorHandlers: true });
+  const built = await createServer({ skipDb: false, deferErrorHandlers: true });
   app = built.app; registerErrorHandlers = built.registerErrorHandlers; closeServer = built.close;
   await Promise.resolve(registerErrorHandlers());
+
+  const email = `teste.escalas.locking.${Date.now()}@example.com`;
+  const senha = 'Senha@123456';
+  const cpf = String(Date.now()).slice(-11).padStart(11, '0');
+  const senhaHash = await bcrypt.hash(senha, 10);
+  await User.create({
+    email,
+    senha: senhaHash,
+    cpf,
+    role: 'master',
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: 'Teste Escalas Locking'
+  });
+
+  agent = request.agent(app);
+  const loginRes = await agent
+    .post('/gestor/login')
+    .type('form')
+    .send({ email, senha });
+  assert.ok(loginRes.status >= 300 && loginRes.status < 400, `Login real deve redirecionar, recebido ${loginRes.status}`);
 }
 
 after(async () => {
@@ -50,7 +72,7 @@ async function criarEscalaBasica() {
     equipes: [ { id: 'EQ1', nome: 'EQ1', descricao: 'Equipe 1', componentes: [] } ],
     gruposTurnos: [ { id: 'g1', turnos: [ { ini: '08:00', fim: '12:00' } ] } ]
   };
-  const res = await request(app)
+  const res = await agent
     .post('/escalas/api/escalas')
     .set('Accept','application/json')
     .send(body);
@@ -60,7 +82,7 @@ async function criarEscalaBasica() {
 }
 
 async function fecharEscala(id) {
-  const res = await request(app)
+  const res = await agent
     .put(`/escalas/api/escalas/${id}/status`)
     .set('Accept','application/json')
     .send({ status: 'fechada' });
@@ -77,7 +99,7 @@ test('Escala fechada deve responder 423 em operações bloqueadas', async () => 
 
   // 1) Remover grupo por equivalência de turnos: deve priorizar 423 mesmo sem body turnos
   {
-    const r = await request(app)
+    const r = await agent
       .post(`/escalas/api/escalas/${id}/grupos-turnos/remove-by-turnos`)
       .set('Accept','application/json')
       .send({});
@@ -87,7 +109,7 @@ test('Escala fechada deve responder 423 em operações bloqueadas', async () => 
 
   // 2) PUT /escalas/:id alterando equipes (campos gerais): 423
   {
-    const r = await request(app)
+    const r = await agent
       .put(`/escalas/api/escalas/${id}`)
       .set('Accept','application/json')
       .send({ equipes: [ { id: 'EQ1', componentes: [] } ] });
@@ -96,7 +118,7 @@ test('Escala fechada deve responder 423 em operações bloqueadas', async () => 
 
   // 3) DELETE recurso: 423 (bloqueio geral)
   {
-    const r = await request(app)
+    const r = await agent
       .delete(`/escalas/api/escalas/${id}/equipes/EQ1/recursos/R1`)
       .set('Accept','application/json');
     assert.equal(r.status, 423, `Esperado 423 Locked em DELETE recurso, recebido ${r.status}`);
@@ -105,7 +127,7 @@ test('Escala fechada deve responder 423 em operações bloqueadas', async () => 
   // 4) DELETE alocação de recurso por dia/turno: 423 célula bloqueada
   {
     const dia = (periodo.ini||'').slice(0,10);
-    const r = await request(app)
+    const r = await agent
       .delete(`/escalas/api/escalas/${id}/equipes/EQ1/recursos/R1/alocacao`)
       .query({ dia, turnoId: '08:00-12:00' })
       .set('Accept','application/json');
@@ -115,7 +137,7 @@ test('Escala fechada deve responder 423 em operações bloqueadas', async () => 
   // 5) Alias POST alocacao/delete: 423 célula bloqueada (mirror)
   {
     const dia = (periodo.ini||'').slice(0,10);
-    const r = await request(app)
+    const r = await agent
       .post(`/escalas/api/escalas/${id}/equipes/EQ1/recursos/R1/alocacao/delete`)
       .send({ dia, turnoId: '08:00-12:00' })
       .set('Accept','application/json');

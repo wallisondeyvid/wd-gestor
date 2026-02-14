@@ -18,6 +18,7 @@ import ausenciasRouter from './routes/ausencias.js'; // rota página ausências
 import recursosApiRouter from './routes/recursosApi.js'; // rota API recursos (busca por placa/unidade)
 import relatoriosRouter from './routes/relatorios.js'; // rota relatórios (PDF)
 import notasRouter from './routes/notas.js'; // rota modal notas
+import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,6 +90,36 @@ app.use(async (req, res, next) => {
   // Usa somente a sessão específica do módulo
   res.locals.user = req.user || (req.session && req.session.escalasUser) || null;
   next();
+});
+
+// Delegação seletiva para API de usuário do Gestor (sem interceptar APIs próprias do módulo Escalas)
+app.use((req, res, next) => {
+  try {
+    const method = String(req.method || 'GET').toUpperCase();
+    const pathOnly = String(req.path || (req.originalUrl || req.url || '')).split('?')[0];
+    const isObjectId = (s) => /^[0-9a-fA-F]{24}$/.test(String(s || ''));
+
+    const shouldDelegate = (() => {
+      if (!pathOnly.startsWith('/api/')) return false;
+
+      if (pathOnly === '/api/usuario') return true;
+      if (pathOnly === '/api/usuario/foto') return true;
+      if (pathOnly === '/api/usuario/senha') return true;
+      if (pathOnly === '/api/modulos' && method === 'GET') return true;
+
+      if (pathOnly === '/api/usuarios' && method === 'POST') return true;
+
+      const m = pathOnly.match(/^\/api\/usuarios\/([^\/]+)\/(update|toggle|delete|status)$/i);
+      if (m && isObjectId(m[1])) return true;
+
+      return false;
+    })();
+
+    if (!shouldDelegate) return next();
+    return gestorUserApi(req, res, next);
+  } catch {
+    return next();
+  }
 });
 
 // Rotas (sem prefixo; prefixo é aplicado no index via meta.basePath)

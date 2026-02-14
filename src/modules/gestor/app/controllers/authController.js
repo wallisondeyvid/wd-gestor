@@ -272,7 +272,10 @@ export async function login(req, res) {
     }
 
     console.log('[login] autenticado', { id: user._id.toString(), primeiro_acesso: user.primeiro_acesso, senha_provisoria: user.senha_provisoria, role: user.role });
-    req.session.user = { id: user._id, email: user.email, nome: user.nome, role: user.role, funcionario_id: user.funcionario_id || null, unidade_id: user.unidade_id || null, funcao: null };
+    req.session.user = {
+      id: user._id.toString(),
+      email: user.email
+    };
 
     // Importante: garantir persistência da sessão antes de redirecionar.
     // Em alguns cenários (principalmente com session store remoto + redirect), a gravação pode atrasar.
