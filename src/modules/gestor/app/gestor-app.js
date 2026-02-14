@@ -22,7 +22,7 @@ import methodOverride from 'method-override';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT = path.resolve(__dirname, '../../../../..');
+const ROOT = process.cwd();
 
 // Rotas (mantida mesma estrutura)
 import usuarioRouter from './routes/usuario.js';
