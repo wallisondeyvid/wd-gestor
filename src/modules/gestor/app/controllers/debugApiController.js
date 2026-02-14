@@ -22,7 +22,7 @@ export function versionInfo(req, res){
 		const __filename = fileURLToPath(import.meta.url);
 		const __dirname = path.dirname(__filename);
 		// Sobe até a raiz (src/modules/gestor/app/controllers -> raiz do repo)
-		const ROOT = path.join(__dirname, '../../../../..');
+		const ROOT = process.cwd();
 		let pkg = { name: 'wdgestor', version: '0.0.0-dev' };
 		try {
 			const pj = path.join(ROOT, 'package.json');

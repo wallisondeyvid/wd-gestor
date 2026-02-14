@@ -1,6 +1,6 @@
 // Rotas de usuários do módulo Gestor (migrado para modules/gestor/app/routes)
 import express from 'express';
-import { toggleUsuario, atualizarUsuario, excluirUsuario, listLockedUsers, unlockUsuario, statusUsuario } from '../controllers/userController.js';
+import { toggleUsuario, atualizarUsuario, excluirUsuario, listLockedUsers, unlockUsuario, statusUsuario } from '#modules/gestor/app/controllers/userController.js';
 
 const router = express.Router();
 router.post('/api/usuarios/:id/toggle', toggleUsuario);

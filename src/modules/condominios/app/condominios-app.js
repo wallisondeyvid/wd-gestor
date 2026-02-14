@@ -7,31 +7,31 @@ import multer from 'multer';
 import crypto from 'crypto';
 import { put, del } from '@vercel/blob';
 import { connectMongo } from '#core/db/connect.js';
-import { emitirDocumentoAssinadoExterno, obterPorToken as obterDocumentoValidadoPorToken, substituir as substituirDocumentoValidado } from '../../../../services/documentos.service.js';
+import { emitirDocumentoAssinadoExterno, obterPorToken as obterDocumentoValidadoPorToken, substituir as substituirDocumentoValidado } from '#services/documentos.service.js';
 // Reutiliza API de usuário do módulo Gestor (perfil/foto/senha)
-import gestorUserApi from '../../gestor/app/routes/userApi.js';
-import { excluirUsuario as gestorExcluirUsuario } from '../../gestor/app/controllers/userController.js';
-import Unidade from '../../../core/models/unidade.js';
+import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
+import { excluirUsuario as gestorExcluirUsuario } from '#modules/gestor/app/controllers/userController.js';
+import Unidade from '#core/models/unidade.js';
 import User from '#core/models/user.js'; // apenas leitura (Gestor)
 import CondUsuario from '#core/models/cond_usuario.js';
 import Funcionario from '#core/models/Funcionario.js';
 // Models do módulo Condomínios
-import CondHabitacao from '../../../core/models/cond_habitacao.js';
-import CondMorador from '../../../core/models/cond_morador.js';
-import CondProprietario from '../../../core/models/cond_proprietario.js';
-import CondBloco from '../../../core/models/cond_bloco.js';
-import CondAndar from '../../../core/models/cond_andar.js';
-import CondVagaGaragem from '../../../core/models/cond_vaga_garagem.js';
-import CondAreaComum from '../../../core/models/cond_area_comum.js';
-import CondAreaCessao from '../../../core/models/cond_area_cessao.js';
-import CondNatMaterial from '../../../core/models/cond_nat_material.js';
-import CondBemMaterial from '../../../core/models/cond_bem_material.js';
-import CondQRCodeMaterial from '../../../core/models/cond_qrcode_material.js';
-import CondMaterialTransferencia from '../../../core/models/cond_material_transferencia.js';
+import CondHabitacao from '#core/models/cond_habitacao.js';
+import CondMorador from '#core/models/cond_morador.js';
+import CondProprietario from '#core/models/cond_proprietario.js';
+import CondBloco from '#core/models/cond_bloco.js';
+import CondAndar from '#core/models/cond_andar.js';
+import CondVagaGaragem from '#core/models/cond_vaga_garagem.js';
+import CondAreaComum from '#core/models/cond_area_comum.js';
+import CondAreaCessao from '#core/models/cond_area_cessao.js';
+import CondNatMaterial from '#core/models/cond_nat_material.js';
+import CondBemMaterial from '#core/models/cond_bem_material.js';
+import CondQRCodeMaterial from '#core/models/cond_qrcode_material.js';
+import CondMaterialTransferencia from '#core/models/cond_material_transferencia.js';
 import CondVisitante from '#core/models/cond_visitante.js';
 import CondAcessoMorador from '#core/models/cond_acesso_morador.js';
-import { issuePortalInvite } from '../../portal-morador/lib/portalAuth.js';
-import { readPortalSessionCookie } from '../../portal-morador/app/lib/portalSessionCookie.js';
+import { issuePortalInvite } from '#modules/portal-morador/lib/portalAuth.js';
+import { readPortalSessionCookie } from '#modules/portal-morador/app/lib/portalSessionCookie.js';
 import CondSolicitacaoServico from '#core/models/cond_solicitacao_servico.js';
 import {
   notifyServicoStatusPush,
@@ -732,13 +732,13 @@ try {
 
 // Views: prioriza /views/condominios, com fallback para /views
 app.set('views', [
-  path.join(__dirname, '../../../../views/condominios'),
-  path.join(__dirname, '../../../../views')
+  path.join(ROOT, 'views/condominios'),
+  path.join(ROOT, 'views')
 ]);
 app.set('view engine', 'ejs');
 
 // Assets compartilhados (servidos das pastas globais; o prefixo público é adicionado no mount)
-const ROOT = path.join(__dirname, '../../../..');
+const ROOT = process.cwd();
 app.use('/css', express.static(path.join(ROOT, 'public/css')));
 // JS crítico: não cachear (evita telas continuarem com versão antiga após deploy)
 app.get('/js/condominios/caixa_de_mensagem.js', (req, res) => {

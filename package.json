@@ -4,6 +4,16 @@
   "description": "Sistema de gestão modular",
   "main": "src/start.js",
   "type": "module",
+  "imports": {
+    "#core/*": "./src/core/*",
+    "#shared/*": "./src/shared/*",
+    "#modules/*": "./src/modules/*",
+    "#models/*": "./models/*",
+    "#services/*": "./services/*",
+    "#utils/*": "./src/utils/*",
+    "#mail/*": "./src/mail/*",
+    "#routes/*": "./routes/*"
+  },
   "scripts": {
     "start": "node src/start.js",
     "dev": "nodemon --watch src --watch routes --watch services --watch models --ext js,json,cjs,mjs --signal SIGTERM src/start.js",
@@ -38,7 +48,9 @@
     "migrate:backfill-habitacao-mailboxes": "node scripts/migrations/2026-01-09_backfill-habitacao-mailboxes.js",
     "backfill:refeicoes": "node scripts/backfill_refeicoes_computavel.js \"%MONGO_URI%\"",
     "backfill:refeicoes:uri": "node scripts/backfill_refeicoes_computavel.js",
-    "test:e2e:refeicoes": "node scripts/test_e2e_refeicoes_computavel.js"
+    "test:e2e:refeicoes": "node scripts/test_e2e_refeicoes_computavel.js",
+    "verify:imports": "node scripts/verify-no-relative-imports.js",
+    "prepare": "husky"
   },
   "keywords": [
     "gestao",
@@ -84,15 +96,11 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "eslint": "^9.32.0",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4"
-  },
-  "imports": {
-    "#core/*": "./src/core/*",
-    "#shared/*": "./src/shared/*",
-    "#modules/*": "./src/modules/*",
-    "#models/*": "./models/*"
   }
 }

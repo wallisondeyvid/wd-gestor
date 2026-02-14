@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
 import { put, del } from '@vercel/blob';
-import requireLogin from '../middlewares/requireLogin.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 import Feedback from '#models/feedback.js';
 
 const router = express.Router();

@@ -9,8 +9,8 @@ import CondUsuario from '#core/models/cond_usuario.js';
 import CondMorador from '#core/models/cond_morador.js';
 import CondHabitacao from '#core/models/cond_habitacao.js';
 import CondProprietario from '#core/models/cond_proprietario.js';
-import { writeAuditLog } from '../lib/auditLog.js';
-import { verifyPortalPassword } from '../../../portal-morador/lib/portalAuth.js';
+import { writeAuditLog } from '#modules/condominios/app/lib/auditLog.js';
+import { verifyPortalPassword } from '#modules/portal-morador/lib/portalAuth.js';
 
 function safeStr(v, max = 4000) {
   const s = String(v ?? '').trim();

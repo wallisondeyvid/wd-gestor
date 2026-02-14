@@ -2,7 +2,7 @@
 import Unidade from '#models/unidade.js';
 import User from '#models/user.js';
 import Funcionario from '#models/Funcionario.js';
-import { callBankApi, getOAuthTokenFromConfig } from '../../../../../services/bank/bankClient.js';
+import { callBankApi, getOAuthTokenFromConfig } from '#services/bank/bankClient.js';
 
 export async function listarUnidades(req, res) {
   try {

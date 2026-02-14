@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import path from 'path';
 import User from '#core/models/user.js';
 import PasswordReset from '#core/models/passwordReset.js';
 // Import do template de reset vindo do módulo Gestor.
-// O caminho anterior '../../gestor/...' subia apenas dois níveis (routes -> app -> escalas) e entrava em 'escalas/gestor',
+// O caminho anterior para gestor subia apenas dois níveis (routes -> app -> escalas) e entrava em 'escalas/gestor',
 // causando o erro de módulo não encontrado. Precisamos subir três níveis para alcançar 'modules'.
 // Estrutura: modules/escalas/app/routes/auth.js -> subir 3 (routes->app->escalas) => modules/ -> gestor/...
 import { resetPasswordTemplate } from '#core/mail/templates/resetPassword.js';
@@ -12,6 +13,8 @@ import nodemailer from 'nodemailer';
 import Modulo from '#core/models/modulo.js';
 import Funcionario from '#core/models/Funcionario.js';
 import RememberToken from '#core/models/rememberToken.js';
+
+const ROOT = process.cwd();
 
 const router = Router();
 

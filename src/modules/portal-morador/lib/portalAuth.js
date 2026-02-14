@@ -9,7 +9,7 @@ import CondBloco from '#core/models/cond_bloco.js';
 import CondAndar from '#core/models/cond_andar.js';
 import Unidade from '#core/models/unidade.js';
 import { sendMail } from '#core/mail/mailer.js';
-import { portalFirstAccessEmail } from '../../../mail/templates/portalFirstAccess.js';
+import { portalFirstAccessEmail } from '#mail/templates/portalFirstAccess.js';
 
 const DEFAULT_INVITE_HOURS = Number(process.env.PORTAL_PRIMEIRO_ACESSO_EXPIRA_HORAS || 120);
 const LOGIN_MAX_ATTEMPTS = Math.max(3, Number(process.env.PORTAL_LOGIN_MAX_TENTATIVAS || 5));

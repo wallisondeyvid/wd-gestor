@@ -2,7 +2,7 @@ import Unidade from '#models/unidade.js';
 import Modulo from '#models/modulo.js';
 import User from '#models/user.js';
 import { ok, created, badRequest, notFound, serverError } from '#core/utils/apiResponse.js';
-import { validarCnpj, calcularDigitoVerificador } from '../utils/cnpj.js';
+import { validarCnpj, calcularDigitoVerificador } from '#modules/gestor/app/utils/cnpj.js';
 // Dependências para upload de logo
 import multer from 'multer';
 import path from 'path';
@@ -531,7 +531,7 @@ export async function getUnidadeLogo(req, res) {
     try {
       if (typeof logo === 'string' && logo) {
         const rel = logo.replace(/^\/*/, '');
-        const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '../../../../..');
+        const ROOT = process.cwd();
         const candidates = [
           path.join(ROOT, 'public', rel),
           path.join(ROOT, rel),
@@ -559,7 +559,7 @@ export async function getUnidadeLogo(req, res) {
 
     // 3) Placeholder
     try {
-      const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '../../../../..');
+      const ROOT = process.cwd();
       const ph = path.join(ROOT, 'public', 'img', 'placeholder-logo.svg');
       res.set('Content-Type', 'image/svg+xml');
       res.set('Cache-Control', 'public, max-age=600');

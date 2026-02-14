@@ -9,20 +9,20 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import nodeFetch from 'node-fetch';
-import { loadConfig } from '../core/config/index.js';
-import { connectMongo } from '../core/db/connect.js';
-import { centralErrorHandler, notFoundHandler } from '../core/middlewares/errorHandler.js';
-import { envelopeNormalizer } from '../core/middlewares/envelopeNormalizer.js';
-import { rememberRestore } from '../core/middlewares/rememberRestore.js';
-import { isWidgetEnabledCached } from '../core/utils/widgetSettings.js';
-import verificacaoRoutes from '../../routes/verificacao.routes.js';
-import * as gestorModule from '../modules/gestor/index.js';
-import * as clinicaModule from '../modules/clinica/index.js';
-import * as condominiosModule from '../modules/condominios/index.js';
-import * as portalMoradorModule from '../modules/portal-morador/index.js';
+import { loadConfig } from '#core/config/index.js';
+import { connectMongo } from '#core/db/connect.js';
+import { centralErrorHandler, notFoundHandler } from '#core/middlewares/errorHandler.js';
+import { envelopeNormalizer } from '#core/middlewares/envelopeNormalizer.js';
+import { rememberRestore } from '#core/middlewares/rememberRestore.js';
+import { isWidgetEnabledCached } from '#core/utils/widgetSettings.js';
+import verificacaoRoutes from '#routes/verificacao.routes.js';
+import * as gestorModule from '#modules/gestor/index.js';
+import * as clinicaModule from '#modules/clinica/index.js';
+import * as condominiosModule from '#modules/condominios/index.js';
+import * as portalMoradorModule from '#modules/portal-morador/index.js';
 // Reuso de handlers de login/primeiro acesso do Gestor para rotas genéricas de módulos
-import { login as genericLogin, primeiroAcessoPost as genericPrimeiroAcessoPost } from '../modules/gestor/app/controllers/authController.js';
-import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } from '../modules/portal-morador/app/controllers/authController.js';
+import { login as genericLogin, primeiroAcessoPost as genericPrimeiroAcessoPost } from '#modules/gestor/app/controllers/authController.js';
+import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } from '#modules/portal-morador/app/controllers/authController.js';
 
 // Módulos registrados: por padrão, NÃO montar Escalas (fora do escopo atual).
 // Para habilitar Escalas no futuro, use ENABLE_ESCALAS=1.
@@ -31,7 +31,7 @@ const registry = [gestorModule, clinicaModule, condominiosModule, portalMoradorM
 export async function createServer(options = {}) {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  const ROOT = path.join(__dirname, '../../');
+  const ROOT = process.cwd();
   const config = options.config || loadConfig();
   const skipDb = options.skipDb === true;
   const skipDbForced = options.skipDb === true;
@@ -77,7 +77,7 @@ export async function createServer(options = {}) {
   } catch { /* noop */ }
   // Registrar view engine para rotas diretas deste app (ex.: '/', '/index')
   try {
-    const viewsRoot = path.join(__dirname, '../../', 'views');
+    const viewsRoot = path.join(ROOT, '.', 'views');
     app.set('views', [
       path.join(viewsRoot),
       path.join(viewsRoot, 'gestor'),
@@ -171,7 +171,7 @@ export async function createServer(options = {}) {
   // Interceptador de res.redirect para evitar loops para /gestor/login e /gestor/primeiroacesso
   // Se algum middleware tentar redirecionar essas páginas públicas, renderizamos o EJS diretamente.
   try {
-    const ROOTi = path.join(__dirname, '../../');
+    const ROOTi = path.join(ROOT, '.');
     app.use((req, res, next) => {
       const originalRedirect = res.redirect.bind(res);
       res.redirect = async function(statusOrUrl, maybeUrl) {
@@ -212,7 +212,7 @@ export async function createServer(options = {}) {
                 if (!segment || segment === 'gestor') return 'Gestor';
                 if (segment === 'escalas') return 'Escalas';
                 if (!req.app.locals.skipDb && mongoose.connection.readyState === 1) {
-                  const ModuloModel = (await import('../core/models/modulo.js')).default;
+                  const ModuloModel = (await import('#core/models/modulo.js')).default;
                   const m = await ModuloModel.findOne({
                     $or: [
                       { url_base: '/' + segment },
@@ -274,7 +274,7 @@ export async function createServer(options = {}) {
   // Ultra-early guard: renderiza /gestor/login e /gestor/primeiroacesso antes de QUALQUER outra coisa
   // Cobre GET e HEAD, preserva query (?erro=...) e evita qualquer redirecionamento acidental
   try {
-    const ROOT2 = path.join(__dirname, '../../');
+    const ROOT2 = path.join(ROOT, '.');
     app.use(async (req, res, next) => {
       try {
         const m = String(req.method||'GET').toUpperCase();
@@ -577,7 +577,7 @@ export async function createServer(options = {}) {
   // middleware que possa redirecionar. Isso elimina loops ocasionais no GET
   // /gestor/login e /gestor/primeiroacesso caso o entrypoint não intercepte.
   try {
-    const ROOT = path.join(__dirname, '../../');
+    const ROOT = process.cwd();
     function parseErroMensagem(isLogin, qs) {
       try {
         const params = new URLSearchParams(qs || '');
@@ -641,7 +641,7 @@ export async function createServer(options = {}) {
         // Tenta obter o nome e status a partir do banco se disponível
         try {
           if (!req.app.locals.skipDb && mongoose.connection.readyState === 1) {
-            const ModuloModel = (await import('../core/models/modulo.js')).default;
+            const ModuloModel = (await import('#core/models/modulo.js')).default;
             const m = await ModuloModel.findOne({
               $or: [
                 { url_base: '/' + seg },
@@ -985,7 +985,7 @@ export async function createServer(options = {}) {
         }
         // Carrega modelo de Módulo on-demand
         let ModuloModel = null;
-        try { const mod = await import('../core/models/modulo.js'); ModuloModel = mod.default || mod; } catch { ModuloModel = null; }
+        try { const mod = await import('#core/models/modulo.js'); ModuloModel = mod.default || mod; } catch { ModuloModel = null; }
         if (!ModuloModel && !isForced) return next();
         // Tenta localizar o módulo pelo url_base; se não achar, tenta variações e por nome
         let modulo = null;
@@ -1056,7 +1056,7 @@ export async function createServer(options = {}) {
   // Habilitar módulo Escalas somente sob flag explícita
   if (process.env.ENABLE_ESCALAS === '1') {
     try {
-      const escalasModule = await import('../modules/escalas/index.js');
+      const escalasModule = await import('#modules/escalas/index.js');
       registry.push(escalasModule);
     } catch (err) {
       console.warn('[server] Escalas desabilitado por erro de carga:', err.message);
@@ -1325,7 +1325,7 @@ export async function createServer(options = {}) {
       try {
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = path.dirname(__filename);
-        const ROOT = path.join(__dirname, '../../');
+        const ROOT = process.cwd();
         const placeholderSvg = path.join(ROOT, 'public', 'img', 'user-placeholder.svg');
         const placeholderPng = path.join(ROOT, 'images', 'usuario.png');
         const target = fs.existsSync(placeholderSvg) ? placeholderSvg : (fs.existsSync(placeholderPng) ? placeholderPng : null);
@@ -1368,8 +1368,8 @@ export async function createServer(options = {}) {
           uriHint: (process.env.MONGO_URI || process.env.MONGODB_URI || (typeof cn?.client?.s?.url === 'string' ? cn.client.s.url : null)) || null,
         };
         // Contagens básicas
-        const Unidade = await importWithFallback('#core/models/unidade.js', '../core/models/unidade.js');
-        const User = await importWithFallback('#core/models/user.js', '../core/models/user.js');
+        const Unidade = await importWithFallback('#core/models/unidade.js', '#core/models/unidade.js');
+        const User = await importWithFallback('#core/models/user.js', '#core/models/user.js');
         let counts = {};
         try { counts.unidades = Unidade ? await Unidade.countDocuments({}) : null; } catch { counts.unidades = null; }
         try { counts.usuarios = User ? await User.countDocuments({}) : null; } catch { counts.usuarios = null; }
@@ -1407,7 +1407,7 @@ export async function createServer(options = {}) {
     app.get(['/', '/index'], async (req, res, next) => {
       try {
         let ModuloModel = null;
-        try { const mod = await import('../core/models/modulo.js'); ModuloModel = mod.default || mod; } catch {}
+        try { const mod = await import('#core/models/modulo.js'); ModuloModel = mod.default || mod; } catch {}
         let modulos = [];
         try {
           if (ModuloModel && mongoose.connection.readyState === 1) {
@@ -1520,7 +1520,7 @@ export async function createServer(options = {}) {
           return res.redirect(302, '/escalas/login');
         }
         // Carrega handler real on-demand
-        const mod = await import('../modules/escalas/app/routes/relatorios.js');
+        const mod = await import('#modules/escalas/app/routes/relatorios.js');
         const handler = mod.relatorioEscalaHandler || (mod.default && mod.default.relatorioEscalaHandler);
         if (typeof handler !== 'function') return next();
         // Normaliza ID a partir de params, query ou caminho (suportando .pdf)

@@ -4,9 +4,9 @@ import Unidade from '#models/unidade.js';
 import Funcionario from '#models/Funcionario.js';
 import bcrypt from 'bcryptjs';
 // Usamos o util do módulo Gestor para manter a chave `error` nas respostas 4xx/5xx
-import { ok, created, badRequest, notFound, serverError } from '../utils/apiResponse.js';
+import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/app/utils/apiResponse.js';
 // Service para criação + envio de senha provisória
-import { createUserAndSendPassword } from '../services/userService.js';
+import { createUserAndSendPassword } from '#modules/gestor/app/services/userService.js';
 
 // Lista usuários atualmente bloqueados por lock_until futuro
 export async function listLockedUsers(req, res) {

@@ -6,8 +6,8 @@ import { readFile } from 'fs/promises';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Localiza raiz do projeto a partir de .../modules/gestor/app/controllers
-const ROOT = path.join(__dirname, '../../../../..');
+// Localiza raiz do projeto a partir de modules/gestor/app/controllers
+const ROOT = process.cwd();
 const BANCOS_FILE = path.join(ROOT, 'public', 'data', 'bancos.json');
 
 let cache = { data: null, ts: 0 };

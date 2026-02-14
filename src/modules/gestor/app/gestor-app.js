@@ -213,13 +213,13 @@ app.use((req, res, next) => {
 // Views ficam ainda em src/views/gestor
 // Views: prioriza /views/gestor, com fallback para /views
 app.set('views', [
-	path.join(__dirname, '../../../../views/gestor'),
-	path.join(__dirname, '../../../../views')
+	path.join(ROOT, 'views/gestor'),
+	path.join(ROOT, 'views')
 ]);
 app.set('view engine', 'ejs');
 
 // Static roots relativos ao novo local (subir 3 níveis para raiz do projeto)
-const ROOT = path.join(__dirname, '../../../..');
+const ROOT = process.cwd();
 
 // Compatibilidade PRIORITÁRIA: sempre atenda /js/modals/* a partir de public/gestor/js/modals
 // Registrado ANTES do static '/js' para prevalecer e evitar versões antigas de public/js/modals

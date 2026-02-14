@@ -1,7 +1,7 @@
 // (migrado) funcaoApi
 import express from 'express';
-import requireLogin from '../middlewares/requireLogin.js';
-import { createFuncao, getFuncao, updateFuncao, getFuncoesPorUnidade, listarFuncoesApi, deleteFuncao, bulkUpdateFuncoes } from '../controllers/funcaoApiController.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { createFuncao, getFuncao, updateFuncao, getFuncoesPorUnidade, listarFuncoesApi, deleteFuncao, bulkUpdateFuncoes } from '#modules/gestor/app/controllers/funcaoApiController.js';
 const router = express.Router();
 router.post('/api/funcoes', requireLogin, createFuncao);
 router.get('/api/funcoes/:id', requireLogin, getFuncao);

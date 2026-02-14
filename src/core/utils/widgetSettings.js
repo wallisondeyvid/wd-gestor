@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import WidgetSetting from '../models/widgetSetting.js';
+import WidgetSetting from '#models/widgetSetting.js';
 
 const CACHE_TTL_MS = 30000;
 /** @type {Map<string, { at: number, enabled: boolean }>} */

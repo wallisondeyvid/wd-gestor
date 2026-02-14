@@ -10,11 +10,11 @@ import {
   formatExpirationDescription,
   setPortalPassword,
   PORTAL_LOGIN_MAX_ATTEMPTS
-} from '../../lib/portalAuth.js';
+} from '#modules/portal-morador/lib/portalAuth.js';
 import mongoose from 'mongoose';
 import User from '#core/models/user.js';
 import CondUsuario from '#core/models/cond_usuario.js';
-import { setPortalSessionCookie, clearPortalSessionCookie } from '../lib/portalSessionCookie.js';
+import { setPortalSessionCookie, clearPortalSessionCookie } from '#modules/portal-morador/app/lib/portalSessionCookie.js';
 
 const FIRST_ACCESS_PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 

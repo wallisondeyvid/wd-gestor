@@ -1,7 +1,7 @@
 // (migrado) setorApi
 import express from 'express';
-import requireLogin from '../middlewares/requireLogin.js';
-import { createSetor, getSetoresPorUnidade, getSetor, updateSetor, listarSetores, deleteSetor, debugGetCounter, debugFixCounter } from '../controllers/setorApiController.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { createSetor, getSetoresPorUnidade, getSetor, updateSetor, listarSetores, deleteSetor, debugGetCounter, debugFixCounter } from '#modules/gestor/app/controllers/setorApiController.js';
 const router = express.Router();
 router.post('/api/setores', requireLogin, createSetor);
 router.get('/api/setores/unidade/:unidadeId', requireLogin, getSetoresPorUnidade);

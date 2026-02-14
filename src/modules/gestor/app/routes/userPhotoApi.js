@@ -6,7 +6,7 @@ import sharp from 'sharp';
 import { v4 as uuid } from 'uuid';
 import { put, del } from '@vercel/blob';
 import User from '#models/user.js';
-import requireLogin from '../middlewares/requireLogin.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 
 const router = express.Router();
 

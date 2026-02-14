@@ -21,10 +21,10 @@ import CondComunicado from '#core/models/cond_comunicado.js';
 import CondAssembleia from '#core/models/cond_assembleia.js';
 import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
 import { connectMongo } from '#core/db/connect.js';
-import { buildPortalSessionPayload, verifyPortalPassword, setPortalPassword } from '../lib/portalAuth.js';
+import { buildPortalSessionPayload, verifyPortalPassword, setPortalPassword } from '#modules/portal-morador/lib/portalAuth.js';
 import { setPortalSessionCookie } from './lib/portalSessionCookie.js';
 import { portalLoginPost, portalLogout, portalAuthContextGet, portalSelectVinculoPost } from './controllers/authController.js';
-import { getPortalVapidPublicKey, savePortalPushSubscription, sendPortalPush } from '../lib/pushNotifications.js';
+import { getPortalVapidPublicKey, savePortalPushSubscription, sendPortalPush } from '#modules/portal-morador/lib/pushNotifications.js';
 import fetch from 'node-fetch';
 
 let sharpPromise = null;
@@ -401,8 +401,8 @@ app.use((req, res, next) => {
 });
 
 app.set('views', [
-  path.join(__dirname, '../../../../views/portal-morador'),
-  path.join(__dirname, '../../../../views')
+  path.join(ROOT, 'views/portal-morador'),
+  path.join(ROOT, 'views')
 ]);
 app.set('view engine', 'ejs');
 
@@ -487,7 +487,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const ROOT = path.join(__dirname, '../../../..');
+const ROOT = process.cwd();
 app.use('/css', express.static(path.join(ROOT, 'public/css')));
 // JS crítico: não cachear (evita Portal continuar com versões antigas após deploy)
 app.get('/js/condominios/caixa_de_mensagem.js', (req, res) => {

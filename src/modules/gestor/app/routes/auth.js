@@ -1,6 +1,6 @@
 // (migrado) Rotas de auth
 import express from 'express';
-import { login, logout, renderResetPassword, postResetPassword, postEsqueciSenha, primeiroAcessoPost, listarEmailsPorCPF } from '../controllers/authController.js';
+import { login, logout, renderResetPassword, postResetPassword, postEsqueciSenha, primeiroAcessoPost, listarEmailsPorCPF } from '#modules/gestor/app/controllers/authController.js';
 const router = express.Router();
 // Métricas simples de adoção de rotas prefixadas vs raiz
 router.use((req,res,next)=> {

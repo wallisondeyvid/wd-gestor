@@ -1,7 +1,7 @@
 // (migrado) Rotas de unidades
 import express from 'express';
-import requireLogin from '../middlewares/requireLogin.js';
-import { testarBanco } from '../controllers/unidadeController.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { testarBanco } from '#modules/gestor/app/controllers/unidadeController.js';
 
 const router = express.Router();
 

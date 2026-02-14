@@ -1,7 +1,7 @@
 // (migrado) unidadeApi
 import express from 'express';
-import { createUnidade, updateUnidade, toggleAccessUnidades, getUnidadeById, getUnidadeModulos, deleteUnidade, uploadLogoUnidade, uploadLogoUnidadeInline, getUnidadeLogo, listUnidades, getUnidadePublic } from '../controllers/unidadeApiController.js';
-import requireLogin from '../middlewares/requireLogin.js';
+import { createUnidade, updateUnidade, toggleAccessUnidades, getUnidadeById, getUnidadeModulos, deleteUnidade, uploadLogoUnidade, uploadLogoUnidadeInline, getUnidadeLogo, listUnidades, getUnidadePublic } from '#modules/gestor/app/controllers/unidadeApiController.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 const router = express.Router();
 router.post('/api/unidades', requireLogin, createUnidade);
 // Listagem para hidratação client-side quando SSR vier vazio

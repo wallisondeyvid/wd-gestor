@@ -3,8 +3,8 @@
 // Mantido para referência e eventual reexecução em ambientes que ainda não aplicaram índices.
 
 import mongoose from 'mongoose';
-import Funcionario from '../../models/Funcionario.js';
-import User from '../../models/user.js';
+import Funcionario from '#models/Funcionario.js';
+import User from '#models/user.js';
 
 async function migrarIndicesCorrigidos() {
   try {

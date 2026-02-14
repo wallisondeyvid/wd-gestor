@@ -9,12 +9,12 @@
 
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import CondHabitacao from '../../src/core/models/cond_habitacao.js';
-import CondMorador from '../../src/core/models/cond_morador.js';
-import CondProprietario from '../../src/core/models/cond_proprietario.js';
-import CondMsgMailbox from '../../src/core/models/cond_msg_mailbox.js';
-import CondBloco from '../../src/core/models/cond_bloco.js';
-import CondAndar from '../../src/core/models/cond_andar.js';
+import CondHabitacao from '#core/models/cond_habitacao.js';
+import CondMorador from '#core/models/cond_morador.js';
+import CondProprietario from '#core/models/cond_proprietario.js';
+import CondMsgMailbox from '#core/models/cond_msg_mailbox.js';
+import CondBloco from '#core/models/cond_bloco.js';
+import CondAndar from '#core/models/cond_andar.js';
 import { fileURLToPath } from 'url';
 
 function parseArgs(argv) {

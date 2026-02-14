@@ -11,9 +11,10 @@ import { normalizeFuncionarioPayload } from './utils/funcionarioNormalize.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ROOT = process.cwd();
 
 // ================= Normalização e movimentação de arquivos =================
-const ROOT_PROJ = path.join(__dirname, '../../../../..');
+const ROOT_PROJ = path.join(ROOT, '.');
 function ensureDir(dir){ if(!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true}); }
 function normalizeAndMaybeMove(fullPath){
   try {
@@ -266,7 +267,7 @@ function isValidPIS(pis){
 }
 
 export async function createFuncionarioInitial(req,res){ try { let { unidade_id, funcao_id, nome, rg, cpf, data_nascimento, sexo, endereco, email, telefone } = req.body; const faltando=[]; function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); } ['unidade_id','nome','rg','cpf','data_nascimento','sexo','endereco','email','telefone'].forEach(c=> need(eval(c), c)); if(faltando.length) return missingFields(res, faltando); cpf = cpf.replace(/[^\d]/g,''); const [cpfExist, emailExist] = await Promise.all([ Funcionario.findOne({ cpf, unidade_id }), Funcionario.findOne({ email: email.toLowerCase() }) ]); if(cpfExist) return badRequest(res, 'Já existe um funcionário cadastrado com este CPF nesta empresa.'); if(emailExist) return badRequest(res, 'Já existe um funcionário cadastrado com este e-mail.'); const funcionario = await Funcionario.create({ unidade_id, funcao_id: funcao_id || undefined, nome: nome.trim(), rg: rg.trim(), cpf, data_nascimento: data_nascimento.trim(), sexo, endereco, email: email.toLowerCase().trim(), telefone: telefone.trim() }); await criarUsuarioAuto(funcionario); return created(res, funcionario._id, { data:{ id: funcionario._id } }); } catch(e){ console.error('[API FUNCIONARIOS][initial] Erro:', e); return serverError(res, 'Falha ao criar funcionário inicial'); } }
-async function criarUsuarioAuto(funcionario){ try { const existingUser = await User.findOne({ email: funcionario.email }); if(existingUser) return; const { createUserAndSendPassword } = await import('../services/userService.js'); await createUserAndSendPassword({ nome: funcionario.nome, email: funcionario.email, cpf: funcionario.cpf, role: funcionario.email === 'wallisondeyvid13@gmail.com' ? 'master' : 'user', unidade_id: funcionario.unidade_id, funcionario_id: funcionario._id }); } catch(err){ console.error('[AUTO USER] Falha criação automática usuário:', err); } }
+async function criarUsuarioAuto(funcionario){ try { const existingUser = await User.findOne({ email: funcionario.email }); if(existingUser) return; const { createUserAndSendPassword } = await import('#modules/gestor/app/services/userService.js'); await createUserAndSendPassword({ nome: funcionario.nome, email: funcionario.email, cpf: funcionario.cpf, role: funcionario.email === 'wallisondeyvid13@gmail.com' ? 'master' : 'user', unidade_id: funcionario.unidade_id, funcionario_id: funcionario._id }); } catch(err){ console.error('[AUTO USER] Falha criação automática usuário:', err); } }
 const asNumber = v => { const s = asStr(v).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',', '.'); return s? Number(s): undefined; };
 export async function createFuncionario(req,res){ try {
 	if (typeof req.body.endereco === 'string') delete req.body.endereco;
@@ -528,7 +529,7 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 		// Exclusão explícita
 		ops.$unset.foto = 1;
 		await deleteFromBlobIfNeeded(funcionario.foto);
-		try { const absFoto = path.join(__dirname,'../../../../..', String(funcionario.foto||'').replace(/^public\//,'')); if(fs.existsSync(absFoto)) fs.unlinkSync(absFoto); } catch{}
+		try { const absFoto = path.join(ROOT, '.', String(funcionario.foto||'').replace(/^public\//,'')); if(fs.existsSync(absFoto)) fs.unlinkSync(absFoto); } catch{}
 	} else {
 		// Nenhum upload novo e não solicitou exclusão -> garantir que não haja unset acidental vindo do form
 		if(ops.$unset && ops.$unset.foto){ delete ops.$unset.foto; }
@@ -702,7 +703,7 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 		if(ops.$set && ops.$set.foto===null){ delete ops.$set.foto; }
 	}
 	let anexosFinal=[]; if(req.body.anexos_existentes && typeof req.body.anexos_existentes === 'string'){ try { anexosFinal=JSON.parse(req.body.anexos_existentes); } catch{} }
-	if(req.body.anexos_excluidos && typeof req.body.anexos_excluidos === 'string'){ try { const excluidos=JSON.parse(req.body.anexos_excluidos); const caminhos=new Set(excluidos.map(a=>a.caminho)); anexosFinal = anexosFinal.filter(e=>!caminhos.has(e.caminho)); for(const ex of excluidos){ if(ex.caminho){ const abs=path.join(__dirname,'../../../../..', ex.caminho.replace(/^public\//,'')); try { if(fs.existsSync(abs)) fs.unlinkSync(abs); } catch{} } } } catch{} }
+	if(req.body.anexos_excluidos && typeof req.body.anexos_excluidos === 'string'){ try { const excluidos=JSON.parse(req.body.anexos_excluidos); const caminhos=new Set(excluidos.map(a=>a.caminho)); anexosFinal = anexosFinal.filter(e=>!caminhos.has(e.caminho)); for(const ex of excluidos){ if(ex.caminho){ const abs=path.join(ROOT, '.', ex.caminho.replace(/^public\//,'')); try { if(fs.existsSync(abs)) fs.unlinkSync(abs); } catch{} } } } catch{} }
 	if(req.files?.anexos?.length){ const novos=mapFiles(req.files.anexos); console.log('[UPLOAD][update-full] novos anexos normalizados:', novos.length); anexosFinal = anexosFinal.concat(novos); }
 	if(anexosFinal.length>0) ops.$set.anexos = anexosFinal; else ops.$unset.anexos=1;
 

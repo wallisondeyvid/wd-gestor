@@ -1,7 +1,7 @@
 // (migrado) Rotas de dashboard
 import express from 'express';
-import { renderDashboard } from '../controllers/dashboardController.js';
-import requireLogin from '../middlewares/requireLogin.js';
+import { renderDashboard } from '#modules/gestor/app/controllers/dashboardController.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 const router = express.Router();
 router.get('/dashboard', requireLogin, renderDashboard);
 // Caso algum fluxo envie POST para /dashboard, redireciona para GET (sem mudar basePath)

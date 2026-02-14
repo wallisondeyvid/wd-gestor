@@ -1,7 +1,7 @@
 // (migrado) recursoApi
 import express from 'express';
-import requireLogin from '../middlewares/requireLogin.js';
-import { listarRecursosApi, getRecurso, createRecurso, updateRecurso, deleteRecurso } from '../controllers/recursoApiController.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { listarRecursosApi, getRecurso, createRecurso, updateRecurso, deleteRecurso } from '#modules/gestor/app/controllers/recursoApiController.js';
 const router = express.Router();
 router.get('/api/recursos', requireLogin, listarRecursosApi);
 router.get('/api/recursos/:id', requireLogin, getRecurso);

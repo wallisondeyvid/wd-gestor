@@ -8,11 +8,11 @@ import sharp from 'sharp';
 import { randomUUID as uuid } from 'crypto';
 import { put, del } from '@vercel/blob';
 import User from '#models/user.js';
-import { criarUsuario, obterUsuarioAtual, atualizarSenhaUsuario, atualizarUsuario } from '../controllers/userController.js';
-import { toggleUsuario, deleteUsuario, updateUsuario as updateUsuarioJson } from '../controllers/userAdminApiController.js';
-import { requireRole } from '../middlewares/requireRole.js';
-import requireApiAuth from '../middlewares/requireApiAuth.js';
-import requireLogin from '../middlewares/requireLogin.js';
+import { criarUsuario, obterUsuarioAtual, atualizarSenhaUsuario, atualizarUsuario } from '#modules/gestor/app/controllers/userController.js';
+import { toggleUsuario, deleteUsuario, updateUsuario as updateUsuarioJson } from '#modules/gestor/app/controllers/userAdminApiController.js';
+import { requireRole } from '#modules/gestor/app/middlewares/requireRole.js';
+import requireApiAuth from '#modules/gestor/app/middlewares/requireApiAuth.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 const router = express.Router();
 
 // GET /api/usuario/foto — endpoint de imagem deve ser resiliente.

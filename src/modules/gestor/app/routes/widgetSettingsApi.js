@@ -1,8 +1,8 @@
 import express from 'express';
 import WidgetSetting from '#models/widgetSetting.js';
-import { bustWidgetEnabledCache } from '../../../../core/utils/widgetSettings.js';
-import requireLogin from '../middlewares/requireLogin.js';
-import { requireRole } from '../middlewares/requireRole.js';
+import { bustWidgetEnabledCache } from '#core/utils/widgetSettings.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { requireRole } from '#modules/gestor/app/middlewares/requireRole.js';
 
 const router = express.Router();
 

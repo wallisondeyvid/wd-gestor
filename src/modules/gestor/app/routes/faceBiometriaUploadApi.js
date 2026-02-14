@@ -2,8 +2,8 @@ import express from 'express';
 import { v4 as uuid } from 'uuid';
 import sharp from 'sharp';
 import { put } from '@vercel/blob';
-import requireLogin from '../middlewares/requireLogin.js';
-import requireApiAuth from '../middlewares/requireApiAuth.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import requireApiAuth from '#modules/gestor/app/middlewares/requireApiAuth.js';
 
 const router = express.Router();
 

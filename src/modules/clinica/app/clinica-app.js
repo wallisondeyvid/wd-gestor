@@ -2,10 +2,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 // Reutiliza API de usuário do módulo Gestor (perfil, foto, senha), para evitar duplicação
-import gestorUserApi from '../../gestor/app/routes/userApi.js';
+import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ROOT = process.cwd();
 
 const app = express();
 
@@ -21,13 +22,12 @@ app.use((req, res, next) => {
 
 // Views: prioriza /views/clinica, com fallback para /views
 app.set('views', [
-  path.join(__dirname, '../../../../views/clinica'),
-  path.join(__dirname, '../../../../views')
+  path.join(ROOT, 'views/clinica'),
+  path.join(ROOT, 'views')
 ]);
 app.set('view engine', 'ejs');
 
 // Assets compartilhados (servimos das pastas globais; o prefixo público é adicionado no mount)
-const ROOT = path.join(__dirname, '../../../..');
 app.use('/css', express.static(path.join(ROOT, 'public/css')));
 app.use('/js', express.static(path.join(ROOT, 'public/js')));
 app.use('/images', express.static(path.join(ROOT, 'images')));

@@ -5,8 +5,8 @@
 
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import Unidade from '../../src/core/models/unidade.js';
-import User from '../../src/core/models/user.js';
+import Unidade from '#core/models/unidade.js';
+import User from '#core/models/user.js';
 import { fileURLToPath } from 'url';
 
 function parseArgs(argv) {

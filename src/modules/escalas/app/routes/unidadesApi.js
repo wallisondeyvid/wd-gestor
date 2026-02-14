@@ -8,12 +8,12 @@ async function getUnidadeModel(){
   } catch (e1) {
     // Fallback quando o alias #core não está resolvendo neste módulo (ambiente sem path aliases)
     try {
-      const mod2 = await import('../../../../../src/core/models/unidade.js');
+      const mod2 = await import('#core/models/unidade.js');
       return mod2.default || mod2.Unidade || mod2;
     } catch (e2) {
       // Fallback final: tentar caminho padrão do projeto em /models/unidade.js
       try {
-        const mod3 = await import('../../../../../models/unidade.js');
+        const mod3 = await import('#models/unidade.js');
         return mod3.default || mod3.Unidade || mod3;
       } catch (e3) {
         console.error('[unidadesApi] Falha ao carregar modelo Unidade (alias/core/models e models root):',

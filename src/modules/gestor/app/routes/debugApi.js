@@ -1,8 +1,8 @@
 // (migrado) debugApi
 import express from 'express';
-import { debugSession, whoAmI, userByEmail, userByCpf, testUnidades, removeWrongMaster, versionInfo } from '../controllers/debugApiController.js';
-import { router as mailerDebugRouter } from '../routes/debugMailer.js';
-import requireLogin from '../middlewares/requireLogin.js';
+import { debugSession, whoAmI, userByEmail, userByCpf, testUnidades, removeWrongMaster, versionInfo } from '#modules/gestor/app/controllers/debugApiController.js';
+import { router as mailerDebugRouter } from '#modules/gestor/app/routes/debugMailer.js';
+import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 const router = express.Router();
 router.get('/debug/session', requireLogin, debugSession);
 router.get('/debug/whoami', requireLogin, whoAmI);

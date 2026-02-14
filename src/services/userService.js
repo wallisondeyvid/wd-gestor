@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { sendMail } from '#core/mail/mailer.js';
-import { welcomePassword } from '../mail/templates/welcomePassword.js';
+import { welcomePassword } from '#mail/templates/welcomePassword.js';
 // Importar o modelo User
 import User from '#core/models/user.js';
 

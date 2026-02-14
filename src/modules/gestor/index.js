@@ -6,7 +6,7 @@ async function runGestorSeeds() {
   const shouldSeed = process.env.GESTOR_SEEDS === '1' || process.env.SEEDS === '1';
   if (!shouldSeed) return;
   try {
-    const { ensureMasterUser, cleanupWrongEmail } = await import('../gestor-seeds.js');
+    const { ensureMasterUser, cleanupWrongEmail } = await import('#modules/gestor-seeds.js');
     await ensureMasterUser();
     await cleanupWrongEmail();
     console.log('[gestor][seeds] concluído');

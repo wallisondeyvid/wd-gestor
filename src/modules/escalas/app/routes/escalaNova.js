@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
-import Ferias from '../../../../../models/ferias.js';
-import Ausencia from '../../../../../models/ausencia.js';
+import Ferias from '#models/ferias.js';
+import Ausencia from '#models/ausencia.js';
 import { relatorioEscalaHandler } from './relatorios.js';
 
 const router = Router();
@@ -49,7 +49,7 @@ async function getUnidadeModel(){
     return mod.default || mod.Unidade || mod;
   } catch (e1) {
     try {
-      const mod2 = await import('../../../../../src/core/models/unidade.js');
+      const mod2 = await import('#core/models/unidade.js');
       return mod2.default || mod2.Unidade || mod2;
     } catch (e2) {
       console.error('[escalaNova][pesquisar] Falha carregando Unidade:', e1?.message||e1, e2?.message||e2);
