@@ -228,6 +228,29 @@
     <div id="uPaginas" class="wdg-pager mt-2"></div>
   </div>
 
+  <!-- Modal: confirmar exclusão de usuário -->
+  <div class="modal fade" id="usrDeleteConfirmModal" tabindex="-1" aria-labelledby="usrDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="usrDeleteConfirmTitle">
+            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+            Confirmar exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Deseja excluir o usuário <strong id="usrDeleteConfirmName">este usuário</strong>?</p>
+          <p class="mb-0 text-danger"><strong>Esta exclusão é definitiva</strong> e não pode ser desfeita.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="usrDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal de confirmação de vinculação de Funcionário -->
   <div class="modal fade" id="modalMatchFuncionario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -322,6 +345,53 @@
   document.addEventListener('DOMContentLoaded', function(){
     // Base path resolvido no servidor e exposto no window; evitar uso de `${_basePath}` que gera ReferenceError
     const basePath = (window.__perfilBasePath || '<%= _basePath %>').replace(/\/$/, '');
+
+    // =============================================================
+    // Modal de confirmação de exclusão
+    // =============================================================
+    const usrDeleteModalEl = document.getElementById('usrDeleteConfirmModal');
+    const usrDeleteNameEl  = document.getElementById('usrDeleteConfirmName');
+    const usrDeleteYesBtn  = document.getElementById('usrDeleteConfirmYes');
+
+    function askDeleteUsuarioConfirm(label){
+      const labelTxt = (label && String(label).trim()) ? String(label).trim() : 'este usuário';
+      const fallbackMsg = `Deseja excluir o usuário "${labelTxt}"?\n\nEsta exclusão é definitiva e não pode ser desfeita.`;
+
+      if (!usrDeleteModalEl || !usrDeleteYesBtn || !(window.bootstrap && window.bootstrap.Modal)) {
+        return Promise.resolve(window.confirm(fallbackMsg));
+      }
+
+      if (usrDeleteNameEl) usrDeleteNameEl.textContent = labelTxt;
+      const modal = window.bootstrap.Modal.getOrCreateInstance(usrDeleteModalEl);
+
+      return new Promise((resolve) => {
+        let resolved = false;
+
+        const cleanup = () => {
+          usrDeleteModalEl.removeEventListener('hidden.bs.modal', onHidden);
+          usrDeleteYesBtn.removeEventListener('click', onConfirm);
+        };
+
+        const onHidden = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          resolve(false);
+        };
+
+        const onConfirm = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          resolve(true);
+          modal.hide();
+        };
+
+        usrDeleteModalEl.addEventListener('hidden.bs.modal', onHidden);
+        usrDeleteYesBtn.addEventListener('click', onConfirm);
+        modal.show();
+      });
+    }
     // =============================================================
     // AÇÕES USUÁRIOS (Toggle / Delete) via AJAX
     // =============================================================
@@ -352,7 +422,11 @@
       const tr = form.closest('tr');
       const url = form.getAttribute('action');
       if(action === 'delete'){
-        if(!confirm('Confirmar exclusão do usuário?')) return;
+        const nome = tr?.getAttribute('data-user-nome') || '';
+        const email = tr?.getAttribute('data-user-email') || '';
+        const label = (nome && String(nome).trim()) ? nome : email;
+        const ok = await askDeleteUsuarioConfirm(label);
+        if(!ok) return;
       }
       form.classList.add('disabled');
       const { ok, data } = await postJsonOrForm(url);
@@ -998,6 +1072,11 @@
 
   });
   </script>
+
+  <style>
+    /* Mantém cabeçalho do modal branco (evita heranças do tema) */
+    #usrDeleteConfirmModal .modal-header{ background:#fff !important; color:#212529 !important; border-bottom:1px solid rgba(0,0,0,.08) !important; }
+  </style>
 
   <style>
   /* Scroll-limit padrão Unidades */

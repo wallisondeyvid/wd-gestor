@@ -5,13 +5,22 @@
   var unidades=[]; try{ unidades = JSON.parse((byId('unidadesOptionsData')||{textContent:'[]'}).textContent||'[]'); }catch(_){ unidades=[]; }
   function unidadeLabel(id){ var u = unidades.find(function(x){ return String(x._id)===String(id); }); return u ? (u.codigo ? (u.codigo + ' - ' + u.nome) : u.nome) : id; }
 
+  var acUnidadeLogo = byId('acUnidadeLogo');
+
   // Campos
   var acUnidade = byId('acUnidade'); var acNome = byId('acNome'); var acArea = byId('acArea'); var acCapacidade = byId('acCapacidade');
   var acFoto = byId('acFoto'); var acFotoPrev = byId('acFotoPrev'); var acFotoLimpar = byId('acFotoLimpar');
+  var acFotoRemover = byId('acFotoRemover');
   var acObs = byId('acObs'); var acObsCount = byId('acObsCount');
   var acSalvar = byId('acSalvar'); var acLimpar = byId('acLimpar'); var acCancelar = byId('acCancelarEdicao'); var acLista = byId('acLista');
   var acTable = byId('acTable'); var acPaginas = byId('acPaginas'); var acPageSizeSel = byId('acPageSize');
   var AC_PAGE_SIZE = 50; var acPage = 0; var acSort = { key: 'unidade', dir: 'asc' };
+
+  // Modal de exclusão
+  var acDeleteModalEl = byId('acDeleteConfirmModal');
+  var acDeleteNameEl = byId('acDeleteConfirmName');
+  var acDeleteYesBtn = byId('acDeleteConfirmYes');
+  var pendingDeleteId = null;
 
   var MAX_CAPACIDADE = 999999;
   function clampCapacidadeNumber(num){ if(!Number.isFinite(num)) return null; if(num < 0) num = 0; if(num > MAX_CAPACIDADE) num = MAX_CAPACIDADE; return Math.round(num); }
@@ -23,7 +32,60 @@
 
   var areas = []; // agora vindo da API
   var editIndex=-1;
-  function setEditMode(on){ if(!acCancelar || !acSalvar) return; if(on){ acCancelar.classList.remove('d-none'); acSalvar.textContent='Salvar alterações'; } else { acCancelar.classList.add('d-none'); acSalvar.textContent='Cadastrar'; } }
+  function setEditMode(on){
+    if(!acCancelar || !acSalvar) return;
+    if(on){
+      acCancelar.classList.remove('d-none');
+      acSalvar.textContent='Alterar';
+    } else {
+      acCancelar.classList.add('d-none');
+      acSalvar.textContent='Cadastrar';
+    }
+  }
+
+  function setImgWithFallback(img, urls){
+    if(!img) return;
+    var list = (urls || []).map(function(x){ return String(x || '').trim(); }).filter(Boolean);
+    if(list.length === 0) return;
+    var idx = 0;
+    img.onerror = function(){
+      idx++;
+      if(idx >= list.length){ img.onerror = null; return; }
+      img.src = list[idx];
+    };
+    img.src = list[0];
+  }
+
+  function getSelectedUnitId(){
+    if(!acUnidade) return '';
+    return String(acUnidade.value || '').trim();
+  }
+
+  function getUnidadeLogoCandidates(uid){
+    uid = String(uid || '').trim();
+    if(!uid) return ['/images/unidade.png', basePath + '/images/unidade.png'];
+    var base = basePath || '';
+    var raw = [];
+    raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push('/images/unidade.png');
+    raw.push(base + '/images/unidade.png');
+    var out = [];
+    for(var j=0;j<raw.length;j++){
+      var s2 = String(raw[j] || '').trim();
+      if(!s2) continue;
+      if(out.indexOf(s2) >= 0) continue;
+      out.push(s2);
+    }
+    return out;
+  }
+
+  function refreshUnitLogo(){
+    if(!acUnidadeLogo) return;
+    var uid = getSelectedUnitId();
+    setImgWithFallback(acUnidadeLogo, getUnidadeLogoCandidates(uid));
+  }
 
   function compareAC(a,b){ function cmp(x,y){ if(x==null&&y==null) return 0; if(x==null) return -1; if(y==null) return 1; x=(typeof x==='string')?x.toLowerCase():x; y=(typeof y==='string')?y.toLowerCase():y; if(x<y) return -1; if(x>y) return 1; return 0; }
     switch(acSort.key){ case 'nome': return cmp(a.nome,b.nome); case 'unidade': default: return cmp(unidadeLabel( (a.unidade && a.unidade._id)||a.unidade_id||a.unidadeId ), unidadeLabel( (b.unidade && b.unidade._id)||b.unidade_id||b.unidadeId )); }
@@ -40,8 +102,20 @@
       '</td>' +
     '</tr>';
   }
-  function buildACPagination(totalPages, pageSize, totalItems){ if(!acPaginas) return; acPaginas.innerHTML=''; if(totalPages<=1){ var infoOnly=document.createElement('div'); infoOnly.className='w-100 text-center mt-1'; infoOnly.style.fontSize='.7rem'; infoOnly.textContent='Total: '+totalItems+' área(s)'; acPaginas.appendChild(infoOnly); return; }
-    function mk(label,page,disabled){ var b=document.createElement('button'); b.type='button'; b.textContent=label; if(page!=null) b.dataset.page=page; if(disabled) b.disabled=true; return b; }
+  function buildACPagination(totalPages, pageSize, totalItems){
+    if(!acPaginas) return;
+    acPaginas.innerHTML='';
+    function mk(label,page,disabled){ var b=document.createElement('button'); b.type='button'; b.textContent=label; if(!disabled && page!=null) b.dataset.page=page; if(disabled) b.disabled=true; return b; }
+    if(totalPages<=1){
+      var firstOnly = mk('<<', 0, true);
+      var prevOnly = mk('<', 0, true);
+      var oneOnly = mk('1', 0, true); oneOnly.classList.add('active');
+      var nextOnly = mk('>', 0, true);
+      var lastOnly = mk('>>', 0, true);
+      acPaginas.appendChild(firstOnly); acPaginas.appendChild(prevOnly); acPaginas.appendChild(oneOnly); acPaginas.appendChild(nextOnly); acPaginas.appendChild(lastOnly);
+      var infoOnly=document.createElement('div'); infoOnly.className='w-100 text-center mt-1'; infoOnly.style.fontSize='.7rem'; infoOnly.textContent='Total: '+totalItems+' área(s)'; acPaginas.appendChild(infoOnly);
+      return;
+    }
     var firstBtn=mk('<<',0,acPage===0); var prevBtn=mk('<',acPage-1,acPage===0); acPaginas.appendChild(firstBtn); acPaginas.appendChild(prevBtn);
     var windowSize=6; var start=Math.max(0, acPage-Math.floor(windowSize/2)); var end=start+windowSize-1; if(end>=totalPages){ end=totalPages-1; start=Math.max(0, end-windowSize+1); }
     if(start>0){ var b0=mk('1',0,false); if(acPage===0) b0.classList.add('active'); acPaginas.appendChild(b0); var dots=document.createElement('span'); dots.textContent='...'; dots.style.padding='0 .4rem'; acPaginas.appendChild(dots); }
@@ -74,13 +148,64 @@
   async function listarAreas(){ var url=basePath + '/api/areas-comuns/busca'; var data=await getJson(url); areas = Array.isArray(data)? data : []; acPage=0; renderACPage(acPage); }
 
   // Carregamento inicial
-  (async function(){ try{ await listarAreas(); }catch(_){ } })();
+  (async function(){ try{ refreshUnitLogo(); await listarAreas(); }catch(_){ } })();
 
   // Eventos lista CRUD
   acLista && acLista.addEventListener('click', async function(ev){ var t=ev.target.closest('button'); if(!t) return;
-    if(t.hasAttribute('data-ac-del')){ var i=parseInt(t.getAttribute('data-ac-del'),10); var a=areas[i]; if(!a) return; if(!confirm('Excluir esta área?')) return; await sendJson(basePath + '/api/areas-comuns/' + encodeURIComponent(a._id), 'DELETE'); await listarAreas(); return; }
-    if(t.hasAttribute('data-ac-edit')){ var i2=parseInt(t.getAttribute('data-ac-edit'),10); var a2=areas[i2]; if(!a2) return; editIndex=i2; var uidEdit=(a2.unidade && a2.unidade._id) || a2.unidade_id || a2.unidadeId || ''; acUnidade.value=uidEdit; acNome.value=a2.nome||''; acArea.value= a2.area_m2!=null ? a2.area_m2 : ''; if(acCapacidade) updateCapacidadeInputFromDigits(a2.capacidade!=null ? String(a2.capacidade) : ''); acObs.value=a2.obs||''; if(acObsCount) acObsCount.textContent=String(acObs.value.length); if(a2.foto){ acFotoPrev.src=a2.foto; acFotoPrev.classList.remove('d-none'); } else { acFotoPrev.src=''; acFotoPrev.classList.add('d-none'); } setEditMode(true); window.scrollTo({ top:0, behavior:'smooth'}); return; }
+    if(t.hasAttribute('data-ac-del')){
+      var i=parseInt(t.getAttribute('data-ac-del'),10);
+      var a=areas[i];
+      if(!a) return;
+      pendingDeleteId = a._id;
+      if(acDeleteNameEl) acDeleteNameEl.textContent = a.nome || '—';
+      if(acDeleteModalEl){
+        try{
+          var m=bootstrap.Modal.getOrCreateInstance(acDeleteModalEl);
+          m.show();
+          return;
+        }catch(_e){ }
+      }
+      if(!confirm('Excluir esta área comum?')){ pendingDeleteId=null; return; }
+      await sendJson(basePath + '/api/areas-comuns/' + encodeURIComponent(a._id), 'DELETE');
+      await listarAreas();
+      return;
+    }
+    if(t.hasAttribute('data-ac-edit')){
+      var i2=parseInt(t.getAttribute('data-ac-edit'),10);
+      var a2=areas[i2];
+      if(!a2) return;
+      editIndex=i2;
+      var uidEdit=(a2.unidade && a2.unidade._id) || a2.unidade_id || a2.unidadeId || '';
+      acUnidade.value=uidEdit;
+      refreshUnitLogo();
+      acNome.value=a2.nome||'';
+      acArea.value= a2.area_m2!=null ? a2.area_m2 : '';
+      if(acCapacidade) updateCapacidadeInputFromDigits(a2.capacidade!=null ? String(a2.capacidade) : '');
+      acObs.value=a2.obs||'';
+      if(acObsCount) acObsCount.textContent=String(acObs.value.length);
+      if(a2.foto){
+        acFotoPrev.src=a2.foto;
+        acFotoPrev.classList.remove('d-none');
+        if(acFotoRemover) acFotoRemover.classList.remove('d-none');
+      } else {
+        acFotoPrev.src='';
+        acFotoPrev.classList.add('d-none');
+        if(acFotoRemover) acFotoRemover.classList.add('d-none');
+      }
+      setEditMode(true);
+      window.scrollTo({ top:0, behavior:'smooth'});
+      return;
+    }
     if(t.hasAttribute('data-ac-det')){ var i3=parseInt(t.getAttribute('data-ac-det'),10); var a3=areas[i3]; if(!a3) return; abrirDetalhesArea(a3); return; }
+  });
+
+  acDeleteYesBtn && acDeleteYesBtn.addEventListener('click', async function(){
+    if(!pendingDeleteId) return;
+    var id = pendingDeleteId;
+    pendingDeleteId = null;
+    try{ if(acDeleteModalEl){ var mm=bootstrap.Modal.getOrCreateInstance(acDeleteModalEl); mm.hide(); } }catch(_e){}
+    await sendJson(basePath + '/api/areas-comuns/' + encodeURIComponent(id), 'DELETE');
+    await listarAreas();
   });
 
   acSalvar && acSalvar.addEventListener('click', async function(){ var uid=acUnidade.value; var nome=(acNome.value||'').trim(); if(!uid){ alert('Selecione o condomínio.'); return; } if(!nome){ alert('Informe o nome da área.'); return; }
@@ -98,15 +223,38 @@
     await listarAreas(); clearForm();
   });
 
-  acLimpar && acLimpar.addEventListener('click', function(){ clearForm(); editIndex=-1; setEditMode(false); });
-  acCancelar && acCancelar.addEventListener('click', function(){ clearForm(); editIndex=-1; setEditMode(false); });
+  // Padrão: Limpar limpa sem sair do modo edição; Cancelar sai do modo
+  acLimpar && acLimpar.addEventListener('click', function(){ clearForm(); });
+  acCancelar && acCancelar.addEventListener('click', function(){ clearForm(); editIndex=-1; setEditMode(false); try{ window.scrollTo({ top:0, behavior:'smooth'}); }catch(_){ } });
 
-  function clearForm(){ acNome.value=''; acArea.value=''; if(acCapacidade){ updateCapacidadeInputFromDigits(''); } if(acObs){ acObs.value=''; if(acObsCount) acObsCount.textContent='0'; } if(acFoto){ acFoto.value=''; acFotoPrev.src=''; acFotoPrev.classList.add('d-none'); } if(unidades.length===1){ acUnidade.value=unidades[0]._id; } }
+  function clearForm(){
+    acNome.value='';
+    acArea.value='';
+    if(acCapacidade){ updateCapacidadeInputFromDigits(''); }
+    if(acObs){ acObs.value=''; if(acObsCount) acObsCount.textContent='0'; }
+    if(acFoto){ acFoto.value=''; }
+    if(acFotoPrev){ acFotoPrev.src=''; acFotoPrev.classList.add('d-none'); }
+    if(acFotoRemover){ acFotoRemover.classList.add('d-none'); }
+    if(unidades.length===1){ acUnidade.value=unidades[0]._id; }
+    refreshUnitLogo();
+  }
 
   // Foto e contador
   acObs && acObs.addEventListener('input', function(){ if(acObsCount) acObsCount.textContent=String(acObs.value.length); });
   acFoto && acFoto.addEventListener('change', function(){ if(acFoto.files && acFoto.files[0]){ var url=URL.createObjectURL(acFoto.files[0]); acFotoPrev.src=url; acFotoPrev.classList.remove('d-none'); } else { acFotoPrev.src=''; acFotoPrev.classList.add('d-none'); } });
   acFotoLimpar && acFotoLimpar.addEventListener('click', function(){ if(acFoto){ acFoto.value=''; } if(acFotoPrev){ acFotoPrev.src=''; acFotoPrev.classList.add('d-none'); } });
+  acFotoRemover && acFotoRemover.addEventListener('click', async function(){
+    if(editIndex<0){ showToast('Nenhuma área em edição.','warning'); return; }
+    var current = areas[editIndex];
+    if(!current || !current._id){ showToast('Área inválida.','danger'); return; }
+    var resp = await sendJson(basePath + '/api/areas-comuns/' + encodeURIComponent(current._id), 'PUT', { foto: '' });
+    if(resp){
+      if(acFoto){ acFoto.value=''; }
+      if(acFotoPrev){ acFotoPrev.src=''; acFotoPrev.classList.add('d-none'); }
+      acFotoRemover.classList.add('d-none');
+      await listarAreas();
+    }
+  });
   acFotoPrev && acFotoPrev.addEventListener('click', function(){ var modalEl=document.getElementById('modalFotoAreaComum'); if(!modalEl || !acFotoPrev.src) return; var img=document.getElementById('fotoAreaComumZoom'); if(img){ img.style.transform='scale(1)'; img.src=acFotoPrev.src; } try{ var m=bootstrap.Modal.getOrCreateInstance(modalEl); m.show(); }catch(_){ } });
 
   function abrirDetalhesArea(a){ var el=document.getElementById('modalDetAreaConstCad'); if(!el) return; var detU=byId('detACUnidade'); if(detU) detU.textContent = unidadeLabel( (a.unidade && a.unidade._id) || a.unidade_id || a.unidadeId ); var detN=byId('detACNome'); if(detN) detN.textContent = a.nome; var detA=byId('detACArea'); if(detA) detA.textContent = a.area_m2!=null ? (a.area_m2+' m²') : '-'; var detCap=byId('detACCapacidade'); if(detCap) detCap.textContent = formatCapacidadeHuman(a.capacidade); var detO=byId('detACObs'); if(detO) detO.textContent = a.obs||''; var detF=byId('detACFoto'); var detFV=byId('detACFotoVazio'); if(detF && detFV){ if(a.foto){ detF.classList.remove('d-none'); detFV.classList.add('d-none'); detF.src=a.foto; } else { detF.classList.add('d-none'); detFV.classList.remove('d-none'); detF.src=''; } } try{ var m=bootstrap.Modal.getOrCreateInstance(el); m.show(); }catch(_){ } }
@@ -124,6 +272,8 @@
 
   // Inicialização de seleção de unidade única
   if(unidades.length===1 && acUnidade){ acUnidade.value=unidades[0]._id; }
+  refreshUnitLogo();
+  acUnidade && acUnidade.addEventListener('change', function(){ refreshUnitLogo(); });
   // Paginação eventos
   acPaginas && acPaginas.addEventListener('click', function(ev){ var b=ev.target.closest('button[data-page]'); if(!b) return; var pg=parseInt(b.dataset.page,10); if(isNaN(pg)) return; renderACPage(pg); });
   acPageSizeSel && acPageSizeSel.addEventListener('change', function(){ acPage=0; renderACPage(acPage); });

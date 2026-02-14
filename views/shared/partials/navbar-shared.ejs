@@ -48,8 +48,20 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   const __rawAdmin = (typeof adminItems !== 'undefined') ? adminItems : undefined;
   const _admin = (user && (user.isMaster || user.role==='admin' || user.role==='master')) ? (Array.isArray(__rawAdmin)? __rawAdmin : [
     { path: '/modulos', label: 'Módulos' },
-    { path: '/usuarios', label: 'Usuários' }
+    { path: '/usuarios', label: 'Usuários' },
+    { path: '/feedback', label: 'Feedback' }
   ]) : [];
+
+  // Hardening: se o servidor injetar adminItems sem "Feedback", garantimos o item no Gestor.
+  (function ensureFeedbackAdminItem(){
+    try {
+      if(__nbBase !== '/gestor') return;
+      if(!(user && (user.isMaster || user.role==='admin' || user.role==='master'))) return;
+      if(!Array.isArray(_admin)) return;
+      const has = _admin.some(it => it && (it.path === '/feedback' || it.path === (__nbBase + '/feedback')));
+      if(!has) _admin.push({ path: '/feedback', label: 'Feedback' });
+    } catch(_e){ /* noop */ }
+  })();
   const __menuLabel = (typeof menuLabel === 'string' && menuLabel) ? menuLabel : 'Cadastros Gerais';
   // menuTree pode não ser fornecido em módulos antigos; faça verificação segura para evitar ReferenceError
   function ensureServicesEntry(tree){
@@ -105,7 +117,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
   function ensureCaixaMensagemEntry(tree){
     // Somente para o módulo Gestão de Condomínios
-    if(__nbBase !== '/condominios') return tree;
+    if(!['/condominios', '/condominio'].includes(__nbBase)) return tree;
     if(!Array.isArray(tree)) return tree;
     const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
     const desiredPath = '/administracao/caixa-de-mensagem';
@@ -121,11 +133,111 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     return tree;
   }
 
+  function ensureFeedbackEntry(tree){
+    // Somente para o módulo Gestor e apenas para Master/Admin
+    if(__nbBase !== '/gestor') return tree;
+    if(!(user && (user.isMaster || user.role === 'admin' || user.role === 'master'))) return tree;
+    if(!Array.isArray(tree)) return tree;
+    const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
+    const desiredPath = '/feedback';
+    let adminNode = tree.find(node => normalizeLabel(node.label) === 'administração' || normalizeLabel(node.label) === 'administracao');
+    if(!adminNode){
+      adminNode = { label: 'Administração', children: [] };
+      tree.push(adminNode);
+    }
+    if(!Array.isArray(adminNode.children)) adminNode.children = [];
+    if(!adminNode.children.some(child => child.path === desiredPath)){
+      adminNode.children.push({ label: 'Feedback', path: desiredPath });
+    }
+    return tree;
+  }
+
+  function ensureAssembleiaExecucaoEntry(tree){
+    // Somente para o módulo Gestão de Condomínios
+    if(!['/condominios', '/condominio'].includes(__nbBase)) return tree;
+    if(!Array.isArray(tree)) return tree;
+
+    const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
+    const desiredPath = '/administracao/assembleia/execucao';
+
+    let adminNode = tree.find(node => {
+      const l = normalizeLabel(node && node.label);
+      return l === 'administração' || l === 'administracao';
+    });
+    if(!adminNode){
+      adminNode = { label: 'Administração', children: [] };
+      tree.push(adminNode);
+    }
+    if(!Array.isArray(adminNode.children)) adminNode.children = [];
+
+    let assembleiaNode = adminNode.children.find(node => {
+      const l = normalizeLabel(node && node.label);
+      return l === 'assembleia' || l === 'assembleias' || l.includes('assembleia');
+    });
+    if(!assembleiaNode){
+      assembleiaNode = { label: 'Assembleia', children: [] };
+      adminNode.children.unshift(assembleiaNode);
+    }
+    if(!Array.isArray(assembleiaNode.children)) assembleiaNode.children = [];
+
+    const hasExecucao = assembleiaNode.children.some(child => {
+      if(!child) return false;
+      return child.path === desiredPath || child.path === (__nbBase + desiredPath);
+    });
+    if(!hasExecucao){
+      assembleiaNode.children.push({ label: 'Execução', path: desiredPath });
+    }
+
+    return tree;
+  }
+
+  function ensureAssembleiaConfiguracoesEntry(tree){
+    // Somente para o módulo Gestão de Condomínios
+    if(!['/condominios', '/condominio'].includes(__nbBase)) return tree;
+    if(!Array.isArray(tree)) return tree;
+
+    const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
+    const desiredPath = '/assembleias/configuracoes';
+
+    let adminNode = tree.find(node => {
+      const l = normalizeLabel(node && node.label);
+      return l === 'administração' || l === 'administracao';
+    });
+    if(!adminNode){
+      adminNode = { label: 'Administração', children: [] };
+      tree.push(adminNode);
+    }
+    if(!Array.isArray(adminNode.children)) adminNode.children = [];
+
+    let assembleiaNode = adminNode.children.find(node => {
+      const l = normalizeLabel(node && node.label);
+      return l === 'assembleia' || l === 'assembleias' || l.includes('assembleia');
+    });
+    if(!assembleiaNode){
+      assembleiaNode = { label: 'Assembleia', children: [] };
+      adminNode.children.unshift(assembleiaNode);
+    }
+    if(!Array.isArray(assembleiaNode.children)) assembleiaNode.children = [];
+
+    const hasConfig = assembleiaNode.children.some(child => {
+      if(!child) return false;
+      return child.path === desiredPath || child.path === (__nbBase + desiredPath);
+    });
+    if(!hasConfig){
+      assembleiaNode.children.push({ label: 'Configurações', path: desiredPath });
+    }
+
+    return tree;
+  }
+
   let __menuTree = (typeof menuTree !== 'undefined' && Array.isArray(menuTree)) ? menuTree : null;
   __menuTree = ensureServicesEntry(__menuTree);
   __menuTree = ensureEnquetesEntry(__menuTree);
   __menuTree = ensureComunicadosEntry(__menuTree);
   __menuTree = ensureCaixaMensagemEntry(__menuTree);
+  __menuTree = ensureFeedbackEntry(__menuTree);
+  __menuTree = ensureAssembleiaExecucaoEntry(__menuTree);
+  __menuTree = ensureAssembleiaConfiguracoesEntry(__menuTree);
 %>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-wd" data-has-user="<%= user ? '1':'0' %>">
   <div class="container-fluid px-3 px-lg-4">
@@ -174,7 +286,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
       </div>
   <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center navbar-wd-actions">
         <% if (user) { %>
-          <% if (__nbBase === '/condominios') { %>
+          <% if (['/condominios', '/condominio'].includes(__nbBase)) { %>
             <li class="nav-item">
               <a class="nav-link nav-wd-icon-link position-relative d-flex align-items-center justify-content-center" id="navMsgNotifyLink" href="<%= buildHref('/administracao/caixa-de-mensagem') %>" aria-label="Caixa de Mensagem">
                 <img src="<%= __nbBase %>/images/mensagem.png" alt="Mensagens" style="width:22px;height:22px;" />
@@ -368,8 +480,10 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
       el.style.display = '';
       // inicializa lastActivity e força início
       var now0 = Date.now();
-      if(!localStorage.getItem(LS_KEY)) localStorage.setItem(LS_KEY, String(now0));
-      var last = Number(localStorage.getItem(LS_KEY)) || now0;
+      // Sempre marque atividade ao entrar em uma página autenticada.
+      // Isso evita logout instantâneo após login quando sobrou um timestamp antigo no localStorage.
+      try{ localStorage.setItem(LS_KEY, String(now0)); }catch(_){ }
+      var last = now0;
       var lastWrite = 0;
       function bumpActivity(ts){
         var now = ts || Date.now();
@@ -451,6 +565,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
       var lastUnread = null;
       var timer = null;
+      var msgApiUnauthorized = false;
       var audioCtx = null;
       var audioUnlocked = false;
       var lastBeepAt = 0;
@@ -479,6 +594,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
       async function resolvePersonalMailboxId(){
         try {
+          if(msgApiUnauthorized) return null;
           if(personalMailboxId) return personalMailboxId;
           if(personalMailboxPromise) return await personalMailboxPromise;
 
@@ -490,6 +606,10 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
                 cache: 'no-store',
                 headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' }
               });
+              if(r && (r.status === 401 || r.status === 403)){
+                msgApiUnauthorized = true;
+                return null;
+              }
               const json = await readJsonTolerant(r);
               const list = Array.isArray(json) ? json : (json && (json.data || json.mailboxes)) || [];
               if(!Array.isArray(list) || !list.length) return null;
@@ -839,6 +959,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
       async function fetchUnread(){
         try {
+          if(msgApiUnauthorized) return 0;
           // Usa paginação mínima e lê `total` para detectar mudanças mesmo com muitas não lidas.
           var mbId = await resolvePersonalMailboxId();
           var mailboxId = (mbId && String(mbId).trim()) ? String(mbId).trim() : 'pessoal';
@@ -848,6 +969,10 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
             cache:'no-store',
             headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' }
           });
+          if(r && (r.status === 401 || r.status === 403)){
+            msgApiUnauthorized = true;
+            return 0;
+          }
           if(!r.ok) throw new Error('http ' + r.status);
           var data = await readJsonTolerant(r);
           var total = (data && typeof data.total !== 'undefined') ? Number(data.total) : NaN;
@@ -859,6 +984,10 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 
       async function tick(){
         try {
+          if(msgApiUnauthorized){
+            setBadge(0);
+            return;
+          }
           var n = await fetchUnread();
           if(n == null) {
             consecutiveFails = Math.min(8, (consecutiveFails || 0) + 1);
@@ -878,6 +1007,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
       function schedule(){
         try {
           if(timer) clearTimeout(timer);
+          if(msgApiUnauthorized) return;
           var isMsgPage = false;
           try {
             var p = String(location && location.pathname ? location.pathname : '');
@@ -904,12 +1034,14 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
       }
 
       document.addEventListener('visibilitychange', function(){
+        if(msgApiUnauthorized) return;
         try {
           if(!document.hidden) { void tick(); }
         } catch(_){ }
         schedule();
       });
       window.addEventListener('focus', function(){
+        if(msgApiUnauthorized) return;
         try { void tick(); } catch(_){ }
         schedule();
       });
@@ -1010,3 +1142,11 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   .idle-timer{ font-weight:700; letter-spacing:.3px; }
   @media (max-width:575.98px){ #nbIdleTimer{ display:none !important; } }
 </style>
+
+<%
+  const __fbEnabled = (typeof feedbackWidgetEnabled === 'boolean') ? feedbackWidgetEnabled : true;
+%>
+<% if (__fbEnabled) { %>
+  <%- include('./feedback-widget') %>
+  <script src="/js/feedback-widget.js" defer></script>
+<% } %>

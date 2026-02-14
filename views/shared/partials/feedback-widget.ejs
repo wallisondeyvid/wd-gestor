@@ -92,9 +92,14 @@
             data-avatar="intro"
           >
           <div class="wdg-feedback-header-text">
-            <p class="wdg-feedback-header-title" data-feedback-title>
-              Feedback!
-            </p>
+            <div class="wdg-feedback-header-title-row">
+              <p class="wdg-feedback-header-title" data-feedback-title>
+                Feedback!
+              </p>
+              <button type="button" class="wdg-feedback-home" aria-label="Home" data-feedback-home>
+                <img class="wdg-feedback-home-icon" src="<%= __fbBase %>/images/home.png?v=<%= __assetVer %>" alt="" width="18" height="18" loading="lazy" decoding="async">
+              </button>
+            </div>
             <p class="wdg-feedback-greeting" data-feedback-greeting>
               Olá! Sou o assistente do WD Gestor. Como posso ajudar?
             </p>
@@ -117,7 +122,7 @@
             <input class="wdg-feedback-chat-file" type="file" accept="image/png,image/jpeg,image/webp" data-chat-file>
             <textarea class="wdg-feedback-chat-input" placeholder="Mensagem" data-chat-input rows="1"></textarea>
             <button class="wdg-feedback-chat-send" type="submit" aria-label="Enviar" data-chat-send>
-              <img class="wdg-feedback-chat-send-icon" src="<%= __fbBase %>/images/enviar.png?v=<%= __assetVer %>" alt="" width="36" height="36" loading="lazy" decoding="async">
+              <img class="wdg-feedback-chat-send-icon" src="<%= __fbBase %>/images/proximo.png?v=<%= __assetVer %>" alt="" width="36" height="36" loading="lazy" decoding="async">
             </button>
           </form>
         </section>
@@ -126,23 +131,23 @@
         <section class="wdg-feedback-screen" data-screen="home" aria-label="Opções iniciais">
           <div class="wdg-feedback-options" role="group" aria-label="Selecione um tipo">
             <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="bug" aria-label="Reportar bug">
-              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/bug.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/notificacao.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
               Bug
             </button>
             <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="sugestao" aria-label="Enviar sugestão">
-              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/sugestao.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/editar.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
               Sugestão
             </button>
             <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="duvida" aria-label="Enviar dúvida">
-              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/duvida.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/pesquisar.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
               Dúvida
             </button>
             <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="critica" aria-label="Enviar crítica">
-              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/critica.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/relatorio.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
               Crítica
             </button>
             <button type="button" class="wdg-feedback-option" data-action="start" data-tipo="elogio" aria-label="Enviar elogio">
-              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/elogio.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
+              <img class="wdg-feedback-option-icon" src="<%= __fbBase %>/images/verifica.png?v=<%= __assetVer %>" alt="" width="22" height="22" loading="lazy" decoding="async">
               Elogio
             </button>
             <button type="button" class="wdg-feedback-option" data-action="track" aria-label="Acompanhar meus feedbacks">
@@ -279,7 +284,7 @@
         <section class="wdg-feedback-screen" data-screen="sent" aria-label="Feedback enviado" hidden>
           <img
             class="wdg-feedback-avatar-inline"
-              src="<%= __fbBase %>/images/avatarposicao4.png?v=<%= __assetVer %>"
+              src="<%= __fbBase %>/images/avatarposicao2.png?v=<%= __assetVer %>"
             alt="Assistente confirmando"
             width="36"
             height="36"

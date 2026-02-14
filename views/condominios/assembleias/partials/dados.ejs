@@ -1,0 +1,303 @@
+<form method="POST" action="<%= _bp %>/assembleias/nova/salvar" class="needs-validation" novalidate>
+  <input type="hidden" name="id" value="<%= id || '' %>">
+  <input type="hidden" name="tab" value="dados">
+  <input type="hidden" name="nav" value="stay" data-nav>
+
+  <% const userUnitRef = (user && (user.unidade_id || user.unidadeId || user.unidadeID || user.unidade || user.matriz_unidade_id || user.unidade_principal_id || user.unidadePrincipalId)) || ''; %>
+  <% const userUnitId = String((userUnitRef && typeof userUnitRef === 'object') ? (userUnitRef._id || userUnitRef.id || userUnitRef) : userUnitRef || '').trim(); %>
+  <% const formUnitId = form && form.unidade_id ? String((form.unidade_id._id || form.unidade_id) || '') : ''; %>
+  <% const selectedUnidadeIdSafe = (typeof selectedUnidadeId !== 'undefined') ? String(selectedUnidadeId || '').trim() : ''; %>
+  <% const selectedUnitId = String(selectedUnidadeIdSafe || formUnitId || userUnitId || '').trim(); %>
+
+  <input type="hidden" name="unidade_id" value="<%= selectedUnitId %>" data-unidade-hidden>
+  <input type="hidden" id="endereco_resumo" name="endereco_resumo" value="">
+
+  <div class="wdg-fieldset mb-3">
+    <div class="row g-3">
+      <!-- 1ª linha: Natureza -->
+      <div class="col-12">
+        <label class="form-label wdg-label-center">Natureza</label>
+        <% const _nat = String(form?.natureza || '').trim().toLowerCase(); %>
+        <div class="wdg-choice-group wdg-choice-center" role="group" aria-label="Natureza">
+          <input class="btn-check" type="radio" name="natureza" id="natureza_ordinaria" value="ordinaria" <%= _nat === 'ordinaria' ? 'checked' : '' %> required>
+          <label class="btn wdg-choice-btn" for="natureza_ordinaria"><img class="wdg-choice-icon" src="/images/assembleia_ordinaria.png" alt="" loading="lazy">Ordinária</label>
+
+          <input class="btn-check" type="radio" name="natureza" id="natureza_extraordinaria" value="extraordinaria" <%= _nat === 'extraordinaria' ? 'checked' : '' %>>
+          <label class="btn wdg-choice-btn" for="natureza_extraordinaria"><img class="wdg-choice-icon" src="/images/assembleia_extraordinaria.png" alt="" loading="lazy">Extraordinária</label>
+        </div>
+      </div>
+
+      <!-- 2ª linha: Título -->
+      <div class="col-12">
+        <label class="form-label">Título</label>
+        <input class="form-control" name="titulo" value="<%= form?.titulo || '' %>" placeholder="Ex.: Assembleia Geral Ordinária" required>
+      </div>
+
+      <!-- 3ª linha: Número | Data -->
+      <div class="col-md-6">
+        <label class="form-label">Número</label>
+        <div class="input-group">
+          <input class="form-control" name="numero" value="<%= form?.numero || '' %>" placeholder="Clique em Gerar" readonly aria-label="Número">
+          <button class="btn btn-outline-secondary" type="button" data-generate-numero>
+            <i class="bi bi-magic me-1"></i>Gerar
+          </button>
+        </div>
+        <div class="form-text">Se vazio, será gerado automaticamente ao salvar.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Data</label>
+        <input class="form-control wdg-date" type="date" name="data" value="<%= form?.data ? new Date(form.data).toISOString().slice(0,10) : '' %>" required>
+      </div>
+
+      <!-- 4ª linha: Modalidade -->
+      <div class="col-12">
+        <label class="form-label wdg-label-center">Modalidade</label>
+        <% const _mod = String(form?.modalidade || '').trim().toLowerCase(); %>
+        <div class="wdg-choice-group wdg-choice-center" role="group" aria-label="Modalidade">
+          <input class="btn-check" type="radio" name="modalidade" id="modalidade_presencial" value="presencial" data-modalidade <%= _mod === 'presencial' ? 'checked' : '' %> required>
+          <label class="btn wdg-choice-btn" for="modalidade_presencial"><img class="wdg-choice-icon" src="/images/assembleia_local.png" alt="" loading="lazy">Presencial</label>
+
+          <input class="btn-check" type="radio" name="modalidade" id="modalidade_virtual" value="virtual" data-modalidade <%= _mod === 'virtual' ? 'checked' : '' %>>
+          <label class="btn wdg-choice-btn" for="modalidade_virtual"><img class="wdg-choice-icon" src="/images/assembleia_virtual.png" alt="" loading="lazy">Virtual</label>
+
+          <input class="btn-check" type="radio" name="modalidade" id="modalidade_hibrida" value="hibrida" data-modalidade <%= _mod === 'hibrida' ? 'checked' : '' %>>
+          <label class="btn wdg-choice-btn" for="modalidade_hibrida"><img class="wdg-choice-icon" src="/images/assembleia_hibrida.png" alt="" loading="lazy">Híbrida</label>
+        </div>
+      </div>
+
+      <!-- 5ª linha: Local (sempre visível; habilita/desabilita via modalidade) -->
+      <div class="col-12" data-field-local>
+        <label class="form-label">Local</label>
+        <div class="input-group">
+          <input class="form-control" name="local" value="<%= form?.local || '' %>" placeholder="Clique em Pesquisar" aria-label="Local" readonly autocomplete="off">
+          <button class="btn btn-outline-secondary" type="button" data-open-modal="local" data-bs-toggle="modal" data-bs-target="#modalAssembleiaLocal">
+            <i class="bi bi-search me-1"></i>Pesquisar
+          </button>
+        </div>
+      </div>
+
+      <!-- 6ª linha: Link (sempre visível; habilita/desabilita via modalidade) -->
+      <div class="col-12" data-field-link>
+        <label class="form-label">Link</label>
+        <input class="form-control" name="link" value="<%= form?.link || '' %>" placeholder="https://...">
+      </div>
+
+      <!-- 7ª linha: Responsável -->
+      <div class="col-12">
+        <label class="form-label">Responsável</label>
+        <input type="hidden" name="responsavel" value="<%= form?.responsavel || '' %>" data-responsavel-value>
+
+        <div class="d-flex flex-column" data-responsavel-field>
+          <button
+            type="button"
+            class="wdg-resp-trigger w-100"
+            data-open-modal="responsavel"
+            data-bs-toggle="modal"
+            data-bs-target="#modalPesquisarResponsavel"
+            aria-label="Selecionar responsável"
+          >
+            <div class="d-flex gap-2 align-items-start p-2 wdg-resp-row" data-responsavel-card>
+              <div class="rounded-circle border bg-light" style="width:76px;height:76px;overflow:hidden;flex:0 0 76px;">
+                <img
+                  src="/images/usuario.png"
+                  alt=""
+                  style="width:76px;height:76px;object-fit:cover;display:block;"
+                  data-responsavel-img
+                >
+              </div>
+              <div class="flex-grow-1" style="min-width:0;">
+                <div class="fw-semibold" data-responsavel-nome>Clique em Pesquisar</div>
+                <div class="text-muted small" data-responsavel-subtitulo style="display:none;"></div>
+                <div class="text-muted small" data-responsavel-email style="display:none;"></div>
+              </div>
+            </div>
+          </button>
+        </div>
+        <div class="invalid-feedback d-none" data-responsavel-invalid>Responsável é obrigatório.</div>
+      </div>
+
+      <!-- 8ª linha: Observações -->
+      <div class="col-12">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" name="observacoes" rows="3" maxlength="4000" data-observacoes><%= form?.observacoes || '' %></textarea>
+        <div class="d-flex justify-content-end">
+          <small class="text-muted" data-observacoes-count>0/4000</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% const _regrasOrigem = String(form?.regrasOrigem || '').trim().toUpperCase(); %>
+  <% const _regrasDraft = (form && form.regras) ? form.regras : null; %>
+
+  <div class="wdg-fieldset mb-3" data-assembleia-regras-root>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <label class="form-label mb-1">Regras desta assembleia</label>
+        <div class="text-muted small">Você pode usar o padrão do condomínio ou personalizar apenas para este rascunho.</div>
+      </div>
+      <div>
+        <a
+          class="btn btn-outline-secondary btn-sm"
+          href="<%= _bp %>/assembleias/configuracoes?<%= selectedUnitId ? ('unidade_id=' + encodeURIComponent(selectedUnitId)) : '' %>"
+          target="_blank"
+          rel="noopener"
+          aria-label="Editar regras padrão do condomínio"
+        >
+          <i class="bi bi-gear me-1" aria-hidden="true"></i>Editar regras
+        </a>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="regrasUsePadrao" data-regras-use-padrao>
+        <label class="form-check-label" for="regrasUsePadrao">Usar regras padrão do condomínio</label>
+      </div>
+      <div class="text-muted small">Desative para personalizar para esta assembleia.</div>
+    </div>
+
+    <div class="alert alert-warning d-none mt-3" role="alert" data-regras-warning></div>
+
+    <div class="mt-3">
+      <div class="fw-semibold mb-1">Resumo</div>
+      <ul class="mb-0" data-regras-summary></ul>
+    </div>
+
+    <input type="hidden" name="regrasOrigem" value="<%= _regrasOrigem || 'PADRAO_CONDOMINIO' %>" data-regras-origem>
+    <input type="hidden" name="regrasSnapshotJson" value="" data-regras-snapshot>
+
+    <div class="mt-3" data-regras-custom-panel style="display:none;">
+      <div class="border rounded p-3">
+        <div class="fw-semibold mb-2">Personalizar regras</div>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label wdg-label-center">Modelo de voto</label>
+            <div class="wdg-choice-group wdg-choice-center" role="group" aria-label="Modelo de voto">
+              <input class="btn-check" type="radio" name="regras_voteMode" id="regras_vote_por_unidade" value="POR_UNIDADE" data-regras-field="voteMode">
+              <label class="btn wdg-choice-btn" for="regras_vote_por_unidade">Unidade</label>
+
+              <input class="btn-check" type="radio" name="regras_voteMode" id="regras_vote_por_fracao" value="POR_FRACAO" data-regras-field="voteMode">
+              <label class="btn wdg-choice-btn" for="regras_vote_por_fracao">Fração ideal</label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label wdg-label-center">Inadimplência</label>
+            <div class="wdg-choice-group wdg-choice-center" role="group" aria-label="Inadimplência">
+              <input class="btn-check" type="radio" name="regras_delinquency" id="regras_inad_bloqueia_voto" value="BLOQUEIA_VOTO" data-regras-field="delinquencyPolicy">
+              <label class="btn wdg-choice-btn" for="regras_inad_bloqueia_voto">Bloqueia voto</label>
+
+              <input class="btn-check" type="radio" name="regras_delinquency" id="regras_inad_apenas_aviso" value="APENAS_AVISO" data-regras-field="delinquencyPolicy">
+              <label class="btn wdg-choice-btn" for="regras_inad_apenas_aviso">Apenas aviso</label>
+
+              <input class="btn-check" type="radio" name="regras_delinquency" id="regras_inad_bloqueia_presenca_voto" value="BLOQUEIA_PRESENCA_E_VOTO" data-regras-field="delinquencyPolicy">
+              <label class="btn wdg-choice-btn" for="regras_inad_bloqueia_presenca_voto">Bloqueia presença e voto</label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Quem pode votar</label>
+            <div class="row g-2">
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="regras_elig_owner" data-regras-elig="allowOwner">
+                  <label class="form-check-label" for="regras_elig_owner">Proprietário</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="regras_elig_proxy" data-regras-elig="allowProxyWithPoA">
+                  <label class="form-check-label" for="regras_elig_proxy">Procurador com procuração</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="regras_elig_tenant" data-regras-elig="allowTenantWithAuthorization">
+                  <label class="form-check-label" for="regras_elig_tenant">Inquilino com autorização</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="regras_elig_third" data-regras-elig="allowThirdPartyWithPoA">
+                  <label class="form-check-label" for="regras_elig_third">Terceiro com procuração</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="regras_req_poa" data-regras-require-poa>
+              <label class="form-check-label" for="regras_req_poa">Procuração obrigatória se não for proprietário</label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Presença remota</label>
+            <div class="row g-2">
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="regras_presence_remote" data-regras-presence="allowRemotePresence">
+                  <label class="form-check-label" for="regras_presence_remote">Permitir presença remota</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="regras_presence_moderator" data-regras-presence="requireModeratorApprovalForRemote">
+                  <label class="form-check-label" for="regras_presence_moderator">Exigir aprovação do moderador</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label">Quórum de instalação (base)</label>
+            <select class="form-select" data-regras-quorum="installationBase" aria-label="Base do quórum">
+              <option value="TOTAL">Total</option>
+              <option value="ADIMPLENTES">Adimplentes</option>
+              <option value="PRESENTES">Presentes</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">Quórum de instalação (métrica)</label>
+            <select class="form-select" data-regras-quorum="metric" aria-label="Métrica do quórum">
+              <option value="UNIDADES">Unidades</option>
+              <option value="FRACAO">Fração</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Auditoria</label>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="regras_audit_reason" data-regras-audit-reason>
+              <label class="form-check-label" for="regras_audit_reason">Exigir motivo ao liberar exceções</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="application/json" id="regrasDraftJson"><%- JSON.stringify(_regrasDraft || {}).replace(/</g, '\\u003c') %></script>
+  </div>
+
+  <%- include('./modal_assembleia_local', { _bp }) %>
+
+  <%- include('./modal_assembleia_responsavel', { _bp }) %>
+
+  <div class="d-flex justify-content-between">
+    <div class="text-muted small">
+      <i class="bi bi-info-circle me-1"></i>Use “Avançar” para salvar e ir para a próxima aba.
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="wdg-btn3d" data-nav-btn="stay">
+        <img class="wdg-btn3d-icon" src="/images/salvar.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/salvar.png'">
+        Salvar rascunho
+      </button>
+      <button type="submit" class="wdg-btn3d" data-nav-btn="next">
+        <img class="wdg-btn3d-icon" src="/images/proximo.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/proximo.png'">
+        Avançar
+      </button>
+    </div>
+  </div>
+</form>

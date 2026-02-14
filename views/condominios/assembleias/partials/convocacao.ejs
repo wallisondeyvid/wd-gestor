@@ -1,0 +1,71 @@
+<form method="POST" action="<%= _bp %>/assembleias/nova/salvar" novalidate>
+  <input type="hidden" name="id" value="<%= id || '' %>">
+  <input type="hidden" name="tab" value="convocacao">
+  <input type="hidden" name="nav" value="stay" data-nav>
+
+  <div class="alert alert-warning" role="alert">
+    <strong>Dica:</strong> esta etapa define horários e regra de convocação (ex.: 1ª e 2ª chamada).
+  </div>
+
+  <div class="wdg-fieldset mb-3">
+    <div class="row g-3">
+      <div class="col-12 d-flex flex-column align-items-center">
+        <label class="form-label w-100 text-center">Regra de convocação</label>
+        <% const _regra = String(form?.regraConvocacao || '').trim().toLowerCase(); %>
+        <div class="wdg-choice-group justify-content-center" role="group" aria-label="Regra de convocação">
+          <input class="btn-check" type="radio" name="regraConvocacao" id="regra_unica" value="unica" data-regra <%= _regra === 'unica' ? 'checked' : '' %> required>
+          <label class="btn wdg-choice-btn" for="regra_unica"><img class="wdg-choice-icon" src="/images/assembleia_unicachamada.png" alt="" loading="lazy">Horário único</label>
+
+          <input class="btn-check" type="radio" name="regraConvocacao" id="regra_dupla" value="dupla" data-regra <%= _regra === 'dupla' ? 'checked' : '' %>>
+          <label class="btn wdg-choice-btn" for="regra_dupla"><img class="wdg-choice-icon" src="/images/assembleia_multichamada.png" alt="" loading="lazy">1ª e 2ª chamada</label>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="row g-3 justify-content-start">
+          <div class="col-12 col-md-auto" data-field-hora-unica>
+            <label class="form-label">Horário</label>
+            <input type="time" class="form-control wdg-time" name="horaUnica" value="<%= form?.horaUnica || '' %>">
+          </div>
+
+          <div class="col-12 col-md-auto" data-field-hora1>
+            <label class="form-label">Horário (1ª chamada)</label>
+            <input type="time" class="form-control wdg-time" name="hora1" value="<%= form?.hora1 || '' %>">
+          </div>
+          <div class="col-12 col-md-auto" data-field-hora2>
+            <label class="form-label">Horário (2ª chamada)</label>
+            <input type="time" class="form-control wdg-time" name="hora2" value="<%= form?.hora2 || '' %>">
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Motivo de override (opcional)</label>
+        <textarea class="form-control" name="overrideMotivo" rows="3" maxlength="4000" data-override-motivo placeholder="Ex.: exceção aprovada em conselho"><%= form?.overrideMotivo || '' %></textarea>
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="form-text">Use quando precisar justificar configuração fora do padrão.</div>
+          <div class="form-text text-end" data-override-motivo-count>0/4000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <div class="d-flex gap-2">
+      <button type="submit" class="wdg-btn3d" data-nav-btn="prev">
+        <img class="wdg-btn3d-icon" src="/images/anterior.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/anterior.png'">
+        Voltar
+      </button>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="wdg-btn3d" data-nav-btn="stay">
+        <img class="wdg-btn3d-icon" src="/images/salvar.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/salvar.png'">
+        Salvar rascunho
+      </button>
+      <button type="submit" class="wdg-btn3d" data-nav-btn="next">
+        <img class="wdg-btn3d-icon" src="/images/proximo.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/proximo.png'">
+        Avançar
+      </button>
+    </div>
+  </div>
+</form>

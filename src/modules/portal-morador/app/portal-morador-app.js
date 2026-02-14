@@ -18,6 +18,8 @@ import CondHabitacao from '#core/models/cond_habitacao.js';
 import CondEnquete from '#core/models/cond_enquete.js';
 import CondEnqueteVoto from '#core/models/cond_enquete_voto.js';
 import CondComunicado from '#core/models/cond_comunicado.js';
+import CondAssembleia from '#core/models/cond_assembleia.js';
+import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
 import { connectMongo } from '#core/db/connect.js';
 import { buildPortalSessionPayload, verifyPortalPassword, setPortalPassword } from '../lib/portalAuth.js';
 import { setPortalSessionCookie } from './lib/portalSessionCookie.js';
@@ -333,9 +335,15 @@ function buildPortalContext(req) {
   const avatarUrl = user && (user.avatar_url || user.avatarUrl || user.foto_url || user.fotoUrl || null);
   const roleRaw = (user && (user.role || user.perfil || user.tipo_acesso)) || '';
   const role = typeof roleRaw === 'string' ? roleRaw.toLowerCase() : '';
-  const habitacaoId = user && (user.habitacao_id || user.habitacaoId) ? String(user.habitacao_id || user.habitacaoId) : '';
+  const habitacaoRef = user && (user.habitacao_id || user.habitacaoId);
+  const habitacaoId = habitacaoRef
+    ? String((habitacaoRef && typeof habitacaoRef === 'object') ? (habitacaoRef._id || habitacaoRef.id || habitacaoRef) : habitacaoRef)
+    : '';
   const habitacaoLabel = user && (user.habitacao_label || user.habitacaoLabel) ? String(user.habitacao_label || user.habitacaoLabel).trim() : '';
-  const unidadeId = user && (user.unidade_id || user.unidadeId || user.unidade_principal_id) ? String(user.unidade_id || user.unidadeId || user.unidade_principal_id) : '';
+  const unidadeRef = user && (user.unidade_id || user.unidadeId || user.unidade_principal_id || user.unidadePrincipalId);
+  const unidadeId = unidadeRef
+    ? String((unidadeRef && typeof unidadeRef === 'object') ? (unidadeRef._id || unidadeRef.id || unidadeRef) : unidadeRef).trim()
+    : '';
 
   // Logo do condomínio: tenta várias fontes (root, nested, e fallback via vinculos).
   const unidadeLogoDirect = user && (user.unidade_logo || user.unidadeLogo || user.logo_unidade || user.logoUnidade || user.logo_cliente || user.logoCliente || user.logoUnidadeUrl || user.unidadeLogoUrl);
@@ -397,6 +405,87 @@ app.set('views', [
   path.join(__dirname, '../../../../views')
 ]);
 app.set('view engine', 'ejs');
+
+function fixPortalMojibakeText(value) {
+  if (typeof value !== 'string' || value.length === 0) return value;
+  if (!/[ÃÂ]/.test(value)) return value;
+
+  // Corrige casos típicos de texto UTF-8 previamente "quebrado" e salvo como mojibake
+  // (ex.: "InÃ­cio", "ConfiguraÃ§Ã£o", "Portal do Morador Â· WD Gestor").
+  const replacements = [
+    ['Â·', '·'],
+    ['Âº', 'º'],
+    ['Âª', 'ª'],
+    ['Â°', '°'],
+    ['Â«', '«'],
+    ['Â»', '»'],
+    ['Ã—', '×'],
+
+    ['Ã€', 'À'],
+    ['Ã‚', 'Â'],
+    ['Ãƒ', 'Ã'],
+    ['Ã‡', 'Ç'],
+    ['Ã‰', 'É'],
+    ['ÃŠ', 'Ê'],
+    ['Ã“', 'Ó'],
+    ['Ã”', 'Ô'],
+    ['Ã•', 'Õ'],
+    ['Ãš', 'Ú'],
+    ['Ãœ', 'Ü'],
+
+    ['Ã ', 'à'],
+    ['Ã¡', 'á'],
+    ['Ã¢', 'â'],
+    ['Ã£', 'ã'],
+    ['Ã¤', 'ä'],
+    ['Ã§', 'ç'],
+    ['Ã¨', 'è'],
+    ['Ã©', 'é'],
+    ['Ãª', 'ê'],
+    ['Ã¬', 'ì'],
+    ['Ã­', 'í'],
+    ['Ã²', 'ò'],
+    ['Ã³', 'ó'],
+    ['Ã´', 'ô'],
+    ['Ãµ', 'õ'],
+    ['Ã¹', 'ù'],
+    ['Ãº', 'ú'],
+  ];
+
+  let out = value;
+  for (const [from, to] of replacements) {
+    if (out.includes(from)) out = out.split(from).join(to);
+  }
+  return out;
+}
+
+// Correção centralizada: garante acentuação correta mesmo se algum template EJS
+// tiver strings já salvas com mojibake (ex.: "InÃ­cio").
+app.use((req, res, next) => {
+  const originalRender = res.render.bind(res);
+
+  res.render = (view, options, callback) => {
+    let locals = options;
+    let cb = callback;
+    if (typeof locals === 'function') {
+      cb = locals;
+      locals = undefined;
+    }
+
+    return originalRender(view, locals, (err, html) => {
+      if (err) {
+        if (typeof cb === 'function') return cb(err);
+        return next(err);
+      }
+
+      const fixed = fixPortalMojibakeText(html);
+      if (typeof cb === 'function') return cb(null, fixed);
+      return res.send(fixed);
+    });
+  };
+
+  next();
+});
 
 const ROOT = path.join(__dirname, '../../../..');
 app.use('/css', express.static(path.join(ROOT, 'public/css')));
@@ -756,6 +845,420 @@ app.get('/enquetes', requirePortalLogin, (req, res) => {
 app.get('/comunicados', requirePortalLogin, (req, res) => {
   return res.render('comunicados', buildPortalContext(req));
 });
+
+app.get('/assembleias', requirePortalLogin, (req, res) => {
+  return res.render('portal_morador_assembleias', buildPortalContext(req));
+});
+
+app.get('/assembleias/:id/presenca', requirePortalLogin, (req, res) => {
+  const ctx = buildPortalContext(req);
+  return res.render('portal_morador_assembleia_presenca', {
+    ...ctx,
+    assembleiaId: String(req.params?.id || '').trim()
+  });
+});
+
+app.get('/assembleias/:id/status', requirePortalLogin, (req, res) => {
+  const ctx = buildPortalContext(req);
+  return res.render('portal_morador_assembleia_status', {
+    ...ctx,
+    assembleiaId: String(req.params?.id || '').trim()
+  });
+});
+
+app.get('/api/assembleias', requirePortalLogin, wrapAsync(async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
+    res.set('CDN-Cache-Control', 'no-store');
+  } catch {
+    /* noop */
+  }
+
+  const ctx = buildPortalContext(req);
+  const queryTimeout = getMongoQueryTimeoutMs();
+  const vinculos = Array.isArray(req.user?.vinculos) ? req.user.vinculos : [];
+
+  let unidadeId = String(ctx?.unidadeId || req.user?.unidade_id || req.user?.unidadeId || req.user?.unidade_principal_id || req.user?.unidadePrincipalId || '').trim();
+
+  const userIdCandidates = new Set();
+  [
+    req.user?.id,
+    req.user?.cond_usuario_id,
+    req.user?._id,
+    req.session?.portalUser?.id,
+    req.session?.portalUser?.cond_usuario_id,
+    req.session?.portalUser?._id
+  ].forEach((v) => {
+    const id = String(v || '').trim();
+    if (id) userIdCandidates.add(id);
+  });
+
+  const habitacaoCandidates = new Set();
+  const addHabCandidate = (val) => {
+    const id = String(val || '').trim();
+    if (id && /^[0-9a-fA-F]{24}$/.test(id)) habitacaoCandidates.add(id);
+  };
+
+  addHabCandidate(req.query?.hab);
+  addHabCandidate(req.user?.habitacao_id);
+  addHabCandidate(req.user?.habitacaoId);
+  addHabCandidate(ctx?.habitacaoId);
+
+  const activeUnit = String(unidadeId || '').trim();
+  for (const v of vinculos) {
+    const vUnit = String(v?.unidade_id || v?.unidadeId || '').trim();
+    const vHab = String(v?.habitacao_id || v?.habitacaoId || '').trim();
+    if (!activeUnit || !vUnit || vUnit === activeUnit) addHabCandidate(vHab);
+  }
+
+  if ((!unidadeId || !mongoose.isValidObjectId(unidadeId)) && habitacaoCandidates.size) {
+    const firstHab = Array.from(habitacaoCandidates)[0] || '';
+    unidadeId = await resolveUnidadeIdFromHabitacao(firstHab, unidadeId, queryTimeout);
+  }
+
+  if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+    for (const v of vinculos) {
+      const vUnit = String(v?.unidade_id || v?.unidadeId || '').trim();
+      if (vUnit && mongoose.isValidObjectId(vUnit)) {
+        unidadeId = vUnit;
+        break;
+      }
+    }
+  }
+
+  const wantedKeys = new Set(Array.from(userIdCandidates).map((id) => `portal:${String(id).toLowerCase()}`));
+  const debug = String(req.query?.debug || '').trim() === '1';
+
+  // Evita ficar pendurado quando o Mongo está oscilando.
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await withTimeout(tryReconnectMongo(), getMongoQueryTimeoutMs(), 'mongo-reconnect');
+    }
+  } catch {
+    // ignore: trata abaixo
+  }
+
+  // Diagnóstico: ajuda a confirmar se o Portal está com unidadeId válido
+  // (em alguns fluxos o user.unidade_id vem populado como objeto).
+  try {
+    res.set('X-Portal-Unidade-Id', unidadeId || '');
+    res.set('X-Portal-Unidade-Id-Valid', String(!!(unidadeId && mongoose.isValidObjectId(unidadeId))));
+  } catch {
+    /* noop */
+  }
+
+  const unidadeIdValid = !!(unidadeId && mongoose.isValidObjectId(unidadeId));
+  if (!unidadeIdValid && !userIdCandidates.size && !habitacaoCandidates.size) {
+    return res.json({
+      ok: true,
+      assembleias: [],
+      ...(debug ? { meta: { unidadeId, unidadeIdValid: false, reason: 'no-unidade-and-no-identity' } } : {})
+    });
+  }
+
+  if (mongoose.connection.readyState !== 1) {
+    return respondDbOffline(res, req);
+  }
+
+  const query = {
+    ...(unidadeIdValid ? { unidade_id: unidadeId } : {}),
+    status: { $ne: 'rascunho' }
+  };
+
+  const presenceMatchesUser = (presence) => {
+    try {
+      if (!presence || typeof presence !== 'object') return false;
+      const pUser = String(presence?.pessoa_id || '').trim();
+      const pKey = String(presence?.key || '').trim().toLowerCase();
+      const pHab = String(presence?.habitacao_id || '').trim();
+      const isRemoved = !!presence?.isRemoved;
+      const pStatus = String(presence?.status || '').trim().toUpperCase();
+      if (isRemoved) return false;
+      if (pStatus === 'REJECTED' || pStatus === 'CANCELED') return false;
+      if (pUser && userIdCandidates.has(pUser)) return true;
+      if (pKey && wantedKeys.has(pKey)) return true;
+      if (pHab && habitacaoCandidates.has(pHab)) return true;
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  let assembleias = [];
+  try {
+    let meta;
+    if (debug) {
+      try {
+        const timeoutMs = getMongoQueryTimeoutMs();
+        const totalUnidade = await withTimeout(
+          CondAssembleia.countDocuments(unidadeIdValid ? { unidade_id: unidadeId } : {}),
+          timeoutMs,
+          'assembleias-count-total'
+        );
+        const totalElegiveis = await withTimeout(
+          CondAssembleia.countDocuments(query),
+          timeoutMs,
+          'assembleias-count-elegiveis'
+        );
+        meta = {
+          unidadeId,
+          unidadeIdValid,
+          mongoReadyState: mongoose.connection.readyState,
+          totalUnidade,
+          totalElegiveis,
+          userIdsCount: userIdCandidates.size,
+          habitacaoIdsCount: habitacaoCandidates.size,
+          filtro: {
+            statusNotRascunho: true,
+          }
+        };
+      } catch {
+        meta = { unidadeId, unidadeIdValid, mongoReadyState: mongoose.connection.readyState };
+      }
+    }
+
+    const publishedAssembleias = await withTimeout(
+      CondAssembleia.find(query)
+        .sort({ data: -1, createdAt: -1 })
+        .select('data hora1 hora2 horaUnica numero titulo natureza status')
+        .lean(),
+      getMongoQueryTimeoutMs(),
+      'assembleias-find'
+    );
+
+    let assembleiasByPresence = [];
+    if (userIdCandidates.size || habitacaoCandidates.size) {
+      const elemOr = [];
+      if (userIdCandidates.size) {
+        elemOr.push({ pessoa_id: { $in: Array.from(userIdCandidates.values()) } });
+      }
+      if (wantedKeys.size) {
+        elemOr.push({ key: { $in: Array.from(wantedKeys.values()) } });
+      }
+      if (habitacaoCandidates.size) {
+        elemOr.push({ habitacao_id: { $in: Array.from(habitacaoCandidates.values()) } });
+      }
+
+      const execPresenceQuery = {
+        ...(unidadeIdValid ? { unidade_id: unidadeId } : {}),
+        ...(elemOr.length ? { presences: { $elemMatch: { $or: elemOr } } } : {})
+      };
+
+      const execDocs = await withTimeout(
+        CondAssembleiaExecution.find(execPresenceQuery)
+          .select('assembleia_id unidade_id presences')
+          .lean(),
+        queryTimeout,
+        'assembleias-find-by-presence-execution'
+      );
+
+      const idsFromPresence = (Array.isArray(execDocs) ? execDocs : [])
+        .filter((execDoc) => {
+          const presences = Array.isArray(execDoc?.presences) ? execDoc.presences : [];
+          return presences.some((p) => presenceMatchesUser(p));
+        })
+        .map((execDoc) => String(execDoc?.assembleia_id || '').trim())
+        .filter((id) => id && mongoose.isValidObjectId(id));
+
+      if (idsFromPresence.length) {
+        const uniquePresenceIds = [...new Set(idsFromPresence)];
+        assembleiasByPresence = await withTimeout(
+          CondAssembleia.find({ _id: { $in: uniquePresenceIds }, ...(unidadeIdValid ? { unidade_id: unidadeId } : {}) })
+            .select('data hora1 hora2 horaUnica numero titulo natureza status')
+            .lean(),
+          queryTimeout,
+          'assembleias-find-by-presence-assembleia'
+        );
+
+        if (debug && meta) {
+          meta.totalViaPresence = uniquePresenceIds.length;
+          meta.execPresenceQuery = {
+            unidadeScoped: !!unidadeIdValid,
+            userIdsCount: userIdCandidates.size,
+            habitacaoIdsCount: habitacaoCandidates.size,
+            keysCount: wantedKeys.size
+          };
+        }
+      } else if (debug && meta) {
+        meta.totalViaPresence = 0;
+      }
+    }
+
+    const mergedMap = new Map();
+    for (const a of (Array.isArray(publishedAssembleias) ? publishedAssembleias : [])) {
+      const id = String(a?._id || a?.id || '').trim();
+      if (!id) continue;
+      mergedMap.set(id, a);
+    }
+    for (const a of (Array.isArray(assembleiasByPresence) ? assembleiasByPresence : [])) {
+      const id = String(a?._id || a?.id || '').trim();
+      if (!id) continue;
+      if (!mergedMap.has(id)) mergedMap.set(id, a);
+    }
+
+    assembleias = Array.from(mergedMap.values()).sort((a, b) => {
+      const ad = a?.data ? new Date(a.data).getTime() : 0;
+      const bd = b?.data ? new Date(b.data).getTime() : 0;
+      if (bd !== ad) return bd - ad;
+      const ac = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bc = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bc - ac;
+    });
+
+    if (debug && meta) {
+      return res.json({ ok: true, assembleias, meta });
+    }
+  } catch (err) {
+    if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+    throw err;
+  }
+
+  return res.json({ ok: true, assembleias });
+}));
+
+app.get('/api/assembleias/:id', requirePortalLogin, wrapAsync(async (req, res) => {
+  const ctx = buildPortalContext(req);
+  const unidadeId = String(ctx?.unidadeId || '').trim();
+  const id = String(req.params?.id || '').trim();
+
+  if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ ok: false, error: 'Unidade inválida' });
+  if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
+
+  // Evita ficar pendurado quando o Mongo está oscilando.
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await withTimeout(tryReconnectMongo(), getMongoQueryTimeoutMs(), 'mongo-reconnect');
+    }
+  } catch {
+    /* noop */
+  }
+
+  if (mongoose.connection.readyState !== 1) return respondDbOffline(res, req);
+
+  const queryTimeout = getMongoQueryTimeoutMs();
+  const query = {
+    _id: id,
+    unidade_id: unidadeId,
+    publicarPortal: { $ne: false },
+    status: { $ne: 'rascunho' }
+  };
+
+  const doc = await CondAssembleia.findOne(query)
+    .select('data hora1 hora2 horaUnica numero titulo natureza status unidade_id')
+    .lean()
+    .maxTimeMS(queryTimeout);
+
+  if (!doc) return res.status(404).json({ ok: false, error: 'Assembleia não encontrada' });
+  return res.json({ ok: true, data: { ...doc, _id: String(doc._id) } });
+}));
+
+// Presença (Portal) — usa o backend do módulo Condomínios via proxy interno
+app.get('/api/assembleias/:id/presenca', requirePortalLogin, proxyMaybeRaw, (req, res, next) => {
+  const id = String(req.params?.id || '').trim();
+  return proxyToCondominios(req, res, next, `/condominios/api/assembleias/${encodeURIComponent(id)}/execution/presence/me`);
+});
+
+app.post('/api/assembleias/:id/presenca/solicitar', requirePortalLogin, proxyMaybeRaw, (req, res, next) => {
+  const id = String(req.params?.id || '').trim();
+  return proxyToCondominios(req, res, next, `/condominios/api/assembleias/${encodeURIComponent(id)}/execution/presence`);
+});
+
+app.post('/api/assembleias/:id/presenca/confirmar', requirePortalLogin, proxyMaybeRaw, (req, res, next) => {
+  const id = String(req.params?.id || '').trim();
+  // Confirma presença do usuário logado via /execution/presence (Portal)
+  return proxyToCondominios(req, res, next, `/condominios/api/assembleias/${encodeURIComponent(id)}/execution/presence`);
+});
+
+app.post('/assembleias/:id/presenca/solicitar', requirePortalLogin, proxyMaybeRaw, (req, res, next) => {
+  const id = String(req.params?.id || '').trim();
+  return proxyToCondominios(req, res, next, `/condominios/api/assembleias/${encodeURIComponent(id)}/execution/presence`);
+});
+
+app.post('/assembleias/:id/presenca/confirmar', requirePortalLogin, proxyMaybeRaw, (req, res, next) => {
+  const id = String(req.params?.id || '').trim();
+  return proxyToCondominios(req, res, next, `/condominios/api/assembleias/${encodeURIComponent(id)}/execution/presence`);
+});
+
+app.get('/api/assembleias/:id/status', requirePortalLogin, wrapAsync(async (req, res) => {
+  const ctx = buildPortalContext(req);
+  const id = String(req.params?.id || '').trim();
+  const userId = String(req.user?.id || req.user?.cond_usuario_id || req.user?._id || '').trim();
+  const habitacaoId = String(req.query?.hab || req.user?.habitacao_id || req.user?.habitacaoId || '').trim();
+
+  if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
+
+  const execDoc = await CondAssembleiaExecution.findOne({ assembleia_id: id })
+    .select('assembleia_id sessionStatus isPaused currentAgendaIdx agenda votes presences closedAt openedAt')
+    .lean();
+
+  const mapAssemblyState = (sessionStatus, isPaused) => {
+    if (isPaused) return 'PAUSED';
+    const s = String(sessionStatus || '').trim().toLowerCase();
+    if (s === 'encerrada') return 'CLOSED';
+    if (s === 'aberta') return 'OPEN';
+    if (s === 'em_votacao') return 'OPEN';
+    if (s === 'aguardando') return 'WAITING';
+    return 'UNKNOWN';
+  };
+
+  const currentIdx = Number(execDoc?.currentAgendaIdx || 0) || 0;
+  const agenda = Array.isArray(execDoc?.agenda) ? execDoc.agenda : [];
+  const currentAgendaItem = agenda.find((a) => Number(a?.idx) === currentIdx) || agenda[currentIdx] || null;
+
+  const votes = Array.isArray(execDoc?.votes) ? execDoc.votes : [];
+  const openVote = votes.find((v) => Number(v?.agendaIdx) === currentIdx && v?.openedAt && !v?.closedAt) || null;
+
+  const presenceList = Array.isArray(execDoc?.presences) ? execDoc.presences : [];
+  const toKey = (uid) => `portal:${String(uid || '').trim().toLowerCase()}`;
+  const wantedKey = toKey(userId);
+  const myPresence = presenceList.find((p) => {
+    const key = String(p?.key || '').trim().toLowerCase();
+    const pUser = String(p?.pessoa_id || '').trim();
+    const pHab = String(p?.habitacao_id || '').trim();
+    return (userId && (pUser === userId || key === wantedKey)) || (habitacaoId && pHab === habitacaoId);
+  }) || null;
+
+  const role = String(myPresence?.presence_role || 'REPRESENTANTE').trim().toUpperCase();
+  const status = String(myPresence?.status || '').trim().toUpperCase();
+  const canVote = role === 'REPRESENTANTE' && status === 'CONFIRMED';
+
+  return res.json({
+    ok: true,
+    data: {
+      assembleiaId: id,
+      assemblyState: mapAssemblyState(execDoc?.sessionStatus, !!execDoc?.isPaused),
+      status: mapAssemblyState(execDoc?.sessionStatus, !!execDoc?.isPaused),
+      currentAgendaItem: currentAgendaItem
+        ? {
+          idx: Number(currentAgendaItem?.idx || 0) || 0,
+          tipo: String(currentAgendaItem?.tipo || '').trim(),
+          descricao: String(currentAgendaItem?.descricao || '').trim(),
+          state: String(currentAgendaItem?.state || '').trim()
+        }
+        : null,
+      voting: {
+        isOpen: !!openVote,
+        tipo: openVote ? String(openVote?.voteType || '').trim() : null
+      },
+      presence: myPresence
+        ? {
+          presenceId: String(myPresence?.presenceId || '').trim() || null,
+          status,
+          role,
+          canVote
+        }
+        : null,
+      session: {
+        openedAt: execDoc?.openedAt || null,
+        closedAt: execDoc?.closedAt || null
+      },
+      unidadeId: String(ctx?.unidadeId || '').trim() || null
+    }
+  });
+}));
 
 function normalizeDigits(val) {
   return String(val || '').replace(/\D/g, '');

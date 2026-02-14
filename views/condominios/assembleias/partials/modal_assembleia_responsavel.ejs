@@ -1,0 +1,211 @@
+<%
+  const __bp = String(_bp || '').replace(/\/+$/, '');
+%>
+
+<style>
+  /* Modal Responsável: reaproveita estética do picker de Destinatários (escopo isolado) */
+  #modalPesquisarResponsavel[data-responsavel-picker]{
+    --wdg-card-bg: #ffffff;
+    --wdg-card-border: rgba(15,23,42,.10);
+    --wdg-soft: rgba(15,23,42,.06);
+    --wdg-shadow: 0 18px 45px rgba(15,23,42,.10);
+    --wdg-shadow-hover: 0 28px 70px rgba(15,23,42,.14);
+    --wdg-glow: 0 0 0 .25rem rgba(29,78,216,.12);
+    --wdg-pane-bg: linear-gradient(180deg, rgba(248,250,252,.92), rgba(255,255,255,.94));
+    --wdg-primary: #1d4ed8;
+    --wdg-primary-2: #38bdf8;
+
+    /* Lista de pessoas: altura fixa (4 itens visíveis) + rolagem vertical */
+    --wdg-resp-list-height: 372px;
+  }
+
+  #modalPesquisarResponsavel .wdg-modal-head{
+    background: linear-gradient(135deg, var(--wdg-primary), var(--wdg-primary-2));
+    color: #fff;
+    border-bottom: 0;
+  }
+  #modalPesquisarResponsavel .wdg-modal-head .modal-title{
+    font-weight: 900;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    font-size: .95rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  #modalPesquisarResponsavel .wdg-modal-head .btn-close{ filter: invert(1) grayscale(1) brightness(2); opacity: .95; }
+
+  /* Centraliza os chips de tipo (mesmo padrão de Natureza/Modalidade) */
+  #modalPesquisarResponsavel .wdg-choice-group{
+    justify-content: center;
+  }
+
+  #modalPesquisarResponsavel .wdg-list-head{
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .65rem .85rem;
+    border-radius: 18px 18px 0 0;
+    background: linear-gradient(135deg, var(--wdg-primary), var(--wdg-primary-2));
+    color: #fff;
+    border: 1px solid rgba(15,23,42,.10);
+    box-shadow: 0 18px 45px rgba(15,23,42,.10);
+  }
+  #modalPesquisarResponsavel .wdg-list-title{
+    margin: 0 auto;
+    font-weight: 900;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    font-size: .85rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+
+  #modalPesquisarResponsavel .wdg-recipients-pane{
+    display: flex;
+    flex-direction: column;
+    gap: .65rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: var(--wdg-resp-list-height);
+    padding: .75rem;
+    background: var(--wdg-pane-bg);
+    border: 1px solid rgba(15,23,42,.10);
+    border-top: 0;
+    border-radius: 0 0 18px 18px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.70),
+      0 18px 50px rgba(15,23,42,.08);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    scrollbar-gutter: stable;
+  }
+
+  @media (max-height: 740px){
+    #modalPesquisarResponsavel[data-responsavel-picker]{
+      --wdg-resp-list-height: 50vh;
+    }
+  }
+  #modalPesquisarResponsavel .wdg-recipients-pane:focus-within{
+    box-shadow: var(--wdg-glow), inset 0 1px 0 rgba(255,255,255,.70), 0 20px 60px rgba(15,23,42,.10);
+  }
+
+  #modalPesquisarResponsavel .wdg-recipient-row{
+    min-height: 64px;
+    border-radius: 14px;
+    border: 1px solid var(--wdg-soft);
+    background: var(--wdg-card-bg);
+    box-shadow: 0 12px 28px rgba(15,23,42,.08);
+    transform: translateZ(0);
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+    will-change: transform;
+  }
+  #modalPesquisarResponsavel .wdg-recipient-row:hover{
+    border-color: rgba(29,78,216,.22);
+    box-shadow: var(--wdg-shadow-hover);
+    transform: translateY(-2px) rotateX(.35deg);
+  }
+  #modalPesquisarResponsavel .wdg-recipient-row.wdg-selected{
+    border-color: rgba(29,78,216,.35);
+    box-shadow: 0 22px 60px rgba(29,78,216,.16);
+  }
+
+  #modalPesquisarResponsavel .wdg-row-btn{
+    width: 100%;
+    text-align: left;
+    padding: .5rem;
+    background: transparent;
+    border: 0;
+  }
+
+  #modalPesquisarResponsavel .rounded-circle{ box-shadow: 0 10px 20px rgba(15,23,42,.08); }
+
+  #modalPesquisarResponsavel .wdg-muted{ color: rgba(100,116,139,.95); }
+
+  #modalPesquisarResponsavel .wdg-outro-card{
+    border-radius: 18px;
+    border: 1px solid rgba(15,23,42,.10);
+    background: linear-gradient(180deg, rgba(248,250,252,.92), rgba(255,255,255,.96));
+    box-shadow: 0 18px 50px rgba(15,23,42,.08);
+  }
+</style>
+
+<div class="modal fade" id="modalPesquisarResponsavel" tabindex="-1" aria-hidden="true" data-responsavel-picker data-bp="<%= __bp || '/condominios' %>">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:18px; overflow:hidden;">
+      <div class="modal-header wdg-modal-head">
+        <h5 class="modal-title">Responsável</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <div class="wdg-choice-group" role="group" aria-label="Tipo de responsável">
+            <input class="btn-check" type="radio" name="assembleia_resp_tipo" id="assembleia_resp_tipo_dirigente" value="dirigentes" checked data-resp-tipo>
+            <label class="btn wdg-choice-btn" for="assembleia_resp_tipo_dirigente"><img class="wdg-choice-icon" src="/images/funcionario.png" alt="" loading="lazy">Dirigente</label>
+
+            <input class="btn-check" type="radio" name="assembleia_resp_tipo" id="assembleia_resp_tipo_colaborador" value="colaboradores" data-resp-tipo>
+            <label class="btn wdg-choice-btn" for="assembleia_resp_tipo_colaborador"><img class="wdg-choice-icon" src="/images/colaborador.png" alt="" loading="lazy">Colaborador</label>
+
+            <input class="btn-check" type="radio" name="assembleia_resp_tipo" id="assembleia_resp_tipo_condomino" value="condominos" data-resp-tipo>
+            <label class="btn wdg-choice-btn" for="assembleia_resp_tipo_condomino"><img class="wdg-choice-icon" src="/images/unidade.png" alt="" loading="lazy">Condômino</label>
+
+            <input class="btn-check" type="radio" name="assembleia_resp_tipo" id="assembleia_resp_tipo_outro" value="outro" data-resp-tipo>
+            <label class="btn wdg-choice-btn" for="assembleia_resp_tipo_outro"><img class="wdg-choice-icon" src="/images/pessoal.png" alt="" loading="lazy">Outro</label>
+          </div>
+        </div>
+
+        <div data-resp-picker-wrap>
+          <div class="input-group mb-3">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input class="form-control" type="search" placeholder="Buscar por nome, e-mail, cargo..." autocomplete="off" data-resp-search>
+            <button class="btn btn-outline-secondary" type="button" title="Atualizar" data-resp-refresh>
+              <img src="/images/atualizar.png" alt="" style="width:18px;height:18px;display:block;">
+            </button>
+          </div>
+
+          <div class="wdg-list-wrap">
+            <div class="wdg-list-head">
+              <div class="wdg-list-title">Pessoas</div>
+            </div>
+            <div class="wdg-recipients-pane" data-resp-scroll>
+              <div class="d-flex flex-column gap-2" data-resp-list></div>
+              <div class="wdg-muted small mt-2" data-resp-hint style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-none" data-resp-outro>
+          <div class="wdg-outro-card p-3">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Nome</label>
+                <input class="form-control" type="text" placeholder="Nome do responsável" data-outro-nome autocomplete="off">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">CPF</label>
+                <input class="form-control" type="text" placeholder="000.000.000-00" data-outro-cpf autocomplete="off" inputmode="numeric">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">E-mail</label>
+                <input class="form-control" type="email" placeholder="email@exemplo.com" data-outro-email autocomplete="off">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Função</label>
+                <input class="form-control" type="text" placeholder="Ex.: Síndico, Administradora, Conselho..." data-outro-funcao autocomplete="off">
+              </div>
+              <div class="col-12">
+                <div class="wdg-muted small">Ao aplicar, o sistema preencherá o campo “Responsável” na assembleia.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" data-resp-confirm disabled>
+          <i class="bi bi-check2-circle me-1"></i>Aplicar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -81,6 +81,48 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', __fallbackWizardInit); else __fallbackWizardInit();
   setTimeout(__fallbackWizardInit, 1200);
 
+  function normalizeText(v){
+    return String(v ?? '').replace(/\s+/g, ' ').trim();
+  }
+
+  function askDeleteFuncionarioConfirm(nome){
+    const modalEl = document.getElementById('fDeleteConfirmModal');
+    const nameEl = document.getElementById('fDeleteConfirmName');
+    const yesBtn = document.getElementById('fDeleteConfirmYes');
+
+    const label = normalizeText(nome) || 'selecionado';
+
+    // fallback: caso Bootstrap/modal não esteja disponível na página
+    if (!modalEl || !yesBtn || !(window.bootstrap && window.bootstrap.Modal)) {
+      return Promise.resolve(window.confirm(`Deseja excluir o funcionário ${label}? Esta exclusão é definitiva e não pode ser desfeita.`));
+    }
+
+    if (nameEl) nameEl.textContent = label;
+
+    return new Promise((resolve) => {
+      let resolved = false;
+      const bs = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true, focus: true });
+
+      const onHidden = () => {
+        if (resolved) return;
+        resolved = true;
+        resolve(false);
+      };
+
+      const onYes = (e) => {
+        try { e?.preventDefault?.(); } catch { /* noop */ }
+        if (resolved) return;
+        resolved = true;
+        resolve(true);
+        try { bs.hide(); } catch { /* noop */ }
+      };
+
+      modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+      yesBtn.addEventListener('click', onYes, { once: true });
+      bs.show();
+    });
+  }
+
   async function carregarFuncionario(id, btn){
     try {
       btn && (btn.disabled=true, btn.dataset._old=btn.innerHTML, btn.innerHTML='<span class="spinner-border spinner-border-sm"></span>');
@@ -117,7 +159,11 @@
   document.addEventListener('submit', async function(ev){
     const form = ev.target.closest('form'); if(!form) return; const action=form.getAttribute('action')||'';
     if(/\/api\/funcionarios\/[^/]+\/delete$/.test(action)){
-      ev.preventDefault(); if(!confirm('Confirmar exclusão do funcionário?')) return; const tr=form.closest('tr');
+      ev.preventDefault();
+      const tr=form.closest('tr');
+      const nome = tr?.querySelector('.col-nome')?.textContent || tr?.querySelector('td')?.textContent || '';
+      const ok = await askDeleteFuncionarioConfirm(nome);
+      if(!ok) return;
       try { const resp=await fetch(action,{method:'POST',headers:{'Accept':'application/json'}}); if(!resp.ok) throw new Error('HTTP '+resp.status); const j=await resp.json(); if(j.success||j.data?.deleted){ tr&&tr.remove(); } else alert('Não foi possível excluir'); }
       catch(e){ console.error('[FUNC_INDEX][unificado] Erro excluir', e); alert('Erro ao excluir'); }
     }

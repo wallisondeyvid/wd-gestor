@@ -274,11 +274,23 @@ export async function login(req, res) {
     console.log('[login] autenticado', { id: user._id.toString(), primeiro_acesso: user.primeiro_acesso, senha_provisoria: user.senha_provisoria, role: user.role });
     req.session.user = { id: user._id, email: user.email, nome: user.nome, role: user.role, funcionario_id: user.funcionario_id || null, unidade_id: user.unidade_id || null, funcao: null };
 
+    // Importante: garantir persistência da sessão antes de redirecionar.
+    // Em alguns cenários (principalmente com session store remoto + redirect), a gravação pode atrasar.
+    const saveSessionSafe = async () => {
+      try {
+        if (!req.session || typeof req.session.save !== 'function') return;
+        await new Promise((resolve) => req.session.save(() => resolve()));
+      } catch (e) {
+        try { console.warn('[login] session.save falhou:', e?.message || e); } catch {}
+      }
+    };
+
     // Se precisa trocar senha (primeiro acesso ou provisória), direciona ANTES da checagem de módulo
     const precisaTrocar = (user.senha_provisoria === true || user.primeiro_acesso === true || user.primeiro_acesso === undefined);
     const enforceMaster = String(process.env.ENFORCE_MASTER_FIRST_LOGIN || '').toLowerCase() === 'true';
     if (precisaTrocar && (!isMasterRole || (isMasterRole && enforceMaster))) {
       console.log('[login] redirecionando (senha_provisoria/primeiro_acesso)', { isMasterRole, enforceMaster });
+      await saveSessionSafe();
   return res.redirect(303, basePath + '/primeiroacesso');
     }
 
@@ -349,6 +361,7 @@ export async function login(req, res) {
       }
     } catch (eCheck) { console.warn('[login] falha checando status planejado:', eCheck.message); }
     
+    await saveSessionSafe();
   return res.redirect(303, basePath + '/dashboard');
   } catch (e) {
     console.error('[login] erro:', e);

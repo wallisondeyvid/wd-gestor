@@ -1,0 +1,632 @@
+/* CSS específico da página: Cadastrar Garagem
+   Objetivo: aplicar o mesmo padrão premium/3D da página de Habitações,
+   usando apenas tokens existentes em condominios-modern.css.
+*/
+
+/* Premium: cards e formulários com acabamento mais “glass” */
+body.page-cadastrar-garagem{
+  /* Remove o fundo com degradês azulados do layout global */
+  background: var(--wdg-bg) !important;
+}
+
+body.page-cadastrar-garagem .content.wdg-card,
+body.page-cadastrar-garagem .wdg-card.content,
+body.page-cadastrar-garagem .content{
+  border-radius: var(--wdg-radius-lg);
+  background: var(--wdg-glass);
+  border: 1px solid var(--wdg-glass-border);
+  box-shadow: var(--wdg-shadow-hover);
+  overflow: hidden;
+}
+
+/* Brilho interno sutil e “borda premium” */
+body.page-cadastrar-garagem .content.wdg-card::before,
+body.page-cadastrar-garagem .wdg-card.content::before,
+body.page-cadastrar-garagem .content::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg, var(--wdg-glass-border), transparent 38%),
+    radial-gradient(900px 320px at 30% 0%, var(--wdg-ink-soft), transparent 55%);
+  opacity: .10;
+}
+
+body.page-cadastrar-garagem .content.wdg-card > *,
+body.page-cadastrar-garagem .wdg-card.content > *,
+body.page-cadastrar-garagem .content > *{
+  position: relative;
+  z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  body.page-cadastrar-garagem .content{
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(14px) saturate(150%);
+    background: var(--wdg-glass);
+    border-color: var(--wdg-glass-border);
+  }
+}
+
+body.page-cadastrar-garagem .page-main-title{
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+body.page-cadastrar-garagem .wdg-section-title{
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+/* Inputs premium (sem trocar o Bootstrap; só polir) */
+body.page-cadastrar-garagem .form-control,
+body.page-cadastrar-garagem .form-select{
+  border-radius: 12px;
+  border-color: rgba(var(--wdg-accent-rgb), .18);
+  background:
+    linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+  box-shadow:
+    inset 0 1px 0 var(--wdg-glass-border),
+    var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-garagem .form-control:focus,
+body.page-cadastrar-garagem .form-select:focus{
+  border-color: var(--wdg-primary);
+  box-shadow: var(--wdg-focus-ring), var(--wdg-shadow-hover);
+}
+
+body.page-cadastrar-garagem .form-label{
+  font-weight: 650;
+  color: var(--wdg-text);
+}
+
+/* Subbar de Condomínio (igual Habitações) */
+body.page-cadastrar-garagem .wdg-condo-subbar{
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: .9rem;
+  margin: .35rem 0 1.15rem;
+}
+
+body.page-cadastrar-garagem .wdg-condo-field{
+  display:flex;
+  flex-direction: column;
+  gap: .45rem;
+  width: 100%;
+  max-width: 760px;
+}
+
+body.page-cadastrar-garagem .wdg-condo-controlrow{
+  display:flex;
+  align-items:center;
+  gap: .7rem;
+  width: 100%;
+}
+
+body.page-cadastrar-garagem .wdg-condo-inline-logo{
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--wdg-border);
+  background: var(--wdg-surface-alt);
+  box-shadow: var(--wdg-shadow-sm);
+  flex: 0 0 46px;
+}
+
+body.page-cadastrar-garagem .wdg-condo-label{
+  font-weight: 800;
+  font-size: .78rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--wdg-text-light);
+}
+
+body.page-cadastrar-garagem .wdg-condo-select.form-select{
+  border-radius: 999px;
+  border: 1px solid var(--wdg-border);
+  box-shadow: var(--wdg-shadow-sm);
+  transition: box-shadow .16s ease, border-color .16s ease, transform .16s ease;
+  padding-left: 1rem;
+  padding-right: 2.2rem;
+  min-height: 62px;
+  font-size: 1.05rem;
+  font-weight: 650;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.page-cadastrar-garagem .wdg-condo-select.form-select:focus{
+  border-color: var(--wdg-primary);
+  box-shadow: var(--wdg-focus-ring), var(--wdg-shadow);
+  transform: translateY(-1px);
+}
+
+body.page-cadastrar-garagem .wdg-condo-select.form-select:disabled{
+  opacity: 1;
+  background: var(--wdg-surface-alt);
+}
+
+/* Picker (mesmo formato do "Não exibir para habitações" em Enquetes) */
+body.page-cadastrar-garagem .wdg-enq-picker{ position:relative; }
+
+body.page-cadastrar-garagem .wdg-enq-picker-box{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:.45rem;
+  padding:.5rem .65rem;
+  border-radius:.5rem;
+  border:1px solid rgba(var(--wdg-accent-rgb), .18);
+  background: var(--wdg-surface);
+  cursor:text;
+}
+
+body.page-cadastrar-garagem .wdg-enq-picker-box:focus{
+  outline:none;
+  box-shadow: var(--wdg-focus-ring);
+  border-color: rgba(var(--wdg-primary-rgb), .35);
+}
+
+body.page-cadastrar-garagem .wdg-enq-token{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  border-radius:999px;
+  border:1px solid rgba(var(--wdg-accent-rgb), .18);
+  background: var(--wdg-surface-alt);
+  color: var(--wdg-text);
+  padding:.22rem .55rem;
+  font-weight:800;
+  font-size:.82rem;
+}
+
+body.page-cadastrar-garagem .wdg-enq-token button{
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+  line-height:1;
+  color: var(--wdg-text-light);
+  font-weight:900;
+}
+body.page-cadastrar-garagem .wdg-enq-token button:hover{ color: var(--wdg-text); }
+
+body.page-cadastrar-garagem .wdg-enq-picker-input{
+  border:0;
+  outline:none;
+  flex:1;
+  min-width:180px;
+  font-weight:700;
+  font-size:.92rem;
+  background:transparent;
+  color: var(--wdg-text);
+}
+
+body.page-cadastrar-garagem .wdg-enq-picker-placeholder{
+  color: var(--wdg-text-light);
+  font-weight:700;
+  font-size:.92rem;
+  user-select:none;
+}
+
+body.page-cadastrar-garagem .wdg-enq-picker-menu{
+  position:absolute;
+  left:0;
+  right:0;
+  top:calc(100% + 6px);
+  z-index:60;
+  background: var(--wdg-surface);
+  border:1px solid rgba(var(--wdg-accent-rgb), .18);
+  border-radius:16px;
+  box-shadow: var(--wdg-shadow-hover);
+  max-height:280px;
+  overflow:auto;
+  padding:.35rem;
+}
+
+body.page-cadastrar-garagem .wdg-enq-picker-item{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:.8rem;
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent;
+  border-radius:12px;
+  padding:.55rem .7rem;
+  font-weight:700;
+  color: var(--wdg-text);
+}
+body.page-cadastrar-garagem .wdg-enq-picker-item:hover{ background: var(--wdg-surface-alt); }
+
+body.page-cadastrar-garagem .wdg-enq-picker-item small{
+  color: var(--wdg-text-light);
+  font-weight:800;
+}
+
+body.page-cadastrar-garagem .wdg-pick-avatar{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  background: var(--wdg-surface-alt);
+  color: var(--wdg-text);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 34px;
+  font-weight:700;
+  font-size:12px;
+  overflow:hidden;
+  border: 1px solid rgba(var(--wdg-accent-rgb), .12);
+}
+body.page-cadastrar-garagem .wdg-pick-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+body.page-cadastrar-garagem .wdg-pick-lines{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  line-height:1.2;
+}
+body.page-cadastrar-garagem .wdg-pick-name{
+  font-weight:700;
+  color: var(--wdg-text);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body.page-cadastrar-garagem .wdg-pick-hab{
+  font-size:12px;
+  color: var(--wdg-text-light);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Tabelas: wrapper no estilo do Feedback (acabamento moderno) */
+body.page-cadastrar-garagem #garTableWrap.ch-table-wrap{
+  border: 1px solid var(--wdg-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(900px 260px at 35% 10%, rgba(var(--wdg-accent-rgb), .08), transparent 60%),
+    var(--wdg-surface-alt);
+  box-shadow: var(--wdg-shadow);
+  padding: 0 10px 10px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Faixa premium no topo */
+body.page-cadastrar-garagem #garTableWrap.ch-table-wrap::before{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height: 52px;
+  background:
+    radial-gradient(900px 220px at 18% -10%, rgba(var(--wdg-primary-rgb), .22), transparent 55%),
+    var(--wdg-hero-gradient);
+  z-index: 1;
+  pointer-events: none;
+}
+
+body.page-cadastrar-garagem #garTableWrap .ch-table-scroll{
+  position: relative;
+  z-index: 2;
+  border-radius: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Altura mais confortável para lista */
+body.page-cadastrar-garagem #garTableWrap .table-vert-max{ max-height: 420px; }
+
+/* Alinhamento geral */
+body.page-cadastrar-garagem #garTableWrap th,
+body.page-cadastrar-garagem #garTableWrap td{
+  text-align: center;
+}
+
+body.page-cadastrar-garagem #garTableWrap table{
+  background: transparent;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+body.page-cadastrar-garagem #garTableWrap thead th{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--wdg-surface);
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+body.page-cadastrar-garagem #garTableWrap table > :not(caption) > thead > * > *{
+  border-bottom-width: 0;
+}
+
+body.page-cadastrar-garagem #garTableWrap tbody td{
+  border-top: none;
+  border-bottom: none;
+  background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+  border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-garagem #garTableWrap tbody tr td:first-child{ border-radius: 12px 0 0 12px; }
+body.page-cadastrar-garagem #garTableWrap tbody tr td:last-child{ border-radius: 0 12px 12px 0; }
+
+body.page-cadastrar-garagem #garTableWrap tbody tr:nth-child(odd) td{
+  background: linear-gradient(180deg, var(--wdg-surface), rgba(var(--wdg-accent-rgb), .03));
+}
+
+body.page-cadastrar-garagem #garTableWrap tbody tr{ transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+body.page-cadastrar-garagem #garTableWrap tbody tr:hover{ transform: translateY(-1px); }
+body.page-cadastrar-garagem #garTableWrap tbody tr:hover td{
+  border-color: rgba(var(--wdg-primary-rgb), .24);
+  background: linear-gradient(180deg, var(--wdg-primary-soft), var(--wdg-surface));
+}
+
+/* Paginação fixa no rodapé do wrapper */
+body.page-cadastrar-garagem .ch-table-pager{
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  margin-top: 10px;
+  padding-top: 10px;
+  padding-bottom: 2px;
+  background: linear-gradient(180deg, transparent, var(--wdg-glass) 28%, var(--wdg-surface));
+  border-top: 1px solid rgba(var(--wdg-accent-rgb), .10);
+}
+
+/* Garagem: paginação “grudada” no rodapé da área rolável da tabela */
+body.page-cadastrar-garagem #garTableWrap .table-vert-max .ch-table-pager{
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-top: 0;
+}
+
+/* --------------------
+   Botões (3D + padrão)
+   -------------------- */
+
+body.page-cadastrar-garagem .btn{
+  border-radius: 12px;
+  box-shadow: var(--wdg-shadow-sm);
+  transition: transform .14s cubic-bezier(.2,.8,.2,1), box-shadow .14s cubic-bezier(.2,.8,.2,1), filter .14s ease;
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+
+body.page-cadastrar-garagem .btn::before{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height: 58%;
+  pointer-events:none;
+  background: linear-gradient(180deg, var(--wdg-glass-border), transparent);
+  opacity: .65;
+}
+
+body.page-cadastrar-garagem .btn:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--wdg-shadow);
+}
+
+body.page-cadastrar-garagem .btn:active{
+  transform: translateY(0);
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-garagem .btn:focus-visible{
+  box-shadow: var(--wdg-focus-ring), var(--wdg-shadow);
+}
+
+body.page-cadastrar-garagem .btn-outline-secondary,
+body.page-cadastrar-garagem .btn-outline-danger,
+body.page-cadastrar-garagem .btn-outline-warning{
+  background: var(--wdg-glass);
+  border-color: rgba(var(--wdg-accent-rgb), .20);
+}
+
+body.page-cadastrar-garagem .btn-primary{
+  box-shadow: var(--wdg-shadow-hover);
+}
+
+body.page-cadastrar-garagem .btn-primary:hover{
+  filter: brightness(1.02);
+}
+
+/* Ícones de ação da tabela: toque 3D discreto */
+body.page-cadastrar-garagem .wdg-icon-btn{
+  border-radius: 10px;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+body.page-cadastrar-garagem .wdg-icon-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-garagem .wdg-icon-btn:active{
+  transform: translateY(0);
+}
+
+/* Preview da foto com acabamento (3D leve) */
+body.page-cadastrar-garagem #gFotoPrev.preview-thumb{
+  border-radius: 16px;
+  box-shadow: var(--wdg-shadow);
+  border: 1px solid rgba(var(--wdg-accent-rgb), .14);
+}
+
+/* --------------------
+   Modais (premium/3D)
+   -------------------- */
+
+body.page-cadastrar-garagem #modalDetGarCad .modal-dialog,
+body.page-cadastrar-garagem #modalFotoGar .modal-dialog{
+  filter: drop-shadow(0 18px 35px rgba(0,0,0,.18));
+}
+
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-dialog{
+  filter: drop-shadow(0 18px 35px rgba(0,0,0,.18));
+}
+
+body.page-cadastrar-garagem #modalDetGarCad .modal-content,
+body.page-cadastrar-garagem #modalFotoGar .modal-content{
+  border-radius: calc(var(--wdg-radius-lg) + 4px);
+  border: 1px solid var(--wdg-glass-border);
+  background: var(--wdg-glass);
+  box-shadow: var(--wdg-shadow-hover);
+  overflow: hidden;
+  position: relative;
+}
+
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-content{
+  border-radius: calc(var(--wdg-radius-lg) + 4px);
+  border: 1px solid var(--wdg-glass-border);
+  background: var(--wdg-glass);
+  box-shadow: var(--wdg-shadow-hover);
+  overflow: hidden;
+  position: relative;
+}
+
+body.page-cadastrar-garagem #modalDetGarCad .modal-content::before,
+body.page-cadastrar-garagem #modalFotoGar .modal-content::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg, var(--wdg-glass-border), transparent 40%),
+    radial-gradient(1100px 420px at 30% 0%, rgba(var(--wdg-accent-rgb), .10), transparent 55%);
+  opacity: .55;
+}
+
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-content::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg, var(--wdg-glass-border), transparent 40%),
+    radial-gradient(900px 320px at 25% 0%, rgba(var(--wdg-accent-rgb), .10), transparent 55%);
+  opacity: .55;
+}
+
+body.page-cadastrar-garagem #modalDetGarCad .modal-header,
+body.page-cadastrar-garagem #modalDetGarCad .modal-footer,
+body.page-cadastrar-garagem #modalFotoGar .modal-header,
+body.page-cadastrar-garagem #modalFotoGar .modal-footer{
+  background: transparent;
+  border-color: rgba(var(--wdg-accent-rgb), .12);
+}
+
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-header,
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-footer{
+  background: transparent;
+  border-color: rgba(var(--wdg-accent-rgb), .12);
+}
+
+body.page-cadastrar-garagem #modalDetGarCad .modal-title,
+body.page-cadastrar-garagem #modalFotoGar .modal-title{
+  font-weight: 850;
+  letter-spacing: -.01em;
+}
+
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-title{
+  font-weight: 850;
+  letter-spacing: -.01em;
+}
+
+body.page-cadastrar-garagem #modalDetGarCad .modal-body,
+body.page-cadastrar-garagem #modalDetGarCad .modal-header,
+body.page-cadastrar-garagem #modalDetGarCad .modal-footer,
+body.page-cadastrar-garagem #modalFotoGar .modal-body,
+body.page-cadastrar-garagem #modalFotoGar .modal-header,
+body.page-cadastrar-garagem #modalFotoGar .modal-footer{
+  position: relative;
+  z-index: 1;
+}
+
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-body,
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-header,
+body.page-cadastrar-garagem #garDeleteConfirmModal .modal-footer{
+  position: relative;
+  z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  body.page-cadastrar-garagem #modalDetGarCad .modal-content,
+  body.page-cadastrar-garagem #modalFotoGar .modal-content{
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+  }
+
+  body.page-cadastrar-garagem #garDeleteConfirmModal .modal-content{
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+  }
+}
+
+/* “Cards” internos do modal de detalhes */
+body.page-cadastrar-garagem #modalDetGarCad .modal-body .border.rounded{
+  border: 1px solid rgba(var(--wdg-accent-rgb), .14) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+  box-shadow: var(--wdg-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+body.page-cadastrar-garagem #modalDetGarCad .modal-body .border.rounded::before{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height: 46px;
+  pointer-events:none;
+  background: linear-gradient(180deg, rgba(var(--wdg-accent-rgb), .10), transparent);
+}
+
+body.page-cadastrar-garagem #modalDetGarCad h6.text-primary{
+  font-weight: 850;
+  letter-spacing: .02em;
+}
+
+body.page-cadastrar-garagem #modalDetGarCad dl dt{
+  color: var(--wdg-text-light);
+  font-weight: 750;
+}
+
+body.page-cadastrar-garagem #modalDetGarCad dl dd{
+  color: var(--wdg-text);
+  font-weight: 600;
+}
+
+body.page-cadastrar-garagem #modalDetGarCad #detGFoto{
+  border: 1px solid rgba(var(--wdg-accent-rgb), .12);
+  box-shadow: var(--wdg-shadow-sm);
+}

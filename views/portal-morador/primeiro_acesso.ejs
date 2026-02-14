@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Primeiro acesso · Portal do Morador</title>
-  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/portal-morador'; %>
-  <link rel="icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=5">
+  <title>Primeiro acesso Â· Portal do Morador</title>
+  <% const BP = '/portal-morador'; %>
+  <link rel="icon" type="image/png" href="<%= BP %>/images/logoWDGestor.png?v=5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="<%= _bp %>/css/portal-morador/login.css?v=<%= Date.now() %>">
+  <link rel="stylesheet" href="<%= BP %>/css/portal-morador/login.css?v=<%= Date.now() %>">
 </head>
 <body class="pm-login-body">
   <div class="pm-login-shell pm-first-access-shell">
@@ -23,13 +23,13 @@
             <p class="pm-kicker">Portal do Morador</p>
             <h1>Ative seu acesso definitivo</h1>
           </div>
-          <p class="pm-hero-description">Use a senha provisória enviada para <strong><%= email || 'seu e-mail' %></strong> e defina uma senha permanente para continuar acompanhando seu condomínio com segurança.</p>
+          <p class="pm-hero-description">Use a senha provisÃ³ria enviada para <strong><%= email || 'seu e-mail' %></strong> e defina uma senha permanente para continuar acompanhando seu condomÃ­nio com seguranÃ§a.</p>
           <div class="pm-first-access-steps">
             <div class="pm-step">
               <span class="pm-step-index">1</span>
               <div>
                 <strong>Validar identidade</strong>
-                <p>Informe a senha provisória recebido por e-mail.</p>
+                <p>Informe a senha provisÃ³ria recebido por e-mail.</p>
               </div>
             </div>
             <div class="pm-step">
@@ -42,7 +42,7 @@
             <div class="pm-step">
               <span class="pm-step-index">3</span>
               <div>
-                <strong>Começar a usar</strong>
+                <strong>ComeÃ§ar a usar</strong>
                 <p>Acesse comunicados, visitantes e mais recursos.</p>
               </div>
             </div>
@@ -50,48 +50,48 @@
         </div>
         <div class="pm-first-access-status">
           <div>
-            <small>Condomínio</small>
-            <strong><%= unidadeNome || 'Unidade não vinculada' %></strong>
+            <small>CondomÃ­nio</small>
+            <strong><%= unidadeNome || 'Unidade nÃ£o vinculada' %></strong>
             <% if (unidadeCodigo) { %>
-              <span class="pm-status-sub">Código <%= unidadeCodigo %></span>
+              <span class="pm-status-sub">CÃ³digo <%= unidadeCodigo %></span>
             <% } %>
           </div>
           <div>
-            <small>Convite válido</small>
+            <small>Convite vÃ¡lido</small>
             <strong><%= validade || 'Em andamento' %></strong>
-            <span class="pm-status-sub">O link expira após o prazo enviado</span>
+            <span class="pm-status-sub">O link expira apÃ³s o prazo enviado</span>
           </div>
         </div>
       </section>
       <section class="pm-login-form pm-first-access-form">
         <div class="pm-brand">
           <% if (unidadeLogo) { %>
-            <img src="<%= unidadeLogo %>" alt="Logo do condomínio">
+            <img src="<%= unidadeLogo %>" alt="Logo do condomÃ­nio">
           <% } else { %>
-            <img src="<%= _bp %>/images/logoWDGestor.png" alt="WD Gestor">
+            <img src="<%= BP %>/images/logoWDGestor.png" alt="WD Gestor">
           <% } %>
           <div class="pm-brand-text">
             <small>Portal do Morador</small>
-            <h5 class="mb-0 fw-bold"><%= nome || 'Olá, morador(a)!' %></h5>
+            <h5 class="mb-0 fw-bold"><%= nome || 'OlÃ¡, morador(a)!' %></h5>
           </div>
         </div>
         <% if (mensagem) { %>
           <div class="pm-alert <%= erro ? '--danger' : '--success' %>"><%= mensagem %></div>
         <% } else if (validade) { %>
-          <div class="pm-info-chip"><i class="bi bi-clock-history me-2"></i>Convite válido até <strong><%= validade %></strong></div>
+          <div class="pm-info-chip"><i class="bi bi-clock-history me-2"></i>Convite vÃ¡lido atÃ© <strong><%= validade %></strong></div>
         <% } %>
-        <form method="POST" action="<%= _bp %>/primeiroacesso" class="pm-first-access-fields">
+        <form method="POST" action="<%= BP %>/primeiroacesso" class="pm-first-access-fields">
           <input type="hidden" name="token" value="<%= token || '' %>">
           <input type="hidden" name="email" value="<%= email || '' %>">
 
           <div class="pm-field">
-            <label for="senhaProvisoria">Senha provisória</label>
+            <label for="senhaProvisoria">Senha provisÃ³ria</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-key"></i></span>
               <input type="password" class="form-control" id="senhaProvisoria" name="senhaProvisoria" placeholder="Senha enviada por e-mail" autocomplete="one-time-code" <%= allowSubmit === false ? 'disabled' : '' %> required>
               <button class="btn btn-outline-success" type="button" data-toggle-password="senhaProvisoria"><i class="bi bi-eye"></i></button>
             </div>
-            <span class="pm-field-note">É o código temporário enviado pela administração.</span>
+            <span class="pm-field-note">Ã‰ o cÃ³digo temporÃ¡rio enviado pela administraÃ§Ã£o.</span>
           </div>
 
           <div class="pm-field">
@@ -101,7 +101,7 @@
               <input type="password" class="form-control" id="senhaNova" name="senha" placeholder="Crie uma nova senha" minlength="8" autocomplete="new-password" <%= allowSubmit === false ? 'disabled' : '' %> required>
               <button class="btn btn-outline-success" type="button" data-toggle-password="senhaNova"><i class="bi bi-eye"></i></button>
             </div>
-            <span class="pm-field-note">Use ao menos 8 caracteres com letras maiúsculas, minúsculas e números.</span>
+            <span class="pm-field-note">Use ao menos 8 caracteres com letras maiÃºsculas, minÃºsculas e nÃºmeros.</span>
           </div>
 
           <div class="pm-field">
@@ -114,7 +114,7 @@
           </div>
 
           <button type="submit" class="pm-cta-btn" <%= allowSubmit === false ? 'disabled' : '' %>>Ativar acesso</button>
-          <p class="text-center text-muted mt-3" style="font-size:.9rem;">Já configurou sua senha? <a href="<%= _bp %>/login">Voltar para o login</a></p>
+          <p class="text-center text-muted mt-3" style="font-size:.9rem;">JÃ¡ configurou sua senha? <a href="<%= BP %>/login">Voltar para o login</a></p>
         </form>
       </section>
     </div>

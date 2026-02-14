@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal do Morador - Assembleias</title>
+  <% const BP = '/portal-morador'; %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= BP %>/css/portal-morador/home.css?v=<%= Date.now() %>">
+  <link rel="stylesheet" href="<%= BP %>/css/portal-morador/assembleias.css?v=<%= Date.now() %>">
+  <%- include('./partials/feedback-assets') %>
+</head>
+<body class="pm-home-body" data-base-path="<%= BP %>" data-hab-id="<%= habitacaoId || '' %>" data-hab-label="<%= habitacaoLabel || '' %>" data-unidade-id="<%= unidadeId || '' %>">
+  <div class="pm-shell">
+    <aside class="pm-sidebar" id="pmSidebar">
+      <div class="pm-sidebar-brand">
+        <div class="pm-sidebar-brand-logo">
+          <img src="<%= BP %>/images/logoWDGestorprata.png" alt="Portal do Morador">
+        </div>
+        <strong>Portal do Morador</strong>
+      </div>
+      <nav class="pm-nav" aria-label="Menu principal">
+        <a class="pm-nav-item" href="<%= BP %>/home"><img class="pm-nav-ico" src="<%= BP %>/images/home.png" alt="" aria-hidden="true">Início</a>
+
+        <details class="pm-nav-details pm-nav-details--mensagens">
+          <summary class="pm-nav-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= BP %>/images/mensagem.png" alt="" aria-hidden="true">Caixa de Mensagem</summary>
+          <div class="pm-nav-sub" role="group" aria-label="Caixa de Mensagem">
+            <a class="pm-nav-sub-item" href="<%= BP %>/mensagens/nova"><img class="pm-nav-ico" src="<%= BP %>/images/nova-mensagem.png" alt="" aria-hidden="true">Nova mensagem</a>
+            <a class="pm-nav-sub-item" href="<%= BP %>/mensagens/entrada"><img class="pm-nav-ico" src="<%= BP %>/images/caixa-de-entrada.png" alt="" aria-hidden="true">Caixa de entrada <span class="pm-nav-count" data-msg-inbox-count style="display:none;" aria-hidden="true"></span></a>
+            <a class="pm-nav-sub-item" href="<%= BP %>/mensagens/saida"><img class="pm-nav-ico" src="<%= BP %>/images/caixa-de-saida.png" alt="" aria-hidden="true">Caixa de saída</a>
+            <a class="pm-nav-sub-item" href="<%= BP %>/mensagens/arquivo"><img class="pm-nav-ico" src="<%= BP %>/images/arquivomensagem.png" alt="" aria-hidden="true">Arquivo</a>
+            <a class="pm-nav-sub-item" href="<%= BP %>/mensagens/lixeira"><img class="pm-nav-ico" src="<%= BP %>/images/lixeira.png" alt="" aria-hidden="true">Lixeira</a>
+            <details class="pm-nav-sub-details pm-nav-sub-details--grupos">
+              <summary class="pm-nav-sub-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= BP %>/images/grupo.png" alt="" aria-hidden="true">Grupos</summary>
+              <div class="pm-nav-sub" role="group" aria-label="Grupos">
+                <a class="pm-nav-sub-item" href="<%= BP %>/mensagens/grupos"><img class="pm-nav-ico" src="<%= BP %>/images/editar.png" alt="" aria-hidden="true">Editar</a>
+              </div>
+            </details>
+            <details class="pm-nav-sub-details">
+              <summary class="pm-nav-sub-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= BP %>/images/configuracao.png" alt="" aria-hidden="true">Configuração</summary>
+              <div class="pm-nav-sub" role="group" aria-label="Configuração">
+                <a class="pm-nav-sub-item" href="<%= BP %>/mensagens/caixas"><img class="pm-nav-ico" src="<%= BP %>/images/caixas.png" alt="" aria-hidden="true">Caixas</a>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <a class="pm-nav-item" href="<%= BP %>/comunicados"><img class="pm-nav-ico" src="<%= BP %>/images/comunicacao.png" alt="" aria-hidden="true">Comunicados</a>
+        <a class="pm-nav-item" href="<%= BP %>/enquetes"><img class="pm-nav-ico" src="<%= BP %>/images/enquete.png" alt="" aria-hidden="true">Enquetes</a>
+        <a class="pm-nav-item" href="<%= BP %>/assembleias"><img class="pm-nav-ico" src="<%= BP %>/images/assembleia_sessao.png" alt="" aria-hidden="true">Assembleias</a>
+        <a class="pm-nav-item" href="<%= BP %>/home#reservas"><img class="pm-nav-ico" src="<%= BP %>/images/reservado.png" alt="" aria-hidden="true">Reservas</a>
+        <a class="pm-nav-item" href="<%= BP %>/home#transparencia"><img class="pm-nav-ico" src="<%= BP %>/images/transparencia.png" alt="" aria-hidden="true">Transparência</a>
+
+        <details class="pm-nav-details">
+          <summary class="pm-nav-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= BP %>/images/solicitacao.png" alt="" aria-hidden="true">Solicitações</summary>
+          <div class="pm-nav-sub" role="group" aria-label="Solicitações">
+            <a class="pm-nav-sub-item" href="<%= BP %>/solicitacoes/servico"><img class="pm-nav-ico" src="<%= BP %>/images/servicos.png" alt="" aria-hidden="true">Serviço</a>
+          </div>
+        </details>
+
+        <details class="pm-nav-details">
+          <summary class="pm-nav-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= BP %>/images/visita.png" alt="" aria-hidden="true">Visitante</summary>
+          <div class="pm-nav-sub" role="group" aria-label="Visitante">
+            <a class="pm-nav-sub-item" href="<%= BP %>/visitante/comunicar"><img class="pm-nav-ico" src="<%= BP %>/images/comunicar_visita.png" alt="" aria-hidden="true">Comunicar visita</a>
+            <a class="pm-nav-sub-item" href="<%= BP %>/visitante/historico"><img class="pm-nav-ico" src="<%= BP %>/images/historico.png" alt="" aria-hidden="true">Histórico de acessos</a>
+          </div>
+        </details>
+
+        <details class="pm-nav-details">
+          <summary class="pm-nav-item pm-nav-item--summary"><img class="pm-nav-ico" src="<%= BP %>/images/financeiro.png" alt="" aria-hidden="true">Financeiro</summary>
+          <div class="pm-nav-sub" role="group" aria-label="Financeiro">
+            <a class="pm-nav-sub-item" href="<%= BP %>/financeiro/boletos"><img class="pm-nav-ico" src="<%= BP %>/images/boleto.png" alt="" aria-hidden="true">Meus boletos</a>
+          </div>
+        </details>
+      </nav>
+      <div class="pm-sidebar-footer">Portal do Morador · WD Gestor</div>
+    </aside>
+
+    <div class="pm-main">
+      <%- include('./partials/topbar-shared', { nameModeId: 'pmNameModeAssembleias' }) %>
+
+      <section class="pm-toolbar" id="pmToolbar">
+        <div class="pm-toolbar-body" id="pmToolbarBody">
+          <div class="pm-condo-center">
+            <small>Condomínio</small>
+            <strong><%= typeof unidadeNome === 'string' ? unidadeNome : 'Seu Condomínio' %></strong>
+            <button class="pm-hab-switch" id="pmHabSwitcher" type="button" aria-haspopup="dialog" aria-expanded="false">
+              <span class="pm-hab-switch__icon"><img src="<%= BP %>/images/home.png" alt=""></span>
+              <span class="pm-hab-switch__label" id="pmHabSwitcherLabel"><%= habitacaoLabel || 'Habitação selecionada' %></span>
+              <i class="bi bi-chevron-down"></i>
+            </button>
+          </div>
+          <div class="pm-search" role="search" aria-label="Pesquisar no portal">
+            <i class="bi bi-search"></i>
+            <input type="search" placeholder="Procure aqui o que você precisa..." aria-label="Pesquisar">
+          </div>
+        </div>
+        <button class="pm-toolbar-toggle" id="pmToolbarToggle" type="button" aria-expanded="true" aria-label="Recolher barra">
+          <span class="pm-toolbar-toggle__chevron" aria-hidden="true"></span>
+        </button>
+      </section>
+
+      <div class="pm-hab-menu-portal" id="pmHabSwitcherMenu" hidden>
+        <div class="pm-hab-menu" role="dialog" aria-modal="true" aria-label="Selecionar habitação">
+          <div class="pm-hab-menu-head">
+            <div>
+              <small>Habitações</small>
+              <strong>Selecione para operar</strong>
+            </div>
+            <button type="button" class="pm-hab-menu-close" id="pmHabMenuClose" aria-label="Fechar">×</button>
+          </div>
+          <div class="pm-hab-menu-grid" id="pmHabMenuGrid" role="listbox" aria-label="Habitações disponíveis"></div>
+          <div class="pm-hab-menu-pager" id="pmHabMenuPager"></div>
+        </div>
+      </div>
+
+      <main class="pm-content">
+        <section class="pm-asm-hero" aria-label="Cabeçalho de assembleias">
+          <h1>Assembleias</h1>
+          <p>Consulte a lista de assembleias do seu condomínio.</p>
+        </section>
+
+        <section class="pm-asm-panel" aria-label="Lista de assembleias">
+          <div class="pm-asm-condo">
+            <div class="pm-asm-condo-label">Condomínio</div>
+            <div class="pm-asm-condo-value"><%= typeof unidadeNome === 'string' ? unidadeNome : 'Seu Condomínio' %></div>
+          </div>
+
+          <div class="pm-asm-tablewrap" role="region" aria-label="Tabela de assembleias">
+            <table class="pm-asm-table" aria-label="Assembleias">
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Número</th>
+                  <th>Título</th>
+                  <th>Natureza</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody data-asm-body>
+                <tr>
+                  <td colspan="6" class="pm-asm-muted">Carregando…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pm-asm-empty" hidden data-asm-empty>
+            <strong>Nenhuma assembleia disponível.</strong>
+            <div style="margin-top:6px">Quando houver assembleias publicadas para o portal, elas vão aparecer aqui.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="<%= BP %>/js/portal_morador_nav_active.js?v=<%= Date.now() %>"></script>
+  <script src="<%= BP %>/js/portal_morador_groups_menu.js?v=<%= Date.now() %>"></script>
+  <script src="<%= BP %>/js/portal_morador_hab_switcher.js?v=<%= Date.now() %>"></script>
+  <script src="<%= BP %>/js/portal_morador_user_menu.js?v=<%= Date.now() %>"></script>
+  <script src="<%= BP %>/js/portal_morador_assembleias.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

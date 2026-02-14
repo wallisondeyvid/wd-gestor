@@ -50,3 +50,6 @@ cleave.js/
 coverage/
 .nyc_output/
 .vercel
+.env*.local
+__pycache__/
+scripts/__pycache__/

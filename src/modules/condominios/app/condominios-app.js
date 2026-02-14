@@ -7,6 +7,7 @@ import multer from 'multer';
 import crypto from 'crypto';
 import { put, del } from '@vercel/blob';
 import { connectMongo } from '#core/db/connect.js';
+import { emitirDocumentoAssinadoExterno, obterPorToken as obterDocumentoValidadoPorToken, substituir as substituirDocumentoValidado } from '../../../../services/documentos.service.js';
 // Reutiliza API de usuário do módulo Gestor (perfil/foto/senha)
 import gestorUserApi from '../../gestor/app/routes/userApi.js';
 import { excluirUsuario as gestorExcluirUsuario } from '../../gestor/app/controllers/userController.js';
@@ -43,8 +44,16 @@ import {
 import CondEnquete from '#core/models/cond_enquete.js';
 import CondEnqueteVoto from '#core/models/cond_enquete_voto.js';
 import CondComunicado from '#core/models/cond_comunicado.js';
+import CondAssembleia from '#core/models/cond_assembleia.js';
+import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
+import CondAssembleiaSettings from '#core/models/cond_assembleia_settings.js';
+import assembleiaExecutionRoutes from './routes/assembleiaExecution.routes.js';
+import DocumentoValidado from '#core/models/documentoValidado.js';
 import CondMsgMailbox from '#core/models/cond_msg_mailbox.js';
 import CondMsgSettings from '#core/models/cond_msg_settings.js';
+import CondDirigenciaSettings from '#core/models/cond_dirigencia_settings.js';
+import CondDirigenciaCargo from '#core/models/cond_dirigencia_cargo.js';
+import CondDirigenciaMandato from '#core/models/cond_dirigencia_mandato.js';
 import CondMsgGroup from '#core/models/cond_msg_group.js';
 import CondMsgMessage from '#core/models/cond_msg_message.js';
 import CondMsgMarker from '#core/models/cond_msg_marker.js';
@@ -249,11 +258,23 @@ function scheduleEnqueteCleanup() {
   };
 
   // primeira execução após o startup, depois periodicamente
-  setTimeout(run, 45 * 1000);
-  setInterval(run, 6 * 60 * 60 * 1000);
+  try {
+    const t1 = setTimeout(run, 45 * 1000);
+    // Não manter o event-loop vivo (evita travar testes/CLI)
+    if (typeof t1?.unref === 'function') t1.unref();
+  } catch { /* noop */ }
+  try {
+    const t2 = setInterval(run, 6 * 60 * 60 * 1000);
+    if (typeof t2?.unref === 'function') t2.unref();
+  } catch { /* noop */ }
 }
 
-scheduleEnqueteCleanup();
+// Em testes, evitar jobs de background que podem segurar o processo.
+try {
+  const isTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test';
+  const disable = ['1', 'true', 'yes', 'on'].includes(String(process.env.DISABLE_CONDOMINIOS_BG_JOBS || '').toLowerCase());
+  if (!isTest && !disable) scheduleEnqueteCleanup();
+} catch { /* noop */ }
 
 function isMongoOfflineError(err) {
   try {
@@ -696,6 +717,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// Expor ctxUser no req para routers isolados (ex.: Execução de Assembleia) reutilizarem a lógica do módulo
+app.use((req, _res, next) => {
+  try { req.ctxUser = getCtxUser(req); } catch { req.ctxUser = null; }
+  next();
+});
+
+// API: Execução da Assembleia (status/presença/votos/ata)
+try {
+  app.use(assembleiaExecutionRoutes());
+} catch (e) {
+  console.error('[condominios][assembleiaExecutionRoutes] falha ao montar rotas:', e);
+}
+
 // Views: prioriza /views/condominios, com fallback para /views
 app.set('views', [
   path.join(__dirname, '../../../../views/condominios'),
@@ -736,20 +770,6 @@ app.use('/data', express.static(path.join(ROOT, 'public/data')));
 // Motivo: `foto` pode estar salvo como caminho relativo e nem sempre está exposto por static.
 app.get('/api/usuarios/foto', async (req, res) => {
   try {
-    // Segurança básica: exige autenticação.
-    // Importante: no Portal do Morador, a autenticação pode vir via cookie assinado `wdg_portal`
-    // (encaminhado pelo proxy com header x-wdg-portal=1). Então usamos getCtxUser().
-    const ctxUser = getCtxUser(req);
-    if (!ctxUser) return res.status(401).end();
-    try {
-      const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1';
-      res.set('X-WDG-Photo-Auth', fromPortal ? 'portal' : 'session');
-    } catch { /* noop */ }
-
-    // Quando a chamada vem do Portal, evita usar a sessão do Gestor (se existir no mesmo navegador).
-    // Aqui não precisamos do ctxUser diretamente, mas mantemos o comportamento consistente.
-    // (A autorização continua sendo apenas "estar autenticado".)
-
     // Placeholders
     const placeholderSvg = path.join(ROOT, 'public', 'img', 'user-placeholder.svg');
     const placeholderPng = path.join(ROOT, 'images', 'usuario.png');
@@ -762,6 +782,24 @@ app.get('/api/usuarios/foto', async (req, res) => {
       res.set('Cache-Control', 'private, max-age=300');
       return res.sendFile(target);
     };
+
+    // Segurança/UX: se não estiver autenticado, não devolver 401 (evita poluir console e quebrar avatares).
+    // Importante: sem ctxUser nunca retornamos foto real, apenas placeholder.
+    // No Portal do Morador, a autenticação pode vir via cookie assinado `wdg_portal`
+    // (encaminhado pelo proxy com header x-wdg-portal=1). Então usamos getCtxUser().
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) {
+      try { res.set('X-WDG-Photo-Auth', 'none'); } catch { /* noop */ }
+      return sendPlaceholder();
+    }
+    try {
+      const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1';
+      res.set('X-WDG-Photo-Auth', fromPortal ? 'portal' : 'session');
+    } catch { /* noop */ }
+
+    // Quando a chamada vem do Portal, evita usar a sessão do Gestor (se existir no mesmo navegador).
+    // Aqui não precisamos do ctxUser diretamente, mas mantemos o comportamento consistente.
+    // (A autorização continua sendo apenas "estar autenticado".)
 
     const email = String(req.query?.email || '').toLowerCase().trim();
     const idRaw = String(req.query?.id || '').trim();
@@ -1012,8 +1050,23 @@ app.delete('/api/cond-usuarios/:id', async (req, res) => {
 // API: listar unidades acessíveis ao usuário atual (para combos)
 app.get('/api/unidades', async (req, res) => {
   try{
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-    const ctxUser = req.user || (req.session && (fromPortal ? (req.session.portalUser || req.session.user) : (req.session.user || req.session.portalUser))) || null;
+    const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+    let ctxUser = getCtxUser(req);
+    const canScopeAllUnits = userCanScopeAll(ctxUser);
+
+    // Se for Diretor/User e ctxUser vier "magro", tenta resolver a unidade.
+    if (!canScopeAllUnits) {
+      const current = normalizeObjectIdString(getUserUnidadeId(ctxUser));
+      if (!current) {
+        try {
+          const resolved = await resolveUnidadeIdForNonScopedUser({ ctxUser, canQueryDb });
+          if (resolved) ctxUser = { ...(ctxUser || {}), unidade_id: resolved };
+        } catch {
+          /* noop */
+        }
+      }
+    }
+
     const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
     const payload = (unidadesOptions || []).map(unit => {
       const enriched = buildUnidadePayload(unit);
@@ -1028,6 +1081,1104 @@ app.get('/api/unidades', async (req, res) => {
     res.json(payload);
   }catch(e){
     res.status(500).json({ error: 'Falha ao listar unidades' });
+  }
+});
+
+// API: logo da unidade (para cabeçalhos/prints e combobox)
+// Serve logo salva como URL pública, Data URL (base64) ou caminho legado em disco.
+app.get('/api/unidades/:id/logo', async (req, res) => {
+  try {
+    const sendPlaceholder = () => {
+      try {
+        const ph = path.join(ROOT, 'public', 'img', 'placeholder-logo.svg');
+        res.set('Content-Type', 'image/svg+xml');
+        res.set('Cache-Control', 'public, max-age=600');
+        return res.sendFile(ph, (err) => err ? res.status(204).end() : undefined);
+      } catch {
+        return res.status(204).end();
+      }
+    };
+
+    // UX/print: não devolver 401 para <img>; retornar placeholder.
+    // (Evita quebrar cabeçalhos em previews/prints quando a sessão expira entre requisições.)
+    if (!req.user && !(req.session && req.session.user) && !(req.session && req.session.portalUser)) {
+      return sendPlaceholder();
+    }
+
+    const { id } = req.params;
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return sendPlaceholder();
+    }
+
+    const unidade = await Unidade.findById(id).select('_id logo').lean();
+    if (!unidade) return sendPlaceholder();
+
+    const logo = String(unidade.logo || '').trim();
+
+    // 0) URL pública (S3/Blob/etc): proxy server-side (evita bloqueio por hotlink/CORS no print)
+    if (/^https?:\/\//i.test(logo)) {
+      try {
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), 4500);
+        const r = await fetch(logo, { signal: ctl.signal, redirect: 'follow' });
+        clearTimeout(t);
+        if (!r.ok) throw new Error('fetch externo falhou: ' + r.status);
+
+        const ct = String(r.headers.get('content-type') || '').trim() || 'image/*';
+        // limite simples para evitar respostas gigantes
+        const buf = Buffer.from(await r.arrayBuffer());
+        if (buf.length > 8 * 1024 * 1024) throw new Error('logo externa muito grande');
+
+        res.set('Content-Type', ct);
+        res.set('Cache-Control', 'public, max-age=300');
+        return res.send(buf);
+      } catch (e) {
+        console.warn('[condominios][logo] proxy externo falhou:', e?.message || e);
+        // cai para placeholder abaixo
+      }
+    }
+
+    // 1) Data URL (base64)
+    if (/^data:/i.test(logo)) {
+      const m = /^data:([^;]+);base64,(.+)$/i.exec(logo);
+      if (!m) return res.status(204).end();
+      const contentType = m[1] || 'application/octet-stream';
+      const base64 = m[2] || '';
+      const buffer = Buffer.from(base64, 'base64');
+      res.set('Content-Type', contentType);
+      res.set('Cache-Control', 'private, max-age=300');
+      return res.send(buffer);
+    }
+
+    // 2) Caminho legado em disco (best-effort)
+    if (logo) {
+      try {
+        const rel = logo.replace(/^\/*/, '');
+        const candidates = [
+          path.join(ROOT, 'public', rel),
+          path.join(ROOT, rel),
+          path.join(ROOT, 'public/uploads', rel),
+        ];
+
+        for (const p of candidates) {
+          const st = await fs.promises.stat(p).catch(() => null);
+          if (st && st.isFile()) {
+            const ext = path.extname(p).toLowerCase();
+            const type = ext === '.svg' ? 'image/svg+xml'
+              : ext === '.png' ? 'image/png'
+              : (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg'
+              : ext === '.webp' ? 'image/webp'
+              : 'application/octet-stream';
+            res.set('Content-Type', type);
+            res.set('Cache-Control', 'private, max-age=300');
+            return res.sendFile(p);
+          }
+        }
+      } catch {
+        // noop
+      }
+    }
+
+    // 3) Placeholder do app (não falhar hard)
+    return sendPlaceholder();
+  } catch (e) {
+    console.error('[condominios][GET /api/unidades/:id/logo] erro:', e);
+    return res.status(500).end();
+  }
+});
+
+// Proxy de assets (imagens) para uso em PDF/snapshot (evita CORS/hotlink no browser)
+// Uso: /condominios/api/assets/proxy?url=https%3A%2F%2F...
+app.get('/api/assets/proxy', async (req, res) => {
+  try {
+    if (!req.user && !(req.session && req.session.user) && !(req.session && req.session.portalUser)) {
+      return res.status(401).end();
+    }
+
+    const raw = String(req.query.url || '').trim();
+    if (!raw || raw.length > 2048) return res.status(400).end();
+
+    let u;
+    try { u = new URL(raw); } catch { return res.status(400).end(); }
+    if (!/^https?:$/i.test(u.protocol)) return res.status(400).end();
+
+    const host = String(u.hostname || '').trim().toLowerCase();
+    if (!host) return res.status(400).end();
+
+    // Bloqueios básicos anti-SSRF (best-effort)
+    if (
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '0.0.0.0' ||
+      host === '::1' ||
+      host.startsWith('10.') ||
+      host.startsWith('192.168.') ||
+      host.startsWith('169.254.') ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(host)
+    ) {
+      return res.status(403).end();
+    }
+
+    const responseType = String(req.query.responseType || '').trim().toLowerCase();
+
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 9000);
+    const r = await fetch(raw, { signal: ctl.signal, redirect: 'follow' });
+    clearTimeout(t);
+    if (!r.ok) return res.status(502).end();
+
+    const ct = String(r.headers.get('content-type') || '').trim();
+    if (ct && !/^image\//i.test(ct)) {
+      return res.status(415).end();
+    }
+
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > 8 * 1024 * 1024) return res.status(413).end();
+
+    res.set('Cache-Control', 'private, max-age=600');
+    // Ajuda browsers a aceitarem o recurso em contextos de captura/print
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+
+    // Compat com html2canvas proxy: pode pedir como texto (data URL) ou blob
+    if (responseType && responseType !== 'text' && responseType !== 'blob') {
+      return res.status(400).end();
+    }
+
+    if (responseType === 'blob') {
+      res.set('Content-Type', ct || 'image/*');
+      return res.send(buf);
+    }
+
+    // default/text
+    res.set('Content-Type', 'text/plain; charset=utf-8');
+    const dataUrl = `data:${ct || 'application/octet-stream'};base64,${buf.toString('base64')}`;
+    return res.send(dataUrl);
+  } catch (e) {
+    console.error('[condominios][GET /api/assets/proxy] erro:', e);
+    return res.status(500).end();
+  }
+});
+
+// Dirigência (Organograma): persistência em nuvem (MongoDB)
+app.get('/api/dirigencia/:unidadeId/state', async (req, res) => {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+    const { unidadeId } = req.params;
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'Unidade inválida' });
+    }
+
+    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+    const allowed = userCanScopeAll(ctxUser)
+      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))
+      || (unidadesOptions || []).some(u => String(u?._id || '') === String(unidadeId));
+    if (!allowed) return res.status(403).json({ success: false, error: 'Acesso negado' });
+
+    const doc = await CondDirigenciaSettings.findOne({ unidade_id: unidadeId }).lean();
+    if (!doc) {
+      // Primeiro acesso: ainda não há doc persistido. Retornamos 200 para não gerar erro/retry no browser.
+      return res.json({ success: true, unidadeId: String(unidadeId), notFound: true, state: null });
+    }
+
+    const stateOut = (doc.state && typeof doc.state === 'object') ? doc.state : {};
+
+    // Dirigência institucional: garante cargos persistidos e migra vínculos diretos (assignments)
+    // para mandatos ativos quando ainda não existe histórico.
+    try {
+      await syncDirigenciaCargosFromState(unidadeId, stateOut);
+      await migrateLegacyAssignmentsToMandatos({ unidadeId, state: stateOut, ctxUser });
+      const derivedAssignments = await buildAssignmentsFromActiveMandatos(unidadeId);
+      if (derivedAssignments && typeof derivedAssignments === 'object') {
+        stateOut.assignments = derivedAssignments;
+      }
+    } catch (e) {
+      console.error('[condominios][dirigencia] sync/migrate erro:', e);
+    }
+
+    return res.json({
+      success: true,
+      unidadeId: String(unidadeId),
+      schemaVersion: doc.schemaVersion || 1,
+      state: stateOut,
+      updatedAt: doc.updatedAt || null,
+      updatedBy: doc.updatedBy || ''
+    });
+  } catch (e) {
+    console.error('[condominios][GET /api/dirigencia/:unidadeId/state] erro:', e);
+    return res.status(500).json({ success: false, error: 'Falha ao carregar Dirigência' });
+  }
+});
+
+app.put('/api/dirigencia/:unidadeId/state', express.json({ limit: '800kb' }), async (req, res) => {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+    const { unidadeId } = req.params;
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'Unidade inválida' });
+    }
+
+    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))) {
+      return res.status(403).json({ success: false, error: 'Sem permissão para editar Dirigência (apenas Master/Admin/Diretor).' });
+    }
+
+    const incoming = (req.body && typeof req.body === 'object') ? (req.body.state != null ? req.body.state : req.body) : null;
+    if (!incoming || typeof incoming !== 'object') {
+      return res.status(400).json({ success: false, error: 'Payload inválido' });
+    }
+
+    // Validações básicas para evitar abuso/acidente
+    const roles = Array.isArray(incoming.roles) ? incoming.roles : null;
+    const assignments = (incoming.assignments && typeof incoming.assignments === 'object') ? incoming.assignments : {};
+    if (!roles || roles.length > 500) {
+      return res.status(400).json({ success: false, error: 'Lista de cargos inválida' });
+    }
+    // `assignments` pode ser omitido; o GET rederiva a partir de mandatos ativos.
+    incoming.assignments = assignments;
+    if (Object.keys(assignments).length > 1000) {
+      return res.status(400).json({ success: false, error: 'Atribuições inválidas' });
+    }
+
+    const updatedBy = (() => {
+      try { return String(getUserIdentityKey(ctxUser) || '').trim().toLowerCase(); } catch { return ''; }
+    })();
+
+    await CondDirigenciaSettings.updateOne(
+      { unidade_id: unidadeId },
+      {
+        $set: {
+          unidade_id: unidadeId,
+          state: incoming,
+          schemaVersion: 1,
+          updatedBy
+        }
+      },
+      { upsert: true }
+    );
+
+    // Mantém coleção de cargos em sincronia (não apaga histórico).
+    try {
+      await syncDirigenciaCargosFromState(unidadeId, incoming);
+    } catch (e) {
+      console.error('[condominios][dirigencia] sync cargos erro:', e);
+    }
+
+    const doc = await CondDirigenciaSettings.findOne({ unidade_id: unidadeId }).select('updatedAt updatedBy schemaVersion').lean();
+
+    return res.json({
+      success: true,
+      unidadeId: String(unidadeId),
+      schemaVersion: doc?.schemaVersion || 1,
+      updatedAt: doc?.updatedAt || null,
+      updatedBy: doc?.updatedBy || updatedBy
+    });
+  } catch (e) {
+    console.error('[condominios][PUT /api/dirigencia/:unidadeId/state] erro:', e);
+    return res.status(500).json({ success: false, error: 'Falha ao salvar Dirigência' });
+  }
+});
+
+function buildDirigenciaCargoId(unidadeId, roleId) {
+  const uid = String(unidadeId || '').trim();
+  const rid = String(roleId || '').trim();
+  if (!uid || !rid) return '';
+  return `${uid}:${rid}`;
+}
+
+function getDirigenciaRoleIdFromCargoId(cargoId) {
+  const s = String(cargoId || '').trim();
+  const i = s.indexOf(':');
+  if (i < 0) return '';
+  return s.slice(i + 1);
+}
+
+function parseDateInput(value) {
+  if (value == null) return null;
+  const s = String(value).trim();
+  if (!s) return null;
+
+  // 1) ISO / yyyy-mm-dd (input[type=date])
+  // 2) dd/mm/yyyy (formato comum pt-BR)
+  // 3) fallback para Date() nativo
+  const mBr = s.match(/^([0-3]?\d)\/([01]?\d)\/(\d{4})(?:\s+.*)?$/);
+  if (mBr) {
+    const dd = Number(mBr[1]);
+    const mm = Number(mBr[2]);
+    const yyyy = Number(mBr[3]);
+    if (dd >= 1 && dd <= 31 && mm >= 1 && mm <= 12 && yyyy >= 1900 && yyyy <= 9999) {
+      const d = new Date(yyyy, mm - 1, dd);
+      if (Number.isFinite(d.getTime())) return d;
+    }
+    return null;
+  }
+
+  const d = new Date(s);
+  if (!Number.isFinite(d.getTime())) return null;
+  return d;
+}
+
+async function expireVencidosMandatos({ unidadeId, cargoId } = {}) {
+  const uid = String(unidadeId || '').trim();
+  if (!uid || !mongoose.isValidObjectId(uid)) return { matched: 0, modified: 0 };
+  const cid = String(cargoId || '').trim();
+
+  const now = new Date();
+  const filter = {
+    unidadeId: uid,
+    ativo: true,
+    fim: { $ne: null, $lt: now }
+  };
+  if (cid) filter.cargoId = cid;
+
+  try {
+    const res = await CondDirigenciaMandato.updateMany(
+      filter,
+      {
+        $set: {
+          ativo: false,
+          encerradoEm: now,
+          encerradoPor: 'system'
+        }
+      }
+    );
+    return {
+      matched: Number(res?.matchedCount || res?.n || 0) || 0,
+      modified: Number(res?.modifiedCount || res?.nModified || 0) || 0
+    };
+  } catch {
+    return { matched: 0, modified: 0 };
+  }
+}
+
+function normalizeMandatoOrigem(value) {
+  const v = String(value || '').trim().toLowerCase();
+  if (v === 'assembleia' || v === 'assembléia') return 'assembleia';
+  if (v === 'provisorio' || v === 'provisório') return 'provisorio';
+  if (v === 'judicial') return 'judicial';
+  return '';
+}
+
+async function syncDirigenciaCargosFromState(unidadeId, state) {
+  const uid = String(unidadeId || '').trim();
+  if (!uid || !mongoose.isValidObjectId(uid)) return;
+  const roles = Array.isArray(state?.roles) ? state.roles : [];
+  if (!roles.length) return;
+
+  const ops = [];
+  for (const r of roles) {
+    const roleId = String(r?.id || '').trim();
+    if (!roleId) continue;
+    const cargoId = buildDirigenciaCargoId(uid, roleId);
+    if (!cargoId) continue;
+
+    const parentRoleId = String(r?.parentId || '').trim();
+    const subordinacao = parentRoleId ? buildDirigenciaCargoId(uid, parentRoleId) : '';
+    const nome = String(r?.nome || '').trim() || roleId;
+    const tipo = r?.mandatory ? 'sindico' : (String(r?.tipo || '').trim() || '');
+
+    ops.push({
+      updateOne: {
+        filter: { _id: cargoId },
+        update: {
+          $setOnInsert: { _id: cargoId, unidadeId: uid },
+          $set: { nome, subordinacao, tipo }
+        },
+        upsert: true
+      }
+    });
+  }
+
+  if (!ops.length) return;
+  await CondDirigenciaCargo.bulkWrite(ops, { ordered: false });
+}
+
+async function migrateLegacyAssignmentsToMandatos({ unidadeId, state, ctxUser }) {
+  const uid = String(unidadeId || '').trim();
+  if (!uid || !mongoose.isValidObjectId(uid)) return;
+  const assignments = (state?.assignments && typeof state.assignments === 'object') ? state.assignments : null;
+  if (!assignments) return;
+
+  const roles = Array.isArray(state?.roles) ? state.roles : [];
+  const knownRoleIds = new Set(roles.map(r => String(r?.id || '').trim()).filter(Boolean));
+
+  const createdBy = (() => {
+    try { return String(getUserIdentityKey(ctxUser) || '').trim().toLowerCase(); } catch { return ''; }
+  })();
+
+  const now = new Date();
+  for (const [roleIdRaw, userIdRaw] of Object.entries(assignments)) {
+    const roleId = String(roleIdRaw || '').trim();
+    const userId = String(userIdRaw || '').trim();
+    if (!roleId || !userId) continue;
+    if (!knownRoleIds.has(roleId)) continue;
+    if (!mongoose.isValidObjectId(userId)) continue;
+
+    const cargoId = buildDirigenciaCargoId(uid, roleId);
+    if (!cargoId) continue;
+
+    // Se já existe mandato ativo, não cria outro (mandato vira fonte de verdade).
+    const hasActive = await CondDirigenciaMandato.exists({
+      unidadeId: uid,
+      cargoId,
+      ativo: true,
+      $or: [
+        { fim: null },
+        { fim: { $gte: now } }
+      ]
+    });
+    if (hasActive) continue;
+
+    const condUsuarioId = await resolveCondUsuarioIdFromAnyUserId(userId);
+    if (!condUsuarioId) continue;
+
+    try {
+      await CondDirigenciaMandato.create({
+        cargoId,
+        unidadeId: uid,
+        usuarioId: condUsuarioId,
+        inicio: now,
+        fim: null,
+        origem: 'provisorio',
+        observacao: `Migrado automaticamente do vínculo direto (atribuição de cargo) em ${now.toISOString()}.`,
+        ativo: true,
+        criadoEm: now,
+        criadoPor: createdBy
+      });
+    } catch (e) {
+      // Em corrida (ex.: múltiplas abas), o índice parcial pode bloquear; ignore.
+      if (String(e?.code) !== '11000') {
+        console.error('[condominios][dirigencia] falha ao migrar assignment -> mandato', { unidadeId: uid, roleId, userId, err: e });
+      }
+    }
+  }
+}
+
+async function buildAssignmentsFromActiveMandatos(unidadeId) {
+  const uid = String(unidadeId || '').trim();
+  if (!uid || !mongoose.isValidObjectId(uid)) return {};
+  // Defesa: evita que mandatos vencidos (fim < agora) permaneçam como "ativos".
+  try { await expireVencidosMandatos({ unidadeId: uid }); } catch { /* noop */ }
+
+  const now = new Date();
+  const active = await CondDirigenciaMandato.find({
+    unidadeId: uid,
+    ativo: true,
+    $or: [
+      { fim: null },
+      { fim: { $gte: now } }
+    ]
+  })
+    .select('cargoId usuarioId')
+    .lean();
+
+  const out = {};
+  for (const m of active || []) {
+    const roleId = getDirigenciaRoleIdFromCargoId(m?.cargoId);
+    const userId = String(m?.usuarioId || '').trim();
+    if (!roleId || !userId) continue;
+    out[roleId] = userId;
+  }
+  return out;
+}
+
+async function resolveCondUsuarioIdFromAnyUserId(usuarioId, opts = {}) {
+  const raw = String(usuarioId || '').trim();
+  if (!raw) return '';
+
+  const allowCreate = !!opts?.allowCreate;
+  const unidadeId = String(opts?.unidadeId || '').trim();
+
+  // Se vier e-mail, tenta resolver (ou criar) CondUsuario diretamente.
+  if (raw.includes('@')) {
+    const email = raw.toLowerCase().trim();
+    if (!email) return '';
+    const existing = await CondUsuario.findOne({ email }).select('_id').lean();
+    if (existing && existing._id) return String(existing._id);
+    if (!allowCreate) return '';
+    if (unidadeId && !mongoose.isValidObjectId(unidadeId)) return '';
+    const created = await CondUsuario.findOneAndUpdate(
+      { email },
+      { $setOnInsert: { email, ...(unidadeId ? { unidade_id: unidadeId } : {}) } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    ).select('_id').lean();
+    return created && created._id ? String(created._id) : '';
+  }
+
+  if (!mongoose.isValidObjectId(raw)) return '';
+
+  // Já é CondUsuario?
+  try {
+    const exists = await CondUsuario.findById(raw).select('_id email').lean();
+    if (exists && exists._id) return String(exists._id);
+  } catch { /* noop */ }
+
+  // Pode ser User (Gestor) -> mapear por e-mail
+  try {
+    const u = await User.findById(raw).select('_id email nome foto').lean();
+    const email = String(u?.email || '').trim().toLowerCase();
+    if (!email) return '';
+    const cu = await CondUsuario.findOne({ email }).select('_id').lean();
+    if (cu && cu._id) return String(cu._id);
+
+    // Se não existir CondUsuario, opcionalmente cria para permitir mandato do diretor/admin.
+    if (!allowCreate) return '';
+    if (unidadeId && !mongoose.isValidObjectId(unidadeId)) return '';
+    const nome = String(u?.nome || '').trim();
+    const foto = String(u?.foto || '').trim();
+    const created = await CondUsuario.findOneAndUpdate(
+      { email },
+      { $setOnInsert: { email, ...(unidadeId ? { unidade_id: unidadeId } : {}), ...(nome ? { nome } : {}), ...(foto ? { foto } : {}) } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    ).select('_id').lean();
+    return created && created._id ? String(created._id) : '';
+  } catch {
+    return '';
+  }
+}
+
+async function userCanEditDirigenciaForUnidade(user, unidadeId) {
+  try {
+    if (!user) return false;
+    if (userCanScopeAll(user)) return true;
+
+    const target = String(unidadeId || '').trim();
+    if (!target || !mongoose.isValidObjectId(target)) return false;
+
+    // Caminho rápido: Diretor identificado por papel + unidade no próprio ctxUser.
+    try {
+      if (userIsDiretor(user)) {
+        const uid = String(getUserUnidadeId(user) || '').trim();
+        if (uid && uid === target) return true;
+      }
+    } catch { /* noop */ }
+
+    // Fallback robusto: considerar Diretor quando o usuário for o diretor cadastrado na Unidade.
+    // (Há cenários onde o ctxUser não traz role/nivel/unidade corretamente.)
+    const pickId = (v) => {
+      if (!v) return '';
+      if (typeof v === 'object') return String(v._id || v.id || '').trim();
+      return String(v).trim();
+    };
+
+    const userId = pickId(user?._id) || pickId(user?.id) || pickId(user?.userId) || pickId(user?.usuarioId) || pickId(user?.usuario_id);
+    if (!userId || !mongoose.isValidObjectId(userId)) return false;
+
+    try {
+      const unit = await Unidade.findById(target).select('diretor_usuario_id').lean();
+      const diretorId = unit?.diretor_usuario_id ? String(unit.diretor_usuario_id) : '';
+      return !!(diretorId && diretorId === String(userId));
+    } catch {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+}
+
+// API Mandatos (Dirigência)
+app.get('/api/dirigencia/:unidadeId/mandatos/ativos', async (req, res) => {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+    const { unidadeId } = req.params;
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'Unidade inválida' });
+    }
+
+    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+    const allowed = userCanScopeAll(ctxUser)
+      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))
+      || (unidadesOptions || []).some(u => String(u?._id || '') === String(unidadeId));
+    if (!allowed) return res.status(403).json({ success: false, error: 'Acesso negado' });
+
+    // Evita "mandatos ativos" vencidos por data fim.
+    try { await expireVencidosMandatos({ unidadeId }); } catch { /* noop */ }
+
+    const now = new Date();
+    const nowTs = now.getTime();
+
+    const docs = await CondDirigenciaMandato.find({ unidadeId, ativo: true })
+      .populate({ path: 'usuarioId', select: 'nome email foto ativo' })
+      .select('cargoId usuarioId inicio fim origem observacao documento ativo criadoEm')
+      .lean();
+
+    const data = {};
+    for (const m of docs || []) {
+      const roleId = getDirigenciaRoleIdFromCargoId(m?.cargoId);
+      if (!roleId) continue;
+      const u = m?.usuarioId && typeof m.usuarioId === 'object' ? m.usuarioId : null;
+      data[roleId] = {
+        id: String(m?._id || ''),
+        cargoId: String(m?.cargoId || ''),
+        roleId,
+        usuario: u ? {
+          id: String(u?._id || ''),
+          nome: String(u?.nome || '').trim(),
+          email: String(u?.email || '').trim(),
+          foto: String(u?.foto || '').trim(),
+          ativo: !!u?.ativo
+        } : {
+          id: String(m?.usuarioId || ''),
+          nome: '',
+          email: '',
+          foto: '',
+          ativo: true
+        },
+        inicio: m?.inicio || null,
+        fim: m?.fim || null,
+        origem: String(m?.origem || ''),
+        observacao: String(m?.observacao || ''),
+        documento: (() => {
+          const d = m?.documento && typeof m.documento === 'object' ? m.documento : null;
+          const url = String(d?.url || '').trim();
+          if (!url) return null;
+          return {
+            url,
+            originalName: String(d?.originalName || '').trim(),
+            mime: String(d?.mime || '').trim(),
+            size: Number(d?.size || 0) || 0,
+            uploadedAt: d?.uploadedAt || null
+          };
+        })(),
+        ativo: !!m?.ativo && (!m?.fim || (new Date(m.fim).getTime() >= nowTs)),
+        criadoEm: m?.criadoEm || null
+      };
+    }
+
+    return res.json({ success: true, unidadeId: String(unidadeId), data });
+  } catch (e) {
+    console.error('[condominios][GET /api/dirigencia/:unidadeId/mandatos/ativos] erro:', e);
+    return res.status(500).json({ success: false, error: 'Falha ao carregar mandatos ativos' });
+  }
+});
+
+app.get('/api/dirigencia/:unidadeId/cargos/:roleId/mandatos/historico', async (req, res) => {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+    const { unidadeId, roleId } = req.params;
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'Unidade inválida' });
+    }
+    const rid = String(roleId || '').trim();
+    if (!rid) return res.status(400).json({ success: false, error: 'Cargo inválido' });
+
+    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+    const allowed = userCanScopeAll(ctxUser)
+      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))
+      || (unidadesOptions || []).some(u => String(u?._id || '') === String(unidadeId));
+    if (!allowed) return res.status(403).json({ success: false, error: 'Acesso negado' });
+
+    const cargoId = buildDirigenciaCargoId(unidadeId, rid);
+
+    // Evita status inconsistente quando existir mandato vencido ainda marcado como ativo.
+    try { await expireVencidosMandatos({ unidadeId, cargoId }); } catch { /* noop */ }
+
+    const now = new Date();
+    const nowTs = now.getTime();
+    const docs = await CondDirigenciaMandato.find({ unidadeId, cargoId })
+      .populate({ path: 'usuarioId', select: 'nome email foto ativo' })
+      .sort({ inicio: -1, createdAt: -1 })
+      .select('cargoId usuarioId inicio fim origem observacao documento ativo criadoEm encerradoEm')
+      .lean();
+
+    const data = (docs || []).map(m => {
+      const u = m?.usuarioId && typeof m.usuarioId === 'object' ? m.usuarioId : null;
+      return {
+        id: String(m?._id || ''),
+        cargoId: String(m?.cargoId || ''),
+        roleId: rid,
+        usuario: u ? {
+          id: String(u?._id || ''),
+          nome: String(u?.nome || '').trim(),
+          email: String(u?.email || '').trim(),
+          foto: String(u?.foto || '').trim(),
+          ativo: !!u?.ativo
+        } : {
+          id: String(m?.usuarioId || ''),
+          nome: '',
+          email: '',
+          foto: '',
+          ativo: true
+        },
+        inicio: m?.inicio || null,
+        fim: m?.fim || null,
+        origem: String(m?.origem || ''),
+        observacao: String(m?.observacao || ''),
+        documento: (() => {
+          const d = m?.documento && typeof m.documento === 'object' ? m.documento : null;
+          const url = String(d?.url || '').trim();
+          if (!url) return null;
+          return {
+            url,
+            originalName: String(d?.originalName || '').trim(),
+            mime: String(d?.mime || '').trim(),
+            size: Number(d?.size || 0) || 0,
+            uploadedAt: d?.uploadedAt || null
+          };
+        })(),
+        ativo: !!m?.ativo && (!m?.fim || (new Date(m.fim).getTime() >= nowTs)),
+        criadoEm: m?.criadoEm || null,
+        encerradoEm: m?.encerradoEm || null
+      };
+    });
+
+    return res.json({ success: true, unidadeId: String(unidadeId), roleId: rid, data });
+  } catch (e) {
+    console.error('[condominios][GET /api/dirigencia/:unidadeId/cargos/:roleId/mandatos/historico] erro:', e);
+    return res.status(500).json({ success: false, error: 'Falha ao carregar histórico' });
+  }
+});
+
+const mandatoDocUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = new Set([
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp'
+    ]);
+    if (!file || !file.mimetype) return cb(null, true);
+    if (allowed.has(file.mimetype)) return cb(null, true);
+    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', String(file.fieldname || 'documento')));
+  }
+});
+
+function parseMandatoCreateBody(req, res, next) {
+  try {
+    if (req && typeof req.is === 'function' && req.is('multipart/form-data')) {
+      return mandatoDocUpload.single('documento')(req, res, (err) => {
+        if (!err) return next();
+        const msg = (err && err.code === 'LIMIT_FILE_SIZE')
+          ? 'Arquivo muito grande (limite 20MB)'
+          : 'Arquivo inválido (use PDF, imagem, DOC ou DOCX)';
+        return res.status(400).json({ success: false, error: msg });
+      });
+    }
+    return express.json({ limit: '120kb' })(req, res, next);
+  } catch (e) {
+    return res.status(400).json({ success: false, error: 'Payload inválido' });
+  }
+}
+
+app.post('/api/dirigencia/:unidadeId/mandatos', parseMandatoCreateBody, async (req, res) => {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+    const { unidadeId } = req.params;
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).json({ success: false, error: 'Unidade inválida' });
+    }
+
+    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))) {
+      return res.status(403).json({ success: false, error: 'Sem permissão para editar Dirigência (apenas Master/Admin/Diretor).' });
+    }
+
+    const body = (req.body && typeof req.body === 'object') ? req.body : {};
+    const roleId = String(body.roleId || '').trim();
+    const usuarioIdRaw = String(body.usuarioId || '').trim();
+    if (!roleId) return res.status(400).json({ success: false, error: 'Cargo inválido' });
+
+    const usuarioId = await resolveCondUsuarioIdFromAnyUserId(usuarioIdRaw, { unidadeId, allowCreate: true });
+    if (!usuarioId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Usuário inválido ou sem cadastro de condômino (CondUsuario).',
+        fields: { usuarioId: usuarioIdRaw }
+      });
+    }
+
+    const inicio = parseDateInput(body.inicio) || null;
+    const fim = parseDateInput(body.fim) || null;
+    if (!inicio) return res.status(400).json({ success: false, error: 'Data de início obrigatória' });
+    if (fim && fim.getTime() < inicio.getTime()) {
+      return res.status(400).json({ success: false, error: 'Data fim não pode ser anterior ao início' });
+    }
+
+    const origem = normalizeMandatoOrigem(body.origem);
+    if (!origem) return res.status(400).json({ success: false, error: 'Origem inválida' });
+
+    const observacao = String(body.observacao || '').trim();
+    const cargoId = buildDirigenciaCargoId(unidadeId, roleId);
+
+    // Garante que mandatos vencidos não bloqueiem criação (ativo=true mas fim < hoje).
+    try { await expireVencidosMandatos({ unidadeId, cargoId }); } catch { /* noop */ }
+
+    // Garante Cargo persistido (para memória institucional)
+    try {
+      const settings = await CondDirigenciaSettings.findOne({ unidade_id: unidadeId }).lean();
+      const roles = Array.isArray(settings?.state?.roles) ? settings.state.roles : [];
+      const r = roles.find(x => String(x?.id || '') === roleId) || null;
+      const parentRoleId = String(r?.parentId || '').trim();
+      const subordinacao = parentRoleId ? buildDirigenciaCargoId(unidadeId, parentRoleId) : '';
+      const nome = String(r?.nome || '').trim() || roleId;
+      const tipo = r?.mandatory ? 'sindico' : '';
+
+      await CondDirigenciaCargo.updateOne(
+        { _id: cargoId },
+        { $setOnInsert: { _id: cargoId, unidadeId }, $set: { nome, subordinacao, tipo } },
+        { upsert: true }
+      );
+    } catch { /* noop */ }
+
+    // Validação: impedir 2 ativos
+    const existingActive = await CondDirigenciaMandato.findOne({ unidadeId, cargoId, ativo: true }).select('_id').lean();
+    if (existingActive) {
+      return res.status(409).json({ success: false, error: 'Este cargo já possui um mandato ativo. Encerre o mandato atual antes de criar outro.' });
+    }
+
+    // Validação: impedir datas sobrepostas
+    const endForQuery = fim || new Date('9999-12-31T23:59:59.999Z');
+    const overlap = await CondDirigenciaMandato.findOne({
+      unidadeId,
+      cargoId,
+      inicio: { $lte: endForQuery },
+      $or: [
+        { fim: null },
+        { fim: { $gte: inicio } }
+      ]
+    }).select('_id inicio fim').lean();
+
+    if (overlap) {
+      return res.status(409).json({ success: false, error: 'Já existe um mandato com datas sobrepostas para este cargo.' });
+    }
+
+    const createdBy = (() => {
+      try { return String(getUserIdentityKey(ctxUser) || '').trim().toLowerCase(); } catch { return ''; }
+    })();
+
+    const now = new Date();
+    const ativo = !fim || fim.getTime() >= now.getTime();
+
+    const doc = await CondDirigenciaMandato.create({
+      cargoId,
+      unidadeId,
+      usuarioId,
+      inicio,
+      fim: fim || null,
+      origem,
+      observacao,
+      ativo,
+      criadoEm: now,
+      criadoPor: createdBy
+    });
+
+    let uploadWarning = '';
+
+    // Upload opcional de documento (ata / ordem judicial / etc)
+    try {
+      const file = req && req.file ? req.file : null;
+      const buf = file && file.buffer ? file.buffer : null;
+      if (file && buf && buf.length) {
+        const mime = String(file.mimetype || '').trim();
+        const originalNameRaw = String(file.originalname || 'documento').trim();
+        const safeName = originalNameRaw
+          .replace(/[^a-zA-Z0-9._\-\s]+/g, '')
+          .replace(/\s+/g, '_')
+          .slice(0, 180) || 'documento';
+
+        const fileName = `dirigencia/mandatos/${String(unidadeId)}/${String(doc._id)}/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
+
+        const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+          || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN
+          || process.env.VERCEL_BLOB_RW_TOKEN
+          || '';
+
+        const inVercel = !!process.env.VERCEL;
+        let url = '';
+
+        if (inVercel || blobToken) {
+          const uploaded = await put(fileName, buf, {
+            access: 'public',
+            contentType: mime || 'application/octet-stream',
+            cacheControl: 'public, max-age=31536000, immutable',
+            ...(blobToken ? { token: blobToken } : {})
+          });
+          url = String(uploaded?.url || '').trim();
+        } else {
+          const rel = fileName;
+          const absDir = path.join(ROOT, 'public', 'uploads', path.dirname(rel));
+          await fs.promises.mkdir(absDir, { recursive: true });
+          const abs = path.join(ROOT, 'public', 'uploads', rel);
+          await fs.promises.writeFile(abs, buf);
+          url = `/uploads/${rel.replace(/\\/g, '/')}`;
+        }
+
+        if (url) {
+          await CondDirigenciaMandato.updateOne(
+            { _id: doc._id },
+            {
+              $set: {
+                documento: {
+                  url,
+                  originalName: originalNameRaw.slice(0, 240),
+                  mime: mime.slice(0, 120),
+                  size: Number(file.size || buf.length || 0) || 0,
+                  uploadedAt: new Date(),
+                  uploadedBy: createdBy
+                }
+              }
+            }
+          );
+        } else {
+          uploadWarning = 'Não foi possível salvar o documento anexado (tente novamente).';
+        }
+      }
+    } catch (upErr) {
+      console.error('[condominios][dirigencia][mandato-create][upload] erro:', upErr);
+      // Mantém o mandato criado, mas informa que o anexo falhou.
+      // (Evita perder dados por falha de upload.)
+      uploadWarning = 'Mandato criado, mas o upload do documento falhou.';
+    }
+
+    console.info('[audit-dirigencia-mandato-criado]', {
+      unidadeId: String(unidadeId),
+      cargoId,
+      roleId,
+      usuarioId,
+      inicio: inicio.toISOString(),
+      fim: fim ? fim.toISOString() : null,
+      origem,
+      by: createdBy
+    });
+
+    return res.json({ success: true, id: String(doc?._id || ''), ativo, warning: uploadWarning || null });
+  } catch (e) {
+    if (String(e?.code) === '11000') {
+      return res.status(409).json({ success: false, error: 'Este cargo já possui um mandato ativo.' });
+    }
+    console.error('[condominios][POST /api/dirigencia/:unidadeId/mandatos] erro:', e);
+    return res.status(500).json({ success: false, error: 'Falha ao criar mandato' });
+  }
+});
+
+app.post('/api/dirigencia/mandatos/:mandatoId/encerrar', express.json({ limit: '64kb' }), async (req, res) => {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+    const { mandatoId } = req.params;
+    if (!mandatoId || !mongoose.isValidObjectId(mandatoId)) {
+      return res.status(400).json({ success: false, error: 'Mandato inválido' });
+    }
+
+    const mandato = await CondDirigenciaMandato.findById(mandatoId).select('unidadeId cargoId ativo inicio').lean();
+    if (!mandato) return res.status(404).json({ success: false, error: 'Mandato não encontrado' });
+
+    const unidadeId = String(mandato?.unidadeId || '').trim();
+    if (!unidadeId) return res.status(400).json({ success: false, error: 'Unidade inválida' });
+
+    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))) {
+      return res.status(403).json({ success: false, error: 'Sem permissão para editar Dirigência (apenas Master/Admin/Diretor).' });
+    }
+
+    if (!mandato.ativo) {
+      return res.status(409).json({ success: false, error: 'Mandato já está encerrado.' });
+    }
+
+    const body = (req.body && typeof req.body === 'object') ? req.body : {};
+    const fim = parseDateInput(body.fim) || new Date();
+    try {
+      const inicioTs = mandato?.inicio ? new Date(mandato.inicio).getTime() : NaN;
+      if (Number.isFinite(inicioTs) && fim && fim.getTime() < inicioTs) {
+        return res.status(400).json({ success: false, error: 'Data de encerramento não pode ser anterior ao início do mandato.' });
+      }
+    } catch { /* noop */ }
+    const obsExtra = String(body.observacao || '').trim();
+
+    const by = (() => {
+      try { return String(getUserIdentityKey(ctxUser) || '').trim().toLowerCase(); } catch { return ''; }
+    })();
+
+    const encerradoEm = new Date();
+    const setFields = {
+      fim,
+      ativo: false,
+      encerradoEm,
+      encerradoPor: by
+    };
+    if (obsExtra) setFields.observacao = obsExtra;
+
+    await CondDirigenciaMandato.updateOne(
+      { _id: mandatoId, ativo: true },
+      {
+        $set: setFields
+      }
+    );
+
+    console.info('[audit-dirigencia-mandato-encerrado]', {
+      unidadeId,
+      mandatoId: String(mandatoId),
+      cargoId: String(mandato?.cargoId || ''),
+      by,
+      fim: fim.toISOString()
+    });
+
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('[condominios][POST /api/dirigencia/mandatos/:mandatoId/encerrar] erro:', e);
+    return res.status(500).json({ success: false, error: 'Falha ao encerrar mandato' });
+  }
+});
+
+// Exclusão de mandato (somente Master).
+app.delete('/api/dirigencia/mandatos/:mandatoId', async (req, res) => {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+    const isMaster = !!(ctxUser?.isMaster || String(ctxUser?.role || '').trim().toLowerCase() === 'master');
+    if (!isMaster) return res.status(403).json({ success: false, error: 'Apenas Master pode excluir mandatos.' });
+
+    const { mandatoId } = req.params;
+    if (!mandatoId || !mongoose.isValidObjectId(mandatoId)) {
+      return res.status(400).json({ success: false, error: 'Mandato inválido' });
+    }
+
+    const mandato = await CondDirigenciaMandato.findById(mandatoId).select('_id unidadeId cargoId ativo inicio fim usuarioId origem documento').lean();
+    if (!mandato) return res.status(404).json({ success: false, error: 'Mandato não encontrado' });
+
+    // Best-effort: remover arquivo local quando armazenado em /uploads.
+    try {
+      const url = String(mandato?.documento?.url || '').trim();
+      if (url && url.startsWith('/uploads/')) {
+        const abs = path.join(ROOT, 'public', url.replace(/^\/+/, ''));
+        await fs.promises.unlink(abs);
+      }
+    } catch { /* noop */ }
+
+    await CondDirigenciaMandato.deleteOne({ _id: mandatoId });
+
+    console.info('[audit-dirigencia-mandato-excluido]', {
+      unidadeId: String(mandato?.unidadeId || ''),
+      cargoId: String(mandato?.cargoId || ''),
+      mandatoId: String(mandatoId),
+      ativo: !!mandato?.ativo,
+      by: String(getUserIdentityKey(ctxUser) || '').trim().toLowerCase()
+    });
+
+    return res.json({ success: true, deleted: true, id: String(mandatoId) });
+  } catch (e) {
+    console.error('[condominios][DELETE /api/dirigencia/mandatos/:mandatoId] erro:', e);
+    return res.status(500).json({ success: false, error: 'Falha ao excluir mandato' });
   }
 });
 
@@ -14508,6 +15659,7 @@ function buildUnidadePayload(unit){
   const id = unit._id || unit.id || unit.codigo || unit.nome || '';
   const unidadePrincipalId = unit.unidade_principal_id ? String(unit.unidade_principal_id) : null;
   const diretorId = unit.diretor_usuario_id ? String(unit.diretor_usuario_id) : null;
+  const unitId = String(id || '');
   return {
     _id: String(id || ''),
     codigo: unit.codigo ? String(unit.codigo) : '',
@@ -14546,7 +15698,10 @@ function buildUnidadePayload(unit){
     is_principal: !!unit.is_principal,
     subunidade: !!unit.subunidade,
     unidade_principal_id: unidadePrincipalId,
-    dataAbertura: unit.dataAbertura || null
+    dataAbertura: unit.dataAbertura || null,
+
+    // Logo: entregar URL estável para o front (não expor base64 no payload)
+    logoUrl: unitId ? `/api/unidades/${unitId}/logo` : null
   };
 }
 
@@ -17097,12 +18252,36 @@ app.get('/api/usuarios/busca.v2', async (req, res) => {
     const { existingUsers = [], unidadesOptions = [] } = await carregarExistingUsers(ctxUser);
     const unitIds = (unidadesOptions || []).map(u => String(u._id || '')).filter(Boolean);
     const isAdmin = !!(ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin'));
+
+    const requestedUnitIdRaw = String((req.query && (req.query.unidade_id || req.query.unidadeId || req.query.unidade)) || '').trim();
+    const requestedUnitId = (requestedUnitIdRaw && mongoose.isValidObjectId(requestedUnitIdRaw)) ? String(requestedUnitIdRaw) : '';
+    if (requestedUnitId && !isAdmin) {
+      // Mesmo para usuário não-admin, só permite filtrar dentro do escopo já autorizado.
+      if (!unitIds.includes(String(requestedUnitId))) {
+        return res.json([]);
+      }
+    }
+
+    const searchTermRaw = String((req.query && (req.query.nome || req.query.search || req.query.q || req.query.termo || req.query.texto)) || '').trim();
+    const searchTerm = searchTermRaw ? searchTermRaw.trim() : '';
+    const limitRaw = Number((req.query && (req.query.limit || req.query.limite)) || 0);
+    // Compat: se não vier limit, não limita (comportamento antigo)
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(500, Math.max(10, Math.round(limitRaw))) : 0;
+
+    const escapeRegexLocal = (s) => String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const normalizeLoose = (s) => String(s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
     if (!isAdmin && !unitIds.length) {
       return res.json(existingUsers.length ? [] : []);
     }
 
     const habFiltro = { ativa: { $ne: false } };
-    if (!isAdmin && unitIds.length) {
+    if (requestedUnitId) {
+      habFiltro.unidade_id = requestedUnitId;
+    } else if (!isAdmin && unitIds.length) {
       habFiltro.unidade_id = { $in: unitIds };
     }
     const habitacoes = await CondHabitacao.find(habFiltro)
@@ -17111,7 +18290,9 @@ app.get('/api/usuarios/busca.v2', async (req, res) => {
 
     const habIds = habitacoes.map(h => h._id);
     const propFiltro = { ativo: { $ne: false } };
-    if (!isAdmin && unitIds.length) {
+    if (requestedUnitId) {
+      propFiltro.unidade_id = requestedUnitId;
+    } else if (!isAdmin && unitIds.length) {
       propFiltro.unidade_id = { $in: unitIds };
     }
     let props = [];
@@ -17137,10 +18318,11 @@ app.get('/api/usuarios/busca.v2', async (req, res) => {
     const condSelect = '_id email nome unidade_id permissoes perfis ativo cpf rg data_nascimento telefone whatsapp sexo foto';
     let condUsuariosDocs = [];
     if (isAdmin) {
-      condUsuariosDocs = await CondUsuario.find({ ativo: { $ne: false } }).select(condSelect).lean();
+      condUsuariosDocs = await CondUsuario.find({ ativo: { $ne: false }, ...(requestedUnitId ? { unidade_id: requestedUnitId } : {}) }).select(condSelect).lean();
     } else {
       const condOr = [];
-      if (unitIds.length) condOr.push({ unidade_id: { $in: unitIds } });
+      if (requestedUnitId) condOr.push({ unidade_id: requestedUnitId });
+      else if (unitIds.length) condOr.push({ unidade_id: { $in: unitIds } });
       if (condUserIdsSet.size) condOr.push({ _id: { $in: Array.from(condUserIdsSet) } });
       if (condOr.length === 0) {
         condUsuariosDocs = [];
@@ -17466,7 +18648,47 @@ app.get('/api/usuarios/busca.v2', async (req, res) => {
       if (entry.email) seenEmails.add(entry.email);
     });
 
-    return res.json(existingResult.concat(filteredCondResult));
+    let result = existingResult.concat(filteredCondResult);
+
+    if (requestedUnitId) {
+      const uKey = String(requestedUnitId);
+      result = result.filter(r => {
+        // Regra: contas Master/Admin (Gestor) não podem aparecer como usuários de unidade.
+        const roleLower = String(r?.role || r?.nivel || '').toLowerCase().trim();
+        if (roleLower === 'master' || roleLower === 'admin') return false;
+
+        const direct = r && r.unidade_id ? String(r.unidade_id) : '';
+        if (direct && direct === uKey) return true;
+        const vinculos = Array.isArray(r && r.vinculos) ? r.vinculos : [];
+        return vinculos.some(v => (v && v.unidade_id) ? String(v.unidade_id) === uKey : false);
+      });
+    }
+
+    if (searchTerm) {
+      const qn = normalizeLoose(searchTerm);
+      const qre = new RegExp(escapeRegexLocal(searchTerm), 'i');
+      result = result.filter(r => {
+        const nome = String(r?.nome || '');
+        const email = String(r?.email || '');
+        const cpf = String(r?.cpf || '').replace(/\D/g, '');
+        if (qre.test(nome) || qre.test(email)) return true;
+        if (cpf && qn && cpf.includes(qn.replace(/\D/g, ''))) return true;
+        return false;
+      });
+    }
+
+    // Opção: retornar apenas usuários com CondUsuario (útil para APIs que exigem ref CondUsuario).
+    const requireCondUsuarioRaw = String((req.query && (req.query.require_cond_usuario || req.query.requireCondUsuario || req.query.requireCondUsuarioId)) || '').trim();
+    const requireCondUsuario = requireCondUsuarioRaw && requireCondUsuarioRaw !== '0' && requireCondUsuarioRaw.toLowerCase() !== 'false';
+    if (requireCondUsuario) {
+      result = result.filter(r => {
+        const cid = String(r?.cond_usuario_id || '').trim();
+        return !!(cid && mongoose.isValidObjectId(cid));
+      });
+    }
+
+    if (limit > 0 && result.length > limit) result = result.slice(0, limit);
+    return res.json(result);
   } catch (e) {
     console.error('[api/usuarios/busca.v2] erro GET', e);
     return res.status(200).json([]);
@@ -17903,12 +19125,12 @@ app.post('/api/habitacoes', express.json({ limit: '2mb' }), async (req, res) => 
   try {
     const { unidade_id, bloco_id, andar_id, numero, tipo, area_m2, fracao_ideal, vencimento_contribuicao_dia, descricao, foto } = req.body || {};
     if (!unidade_id || !numero) return res.status(400).json({ error: 'unidade_id e numero são obrigatórios' });
-    // Validação de fração ideal (1..100)
+    // Validação de fração ideal (0..100)
     let fr = null;
     if (fracao_ideal !== undefined && fracao_ideal !== null && fracao_ideal !== '') {
       const fnum = Number(fracao_ideal);
       if (Number.isNaN(fnum)) return res.status(400).json({ error: 'fracao_ideal inválida' });
-      if (fnum < 1 || fnum > 100) return res.status(400).json({ error: 'fracao_ideal deve estar entre 1 e 100' });
+      if (fnum < 0 || fnum > 100) return res.status(400).json({ error: 'fracao_ideal deve estar entre 0 e 100' });
       fr = fnum;
     }
     let vencimentoDia = null;
@@ -18500,7 +19722,7 @@ app.put('/api/habitacoes/:id', express.json({ limit: '5mb' }), async (req, res) 
       else {
         const fnum = Number(fracao_ideal);
         if (Number.isNaN(fnum)) return res.status(400).json({ error: 'fracao_ideal inválida' });
-        if (fnum < 1 || fnum > 100) return res.status(400).json({ error: 'fracao_ideal deve estar entre 1 e 100' });
+        if (fnum < 0 || fnum > 100) return res.status(400).json({ error: 'fracao_ideal deve estar entre 0 e 100' });
         upd.fracao_ideal = fnum;
       }
     }
@@ -18909,7 +20131,7 @@ async function listarUnidadesParaUsuario(user){
   try{
     if(!Unidade) return [];
     const unidadeSelectFields = '_id codigo nome razaoSocial cnpj cpf pessoaTipo inscricaoEstadual inscricaoMunicipal cnaePrincipal cnaeSecundarios regimeTributario naturezaJuridica tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal diretor_usuario_id pixChave tipoPix banco agencia contaCorrente is_principal subunidade unidade_principal_id dataAbertura';
-    if(user && (user.isMaster || user.role === 'master' || user.role === 'admin')){
+    if(userCanScopeAll(user)){
       return await Unidade.find({ ativa: { $ne: false } }).select(unidadeSelectFields).lean();
     }
     if(user && (user.matriz_unidade_id || user.unidade_principal_id || user.unidade_id)){
@@ -19054,12 +20276,24 @@ app.get('/cadastros/materiais', async (req, res) => {
 
 // Editar > Habitações (renderiza a nova página)
 app.get('/editar/habitacoes', async (req, res) => {
-  return res.render('editar_habitacao', { moduleLabel: 'Gestão de Condomínios' });
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+  return res.render('editar_habitacao', {
+    moduleLabel: 'Gestão de Condomínios',
+    user: ctxUser,
+    unidadesOptions
+  });
 });
 
 // Editar > Áreas Comuns
 app.get('/editar/areas-comuns', async (req, res) => {
-  return res.render('editar_area_comum', { moduleLabel: 'Gestão de Condomínios' });
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+  return res.render('editar_area_comum', {
+    moduleLabel: 'Gestão de Condomínios',
+    user: ctxUser,
+    unidadesOptions
+  });
 });
 
 // Operação > Painel de Habitações
@@ -19105,12 +20339,2678 @@ app.get('/servicos/servicos', async (req, res) => {
   });
 });
 
-// Administração > Assembleias
-app.get('/administracao/assembleias', async (req, res) => {
+// Administração > Assembleia (módulo novo)
+const ASSEMBLEIA_TABS = ['dados', 'convocacao', 'pauta', 'revisao', 'publicacao'];
+const ASSEMBLEIA_BODY_PARSERS = [
+  express.urlencoded({ extended: true, limit: '12mb' }),
+  express.json({ limit: '12mb' })
+];
+function normalizeAssembleiaTab(tab) {
+  const t = String(tab || '').trim().toLowerCase();
+  return ASSEMBLEIA_TABS.includes(t) ? t : 'dados';
+}
+
+function getAuditUser(ctxUser) {
+  try {
+    if (!ctxUser) return { userId: null, nome: '', email: '' };
+    const id = ctxUser?._id || ctxUser?.id || ctxUser?.userId || null;
+    const userId = (id && mongoose.isValidObjectId(String(id))) ? new mongoose.Types.ObjectId(String(id)) : null;
+    return {
+      userId,
+      nome: String(ctxUser?.nome || '').trim(),
+      email: String(ctxUser?.email || '').trim().toLowerCase()
+    };
+  } catch {
+    return { userId: null, nome: '', email: '' };
+  }
+}
+
+function generateAssembleiaNumero() {
+  const year = new Date().getFullYear();
+  const rnd = Math.floor(1000 + Math.random() * 9000);
+  return `ASM-${year}-${rnd}`;
+}
+
+async function generateUniqueAssembleiaNumero({ unidadeId, canQueryDb } = {}) {
+  const canDb = !!canQueryDb && mongoose.connection.readyState === 1;
+  const unit = (unidadeId && mongoose.isValidObjectId(String(unidadeId))) ? String(unidadeId) : '';
+
+  // Tenta algumas vezes com o formato padrão.
+  for (let i = 0; i < 25; i += 1) {
+    const candidate = generateAssembleiaNumero();
+    if (!canDb || !CondAssembleia) return candidate;
+    const q = { numero: candidate };
+    if (unit) q.unidade_id = new mongoose.Types.ObjectId(unit);
+    // eslint-disable-next-line no-await-in-loop
+    const exists = await CondAssembleia.exists(q);
+    if (!exists) return candidate;
+  }
+
+  // Fallback: inclui timestamp para reduzir colisão
+  const year = new Date().getFullYear();
+  const tail = String(Date.now()).slice(-6);
+  return `ASM-${year}-${tail}`;
+}
+
+function parsePautaFromBody(body = {}) {
+  const count = Math.max(0, Math.min(80, Number(body.pauta_count || 0) || 0));
+  const items = [];
+  for (let i = 0; i < count; i += 1) {
+    const tipo = String(body[`pauta_tipo_${i}`] || '').trim();
+    const descricao = String(body[`pauta_descricao_${i}`] || '').trim();
+    const observacoesInternas = String(body[`pauta_obs_${i}`] || '').trim();
+    if (!tipo && !descricao && !observacoesInternas) continue;
+    items.push({
+      tipo,
+      descricao,
+      observacoesInternas,
+      anexos: []
+    });
+  }
+  return items;
+}
+
+function applyBodyToAssembleiaDoc(doc, body = {}) {
+  doc.natureza = String(body.natureza || doc.natureza || '').trim();
+  doc.titulo = String(body.titulo || doc.titulo || '').trim();
+  doc.numero = String(body.numero || doc.numero || '').trim();
+  doc.modalidade = String(body.modalidade || doc.modalidade || '').trim();
+  doc.local = String(body.local || doc.local || '').trim();
+  doc.link = String(body.link || doc.link || '').trim();
+  doc.responsavel = String(body.responsavel || doc.responsavel || '').trim();
+  doc.observacoes = String(body.observacoes || doc.observacoes || '').trim();
+
+  doc.regraConvocacao = String(body.regraConvocacao || doc.regraConvocacao || '').trim();
+  doc.hora1 = String(body.hora1 || doc.hora1 || '').trim();
+  doc.hora2 = String(body.hora2 || doc.hora2 || '').trim();
+  doc.horaUnica = String(body.horaUnica || doc.horaUnica || '').trim();
+  doc.overrideMotivo = String(body.overrideMotivo || doc.overrideMotivo || '').trim();
+
+  // Datas
+  const dataStr = String(body.data || '').trim();
+  if (dataStr) {
+    const d = new Date(dataStr);
+    if (!Number.isNaN(d.getTime())) doc.data = d;
+  }
+  const dataPubStr = String(body.dataPublicacao || '').trim();
+  if (dataPubStr) {
+    const dp = new Date(dataPubStr);
+    if (!Number.isNaN(dp.getTime())) doc.dataPublicacao = dp;
+  }
+
+  // Publicação toggles
+  if (body.publicarPortal !== undefined) doc.publicarPortal = body.publicarPortal === '1' || body.publicarPortal === 'on' || body.publicarPortal === true;
+  if (body.enviarEmail !== undefined) doc.enviarEmail = body.enviarEmail === '1' || body.enviarEmail === 'on' || body.enviarEmail === true;
+  if (body.assinaturaDigital !== undefined) doc.assinaturaDigital = body.assinaturaDigital === '1' || body.assinaturaDigital === 'on' || body.assinaturaDigital === true;
+
+  // Pauta
+  if (String(body.hasPauta || '') === '1' || body.pauta_count !== undefined) {
+    doc.pauta = parsePautaFromBody(body);
+  }
+
+  // Defaults
+  if (!doc.numero) doc.numero = generateAssembleiaNumero();
+  if (!doc.status) doc.status = 'rascunho';
+}
+
+function validateAssembleiaForPublish(doc) {
+  const errors = {};
+  const reqField = (key, label, cond = true) => {
+    if (!cond) return;
+    const v = String(doc?.[key] ?? '').trim();
+    if (!v) errors[key] = `${label} é obrigatório.`;
+  };
+
+  reqField('natureza', 'Natureza');
+  reqField('titulo', 'Título');
+  reqField('numero', 'Número');
+  if (!doc?.data) errors.data = 'Data é obrigatória.';
+  reqField('modalidade', 'Modalidade');
+  reqField('responsavel', 'Responsável');
+  reqField('regraConvocacao', 'Regra de convocação');
+  if (!doc?.dataPublicacao) errors.dataPublicacao = 'Data de emissão é obrigatória para convocar.';
+
+  const mod = String(doc?.modalidade || '').toLowerCase();
+  if (mod === 'presencial' || mod === 'hibrida') {
+    if (!String(doc?.local || '').trim()) errors.local = 'Local é obrigatório para presencial/híbrida.';
+  }
+  if (mod === 'virtual' || mod === 'hibrida') {
+    if (!String(doc?.link || '').trim()) errors.link = 'Link é obrigatório para virtual/híbrida.';
+  }
+
+  const regra = String(doc?.regraConvocacao || '').toLowerCase();
+  if (regra === 'dupla') {
+    if (!String(doc?.hora1 || '').trim()) errors.hora1 = 'Horário (1ª chamada) é obrigatório.';
+    if (!String(doc?.hora2 || '').trim()) errors.hora2 = 'Horário (2ª chamada) é obrigatório.';
+  }
+  if (regra === 'unica') {
+    if (!String(doc?.horaUnica || '').trim()) errors.horaUnica = 'Horário é obrigatório.';
+  }
+
+  const pauta = Array.isArray(doc?.pauta) ? doc.pauta : [];
+  if (!pauta.length) errors.pauta = 'Informe ao menos 1 item de pauta.';
+  pauta.forEach((it, idx) => {
+    if (!String(it?.tipo || '').trim()) errors[`pauta_tipo_${idx}`] = 'Tipo do item é obrigatório.';
+    if (!String(it?.descricao || '').trim()) errors[`pauta_descricao_${idx}`] = 'Descrição do item é obrigatória.';
+  });
+
+  // Regra: o edital publicado/convocado deve ser o PDF assinado CERTIFICADO (token global verificável).
+  // Assinatura acontece fora do sistema; aqui apenas certificamos e verificamos.
+  {
+    const tok = String(doc?.editalDocumentoToken || '').trim();
+    if (!tok) errors.editalDocumentoToken = 'Envie o edital assinado antes de convocar.';
+  }
+
+  return errors;
+}
+
+function getUserUnidadeId(ctxUser) {
+  try {
+    const ref = (
+      ctxUser?.unidade_id ||
+      ctxUser?.unidadeId ||
+      ctxUser?.unidadeID ||
+      ctxUser?.unidade ||
+      ctxUser?.unidade_id_str ||
+      ctxUser?.matriz_unidade_id ||
+      ctxUser?.unidade_principal_id ||
+      ctxUser?.unidadePrincipalId ||
+      null
+    );
+    const id = (ref && typeof ref === 'object') ? (ref._id || ref.id || ref) : ref;
+    return String(id || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+function normalizeObjectIdString(id) {
+  const s = String(id || '').trim();
+  return (s && mongoose.isValidObjectId(s)) ? s : '';
+}
+
+function getCtxUserIdString(ctxUser) {
+  try {
+    const ref = ctxUser?._id || ctxUser?.id || ctxUser?.userId || ctxUser?.userid || null;
+    const id = (ref && typeof ref === 'object') ? (ref._id || ref.id || ref) : ref;
+    return String(id || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+async function resolveUnidadeIdForNonScopedUser({ ctxUser, canQueryDb }) {
+  try {
+    if (!canQueryDb) return '';
+    const current = normalizeObjectIdString(getUserUnidadeId(ctxUser));
+    if (current) return current;
+
+    // 1) Via funcionário vinculado (mais confiável em alguns payloads de sessão)
+    const funcRef = ctxUser?.funcionario_id || ctxUser?.funcionarioId || null;
+    const funcId = normalizeObjectIdString((funcRef && typeof funcRef === 'object') ? (funcRef._id || funcRef.id || funcRef) : funcRef);
+    if (funcId && Funcionario) {
+      const f = await Funcionario.findById(funcId).select('unidade_id').lean();
+      const u = normalizeObjectIdString(f?.unidade_id?._id || f?.unidade_id);
+      if (u) return u;
+    }
+
+    // 2) Via próprio User
+    const ctxUserId = normalizeObjectIdString(getCtxUserIdString(ctxUser));
+    if (ctxUserId && User) {
+      const uDoc = await User.findById(ctxUserId).select('unidade_id').lean();
+      const u = normalizeObjectIdString(uDoc?.unidade_id?._id || uDoc?.unidade_id);
+      if (u) return u;
+    }
+
+    return '';
+  } catch {
+    return '';
+  }
+}
+
+async function buildAssembleiaAvailableRecipients({ selectedUnidadeId, canQueryDb }) {
+  const available = { dirigentes: [], colaboradores: [], condominos: [] };
+  const unitId = normalizeObjectIdString(selectedUnidadeId);
+  if (!canQueryDb || !unitId) return available;
+
+  const unitObjId = new mongoose.Types.ObjectId(unitId);
+
+  const normalizeEmail = (value) => {
+    const s = String(value || '').trim().toLowerCase();
+    return s && s.includes('@') ? s : '';
+  };
+
+  const toPublicFotoUrl = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    if (s.length > 800) return '';
+    if (/^data:/i.test(s)) return s;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (s.startsWith('/')) return s;
+    const rel = s.replace(/\\/g, '/').replace(/^\/+/, '');
+    // Alguns campos legados já vêm com "uploads/..." ou "public/uploads/..."
+    if (rel.startsWith('public/uploads/')) return `/${rel.replace(/^public\//, '')}`;
+    if (rel.startsWith('uploads/')) return `/${rel}`;
+    // Padrão do sistema: salva em `uploads/<rel>` e referencia por `users/<file>`
+    return `/condominios/uploads/${rel}`;
+  };
+
+  const condoCandidates = [];
+
+  const habLinesByEmail = new Map();
+
+  // 1) Dirigentes: vem do organograma/dirigência (mandatos ativos), não do nível de acesso.
+  try {
+    if (CondDirigenciaMandato && CondUsuario) {
+      const mandatos = await CondDirigenciaMandato.find({ unidadeId: unitObjId, ativo: true })
+        .select('usuarioId cargoId')
+        .limit(200)
+        .lean()
+        .catch(() => []);
+
+      const usuarioIds = Array.from(new Set((mandatos || []).map(m => String(m?.usuarioId || '').trim()).filter(Boolean)));
+      const cargoIds = Array.from(new Set((mandatos || []).map(m => String(m?.cargoId || '').trim()).filter(Boolean)));
+
+      const cargos = cargoIds.length && CondDirigenciaCargo
+        ? await CondDirigenciaCargo.find({ _id: { $in: cargoIds } }).select('_id nome').lean().catch(() => [])
+        : [];
+      const cargoNameById = new Map((cargos || []).map(c => [String(c?._id || '').trim(), String(c?.nome || '').trim()]));
+
+      const condUsers = usuarioIds.length
+        ? await CondUsuario.find({ _id: { $in: usuarioIds.map(id => new mongoose.Types.ObjectId(id)) }, ativo: { $ne: false } })
+          .select('_id nome email foto')
+          .lean()
+          .catch(() => [])
+        : [];
+      const condUserById = new Map((condUsers || []).map(u => [String(u?._id || '').trim(), u]));
+
+      const seen = new Set();
+      (mandatos || []).forEach((m) => {
+        const uid = String(m?.usuarioId || '').trim();
+        if (!uid) return;
+        const cu = condUserById.get(uid);
+        if (!cu) return;
+        const rawEmail = String(cu?.email || '').trim();
+        const emailNorm = normalizeEmail(rawEmail);
+        const key = emailNorm ? `em:${emailNorm}` : `cu:${uid}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        const cargoNome = cargoNameById.get(String(m?.cargoId || '').trim()) || '';
+        available.dirigentes.push({
+          id: key,
+          nome: String(cu?.nome || cu?.email || '').trim() || '-',
+          subtitulo: cargoNome || 'Dirigência',
+          email: rawEmail,
+          foto: toPublicFotoUrl(cu?.foto),
+          aliases: [`cu:${uid}`]
+        });
+      });
+    }
+  } catch {
+    /* noop */
+  }
+
+  // 2) Colaboradores/usuários internos (Gestor): por unidade direta OU por vínculo com `Funcionario`.
+  if (User) {
+    const or = [{ unidade_id: unitId }];
+    try {
+      if (Funcionario) {
+        const funcDocs = await Funcionario.find({ unidade_id: unitId, ativo: { $ne: false } })
+          .select('_id usuario_id')
+          .lean();
+
+        const funcionarioIds = (funcDocs || []).map(f => f?._id).filter(Boolean);
+        const usuarioIds = (funcDocs || []).map(f => f?.usuario_id).filter(Boolean);
+        if (usuarioIds.length) or.push({ _id: { $in: usuarioIds } });
+        if (funcionarioIds.length) or.push({ funcionario_id: { $in: funcionarioIds } });
+      }
+    } catch {
+      /* noop */
+    }
+
+    const users = await User.find({ $or: or, ativo: { $ne: false } })
+      .select('_id nome email role funcionario_id unidade_id foto')
+      .lean();
+    const toUserPerson = (u, subtitulo) => {
+      const rawEmail = String(u?.email || '').trim();
+      const emailNorm = normalizeEmail(rawEmail);
+      const id = emailNorm ? `em:${emailNorm}` : String(u._id);
+      return {
+        id,
+        nome: String(u?.nome || u?.email || '').trim() || '-',
+        subtitulo: String(subtitulo || '').trim(),
+        email: rawEmail,
+        foto: toPublicFotoUrl(u?.foto),
+        aliases: [String(u._id)]
+      };
+    };
+
+    (users || []).forEach((u) => {
+      const role = String(u?.role || '').toLowerCase();
+      const isFuncionario = !!u?.funcionario_id;
+      if (isFuncionario) {
+        available.colaboradores.push(toUserPerson(u, 'Colaborador'));
+        return;
+      }
+      if (role === 'master' || role === 'admin') {
+        available.colaboradores.push(toUserPerson(u, role === 'admin' ? 'Admin' : 'Master'));
+        return;
+      }
+
+      // Condôminos (lista para publicação de assembleia): consolidar por e-mail.
+      const rawEmail = String(u?.email || '').trim();
+      const emailNorm = normalizeEmail(rawEmail);
+      const id = emailNorm ? `em:${emailNorm}` : String(u._id);
+      condoCandidates.push({
+        id,
+        aliases: [String(u._id)],
+        nome: String(u?.nome || rawEmail || '').trim() || '-',
+        email: rawEmail,
+        foto: toPublicFotoUrl(u?.foto)
+      });
+    });
+  }
+
+  // 3) Condôminos (Portal do Morador): CondMorador por unidade.
+  // Consolidar por e-mail e trocar o subtítulo por habitações vinculadas.
+  const habIdsByEmail = new Map();
+  const aliasesByEmail = new Map();
+  const portalCandidateByEmail = new Map();
+
+  try {
+    if (CondMorador) {
+      const moradores = await CondMorador.find({ unidade_id: unitObjId, ativo: { $ne: false } })
+        .select('_id nome email responsavel_email usuario_id cond_usuario_id habitacao_id')
+        .limit(5000)
+        .lean()
+        .catch(() => []);
+
+      const userIds = Array.from(new Set((moradores || []).map(m => String(m?.usuario_id || '').trim()).filter(Boolean)));
+      const condUserIds = Array.from(new Set((moradores || []).map(m => String(m?.cond_usuario_id || '').trim()).filter(Boolean)));
+
+      const userDocs = (User && userIds.length)
+        ? await User.find({ _id: { $in: userIds.map(id => new mongoose.Types.ObjectId(id)) } }).select('_id foto').lean().catch(() => [])
+        : [];
+      const userFotoById = new Map((userDocs || []).map(u => [String(u?._id || '').trim(), toPublicFotoUrl(u?.foto)]));
+
+      const condDocs = (CondUsuario && condUserIds.length)
+        ? await CondUsuario.find({ _id: { $in: condUserIds.map(id => new mongoose.Types.ObjectId(id)) } }).select('_id foto').lean().catch(() => [])
+        : [];
+      const condFotoById = new Map((condDocs || []).map(u => [String(u?._id || '').trim(), toPublicFotoUrl(u?.foto)]));
+
+      (moradores || []).forEach((m) => {
+        const mid = String(m?._id || '').trim();
+        const rawEmail = String(m?.email || m?.responsavel_email || '').trim();
+        const emailNorm = normalizeEmail(rawEmail);
+        if (!emailNorm) return;
+
+        const aliasId = mid ? `m:${mid}` : '';
+        if (aliasId) {
+          const prev = aliasesByEmail.get(emailNorm) || new Set();
+          prev.add(aliasId);
+          aliasesByEmail.set(emailNorm, prev);
+        }
+
+        const habId = String(m?.habitacao_id || '').trim();
+        if (habId) {
+          const prev = habIdsByEmail.get(emailNorm) || new Set();
+          prev.add(habId);
+          habIdsByEmail.set(emailNorm, prev);
+        }
+
+        let foto = '';
+        const uid = String(m?.usuario_id || '').trim();
+        const cuid = String(m?.cond_usuario_id || '').trim();
+        if (uid && userFotoById.has(uid)) foto = userFotoById.get(uid) || '';
+        else if (cuid && condFotoById.has(cuid)) foto = condFotoById.get(cuid) || '';
+
+        const prevC = portalCandidateByEmail.get(emailNorm) || null;
+        if (!prevC) {
+          portalCandidateByEmail.set(emailNorm, {
+            id: `em:${emailNorm}`,
+            aliases: [],
+            nome: String(m?.nome || rawEmail || '').trim() || '-',
+            email: rawEmail,
+            foto
+          });
+        } else if (!prevC.foto && foto) {
+          prevC.foto = foto;
+        }
+      });
+
+      // Resolver labels de habitação por e-mail (Bloco/Andar/Tipo/Número)
+      const buildHabitacaoLine = (habDoc, blocoNome, andarNome) => {
+        const parts = [];
+        const bn = String(blocoNome || '').trim();
+        const an = String(andarNome || '').trim();
+        if (bn) parts.push(`Bloco ${bn}`);
+        if (an) parts.push(an);
+        const tipoRaw = String(habDoc?.tipo || '').trim();
+        const numeroRaw = String(habDoc?.numero || '').trim();
+        const tipo = tipoRaw ? tipoRaw.toLowerCase() : '';
+        if (tipo && numeroRaw) parts.push(`${tipo} ${numeroRaw}`);
+        else if (numeroRaw) parts.push(`apartamento ${numeroRaw}`);
+        else if (tipo) parts.push(tipo);
+        const descr = String(habDoc?.descricao || '').trim();
+        return parts.join(' - ') || descr || '';
+      };
+
+      const allHabIds = Array.from(new Set(Array.from(habIdsByEmail.values()).flatMap(set => Array.from(set.values()))))
+        .filter(mongoose.isValidObjectId);
+
+      const habDocs = (CondHabitacao && allHabIds.length)
+        ? await CondHabitacao.find({ _id: { $in: allHabIds.map(id => new mongoose.Types.ObjectId(id)) } })
+            .select('_id bloco_id andar_id numero tipo descricao')
+            .lean()
+            .catch(() => [])
+        : [];
+
+      const blocoIds = Array.from(new Set((habDocs || []).map(h => String(h?.bloco_id || '').trim()).filter(Boolean)))
+        .filter(mongoose.isValidObjectId);
+      const andarIds = Array.from(new Set((habDocs || []).map(h => String(h?.andar_id || '').trim()).filter(Boolean)))
+        .filter(mongoose.isValidObjectId);
+
+      const [blocos, andares] = await Promise.all([
+        (CondBloco && blocoIds.length)
+          ? CondBloco.find({ _id: { $in: blocoIds.map(id => new mongoose.Types.ObjectId(id)) } }).select('_id nome').lean().catch(() => [])
+          : [],
+        (CondAndar && andarIds.length)
+          ? CondAndar.find({ _id: { $in: andarIds.map(id => new mongoose.Types.ObjectId(id)) } }).select('_id nome').lean().catch(() => [])
+          : []
+      ]);
+      const blocoNomeById = new Map((blocos || []).map(b => [String(b?._id || '').trim(), String(b?.nome || '').trim()]));
+      const andarNomeById = new Map((andares || []).map(a => [String(a?._id || '').trim(), String(a?.nome || '').trim()]));
+
+      const habById = new Map((habDocs || []).map(h => [String(h?._id || '').trim(), h]));
+      habIdsByEmail.forEach((set, emailNorm) => {
+        const lines = [];
+        Array.from(set.values()).forEach((hid) => {
+          const hab = habById.get(String(hid || '').trim());
+          if (!hab) return;
+          const blocoNome = blocoNomeById.get(String(hab?.bloco_id || '').trim()) || '';
+          const andarNome = andarNomeById.get(String(hab?.andar_id || '').trim()) || '';
+          const line = buildHabitacaoLine(hab, blocoNome, andarNome);
+          if (line) lines.push(line);
+        });
+        const uniq = Array.from(new Set(lines.map(s => String(s || '').trim()).filter(Boolean)));
+        uniq.sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+        habLinesByEmail.set(emailNorm, uniq);
+      });
+    }
+  } catch {
+    /* noop */
+  }
+
+  // Se a pessoa aparece também como dirigente/colaborador, adiciona as habitações no subtítulo.
+  try {
+    const appendHabitacoes = (entry) => {
+      if (!entry || typeof entry !== 'object') return;
+      const rawEmail = String(entry?.email || '').trim();
+      const emailNorm = normalizeEmail(rawEmail);
+      if (!emailNorm) return;
+      const habs = habLinesByEmail.get(emailNorm) || [];
+      if (!Array.isArray(habs) || !habs.length) return;
+      const roleLine = String(entry?.subtitulo || '').trim();
+      entry.subtitulo = '';
+      entry.subtitulos = [roleLine].filter(Boolean).concat(habs);
+    };
+    (available.dirigentes || []).forEach(appendHabitacoes);
+    (available.colaboradores || []).forEach(appendHabitacoes);
+  } catch {
+    /* noop */
+  }
+
+  // Mescla candidatos (interno + portal) por e-mail
+  const mergedByEmail = new Map();
+  const upsertCandidate = (cand) => {
+    if (!cand) return;
+    const rawEmail = String(cand.email || '').trim();
+    const emailNorm = normalizeEmail(rawEmail);
+    const key = emailNorm || String(cand.id || '').trim();
+    if (!key) return;
+    const prev = mergedByEmail.get(key) || {
+      id: emailNorm ? `em:${emailNorm}` : String(cand.id || '').trim(),
+      nome: String(cand.nome || rawEmail || '').trim() || '-',
+      email: rawEmail,
+      foto: String(cand.foto || '').trim(),
+      aliases: new Set()
+    };
+    (Array.isArray(cand.aliases) ? cand.aliases : []).forEach(a => { const v = String(a || '').trim(); if (v) prev.aliases.add(v); });
+    if (!prev.foto && cand.foto) prev.foto = String(cand.foto || '').trim();
+    if ((!prev.nome || prev.nome === '-') && cand.nome) prev.nome = String(cand.nome || '').trim() || prev.nome;
+    if (!prev.email && rawEmail) prev.email = rawEmail;
+    mergedByEmail.set(key, prev);
+  };
+
+  condoCandidates.forEach(upsertCandidate);
+  portalCandidateByEmail.forEach((cand, emailNorm) => {
+    const aliasSet = aliasesByEmail.get(emailNorm) || new Set();
+    cand.aliases = Array.from(aliasSet.values());
+    upsertCandidate(cand);
+  });
+
+  // Monta lista final de condôminos com linhas de habitação.
+  available.condominos = Array.from(mergedByEmail.values()).map((c) => {
+    const emailNorm = normalizeEmail(c.email);
+    const habLines = (emailNorm && habLinesByEmail.has(emailNorm)) ? (habLinesByEmail.get(emailNorm) || []) : [];
+    const subtitulos = habLines.length ? habLines : ['Sem habitação vinculada'];
+    return {
+      id: String(c.id || '').trim(),
+      nome: String(c.nome || '').trim() || '-',
+      subtitulo: '',
+      subtitulos,
+      email: String(c.email || '').trim(),
+      foto: String(c.foto || '').trim(),
+      aliases: Array.from((c.aliases || new Set()).values()).filter(Boolean)
+    };
+  });
+
+  // Nota: a seção de condôminos já é montada acima (consolidada por e-mail).
+
+  const byName = (a, b) => String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR', { sensitivity: 'base' });
+  available.dirigentes.sort(byName);
+  available.colaboradores.sort(byName);
+  available.condominos.sort(byName);
+
+  return available;
+}
+
+// Fallback: alguns fluxos/erros de UI podem submeter um POST para a listagem.
+// A listagem é GET; então aqui evitamos 404 no deploy e direcionamos para a rota correta.
+app.post('/assembleias', (req, res) => {
+  try {
+    const bp = String(res?.locals?._bp || '/condominios').trim() || '/condominios';
+    const accept = String(req.get('accept') || '').toLowerCase();
+    const isAjax = String(req.get('x-requested-with') || '').toLowerCase() === 'xmlhttprequest'
+      || String(req.get('x-wdg-ajax') || '').trim() === '1'
+      || accept.includes('application/json');
+
+    if (isAjax) {
+      return res.status(404).json({
+        ok: false,
+        error: `Rota inválida para POST. Use ${bp}/assembleias/nova/salvar ou ${bp}/assembleias/nova/publicar.`
+      });
+    }
+
+    return res.redirect(303, `${bp}/assembleias`);
+  } catch {
+    return res.redirect(303, '/condominios/assembleias');
+  }
+});
+
+app.get('/assembleias', async (req, res, next) => {
+  let ctxUser = getCtxUser(req);
+  try {
+    // IMPORTANTE (Vercel/CDN): não cachear HTML desta lista (varia por querystring unidade_id).
+    try {
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+      res.setHeader('CDN-Cache-Control', 'no-store');
+      res.setHeader('X-WDG-Asset-Version', String(res?.locals?.assetVersion || 'dev'));
+    } catch { /* noop */ }
+
+    const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+    const canScopeAll = !!userCanScopeAll(ctxUser);
+    const requestedUnitId = String(req.query.unidade_id || req.query.unidade || req.query.unidadeId || '').trim();
+    let fixedUserUnitId = String(getUserUnidadeId(ctxUser) || '').trim();
+
+    // Se for usuário sem escopo total e ctxUser vier "magro" (sem unidade), tenta resolver.
+    if (!canScopeAll && !fixedUserUnitId) {
+      try {
+        const resolved = await resolveUnidadeIdForNonScopedUser({ ctxUser, canQueryDb });
+        if (resolved) {
+          fixedUserUnitId = String(resolved || '').trim();
+          if (fixedUserUnitId) ctxUser = { ...(ctxUser || {}), unidade_id: fixedUserUnitId };
+        }
+      } catch {
+        /* noop */
+      }
+    }
+
+    const filtro = {
+      unidade_id: String((canScopeAll ? requestedUnitId : fixedUserUnitId) || '').trim(),
+      status: String(req.query.status || '').trim(),
+      natureza: String(req.query.natureza || '').trim(),
+      de: String(req.query.de || '').trim(),
+      ate: String(req.query.ate || '').trim(),
+      q: String(req.query.q || '').trim()
+    };
+
+    const allowedPageSizes = [5, 10, 15, 20, 25, 50];
+    let perPage = 10;
+    try {
+      const rawSize = String(req.query.perPage || req.query.pageSize || req.query.pagesize || '').trim();
+      const n = parseInt(rawSize, 10);
+      if (Number.isFinite(n) && allowedPageSizes.includes(n)) perPage = n;
+    } catch { /* noop */ }
+    let page = 1;
+    try {
+      const rawPage = String(req.query.page || req.query.p || '').trim();
+      const n = parseInt(rawPage, 10);
+      if (Number.isFinite(n) && n > 0) page = n;
+    } catch { /* noop */ }
+
+    // Regra de UX: se não há condomínio selecionado, não listar itens.
+    // (Master/Admin podem enxergar todas, mas aqui exigimos a seleção explícita.)
+    if (canScopeAll && !filtro.unidade_id) {
+      return res.render('condominios/assembleias/assembleias', {
+        moduleLabel: 'Gestão de Condomínios',
+        user: ctxUser,
+        filtro,
+        assembleias: [],
+        pagination: { page: 1, perPage, total: 0, totalPages: 1 }
+      });
+    }
+
+    const query = {};
+    if (filtro.unidade_id) {
+      let unitIdForQuery = String(filtro.unidade_id || '').trim();
+
+      // Compat: algumas telas antigas/fluxos podem passar o código (ex: M0005) no lugar do ObjectId.
+      // Se não for ObjectId, tenta resolver por Unidade.codigo.
+      if (unitIdForQuery && !mongoose.isValidObjectId(unitIdForQuery)) {
+        try {
+          if (canQueryDb && Unidade) {
+            const rx = new RegExp(`^${escapeRegExp(unitIdForQuery)}$`, 'i');
+            const u = await Unidade.findOne({ codigo: rx }).select('_id').lean();
+            if (u && u._id) unitIdForQuery = String(u._id);
+          }
+        } catch {
+          /* noop */
+        }
+      }
+
+      if (!unitIdForQuery || !mongoose.isValidObjectId(unitIdForQuery)) {
+        return res.status(400).type('text/plain; charset=utf-8').send('unidade_id inválido.');
+      }
+
+      query.unidade_id = unitIdForQuery;
+      filtro.unidade_id = unitIdForQuery;
+    } else if (!canScopeAll) {
+      // Usuário sem unidade vinculada: não listar dados de outras unidades.
+      return res.render('condominios/assembleias/assembleias', {
+        moduleLabel: 'Gestão de Condomínios',
+        user: ctxUser,
+        filtro,
+        assembleias: [],
+        pagination: { page: 1, perPage, total: 0, totalPages: 1 }
+      });
+    }
+    if (filtro.status) query.status = filtro.status;
+    if (filtro.natureza) query.natureza = filtro.natureza;
+    if (filtro.de || filtro.ate) {
+      query.data = {};
+      if (filtro.de) {
+        const d = new Date(filtro.de);
+        if (!Number.isNaN(d.getTime())) query.data.$gte = d;
+      }
+      if (filtro.ate) {
+        const d = new Date(filtro.ate);
+        if (!Number.isNaN(d.getTime())) query.data.$lte = d;
+      }
+      if (!Object.keys(query.data).length) delete query.data;
+    }
+    if (filtro.q) {
+      const rx = new RegExp(escapeRegExp(filtro.q), 'i');
+      query.$or = [{ titulo: rx }, { numero: rx }];
+    }
+
+    let assembleias = [];
+    let total = 0;
+    let totalPages = 1;
+    if (canQueryDb) {
+      try {
+        total = await CondAssembleia.countDocuments(query);
+        totalPages = Math.max(1, Math.ceil((total || 0) / perPage));
+        if (page > totalPages) page = totalPages;
+        const skip = (page - 1) * perPage;
+        assembleias = await CondAssembleia.find(query)
+          .sort({ data: -1, createdAt: -1 })
+          .skip(skip)
+          .limit(perPage)
+          .lean();
+
+        // Fallback defensivo: se a página retornou itens mas o count veio 0,
+        // garante que o pager não mostre “—”.
+        if (!total && Array.isArray(assembleias) && assembleias.length) {
+          total = assembleias.length;
+          totalPages = 1;
+          page = 1;
+        }
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+    }
+
+    // Debug opcional (inspecionar no Network sem alterar a UX)
+    try {
+      if (String(process.env.DEBUG_ASSEMBLEIAS_UNIDADE || '').trim() === '1') {
+        res.setHeader('X-WDG-Assembleias-CanScopeAll', canScopeAll ? '1' : '0');
+        res.setHeader('X-WDG-Assembleias-RequestedUnidade', requestedUnitId || '');
+        res.setHeader('X-WDG-Assembleias-FiltroUnidade', String(filtro.unidade_id || ''));
+      }
+    } catch { /* noop */ }
+
+    return res.render('condominios/assembleias/assembleias', {
+      moduleLabel: 'Gestão de Condomínios',
+      user: ctxUser,
+      filtro,
+      assembleias,
+      pagination: { page, perPage, total, totalPages }
+    });
+  } catch (e) {
+    return next(e);
+  }
+});
+
+function getDefaultRegrasAssembleiaRecommended() {
+  return {
+    voteMode: 'POR_FRACAO',
+    delinquencyPolicy: 'BLOQUEIA_VOTO',
+    eligibility: {
+      allowOwner: true,
+      allowProxyWithPoA: true,
+      allowTenantWithAuthorization: false,
+      allowThirdPartyWithPoA: true
+    },
+    requirePoAIfNotOwner: true,
+    presence: {
+      allowRemotePresence: true,
+      requireModeratorApprovalForRemote: true
+    },
+    quorum: {
+      installationBase: 'PRESENTES',
+      metric: 'FRACAO'
+    },
+    audit: {
+      requireReasonOnOverride: true
+    }
+  };
+}
+
+function normalizeRegrasAssembleia(input) {
+  const d = getDefaultRegrasAssembleiaRecommended();
+  const r = (input && typeof input === 'object') ? input : {};
+
+  const voteMode = (r.voteMode === 'POR_UNIDADE' || r.voteMode === 'POR_FRACAO') ? r.voteMode : d.voteMode;
+  const delinquencyPolicy = (r.delinquencyPolicy === 'BLOQUEIA_VOTO' || r.delinquencyPolicy === 'APENAS_AVISO' || r.delinquencyPolicy === 'BLOQUEIA_PRESENCA_E_VOTO')
+    ? r.delinquencyPolicy
+    : d.delinquencyPolicy;
+
+  const eligibilityIn = (r.eligibility && typeof r.eligibility === 'object') ? r.eligibility : {};
+  const eligibility = {
+    allowOwner: !!eligibilityIn.allowOwner,
+    allowProxyWithPoA: !!eligibilityIn.allowProxyWithPoA,
+    allowTenantWithAuthorization: !!eligibilityIn.allowTenantWithAuthorization,
+    allowThirdPartyWithPoA: !!eligibilityIn.allowThirdPartyWithPoA
+  };
+
+  let requirePoAIfNotOwner = !!r.requirePoAIfNotOwner;
+  if (!eligibility.allowProxyWithPoA && requirePoAIfNotOwner) {
+    // Coerência: se não aceita procurador, não faz sentido exigir procuração.
+    requirePoAIfNotOwner = false;
+  }
+
+  const presenceIn = (r.presence && typeof r.presence === 'object') ? r.presence : {};
+  const presence = {
+    allowRemotePresence: !!presenceIn.allowRemotePresence,
+    requireModeratorApprovalForRemote: !!presenceIn.requireModeratorApprovalForRemote
+  };
+  if (!presence.allowRemotePresence) presence.requireModeratorApprovalForRemote = false;
+
+  const quorumIn = (r.quorum && typeof r.quorum === 'object') ? r.quorum : {};
+  const installationBase = (quorumIn.installationBase === 'TOTAL' || quorumIn.installationBase === 'ADIMPLENTES' || quorumIn.installationBase === 'PRESENTES')
+    ? quorumIn.installationBase
+    : d.quorum.installationBase;
+  let metric = (quorumIn.metric === 'UNIDADES' || quorumIn.metric === 'FRACAO')
+    ? quorumIn.metric
+    : (voteMode === 'POR_FRACAO' ? 'FRACAO' : 'UNIDADES');
+  if (voteMode === 'POR_FRACAO') metric = 'FRACAO';
+  if (voteMode === 'POR_UNIDADE' && metric === 'FRACAO') metric = 'UNIDADES';
+
+  const auditIn = (r.audit && typeof r.audit === 'object') ? r.audit : {};
+  const audit = { requireReasonOnOverride: (auditIn.requireReasonOnOverride === false) ? false : true };
+
+  return {
+    voteMode,
+    delinquencyPolicy,
+    eligibility,
+    requirePoAIfNotOwner,
+    presence,
+    quorum: { installationBase, metric },
+    audit
+  };
+}
+
+async function getAssembleiaSettingsUnidadeContext({ req, ctxUser }) {
+  const canScopeAllUnits = userCanScopeAll(ctxUser);
+  const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+
+  // Alguns fluxos de login/sessão trazem ctxUser "magro" (sem unidade_id).
+  let ctxUserForUnits = ctxUser;
+  let userUnitId = normalizeObjectIdString(getUserUnidadeId(ctxUserForUnits));
+  if (!canScopeAllUnits && !userUnitId) {
+    try {
+      const resolved = await resolveUnidadeIdForNonScopedUser({ ctxUser: ctxUserForUnits, canQueryDb });
+      if (resolved) {
+        ctxUserForUnits = { ...(ctxUserForUnits || {}), unidade_id: resolved };
+        userUnitId = normalizeObjectIdString(resolved);
+      }
+    } catch { /* noop */ }
+  }
+
+  const unidadesOptions = await listarUnidadesParaUsuario(ctxUserForUnits);
+  const allowed = new Set((unidadesOptions || []).map(u => normalizeObjectIdString(u?._id)).filter(Boolean));
+
+  const qUnidadeIdRaw = String(req.query.unidade_id || req.query.unidade || req.query.unidadeId || '').trim();
+  let selectedUnidadeId = '';
+  if (canScopeAllUnits) {
+    const qId = normalizeObjectIdString(qUnidadeIdRaw);
+    if (qId && allowed.has(qId)) selectedUnidadeId = qId;
+  } else {
+    selectedUnidadeId = userUnitId || normalizeObjectIdString(unidadesOptions?.[0]?._id);
+  }
+  if (!canScopeAllUnits) selectedUnidadeId = selectedUnidadeId || userUnitId || normalizeObjectIdString(unidadesOptions?.[0]?._id);
+
+  return { canScopeAllUnits, canQueryDb, unidadesOptions, allowed, userUnitId, selectedUnidadeId };
+}
+
+app.get('/assembleias/configuracoes', async (req, res, next) => {
   const ctxUser = getCtxUser(req);
-  return res.render('assembleiais', {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+
+    const ok = await ensureMongoReady();
+    if (!ok) return respondDbOffline(res, req);
+
+    const { canScopeAllUnits, canQueryDb, selectedUnidadeId } = await getAssembleiaSettingsUnidadeContext({ req, ctxUser });
+
+    let regras = getDefaultRegrasAssembleiaRecommended();
+    if (selectedUnidadeId && canQueryDb) {
+      try {
+        const doc = await CondAssembleiaSettings.findOne({ unidade_id: selectedUnidadeId }).select('regras').lean();
+        if (doc && doc.regras) regras = normalizeRegrasAssembleia(doc.regras);
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+    }
+
+    const saved = String(req.query.saved || '').trim() === '1';
+    const bp = req.baseUrl || '';
+    return res.render('condominios/assembleias/assembleias_configuracoes', {
+      moduleLabel: 'Gestão de Condomínios',
+      user: ctxUser,
+      _bp: bp,
+      selectedUnidadeId: selectedUnidadeId || '',
+      canScopeAllUnits: !!canScopeAllUnits,
+      regras,
+      saved
+    });
+  } catch (e) {
+    return next(e);
+  }
+});
+
+app.get('/assembleias/configuracoes/json', async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+
+    const ok = await ensureMongoReady();
+    if (!ok) return res.status(503).json({ success: false, error: 'DB indisponível.' });
+
+    const { canScopeAllUnits, canQueryDb, allowed, userUnitId } = await getAssembleiaSettingsUnidadeContext({ req, ctxUser });
+
+    const qIdRaw = String(req.query.unidade_id || req.query.unidade || req.query.unidadeId || '').trim();
+    let unidadeId = normalizeObjectIdString(qIdRaw);
+    if (!canScopeAllUnits) unidadeId = normalizeObjectIdString(userUnitId);
+    if (canScopeAllUnits && unidadeId && allowed && !allowed.has(unidadeId)) {
+      return res.status(403).json({ success: false, error: 'unidade_id não permitida.' });
+    }
+
+    let regras = getDefaultRegrasAssembleiaRecommended();
+    if (unidadeId && canQueryDb) {
+      try {
+        const doc = await CondAssembleiaSettings.findOne({ unidade_id: unidadeId }).select('regras').lean();
+        if (doc && doc.regras) regras = normalizeRegrasAssembleia(doc.regras);
+      } catch {
+        // fallback para default
+      }
+    }
+
+    return res.json({ success: true, regras });
+  } catch (e) {
+    return next(e);
+  }
+});
+
+app.post('/assembleias/configuracoes/salvar', express.urlencoded({ extended: true }), async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+
+    const ok = await ensureMongoReady();
+    if (!ok) return respondDbOffline(res, req);
+
+    const { canScopeAllUnits, canQueryDb, allowed, userUnitId } = await getAssembleiaSettingsUnidadeContext({ req, ctxUser });
+
+    let unidadeId = normalizeObjectIdString(String(req.body?.unidade_id || '').trim());
+    if (!canScopeAllUnits) unidadeId = normalizeObjectIdString(userUnitId);
+    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+      return res.status(400).type('text/plain; charset=utf-8').send('unidade_id inválido.');
+    }
+    if (canScopeAllUnits && allowed && !allowed.has(unidadeId)) {
+      return res.status(403).type('text/plain; charset=utf-8').send('unidade_id não permitida.');
+    }
+
+    let parsed = null;
+    try {
+      const raw = String(req.body?.regrasJson || '').trim();
+      parsed = raw ? JSON.parse(raw) : null;
+    } catch {
+      parsed = null;
+    }
+    const regras = normalizeRegrasAssembleia(parsed || getDefaultRegrasAssembleiaRecommended());
+
+    if (!canQueryDb) return res.status(503).type('text/plain; charset=utf-8').send('DB indisponível.');
+
+    let doc = null;
+    try {
+      doc = await CondAssembleiaSettings.findOne({ unidade_id: unidadeId });
+    } catch (err) {
+      if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+      throw err;
+    }
+    if (!doc) doc = new CondAssembleiaSettings({ unidade_id: new mongoose.Types.ObjectId(unidadeId) });
+    doc.regras = regras;
+    doc.schemaVersion = 1;
+    doc.updatedBy = String(getUserIdentityKey(ctxUser) || '').trim();
+
+    try {
+      await doc.save();
+    } catch (err) {
+      if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+      throw err;
+    }
+
+    const bp = req.baseUrl || '';
+    return res.redirect(303, `${bp}/assembleias/configuracoes?unidade_id=${encodeURIComponent(unidadeId)}&saved=1`);
+  } catch (e) {
+    return next(e);
+  }
+});
+
+// Exclusão definitiva de assembleia (somente Master).
+// Remove:
+// - registro CondAssembleia
+// - DocumentoValidado vinculados (referencia entidade=assembleia, entidadeId=<id>)
+// - arquivos gerados em uploads/documentos-validos/<token>.pdf e <token>.original.pdf
+app.post('/assembleias/:id/excluir-definitivo', async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+
+    if (!ctxUser) {
+      const nextUrl = encodeURIComponent(String(req.originalUrl || req.url || '/condominios/assembleias'));
+      return res.redirect(`/gestor/login?next=${nextUrl}`);
+    }
+
+    const isMaster = !!(ctxUser?.isMaster || String(ctxUser?.role || '').trim().toLowerCase() === 'master');
+    if (!isMaster) return res.status(403).type('text/plain; charset=utf-8').send('Apenas Master pode excluir assembleias.');
+
+    const ok = await ensureMongoReady();
+    if (!ok) return respondDbOffline(res, req);
+
+    const id = String(req.params?.id || '').trim();
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).type('text/plain; charset=utf-8').send('ID inválido.');
+    }
+
+    const assembleia = await CondAssembleia.findById(id).lean();
+    if (!assembleia) return res.status(404).type('text/plain; charset=utf-8').send('Assembleia não encontrada.');
+
+    const tokens = new Set();
+    try {
+      const t0 = String(assembleia?.editalDocumentoToken || '').trim().toLowerCase();
+      if (t0) tokens.add(t0);
+    } catch { /* noop */ }
+
+    const vdocs = await DocumentoValidado
+      .find({ modulo: 'condominios', 'referencia.entidade': 'assembleia', 'referencia.entidadeId': id })
+      .select('token arquivo.url meta.originalArquivoUrl meta.substituidoPorToken')
+      .lean();
+
+    for (const d of (vdocs || [])) {
+      const tk = String(d?.token || '').trim().toLowerCase();
+      if (tk) tokens.add(tk);
+      const sub = String(d?.meta?.substituidoPorToken || '').trim().toLowerCase();
+      if (sub) tokens.add(sub);
+    }
+
+    // Best-effort: remover PDFs do Vercel Blob (quando armazenados como URL https)
+    try {
+      const blobToken = String(
+        process.env.BLOB_READ_WRITE_TOKEN
+        || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN
+        || process.env.VERCEL_BLOB_RW_TOKEN
+        || ''
+      ).trim();
+
+      const urls = [];
+      for (const d of (vdocs || [])) {
+        const u1 = String(d?.arquivo?.url || '').trim();
+        const u2 = String(d?.meta?.originalArquivoUrl || '').trim();
+        if (u1) urls.push(u1);
+        if (u2) urls.push(u2);
+      }
+
+      const isBlobUrl = (u) => /^https?:\/\/.*blob\.vercel-storage\.com\//i.test(String(u || ''));
+      for (const u of urls) {
+        if (!isBlobUrl(u)) continue;
+        // eslint-disable-next-line no-await-in-loop
+        try { await del(u, blobToken ? { token: blobToken } : undefined); } catch { /* noop */ }
+      }
+    } catch { /* noop */ }
+
+    const DOCS_DIR = path.resolve(process.cwd(), 'uploads', 'documentos-validos');
+    const absInDocsDir = (absPath) => {
+      try {
+        const abs = path.resolve(absPath);
+        return abs === DOCS_DIR || abs.startsWith(DOCS_DIR + path.sep);
+      } catch {
+        return false;
+      }
+    };
+
+    const unlinkIfExists = async (absPath) => {
+      try {
+        if (!absPath) return false;
+        if (!absInDocsDir(absPath)) return false;
+        await fs.promises.unlink(absPath);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const deleteByToken = async (token) => {
+      const t = String(token || '').trim().toLowerCase();
+      if (!t) return { token: t, deleted: 0 };
+      const absCertified = path.join(DOCS_DIR, `${t}.pdf`);
+      const absOriginal = path.join(DOCS_DIR, `${t}.original.pdf`);
+      let deleted = 0;
+      if (await unlinkIfExists(absCertified)) deleted++;
+      if (await unlinkIfExists(absOriginal)) deleted++;
+      return { token: t, deleted };
+    };
+
+    // Best-effort: anexos na pauta que apontem para /uploads/...
+    try {
+      const anexos = [];
+      for (const it of (assembleia?.pauta || [])) {
+        if (Array.isArray(it?.anexos)) anexos.push(...it.anexos);
+      }
+      for (const u of anexos) {
+        const url = String(u || '').trim();
+        if (!url || !url.startsWith('/uploads/')) continue;
+        const abs = path.resolve(process.cwd(), url.replace(/^\/+/, ''));
+        // Só apaga se estiver dentro de uploads/
+        const uploadsDir = path.resolve(process.cwd(), 'uploads');
+        if (abs === uploadsDir || abs.startsWith(uploadsDir + path.sep)) {
+          try { await fs.promises.unlink(abs); } catch { /* noop */ }
+        }
+      }
+    } catch { /* noop */ }
+
+    // Apagar arquivos certificados/originais por token.
+    const tokenList = Array.from(tokens.values()).filter(Boolean);
+    const fileResults = [];
+    for (const t of tokenList) {
+      // eslint-disable-next-line no-await-in-loop
+      fileResults.push(await deleteByToken(t));
+    }
+
+    // Remover documentos validados vinculados.
+    if (tokenList.length) {
+      await DocumentoValidado.deleteMany({ token: { $in: tokenList } });
+    }
+    await DocumentoValidado.deleteMany({ modulo: 'condominios', 'referencia.entidade': 'assembleia', 'referencia.entidadeId': id });
+
+    // Remover a assembleia.
+    await CondAssembleia.deleteOne({ _id: id });
+
+    try {
+      console.info('[assembleias][purge]', {
+        assembleiaId: id,
+        numero: String(assembleia?.numero || '').trim(),
+        titulo: String(assembleia?.titulo || '').trim(),
+        tokens: tokenList,
+        filesDeleted: fileResults,
+        by: String(getUserIdentityKey(ctxUser) || '').trim().toLowerCase()
+      });
+    } catch { /* noop */ }
+
+    return res.redirect('/condominios/assembleias');
+  } catch (e) {
+    return next(e);
+  }
+});
+
+app.get('/assembleias/nova', async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    // IMPORTANTE (Vercel/CDN): não cachear HTML desta tela (injeta URLs com querystring de versão).
+    try {
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+      res.setHeader('CDN-Cache-Control', 'no-store');
+      res.setHeader('X-WDG-Asset-Version', String(res?.locals?.assetVersion || 'dev'));
+    } catch { /* noop */ }
+
+    const tab = normalizeAssembleiaTab(req.query.tab);
+    const id = String(req.query.id || '').trim();
+    const qUnidadeIdRaw = String(req.query.unidade_id || req.query.unidade || '').trim();
+    const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+    let doc = null;
+    if (id && canQueryDb && mongoose.isValidObjectId(id)) {
+      try {
+        doc = await CondAssembleia.findById(id).lean();
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+    }
+
+    const canScopeAllUnits = userCanScopeAll(ctxUser);
+
+    // Alguns fluxos de login/sessão trazem ctxUser "magro" (sem unidade_id).
+    // Para Diretor/User, tentamos resolver a unidade pelo cadastro no Mongo.
+    let ctxUserForUnits = ctxUser;
+    let userUnitId = normalizeObjectIdString(getUserUnidadeId(ctxUserForUnits));
+    if (!canScopeAllUnits && !userUnitId) {
+      try {
+        const resolved = await resolveUnidadeIdForNonScopedUser({ ctxUser: ctxUserForUnits, canQueryDb });
+        if (resolved) {
+          ctxUserForUnits = { ...(ctxUserForUnits || {}), unidade_id: resolved };
+          userUnitId = resolved;
+        }
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+    }
+
+    const unidadesOptions = await listarUnidadesParaUsuario(ctxUserForUnits);
+    const docUnitId = normalizeObjectIdString(doc?.unidade_id?._id || doc?.unidade_id);
+    let selectedUnidadeId = docUnitId;
+    if (!selectedUnidadeId) {
+      if (!canScopeAllUnits) selectedUnidadeId = userUnitId || normalizeObjectIdString(unidadesOptions?.[0]?._id);
+      else selectedUnidadeId = userUnitId || normalizeObjectIdString(unidadesOptions?.[0]?._id);
+    }
+    if (!canScopeAllUnits) selectedUnidadeId = selectedUnidadeId || userUnitId || normalizeObjectIdString(unidadesOptions?.[0]?._id);
+
+    // Master/Admin pode escolher via querystring (antes do primeiro save)
+    try {
+      if (canScopeAllUnits && qUnidadeIdRaw) {
+        const qId = normalizeObjectIdString(qUnidadeIdRaw);
+        const allowed = new Set((unidadesOptions || []).map(u => normalizeObjectIdString(u?._id)).filter(Boolean));
+        if (qId && allowed.has(qId)) selectedUnidadeId = qId;
+      }
+    } catch { /* noop */ }
+
+    let available = { dirigentes: [], colaboradores: [], condominos: [] };
+    try {
+      available = await buildAssembleiaAvailableRecipients({ selectedUnidadeId, canQueryDb });
+    } catch (err) {
+      if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+      throw err;
+    }
+
+    const errors = {};
+
+    // UX: na aba Publicação, se a data não estiver salva ainda, assumimos hoje como padrão.
+    // Isso evita “pendência” exibida mesmo quando a UI já preenche a data automaticamente.
+    const docForView = doc ? { ...(doc || {}) } : null;
+    try {
+      if (tab === 'publicacao' && docForView && !docForView.dataPublicacao) {
+        const now = new Date();
+        docForView.dataPublicacao = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      }
+    } catch { /* noop */ }
+
+    let publishErrors = docForView ? validateAssembleiaForPublish(docForView) : { _global: 'Salve o rascunho antes de publicar.' };
+
+    // Hardening: token do edital precisa existir e estar VALIDO no DB (anti-bypass; sem depender do front).
+    try {
+      const tok = String(doc?.editalDocumentoToken || '').trim().toLowerCase();
+      if (tok && canQueryDb) {
+        const vdoc = await obterDocumentoValidadoPorToken(tok);
+        const st = String(vdoc?.status || '').trim().toUpperCase();
+        if (!vdoc) publishErrors.editalDocumentoToken = 'Não foi possível validar o edital. Envie novamente o edital assinado.';
+        else if (st !== 'VALIDO') {
+          publishErrors.editalDocumentoToken = (st === 'REVOGADO')
+            ? 'O edital enviado não pode ser usado. Envie novamente o edital assinado.'
+            : (st === 'SUBSTITUIDO')
+              ? 'Existe uma versão mais recente do edital. Envie a versão atual assinada.'
+              : 'Não foi possível validar o edital. Envie novamente o edital assinado.';
+        }
+      }
+    } catch { /* best-effort */ }
+
+    const canPublish = docForView && Object.keys(publishErrors).length === 0;
+
+    return res.render('condominios/assembleias/nova_assembleia_index', {
+      moduleLabel: 'Gestão de Condomínios',
+      user: ctxUser,
+      tab,
+      id: docForView ? String(docForView._id) : '',
+      form: docForView || {},
+      unidadesOptions,
+      selectedUnidadeId: selectedUnidadeId || '',
+      available,
+      errors,
+      publishErrors,
+      canPublish,
+      showPublishErrors: false
+    });
+  } catch (e) {
+    return next(e);
+  }
+});
+
+// API: listar possíveis responsáveis (Dirigentes/Colaboradores/Condôminos)
+app.get('/assembleias/api/responsaveis', async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+
+    const ok = await ensureMongoReady();
+    if (!ok) return res.json([]);
+
+    const canScopeAllUnits = userCanScopeAll(ctxUser);
+    const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+
+    const tipoRaw = String(req.query.tipo || '').trim().toLowerCase();
+    const tipo = (tipoRaw === 'colaboradores' || tipoRaw === 'condominos' || tipoRaw === 'dirigentes') ? tipoRaw : 'dirigentes';
+
+    let unidadeId = normalizeObjectIdString(String(req.query.unidade_id || req.query.unidade || '').trim());
+    if (!canScopeAllUnits) {
+      unidadeId = normalizeObjectIdString(getUserUnidadeId(ctxUser));
+      if (!unidadeId) {
+        try {
+          const resolved = await resolveUnidadeIdForNonScopedUser({ ctxUser, canQueryDb });
+          if (resolved) unidadeId = normalizeObjectIdString(resolved);
+        } catch { /* noop */ }
+      }
+    } else if (unidadeId) {
+      // Master/Admin: valida se a unidade está na lista acessível
+      try {
+        const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+        const allowed = new Set((unidadesOptions || []).map(u => normalizeObjectIdString(u?._id)).filter(Boolean));
+        if (!allowed.has(unidadeId)) return res.status(403).json({ error: 'unidade_id não permitida' });
+      } catch {
+        return res.status(403).json({ error: 'unidade_id não permitida' });
+      }
+    }
+
+    if (!unidadeId) return res.status(400).json({ error: 'unidade_id é obrigatório' });
+
+    const qRaw = String(req.query.q || '').trim();
+    const qNorm = qRaw
+      ? (qRaw.normalize ? qRaw.normalize('NFD').replace(/\p{Diacritic}/gu, '') : qRaw)
+          .toLowerCase()
+          .trim()
+      : '';
+
+    let limit = parseInt(String(req.query.limit || '120'), 10);
+    if (!Number.isFinite(limit) || limit < 1) limit = 120;
+    limit = Math.min(limit, 400);
+
+    const available = await buildAssembleiaAvailableRecipients({ selectedUnidadeId: unidadeId, canQueryDb });
+    let items = Array.isArray(available?.[tipo]) ? available[tipo] : [];
+
+    if (qNorm) {
+      const norm = (v) => {
+        const s = String(v || '').trim();
+        if (!s) return '';
+        try { return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase(); } catch { return s.toLowerCase(); }
+      };
+      items = items.filter((p) => {
+        const nome = norm(p?.nome);
+        const email = norm(p?.email);
+        const sub = norm(p?.subtitulo);
+        const subs = Array.isArray(p?.subtitulos) ? p.subtitulos.map(norm).join(' ') : '';
+        return (
+          (nome && nome.includes(qNorm)) ||
+          (email && email.includes(qNorm)) ||
+          (sub && sub.includes(qNorm)) ||
+          (subs && subs.includes(qNorm))
+        );
+      });
+    }
+
+    items = items.slice(0, limit);
+    return res.json(items);
+  } catch (e) {
+    return next(e);
+  }
+});
+
+// API: gerar número manual (sem repetição) para o campo Número
+app.get('/assembleias/api/numero/gerar', async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    const ok = await ensureMongoReady();
+    if (!ok) {
+      const numero = generateAssembleiaNumero();
+      return res.json({ numero, offline: true });
+    }
+
+    const canScopeAllUnits = userCanScopeAll(ctxUser);
+    const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+
+    let unidadeId = normalizeObjectIdString(String(req.query.unidade_id || req.query.unidade || '').trim());
+    if (!canScopeAllUnits) {
+      unidadeId = normalizeObjectIdString(getUserUnidadeId(ctxUser));
+    } else if (unidadeId) {
+      // Master/Admin: valida se a unidade está na lista acessível
+      try {
+        const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+        const allowed = new Set((unidadesOptions || []).map(u => normalizeObjectIdString(u?._id)).filter(Boolean));
+        if (!allowed.has(unidadeId)) unidadeId = '';
+      } catch { /* noop */ }
+    }
+
+    const numero = await generateUniqueAssembleiaNumero({ unidadeId, canQueryDb });
+    return res.json({ numero });
+  } catch (e) {
+    return next(e);
+  }
+});
+
+app.post('/assembleias/nova/salvar', ...ASSEMBLEIA_BODY_PARSERS, async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    const body = req.body || {};
+    const tab = normalizeAssembleiaTab(body.tab || req.query.tab);
+    const nav = String(body.nav || 'stay'); // stay|prev|next
+    const id = String(body.id || req.query.id || '').trim();
+    const ok = await ensureMongoReady();
+    if (!ok) return respondDbOffline(res, req);
+
+    let doc = null;
+    if (id && mongoose.isValidObjectId(id)) {
+      try {
+        doc = await CondAssembleia.findById(id);
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+    }
+    if (!doc) {
+      doc = new CondAssembleia({ status: 'rascunho' });
+      doc.audit = doc.audit || {};
+      doc.audit.createdBy = getAuditUser(ctxUser);
+    }
+
+    applyBodyToAssembleiaDoc(doc, body);
+
+    // Unidade (aba Dados): Master/Admin escolhe; Diretor/User força unidade do usuário
+    try {
+      const canScopeAllUnits = userCanScopeAll(ctxUser);
+      let userUnitId = normalizeObjectIdString(getUserUnidadeId(ctxUser));
+      if (!canScopeAllUnits) {
+        const submittedId = normalizeObjectIdString(body.unidade_id);
+
+        // Se ctxUser não tem unidade_id, tenta resolver pelo cadastro.
+        let ctxUserForUnits = ctxUser;
+        if (!userUnitId) {
+          const resolved = await resolveUnidadeIdForNonScopedUser({ ctxUser: ctxUserForUnits, canQueryDb: mongoose.connection.readyState === 1 });
+          if (resolved) {
+            ctxUserForUnits = { ...(ctxUserForUnits || {}), unidade_id: resolved };
+            userUnitId = resolved;
+          }
+        }
+
+        const unidadesOptions = await listarUnidadesParaUsuario(ctxUserForUnits);
+        const allowedIds = new Set((unidadesOptions || []).map(u => normalizeObjectIdString(u?._id)).filter(Boolean));
+        const forcedId =
+          userUnitId ||
+          (submittedId && allowedIds.has(submittedId) ? submittedId : '') ||
+          Array.from(allowedIds.values())[0] ||
+          '';
+        if (forcedId) doc.unidade_id = new mongoose.Types.ObjectId(forcedId);
+      } else {
+        const bodyUnitId = normalizeObjectIdString(body.unidade_id);
+        if (body.unidade_id !== undefined) {
+          doc.unidade_id = bodyUnitId ? new mongoose.Types.ObjectId(bodyUnitId) : null;
+        } else if (!doc.unidade_id && userUnitId) {
+          doc.unidade_id = new mongoose.Types.ObjectId(userUnitId);
+        }
+      }
+    } catch { /* noop */ }
+
+    // Destinatários (aba Publicação): CSV -> array
+    try {
+      const csv = String(body.selectedPersonIds || '').trim();
+      const arr = csv
+        ? csv.split(',').map(s => String(s || '').trim()).filter(Boolean).slice(0, 500)
+        : [];
+      // Persistir mesmo que o schema não declare explicitamente (mudança mínima sem refatorar model)
+      if (typeof doc.set === 'function') doc.set('selectedPersonIds', arr, { strict: false });
+      else doc.selectedPersonIds = arr;
+      try { if (typeof doc.markModified === 'function') doc.markModified('selectedPersonIds'); } catch { /* noop */ }
+    } catch { /* noop */ }
+
+    // Regras da assembleia (snapshot para auditoria)
+    try {
+      const rawOrigem = String(body.regrasOrigem || '').trim().toUpperCase();
+      const origem = (rawOrigem === 'PERSONALIZADA') ? 'PERSONALIZADA' : ((rawOrigem === 'PADRAO_CONDOMINIO') ? 'PADRAO_CONDOMINIO' : '');
+      const rawJson = String(body.regrasSnapshotJson || '').trim();
+
+      // Só mexe se o front enviou algum sinal de regras (evita sobrescrever em saves de outras abas/fluxos)
+      const shouldHandle = !!origem || !!rawJson;
+
+      if (shouldHandle) {
+        let snapshot = null;
+        if (rawJson) {
+          try { snapshot = JSON.parse(rawJson); } catch { snapshot = null; }
+        }
+
+        // Se está usando padrão e não veio snapshot, tenta buscar o atual do condomínio.
+        if (!snapshot && origem === 'PADRAO_CONDOMINIO') {
+          try {
+            const unidadeId = normalizeObjectIdString(doc?.unidade_id?._id || doc?.unidade_id || body.unidade_id);
+            const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+            if (unidadeId && canQueryDb) {
+              const s = await CondAssembleiaSettings.findOne({ unidade_id: unidadeId }).select('regras').lean();
+              if (s && s.regras) snapshot = s.regras;
+            }
+          } catch { /* fallback para default */ }
+        }
+
+        const regras = normalizeRegrasAssembleia(snapshot || getDefaultRegrasAssembleiaRecommended());
+
+        if (typeof doc.set === 'function') {
+          doc.set('regras', regras, { strict: false });
+          doc.set('regrasOrigem', origem || 'PADRAO_CONDOMINIO', { strict: false });
+        } else {
+          doc.regras = regras;
+          doc.regrasOrigem = origem || 'PADRAO_CONDOMINIO';
+        }
+        try { if (typeof doc.markModified === 'function') { doc.markModified('regras'); doc.markModified('regrasOrigem'); } } catch { /* noop */ }
+      }
+    } catch { /* noop */ }
+
+    doc.audit = doc.audit || {};
+    doc.audit.updatedBy = getAuditUser(ctxUser);
+
+    try {
+      await doc.save();
+    } catch (err) {
+      if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+      throw err;
+    }
+
+    const idx = ASSEMBLEIA_TABS.indexOf(tab);
+    let targetTab = tab;
+    if (nav === 'prev') targetTab = ASSEMBLEIA_TABS[Math.max(0, idx - 1)] || 'dados';
+    if (nav === 'next') targetTab = ASSEMBLEIA_TABS[Math.min(ASSEMBLEIA_TABS.length - 1, idx + 1)] || 'publicacao';
+
+    const bp = req.baseUrl || '';
+    // 303 força o client a seguir com GET (evita re-POST em alguns ambientes/proxies)
+    return res.redirect(303, `${bp}/assembleias/nova?id=${String(doc._id)}&tab=${encodeURIComponent(targetTab)}`);
+  } catch (e) {
+    return next(e);
+  }
+});
+
+// Hardening: caso algum client/proxy repita o POST para a tela /assembleias/nova (que é GET),
+// convertemos para GET preservando querystring para evitar 404 no fluxo de "Avançar".
+app.post('/assembleias/nova', (req, res) => {
+  try {
+    const bp = req.baseUrl || '';
+    const raw = String(req.originalUrl || req.url || '');
+    const qIndex = raw.indexOf('?');
+    const qs = qIndex >= 0 ? raw.slice(qIndex) : '';
+    return res.redirect(303, `${bp}/assembleias/nova${qs}`);
+  } catch {
+    return res.redirect(303, '/condominios/assembleias/nova');
+  }
+});
+
+app.post('/assembleias/nova/publicar', ...ASSEMBLEIA_BODY_PARSERS, async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  const wantsJson = String(req.headers['x-wdg-ajax'] || '').trim() === '1'
+    || String(req.headers.accept || '').toLowerCase().includes('application/json');
+  try {
+    const tab = 'publicacao';
+    const body = req.body || {};
+    const id = String(body.id || req.query.id || '').trim();
+    const ok = await ensureMongoReady();
+    if (!ok) {
+      if (wantsJson) return res.status(503).json({ ok: false, error: 'DB indisponível. Tente novamente.' });
+      return respondDbOffline(res, req);
+    }
+
+    const bp = req.baseUrl || '';
+    if (!id || !mongoose.isValidObjectId(id)) {
+      if (wantsJson) return res.status(400).json({ ok: false, error: 'Assembleia inválida.' });
+      return res.redirect(`${bp}/assembleias`);
+    }
+    let doc = null;
+    try {
+      doc = await CondAssembleia.findById(id);
+    } catch (err) {
+      if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+      throw err;
+    }
+    if (!doc) {
+      if (wantsJson) return res.status(404).json({ ok: false, error: 'Assembleia não encontrada.' });
+      return res.redirect(`${bp}/assembleias`);
+    }
+
+    applyBodyToAssembleiaDoc(doc, body);
+
+    // Destinatários: aplica/atualiza no ato de convocar (sem exigir que o usuário tenha clicado em "Salvar" antes).
+    try {
+      let arr = [];
+      if (Array.isArray(body.selectedPersonIds)) {
+        arr = body.selectedPersonIds.map(s => String(s || '').trim()).filter(Boolean);
+      } else {
+        const csv = String(body.selectedPersonIds || '').trim();
+        arr = csv ? csv.split(',').map(s => String(s || '').trim()).filter(Boolean) : [];
+      }
+      arr = arr.slice(0, 500);
+      if (typeof doc.set === 'function') doc.set('selectedPersonIds', arr, { strict: false });
+      else doc.selectedPersonIds = arr;
+      try { if (typeof doc.markModified === 'function') doc.markModified('selectedPersonIds'); } catch { /* noop */ }
+    } catch { /* noop */ }
+
+    // Entrega interna (apenas Caixa de Mensagens) + data de emissão
+    const parseDateYmdOrNow = (raw) => {
+      const s = String(raw || '').trim();
+      const now = new Date();
+      if (!s) return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const d = new Date(`${s}T00:00:00`);
+        if (!Number.isNaN(d.getTime())) return d;
+      }
+      const d = new Date(s);
+      if (!Number.isNaN(d.getTime())) return d;
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    };
+    const dataEmissao = parseDateYmdOrNow(body.dataEmissao ?? body.dataPublicacao);
+
+    const entregaMensagem = true;
+    const publicarComunicado = false;
+
+    try {
+      if (typeof doc.set === 'function') {
+        doc.set('entrega', { mensagem: entregaMensagem, comunicado: publicarComunicado }, { strict: false });
+        doc.set('dataEmissao', dataEmissao, { strict: false });
+
+        // Compatibilidade com o template atual (publicacao.ejs)
+        doc.set('enviarEmail', entregaMensagem, { strict: false });
+        doc.set('publicarPortal', publicarComunicado, { strict: false });
+        doc.set('dataPublicacao', dataEmissao, { strict: false });
+      } else {
+        doc.entrega = { mensagem: entregaMensagem, comunicado: publicarComunicado };
+        doc.dataEmissao = dataEmissao;
+        doc.enviarEmail = entregaMensagem;
+        doc.publicarPortal = publicarComunicado;
+        doc.dataPublicacao = dataEmissao;
+      }
+      try {
+        if (typeof doc.markModified === 'function') {
+          doc.markModified('entrega');
+          doc.markModified('dataEmissao');
+          doc.markModified('dataPublicacao');
+        }
+      } catch { /* noop */ }
+    } catch { /* noop */ }
+
+    doc.audit = doc.audit || {};
+    doc.audit.updatedBy = getAuditUser(ctxUser);
+
+    const errors = validateAssembleiaForPublish(doc);
+
+    // Convocação exige destinatários selecionados.
+    try {
+      const raw = (doc && typeof doc.get === 'function') ? doc.get('selectedPersonIds') : doc?.selectedPersonIds;
+      const ids = Array.isArray(raw)
+        ? raw
+        : (typeof raw === 'string'
+          ? String(raw || '').split(',').map(s => String(s || '').trim()).filter(Boolean)
+          : []);
+      if (!ids.length) errors.selectedPersonIds = 'Selecione ao menos um destinatário antes de convocar.';
+    } catch { /* noop */ }
+
+    // Hardening: valida token no DB e status do documento (anti-bypass via POST manual).
+    let vdocForAttach = null;
+    try {
+      const tok = String(doc?.editalDocumentoToken || '').trim().toLowerCase();
+      if (tok) {
+        const vdoc = await obterDocumentoValidadoPorToken(tok);
+        vdocForAttach = vdoc || null;
+        const st = String(vdoc?.status || '').trim().toUpperCase();
+        if (!vdoc) errors.editalDocumentoToken = 'Certificação não encontrada. Envie o PDF assinado novamente.';
+        else if (st !== 'VALIDO') {
+          errors.editalDocumentoToken = (st === 'REVOGADO')
+            ? 'Certificação revogada. Envie o PDF assinado novamente.'
+            : (st === 'SUBSTITUIDO')
+              ? 'Certificação substituída. Envie a versão atual do PDF assinado.'
+              : 'Certificação inválida. Envie o PDF assinado novamente.';
+        }
+      }
+    } catch { /* best-effort */ }
+
+    const canPublish = Object.keys(errors).length === 0;
+    if (!canPublish) {
+      // Persistir opções da aba Publicação mesmo com erro de validação
+      try {
+        await doc.save();
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+
+      if (wantsJson) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Há pendências para convocar.',
+          publishErrors: errors,
+          debug: {
+            contentType: String(req.headers['content-type'] || ''),
+            receivedSelectedPersonIds: body.selectedPersonIds,
+            receivedSelectedPersonIdsType: Array.isArray(body.selectedPersonIds) ? 'array' : typeof body.selectedPersonIds,
+            docSelectedPersonIdsCount: (() => {
+              try {
+                const raw = (doc && typeof doc.get === 'function') ? doc.get('selectedPersonIds') : doc?.selectedPersonIds;
+                if (Array.isArray(raw)) return raw.length;
+                if (typeof raw === 'string') {
+                  const arr = String(raw || '').split(',').map(s => String(s || '').trim()).filter(Boolean);
+                  return arr.length;
+                }
+                return null;
+              } catch {
+                return null;
+              }
+            })()
+          }
+        });
+      }
+
+      const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+      const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+      const selectedUnidadeId = normalizeObjectIdString(doc?.unidade_id?._id || doc?.unidade_id) || normalizeObjectIdString(getUserUnidadeId(ctxUser));
+      let available = { dirigentes: [], colaboradores: [], condominos: [] };
+      try {
+        available = await buildAssembleiaAvailableRecipients({ selectedUnidadeId, canQueryDb });
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+      // Renderiza a aba de publicação com os erros
+      return res.status(400).render('condominios/assembleias/nova_assembleia_index', {
+        moduleLabel: 'Gestão de Condomínios',
+        user: ctxUser,
+        tab,
+        id: String(doc._id),
+        form: doc.toObject ? doc.toObject() : doc,
+        unidadesOptions,
+        selectedUnidadeId: selectedUnidadeId || '',
+        available,
+        errors: {},
+        publishErrors: errors,
+        canPublish: false,
+        showPublishErrors: true
+      });
+    }
+
+    // Envia mensagem formal na Caixa de Mensagens (remetente: Sistema).
+    // IMPORTANTE: respostas para essa "caixa" não são monitoradas.
+    try {
+      const unidadeId = normalizeObjectIdString(doc?.unidade_id?._id || doc?.unidade_id);
+      const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+
+      const available = await buildAssembleiaAvailableRecipients({ selectedUnidadeId: unidadeId, canQueryDb });
+      const all = [...(available?.dirigentes || []), ...(available?.colaboradores || []), ...(available?.condominos || [])];
+      const byId = new Map(all.map(p => [String(p?.id || '').trim(), p]).filter(([k]) => !!k));
+      const aliasToId = new Map();
+      all.forEach((p) => {
+        const pid = String(p?.id || '').trim();
+        const aliases = Array.isArray(p?.aliases) ? p.aliases : [];
+        aliases.forEach((a) => {
+          const key = String(a || '').trim();
+          if (key) aliasToId.set(key, pid);
+        });
+      });
+      const resolveId = (raw) => {
+        const s = String(raw || '').trim();
+        if (!s) return '';
+        if (byId.has(s)) return s;
+        const mapped = aliasToId.get(s);
+        return mapped || s;
+      };
+
+      const selectedIds = (() => {
+        const raw = (doc && typeof doc.get === 'function') ? doc.get('selectedPersonIds') : doc?.selectedPersonIds;
+        if (Array.isArray(raw)) return raw;
+        if (typeof raw === 'string') return String(raw || '').split(',').map(s => String(s || '').trim()).filter(Boolean);
+        return [];
+      })();
+      const to = [];
+      const seen = new Set();
+      for (const sid of selectedIds) {
+        const rid = resolveId(sid);
+        const p = byId.get(rid) || null;
+
+        // Fallback: ids no formato em:<email>
+        const rawEmail = p
+          ? String(p?.email || '').trim()
+          : (String(rid || '').startsWith('em:') ? String(rid).slice(3).trim() : '');
+        const email = String(rawEmail || '').trim().toLowerCase();
+        if (!isEmailish(email)) continue;
+        if (seen.has(email)) continue;
+        seen.add(email);
+
+        const nome = p ? String(p?.nome || '').trim() : '';
+        to.push({ type: 'user', email, nome });
+      }
+
+      if (!to.length) {
+        // Segurança: se não conseguimos resolver e-mails válidos, não convoca.
+        const err = new Error('Nenhum destinatário válido para envio pela Caixa de Mensagens.');
+        err.status = 400;
+        throw err;
+      }
+
+      const fromMailboxId = 'pessoal';
+      const fromMailboxName = 'Sistema';
+      const fromOwner = 'sistema@wdgestor.local';
+      const clientNonce = `assembleia:${String(doc._id)}:convocacao`;
+
+      const fmtDate = (d) => {
+        try { return (d instanceof Date ? d : new Date(d)).toLocaleDateString('pt-BR'); } catch { return ''; }
+      };
+      const fmtTime = (s) => String(s || '').trim();
+
+      const numero = String(doc?.numero || '').trim();
+      const titulo = String(doc?.titulo || '').trim();
+      const modalidade = String(doc?.modalidade || '').trim();
+      const dataAssembleia = doc?.data ? fmtDate(doc.data) : '';
+      const dataEm = doc?.dataPublicacao ? fmtDate(doc.dataPublicacao) : (doc?.dataEmissao ? fmtDate(doc.dataEmissao) : '');
+      const regra = String(doc?.regraConvocacao || '').trim();
+      const local = String(doc?.local || '').trim();
+      const link = String(doc?.link || '').trim();
+
+      const assunto = `Convocação de Assembleia${numero ? ' — ' + numero : ''}${titulo ? ' — ' + titulo : ''}`.slice(0, 140);
+
+      const linhas = [];
+      linhas.push('Prezados(as),');
+      linhas.push('');
+      linhas.push('Por meio desta, comunicamos a CONVOCAÇÃO de assembleia, conforme edital assinado e certificado em anexo.');
+      linhas.push('');
+      if (titulo) linhas.push(`Título: ${titulo}`);
+      if (numero) linhas.push(`Número: ${numero}`);
+      if (dataAssembleia) linhas.push(`Data: ${dataAssembleia}`);
+      if (modalidade) linhas.push(`Modalidade: ${modalidade}`);
+      if (regra) linhas.push(`Regra de convocação: ${regra}`);
+      if (String(doc?.hora1 || '').trim()) linhas.push(`Horário (1ª chamada): ${fmtTime(doc.hora1)}`);
+      if (String(doc?.hora2 || '').trim()) linhas.push(`Horário (2ª chamada): ${fmtTime(doc.hora2)}`);
+      if (String(doc?.horaUnica || '').trim()) linhas.push(`Horário: ${fmtTime(doc.horaUnica)}`);
+      if (local) linhas.push(`Local: ${local}`);
+      if (link) linhas.push(`Link: ${link}`);
+      if (dataEm) linhas.push(`Data de emissão: ${dataEm}`);
+      linhas.push('');
+      linhas.push('Solicitamos a gentileza de ler integralmente o edital e, se necessário, preparar-se para as deliberações pautadas.');
+      linhas.push('');
+      linhas.push('Atenciosamente,');
+      linhas.push('Sistema');
+      linhas.push('');
+      linhas.push('Observação: esta é uma mensagem automática. Respostas para este remetente não são monitoradas.');
+
+      const bodyText = linhas.join('\n').trim();
+
+      const escapeHtml = (value) => {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      };
+
+      // A UI renderiza preferencialmente body_html; então geramos HTML simples a partir
+      // das mesmas linhas, evitando depender de body_text.
+      const bodyHtml = `
+        <div class="wdg-msg-text">${linhas.map(l => escapeHtml(l)).join('<br>')}</div>
+      `.trim();
+
+      const anexos = [];
+      try {
+        const url = String(vdocForAttach?.arquivo?.url || '').trim();
+        const filename = String(vdocForAttach?.arquivo?.filename || '').trim();
+        const mime = String(vdocForAttach?.arquivo?.mime || 'application/pdf').trim();
+        const size = Number(vdocForAttach?.arquivo?.size || 0) || 0;
+        if (url) {
+          anexos.push({
+            nome: filename || `Edital de Convocação${numero ? ' - ' + numero : ''}.pdf`,
+            mime,
+            tamanho: size,
+            url,
+            caminho: ''
+          });
+        }
+      } catch { /* noop */ }
+
+      // Estados por destinatário (Caixa Pessoal)
+      const scopes = new Map();
+      const pushScope = (mailboxId, owner) => {
+        const mb = String(mailboxId || '').trim();
+        const ow = String(owner || '').trim().toLowerCase();
+        if (!mb || !ow) return;
+        scopes.set(`${mb}::${ow}`, { mailboxId: mb, owner: ow });
+      };
+      pushScope(fromMailboxId, fromOwner);
+      to.forEach(m => pushScope('pessoal', String(m?.email || '').trim().toLowerCase()));
+
+      const initialStates = Array.from(scopes.values()).map(s => {
+        const isSender = (String(s.mailboxId) === String(fromMailboxId)) && (String(s.owner || '').toLowerCase() === String(fromOwner).toLowerCase());
+        return {
+          mailbox_id: s.mailboxId,
+          owner: s.owner,
+          lida_em: isSender ? new Date() : null,
+          arquivada_em: null,
+          lixeira_em: null,
+          fixada_em: null,
+          marcadores: []
+        };
+      });
+
+      // Idempotência (anti duplo clique)
+      try {
+        const existing = await CondMsgMessage.findOne({ from_owner: String(fromOwner).toLowerCase(), from_mailbox_id: fromMailboxId, client_nonce: clientNonce })
+          .select('_id')
+          .lean();
+
+        const fillBodyIfEmptyById = async (id) => {
+          try {
+            const _id = String(id || '').trim();
+            if (!_id || !mongoose.isValidObjectId(_id)) return;
+            await CondMsgMessage.updateOne(
+              {
+                _id,
+                $and: [
+                  { $or: [{ body_text: { $exists: false } }, { body_text: '' }] },
+                  { $or: [{ body_html: { $exists: false } }, { body_html: '' }] }
+                ]
+              },
+              { $set: { body_text: bodyText, body_html: bodyHtml } }
+            );
+          } catch { /* noop */ }
+        };
+
+        // Se já existir (ex.: reenvio), garante que o corpo não esteja vazio.
+        if (existing?._id) {
+          await fillBodyIfEmptyById(existing._id);
+        }
+        if (!existing?._id) {
+          let created = null;
+          for (let i = 0; i < 7; i++) {
+            const protocolo = generateMsgProtocolo();
+            try {
+              created = await CondMsgMessage.create({
+                protocolo,
+                ano: Number(String(protocolo).slice(0, 4)) || new Date().getFullYear(),
+                from_mailbox_id: fromMailboxId,
+                from_mailbox_name: fromMailboxName,
+                from_owner: String(fromOwner).trim().toLowerCase(),
+                client_nonce: clientNonce,
+                to,
+                cc: [],
+                assunto,
+                body_html: bodyHtml,
+                body_text: bodyText,
+                assinatura_ativa: false,
+                assinatura_texto: '',
+                anexos,
+                thread_root_id: null,
+                in_reply_to: null,
+                forwarded_from_id: null,
+                acessos: [],
+                states: initialStates,
+                unidade_id: unidadeId ? new mongoose.Types.ObjectId(unidadeId) : null,
+                createdBy: 'Sistema',
+                ativo: true
+              });
+              break;
+            } catch (e) {
+              const isDup = e && (e.code === 11000 || String(e.message || '').includes('duplicate key'));
+              if (isDup) {
+                // corrida do client_nonce: retorna existente no próximo check
+                created = null;
+                continue;
+              }
+              throw e;
+            }
+          }
+
+          // Defesa: caso algum fluxo/legado crie sem corpo, corrige.
+          try { await fillBodyIfEmptyById(created?._id); } catch { /* noop */ }
+
+          if (!created) {
+            // best-effort: se caiu aqui por corrida, ok; caso contrário, falha.
+            const ex2 = await CondMsgMessage.findOne({ from_owner: String(fromOwner).toLowerCase(), from_mailbox_id: fromMailboxId, client_nonce: clientNonce })
+              .select('_id')
+              .lean();
+            if (ex2?._id) {
+              await fillBodyIfEmptyById(ex2._id);
+            }
+            if (!ex2?._id) throw new Error('Falha ao gerar protocolo para mensagem do sistema.');
+          }
+        }
+      } catch (e) {
+        const msg = String(e?.message || '').trim() || 'Falha ao enviar mensagem.';
+        const err = new Error(msg);
+        err.status = 500;
+        throw err;
+      }
+    } catch (e) {
+      // Não marca como convocada se não conseguir enviar a mensagem.
+      const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
+      const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+      const selectedUnidadeId = normalizeObjectIdString(doc?.unidade_id?._id || doc?.unidade_id) || normalizeObjectIdString(getUserUnidadeId(ctxUser));
+      let available = { dirigentes: [], colaboradores: [], condominos: [] };
+      try {
+        available = await buildAssembleiaAvailableRecipients({ selectedUnidadeId, canQueryDb });
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+
+      const st = e && e.status ? Number(e.status) : 500;
+      const msg = (st && st < 500)
+        ? (String(e?.message || '').trim() || 'Não foi possível enviar a convocação. Verifique e tente novamente.')
+        : 'Falha ao enviar a convocação via Caixa de Mensagens. Tente novamente.';
+
+      const publishErrors = { _global: msg };
+      if (wantsJson) {
+        const status = (st && st >= 400 && st < 600) ? st : 500;
+        return res.status(status).json({ ok: false, error: msg });
+      }
+
+      return res.status(500).render('condominios/assembleias/nova_assembleia_index', {
+        moduleLabel: 'Gestão de Condomínios',
+        user: ctxUser,
+        tab,
+        id: String(doc._id),
+        form: doc.toObject ? doc.toObject() : doc,
+        unidadesOptions,
+        selectedUnidadeId: selectedUnidadeId || '',
+        available,
+        errors: {},
+        publishErrors,
+        canPublish: false,
+        showPublishErrors: true
+      });
+    }
+
+    doc.status = 'convocada';
+    try {
+      await doc.save();
+    } catch (err) {
+      if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+      throw err;
+    }
+
+    if (wantsJson) {
+      return res.json({ ok: true, redirect: `${bp}/assembleias` });
+    }
+    return res.redirect(`${bp}/assembleias`);
+  } catch (e) {
+    if (wantsJson) {
+      const st = e && e.status ? Number(e.status) : 500;
+      const status = (st && st >= 400 && st < 600) ? st : 500;
+      const msg = (status && status < 500)
+        ? (String(e?.message || '').trim() || 'Não foi possível enviar a convocação. Verifique e tente novamente.')
+        : 'Falha ao enviar a convocação. Tente novamente.';
+      return res.status(status).json({ ok: false, error: msg });
+    }
+    return next(e);
+  }
+});
+
+// Preview do edital de convocação
+app.get('/assembleias/:id/edital', async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    try {
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } catch { /* noop */ }
+
+    const ok = await ensureMongoReady();
+    if (!ok) return respondDbOffline(res, req);
+
+    const id = String(req.params?.id || '').trim();
+    const bp = req.baseUrl || '';
+    if (!id || !mongoose.isValidObjectId(id)) return res.redirect(`${bp}/assembleias`);
+
+    const printMode = (() => {
+      const v = String(req.query?.print || '').trim().toLowerCase();
+      return v === '1' || v === 'true' || v === 'yes';
+    })();
+
+    let obj = null;
+    try {
+      obj = await CondAssembleia.findById(id).lean();
+    } catch (err) {
+      if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+      throw err;
+    }
+    if (!obj) return res.redirect(`${bp}/assembleias`);
+
+    const unidadeId = (() => {
+      try {
+        const raw = obj?.unidade_id?._id || obj?.unidade_id || obj?.unidadeId || '';
+        const v = String(raw || '').trim();
+        return v && mongoose.isValidObjectId(v) ? v : '';
+      } catch {
+        return '';
+      }
+    })();
+
+    const unidadeLogoUrl = unidadeId ? `${String(bp || '').replace(/\/+$/, '')}/api/unidades/${encodeURIComponent(unidadeId)}/logo` : '';
+
+    const parsePessoaFromResponsavel = (raw) => {
+      const text = String(raw || '').trim();
+      if (!text) return { nome: '', email: '', cargo: '' };
+
+      let email = '';
+      const mEmail = text.match(/<([^>]+)>/);
+      if (mEmail) email = String(mEmail[1] || '').trim();
+
+      const beforeEmail = text.split('<')[0].trim();
+      const beforeCpf = beforeEmail.replace(/\(\s*cpf\s*[^)]+\)/i, '').trim();
+
+      let nome = beforeCpf;
+      let cargo = '';
+      const idx = beforeCpf.indexOf(' - ');
+      if (idx >= 0) {
+        nome = beforeCpf.slice(0, idx).trim();
+        cargo = beforeCpf.slice(idx + 3).trim();
+      }
+
+      return { nome: nome || text, email, cargo };
+    };
+
+    const organizador = parsePessoaFromResponsavel(obj?.responsavel);
+
+    const buildEnderecoLinha = (u) => {
+      const parts = [];
+      const push = (v) => {
+        const s = String(v || '').trim();
+        if (s) parts.push(s);
+      };
+      push(u?.tipoLogradouro);
+      push(u?.logradouro);
+      if (u?.numero) push(String(u.numero).trim());
+      if (u?.complemento) push(String(u.complemento).trim());
+      if (u?.bairro) push(String(u.bairro).trim());
+      const cidadeUf = [String(u?.cidade || '').trim(), String(u?.estado || '').trim()].filter(Boolean).join(' - ');
+      if (cidadeUf) parts.push(cidadeUf);
+      if (u?.cep) parts.push(String(u.cep).trim());
+      return parts.join(', ');
+    };
+
+    let condominio = { nome: '', cnpj: '', endereco: '' };
+    if (unidadeId) {
+      try {
+        const u = await Unidade.findById(unidadeId)
+          .select('nome cnpj endereco tipoLogradouro logradouro numero complemento bairro cep cidade estado')
+          .lean();
+        if (u) {
+          const enderecoLinha = String(u?.endereco || '').trim() || buildEnderecoLinha(u);
+          condominio = {
+            nome: String(u?.nome || '').trim(),
+            cnpj: String(u?.cnpj || '').trim(),
+            endereco: String(enderecoLinha || '').trim()
+          };
+        }
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+    }
+    if (!condominio?.nome) {
+      condominio.nome = String(obj?.unidade_nome || obj?.unidadeNome || obj?.unidade?.nome || obj?.unidade_id?.nome || '').trim();
+    }
+
+    let convocante = null;
+    let convocanteAviso = '';
+    if (unidadeId) {
+      try {
+        let cargoSindico = await CondDirigenciaCargo.findOne({ unidadeId, tipo: 'sindico' }).lean();
+        if (!cargoSindico) {
+          cargoSindico = await CondDirigenciaCargo.findOne({ unidadeId, nome: /s[ií]ndico/i }).lean();
+        }
+
+        const cargoId = String(cargoSindico?._id || '').trim();
+        if (cargoId) {
+          const mandato = await CondDirigenciaMandato.findOne({ unidadeId, cargoId, ativo: true })
+            .populate('usuarioId', 'nome email')
+            .lean();
+          const u = mandato?.usuarioId;
+          const nome = String(u?.nome || '').trim();
+          const email = String(u?.email || '').trim();
+          if (nome || email) {
+            convocante = {
+              nome: nome || email || 'Síndico',
+              email,
+              cargo: String(cargoSindico?.nome || 'Síndico').trim() || 'Síndico'
+            };
+          }
+        }
+      } catch (err) {
+        if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+        throw err;
+      }
+    }
+
+    if (!convocante || !String(convocante?.nome || '').trim()) {
+      if (String(organizador?.nome || '').trim() || String(organizador?.email || '').trim()) {
+        convocante = {
+          nome: String(organizador?.nome || '').trim() || String(organizador?.email || '').trim(),
+          email: String(organizador?.email || '').trim(),
+          cargo: 'Convocante'
+        };
+      } else {
+        convocante = { nome: 'Convocante', email: '', cargo: 'Convocante' };
+      }
+      convocanteAviso = 'Síndico não definido na Dirigência; usando o organizador como convocante.';
+    }
+
+    return res.render('condominios/assembleias/edital_preview', {
+      moduleLabel: 'Gestão de Condomínios',
+      user: ctxUser,
+      basePath: bp,
+      assembleia: obj,
+      condominio,
+      convocante,
+      organizador,
+      convocanteAviso,
+      unidadeLogoUrl,
+      printMode
+    });
+  } catch (e) {
+    try {
+      const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+      if (!isProd && !res.headersSent) {
+        console.error('[condominios][assembleias][edital] erro ao renderizar', e);
+        return res.status(500).send(`Falha ao gerar o edital. ${String(e?.message || e || 'Erro interno')}`);
+      }
+    } catch { /* noop */ }
+    return next(e);
+  }
+});
+
+// Upload do edital assinado externamente (PDF) + emissão de token global verificável
+const editalAssinadoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: Number(process.env.DOCS_MAX_PDF_BYTES || (15 * 1024 * 1024)),
+    files: 1
+  },
+  fileFilter: (_req, file, cb) => {
+    try {
+      const mime = String(file?.mimetype || '').toLowerCase();
+      const name = String(file?.originalname || 'documento.pdf');
+      if (mime && mime !== 'application/pdf') return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'pdf'));
+      if (name && !/\.pdf$/i.test(name)) return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'pdf'));
+      return cb(null, true);
+    } catch {
+      return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'pdf'));
+    }
+  }
+});
+
+app.post('/assembleias/:id/edital/upload-assinado', async (req, res, next) => {
+  const ctxUser = getCtxUser(req);
+  try {
+    const ok = await ensureMongoReady();
+    if (!ok) return respondDbOffline(res, req);
+
+    return editalAssinadoUpload.single('pdf')(req, res, async (err) => {
+      try {
+        if (err) {
+          const msg = (err?.code === 'LIMIT_FILE_SIZE')
+            ? 'Arquivo muito grande. Envie um PDF menor.'
+            : 'Upload inválido. Envie um arquivo PDF.';
+          return res.status(400).json({ success: false, message: msg });
+        }
+
+        const id = String(req.params?.id || '').trim();
+        if (!id || !mongoose.isValidObjectId(id)) {
+          return res.status(400).json({ success: false, message: 'ID inválido.' });
+        }
+
+        const file = req.file;
+        if (!file || !file.buffer) {
+          return res.status(400).json({ success: false, message: 'Envie o PDF no campo "pdf".' });
+        }
+
+        const doc = await CondAssembleia.findById(id);
+        if (!doc) return res.status(404).json({ success: false, message: 'Assembleia não encontrada.' });
+
+        const unidadeId = (() => {
+          try {
+            const raw = doc?.unidade_id?._id || doc?.unidade_id || '';
+            const v = String(raw || '').trim();
+            return v && mongoose.isValidObjectId(v) ? v : '';
+          } catch { return ''; }
+        })();
+
+        const prevToken = String(doc?.editalDocumentoToken || '').trim();
+
+        const emitido = await emitirDocumentoAssinadoExterno({
+          modulo: 'condominios',
+          tipo: 'EDITAL',
+          organizacaoId: unidadeId || null,
+          referencia: {
+            entidade: 'assembleia',
+            entidadeId: id,
+            numero: String(doc?.numero || '').trim() || undefined
+          },
+          titulo: String(doc?.titulo || '').trim() ? `Edital de Convocação — ${String(doc.titulo).trim()}` : 'Edital de Convocação',
+          emitidoEm: new Date(),
+          emitidoPorUserId: (ctxUser?._id || ctxUser?.id || ctxUser?.userId || null),
+          emitidoPorNomeSnapshot: String(ctxUser?.nome || ctxUser?.email || '').trim(),
+          file,
+          meta: {
+            versaoLayout: 'edital_preview',
+            ip: String(req.ip || '').trim(),
+            userAgent: String(req.get('user-agent') || '').trim()
+          }
+        });
+
+        // Preserva histórico do token anterior
+        if (prevToken && prevToken !== emitido.token) {
+          try { await substituirDocumentoValidado(prevToken, emitido.token); } catch { /* best-effort */ }
+        }
+
+        doc.editalDocumentoToken = emitido.token;
+        await doc.save();
+
+        return res.json({
+          success: true,
+          token: emitido.token,
+          verificarUrl: `/verificar/${encodeURIComponent(String(emitido.token || ''))}`,
+          status: String(emitido.status || 'VALIDO'),
+          hashSha256Pdf: String(emitido.hashSha256Pdf || '')
+        });
+      } catch (e) {
+        return next(e);
+      }
+    });
+  } catch (e) {
+    return next(e);
+  }
+});
+
+// Administração > Assembleia (rota removida; manter por compatibilidade)
+app.get('/administracao/assembleias', async (req, res) => {
+  return res.redirect('/administracao/atas');
+});
+
+// Administração > Assembleia (singular)
+app.get('/administracao/assembleia', async (req, res) => {
+  return res.redirect('/administracao/atas');
+});
+
+// Execução de Assembleia (ambiente operacional)
+// URL canônica (menu): /condominios/administracao/assembleia/execucao?id=<assembleiaId>
+app.get('/administracao/assembleia/execucao', async (req, res) => {
+  let ctxUser = getCtxUser(req);
+  try {
+    try {
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+      res.setHeader('CDN-Cache-Control', 'no-store');
+      res.setHeader('X-WDG-Asset-Version', String(res?.locals?.assetVersion || 'dev'));
+    } catch { /* noop */ }
+
+    if (!ctxUser) {
+      const nextUrl = encodeURIComponent(String(req.originalUrl || req.url || '/condominios/administracao/assembleia/execucao'));
+      return res.redirect(`/gestor/login?next=${nextUrl}`);
+    }
+
+    const id = String(
+      req.query.id
+      || req.query.numero
+      || req.query.assembleia_id
+      || req.query.assembleiaId
+      || ''
+    ).trim();
+    if (!id) {
+      return res.render('condominios/assembleias/execution', {
+        moduleLabel: 'Gestão de Condomínios',
+        user: ctxUser,
+        assembleia: null,
+        unidadeId: '',
+        habitacoesDirectory: []
+      });
+    }
+
+    // Aceita também o número (ex: ASM-2026-9964). Se vier algo que não é ObjectId,
+    // tentamos resolver por CondAssembleia.numero e redirecionar para o _id.
+    if (!mongoose.isValidObjectId(id)) {
+      let resolved = null;
+      try {
+        const ok = await ensureMongoReady();
+        if (ok) {
+          const esc = (s = '') => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          resolved = await CondAssembleia.findOne({ numero: new RegExp(`^${esc(id)}$`, 'i') })
+            .select('_id')
+            .lean();
+        }
+      } catch { /* noop */ }
+
+      if (resolved && resolved._id) {
+        return res.redirect(`/condominios/administracao/assembleia/execucao?id=${encodeURIComponent(String(resolved._id))}`);
+      }
+
+      return res.render('condominios/assembleias/execution', {
+        moduleLabel: 'Gestão de Condomínios',
+        user: ctxUser,
+        assembleia: null,
+        unidadeId: '',
+        habitacoesDirectory: [],
+        resolveError: `Assembleia não encontrada para o identificador "${id}". Informe o ID (ObjectId) ou o número (ex: ASM-2026-XXXX).`
+      });
+    }
+
+    // Best-effort: carregar dados mínimos da assembleia (para título/modalidade/link)
+    let assembleia = null;
+    try {
+      const ok = await ensureMongoReady();
+      // Observação: há legados usando campos diferentes para vínculo com condomínio (ex.: unidadeId).
+      if (ok) assembleia = await CondAssembleia.findById(id).select('titulo modalidade local link data status hora1 hora2 horaUnica unidade_id unidadeId unidade').lean();
+    } catch { /* noop */ }
+    if (!assembleia) {
+      // Não bloqueia a UI (página ainda pode carregar e a API pode responder depois)
+      assembleia = { _id: id, titulo: '', modalidade: '', local: '', link: '', data: null, status: '' };
+    }
+
+    let resolvedUnidadeId = '';
+    let habitacoesDirectory = [];
+
+    // Nome do condomínio (Unidade) para exibição em "Dados da assembleia"
+    try {
+      const __normalizeId = (raw) => {
+        try {
+          if (!raw) return '';
+          if (typeof raw === 'string') return raw.trim();
+          if (typeof raw === 'object') {
+            const inner = raw._id || raw.id || raw;
+            return String(inner || '').trim();
+          }
+          return String(raw || '').trim();
+        } catch {
+          return '';
+        }
+      };
+
+      let unidadeId = (() => {
+        const a = assembleia || {};
+        const u = a.unidade;
+        const raw = (a.unidade_id && typeof a.unidade_id === 'object') ? (a.unidade_id._id || a.unidade_id.id || a.unidade_id) : a.unidade_id;
+        const rawAlt = (a.unidadeId && typeof a.unidadeId === 'object') ? (a.unidadeId._id || a.unidadeId.id || a.unidadeId) : a.unidadeId;
+        const direct = __normalizeId(raw || rawAlt || '');
+        if (direct) return direct;
+        if (u && typeof u === 'object') return __normalizeId(u._id || u.id || '');
+        if (u) return __normalizeId(u);
+        return '';
+      })();
+
+      // fallback: quando a assembleia não tem unidade_id, tenta pegar do documento de execução
+      if (!unidadeId) {
+        const execDoc = await CondAssembleiaExecution.findOne({ assembleia_id: id }).select('unidade_id').lean();
+        const fromExec = __normalizeId(execDoc?.unidade_id?._id || execDoc?.unidade_id || '');
+        if (fromExec) unidadeId = fromExec;
+      }
+
+      // fallback seguro: se o usuário não tem escopo global, o contexto dele é o condomínio corrente
+      if (!unidadeId) {
+        try {
+          if (ctxUser && !userCanScopeAll(ctxUser)) {
+            const fromCtx = __normalizeId(ctxUser?.unidade_id?._id || ctxUser?.unidade_id || ctxUser?.unidadeId?._id || ctxUser?.unidadeId || '');
+            if (fromCtx) unidadeId = fromCtx;
+          }
+        } catch { /* noop */ }
+      }
+
+      resolvedUnidadeId = unidadeId;
+
+      if (unidadeId && mongoose.isValidObjectId(unidadeId)) {
+        const u = await Unidade.findById(unidadeId).select('nome razaoSocial codigo').lean();
+        const nome = String(u?.nome || u?.razaoSocial || u?.codigo || '').trim();
+        if (nome) assembleia = { ...assembleia, condominioNome: nome };
+      }
+    } catch { /* noop */ }
+
+    // Diretório de habitações: SEM fetch no front. A lista vem da view, filtrada pelo condomínio.
+    // Importante: se não conseguirmos montar a lista, enviamos [] para desativar mock/fallback.
+    try {
+      const ok = await ensureMongoReady();
+      const unidadeId = String(resolvedUnidadeId || '').trim();
+      if (ok && unidadeId && mongoose.isValidObjectId(unidadeId)) {
+        const unitObjId = new mongoose.Types.ObjectId(unidadeId);
+        const habDocs = await CondHabitacao.find({ unidade_id: unitObjId, ativa: { $ne: false } })
+          .select('_id unidade_id bloco_id andar_id numero tipo fracao_ideal descricao proprietario_id')
+          .populate({ path: 'bloco_id', select: 'nome', options: { lean: true } })
+          .populate({ path: 'andar_id', select: 'nome', options: { lean: true } })
+          .limit(6000)
+          .lean();
+
+        const habIds = (habDocs || []).map(h => h?._id).filter(Boolean);
+
+        const moradoresDocs = habIds.length
+          ? await CondMorador.find({ habitacao_id: { $in: habIds }, ativo: { $ne: false } })
+            .select('_id nome habitacao_id email responsavel_email usuario_id cond_usuario_id')
+            .limit(20000)
+            .lean()
+          : [];
+
+        const moradoresByHab = new Map();
+        (moradoresDocs || []).forEach((m) => {
+          const hid = m?.habitacao_id ? String(m.habitacao_id) : '';
+          if (!hid) return;
+          if (!moradoresByHab.has(hid)) moradoresByHab.set(hid, []);
+          const nome = String(m?.nome || '').trim();
+          if (!nome) return;
+
+          const email = String(m?.email || m?.responsavel_email || '').trim();
+          const uid = (() => {
+            try {
+              const v = m?.usuario_id;
+              if (!v) return '';
+              if (typeof v === 'object') return String(v._id || v.id || v || '').trim();
+              return String(v || '').trim();
+            } catch { return ''; }
+          })();
+          const cuid = (() => {
+            try {
+              const v = m?.cond_usuario_id;
+              if (!v) return '';
+              if (typeof v === 'object') return String(v._id || v.id || v || '').trim();
+              return String(v || '').trim();
+            } catch { return ''; }
+          })();
+
+          // Importante: URL RELATIVA (sem slash inicial) para o front prefixar com /condominios.
+          // O JS também tem fallback por e-mail (alt-src) se a foto falhar.
+          const foto = cuid
+            ? `api/usuarios/foto?id=${encodeURIComponent(cuid)}`
+            : (uid
+              ? `api/usuarios/foto?id=${encodeURIComponent(uid)}`
+              : (email
+                ? `api/usuarios/foto?email=${encodeURIComponent(String(email).toLowerCase().trim())}`
+                : ''));
+
+          moradoresByHab.get(hid).push({ id: String(m?._id || ''), nome, email, foto });
+        });
+
+        const propIds = Array.from(new Set((habDocs || [])
+          .map(h => h?.proprietario_id)
+          .filter(Boolean)
+          .map(v => String(v))
+          .filter(Boolean)));
+
+        const propDocs = propIds.length
+          ? await CondProprietario.find({ _id: { $in: propIds }, ativo: { $ne: false } })
+            .select('_id nome')
+            .limit(6000)
+            .lean()
+          : [];
+
+        const propById = new Map((propDocs || []).map((p) => [String(p?._id || ''), p]));
+
+        const condNome = String(assembleia?.condominioNome || '').trim();
+        const buildLabel = ({ blocoNome, andarNome, tipo, numero, descricao }) => {
+          const parts = [];
+          const b = String(blocoNome || '').trim();
+          const a = String(andarNome || '').trim();
+          const t = String(tipo || '').trim();
+          const n = String(numero || '').trim();
+          const d = String(descricao || '').trim();
+          if (b) parts.push(/^bloco\b/i.test(b) ? b : `Bloco ${b}`);
+          if (a) parts.push(a);
+          if (t) parts.push(n ? `${t} ${n}` : t);
+          else if (n) parts.push(n);
+          if (!parts.length && d) parts.push(d);
+          return parts.join(' - ').trim();
+        };
+
+        habitacoesDirectory = (habDocs || [])
+          .map((h) => {
+            const id = h?._id ? String(h._id) : '';
+            if (!id) return null;
+
+            const blocoNome = String(h?.bloco_id?.nome || '').trim();
+            const andarNome = String(h?.andar_id?.nome || '').trim();
+            const tipo = String(h?.tipo || '').trim();
+            const numero = String(h?.numero || '').trim();
+            const descricao = String(h?.descricao || '').trim();
+
+            let fr = h?.fracao_ideal;
+            fr = (fr == null || fr === '') ? null : Number(fr);
+            // `fracao_ideal` na Habitação é armazenada como percentual (0..100).
+            // Mantemos também o percentual original para exibição (sem “cálculo” no campo).
+            const fr01 = Number.isFinite(fr) ? (fr / 100) : null;
+
+            const label = buildLabel({ blocoNome, andarNome, tipo, numero, descricao }) || `Habitação ${id}`;
+
+            const propId = h?.proprietario_id ? String(h.proprietario_id) : '';
+            const propDoc = propId ? propById.get(propId) : null;
+            const proprietarios = (propDoc && String(propDoc?.nome || '').trim())
+              ? [{ id: String(propDoc._id), nome: String(propDoc.nome).trim() }]
+              : [];
+
+            const moradores = moradoresByHab.get(id) || [];
+
+            return {
+              id,
+              label,
+              // Para cálculos internos (quórum etc.)
+              fracaoIdeal: fr01,
+              // Para exibição fiel ao cadastro (ex.: 0,5% / 0,2%)
+              fracaoIdealPercent: Number.isFinite(fr) ? fr : null,
+              // Campos para o formatter do picker (assembleia-execution.js)
+              blocoNome,
+              andarNome,
+              tipo,
+              numero,
+              descricao,
+              unidade_id: unidadeId,
+              condominioNome: condNome,
+              proprietarios,
+              moradores
+            };
+          })
+          .filter(Boolean);
+      }
+    } catch { /* noop */ }
+
+    return res.render('condominios/assembleias/execution', {
+      moduleLabel: 'Gestão de Condomínios',
+      user: ctxUser,
+      assembleia,
+      habitacoesDirectory,
+      unidadeId: String(resolvedUnidadeId || '').trim()
+    });
+  } catch (e) {
+    console.error('[condominios][ui][assembleia-execucao] erro:', e);
+    return res.status(500).type('text/plain; charset=utf-8').send('Falha ao carregar Execução da Assembleia.');
+  }
+});
+
+// Atalho: /condominios/assembleias/:id/execucao -> canônica
+app.get('/assembleias/:id/execucao', async (req, res) => {
+  try {
+    const id = String(req.params?.id || '').trim();
+    return res.redirect(`/condominios/administracao/assembleia/execucao?id=${encodeURIComponent(id)}`);
+  } catch {
+    return res.redirect('/condominios/assembleias');
+  }
+});
+
+// Administração > Dirigência
+app.get('/administracao/dirigencia', async (req, res) => {
+  const ctxUser = getCtxUser(req);
+  // IMPORTANTE (Vercel/CDN): esta página injeta URLs versionadas de JS/CSS.
+  // Se o HTML for cacheado, o cliente pode continuar referenciando assets antigos
+  // e/ou flags de permissão desatualizadas (ex.: data-can-edit).
+  try {
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('CDN-Cache-Control', 'no-store');
+    res.setHeader('X-WDG-Asset-Version', String(res?.locals?.assetVersion || 'dev'));
+  } catch { /* noop */ }
+  const isDiretorByUnit = await (async () => {
+    try {
+      if (!ctxUser) return false;
+      if (userCanScopeAll(ctxUser)) return true;
+      const userId = (() => {
+        const v = ctxUser?._id || ctxUser?.id || ctxUser?.userId || '';
+        if (!v) return '';
+        if (typeof v === 'object') return String(v._id || v.id || '').trim();
+        return String(v).trim();
+      })();
+      if (!userId || !mongoose.isValidObjectId(userId)) return false;
+      const exists = await Unidade.exists({ diretor_usuario_id: new mongoose.Types.ObjectId(userId) });
+      return !!exists;
+    } catch {
+      return false;
+    }
+  })();
+
+  return res.render('dirigencia', {
     moduleLabel: 'Gestão de Condomínios',
-    user: ctxUser
+    user: ctxUser,
+    canEditDirigencia: !!(userCanScopeAll(ctxUser) || userIsDiretor(ctxUser) || isDiretorByUnit)
   });
 });
 
@@ -19283,9 +23183,20 @@ function getCtxUser(req) {
       // Header explícito (proxy/cliente do Portal)
       if (String(hdr('x-wdg-portal') || '').trim() === '1') return true;
 
-      // Heurística segura: chamadas iniciadas em páginas do Portal devem ter Referer apontando para /portal-morador.
-      const ref = String(hdr('referer') || '').toLowerCase();
-      if (ref.includes('/portal-morador')) return true;
+      // Heurística segura: chamadas iniciadas em páginas do Portal devem ter Referer COM PATH apontando para /portal-morador.
+      // (Evita falso positivo quando "/portal-morador" aparece apenas em querystring.)
+      const refRaw = String(hdr('referer') || '').trim();
+      if (refRaw) {
+        try {
+          const u = new URL(refRaw);
+          const p = String(u?.pathname || '').toLowerCase();
+          if (p === '/portal-morador' || p.startsWith('/portal-morador/')) return true;
+        } catch {
+          // Fallback: procurar o path após o host, não na query
+          const safe = /(^|:\/\/[^\/]+)\/portal-morador(\/|$)/i;
+          if (safe.test(refRaw)) return true;
+        }
+      }
 
       return false;
     } catch {
@@ -19397,17 +23308,100 @@ function getCtxUser(req) {
 }
 
 function userCanScopeAll(user) {
-  return !!(user && (user.isMaster || user.role === 'master' || user.role === 'admin'));
-}
-
-function userIsDiretor(user) {
   try {
-    const r = String(user?.role || user?.perfil || '').trim().toLowerCase();
-    return r === 'diretor' || r === 'director';
+    const role = String(user?.role || '').trim().toLowerCase();
+    return !!(user && (user.isMaster || role === 'master' || role === 'admin'));
   } catch {
     return false;
   }
 }
+
+function userIsDiretor(user) {
+  try {
+    const candidates = [];
+    const push = (v) => {
+      const s = String(v || '').trim().toLowerCase();
+      if (s) candidates.push(s);
+    };
+
+    // Campos comuns
+    push(user?.role);
+    push(user?.perfil);
+    push(user?.nivel);
+    push(user?.nivel_acesso);
+    push(user?.nivelAcesso);
+    push(user?.nivel_de_acesso);
+    push(user?.nivelDeAcesso);
+    push(user?.acesso);
+    push(user?.acesso_nivel);
+    push(user?.acessoNivel);
+    push(user?.tipo_acesso);
+    push(user?.tipoAcesso);
+    push(user?.tipo);
+    push(user?.roleName);
+    push(user?.perfilNome);
+    push(user?.perfil_nome);
+
+    // Arrays comuns
+    const arrs = [user?.perfis, user?.permissoes, user?.perms, user?.roles];
+    for (const a of arrs) {
+      if (!Array.isArray(a)) continue;
+      for (const it of a) push(it);
+    }
+
+    // Alguns contextos trazem perms como objeto
+    if (user?.perms && typeof user.perms === 'object' && !Array.isArray(user.perms)) {
+      for (const [k, v] of Object.entries(user.perms)) {
+        if (v === true) push(k);
+      }
+    }
+
+    // Fallback ultra-robusto: varrer strings/arrays de nível 1 do ctxUser.
+    // (Evita depender de um nome de campo específico para "nível de acesso".)
+    try {
+      if (user && typeof user === 'object') {
+        for (const v of Object.values(user)) {
+          if (typeof v === 'string') push(v);
+          else if (Array.isArray(v)) v.forEach(it => push(it));
+        }
+      }
+    } catch { /* noop */ }
+
+    return candidates.some(s => s === 'diretor' || s === 'director' || s.includes('diretor') || s.includes('director'));
+  } catch {
+    return false;
+  }
+}
+
+// Diagnóstico (sem PII) para validar permissões em runtime.
+app.get('/api/dirigencia/_debug/me', async (req, res) => {
+  try {
+    try { res.setHeader('Cache-Control', 'no-store'); } catch { /* noop */ }
+    const ctxUser = getCtxUser(req);
+    if (!ctxUser) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+    const unitId = String(getUserUnidadeId(ctxUser) || '').trim();
+    const targetUnitId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || unitId || '').trim();
+    const canEditForTarget = targetUnitId && mongoose.isValidObjectId(targetUnitId)
+      ? await userCanEditDirigenciaForUnidade(ctxUser, targetUnitId)
+      : false;
+    const snapshot = {
+      role: String(ctxUser?.role || ''),
+      perfil: String(ctxUser?.perfil || ''),
+      nivel: String(ctxUser?.nivel || ''),
+      nivel_acesso: String(ctxUser?.nivel_acesso || ''),
+      nivelAcesso: String(ctxUser?.nivelAcesso || ''),
+      unidadeId: unitId,
+      targetUnidadeId: targetUnitId,
+      isScopeAll: userCanScopeAll(ctxUser),
+      isDiretor: userIsDiretor(ctxUser),
+      canEditDirigenciaForUnidade: !!canEditForTarget
+    };
+    return res.json({ success: true, data: snapshot });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: 'Falha no diagnóstico' });
+  }
+});
 
 function userCanMsgAdminForUnidade(user, unidadeId) {
   try {
@@ -19421,18 +23415,6 @@ function userCanMsgAdminForUnidade(user, unidadeId) {
     return uid === target;
   } catch {
     return false;
-  }
-}
-
-function getUserUnidadeId(user) {
-  try {
-    if (!user) return '';
-    const u = user.unidade_id;
-    const cand = u && typeof u === 'object' ? (u._id || u.id || '') : (u || '');
-    const alt = user.unidadeId || user.unidade_principal_id || user.unidadePrincipalId || '';
-    return String(cand || alt || '').trim();
-  } catch {
-    return '';
   }
 }
 

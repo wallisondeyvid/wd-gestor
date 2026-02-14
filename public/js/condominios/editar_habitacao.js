@@ -1,6 +1,174 @@
 (function(){
   const basePath = (document.body.getAttribute('data-base-path') || '/condominios').replace(/\/$/, '');
 
+  const byId = (id) => document.getElementById(id);
+
+  // Unidades (para filtro e logo)
+  let unidades = [];
+  try{
+    unidades = JSON.parse((byId('unidadesOptionsData') || { textContent: '[]' }).textContent || '[]');
+  }catch(_){ unidades = []; }
+
+  const unidadeTop = byId('unidadeTop');
+  const unidadeTopLogo = byId('unidadeTopLogo');
+  function getSelectedUnitId(){ return unidadeTop ? String(unidadeTop.value || '').trim() : ''; }
+
+  async function ensureUnidadesLoaded(){
+    if(Array.isArray(unidades) && unidades.length) return unidades;
+    const url = `${basePath}/api/unidades?_=${Date.now()}`;
+    const data = await getJson(url);
+    if(Array.isArray(data)) unidades = data;
+    return unidades;
+  }
+
+  function isLikelyObjectId(value){
+    const s = String(value || '').trim();
+    return /^[a-f0-9]{24}$/i.test(s);
+  }
+
+  function optionTextLooksLikeId(opt){
+    if(!opt) return false;
+    const t = String(opt.textContent || '').trim();
+    const v = String(opt.value || '').trim();
+    return !!t && !!v && t === v && isLikelyObjectId(v);
+  }
+
+  function optionTextIsPlaceholder(opt){
+    if(!opt) return false;
+    const t = String(opt.textContent || '').trim().toLowerCase();
+    if(!t) return true;
+    // placeholders usados no EJS quando não resolve o label no server
+    if(t === 'condomínio selecionado') return true;
+    if(t === 'condominio selecionado') return true;
+    if(t === 'condomínio não definido') return true;
+    if(t === 'condominio não definido') return true;
+    if(t === 'selecione...') return true;
+    if(t === 'selecionar...') return true;
+    if(t === '—' || t === '-') return true;
+    return false;
+  }
+
+  function escapeCssValue(value){
+    const raw = String(value || '');
+    if(typeof CSS !== 'undefined' && CSS && typeof CSS.escape === 'function') return CSS.escape(raw);
+    return raw.replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+  }
+
+  async function ensureUnidadeSelectLabel(){
+    if(!unidadeTop) return;
+    const uid = getSelectedUnitId();
+    if(!uid) return;
+    const selector = `option[value="${escapeCssValue(uid)}"]`;
+    const opt = unidadeTop.querySelector(selector) || (unidadeTop.selectedOptions && unidadeTop.selectedOptions[0]);
+    if(!opt) return;
+    // Reescreve o label quando o option está com ObjectId OU placeholder.
+    // (No seu print o texto estava “Condomínio selecionado”, não igual ao value.)
+    if(!isLikelyObjectId(uid)) return;
+    if(!(optionTextLooksLikeId(opt) || optionTextIsPlaceholder(opt))) return;
+
+    await ensureUnidadesLoaded();
+    const u = getUnitById(uid);
+    if(!u) return;
+    const label = formatUnidade(u);
+    if(label) opt.textContent = label;
+  }
+
+  function getUnitById(id){
+    const uid = String(id || '').trim();
+    if(!uid) return null;
+    return (unidades || []).find(u => String(u && u._id) === uid) || null;
+  }
+
+  function pickUnitLogoUrl(u){
+    if(!u) return '';
+    let raw = u.logo || u.logo_url || u.logoUrl || u.logo_unidade || u.logoUnidade || u.headerLogo || u.header_logo || u.logoURL || u.logoUrlUnidade || u.logo_unidade_url || u.logo_url_unidade;
+    raw = (raw == null) ? '' : String(raw).trim();
+    return raw;
+  }
+
+  function buildLogoCandidates(rawUrl, basePathForModule){
+    const bp = String(basePathForModule || '').trim();
+    const u = String(rawUrl || '').trim();
+    if(!u) return [];
+
+    const candidates = [];
+    const isAbs = /^https?:\/\//i.test(u) || u.indexOf('data:') === 0;
+    if(isAbs){
+      candidates.push(u);
+      return candidates;
+    }
+
+    if(bp && u.charAt(0) === '/' && u.indexOf(bp + '/') !== 0){
+      candidates.push(bp + u);
+    }
+    candidates.push(u);
+
+    if(u.charAt(0) === '/'){
+      try{ candidates.push(window.location.origin + u); }catch(_){ }
+      if(bp && u.indexOf(bp + '/') !== 0){
+        try{ candidates.push(window.location.origin + bp + u); }catch(_){ }
+      }
+    }
+
+    const out = [];
+    for(const c of candidates){
+      const s = String(c || '').trim();
+      if(!s) continue;
+      if(out.includes(s)) continue;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function getUnidadeLogoCandidates(unitId){
+    const uid = String(unitId || '').trim();
+    const base = String(basePath || '/condominios').trim() || '/condominios';
+    if(!uid){
+      return ['/images/unidade.png', base + '/images/unidade.png'];
+    }
+
+    const u = getUnitById(uid);
+    const rawLogo = pickUnitLogoUrl(u);
+    const fromList = rawLogo ? buildLogoCandidates(rawLogo, base) : [];
+    const raw = [];
+    for(const item of fromList) raw.push(item);
+
+    raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+
+    raw.push('/images/unidade.png');
+    raw.push(base + '/images/unidade.png');
+
+    const out = [];
+    for(const it of raw){
+      const s2 = String(it || '').trim();
+      if(!s2) continue;
+      if(out.includes(s2)) continue;
+      out.push(s2);
+    }
+    return out;
+  }
+
+  function setImgWithFallback(img, urls){
+    if(!img) return;
+    const list = (urls || []).map(x => String(x || '').trim()).filter(Boolean);
+    if(!list.length) return;
+    let idx = 0;
+    img.onerror = function(){
+      idx++;
+      if(idx >= list.length){ img.onerror = null; return; }
+      img.src = list[idx];
+    };
+    img.src = list[0];
+  }
+
+  function refreshUnitLogo(){
+    if(!unidadeTopLogo) return;
+    const uid = getSelectedUnitId();
+    setImgWithFallback(unidadeTopLogo, getUnidadeLogoCandidates(uid));
+  }
+
   // Elementos do formulário
   const form = document.getElementById('formPesquisaHab');
   const selBloco = document.getElementById('fBloco');
@@ -89,7 +257,22 @@
 
   async function carregarHabitacoes(options = {}){
     const { initialRun = false } = options || {};
-    const url = basePath + '/api/habitacoes/busca';
+    const params = new URLSearchParams();
+    const unidadeId = getSelectedUnitId();
+
+    // Regra da tela: sem condomínio selecionado, não exibir nada na lista.
+    // (Evita que o backend retorne “tudo” quando o parâmetro unidade não vem.)
+    if(!unidadeId){
+      fullData = [];
+      atualizarOpcoesFiltro();
+      updateNumberSuggestions('');
+      aplicarFiltros(initialRun);
+      return;
+    }
+
+    params.set('unidade', unidadeId);
+    params.set('_ts', String(Date.now()));
+    const url = basePath + '/api/habitacoes/busca?' + params.toString();
     const data = await getJson(url);
     const arr = Array.isArray(data) ? data : (data && data.items) || [];
     fullData = arr.map(prepararItem);
@@ -205,6 +388,16 @@
   function scheduleReload(){
     clearTimeout(reloadTimer);
     reloadTimer = setTimeout(() => carregarHabitacoes({ initialRun: false }), 200);
+  }
+
+  function onUnidadeChanged(){
+    refreshUnitLogo();
+    ensureUnidadeSelectLabel();
+    if(selBloco) selBloco.value = '';
+    if(selAndar) selAndar.value = '';
+    if(inpNumero) inpNumero.value = '';
+    updateNumberSuggestions('');
+    carregarHabitacoes({ initialRun: false });
   }
 
   function renderTabela(){
@@ -515,9 +708,25 @@
   }
 
   function buildPager(){
+    if(!pager) return;
     pager.innerHTML = '';
     const totalPages = Math.max(1, Math.ceil(state.total / state.size));
-    if(totalPages <= 1) return;
+
+    if(totalPages <= 1){
+      pager.appendChild(mkBtn('«', () => { state.page = 1; renderTabela(); }, true));
+      pager.appendChild(mkBtn('‹', () => { state.page = 1; renderTabela(); }, true));
+      pager.appendChild(mkBtn('1', () => { state.page = 1; renderTabela(); }, true, true));
+      pager.appendChild(mkBtn('›', () => { state.page = 1; renderTabela(); }, true));
+      pager.appendChild(mkBtn('»', () => { state.page = 1; renderTabela(); }, true));
+
+      const infoOnly = document.createElement('div');
+      infoOnly.className = 'w-100 text-center mt-1';
+      infoOnly.style.fontSize = '.7rem';
+      infoOnly.textContent = 'Total: ' + String(state.total || 0) + ' habitação(ões)';
+      pager.appendChild(infoOnly);
+      return;
+    }
+
     const windowSize = 7;
     let start = Math.max(1, state.page - Math.floor(windowSize/2));
     let end = Math.min(totalPages, start + windowSize - 1);
@@ -530,6 +739,12 @@
     frag.appendChild(mkBtn('›', () => { if(state.page<totalPages){ state.page++; renderTabela(); } }, state.page === totalPages));
     frag.appendChild(mkBtn('»', () => { state.page = totalPages; renderTabela(); }, state.page === totalPages));
     pager.appendChild(frag);
+
+    const info = document.createElement('div');
+    info.className = 'w-100 text-center mt-1';
+    info.style.fontSize = '.7rem';
+    info.textContent = 'Total: ' + String(state.total || 0) + ' habitação(ões)';
+    pager.appendChild(info);
   }
   function mkBtn(label, onClick, disabled, active){
     const b = document.createElement('button');
@@ -540,9 +755,15 @@
     return b;
   }
   function applyScrollLimit(){
+    // Habilita rolagem interna apenas quando necessário.
+    // Evita scrollbar “fantasma” com poucos registros e garante cabeçalho sticky.
     if(!tableWrap) return;
-    const count = tbody.querySelectorAll('tr').length;
-    if(count > 4) tableWrap.classList.add('scroll-limit'); else tableWrap.classList.remove('scroll-limit');
+
+    const rowCount = tbody ? tbody.querySelectorAll('tr').length : 0;
+    // Threshold simples e estável: com poucas linhas, a tabela cresce com a página.
+    // Com muitas, limita altura e ativa overflow-y no wrapper.
+    const shouldLimit = rowCount > 6;
+    tableWrap.classList.toggle('scroll-limit', shouldLimit);
   }
 
   function calcMaioridade(dataStr){
@@ -589,6 +810,13 @@
   document.addEventListener('habitacao:lista:refresh', scheduleReload);
   document.addEventListener('habitacao:moradores:atualizado', scheduleReload);
 
+  unidadeTop?.addEventListener('change', onUnidadeChanged);
+
   // Boot
+  if(unidadeTop && unidades.length === 1 && !getSelectedUnitId()){
+    unidadeTop.value = String(unidades[0] && unidades[0]._id ? unidades[0]._id : '');
+  }
+  refreshUnitLogo();
+  ensureUnidadeSelectLabel();
   carregarHabitacoes({ initialRun: true });
 })();

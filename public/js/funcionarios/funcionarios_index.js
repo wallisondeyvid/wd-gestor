@@ -86,14 +86,55 @@ document.addEventListener('submit', async function(ev){
   const matchDelete = action.match(/\/api\/funcionarios\/([^/]+)\/delete$/);
   if(!matchDelete) return; // não é formulário de exclusão
   ev.preventDefault();
-  // Confirmação única centralizada
-  if(!window.__deletingConfirmShown){
-    const ok = confirm('Confirmar exclusão do funcionário?');
-    if(!ok) return; // aborta sem marcar flag
-    window.__deletingConfirmShown = true;
-    setTimeout(()=>{ delete window.__deletingConfirmShown; }, 1500); // libera após pequeno intervalo
+
+  function normalizeText(v){
+    return String(v ?? '').replace(/\s+/g, ' ').trim();
   }
+
+  function askDeleteFuncionarioConfirm(nome){
+    const modalEl = document.getElementById('fDeleteConfirmModal');
+    const nameEl = document.getElementById('fDeleteConfirmName');
+    const yesBtn = document.getElementById('fDeleteConfirmYes');
+    const label = normalizeText(nome) || 'selecionado';
+
+    // fallback: caso a página não tenha modal/Bootstrap
+    if (!modalEl || !yesBtn || !(window.bootstrap && window.bootstrap.Modal)) {
+      return Promise.resolve(window.confirm(`Deseja excluir o funcionário ${label}? Esta exclusão é definitiva e não pode ser desfeita.`));
+    }
+
+    if (nameEl) nameEl.textContent = label;
+
+    return new Promise((resolve) => {
+      let resolved = false;
+      const bs = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true, focus: true });
+
+      const onHidden = () => {
+        if (resolved) return;
+        resolved = true;
+        resolve(false);
+      };
+
+      const onYes = (e) => {
+        try { e?.preventDefault?.(); } catch { /* noop */ }
+        if (resolved) return;
+        resolved = true;
+        resolve(true);
+        try { bs.hide(); } catch { /* noop */ }
+      };
+
+      modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+      yesBtn.addEventListener('click', onYes, { once: true });
+      bs.show();
+    });
+  }
+
   const tr = form.closest('tr');
+  const nome = tr?.querySelector('.col-nome')?.textContent || tr?.querySelector('td')?.textContent || '';
+
+  // Confirmação (modal quando disponível)
+  const ok = await askDeleteFuncionarioConfirm(nome);
+  if(!ok) return;
+
   let deleted=false; let lastStatus=0; let lastBody='';
   try {
     // 1) Tenta DELETE direto (/api/funcionarios/:id)
@@ -1274,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <button type="button" class="btn btn-outline-primary btn-sm btn-icon btn-edit-func" title="Editar" aria-label="Editar">
           <img src="${basePath}/images/editar.png" alt="Editar" class="icon" />
         </button>
-  <form method="POST" action="${basePath}/api/funcionarios/${idAttr}/delete" class="d-inline" onsubmit="return confirm('Confirmar exclusão do funcionário?');">
+        <form method="POST" action="${basePath}/api/funcionarios/${idAttr}/delete" class="d-inline">
           <button class="btn btn-outline-danger btn-sm btn-icon" type="submit" title="Excluir" aria-label="Excluir">
             <img src="${basePath}/images/excluir.png" alt="Excluir" class="icon" />
           </button>

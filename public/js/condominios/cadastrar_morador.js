@@ -27,6 +27,7 @@
   const boxResp = byId('boxResponsavel');
 
   const unid = byId('mUnidade');
+  const unidadeLogoImg = byId('mUnidadeLogo');
   const unidadeResumo = byId('mUnidadeResumo');
   const hab = byId('mHabitacao');
   const inq = byId('mInquilino');
@@ -49,6 +50,230 @@
   let editMode = false;
   let editingEmail = '';
 
+  // Picker Habitação (mesmo formato do campo Vincular da Garagem)
+  const mHabPickerRoot = document.querySelector('[data-m-hab-picker]');
+  const mHabPickerBox = mHabPickerRoot ? mHabPickerRoot.querySelector('[data-m-hab-picker-box]') : null;
+  const mHabPickerInput = mHabPickerRoot ? mHabPickerRoot.querySelector('[data-m-hab-picker-input]') : null;
+  const mHabPickerTokens = mHabPickerRoot ? mHabPickerRoot.querySelector('[data-m-hab-picker-tokens]') : null;
+  const mHabPickerMenu = mHabPickerRoot ? mHabPickerRoot.querySelector('[data-m-hab-picker-menu]') : null;
+  const mHabPickerPlaceholder = mHabPickerRoot ? mHabPickerRoot.querySelector('[data-m-hab-picker-placeholder]') : null;
+
+  function escapeHtml(str){
+    return String(str == null ? '' : str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+  function cssEscapeValue(v){
+    var s = String(v || '');
+    return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+  function escapeAttr(v){
+    return escapeHtml(String(v || '')).replace(/"/g,'&quot;');
+  }
+
+  function getSelectedUnidadeLabel(){
+    try{
+      var txt = unidadeResumo ? String(unidadeResumo.textContent || '').trim() : '';
+      if(txt && txt !== 'Selecione um condomínio') return txt;
+    }catch(_){ }
+    try{
+      return (unid && unid.options && unid.selectedIndex >= 0) ? String(unid.options[unid.selectedIndex].text || '').trim() : '';
+    }catch(_2){ }
+    return '';
+  }
+
+  function mHabOpenMenu(){ if(mHabPickerMenu) mHabPickerMenu.hidden = false; }
+  function mHabCloseMenu(){ if(mHabPickerMenu) mHabPickerMenu.hidden = true; }
+
+  function mHabUpdateDisabledState(){
+    if(!mHabPickerRoot || !hab) return;
+    var dis = !!hab.disabled;
+    mHabPickerRoot.classList.toggle('is-disabled', dis);
+    if(mHabPickerInput) mHabPickerInput.disabled = dis;
+    if(mHabPickerBox) mHabPickerBox.setAttribute('aria-disabled', dis ? 'true' : 'false');
+    if(dis) mHabCloseMenu();
+  }
+
+  function mHabRenderToken(label){
+    if(!mHabPickerTokens) return;
+    if(!label){ mHabPickerTokens.innerHTML=''; return; }
+    mHabPickerTokens.innerHTML = '<span class="wdg-enq-token">'
+      + escapeHtml(label)
+      + ' <button type="button" data-m-hab-clear aria-label="Remover">×</button>'
+      + '</span>';
+  }
+
+  function mHabGetSelectedLabel(){
+    if(!hab) return '';
+    var val = String(hab.value || '');
+    if(!val) return '';
+    var opt = hab.querySelector('option[value="' + cssEscapeValue(val) + '"]');
+    return opt ? String(opt.textContent || '').trim() : '';
+  }
+
+  function mHabBuildItemsFromSelect(){
+    var items = [];
+    if(!hab) return items;
+    (hab.querySelectorAll('option') || []).forEach(function(opt){
+      var val = String(opt.value || '').trim();
+      if(!val) return;
+      var label = String(opt.textContent || '').trim();
+      items.push({ value: val, label: label });
+    });
+    return items;
+  }
+
+  function mHabRenderMenu(items, filter){
+    if(!mHabPickerMenu) return;
+    var q = String(filter || '').trim().toLowerCase();
+    var selectedVal = hab ? String(hab.value || '') : '';
+    var list = (items || []).filter(function(it){
+      if(!it || !it.value) return false;
+      if(selectedVal && String(it.value) === selectedVal) return false;
+      if(!q) return true;
+      return String(it.label || '').toLowerCase().indexOf(q) >= 0;
+    }).slice(0, 40);
+    if(list.length === 0){
+      mHabPickerMenu.innerHTML = '<div class="px-2 py-2 text-muted small">Nenhum resultado.</div>';
+      return;
+    }
+    var unidadeLine = getSelectedUnidadeLabel() || 'Condomínio';
+    var avatarSrc = (basePath || '') + '/images/home.png';
+    mHabPickerMenu.innerHTML = list.map(function(it){
+      return ''
+        + '<button type="button" class="wdg-enq-picker-item" data-m-hab-item data-val="' + escapeAttr(it.value) + '">' 
+        +   '<span class="wdg-pick-avatar">'
+        +     '<img src="' + escapeAttr(avatarSrc) + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'' + escapeAttr(avatarSrc) + '\';">'
+        +   '</span>'
+        +   '<span class="wdg-pick-lines">'
+        +     '<span class="wdg-pick-name">' + escapeHtml(unidadeLine) + '</span>'
+        +     '<span class="wdg-pick-hab">' + escapeHtml(it.label || it.value) + '</span>'
+        +   '</span>'
+        + '</button>';
+    }).join('');
+  }
+
+  var mHabItemsCache = [];
+  function refreshMHabPickerFromSelect(){
+    if(!mHabPickerRoot || !hab) return;
+    mHabItemsCache = mHabBuildItemsFromSelect();
+    var label = mHabGetSelectedLabel();
+    mHabRenderToken(label);
+    if(mHabPickerPlaceholder) mHabPickerPlaceholder.hidden = true;
+    if(mHabPickerInput) mHabPickerInput.value = '';
+    mHabRenderMenu(mHabItemsCache, '');
+    mHabUpdateDisabledState();
+    mHabCloseMenu();
+  }
+
+  if(mHabPickerBox){
+    mHabPickerBox.addEventListener('click', function(){
+      if(hab && hab.disabled) return;
+      if(mHabPickerInput) mHabPickerInput.focus();
+      mHabOpenMenu();
+    });
+    mHabPickerBox.addEventListener('keydown', function(e){
+      if(!e) return;
+      if(hab && hab.disabled) return;
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); mHabOpenMenu(); if(mHabPickerInput) mHabPickerInput.focus(); }
+      if(e.key==='Escape'){ mHabCloseMenu(); }
+    });
+  }
+  if(mHabPickerInput){
+    mHabPickerInput.addEventListener('input', function(){
+      mHabRenderMenu(mHabItemsCache, mHabPickerInput.value);
+      mHabOpenMenu();
+    });
+    mHabPickerInput.addEventListener('focus', function(){
+      if(hab && hab.disabled) return;
+      mHabRenderMenu(mHabItemsCache, mHabPickerInput.value);
+      mHabOpenMenu();
+    });
+    mHabPickerInput.addEventListener('keydown', function(e){
+      if(!e) return;
+      if(e.key==='Escape'){ mHabCloseMenu(); return; }
+    });
+  }
+  if(mHabPickerRoot){
+    mHabPickerRoot.addEventListener('click', function(e){
+      if(hab && hab.disabled) return;
+      var btn = e && e.target ? e.target.closest('[data-m-hab-item]') : null;
+      if(btn && hab){
+        var v = String(btn.getAttribute('data-val') || '');
+        hab.value = v;
+        refreshMHabPickerFromSelect();
+        return;
+      }
+      var clearBtn = e && e.target ? e.target.closest('[data-m-hab-clear]') : null;
+      if(clearBtn && hab){
+        hab.value = '';
+        refreshMHabPickerFromSelect();
+        return;
+      }
+    });
+  }
+  document.addEventListener('click', function(e){
+    if(!mHabPickerRoot || !mHabPickerMenu) return;
+    var t = e && e.target ? e.target : null;
+    if(!t) return;
+    if(mHabPickerRoot.contains(t)) return;
+    mHabCloseMenu();
+  });
+
+  function setEditModeUI(on){
+    if(!btnCadastrar) return;
+    if(on){
+      btnCadastrar.textContent = 'Alterar';
+      btnCancelarEdicao && btnCancelarEdicao.classList.remove('d-none');
+    } else {
+      btnCadastrar.textContent = 'Cadastrar';
+      btnCancelarEdicao && btnCancelarEdicao.classList.add('d-none');
+    }
+  }
+
+  function setImgWithFallback(img, urls){
+    if(!img) return;
+    var list = (urls || []).map(function(x){ return String(x || '').trim(); }).filter(Boolean);
+    if(list.length === 0) return;
+    var idx = 0;
+    img.onerror = function(){
+      idx++;
+      if(idx >= list.length){ img.onerror = null; return; }
+      img.src = list[idx];
+    };
+    img.src = list[0];
+  }
+
+  function getUnidadeLogoCandidates(uid){
+    uid = String(uid || '').trim();
+    var base = basePath || '';
+    var raw = [];
+    if(uid){
+      raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+      raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
+      raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    }
+    raw.push('/images/unidade.png');
+    raw.push(base + '/images/unidade.png');
+    var out = [];
+    for(var j=0;j<raw.length;j++){
+      var s = String(raw[j] || '').trim();
+      if(!s) continue;
+      if(out.indexOf(s) >= 0) continue;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function refreshUnitLogo(){
+    if(!unidadeLogoImg) return;
+    var uid = String((unid && unid.value) || '').trim();
+    setImgWithFallback(unidadeLogoImg, getUnidadeLogoCandidates(uid));
+  }
+
   // Dados
   const existingUsers = safeJSON('existingUsersData', []);
   // Habitações (preferir storages oficiais do módulo, com fallback legado)
@@ -70,6 +295,7 @@
 
   function setBlocked(block){
     [nome, rg, cpf, dn, pai, mae, sexo].forEach(el=>{ if(!el) return; el.disabled=!!block; el.classList.toggle('blocked', !!block && el.tagName!=='BUTTON'); });
+    mHabUpdateDisabledState();
   }
   function enableAll(){ setBlocked(false); }
   function disableAll(){ setBlocked(true); }
@@ -77,6 +303,7 @@
   // Controles de vínculo (Unidade/Habitação/Inserir/Limpar) devem permanecer habilitados mesmo quando o usuário vier do Gestor
   function enableVinculos(){
     [unid, hab, btnInserir, btnLimparV, inq].forEach(function(el){ if(!el) return; el.disabled=false; el.classList.remove('blocked'); });
+    mHabUpdateDisabledState();
   }
 
   function fillSelect(select,data,mapper){ if(!select) return; select.innerHTML=''; const opt=document.createElement('option'); opt.value=''; opt.textContent='Selecione...'; select.appendChild(opt); (data||[]).forEach(item=>{ const {value,label}=(mapper?mapper(item):{value:item._id,label:item.nome}); const o=document.createElement('option'); o.value=value; o.textContent=label; select.appendChild(o); }); }
@@ -97,6 +324,7 @@
       }
     }
     updateUnidadeResumo();
+    refreshUnitLogo();
   }
   function labelById(arr,id){ const x=(arr||[]).find(o=> String(o.id)===String(id)); return x? x.nome : ''; }
   async function fetchHabitacoesByUnidade(unidadeId){
@@ -116,6 +344,7 @@
       hab.disabled = true;
       hab.classList.add('blocked');
       if(inq){ inq.disabled = true; inq.classList.add('blocked'); inq.checked = false; }
+      refreshMHabPickerFromSelect();
       return;
     }
     // Exibe todas as habitações do condomínio selecionado vindas do banco (morador pode existir mais de um por habitação)
@@ -128,9 +357,16 @@
       const parts = [blocoNome, andarNome, numero].filter(Boolean);
       return { value: idVal, label: parts.join(' - ') };
     });
-    hab.disabled = false;
+    var vincDisabled = !!(btnInserir && btnInserir.disabled);
+    hab.disabled = vincDisabled;
     hab.classList.remove('blocked');
-    if(inq){ inq.disabled = false; inq.classList.remove('blocked'); }
+    if(inq){
+      inq.disabled = vincDisabled;
+      inq.classList.toggle('blocked', vincDisabled);
+      if(vincDisabled) inq.checked = false;
+      else inq.classList.remove('blocked');
+    }
+    refreshMHabPickerFromSelect();
   }
 
   function formatCPF(v){ if(!v) return ''; const d=String(v).replace(/\D/g,'').slice(0,11); if(d.length<=3) return d; if(d.length<=6) return `${d.slice(0,3)}.${d.slice(3)}`; if(d.length<=9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`; return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`; }
@@ -190,7 +426,7 @@
     }
     editMode = false;
     editingEmail = '';
-    if(btnCancelarEdicao) btnCancelarEdicao.classList.add('d-none');
+    setEditModeUI(false);
   }
 
   email.addEventListener('input', ()=> emailMsg.classList.add('d-none'));
@@ -225,16 +461,19 @@
 
   populateUnidades();
   populateHabitacoesFiltro(unid ? unid.value : '');
+  refreshMHabPickerFromSelect();
   unid && unid.addEventListener('change', ()=> {
     updateUnidadeResumo();
     populateHabitacoesFiltro(unid.value);
+    refreshUnitLogo();
+    refreshMHabPickerFromSelect();
   });
 
   btnVerificar.addEventListener('click', ()=>{
     if(!unid || !unid.value){ alert('Selecione um condomínio antes de verificar o e-mail.'); return; }
     const em = (email.value||'').trim(); if(!em){ emailMsg.textContent='Informe um e-mail.'; emailMsg.classList.remove('d-none'); return; }
     const u = findUserByEmail(em); emailMsg.classList.add('d-none');
-    if(!u){ enableAll(); [nome, rg, cpf, dn, pai, mae, sexo, telefone, whatsapp].forEach(el=>{ if(!el) return; el.disabled=false; el.classList.remove('blocked'); }); enableVinculos(); btnCadastrar.disabled=false; email.dataset.fromGestor=''; editMode = false; editingEmail=''; if(btnCancelarEdicao) btnCancelarEdicao.classList.add('d-none'); return; }
+    if(!u){ enableAll(); [nome, rg, cpf, dn, pai, mae, sexo, telefone, whatsapp].forEach(el=>{ if(!el) return; el.disabled=false; el.classList.remove('blocked'); }); enableVinculos(); btnCadastrar.disabled=false; email.dataset.fromGestor=''; editMode = false; editingEmail=''; setEditModeUI(false); return; }
     nome.value=u.nome||''; rg.value=u.rg||''; cpf.value=formatCPF(u.cpf||'');
     let dval = u.data_nascimento_br || u.data_nascimento || '';
     if(/^\d{4}-\d{2}-\d{2}$/.test(dval)){ const [yyyy,mm,dd]=dval.split('-'); dval=`${dd}/${mm}/${yyyy}`; }
@@ -251,7 +490,7 @@
     btnCadastrar.disabled=false;
     editMode = false;
     editingEmail='';
-    if(btnCancelarEdicao) btnCancelarEdicao.classList.add('d-none');
+    setEditModeUI(false);
   });
 
   btnVerResp.addEventListener('click', ()=>{
@@ -270,9 +509,10 @@
     const inqBadge = isInq ? '<span class="badge bg-primary">Sim</span>' : '<span class="badge bg-secondary">Não</span>';
   tr.innerHTML=`<td>${uidText}</td><td>${hidText}</td><td>${inqBadge}</td><td><button type=\"button\" class=\"wdg-icon-btn\" data-action=\"rem\" aria-label=\"Remover vínculo\" title=\"Remover vínculo\"><img src=\"${basePath}/images/excluir.png\" alt=\"Remover\"/></button></td>`;
     tabela.appendChild(tr); hab.value=''; if(inq) inq.checked=false;
+    refreshMHabPickerFromSelect();
   });
   tabela.addEventListener('click', e=>{ const b=e.target.closest('button[data-action="rem"]'); if(!b) return; b.closest('tr')?.remove(); });
-  btnLimparV.addEventListener('click', ()=> tabela.innerHTML='');
+  btnLimparV.addEventListener('click', ()=>{ tabela.innerHTML=''; refreshMHabPickerFromSelect(); });
   btnLimparForm.addEventListener('click', ()=> clearForm({ preserveEmail:true }));
   btnCancelarEdicao && btnCancelarEdicao.addEventListener('click', ()=>{
     clearForm({ preserveEmail:false });
@@ -451,7 +691,7 @@
       });
       editMode = true;
       editingEmail = String(u.email||'').toLowerCase();
-      if(btnCancelarEdicao) btnCancelarEdicao.classList.remove('d-none');
+      setEditModeUI(true);
     }catch(err){ console.warn('[editarMorador] erro', err); alert('Falha ao carregar dados do servidor.'); }
   }
 

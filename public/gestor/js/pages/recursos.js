@@ -9,6 +9,48 @@ document.addEventListener('DOMContentLoaded', () => {
 	const basePath = (window.__perfilBasePath || (document.querySelector('script[data-base-path]')?.getAttribute('data-base-path')) || (window.basePath) || '/gestor').replace(/\/$/,'');
 	const byId = (id) => document.getElementById(id);
 
+	function normalizeText(v){
+		return String(v ?? '').replace(/\s+/g, ' ').trim();
+	}
+
+	function askDeleteRecursoConfirm(label){
+		const modalEl = byId('rDeleteConfirmModal');
+		const labelEl = byId('rDeleteConfirmLabel');
+		const yesBtn = byId('rDeleteConfirmYes');
+
+		const safeLabel = normalizeText(label) || 'selecionado';
+
+		// fallback se Bootstrap/modal não estiver disponível
+		if (!modalEl || !yesBtn || !(window.bootstrap && window.bootstrap.Modal)){
+			return Promise.resolve(window.confirm(`Deseja excluir o recurso ${safeLabel}? Esta exclusão é definitiva e não pode ser desfeita.`));
+		}
+
+		if (labelEl) labelEl.textContent = safeLabel;
+
+		return new Promise((resolve) => {
+			let resolved = false;
+			const bs = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true, focus: true });
+
+			const onHidden = () => {
+				if (resolved) return;
+				resolved = true;
+				resolve(false);
+			};
+
+			const onYes = (e) => {
+				try { e?.preventDefault?.(); } catch { /* noop */ }
+				if (resolved) return;
+				resolved = true;
+				resolve(true);
+				try { bs.hide(); } catch { /* noop */ }
+			};
+
+			modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+			yesBtn.addEventListener('click', onYes, { once: true });
+			bs.show();
+		});
+	}
+
 	// Máscara para placa
 	const initPlacaMask = () => {
 		const placaEl = byId('placa');
@@ -259,8 +301,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	window.excluirRecurso = async (id) => {
-		if (!confirm('Tem certeza que deseja excluir este recurso?')) return;
+	window.excluirRecurso = async (id, label) => {
+		const ok = await askDeleteRecursoConfirm(label || 'selecionado');
+		if (!ok) return;
 
 		try {
 			const response = await fetch(`${basePath}/api/recursos/${id}`, {
@@ -293,7 +336,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			if(!id || !action) return;
 			ev.preventDefault();
 			if(action === 'editar') return editarRecurso(id);
-			if(action === 'excluir') return excluirRecurso(id);
+			if(action === 'excluir'){
+				const tr = btn.closest('tr');
+				const unidade = normalizeText(tr?.children?.[0]?.textContent);
+				const placa = normalizeText(tr?.children?.[2]?.textContent);
+				const modelo = normalizeText(tr?.children?.[4]?.textContent);
+				const parts = [placa, modelo].filter(Boolean);
+				const baseLabel = parts.length ? parts.join(' — ') : '';
+				const label = unidade ? (baseLabel ? `${baseLabel} (${unidade})` : unidade) : (baseLabel || 'selecionado');
+				return excluirRecurso(id, label);
+			}
 		});
 	}
 

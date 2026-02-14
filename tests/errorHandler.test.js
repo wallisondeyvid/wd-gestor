@@ -1,35 +1,29 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
-import { createServer } from '../src/server/createServer.js';
+import express from 'express';
+import { centralErrorHandler, notFoundHandler } from '../src/core/middlewares/errorHandler.js';
 
 let app;
-let registerErrorHandlers;
 let oldEnv = {};
 
 describe('Error Handler', () => {
   before(async () => {
-    // salvar e setar env controlado
-    oldEnv.MONGO_MEMORY = process.env.MONGO_MEMORY;
     oldEnv.NODE_ENV = process.env.NODE_ENV;
-    process.env.MONGO_MEMORY = '1';
     process.env.NODE_ENV = 'test';
 
-  const built = await createServer({ deferErrorHandlers: true, skipDb: true, skipAuth: true });
-    app = built.app;
-    registerErrorHandlers = built.registerErrorHandlers;
+    app = express();
 
     // Observação: o servidor redireciona /api/* -> /gestor/api/*
     // Então, para testar o handler de erro, registramos a rota dentro de /gestor/api.
     app.get('/gestor/api/boom', () => { throw new Error('falha'); });
 
-    // caso seja async
-    await Promise.resolve(registerErrorHandlers());
+    // Ordem padrão: 404 -> error handler
+    app.use(notFoundHandler);
+    app.use(centralErrorHandler);
   });
 
   after(() => {
-    // restaurar env
-    process.env.MONGO_MEMORY = oldEnv.MONGO_MEMORY;
     process.env.NODE_ENV = oldEnv.NODE_ENV;
   });
 

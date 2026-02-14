@@ -153,34 +153,40 @@
     const deleteModalEl = document.getElementById('confirmDeleteModal');
     let deleteModalInstance = null;
     let deleteTargetId = null;
-    if (deleteModalEl) {
-      deleteModalInstance = new bootstrap.Modal(deleteModalEl);
+    if (deleteModalEl && window.bootstrap && bootstrap.Modal) {
+      deleteModalInstance = bootstrap.Modal.getOrCreateInstance(deleteModalEl, { backdrop: true, keyboard: true, focus: true });
       const btnConfirmDelete = document.getElementById('btnConfirmDelete');
-      btnConfirmDelete.addEventListener('click', () => {
+      btnConfirmDelete?.addEventListener('click', () => {
         if(!deleteTargetId) return;
         const btn = btnConfirmDelete;
         btn.disabled = true;
         btn.textContent = 'Excluindo...';
-  fetchJson(basePath + '/api/setores/' + deleteTargetId, { method:'DELETE' })
+        fetchJson(basePath + '/api/setores/' + deleteTargetId, { method:'DELETE' })
           .then(res => { if(!res.ok) throw new Error(res.error||'Erro'); toastSuccess('Setor excluído'); deleteModalInstance.hide(); return recarregarLista(); })
           .catch(err => toastError('Erro: ' + err.message))
-          .finally(()=>{ btn.disabled=false; btn.textContent='Excluir'; deleteTargetId=null; });
+          .finally(()=>{ btn.disabled=false; btn.textContent='Excluir definitivamente'; deleteTargetId=null; });
       });
     }
 
     function excluirHandler(id, nome){
       deleteTargetId = id;
+      const nameEl = document.getElementById('confirmDeleteName');
       const msgEl = document.getElementById('confirmDeleteMessage');
-      if (msgEl) {
-        msgEl.textContent = nome ? `Excluir o setor "${nome}"?` : 'Tem certeza que deseja excluir este setor?';
+      const label = (String(nome || '').trim()) || 'selecionado';
+      if (nameEl) nameEl.textContent = label;
+      // fallback (caso a marcação antiga ainda esteja presente)
+      if (msgEl && !nameEl) {
+        msgEl.textContent = `Deseja excluir o setor ${label}?`;
       }
       if (deleteModalInstance) deleteModalInstance.show();
-      else if (window.confirm('Confirma exclusão?')) {
-  fetchJson(basePath + '/api/setores/' + id, { method:'DELETE' })
+      else {
+        const ok = window.confirm(`Deseja excluir o setor ${label}? Esta exclusão é definitiva e não pode ser desfeita.`);
+        if (!ok) return;
+        fetchJson(basePath + '/api/setores/' + id, { method:'DELETE' })
           .then(res => { if(!res.ok) throw new Error(res.error||'Erro'); toastSuccess('Setor excluído'); return recarregarLista(); })
           .catch(err => toastError('Erro: ' + err.message));
       }
-  }
+    }
 
   function editarHandler(id){
   fetchJson(basePath + '/api/setores/' + id)

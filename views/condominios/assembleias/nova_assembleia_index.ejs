@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova assembleia - WDGestor</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <% const _id = (typeof id === 'string' && id) ? id : ''; %>
+  <% const _tab = (typeof tab === 'string' && tab) ? tab : 'dados'; %>
+  <% const _form = (form && typeof form === 'object') ? form : {}; %>
+  <% const partialMap = {
+    dados: './partials/dados',
+    convocacao: './partials/convocacao',
+    pauta: './partials/pauta',
+    revisao: './partials/revisao',
+    publicacao: './partials/publicacao'
+  }; %>
+  <% const activePartial = partialMap[_tab] || partialMap.dados; %>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <%- include('../../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <style>
+    body.wdg-nova-assembleia{background:#f5f7fb;}
+    .wdg-hero{background:linear-gradient(135deg,#0f172a,#4c1d95);color:#fff;border-radius:28px;padding:1.9rem 2.4rem;margin-bottom:1.1rem;box-shadow:0 35px 90px rgba(15,23,42,.25);} 
+    .wdg-hero h1{font-weight:750;font-size:1.85rem;margin:0;}
+    .wdg-hero small{color:rgba(255,255,255,.78);} 
+    .wdg-panel{background:#fff;border-radius:22px;padding:1.25rem 1.35rem;box-shadow:0 18px 55px rgba(15,23,42,.10);} 
+    .nav-tabs .nav-link{border-radius:14px 14px 0 0; font-weight:700; color:#475569;}
+    .nav-tabs .nav-link.active{color:#0f172a;}
+    .btn{border-radius:12px;}
+    .wdg-muted{color:#64748b;}
+    .wdg-kv{background:#f8fafc;border:1px solid rgba(15,23,42,.08);border-radius:16px;padding:.85rem 1rem;}
+    .wdg-error{color:#b91c1c;font-weight:700;font-size:.85rem;}
+    .wdg-fieldset{border:1px solid rgba(15,23,42,.10);border-radius:18px;padding:1rem 1.1rem;}
+
+    /* Botão 3D (moderno) – igual ao da lista de Assembleias */
+    .wdg-btn3d{
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      border-radius: 999px;
+      padding: .58rem 1.05rem;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(255,255,255,.96);
+      color: #0f172a;
+      font-weight: 750;
+      box-shadow:
+        0 16px 34px rgba(2,6,23,.18),
+        0 1px 0 rgba(255,255,255,.85) inset;
+      transform: translateY(0);
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .wdg-btn3d--on-dark{
+      border-color: rgba(255,255,255,.22);
+    }
+    .wdg-btn3d:hover{
+      transform: translateY(-1px);
+      box-shadow:
+        0 22px 46px rgba(2,6,23,.22),
+        0 1px 0 rgba(255,255,255,.88) inset;
+      filter: saturate(1.04);
+      color: #0f172a;
+      text-decoration: none;
+    }
+    .wdg-btn3d:active{
+      transform: translateY(1px);
+      box-shadow:
+        0 10px 24px rgba(2,6,23,.18),
+        0 1px 0 rgba(255,255,255,.82) inset;
+    }
+    .wdg-btn3d:focus-visible{
+      outline: 2px solid rgba(255,255,255,.75);
+      outline-offset: 3px;
+    }
+    .wdg-btn3d .wdg-btn3d-icon{
+      width: 28px;
+      height: 28px;
+      display: block;
+      object-fit: contain;
+      flex: 0 0 28px;
+      filter: drop-shadow(0 8px 16px rgba(2,6,23,.18));
+    }
+
+    /* Premium (todas as abas): tokens + superfícies + 3D */
+    #novaAssembleiaApp{
+      --wdg-ink: rgba(15,23,42,.92);
+      --wdg-muted-ink: rgba(71,85,105,.92);
+      --wdg-primary: rgba(29,78,216,1);
+      --wdg-ring: rgba(29,78,216,.16);
+      --wdg-inset: inset 0 1px 0 rgba(255,255,255,.92);
+    }
+
+    /* Tabs */
+    #novaAssembleiaApp .nav-tabs{ border-bottom: 1px solid rgba(15,23,42,.08); }
+    #novaAssembleiaApp .nav-tabs .nav-link{
+      border: 1px solid transparent;
+      margin-bottom: -1px;
+      padding: .65rem 1rem;
+      background: transparent;
+      transition: background .12s ease, color .12s ease, transform .12s ease;
+    }
+    #novaAssembleiaApp .nav-tabs .nav-link:hover{ background: rgba(2,6,23,.03); transform: translateY(-1px); }
+    #novaAssembleiaApp .nav-tabs .nav-link.active{
+      background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      border-color: rgba(15,23,42,.08) rgba(15,23,42,.08) #fff;
+      box-shadow: 0 10px 26px rgba(15,23,42,.08);
+    }
+
+    /* Fieldsets com profundidade */
+    #novaAssembleiaApp .wdg-fieldset{
+      background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,.85) 100%);
+      border: 1px solid rgba(15,23,42,.08);
+      box-shadow: 0 22px 55px rgba(15,23,42,.08);
+      transition: transform .14s ease, box-shadow .14s ease;
+    }
+    #novaAssembleiaApp .wdg-fieldset:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 28px 70px rgba(15,23,42,.10);
+    }
+
+    /* Labels/ajudas */
+    #novaAssembleiaApp .form-label{ color: var(--wdg-ink); font-weight: 650; }
+    #novaAssembleiaApp .form-text{ color: rgba(100,116,139,.92); }
+
+    /* Campos (inputs/selects/textarea): 3D premium */
+    #novaAssembleiaApp .form-control,
+    #novaAssembleiaApp .form-select{
+      border-radius: 14px;
+      border: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      box-shadow: var(--wdg-inset), 0 12px 26px rgba(15,23,42,.10), 0 2px 7px rgba(15,23,42,.06);
+      color: var(--wdg-ink);
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    #novaAssembleiaApp .form-control::placeholder{ color: rgba(100,116,139,.75); }
+    #novaAssembleiaApp .form-control:hover,
+    #novaAssembleiaApp .form-select:hover{
+      transform: translateY(-1px);
+      box-shadow: var(--wdg-inset), 0 16px 34px rgba(15,23,42,.12), 0 4px 10px rgba(15,23,42,.07);
+    }
+    #novaAssembleiaApp .form-control:focus,
+    #novaAssembleiaApp .form-select:focus{
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 0 .25rem var(--wdg-ring),
+        var(--wdg-inset),
+        0 18px 40px rgba(15,23,42,.12),
+        0 6px 14px rgba(29,78,216,.10);
+    }
+    #novaAssembleiaApp textarea.form-control{ resize: vertical; }
+    #novaAssembleiaApp .form-control:disabled,
+    #novaAssembleiaApp .form-select:disabled{
+      opacity: 1;
+      color: rgba(71,85,105,.85);
+      background: linear-gradient(180deg, rgba(226,232,240,.55) 0%, rgba(241,245,249,.70) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.85);
+      transform: none;
+    }
+
+    /* Input-group: botões com 3D */
+    #novaAssembleiaApp .input-group .btn{
+      border: 0;
+      box-shadow: 0 12px 26px rgba(15,23,42,.10), 0 2px 7px rgba(15,23,42,.06);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    #novaAssembleiaApp .input-group .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(15,23,42,.12), 0 4px 10px rgba(15,23,42,.07);
+    }
+    #novaAssembleiaApp .input-group .btn:active{ transform: translateY(0px); }
+    #novaAssembleiaApp .input-group .btn:focus{
+      box-shadow: 0 0 0 .25rem var(--wdg-ring), 0 16px 34px rgba(15,23,42,.12);
+    }
+
+    /* Campos de lista (estilo moderno): opções em pílulas/segmentado */
+    .wdg-choice-group{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.55rem;
+      padding:0;
+      border:0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .wdg-choice-group.wdg-choice-center{ justify-content: center; }
+    #novaAssembleiaApp .wdg-label-center{ display:block; width:100%; text-align:center; }
+    .wdg-choice-btn{
+      border-radius: 999px;
+      padding: .44rem .8rem;
+      font-weight: 400;
+      letter-spacing: .01em;
+      border: 0 !important;
+      background: linear-gradient(180deg, #ffffff 0%, rgba(248,250,252,1) 100%) !important;
+      color: rgba(15,23,42,.88) !important;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.95),
+        0 10px 24px rgba(15,23,42,.16),
+        0 2px 6px rgba(15,23,42,.08);
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease, color .12s ease;
+      user-select:none;
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      white-space: nowrap;
+      position: relative;
+    }
+    .wdg-choice-btn:hover{
+      transform: translateY(-1px);
+      background: linear-gradient(180deg, #ffffff 0%, rgba(241,245,249,1) 100%) !important;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.95),
+        0 14px 34px rgba(15,23,42,.18),
+        0 4px 10px rgba(15,23,42,.10);
+    }
+    .btn-check:focus + .wdg-choice-btn{
+      box-shadow:
+        0 0 0 .25rem rgba(29,78,216,.16),
+        0 1px 0 rgba(255,255,255,.95),
+        0 14px 34px rgba(15,23,42,.18),
+        0 4px 10px rgba(15,23,42,.10);
+    }
+    .btn-check:checked + .wdg-choice-btn{
+      background: linear-gradient(180deg, rgba(219,234,254,1) 0%, rgba(191,219,254,1) 100%) !important;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.92),
+        0 16px 36px rgba(15,23,42,.20),
+        0 6px 14px rgba(29,78,216,.18);
+      color: rgba(29,78,216,.98) !important;
+    }
+    .wdg-choice-icon{
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      flex: 0 0 18px;
+    }
+
+    /* Campo Responsável: exibição estilo card (igual ao modal) */
+    #novaAssembleiaApp .wdg-resp-trigger{
+      flex: 1 1 auto;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      text-align: left;
+      border-radius: 16px;
+    }
+    #novaAssembleiaApp .wdg-resp-trigger:focus{
+      outline: none;
+      box-shadow: 0 0 0 .25rem rgba(29,78,216,.16);
+    }
+    #novaAssembleiaApp .wdg-resp-row{
+      min-height: 92px;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.95),
+        0 12px 28px rgba(15,23,42,.10),
+        0 2px 6px rgba(15,23,42,.07);
+      transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+    }
+    #novaAssembleiaApp .wdg-resp-trigger:hover .wdg-resp-row{
+      transform: translateY(-1px);
+      border-color: rgba(29,78,216,.18);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.95),
+        0 18px 42px rgba(15,23,42,.12),
+        0 4px 10px rgba(15,23,42,.08);
+    }
+    #novaAssembleiaApp [data-responsavel-field].wdg-invalid .wdg-resp-row{
+      border-color: rgba(220,53,69,.55);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.92),
+        0 14px 34px rgba(220,53,69,.12),
+        0 0 0 .25rem rgba(220,53,69,.10);
+    }
+
+    /* Campos de data: compactos, sem ícone e com tamanhos padronizados */
+    #novaAssembleiaApp input[type="date"].form-control{
+      font-variant-numeric: tabular-nums;
+    }
+    #novaAssembleiaApp input[type="date"].wdg-date{
+      width: 11.2rem;
+      max-width: 11.2rem;
+      padding-right: .75rem;
+    }
+    /* Remove indicador de calendário (Chromium/WebKit) */
+    #novaAssembleiaApp input[type="date"].wdg-date::-webkit-calendar-picker-indicator{
+      opacity: 0;
+      display: none;
+    }
+    #novaAssembleiaApp input[type="date"].wdg-date::-webkit-inner-spin-button,
+    #novaAssembleiaApp input[type="date"].wdg-date::-webkit-clear-button{
+      display: none;
+    }
+
+    #novaAssembleiaApp input[type="time"].form-control{
+      font-variant-numeric: tabular-nums;
+    }
+    #novaAssembleiaApp input[type="time"].wdg-time{
+      width: 8.2rem;
+      max-width: 8.2rem;
+      padding-right: .75rem;
+    }
+    /* Remove indicador de relógio (Chromium/WebKit) */
+    #novaAssembleiaApp input[type="time"].wdg-time::-webkit-calendar-picker-indicator{
+      opacity: 0;
+      display: none;
+    }
+    #novaAssembleiaApp input[type="time"].wdg-time::-webkit-inner-spin-button,
+    #novaAssembleiaApp input[type="time"].wdg-time::-webkit-clear-button{
+      display: none;
+    }
+
+    #novaAssembleiaApp .wdg-field-disabled{
+      opacity: .72;
+    }
+    #novaAssembleiaApp .wdg-field-disabled .form-control{
+      background: linear-gradient(180deg, rgba(226,232,240,.55) 0%, rgba(241,245,249,.70) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.85);
+      transform: none;
+    }
+
+    #novaAssembleiaApp .wdg-field-disabled .btn{
+      opacity: .85;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Aba Revisão: layout mais rico */
+    #novaAssembleiaApp .wdg-review-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    #novaAssembleiaApp .wdg-review-badges{
+      display:flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    /* Badges topo (Revisão): premium pills */
+    #novaAssembleiaApp .wdg-review-badge{
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .33rem .62rem;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      color: rgba(15,23,42,.86);
+      font-weight: 700;
+      font-size: .82rem;
+      letter-spacing: .01em;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.92),
+        0 10px 22px rgba(15,23,42,.10);
+      user-select: none;
+      white-space: nowrap;
+    }
+    #novaAssembleiaApp .wdg-review-badge i{
+      font-size: .95rem;
+      line-height: 1;
+      opacity: .9;
+    }
+    #novaAssembleiaApp .wdg-review-badge--primary{
+      border-color: var(--bs-primary-border-subtle);
+      background: linear-gradient(180deg, var(--bs-primary-bg-subtle) 0%, rgba(255,255,255,.92) 100%);
+      color: var(--bs-primary-text-emphasis);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.92),
+        0 14px 30px rgba(29,78,216,.18);
+    }
+    #novaAssembleiaApp .wdg-review-grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    #novaAssembleiaApp .wdg-review-card{
+      border: 1px solid rgba(15,23,42,.08);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(248,250,252,.78) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.88),
+        0 18px 46px rgba(15,23,42,.08);
+      padding: .9rem 1rem;
+      transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+    }
+    #novaAssembleiaApp .wdg-review-card:hover{
+      transform: translateY(-1px);
+      border-color: rgba(15,23,42,.10);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.90),
+        0 26px 66px rgba(15,23,42,.10);
+    }
+    #novaAssembleiaApp .wdg-review-card-title{
+      display:flex;
+      align-items:center;
+      gap: .6rem;
+      font-weight: 800;
+      color: rgba(15,23,42,.90);
+      margin-bottom: .75rem;
+      letter-spacing: .01em;
+    }
+
+    #novaAssembleiaApp .wdg-review-icon{
+      width: 20px;
+      height: 20px;
+      flex: 0 0 20px;
+      display: block;
+      object-fit: contain;
+    }
+
+    #novaAssembleiaApp .wdg-review-note-title{
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    #novaAssembleiaApp .wdg-review-kv{
+      display:flex;
+      flex-direction: column;
+      gap: 0;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,.06);
+      background: rgba(248,250,252,.62);
+      overflow: hidden;
+    }
+    @media (max-width: 520px){
+      #novaAssembleiaApp .wdg-review-row{ grid-template-columns: 1fr; }
+    }
+    #novaAssembleiaApp .wdg-review-row{
+      display:grid;
+      grid-template-columns: 160px 1fr;
+      gap: .6rem .85rem;
+      align-items: baseline;
+      padding: .55rem .85rem;
+      border-bottom: 1px solid rgba(15,23,42,.06);
+      background: transparent;
+      transition: background .12s ease;
+    }
+    #novaAssembleiaApp .wdg-review-row:last-child{ border-bottom: 0; }
+    #novaAssembleiaApp .wdg-review-row:hover{ background: rgba(2,6,23,.02); }
+    #novaAssembleiaApp .wdg-review-kv .k{
+      color: rgba(100,116,139,.92);
+      font-weight: 650;
+      letter-spacing: .01em;
+      text-transform: none;
+      font-size: .86rem;
+      line-height: 1.1;
+    }
+    #novaAssembleiaApp .wdg-review-kv .v{
+      color: rgba(15,23,42,.92);
+      font-weight: 400;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      font-variant-numeric: tabular-nums;
+    }
+    #novaAssembleiaApp .wdg-review-note{
+      border-top: 1px dashed rgba(15,23,42,.14);
+      padding-top: .75rem;
+    }
+    #novaAssembleiaApp .wdg-review-note-title{
+      font-weight: 800;
+      margin-bottom: .25rem;
+    }
+    #novaAssembleiaApp .wdg-review-summary{
+      cursor: pointer;
+      user-select: none;
+      color: rgba(29,78,216,1);
+      font-weight: 750;
+      list-style: none;
+    }
+    #novaAssembleiaApp details > summary::-webkit-details-marker{ display:none; }
+    #novaAssembleiaApp .wdg-review-note-body{
+      margin-top: .5rem;
+      white-space: pre-wrap;
+      color: rgba(15,23,42,.88);
+    }
+
+    #novaAssembleiaApp .wdg-review-pauta{
+      display:flex;
+      flex-direction: column;
+      gap: .65rem;
+    }
+    #novaAssembleiaApp .wdg-review-pauta-item{
+      position: relative;
+      display:flex;
+      gap: .75rem;
+      padding: .85rem 3.1rem .85rem .95rem;
+      border: 1px solid rgba(15,23,42,.08);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,.95) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.85);
+    }
+    #novaAssembleiaApp .wdg-review-pauta-idx{
+      position: absolute;
+      top: .65rem;
+      right: .65rem;
+      min-width: 26px;
+      height: 22px;
+      padding: 0 .5rem;
+      border-radius: 999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(15,23,42,.06);
+      border: 1px solid rgba(15,23,42,.08);
+      color: rgba(71,85,105,.92);
+      font-weight: 650;
+      font-size: .78rem;
+      letter-spacing: .01em;
+      flex: 0 0 auto;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.85);
+    }
+    #novaAssembleiaApp .wdg-review-pauta-main{ min-width: 0; flex: 1 1 auto; }
+    #novaAssembleiaApp .wdg-review-pauta-top{
+      display:flex;
+      align-items:center;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    /* Badges de tipo (Pauta): premium e por categoria */
+    #novaAssembleiaApp .wdg-pauta-badge{
+      border-radius: 999px;
+      padding: .28rem .6rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      border: 1px solid transparent;
+      background: rgba(248,250,252,1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.92);
+    }
+    #novaAssembleiaApp .wdg-pauta-badge--deliberativo{
+      background: var(--bs-primary-bg-subtle);
+      border-color: var(--bs-primary-border-subtle);
+      color: var(--bs-primary-text-emphasis);
+    }
+    #novaAssembleiaApp .wdg-pauta-badge--informativo{
+      background: var(--bs-info-bg-subtle);
+      border-color: var(--bs-info-border-subtle);
+      color: var(--bs-info-text-emphasis);
+    }
+    #novaAssembleiaApp .wdg-pauta-badge--eleicao{
+      background: var(--bs-warning-bg-subtle);
+      border-color: var(--bs-warning-border-subtle);
+      color: var(--bs-warning-text-emphasis);
+    }
+    #novaAssembleiaApp .wdg-review-pauta-desc{
+      font-weight: 700;
+      color: rgba(15,23,42,.92);
+      min-width: 0;
+    }
+    #novaAssembleiaApp .wdg-review-pauta-obs{
+      margin-top: .35rem;
+      color: rgba(100,116,139,.95);
+      white-space: pre-wrap;
+    }
+
+    #novaAssembleiaApp .wdg-review-steps{
+      border: 1px solid rgba(15,23,42,.08);
+      border-radius: 16px;
+      background: rgba(248,250,252,.75);
+      padding: .7rem .85rem;
+    }
+    #novaAssembleiaApp .wdg-review-step{
+      display:flex;
+      align-items:center;
+      gap: .55rem;
+      padding: .35rem 0;
+      color: rgba(15,23,42,.86);
+      font-weight: 650;
+    }
+    #novaAssembleiaApp .wdg-review-step i{ color: rgba(29,78,216,1); }
+
+    /* Campo Condomínio (mesmo formato da Dirigência) */
+    .wdg-panel-subbar{
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      gap: .9rem;
+      margin: -.35rem 0 1rem;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .wdg-condo-row{ display:flex; align-items:flex-end; justify-content: flex-start; gap: .9rem; flex-wrap:wrap; width:100%; }
+    .wdg-condo-field{ display:flex; flex-direction: column; gap: .45rem; min-width: 420px; max-width: 760px; width: 100%; }
+    .wdg-condo-controlrow{ display:flex; align-items:center; gap: .7rem; width: 100%; }
+    .wdg-condo-inline-logo{
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(15,23,42,.04);
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      flex: 0 0 46px;
+    }
+    .wdg-condo-label{
+      font-weight: 800;
+      font-size: .78rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(15,23,42,.65);
+    }
+    .wdg-condo-select.form-select{
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.12);
+      box-shadow: 0 10px 22px rgba(15,23,42,.06);
+      transition: box-shadow .16s ease, border-color .16s ease, transform .16s ease;
+      padding-left: 1rem;
+      padding-right: 2.2rem;
+      min-height: 58px;
+      font-size: 1.02rem;
+      font-weight: 750;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .wdg-condo-select.form-select:focus{
+      border-color: rgba(29,78,216,.35);
+      box-shadow:
+        0 0 0 .25rem rgba(29,78,216,.12),
+        0 18px 38px rgba(15,23,42,.10);
+      transform: translateY(-1px);
+    }
+    .wdg-condo-select.form-select:disabled{
+      opacity: 1;
+      background: rgba(148, 163, 184, 0.18);
+      border-color: rgba(15,23,42,.10);
+      box-shadow: none;
+      transform: none;
+    }
+    @media (max-width: 576px){
+      .wdg-condo-field{ min-width: 0; }
+    }
+  </style>
+</head>
+<body class="wdg-layout wdg-nova-assembleia" data-base-path="<%= _bp %>">
+  <%- include('../../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Gestão de Condomínios',
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+
+  <main class="container py-4" id="novaAssembleiaApp" data-base-path="<%= _bp %>" data-id="<%= _id %>">
+    <section class="wdg-hero">
+      <div class="d-flex flex-wrap gap-3 justify-content-between align-items-start">
+        <div>
+          <h1>Nova assembleia</h1>
+          <small>
+            <% if (_id) { %>
+              ID do rascunho: <strong><%= _id %></strong>
+            <% } else { %>
+              Salve o rascunho para gerar um ID.
+            <% } %>
+          </small>
+        </div>
+        <div class="d-flex gap-2">
+          <a class="wdg-btn3d wdg-btn3d--on-dark" href="<%= _bp %>/assembleias" aria-label="Voltar para lista">
+            <img class="wdg-btn3d-icon" src="<%= _bp %>/images/anterior.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='/images/anterior.png'">
+            Voltar para lista
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="wdg-panel">
+      <% const canScopeAllUnits = (user && (user.isMaster || user.role === 'master' || user.role === 'admin')); %>
+      <% const selectedUnidadeIdSafe = (typeof selectedUnidadeId !== 'undefined') ? String(selectedUnidadeId || '').trim() : ''; %>
+
+      <div class="wdg-panel-subbar" aria-label="Filtro de condomínio">
+        <div class="wdg-condo-row">
+          <div class="wdg-condo-field">
+            <label class="wdg-condo-label">Condomínio</label>
+            <div class="wdg-condo-controlrow">
+              <img class="wdg-condo-inline-logo" data-condo-inline-logo="1" src="<%= _bp %>/images/unidade.png" alt="Logo do condomínio" loading="lazy" onerror="this.onerror=null;this.src='/images/unidade.png'">
+              <select
+                class="form-select wdg-select wdg-condo-select"
+                data-condo-select
+                data-selected-unidade-id="<%= selectedUnidadeIdSafe %>"
+                <%= canScopeAllUnits ? '' : 'disabled' %>
+                aria-label="Condomínio"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form method="POST" action="<%= _bp %>/assembleias/nova/salvar" data-assembleia-unidade-form class="d-none">
+        <input type="hidden" name="id" value="<%= _id || '' %>">
+        <input type="hidden" name="tab" value="<%= _tab %>">
+        <input type="hidden" name="nav" value="stay">
+        <input type="hidden" name="unidade_id" value="<%= selectedUnidadeIdSafe %>" data-assembleia-unidade-id>
+      </form>
+
+      <ul class="nav nav-tabs" role="tablist">
+        <% const tabs = [
+          { key: 'dados', label: 'Dados' },
+          { key: 'convocacao', label: 'Convocação' },
+          { key: 'pauta', label: 'Pauta' },
+          { key: 'revisao', label: 'Revisão' },
+          { key: 'publicacao', label: 'Publicação' }
+        ]; %>
+        <% tabs.forEach(t => { %>
+          <% const isActive = t.key === _tab; %>
+          <% const disabled = !_id && t.key !== 'dados'; %>
+          <li class="nav-item" role="presentation">
+            <% if (disabled) { %>
+              <span class="nav-link <%= isActive ? 'active' : '' %> disabled" aria-disabled="true"><%= t.label %></span>
+            <% } else { %>
+              <a class="nav-link <%= isActive ? 'active' : '' %>" href="<%= _bp %>/assembleias/nova?<%= _id ? ('id=' + encodeURIComponent(_id) + '&') : '' %>tab=<%= encodeURIComponent(t.key) %>"><%= t.label %></a>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+
+      <div class="pt-3">
+        <%- include(activePartial, {
+          _bp,
+          id: _id,
+          tab: _tab,
+          form: _form,
+          errors,
+          publishErrors,
+          canPublish,
+          showPublishErrors: (typeof showPublishErrors !== 'undefined' ? showPublishErrors : false),
+          unidadesOptions: (typeof unidadesOptions !== 'undefined' ? unidadesOptions : undefined),
+          selectedUnidadeId: (typeof selectedUnidadeId !== 'undefined' ? selectedUnidadeId : undefined),
+          available: (typeof available !== 'undefined' ? available : undefined)
+        }) %>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal de pré-visualização (placeholder) -->
+  <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content" style="border-radius:18px;">
+        <div class="modal-header">
+          <h5 class="modal-title">Pré-visualização (placeholder)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="wdg-muted mb-2">Nesta etapa, a geração da convocação/ata pode ser integrada depois.</p>
+          <div class="wdg-kv">
+            <div><strong>Título:</strong> <%= _form?.titulo || '-' %></div>
+            <div><strong>Número:</strong> <%= _form?.numero || '-' %></div>
+            <div><strong>Data:</strong> <%= _form?.data ? new Date(_form.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-' %></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<%= _bp %>/js/condominios/assembleias/nova_assembleia.js?v=20260206.8"></script>
+  <script src="<%= _bp %>/js/condominios/assembleias/modal_assembleia_local.js?v=20260206.2"></script>
+  <script src="<%= _bp %>/js/condominios/assembleias/modal_assembleia_responsavel.js?v=20260206.2"></script>
+</body>
+</html>

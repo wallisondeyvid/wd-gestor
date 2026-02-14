@@ -1,0 +1,1179 @@
+/* CSS específico da página: Cadastrar Proprietário
+	 Objetivo: replicar o padrão premium/3D da Habitação/Garagem/Áreas Comuns,
+	 usando apenas tokens existentes em condominios-modern.css.
+*/
+
+body.page-cadastrar-proprietario,
+body.page-editar-habitacao,
+body.page-editar-area-comum{
+	background: var(--wdg-bg) !important;
+}
+
+/* Cards com acabamento premium */
+body.page-cadastrar-proprietario .content.wdg-card,
+body.page-cadastrar-proprietario .wdg-card.content,
+body.page-cadastrar-proprietario .content,
+body.page-editar-habitacao .content.wdg-card,
+body.page-editar-habitacao .wdg-card.content,
+body.page-editar-habitacao .content,
+body.page-editar-area-comum .content.wdg-card,
+body.page-editar-area-comum .wdg-card.content,
+body.page-editar-area-comum .content{
+	border-radius: var(--wdg-radius-lg);
+	background: var(--wdg-glass);
+	border: 1px solid var(--wdg-glass-border);
+	box-shadow: var(--wdg-shadow-hover);
+	/* precisa ser visível para o dropdown (picker) extrapolar o bloco */
+	overflow: visible;
+	position: relative;
+}
+
+/* Nesta tela não há dropdown que extrapole o card: manter acabamento "glass" com overflow hidden */
+body.page-editar-habitacao .content.wdg-card,
+body.page-editar-habitacao .wdg-card.content,
+body.page-editar-habitacao .content,
+body.page-editar-area-comum .content.wdg-card,
+body.page-editar-area-comum .wdg-card.content,
+body.page-editar-area-comum .content{ overflow: hidden; }
+
+/* Card do formulário deve ficar acima do bloco seguinte (dropdown do picker) */
+body.page-cadastrar-proprietario .content.mb-3.wdg-card,
+body.page-editar-habitacao .content.mb-3.wdg-card,
+body.page-editar-area-comum .content.mb-3.wdg-card{ z-index: 5; }
+
+body.page-cadastrar-proprietario .content.wdg-card::before,
+body.page-cadastrar-proprietario .wdg-card.content::before,
+body.page-cadastrar-proprietario .content::before,
+body.page-editar-habitacao .content.wdg-card::before,
+body.page-editar-habitacao .wdg-card.content::before,
+body.page-editar-habitacao .content::before,
+body.page-editar-area-comum .content.wdg-card::before,
+body.page-editar-area-comum .wdg-card.content::before,
+body.page-editar-area-comum .content::before{
+	content:'';
+	position:absolute;
+	inset:0;
+	border-radius: inherit;
+	pointer-events:none;
+	background:
+		linear-gradient(180deg, var(--wdg-glass-border), transparent 38%),
+		radial-gradient(900px 320px at 30% 0%, var(--wdg-ink-soft), transparent 55%);
+	opacity: .10;
+}
+
+body.page-cadastrar-proprietario .content.wdg-card > *,
+body.page-cadastrar-proprietario .wdg-card.content > *,
+body.page-cadastrar-proprietario .content > *,
+body.page-editar-habitacao .content.wdg-card > *,
+body.page-editar-habitacao .wdg-card.content > *,
+body.page-editar-habitacao .content > *,
+body.page-editar-area-comum .content.wdg-card > *,
+body.page-editar-area-comum .wdg-card.content > *,
+body.page-editar-area-comum .content > *{
+	position: relative;
+	z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+	body.page-cadastrar-proprietario .content{
+		-webkit-backdrop-filter: blur(14px) saturate(150%);
+		backdrop-filter: blur(14px) saturate(150%);
+		background: var(--wdg-glass);
+		border-color: var(--wdg-glass-border);
+	}
+	body.page-editar-habitacao .content{
+		-webkit-backdrop-filter: blur(14px) saturate(150%);
+		backdrop-filter: blur(14px) saturate(150%);
+		background: var(--wdg-glass);
+		border-color: var(--wdg-glass-border);
+	}
+	body.page-editar-area-comum .content{
+		-webkit-backdrop-filter: blur(14px) saturate(150%);
+		backdrop-filter: blur(14px) saturate(150%);
+		background: var(--wdg-glass);
+		border-color: var(--wdg-glass-border);
+	}
+}
+
+body.page-cadastrar-proprietario .page-main-title,
+body.page-editar-habitacao .page-main-title,
+body.page-editar-area-comum .page-main-title{
+	font-weight: 800;
+	letter-spacing: -.02em;
+}
+
+body.page-cadastrar-proprietario .wdg-section-title,
+body.page-editar-habitacao .wdg-section-title,
+body.page-editar-area-comum .wdg-section-title{
+	font-weight: 800;
+	letter-spacing: .2px;
+}
+
+/* Inputs premium */
+body.page-cadastrar-proprietario .form-control,
+body.page-cadastrar-proprietario .form-select,
+body.page-editar-habitacao .form-control,
+body.page-editar-habitacao .form-select,
+body.page-editar-area-comum .form-control,
+body.page-editar-area-comum .form-select{
+	border-radius: 12px;
+	border-color: rgba(var(--wdg-accent-rgb), .18);
+	background:
+		linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	box-shadow:
+		inset 0 1px 0 var(--wdg-glass-border),
+		var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-proprietario .form-control:focus,
+body.page-cadastrar-proprietario .form-select:focus,
+body.page-editar-habitacao .form-control:focus,
+body.page-editar-habitacao .form-select:focus,
+body.page-editar-area-comum .form-control:focus,
+body.page-editar-area-comum .form-select:focus{
+	border-color: var(--wdg-primary);
+	box-shadow: var(--wdg-focus-ring), var(--wdg-shadow-hover);
+}
+
+body.page-cadastrar-proprietario .form-label,
+body.page-editar-habitacao .form-label,
+body.page-editar-area-comum .form-label{
+	font-weight: 650;
+	color: var(--wdg-text);
+}
+
+/* Padrões legados desta tela */
+body.page-cadastrar-proprietario .table-sm td,
+body.page-cadastrar-proprietario .table-sm th{
+	vertical-align: middle;
+}
+
+body.page-cadastrar-proprietario .blocked{
+	background: var(--wdg-surface-alt);
+	cursor: not-allowed;
+}
+
+body.page-cadastrar-proprietario .hab-table td{ font-size: .85rem; }
+body.page-cadastrar-proprietario .badge-role{ font-size: .65rem; letter-spacing: .5px; }
+
+/* Oculta ícone do calendário para este campo específico */
+body.page-cadastrar-proprietario #pDataNasc + .btn-date-icon,
+body.page-cadastrar-proprietario #mDataNasc + .btn-date-icon{ display:none !important; }
+
+/* Materiais: oculta ícone do calendário neste campo */
+body.page-cadastrar-materiais #mDataAquisicao + .btn-date-icon{ display:none !important; }
+
+/* WhatsApp addon (evita ficar por baixo do input) */
+body.page-cadastrar-proprietario .tel-group .wa-addon{
+	padding-left: 1rem;
+	padding-right: 1rem;
+	min-width: 121px;
+	flex: 0 0 auto;
+	position: relative;
+	z-index: 3;
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	text-align: right;
+}
+
+body.page-cadastrar-proprietario .tel-group .wa-addon .form-check{ margin-left: auto; }
+body.page-cadastrar-proprietario .tel-group .form-control{ position: relative; z-index: 1; }
+
+/* Subbar de Condomínio (igual Habitação/Garagem/Áreas Comuns) */
+body.page-cadastrar-proprietario .wdg-condo-subbar,
+body.page-editar-habitacao .wdg-condo-subbar,
+body.page-editar-area-comum .wdg-condo-subbar{
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	gap: .9rem;
+	margin: .35rem 0 1.15rem;
+}
+
+body.page-cadastrar-proprietario .wdg-condo-field,
+body.page-editar-habitacao .wdg-condo-field,
+body.page-editar-area-comum .wdg-condo-field{
+	display:flex;
+	flex-direction: column;
+	gap: .45rem;
+	width: 100%;
+	max-width: 760px;
+}
+
+body.page-cadastrar-proprietario .wdg-condo-controlrow,
+body.page-editar-habitacao .wdg-condo-controlrow,
+body.page-editar-area-comum .wdg-condo-controlrow{
+	display:flex;
+	align-items:center;
+	gap: .7rem;
+	width: 100%;
+}
+
+body.page-cadastrar-proprietario .wdg-condo-inline-logo,
+body.page-editar-habitacao .wdg-condo-inline-logo,
+body.page-editar-area-comum .wdg-condo-inline-logo{
+	width: 46px;
+	height: 46px;
+	border-radius: 999px;
+	object-fit: cover;
+	border: 1px solid var(--wdg-border);
+	background: var(--wdg-surface-alt);
+	box-shadow: var(--wdg-shadow-sm);
+	flex: 0 0 46px;
+}
+
+body.page-cadastrar-proprietario .wdg-condo-label,
+body.page-editar-habitacao .wdg-condo-label,
+body.page-editar-area-comum .wdg-condo-label{
+	font-weight: 800;
+	font-size: .78rem;
+	letter-spacing: .18em;
+	text-transform: uppercase;
+	color: var(--wdg-text-light);
+}
+
+body.page-cadastrar-proprietario .wdg-condo-select.form-select,
+body.page-editar-habitacao .wdg-condo-select.form-select,
+body.page-editar-area-comum .wdg-condo-select.form-select{
+	border-radius: 999px;
+	border: 1px solid var(--wdg-border);
+	box-shadow: var(--wdg-shadow-sm);
+	transition: box-shadow .16s ease, border-color .16s ease, transform .16s ease;
+	padding-left: 1rem;
+	padding-right: 2.2rem;
+	min-height: 62px;
+	font-size: 1.05rem;
+	font-weight: 650;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+body.page-cadastrar-proprietario .wdg-condo-select.form-select:focus,
+body.page-editar-habitacao .wdg-condo-select.form-select:focus,
+body.page-editar-area-comum .wdg-condo-select.form-select:focus{
+	border-color: var(--wdg-primary);
+	box-shadow: var(--wdg-focus-ring), var(--wdg-shadow);
+	transform: translateY(-1px);
+}
+
+body.page-cadastrar-proprietario .wdg-condo-select.form-select:disabled,
+body.page-editar-habitacao .wdg-condo-select.form-select:disabled,
+body.page-editar-area-comum .wdg-condo-select.form-select:disabled{
+	opacity: 1;
+	background: var(--wdg-surface-alt);
+}
+
+/* Picker (mesmo formato do campo Vincular da Garagem) */
+body.page-cadastrar-proprietario .wdg-enq-picker{ position:relative; }
+
+body.page-cadastrar-proprietario .wdg-enq-picker-box{
+	min-height:42px;
+	display:flex;
+	align-items:center;
+	flex-wrap:wrap;
+	gap:.45rem;
+	padding:.5rem .65rem;
+	border-radius:.5rem;
+	border:1px solid rgba(var(--wdg-accent-rgb), .18);
+	background: var(--wdg-surface);
+	cursor:text;
+}
+
+body.page-cadastrar-proprietario .wdg-enq-picker-box:focus{
+	outline:none;
+	box-shadow: var(--wdg-focus-ring);
+	border-color: rgba(var(--wdg-primary-rgb), .35);
+}
+
+body.page-cadastrar-proprietario .wdg-enq-token{
+	display:inline-flex;
+	align-items:center;
+	gap:.4rem;
+	border-radius:999px;
+	border:1px solid rgba(var(--wdg-accent-rgb), .18);
+	background: var(--wdg-surface-alt);
+	color: var(--wdg-text);
+	padding:.22rem .55rem;
+	font-weight:800;
+	font-size:.82rem;
+}
+
+body.page-cadastrar-proprietario .wdg-enq-token button{
+	border:0;
+	background:transparent;
+	padding:0;
+	margin:0;
+	line-height:1;
+	color: var(--wdg-text-light);
+	font-weight:900;
+}
+body.page-cadastrar-proprietario .wdg-enq-token button:hover{ color: var(--wdg-text); }
+
+body.page-cadastrar-proprietario .wdg-enq-picker-input{
+	border:0;
+	outline:none;
+	flex:1;
+	min-width:180px;
+	font-weight:700;
+	font-size:.92rem;
+	background:transparent;
+	color: var(--wdg-text);
+}
+
+body.page-cadastrar-proprietario .wdg-enq-picker-placeholder{
+	color: var(--wdg-text-light);
+	font-weight:700;
+	font-size:.92rem;
+	user-select:none;
+}
+
+body.page-cadastrar-proprietario .wdg-enq-picker-menu{
+	position:absolute;
+	left:0;
+	right:0;
+	top:calc(100% + 6px);
+	z-index:60;
+	background: var(--wdg-surface);
+	border:1px solid rgba(var(--wdg-accent-rgb), .18);
+	border-radius:16px;
+	box-shadow: var(--wdg-shadow-hover);
+	max-height:280px;
+	overflow:auto;
+	padding:.35rem;
+}
+
+body.page-cadastrar-proprietario .wdg-enq-picker-item{
+	display:flex;
+	align-items:center;
+	justify-content:flex-start;
+	gap:.8rem;
+	width:100%;
+	text-align:left;
+	border:0;
+	background:transparent;
+	border-radius:12px;
+	padding:.55rem .7rem;
+	font-weight:700;
+	color: var(--wdg-text);
+}
+body.page-cadastrar-proprietario .wdg-enq-picker-item:hover{ background: var(--wdg-surface-alt); }
+
+body.page-cadastrar-proprietario .wdg-enq-picker-item small{
+	color: var(--wdg-text-light);
+	font-weight:800;
+}
+
+body.page-cadastrar-proprietario .wdg-pick-avatar{
+	width:34px;
+	height:34px;
+	border-radius:999px;
+	background: var(--wdg-surface-alt);
+	color: var(--wdg-text);
+	display:inline-flex;
+	align-items:center;
+	justify-content:center;
+	flex:0 0 34px;
+	font-weight:700;
+	font-size:12px;
+	overflow:hidden;
+	border: 1px solid rgba(var(--wdg-accent-rgb), .12);
+}
+body.page-cadastrar-proprietario .wdg-pick-avatar img{
+	width:100%;
+	height:100%;
+	object-fit:cover;
+	display:block;
+}
+body.page-cadastrar-proprietario .wdg-pick-lines{
+	display:flex;
+	flex-direction:column;
+	min-width:0;
+	line-height:1.2;
+}
+body.page-cadastrar-proprietario .wdg-pick-name{
+	font-weight:700;
+	color: var(--wdg-text);
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+body.page-cadastrar-proprietario .wdg-pick-hab{
+	font-size:12px;
+	color: var(--wdg-text-light);
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+
+/* Estado desabilitado para combinar com campos bloqueados */
+body.page-cadastrar-proprietario .wdg-enq-picker.is-disabled .wdg-enq-picker-box{
+	background: var(--wdg-surface-alt);
+	cursor: not-allowed;
+}
+body.page-cadastrar-proprietario .wdg-enq-picker.is-disabled .wdg-enq-picker-input{
+	cursor: not-allowed;
+}
+
+/* Picker (Morador) */
+body.page-cadastrar-morador .wdg-enq-picker{ position:relative; }
+
+body.page-cadastrar-morador .wdg-enq-picker-box{
+	min-height:42px;
+	display:flex;
+	align-items:center;
+	flex-wrap:wrap;
+	gap:.45rem;
+	padding:.5rem .65rem;
+	border-radius:.5rem;
+	border:1px solid rgba(var(--wdg-accent-rgb), .18);
+	background: var(--wdg-surface);
+	cursor:text;
+}
+
+body.page-cadastrar-morador .wdg-enq-picker-box:focus{
+	outline:none;
+	box-shadow: var(--wdg-focus-ring);
+	border-color: rgba(var(--wdg-primary-rgb), .35);
+}
+
+body.page-cadastrar-morador .wdg-enq-token{
+	display:inline-flex;
+	align-items:center;
+	gap:.4rem;
+	border-radius:999px;
+	border:1px solid rgba(var(--wdg-accent-rgb), .18);
+	background: var(--wdg-surface-alt);
+	color: var(--wdg-text);
+	padding:.22rem .55rem;
+	font-weight:800;
+	font-size:.82rem;
+}
+
+body.page-cadastrar-morador .wdg-enq-token button{
+	border:0;
+	background:transparent;
+	padding:0;
+	margin:0;
+	line-height:1;
+	color: var(--wdg-text-light);
+	font-weight:900;
+}
+body.page-cadastrar-morador .wdg-enq-token button:hover{ color: var(--wdg-text); }
+
+body.page-cadastrar-morador .wdg-enq-picker-input{
+	border:0;
+	outline:none;
+	flex:1;
+	min-width:180px;
+	font-weight:700;
+	font-size:.92rem;
+	background:transparent;
+	color: var(--wdg-text);
+}
+
+body.page-cadastrar-morador .wdg-enq-picker-placeholder{
+	color: var(--wdg-text-light);
+	font-weight:700;
+	font-size:.92rem;
+	user-select:none;
+}
+
+body.page-cadastrar-morador .wdg-enq-picker-menu{
+	position:absolute;
+	left:0;
+	right:0;
+	top:calc(100% + 6px);
+	z-index:60;
+	background: var(--wdg-surface);
+	border:1px solid rgba(var(--wdg-accent-rgb), .18);
+	border-radius:16px;
+	box-shadow: var(--wdg-shadow-hover);
+	max-height:280px;
+	overflow:auto;
+	padding:.35rem;
+}
+
+body.page-cadastrar-morador .wdg-enq-picker-item{
+	display:flex;
+	align-items:center;
+	justify-content:flex-start;
+	gap:.8rem;
+	width:100%;
+	text-align:left;
+	border:0;
+	background:transparent;
+	border-radius:12px;
+	padding:.55rem .7rem;
+	font-weight:700;
+	color: var(--wdg-text);
+}
+body.page-cadastrar-morador .wdg-enq-picker-item:hover{ background: var(--wdg-surface-alt); }
+
+body.page-cadastrar-morador .wdg-enq-picker-item small{
+	color: var(--wdg-text-light);
+	font-weight:800;
+}
+
+body.page-cadastrar-morador .wdg-pick-avatar{
+	width:34px;
+	height:34px;
+	border-radius:999px;
+	background: var(--wdg-surface-alt);
+	color: var(--wdg-text);
+	display:inline-flex;
+	align-items:center;
+	justify-content:center;
+	flex:0 0 34px;
+	font-weight:700;
+	font-size:12px;
+	overflow:hidden;
+	border: 1px solid rgba(var(--wdg-accent-rgb), .12);
+}
+body.page-cadastrar-morador .wdg-pick-avatar img{
+	width:100%;
+	height:100%;
+	object-fit:cover;
+	display:block;
+}
+body.page-cadastrar-morador .wdg-pick-lines{
+	display:flex;
+	flex-direction:column;
+	min-width:0;
+	line-height:1.2;
+}
+body.page-cadastrar-morador .wdg-pick-name{
+	font-weight:700;
+	color: var(--wdg-text);
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+body.page-cadastrar-morador .wdg-pick-hab{
+	font-size:12px;
+	color: var(--wdg-text-light);
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+
+body.page-cadastrar-morador .wdg-enq-picker.is-disabled .wdg-enq-picker-box{
+	background: var(--wdg-surface-alt);
+	cursor: not-allowed;
+}
+body.page-cadastrar-morador .wdg-enq-picker.is-disabled .wdg-enq-picker-input{
+	cursor: not-allowed;
+}
+
+/* Wrapper premium da tabela (estilo Feedback) */
+body.page-cadastrar-proprietario .ch-table-wrap{
+	border: 1px solid var(--wdg-border);
+	border-radius: 14px;
+	background:
+		radial-gradient(900px 260px at 35% 10%, rgba(var(--wdg-accent-rgb), .08), transparent 60%),
+		var(--wdg-surface-alt);
+	box-shadow: var(--wdg-shadow);
+	padding: 0 10px 10px;
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Wrapper premium da tabela também no Editar Habitações */
+body.page-editar-habitacao .ch-table-wrap{
+	border: 1px solid var(--wdg-border);
+	border-radius: 14px;
+	background:
+		radial-gradient(900px 260px at 35% 10%, rgba(var(--wdg-accent-rgb), .08), transparent 60%),
+		var(--wdg-surface-alt);
+	box-shadow: var(--wdg-shadow);
+	padding: 0 10px 10px;
+	position: relative;
+	/* Importante: `position: sticky` do thead depende de ancestrais com overflow visível.
+	   Mantemos o recorte/rolagem no wrapper interno (#habResultadoWrap). */
+	overflow: visible;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Wrapper premium da tabela também no Editar Áreas Comuns */
+body.page-editar-area-comum .ch-table-wrap{
+	border: 1px solid var(--wdg-border);
+	border-radius: 14px;
+	background:
+		radial-gradient(900px 260px at 35% 10%, rgba(var(--wdg-accent-rgb), .08), transparent 60%),
+		var(--wdg-surface-alt);
+	box-shadow: var(--wdg-shadow);
+	padding: 0 10px 10px;
+	position: relative;
+	/* Importante: `position: sticky` do thead depende de ancestrais com overflow visível.
+	   Mantemos o recorte/rolagem no wrapper interno (#areaResultadoWrap). */
+	overflow: visible;
+	display: flex;
+	flex-direction: column;
+}
+
+body.page-editar-area-comum .ch-table-wrap::before{
+	content:'';
+	position:absolute;
+	left:0;
+	right:0;
+	top:0;
+	height: 52px;
+	background:
+		radial-gradient(900px 220px at 18% -10%, rgba(var(--wdg-primary-rgb), .22), transparent 55%),
+		var(--wdg-hero-gradient);
+	border-top-left-radius: 14px;
+	border-top-right-radius: 14px;
+	z-index: 1;
+	pointer-events: none;
+}
+
+body.page-editar-habitacao .ch-table-wrap::before{
+	content:'';
+	position:absolute;
+	left:0;
+	right:0;
+	top:0;
+	height: 52px;
+	background:
+		radial-gradient(900px 220px at 18% -10%, rgba(var(--wdg-primary-rgb), .22), transparent 55%),
+		var(--wdg-hero-gradient);
+	border-top-left-radius: 14px;
+	border-top-right-radius: 14px;
+	z-index: 1;
+	pointer-events: none;
+}
+
+/* Editar Habitações: altura da lista igual ao Cadastrar Habitação
+   (scroll na tabela + paginação sempre fixa no rodapé do wrapper) */
+
+/* Por padrão NÃO deve haver rolagem interna (evita scrollbar “fantasma”).
+   Ativa scroll apenas quando JS adicionar `.scroll-limit` em #habResultadoWrap. */
+body.page-editar-habitacao #habResultadoWrap.table-vert-max{
+	max-height: none;
+	overflow-y: visible;
+	scrollbar-gutter: auto;
+}
+
+body.page-editar-habitacao #habResultadoWrap.scroll-limit{
+	max-height: 420px;
+	overflow-y: auto;
+}
+
+/* Editar Áreas Comuns: por padrão sem rolagem interna; ativa só com `.scroll-limit` */
+body.page-editar-area-comum #areaResultadoWrap.table-vert-max{
+	max-height: none;
+	overflow-y: visible;
+	scrollbar-gutter: auto;
+}
+
+body.page-editar-area-comum #areaResultadoWrap.scroll-limit{
+	max-height: 420px;
+	overflow-y: auto;
+}
+
+body.page-editar-habitacao .ch-table-scroll,
+body.page-editar-area-comum .ch-table-scroll{
+	position: relative;
+	z-index: 2;
+	border-radius: 12px;
+	flex: 1 1 auto;
+	min-height: 0;
+	/* Horizontal sempre responsivo; vertical só quando `.scroll-limit` estiver ativo */
+	overflow-x: auto;
+	overflow-y: visible;
+}
+
+body.page-editar-habitacao .ch-table-pager{
+	position: relative;
+	z-index: 2;
+	flex: 0 0 auto;
+	margin-top: 10px;
+	padding-top: 10px;
+	padding-bottom: 2px;
+	background: linear-gradient(180deg, transparent, var(--wdg-glass) 28%, var(--wdg-surface));
+	border-top: 1px solid rgba(var(--wdg-accent-rgb), .10);
+}
+
+body.page-editar-area-comum .ch-table-pager{
+	position: relative;
+	z-index: 2;
+	flex: 0 0 auto;
+	margin-top: 10px;
+	padding-top: 10px;
+	padding-bottom: 2px;
+	background: linear-gradient(180deg, transparent, var(--wdg-glass) 28%, var(--wdg-surface));
+	border-top: 1px solid rgba(var(--wdg-accent-rgb), .10);
+}
+
+/* Tabela no estilo "Feedback" (linhas em cards) - Editar Áreas Comuns */
+body.page-editar-area-comum #areaTableWrap th,
+body.page-editar-area-comum #areaTableWrap td{ text-align: center; }
+
+body.page-editar-area-comum #areaTableWrap table{
+	background: transparent;
+	border-collapse: separate;
+	border-spacing: 0 10px;
+}
+
+/* Header sticky transparente (o fundo vem do ::before do wrapper) */
+body.page-editar-area-comum #areaTableWrap thead th{
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	font-size: .72rem;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	color: var(--wdg-surface);
+	background: transparent;
+	border-bottom: 0;
+	box-shadow: none;
+}
+
+/* Cantos superiores arredondados no cabeçalho */
+body.page-editar-area-comum #areaTableWrap thead th:first-child{ border-top-left-radius: 12px; }
+body.page-editar-area-comum #areaTableWrap thead th:last-child{ border-top-right-radius: 12px; }
+
+/* Remove qualquer borda “fina” aplicada pelo Bootstrap no thead */
+body.page-editar-area-comum #areaTableWrap table > :not(caption) > thead > * > *{ border-bottom-width: 0; }
+
+/* Células do corpo: gradiente, borda e sombra (efeito card) */
+body.page-editar-area-comum #areaTableWrap tbody td{
+	border-top: none;
+	border-bottom: none;
+	background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+	box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-editar-area-comum #areaTableWrap tbody tr td:first-child{ border-radius: 12px 0 0 12px; }
+body.page-editar-area-comum #areaTableWrap tbody tr td:last-child{ border-radius: 0 12px 12px 0; }
+
+/* Zebra suave nas células (não no <tr>) */
+body.page-editar-area-comum #areaTableWrap tbody tr:nth-child(odd) td{
+	background: linear-gradient(180deg, var(--wdg-surface), rgba(var(--wdg-accent-rgb), .03));
+}
+
+/* Hover premium */
+body.page-editar-area-comum #areaTableWrap tbody tr{ transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+body.page-editar-area-comum #areaTableWrap tbody tr:hover{ transform: translateY(-1px); }
+body.page-editar-area-comum #areaTableWrap tbody tr:hover td{
+	border-color: rgba(var(--wdg-primary-rgb), .24);
+	background: linear-gradient(180deg, var(--wdg-primary-soft), var(--wdg-surface));
+}
+
+/* Tabela no estilo "Feedback" (linhas em cards) */
+body.page-editar-habitacao #habTableWrap th,
+body.page-editar-habitacao #habTableWrap td{ text-align: center; }
+
+body.page-editar-habitacao #habTableWrap table{
+	background: transparent;
+	border-collapse: separate;
+	border-spacing: 0 10px;
+}
+
+/* Header sticky transparente (o fundo vem do ::before do wrapper) */
+body.page-editar-habitacao #habTableWrap thead th{
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	font-size: .72rem;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	color: var(--wdg-surface);
+	background: transparent;
+	border-bottom: 0;
+	box-shadow: none;
+}
+
+/* Cantos superiores arredondados no cabeçalho */
+body.page-editar-habitacao #habTableWrap thead th:first-child{
+	border-top-left-radius: 12px;
+}
+body.page-editar-habitacao #habTableWrap thead th:last-child{
+	border-top-right-radius: 12px;
+}
+
+/* Remove qualquer borda “fina” aplicada pelo Bootstrap no thead */
+body.page-editar-habitacao #habTableWrap table > :not(caption) > thead > * > *{
+	border-bottom-width: 0;
+}
+
+/* Células do corpo: gradiente, borda e sombra (efeito card) */
+body.page-editar-habitacao #habTableWrap tbody td{
+	border-top: none;
+	border-bottom: none;
+	background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+	box-shadow: var(--wdg-shadow-sm);
+}
+
+/* Bordas arredondadas por linha */
+body.page-editar-habitacao #habTableWrap tbody tr td:first-child{ border-radius: 12px 0 0 12px; }
+body.page-editar-habitacao #habTableWrap tbody tr td:last-child{ border-radius: 0 12px 12px 0; }
+
+/* Zebra suave nas células (não no <tr>) */
+body.page-editar-habitacao #habTableWrap tbody tr:nth-child(odd) td{
+	background: linear-gradient(180deg, var(--wdg-surface), rgba(var(--wdg-accent-rgb), .03));
+}
+
+/* Hover premium */
+body.page-editar-habitacao #habTableWrap tbody tr{ transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+body.page-editar-habitacao #habTableWrap tbody tr:hover{ transform: translateY(-1px); }
+body.page-editar-habitacao #habTableWrap tbody tr:hover td{
+	border-color: rgba(var(--wdg-primary-rgb), .24);
+	background: linear-gradient(180deg, var(--wdg-primary-soft), var(--wdg-surface));
+}
+
+body.page-cadastrar-proprietario .ch-table-wrap::before{
+	content:'';
+	position:absolute;
+	left:0;
+	right:0;
+	top:0;
+	height: 52px;
+	background:
+		radial-gradient(900px 220px at 18% -10%, rgba(var(--wdg-primary-rgb), .22), transparent 55%),
+		var(--wdg-hero-gradient);
+	z-index: 1;
+	pointer-events: none;
+}
+
+body.page-cadastrar-proprietario .ch-table-scroll{
+	position: relative;
+	z-index: 2;
+	border-radius: 12px;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+body.page-cadastrar-proprietario .ch-table-pager{
+	position: relative;
+	z-index: 2;
+	flex: 0 0 auto;
+	margin-top: 10px;
+	padding-top: 10px;
+	padding-bottom: 2px;
+	background: linear-gradient(180deg, transparent, var(--wdg-glass) 28%, var(--wdg-surface));
+	border-top: 1px solid rgba(var(--wdg-accent-rgb), .10);
+}
+
+body.page-cadastrar-proprietario #propTableWrap .table-vert-max,
+body.page-cadastrar-proprietario #morTableWrap .table-vert-max{ max-height: 420px; }
+
+/* Lista de vínculos (Habitações vinculadas): mesma estética da lista principal */
+body.page-cadastrar-proprietario #vincTableWrap .table-vert-max,
+body.page-cadastrar-proprietario #vincMorTableWrap .table-vert-max{ max-height: 320px; }
+
+/* Vínculos não têm paginação: não esticar o bloco verticalmente */
+body.page-cadastrar-proprietario #vincTableWrap .ch-table-scroll{
+	flex: 0 0 auto;
+}
+
+body.page-cadastrar-proprietario #vincMorTableWrap .ch-table-scroll{
+	flex: 0 0 auto;
+}
+
+/* Estilo “Feedback” da tabela (linhas em cards + thead sticky) */
+body.page-cadastrar-proprietario #propTableWrap th,
+body.page-cadastrar-proprietario #propTableWrap td,
+body.page-cadastrar-proprietario #morTableWrap th,
+body.page-cadastrar-proprietario #morTableWrap td{ text-align: center; }
+
+body.page-cadastrar-proprietario #vincTableWrap th,
+body.page-cadastrar-proprietario #vincTableWrap td,
+body.page-cadastrar-proprietario #vincMorTableWrap th,
+body.page-cadastrar-proprietario #vincMorTableWrap td{ text-align: center; }
+
+body.page-cadastrar-proprietario #propTableWrap table,
+body.page-cadastrar-proprietario #morTableWrap table{
+	background: transparent;
+	border-collapse: separate;
+	border-spacing: 0 10px;
+}
+
+body.page-cadastrar-proprietario #vincTableWrap table,
+body.page-cadastrar-proprietario #vincMorTableWrap table{
+	background: transparent;
+	border-collapse: separate;
+	border-spacing: 0 10px;
+}
+
+body.page-cadastrar-proprietario #propTableWrap thead th,
+body.page-cadastrar-proprietario #morTableWrap thead th{
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	font-size: .72rem;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	color: var(--wdg-surface);
+	background: transparent;
+	border-bottom: 0;
+	box-shadow: none;
+}
+
+body.page-cadastrar-proprietario #vincTableWrap thead th,
+body.page-cadastrar-proprietario #vincMorTableWrap thead th{
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	font-size: .72rem;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	color: var(--wdg-surface);
+	background: transparent;
+	border-bottom: 0;
+	box-shadow: none;
+}
+
+/* Override extra: regra global de .table-vert-max thead th não pode pintar fundo */
+body.page-cadastrar-proprietario #vincTableWrap .table-vert-max thead th,
+body.page-cadastrar-proprietario #vincMorTableWrap .table-vert-max thead th{
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+/* Materiais: lista premium (mesmo padrão visual das outras telas) */
+body.page-cadastrar-materiais #natTableWrap .table-vert-max{ max-height: 320px; }
+body.page-cadastrar-materiais #matTableWrap .table-vert-max{ max-height: 420px; }
+body.page-cadastrar-materiais #vincAreaTableWrap .table-vert-max{ max-height: 320px; }
+
+/* Vínculo não tem paginação: não esticar bloco verticalmente */
+body.page-cadastrar-materiais #vincAreaTableWrap .ch-table-scroll{ flex: 0 0 auto; }
+
+body.page-cadastrar-materiais #natTableWrap th,
+body.page-cadastrar-materiais #natTableWrap td,
+body.page-cadastrar-materiais #matTableWrap th,
+body.page-cadastrar-materiais #matTableWrap td,
+body.page-cadastrar-materiais #vincAreaTableWrap th,
+body.page-cadastrar-materiais #vincAreaTableWrap td{ text-align: center; }
+
+body.page-cadastrar-materiais #natTableWrap table,
+body.page-cadastrar-materiais #matTableWrap table,
+body.page-cadastrar-materiais #vincAreaTableWrap table{
+	background: transparent;
+	border-collapse: separate;
+	border-spacing: 0 10px;
+}
+
+body.page-cadastrar-materiais #natTableWrap thead th,
+body.page-cadastrar-materiais #matTableWrap thead th,
+body.page-cadastrar-materiais #vincAreaTableWrap thead th{
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	font-size: .72rem;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	color: var(--wdg-surface);
+	background: transparent;
+	border-bottom: 0;
+	box-shadow: none;
+}
+
+body.page-cadastrar-materiais #natTableWrap .table-vert-max thead th,
+body.page-cadastrar-materiais #matTableWrap .table-vert-max thead th,
+body.page-cadastrar-materiais #vincAreaTableWrap .table-vert-max thead th{
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+body.page-cadastrar-materiais #natTableWrap table > :not(caption) > thead > * > *,
+body.page-cadastrar-materiais #matTableWrap table > :not(caption) > thead > * > *,
+body.page-cadastrar-materiais #vincAreaTableWrap table > :not(caption) > thead > * > *{ border-bottom-width: 0; }
+
+body.page-cadastrar-materiais #natTableWrap tbody td,
+body.page-cadastrar-materiais #matTableWrap tbody td,
+body.page-cadastrar-materiais #vincAreaTableWrap tbody td{
+	border-top: none;
+	border-bottom: none;
+	background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+	box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-materiais #natTableWrap tbody tr td:first-child,
+body.page-cadastrar-materiais #matTableWrap tbody tr td:first-child,
+body.page-cadastrar-materiais #vincAreaTableWrap tbody tr td:first-child{ border-radius: 12px 0 0 12px; }
+body.page-cadastrar-materiais #natTableWrap tbody tr td:last-child,
+body.page-cadastrar-materiais #matTableWrap tbody tr td:last-child,
+body.page-cadastrar-materiais #vincAreaTableWrap tbody tr td:last-child{ border-radius: 0 12px 12px 0; }
+
+body.page-cadastrar-materiais #natTableWrap tbody tr:nth-child(odd) td,
+body.page-cadastrar-materiais #matTableWrap tbody tr:nth-child(odd) td,
+body.page-cadastrar-materiais #vincAreaTableWrap tbody tr:nth-child(odd) td{
+	background: linear-gradient(180deg, var(--wdg-surface), rgba(var(--wdg-accent-rgb), .03));
+}
+
+body.page-cadastrar-materiais #natTableWrap tbody tr,
+body.page-cadastrar-materiais #matTableWrap tbody tr,
+body.page-cadastrar-materiais #vincAreaTableWrap tbody tr{ transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+
+body.page-cadastrar-materiais #natTableWrap tbody tr:hover,
+body.page-cadastrar-materiais #matTableWrap tbody tr:hover,
+body.page-cadastrar-materiais #vincAreaTableWrap tbody tr:hover{ transform: translateY(-1px); }
+
+body.page-cadastrar-materiais #natTableWrap tbody tr:hover td,
+body.page-cadastrar-materiais #matTableWrap tbody tr:hover td,
+body.page-cadastrar-materiais #vincAreaTableWrap tbody tr:hover td{
+	border-color: rgba(var(--wdg-primary-rgb), .24);
+	background: linear-gradient(180deg, var(--wdg-primary-soft), var(--wdg-surface));
+}
+
+body.page-cadastrar-proprietario #propTableWrap table > :not(caption) > thead > * > *,
+body.page-cadastrar-proprietario #morTableWrap table > :not(caption) > thead > * > *{ border-bottom-width: 0; }
+
+body.page-cadastrar-proprietario #vincTableWrap table > :not(caption) > thead > * > *,
+body.page-cadastrar-proprietario #vincMorTableWrap table > :not(caption) > thead > * > *{ border-bottom-width: 0; }
+
+body.page-cadastrar-proprietario #propTableWrap tbody td,
+body.page-cadastrar-proprietario #morTableWrap tbody td{
+	border-top: none;
+	border-bottom: none;
+	background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+	box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-proprietario #vincTableWrap tbody td,
+body.page-cadastrar-proprietario #vincMorTableWrap tbody td{
+	border-top: none;
+	border-bottom: none;
+	background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+	box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-proprietario #propTableWrap tbody tr td:first-child,
+body.page-cadastrar-proprietario #morTableWrap tbody tr td:first-child{ border-radius: 12px 0 0 12px; }
+body.page-cadastrar-proprietario #propTableWrap tbody tr td:last-child,
+body.page-cadastrar-proprietario #morTableWrap tbody tr td:last-child{ border-radius: 0 12px 12px 0; }
+
+body.page-cadastrar-proprietario #vincTableWrap tbody tr td:first-child,
+body.page-cadastrar-proprietario #vincMorTableWrap tbody tr td:first-child{ border-radius: 12px 0 0 12px; }
+body.page-cadastrar-proprietario #vincTableWrap tbody tr td:last-child,
+body.page-cadastrar-proprietario #vincMorTableWrap tbody tr td:last-child{ border-radius: 0 12px 12px 0; }
+
+body.page-cadastrar-proprietario #propTableWrap tbody tr:nth-child(odd) td,
+body.page-cadastrar-proprietario #morTableWrap tbody tr:nth-child(odd) td{
+	background: linear-gradient(180deg, var(--wdg-surface), rgba(var(--wdg-accent-rgb), .03));
+}
+
+body.page-cadastrar-proprietario #vincTableWrap tbody tr:nth-child(odd) td,
+body.page-cadastrar-proprietario #vincMorTableWrap tbody tr:nth-child(odd) td{
+	background: linear-gradient(180deg, var(--wdg-surface), rgba(var(--wdg-accent-rgb), .03));
+}
+
+body.page-cadastrar-proprietario #propTableWrap tbody tr,
+body.page-cadastrar-proprietario #morTableWrap tbody tr{ transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+body.page-cadastrar-proprietario #propTableWrap tbody tr:hover,
+body.page-cadastrar-proprietario #morTableWrap tbody tr:hover{ transform: translateY(-1px); }
+body.page-cadastrar-proprietario #propTableWrap tbody tr:hover td,
+body.page-cadastrar-proprietario #morTableWrap tbody tr:hover td{
+	border-color: rgba(var(--wdg-primary-rgb), .24);
+	background: linear-gradient(180deg, var(--wdg-primary-soft), var(--wdg-surface));
+}
+
+body.page-cadastrar-proprietario #vincTableWrap tbody tr,
+body.page-cadastrar-proprietario #vincMorTableWrap tbody tr{ transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+body.page-cadastrar-proprietario #vincTableWrap tbody tr:hover,
+body.page-cadastrar-proprietario #vincMorTableWrap tbody tr:hover{ transform: translateY(-1px); }
+body.page-cadastrar-proprietario #vincTableWrap tbody tr:hover td,
+body.page-cadastrar-proprietario #vincMorTableWrap tbody tr:hover td{
+	border-color: rgba(var(--wdg-primary-rgb), .24);
+	background: linear-gradient(180deg, var(--wdg-primary-soft), var(--wdg-surface));
+}
+
+/* Toque 3D nos ícones de ação */
+body.page-cadastrar-proprietario .wdg-icon-btn{
+	border-radius: 10px;
+	transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+body.page-cadastrar-proprietario .wdg-icon-btn:hover{
+	transform: translateY(-1px);
+	box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-proprietario .wdg-icon-btn:active{ transform: translateY(0); }
+
+/* --------------------
+	Modal: Detalhes do Proprietário (premium/3D)
+	-------------------- */
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-dialog{
+	filter: drop-shadow(0 18px 35px rgba(0,0,0,.18));
+}
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-content{
+	border-radius: calc(var(--wdg-radius-lg) + 4px);
+	border: 1px solid var(--wdg-glass-border);
+	background: var(--wdg-glass);
+	box-shadow: var(--wdg-shadow-hover);
+	overflow: hidden;
+	position: relative;
+}
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-content::before{
+	content:'';
+	position:absolute;
+	inset:0;
+	pointer-events:none;
+	background:
+		linear-gradient(180deg, var(--wdg-glass-border), transparent 40%),
+		radial-gradient(1100px 420px at 30% 0%, rgba(var(--wdg-accent-rgb), .10), transparent 55%);
+	opacity: .55;
+}
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-header,
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-footer{
+	background: transparent;
+	border-color: rgba(var(--wdg-accent-rgb), .12);
+}
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-title{
+	font-weight: 850;
+	letter-spacing: -.01em;
+}
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-body,
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-header,
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-footer{
+	position: relative;
+	z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+	body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-content{
+		-webkit-backdrop-filter: blur(16px) saturate(160%);
+		backdrop-filter: blur(16px) saturate(160%);
+	}
+}
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-body .border.rounded{
+	border: 1px solid rgba(var(--wdg-accent-rgb), .14) !important;
+	border-radius: 16px !important;
+	background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	box-shadow: var(--wdg-shadow);
+	position: relative;
+}
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-body .border.rounded::before{
+	content:'';
+	position:absolute;
+	inset:0;
+	pointer-events:none;
+	background: radial-gradient(900px 260px at 20% 0%, rgba(var(--wdg-primary-rgb), .10), transparent 60%);
+	opacity: .55;
+	border-radius: 16px;
+}
+
+body.page-cadastrar-proprietario #modalDetalhesProprietario .modal-body .border.rounded > *{
+	position: relative;
+	z-index: 1;
+}

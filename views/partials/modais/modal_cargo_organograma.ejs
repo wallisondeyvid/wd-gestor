@@ -1,0 +1,249 @@
+<% /* Modal premium: criar/editar cargo + confirmar exclusão */ %>
+
+<style>
+  :root{
+    --wdg-modal-bg: #ffffff;
+    --wdg-modal-text: #0f172a;
+    --wdg-modal-muted: #64748b;
+    --wdg-modal-border: rgba(15, 23, 42, .10);
+    --wdg-modal-shadow: 0 28px 90px rgba(15,23,42,.18);
+    --wdg-modal-ring: rgba(37,99,235,.28);
+  }
+
+  #modalCargoOrganograma .modal-content,
+  #modalExcluirCargoOrganograma .modal-content{
+    border: 1px solid var(--wdg-modal-border);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: var(--wdg-modal-shadow);
+    background: var(--wdg-modal-bg);
+  }
+
+  #modalCargoOrganograma .modal-header,
+  #modalExcluirCargoOrganograma .modal-header{
+    border: 0;
+    padding: 18px 18px 14px;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(59,130,246,.18), transparent 48%),
+      radial-gradient(circle at 82% 16%, rgba(167,139,250,.16), transparent 52%),
+      linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,.94));
+  }
+
+  #modalCargoOrganograma .modal-title,
+  #modalExcluirCargoOrganograma .modal-title{
+    font-weight: 800;
+    color: var(--wdg-modal-text);
+    letter-spacing: -.02em;
+  }
+
+  .wdg-mhdr{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .wdg-mico{
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.85), rgba(255,255,255,0) 58%),
+      linear-gradient(135deg, rgba(37,99,235,.95), rgba(59,130,246,.70));
+    box-shadow: 0 16px 34px rgba(37,99,235,.20);
+    color: #fff;
+    flex: 0 0 auto;
+  }
+  .wdg-mico--danger{
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.85), rgba(255,255,255,0) 58%),
+      linear-gradient(135deg, rgba(239,68,68,.96), rgba(244,63,94,.70));
+    box-shadow: 0 16px 34px rgba(239,68,68,.18);
+  }
+  .wdg-mmeta{ min-width: 0; }
+  .wdg-msub{
+    margin: 2px 0 0;
+    color: var(--wdg-modal-muted);
+    font-weight: 650;
+    font-size: .9rem;
+    line-height: 1.25;
+  }
+
+  #modalCargoOrganograma .modal-body,
+  #modalExcluirCargoOrganograma .modal-body{
+    padding: 16px 18px 6px;
+  }
+
+  #modalCargoOrganograma .form-control{
+    border-radius: 14px;
+    border-color: rgba(15,23,42,.14);
+    box-shadow: 0 1px 0 rgba(2,6,23,.03);
+    padding: 12px 14px;
+    font-weight: 750;
+  }
+  #modalCargoOrganograma .form-control:focus{
+    border-color: rgba(37,99,235,.40);
+    box-shadow: 0 0 0 .25rem var(--wdg-modal-ring);
+  }
+
+  .wdg-hintrow{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    color: var(--wdg-modal-muted);
+    font-weight: 650;
+    font-size: .82rem;
+  }
+
+  .wdg-suggestions{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .wdg-chip{
+    border: 1px solid rgba(37,99,235,.20);
+    background: rgba(37,99,235,.06);
+    color: rgba(30,64,175,.95);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight: 750;
+    font-size: .82rem;
+    cursor: pointer;
+    user-select: none;
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  }
+  .wdg-chip:hover{ transform: translateY(-1px); background: rgba(37,99,235,.10); border-color: rgba(37,99,235,.28); }
+
+  .wdg-error{
+    display:none;
+    margin-top: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(239,68,68,.22);
+    background: rgba(239,68,68,.06);
+    color: rgba(127,29,29,.95);
+    padding: 10px 12px;
+    font-weight: 750;
+    font-size: .88rem;
+  }
+
+  #modalCargoOrganograma .modal-footer,
+  #modalExcluirCargoOrganograma .modal-footer{
+    border: 0;
+    padding: 12px 18px 18px;
+    gap: 10px;
+  }
+
+  .wdg-btn{
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-weight: 650;
+    box-shadow: 0 10px 22px rgba(15,23,42,.10);
+  }
+  .wdg-btn-primary{
+    background: linear-gradient(135deg, rgba(29,78,216,1), rgba(56,189,248,.92));
+    border: none;
+  }
+  .wdg-btn-primary:hover{ filter: saturate(1.02) brightness(1.01); }
+  .wdg-btn-light{
+    background: rgba(148,163,184,.16);
+    border: 1px solid rgba(148,163,184,.26);
+    color: rgba(15,23,42,.88);
+    box-shadow: none;
+  }
+  .wdg-btn-danger{
+    background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,.92));
+    border: none;
+  }
+
+  /* Confirmação: conteúdo */
+  #modalExcluirCargoOrganograma .wdg-confirm{
+    border: 1px solid rgba(15,23,42,.08);
+    background:
+      radial-gradient(circle at 18% 18%, rgba(239,68,68,.08), transparent 48%),
+      linear-gradient(180deg, rgba(248,250,252,1), rgba(255,255,255,1));
+    border-radius: 18px;
+    padding: 14px 14px;
+    color: rgba(15,23,42,.90);
+    font-weight: 750;
+  }
+  #modalExcluirCargoOrganograma .wdg-confirm strong{ font-weight: 900; }
+</style>
+
+<!-- Modal: Criar/Editar Cargo -->
+<div class="modal fade" id="modalCargoOrganograma" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 640px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="wdg-mhdr">
+          <div class="wdg-mico" aria-hidden="true"><i class="bi bi-diagram-3"></i></div>
+          <div class="wdg-mmeta">
+            <h5 class="modal-title" id="cargoModalTitle">Novo cargo</h5>
+            <p class="wdg-msub" id="cargoModalSubtitle">Crie um cargo para montar a hierarquia do organograma.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="cargoModalForm" autocomplete="off">
+          <label class="form-label" for="cargoNome" style="font-weight:800; color:var(--wdg-modal-text);">Nome do cargo</label>
+          <input type="text" class="form-control" id="cargoNome" placeholder="Ex.: Secretário, Conselho Fiscal, Comissão de Obras" maxlength="80" />
+
+          <div class="wdg-hintrow">
+            <span id="cargoModalHint">Dica: use um nome claro e curto.</span>
+            <span><span id="cargoCharCount">0</span>/80</span>
+          </div>
+
+          <div class="wdg-error" id="cargoModalError" role="alert"></div>
+
+          <div class="wdg-suggestions" id="cargoSuggestions" aria-label="Sugestões rápidas">
+            <span class="wdg-chip" data-cargo-suggest="Conselho Fiscal">Conselho Fiscal</span>
+            <span class="wdg-chip" data-cargo-suggest="Comissão de Obras">Comissão de Obras</span>
+            <span class="wdg-chip" data-cargo-suggest="Conselho Consultivo">Conselho Consultivo</span>
+            <span class="wdg-chip" data-cargo-suggest="Síndico">Síndico</span>
+            <span class="wdg-chip" data-cargo-suggest="Subsíndico">Subsíndico</span>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn wdg-btn wdg-btn-light" data-bs-dismiss="modal" id="cargoModalCancel">Cancelar</button>
+        <button type="button" class="btn wdg-btn wdg-btn-primary" id="cargoModalOk">Criar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar Exclusão -->
+<div class="modal fade" id="modalExcluirCargoOrganograma" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 640px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="wdg-mhdr">
+          <div class="wdg-mico wdg-mico--danger" aria-hidden="true"><i class="bi bi-trash3"></i></div>
+          <div class="wdg-mmeta">
+            <h5 class="modal-title">Excluir cargo</h5>
+            <p class="wdg-msub">Esta ação remove o cargo e realoca os subordinados.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="wdg-confirm">
+          Tem certeza que deseja excluir o cargo <strong id="cargoDeleteName">"Cargo"</strong>?
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn wdg-btn wdg-btn-light" data-bs-dismiss="modal" id="cargoDeleteCancel">Cancelar</button>
+        <button type="button" class="btn wdg-btn wdg-btn-danger" id="cargoDeleteOk">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>

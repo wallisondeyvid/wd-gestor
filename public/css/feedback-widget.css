@@ -18,7 +18,9 @@
   /* Quanto do avatar deve “entrar” no header (resto fica para fora, evitando cobrir o body) */
   --wdg-fb-avatar-inset-y: 64px;
   /* Ajuste fino: compensa a “faixa” da scrollbar no Windows durante a expansão */
-  --wdg-fb-hover-nudge-x: -16px;
+  /* Em alguns layouts o nudge negativo corta a imagem na borda direita; use deslocamento para a esquerda */
+  --wdg-fb-hover-nudge-x: 0px;
+  --wdg-fb-hover-shift-right: 16px;
   --wdg-fb-border: 1px solid rgba(0,0,0,.10);
   --wdg-fb-drawer-bg: #ffffff;
   --wdg-fb-drawer-radius: 14px;
@@ -121,6 +123,8 @@
   .wdg-feedback-widget:hover{
     width: var(--wdg-fb-fab-expanded-w);
     margin-right: var(--wdg-fb-hover-nudge-x) !important;
+    right: var(--wdg-fb-hover-shift-right) !important;
+    inset: auto var(--wdg-fb-hover-shift-right) var(--wdg-fb-gap) auto !important;
   }
 }
 
@@ -128,6 +132,8 @@
 .wdg-feedback-widget[data-open="1"]{
   width: var(--wdg-fb-fab-expanded-w);
   margin-right: var(--wdg-fb-hover-nudge-x) !important;
+  right: var(--wdg-fb-hover-shift-right) !important;
+  inset: auto var(--wdg-fb-hover-shift-right) var(--wdg-fb-gap) auto !important;
 }
 
 .wdg-feedback-widget .wdg-feedback-fab-icon{
@@ -252,6 +258,30 @@
   line-height: 1.1;
 }
 
+.wdg-feedback-widget .wdg-feedback-header-title-row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wdg-feedback-widget .wdg-feedback-home{
+  border: 0;
+  background: rgba(255,255,255,.92);
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(15,23,42,.06);
+}
+
+.wdg-feedback-widget .wdg-feedback-home:hover{ background: #fff; }
+.wdg-feedback-widget .wdg-feedback-home:active{ transform: translateY(1px); }
+
+.wdg-feedback-widget .wdg-feedback-home-icon{ display: block; }
+
 .wdg-feedback-widget .wdg-feedback-greeting{
   margin: 0;
   font-weight: 700;
@@ -371,11 +401,90 @@
   border-top-right-radius: 6px;
 }
 
+.wdg-feedback-widget .wdg-feedback-img-thumb{
+  width: 180px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(15,23,42,.12);
+}
+
+.wdg-feedback-widget .wdg-feedback-img-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(2,6,23,.62);
+}
+
+.wdg-feedback-widget .wdg-feedback-img-modal[aria-hidden="false"]{ display: flex; }
+
+.wdg-feedback-widget .wdg-feedback-img-modal-content{
+  position: relative;
+  max-width: min(920px, 96vw);
+  max-height: min(92vh, 920px);
+}
+
+.wdg-feedback-widget .wdg-feedback-img-modal-content img{
+  display: block;
+  max-width: 96vw;
+  max-height: 92vh;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.wdg-feedback-widget .wdg-feedback-img-modal-close{
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 10px 24px rgba(0,0,0,.25);
+  font-size: 18px;
+  line-height: 34px;
+}
+
 .wdg-feedback-widget .wdg-feedback-chat-quick{
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 8px 10px 10px;
+  /* Quando o container é movido para dentro do log (JS),
+     o padding lateral já vem do próprio log. */
+  padding: 8px 0 10px;
+}
+
+/* Modo premium para escolhas rápidas (1/2) */
+.wdg-feedback-widget .wdg-feedback-chat-quick[data-quick-mode="choices"]{
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0 12px;
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-quick[data-quick-mode="choices"] .wdg-feedback-quick-btn{
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  text-align: left;
+  white-space: pre-line;
+  line-height: 1.25;
+  border-color: rgba(15,23,42,.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.92));
+  box-shadow: 0 6px 18px rgba(15,23,42,.08);
+}
+
+.wdg-feedback-widget .wdg-feedback-chat-quick[data-quick-mode="choices"] .wdg-feedback-quick-btn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(26,160,255,.30);
 }
 
 .wdg-feedback-widget .wdg-feedback-quick-btn{
@@ -386,7 +495,7 @@
   border: 1px solid rgba(0,0,0,.10);
   background: rgba(255,255,255,.95);
   border-radius: 999px;
-  font-weight: 800;
+  font-weight: 500;
   cursor: pointer;
   transition: transform var(--wdg-fb-dur) var(--wdg-fb-ease),
               border-color var(--wdg-fb-dur) var(--wdg-fb-ease);
@@ -504,12 +613,43 @@
   padding: 10px 12px;
   text-align: left;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 10px;
   transition: transform var(--wdg-fb-dur) var(--wdg-fb-ease),
               border-color var(--wdg-fb-dur) var(--wdg-fb-ease);
+}
+
+/* ==============================
+   Indicador "digitando" (WhatsApp-like)
+   ============================== */
+.wdg-feedback-widget .wdg-feedback-typing-bubble{
+  padding: 10px 12px;
+}
+
+.wdg-feedback-widget .wdg-feedback-typing-dots{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 14px;
+}
+
+.wdg-feedback-widget .wdg-feedback-typing-dot{
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(15,23,42,.35);
+  display: inline-block;
+  animation: wdgFbTyping 2.10s infinite ease-in-out;
+}
+
+.wdg-feedback-widget .wdg-feedback-typing-dot:nth-child(2){ animation-delay: .22s; }
+.wdg-feedback-widget .wdg-feedback-typing-dot:nth-child(3){ animation-delay: .44s; }
+
+@keyframes wdgFbTyping{
+  0%, 100%{ transform: translateY(0); opacity: .45; }
+  50%{ transform: translateY(-3px); opacity: .9; }
 }
 
 .wdg-feedback-widget .wdg-feedback-option-icon{

@@ -19,6 +19,7 @@
   const telefone = byId('pTelefone');
   const whatsapp = byId('pWhatsapp');
   const unid = byId('vUnidade');
+  const unidadeLogoImg = byId('pUnidadeLogo');
   const unidadeResumo = byId('vUnidadeResumo');
   const hab = byId('vHabitacao');
   const morador = byId('vMorador');
@@ -39,6 +40,231 @@
   let editMode = false;
   let editingEmail = '';
 
+  // Picker Habitação (mesmo formato do campo Vincular da Garagem)
+  const pHabPickerRoot = document.querySelector('[data-p-hab-picker]');
+  const pHabPickerBox = pHabPickerRoot ? pHabPickerRoot.querySelector('[data-p-hab-picker-box]') : null;
+  const pHabPickerInput = pHabPickerRoot ? pHabPickerRoot.querySelector('[data-p-hab-picker-input]') : null;
+  const pHabPickerTokens = pHabPickerRoot ? pHabPickerRoot.querySelector('[data-p-hab-picker-tokens]') : null;
+  const pHabPickerMenu = pHabPickerRoot ? pHabPickerRoot.querySelector('[data-p-hab-picker-menu]') : null;
+  const pHabPickerPlaceholder = pHabPickerRoot ? pHabPickerRoot.querySelector('[data-p-hab-picker-placeholder]') : null;
+
+  function escapeHtml(str){
+    return String(str == null ? '' : str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+  function cssEscapeValue(v){
+    var s = String(v || '');
+    return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+  function escapeAttr(v){
+    return escapeHtml(String(v || '')).replace(/"/g,'&quot;');
+  }
+
+  function getSelectedUnidadeLabel(){
+    try{
+      var txt = unidadeResumo ? String(unidadeResumo.textContent || '').trim() : '';
+      if(txt && txt !== 'Selecione um condomínio') return txt;
+    }catch(_){ }
+    try{
+      return (unid && unid.options && unid.selectedIndex >= 0) ? String(unid.options[unid.selectedIndex].text || '').trim() : '';
+    }catch(_2){ }
+    return '';
+  }
+
+  function pHabOpenMenu(){ if(pHabPickerMenu) pHabPickerMenu.hidden = false; }
+  function pHabCloseMenu(){ if(pHabPickerMenu) pHabPickerMenu.hidden = true; }
+
+  function pHabUpdateDisabledState(){
+    if(!pHabPickerRoot || !hab) return;
+    var dis = !!hab.disabled;
+    pHabPickerRoot.classList.toggle('is-disabled', dis);
+    if(pHabPickerInput) pHabPickerInput.disabled = dis;
+    if(pHabPickerBox) pHabPickerBox.setAttribute('aria-disabled', dis ? 'true' : 'false');
+    if(dis) pHabCloseMenu();
+  }
+
+  function pHabRenderToken(label){
+    if(!pHabPickerTokens) return;
+    if(!label){ pHabPickerTokens.innerHTML=''; return; }
+    pHabPickerTokens.innerHTML = '<span class="wdg-enq-token">'
+      + escapeHtml(label)
+      + ' <button type="button" data-p-hab-clear aria-label="Remover">×</button>'
+      + '</span>';
+  }
+
+  function pHabGetSelectedLabel(){
+    if(!hab) return '';
+    var val = String(hab.value || '');
+    if(!val) return '';
+    var opt = hab.querySelector('option[value="' + cssEscapeValue(val) + '"]');
+    return opt ? String(opt.textContent || '').trim() : '';
+  }
+
+  function pHabBuildItemsFromSelect(){
+    var items = [];
+    if(!hab) return items;
+    (hab.querySelectorAll('option') || []).forEach(function(opt){
+      var val = String(opt.value || '').trim();
+      if(!val) return;
+      var label = String(opt.textContent || '').trim();
+      items.push({ value: val, label: label });
+    });
+    return items;
+  }
+
+  function pHabRenderMenu(items, filter){
+    if(!pHabPickerMenu) return;
+    var q = String(filter || '').trim().toLowerCase();
+    var selectedVal = hab ? String(hab.value || '') : '';
+    var list = (items || []).filter(function(it){
+      if(!it || !it.value) return false;
+      if(selectedVal && String(it.value) === selectedVal) return false;
+      if(!q) return true;
+      return String(it.label || '').toLowerCase().indexOf(q) >= 0;
+    }).slice(0, 40);
+    if(list.length === 0){
+      pHabPickerMenu.innerHTML = '<div class="px-2 py-2 text-muted small">Nenhum resultado.</div>';
+      return;
+    }
+    var unidadeLine = getSelectedUnidadeLabel() || 'Condomínio';
+    var avatarSrc = (basePath || '') + '/images/home.png';
+    pHabPickerMenu.innerHTML = list.map(function(it){
+      return ''
+        + '<button type="button" class="wdg-enq-picker-item" data-p-hab-item data-val="' + escapeAttr(it.value) + '">' 
+        +   '<span class="wdg-pick-avatar">'
+        +     '<img src="' + escapeAttr(avatarSrc) + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'' + escapeAttr(avatarSrc) + '\';">'
+        +   '</span>'
+        +   '<span class="wdg-pick-lines">'
+        +     '<span class="wdg-pick-name">' + escapeHtml(unidadeLine) + '</span>'
+        +     '<span class="wdg-pick-hab">' + escapeHtml(it.label || it.value) + '</span>'
+        +   '</span>'
+        + '</button>';
+    }).join('');
+  }
+
+  var pHabItemsCache = [];
+  function refreshPHabPickerFromSelect(){
+    if(!pHabPickerRoot || !hab) return;
+    pHabItemsCache = pHabBuildItemsFromSelect();
+    var label = pHabGetSelectedLabel();
+    pHabRenderToken(label);
+    if(pHabPickerPlaceholder) pHabPickerPlaceholder.hidden = true;
+    if(pHabPickerInput) pHabPickerInput.value = '';
+    pHabRenderMenu(pHabItemsCache, '');
+    pHabUpdateDisabledState();
+    pHabCloseMenu();
+  }
+
+  // Picker do vínculo (single-select)
+  if(pHabPickerBox){
+    pHabPickerBox.addEventListener('click', function(){
+      if(hab && hab.disabled) return;
+      if(pHabPickerInput) pHabPickerInput.focus();
+      pHabOpenMenu();
+    });
+    pHabPickerBox.addEventListener('keydown', function(e){
+      if(!e) return;
+      if(hab && hab.disabled) return;
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); pHabOpenMenu(); if(pHabPickerInput) pHabPickerInput.focus(); }
+      if(e.key==='Escape'){ pHabCloseMenu(); }
+    });
+  }
+  if(pHabPickerInput){
+    pHabPickerInput.addEventListener('input', function(){
+      pHabRenderMenu(pHabItemsCache, pHabPickerInput.value);
+      pHabOpenMenu();
+    });
+    pHabPickerInput.addEventListener('focus', function(){
+      if(hab && hab.disabled) return;
+      pHabRenderMenu(pHabItemsCache, pHabPickerInput.value);
+      pHabOpenMenu();
+    });
+    pHabPickerInput.addEventListener('keydown', function(e){
+      if(!e) return;
+      if(e.key==='Escape'){ pHabCloseMenu(); return; }
+    });
+  }
+  if(pHabPickerRoot){
+    pHabPickerRoot.addEventListener('click', function(e){
+      if(hab && hab.disabled) return;
+      var btn = e && e.target ? e.target.closest('[data-p-hab-item]') : null;
+      if(btn && hab){
+        var v = String(btn.getAttribute('data-val') || '');
+        hab.value = v;
+        refreshPHabPickerFromSelect();
+        return;
+      }
+      var clearBtn = e && e.target ? e.target.closest('[data-p-hab-clear]') : null;
+      if(clearBtn && hab){
+        hab.value = '';
+        refreshPHabPickerFromSelect();
+        return;
+      }
+    });
+  }
+  document.addEventListener('click', function(e){
+    if(!pHabPickerRoot || !pHabPickerMenu) return;
+    var t = e && e.target ? e.target : null;
+    if(!t) return;
+    if(pHabPickerRoot.contains(t)) return;
+    pHabCloseMenu();
+  });
+
+  function setEditModeUI(on){
+    if(!btnCadastrar) return;
+    if(on){
+      btnCadastrar.textContent = 'Alterar';
+      btnCancelarEdicao && btnCancelarEdicao.classList.remove('d-none');
+    } else {
+      btnCadastrar.textContent = 'Cadastrar';
+      btnCancelarEdicao && btnCancelarEdicao.classList.add('d-none');
+    }
+  }
+
+  function setImgWithFallback(img, urls){
+    if(!img) return;
+    var list = (urls || []).map(function(x){ return String(x || '').trim(); }).filter(Boolean);
+    if(list.length === 0) return;
+    var idx = 0;
+    img.onerror = function(){
+      idx++;
+      if(idx >= list.length){ img.onerror = null; return; }
+      img.src = list[idx];
+    };
+    img.src = list[0];
+  }
+
+  function getUnidadeLogoCandidates(uid){
+    uid = String(uid || '').trim();
+    var base = basePath || '';
+    var raw = [];
+    if(uid){
+      raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+      raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
+      raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    }
+    raw.push('/images/unidade.png');
+    raw.push(base + '/images/unidade.png');
+    var out = [];
+    for(var j=0;j<raw.length;j++){
+      var s = String(raw[j] || '').trim();
+      if(!s) continue;
+      if(out.indexOf(s) >= 0) continue;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function refreshUnitLogo(){
+    if(!unidadeLogoImg) return;
+    var uid = String((unid && unid.value) || '').trim();
+    setImgWithFallback(unidadeLogoImg, getUnidadeLogoCandidates(uid));
+  }
+
   // dados iniciais vindos do servidor
   const existingUsers = safeJSON('existingUsersData', []);
   // Dados locais de habitações/blocos/andares mantidos pela página Cadastrar Habitação
@@ -57,6 +283,7 @@
   function setBlocked(block){
     const targets = [nome, rg, cpf, dn, pai, mae, sexo, telefone, whatsapp, hab, morador, btnInserir, btnLimparVinc, btnCadastrar];
     targets.forEach(el=>{ if(!el) return; el.disabled = !!block; el.classList.toggle('blocked', !!block && el.tagName!=='BUTTON'); });
+    pHabUpdateDisabledState();
   }
 
   // Helper para identificar se vínculo é de propriedade.
@@ -93,6 +320,7 @@
       if(selectable.length === 1){ selectable[0].selected = true; }
     }
     updateUnidadeResumo();
+    refreshUnitLogo();
   }
   async function populateSexo(){
     try{
@@ -138,6 +366,7 @@
     if(!unidadeId){
       fillSelect(hab, []);
       hab.disabled = true;
+      refreshPHabPickerFromSelect();
       return;
     }
     // Carrega do banco as habitações da unidade
@@ -153,7 +382,9 @@
       const parts = [blocoNome, andarNome, numero].filter(Boolean);
       return { value: (h._id||h.id), label: parts.join(' - ') };
     });
-    hab.disabled = false;
+    // Mantém consistência com o fluxo: se o vínculo ainda estiver bloqueado, o picker deve ficar desabilitado
+    hab.disabled = !!(btnInserir && btnInserir.disabled);
+    refreshPHabPickerFromSelect();
   }
 
   function calcIdadeFromBR(dstr){
@@ -234,7 +465,7 @@
     if(!preserveEmail) emailInput.value='';
     editMode = false;
     editingEmail = '';
-    if(btnCancelarEdicao) btnCancelarEdicao.classList.add('d-none');
+    setEditModeUI(false);
     updateUnidadeResumo();
     populateHabitacoesFiltro(unid ? unid.value : '');
   }
@@ -259,10 +490,13 @@
 
   populateUnidades();
   populateHabitacoesFiltro(unid ? unid.value : '');
+  refreshPHabPickerFromSelect();
   populateSexo();
   unid && unid.addEventListener('change', ()=> {
     updateUnidadeResumo();
     populateHabitacoesFiltro(unid.value);
+    refreshUnitLogo();
+    refreshPHabPickerFromSelect();
   });
 
   btnVerificar.addEventListener('click', ()=>{
@@ -279,7 +513,7 @@
       btnCadastrar.disabled = false;
       editMode = false;
       editingEmail = '';
-      if(btnCancelarEdicao) btnCancelarEdicao.classList.add('d-none');
+      setEditModeUI(false);
       return;
     }
     // Usuário existente: preencher e liberar edição dos campos conhecidos
@@ -301,7 +535,7 @@
     btnCadastrar.disabled = false;
     editMode = false;
     editingEmail = '';
-    if(btnCancelarEdicao) btnCancelarEdicao.classList.add('d-none');
+    setEditModeUI(false);
   });
 
   btnInserir.addEventListener('click', ()=>{
@@ -324,12 +558,16 @@
       </td>`;
     vTabela.appendChild(tr);
     hab.value=''; morador.value='N';
+    refreshPHabPickerFromSelect();
+    // remover da lista de livres (e prevenir duplicidade)
+    populateHabitacoesFiltro(unid ? unid.value : '');
   });
   vTabela.addEventListener('click', (e)=>{
     const btn = e.target.closest('button[data-action="rem"]'); if(!btn) return;
     btn.closest('tr')?.remove();
+    populateHabitacoesFiltro(unid ? unid.value : '');
   });
-  btnLimparVinc.addEventListener('click', ()=>{ vTabela.innerHTML=''; });
+  btnLimparVinc.addEventListener('click', ()=>{ vTabela.innerHTML=''; populateHabitacoesFiltro(unid ? unid.value : ''); refreshPHabPickerFromSelect(); });
 
   btnLimparForm.addEventListener('click', ()=> clearForm({ preserveEmail:true }));
   btnCancelarEdicao && btnCancelarEdicao.addEventListener('click', ()=>{
@@ -368,6 +606,9 @@
       // Recarrega a listagem do servidor
       try { await renderPropPage(0); } catch(_){}
       clearForm({ preserveEmail:false });
+      editMode = false;
+      editingEmail = '';
+      setEditModeUI(false);
     }catch(e){
       console.error('[cadastro proprietario] erro', e);
       alert('Não foi possível salvar no servidor. Tente novamente.');
@@ -437,8 +678,58 @@
     }).join('<br>');
   }
 
+  function buildPropDeleteLabelFromRow(tr){
+    if(!tr) return '—';
+    var email = String(tr.getAttribute('data-email') || '').trim();
+    var nome = '';
+    try{
+      var tds = tr.querySelectorAll('td');
+      if(tds && tds[1]) nome = String(tds[1].textContent || '').trim();
+    }catch(_){ /* ignore */ }
+    var label = (nome || email || '—').trim();
+    if(nome && email) label = nome + ' (' + email + ')';
+    return label || '—';
+  }
+
+  function askPropDeleteConfirm(pLabel){
+    var modalEl = byId('propDeleteConfirmModal');
+    var nameEl = byId('propDeleteConfirmName');
+    var yesBtn = byId('propDeleteConfirmYes');
+
+    // fallback (caso Bootstrap/modal não esteja disponível)
+    if(!modalEl || !yesBtn || !(window.bootstrap && window.bootstrap.Modal)){
+      var suffix = (pLabel && pLabel !== '—') ? ('\n\nProprietário: ' + pLabel) : '';
+      return Promise.resolve(window.confirm('Confirma remover este proprietário? As habitações vinculadas ficarão sem proprietário.' + suffix + '\n\nEsta exclusão é definitiva e não pode ser desfeita.'));
+    }
+
+    if(nameEl) nameEl.textContent = pLabel || '—';
+
+    return new Promise(function(resolve){
+      var resolved = false;
+      var bs = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true, focus: true });
+
+      var onHidden = function(){
+        if(resolved) return;
+        resolved = true;
+        resolve(false);
+      };
+
+      var onYes = function(e){
+        try{ e && e.preventDefault && e.preventDefault(); }catch(_){ }
+        if(resolved) return;
+        resolved = true;
+        resolve(true);
+        try{ bs.hide(); }catch(_2){ }
+      };
+
+      modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+      yesBtn.addEventListener('click', onYes, { once: true });
+      bs.show();
+    });
+  }
+
   // Delegação ações tabela
-  propLista.addEventListener('click', (e)=>{
+  propLista.addEventListener('click', async (e)=>{
     const btn = e.target.closest('button[data-action]'); if(!btn) return;
     const tr = btn.closest('tr'); if(!tr) return;
     const email = tr.dataset.email;
@@ -449,11 +740,21 @@
     } else if(btn.dataset.action==='del-prop' || btn.dataset.action==='del'){
       const pid = tr.getAttribute('data-prop-id');
       if(!pid) return alert('ID de proprietário não encontrado.');
-      if(!confirm('Confirma remover este proprietário? As habitações vinculadas ficarão sem proprietário.')) return;
-      fetch(basePath + '/api/proprietarios/' + encodeURIComponent(pid) + '?hard=1', { method:'DELETE', credentials:'same-origin' })
-        .then(async r=>{ if(!r.ok){ throw new Error(await r.text()); } })
-        .then(async ()=>{ await renderPropPage(0); })
-        .catch(err=>{ console.error('[del proprietario] erro', err); alert('Falha ao remover.'); });
+      const labelDel = buildPropDeleteLabelFromRow(tr);
+      const okDel = await askPropDeleteConfirm(labelDel);
+      if(!okDel) return;
+      try{
+        const r = await fetch(basePath + '/api/proprietarios/' + encodeURIComponent(pid) + '?hard=1', { method:'DELETE', credentials:'same-origin' });
+        if(!r.ok){
+          let msg='';
+          try{ msg = await r.text(); }catch(_){ msg=''; }
+          throw new Error(msg || ('HTTP ' + r.status));
+        }
+        await renderPropPage(0);
+      }catch(err){
+        console.error('[del proprietario] erro', err);
+        alert('Falha ao remover.');
+      }
     }
   });
 
@@ -490,7 +791,7 @@
       });
       editMode = true;
       editingEmail = String(u.email||'').toLowerCase();
-      if(btnCancelarEdicao) btnCancelarEdicao.classList.remove('d-none');
+      setEditModeUI(true);
     }catch(err){ console.warn('[editarProprietario] erro', err); alert('Falha ao carregar dados do servidor.'); }
   }
 
@@ -569,8 +870,36 @@
     const html = montarListaCondominios(vinculos);
     return String(html||'').replace(/<br\s*\/?>(\s)?/gi, ' ').trim();
   }
-  function buildPropPagination(totalPages, pageSize, totalItems){ if(!pPaginas) return; pPaginas.innerHTML=''; if(totalPages<=1){ const infoOnly=document.createElement('div'); infoOnly.className='w-100 text-center mt-1'; infoOnly.style.fontSize='.7rem'; infoOnly.textContent='Total: '+totalItems+' proprietário(s)'; pPaginas.appendChild(infoOnly); return; }
-    function mk(label, go, dis){ const b=document.createElement('button'); b.type='button'; b.textContent=label; b.disabled=!!dis; b.addEventListener('click', ()=> renderPropPage(go)); return b; }
+  function buildPropPagination(totalPages, pageSize, totalItems){
+    if(!pPaginas) return;
+    pPaginas.innerHTML='';
+    function mk(label, go, dis){
+      const b=document.createElement('button');
+      b.type='button';
+      b.textContent=label;
+      b.disabled=!!dis;
+      if(!dis) b.addEventListener('click', ()=> renderPropPage(go));
+      return b;
+    }
+    if(totalPages<=1){
+      const firstOnly = mk('<<', 0, true);
+      const prevOnly = mk('<', 0, true);
+      const oneOnly = mk('1', 0, true);
+      const nextOnly = mk('>', 0, true);
+      const lastOnly = mk('>>', 0, true);
+      oneOnly.classList.add('active');
+      pPaginas.appendChild(firstOnly);
+      pPaginas.appendChild(prevOnly);
+      pPaginas.appendChild(oneOnly);
+      pPaginas.appendChild(nextOnly);
+      pPaginas.appendChild(lastOnly);
+      const infoOnly=document.createElement('div');
+      infoOnly.className='w-100 text-center mt-1';
+      infoOnly.style.fontSize='.7rem';
+      infoOnly.textContent='Total: '+totalItems+' proprietário(s)';
+      pPaginas.appendChild(infoOnly);
+      return;
+    }
     const win=5; const start=Math.max(0, propPage-Math.floor(win/2)); const end=Math.min(totalPages-1, start+win-1);
     const firstBtn=mk('<<',0,propPage===0); const prevBtn=mk('<',propPage-1,propPage===0); pPaginas.appendChild(firstBtn); pPaginas.appendChild(prevBtn);
     if(start>0){ const b0=mk('1',0,false); if(propPage===0) b0.classList.add('active'); pPaginas.appendChild(b0); const dots=document.createElement('span'); dots.textContent='...'; dots.style.padding='0 .4rem'; pPaginas.appendChild(dots); }

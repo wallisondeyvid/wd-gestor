@@ -8,24 +8,44 @@
       <div class="modal-body">
         <div id="propDetLoading" class="text-muted">Carregando...</div>
         <div id="propDetContent" class="d-none">
-          <dl class="row mb-0">
-            <dt class="col-sm-3">E-mail</dt><dd class="col-sm-9" id="detPropEmail"></dd>
-            <dt class="col-sm-3">Nome</dt><dd class="col-sm-9" id="detPropNome"></dd>
-            <dt class="col-sm-3">RG</dt><dd class="col-sm-9" id="detPropRg"></dd>
-            <dt class="col-sm-3">CPF</dt><dd class="col-sm-9" id="detPropCpf"></dd>
-            <dt class="col-sm-3">Nascimento</dt><dd class="col-sm-9" id="detPropNasc"></dd>
-            <dt class="col-sm-3">Idade</dt><dd class="col-sm-9" id="detPropIdade"></dd>
-            <dt class="col-sm-3">Sexo</dt><dd class="col-sm-9" id="detPropSexo"></dd>
-            <dt class="col-sm-3">Telefone</dt><dd class="col-sm-9" id="detPropTelefone"></dd>
-            <dt class="col-sm-3">WhatsApp</dt><dd class="col-sm-9" id="detPropWhatsapp"></dd>
-            <dt class="col-sm-3">Pai</dt><dd class="col-sm-9" id="detPropPai"></dd>
-            <dt class="col-sm-3">Mãe</dt><dd class="col-sm-9" id="detPropMae"></dd>
-            <dt class="col-sm-3">Habitações</dt><dd class="col-sm-9" id="detPropHabs"></dd>
-          </dl>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="border rounded p-3 h-100">
+                <h6 class="text-primary mb-3">Informações</h6>
+                <dl class="row mb-0">
+                  <dt class="col-sm-4">E-mail</dt><dd class="col-sm-8" id="detPropEmail"></dd>
+                  <dt class="col-sm-4">Nome</dt><dd class="col-sm-8" id="detPropNome"></dd>
+                  <dt class="col-sm-4">RG</dt><dd class="col-sm-8" id="detPropRg"></dd>
+                  <dt class="col-sm-4">CPF</dt><dd class="col-sm-8" id="detPropCpf"></dd>
+                  <dt class="col-sm-4">Nascimento</dt><dd class="col-sm-8" id="detPropNasc"></dd>
+                  <dt class="col-sm-4">Idade</dt><dd class="col-sm-8" id="detPropIdade"></dd>
+                  <dt class="col-sm-4">Sexo</dt><dd class="col-sm-8" id="detPropSexo"></dd>
+                </dl>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="border rounded p-3 h-100">
+                <h6 class="text-primary mb-3">Contato</h6>
+                <dl class="row mb-0">
+                  <dt class="col-sm-4">Telefone</dt><dd class="col-sm-8" id="detPropTelefone"></dd>
+                  <dt class="col-sm-4">WhatsApp</dt><dd class="col-sm-8" id="detPropWhatsapp"></dd>
+                  <dt class="col-sm-4">Pai</dt><dd class="col-sm-8" id="detPropPai"></dd>
+                  <dt class="col-sm-4">Mãe</dt><dd class="col-sm-8" id="detPropMae"></dd>
+                </dl>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="border rounded p-3">
+                <h6 class="text-primary mb-2">Habitações</h6>
+                <div id="detPropHabs" class="mb-0" style="white-space: pre-wrap; min-height: 80px"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
       </div>
     </div>
   </div>

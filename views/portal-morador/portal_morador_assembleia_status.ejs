@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal do Morador - Status da Assembleia</title>
+  <% const BP = '/portal-morador'; %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= BP %>/css/portal-morador/home.css?v=<%= Date.now() %>">
+  <link rel="stylesheet" href="<%= BP %>/css/portal-morador/assembleias.css?v=<%= Date.now() %>">
+</head>
+<body class="pm-home-body" data-base-path="<%= BP %>" data-assembleia-id="<%= assembleiaId || '' %>">
+  <div class="pm-shell">
+    <aside class="pm-sidebar" id="pmSidebar">
+      <div class="pm-sidebar-brand">
+        <div class="pm-sidebar-brand-logo">
+          <img src="<%= BP %>/images/logoWDGestorprata.png" alt="Portal do Morador">
+        </div>
+        <strong>Portal do Morador</strong>
+      </div>
+      <nav class="pm-nav" aria-label="Menu principal">
+        <a class="pm-nav-item" href="<%= BP %>/home"><img class="pm-nav-ico" src="<%= BP %>/images/home.png" alt="" aria-hidden="true">Início</a>
+        <a class="pm-nav-item" href="<%= BP %>/assembleias"><img class="pm-nav-ico" src="<%= BP %>/images/assembleia_sessao.png" alt="" aria-hidden="true">Assembleias</a>
+      </nav>
+      <div class="pm-sidebar-footer">Portal do Morador · WD Gestor</div>
+    </aside>
+
+    <div class="pm-main">
+      <%- include('./partials/topbar-shared', { nameModeId: 'pmNameModeAssembleiaStatus' }) %>
+
+      <main class="pm-content">
+        <section class="pm-asm-hero" aria-label="Cabeçalho">
+          <h1>Status da assembleia</h1>
+          <p>Acompanhamento em tempo real.</p>
+        </section>
+
+        <section class="pm-asm-panel" aria-label="Status">
+          <div class="pm-asm-tablewrap" style="padding: 14px;">
+            <div class="pm-asm-condo" style="margin:0; padding:0; border:0; background:transparent;">
+              <div class="pm-asm-condo-label">Estado operacional</div>
+              <div class="pm-asm-condo-value" data-asm-state>—</div>
+            </div>
+
+            <div style="margin-top:12px;" class="small text-muted">
+              Item atual: <span data-asm-item>—</span>
+            </div>
+            <div class="small text-muted">
+              Votação: <span data-asm-voting>—</span>
+            </div>
+            <div class="small text-muted">
+              Sua presença: <span data-asm-presence>—</span>
+            </div>
+            <div class="small text-muted" data-asm-updated>Atualizado: —</div>
+
+            <div class="pm-asm-empty" hidden data-asm-msg style="margin-top: 12px;"></div>
+
+            <div style="margin-top: 14px; display:flex; gap:10px; flex-wrap: wrap;">
+              <a class="pm-btn pm-btn--ghost" href="<%= BP %>/assembleias">Voltar</a>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="<%= BP %>/js/portal_morador_nav_active.js?v=<%= Date.now() %>"></script>
+  <script src="<%= BP %>/js/portal_morador_user_menu.js?v=<%= Date.now() %>"></script>
+  <script src="<%= BP %>/js/portal_morador_assembleia_status.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

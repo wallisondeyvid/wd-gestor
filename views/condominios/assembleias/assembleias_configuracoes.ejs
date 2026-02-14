@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações de Assembleia - WDGestor</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <%- include('../../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <style>
+    body.wdg-assembleia-configs{background:#f5f7fb;}
+    .wdg-hero{background:linear-gradient(135deg,#0f172a,#2563eb);color:#fff;border-radius:28px;padding:2.0rem 2.4rem;margin-bottom:1.2rem;box-shadow:0 35px 90px rgba(15,23,42,.25);} 
+    .wdg-hero h1{font-weight:750;font-size:2rem;margin:0 0 .25rem 0;}
+    .wdg-hero p{margin:0;max-width:820px;color:rgba(255,255,255,.86);} 
+    .wdg-panel{background:#fff;border-radius:22px;padding:1.25rem 1.35rem;box-shadow:0 18px 55px rgba(15,23,42,.10);} 
+    .btn{border-radius:12px;}
+    .wdg-fieldset{border:1px solid rgba(15,23,42,.10);border-radius:18px;padding:1rem 1.1rem;}
+
+    /* Campo Condomínio (mesmo formato das telas de assembleia) */
+    .wdg-panel-subbar{
+      display:flex;
+      align-items:flex-end;
+      justify-content:flex-start;
+      gap:.9rem;
+      margin:-.35rem 0 1rem;
+      padding:0;
+      border:0;
+      background:transparent;
+      box-shadow:none;
+    }
+    .wdg-condo-row{display:flex;align-items:flex-end;justify-content:flex-start;gap:.9rem;flex-wrap:wrap;width:100%;}
+    .wdg-condo-field{display:flex;flex-direction:column;gap:.45rem;min-width:420px;max-width:760px;width:100%;}
+    .wdg-condo-controlrow{display:flex;align-items:center;gap:.7rem;width:100%;}
+    .wdg-condo-inline-logo{width:46px;height:46px;border-radius:999px;object-fit:cover;border:1px solid rgba(15,23,42,.12);background:rgba(15,23,42,.04);box-shadow:0 10px 22px rgba(15,23,42,.08);flex:0 0 46px;}
+    .wdg-condo-label{font-weight:800;font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(15,23,42,.65);}
+    .wdg-condo-select.form-select{border-radius:999px;border:1px solid rgba(15,23,42,.12);box-shadow:0 10px 22px rgba(15,23,42,.06);transition:box-shadow .16s ease,border-color .16s ease,transform .16s ease;padding-left:1rem;padding-right:2.2rem;min-height:58px;font-size:1.02rem;font-weight:750;flex:1 1 auto;min-width:0;}
+    .wdg-condo-select.form-select:focus{border-color:rgba(29,78,216,.35);box-shadow:0 0 0 .25rem rgba(29,78,216,.12),0 18px 38px rgba(15,23,42,.10);transform:translateY(-1px);}
+    .wdg-condo-select.form-select:disabled{opacity:1;background:rgba(148,163,184,0.18);border-color:rgba(15,23,42,.10);box-shadow:none;transform:none;}
+    @media (max-width:576px){.wdg-condo-field{min-width:0;}}
+
+    /* Opções em pílulas/segmentado (mesmo padrão do wizard) */
+    .wdg-choice-group{display:flex;flex-wrap:wrap;gap:.55rem;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;}
+    .wdg-choice-group.wdg-choice-center{justify-content:center;}
+    #assembleiaConfiguracoesApp .wdg-label-center{display:block;width:100%;text-align:center;}
+    .wdg-choice-btn{border-radius:999px;padding:.44rem .8rem;font-weight:400;letter-spacing:.01em;border:0 !important;background:linear-gradient(180deg,#ffffff 0%,rgba(248,250,252,1) 100%) !important;color:rgba(15,23,42,.88) !important;box-shadow:0 1px 0 rgba(255,255,255,.95),0 10px 24px rgba(15,23,42,.16),0 2px 6px rgba(15,23,42,.08);transition:transform .12s ease,box-shadow .12s ease,background .12s ease,color .12s ease;user-select:none;display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;position:relative;}
+    .wdg-choice-btn:hover{transform:translateY(-1px);background:linear-gradient(180deg,#ffffff 0%,rgba(241,245,249,1) 100%) !important;box-shadow:0 1px 0 rgba(255,255,255,.95),0 14px 34px rgba(15,23,42,.18),0 4px 10px rgba(15,23,42,.10);}
+    .btn-check:focus + .wdg-choice-btn{box-shadow:0 0 0 .25rem rgba(29,78,216,.16),0 1px 0 rgba(255,255,255,.95),0 14px 34px rgba(15,23,42,.18),0 4px 10px rgba(15,23,42,.10);}
+    .btn-check:checked + .wdg-choice-btn{background:linear-gradient(180deg,rgba(219,234,254,1) 0%,rgba(191,219,254,1) 100%) !important;box-shadow:0 1px 0 rgba(255,255,255,.92),0 16px 36px rgba(15,23,42,.20),0 6px 14px rgba(29,78,216,.18);color:rgba(29,78,216,.98) !important;}
+
+    /* Botão 3D (mesmo padrão das telas de assembleias) */
+    .wdg-btn3d{
+      display:inline-flex;align-items:center;gap:.55rem;
+      border-radius:999px;padding:.58rem 1.05rem;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(255,255,255,.96);
+      color:#0f172a;font-weight:750;
+      box-shadow:0 16px 34px rgba(2,6,23,.18), 0 1px 0 rgba(255,255,255,.85) inset;
+      transform:translateY(0);
+      transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      text-decoration:none;user-select:none;
+    }
+    .wdg-btn3d--on-dark{border-color:rgba(255,255,255,.22);}
+    .wdg-btn3d:hover{
+      transform:translateY(-1px);
+      box-shadow:0 22px 46px rgba(2,6,23,.22), 0 1px 0 rgba(255,255,255,.88) inset;
+      filter:saturate(1.04);
+      color:#0f172a;
+      text-decoration:none;
+    }
+    .wdg-btn3d:active{
+      transform:translateY(1px);
+      box-shadow:0 10px 24px rgba(2,6,23,.18), 0 1px 0 rgba(255,255,255,.82) inset;
+    }
+    .wdg-btn3d-icon{width:18px;height:18px;object-fit:contain;display:inline-block;vertical-align:text-bottom;}
+  </style>
+</head>
+<body class="wdg-layout wdg-assembleia-configs" data-base-path="<%= _bp %>">
+  <%- include('../../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Gestão de Condomínios',
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+
+  <% const _selectedUnidadeIdSafe = String(selectedUnidadeId || '').trim(); %>
+  <% const _canScopeAll = !!(canScopeAllUnits); %>
+
+  <main class="container py-4" id="assembleiaConfiguracoesApp" data-base-path="<%= _bp %>" data-scope-all="<%= _canScopeAll ? 'true' : 'false' %>">
+    <section class="wdg-hero">
+      <div class="d-flex flex-wrap gap-3 justify-content-between align-items-start">
+        <div>
+          <h1>Configurações de Assembleia</h1>
+          <p>Defina as regras padrão aplicadas às assembleias deste condomínio.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a class="wdg-btn3d wdg-btn3d--on-dark" href="<%= _bp %>/assembleias" aria-label="Voltar para assembleias">
+            <img class="wdg-btn3d-icon" src="<%= _bp %>/images/anterior.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='/images/anterior.png'">
+            Voltar
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="wdg-panel mb-3">
+      <div class="wdg-panel-subbar" aria-label="Filtro de condomínio">
+        <div class="wdg-condo-row">
+          <div class="wdg-condo-field">
+            <label class="wdg-condo-label">Condomínio</label>
+            <div class="wdg-condo-controlrow">
+              <img class="wdg-condo-inline-logo" data-condo-inline-logo="1" src="<%= _bp %>/images/unidade.png" alt="Logo do condomínio" loading="lazy" onerror="this.onerror=null;this.src='/images/unidade.png'">
+              <select
+                class="form-select wdg-select wdg-condo-select"
+                data-condo-select
+                data-selected-unidade-id="<%= _selectedUnidadeIdSafe %>"
+                <%= _canScopeAll ? '' : 'disabled' %>
+                aria-label="Condomínio"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wdg-panel">
+      <div class="px-1 px-md-2">
+        <% if (saved) { %>
+          <div class="alert alert-success" role="alert">
+            <strong>Configurações salvas.</strong> As próximas assembleias podem usar estas regras como padrão.
+          </div>
+        <% } %>
+        <div class="alert alert-warning d-none" role="alert" data-regras-warning></div>
+
+        <form method="POST" action="<%= _bp %>/assembleias/configuracoes/salvar" id="assembleiaConfigForm" novalidate>
+          <input type="hidden" name="unidade_id" value="<%= _selectedUnidadeIdSafe %>" data-unidade-hidden>
+          <input type="hidden" name="regrasJson" value="" data-regras-json>
+
+          <div class="wdg-fieldset mb-3">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label wdg-label-center">Modelo de voto</label>
+                <div class="wdg-choice-group wdg-choice-center" role="group" aria-label="Modelo de voto">
+                  <input class="btn-check" type="radio" name="voteMode" id="vote_por_unidade" value="POR_UNIDADE" required>
+                  <label class="btn wdg-choice-btn" for="vote_por_unidade">Unidade</label>
+
+                  <input class="btn-check" type="radio" name="voteMode" id="vote_por_fracao" value="POR_FRACAO" required>
+                  <label class="btn wdg-choice-btn" for="vote_por_fracao">Fração ideal</label>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label wdg-label-center">Inadimplência</label>
+                <div class="wdg-choice-group wdg-choice-center" role="group" aria-label="Inadimplência">
+                  <input class="btn-check" type="radio" name="delinquencyPolicy" id="inad_bloqueia_voto" value="BLOQUEIA_VOTO" required>
+                  <label class="btn wdg-choice-btn" for="inad_bloqueia_voto">Bloqueia voto</label>
+
+                  <input class="btn-check" type="radio" name="delinquencyPolicy" id="inad_apenas_aviso" value="APENAS_AVISO" required>
+                  <label class="btn wdg-choice-btn" for="inad_apenas_aviso">Apenas aviso</label>
+
+                  <input class="btn-check" type="radio" name="delinquencyPolicy" id="inad_bloqueia_presenca_voto" value="BLOQUEIA_PRESENCA_E_VOTO" required>
+                  <label class="btn wdg-choice-btn" for="inad_bloqueia_presenca_voto">Bloqueia presença e voto</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wdg-fieldset mb-3">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Quem pode votar</label>
+                <div class="row g-2">
+                  <div class="col-12 col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="elig_owner" data-elig="allowOwner">
+                      <label class="form-check-label" for="elig_owner">Proprietário</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="elig_proxy" data-elig="allowProxyWithPoA">
+                      <label class="form-check-label" for="elig_proxy">Procurador com procuração</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="elig_tenant" data-elig="allowTenantWithAuthorization">
+                      <label class="form-check-label" for="elig_tenant">Inquilino com autorização</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="elig_third" data-elig="allowThirdPartyWithPoA">
+                      <label class="form-check-label" for="elig_third">Terceiro com procuração</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="req_poa" data-require-poa>
+                  <label class="form-check-label" for="req_poa">Procuração obrigatória se não for proprietário</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wdg-fieldset mb-3">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Presença remota</label>
+                <div class="row g-2">
+                  <div class="col-12 col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="presence_remote" data-presence="allowRemotePresence">
+                      <label class="form-check-label" for="presence_remote">Permitir presença remota</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="presence_moderator" data-presence="requireModeratorApprovalForRemote">
+                      <label class="form-check-label" for="presence_moderator">Exigir aprovação do moderador</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-text">A aprovação do moderador só é aplicada quando a presença remota está habilitada.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wdg-fieldset mb-3">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">Quórum de instalação (base)</label>
+                <select class="form-select" data-quorum="installationBase" aria-label="Base do quórum">
+                  <option value="TOTAL">Total</option>
+                  <option value="ADIMPLENTES">Adimplentes</option>
+                  <option value="PRESENTES">Presentes</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Quórum de instalação (métrica)</label>
+                <select class="form-select" data-quorum="metric" aria-label="Métrica do quórum">
+                  <option value="UNIDADES">Unidades</option>
+                  <option value="FRACAO">Fração</option>
+                </select>
+                <div class="form-text">A métrica acompanha o modelo de voto (Unidades/Fração), mas é mantida explícita para auditoria.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wdg-fieldset mb-3">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Auditoria</label>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="audit_reason" data-audit-reason>
+                  <label class="form-check-label" for="audit_reason">Exigir motivo ao liberar exceções</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="text-muted small">
+              <i class="bi bi-info-circle me-1"></i>Estas regras serão o padrão sugerido na criação de novas assembleias.
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="wdg-btn3d" data-regras-restore>
+                <img class="wdg-btn3d-icon" src="/images/verificado.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/verificado.png'">
+                Restaurar padrão recomendado
+              </button>
+              <button type="submit" class="wdg-btn3d" data-regras-save>
+                <img class="wdg-btn3d-icon" src="/images/salvar.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/salvar.png'">
+                Salvar configurações
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <script type="application/json" id="regrasInitialJson"><%- JSON.stringify(regras || {}).replace(/</g, '\\u003c') %></script>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<%= _bp %>/js/condominios/assembleias/assembleias_configuracoes.js?v=20260208.1"></script>
+</body>
+</html>

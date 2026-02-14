@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { paginaDashboard, paginaUsuarios } from '../src/modules/gestor/app/controllers/views/pagesController.js';
+import { paginaDashboard, paginaUsuarios, paginaFeedback } from '../src/modules/gestor/app/controllers/views/pagesController.js';
 
 function mockRes(){
   const r={}; r.statusCode=200; r.view=null; r.context=null; r.sent=null;
@@ -30,5 +30,12 @@ test('paginaUsuarios exige admin/master', async () => {
   const req={ user:{ role:'user', isMaster:false } };
   const res=mockRes();
   await paginaUsuarios(req,res,()=>{});
+  assert.equal(res.statusCode,403);
+});
+
+test('paginaFeedback exige admin/master', async () => {
+  const req={ user:{ role:'user', isMaster:false } };
+  const res=mockRes();
+  await paginaFeedback(req,res);
   assert.equal(res.statusCode,403);
 });

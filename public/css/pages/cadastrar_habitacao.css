@@ -1,0 +1,555 @@
+/* CSS específico da página: Cadastrar Habitação
+   Objetivo: aproximar visual do seletor/tabela ao padrão “Dirigência/Feedback”,
+   usando apenas tokens já existentes em condominios-modern.css.
+*/
+
+/* Premium: cards e formulários com acabamento mais “glass” */
+body.page-cadastrar-habitacao{
+  /* Remove o fundo com degradês azulados do layout global */
+  background: var(--wdg-bg) !important;
+}
+
+body.page-cadastrar-habitacao .content.wdg-card,
+body.page-cadastrar-habitacao .wdg-card.content,
+body.page-cadastrar-habitacao .content{
+  border-radius: var(--wdg-radius-lg);
+  background: var(--wdg-glass);
+  border: 1px solid var(--wdg-glass-border);
+  box-shadow: var(--wdg-shadow-hover);
+  overflow: hidden;
+}
+
+/* Brilho interno sutil e “borda premium” */
+body.page-cadastrar-habitacao .content.wdg-card::before,
+body.page-cadastrar-habitacao .wdg-card.content::before,
+body.page-cadastrar-habitacao .content::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg, var(--wdg-glass-border), transparent 38%),
+    radial-gradient(900px 320px at 30% 0%, var(--wdg-ink-soft), transparent 55%);
+  opacity: .10;
+}
+
+body.page-cadastrar-habitacao .content.wdg-card > *,
+body.page-cadastrar-habitacao .wdg-card.content > *,
+body.page-cadastrar-habitacao .content > *{
+  position: relative;
+  z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  body.page-cadastrar-habitacao .content{
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(14px) saturate(150%);
+    background: var(--wdg-glass);
+    border-color: var(--wdg-glass-border);
+  }
+}
+
+body.page-cadastrar-habitacao .page-main-title{
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+body.page-cadastrar-habitacao .wdg-section-title{
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+/* Inputs premium (sem trocar o Bootstrap; só polir) */
+body.page-cadastrar-habitacao .form-control,
+body.page-cadastrar-habitacao .form-select{
+  border-radius: 12px;
+  border-color: rgba(var(--wdg-accent-rgb), .18);
+  background:
+    linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+  box-shadow:
+    inset 0 1px 0 var(--wdg-glass-border),
+    var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-habitacao .form-control:focus,
+body.page-cadastrar-habitacao .form-select:focus{
+  border-color: var(--wdg-primary);
+  box-shadow: var(--wdg-focus-ring), var(--wdg-shadow-hover);
+}
+
+body.page-cadastrar-habitacao .form-label{
+  font-weight: 650;
+  color: var(--wdg-text);
+}
+
+.wdg-condo-subbar{
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: .9rem;
+  margin: .35rem 0 1.15rem;
+}
+
+.wdg-condo-field{
+  display:flex;
+  flex-direction: column;
+  gap: .45rem;
+  width: 100%;
+  max-width: 760px;
+}
+
+.wdg-condo-controlrow{
+  display:flex;
+  align-items:center;
+  gap: .7rem;
+  width: 100%;
+}
+
+.wdg-condo-inline-logo{
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--wdg-border);
+  background: var(--wdg-surface-alt);
+  box-shadow: var(--wdg-shadow-sm);
+  flex: 0 0 46px;
+}
+
+.wdg-condo-label{
+  font-weight: 800;
+  font-size: .78rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--wdg-text-light);
+}
+
+.wdg-condo-select.form-select{
+  border-radius: 999px;
+  border: 1px solid var(--wdg-border);
+  box-shadow: var(--wdg-shadow-sm);
+  transition: box-shadow .16s ease, border-color .16s ease, transform .16s ease;
+  padding-left: 1rem;
+  padding-right: 2.2rem;
+  min-height: 62px;
+  font-size: 1.05rem;
+  font-weight: 650;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wdg-condo-select.form-select:focus{
+  border-color: var(--wdg-primary);
+  box-shadow: var(--wdg-focus-ring), var(--wdg-shadow);
+  transform: translateY(-1px);
+}
+
+.wdg-condo-select.form-select:disabled{
+  opacity: 1;
+  background: var(--wdg-surface-alt);
+}
+
+/* Melhor leitura no topo (principalmente em telas grandes) */
+
+/* Cards internos (Bloco/Andar) com cara de “painel” */
+body.page-cadastrar-habitacao .independent-box.wdg-card{
+  border-radius: 14px;
+  box-shadow: var(--wdg-shadow);
+}
+
+body.page-cadastrar-habitacao .box-toggle-header{
+  border-radius: 12px;
+  background:
+    linear-gradient(95deg, var(--wdg-surface-alt), var(--wdg-surface));
+  border: 1px solid var(--wdg-border);
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+/* Tabelas: mais conforto + altura maior na lista */
+body.page-cadastrar-habitacao #habTableWrap .table-vert-max{ max-height: 420px; }
+
+/* Tabelas: wrapper no estilo do Feedback (acabamento moderno) */
+body.page-cadastrar-habitacao .ch-table-wrap{
+  border: 1px solid var(--wdg-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(900px 260px at 35% 10%, rgba(var(--wdg-accent-rgb), .08), transparent 60%),
+    var(--wdg-surface-alt);
+  box-shadow: var(--wdg-shadow);
+  padding: 0 10px 10px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Faixa premium no topo (estilo Feedback; usa o hero gradient já existente) */
+body.page-cadastrar-habitacao .ch-table-wrap::before{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height: 52px;
+  background:
+    radial-gradient(900px 220px at 18% -10%, rgba(var(--wdg-primary-rgb), .22), transparent 55%),
+    var(--wdg-hero-gradient);
+  z-index: 1;
+  pointer-events: none;
+}
+
+body.page-cadastrar-habitacao .ch-table-scroll{
+  position: relative;
+  z-index: 2;
+  /* garante que a borda arredondada fique correta com sticky thead */
+  border-radius: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Bloco/Andar: sem paginação -> altura fixa (~5 itens) com scroll */
+body.page-cadastrar-habitacao #blocoTableWrap .ch-table-scroll,
+body.page-cadastrar-habitacao #andarTableWrap .ch-table-scroll{
+  height: 360px;
+  max-height: 360px;
+  overflow: auto;
+}
+
+/* Um pouco menos de espaçamento vertical para caber 5 linhas com folga */
+body.page-cadastrar-habitacao #blocoTableWrap table,
+body.page-cadastrar-habitacao #andarTableWrap table{
+  border-spacing: 0 8px;
+}
+
+/* Bloco/Andar: não alterar cor do cabeçalho; só garantir que ele fique acima do conteúdo */
+body.page-cadastrar-habitacao #blocoTableWrap thead th,
+body.page-cadastrar-habitacao #andarTableWrap thead th{
+  z-index: 6;
+}
+
+/* Paginação fixa no rodapé do wrapper (estilo Feedback) */
+body.page-cadastrar-habitacao .ch-table-pager{
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  margin-top: 10px;
+  padding-top: 10px;
+  padding-bottom: 2px;
+  background: linear-gradient(180deg, transparent, var(--wdg-glass) 28%, var(--wdg-surface));
+  border-top: 1px solid rgba(var(--wdg-accent-rgb), .10);
+}
+
+/* Alinhamento geral (como no Feedback) */
+body.page-cadastrar-habitacao .ch-table-wrap th,
+body.page-cadastrar-habitacao .ch-table-wrap td{
+  text-align: center;
+}
+
+/* Tabela no estilo Feedback (linhas em “cards”) */
+body.page-cadastrar-habitacao .ch-table-wrap table{
+  background: transparent;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+/* Header sticky transparente (o fundo vem do ::before do wrapper) */
+body.page-cadastrar-habitacao .ch-table-wrap thead th{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--wdg-surface);
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+/* Remove qualquer borda “fina” aplicada pelo Bootstrap no thead */
+body.page-cadastrar-habitacao .ch-table-wrap table > :not(caption) > thead > * > *{
+  border-bottom-width: 0;
+}
+
+/* Células do corpo: gradiente, borda e sombra (efeito card) */
+body.page-cadastrar-habitacao .ch-table-wrap tbody td{
+  border-top: none;
+  border-bottom: none;
+  background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+  border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+/* Bordas arredondadas por linha */
+body.page-cadastrar-habitacao .ch-table-wrap tbody tr td:first-child{ border-radius: 12px 0 0 12px; }
+body.page-cadastrar-habitacao .ch-table-wrap tbody tr td:last-child{ border-radius: 0 12px 12px 0; }
+
+/* Zebra suave nas células (não no <tr>) */
+body.page-cadastrar-habitacao .ch-table-wrap tbody tr:nth-child(odd) td{
+  background: linear-gradient(180deg, var(--wdg-surface), rgba(var(--wdg-accent-rgb), .03));
+}
+
+/* Hover premium */
+body.page-cadastrar-habitacao .ch-table-wrap tbody tr{ transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+body.page-cadastrar-habitacao .ch-table-wrap tbody tr:hover{ transform: translateY(-1px); }
+body.page-cadastrar-habitacao .ch-table-wrap tbody tr:hover td{
+  border-color: rgba(var(--wdg-primary-rgb), .24);
+  background: linear-gradient(180deg, var(--wdg-primary-soft), var(--wdg-surface));
+}
+
+body.page-cadastrar-habitacao .ch-table-wrap .table-vert-max thead th[data-sort]::after{
+  opacity: .45;
+}
+
+/* Habitações: herda o estilo “Feedback” via .ch-table-wrap */
+
+/* Ordenação: mostrar chevron no cabeçalho clicável */
+body.page-cadastrar-habitacao #habTable thead th[data-sort]{
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+body.page-cadastrar-habitacao #habTable thead th[data-sort]::after{
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: .45rem;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  opacity: .35;
+  transform: translateY(-1px);
+}
+
+body.page-cadastrar-habitacao #habTable thead th[data-sort].asc::after{
+  border-bottom: 6px solid currentColor;
+  opacity: .85;
+}
+
+body.page-cadastrar-habitacao #habTable thead th[data-sort].desc::after{
+  border-top: 6px solid currentColor;
+  opacity: .85;
+}
+
+/* --------------------
+   Botões (3D + padrão)
+   -------------------- */
+
+/* Padroniza botões (sem mexer em cores do tema; só acabamento e interação) */
+body.page-cadastrar-habitacao .btn{
+  border-radius: 12px;
+  box-shadow: var(--wdg-shadow-sm);
+  transition: transform .14s cubic-bezier(.2,.8,.2,1), box-shadow .14s cubic-bezier(.2,.8,.2,1), filter .14s ease;
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+
+/* brilho “gloss” em cima do botão */
+body.page-cadastrar-habitacao .btn::before{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height: 58%;
+  pointer-events:none;
+  background: linear-gradient(180deg, var(--wdg-glass-border), transparent);
+  opacity: .65;
+}
+
+body.page-cadastrar-habitacao .btn:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--wdg-shadow);
+}
+
+body.page-cadastrar-habitacao .btn:active{
+  transform: translateY(0);
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-habitacao .btn:focus-visible{
+  box-shadow: var(--wdg-focus-ring), var(--wdg-shadow);
+}
+
+/* Botões outline: leve “glass” sem trocar a cor */
+body.page-cadastrar-habitacao .btn-outline-secondary,
+body.page-cadastrar-habitacao .btn-outline-danger{
+  background: var(--wdg-glass);
+  border-color: rgba(var(--wdg-accent-rgb), .20);
+}
+
+/* Botão primário: mantém token do tema; só reforça profundidade */
+body.page-cadastrar-habitacao .btn-primary{
+  box-shadow: var(--wdg-shadow-hover);
+}
+
+body.page-cadastrar-habitacao .btn-primary:hover{
+  filter: brightness(1.02);
+}
+
+/* Ícones de ação da tabela: toque 3D discreto */
+body.page-cadastrar-habitacao .wdg-icon-btn{
+  border-radius: 10px;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+body.page-cadastrar-habitacao .wdg-icon-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-habitacao .wdg-icon-btn:active{
+  transform: translateY(0);
+}
+
+/* Preview da foto com acabamento (3D leve) */
+body.page-cadastrar-habitacao #hFotoPrev.preview-thumb{
+  border-radius: 16px;
+  box-shadow: var(--wdg-shadow);
+  border: 1px solid rgba(var(--wdg-accent-rgb), .14);
+}
+
+/* --------------------
+   Modal: Detalhes da Habitação (premium/3D)
+   -------------------- */
+
+body.page-cadastrar-habitacao #modalDetHabCad .modal-dialog{
+  filter: drop-shadow(0 18px 35px rgba(0,0,0,.18));
+}
+
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-dialog{
+  filter: drop-shadow(0 18px 35px rgba(0,0,0,.18));
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad .modal-content{
+  border-radius: calc(var(--wdg-radius-lg) + 4px);
+  border: 1px solid var(--wdg-glass-border);
+  background: var(--wdg-glass);
+  box-shadow: var(--wdg-shadow-hover);
+  overflow: hidden;
+  position: relative;
+}
+
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-content{
+  border-radius: calc(var(--wdg-radius-lg) + 4px);
+  border: 1px solid var(--wdg-glass-border);
+  background: var(--wdg-glass);
+  box-shadow: var(--wdg-shadow-hover);
+  overflow: hidden;
+  position: relative;
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad .modal-content::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg, var(--wdg-glass-border), transparent 40%),
+    radial-gradient(1100px 420px at 30% 0%, rgba(var(--wdg-accent-rgb), .10), transparent 55%);
+  opacity: .55;
+}
+
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-content::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg, var(--wdg-glass-border), transparent 40%),
+    radial-gradient(900px 320px at 25% 0%, rgba(var(--wdg-accent-rgb), .10), transparent 55%);
+  opacity: .55;
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad .modal-header,
+body.page-cadastrar-habitacao #modalDetHabCad .modal-footer{
+  background: transparent;
+  border-color: rgba(var(--wdg-accent-rgb), .12);
+}
+
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-header,
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-footer{
+  background: transparent;
+  border-color: rgba(var(--wdg-accent-rgb), .12);
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad .modal-title{
+  font-weight: 850;
+  letter-spacing: -.01em;
+}
+
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-title{
+  font-weight: 850;
+  letter-spacing: -.01em;
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad .modal-body,
+body.page-cadastrar-habitacao #modalDetHabCad .modal-header,
+body.page-cadastrar-habitacao #modalDetHabCad .modal-footer{
+  position: relative;
+  z-index: 1;
+}
+
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-body,
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-header,
+body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-footer{
+  position: relative;
+  z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  body.page-cadastrar-habitacao #modalDetHabCad .modal-content{
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+  }
+
+  body.page-cadastrar-habitacao #habDeleteConfirmModal .modal-content{
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+  }
+}
+
+/* “Cards” internos do modal (Informações / Foto / Descrição) */
+body.page-cadastrar-habitacao #modalDetHabCad .modal-body .border.rounded{
+  border: 1px solid rgba(var(--wdg-accent-rgb), .14) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+  box-shadow: var(--wdg-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad .modal-body .border.rounded::before{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height: 46px;
+  pointer-events:none;
+  background: linear-gradient(180deg, rgba(var(--wdg-accent-rgb), .10), transparent);
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad h6.text-primary{
+  font-weight: 850;
+  letter-spacing: .02em;
+  text-transform: none;
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad dl dt{
+  color: var(--wdg-text-light);
+  font-weight: 750;
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad dl dd{
+  color: var(--wdg-text);
+  font-weight: 600;
+}
+
+body.page-cadastrar-habitacao #modalDetHabCad #detFoto{
+  border: 1px solid rgba(var(--wdg-accent-rgb), .12);
+  box-shadow: var(--wdg-shadow-sm);
+}
+

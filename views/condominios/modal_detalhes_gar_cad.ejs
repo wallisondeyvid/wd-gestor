@@ -8,22 +8,36 @@
       <div class="modal-body">
         <div class="row g-3">
           <div class="col-md-6">
-            <div class="mb-2"><strong>Condomínio:</strong> <span id="detGUnidade"></span></div>
-            <div class="mb-2"><strong>Nome da Vaga:</strong> <span id="detGNome"></span></div>
-            <div class="mb-2"><strong>Vínculo:</strong> <span id="detGVinc"></span></div>
-            <div class="mb-2"><strong>Observações:</strong><br><small class="text-muted">(Até 4000 caracteres)</small>
-              <div class="border rounded p-2 mt-1" style="min-height:80px; white-space:pre-wrap;" id="detGObs"></div>
+            <div class="border rounded p-3 h-100">
+              <h6 class="text-primary mb-3">Informações</h6>
+              <dl class="row mb-0">
+                <dt class="col-sm-5">Condomínio</dt>
+                <dd class="col-sm-7" id="detGUnidade">-</dd>
+                <dt class="col-sm-5">Nome da vaga</dt>
+                <dd class="col-sm-7" id="detGNome">-</dd>
+                <dt class="col-sm-5">Vínculo</dt>
+                <dd class="col-sm-7" id="detGVinc">-</dd>
+              </dl>
             </div>
           </div>
           <div class="col-md-6">
-            <div class="mb-2"><strong>Foto:</strong></div>
-            <img id="detGFoto" class="img-fluid rounded shadow-sm d-none" alt="Foto da vaga">
-            <div id="detGFotoVazio" class="text-muted small">Nenhuma foto anexada.</div>
+            <div class="border rounded p-3 h-100">
+              <h6 class="text-primary mb-3">Foto</h6>
+              <img id="detGFoto" class="img-fluid rounded d-none" alt="Foto da vaga">
+              <div id="detGFotoVazio" class="text-muted">Sem foto.</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="border rounded p-3">
+              <h6 class="text-primary mb-2">Observações</h6>
+              <p class="text-muted small mb-2">(Até 4000 caracteres)</p>
+              <p id="detGObs" class="mb-0" style="white-space: pre-line"></p>
+            </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
       </div>
     </div>
   </div>

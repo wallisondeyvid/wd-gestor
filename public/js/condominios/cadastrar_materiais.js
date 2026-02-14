@@ -10,12 +10,16 @@
   var naturezas=[]; // vindas de /api/materiais/naturezas/busca
 
   // Elements
+  var unidadeTop = byId('unidadeTop');
+  var unidadeTopLogo = byId('unidadeTopLogo');
+
   var mUnidade=byId('mUnidade'); var mNome=byId('mNome'); var mSerie=byId('mSerie'); var mGerarSerie=byId('mGerarSerie'); var mData=byId('mDataAquisicao');
   var mMarca=byId('mMarca'); var mModelo=byId('mModelo'); var mNumSerie=byId('mNumSerie'); var mPeso=byId('mPeso'); var mCor=byId('mCor');
   var mFoto=byId('mFoto'); var mFotoPrev=byId('mFotoPrev'); var mFotoLimpar=byId('mFotoLimpar');
   var mAnexo=byId('mAnexo'); var mAnexoLimpar=byId('mAnexoLimpar'); var mAnexoLista=byId('mAnexoLista');
   var vUnidade=byId('vUnidade'); var vArea=byId('vArea'); var vTabela=byId('vTabela'); var btnInserirVinc=byId('btnInserirVinc'); var btnLimparVinc=byId('btnLimparVinc');
-  var mSalvar=byId('mSalvar'); var mLimpar=byId('mLimpar');
+  var vUnidadeResumo = byId('vUnidadeResumo');
+  var mSalvar=byId('mSalvar'); var mLimpar=byId('mLimpar'); var mCancelar=byId('mCancelar');
 
   // Natureza form elements
   var nUnidade=byId('nUnidade'); var nTipo=byId('nTipo'); var nNome=byId('nNome');
@@ -30,21 +34,131 @@
   var MAT_PAGE_SIZE=50; var matPage=0; var matSort={ key:'nome', dir:'asc' };
   var editIndex=-1; var currentFotoURL=''; var currentAnexoURL=''; var currentAnexoMeta=null;
 
-  function fillUnidadesSelect(sel){ if(!sel) return; sel.innerHTML = '<option value="">Selecione...</option>' + (unidades||[]).map(function(u){ return '<option value="'+u._id+'">'+(u.codigo ? (u.codigo + ' - ' + u.nome) : u.nome)+'</option>'; }).join(''); if(unidades.length===1){ sel.value=unidades[0]._id; } }
-  fillUnidadesSelect(mUnidade); fillUnidadesSelect(nUnidade);
-  // vUnidade agora é somente display (input texto desabilitado)
-  function syncVincUnidadeDisplay(){ if(vUnidade){ var opt = mUnidade.options[mUnidade.selectedIndex]; vUnidade.value = opt ? opt.text : ''; } }
-  mUnidade && mUnidade.addEventListener('change', function(){ rebuildMaterialNomeOptions(); syncVincUnidadeDisplay(); syncAreas(); });
+  function setImgWithFallback(img, urls){
+    if(!img) return;
+    var list = (urls || []).map(function(x){ return String(x || '').trim(); }).filter(Boolean);
+    if(list.length === 0) return;
+    var idx = 0;
+    img.onerror = function(){
+      idx++;
+      if(idx >= list.length){ img.onerror = null; return; }
+      img.src = list[idx];
+    };
+    img.src = list[0];
+  }
+
+  function getUnidadeLogoCandidates(uid){
+    uid = String(uid || '').trim();
+    var base = basePath || '';
+    var raw = [];
+    if(uid){
+      raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+      raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
+      raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    }
+    raw.push('/images/unidade.png');
+    raw.push(base + '/images/unidade.png');
+    var out = [];
+    for(var j=0;j<raw.length;j++){
+      var s = String(raw[j] || '').trim();
+      if(!s) continue;
+      if(out.indexOf(s) >= 0) continue;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function refreshLogoFor(sel, img){
+    if(!sel || !img) return;
+    setImgWithFallback(img, getUnidadeLogoCandidates(sel.value));
+  }
+
+  function setMatEditMode(on){
+    if(!mSalvar) return;
+    if(on){
+      mSalvar.textContent = 'Alterar';
+      if(mCancelar) mCancelar.classList.remove('d-none');
+    } else {
+      mSalvar.textContent = 'Cadastrar';
+      if(mCancelar) mCancelar.classList.add('d-none');
+    }
+  }
+
+  function fillUnidadesSelect(sel){
+    if(!sel) return;
+    sel.innerHTML = '<option value="">Selecione...</option>' + (unidades||[]).map(function(u){
+      return '<option value="'+u._id+'">'+(u.codigo ? (u.codigo + ' - ' + u.nome) : u.nome)+'</option>';
+    }).join('');
+    if(unidades.length===1){ sel.value=unidades[0]._id; }
+  }
+
+  fillUnidadesSelect(unidadeTop);
+  fillUnidadesSelect(mUnidade);
+  fillUnidadesSelect(nUnidade);
+
+  function syncUnidadeFromTop(){
+    if(!unidadeTop) return;
+    if(mUnidade) mUnidade.value = unidadeTop.value;
+    if(nUnidade) nUnidade.value = unidadeTop.value;
+  }
+
+  function syncUnidadeTopFromAny(){
+    if(!unidadeTop) return;
+    var val = (mUnidade && mUnidade.value) || (nUnidade && nUnidade.value) || '';
+    unidadeTop.value = val;
+  }
+
+  // Inicializa seletores internos a partir do topo
+  syncUnidadeTopFromAny();
+  syncUnidadeFromTop();
+  refreshLogoFor(unidadeTop, unidadeTopLogo);
+  setMatEditMode(false);
+  // Vínculo: condomínio como label/plaintext
+  function syncVincUnidadeDisplay(){
+    if(!vUnidadeResumo) return;
+    var opt = mUnidade && mUnidade.options ? mUnidade.options[mUnidade.selectedIndex] : null;
+    vUnidadeResumo.textContent = (opt && opt.value) ? opt.text : 'Selecione um condomínio';
+  }
+
+  unidadeTop && unidadeTop.addEventListener('change', function(){
+    syncUnidadeFromTop();
+    rebuildMaterialNomeOptions();
+    syncVincUnidadeDisplay();
+    syncAreas();
+    refreshLogoFor(unidadeTop, unidadeTopLogo);
+  });
+
   syncVincUnidadeDisplay();
 
-  function syncAreas(){ var uid=mUnidade.value; var list = (areasAll||[]).filter(function(a){ var auid=(a.unidade && a.unidade._id)||a.unidade_id||a.unidadeId; return String(auid)===String(uid); }); vArea.innerHTML = '<option value="">Selecione...</option>'+ list.map(function(a){ return '<option value="'+((a._id)||a.id)+'">'+a.nome+'</option>'; }).join(''); }
+  function getSelectedUnidadeId(){
+    return (unidadeTop && unidadeTop.value) ? String(unidadeTop.value) : String((mUnidade && mUnidade.value) || (nUnidade && nUnidade.value) || '');
+  }
+
+  function syncAreas(){
+    var uid=getSelectedUnidadeId();
+    if(mUnidade) mUnidade.value = uid;
+    if(nUnidade) nUnidade.value = uid;
+    var list = (areasAll||[]).filter(function(a){
+      var auid=(a.unidade && a.unidade._id)||a.unidade_id||a.unidadeId;
+      return String(auid)===String(uid);
+    });
+    vArea.innerHTML = '<option value="">Selecione...</option>'+ list.map(function(a){
+      return '<option value="'+((a._id)||a.id)+'">'+a.nome+'</option>';
+    }).join('');
+  }
   if(unidades.length===1){ syncAreas(); }
 
-  function rebuildMaterialNomeOptions(){ if(!mNome) return; var uid=mUnidade.value; var tipoEl = document.querySelector('input[name="mTipo"]:checked'); var tipo = tipoEl ? tipoEl.value : 'Fixo';
+  function rebuildMaterialNomeOptions(){
+    if(!mNome) return;
+    var uid=getSelectedUnidadeId();
+    if(mUnidade) mUnidade.value = uid;
+    if(nUnidade) nUnidade.value = uid;
+    var tipoEl = document.querySelector('input[name="mTipo"]:checked');
+    var tipo = tipoEl ? tipoEl.value : 'Fixo';
     var list = (naturezas||[]).filter(function(n){ var nuid=(n.unidade && n.unidade._id)||n.unidade_id||n.unidadeId; return String(nuid)===String(uid) && String(n.tipo)===String(tipo); }).sort(function(a,b){ return (a.nome||'').localeCompare(b.nome||'', 'pt-BR'); });
     mNome.innerHTML = '<option value="">Selecione...</option>'+ list.map(function(n){ return '<option value="'+((n._id)||n.id)+'">'+(n.nome||'')+'</option>'; }).join('');
   }
-  mUnidade && mUnidade.addEventListener('change', rebuildMaterialNomeOptions);
+  // rebuildMaterialNomeOptions roda quando o condomínio do topo muda ou o tipo muda
   document.querySelectorAll('input[name="mTipo"]').forEach(function(r){ r.addEventListener('change', rebuildMaterialNomeOptions); });
   // Inicializa select nome conforme filtros atuais
   rebuildMaterialNomeOptions();
@@ -79,8 +193,62 @@
     }catch(e){ console.warn('[materiais] '+(method||'POST')+' falhou', url, e); showToast('Operação falhou','danger'); return null; }
   }
 
+  function buildMatDeleteLabel(m){
+    if(!m) return '—';
+    var nome = String((m.natureza && m.natureza.nome) || m.nome || '').trim();
+    var serie = String(m.serie || '').trim();
+    var label = nome;
+    if(serie) label = (label ? (label + ' · ') : '') + 'Patrimônio ' + serie;
+    label = String(label || '').trim();
+    return label || '—';
+  }
+
+  function askMatDeleteConfirm(label){
+    var modalEl = byId('matDeleteConfirmModal');
+    var nameEl = byId('matDeleteConfirmName');
+    var yesBtn = byId('matDeleteConfirmYes');
+
+    if(!modalEl || !yesBtn || !(window.bootstrap && window.bootstrap.Modal)){
+      var suffix = (label && label !== '—') ? (' (' + label + ')') : '';
+      return Promise.resolve(window.confirm('Tem certeza que deseja excluir este material?' + suffix + '\n\nEsta exclusão é definitiva e não pode ser desfeita.'));
+    }
+
+    if(nameEl) nameEl.textContent = label || '—';
+
+    return new Promise(function(resolve){
+      var resolved = false;
+      var bs = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true, focus: true });
+
+      var onHidden = function(){
+        if(resolved) return;
+        resolved = true;
+        resolve(false);
+      };
+
+      var onYes = function(e){
+        try{ e && e.preventDefault && e.preventDefault(); }catch(_){ }
+        if(resolved) return;
+        resolved = true;
+        resolve(true);
+        try{ bs.hide(); }catch(_2){ }
+      };
+
+      modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+      yesBtn.addEventListener('click', onYes, { once: true });
+      bs.show();
+    });
+  }
+
   // Naturezas CRUD e listagem
-  function clearNatForm(retainTipo){ if(nUnidade && unidades.length===1){ nUnidade.value=unidades[0]._id; } if(nTipo && !retainTipo){ nTipo.value='Fixo'; } if(nNome){ nNome.value=''; } }
+  function clearNatForm(retainTipo){
+    if(unidades.length===1){
+      if(unidadeTop) unidadeTop.value=unidades[0]._id;
+      syncUnidadeFromTop();
+      refreshLogoFor(unidadeTop, unidadeTopLogo);
+    }
+    if(nTipo && !retainTipo){ nTipo.value='Fixo'; }
+    if(nNome){ nNome.value=''; }
+  }
   nLimpar && nLimpar.addEventListener('click', function(){ clearNatForm(false); if(nNome){ nNome.focus(); } });
 
   function renderNaturezas(){ if(!nLista) return; var rows = (naturezas||[]).slice().sort(function(a,b){ return (a.nome||'').localeCompare(b.nome||'','pt-BR'); }).map(function(n){
@@ -98,7 +266,14 @@
   var natEditId=null;
   function enterNatEditMode(){ if(nSalvar){ nSalvar.textContent='Salvar'; } if(nCancelar){ nCancelar.classList.remove('d-none'); } }
   function exitNatEditMode(){ natEditId=null; if(nSalvar){ nSalvar.textContent='Cadastrar'; } if(nCancelar){ nCancelar.classList.add('d-none'); } }
-  nSalvar && nSalvar.addEventListener('click', async function(){ var uid=nUnidade.value; var tipo=nTipo.value||'Fixo'; var nome=(nNome.value||'').trim(); if(!uid){ return alert('Selecione o condomínio.'); } if(!nome){ return alert('Informe o nome da natureza.'); }
+  nSalvar && nSalvar.addEventListener('click', async function(){
+    var uid = getSelectedUnidadeId();
+    if(nUnidade) nUnidade.value = uid;
+    if(mUnidade) mUnidade.value = uid;
+    var tipo=nTipo.value||'Fixo';
+    var nome=(nNome.value||'').trim();
+    if(!uid){ return alert('Selecione o condomínio.'); }
+    if(!nome){ return alert('Informe o nome da natureza.'); }
     // Verificar duplicidade localmente para feedback rápido
     var exists = (naturezas||[]).some(function(n){ var id=(n._id)||n.id; var nuid=(n.unidade && n.unidade._id)||n.unidade_id||n.unidadeId; return id!==natEditId && String(nuid)===String(uid) && String(n.tipo)===String(tipo) && String(n.nome||'').toLowerCase()===nome.toLowerCase(); });
     if(exists){ return alert('Já existe natureza com este nome para o condomínio e tipo.'); }
@@ -110,7 +285,22 @@
   });
   nLista && nLista.addEventListener('click', async function(ev){ var btn=ev.target.closest('button[data-action]'); if(!btn) return; var tr=btn.closest('tr'); if(!tr) return; var id=tr.getAttribute('data-id'); var action=btn.getAttribute('data-action');
     if(action==='natDel'){ if(confirm('Excluir esta natureza?')){ await sendJson(basePath + '/api/materiais/naturezas/' + encodeURIComponent(id), 'DELETE'); await listarNaturezas(); rebuildMaterialNomeOptions(); } return; }
-    if(action==='natEdit'){ var n = (naturezas||[]).find(function(x){ return String((x._id)||x.id)===String(id); }); if(!n) return; natEditId=(n._id)||n.id; var nuid=(n.unidade && n.unidade._id)||n.unidade_id||n.unidadeId; if(nUnidade) nUnidade.value=nuid; if(nTipo) nTipo.value=n.tipo; if(nNome) nNome.value=n.nome; enterNatEditMode(); window.scrollTo({ top:0, behavior:'smooth'}); }
+    if(action==='natEdit'){
+      var n = (naturezas||[]).find(function(x){ return String((x._id)||x.id)===String(id); });
+      if(!n) return;
+      natEditId=(n._id)||n.id;
+      var nuid=(n.unidade && n.unidade._id)||n.unidade_id||n.unidadeId;
+      if(unidadeTop) unidadeTop.value=nuid;
+      syncUnidadeFromTop();
+      if(nTipo) nTipo.value=n.tipo;
+      if(nNome) nNome.value=n.nome;
+      rebuildMaterialNomeOptions();
+      syncVincUnidadeDisplay();
+      syncAreas();
+      refreshLogoFor(unidadeTop, unidadeTopLogo);
+      enterNatEditMode();
+      window.scrollTo({ top:0, behavior:'smooth'});
+    }
   });
   nCancelar && nCancelar.addEventListener('click', function(){ exitNatEditMode(); clearNatForm(true); if(nNome){ nNome.focus(); } });
 
@@ -126,7 +316,21 @@
   });
   mAnexoLimpar && mAnexoLimpar.addEventListener('click', function(){ if(mAnexo){ mAnexo.value=''; } if(currentAnexoURL){ try{ URL.revokeObjectURL(currentAnexoURL); }catch(_){ } currentAnexoURL=''; } currentAnexoMeta=null; mAnexoLista.innerHTML=''; });
 
-  btnInserirVinc && btnInserirVinc.addEventListener('click', function(){ var uid=mUnidade.value; var aid=vArea.value; var uText = vUnidade.value || ''; var aText = (vArea.options[vArea.selectedIndex]||{}).text || ''; if(!uid || !aid){ return alert('Selecione o condomínio e a área.'); } vTabela.innerHTML=''; var tr=document.createElement('tr'); tr.dataset.unidadeId=uid; tr.dataset.areaId=aid; tr.innerHTML='<td>'+uText+'</td><td>'+aText+'</td><td><button type="button" class="wdg-icon-btn" data-action="remV" aria-label="Remover vinculação"><img src="'+basePath+'/images/excluir.png" alt="Excluir"/></button></td>'; vTabela.appendChild(tr); });
+  btnInserirVinc && btnInserirVinc.addEventListener('click', function(){
+    var uid=getSelectedUnidadeId();
+    if(mUnidade) mUnidade.value = uid;
+    if(nUnidade) nUnidade.value = uid;
+    var aid=vArea.value;
+    var uText = (vUnidadeResumo && vUnidadeResumo.textContent) ? vUnidadeResumo.textContent : unidadeLabel(uid);
+    var aText = (vArea.options[vArea.selectedIndex]||{}).text || '';
+    if(!uid || !aid){ return alert('Selecione o condomínio e a área.'); }
+    vTabela.innerHTML='';
+    var tr=document.createElement('tr');
+    tr.dataset.unidadeId=uid;
+    tr.dataset.areaId=aid;
+    tr.innerHTML='<td>'+uText+'</td><td>'+aText+'</td><td><button type="button" class="wdg-icon-btn" data-action="remV" aria-label="Remover vinculação"><img src="'+basePath+'/images/excluir.png" alt="Excluir"/></button></td>';
+    vTabela.appendChild(tr);
+  });
   btnLimparVinc && btnLimparVinc.addEventListener('click', function(){ vTabela.innerHTML=''; });
   vTabela && vTabela.addEventListener('click', function(ev){ var b=ev.target.closest('button[data-action="remV"]'); if(!b) return; var tr=b.closest('tr'); if(tr) tr.remove(); });
 
@@ -161,7 +365,6 @@
     '</tr>'; }
 
   var matFilter='';
-  var matSearchInput = document.getElementById('matSearch'); if(matSearchInput){ matSearchInput.addEventListener('input', function(){ matFilter = String(matSearchInput.value||'').trim().toLowerCase(); matPage=0; sortAndRender(matPage); }); }
 
   function sortAndRender(page){ var pageSize = MAT_PAGE_SIZE; if(matPageSizeSel){ var v=parseInt(matPageSizeSel.value,10); if(!isNaN(v)&&v>0) pageSize=v; }
     // Enriquecer rótulos
@@ -199,10 +402,18 @@
   matPaginas && matPaginas.addEventListener('click', function(ev){ var b=ev.target.closest('button[data-page]'); if(!b) return; var pg=parseInt(b.dataset.page,10); if(isNaN(pg)) return; sortAndRender(pg); });
   matPageSizeSel && matPageSizeSel.addEventListener('change', function(){ matPage=0; sortAndRender(matPage); });
 
-  function clearForm(){ mNome.value=''; mSerie.value=''; mData.value=''; if(mMarca) mMarca.value=''; if(mModelo) mModelo.value=''; if(mNumSerie) mNumSerie.value=''; if(mPeso) mPeso.value=''; if(mCor) mCor.value=''; var mDesc=byId('mDesc'); if(mDesc){ mDesc.value=''; var c=byId('mDescCount'); if(c) c.textContent='0'; } if(mFoto){ mFoto.value=''; } if(mFotoPrev){ mFotoPrev.src=''; mFotoPrev.classList.add('d-none'); } if(mAnexo){ mAnexo.value=''; } mAnexoLista.innerHTML=''; currentFotoURL=''; if(currentAnexoURL){ try{ URL.revokeObjectURL(currentAnexoURL); }catch(_){ } currentAnexoURL=''; } currentAnexoMeta=null; vTabela.innerHTML=''; if(unidades.length===1){ mUnidade.value=unidades[0]._id; } syncVincUnidadeDisplay(); syncAreas(); editIndex=-1; rebuildMaterialNomeOptions(); }
-  mLimpar && mLimpar.addEventListener('click', clearForm);
+  function clearForm(){ mNome.value=''; mSerie.value=''; mData.value=''; if(mMarca) mMarca.value=''; if(mModelo) mModelo.value=''; if(mNumSerie) mNumSerie.value=''; if(mPeso) mPeso.value=''; if(mCor) mCor.value=''; var mDesc=byId('mDesc'); if(mDesc){ mDesc.value=''; var c=byId('mDescCount'); if(c) c.textContent='0'; } if(mFoto){ mFoto.value=''; } if(mFotoPrev){ mFotoPrev.src=''; mFotoPrev.classList.add('d-none'); } if(mAnexo){ mAnexo.value=''; } mAnexoLista.innerHTML=''; currentFotoURL=''; if(currentAnexoURL){ try{ URL.revokeObjectURL(currentAnexoURL); }catch(_){ } currentAnexoURL=''; } currentAnexoMeta=null; vTabela.innerHTML=''; if(unidades.length===1){ if(unidadeTop) unidadeTop.value=unidades[0]._id; syncUnidadeFromTop(); refreshLogoFor(unidadeTop, unidadeTopLogo); } syncVincUnidadeDisplay(); syncAreas(); editIndex=-1; rebuildMaterialNomeOptions(); }
+  mLimpar && mLimpar.addEventListener('click', function(){ clearForm(); setMatEditMode(false); });
+  mCancelar && mCancelar.addEventListener('click', function(){ clearForm(); setMatEditMode(false); window.scrollTo({ top:0, behavior:'smooth' }); });
 
-  mSalvar && mSalvar.addEventListener('click', async function(){ var uid=mUnidade.value; var tipo = (document.querySelector('input[name="mTipo"]:checked')||{}).value || 'Fixo'; var naturezaId=(mNome.value||'').trim(); var serie=(mSerie.value||'').trim(); var dataISO = parseDateBRtoISO((mData && mData.value) || '');
+  mSalvar && mSalvar.addEventListener('click', async function(){
+    var uid=getSelectedUnidadeId();
+    if(mUnidade) mUnidade.value = uid;
+    if(nUnidade) nUnidade.value = uid;
+    var tipo = (document.querySelector('input[name="mTipo"]:checked')||{}).value || 'Fixo';
+    var naturezaId=(mNome.value||'').trim();
+    var serie=(mSerie.value||'').trim();
+    var dataISO = parseDateBRtoISO((mData && mData.value) || '');
     if(!uid){ return alert('Selecione o condomínio.'); } if(!naturezaId){ return alert('Selecione o nome do material.'); }
     if((mData.value||'').trim() && !dataISO){ return alert('Informe a data de aquisição no formato dd/mm/aaaa.'); }
     if(serie){ if(serie.length>15){ return alert('Nº de patrimônio deve ter até 15 caracteres.'); }
@@ -214,11 +425,11 @@
     if(mFoto && mFoto.files && mFoto.files[0]){ try{ payload.foto = await readFileAsDataURL(mFoto.files[0]); }catch(_e){ showToast('Falha ao ler imagem.','danger'); return; } }
     if(mAnexo && mAnexo.files && mAnexo.files[0]){ var f=mAnexo.files[0]; if(f.type!=='application/pdf'){ alert('Selecione um arquivo PDF.'); return; } try{ payload.anexo = await readFileAsDataURL(f); }catch(_e){ showToast('Falha ao ler anexo.','danger'); return; } }
     var resp;
-    if(editIndex>=0){ var current=materiais[editIndex]; resp = await sendJson(basePath + '/api/materiais/' + encodeURIComponent(current._id), 'PUT', payload); editIndex=-1; }
+    if(editIndex>=0){ var current=materiais[editIndex]; resp = await sendJson(basePath + '/api/materiais/' + encodeURIComponent(current._id), 'PUT', payload); editIndex=-1; setMatEditMode(false); }
     else { resp = await sendJson(basePath + '/api/materiais', 'POST', payload); }
     if(resp && payload.foto && !resp.foto_saved){ showToast('Imagem não salva (upload indisponível).','warning'); }
     if(resp && payload.anexo && !resp.anexo_saved){ showToast('Anexo não salvo (upload indisponível).','warning'); }
-    await listarMateriais(); clearForm();
+    await listarMateriais(); clearForm(); setMatEditMode(false);
     // Salva preferência do tipo
     try{ localStorage.setItem(LS_PREF_TIPO_MAT, tipo); }catch(_){ }
     var radioPref = document.querySelector('input[name="mTipo"][value="'+tipo+'"]'); if(radioPref){ radioPref.checked=true; }
@@ -226,9 +437,23 @@
   });
 
   matLista && matLista.addEventListener('click', async function(ev){ var t=ev.target.closest('button'); if(!t) return;
-    if(t.hasAttribute('data-m-del')){ var id=t.getAttribute('data-m-del'); var idx=materiais.findIndex(function(x){ return String(x._id)===String(id); }); var m = idx>=0 ? materiais[idx] : null; if(!m) return; if(!confirm('Excluir este material?')) return; await sendJson(basePath + '/api/materiais/' + encodeURIComponent(m._id), 'DELETE'); await listarMateriais(); return; }
+    if(t.hasAttribute('data-m-del')){
+      var id=t.getAttribute('data-m-del');
+      var idx=materiais.findIndex(function(x){ return String(x._id)===String(id); });
+      var m = idx>=0 ? materiais[idx] : null;
+      if(!m) return;
+      var ok = await askMatDeleteConfirm(buildMatDeleteLabel(m));
+      if(!ok) return;
+      await sendJson(basePath + '/api/materiais/' + encodeURIComponent(m._id), 'DELETE');
+      await listarMateriais();
+      return;
+    }
     if(t.hasAttribute('data-m-edit')){ var id2=t.getAttribute('data-m-edit'); var idx2=materiais.findIndex(function(x){ return String(x._id)===String(id2); }); var m=materiais[idx2]; if(!m) return; editIndex=idx2; var uid=(m.unidade && m.unidade._id)||m.unidade_id||m.unidadeId; mUnidade.value=uid; syncVincUnidadeDisplay(); syncAreas(); (m.tipo==='Móvel'? byId('mTipoMovel'):byId('mTipoFixo')).checked=true; rebuildMaterialNomeOptions(); var natId=(m.natureza && m.natureza._id)||m.natureza_id||''; mNome.value=natId; mSerie.value=m.serie||''; mData.value = m.data_aquisicao ? formatDateBR(m.data_aquisicao) : ''; if(mMarca) mMarca.value=m.marca||''; if(mModelo) mModelo.value=m.modelo||''; if(mNumSerie) mNumSerie.value=m.num_serie||''; if(mPeso) mPeso.value=m.peso||''; if(mCor) mCor.value=m.cor||''; var md=byId('mDesc'); if(md){ md.value=m.descricao||''; var c=byId('mDescCount'); if(c) c.textContent=String((m.descricao||'').length); } if(m.foto){ mFotoPrev.src=m.foto; mFotoPrev.classList.remove('d-none'); } else { mFotoPrev.classList.add('d-none'); mFotoPrev.src=''; }
-      vTabela.innerHTML=''; if(m.vinculo_area && m.vinculo_area.unidade_id && m.vinculo_area.area_id){ vUnidade.value=m.vinculo_area.unidade_id; syncAreas(); vArea.value=m.vinculo_area.area_id; btnInserirVinc.click(); }
+      vTabela.innerHTML=''; if(m.vinculo_area && m.vinculo_area.unidade_id && m.vinculo_area.area_id){ syncAreas(); vArea.value=m.vinculo_area.area_id; btnInserirVinc.click(); }
+      if(unidadeTop) unidadeTop.value=uid;
+      syncUnidadeFromTop();
+      refreshLogoFor(unidadeTop, unidadeTopLogo);
+      setMatEditMode(true);
       window.scrollTo({ top:0, behavior:'smooth'}); return; }
     if(t.hasAttribute('data-m-qr')){ var idqr=t.getAttribute('data-m-qr'); var mq=materiais.find(function(x){ return String(x._id)===String(idqr); }); if(!mq) return; var uid0=(mq.unidade && mq.unidade._id)||mq.unidade_id||mq.unidadeId; var uni = unidades.find(function(u){ return String(u._id)===String(uid0); })||{}; try { if(!mq.area_rotulo && mq.vinculo_area && mq.vinculo_area.unidade_id && mq.vinculo_area.area_id){ mq.area_rotulo = buildAreaRotulo(mq.vinculo_area.unidade_id, mq.vinculo_area.area_id); } mq.lotacao = mq.area_rotulo || ''; } catch(_) { }
       var ctx = { material: { id: mq._id, unidadeId: uid0, nome: (mq.natureza&&mq.natureza.nome)||'', marca: mq.marca||'', modelo: mq.modelo||'', cor: mq.cor||'', serie: mq.serie||'', lotacao: mq.lotacao||mq.area_rotulo||'' }, unidade: { nome: uni.nome||'', codigo: uni.codigo||'', razao: uni.razaoSocial||uni.razao||'', cnpj: uni.cnpj||'', endereco: uni.endereco||'', telefone: uni.telefone||'', logo: uni.logoUrl||uni.logo||'' } };
@@ -258,10 +483,22 @@
   // Ordenação por cabeçalho
   if(matTable){ var ths = matTable.querySelectorAll('thead th[data-sort]'); ths.forEach(function(th){ th.addEventListener('click', function(){ var key=th.getAttribute('data-sort'); if(matSort.key===key){ matSort.dir = matSort.dir==='asc' ? 'desc' : 'asc'; } else { matSort.key=key; matSort.dir='asc'; } ths.forEach(function(x){ x.classList.remove('asc','desc'); }); th.classList.add(matSort.dir); sortAndRender(0); }); }); var initTh=matTable.querySelector('thead th[data-sort="'+matSort.key+'"]'); if(initTh){ initTh.classList.add(matSort.dir); } }
 
-  async function listarAreas(){ var data=await getJson(basePath + '/api/areas-comuns/busca'); areasAll = Array.isArray(data)? data : []; }
+  async function listarAreas(){
+    var data=await getJson(basePath + '/api/areas-comuns/busca');
+    areasAll = Array.isArray(data)? data : [];
+    syncAreas();
+  }
   async function listarMateriais(){ var data=await getJson(basePath + '/api/materiais/busca'); materiais = Array.isArray(data)? data : []; matPage=0; sortAndRender(matPage); }
 
-  (async function init(){ await listarNaturezas(); await listarAreas(); await listarMateriais(); })();
+  (async function init(){
+    await listarNaturezas();
+    await listarAreas();
+    await listarMateriais();
+    // Garantir selects sincronizados mesmo sem novo change
+    rebuildMaterialNomeOptions();
+    syncVincUnidadeDisplay();
+    syncAreas();
+  })();
 
   // Contador de descrição
   (function(){ var ta=byId('mDesc'); var ct=byId('mDescCount'); if(!ta||!ct) return; ta.addEventListener('input', function(){ var v=ta.value||''; if(v.length>4000){ ta.value=v.slice(0,4000); v=ta.value; } ct.textContent=String(v.length); }); })();

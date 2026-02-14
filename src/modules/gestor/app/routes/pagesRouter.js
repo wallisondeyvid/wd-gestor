@@ -1,7 +1,7 @@
 // (migrado) pagesRouter.js
 import express from 'express';
 import requireLogin from '../middlewares/requireLogin.js';
-import { paginaDashboard, paginaLogin, paginaContato, paginaPrimeiroAcesso, paginaEsqueciSenha, paginaErro, paginaUsuarios, paginaUnidades, paginaEditarUnidade, paginaModulos, paginaFuncoes, paginaFuncionarios, paginaRecursos, partialEndereco, paginaSetores } from '../controllers/views/pagesController.js';
+import { paginaDashboard, paginaLogin, paginaContato, paginaPrimeiroAcesso, paginaEsqueciSenha, paginaErro, paginaUsuarios, paginaUnidades, paginaEditarUnidade, paginaModulos, paginaFuncoes, paginaFuncionarios, paginaRecursos, partialEndereco, paginaSetores, paginaFeedback } from '../controllers/views/pagesController.js';
 // Wrapper inline para advanced recovery (reutiliza template compartilhado)
 function paginaEsqueciSenhaAvancada(req,res){
 	const basePath = req.urlBasePath || '';
@@ -29,6 +29,7 @@ router.get('/dashboard', requireLogin, paginaDashboard);
 // Advanced recovery (GET form)
 router.get('/esquecisenha-avancada', (req,res)=> paginaEsqueciSenhaAvancada(req,res));
 router.get('/usuarios', requireLogin, paginaUsuarios);
+router.get('/feedback', requireLogin, paginaFeedback);
 router.get('/unidades', requireLogin, paginaUnidades);
 router.get('/editar-unidades/:id', requireLogin, paginaEditarUnidade);
 router.get('/modulos', requireLogin, paginaModulos);

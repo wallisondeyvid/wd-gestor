@@ -1,0 +1,117 @@
+<form method="POST" action="<%= _bp %>/assembleias/nova/salvar" novalidate>
+  <input type="hidden" name="id" value="<%= id || '' %>">
+  <input type="hidden" name="tab" value="pauta">
+  <input type="hidden" name="nav" value="stay" data-nav>
+
+  <% const pauta = Array.isArray(form?.pauta) ? form.pauta : []; %>
+
+  <div class="alert alert-info" role="alert">
+    <strong>Pauta:</strong> adicione itens (tipo + descrição). Para publicar, é necessário pelo menos 1 item.
+  </div>
+
+  <input type="hidden" name="hasPauta" value="1">
+  <input type="hidden" name="pauta_count" value="<%= Math.max(pauta.length, 1) %>" data-pauta-count>
+
+  <div id="pautaList" class="d-flex flex-column gap-3">
+    <% const count = Math.max(pauta.length, 1); %>
+    <% for (let i = 0; i < count; i += 1) { %>
+      <% const it = pauta[i] || {}; %>
+      <div class="wdg-fieldset" data-pauta-item>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong>Item <%= (i + 1) %></strong>
+          <button class="btn p-0 border-0 bg-transparent" type="button" data-pauta-remove title="Remover" aria-label="Remover">
+            <img src="/images/remover.png" alt="" style="width:36px;height:36px;display:block;">
+          </button>
+        </div>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Tipo</label>
+            <% const _tipo = String(it?.tipo || '').trim().toLowerCase(); %>
+            <div class="wdg-choice-group" role="group" aria-label="Tipo">
+              <input class="btn-check" type="radio" name="pauta_tipo_<%= i %>" id="pauta_<%= i %>_tipo_informativo" value="informativo" data-pauta-tipo-radio data-pauta-tipo="informativo" <%= _tipo === 'informativo' ? 'checked' : '' %>>
+              <label class="btn wdg-choice-btn" for="pauta_<%= i %>_tipo_informativo" data-pauta-tipo-label data-pauta-tipo="informativo"><img class="wdg-choice-icon" src="/images/assembleia_informacao.png" alt="" loading="lazy">Informativo</label>
+
+              <input class="btn-check" type="radio" name="pauta_tipo_<%= i %>" id="pauta_<%= i %>_tipo_deliberativo" value="deliberativo" data-pauta-tipo-radio data-pauta-tipo="deliberativo" <%= _tipo === 'deliberativo' ? 'checked' : '' %>>
+              <label class="btn wdg-choice-btn" for="pauta_<%= i %>_tipo_deliberativo" data-pauta-tipo-label data-pauta-tipo="deliberativo"><img class="wdg-choice-icon" src="/images/assembleia_deliberacao.png" alt="" loading="lazy">Deliberativo</label>
+
+              <input class="btn-check" type="radio" name="pauta_tipo_<%= i %>" id="pauta_<%= i %>_tipo_eleicao" value="eleicao" data-pauta-tipo-radio data-pauta-tipo="eleicao" <%= _tipo === 'eleicao' ? 'checked' : '' %>>
+              <label class="btn wdg-choice-btn" for="pauta_<%= i %>_tipo_eleicao" data-pauta-tipo-label data-pauta-tipo="eleicao"><img class="wdg-choice-icon" src="/images/assembleia_eleicao.png" alt="" loading="lazy">Eleição</label>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Descrição</label>
+            <input class="form-control" name="pauta_descricao_<%= i %>" value="<%= it?.descricao || '' %>" placeholder="Ex.: Aprovação do orçamento" />
+          </div>
+          <div class="col-12">
+            <label class="form-label">Observações internas</label>
+            <textarea class="form-control" rows="3" name="pauta_obs_<%= i %>" maxlength="4000" placeholder="Opcional" data-pauta-obs><%= it?.observacoesInternas || '' %></textarea>
+            <div class="d-flex justify-content-end">
+              <div class="form-text text-end" data-pauta-obs-count>0/4000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <button class="btn btn-outline-primary" type="button" id="btnAddPauta"><i class="bi bi-plus-circle me-1"></i>Adicionar item</button>
+    <small class="text-muted">Anexos podem ser integrados depois.</small>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="d-flex justify-content-between">
+    <button type="submit" class="wdg-btn3d" data-nav-btn="prev">
+      <img class="wdg-btn3d-icon" src="/images/anterior.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/anterior.png'">
+      Voltar
+    </button>
+    <div class="d-flex gap-2">
+      <button type="submit" class="wdg-btn3d" data-nav-btn="stay">
+        <img class="wdg-btn3d-icon" src="/images/salvar.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/salvar.png'">
+        Salvar rascunho
+      </button>
+      <button type="submit" class="wdg-btn3d" data-nav-btn="next">
+        <img class="wdg-btn3d-icon" src="/images/proximo.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/proximo.png'">
+        Avançar
+      </button>
+    </div>
+  </div>
+</form>
+
+<template id="tplPautaItem">
+  <div class="wdg-fieldset" data-pauta-item>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <strong data-pauta-title>Item</strong>
+      <button class="btn p-0 border-0 bg-transparent" type="button" data-pauta-remove title="Remover" aria-label="Remover">
+        <img src="/images/remover.png" alt="" style="width:36px;height:36px;display:block;">
+      </button>
+    </div>
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label">Tipo</label>
+        <div class="wdg-choice-group" role="group" aria-label="Tipo">
+          <input class="btn-check" type="radio" name="" id="" value="informativo" data-pauta-tipo-radio data-pauta-tipo="informativo">
+          <label class="btn wdg-choice-btn" for="" data-pauta-tipo-label data-pauta-tipo="informativo"><img class="wdg-choice-icon" src="/images/assembleia_informacao.png" alt="" loading="lazy">Informativo</label>
+
+          <input class="btn-check" type="radio" name="" id="" value="deliberativo" data-pauta-tipo-radio data-pauta-tipo="deliberativo">
+          <label class="btn wdg-choice-btn" for="" data-pauta-tipo-label data-pauta-tipo="deliberativo"><img class="wdg-choice-icon" src="/images/assembleia_deliberacao.png" alt="" loading="lazy">Deliberativo</label>
+
+          <input class="btn-check" type="radio" name="" id="" value="eleicao" data-pauta-tipo-radio data-pauta-tipo="eleicao">
+          <label class="btn wdg-choice-btn" for="" data-pauta-tipo-label data-pauta-tipo="eleicao"><img class="wdg-choice-icon" src="/images/assembleia_eleicao.png" alt="" loading="lazy">Eleição</label>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Descrição</label>
+        <input class="form-control" name="" value="" placeholder="Ex.: Aprovação do orçamento" />
+      </div>
+      <div class="col-12">
+        <label class="form-label">Observações internas</label>
+        <textarea class="form-control" rows="3" name="" maxlength="4000" placeholder="Opcional" data-pauta-obs></textarea>
+        <div class="d-flex justify-content-end">
+          <div class="form-text text-end" data-pauta-obs-count>0/4000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

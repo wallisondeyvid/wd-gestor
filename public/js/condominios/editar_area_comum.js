@@ -1,8 +1,17 @@
 (function(){
   const basePath = (document.body.getAttribute('data-base-path') || '/condominios').replace(/\/$/, '');
 
+  const byId = (id) => document.getElementById(id);
+
+  // Unidades (para filtro e logo) — mesmo padrão do editar_habitacao
+  let unidades = [];
+  try{
+    unidades = JSON.parse((byId('unidadesOptionsData') || { textContent: '[]' }).textContent || '[]');
+  }catch(_){ unidades = []; }
+
   const form = document.getElementById('formPesquisaArea');
   const selUnidade = document.getElementById('fAreaUnidade');
+  const selUnidadeLogo = document.getElementById('fAreaUnidadeLogo');
   const selStatus = document.getElementById('fAreaStatus');
   const inpNome = document.getElementById('fAreaNome');
   const tbody = document.getElementById('areaResultadosBody');
@@ -60,6 +69,171 @@
       console.warn('[editar_area_comum] fetch falhou', url, err);
       return null;
     }
+  }
+
+  function getSelectedUnitId(){ return selUnidade ? String(selUnidade.value || '').trim() : ''; }
+
+  async function ensureUnidadesLoaded(){
+    if(Array.isArray(unidades) && unidades.length) return unidades;
+    const url = `${basePath}/api/unidades?_=${Date.now()}`;
+    const data = await getJson(url);
+    if(Array.isArray(data)) unidades = data;
+    return unidades;
+  }
+
+  function isLikelyObjectId(value){
+    const s = String(value || '').trim();
+    return /^[a-f0-9]{24}$/i.test(s);
+  }
+
+  function optionTextLooksLikeId(opt){
+    if(!opt) return false;
+    const t = String(opt.textContent || '').trim();
+    const v = String(opt.value || '').trim();
+    return !!t && !!v && t === v && isLikelyObjectId(v);
+  }
+
+  function optionTextIsPlaceholder(opt){
+    if(!opt) return false;
+    const t = String(opt.textContent || '').trim().toLowerCase();
+    if(!t) return true;
+    if(t === 'condomínio selecionado') return true;
+    if(t === 'condominio selecionado') return true;
+    if(t === 'condomínio não definido') return true;
+    if(t === 'condominio não definido') return true;
+    if(t === 'selecione...') return true;
+    if(t === 'selecionar...') return true;
+    if(t === '—' || t === '-') return true;
+    return false;
+  }
+
+  function escapeCssValue(value){
+    const raw = String(value || '');
+    if(typeof CSS !== 'undefined' && CSS && typeof CSS.escape === 'function') return CSS.escape(raw);
+    return raw.replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+  }
+
+  async function ensureUnidadeSelectLabel(){
+    if(!selUnidade) return;
+    const uid = getSelectedUnitId();
+    if(!uid) return;
+    if(!isLikelyObjectId(uid)) return;
+
+    const selector = `option[value="${escapeCssValue(uid)}"]`;
+    const opt = selUnidade.querySelector(selector) || (selUnidade.selectedOptions && selUnidade.selectedOptions[0]);
+    if(!opt) return;
+
+    // Reescreve o label quando o option está com ObjectId OU placeholder.
+    if(!(optionTextLooksLikeId(opt) || optionTextIsPlaceholder(opt))) return;
+
+    await ensureUnidadesLoaded();
+    const u = getUnitById(uid);
+    if(!u) return;
+    const label = formatUnidade(u);
+    if(label) opt.textContent = label;
+  }
+
+  function formatUnidade(unidade){
+    if(!unidade || typeof unidade !== 'object') return '—';
+    const cod = (unidade.codigo || '').toString().trim();
+    const nome = (unidade.nome || unidade.razaoSocial || '').toString().trim();
+    return [cod, nome].filter(Boolean).join(' - ') || nome || cod || '—';
+  }
+
+  function getUnitById(id){
+    const uid = String(id || '').trim();
+    if(!uid) return null;
+    return (unidades || []).find(u => String(u && u._id) === uid) || null;
+  }
+
+  function pickUnitLogoUrl(u){
+    if(!u) return '';
+    let raw = u.logo || u.logo_url || u.logoUrl || u.logo_unidade || u.logoUnidade || u.headerLogo || u.header_logo || u.logoURL || u.logoUrlUnidade || u.logo_unidade_url || u.logo_url_unidade;
+    raw = (raw == null) ? '' : String(raw).trim();
+    return raw;
+  }
+
+  function buildLogoCandidates(rawUrl, basePathForModule){
+    const bp = String(basePathForModule || '').trim();
+    const u = String(rawUrl || '').trim();
+    if(!u) return [];
+
+    const candidates = [];
+    const isAbs = /^https?:\/\//i.test(u) || u.indexOf('data:') === 0;
+    if(isAbs){
+      candidates.push(u);
+      return candidates;
+    }
+
+    if(bp && u.charAt(0) === '/' && u.indexOf(bp + '/') !== 0){
+      candidates.push(bp + u);
+    }
+    candidates.push(u);
+
+    if(u.charAt(0) === '/'){
+      try{ candidates.push(window.location.origin + u); }catch(_){ }
+      if(bp && u.indexOf(bp + '/') !== 0){
+        try{ candidates.push(window.location.origin + bp + u); }catch(_){ }
+      }
+    }
+
+    const out = [];
+    for(const c of candidates){
+      const s = String(c || '').trim();
+      if(!s) continue;
+      if(out.includes(s)) continue;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function getUnidadeLogoCandidates(unitId){
+    const uid = String(unitId || '').trim();
+    const base = String(basePath || '/condominios').trim() || '/condominios';
+    if(!uid){
+      return ['/images/unidade.png', base + '/images/unidade.png'];
+    }
+
+    const u = getUnitById(uid);
+    const rawLogo = pickUnitLogoUrl(u);
+    const fromList = rawLogo ? buildLogoCandidates(rawLogo, base) : [];
+    const raw = [];
+    for(const item of fromList) raw.push(item);
+
+    raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+
+    raw.push('/images/unidade.png');
+    raw.push(base + '/images/unidade.png');
+
+    const out = [];
+    for(const it of raw){
+      const s2 = String(it || '').trim();
+      if(!s2) continue;
+      if(out.includes(s2)) continue;
+      out.push(s2);
+    }
+    return out;
+  }
+
+  function setImgWithFallback(img, urls){
+    if(!img) return;
+    const list = (urls || []).map(x => String(x || '').trim()).filter(Boolean);
+    if(!list.length) return;
+    let idx = 0;
+    img.onerror = function(){
+      idx++;
+      if(idx >= list.length){ img.onerror = null; return; }
+      img.src = list[idx];
+    };
+    img.src = list[0];
+  }
+
+  function refreshUnitLogo(){
+    if(!selUnidadeLogo) return;
+    const uid = getSelectedUnitId();
+    setImgWithFallback(selUnidadeLogo, getUnidadeLogoCandidates(uid));
   }
 
   function cloneData(value){
@@ -327,7 +501,7 @@
   function formatUnidadeLabel(unidade){
     if(!unidade) return '—';
     const codigo = (unidade.codigo || '').toString().trim();
-    const nome = (unidade.nome || '').toString().trim();
+    const nome = (unidade.nome || unidade.razaoSocial || '').toString().trim();
     return [codigo, nome].filter(Boolean).join(' - ') || nome || codigo || '—';
   }
 
@@ -359,32 +533,31 @@
   }
 
   async function carregarAreas(options){
-    const url = basePath + '/api/areas-comuns/busca';
+    const { initialRun = false } = options || {};
+    const unidadeId = getSelectedUnitId();
+
+    // Mesmo comportamento do editar_habitacao: sem condomínio selecionado, não exibe dados.
+    if(!unidadeId){
+      fullData = [];
+      state.data = [];
+      state.total = 0;
+      state.page = 1;
+      renderTabela();
+      refreshUnitLogo();
+      return;
+    }
+
+    const url = basePath + '/api/areas-comuns/busca?unidade=' + encodeURIComponent(unidadeId) + '&_ts=' + Date.now();
     const data = await getJson(url);
     const list = Array.isArray(data) ? data : (data && data.items) || [];
     fullData = list.map(prepararItem);
-    atualizarOpcaoUnidade();
-    aplicarFiltros(true);
-  }
-
-  function atualizarOpcaoUnidade(){
-    if(!selUnidade) return;
-    if(!fullData.length){
-      selUnidade.innerHTML = '<option value="">Todos</option>';
-      selUnidade.disabled = true;
-      return;
+    if(initialRun){
+      // garante logo/label corretos no primeiro load (quando vem placeholder no option)
+      try{ await ensureUnidadesLoaded(); }catch(_){ }
     }
-    const mapa = new Map();
-    fullData.forEach(item => {
-      if(!item || !item._unidadeId) return;
-      if(!mapa.has(item._unidadeId)) mapa.set(item._unidadeId, item._unidadeLabel || 'Condomínio');
-    });
-    const options = Array.from(mapa.entries()).sort((a,b) => a[1].localeCompare(b[1], 'pt-BR'));
-    let html = '<option value="">Todos</option>';
-    html += options.map(([value,label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join('');
-    selUnidade.innerHTML = html;
-    selUnidade.disabled = false;
-    if(options.length === 1) selUnidade.value = options[0][0];
+    try{ await ensureUnidadeSelectLabel(); }catch(_){ }
+    refreshUnitLogo();
+    aplicarFiltros(true);
   }
 
   function aplicarFiltros(initial){
@@ -395,12 +568,12 @@
       renderTabela();
       return;
     }
-    const unidadeSel = selUnidade?.value || '';
+    const unidadeSel = getSelectedUnitId();
     const statusSel = selStatus?.value || '';
     const nomeTerm = (inpNome?.value || '').trim().toLowerCase();
     const filtered = fullData.filter(item => {
       if(!item) return false;
-      if(unidadeSel && item._unidadeId !== unidadeSel) return false;
+      if(unidadeSel && item._unidadeId && item._unidadeId !== unidadeSel) return false;
       if(statusSel === 'ativas' && item._status !== 'ativo') return false;
       if(statusSel === 'inativas' && item._status !== 'inativo') return false;
       if(nomeTerm){
@@ -1062,11 +1235,17 @@
     pager.innerHTML = '';
     const totalPages = Math.max(1, Math.ceil(state.total / state.size));
     if(totalPages <= 1){
-      const info = document.createElement('div');
-      info.className = 'w-100 text-center';
-      info.style.fontSize = '.75rem';
-      info.textContent = 'Total: ' + state.total + ' área(s)';
-      pager.appendChild(info);
+      pager.appendChild(mkBtn('«', () => { state.page = 1; renderTabela(); }, true));
+      pager.appendChild(mkBtn('‹', () => { state.page = 1; renderTabela(); }, true));
+      pager.appendChild(mkBtn('1', () => { state.page = 1; renderTabela(); }, true, true));
+      pager.appendChild(mkBtn('›', () => { state.page = 1; renderTabela(); }, true));
+      pager.appendChild(mkBtn('»', () => { state.page = 1; renderTabela(); }, true));
+
+      const infoOnly = document.createElement('div');
+      infoOnly.className = 'w-100 text-center mt-1';
+      infoOnly.style.fontSize = '.7rem';
+      infoOnly.textContent = 'Total: ' + String(state.total || 0) + ' área(s)';
+      pager.appendChild(infoOnly);
       return;
     }
     const windowSize = 7;
@@ -1115,7 +1294,15 @@
   }
 
   form?.addEventListener('submit', ev => ev.preventDefault());
-  selUnidade?.addEventListener('change', scheduleFilter);
+  async function onUnidadeChanged(){
+    try{ await ensureUnidadesLoaded(); }catch(_){ }
+    try{ await ensureUnidadeSelectLabel(); }catch(_){ }
+    refreshUnitLogo();
+    state.page = 1;
+    await carregarAreas({ initialRun: false });
+  }
+
+  selUnidade?.addEventListener('change', onUnidadeChanged);
   selStatus?.addEventListener('change', scheduleFilter);
   inpNome?.addEventListener('input', scheduleFilter);
   pageSizeSel?.addEventListener('change', () => {
@@ -1284,5 +1471,18 @@
   document.addEventListener('area-comum:lista:refresh', scheduleReload);
   document.addEventListener('area-comum:material:recebido', handleMaterialRecebido);
 
+  // Se só existir 1 unidade e não veio selecionada, pré-seleciona (mesmo padrão do editar_habitacao)
+  if(selUnidade && !selUnidade.disabled){
+    const uid = getSelectedUnitId();
+    if(!uid && Array.isArray(unidades) && unidades.length === 1){
+      const onlyId = String(unidades[0] && (unidades[0]._id || unidades[0].id) ? (unidades[0]._id || unidades[0].id) : '').trim();
+      if(onlyId) selUnidade.value = onlyId;
+    }
+  }
+
+  refreshUnitLogo();
+  // Se a unidade está fixada pelo perfil, o select fica disabled e nunca dispara change;
+  // então garantimos o label no load inicial.
+  ensureUnidadeSelectLabel().catch(() => {});
   carregarAreas({ initialRun: true });
 })();

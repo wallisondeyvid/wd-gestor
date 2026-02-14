@@ -8,6 +8,49 @@ document.addEventListener('DOMContentLoaded', () => {
 	// ===================== Helpers gerais =====================
 	const byId = (id) => document.getElementById(id);
 
+	function normalizeText(v){
+		const s = String(v ?? '').trim();
+		return s;
+	}
+
+	function askDeleteUnidadeConfirm(unidadeNome){
+		const modalEl = byId('uDeleteConfirmModal');
+		const nameEl = byId('uDeleteConfirmName');
+		const yesBtn = byId('uDeleteConfirmYes');
+
+		const nome = normalizeText(unidadeNome) || 'selecionada';
+
+		// fallback se Bootstrap/modal não estiver disponível
+		if (!modalEl || !yesBtn || !(window.bootstrap && window.bootstrap.Modal)) {
+			return Promise.resolve(window.confirm(`Deseja excluir a unidade ${nome}? Esta exclusão é definitiva e não pode ser desfeita.`));
+		}
+
+		if (nameEl) nameEl.textContent = nome;
+
+		return new Promise((resolve) => {
+			let resolved = false;
+			const bs = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true, focus: true });
+
+			const onHidden = () => {
+				if (resolved) return;
+				resolved = true;
+				resolve(false);
+			};
+
+			const onYes = (e) => {
+				try { e?.preventDefault?.(); } catch { /* noop */ }
+				if (resolved) return;
+				resolved = true;
+				resolve(true);
+				try { bs.hide(); } catch { /* noop */ }
+			};
+
+			modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+			yesBtn.addEventListener('click', onYes, { once: true });
+			bs.show();
+		});
+	}
+
 	// Leitor de arquivo -> DataURL (Promise)
 	function readFileAsDataURL(file){
 		return new Promise((resolve, reject) => {
@@ -1508,7 +1551,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (action === 'excluir') {
 				const id = btn.getAttribute('data-id') || btn.closest('tr')?.getAttribute('data-id');
 				if (!id) return;
-				if (!confirm('Tem certeza que deseja excluir esta unidade?')) return;
+				const tr = btn.closest('tr');
+				const nome = tr?.querySelector('.td-nome span')?.textContent || tr?.querySelector('.td-nome')?.textContent || '';
+				const ok = await askDeleteUnidadeConfirm(nome);
+				if (!ok) return;
 				const res = await fetch(apiUnidades(`/${id}`), { 
 					method: 'DELETE', 
 					headers: { 'Accept': 'application/json' },

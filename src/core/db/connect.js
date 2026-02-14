@@ -7,9 +7,22 @@ const GLOBAL_CACHE_KEY = '__wdgestorMongoCache__';
 function getGlobalCache() {
   const g = globalThis;
   if (!g[GLOBAL_CACHE_KEY]) {
-    g[GLOBAL_CACHE_KEY] = { conn: null, promise: null, listenersInstalled: false };
+    g[GLOBAL_CACHE_KEY] = { conn: null, promise: null, listenersInstalled: false, mem: null, memUri: null };
   }
   return g[GLOBAL_CACHE_KEY];
+}
+
+export async function disconnectMongo({ stopMemoryServer = true } = {}) {
+  const cache = getGlobalCache();
+  try { await mongoose.disconnect(); } catch { /* noop */ }
+  cache.conn = null;
+  cache.promise = null;
+
+  if (stopMemoryServer && cache.mem) {
+    try { await cache.mem.stop(); } catch { /* noop */ }
+    cache.mem = null;
+    cache.memUri = null;
+  }
 }
 
 function isServerlessRuntime() {
@@ -185,8 +198,15 @@ export async function connectMongo(uri, options = {}) {
           const { MongoMemoryServer } = await import('mongodb-memory-server');
           MemoryServer = MongoMemoryServer;
         }
+        if (cache.mem) {
+          try { await cache.mem.stop(); } catch { /* noop */ }
+          cache.mem = null;
+          cache.memUri = null;
+        }
         const mem = await MemoryServer.create();
         const memUri = mem.getUri();
+        cache.mem = mem;
+        cache.memUri = memUri;
         await mongoose.connect(memUri, { ...defaultOpts, ...options });
         const conn = mongoose.connection;
         console.log('[mongo] conectado em memória (fallback):', memUri);
@@ -201,8 +221,15 @@ export async function connectMongo(uri, options = {}) {
       const { MongoMemoryServer } = await import('mongodb-memory-server');
       MemoryServer = MongoMemoryServer;
     }
+    if (cache.mem) {
+      try { await cache.mem.stop(); } catch { /* noop */ }
+      cache.mem = null;
+      cache.memUri = null;
+    }
     const mem = await MemoryServer.create();
     const memUri = mem.getUri();
+    cache.mem = mem;
+    cache.memUri = memUri;
     await mongoose.connect(memUri, { ...defaultOpts, ...options });
     const conn = mongoose.connection;
     console.log('[mongo] conectado em memória:', memUri);

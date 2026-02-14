@@ -1,0 +1,351 @@
+/* CSS específico da página: Cadastrar Áreas Comuns
+	 Objetivo: replicar o padrão premium/3D da Habitação/Garagem,
+	 usando apenas tokens existentes em condominios-modern.css.
+*/
+
+/* Premium: remove fundo azul do layout global */
+body.page-cadastrar-areas-comuns{
+	background: var(--wdg-bg) !important;
+}
+
+/* Cards com acabamento premium */
+body.page-cadastrar-areas-comuns .content.wdg-card,
+body.page-cadastrar-areas-comuns .wdg-card.content,
+body.page-cadastrar-areas-comuns .content{
+	border-radius: var(--wdg-radius-lg);
+	background: var(--wdg-glass);
+	border: 1px solid var(--wdg-glass-border);
+	box-shadow: var(--wdg-shadow-hover);
+	overflow: hidden;
+}
+
+body.page-cadastrar-areas-comuns .content.wdg-card::before,
+body.page-cadastrar-areas-comuns .wdg-card.content::before,
+body.page-cadastrar-areas-comuns .content::before{
+	content:'';
+	position:absolute;
+	inset:0;
+	pointer-events:none;
+	background:
+		linear-gradient(180deg, var(--wdg-glass-border), transparent 38%),
+		radial-gradient(900px 320px at 30% 0%, var(--wdg-ink-soft), transparent 55%);
+	opacity: .10;
+}
+
+body.page-cadastrar-areas-comuns .content.wdg-card > *,
+body.page-cadastrar-areas-comuns .wdg-card.content > *,
+body.page-cadastrar-areas-comuns .content > *{
+	position: relative;
+	z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+	body.page-cadastrar-areas-comuns .content{
+		-webkit-backdrop-filter: blur(14px) saturate(150%);
+		backdrop-filter: blur(14px) saturate(150%);
+		background: var(--wdg-glass);
+		border-color: var(--wdg-glass-border);
+	}
+}
+
+body.page-cadastrar-areas-comuns .page-main-title{
+	font-weight: 800;
+	letter-spacing: -.02em;
+}
+
+body.page-cadastrar-areas-comuns .wdg-section-title{
+	font-weight: 800;
+	letter-spacing: .2px;
+}
+
+/* Inputs premium (mesma polida) */
+body.page-cadastrar-areas-comuns .form-control,
+body.page-cadastrar-areas-comuns .form-select{
+	border-radius: 12px;
+	border-color: rgba(var(--wdg-accent-rgb), .18);
+	background:
+		linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	box-shadow:
+		inset 0 1px 0 var(--wdg-glass-border),
+		var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-areas-comuns .form-control:focus,
+body.page-cadastrar-areas-comuns .form-select:focus{
+	border-color: var(--wdg-primary);
+	box-shadow: var(--wdg-focus-ring), var(--wdg-shadow-hover);
+}
+
+body.page-cadastrar-areas-comuns .form-label{
+	font-weight: 650;
+	color: var(--wdg-text);
+}
+
+/* Subbar de Condomínio (igual Habitação/Garagem) */
+body.page-cadastrar-areas-comuns .wdg-condo-subbar{
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	gap: .9rem;
+	margin: .35rem 0 1.15rem;
+}
+
+body.page-cadastrar-areas-comuns .wdg-condo-field{
+	display:flex;
+	flex-direction: column;
+	gap: .45rem;
+	width: 100%;
+	max-width: 760px;
+}
+
+body.page-cadastrar-areas-comuns .wdg-condo-controlrow{
+	display:flex;
+	align-items:center;
+	gap: .7rem;
+	width: 100%;
+}
+
+body.page-cadastrar-areas-comuns .wdg-condo-inline-logo{
+	width: 46px;
+	height: 46px;
+	border-radius: 999px;
+	object-fit: cover;
+	border: 1px solid var(--wdg-border);
+	background: var(--wdg-surface-alt);
+	box-shadow: var(--wdg-shadow-sm);
+	flex: 0 0 46px;
+}
+
+body.page-cadastrar-areas-comuns .wdg-condo-label{
+	font-weight: 800;
+	font-size: .78rem;
+	letter-spacing: .18em;
+	text-transform: uppercase;
+	color: var(--wdg-text-light);
+}
+
+body.page-cadastrar-areas-comuns .wdg-condo-select.form-select{
+	border-radius: 999px;
+	border: 1px solid var(--wdg-border);
+	box-shadow: var(--wdg-shadow-sm);
+	transition: box-shadow .16s ease, border-color .16s ease, transform .16s ease;
+	padding-left: 1rem;
+	padding-right: 2.2rem;
+	min-height: 62px;
+	font-size: 1.05rem;
+	font-weight: 650;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+body.page-cadastrar-areas-comuns .wdg-condo-select.form-select:focus{
+	border-color: var(--wdg-primary);
+	box-shadow: var(--wdg-focus-ring), var(--wdg-shadow);
+	transform: translateY(-1px);
+}
+
+body.page-cadastrar-areas-comuns .wdg-condo-select.form-select:disabled{
+	opacity: 1;
+	background: var(--wdg-surface-alt);
+}
+
+/* Tabelas: wrapper no estilo Feedback (acabamento moderno, igual Habitação) */
+body.page-cadastrar-areas-comuns .ch-table-wrap{
+	border: 1px solid var(--wdg-border);
+	border-radius: 14px;
+	background:
+		radial-gradient(900px 260px at 35% 10%, rgba(var(--wdg-accent-rgb), .08), transparent 60%),
+		var(--wdg-surface-alt);
+	box-shadow: var(--wdg-shadow);
+	padding: 0 10px 10px;
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+body.page-cadastrar-areas-comuns .ch-table-wrap::before{
+	content:'';
+	position:absolute;
+	left:0;
+	right:0;
+	top:0;
+	height: 52px;
+	background:
+		radial-gradient(900px 220px at 18% -10%, rgba(var(--wdg-primary-rgb), .22), transparent 55%),
+		var(--wdg-hero-gradient);
+	z-index: 1;
+	pointer-events: none;
+}
+
+body.page-cadastrar-areas-comuns .ch-table-scroll{
+	position: relative;
+	z-index: 2;
+	border-radius: 12px;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+body.page-cadastrar-areas-comuns .ch-table-pager{
+	position: relative;
+	z-index: 2;
+	flex: 0 0 auto;
+	margin-top: 10px;
+	padding-top: 10px;
+	padding-bottom: 2px;
+	background: linear-gradient(180deg, transparent, var(--wdg-glass) 28%, var(--wdg-surface));
+	border-top: 1px solid rgba(var(--wdg-accent-rgb), .10);
+}
+
+/* Altura mais confortável para lista */
+body.page-cadastrar-areas-comuns #acTableWrap .table-vert-max{ max-height: 420px; }
+
+/* Estilo “Feedback” da tabela (igual Garagem/Habitação) */
+body.page-cadastrar-areas-comuns #acTableWrap th,
+body.page-cadastrar-areas-comuns #acTableWrap td{
+	text-align: center;
+}
+
+body.page-cadastrar-areas-comuns #acTableWrap table{
+	background: transparent;
+	border-collapse: separate;
+	border-spacing: 0 10px;
+}
+
+body.page-cadastrar-areas-comuns #acTableWrap thead th{
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	font-size: .72rem;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	color: var(--wdg-surface);
+	background: transparent;
+	border-bottom: 0;
+	box-shadow: none;
+}
+
+body.page-cadastrar-areas-comuns #acTableWrap table > :not(caption) > thead > * > *{
+	border-bottom-width: 0;
+}
+
+body.page-cadastrar-areas-comuns #acTableWrap tbody td{
+	border-top: none;
+	border-bottom: none;
+	background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	border: 1px solid rgba(var(--wdg-primary-rgb), .14);
+	box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-areas-comuns #acTableWrap tbody tr td:first-child{ border-radius: 12px 0 0 12px; }
+body.page-cadastrar-areas-comuns #acTableWrap tbody tr td:last-child{ border-radius: 0 12px 12px 0; }
+
+body.page-cadastrar-areas-comuns #acTableWrap tbody tr:nth-child(odd) td{
+	background: linear-gradient(180deg, var(--wdg-surface), rgba(var(--wdg-accent-rgb), .03));
+}
+
+body.page-cadastrar-areas-comuns #acTableWrap tbody tr{ transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+body.page-cadastrar-areas-comuns #acTableWrap tbody tr:hover{ transform: translateY(-1px); }
+body.page-cadastrar-areas-comuns #acTableWrap tbody tr:hover td{
+	border-color: rgba(var(--wdg-primary-rgb), .24);
+	background: linear-gradient(180deg, var(--wdg-primary-soft), var(--wdg-surface));
+}
+
+/* Toque 3D nos ícones de ação (igual Habitação/Garagem) */
+body.page-cadastrar-areas-comuns .wdg-icon-btn{
+	border-radius: 10px;
+	transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+body.page-cadastrar-areas-comuns .wdg-icon-btn:hover{
+	transform: translateY(-1px);
+	box-shadow: var(--wdg-shadow-sm);
+}
+
+body.page-cadastrar-areas-comuns .wdg-icon-btn:active{
+	transform: translateY(0);
+}
+
+/* --------------------
+	 Modal: Detalhes da Área Comum (premium/3D)
+	 -------------------- */
+
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-dialog{
+	filter: drop-shadow(0 18px 35px rgba(0,0,0,.18));
+}
+
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-content{
+	border-radius: calc(var(--wdg-radius-lg) + 4px);
+	border: 1px solid var(--wdg-glass-border);
+	background: var(--wdg-glass);
+	box-shadow: var(--wdg-shadow-hover);
+	overflow: hidden;
+	position: relative;
+}
+
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-content::before{
+	content:'';
+	position:absolute;
+	inset:0;
+	pointer-events:none;
+	background:
+		linear-gradient(180deg, var(--wdg-glass-border), transparent 40%),
+		radial-gradient(1100px 420px at 30% 0%, rgba(var(--wdg-accent-rgb), .10), transparent 55%);
+	opacity: .55;
+}
+
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-header,
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-footer{
+	background: transparent;
+	border-color: rgba(var(--wdg-accent-rgb), .12);
+}
+
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-title{
+	font-weight: 850;
+	letter-spacing: -.01em;
+}
+
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-body,
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-header,
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-footer{
+	position: relative;
+	z-index: 1;
+}
+
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+	body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-content{
+		-webkit-backdrop-filter: blur(16px) saturate(160%);
+		backdrop-filter: blur(16px) saturate(160%);
+	}
+}
+
+/* “Cards” internos do modal (Informações / Foto / Observações) */
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-body .border.rounded{
+	border: 1px solid rgba(var(--wdg-accent-rgb), .14) !important;
+	border-radius: 16px !important;
+	background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+	box-shadow: var(--wdg-shadow);
+	position: relative;
+}
+
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-body .border.rounded::before{
+	content:'';
+	position:absolute;
+	inset:0;
+	pointer-events:none;
+	background: radial-gradient(900px 260px at 20% 0%, rgba(var(--wdg-primary-rgb), .10), transparent 60%);
+	opacity: .55;
+	border-radius: 16px;
+}
+
+body.page-cadastrar-areas-comuns #modalDetAreaConstCad .modal-body .border.rounded > *{
+	position: relative;
+	z-index: 1;
+}
+
+/* Foto: botões abaixo à direita (igual Garagem) */
+body.page-cadastrar-areas-comuns .ac-foto-actions{
+	display:flex;
+	gap:.5rem;
+	justify-content:flex-end;
+}

@@ -150,7 +150,7 @@
                     <button type="button" class="wdg-icon-btn" onclick="editar('<%= funcao._id %>')" title="Editar" aria-label="Editar">
                       <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
                     </button>
-                    <button type="button" class="wdg-icon-btn" onclick="excluir('<%= funcao._id %>')" title="Excluir" aria-label="Excluir">
+                    <button type="button" class="wdg-icon-btn" onclick="excluir('<%= funcao._id %>', '<%= encodeURIComponent(funcao.nome || '') %>')" title="Excluir" aria-label="Excluir">
                       <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
                     </button>
                   </div>
@@ -169,6 +169,29 @@
 
   <!-- ============ Modais & Dados ============ -->
   <%- include('../partials/modais/modal_selecionar_modulos.ejs') %>
+
+  <!-- Modal: confirmar exclusão de função -->
+  <div class="modal fade" id="fnDeleteConfirmModal" tabindex="-1" aria-labelledby="fnDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="fnDeleteConfirmTitle">
+            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+            Confirmar exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Deseja excluir a função <strong id="fnDeleteConfirmName">esta função</strong>?</p>
+          <p class="mb-0 text-danger"><strong>Esta exclusão é definitiva</strong> e não pode ser desfeita.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="fnDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="application/json" id="modulosJson"><%- JSON.stringify(modulosFiltrados || []) %></script>
   <script>
@@ -196,6 +219,51 @@ document.addEventListener('DOMContentLoaded', function(){
   const btnGerenciar= document.getElementById('btnGerenciarModulos');
   const hintSelecao = document.getElementById('hintModulosSelecao');
   const hintUnidade = document.getElementById('hintModulosUnidade');
+
+  // --- Modal de confirmação de exclusão
+  const deleteModalEl = document.getElementById('fnDeleteConfirmModal');
+  const deleteNameEl  = document.getElementById('fnDeleteConfirmName');
+  const deleteYesBtn  = document.getElementById('fnDeleteConfirmYes');
+
+  function askDeleteFuncaoConfirm(nome){
+    const nomeTxt = (nome && String(nome).trim()) ? String(nome).trim() : 'esta função';
+    const fallbackMsg = `Deseja excluir a função "${nomeTxt}"?\n\nEsta exclusão é definitiva e não pode ser desfeita.`;
+
+    if (!deleteModalEl || !deleteYesBtn || !(window.bootstrap && window.bootstrap.Modal)) {
+      return Promise.resolve(window.confirm(fallbackMsg));
+    }
+
+    if (deleteNameEl) deleteNameEl.textContent = nomeTxt;
+    const modal = window.bootstrap.Modal.getOrCreateInstance(deleteModalEl);
+
+    return new Promise((resolve) => {
+      let resolved = false;
+
+      const cleanup = () => {
+        deleteModalEl.removeEventListener('hidden.bs.modal', onHidden);
+        deleteYesBtn.removeEventListener('click', onConfirm);
+      };
+
+      const onHidden = () => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve(false);
+      };
+
+      const onConfirm = () => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve(true);
+        modal.hide();
+      };
+
+      deleteModalEl.addEventListener('hidden.bs.modal', onHidden);
+      deleteYesBtn.addEventListener('click', onConfirm);
+      modal.show();
+    });
+  }
   // Campo de módulos é sempre somente exibição; seleção apenas via modal
   selectMods.setAttribute('disabled', 'disabled');
   selectMods.classList.add('disabled');
@@ -426,8 +494,10 @@ document.addEventListener('DOMContentLoaded', function(){
       });
   };
 
-  window.excluir = function(id){
-    if (!confirm('Confirma exclusão?')) return;
+  window.excluir = async function(id, nomeEncoded){
+    const nome = nomeEncoded ? decodeURIComponent(String(nomeEncoded)) : '';
+    const ok = await askDeleteFuncaoConfirm(nome);
+    if (!ok) return;
   fetch(BASE + '/api/funcoes/' + encodeURIComponent(id), { method:'DELETE', headers:{'Accept':'application/json'} })
       .then(r => r.ok ? location.reload() : r.text().then(t => { throw new Error(t || 'Erro ao excluir'); }))
       .catch(err => alert('Erro: ' + err.message));
@@ -575,6 +645,8 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 <style>
+/* Mantém cabeçalho do modal branco (evita heranças do tema) */
+#fnDeleteConfirmModal .modal-header{ background:#fff !important; color:#212529 !important; border-bottom:1px solid rgba(0,0,0,.08) !important; }
 /* Scroll vertical a partir de 4 itens (padronizado como Unidades) */
 #wrapperTabelaFuncoes.scroll-limit{ max-height:360px; overflow-y:auto; }
 #wrapperTabelaFuncoes.scroll-limit thead th{ position:sticky; top:0; background:#f8f9fa; z-index:2; box-shadow:0 1px 0 rgba(0,0,0,.06); }

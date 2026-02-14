@@ -1,0 +1,170 @@
+<form method="POST" action="<%= _bp %>/assembleias/nova/salvar" novalidate>
+  <input type="hidden" name="id" value="<%= id || '' %>">
+  <input type="hidden" name="tab" value="revisao">
+  <input type="hidden" name="nav" value="stay" data-nav>
+
+  <div class="wdg-fieldset">
+      <% 
+        const pauta = Array.isArray(form?.pauta) ? form.pauta : [];
+        const regra = String(form?.regraConvocacao || '').trim().toLowerCase();
+        const modalidade = String(form?.modalidade || '').trim().toLowerCase();
+        const natureza = String(form?.natureza || '').trim().toLowerCase();
+        const overrideMotivo = String(form?.overrideMotivo || '').trim();
+
+        const toKey = (s) => String(s || '')
+          .trim()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const cap1 = (s) => {
+          const t = String(s || '').trim();
+          return t ? (t.charAt(0).toUpperCase() + t.slice(1)) : '';
+        };
+
+        const prettyFromMap = (raw, map) => {
+          const key = toKey(raw);
+          if (!key) return '';
+          return map[key] || cap1(raw);
+        };
+
+        const naturezaHuman = (raw) => prettyFromMap(raw, {
+          ordinaria: 'Ordinária',
+          extraordinaria: 'Extraordinária'
+        });
+
+        const modalidadeHuman = (raw) => prettyFromMap(raw, {
+          presencial: 'Presencial',
+          virtual: 'Virtual',
+          hibrida: 'Híbrida'
+        });
+
+        const regraHuman = (raw) => prettyFromMap(raw, {
+          unica: 'Única',
+          dupla: 'Dupla'
+        });
+      %>
+
+      <div class="wdg-review-head mb-3">
+        <div>
+          <h5 class="mb-1">Revisão</h5>
+          <div class="wdg-muted small">Confira os dados antes de publicar.</div>
+        </div>
+        <div class="wdg-review-badges">
+          <% if (natureza) { %>
+            <span class="wdg-review-badge"><i class="bi bi-tag"></i><span><%= naturezaHuman(natureza) %></span></span>
+          <% } %>
+          <% if (modalidade) { %>
+            <span class="wdg-review-badge"><i class="bi bi-camera-video"></i><span><%= modalidadeHuman(modalidade) %></span></span>
+          <% } %>
+          <% if (regra) { %>
+            <span class="wdg-review-badge"><i class="bi bi-clock-history"></i><span><%= regraHuman(regra) %></span></span>
+          <% } %>
+          <span class="wdg-review-badge wdg-review-badge--primary"><i class="bi bi-list-check"></i><span><%= pauta.length %> item(ns)</span></span>
+        </div>
+      </div>
+
+      <div class="wdg-review-grid">
+        <div class="wdg-review-card">
+          <div class="wdg-review-card-title">
+            <img class="wdg-review-icon" src="/images/assembleia_revisao_inf.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/assembleia_revisao_inf.png'">
+            <span>Dados da assembleia</span>
+          </div>
+          <div class="wdg-review-kv">
+            <div class="wdg-review-row"><div class="k">Natureza</div><div class="v"><%= naturezaHuman(form?.natureza) || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Título</div><div class="v"><%= form?.titulo || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Número</div><div class="v"><%= form?.numero || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Data</div><div class="v"><%= form?.data ? new Date(form.data).toLocaleDateString('pt-BR') : '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Modalidade</div><div class="v"><%= modalidadeHuman(form?.modalidade) || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Local</div><div class="v"><%= form?.local || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Link</div><div class="v"><%= form?.link || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Responsável</div><div class="v"><%= form?.responsavel || '-' %></div></div>
+          </div>
+        </div>
+
+        <div class="wdg-review-card">
+          <div class="wdg-review-card-title">
+            <img class="wdg-review-icon" src="/images/disponibilidade.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/disponibilidade.png'">
+            <span>Convocação</span>
+          </div>
+          <div class="wdg-review-kv">
+            <div class="wdg-review-row"><div class="k">Regra</div><div class="v"><%= regraHuman(form?.regraConvocacao) || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Horário (único)</div><div class="v"><%= form?.horaUnica || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Horário (1ª)</div><div class="v"><%= form?.hora1 || '-' %></div></div>
+            <div class="wdg-review-row"><div class="k">Horário (2ª)</div><div class="v"><%= form?.hora2 || '-' %></div></div>
+          </div>
+
+          <% if (overrideMotivo) { %>
+            <div class="wdg-review-note mt-3">
+              <div class="wdg-review-note-title"><img class="wdg-review-icon" src="/images/assembleia_override.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/assembleia_override.png'">Motivo de override</div>
+              <details>
+                <summary class="wdg-review-summary">Ver detalhe</summary>
+                <div class="wdg-review-note-body"><%= overrideMotivo %></div>
+              </details>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="wdg-review-card mt-3">
+        <div class="wdg-review-card-title">
+          <img class="wdg-review-icon" src="/images/assembleia_revisao_pauta.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/assembleia_revisao_pauta.png'">
+          <span>Pauta</span>
+        </div>
+        <% if (!pauta.length) { %>
+          <div class="text-muted">Nenhum item informado.</div>
+        <% } else { %>
+          <div class="wdg-review-pauta">
+            <% pauta.forEach((it, idx) => { %>
+              <% const tipoRaw = String(it?.tipo || '-').trim(); %>
+              <% const tipoLower = tipoRaw.toLowerCase(); %>
+              <% const tipoKey = tipoLower
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim(); %>
+              <% const tipoClass = (tipoKey === 'deliberativo')
+                ? 'wdg-pauta-badge--deliberativo'
+                : (tipoKey === 'informativo')
+                  ? 'wdg-pauta-badge--informativo'
+                  : (tipoKey === 'eleicao' || tipoKey === 'eleição')
+                    ? 'wdg-pauta-badge--eleicao'
+                    : ''; %>
+              <% const tipoLabel = tipoRaw && tipoRaw !== '-'
+                ? (tipoRaw.charAt(0).toUpperCase() + tipoRaw.slice(1))
+                : '-'; %>
+              <% const desc = String(it?.descricao || '-').trim(); %>
+              <% const obs = String(it?.observacoesInternas || '').trim(); %>
+              <div class="wdg-review-pauta-item">
+                <div class="wdg-review-pauta-idx"><%= idx + 1 %></div>
+                <div class="wdg-review-pauta-main">
+                  <div class="wdg-review-pauta-top">
+                    <span class="wdg-pauta-badge <%= tipoClass %>"><%= tipoLabel %></span>
+                    <div class="wdg-review-pauta-desc"><%= desc %></div>
+                  </div>
+                  <% if (obs) { %>
+                    <div class="wdg-review-pauta-obs"><%= obs %></div>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="d-flex justify-content-between">
+        <button type="submit" class="wdg-btn3d" data-nav-btn="prev">
+          <img class="wdg-btn3d-icon" src="/images/anterior.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/anterior.png'">
+          Voltar
+        </button>
+        <button type="submit" class="wdg-btn3d" data-nav-btn="next">
+          <img class="wdg-btn3d-icon" src="/images/proximo.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/proximo.png'">
+          Avançar
+        </button>
+      </div>
+  </div>
+</form>

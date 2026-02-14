@@ -9,44 +9,85 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="<%= _bp %>/css/condominios-modern.css?v=1">
   <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <link rel="stylesheet" href="<%= _bp %>/css/pages/cadastrar_proprietario.css?v=1">
   <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
   <style>
-    .hab-search-form .form-label{ font-weight:500; }
-  .hab-results-table th{ vertical-align:middle; text-align:center; white-space:nowrap; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#475569; background:#f8fafc; }
-  .hab-results-table td{ vertical-align:middle; text-align:center; white-space:normal; background:#fff !important; padding:.85rem .9rem; border-top:1px solid rgba(148,163,184,.2); }
-    .hab-results-table tbody tr:first-child td{ border-top:none; }
-    .hab-results-table tbody tr:hover td{ background:#f5f9ff !important; }
-    #habResultadoWrap.scroll-limit{ max-height:360px; overflow-y:auto; }
-    #habResultadoWrap.scroll-limit thead th{ position:sticky; top:0; background:#f8f9fa; z-index:2; }
-    .gestor-divider{ height:2px; width:300px; margin:6px auto 18px; background:#0d6efd; border-radius:2px; }
-  /* Usar tamanho padrão de ícones definido em public/css/icon-buttons.css (24x24) */
+    .hab-search-form .form-label{ font-weight:650; }
+
+    /* Mantém apenas ajustes específicos da tela; o visual base da tabela vem do padrão premium (ch-table). */
+
+    /* Usar tamanho padrão de ícones definido em public/css/icon-buttons.css (24x24) */
     .col-acoes { width: 200px; }
-  /* Moradores: cada um em uma linha */
-  .hab-col-moradores{ white-space: normal; text-align: left; }
+    /* Moradores: cada um em uma linha */
+    .hab-col-moradores{ white-space: normal; text-align: left; }
     .truncate{ max-width:320px; }
 
     .wdg-hab-stack{ display:flex; flex-direction:column; gap:.25rem; align-items:center; text-align:center; }
-    .wdg-hab-primary{ font-weight:600; color:#0f172a; }
-    .wdg-hab-secondary{ font-size:.75rem; color:#64748b; }
+    .wdg-hab-primary{ font-weight:700; color:var(--wdg-text); }
+    .wdg-hab-secondary{ font-size:.75rem; color:var(--wdg-text-light); }
     .wdg-hab-chip-row{ display:flex; flex-wrap:wrap; gap:.4rem; justify-content:center; }
-    .wdg-hab-chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.35rem .75rem; border-radius:999px; font-size:.78rem; font-weight:600; border:1px solid transparent; text-decoration:none; line-height:1.2; background:rgba(148,163,184,.12); color:#1e293b; white-space:nowrap; }
-    .wdg-hab-chip i{ font-size:.9rem; }
-    .wdg-hab-chip[data-variant="accent"]{ background:rgba(37,99,235,.12); border-color:rgba(37,99,235,.28); color:#1d4ed8; }
-    .wdg-hab-chip[data-variant="success"]{ background:rgba(16,185,129,.16); border-color:rgba(16,185,129,.28); color:#047857; }
-    .wdg-hab-chip[data-variant="muted"]{ background:rgba(148,163,184,.2); border-color:rgba(148,163,184,.3); color:#475569; }
-    .wdg-hab-chip[data-variant="warning"]{ background:rgba(251,191,36,.22); border-color:rgba(251,191,36,.32); color:#92400e; }
-    .wdg-hab-chip[data-variant="danger"]{ background:rgba(248,113,113,.18); border-color:rgba(248,113,113,.28); color:#b91c1c; }
-    .wdg-hab-chip--link{ cursor:pointer; transition:all .15s ease; }
-    .wdg-hab-chip--link:hover{ background:#1d4ed8; border-color:#1d4ed8; color:#fff; text-decoration:none; }
-    button.wdg-hab-chip{ border:none; background:transparent; }
+    .wdg-hab-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:.42rem;
+      min-height: 32px;
+      padding:.38rem .9rem;
+      border-radius:999px;
+      font-size:.79rem;
+      font-weight:750;
+      letter-spacing:.01em;
+      border:1px solid rgba(var(--wdg-accent-rgb), .18);
+      text-decoration:none;
+      line-height:1.1;
+      background: linear-gradient(180deg, rgba(var(--wdg-accent-rgb), .12), rgba(var(--wdg-accent-rgb), .06)) !important;
+      color:var(--wdg-text);
+      white-space:nowrap;
+      max-width: 100%;
+      box-shadow: var(--wdg-shadow-sm) !important;
+    }
+    .wdg-hab-chip i{ font-size:.98rem; opacity:.95; }
+
+    /* Variantes com mais contraste (sem cores novas) */
+    .wdg-hab-chip[data-variant="accent"]{
+      background: var(--wdg-primary) !important;
+      border-color: rgba(var(--wdg-primary-rgb), .18) !important;
+      color: #fff !important;
+    }
+    .wdg-hab-chip[data-variant="success"]{
+      background: var(--wdg-success) !important;
+      border-color: rgba(var(--wdg-success-rgb, var(--wdg-primary-rgb)), .18) !important;
+      color: #fff !important;
+    }
+    .wdg-hab-chip[data-variant="muted"]{
+      background: linear-gradient(180deg, var(--wdg-surface), var(--wdg-surface-alt));
+      border-color: rgba(var(--wdg-accent-rgb), .18);
+      color: var(--wdg-text-light);
+      box-shadow: none;
+    }
+    .wdg-hab-chip[data-variant="warning"]{
+      background: rgb(var(--bs-warning-rgb)) !important;
+      border-color: rgba(var(--bs-warning-rgb), .22) !important;
+      color: var(--wdg-text) !important;
+    }
+    .wdg-hab-chip[data-variant="danger"]{
+      background: var(--wdg-danger) !important;
+      border-color: rgba(var(--wdg-danger-rgb, var(--wdg-primary-rgb)), .18) !important;
+      color: #fff !important;
+    }
+    .wdg-hab-chip--link{ cursor:pointer; user-select:none; transition:transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease, color .15s ease; }
+    .wdg-hab-chip--link:hover{ background:var(--wdg-primary); border-color:var(--wdg-primary); color:#fff; text-decoration:none; box-shadow: var(--wdg-shadow-sm); transform: translateY(-1px); }
+    .wdg-hab-chip--link:active{ transform: translateY(0); box-shadow:none; }
+    /* Garantir que <button> use o mesmo visual do chip */
+    button.wdg-hab-chip{ border:0; background: inherit; padding: inherit; }
     button.wdg-hab-chip:disabled{ opacity:.45; cursor:not-allowed; }
-    button.wdg-hab-chip:focus-visible{ outline:2px solid #2563eb; outline-offset:2px; }
-    .wdg-hab-chip-text{ display:inline-block; }
+    button.wdg-hab-chip:focus-visible{ outline:2px solid var(--wdg-primary); outline-offset:2px; }
+    .wdg-hab-chip-text{ display:inline-block; overflow:hidden; text-overflow:ellipsis; max-width: 320px; }
     .wdg-hab-chip.wdg-loading{ opacity:.6; pointer-events:none; }
-    .wdg-hab-empty{ color:#94a3b8; font-weight:500; }
+    .wdg-hab-empty{ color:var(--wdg-text-light); font-weight:650; }
   </style>
 </head>
-<body class="wdg-layout" data-base-path="<%= _bp %>">
+<body class="wdg-layout page-editar-habitacao" data-base-path="<%= _bp %>">
   <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
   <%- include('../shared/partials/navbar-shared', {
         moduleBasePath: _bp,
@@ -74,7 +115,11 @@
             { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
           ]},
           { label: 'Administração', children: [
-            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
             { label: 'Atas', path: '/administracao/atas' },
             { label: 'Financeiro', path: '/administracao/financeiro' },
             { label: 'Configurações', path: '/administracao/configuracoes' }
@@ -89,23 +134,67 @@
       }) %>
   <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
 
+  <% 
+    const _unidadesOptions = (typeof unidadesOptions !== 'undefined' && Array.isArray(unidadesOptions)) ? unidadesOptions : [];
+    const _isScopeAll = Boolean(user && (user.isMaster || user.role === 'master' || user.role === 'admin'));
+    const _userUnitId = (user && user.unidade_id) ? (user.unidade_id._id || user.unidade_id || user.unidadeId || '') : (user && user.unidadeId ? user.unidadeId : '');
+    const _userUnitObj = (_userUnitId && _unidadesOptions.length) ? (_unidadesOptions||[]).find(u => String((u && (u._id || u.id)) || '') === String(_userUnitId)) : null;
+    const _userUnitFromProfile = (user && user.unidade_id && typeof user.unidade_id === 'object') ? user.unidade_id : null;
+    const _userUnitLabelFromProfile = _userUnitFromProfile ? ((_userUnitFromProfile.codigo ? (_userUnitFromProfile.codigo + ' - ') : '') + (_userUnitFromProfile.nome || _userUnitFromProfile.razaoSocial || '')) : '';
+    const _fmtUnidadeLabel = (u) => {
+      if(!u) return '';
+      const codigo = (u.codigo || '').toString().trim();
+      const nome = (u.nome || u.razaoSocial || u.label || '').toString().trim();
+      return (codigo ? (codigo + ' - ') : '') + (nome || codigo);
+    };
+  %>
+
   <div class="container py-3">
-    <h4 class="mb-3 text-center page-main-title">Editar Habitações</h4>
-    <div class="gestor-divider"></div>
+    <div class="content mb-3 wdg-card wdg-card-hover">
+      <h4 class="mb-3 text-center page-main-title">Editar Habitações</h4>
+
+      <div class="wdg-panel-subbar wdg-condo-subbar" aria-label="Filtro de condomínio">
+        <div class="wdg-condo-field">
+          <div class="wdg-condo-label">Condomínio</div>
+          <div class="wdg-condo-controlrow">
+            <img id="unidadeTopLogo" data-condo-inline-logo="1" src="/images/unidade.png" alt="" aria-hidden="true" class="wdg-condo-inline-logo">
+            <select class="form-select wdg-condo-select" id="unidadeTop" <%= !_isScopeAll ? 'disabled' : '' %> aria-label="Condomínio">
+              <% if (_isScopeAll) { %>
+                <option value="">Selecione...</option>
+                <% (_unidadesOptions||[]).forEach(u => { %>
+                  <option value="<%= (u._id || u.id) %>"><%= _fmtUnidadeLabel(u) %></option>
+                <% }) %>
+              <% } else { %>
+                <% if (_userUnitObj) { %>
+                  <option value="<%= (_userUnitObj._id || _userUnitObj.id) %>" selected><%= _fmtUnidadeLabel(_userUnitObj) %></option>
+                <% } else if (_userUnitId) { %>
+                  <option value="<%= _userUnitId %>" selected><%= (_userUnitLabelFromProfile || 'Condomínio selecionado') %></option>
+                <% } else { %>
+                  <option value="" selected>Condomínio não definido</option>
+                <% } %>
+              <% } %>
+            </select>
+          </div>
+          <% if (!_isScopeAll) { %>
+            <div class="text-muted small mt-1">Condomínio fixado pelo seu perfil.</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
 
     <!-- Formulário de Pesquisa -->
-    <form id="formPesquisaHab" class="wdg-card wdg-card-hover p-3 mb-4 hab-search-form" autocomplete="off" novalidate>
+    <form id="formPesquisaHab" class="content wdg-card wdg-card-hover p-3 mb-3 hab-search-form" autocomplete="off" novalidate>
       <div class="row g-3 align-items-end">
         <div class="col-lg-4 col-md-6">
           <label class="form-label">Bloco/Torre</label>
           <select id="fBloco" class="form-select" aria-label="Selecionar bloco" disabled>
-            <option value="">Selecione...</option>
+            <option value="">Todos</option>
           </select>
         </div>
         <div class="col-lg-4 col-md-6">
           <label class="form-label">Andar</label>
           <select id="fAndar" class="form-select" aria-label="Selecionar andar" disabled>
-            <option value="">Selecione...</option>
+            <option value="">Todos</option>
           </select>
         </div>
         <div class="col-lg-4 col-md-6">
@@ -117,7 +206,7 @@
     </form>
 
     <!-- Lista de Habitações -->
-    <div class="wdg-card wdg-card-hover p-3">
+    <div class="content wdg-card wdg-card-hover p-3 wdg-list-wide">
       <h5 class="mb-2 text-center wdg-section-title">Lista de Habitações</h5>
       <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
         <div class="d-flex align-items-center gap-2">
@@ -136,26 +225,28 @@
           <span class="ms-1">itens</span>
         </div>
       </div>
-      <div id="habResultadoWrap" class="table-responsive table-vert-max">
-        <table class="table table-sm align-middle hab-results-table" id="tabelaHabEdit">
-          <thead>
-            <tr>
-              <th>Habitação</th>
-              <th>Proprietário</th>
-              <th>Alugado?</th>
-              <th>Contrato Locação</th>
-              <th>Moradores</th>
-              <th>Veículos</th>
-              <th>Pets</th>
-              <th class="col-acoes">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="habResultadosBody">
-            <!-- Linhas preenchidas via JS -->
-          </tbody>
-        </table>
+      <div class="ch-table-wrap" id="habTableWrap" aria-label="Habitações cadastradas">
+        <div id="habResultadoWrap" class="table-responsive table-vert-max ch-table-scroll">
+          <table class="table table-hover table-sm align-middle text-center mb-0 ch-table" id="tabelaHabEdit">
+            <thead>
+              <tr>
+                <th>Habitação</th>
+                <th>Proprietário</th>
+                <th>Alugado?</th>
+                <th>Contrato Locação</th>
+                <th>Moradores</th>
+                <th>Veículos</th>
+                <th>Pets</th>
+                <th class="col-acoes">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="habResultadosBody">
+              <!-- Linhas preenchidas via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="habPaginas" class="wdg-pager ch-table-pager mt-2"></div>
       </div>
-      <div id="habPaginas" class="wdg-pager mt-2"></div>
     </div>
   </div>
 
@@ -186,6 +277,7 @@
   </template>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script id="unidadesOptionsData" type="application/json"><%- JSON.stringify(_unidadesOptions) %></script>
   <script src="<%= _bp %>/js/condominios/editar_habitacao.js?v=1"></script>
   <%- include('./modal_detalhes_veiculo') %>
   <script src="<%= _bp %>/js/condominios/modal_detalhes_veiculo.js?v=1"></script>

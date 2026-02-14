@@ -14,28 +14,20 @@ import { requireRole } from '../middlewares/requireRole.js';
 import requireApiAuth from '../middlewares/requireApiAuth.js';
 import requireLogin from '../middlewares/requireLogin.js';
 const router = express.Router();
-// Aplique autenticação apenas às rotas /api/* deste router, para não interferir em páginas públicas
-router.use('/api', requireLogin);
-router.post('/api/usuarios', criarUsuario);
-// Suporta edição via endpoint canônico /api (usado pelo modal). Mantém semântica de redirect pós-sucesso.
-router.post('/api/usuarios/:id/update', atualizarUsuario);
-// Endpoints de administração também disponíveis sob /api para compatibilidade com o front
-router.post('/api/usuarios/:id/toggle', requireLogin, requireRole(['admin']), toggleUsuario);
-router.post('/api/usuarios/:id/delete', requireApiAuth, requireRole(['admin']), deleteUsuario);
-router.get('/api/usuario', obterUsuarioAtual);
-router.put('/api/usuario/senha', atualizarSenhaUsuario);
 
-// GET /api/usuario/foto — serve a foto do usuário atual (contexto Gestor)
+// GET /api/usuario/foto — endpoint de imagem deve ser resiliente.
+// Importante: não devolver 401 aqui, porque é comumente consumido por <img> (e alguns front-ends interpretam 401 como “deslogou”).
+// Se não houver sessão/usuário, responde placeholder (ou 204 se não existir placeholder local).
 router.get('/api/usuario/foto', async (req, res) => {
 	try {
-		const email = String(req.user?.email || '').toLowerCase();
+		const email = String(req.user?.email || (req.session && req.session.user && req.session.user.email) || '').toLowerCase();
 		// Placeholders
 		const ROOT = process.cwd();
 		const placeholderSvg = path.join(ROOT, 'public', 'img', 'user-placeholder.svg');
 		const placeholderPng = path.join(ROOT, 'images', 'usuario.png');
 		const sendPlaceholder = () => {
 			const target = fs.existsSync(placeholderSvg) ? placeholderSvg : (fs.existsSync(placeholderPng) ? placeholderPng : null);
-			if (!target) return res.status(404).end();
+			if (!target) return res.status(204).end();
 			const ext = path.extname(target).toLowerCase();
 			if (ext === '.svg') res.type('image/svg+xml');
 			else if (ext === '.png') res.type('image/png');
@@ -88,9 +80,9 @@ router.get('/api/usuario/foto', async (req, res) => {
 						if (st && st.isFile()) {
 							const ext = path.extname(p).toLowerCase();
 							const type = ext === '.svg' ? 'image/svg+xml'
-												: ext === '.png' ? 'image/png'
-												: (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg'
-												: ext === '.webp' ? 'image/webp' : 'application/octet-stream';
+										: ext === '.png' ? 'image/png'
+										: (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg'
+										: ext === '.webp' ? 'image/webp' : 'application/octet-stream';
 							res.set('Content-Type', type);
 							res.set('Cache-Control', 'private, max-age=300');
 							return res.sendFile(p);
@@ -107,17 +99,28 @@ router.get('/api/usuario/foto', async (req, res) => {
 			const placeholderSvg = path.join(ROOT, 'public', 'img', 'user-placeholder.svg');
 			const placeholderPng = path.join(ROOT, 'images', 'usuario.png');
 			const target = fs.existsSync(placeholderSvg) ? placeholderSvg : (fs.existsSync(placeholderPng) ? placeholderPng : null);
-			if (!target) return res.status(404).end();
+			if (!target) return res.status(204).end();
 			const ext = path.extname(target).toLowerCase();
 			if (ext === '.svg') res.type('image/svg+xml');
 			else if (ext === '.png') res.type('image/png');
 			res.set('Cache-Control', 'public, max-age=300');
 			return res.sendFile(target);
 		} catch {
-			return res.status(404).end();
+			return res.status(204).end();
 		}
 	}
 });
+
+// Aplique autenticação apenas às rotas /api/* deste router, para não interferir em páginas públicas
+router.use('/api', requireLogin);
+router.post('/api/usuarios', criarUsuario);
+// Suporta edição via endpoint canônico /api (usado pelo modal). Mantém semântica de redirect pós-sucesso.
+router.post('/api/usuarios/:id/update', atualizarUsuario);
+// Endpoints de administração também disponíveis sob /api para compatibilidade com o front
+router.post('/api/usuarios/:id/toggle', requireLogin, requireRole(['admin']), toggleUsuario);
+router.post('/api/usuarios/:id/delete', requireApiAuth, requireRole(['admin']), deleteUsuario);
+router.get('/api/usuario', obterUsuarioAtual);
+router.put('/api/usuario/senha', atualizarSenhaUsuario);
 
 // GET /api/modulos — lista simples para badges do perfil (contexto Gestor)
 router.get('/api/modulos', async (req, res) => {

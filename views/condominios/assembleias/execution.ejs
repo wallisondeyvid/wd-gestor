@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Execução da Assembleia - WDGestor</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="<%= _bp %>/css/condominios-modern.css?v=1">
+  <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <%- include('../../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+  <link rel="stylesheet" href="<%= _bp %>/css/assembleias-execution-presencas.css?v=<%= (typeof assetVersion !== 'undefined' && assetVersion) ? assetVersion : Date.now() %>">
+  <style>
+    body.wdg-exec-page .wdg-page-header-card{
+      overflow:hidden;
+      border-radius: 1.05rem;
+      border: 1px solid rgba(var(--bs-border-color-rgb), .65);
+      background: rgba(var(--bs-body-bg-rgb), .92);
+      box-shadow:
+        0 24px 60px rgba(2,6,23,.10),
+        0 10px 22px rgba(2,6,23,.08);
+      position: relative;
+      transform: translateZ(0);
+    }
+    body.wdg-exec-page .wdg-page-header-card::before{
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(700px 260px at 8% 12%, rgba(var(--bs-primary-rgb), .14), transparent 62%),
+        radial-gradient(520px 240px at 92% 18%, rgba(var(--bs-info-rgb), .10), transparent 58%),
+        linear-gradient(180deg, rgba(255,255,255,.55), transparent 26%);
+      opacity: .9;
+    }
+    body.wdg-exec-page .wdg-page-header-card > *{ position: relative; z-index: 1; }
+
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      body.wdg-exec-page .wdg-page-header-card{
+        -webkit-backdrop-filter: blur(14px) saturate(155%);
+        backdrop-filter: blur(14px) saturate(155%);
+      }
+    }
+    body.wdg-exec-page .wdg-page-icon{
+      width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
+      border-radius:12px;
+      background: var(--bs-tertiary-bg);
+      border: 1px solid var(--bs-border-color);
+      flex: 0 0 auto;
+    }
+    body.wdg-exec-page .wdg-tab-icon{
+      width:18px;
+      height:18px;
+      object-fit: contain;
+      display:inline-block;
+      vertical-align: text-bottom;
+    }
+    body.wdg-exec-page .wdg-kpi{
+      padding:.75rem .9rem;
+      border-radius: .75rem;
+      border: 1px solid rgba(var(--bs-border-color-rgb), .65);
+      background: rgba(var(--bs-body-bg-rgb), .92);
+      height: 100%;
+      position: relative;
+      box-shadow:
+        0 16px 44px rgba(2,6,23,.08),
+        0 6px 16px rgba(2,6,23,.06),
+        inset 0 1px 0 rgba(255,255,255,.65);
+      transform: translateZ(0);
+    }
+    body.wdg-exec-page .wdg-kpi::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      border-radius: inherit;
+      pointer-events:none;
+      background:
+        radial-gradient(520px 220px at 12% 8%, rgba(var(--bs-primary-rgb), .08), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.55), transparent 30%);
+      opacity: .85;
+    }
+    body.wdg-exec-page .wdg-kpi > *{ position: relative; z-index: 1; }
+    body.wdg-exec-page .wdg-kpi .small{ letter-spacing: .02em; }
+
+    /* Campos (visual moderno + padronizado + leve 3D) */
+    body.wdg-exec-page{
+      --wdg-field-radius: .95rem;
+      --wdg-field-border: rgba(var(--bs-border-color-rgb), .65);
+      --wdg-field-bg: rgba(var(--bs-body-bg-rgb), .86);
+      --wdg-field-shadow:
+        0 10px 26px rgba(2,6,23,.06),
+        0 4px 12px rgba(2,6,23,.05),
+        inset 0 1px 0 rgba(255,255,255,.62);
+      --wdg-field-shadow-focus:
+        0 14px 34px rgba(2,6,23,.08),
+        0 6px 16px rgba(2,6,23,.06),
+        0 0 0 .22rem rgba(var(--bs-primary-rgb), .14),
+        inset 0 1px 0 rgba(255,255,255,.68);
+    }
+
+    body.wdg-exec-page :is(.form-control, .form-select){
+      border-radius: var(--wdg-field-radius);
+      border: 1px solid var(--wdg-field-border);
+      background:
+        radial-gradient(520px 180px at 10% 0%, rgba(var(--bs-primary-rgb), .06), transparent 58%),
+        linear-gradient(180deg, rgba(255,255,255,.55), transparent 40%),
+        var(--wdg-field-bg);
+      box-shadow: var(--wdg-field-shadow);
+      transform: translateZ(0);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    body.wdg-exec-page :is(.form-control, .form-select)::placeholder{
+      color: rgba(var(--bs-secondary-rgb), .75);
+    }
+
+    body.wdg-exec-page :is(.form-control, .form-select):disabled,
+    body.wdg-exec-page :is(.form-control, .form-select)[readonly]{
+      opacity: .92;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.45), transparent 44%),
+        rgba(var(--bs-body-bg-rgb), .78);
+    }
+
+    body.wdg-exec-page :is(.form-control, .form-select):focus{
+      border-color: rgba(var(--bs-primary-rgb), .35);
+      box-shadow: var(--wdg-field-shadow-focus);
+    }
+
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page :is(.form-control, .form-select):not(:disabled):not([readonly]):hover{
+        border-color: rgba(var(--bs-primary-rgb), .22);
+        transform: translateY(-1px);
+        box-shadow:
+          0 12px 30px rgba(2,6,23,.07),
+          0 5px 14px rgba(2,6,23,.06),
+          inset 0 1px 0 rgba(255,255,255,.66);
+      }
+    }
+
+    body.wdg-exec-page .input-group-text{
+      border-radius: var(--wdg-field-radius);
+      border: 1px solid var(--wdg-field-border);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.55), transparent 42%),
+        rgba(var(--bs-body-bg-rgb), .88);
+      box-shadow: var(--wdg-field-shadow);
+    }
+
+    /* alinhar arredondamento no input-group */
+    body.wdg-exec-page .input-group > :is(.form-control, .form-select){
+      box-shadow: var(--wdg-field-shadow);
+    }
+    body.wdg-exec-page .input-group > :not(:first-child){
+      margin-left: -1px;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      body.wdg-exec-page :is(.form-control, .form-select){
+        transition: none;
+      }
+    }
+
+    /* Premium: botões, listas e superfícies (efeito depth/3D sem mudar identidade) */
+    body.wdg-exec-page{
+      --wdg-radius-lg: 1.10rem;
+      --wdg-radius-md: 1.00rem;
+      --wdg-radius-sm: .85rem;
+      --wdg-surface: rgba(var(--bs-body-bg-rgb), .92);
+      --wdg-surface-soft: rgba(var(--bs-body-bg-rgb), .86);
+      --wdg-border-soft: rgba(var(--bs-border-color-rgb), .65);
+      --wdg-elev-1:
+        0 16px 44px rgba(2,6,23,.08),
+        0 6px 16px rgba(2,6,23,.06),
+        inset 0 1px 0 rgba(255,255,255,.65);
+      --wdg-elev-2:
+        0 22px 56px rgba(2,6,23,.10),
+        0 10px 22px rgba(2,6,23,.08),
+        inset 0 1px 0 rgba(255,255,255,.70);
+      --wdg-elev-3:
+        0 34px 90px rgba(2,6,23,.16),
+        0 14px 30px rgba(2,6,23,.10),
+        inset 0 1px 0 rgba(255,255,255,.72);
+      --wdg-gloss: linear-gradient(180deg, rgba(255,255,255,.58), transparent 34%);
+      --wdg-ring: 0 0 0 .22rem rgba(var(--bs-primary-rgb), .16);
+    }
+
+    body.wdg-exec-page .card.shadow-sm:not(.wdg-page-header-card){
+      border-radius: var(--wdg-radius-lg);
+      border: 1px solid var(--wdg-border-soft);
+      background: var(--wdg-surface);
+      box-shadow: var(--wdg-elev-1);
+      overflow: hidden;
+      position: relative;
+      transform: translateZ(0);
+    }
+    body.wdg-exec-page .card.shadow-sm:not(.wdg-page-header-card)::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(560px 220px at 10% 10%, rgba(var(--bs-primary-rgb), .06), transparent 62%),
+        var(--wdg-gloss);
+      opacity: .9;
+    }
+    body.wdg-exec-page .card.shadow-sm:not(.wdg-page-header-card) > *{ position: relative; z-index: 1; }
+
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      body.wdg-exec-page .card.shadow-sm:not(.wdg-page-header-card){
+        -webkit-backdrop-filter: blur(10px) saturate(140%);
+        backdrop-filter: blur(10px) saturate(140%);
+      }
+    }
+
+    /* Botões (exclui os pills de escolha que já têm visual próprio) */
+    body.wdg-exec-page .btn:not(.wdg-choice-btn){
+      border-radius: var(--wdg-radius-md);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.65) inset,
+        0 12px 26px rgba(2,6,23,.10),
+        0 4px 10px rgba(2,6,23,.08);
+      transform: translateZ(0);
+      position: relative;
+      overflow: hidden;
+      transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+    }
+    body.wdg-exec-page .btn:not(.wdg-choice-btn)::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(520px 180px at 14% 0%, rgba(255,255,255,.22), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.22), transparent 55%);
+      opacity: .9;
+    }
+    body.wdg-exec-page .btn:not(.wdg-choice-btn) > *{ position: relative; z-index: 1; }
+
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page .btn:not(.wdg-choice-btn):hover{
+        transform: translateY(-1px);
+        box-shadow:
+          0 1px 0 rgba(255,255,255,.65) inset,
+          0 18px 40px rgba(2,6,23,.14),
+          0 6px 14px rgba(2,6,23,.10);
+        filter: saturate(1.02);
+      }
+    }
+    body.wdg-exec-page .btn:not(.wdg-choice-btn):active{
+      transform: translateY(0);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.62) inset,
+        0 10px 22px rgba(2,6,23,.12),
+        0 3px 8px rgba(2,6,23,.10);
+    }
+    body.wdg-exec-page .btn:not(.wdg-choice-btn):focus-visible{
+      box-shadow:
+        var(--wdg-ring),
+        0 1px 0 rgba(255,255,255,.65) inset,
+        0 18px 40px rgba(2,6,23,.14),
+        0 6px 14px rgba(2,6,23,.10);
+    }
+
+    /* Glow por variante (usa apenas variáveis Bootstrap) */
+    body.wdg-exec-page :is(.btn-primary, .btn-outline-primary):focus-visible{ --wdg-ring: 0 0 0 .22rem rgba(var(--bs-primary-rgb), .18); }
+    body.wdg-exec-page :is(.btn-success, .btn-outline-success):focus-visible{ --wdg-ring: 0 0 0 .22rem rgba(var(--bs-success-rgb), .18); }
+    body.wdg-exec-page :is(.btn-warning, .btn-outline-warning):focus-visible{ --wdg-ring: 0 0 0 .22rem rgba(var(--bs-warning-rgb), .20); }
+    body.wdg-exec-page :is(.btn-danger, .btn-outline-danger):focus-visible{ --wdg-ring: 0 0 0 .22rem rgba(var(--bs-danger-rgb), .18); }
+    body.wdg-exec-page :is(.btn-info, .btn-outline-info):focus-visible{ --wdg-ring: 0 0 0 .22rem rgba(var(--bs-info-rgb), .18); }
+
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page :is(.btn-primary, .btn-outline-primary):hover{ box-shadow: 0 1px 0 rgba(255,255,255,.62) inset, 0 22px 56px rgba(2,6,23,.16), 0 10px 22px rgba(var(--bs-primary-rgb), .12); }
+      body.wdg-exec-page :is(.btn-success, .btn-outline-success):hover{ box-shadow: 0 1px 0 rgba(255,255,255,.62) inset, 0 22px 56px rgba(2,6,23,.16), 0 10px 22px rgba(var(--bs-success-rgb), .12); }
+      body.wdg-exec-page :is(.btn-warning, .btn-outline-warning):hover{ box-shadow: 0 1px 0 rgba(255,255,255,.62) inset, 0 22px 56px rgba(2,6,23,.16), 0 10px 22px rgba(var(--bs-warning-rgb), .14); }
+      body.wdg-exec-page :is(.btn-danger, .btn-outline-danger):hover{ box-shadow: 0 1px 0 rgba(255,255,255,.62) inset, 0 22px 56px rgba(2,6,23,.16), 0 10px 22px rgba(var(--bs-danger-rgb), .12); }
+    }
+
+    /* Listas */
+    body.wdg-exec-page .list-group{
+      border-radius: var(--wdg-radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(var(--bs-border-color-rgb), .55);
+      background: rgba(var(--bs-body-bg-rgb), .88);
+      box-shadow: 0 14px 30px rgba(2,6,23,.08);
+    }
+    body.wdg-exec-page .list-group-item{
+      border-color: rgba(var(--bs-border-color-rgb), .55);
+      background:
+        radial-gradient(520px 180px at 12% 0%, rgba(var(--bs-primary-rgb), .04), transparent 58%),
+        rgba(var(--bs-body-bg-rgb), .92);
+    }
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page .list-group-item:hover{
+        background:
+          radial-gradient(520px 180px at 12% 0%, rgba(var(--bs-primary-rgb), .07), transparent 58%),
+          rgba(var(--bs-body-bg-rgb), .94);
+      }
+    }
+
+    /* Tabelas: container premium */
+    body.wdg-exec-page .table-responsive{
+      border-radius: var(--wdg-radius-lg);
+      border: 1px solid rgba(var(--bs-border-color-rgb), .55);
+      background: rgba(var(--bs-body-bg-rgb), .92);
+      box-shadow: 0 16px 44px rgba(2,6,23,.08);
+      overflow: hidden;
+    }
+    body.wdg-exec-page .table{
+      margin-bottom: 0;
+    }
+    body.wdg-exec-page .table thead th{
+      background:
+        linear-gradient(180deg, rgba(var(--bs-tertiary-bg-rgb), .92), rgba(var(--bs-body-bg-rgb), .92));
+      border-bottom-color: rgba(var(--bs-border-color-rgb), .55);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: .72rem;
+      color: rgba(var(--bs-body-color-rgb), .72);
+    }
+    body.wdg-exec-page .table tbody td{
+      border-top-color: rgba(var(--bs-border-color-rgb), .45);
+    }
+
+    /* Dropdowns e modais */
+    body.wdg-exec-page #wdg-exec-root .dropdown-menu{
+      border-radius: var(--wdg-radius-lg);
+      border: 1px solid rgba(var(--bs-border-color-rgb), .55);
+      background: rgba(var(--bs-body-bg-rgb), .95);
+      box-shadow: 0 26px 70px rgba(2,6,23,.18);
+      overflow: hidden;
+    }
+    body.wdg-exec-page #wdg-exec-root .dropdown-item{ transition: background-color .12s ease; }
+    body.wdg-exec-page #wdg-exec-root .dropdown-item:hover{
+      background: rgba(var(--bs-primary-rgb), .08);
+    }
+    body.wdg-exec-page .modal-content{
+      border-radius: calc(var(--wdg-radius-lg) + .10rem);
+      border: 1px solid rgba(var(--bs-border-color-rgb), .55);
+      background: rgba(var(--bs-body-bg-rgb), .96);
+      box-shadow: var(--wdg-elev-3);
+      overflow: hidden;
+    }
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      body.wdg-exec-page #wdg-exec-root .dropdown-menu,
+      body.wdg-exec-page .modal-content{
+        -webkit-backdrop-filter: blur(14px) saturate(150%);
+        backdrop-filter: blur(14px) saturate(150%);
+      }
+    }
+
+    /* Badges: efeito glossy */
+    body.wdg-exec-page .badge{
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+    }
+    body.wdg-exec-page .badge.rounded-pill{
+      position: relative;
+      overflow: hidden;
+    }
+    body.wdg-exec-page .badge.rounded-pill::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background: linear-gradient(180deg, rgba(255,255,255,.30), transparent 58%);
+      opacity: .9;
+    }
+
+    /* Bloco de eventos (logs) */
+    body.wdg-exec-page pre#wdg-exec-events,
+    body.wdg-exec-page pre#wdg-doc-meta{
+      border-radius: 1rem !important;
+      border-color: rgba(var(--bs-border-color-rgb), .55) !important;
+      background:
+        radial-gradient(520px 220px at 12% 0%, rgba(var(--bs-primary-rgb), .05), transparent 62%),
+        rgba(var(--bs-body-bg-rgb), .92) !important;
+      box-shadow:
+        0 16px 44px rgba(2,6,23,.08),
+        0 6px 16px rgba(2,6,23,.06),
+        inset 0 1px 0 rgba(255,255,255,.60);
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      body.wdg-exec-page .btn:not(.wdg-choice-btn){
+        transition: none;
+      }
+    }
+
+    /* Header (XL+): reduzir "Dados da assembleia" em 1/3 e ampliar "Status operacional" */
+    @media (min-width: 1200px){
+      body.wdg-exec-page .wdg-exec-col-dados{
+        flex: 0 0 52.7778%;
+        max-width: 52.7778%;
+      }
+      body.wdg-exec-page .wdg-exec-col-status{
+        flex: 0 0 47.2222%;
+        max-width: 47.2222%;
+      }
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      body.wdg-exec-page .wdg-kpi{
+        -webkit-backdrop-filter: blur(12px) saturate(155%);
+        backdrop-filter: blur(12px) saturate(155%);
+      }
+    }
+
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page .wdg-page-header-card,
+      body.wdg-exec-page .wdg-kpi{
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      }
+      body.wdg-exec-page .wdg-kpi:hover{
+        transform: translateY(-2px);
+        border-color: rgba(var(--bs-primary-rgb), .22);
+        box-shadow:
+          0 22px 56px rgba(2,6,23,.10),
+          0 10px 22px rgba(2,6,23,.08),
+          inset 0 1px 0 rgba(255,255,255,.70);
+      }
+    }
+
+    body.wdg-exec-page .wdg-asm-grid{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .6rem;
+    }
+    body.wdg-exec-page .wdg-asm-grid.wdg-asm-grid-2{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 991.98px){
+      body.wdg-exec-page .wdg-asm-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      body.wdg-exec-page .wdg-asm-grid.wdg-asm-grid-2{ grid-template-columns: 1fr; }
+    }
+    @media (max-width: 575.98px){
+      body.wdg-exec-page .wdg-asm-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* Dados da assembleia (layout 2 linhas com proporções fixas) */
+    body.wdg-exec-page .wdg-asm-dados{
+      display: grid;
+      gap: .55rem;
+    }
+    body.wdg-exec-page .wdg-asm-dados-row{
+      display: grid;
+      gap: .55rem;
+      width: 100%;
+      min-width: 0;
+    }
+    body.wdg-exec-page .wdg-asm-dados-row--1{
+      grid-template-columns: 2fr 1fr 1fr; /* 50% | 25% | 25% */
+    }
+    body.wdg-exec-page .wdg-asm-dados-row--2{
+      grid-template-columns: 15fr 15fr 35fr 35fr; /* 15% | 15% | 35% | 35% */
+    }
+    body.wdg-exec-page .wdg-asm-dados-row .wdg-asm-chip{
+      min-width: 0;
+      width: 100%;
+    }
+    body.wdg-exec-page .wdg-asm-dados-row .wdg-asm-chip .wdg-asm-chip-val,
+    body.wdg-exec-page .wdg-asm-dados-row .wdg-asm-chip .wdg-asm-chip-sub{
+      min-width: 0;
+    }
+    @media (max-width: 991.98px){
+      body.wdg-exec-page .wdg-asm-dados-row--1,
+      body.wdg-exec-page .wdg-asm-dados-row--2{
+        grid-template-columns: 1fr;
+      }
+    }
+    body.wdg-exec-page .wdg-asm-item{
+      padding: .65rem .75rem;
+      border-radius: .75rem;
+      border: 1px solid rgba(var(--bs-border-color-rgb), .65);
+      background: rgba(var(--bs-body-bg-rgb), .70);
+      position: relative;
+      box-shadow:
+        0 10px 28px rgba(2,6,23,.06),
+        0 4px 12px rgba(2,6,23,.05),
+        inset 0 1px 0 rgba(255,255,255,.60);
+      transform: translateZ(0);
+    }
+    body.wdg-exec-page .wdg-asm-item::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      border-radius: inherit;
+      pointer-events:none;
+      background: linear-gradient(180deg, rgba(255,255,255,.52), transparent 30%);
+      opacity: .85;
+    }
+    body.wdg-exec-page .wdg-asm-item > *{ position: relative; z-index: 1; }
+
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      body.wdg-exec-page .wdg-asm-item{
+        -webkit-backdrop-filter: blur(10px) saturate(155%);
+        backdrop-filter: blur(10px) saturate(155%);
+      }
+    }
+
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page .wdg-asm-item{ transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+      body.wdg-exec-page .wdg-asm-item:hover{
+        transform: translateY(-1px);
+        border-color: rgba(var(--bs-primary-rgb), .18);
+        box-shadow:
+          0 14px 34px rgba(2,6,23,.08),
+          0 6px 16px rgba(2,6,23,.06),
+          inset 0 1px 0 rgba(255,255,255,.68);
+      }
+    }
+
+    body.wdg-exec-page .wdg-stepper .progress{
+      background: rgba(var(--bs-tertiary-bg-rgb), .9);
+      border: 1px solid rgba(var(--bs-border-color-rgb), .55);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+      overflow: hidden;
+    }
+    body.wdg-exec-page .wdg-stepper .progress-bar{
+      box-shadow: 0 10px 18px rgba(0,0,0,.10);
+    }
+    body.wdg-exec-page .wdg-asm-label{
+      display:flex;
+      align-items:center;
+      gap:.45rem;
+      color: var(--bs-secondary-color);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-size: .72rem;
+      line-height: 1.1;
+    }
+    body.wdg-exec-page .wdg-asm-ico{
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+      flex: 0 0 auto;
+      opacity: .9;
+      filter: drop-shadow(0 1px 0 rgba(0,0,0,.08));
+    }
+    body.wdg-exec-page .wdg-asm-value{ font-weight: 600; }
+    body.wdg-exec-page .wdg-asm-sub{ color: var(--bs-secondary-color); font-size: .82rem; }
+    body.wdg-exec-page .wdg-asm-pills{ display:flex; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
+
+    /* Dados da assembleia (compact/premium) */
+    body.wdg-exec-page .wdg-asm-chips{
+      display:flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+    }
+    body.wdg-exec-page .wdg-asm-chip{
+      flex: 1 1 150px;
+      min-width: 150px;
+      padding: .5rem .6rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(var(--bs-border-color-rgb), .60);
+      background: rgba(var(--bs-body-bg-rgb), .70);
+      box-shadow:
+        0 10px 26px rgba(2,6,23,.06),
+        0 4px 12px rgba(2,6,23,.05),
+        inset 0 1px 0 rgba(255,255,255,.62);
+      position: relative;
+      transform: translateZ(0);
+    }
+    body.wdg-exec-page .wdg-asm-chip::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      border-radius: inherit;
+      pointer-events:none;
+      background: linear-gradient(180deg, rgba(255,255,255,.52), transparent 34%);
+      opacity: .85;
+    }
+    body.wdg-exec-page .wdg-asm-chip > *{ position: relative; z-index: 1; }
+    body.wdg-exec-page .wdg-asm-chip.wdg-asm-chip-wide{ flex: 2 1 260px; min-width: 260px; }
+
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      body.wdg-exec-page .wdg-asm-chip{
+        -webkit-backdrop-filter: blur(10px) saturate(155%);
+        backdrop-filter: blur(10px) saturate(155%);
+      }
+    }
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page .wdg-asm-chip{ transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+      body.wdg-exec-page .wdg-asm-chip:hover{
+        transform: translateY(-1px);
+        border-color: rgba(var(--bs-primary-rgb), .18);
+        box-shadow:
+          0 14px 34px rgba(2,6,23,.08),
+          0 6px 16px rgba(2,6,23,.06),
+          inset 0 1px 0 rgba(255,255,255,.68);
+      }
+    }
+
+    body.wdg-exec-page .wdg-asm-chip-hd{
+      display:flex;
+      align-items:center;
+      gap: .45rem;
+      color: var(--bs-secondary-color);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: .68rem;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    body.wdg-exec-page .wdg-asm-chip-val{
+      margin-top: .35rem;
+      font-weight: 700;
+      font-size: 1.03rem;
+      line-height: 1.15;
+    }
+    body.wdg-exec-page .wdg-asm-chip-sub{
+      margin-top: .35rem;
+      display:flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      align-items: center;
+    }
+    body.wdg-exec-page .wdg-asm-mini{
+      display:inline-flex;
+      align-items:center;
+      gap: .35rem;
+      padding: .18rem .48rem;
+      border-radius: 999px;
+      border: 1px solid rgba(var(--bs-border-color-rgb), .58);
+      background: rgba(var(--bs-tertiary-bg-rgb), .86);
+      color: var(--bs-body-color);
+      font-size: .78rem;
+      line-height: 1.1;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+    }
+
+    body.wdg-exec-page .wdg-asm-fields{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .55rem;
+      margin-top: .55rem;
+    }
+    @media (max-width: 991.98px){
+      body.wdg-exec-page .wdg-asm-fields{ grid-template-columns: 1fr; }
+    }
+    body.wdg-exec-page .wdg-asm-field{
+      display:flex;
+      gap: .6rem;
+      align-items: center;
+      padding: .55rem .65rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(var(--bs-border-color-rgb), .60);
+      background: rgba(var(--bs-body-bg-rgb), .70);
+      box-shadow:
+        0 10px 26px rgba(2,6,23,.06),
+        0 4px 12px rgba(2,6,23,.05),
+        inset 0 1px 0 rgba(255,255,255,.62);
+      position: relative;
+      transform: translateZ(0);
+      min-height: 56px;
+    }
+    body.wdg-exec-page .wdg-asm-field::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      border-radius: inherit;
+      pointer-events:none;
+      background: linear-gradient(180deg, rgba(255,255,255,.52), transparent 34%);
+      opacity: .85;
+    }
+    body.wdg-exec-page .wdg-asm-field > *{ position: relative; z-index: 1; }
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      body.wdg-exec-page .wdg-asm-field{
+        -webkit-backdrop-filter: blur(10px) saturate(155%);
+        backdrop-filter: blur(10px) saturate(155%);
+      }
+    }
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page .wdg-asm-field{ transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+      body.wdg-exec-page .wdg-asm-field:hover{
+        transform: translateY(-1px);
+        border-color: rgba(var(--bs-primary-rgb), .18);
+        box-shadow:
+          0 14px 34px rgba(2,6,23,.08),
+          0 6px 16px rgba(2,6,23,.06),
+          inset 0 1px 0 rgba(255,255,255,.68);
+      }
+    }
+    body.wdg-exec-page .wdg-asm-field-body{ min-width: 0; }
+    body.wdg-exec-page .wdg-asm-field-label{
+      color: var(--bs-secondary-color);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: .68rem;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    body.wdg-exec-page .wdg-asm-field-val{
+      margin-top: .28rem;
+      font-weight: 700;
+      min-width: 0;
+    }
+
+    body.wdg-exec-page .wdg-step-badge{
+      border: 1px solid var(--bs-border-color);
+      background: var(--bs-tertiary-bg);
+      color: var(--bs-body-color);
+    }
+
+    /* Sidebar premium (padrão Dirigência/Caixa de Mensagem) */
+    body.wdg-exec-page .wdg-exec-sidenav{
+      --wdg-exec-top-offset: 106px;
+      --wdg-exec-navbtn-minh: 58px;
+      /* Mesma identidade da Caixa de Mensagens (sem preto) */
+      background:
+        radial-gradient(520px 240px at 18% 8%, rgba(255,255,255,.22), transparent 62%),
+        radial-gradient(520px 320px at 92% 20%, rgba(56,189,248,.18), transparent 58%),
+        linear-gradient(135deg, #0b2a6b 0%, #0b5ed7 45%, #1aa0ff 100%);
+      color: rgba(248, 251, 255, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      border-radius: 22px;
+      box-shadow:
+        0 26px 70px rgba(2,6,23,.28),
+        0 14px 30px rgba(2,6,23,.18),
+        inset 0 1px 0 rgba(255,255,255,.22),
+        inset 0 -18px 40px rgba(0,0,0,.12);
+      padding: .7rem;
+      overflow: hidden;
+      position: relative;
+      transform: translateZ(0);
+    }
+    body.wdg-exec-page .wdg-exec-sidenav::before{ content:none; }
+    body.wdg-exec-page .wdg-exec-sidenav > *{ position: relative; z-index: 1; }
+
+    @media (min-width: 992px){
+      body.wdg-exec-page .wdg-exec-sidenav{
+        position: sticky;
+        top: var(--wdg-exec-top-offset);
+        align-self: start;
+      }
+    }
+    @media (max-width: 992px){
+      body.wdg-exec-page .wdg-exec-sidenav{ position: static; top: auto; }
+    }
+
+    body.wdg-exec-page .wdg-exec-sidenav-title{
+      text-align: center;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 1.42rem;
+      line-height: 1.05;
+      margin: 1.2rem 0 0;
+      color: rgba(255,255,255,.95);
+      text-shadow: 0 2px 8px rgba(0,0,0,.18);
+    }
+    body.wdg-exec-page .wdg-exec-sidenav-title span{ display:block; }
+
+    body.wdg-exec-page .wdg-exec-nav{
+      display:flex;
+      flex-direction: column;
+      gap: .55rem;
+    }
+
+    /* Espaço de altura de um menu entre título e primeiro item */
+    body.wdg-exec-page .wdg-exec-nav{ margin-top: var(--wdg-exec-navbtn-minh); }
+
+    /* Espaço de altura de um menu abaixo do último item */
+    body.wdg-exec-page .wdg-exec-nav{ padding-bottom: var(--wdg-exec-navbtn-minh); }
+
+    body.wdg-exec-page .wdg-exec-navbtn{
+      width: 100%;
+      border-radius: 14px;
+      text-align: left;
+      padding: .66rem .85rem;
+      min-height: var(--wdg-exec-navbtn-minh);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255,255,255,.10);
+      color: rgba(248, 251, 255, 0.92);
+      box-shadow:
+        0 14px 26px rgba(1, 10, 28, 0.18),
+        0 1px 0 rgba(255, 255, 255, 0.05) inset;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: .75rem;
+      transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+      font: inherit;
+      font-weight: 400;
+      position: relative;
+      overflow: hidden;
+      transform: translateZ(0);
+    }
+    body.wdg-exec-page .wdg-exec-navbtn::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(520px 220px at 18% 0%, rgba(255,255,255,.16), transparent 58%),
+        linear-gradient(180deg, rgba(255,255,255,.18), transparent 62%);
+      opacity: .9;
+    }
+    body.wdg-exec-page .wdg-exec-navbtn > *{ position: relative; z-index: 1; }
+    body.wdg-exec-page .wdg-exec-navbtn:focus-visible{
+      outline: 2px solid rgba(142, 197, 255, 0.55);
+      outline-offset: 2px;
+    }
+    body.wdg-exec-page .wdg-exec-navbtn:hover,
+    body.wdg-exec-page .wdg-exec-navbtn.active{
+      background: rgba(255,255,255,.14);
+      border-color: rgba(255,255,255,.24);
+      color: #fff;
+      box-shadow:
+        0 18px 40px rgba(1, 10, 28, 0.26),
+        0 0 0 1px rgba(44, 123, 255, 0.10) inset,
+        0 0 26px rgba(255, 255, 255, 0.14);
+      transform: translateY(-1px);
+    }
+
+    body.wdg-exec-page .wdg-exec-navbtn:active{
+      transform: translateY(0);
+      box-shadow:
+        0 12px 26px rgba(1, 10, 28, 0.22),
+        0 0 0 1px rgba(44, 123, 255, 0.10) inset,
+        inset 0 1px 0 rgba(255,255,255,.10);
+    }
+
+    /* item selecionado bem distinto */
+    body.wdg-exec-page .wdg-exec-navbtn.active{
+      background:
+        radial-gradient(circle at 18% 40%, rgba(255,255,255,.24), transparent 58%),
+        linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.10));
+      border-color: rgba(255,255,255,.32);
+      box-shadow:
+        0 20px 44px rgba(1, 10, 28, 0.30),
+        0 0 0 1px rgba(255,255,255,.14) inset,
+        0 0 0 3px rgba(255,255,255,.08);
+    }
+    body.wdg-exec-page .wdg-exec-navbtn.active::before{
+      content:'';
+      position:absolute;
+      left: .35rem;
+      top: .72rem;
+      bottom: .72rem;
+      width: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 0 18px rgba(255,255,255,.22);
+    }
+
+    /* Lista da pauta: transforma list-group em cards premium (somente nessa lista) */
+    body.wdg-exec-page #wdg-agenda-list.list-group{
+      padding: .65rem;
+      gap: .55rem;
+      background: rgba(var(--bs-body-bg-rgb), .90);
+    }
+    body.wdg-exec-page #wdg-agenda-list.list-group .list-group-item{
+      border-radius: var(--wdg-radius-lg);
+      border: 1px solid rgba(var(--bs-border-color-rgb), .55);
+      box-shadow:
+        0 12px 28px rgba(2,6,23,.08),
+        0 4px 12px rgba(2,6,23,.06),
+        inset 0 1px 0 rgba(255,255,255,.62);
+      overflow: hidden;
+      position: relative;
+      transform: translateZ(0);
+    }
+    body.wdg-exec-page #wdg-agenda-list.list-group .list-group-item::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(520px 180px at 12% 0%, rgba(var(--bs-primary-rgb), .06), transparent 58%),
+        linear-gradient(180deg, rgba(255,255,255,.52), transparent 45%);
+      opacity: .9;
+    }
+    body.wdg-exec-page #wdg-agenda-list.list-group .list-group-item > *{ position: relative; z-index: 1; }
+
+    @media (hover:hover) and (pointer:fine){
+      body.wdg-exec-page #wdg-agenda-list.list-group .list-group-item:hover{
+        transform: translateY(-1px);
+        border-color: rgba(var(--bs-primary-rgb), .22);
+        box-shadow:
+          0 18px 44px rgba(2,6,23,.12),
+          0 6px 16px rgba(2,6,23,.08),
+          inset 0 1px 0 rgba(255,255,255,.70);
+      }
+    }
+
+    body.wdg-exec-page .wdg-exec-navbtn .left{ display:flex; align-items:center; gap:.65rem; min-width: 0; }
+    body.wdg-exec-page .wdg-exec-navico{
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 40px;
+    }
+    body.wdg-exec-page .wdg-exec-navico img{
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.32));
+      opacity: .98;
+    }
+    body.wdg-exec-page .wdg-exec-navlabel{
+      font-weight: 400;
+      font-size: 1.14rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    body.wdg-exec-page .wdg-exec-navchev{
+      color: rgba(255,255,255,.72);
+      font-size: .95rem;
+      flex: 0 0 auto;
+    }
+    body.wdg-exec-page .wdg-exec-navbtn.active .wdg-exec-navchev{ color: rgba(255,255,255,.90); }
+
+    body.wdg-exec-page{
+      background: var(--wdg-bg) !important;
+      background-image: none !important;
+      --wdg-prem-radius-xl: 1rem;
+      --wdg-prem-radius-lg: .82rem;
+      --wdg-prem-border: rgba(var(--bs-border-color-rgb), .62);
+      --wdg-prem-shadow-sm: 0 8px 22px rgba(2,6,23,.07);
+      --wdg-prem-shadow: 0 16px 34px rgba(2,6,23,.10);
+    }
+
+    body.wdg-exec-page .wdg-page-header-card,
+    body.wdg-exec-page .card.shadow-sm{
+      border-radius: var(--wdg-prem-radius-xl);
+      border: 1px solid var(--wdg-prem-border);
+      background: rgba(var(--bs-body-bg-rgb), .96);
+      box-shadow: var(--wdg-prem-shadow-sm);
+      overflow: hidden;
+      position: relative;
+    }
+    body.wdg-exec-page .wdg-page-header-card::before,
+    body.wdg-exec-page .card.shadow-sm::before{
+      content: none !important;
+    }
+
+    body.wdg-exec-page #wdg-exec-root .wdg-exec-sidenav{
+      border-radius: 1.05rem;
+      border: 1px solid rgba(255,255,255,.20);
+      box-shadow: var(--wdg-prem-shadow);
+      overflow: hidden;
+    }
+    body.wdg-exec-page #wdg-exec-root .wdg-exec-navbtn{
+      border-radius: .75rem;
+      margin: .16rem .34rem;
+      border: 1px solid rgba(255,255,255,.14);
+      transition: transform .14s ease, box-shadow .14s ease;
+    }
+    body.wdg-exec-page #wdg-exec-root .wdg-exec-navbtn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(2,6,23,.18);
+    }
+
+    body.wdg-exec-page #wdg-exec-root :is(.form-control, .form-select){
+      border-radius: var(--wdg-prem-radius-lg);
+      border: 1px solid var(--wdg-prem-border);
+      background: rgba(var(--bs-body-bg-rgb), .98);
+      box-shadow: none;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+    body.wdg-exec-page #wdg-exec-root :is(.form-control, .form-select):focus{
+      border-color: rgba(var(--bs-primary-rgb), .30);
+      box-shadow: 0 0 0 .18rem rgba(var(--bs-primary-rgb), .12);
+    }
+    body.wdg-exec-page #wdg-exec-root .input-group-text{
+      border-radius: var(--wdg-prem-radius-lg);
+      border-color: var(--wdg-prem-border);
+      background: rgba(var(--bs-body-bg-rgb), .96);
+      box-shadow: none;
+    }
+
+    body.wdg-exec-page #wdg-exec-root .btn:not(.wdg-choice-btn){
+      border-radius: .75rem;
+      box-shadow: 0 6px 14px rgba(2,6,23,.10);
+      transition: transform .14s ease, box-shadow .14s ease;
+    }
+    body.wdg-exec-page #wdg-exec-root .btn:not(.wdg-choice-btn)::before,
+    body.wdg-exec-page #wdg-exec-root .btn:not(.wdg-choice-btn)::after{
+      content: none !important;
+    }
+    body.wdg-exec-page #wdg-exec-root .btn:not(.wdg-choice-btn):hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(2,6,23,.12);
+    }
+
+    body.wdg-exec-page #wdg-exec-root .wdg-kpi{
+      border-radius: var(--wdg-prem-radius-lg);
+      border: 1px solid var(--wdg-prem-border);
+      background: rgba(var(--bs-body-bg-rgb), .98);
+      box-shadow: 0 6px 14px rgba(2,6,23,.07);
+    }
+    body.wdg-exec-page #wdg-exec-root .wdg-kpi::before{ content: none !important; }
+
+    body.wdg-exec-page #wdg-exec-root .table-responsive{
+      border-radius: .9rem;
+      border: 1px solid var(--wdg-prem-border);
+      background: rgba(var(--bs-body-bg-rgb), .98);
+      box-shadow: 0 8px 18px rgba(2,6,23,.07);
+    }
+    body.wdg-exec-page #wdg-exec-root .table thead th{
+      background: rgba(var(--bs-tertiary-bg-rgb), .82);
+      color: rgba(var(--bs-body-color-rgb), .72);
+      border-bottom-color: rgba(var(--bs-border-color-rgb), .55);
+    }
+    body.wdg-exec-page #wdg-exec-root .table tbody tr:hover td{
+      background-color: rgba(var(--bs-primary-rgb), .04);
+    }
+
+    body.wdg-exec-page #wdg-exec-root .badge,
+    body.wdg-exec-page #wdg-exec-root .wdg-pres-pill,
+    body.wdg-exec-page #wdg-exec-root .wdg-pres-badge{
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.40);
+    }
+
+    body.wdg-exec-page .modal-content{
+      border-radius: 1rem;
+      border: 1px solid rgba(var(--bs-border-color-rgb), .55);
+      background: rgba(var(--bs-body-bg-rgb), .98);
+      box-shadow: 0 20px 48px rgba(2,6,23,.18);
+    }
+  </style>
+</head>
+<body class="wdg-layout wdg-exec-page" data-base-path="<%= _bp %>">
+  <%- include('../../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Gestão de Condomínios',
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' },
+              { label: 'Execução', path: '/administracao/assembleia/execucao' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+
+<div class="container-fluid py-3" id="wdg-exec-root">
+  <div class="row g-3">
+    <div class="col-12 col-lg-2">
+      <aside class="wdg-exec-sidenav">
+        <div class="wdg-exec-sidenav-title" aria-label="Execução da Assembleia">
+          <span>EXECUÇÃO</span>
+          <span>DA</span>
+          <span>ASSEMBLEIA</span>
+        </div>
+        <div id="wdg-tabs" class="wdg-exec-nav" role="tablist" aria-label="Navegação da execução">
+          <button class="wdg-exec-navbtn active" data-tab="sessao" type="button" role="tab" aria-selected="true">
+            <span class="left">
+              <span class="wdg-exec-navico" aria-hidden="true"><img src="<%= _bp %>/images/assembleia_sessao.png" alt=""></span>
+              <span class="wdg-exec-navlabel">Sessão</span>
+            </span>
+            <span class="wdg-exec-navchev" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          </button>
+          <button class="wdg-exec-navbtn" data-tab="presencas" type="button" role="tab" aria-selected="false">
+            <span class="left">
+              <span class="wdg-exec-navico" aria-hidden="true"><img src="<%= _bp %>/images/pessoal.png" alt=""></span>
+              <span class="wdg-exec-navlabel">Presenças</span>
+            </span>
+            <span class="wdg-exec-navchev" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          </button>
+          <button class="wdg-exec-navbtn" data-tab="pauta" type="button" role="tab" aria-selected="false">
+            <span class="left">
+              <span class="wdg-exec-navico" aria-hidden="true"><img src="<%= _bp %>/images/assembleia_revisao_pauta.png" alt=""></span>
+              <span class="wdg-exec-navlabel">Pauta ao vivo</span>
+            </span>
+            <span class="wdg-exec-navchev" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          </button>
+          <button class="wdg-exec-navbtn" data-tab="votacoes" type="button" role="tab" aria-selected="false">
+            <span class="left">
+              <span class="wdg-exec-navico" aria-hidden="true"><img src="<%= _bp %>/images/voto.png" alt=""></span>
+              <span class="wdg-exec-navlabel">Votações</span>
+            </span>
+            <span class="wdg-exec-navchev" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          </button>
+          <button class="wdg-exec-navbtn" data-tab="ata" type="button" role="tab" aria-selected="false">
+            <span class="left">
+              <span class="wdg-exec-navico" aria-hidden="true"><img src="<%= _bp %>/images/assembleia_ata.png" alt=""></span>
+              <span class="wdg-exec-navlabel">Ata</span>
+            </span>
+            <span class="wdg-exec-navchev" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          </button>
+          <button class="wdg-exec-navbtn" data-tab="encerramento" type="button" role="tab" aria-selected="false">
+            <span class="left">
+              <span class="wdg-exec-navico" aria-hidden="true"><img src="<%= _bp %>/images/fechar.png" alt=""></span>
+              <span class="wdg-exec-navlabel">Encerramento</span>
+            </span>
+            <span class="wdg-exec-navchev" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <div class="col-12 col-lg-10">
+      <div class="row g-3">
+        <div class="col-12">
+      <% 
+        const __asmId = assembleia?._id ? String(assembleia._id) : '';
+        const __asmTitulo = assembleia?._id ? (assembleia?.titulo || ('#' + __asmId)) : 'Selecione uma assembleia';
+        const __asmModalidade = assembleia?.modalidade || '—';
+        const __asmModalKey = String(__asmModalidade || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase();
+        const __isHibrida = __asmModalKey.includes('hibr');
+        const __isVirtual = __asmModalKey.includes('virtual');
+        const __isPresencial = __asmModalKey.includes('pres');
+
+        const __toTitle = (value) => {
+          const s = String(value || '').trim();
+          if (!s) return '';
+          return s
+            .replace(/[_\-]+/g, ' ')
+            .split(/\s+/)
+            .map(w => w ? (w[0].toUpperCase() + w.slice(1).toLowerCase()) : '')
+            .join(' ');
+        };
+
+        const __asmModalLabel = __isHibrida ? 'Híbrida' : (__isVirtual ? 'Virtual' : (__isPresencial ? 'Presencial' : (__toTitle(__asmModalidade) || '—')));
+
+        const __asmData = assembleia?.data ? new Date(assembleia.data) : null;
+        const __asmDataStr = __asmData ? __asmData.toLocaleDateString('pt-BR') : '—';
+        const __horaUnica = String(assembleia?.horaUnica || '').trim();
+        const __hora1 = String(assembleia?.hora1 || '').trim();
+        const __hora2 = String(assembleia?.hora2 || '').trim();
+        const __hasChamadas = !!(__horaUnica || __hora1 || __hora2);
+        const __chamadaTipo = __horaUnica ? 'HORÁRIO ÚNICO' : ((__hora1 || __hora2) ? '1ª / 2ª CHAMADA' : '—');
+        const __asmStatusRaw = String(assembleia?.status || '').trim();
+        const __asmStatusKey = __asmStatusRaw
+          ? __asmStatusRaw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+          : '';
+        const __asmStatusLabel = __asmStatusRaw
+          ? ((__asmStatusKey === 'aberta' || __asmStatusKey === 'em_andamento')
+            ? 'Em andamento'
+            : (__toTitle(__asmStatusRaw) || __asmStatusRaw))
+          : '—';
+        const __asmStatusVariant = (__asmStatusKey.includes('abert') || __asmStatusKey.includes('andament')) ? 'success'
+          : (__asmStatusKey.includes('paus') ? 'warning'
+          : ((__asmStatusKey.includes('encerr') || __asmStatusKey.includes('final')) ? 'dark'
+          : (__asmStatusKey.includes('convoc') ? 'info' : 'secondary')));
+        const __asmModalVariant = __isHibrida ? 'primary' : (__isVirtual ? 'info' : (__isPresencial ? 'secondary' : 'light'));
+
+        const __asmCondominioNome = String(
+          assembleia?.condominioNome
+          || assembleia?.unidadeNome
+          || assembleia?.unidade_nome
+          || assembleia?.unidade
+          || assembleia?.condominio?.nome
+          || ''
+        ).trim() || '—';
+
+        const __asmViewUnidadeId = (typeof unidadeId !== 'undefined') ? unidadeId : '';
+        const __asmUnidadeId = String(
+          __asmViewUnidadeId
+          || assembleia?.unidade_id?._id
+          || assembleia?.unidade_id
+          || assembleia?.unidadeId?._id
+          || assembleia?.unidadeId
+          || assembleia?.unidade?._id
+          || assembleia?.unidade?.id
+          || ''
+        ).trim();
+        const __asmUnidadeIdOk = /^[a-f\d]{24}$/i.test(__asmUnidadeId);
+        const __asmCondominioLogoUrl = __asmUnidadeIdOk
+          ? (`${_bp}/api/unidades/${encodeURIComponent(__asmUnidadeId)}/logo`)
+          : (`${_bp}/images/unidade.png`);
+
+        const __asmLocal = String(assembleia?.local || '').trim();
+        const __asmLink = String(assembleia?.link || '').trim();
+        const __asmLinkHref = __asmLink
+          ? ((/^https?:\/\//i.test(__asmLink) || __asmLink.startsWith('//')) ? __asmLink : `https://${__asmLink}`)
+          : '';
+      %>
+      <div class="card shadow-sm wdg-page-header-card">
+        <div class="card-body">
+          
+
+          <div class="row g-3 mt-1">
+            <div class="col-12 wdg-exec-col-dados">
+              <div class="wdg-kpi">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                  <div class="text-muted small fw-semibold">Dados da assembleia</div>
+                  <span class="badge rounded-pill text-bg-light border" title="ID"><%= __asmId ? ('#' + __asmId) : '—' %></span>
+                </div>
+                <div class="wdg-asm-dados">
+                  <div class="wdg-asm-dados-row wdg-asm-dados-row--1" aria-label="Linha 1">
+                    <div class="wdg-asm-chip">
+                      <div class="wdg-asm-chip-hd">
+                        <img class="wdg-asm-ico" src="<%= __asmCondominioLogoUrl %>" alt="" onerror="this.onerror=null;this.src='<%= _bp %>/images/unidade.png';">
+                        <span>Condomínio</span>
+                      </div>
+                      <div class="wdg-asm-chip-val text-truncate"><%= __asmCondominioNome %></div>
+                    </div>
+
+                    <div class="wdg-asm-chip">
+                      <div class="wdg-asm-chip-hd"><img class="wdg-asm-ico" src="<%= _bp %>/images/calendario.png" alt=""><span>Data</span></div>
+                      <div class="wdg-asm-chip-val"><%= __asmDataStr %></div>
+                    </div>
+
+                    <div class="wdg-asm-chip">
+                      <div class="wdg-asm-chip-hd"><img class="wdg-asm-ico" src="<%= _bp %>/images/relogio.png" alt=""><span>Chamada</span></div>
+                      <div class="wdg-asm-chip-sub">
+                        <span class="wdg-asm-mini"><%= __chamadaTipo %></span>
+                        <% if (!__hasChamadas) { %>
+                          <span class="wdg-asm-sub">—</span>
+                        <% } else if (__horaUnica) { %>
+                          <span class="wdg-asm-mini"><span class="fw-semibold">Única</span> <%= __horaUnica %></span>
+                        <% } else { %>
+                          <span class="wdg-asm-mini"><span class="fw-semibold">1ª</span> <%= __hora1 || '—' %></span>
+                          <span class="wdg-asm-mini"><span class="fw-semibold">2ª</span> <%= __hora2 || '—' %></span>
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="wdg-asm-dados-row wdg-asm-dados-row--2" aria-label="Linha 2">
+                    <div class="wdg-asm-chip">
+                      <div class="wdg-asm-chip-hd"><img class="wdg-asm-ico" src="<%= _bp %>/images/modalidade.png" alt=""><span>Modalidade</span></div>
+                      <div class="wdg-asm-chip-sub">
+                        <% if (__asmModalVariant === 'light') { %>
+                          <span class="badge rounded-pill text-bg-light border"><%= __asmModalLabel %></span>
+                        <% } else { %>
+                          <span class="badge rounded-pill text-bg-<%= __asmModalVariant %>"><%= __asmModalLabel %></span>
+                        <% } %>
+                      </div>
+                    </div>
+
+                    <div class="wdg-asm-chip">
+                      <div class="wdg-asm-chip-hd"><img class="wdg-asm-ico" src="<%= _bp %>/images/info.png" alt=""><span>Status</span></div>
+                      <div class="wdg-asm-chip-sub">
+                        <span class="badge rounded-pill text-bg-<%= __asmStatusVariant %>"><%= __asmStatusLabel %></span>
+                      </div>
+                    </div>
+
+                    <div class="wdg-asm-chip">
+                      <div class="wdg-asm-chip-hd"><img class="wdg-asm-ico" src="<%= _bp %>/images/local.png" alt=""><span><%= (__isHibrida || __isVirtual) ? 'Local (físico)' : 'Local' %></span></div>
+                      <div class="wdg-asm-chip-val text-truncate"><%= __asmLocal || '—' %></div>
+                    </div>
+
+                    <div class="wdg-asm-chip">
+                      <div class="wdg-asm-chip-hd"><img class="wdg-asm-ico" src="<%= _bp %>/images/web.png" alt=""><span>Link (virtual)</span></div>
+                      <div class="wdg-asm-chip-val text-truncate">
+                        <% if (__asmLink) { %>
+                          <a class="link-primary text-decoration-none" href="<%= __asmLinkHref %>" target="_blank" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right me-1"></i><span><%= __asmLink %></span>
+                          </a>
+                        <% } else { %>
+                          —
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 wdg-exec-col-status">
+              <div class="wdg-kpi">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="text-muted small fw-semibold">Status operacional</div>
+                    <span id="wdg-exec-status-badge" class="badge rounded-pill text-bg-secondary"><span id="wdg-exec-status">Carregando…</span></span>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-success btn-sm" id="wdg-btn-open" type="button"><i class="bi bi-play-fill me-1"></i>Abrir</button>
+                    <button class="btn btn-warning btn-sm" id="wdg-btn-pause" type="button"><i class="bi bi-pause-fill me-1"></i><span id="wdg-btn-pause-label">Pausar</span></button>
+                    <button class="btn btn-danger btn-sm" id="wdg-btn-close" type="button"><i class="bi bi-x-circle me-1"></i>Encerrar</button>
+                  </div>
+                </div>
+
+                <div class="wdg-stepper mt-2">
+                  <div class="progress" style="height: 8px;">
+                    <div id="wdg-exec-status-progress" class="progress-bar" role="progressbar" style="width: 0%" aria-label="Progresso da sessão"></div>
+                  </div>
+                  <div class="d-flex flex-wrap justify-content-between gap-2 mt-2">
+                    <span id="wdg-step-open" class="badge rounded-pill wdg-step-badge"><i class="bi bi-door-open me-1"></i>Abertura</span>
+                    <span id="wdg-step-pause" class="badge rounded-pill wdg-step-badge"><i class="bi bi-pause-circle me-1"></i>Pausa</span>
+                    <span id="wdg-step-resume" class="badge rounded-pill wdg-step-badge"><i class="bi bi-play-circle me-1"></i>Retorno</span>
+                    <span id="wdg-step-close" class="badge rounded-pill wdg-step-badge"><i class="bi bi-flag me-1"></i>Encerramento</span>
+                  </div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                  <div class="col-12 col-md-4">
+                    <div class="text-muted small"><i class="bi bi-stopwatch me-1"></i>Relógio</div>
+                    <div class="fw-semibold" id="wdg-exec-clock">—</div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div class="text-muted small"><i class="bi bi-people me-1"></i>Quórum</div>
+                    <div class="fw-semibold" id="wdg-exec-quorum">—</div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div class="text-muted small"><i class="bi bi-list-check me-1"></i>Item da pauta</div>
+                    <div class="fw-semibold text-truncate" id="wdg-exec-agenda">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+        </div>
+
+        <% if (!assembleia || !assembleia._id) { %>
+          <div class="col-12">
+            <div class="alert alert-warning mb-0">
+              <div class="fw-semibold mb-1">Esta tela precisa de uma assembleia.</div>
+              <div class="small text-muted">Abra pela lista de assembleias (ou informe o ID abaixo).</div>
+              <% if (typeof resolveError !== 'undefined' && resolveError) { %>
+                <div class="alert alert-danger mt-2 mb-0" role="alert"><%= String(resolveError) %></div>
+              <% } %>
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <a class="btn btn-sm btn-outline-secondary" href="/condominios/assembleias">Ir para Assembleias</a>
+                <form class="d-flex flex-wrap gap-2" method="GET" action="/condominios/administracao/assembleia/execucao">
+                  <input class="form-control form-control-sm" name="id" placeholder="Cole o ID da assembleia" style="min-width: 320px;" />
+                  <button class="btn btn-sm btn-primary" type="submit">Abrir Execução</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <div class="col-12 col-xl-9">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div id="wdg-tab-sessao" class="wdg-tab">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+              <h5 class="mb-0">Sessão</h5>
+            </div>
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="text-muted small">Últimos eventos</div>
+                <pre class="bg-light border rounded p-2 small mb-0" style="max-height: 280px; overflow:auto;" id="wdg-exec-events">(carregando…)</pre>
+              </div>
+            </div>
+          </div>
+
+          <div id="wdg-tab-presencas" class="wdg-tab d-none">
+            <h5 class="mb-3">Presenças</h5>
+
+            <div id="wdg-presencas-app" data-mode="local">
+              <div class="row g-3">
+                <div class="col-12 col-xl-6">
+                  <div class="wdg-pres-card">
+                    <div class="wdg-pres-card-hd">
+                      <div class="fw-bold text-uppercase text-center">Registrar presença de representante da habitação</div>
+                      <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mt-1">
+                        <span class="badge text-bg-light border" id="wdg-pres-config-pill">Config: —</span>
+                      </div>
+                    </div>
+                    <div class="wdg-pres-card-bd">
+
+                      <div class="alert alert-warning d-none wdg-pres-inline-alert" role="alert" id="wdg-pres-form-warn"></div>
+                      <div class="alert alert-success d-none wdg-pres-inline-alert" role="alert" id="wdg-pres-form-ok"></div>
+
+                      <form id="wdg-form-presence" novalidate>
+                        <div class="row g-3">
+                          <!-- 1ª linha: Habitação -->
+                          <div class="col-12">
+                            <div class="wdg-pres-field">
+                              <label for="wdg-habitacao-picker-input">Habitação</label>
+                              <div class="wdg-pres-picker" data-pres-picker="habitacao">
+                                <div class="wdg-pres-picker-box" tabindex="0" data-pres-picker-box>
+                                  <div data-pres-picker-tokens></div>
+                                  <input class="wdg-pres-picker-input" id="wdg-habitacao-picker-input" type="text" data-pres-picker-input placeholder="" autocomplete="off" />
+                                  <div class="wdg-pres-picker-placeholder" data-pres-picker-placeholder></div>
+                                </div>
+                                <div class="wdg-pres-picker-menu" data-pres-picker-menu hidden></div>
+                                <input type="hidden" id="wdg-habitacao-id" value="" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- 2ª linha: Fração ideal | Financeiro -->
+                          <div class="col-12 col-md-6">
+                            <div class="wdg-pres-field">
+                              <label for="wdg-fracao-ideal">Fração ideal</label>
+                              <input class="form-control" id="wdg-fracao-ideal" readonly placeholder="Selecione a habitação" />
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <div class="wdg-pres-field">
+                              <label>Financeiro</label>
+                              <div>
+                                <span class="badge text-bg-secondary" id="wdg-financeiro-badge">—</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- 3ª linha: Tipo representante -->
+                          <div class="col-12">
+                            <label class="form-label visually-hidden">Tipo representante</label>
+                            <div class="wdg-choice-group wdg-choice-center" id="wdg-rep-tipo" role="group" aria-label="Selecione o tipo de representante">
+                              <input class="btn-check" type="radio" name="wdg-rep-tipo" id="wdg-rep-tipo-proprietario" value="proprietario" checked>
+                              <label class="btn wdg-choice-btn" for="wdg-rep-tipo-proprietario"><img class="wdg-choice-icon" src="/images/proprietario.png" alt="" loading="lazy">Proprietário</label>
+
+                              <input class="btn-check" type="radio" name="wdg-rep-tipo" id="wdg-rep-tipo-inquilino" value="inquilino_autorizado">
+                              <label class="btn wdg-choice-btn" for="wdg-rep-tipo-inquilino"><img class="wdg-choice-icon" src="/images/inquilino.png" alt="" loading="lazy">Inquilino</label>
+
+                              <input class="btn-check" type="radio" name="wdg-rep-tipo" id="wdg-rep-tipo-procurador" value="procurador">
+                              <label class="btn wdg-choice-btn" for="wdg-rep-tipo-procurador"><img class="wdg-choice-icon" src="/images/procurador.png" alt="" loading="lazy">Procurador</label>
+                            </div>
+                          </div>
+
+                          <!-- 3ª linha (Procurador): campos manuais -->
+                          <div class="col-12 d-none" id="wdg-rep-procurador-manual-wrap">
+                            <div class="row g-2">
+                              <div class="col-12 col-md-5">
+                                <label class="form-label" for="wdg-rep-proc-nome">Nome</label>
+                                <input class="form-control" id="wdg-rep-proc-nome" placeholder="Nome completo" maxlength="120" />
+                              </div>
+                              <div class="col-12 col-md-3">
+                                <label class="form-label" for="wdg-rep-proc-cpf">CPF</label>
+                                <input class="form-control" id="wdg-rep-proc-cpf" placeholder="Somente números" inputmode="numeric" maxlength="14" />
+                              </div>
+                              <div class="col-12 col-md-4">
+                                <label class="form-label" for="wdg-rep-proc-email">E-mail</label>
+                                <input class="form-control" id="wdg-rep-proc-email" placeholder="email@exemplo.com" maxlength="140" />
+                              </div>
+                              <div class="col-12">
+                                <label class="form-label" for="wdg-rep-proc-obs">Observação</label>
+                                <input class="form-control" id="wdg-rep-proc-obs" placeholder="Opcional" maxlength="220" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- 4ª linha: Seleção -->
+                          <div class="col-12" id="wdg-rep-pessoa-wrap">
+                            <label class="form-label visually-hidden" for="wdg-rep-search">Seleção</label>
+                            <div class="wdg-outros-picker" data-rep-picker data-outros-picker>
+                              <input type="hidden" id="wdg-rep-pessoa-id" value="" />
+                              <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input class="form-control" type="search" id="wdg-rep-search" placeholder="Buscar por nome, e-mail, cargo..." autocomplete="off">
+                                <button class="btn btn-outline-secondary" type="button" title="Atualizar" id="wdg-rep-refresh">
+                                  <img src="/images/atualizar.png" alt="" style="width:18px;height:18px;display:block;">
+                                </button>
+                              </div>
+
+                              <div class="wdg-list-wrap">
+                                <div class="wdg-list-head">
+                                  <div class="wdg-list-title">Pessoas</div>
+                                </div>
+                                <div class="wdg-recipients-pane" id="wdg-rep-scroll">
+                                  <div class="d-flex flex-column gap-2" id="wdg-rep-list"></div>
+                                  <div class="wdg-muted small mt-2" id="wdg-rep-hint" style="display:none;"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- 5ª linha: Anexo de procuração -->
+                          <div class="col-12">
+                            <div class="wdg-pres-field">
+                              <label for="wdg-anexo-file" id="wdg-doc-label">Anexo de procuração</label>
+                              <input class="form-control" type="file" id="wdg-anexo-file" accept="application/pdf,image/*" />
+                            </div>
+                          </div>
+
+                          <!-- 6ª linha: Votação -->
+                          <div class="col-12">
+                            <div class="wdg-pres-field">
+                              <label>Votação</label>
+                              <input type="hidden" id="wdg-voto-status" value="votante" />
+                              <div class="dropdown">
+                                <button class="badge text-bg-success dropdown-toggle" type="button" id="wdg-voto-badge" data-bs-toggle="dropdown" aria-expanded="false">
+                                  Apto para votar
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="wdg-voto-badge" id="wdg-voto-menu">
+                                  <li><button class="dropdown-item" type="button" data-voto-set="votante">Apto para votar</button></li>
+                                  <li><button class="dropdown-item" type="button" data-voto-set="nao_votante">Inapto para votar</button></li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="col-12">
+                            <div class="wdg-pres-actions wdg-pres-actions-right" id="wdg-rep-actions">
+                              <button class="btn btn-sm btn-outline-secondary w-auto" type="button" id="wdg-btn-limpar">Limpar</button>
+                              <button class="btn btn-sm btn-primary w-auto" type="submit" id="wdg-btn-confirmar">Confirmar</button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 col-xl-6">
+                  <div class="wdg-pres-card">
+                    <div class="wdg-pres-card-hd">
+                      <div class="fw-bold text-uppercase text-center">Registrar presença de não representante</div>
+                    </div>
+                    <div class="wdg-pres-card-bd">
+                      <div class="row g-3">
+                        <div class="col-12">
+                          <label class="form-label visually-hidden">Tipo</label>
+                          <div class="wdg-choice-group wdg-choice-center" id="wdg-outros-tipo" role="group" aria-label="Selecione o tipo">
+                            <input class="btn-check" type="radio" name="wdg-outros-tipo" id="wdg-outros-tipo-dirigente" value="dirigente" checked>
+                            <label class="btn wdg-choice-btn" for="wdg-outros-tipo-dirigente"><img class="wdg-choice-icon" src="/images/funcionario.png" alt="" loading="lazy">Dirigente</label>
+
+                            <input class="btn-check" type="radio" name="wdg-outros-tipo" id="wdg-outros-tipo-colaborador" value="colaborador">
+                            <label class="btn wdg-choice-btn" for="wdg-outros-tipo-colaborador"><img class="wdg-choice-icon" src="/images/colaborador.png" alt="" loading="lazy">Colaborador</label>
+
+                            <input class="btn-check" type="radio" name="wdg-outros-tipo" id="wdg-outros-tipo-morador" value="morador">
+                            <label class="btn wdg-choice-btn" for="wdg-outros-tipo-morador"><img class="wdg-choice-icon" src="/images/unidade.png" alt="" loading="lazy">Morador</label>
+
+                            <input class="btn-check" type="radio" name="wdg-outros-tipo" id="wdg-outros-tipo-outros" value="outros">
+                            <label class="btn wdg-choice-btn" for="wdg-outros-tipo-outros"><img class="wdg-choice-icon" src="/images/pessoal.png" alt="" loading="lazy">Outro</label>
+                          </div>
+                        </div>
+
+                        <div class="col-12" id="wdg-outros-pessoa-wrap">
+                          <label class="form-label visually-hidden" for="wdg-outros-search">Seleção</label>
+                          <div class="wdg-outros-picker" data-outros-picker>
+                            <input type="hidden" id="wdg-outros-pessoa-id" value="" />
+                            <div class="input-group mb-2">
+                              <span class="input-group-text"><i class="bi bi-search"></i></span>
+                              <input class="form-control" type="search" id="wdg-outros-search" placeholder="Buscar por nome, e-mail, cargo..." autocomplete="off">
+                              <button class="btn btn-outline-secondary" type="button" title="Atualizar" id="wdg-outros-refresh">
+                                <img src="/images/atualizar.png" alt="" style="width:18px;height:18px;display:block;">
+                              </button>
+                            </div>
+
+                            <div class="wdg-list-wrap">
+                              <div class="wdg-list-head">
+                                <div class="wdg-list-title">Pessoas</div>
+                              </div>
+                              <div class="wdg-recipients-pane" id="wdg-outros-scroll">
+                                <div class="d-flex flex-column gap-2" id="wdg-outros-list"></div>
+                                <div class="wdg-muted small mt-2" id="wdg-outros-hint" style="display:none;"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-12 d-none" id="wdg-outros-manual-wrap">
+                          <div class="row g-2">
+                            <div class="col-12 col-md-5">
+                              <label class="form-label" for="wdg-outros-nome">Nome</label>
+                              <input class="form-control" id="wdg-outros-nome" placeholder="Nome completo" maxlength="120" />
+                            </div>
+                            <div class="col-12 col-md-3">
+                              <label class="form-label" for="wdg-outros-cpf">CPF</label>
+                              <input class="form-control" id="wdg-outros-cpf" placeholder="Somente números" inputmode="numeric" maxlength="14" />
+                            </div>
+                            <div class="col-12 col-md-4">
+                              <label class="form-label" for="wdg-outros-email">E-mail</label>
+                              <input class="form-control" id="wdg-outros-email" placeholder="email@exemplo.com" maxlength="140" />
+                            </div>
+                            <div class="col-12">
+                              <label class="form-label" for="wdg-outros-obs">Observação</label>
+                              <input class="form-control" id="wdg-outros-obs" placeholder="Opcional" maxlength="220" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <div class="d-flex justify-content-end">
+                            <button class="btn btn-outline-primary" type="button" id="wdg-outros-add" style="min-width: 180px;">Adicionar</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-3 mt-0">
+                <div class="col-12">
+                  <div class="wdg-pres-card">
+                    <div class="wdg-pres-card-hd">
+                      <div class="fw-bold">Quórum atual</div>
+                    </div>
+                    <div class="wdg-pres-card-bd">
+                      <div class="wdg-pres-quorum-kpi" id="wdg-quorum-card">
+                        <div class="wdg-pres-kpi">
+                          <div class="hd">Aprovados (unidades)</div>
+                          <div class="val" id="wdg-quorum-aprovados-unidades">0</div>
+                        </div>
+                        <div class="wdg-pres-kpi">
+                          <div class="hd">Aprovados (fração)</div>
+                          <div class="val" id="wdg-quorum-aprovados-fracao">0</div>
+                        </div>
+                        <div class="wdg-pres-kpi">
+                          <div class="hd">Pendentes</div>
+                          <div class="val" id="wdg-quorum-pendentes">0</div>
+                        </div>
+                        <div class="wdg-pres-kpi">
+                          <div class="hd">Bloqueados</div>
+                          <div class="val" id="wdg-quorum-bloqueados">0</div>
+                        </div>
+                        <div class="wdg-pres-kpi">
+                          <div class="hd">Falta p/ instalar</div>
+                          <div class="val" id="wdg-quorum-falta">—</div>
+                        </div>
+                      </div>
+                      <hr class="my-3" />
+                      <div class="wdg-pres-help" id="wdg-quorum-effective">—</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 wdg-pres-list-block">
+                <div class="wdg-pres-list-head">
+                  <div class="wdg-pres-list-caption">Lista de participantes</div>
+                  <div class="wdg-pres-list-sub">Resumo de presenças registradas</div>
+                </div>
+                <div class="wdg-pres-list-wrap" aria-label="Lista de participantes da assembleia">
+                  <div class="table-responsive wdg-pres-list-scroll">
+                    <table class="table wdg-pres-table align-middle mb-0 text-center">
+                    <thead>
+                      <tr>
+                        <th>Habitação</th>
+                        <th>Participante</th>
+                        <th>Representante</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                        <th>Fração</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="wdg-presences-body">
+                      <tr><td colspan="7" class="text-muted wdg-pres-empty">Nenhuma presença registrada.</td></tr>
+                    </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal: simular presença do portal -->
+              <div class="modal fade" id="wdg-modal-portal-presence" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Simular presença do portal</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="alert alert-danger d-none" role="alert" id="wdg-portal-error"></div>
+                      <form id="wdg-form-portal" novalidate>
+                        <div class="row g-3">
+                          <div class="col-12 col-md-6">
+                            <label class="form-label">Habitação</label>
+                            <select class="form-select" id="wdg-portal-hab"></select>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" id="wdg-portal-tipo">
+                              <option value="proprietario">Proprietário</option>
+                              <option value="procurador">Procurador</option>
+                              <option value="inquilino_autorizado">Inquilino autorizado</option>
+                            </select>
+                          </div>
+                          <div class="col-12">
+                            <label class="form-label">Nome</label>
+                            <input class="form-control" id="wdg-portal-nome" placeholder="Nome completo" />
+                          </div>
+                          <div class="col-12">
+                            <label class="form-label">Procuração (anexo)</label>
+                            <input class="form-control" type="file" id="wdg-portal-doc" accept="application/pdf,image/*" />
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="button" class="btn btn-primary" id="wdg-portal-submit">Criar presença</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal: ver doc -->
+              <div class="modal fade" id="wdg-modal-confirmar-pin" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content">
+                    <form id="wdg-pin-presence-form" onsubmit="return false;" novalidate>
+                      <div class="modal-header">
+                        <h5 class="modal-title">Confirmar presença (PIN)</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                      </div>
+                      <div class="modal-body">
+                        <input type="hidden" id="wdg-pin-presence-id" value="" />
+                        <label class="form-label" for="wdg-pin-presence-value">PIN/Senha do participante</label>
+                        <input class="form-control" id="wdg-pin-presence-value" type="password" autocomplete="off" />
+                        <div class="small text-muted mt-2">Use o PIN de presença do participante (ou senha do portal, fallback).</div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="wdg-pin-presence-submit">Confirmar</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal: ver doc -->
+              <div class="modal fade" id="wdg-modal-doc" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Documento anexado</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="text-muted small">Metadados (em memória):</div>
+                      <pre class="bg-light border rounded p-2 small mb-0" id="wdg-doc-meta">—</pre>
+
+                      <hr class="my-3" />
+
+                      <div class="row g-2">
+                        <div class="col-12">
+                          <label class="form-label">Substituir anexo</label>
+                          <input class="form-control" type="file" id="wdg-doc-replace" accept="application/pdf,image/*" />
+                        </div>
+                        <div class="col-12 d-flex flex-wrap gap-2">
+                          <button class="btn btn-outline-danger" type="button" id="wdg-doc-remove">Remover doc</button>
+                          <button class="btn btn-primary" type="button" id="wdg-doc-save">Salvar novo anexo</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Ok</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div id="wdg-tab-pauta" class="wdg-tab d-none">
+            <h5 class="mb-3">Pauta ao vivo</h5>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <button class="btn btn-outline-secondary" id="wdg-btn-agenda-prev" type="button">Anterior</button>
+              <button class="btn btn-outline-secondary" id="wdg-btn-agenda-next" type="button">Próximo</button>
+              <button class="btn btn-outline-primary" id="wdg-btn-agenda-discuss" type="button">Iniciar discussão</button>
+            </div>
+            <div class="text-muted small">Itens</div>
+            <div class="list-group" id="wdg-agenda-list">
+              <div class="list-group-item text-muted">Carregando…</div>
+            </div>
+          </div>
+
+          <div id="wdg-tab-votacoes" class="wdg-tab d-none">
+            <h5 class="mb-3">Votações</h5>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <select class="form-select" id="wdg-vote-rule" style="max-width: 240px;">
+                <option value="maioria_simples">Maioria simples</option>
+                <option value="maioria_qualificada">Maioria qualificada</option>
+                <option value="unanimidade">Unanimidade</option>
+              </select>
+              <select class="form-select" id="wdg-vote-type" style="max-width: 240px;">
+                <option value="sim_nao_abstencao">SIM / NÃO / ABSTENÇÃO</option>
+              </select>
+              <button class="btn btn-outline-primary" id="wdg-btn-vote-open" type="button">Abrir votação do item atual</button>
+              <button class="btn btn-outline-danger" id="wdg-btn-vote-close" type="button">Fechar votação</button>
+            </div>
+
+            <form class="row g-2" id="wdg-form-vote">
+              <div class="col-12 col-md-4">
+                <input class="form-control" name="presenceKey" placeholder="Chave (ex: APTO-101)" required />
+              </div>
+              <div class="col-12 col-md-4">
+                <select class="form-select" name="choice" required>
+                  <option value="sim">Sim</option>
+                  <option value="nao">Não</option>
+                  <option value="abstencao">Abstenção</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4">
+                <button class="btn btn-success w-100" type="submit">Registrar voto</button>
+              </div>
+            </form>
+
+            <div class="mt-3">
+              <div class="text-muted small">Resumo</div>
+              <div class="row g-2">
+                <div class="col-12 col-md-3"><div class="border rounded p-2"><div class="text-muted small">Sim</div><div class="fw-semibold" id="wdg-vote-sim">—</div></div></div>
+                <div class="col-12 col-md-3"><div class="border rounded p-2"><div class="text-muted small">Não</div><div class="fw-semibold" id="wdg-vote-nao">—</div></div></div>
+                <div class="col-12 col-md-3"><div class="border rounded p-2"><div class="text-muted small">Abst.</div><div class="fw-semibold" id="wdg-vote-abst">—</div></div></div>
+                <div class="col-12 col-md-3"><div class="border rounded p-2"><div class="text-muted small">Total</div><div class="fw-semibold" id="wdg-vote-total">—</div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="wdg-tab-ata" class="wdg-tab d-none">
+            <h5 class="mb-3">Ata</h5>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <button class="btn btn-outline-primary" id="wdg-btn-ata-load" type="button">Carregar prévia</button>
+              <a class="btn btn-outline-secondary" id="wdg-btn-ata-pdf" target="_blank" rel="noopener">Exportar PDF</a>
+            </div>
+            <textarea class="form-control" rows="14" id="wdg-ata-text" placeholder="Carregue a prévia para editar/revisar…"></textarea>
+          </div>
+
+          <div id="wdg-tab-encerramento" class="wdg-tab d-none">
+            <h5 class="mb-3">Encerramento</h5>
+            <div class="alert alert-warning">
+              Ao encerrar, a sessão é bloqueada e a votação (se aberta) é finalizada.
+            </div>
+            <button class="btn btn-danger" id="wdg-btn-close-2" type="button">Encerrar sessão</button>
+          </div>
+
+          <div class="mt-3">
+            <div class="alert alert-danger d-none" id="wdg-error"></div>
+            <div class="alert alert-success d-none" id="wdg-success"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+        <div class="col-12 col-xl-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h6 class="mb-2">Resumo</h6>
+          <div class="small text-muted">As informações abaixo vêm do status.</div>
+          <hr />
+          <div class="mb-2"><div class="text-muted small">Presentes confirmados</div><div class="fw-semibold" id="wdg-summary-presences">—</div></div>
+          <div class="mb-2"><div class="text-muted small">Votação aberta</div><div class="fw-semibold" id="wdg-summary-vote">—</div></div>
+          <div class="mb-0"><div class="text-muted small">Última atualização</div><div class="fw-semibold" id="wdg-summary-updated">—</div></div>
+        </div>
+      </div>
+    </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="wdg-exec-config" data-assembleia-id="<%= String((assembleia && assembleia._id) || '') %>"></div>
+
+<script>
+  // Boot opcional mínimo. O restante (config/habitações) vem de providers no JS.
+  window.__WDG_BOOT__ = window.__WDG_BOOT__ || {
+    assembleiaId: <%- JSON.stringify(String((assembleia && assembleia._id) || '')) %>,
+    userLabel: <%- JSON.stringify(String((user && (user.nome || user.name || user.email)) || 'Gestor')) %>
+  };
+
+  // Diretório de habitações (filtrado pelo condomínio da assembleia). Sem fetch.
+  // Enviamos sempre array (mesmo vazio) para desativar mocks/fallbacks.
+  window.__HABITACOES__ = <%- JSON.stringify((typeof habitacoesDirectory !== 'undefined' && Array.isArray(habitacoesDirectory)) ? habitacoesDirectory : []) %>;
+</script>
+<script src="<%= _bp %>/js/condominios/assembleias/assembleia-execution.js?v=<%= (typeof assetVersion !== 'undefined' && assetVersion) ? assetVersion : Date.now() %>"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -105,6 +105,10 @@ Execute os testes com:
 npm test
 ```
 
+## 📚 Docs adicionais
+
+- [README_FEEDBACK_UPLOAD.md](README_FEEDBACK_UPLOAD.md) — upload de anexos do feedback via Vercel Blob
+
 ## 📖 API Documentation
 
 A documentação da API está disponível em `/api/docs` quando o servidor estiver rodando.

@@ -1,5 +1,14 @@
 // Error handler central unificado (HTML vs JSON)
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function wantsJson(req) {
   if (req.xhr) return true;
   const accept = req.headers['accept'] || '';
@@ -78,7 +87,15 @@ export function centralErrorHandler(err, req, res, next) { // eslint-disable-lin
     // Renderização simples para views (poderia ser substituída por página ejs)
     res.status(status).set('Content-Type', 'text/html; charset=utf-8');
     const msg = isDbOffline ? 'Banco de dados temporariamente indisponível. Tente novamente em instantes.' : (err.message || 'Erro interno');
-    return res.send(`<html><body><h1>Erro ${status}</h1><pre>${msg}</pre></body></html>`);
+    const showStack = process.env.NODE_ENV !== 'production';
+    const stack = (showStack && err && err.stack) ? String(err.stack) : '';
+    const stackHtml = stack
+      ? `<h2>Stacktrace</h2><pre>${escapeHtml(stack)}</pre>`
+      : '';
+    const nameHtml = (showStack && err && err.name)
+      ? `<p><strong>${escapeHtml(String(err.name))}</strong></p>`
+      : '';
+    return res.send(`<!doctype html><html><body><h1>Erro ${status}</h1>${nameHtml}<pre>${escapeHtml(msg)}</pre>${stackHtml}</body></html>`);
   }
   const payload = {
     error: true,
@@ -87,7 +104,7 @@ export function centralErrorHandler(err, req, res, next) { // eslint-disable-lin
   if (isDbOffline) payload.code = 'DB_OFFLINE';
   if (err.details) payload.details = err.details;
   if (process.env.NODE_ENV !== 'production' && err.stack) payload.stack = err.stack;
-  if (status >= 500) console.error('[centralError]', err);
+  if (status >= 500 && process.env.NODE_ENV !== 'test') console.error('[centralError]', err);
   res
     .status(status)
     .set('Content-Type', 'application/json; charset=utf-8')

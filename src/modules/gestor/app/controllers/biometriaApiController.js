@@ -8,6 +8,8 @@ const biometriaEnabled = (!biometriaDisabledByEnv) && (biometriaEnabledByEnv || 
 let HID;
 (async () => {
 	try {
+		// Em testes unitários, evitar efeitos colaterais (import de node-hid / acesso a dispositivos).
+		if (isTest) return;
 		if (!biometriaEnabled) {
 			if (!isTest) console.log('[BIOMETRIA] desabilitada (serverless/flag).');
 			return;

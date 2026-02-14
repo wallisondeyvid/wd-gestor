@@ -38,8 +38,16 @@
   var garagens = [];
 
   // Elementos
-  var gUnidade = byId('gUnidade'); var gNome = byId('gNome'); var gVinc = byId('gVinc');
-  var gFoto = byId('gFoto'); var gFotoPrev = byId('gFotoPrev'); var gFotoLimpar = byId('gFotoLimpar');
+  var gUnidade = byId('gUnidade');
+  var gUnidadeLogo = byId('gUnidadeLogo');
+  var gNome = byId('gNome'); var gVinc = byId('gVinc');
+  var gVincPickerRoot = document.querySelector('[data-g-vinc-picker]');
+  var gVincPickerBox = gVincPickerRoot ? gVincPickerRoot.querySelector('[data-g-vinc-picker-box]') : null;
+  var gVincPickerInput = gVincPickerRoot ? gVincPickerRoot.querySelector('[data-g-vinc-picker-input]') : null;
+  var gVincPickerTokens = gVincPickerRoot ? gVincPickerRoot.querySelector('[data-g-vinc-picker-tokens]') : null;
+  var gVincPickerMenu = gVincPickerRoot ? gVincPickerRoot.querySelector('[data-g-vinc-picker-menu]') : null;
+  var gVincPickerPlaceholder = gVincPickerRoot ? gVincPickerRoot.querySelector('[data-g-vinc-picker-placeholder]') : null;
+  var gFoto = byId('gFoto'); var gFotoPrev = byId('gFotoPrev'); var gFotoLimpar = byId('gFotoLimpar'); var gFotoRemover = byId('gFotoRemover');
   var gObs = byId('gObs'); var gObsCount = byId('gObsCount');
   var gSalvar = byId('gSalvar'); var gLimpar = byId('gLimpar'); var gCancelar = byId('gCancelarEdicao'); var gLista = byId('gLista');
   // Tabela e paginação
@@ -47,20 +55,283 @@
   var GAR_PAGE_SIZE = 50; var garPage = 0; var garSort = { key: 'unidade', dir: 'asc' };
   var editIndex = -1;
 
-  function setEditMode(on){ if(!gCancelar || !gSalvar) return; if(on){ gCancelar.classList.remove('d-none'); gSalvar.textContent='Salvar alterações'; } else { gCancelar.classList.add('d-none'); gSalvar.textContent='Cadastrar'; } }
+  function setEditMode(on){ if(!gCancelar || !gSalvar) return; if(on){ gCancelar.classList.remove('d-none'); gSalvar.textContent='Alterar'; } else { gCancelar.classList.add('d-none'); gSalvar.textContent='Cadastrar'; } }
+
+  function getSelectedUnitId(){ return gUnidade ? String(gUnidade.value || '').trim() : ''; }
+
+  function getUnitById(id){
+    var uid = String(id || '').trim();
+    if(!uid) return null;
+    return (unidades || []).find(function(u){ return String(u && u._id) === uid; }) || null;
+  }
+
+  function pickUnitLogoUrl(u){
+    if(!u) return '';
+    var raw = u.logo || u.logo_url || u.logoUrl || u.logo_unidade || u.logoUnidade || u.headerLogo || u.header_logo || u.logoURL || u.logoUrlUnidade || u.logo_unidade_url || u.logo_url_unidade;
+    raw = (raw == null) ? '' : String(raw).trim();
+    return raw;
+  }
+
+  function buildLogoCandidates(rawUrl, basePathForModule){
+    var bp = String(basePathForModule || '').trim();
+    var u = String(rawUrl || '').trim();
+    if(!u) return [];
+
+    var candidates = [];
+    var isAbs = /^https?:\/\//i.test(u) || u.indexOf('data:') === 0;
+    if(isAbs){
+      candidates.push(u);
+      return candidates;
+    }
+
+    if(bp && u.charAt(0) === '/' && u.indexOf(bp + '/') !== 0){
+      candidates.push(bp + u);
+    }
+
+    candidates.push(u);
+
+    if(u.charAt(0) === '/'){
+      try{ candidates.push(window.location.origin + u); }catch(_){ }
+      if(bp && u.indexOf(bp + '/') !== 0){
+        try{ candidates.push(window.location.origin + bp + u); }catch(_){ }
+      }
+    }
+
+    var out = [];
+    for(var i=0;i<candidates.length;i++){
+      var s = String(candidates[i] || '').trim();
+      if(!s) continue;
+      if(out.indexOf(s) >= 0) continue;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function getUnidadeLogoCandidates(unitId){
+    var uid = String(unitId || '').trim();
+    var base = String(basePath || '/condominios').trim() || '/condominios';
+    if(!uid){
+      return ['/images/unidade.png', base + '/images/unidade.png'];
+    }
+
+    var u = getUnitById(uid);
+    var rawLogo = pickUnitLogoUrl(u);
+    var fromList = rawLogo ? buildLogoCandidates(rawLogo, base) : [];
+
+    var raw = [];
+    for(var i=0;i<fromList.length;i++) raw.push(fromList[i]);
+
+    raw.push('/gestor/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push(base + '/api/unidades/' + encodeURIComponent(uid) + '/logo');
+    raw.push('/api/unidades/' + encodeURIComponent(uid) + '/logo');
+
+    raw.push('/images/unidade.png');
+    raw.push(base + '/images/unidade.png');
+
+    var out = [];
+    for(var j=0;j<raw.length;j++){
+      var s2 = String(raw[j] || '').trim();
+      if(!s2) continue;
+      if(out.indexOf(s2) >= 0) continue;
+      out.push(s2);
+    }
+    return out;
+  }
+
+  function setImgWithFallback(img, urls){
+    if(!img) return;
+    var list = (urls || []).map(function(x){ return String(x || '').trim(); }).filter(Boolean);
+    if(list.length === 0) return;
+    var idx = 0;
+    img.onerror = function(){
+      idx++;
+      if(idx >= list.length){ img.onerror = null; return; }
+      img.src = list[idx];
+    };
+    img.src = list[0];
+  }
+
+  function refreshUnitLogo(){
+    if(!gUnidadeLogo) return;
+    var uid = getSelectedUnitId();
+    setImgWithFallback(gUnidadeLogo, getUnidadeLogoCandidates(uid));
+  }
 
   // Preenche select de vínculo (habitação e área comum) conforme unidade
   function syncVincSelect(){ var uid = gUnidade.value; var listH = habs.filter(function(h){ return String((h.unidade && h.unidade._id) || h.unidade_id || h.unidadeId)===String(uid); }); var listA = areas.filter(function(a){ return String(a.unidadeId)===String(uid); });
     var html = '<option value="">Selecione...</option>';
   if(listH.length){ html += '<optgroup label="Habitações">' + listH.map(function(h){ var hid = h._id || h.id; return '<option value="hab:'+hid+'">'+escapeHtml(habLabel(h))+'</option>'; }).join('') + '</optgroup>'; }
     if(listA.length){ html += '<optgroup label="Áreas Comuns">' + listA.map(function(a){ return '<option value="area:'+a.id+'">'+escapeHtml(a.nome)+'</option>'; }).join('') + '</optgroup>'; }
-    gVinc.innerHTML = html; }
+    var prev = gVinc ? String(gVinc.value || '') : '';
+    gVinc.innerHTML = html;
+    if(prev && gVinc.querySelector('option[value="'+cssEscape(prev)+'"]')){ gVinc.value = prev; }
+    refreshVincPickerFromSelect();
+  }
+
+  function cssEscape(s){
+    var v = String(s || '');
+    // escape mínimo para selector option[value="..."]
+    return v.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  function escapeAttr(v){
+    return escapeHtml(String(v || '')).replace(/"/g,'&quot;');
+  }
+
+  function openVincMenu(){
+    if(!gVincPickerMenu) return;
+    gVincPickerMenu.hidden = false;
+  }
+  function closeVincMenu(){
+    if(!gVincPickerMenu) return;
+    gVincPickerMenu.hidden = true;
+  }
+
+  function renderVincToken(label){
+    if(!gVincPickerTokens) return;
+    if(!label){ gVincPickerTokens.innerHTML=''; return; }
+    gVincPickerTokens.innerHTML = '<span class="wdg-enq-token">'
+      + escapeHtml(label)
+      + ' <button type="button" data-g-vinc-clear aria-label="Remover">×</button>'
+      + '</span>';
+  }
+
+  function getSelectedVincLabel(){
+    if(!gVinc) return '';
+    var val = String(gVinc.value || '');
+    if(!val) return '';
+    var opt = gVinc.querySelector('option[value="'+cssEscape(val)+'"]');
+    return opt ? String(opt.textContent||'').trim() : '';
+  }
+
+  function buildVincItemsFromSelect(){
+    var items = [];
+    if(!gVinc) return items;
+    var groups = gVinc.querySelectorAll('optgroup');
+    if(groups && groups.length){
+      groups.forEach(function(gr){
+        var groupLabel = String(gr.getAttribute('label')||'').trim();
+        (gr.querySelectorAll('option')||[]).forEach(function(opt){
+          var val = String(opt.value||'').trim();
+          if(!val) return;
+          var label = String(opt.textContent||'').trim();
+          items.push({ value: val, label: label, group: groupLabel });
+        });
+      });
+    }else{
+      (gVinc.querySelectorAll('option')||[]).forEach(function(opt){
+        var val = String(opt.value||'').trim();
+        if(!val) return;
+        var label = String(opt.textContent||'').trim();
+        items.push({ value: val, label: label, group: '' });
+      });
+    }
+    return items;
+  }
+
+  function renderVincMenu(items, filter){
+    if(!gVincPickerMenu) return;
+    var q = String(filter||'').trim().toLowerCase();
+    var selectedVal = gVinc ? String(gVinc.value || '') : '';
+    var list = (items||[]).filter(function(it){
+      if(!it || !it.value) return false;
+      if(selectedVal && String(it.value)===selectedVal) return false;
+      if(!q) return true;
+      return String(it.label||'').toLowerCase().indexOf(q) >= 0
+        || String(it.group||'').toLowerCase().indexOf(q) >= 0;
+    }).slice(0, 40);
+    if(list.length===0){
+      gVincPickerMenu.innerHTML = '<div class="px-2 py-2 text-muted small">Nenhum resultado.</div>';
+      return;
+    }
+    var unidadeLine = unidadeLabel(getSelectedUnitId()) || 'Condomínio';
+    var avatarSrc = (basePath||'') + '/images/home.png';
+    gVincPickerMenu.innerHTML = list.map(function(it){
+      return ''
+        + '<button type="button" class="wdg-enq-picker-item" data-g-vinc-item data-val="'+escapeAttr(it.value)+'">'
+        +   '<span class="wdg-pick-avatar">'
+        +     '<img src="'+escapeAttr(avatarSrc)+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\''+escapeAttr(avatarSrc)+'\';">'
+        +   '</span>'
+        +   '<span class="wdg-pick-lines">'
+        +     '<span class="wdg-pick-name">'+escapeHtml(unidadeLine)+'</span>'
+        +     '<span class="wdg-pick-hab">'+escapeHtml(it.label || it.value)+'</span>'
+        +   '</span>'
+        + '</button>';
+    }).join('');
+  }
+
+  var vincItemsCache = [];
+  function refreshVincPickerFromSelect(){
+    if(!gVincPickerRoot || !gVinc) return;
+    vincItemsCache = buildVincItemsFromSelect();
+    var label = getSelectedVincLabel();
+    renderVincToken(label);
+    if(gVincPickerPlaceholder){
+      gVincPickerPlaceholder.hidden = true;
+    }
+    if(gVincPickerInput){
+      gVincPickerInput.value = '';
+    }
+    renderVincMenu(vincItemsCache, '');
+    closeVincMenu();
+  }
   async function carregarHabitacoes(unidadeId){ if(!unidadeId){ habs=[]; syncVincSelect(); return; }
     if(habCache[unidadeId]){ habs = habCache[unidadeId]; syncVincSelect(); return; }
     try{ var url = basePath + '/api/habitacoes/busca?unidade=' + encodeURIComponent(unidadeId); var res = await fetch(url,{ cache:'no-store' }); if(!res.ok) throw new Error('HTTP '+res.status); var data = await res.json(); habs = Array.isArray(data)? data : []; habCache[unidadeId]=habs; syncVincSelect(); }
     catch(e){ console.warn('[garagens] Falha ao carregar habitações', e); showToast('Não foi possível carregar habitações para vínculo.','warning'); habs=[]; syncVincSelect(); }
   }
-  gUnidade && gUnidade.addEventListener('change', async function(){ await carregarHabitacoes(gUnidade.value); await listarVagas(); });
+  gUnidade && gUnidade.addEventListener('change', async function(){ refreshUnitLogo(); await carregarHabitacoes(gUnidade.value); await listarVagas(); });
+
+  // Picker do vínculo (single-select)
+  if(gVincPickerBox){
+    gVincPickerBox.addEventListener('click', function(){
+      if(gVincPickerInput) gVincPickerInput.focus();
+      openVincMenu();
+    });
+    gVincPickerBox.addEventListener('keydown', function(e){
+      if(!e) return;
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openVincMenu(); if(gVincPickerInput) gVincPickerInput.focus(); }
+      if(e.key==='Escape'){ closeVincMenu(); }
+    });
+  }
+  if(gVincPickerInput){
+    gVincPickerInput.addEventListener('input', function(){
+      renderVincMenu(vincItemsCache, gVincPickerInput.value);
+      openVincMenu();
+    });
+    gVincPickerInput.addEventListener('focus', function(){
+      renderVincMenu(vincItemsCache, gVincPickerInput.value);
+      openVincMenu();
+    });
+    gVincPickerInput.addEventListener('keydown', function(e){
+      if(!e) return;
+      if(e.key==='Escape'){ closeVincMenu(); return; }
+    });
+  }
+  if(gVincPickerRoot){
+    gVincPickerRoot.addEventListener('click', function(e){
+      var btn = e && e.target ? e.target.closest('[data-g-vinc-item]') : null;
+      if(btn && gVinc){
+        var v = String(btn.getAttribute('data-val')||'');
+        gVinc.value = v;
+        refreshVincPickerFromSelect();
+        return;
+      }
+      var clearBtn = e && e.target ? e.target.closest('[data-g-vinc-clear]') : null;
+      if(clearBtn && gVinc){
+        gVinc.value = '';
+        refreshVincPickerFromSelect();
+        return;
+      }
+    });
+  }
+  document.addEventListener('click', function(e){
+    if(!gVincPickerRoot || !gVincPickerMenu) return;
+    var t = e && e.target ? e.target : null;
+    if(!t) return;
+    if(gVincPickerRoot.contains(t)) return;
+    closeVincMenu();
+  });
 
   function vinculoLabel(g){
     function findHab(id){ return habs.find(function(x){ return String((x._id||x.id))===String(id); }); }
@@ -93,8 +364,18 @@
         '<button class="wdg-icon-btn" data-g-del="'+i+'" aria-label="Excluir" title="Excluir"><img src="'+basePath+'/images/excluir.png" alt="Excluir"/></button>'+
       '</td>'+
     '</tr>'; }
-  function buildGarPagination(totalPages, pageSize, totalItems){ if(!gPaginas) return; gPaginas.innerHTML=''; if(totalPages<=1){ var infoOnly=document.createElement('div'); infoOnly.className='w-100 text-center mt-1'; infoOnly.style.fontSize='.7rem'; infoOnly.textContent='Total: '+totalItems+' vaga(s)'; gPaginas.appendChild(infoOnly); return; }
-    function mk(label, page, disabled){ var b=document.createElement('button'); b.type='button'; b.textContent=label; if(page!=null) b.dataset.page=page; if(disabled) b.disabled=true; return b; }
+  function buildGarPagination(totalPages, pageSize, totalItems){ if(!gPaginas) return; gPaginas.innerHTML='';
+    function mk(label, page, disabled){ var b=document.createElement('button'); b.type='button'; b.textContent=label; if(!disabled && page!=null) b.dataset.page=page; if(disabled) b.disabled=true; return b; }
+    if(totalPages<=1){
+      var firstOnly = mk('<<', 0, true);
+      var prevOnly = mk('<', 0, true);
+      var oneOnly = mk('1', 0, true); oneOnly.classList.add('active');
+      var nextOnly = mk('>', 0, true);
+      var lastOnly = mk('>>', 0, true);
+      gPaginas.appendChild(firstOnly); gPaginas.appendChild(prevOnly); gPaginas.appendChild(oneOnly); gPaginas.appendChild(nextOnly); gPaginas.appendChild(lastOnly);
+      var infoOnly=document.createElement('div'); infoOnly.className='w-100 text-center mt-1'; infoOnly.style.fontSize='.7rem'; infoOnly.textContent='Total: '+totalItems+' vaga(s)'; gPaginas.appendChild(infoOnly);
+      return;
+    }
     var firstBtn = mk('<<', 0, garPage===0); var prevBtn = mk('<', garPage-1, garPage===0); gPaginas.appendChild(firstBtn); gPaginas.appendChild(prevBtn);
     var windowSize=6; var start=Math.max(0, garPage-Math.floor(windowSize/2)); var end=start+windowSize-1; if(end>=totalPages){ end=totalPages-1; start=Math.max(0, end-windowSize+1); }
     if(start>0){ var b0=mk('1',0,false); if(garPage===0) b0.classList.add('active'); gPaginas.appendChild(b0); var dots=document.createElement('span'); dots.textContent='...'; dots.style.padding='0 .4rem'; gPaginas.appendChild(dots); }
@@ -111,13 +392,15 @@
   // Eventos da lista agora serão gerenciados após carga API (implementado em nova seção)
 
   // Botão salvar será redefinido na versão API (seção inferior)
-  gLimpar && gLimpar.addEventListener('click', function(){ clearForm(); editIndex=-1; setEditMode(false); });
+  gLimpar && gLimpar.addEventListener('click', function(){ clearForm(); });
   gCancelar && gCancelar.addEventListener('click', function(){ clearForm(); editIndex=-1; setEditMode(false); });
 
-  function clearForm(){ gNome.value=''; if(gVinc){ gVinc.value=''; } if(gObs){ gObs.value=''; if(gObsCount) gObsCount.textContent='0'; } if(gFoto){ gFoto.value=''; gFotoPrev.src=''; gFotoPrev.classList.add('d-none'); } if(unidades.length===1){ gUnidade.value=unidades[0]._id; } syncVincSelect(); }
+  function clearForm(){ gNome.value=''; if(gVinc){ gVinc.value=''; } if(gObs){ gObs.value=''; if(gObsCount) gObsCount.textContent='0'; } if(gFoto){ gFoto.value=''; gFotoPrev.src=''; gFotoPrev.classList.add('d-none'); } if(gFotoRemover){ gFotoRemover.classList.add('d-none'); } if(unidades.length===1){ gUnidade.value=unidades[0]._id; } syncVincSelect(); }
 
   // Inicialização
   if(unidades.length===1 && gUnidade){ gUnidade.value=unidades[0]._id; }
+  refreshUnitLogo();
+  refreshVincPickerFromSelect();
   // Carregar habitações iniciais se já houver unidade
   (async function(){ if(gUnidade && gUnidade.value){ await carregarHabitacoes(gUnidade.value); } else { syncVincSelect(); } })();
   
@@ -126,13 +409,70 @@
   async function sendJson(url, method, body){ try{ var res=await fetch(url,{ method:method||'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) }); if(res.status===503){ showToast('Banco indisponível.','warning'); return null; } if(!res.ok) throw new Error('HTTP '+res.status); var data=await res.json(); showToast(method==='DELETE'? 'Excluído.' : (method==='PUT'? 'Alterado.' : 'Salvo.'),'success'); return data; }catch(e){ console.warn('[cadastrar_garagem] '+(method||'POST')+' falhou', url, e); showToast('Operação falhou','danger'); return null; } }
   async function listarVagas(){ var uid=gUnidade && gUnidade.value ? gUnidade.value : ''; var url = basePath + '/api/garagens/busca' + (uid? ('?unidade='+encodeURIComponent(uid)) : ''); var data=await getJson(url); garagens = Array.isArray(data)? data : []; garPage=0; renderGarPage(garPage); }
   
+  function buildGarDeleteLabel(g){
+    if(!g) return '—';
+    var nome = String(g.nome || '').trim();
+    var uidLabel = unidadeLabelByObj(g.unidade) || unidadeLabel(g.unidadeId);
+    var label = nome || 'Vaga';
+    if(uidLabel) label += ' · ' + uidLabel;
+    return label || '—';
+  }
+
+  function askGarDeleteConfirm(gLabel){
+    var modalEl = byId('garDeleteConfirmModal');
+    var nameEl = byId('garDeleteConfirmName');
+    var yesBtn = byId('garDeleteConfirmYes');
+
+    // fallback
+    if(!modalEl || !yesBtn || !(window.bootstrap && window.bootstrap.Modal)){
+      var suffix = (gLabel && gLabel !== '—') ? (' (' + gLabel + ')') : '';
+      return Promise.resolve(window.confirm('Tem certeza que deseja excluir essa vaga?' + suffix + '\n\nEsta exclusão é definitiva e não pode ser desfeita.'));
+    }
+
+    if(nameEl) nameEl.textContent = gLabel || '—';
+
+    return new Promise(function(resolve){
+      var resolved = false;
+      var bs = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true, focus: true });
+
+      var onHidden = function(){
+        if(resolved) return;
+        resolved = true;
+        resolve(false);
+      };
+
+      var onYes = function(e){
+        try{ e && e.preventDefault && e.preventDefault(); }catch(_){ }
+        if(resolved) return;
+        resolved = true;
+        resolve(true);
+        try{ bs.hide(); }catch(_2){ }
+      };
+
+      modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+      yesBtn.addEventListener('click', onYes, { once: true });
+      bs.show();
+    });
+  }
+
   // Render inicial via API (após possíveis habitações)
   (async function(){ try{ await listarVagas(); }catch(_){ } })();
 
   // Eventos lista (CRUD) com API
   gLista && gLista.addEventListener('click', async function(ev){ var t=ev.target.closest('button'); if(!t) return; 
-    if(t.hasAttribute('data-g-del')){ var i=parseInt(t.getAttribute('data-g-del'),10); var g=garagens[i]; if(!g) return; if(!confirm('Excluir esta vaga?')) return; await sendJson(basePath + '/api/garagens/' + encodeURIComponent(g._id), 'DELETE'); await listarVagas(); return; }
-  if(t.hasAttribute('data-g-edit')){ var i2=parseInt(t.getAttribute('data-g-edit'),10); var g2=garagens[i2]; if(!g2) return; editIndex=i2; var uidEdit = (g2.unidade && g2.unidade._id) || g2.unidade_id || g2.unidadeId || ''; gUnidade.value = uidEdit; await carregarHabitacoes(uidEdit); gNome.value=g2.nome||''; if(g2.link_type && g2.link_id){ gVinc.value=g2.link_type+':'+g2.link_id; } else if(g2.linkType && g2.linkId){ gVinc.value=g2.linkType+':'+g2.linkId; } gObs.value=g2.obs||''; if(gObsCount) gObsCount.textContent=String(gObs.value.length); if(g2.foto){ gFotoPrev.src=g2.foto; gFotoPrev.classList.remove('d-none'); } else { gFotoPrev.src=''; gFotoPrev.classList.add('d-none'); } setEditMode(true); window.scrollTo({ top:0, behavior:'smooth'}); return; }
+    if(t.hasAttribute('data-g-del')){
+      var i=parseInt(t.getAttribute('data-g-del'),10);
+      var g=garagens[i];
+      if(!g) return;
+      var labelDel = buildGarDeleteLabel(g);
+      var okDel = await askGarDeleteConfirm(labelDel);
+      if(!okDel) return;
+      var delResp = await sendJson(basePath + '/api/garagens/' + encodeURIComponent(g._id), 'DELETE');
+      if(!delResp) return;
+      await listarVagas();
+      return;
+    }
+  if(t.hasAttribute('data-g-edit')){ var i2=parseInt(t.getAttribute('data-g-edit'),10); var g2=garagens[i2]; if(!g2) return; editIndex=i2; var uidEdit = (g2.unidade && g2.unidade._id) || g2.unidade_id || g2.unidadeId || ''; gUnidade.value = uidEdit; refreshUnitLogo(); await carregarHabitacoes(uidEdit); gNome.value=g2.nome||''; if(g2.link_type && g2.link_id){ gVinc.value=g2.link_type+':'+g2.link_id; } else if(g2.linkType && g2.linkId){ gVinc.value=g2.linkType+':'+g2.linkId; } gObs.value=g2.obs||''; if(gObsCount) gObsCount.textContent=String(gObs.value.length); if(g2.foto){ gFotoPrev.src=g2.foto; gFotoPrev.classList.remove('d-none'); if(gFotoRemover){ gFotoRemover.classList.remove('d-none'); } } else { gFotoPrev.src=''; gFotoPrev.classList.add('d-none'); if(gFotoRemover){ gFotoRemover.classList.add('d-none'); } showToast('Esta vaga não possui foto salva.', 'info'); } setEditMode(true); window.scrollTo({ top:0, behavior:'smooth'}); return; }
     if(t.hasAttribute('data-g-det')){ var i3=parseInt(t.getAttribute('data-g-det'),10); var g3=garagens[i3]; if(!g3) return; abrirDetalhesVaga(g3); return; }
   });
 
@@ -140,6 +480,19 @@
   gObs && gObs.addEventListener('input', function(){ if(gObsCount) gObsCount.textContent=String(gObs.value.length); });
   gFoto && gFoto.addEventListener('change', function(){ if(gFoto.files && gFoto.files[0]){ var url = URL.createObjectURL(gFoto.files[0]); gFotoPrev.src=url; gFotoPrev.classList.remove('d-none'); } else { gFotoPrev.src=''; gFotoPrev.classList.add('d-none'); } });
   gFotoLimpar && gFotoLimpar.addEventListener('click', function(){ if(gFoto){ gFoto.value=''; } if(gFotoPrev){ gFotoPrev.src=''; gFotoPrev.classList.add('d-none'); } });
+  gFotoRemover && gFotoRemover.addEventListener('click', async function(){
+    if(editIndex < 0 || !garagens[editIndex] || !garagens[editIndex]._id){ showToast('Remover foto está disponível apenas ao editar.', 'warning'); return; }
+    if(!confirm('Remover a foto atual desta vaga?')) return;
+    var current = garagens[editIndex];
+    var ok = await sendJson(basePath + '/api/garagens/' + encodeURIComponent(current._id), 'PUT', { foto: '' });
+    if(ok){
+      try{ garagens[editIndex].foto = ''; }catch(_){ }
+      if(gFoto){ gFoto.value=''; }
+      if(gFotoPrev){ gFotoPrev.src=''; gFotoPrev.classList.add('d-none'); }
+      if(gFotoRemover){ gFotoRemover.classList.add('d-none'); }
+      await listarVagas();
+    }
+  });
   gFotoPrev && gFotoPrev.addEventListener('click', function(){ var modalEl = document.getElementById('modalFotoGar'); if(!modalEl || !gFotoPrev.src) return; var img = document.getElementById('fotoGarZoom'); if(img){ img.style.transform='scale(1)'; img.src = gFotoPrev.src; } try{ var m = bootstrap.Modal.getOrCreateInstance(modalEl); m.show(); }catch(_){ } });
 
   // Modal detalhes

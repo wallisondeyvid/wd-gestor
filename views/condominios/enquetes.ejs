@@ -236,7 +236,11 @@
             { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
           ]},
           { label: 'Administração', children: [
-            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
             { label: 'Atas', path: '/administracao/atas' },
             { label: 'Financeiro', path: '/administracao/financeiro' },
             { label: 'Configurações', path: '/administracao/configuracoes' }

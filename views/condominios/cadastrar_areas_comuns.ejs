@@ -9,9 +9,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="<%= _bp %>/css/condominios-modern.css?v=1">
   <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <link rel="stylesheet" href="<%= _bp %>/css/pages/cadastrar_areas_comuns.css?v=1">
   <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
 </head>
-<body class="wdg-layout" data-base-path="<%= _bp %>">
+<body class="wdg-layout page-cadastrar-areas-comuns" data-base-path="<%= _bp %>">
   <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
   <%- include('../shared/partials/navbar-shared', {
         moduleBasePath: _bp,
@@ -39,7 +40,11 @@
             { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
           ]},
           { label: 'Administração', children: [
-            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
             { label: 'Atas', path: '/administracao/atas' },
             { label: 'Financeiro', path: '/administracao/financeiro' },
             { label: 'Configurações', path: '/administracao/configuracoes' }
@@ -54,22 +59,49 @@
       }) %>
   <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
 
+  <% 
+    const _isScopeAll = Boolean(user && (user.isMaster || user.role === 'master' || user.role === 'admin'));
+    const _userUnitId = (user && user.unidade_id) ? (user.unidade_id._id || user.unidade_id || user.unidadeId || '') : (user && user.unidadeId ? user.unidadeId : '');
+    const _userUnitObj = (_userUnitId && Array.isArray(unidadesOptions)) ? (unidadesOptions||[]).find(u => String(u._id) === String(_userUnitId)) : null;
+  %>
+
   <div class="container py-3">
     <div class="content mb-3 wdg-card wdg-card-hover">
       <h4 class="mb-3 text-center page-main-title">Estruturar Condomínio · Áreas Comuns</h4>
-      <form id="formAreaComum" class="row g-2" novalidate>
-        <!-- Linha 1: Condomínio, Nome da área e Área construída na mesma linha -->
-        <div class="col-md-4">
-          <label class="form-label">Condomínio</label>
-          <select class="form-select" id="acUnidade">
-            <% if ((unidadesOptions||[]).length === 0) { %>
-              <option value="">Selecione...</option>
-            <% } %>
-            <% (unidadesOptions||[]).forEach(u => { %>
-              <option value="<%= u._id %>"><%= u.codigo ? (u.codigo + ' - ' + u.nome) : u.nome %></option>
-            <% }) %>
-          </select>
+
+      <div class="wdg-panel-subbar wdg-condo-subbar" aria-label="Filtro de condomínio">
+        <div class="wdg-condo-field">
+          <div class="wdg-condo-label">Condomínio</div>
+          <div class="wdg-condo-controlrow">
+            <img id="acUnidadeLogo" data-condo-inline-logo="1" src="/images/unidade.png" alt="" aria-hidden="true" class="wdg-condo-inline-logo">
+            <select class="form-select wdg-condo-select" id="acUnidade" <%= !_isScopeAll ? 'disabled' : '' %> aria-label="Condomínio">
+              <% if (_isScopeAll) { %>
+                <option value="">Selecione...</option>
+                <% (unidadesOptions||[]).forEach(u => { %>
+                  <option value="<%= u._id %>"><%= u.codigo ? (u.codigo + ' - ' + u.nome) : u.nome %></option>
+                <% }) %>
+              <% } else { %>
+                <% if (_userUnitObj) { %>
+                  <option value="<%= _userUnitObj._id %>" selected><%= _userUnitObj.codigo ? (_userUnitObj.codigo + ' - ' + _userUnitObj.nome) : _userUnitObj.nome %></option>
+                <% } else if (_userUnitId) { %>
+                  <option value="<%= _userUnitId %>" selected><%= _userUnitId %></option>
+                <% } else { %>
+                  <option value="" selected>Condomínio não definido</option>
+                <% } %>
+              <% } %>
+            </select>
+          </div>
+          <% if (!_isScopeAll) { %>
+            <div class="text-muted small mt-1">Condomínio fixado pelo seu perfil.</div>
+          <% } %>
         </div>
+      </div>
+    </div>
+
+    <div class="content mb-3 wdg-card wdg-card-hover">
+      <h5 class="mb-3 text-center wdg-section-title">Cadastrar Área Comum</h5>
+      <form id="formAreaComum" class="row g-2" novalidate>
+        <!-- Linha 1: Nome da área e Área construída na mesma linha -->
         <div class="col-md-4">
           <label class="form-label">Nome da área</label>
           <input type="text" class="form-control" id="acNome" required>
@@ -83,14 +115,19 @@
           <input type="text" class="form-control" id="acCapacidade" inputmode="numeric" placeholder="0 pessoa" autocomplete="off">
         </div>
         <div class="w-100"></div>
+
+        <!-- Foto (centralizada) -->
         <div class="col-md-8 mx-auto">
           <label class="form-label">Foto</label>
-          <div class="d-flex gap-2">
-            <input type="file" class="form-control" id="acFoto" accept="image/*">
+          <input type="file" class="form-control" id="acFoto" accept="image/*">
+          <div class="ac-foto-actions d-flex gap-2 justify-content-end mt-2">
             <button type="button" class="btn btn-outline-secondary" id="acFotoLimpar">Limpar</button>
+            <button type="button" class="btn btn-outline-danger d-none" id="acFotoRemover" title="Remover a foto salva">Remover foto</button>
           </div>
           <div class="mt-2 text-center"><img id="acFotoPrev" class="preview-thumb d-none" alt="Pré-visualização"></div>
         </div>
+
+        <div class="w-100"></div>
         <div class="col-12">
           <label class="form-label">Observações</label>
           <textarea id="acObs" class="form-control" rows="4" maxlength="4000" placeholder="Até 4000 caracteres..."></textarea>
@@ -98,7 +135,7 @@
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
           <button type="button" class="btn btn-outline-secondary" id="acLimpar">Limpar</button>
-          <button type="button" class="btn btn-outline-warning d-none" id="acCancelarEdicao">Cancelar edição</button>
+          <button type="button" class="btn btn-outline-danger d-none" id="acCancelarEdicao" title="Cancelar edição">Cancelar</button>
           <button type="button" class="btn btn-primary" id="acSalvar">Cadastrar</button>
         </div>
       </form>
@@ -123,23 +160,59 @@
           <span class="ms-1">itens</span>
         </div>
       </div>
-      <div class="table-responsive table-vert-max" id="acTableWrap">
-        <table class="table table-sm align-middle text-center" id="acTable">
-          <thead>
-            <tr>
-              <th data-sort="unidade">Condomínio</th>
-              <th data-sort="nome">Nome da área</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="acLista"></tbody>
-        </table>
+      <div class="ch-table-wrap" id="acTableWrap" aria-label="Áreas comuns cadastradas">
+        <div class="table-responsive table-vert-max ch-table-scroll">
+          <table class="table table-hover table-sm align-middle text-center mb-0 ch-table" id="acTable">
+            <thead>
+              <tr>
+                <th data-sort="unidade">Condomínio</th>
+                <th data-sort="nome">Nome da área</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="acLista"></tbody>
+          </table>
+        </div>
+        <div id="acPaginas" class="wdg-pager ch-table-pager" aria-label="Paginação da tabela"></div>
       </div>
-      <div id="acPaginas" class="wdg-pager mt-2"></div>
     </div>
   </div>
 
   <%- include('modal_detalhes_areaconst_cad') %>
+
+  <!-- Modal: confirmação de exclusão (Área Comum) -->
+  <div class="modal fade" id="acDeleteConfirmModal" tabindex="-1" aria-labelledby="acDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="acDeleteConfirmTitle">
+            <i class="bi bi-trash3 text-danger" aria-hidden="true"></i>
+            Confirmar exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex gap-3">
+            <div class="text-danger" style="font-size:2rem; line-height:1">
+              <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            </div>
+            <div>
+              <div class="mb-1">Tem certeza que deseja excluir esta área comum?</div>
+              <div class="mb-1">
+                <span class="text-muted">Área:</span>
+                <strong><span id="acDeleteConfirmName">—</span></strong>
+              </div>
+              <div class="text-muted small">Esta exclusão é definitiva e não pode ser desfeita.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="acDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="modal fade" id="modalFotoAreaComum" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">

@@ -8157,7 +8157,11 @@
           const who = escapeHtml(m?.from?.display || m?.from?.mailboxName || m?.from?.mailboxId || '');
           const when = fmtWhen(m?.createdAt);
           const proto = escapeHtml(m?.protocolo || '');
-          const html = sanitizeRichHtml(m?.bodyHtml || '');
+          const bodyHtmlRaw = String(m?.bodyHtml || '').trim();
+          const bodyTxtRaw = String(m?.bodyText || '').trim();
+          const html = bodyHtmlRaw
+            ? sanitizeRichHtml(bodyHtmlRaw)
+            : (bodyTxtRaw ? escapeHtml(bodyTxtRaw).replace(/\r?\n/g, '<br>') : '');
           const anexosHtml = renderAttachmentsBlock(m, m?.anexos);
           const paraBadges = renderToBadges(m?.to, m);
           const copyBadges = renderToBadges(m?.cc, m);

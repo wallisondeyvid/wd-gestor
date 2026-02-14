@@ -146,7 +146,7 @@
                     <button type="button" class="wdg-icon-btn" data-action="editar" data-id="<%= modulo.id %>" title="Editar" aria-label="Editar">
                       <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'" />
                     </button>
-                    <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="<%= modulo.id %>" title="Excluir" aria-label="Excluir">
+                    <button type="button" class="wdg-icon-btn" data-action="excluir" data-id="<%= modulo.id %>" data-nome="<%= encodeURIComponent(modulo.nome || '') %>" title="Excluir" aria-label="Excluir">
                       <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'" />
                     </button>
                   </div>
@@ -163,6 +163,29 @@
     <div id="mPaginas" class="wdg-pager mt-2"></div>
   </div>
 
+  <!-- Modal: confirmar exclusão de módulo -->
+  <div class="modal fade" id="smDeleteConfirmModal" tabindex="-1" aria-labelledby="smDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="smDeleteConfirmTitle">
+            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+            Confirmar exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Deseja excluir o módulo <strong id="smDeleteConfirmName">este módulo</strong>?</p>
+          <p class="mb-0 text-danger"><strong>Esta exclusão é definitiva</strong> e não pode ser desfeita.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="smDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- JS da página -->
   <script>
     // ===== Edição inline de módulos (sem modal) =====
@@ -171,6 +194,51 @@
     const btnSubmitModulo   = document.getElementById('btnSubmitModulo');
     const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
     const btnResetModulo    = document.getElementById('btnResetModulo');
+
+    // ===== Confirmação de exclusão (modal) =====
+    const smDeleteModalEl = document.getElementById('smDeleteConfirmModal');
+    const smDeleteNameEl  = document.getElementById('smDeleteConfirmName');
+    const smDeleteYesBtn  = document.getElementById('smDeleteConfirmYes');
+
+    function askDeleteModuloConfirm(nome){
+      const nomeTxt = (nome && String(nome).trim()) ? String(nome).trim() : 'este módulo';
+      const fallbackMsg = `Deseja excluir o módulo "${nomeTxt}"?\n\nEsta exclusão é definitiva e não pode ser desfeita.`;
+
+      if (!smDeleteModalEl || !smDeleteYesBtn || !(window.bootstrap && window.bootstrap.Modal)) {
+        return Promise.resolve(window.confirm(fallbackMsg));
+      }
+
+      if (smDeleteNameEl) smDeleteNameEl.textContent = nomeTxt;
+      const modal = window.bootstrap.Modal.getOrCreateInstance(smDeleteModalEl);
+
+      return new Promise((resolve) => {
+        let resolved = false;
+
+        const cleanup = () => {
+          smDeleteModalEl.removeEventListener('hidden.bs.modal', onHidden);
+          smDeleteYesBtn.removeEventListener('click', onConfirm);
+        };
+
+        const onHidden = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          resolve(false);
+        };
+
+        const onConfirm = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          resolve(true);
+          modal.hide();
+        };
+
+        smDeleteModalEl.addEventListener('hidden.bs.modal', onHidden);
+        smDeleteYesBtn.addEventListener('click', onConfirm);
+        modal.show();
+      });
+    }
 
     function entrarModoEdicaoModulo(){
       btnSubmitModulo.textContent = 'Salvar';
@@ -246,7 +314,7 @@
     }
 
     // Delegação de eventos para botões de ação ícone
-    document.addEventListener('click', function(e){
+    document.addEventListener('click', async function(e){
       const btn = e.target.closest('button[data-action]');
       if(!btn) return;
       const action = btn.getAttribute('data-action');
@@ -272,7 +340,10 @@
           });
       }
       if(action === 'excluir'){
-        if (!confirm('Confirma exclusão?')) return;
+        const nomeEncoded = btn.getAttribute('data-nome') || '';
+        const nome = nomeEncoded ? decodeURIComponent(String(nomeEncoded)) : '';
+        const ok = await askDeleteModuloConfirm(nome);
+        if (!ok) return;
         fetch('<%= _basePath %>/api/modulos/' + encodeURIComponent(id), {
           method: 'DELETE',
           headers: { 'Content-Type':'application/json' },
@@ -285,6 +356,11 @@
 
     // Hover desabilitado — manter apenas clique padrão do Bootstrap
   </script>
+
+  <style>
+    /* Mantém cabeçalho do modal branco (evita heranças do tema) */
+    #smDeleteConfirmModal .modal-header{ background:#fff !important; color:#212529 !important; border-bottom:1px solid rgba(0,0,0,.08) !important; }
+  </style>
 
   <!-- Script de perfil modular -->
   <script>window.__perfilBasePath='<%= _basePath %>';</script>

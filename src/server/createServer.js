@@ -14,6 +14,8 @@ import { connectMongo } from '../core/db/connect.js';
 import { centralErrorHandler, notFoundHandler } from '../core/middlewares/errorHandler.js';
 import { envelopeNormalizer } from '../core/middlewares/envelopeNormalizer.js';
 import { rememberRestore } from '../core/middlewares/rememberRestore.js';
+import { isWidgetEnabledCached } from '../core/utils/widgetSettings.js';
+import verificacaoRoutes from '../../routes/verificacao.routes.js';
 import * as gestorModule from '../modules/gestor/index.js';
 import * as clinicaModule from '../modules/clinica/index.js';
 import * as condominiosModule from '../modules/condominios/index.js';
@@ -32,12 +34,32 @@ export async function createServer(options = {}) {
   const ROOT = path.join(__dirname, '../../');
   const config = options.config || loadConfig();
   const skipDb = options.skipDb === true;
+  const skipDbForced = options.skipDb === true;
   // skipAuth só deve ser habilitado explicitamente via options OU por variáveis de ambiente em cenários de teste/CI.
   // Isso evita que ambientes de desenvolvimento/produção fiquem acidentalmente com um usuário fake (test@example.com).
   const envWantsSkip = (String(process.env.SKIP_AUTH||'').trim()==='1') || (String(process.env.BYPASS_AUTH||'').trim()==='1');
   const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase());
   const skipAuth = options.skipAuth === true || (envWantsSkip && isTestEnv);
   const app = express();
+
+  // Widgets: injeta flag de visibilidade (por módulo) para os templates EJS.
+  // Default: habilitado; se DB indisponível, mantém habilitado (não quebra páginas).
+  try {
+    const KNOWN_WIDGET_MODULES = new Set(['gestor', 'clinica', 'condominios', 'escalas', 'portal-morador', 'portal_morador']);
+    app.use(async (req, res, next) => {
+      try {
+        const url = String(req.originalUrl || req.url || '');
+        // Evita custo em assets
+        if (/\.(?:css|js|png|jpg|jpeg|gif|svg|ico|webp|woff2?)(?:\?|$)/i.test(url)) return next();
+        const pathname = url.split('?')[0] || '';
+        const seg = pathname.replace(/^\/+/, '').split('/')[0] || '';
+        if (!seg || !KNOWN_WIDGET_MODULES.has(seg)) return next();
+        const moduleId = seg === 'portal_morador' ? 'portal-morador' : seg;
+        res.locals.feedbackWidgetEnabled = await isWidgetEnabledCached('feedback', moduleId, true);
+      } catch { /* noop */ }
+      next();
+    });
+  } catch { /* noop */ }
 
   // Headers de diagnóstico de deploy (úteis para confirmar que o runtime está com este código/commit).
   try {
@@ -69,6 +91,8 @@ export async function createServer(options = {}) {
   // e causar loop de redirecionamento no login.
   app.set('trust proxy', 1);
   app.locals.skipDb = !!skipDb;
+  // Quando o caller passa skipDb=true explicitamente (ex.: testes), não tentamos reconectar no middleware de retry.
+  app.locals.__skipDbForced = !!skipDbForced;
 
   // Flag efetiva: pode mudar para true caso a conexão com Mongo falhe durante o boot.
   // (Importante para evitar inicializações que assumem DB disponível, como MongoStore.)
@@ -80,6 +104,8 @@ export async function createServer(options = {}) {
     app.locals.__dbRetry = { lastAttemptAt: 0, promise: null };
     app.use(async (req, _res, next) => {
       try {
+        // Modo skipDb forçado (ex.: testes): não tentar reconectar automaticamente.
+        if (app.locals.__skipDbForced) return next();
         // Se o app está em skipDb ou se a conexão caiu após o boot (readyState != 1), tenta reconectar.
         const mongoReady = mongoose.connection.readyState === 1;
         if (!getEffectiveSkipDb() && mongoReady) return next();
@@ -423,6 +449,19 @@ export async function createServer(options = {}) {
       const seg = String(req.params.seg||''); if (!seg || seg === 'gestor' || seg === 'escalas') return next();
       return express.static(path.join(ROOT, 'public/js'))(req, res, next);
     });
+
+    // Uploads compartilhados (ex.: fotos) para módulos genéricos (inclui /condominios/uploads/*)
+    app.use('/:seg/uploads', (req, res, next) => {
+      const seg = String(req.params.seg||''); if (!seg || seg === 'gestor' || seg === 'escalas') return next();
+      // Prioriza uploads persistidos em /uploads; fallback para /public/uploads (ambientes legados)
+      const st1 = express.static(path.join(ROOT, 'uploads'));
+      const st2 = express.static(path.join(ROOT, 'public/uploads'));
+      return st1(req, res, () => st2(req, res, next));
+    });
+
+    // Uploads na raiz (casos onde a URL vem como /uploads/*)
+    app.use('/uploads', express.static(path.join(ROOT, 'uploads')));
+    app.use('/uploads', express.static(path.join(ROOT, 'public/uploads')));
     // Script de página de login compartilhado para módulos genéricos
     app.get('/:seg/js/pages/login.js', (req, res, next) => {
       try {
@@ -1049,6 +1088,9 @@ export async function createServer(options = {}) {
   // Middleware de normalização de envelopes (precisa vir antes de rotas)
   app.use(envelopeNormalizer);
 
+  // Rotas globais públicas (infraestrutura central)
+  app.use(verificacaoRoutes);
+
   // Removido: redirecionamento de /escalas/api/usuario -> /gestor/api/usuario
   // Mantemos as rotas do módulo Escalas responsáveis por /escalas/api/usuario
   // para garantir que os dados venham da sessão correta (escalasUser)
@@ -1065,6 +1107,15 @@ export async function createServer(options = {}) {
     } catch {}
     app.use(meta.basePath || '/', built);
     console.log(`[server] módulo montado: ${meta.name} em ${meta.basePath || '/'}`);
+
+    // Alias: algumas instalações/links usam /condominio (singular).
+    // Monta o mesmo sub-app para evitar 404 e manter compatibilidade.
+    try {
+      if (meta?.name === 'condominios' && (meta.basePath || '/condominios') === '/condominios') {
+        app.use('/condominio', built);
+        console.log('[server] módulo montado (alias): condominios em /condominio');
+      }
+    } catch { /* noop */ }
   }
 
   // Compat: permitir chamadas sem o prefixo /escalas para rotas do módulo Escalas
@@ -1134,7 +1185,12 @@ export async function createServer(options = {}) {
           } catch {
             data = null;
           }
-          return { ok, status, data };
+          return { ok, status, data, aborted: false };
+        } catch (err) {
+          const msg = String(err?.name || err?.message || err);
+          const lower = msg.toLowerCase();
+          const aborted = (err && (err.name === 'AbortError')) || lower.includes('abort') || lower.includes('timeout');
+          return { ok: false, status: aborted ? 504 : 0, data: null, aborted };
         } finally {
           clearTimeout(t);
         }
@@ -1174,6 +1230,14 @@ export async function createServer(options = {}) {
           res.set('Cache-Control', 'public, max-age=86400');
         } catch {}
         return res.json(mapped);
+      }
+
+      if (via.aborted && br.aborted) {
+        try {
+          res.set('X-CEP-Proxy', '1');
+          res.set('X-CEP-Provider', 'timeout');
+        } catch {}
+        return res.status(504).json({ error: 'Timeout ao consultar CEP' });
       }
 
       return res.status(502).json({ error: 'Falha ao consultar CEP' });

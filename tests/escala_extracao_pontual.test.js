@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import request from 'supertest';
@@ -10,6 +10,11 @@ process.env.MONGO_MEMORY = '1';
 
 import { createServer } from '../src/server/createServer.js';
 import Escala from '../src/core/models/escala.js';
+import { disconnectMongo } from '../src/core/db/connect.js';
+
+after(async () => {
+  await disconnectMongo({ stopMemoryServer: true });
+});
 
 function oid(v){ return new mongoose.Types.ObjectId(v); }
 

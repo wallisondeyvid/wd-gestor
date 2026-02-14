@@ -1,0 +1,702 @@
+<div class="modal fade" id="modalEditarSlotOrganograma" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <style>
+          /* Superpremium UI (escopo total no modal) */
+          #modalEditarSlotOrganograma{
+            --wdg-bg: #0b1220;
+            --wdg-surface: #ffffff;
+            --wdg-surface-2: #f8fafc;
+            --wdg-surface-3: #f1f5f9;
+            --wdg-border: rgba(15,23,42,.10);
+            --wdg-border-strong: rgba(15,23,42,.16);
+            --wdg-text: #0f172a;
+            --wdg-muted: #64748b;
+            --wdg-accent: #2563eb;
+            --wdg-accent-2: #1d4ed8;
+            --wdg-ring: rgba(37,99,235,.45);
+            --wdg-shadow-lg: 0 28px 80px rgba(2,6,23,.32);
+            --wdg-shadow-md: 0 18px 40px rgba(2,6,23,.14);
+            --wdg-shadow-sm: 0 10px 22px rgba(2,6,23,.10);
+            --wdg-radius-lg: 20px;
+            --wdg-radius-md: 16px;
+            --wdg-radius-sm: 12px;
+          }
+
+          #modalEditarSlotOrganograma .modal-content{
+            border: 1px solid rgba(255,255,255,.10);
+            border-radius: 22px;
+            box-shadow: var(--wdg-shadow-lg);
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.94));
+          }
+
+          #modalEditarSlotOrganograma .modal-header{
+            border-bottom: 1px solid rgba(15,23,42,.08);
+            background: linear-gradient(90deg, rgba(37,99,235,.08), rgba(255,255,255,0));
+          }
+          #modalEditarSlotOrganograma .modal-title{
+            font-weight: 950;
+            letter-spacing: -.02em;
+            color: var(--wdg-text);
+          }
+          #modalEditarSlotOrganograma .modal-body{
+            background:
+              radial-gradient(1200px 300px at 18% 0%, rgba(37,99,235,.10), transparent 55%),
+              radial-gradient(900px 260px at 90% 10%, rgba(168,85,247,.08), transparent 52%),
+              var(--wdg-surface-2);
+          }
+          #modalEditarSlotOrganograma .modal-footer{
+            border-top: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.88);
+            backdrop-filter: blur(10px);
+          }
+          #modalEditarSlotOrganograma .modal-footer .btn{
+            border-radius: 14px;
+            font-weight: 500;
+            padding: 10px 14px;
+          }
+
+          #modalEditarSlotOrganograma label.form-label{
+            font-weight: 800;
+            color: rgba(15,23,42,.78);
+            margin-bottom: 6px;
+          }
+          #modalEditarSlotOrganograma .form-select,
+          #modalEditarSlotOrganograma .form-control{
+            border-radius: 14px;
+            border-color: var(--wdg-border);
+            box-shadow: 0 1px 0 rgba(2,6,23,.03);
+          }
+          #modalEditarSlotOrganograma .form-select:focus,
+          #modalEditarSlotOrganograma .form-control:focus{
+            border-color: rgba(37,99,235,.38);
+            box-shadow: 0 0 0 .25rem rgba(37,99,235,.12);
+          }
+
+          /* Preview premium */
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost{
+            min-height: 360px;
+            border: 1px solid var(--wdg-border);
+            border-radius: var(--wdg-radius-lg);
+            background:
+              linear-gradient(0deg, rgba(255,255,255,.80), rgba(255,255,255,.80)),
+              repeating-linear-gradient(45deg, rgba(148,163,184,.35) 0 10px, rgba(226,232,240,.60) 10px 20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            overflow: hidden;
+            box-shadow: var(--wdg-shadow-md);
+            position: relative;
+          }
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost:before{
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: var(--wdg-radius-lg);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(2,6,23,.05);
+            pointer-events: none;
+          }
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgcard{
+            margin: 0;
+            transform: none !important;
+            box-shadow: 0 22px 60px rgba(2,6,23,.16);
+          }
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgname,
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgrole,
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgemail,
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgpill{
+            cursor: pointer;
+            border-radius: 10px;
+            padding: 3px 8px;
+            transition: background .15s ease, box-shadow .15s ease;
+          }
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgname:hover,
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgrole:hover,
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgemail:hover,
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgpill:hover{
+            background: rgba(37,99,235,.08);
+            box-shadow: inset 0 0 0 1px rgba(37,99,235,.20);
+          }
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-slot-text-active{
+            outline: 3px solid var(--wdg-ring);
+            outline-offset: 2px;
+            background: rgba(37,99,235,.10);
+            box-shadow: inset 0 0 0 1px rgba(37,99,235,.25);
+          }
+
+          /* Quando o alvo é o badge, não esconda a cor customizada ao selecionar */
+          #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgpill.wdg-slot-text-active{
+            background: var(--wdg-slot-pill-bg, rgba(37,99,235,.10));
+            box-shadow: inset 0 0 0 1px var(--wdg-slot-pill-border-color, rgba(37,99,235,.25));
+          }
+
+          #modalEditarSlotOrganograma .wdg-slot-editor-subtitle{
+            color: var(--wdg-muted);
+            font-size: .86rem;
+            font-weight: 800;
+            margin-top: -4px;
+            margin-bottom: 10px;
+          }
+
+          /* Accordion premium */
+          #modalEditarSlotOrganograma .wdg-acc .accordion-item{
+            border: 1px solid var(--wdg-border);
+            border-radius: var(--wdg-radius-lg);
+            overflow: hidden;
+            background: rgba(255,255,255,.72);
+            box-shadow: var(--wdg-shadow-sm);
+          }
+          #modalEditarSlotOrganograma .wdg-acc .accordion-item + .accordion-item{ margin-top: 12px; }
+          #modalEditarSlotOrganograma .wdg-acc .accordion-button{
+            font-weight: 500;
+            color: var(--wdg-text);
+            background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
+            padding: 14px 16px;
+          }
+          #modalEditarSlotOrganograma .wdg-acc .accordion-button:not(.collapsed){
+            background: linear-gradient(180deg, rgba(37,99,235,.09), rgba(255,255,255,.78));
+          }
+          #modalEditarSlotOrganograma .wdg-acc .accordion-button:focus{
+            box-shadow: 0 0 0 .25rem rgba(37,99,235,.14);
+          }
+          #modalEditarSlotOrganograma .wdg-acc .accordion-body{ background: transparent; padding: 16px; }
+
+          /* Layout */
+          #modalEditarSlotOrganograma .wdg-editor-row{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+          }
+          @media (max-width: 992px){
+            #modalEditarSlotOrganograma .wdg-editor-row{ grid-template-columns: 1fr; }
+          }
+
+          /* Shape selector (ícones PNG, sem botões) */
+          #modalEditarSlotOrganograma .wdg-shape-grid{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+          }
+          @media (min-width: 992px){
+            #modalEditarSlotOrganograma .wdg-shape-grid{
+              grid-template-columns: repeat(7, 1fr);
+              gap: 10px;
+            }
+          }
+          #modalEditarSlotOrganograma .wdg-shape-tile{
+            width: 100%;
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            border: 1px solid rgba(15,23,42,.16);
+            background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,250,252,.86));
+            box-shadow: 0 10px 24px rgba(2,6,23,.10);
+            transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+            cursor: pointer;
+            user-select: none;
+          }
+          #modalEditarSlotOrganograma .wdg-shape-tile:hover{
+            transform: translateY(-1px);
+            box-shadow: 0 16px 34px rgba(2,6,23,.14);
+            background: linear-gradient(180deg, rgba(37,99,235,.08), rgba(255,255,255,.88));
+          }
+          #modalEditarSlotOrganograma .wdg-shape-icon{
+            width: 26px;
+            height: 26px;
+            object-fit: contain;
+            filter: drop-shadow(0 6px 14px rgba(2,6,23,.12));
+          }
+          #modalEditarSlotOrganograma .btn-check:checked + .wdg-shape-tile{
+            background: linear-gradient(180deg, rgba(37,99,235,.22), rgba(255,255,255,.88));
+            border-color: rgba(37,99,235,.70);
+            box-shadow: 0 22px 52px rgba(37,99,235,.22);
+          }
+          #modalEditarSlotOrganograma .btn-check:focus-visible + .wdg-shape-tile{
+            outline: 3px solid var(--wdg-ring);
+            outline-offset: 2px;
+          }
+
+          /* Typo controls */
+          #modalEditarSlotOrganograma .wdg-typo-controls{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+          }
+          #modalEditarSlotOrganograma .wdg-mini-btn{
+            border-radius: 14px;
+            font-weight: 500;
+            padding: 10px 12px;
+          }
+          #modalEditarSlotOrganograma .wdg-mini-btn.active{
+            background: rgba(37,99,235,.12);
+            border-color: rgba(37,99,235,.42);
+          }
+
+          /* Paleta */
+          #modalEditarSlotOrganograma .wdg-palette{
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 7px;
+          }
+          #modalEditarSlotOrganograma .wdg-swatch{
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,.14);
+            box-shadow: 0 8px 18px rgba(2,6,23,.10);
+            cursor: pointer;
+            padding: 0;
+            background: transparent;
+            transition: transform .12s ease, box-shadow .12s ease;
+          }
+          #modalEditarSlotOrganograma .wdg-swatch:hover{
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(2,6,23,.14);
+          }
+          #modalEditarSlotOrganograma .wdg-swatch.is-active{
+            outline: 3px solid var(--wdg-ring);
+            outline-offset: 2px;
+          }
+          #modalEditarSlotOrganograma .wdg-swatch:focus-visible{
+            outline: 3px solid var(--wdg-ring);
+            outline-offset: 2px;
+          }
+
+          /* Texto: habilita/desabilita */
+          #modalEditarSlotOrganograma[data-has-text="0"] .wdg-text-controls{ display:none; }
+          #modalEditarSlotOrganograma[data-has-text="0"] .wdg-text-empty{ display:block; }
+          #modalEditarSlotOrganograma[data-has-text="1"] .wdg-text-controls{ display:block; }
+          #modalEditarSlotOrganograma[data-has-text="1"] .wdg-text-empty{ display:none; }
+
+          /* Badge: controles extras só quando o alvo ativo é o status */
+          #modalEditarSlotOrganograma .wdg-pill-controls{ display:none; }
+          #modalEditarSlotOrganograma[data-active-text="pill"] .wdg-pill-controls{ display:block; }
+
+          /* Slider superpremium */
+          #modalEditarSlotOrganograma .wdg-range{ height: 26px; }
+          #modalEditarSlotOrganograma .wdg-range::-webkit-slider-runnable-track{
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(37,99,235,.30), rgba(15,23,42,.12));
+            border: 1px solid rgba(15,23,42,.14);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+          }
+          #modalEditarSlotOrganograma .wdg-range::-webkit-slider-thumb{
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            border: 1px solid rgba(15,23,42,.20);
+            background: radial-gradient(circle at 30% 30%, #ffffff, rgba(37,99,235,.18));
+            box-shadow: 0 10px 22px rgba(2,6,23,.18);
+            margin-top: -6px;
+          }
+          #modalEditarSlotOrganograma .wdg-range::-moz-range-track{
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(37,99,235,.30), rgba(15,23,42,.12));
+            border: 1px solid rgba(15,23,42,.14);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+          }
+          #modalEditarSlotOrganograma .wdg-range::-moz-range-thumb{
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            border: 1px solid rgba(15,23,42,.20);
+            background: radial-gradient(circle at 30% 30%, #ffffff, rgba(37,99,235,.18));
+            box-shadow: 0 10px 22px rgba(2,6,23,.18);
+          }
+
+          /* Dropdown de cor (Office-like, alinhado) */
+          #modalEditarSlotOrganograma .wdg-colorbtn{
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            width: 100%;
+            border-radius: 16px;
+            font-weight: 500;
+            padding: 12px 46px 12px 14px;
+            background: rgba(255,255,255,.88);
+            border-color: rgba(37,99,235,.34) !important;
+            box-shadow: 0 10px 22px rgba(2,6,23,.10);
+          }
+          #modalEditarSlotOrganograma .wdg-colorbtn:hover{
+            background: rgba(37,99,235,.06);
+            border-color: rgba(37,99,235,.46) !important;
+          }
+          #modalEditarSlotOrganograma .wdg-colorbtn:focus{
+            box-shadow: 0 0 0 .25rem rgba(37,99,235,.14);
+          }
+          #modalEditarSlotOrganograma .wdg-colorbtn > span:first-child{
+            color: var(--wdg-text);
+          }
+          #modalEditarSlotOrganograma .wdg-color-indicator{
+            position: absolute;
+            right: 34px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border-radius: 7px;
+            border: 1px solid rgba(15,23,42,.18);
+            background: repeating-linear-gradient(45deg, rgba(148,163,184,.45) 0 6px, rgba(226,232,240,.75) 6px 12px);
+            box-shadow: 0 10px 20px rgba(2,6,23,.10);
+          }
+          #modalEditarSlotOrganograma .wdg-color-menu{
+            padding: 12px;
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,.14);
+            box-shadow: 0 28px 70px rgba(2,6,23,.22);
+            width: min(380px, 92vw);
+            background: rgba(255,255,255,.96);
+            backdrop-filter: blur(10px);
+          }
+          #modalEditarSlotOrganograma .wdg-color-menu .wdg-color-menu-head{
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+          }
+          #modalEditarSlotOrganograma .wdg-color-menu .wdg-color-menu-head .title{
+            font-weight: 950;
+            color: var(--wdg-text);
+            letter-spacing: -.01em;
+          }
+          #modalEditarSlotOrganograma .wdg-color-menu .wdg-color-menu-head .btn{
+            border-radius: 14px;
+            font-weight: 500;
+          }
+
+          @media (prefers-reduced-motion: reduce){
+            #modalEditarSlotOrganograma .wdg-shape-btn,
+            #modalEditarSlotOrganograma .wdg-swatch,
+            #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgname,
+            #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgrole,
+            #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgemail,
+            #modalEditarSlotOrganograma .wdg-slot-editor-previewhost .wdg-orgpill{ transition: none !important; }
+          }
+        </style>
+
+        <div class="row g-3">
+          <div class="col-12 col-lg-5">
+            <div class="small text-muted mb-1">Pré-visualização</div>
+            <div id="slotEditorPreviewHost" class="wdg-slot-editor-previewhost" aria-label="Pré-visualização do slot"></div>
+          </div>
+
+          <div class="col-12 col-lg-7">
+            <div class="accordion wdg-acc" id="slotEditorAccordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="accSlotHeading">
+                  <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accSlot" aria-expanded="true" aria-controls="accSlot">Slot</button>
+                </h2>
+                <div id="accSlot" class="accordion-collapse collapse show" aria-labelledby="accSlotHeading" data-bs-parent="#slotEditorAccordion">
+                  <div class="accordion-body">
+
+
+                    <div class="wdg-shape-grid" role="group" aria-label="Forma do slot">
+                      <input type="radio" class="btn-check" name="slotShape" id="slotShapeRect" value="rect" autocomplete="off" checked>
+                      <label class="wdg-shape-tile" for="slotShapeRect" title="Quadrado" aria-label="Quadrado">
+                        <img class="wdg-shape-icon" src="/images/forma-quadrado.png" alt="" aria-hidden="true" />
+                      </label>
+
+                      <input type="radio" class="btn-check" name="slotShape" id="slotShapeCircle" value="circle" autocomplete="off">
+                      <label class="wdg-shape-tile" for="slotShapeCircle" title="Círculo" aria-label="Círculo">
+                        <img class="wdg-shape-icon" src="/images/forma-circulo.png" alt="" aria-hidden="true" />
+                      </label>
+
+                      <input type="radio" class="btn-check" name="slotShape" id="slotShapeTriangle" value="triangle" autocomplete="off">
+                      <label class="wdg-shape-tile" for="slotShapeTriangle" title="Triângulo" aria-label="Triângulo">
+                        <img class="wdg-shape-icon" src="/images/forma-triangulo.png" alt="" aria-hidden="true" />
+                      </label>
+
+                      <input type="radio" class="btn-check" name="slotShape" id="slotShapePentagon" value="pentagon" autocomplete="off">
+                      <label class="wdg-shape-tile" for="slotShapePentagon" title="Pentágono" aria-label="Pentágono">
+                        <img class="wdg-shape-icon" src="/images/forma-pentagono.png" alt="" aria-hidden="true" />
+                      </label>
+
+                      <input type="radio" class="btn-check" name="slotShape" id="slotShapeHexagon" value="hexagon" autocomplete="off">
+                      <label class="wdg-shape-tile" for="slotShapeHexagon" title="Hexágono" aria-label="Hexágono">
+                        <img class="wdg-shape-icon" src="/images/forma-hexagono.png" alt="" aria-hidden="true" />
+                      </label>
+
+                      <input type="radio" class="btn-check" name="slotShape" id="slotShapeOctagon" value="octagon" autocomplete="off">
+                      <label class="wdg-shape-tile" for="slotShapeOctagon" title="Octógono" aria-label="Octógono">
+                        <img class="wdg-shape-icon" src="/images/forma-octogono.png" alt="" aria-hidden="true" />
+                      </label>
+
+                      <input type="radio" class="btn-check" name="slotShape" id="slotShapeStar" value="star" autocomplete="off">
+                      <label class="wdg-shape-tile" for="slotShapeStar" title="Estrela" aria-label="Estrela">
+                        <img class="wdg-shape-icon" src="/images/forma-estrela.png" alt="" aria-hidden="true" />
+                      </label>
+                    </div>
+
+                    <div class="mt-3">
+                      <div class="wdg-editor-row">
+                        <div>
+                          <label class="form-label" for="slotCardWidth">Tamanho da forma</label>
+                          <select class="form-select" id="slotCardWidth" aria-label="Tamanho da forma">
+                            <option value="">Padrão</option>
+                            <option value="240">Pequena (240px)</option>
+                            <option value="280">Normal (280px)</option>
+                            <option value="320">Grande (320px)</option>
+                            <option value="360">Extra (360px)</option>
+                            <option value="420">Máxima (420px)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <div class="d-flex align-items-center justify-content-between">
+                            <label class="form-label" for="slotContentScale">Escala do conteúdo</label>
+                            <div class="small text-muted" id="slotContentScaleLabel">100%</div>
+                          </div>
+                          <input type="range" class="form-range wdg-range" id="slotContentScale" min="60" max="110" step="1" value="100" aria-label="Escala do conteúdo" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-3">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold">Transparência da cor</div>
+                        <div class="small text-muted" id="slotBgAlphaLabel">100%</div>
+                      </div>
+                      <input type="range" class="form-range wdg-range" id="slotBgAlpha" min="0" max="100" step="1" value="100" aria-label="Transparência da cor da forma" />
+                    </div>
+
+                    <div class="mt-3">
+                      <div class="dropdown">
+                        <button type="button" class="btn btn-outline-primary wdg-colorbtn dropdown-toggle" id="slotBgColorBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                          <span>Cor da forma</span>
+                          <span class="wdg-color-indicator" id="slotBgColorIndicator" aria-hidden="true"></span>
+                        </button>
+                        <div class="dropdown-menu wdg-color-menu" aria-labelledby="slotBgColorBtn">
+                          <div class="wdg-color-menu-head">
+                            <div class="title">Cor da forma</div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSlotBgClear">Sem cor</button>
+                          </div>
+                          <div id="slotBgPalette" class="wdg-palette" aria-label="Lista de cores da forma"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="accBorderHeading">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accBorder" aria-expanded="false" aria-controls="accBorder">Borda</button>
+                </h2>
+                <div id="accBorder" class="accordion-collapse collapse" aria-labelledby="accBorderHeading" data-bs-parent="#slotEditorAccordion">
+                  <div class="accordion-body">
+
+                    <div class="wdg-editor-row">
+                      <div>
+                        <label class="form-label" for="slotBorderWidth">Espessura</label>
+                        <select class="form-select" id="slotBorderWidth" aria-label="Espessura da borda">
+                          <option value="">Padrão</option>
+                          <option value="0">Sem borda</option>
+                          <option value="1">1 px</option>
+                          <option value="2">2 px</option>
+                          <option value="3">3 px</option>
+                          <option value="4">4 px</option>
+                          <option value="5">5 px</option>
+                          <option value="6">6 px</option>
+                          <option value="8">8 px</option>
+                          <option value="10">10 px</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="form-label" for="slotBorderStyle">Estilo</label>
+                        <select class="form-select" id="slotBorderStyle" aria-label="Estilo da borda">
+                          <option value="">Padrão</option>
+                          <option value="solid">Sólida</option>
+                          <option value="dashed">Tracejada</option>
+                          <option value="dotted">Pontilhada</option>
+                          <option value="double">Dupla</option>
+                        </select>
+                        <div id="slotBorderStyleHint" class="small text-muted mt-1 d-none"></div>
+                      </div>
+                    </div>
+
+                    <div class="mt-3">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold">Transparência da borda</div>
+                        <div class="small text-muted" id="slotBorderAlphaLabel">100%</div>
+                      </div>
+                      <input type="range" class="form-range wdg-range" id="slotBorderAlpha" min="0" max="100" step="1" value="100" aria-label="Transparência da borda" />
+                    </div>
+
+                    <div class="mt-3">
+                      <div class="dropdown">
+                        <button type="button" class="btn btn-outline-primary wdg-colorbtn dropdown-toggle" id="slotBorderColorBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                          <span>Cor da borda</span>
+                          <span class="wdg-color-indicator" id="slotBorderColorIndicator" aria-hidden="true"></span>
+                        </button>
+                        <div class="dropdown-menu wdg-color-menu" aria-labelledby="slotBorderColorBtn">
+                          <div class="wdg-color-menu-head">
+                            <div class="title">Cor da borda</div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSlotBorderClear">Limpar</button>
+                          </div>
+                          <div id="slotBorderPalette" class="wdg-palette" aria-label="Lista de cores da borda"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="accTextHeading">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accText" aria-expanded="false" aria-controls="accText">Texto</button>
+                </h2>
+                <div id="accText" class="accordion-collapse collapse" aria-labelledby="accTextHeading" data-bs-parent="#slotEditorAccordion">
+                  <div class="accordion-body">
+
+
+                    <div class="wdg-text-empty text-muted small">Selecione um texto no preview para habilitar as opções.</div>
+
+                    <div class="wdg-text-controls">
+                      <div class="wdg-editor-row">
+                        <div>
+                          <label class="form-label" for="slotFontFamily">Fonte</label>
+                          <select class="form-select" id="slotFontFamily" aria-label="Fonte do texto">
+                            <option value="">Padrão</option>
+                            <option value="Calibri, Arial, sans-serif">Calibri</option>
+                            <option value="Arial, Helvetica, sans-serif">Arial</option>
+                            <option value="'Arial Black', Arial, sans-serif">Arial Black</option>
+                            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                            <option value="Cambria, Georgia, 'Times New Roman', serif">Cambria</option>
+                            <option value="Georgia, 'Times New Roman', Times, serif">Georgia</option>
+                            <option value="Tahoma, Verdana, sans-serif">Tahoma</option>
+                            <option value="'Trebuchet MS', Tahoma, sans-serif">Trebuchet MS</option>
+                            <option value="Verdana, Tahoma, sans-serif">Verdana</option>
+                            <option value="'Courier New', Courier, monospace">Courier New</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="form-label" for="slotFontSizeSelect">Tamanho</label>
+                          <select class="form-select" id="slotFontSizeSelect" aria-label="Tamanho da fonte">
+                            <option value="">Padrão</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="14">14</option>
+                            <option value="16">16</option>
+                            <option value="18">18</option>
+                            <option value="20">20</option>
+                            <option value="22">22</option>
+                            <option value="24">24</option>
+                            <option value="26">26</option>
+                            <option value="28">28</option>
+                            <option value="32">32</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="mt-2 wdg-typo-controls" aria-label="Controles de tipografia">
+                        <div class="btn-group" role="group" aria-label="Estilo do texto">
+                          <button type="button" class="btn btn-outline-dark wdg-mini-btn" id="btnSlotBold" title="Negrito">B</button>
+                          <button type="button" class="btn btn-outline-dark wdg-mini-btn" id="btnSlotItalic" title="Itálico"><i>I</i></button>
+                          <button type="button" class="btn btn-outline-dark wdg-mini-btn" id="btnSlotUnderline" title="Sublinhado"><u>U</u></button>
+                          <button type="button" class="btn btn-outline-dark wdg-mini-btn" id="btnSlotStrike" title="Tachado"><span style="text-decoration:line-through;">S</span></button>
+                        </div>
+
+                        <div class="btn-group" role="group" aria-label="Alinhamento">
+                          <button type="button" class="btn btn-outline-dark wdg-mini-btn" data-slot-align="left" title="Alinhar à esquerda">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M4 6h16"/><path d="M4 10h10"/><path d="M4 14h16"/><path d="M4 18h10"/>
+                            </svg>
+                          </button>
+                          <button type="button" class="btn btn-outline-dark wdg-mini-btn" data-slot-align="center" title="Centralizar">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M6 6h12"/><path d="M4 10h16"/><path d="M6 14h12"/><path d="M4 18h16"/>
+                            </svg>
+                          </button>
+                          <button type="button" class="btn btn-outline-dark wdg-mini-btn" data-slot-align="right" title="Alinhar à direita">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M4 6h16"/><path d="M10 10h10"/><path d="M4 14h16"/><path d="M10 18h10"/>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="mt-3">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                          <div class="fw-bold">Cor da fonte</div>
+                        </div>
+                        <div class="dropdown">
+                          <button type="button" class="btn btn-outline-primary wdg-colorbtn dropdown-toggle" id="slotTextColorBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span>Cor da fonte</span>
+                            <span class="wdg-color-indicator" id="slotTextColorIndicator" aria-hidden="true"></span>
+                          </button>
+                          <div class="dropdown-menu wdg-color-menu" aria-labelledby="slotTextColorBtn">
+                            <div class="wdg-color-menu-head">
+                              <div class="title">Cor da fonte</div>
+                              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSlotTextClear">Limpar</button>
+                            </div>
+                            <div id="slotTextPalette" class="wdg-palette" aria-label="Lista de cores da fonte"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="mt-3 wdg-pill-controls">
+                        <div class="fw-bold mb-1">Cor do badge</div>
+                        <div class="wdg-editor-row">
+                          <div>
+                            <div class="dropdown">
+                              <button type="button" class="btn btn-outline-primary wdg-colorbtn dropdown-toggle" id="slotPillBgColorBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span>Fundo</span>
+                                <span class="wdg-color-indicator" id="slotPillBgColorIndicator" aria-hidden="true"></span>
+                              </button>
+                              <div class="dropdown-menu wdg-color-menu" aria-labelledby="slotPillBgColorBtn">
+                                <div class="wdg-color-menu-head">
+                                  <div class="title">Fundo do badge</div>
+                                  <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSlotPillBgClear">Limpar</button>
+                                </div>
+                                <div id="slotPillBgPalette" class="wdg-palette" aria-label="Lista de cores do fundo do badge"></div>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <div class="dropdown">
+                              <button type="button" class="btn btn-outline-primary wdg-colorbtn dropdown-toggle" id="slotPillBorderColorBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span>Borda</span>
+                                <span class="wdg-color-indicator" id="slotPillBorderColorIndicator" aria-hidden="true"></span>
+                              </button>
+                              <div class="dropdown-menu wdg-color-menu" aria-labelledby="slotPillBorderColorBtn">
+                                <div class="wdg-color-menu-head">
+                                  <div class="title">Borda do badge</div>
+                                  <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSlotPillBorderClear">Limpar</button>
+                                </div>
+                                <div id="slotPillBorderPalette" class="wdg-palette" aria-label="Lista de cores da borda do badge"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="btnSlotEditorApply">Aplicar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnSlotEditorApplyAll">Aplicar em todos</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

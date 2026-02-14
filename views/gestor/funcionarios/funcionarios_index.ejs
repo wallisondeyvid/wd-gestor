@@ -45,6 +45,11 @@
     /* Modal z-index */
     .modal-backdrop { z-index:1050 !important; }
     .modal { z-index:1065 !important; }
+
+    /* Modal de exclusão: manter cabeçalho branco (padronizado) */
+    #fDeleteConfirmModal .modal-header{ background:#ffffff !important; color:#212529 !important; }
+    #fDeleteConfirmModal .modal-title{ color:inherit !important; }
+    #fDeleteConfirmModal .btn-close{ filter:none !important; }
   </style>
 </head>
   <body class="wdg-layout" data-unidade-default="<%= user && user.unidade_id ? user.unidade_id.toString() : '' %>" data-base-path="<%= _basePath %>">
@@ -230,6 +235,38 @@
     <div id="fPaginas" class="wdg-pager mt-2"></div>
   </div>
 
+  <!-- Modal: confirmação de exclusão (Funcionários) -->
+  <div class="modal fade" id="fDeleteConfirmModal" tabindex="-1" aria-labelledby="fDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="fDeleteConfirmTitle">
+            <i class="bi bi-trash3 text-danger" aria-hidden="true"></i>
+            Confirmar exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex gap-3">
+            <div class="text-danger" style="font-size:2rem; line-height:1">
+              <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            </div>
+            <div>
+              <div class="mb-1">
+                Deseja excluir o funcionário <strong><span id="fDeleteConfirmName">—</span></strong>?
+              </div>
+              <div class="text-muted small">Esta exclusão é definitiva e não pode ser desfeita.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="fDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- JS base -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
@@ -276,7 +313,7 @@
     (function(){
       if(typeof window.fillFormWithFuncionario === 'function') return; // já disponível
       var s = document.createElement('script');
-      s.src = '<%= _basePath %>/js/funcionarios/funcionarios_index.js?v=full';
+      s.src = '<%= _basePath %>/js/funcionarios/funcionarios_index.js?v=' + Date.now();
       s.defer = true;
       document.head.appendChild(s);
       console.log('[FUNCIONARIOS] Script completo de edição carregado (fallback)');

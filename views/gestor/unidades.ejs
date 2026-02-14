@@ -657,6 +657,40 @@
   <%- include('../partials/modais/modal_selecionar_modulos') %>
   <%- include('../partials/modais/modal_diretor') %>
 
+  <!-- Modal: confirmação de exclusão (Unidades) -->
+  <div class="modal fade" id="uDeleteConfirmModal" tabindex="-1" aria-labelledby="uDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="uDeleteConfirmTitle">
+            <i class="bi bi-trash3 text-danger" aria-hidden="true"></i>
+            Confirmar exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex gap-3">
+            <div class="text-danger" style="font-size:2rem; line-height:1">
+              <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            </div>
+            <div>
+              <div class="mb-1">
+                Deseja excluir a unidade <strong><span id="uDeleteConfirmName">—</span></strong>?
+              </div>
+              <div class="text-muted small">
+                Esta exclusão é definitiva e não pode ser desfeita.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="uDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- DADOS (JSON) -->
   <script type="application/json" id="unidadesJson"><%- JSON.stringify(Array.isArray(unidadesFiltradas) ? unidadesFiltradas : []) %></script>
   <script type="application/json" id="modulosJson"><%- JSON.stringify(Array.isArray(modulos) ? modulos : (modulos || [])) %></script>

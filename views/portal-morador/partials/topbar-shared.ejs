@@ -1,0 +1,166 @@
+﻿<%
+  const _nameModeId = (typeof nameModeId === 'string' && nameModeId.trim().length)
+    ? nameModeId.trim()
+    : 'pmNameMode';
+
+  // Portal do Morador: tenta usar logo do condomínio do usuário (sessão), com fallback seguro.
+  const __pmLogoFallback = '/images/logoWDGestorprata.png';
+
+  const __pmUser = (typeof user !== 'undefined' ? user : null);
+  const __pmLogoRaw = (
+    (__pmUser && typeof __pmUser.unidade_logo === 'string' && __pmUser.unidade_logo.trim()) ||
+    (__pmUser && typeof __pmUser.unidadeLogo === 'string' && __pmUser.unidadeLogo.trim()) ||
+    (__pmUser && typeof __pmUser.unidade_logo_url === 'string' && __pmUser.unidade_logo_url.trim()) ||
+    (__pmUser && typeof __pmUser.unidadeLogoUrl === 'string' && __pmUser.unidadeLogoUrl.trim()) ||
+    (__pmUser && __pmUser.unidade && typeof __pmUser.unidade.logo === 'string' && __pmUser.unidade.logo.trim()) ||
+    (__pmUser && __pmUser.unidade && typeof __pmUser.unidade.logo_url === 'string' && __pmUser.unidade.logo_url.trim()) ||
+    (__pmUser && __pmUser.unidade && typeof __pmUser.unidade.logoUrl === 'string' && __pmUser.unidade.logoUrl.trim()) ||
+    ''
+  );
+
+  const __pmNormalizeLogoUrl = (value) => {
+    const v = (typeof value === 'string' ? value.trim() : '');
+    if (!v) return '';
+    if (/^https?:\/\//i.test(v) || v.startsWith('/')) return v;
+    return '/' + v.replace(/^\.*\/?/, '').replace(/^\/+/, '');
+  };
+
+  const __pmLogo = __pmNormalizeLogoUrl(__pmLogoRaw) || __pmLogoFallback;
+
+  // Portal do Morador: não depende de BP/_bp vindo do controller.
+  const __pmBasePath = '/portal-morador';
+%>
+
+<header class="pm-topbar">
+  <div class="pm-topbar-row pm-topbar-row--top">
+    <div class="pm-topbar-left">
+      <button class="pm-nav-toggle" id="pmNavToggle" aria-label="Alternar menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="pm-topbar-logo">
+      <img src="<%= __pmLogo %>" alt="Logo do condomínio">
+    </div>
+    <div class="pm-topbar-spacer" aria-hidden="true"></div>
+  </div>
+
+  <div class="pm-topbar-row pm-topbar-row--bottom">
+    <div class="pm-topbar-actions pm-topbar-actions--main">
+      <div class="pm-bell-wrap">
+        <button class="pm-icon-btn pm-bell-btn" type="button" title="NotificaÃ§Ãµes" data-bell-btn>
+          <img src="/images/notificacao.png" alt="NotificaÃ§Ãµes">
+          <span class="pm-bell-badge" aria-hidden="true" data-bell-badge>0</span>
+        </button>
+        <div class="pm-bell-menu" hidden data-bell-menu>
+          <div class="pm-bell-head">
+            <strong>NotificaÃ§Ãµes</strong>
+            <button class="pm-bell-close" type="button" aria-label="Fechar" data-bell-close>Ã—</button>
+          </div>
+          <div class="pm-bell-list" data-bell-list role="list"></div>
+        </div>
+      </div>
+      <a class="pm-icon-btn pm-msg-btn" href="/portal-morador/mensagens/entrada" title="Caixa de Mensagem" aria-label="Caixa de Mensagem" data-msg-link>
+        <img src="/images/mensagem.png" alt="Mensagens">
+        <span class="pm-bell-badge" aria-hidden="true" data-msg-badge style="display:none;"></span>
+      </a>
+      <div class="pm-user-menu-wrap" data-user-name="<%= typeof userName === 'string' ? userName : '' %>">
+        <button class="pm-user-chip pm-user-chip--btn" type="button" title="Perfil do usuÃ¡rio" aria-haspopup="menu" aria-expanded="false">
+          <% if (avatarUrl) { %>
+            <img src="<%= avatarUrl %>" alt="Avatar">
+          <% } else { %>
+            <span class="pm-user-initials"><%= (typeof userName === 'string' && userName) ? userName.slice(0,2).toUpperCase() : 'ME' %></span>
+          <% } %>
+        </button>
+        <div class="pm-user-menu" role="menu" aria-label="Menu do usuÃ¡rio">
+          <h4>Conta</h4>
+
+          <div class="pm-user-menu-row">
+            <label for="<%= _nameModeId %>">Exibir nome</label>
+          </div>
+          <select id="<%= _nameModeId %>" data-action="name-mode">
+            <option value="initials">Somente iniciais</option>
+            <option value="first">Primeiro nome</option>
+            <option value="full">Nome completo</option>
+          </select>
+
+          <div class="pm-user-menu-actions" style="margin-top:10px">
+            <button class="pm-user-menu-btn" type="button" data-action="avatar-pick">Alterar foto</button>
+            <button class="pm-user-menu-btn" type="button" data-action="toggle-password">Alterar senha</button>
+          </div>
+
+          <input type="file" accept="image/*" hidden data-action="avatar-file">
+
+          <form hidden data-action="password-form" style="margin-top:10px">
+            <input type="text" name="username" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+            <input type="password" name="currentPassword" placeholder="Senha atual" autocomplete="current-password" style="margin-bottom:8px">
+            <input type="password" name="newPassword" placeholder="Nova senha" autocomplete="new-password" style="margin-bottom:8px">
+            <input type="password" name="confirmPassword" placeholder="Confirmar nova senha" autocomplete="new-password" style="margin-bottom:10px">
+            <button class="pm-user-menu-btn" type="submit">Salvar</button>
+          </form>
+
+          <div class="pm-user-menu-status" aria-live="polite"></div>
+        </div>
+      </div>
+      <a class="pm-logout-btn pm-logout-btn--icon" href="/portal-morador/logout" title="Sair">
+        <img src="/images/sair.png" alt="Sair">
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  (function () {
+    try {
+      var logoUrl = <%- JSON.stringify(__pmLogo || '') %>;
+      if (!logoUrl) return;
+
+      function guessType(url) {
+        try {
+          var u = String(url || '').toLowerCase();
+          if (u.includes('.svg')) return 'image/svg+xml';
+          if (u.includes('.ico')) return 'image/x-icon';
+          if (u.includes('.jpg') || u.includes('.jpeg')) return 'image/jpeg';
+          if (u.includes('.webp')) return 'image/webp';
+        } catch {}
+        return 'image/png';
+      }
+
+      function ensureFavicon(href) {
+        var head = document.head || document.getElementsByTagName('head')[0];
+        if (!head) return;
+
+        var links = head.querySelectorAll('link[rel~="icon"]');
+        var type = guessType(href);
+
+        if (links && links.length) {
+          for (var i = 0; i < links.length; i++) {
+            links[i].setAttribute('href', href);
+            links[i].setAttribute('type', type);
+          }
+          return;
+        }
+
+        var link = document.createElement('link');
+        link.setAttribute('rel', 'icon');
+        link.setAttribute('href', href);
+        link.setAttribute('type', type);
+        head.appendChild(link);
+      }
+
+      ensureFavicon(logoUrl);
+    } catch (e) {
+      // noop
+    }
+  })();
+</script>
+
+<%
+  const __fbEnabled = (typeof feedbackWidgetEnabled === 'boolean') ? feedbackWidgetEnabled : true;
+%>
+<% if (__fbEnabled) { %>
+  <%- include('../../shared/partials/feedback-widget', {
+    moduleBasePath: __pmBasePath,
+    user: (typeof user !== 'undefined' ? user : null),
+    assetVersion: (typeof assetVersion !== 'undefined' ? assetVersion : null)
+  }) %>
+<% } %>

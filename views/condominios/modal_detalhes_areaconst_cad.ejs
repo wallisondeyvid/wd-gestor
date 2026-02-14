@@ -8,23 +8,39 @@
       <div class="modal-body">
         <div class="row g-3">
           <div class="col-md-6">
-            <div class="mb-2"><strong>Condomínio:</strong> <span id="detACUnidade"></span></div>
-            <div class="mb-2"><strong>Nome da área:</strong> <span id="detACNome"></span></div>
-            <div class="mb-2"><strong>Área construída:</strong> <span id="detACArea"></span></div>
-            <div class="mb-2"><strong>Capacidade:</strong> <span id="detACCapacidade"></span></div>
-            <div class="mb-2"><strong>Observações:</strong><br><small class="text-muted">(Até 4000 caracteres)</small>
-              <div class="border rounded p-2 mt-1" style="min-height:80px; white-space:pre-wrap;" id="detACObs"></div>
+            <div class="border rounded p-3 h-100">
+              <h6 class="text-primary mb-3">Informações</h6>
+              <dl class="row mb-0">
+                <dt class="col-sm-5">Condomínio</dt>
+                <dd class="col-sm-7" id="detACUnidade">-</dd>
+                <dt class="col-sm-5">Nome da área</dt>
+                <dd class="col-sm-7" id="detACNome">-</dd>
+                <dt class="col-sm-5">Área construída</dt>
+                <dd class="col-sm-7" id="detACArea">-</dd>
+                <dt class="col-sm-5">Capacidade</dt>
+                <dd class="col-sm-7" id="detACCapacidade">-</dd>
+              </dl>
             </div>
           </div>
           <div class="col-md-6">
-            <div class="mb-2"><strong>Foto:</strong></div>
-            <img id="detACFoto" class="img-fluid rounded shadow-sm d-none" alt="Foto da área comum">
-            <div id="detACFotoVazio" class="text-muted small">Nenhuma foto anexada.</div>
+            <div class="border rounded p-3 h-100">
+              <h6 class="text-primary mb-3">Foto</h6>
+              <img id="detACFoto" class="img-fluid rounded d-none" alt="Foto da área comum">
+              <div id="detACFotoVazio" class="text-muted">Nenhuma foto anexada.</div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="border rounded p-3">
+              <h6 class="text-primary mb-2">Observações</h6>
+              <div class="text-muted small mb-2">(Até 4000 caracteres)</div>
+              <div id="detACObs" class="mb-0" style="white-space: pre-wrap; min-height: 80px"></div>
+            </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
       </div>
     </div>
   </div>

@@ -9,13 +9,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="<%= _bp %>/css/condominios-modern.css?v=1">
   <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <link rel="stylesheet" href="<%= _bp %>/css/pages/cadastrar_proprietario.css?v=1">
   <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
-  <style>
-    /* Oculta ícone do calendário ao lado do campo de data de aquisição */
-    #mDataAquisicao + .btn-date-icon { display: none !important; }
-  </style>
 </head>
-<body class="wdg-layout" data-base-path="<%= _bp %>">
+<body class="wdg-layout page-cadastrar-proprietario page-cadastrar-materiais" data-base-path="<%= _bp %>">
   <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
   <%- include('../shared/partials/navbar-shared', {
         moduleBasePath: _bp,
@@ -43,7 +40,11 @@
             { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
           ]},
           { label: 'Administração', children: [
-            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
             { label: 'Atas', path: '/administracao/atas' },
             { label: 'Financeiro', path: '/administracao/financeiro' },
             { label: 'Configurações', path: '/administracao/configuracoes' }
@@ -61,41 +62,58 @@
   <div class="container py-3">
     <div class="content mb-3 wdg-card wdg-card-hover">
       <h4 class="mb-3 text-center page-main-title">Estruturar Condomínio · Natureza do Material</h4>
+
+      <div class="wdg-condo-subbar" aria-label="Selecionar condomínio">
+        <div class="wdg-condo-field" style="max-width:none">
+          <div class="wdg-condo-label">Condomínio</div>
+          <div class="wdg-condo-controlrow">
+            <img id="unidadeTopLogo" data-condo-inline-logo="1" src="/images/unidade.png" alt="" aria-hidden="true" class="wdg-condo-inline-logo">
+            <select class="form-select wdg-condo-select" id="unidadeTop" aria-label="Condomínio"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-none" aria-hidden="true">
+        <select id="nUnidade" tabindex="-1"></select>
+        <select id="mUnidade" tabindex="-1"></select>
+      </div>
+
       <div class="row g-3 side-forms">
         <div class="col-12 form-col-wrapper">
           <form id="formNat" class="independent-box wdg-card wdg-card-hover" novalidate>
             <div class="box-toggle-header d-flex align-items-center gap-2">
-              <button type="button" class="btn btn-light border toggle-collapse collapsed" data-bs-toggle="collapse" data-bs-target="#formNatBody" aria-expanded="false" title="Recolher / Expandir">+</button>
+              <button type="button" class="toggle-collapse collapsed" data-bs-toggle="collapse" data-bs-target="#formNatBody" aria-expanded="false" aria-label="Recolher / Expandir" title="Recolher / Expandir">
+                <img src="/images/zoommais.png" alt="" aria-hidden="true">
+              </button>
               <h6 class="mb-0">Cadastrar Natureza do Material</h6>
             </div>
             <div id="formNatBody" class="collapse">
-              <div class="row g-2 mt-2">
-                <div class="col-md-4">
-                  <label class="form-label">Condomínio</label>
-                  <select class="form-select" id="nUnidade"></select>
-                </div>
-                <div class="col-md-4">
+              <div class="row g-2 mt-0">
+                <div class="col-md-6">
                   <label class="form-label">Tipo de Material</label>
                   <select class="form-select" id="nTipo">
                     <option value="Fixo">Fixo</option>
                     <option value="Móvel">Móvel</option>
                   </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                   <label class="form-label">Nome da Natureza do Material</label>
                   <input type="text" class="form-control" id="nNome" placeholder="Ex.: Cadeira" required>
                 </div>
                 <div class="w-100"></div>
                 <div class="col-12 d-flex gap-2 justify-content-end">
-                  <button type="button" class="btn btn-outline-danger d-none" id="nCancelar" title="Cancelar edição">Cancelar edição</button>
                   <button type="button" class="btn btn-outline-secondary" id="nLimpar">Limpar</button>
+                  <button type="button" class="btn btn-outline-danger d-none" id="nCancelar" title="Cancelar edição">Cancelar</button>
                   <button type="button" class="btn btn-primary" id="nSalvar">Cadastrar</button>
                 </div>
-                <div class="table-responsive table-vert-max mt-3">
-                  <table class="table table-sm align-middle text-center">
-                    <thead><tr><th>Condomínio</th><th>Tipo Material</th><th>Nome</th><th>Ações</th></tr></thead>
-                    <tbody id="nLista"></tbody>
-                  </table>
+
+                <div class="ch-table-wrap mt-3" id="natTableWrap" aria-label="Naturezas cadastradas">
+                  <div class="table-responsive table-vert-max ch-table-scroll">
+                    <table class="table table-hover table-sm align-middle text-center mb-0 ch-table">
+                      <thead><tr><th>Condomínio</th><th>Tipo Material</th><th>Nome</th><th>Ações</th></tr></thead>
+                      <tbody id="nLista"></tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -107,11 +125,7 @@
     <div class="content mb-3 wdg-card wdg-card-hover">
       <h5 class="mb-3 text-center wdg-section-title">Cadastrar Material</h5>
       <form id="formMat" class="row g-2" novalidate>
-        <div class="col-md-4">
-          <label class="form-label">Condomínio</label>
-          <select class="form-select" id="mUnidade"></select>
-        </div>
-        <div class="col-md-4 text-center">
+        <div class="col-md-6 text-center">
           <label class="form-label d-block mb-1">Tipo de material</label>
           <div class="d-flex gap-4 justify-content-center align-items-center" id="mTipoWrap">
             <div class="form-check">
@@ -124,7 +138,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label class="form-label">Nome do Material</label>
           <select class="form-select" id="mNome" required>
             <option value="">Selecione...</option>
@@ -194,33 +208,37 @@
           <h6 class="mb-2">Vincular à área comum</h6>
           <div class="row g-3 align-items-end">
             <div class="col-md-4">
-              <label class="form-label">Condomínio</label>
-              <input type="text" class="form-control" id="vUnidade" disabled>
+              <label class="form-label">Condomínio selecionado</label>
+              <div class="form-control-plaintext" id="vUnidadeResumo">Selecione um condomínio</div>
             </div>
             <div class="col-md-4">
               <label class="form-label">Área comum</label>
               <select class="form-select" id="vArea"><option value="">Selecione...</option></select>
             </div>
-            <div class="col-md-4 d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-outline-primary" id="btnInserirVinc">Inserir</button>
-              <button type="button" class="btn btn-outline-secondary" id="btnLimparVinc">Limpar</button>
+            <div class="col-md-4 d-flex justify-content-end gap-2 vinc-toolbar align-items-end">
+              <button type="button" class="btn btn-outline-primary vinc-btn" id="btnInserirVinc">Inserir</button>
+              <button type="button" class="btn btn-outline-secondary vinc-btn" id="btnLimparVinc">Limpar</button>
             </div>
           </div>
-          <div class="table-responsive mt-2">
-            <table class="table table-sm align-middle text-center">
-              <thead><tr><th>Condomínio</th><th>Área comum</th><th>Ações</th></tr></thead>
-              <tbody id="vTabela"></tbody>
-            </table>
+
+          <div class="ch-table-wrap mt-2" id="vincAreaTableWrap" aria-label="Vinculações com área comum">
+            <div class="table-responsive table-vert-max ch-table-scroll">
+              <table class="table table-hover table-sm align-middle text-center mb-0 ch-table">
+                <thead><tr><th>Condomínio</th><th>Área comum</th><th>Ações</th></tr></thead>
+                <tbody id="vTabela"></tbody>
+              </table>
+            </div>
           </div>
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
           <button type="button" class="btn btn-outline-secondary" id="mLimpar">Limpar</button>
+          <button type="button" class="btn btn-outline-danger d-none" id="mCancelar" title="Cancelar edição">Cancelar</button>
           <button type="button" class="btn btn-primary" id="mSalvar">Cadastrar</button>
         </div>
       </form>
     </div>
 
-    <div class="content wdg-card wdg-card-hover">
+    <div class="content wdg-card wdg-card-hover wdg-list-wide">
       <h5 class="mb-1 text-center wdg-section-title">Materiais cadastrados</h5>
       <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
         <div class="d-flex align-items-center gap-2">
@@ -238,29 +256,25 @@
           </select>
           <span class="ms-1">itens</span>
         </div>
-        <div class="ms-auto mt-2 mt-md-0" style="min-width: 240px;">
-          <div class="input-group input-group-sm">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" id="matSearch" class="form-control" placeholder="Buscar por nome, patrimônio, marca...">
-          </div>
+      </div>
+      <div class="ch-table-wrap" id="matTableWrap" aria-label="Materiais cadastrados">
+        <div class="table-responsive table-vert-max ch-table-scroll">
+          <table class="table table-hover table-sm align-middle text-center mb-0 ch-table" id="matTable">
+            <thead>
+              <tr>
+                <th data-sort="tipo">Tipo Material</th>
+                <th data-sort="nome">Nome</th>
+                <th data-sort="serie">Nº de Patrimônio</th>
+                <th data-sort="data">Data de aquisição</th>
+                <th data-sort="area">Área comum</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="matLista"></tbody>
+          </table>
         </div>
+        <div id="matPaginas" class="wdg-pager ch-table-pager" aria-label="Paginação da tabela"></div>
       </div>
-      <div class="table-responsive table-vert-max" id="matTableWrap">
-        <table class="table table-sm align-middle text-center" id="matTable">
-          <thead>
-            <tr>
-              <th data-sort="tipo">Tipo Material</th>
-              <th data-sort="nome">Nome</th>
-              <th data-sort="serie">Nº de Patrimônio</th>
-              <th data-sort="data">Data de aquisição</th>
-              <th data-sort="area">Área comum</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="matLista"></tbody>
-        </table>
-      </div>
-      <div id="matPaginas" class="wdg-pager mt-2"></div>
     </div>
   </div>
 
@@ -269,6 +283,41 @@
   <script src="/gestor/js/core/simple-datepicker.js"></script>
   <script src="<%= _bp %>/js/condominios/cadastrar_materiais.js?v=4"></script>
   <%- include('modal_detalhes_materiais_cad') %>
+
+  <!-- Modal: confirmação de exclusão (Material) -->
+  <div class="modal fade" id="matDeleteConfirmModal" tabindex="-1" aria-labelledby="matDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="matDeleteConfirmTitle">
+            <i class="bi bi-trash3 text-danger" aria-hidden="true"></i>
+            Confirmar exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex gap-3">
+            <div class="text-danger" style="font-size:2rem; line-height:1">
+              <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            </div>
+            <div>
+              <div class="mb-1">Tem certeza que deseja excluir este material?</div>
+              <div class="mb-1">
+                <span class="text-muted">Material:</span>
+                <strong><span id="matDeleteConfirmName">—</span></strong>
+              </div>
+              <div class="text-muted small">Esta exclusão é definitiva e não pode ser desfeita.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="matDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="<%= _bp %>/js/condominios/modal_detalhes_materiais_cad.js?v=1"></script>
   <%- include('modal_qrcode_mat_cad') %>
   <!-- Biblioteca QRCode: tenta CDN (sem SRI) e mantém local como fallback -->
@@ -282,10 +331,17 @@
         var targetSel = btn.getAttribute('data-bs-target');
         var body = document.querySelector(targetSel);
         if(!body) return;
-        body.addEventListener('shown.bs.collapse', function(){ btn.textContent = '−'; btn.setAttribute('aria-expanded','true'); });
-        body.addEventListener('hidden.bs.collapse', function(){ btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); });
-        if(!body.classList.contains('show')){ btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); }
-        else { btn.textContent = '−'; btn.setAttribute('aria-expanded','true'); }
+        var img = btn.querySelector('img');
+        var iconPlus = '/images/zoommais.png';
+        var iconMinus = '/images/zoommenos.png';
+        function sync(){
+          var expanded = body.classList.contains('show');
+          btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          if(img) img.src = expanded ? iconMinus : iconPlus;
+        }
+        body.addEventListener('shown.bs.collapse', sync);
+        body.addEventListener('hidden.bs.collapse', sync);
+        sync();
       });
     })();
   </script>

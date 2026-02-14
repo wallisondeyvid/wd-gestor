@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WDGestor — Verificação de Documento</title>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <style>
+    :root{
+      --ink:#0f172a;
+      --muted:#475569;
+      --line:rgba(15,23,42,.14);
+      --paper:#f8fafc;
+      --bg:#ffffff;
+      --cardShadow: 0 24px 70px rgba(2,6,23,.10);
+      --cardShadow2: 0 10px 22px rgba(2,6,23,.08);
+      --ok:#065f46;
+      --warn:#92400e;
+      --bad:#991b1b;
+    }
+    body{ margin:0; background:var(--paper); color:var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif; }
+    .bg{
+      min-height: 100vh;
+      background: #ffffff;
+    }
+    .wrap{ max-width: 1220px; margin: 0 auto; padding: 40px 18px 60px; }
+
+    .card{
+      background:var(--bg);
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 26px;
+      padding: 28px 30px;
+      box-shadow: var(--cardShadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .cardInner{ position: relative; }
+
+    .cardHeader{
+      position: relative;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      min-height: 86px;
+    }
+    .headerLeft{ display:flex; align-items:center; justify-content:flex-start; min-width: 0; }
+    .headerCenter{
+      position:absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      text-align:center;
+      gap: 6px;
+      pointer-events:none;
+      white-space: nowrap;
+    }
+    .headerRight{ display:flex; align-items:center; justify-content:flex-end; min-width: 0; }
+
+    .brandInlineLogo{
+      width: auto;
+      height: 78px;
+      max-width: 100%;
+      object-fit: contain;
+      display:block;
+      filter: none;
+    }
+    .seal{
+      width: 78px;
+      height: 78px;
+      object-fit: contain;
+      opacity: .98;
+    }
+    .pageTitle{ font-weight: 980; letter-spacing: .08em; line-height: 1.08; font-size: calc(1.18rem + 8px); text-transform: uppercase; }
+
+    .split{
+      display:grid;
+      grid-template-columns: minmax(0, 1fr) 480px;
+      gap: 22px;
+      align-items: start;
+      margin-top: 10px;
+    }
+    .preview{
+      border-radius: 18px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 16px 46px rgba(2,6,23,.10);
+      overflow: hidden;
+    }
+    .previewBody{ padding: 10px; }
+    .thumbCanvasWrap{
+      width: 100%;
+      aspect-ratio: 1 / 1.414;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid rgba(15,23,42,.10);
+      overflow: hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .thumbCanvas{
+      width: 100%;
+      height: 100%;
+      display:block;
+      background: #fff;
+    }
+    .thumbFallback{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      aspect-ratio: 1 / 1.414;
+      border-radius: 14px;
+      border: 1px dashed rgba(15,23,42,.18);
+      color: rgba(71,85,105,.92);
+      font-weight: 800;
+    }
+
+    h1{ margin:0; font-size: 1.34rem; letter-spacing:.01em; font-weight: 980; }
+    .sub{ color:rgba(71,85,105,.92); margin:8px 0 14px; line-height:1.6; }
+    .headRow{ display:flex; align-items:flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .headLeft{ min-width: 0; }
+    .headRight{ display:flex; align-items:center; gap: 10px; }
+    .micro{ color: rgba(71,85,105,.88); font-weight: 750; font-size: .92rem; }
+    .badge{ display:inline-block; padding: 7px 11px; border-radius: 999px; font-weight: 900; font-size: .82rem; letter-spacing: .10em; text-transform: uppercase; box-shadow: var(--cardShadow2); }
+    .badge.ok{ background: rgba(6,95,70,.10); color: var(--ok); border: 1px solid rgba(6,95,70,.25); }
+    .badge.warn{ background: rgba(146,64,14,.10); color: var(--warn); border: 1px solid rgba(146,64,14,.25); }
+    .badge.bad{ background: rgba(153,27,27,.10); color: var(--bad); border: 1px solid rgba(153,27,27,.25); }
+
+    .grid{ display:grid; grid-template-columns: 190px 1fr; row-gap: 10px; column-gap: 14px; margin-top: 16px; }
+    .k{ color:rgba(71,85,105,.92); font-weight: 900; letter-spacing:.12em; text-transform: uppercase; font-size: .72rem; padding-top: 3px; }
+    .v{ color:#0b1220; font-weight: 500; word-break: break-word; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .hr{ border:0; border-top:1px dashed rgba(15,23,42,.20); margin: 18px 0; }
+    .how{ color:rgba(71,85,105,.95); line-height:1.7; }
+    .note{ margin: 12px 0 0; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(146,64,14,.22); background: rgba(146,64,14,.08); color: rgba(120,53,15,.92); box-shadow: 0 16px 40px rgba(2,6,23,.08); }
+    a{ color: #1d4ed8; text-decoration: none; font-weight: 700; }
+    a:hover{ text-decoration: underline; }
+
+    .v a{ font-weight: 600; }
+
+    .leftTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 2px;
+      flex-wrap: wrap;
+    }
+    .leftTitle{ display:flex; flex-direction: column; gap: 6px; min-width: 0; align-items: center; text-align: center; }
+    .leftTitle h1{ margin:0; font-size: 1.22rem; letter-spacing:.01em; font-weight: 980; }
+    .leftTitle .sub{ margin:0; }
+
+    .sections{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .section{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 18px;
+      box-shadow: var(--cardShadow2);
+      padding: 14px 14px;
+      min-width: 0;
+    }
+    .section.full{ grid-column: 1 / -1; }
+    .sectionTitle{ font-weight: 950; letter-spacing: .02em; color: rgba(15,23,42,.88); margin: 0 0 10px; }
+    .kv{ display:grid; grid-template-columns: 150px 1fr; row-gap: 10px; column-gap: 12px; }
+    .kv .k{ padding-top: 2px; }
+
+    .fileRow{ display:flex; align-items:center; gap: 10px; min-width: 0; }
+    .fileIcon{ width: 22px; height: 22px; object-fit: contain; flex: 0 0 auto; }
+    .fileName{ color: rgba(15,23,42,.78); font-weight: 700; }
+
+    .footer{
+      margin-top: 14px;
+      text-align: center;
+      color: rgba(71,85,105,.82);
+      font-weight: 700;
+      font-size: .9rem;
+    }
+
+    @media (max-width: 640px){
+      .grid{ grid-template-columns: 1fr; }
+      .k{ padding-top: 0; }
+      .wrap{ padding: 22px 14px 38px; }
+      .card{ padding: 18px 16px; border-radius: 22px; }
+      .cardHeader{ min-height: auto; flex-direction: column; align-items: center; gap: 10px; }
+      .headerCenter{ position: static; transform: none; pointer-events: auto; white-space: normal; }
+      .headerLeft, .headerRight{ justify-content: center; }
+      .brandInlineLogo{ height: 74px; }
+      .seal{ display:none; }
+      .split{ grid-template-columns: 1fr; }
+      .thumbCanvasWrap, .thumbFallback{ aspect-ratio: 1 / 1.414; }
+      .sections{ grid-template-columns: 1fr; }
+      .kv{ grid-template-columns: 1fr; }
+    }
+
+    @media print{
+      body{ background:#fff; }
+      .wrap{ margin:0; padding:0; }
+      .card{ border:0; border-radius:0; padding:0; box-shadow:none; }
+      .footer{ display:none; }
+      @page{ margin: 20mm; }
+    }
+  </style>
+</head>
+<body class="bg">
+  <div class="wrap">
+
+      <div class="card">
+        <div class="cardInner">
+          <% if (!found) { %>
+            <div class="cardHeader">
+              <div class="headerLeft">
+                <img class="brandInlineLogo" src="/images/logoWDGestor.png?v=5" alt="WDGestor" loading="eager" onerror="this.onerror=null;this.src='/images/logoWDGestor.png'">
+              </div>
+              <div class="headerCenter">
+                <div class="pageTitle">Verificação de Documento</div>
+              </div>
+              <div class="headerRight">
+                <img class="seal" src="/images/selo_autentico.png" alt="Selo de autenticidade" onerror="this.style.display='none'" />
+              </div>
+            </div>
+            <p class="sub">Não foi possível localizar um documento válido para este token.</p>
+            <div class="grid">
+              <div class="k">Token</div>
+              <div class="v mono"><%= String(token || '') %></div>
+            </div>
+            <hr class="hr" />
+            <p class="how">Se você recebeu um token, verifique se foi digitado corretamente.</p>
+          <% } else { %>
+            <% const st = String(doc?.status || '').toUpperCase(); %>
+            <% const badgeClass = st === 'VALIDO' ? 'ok' : (st === 'REVOGADO' ? 'bad' : 'warn'); %>
+            <% const badgeLabel = st === 'VALIDO' ? 'Válido' : (st === 'REVOGADO' ? 'Revogado' : (st === 'SUBSTITUIDO' ? 'Substituído' : (st ? st : 'Indefinido'))); %>
+            <div class="cardHeader">
+              <div class="headerLeft">
+                <img class="brandInlineLogo" src="/images/logoWDGestor.png?v=5" alt="WDGestor" loading="eager" onerror="this.onerror=null;this.src='/images/logoWDGestor.png'">
+              </div>
+              <div class="headerCenter">
+                <div class="pageTitle">Verificação de Documento</div>
+              </div>
+              <div class="headerRight">
+                <img class="seal" src="/images/selo_autentico.png" alt="Selo de autenticidade" onerror="this.style.display='none'" />
+              </div>
+            </div>
+
+            <% if (st === 'SUBSTITUIDO' && doc?.meta?.substituidoPorToken) { %>
+              <div class="note">
+                Este documento foi substituído. Consulte a versão mais recente:
+                <a href="/verificar/<%= encodeURIComponent(String(doc.meta.substituidoPorToken)) %>">/verificar/<%= String(doc.meta.substituidoPorToken) %></a>
+                <div style="margin-top:8px;">
+                  <a href="/verificar/<%= encodeURIComponent(String(doc.meta.substituidoPorToken)) %>/pdf?viewer=1" target="_blank" rel="noopener">Abrir versão mais recente (PDF)</a>
+                </div>
+              </div>
+            <% } %>
+
+            <div class="split">
+              <div>
+                <div class="leftTop">
+                  <div class="leftTitle">
+                    <h1><%= String(doc?.titulo || 'Documento') %></h1>
+                    <div class="sub"><span class="micro">Módulo:</span> <strong><%= String(doc?.modulo || '—') %></strong> &nbsp;·&nbsp; <span class="micro">Tipo:</span> <strong><%= String(doc?.tipo || '—') %></strong></div>
+                  </div>
+                </div>
+
+                <div class="sections">
+                  <div class="section full">
+                    <div class="sectionTitle">Validação</div>
+                    <div class="kv">
+                      <div class="k">Status</div>
+                      <div class="v"><span class="badge <%= badgeClass %>"><%= String(badgeLabel) %></span></div>
+
+                      <div class="k">Token</div>
+                      <div class="v mono"><%= String(doc?.token || token || '') %></div>
+
+                      <div class="k">SHA-256 (PDF)</div>
+                      <div class="v mono"><%= String(doc?.hashSha256Pdf || '—') %></div>
+                    </div>
+                  </div>
+
+                  <div class="section full">
+                    <div class="sectionTitle">Emissão</div>
+                    <div class="kv">
+                      <div class="k">Emitido em</div>
+                      <div class="v"><%= doc?.emitidoEm ? new Date(doc.emitidoEm).toLocaleString('pt-BR') : '—' %></div>
+
+                      <div class="k">Emitido por</div>
+                      <div class="v"><%= String(doc?.emitidoPorNomeSnapshot || '—') %></div>
+                    </div>
+                  </div>
+
+                  <div class="section full">
+                    <div class="sectionTitle">Arquivo</div>
+                    <div class="kv">
+                      <div class="k">PDF</div>
+                      <div class="v">
+                        <% if (doc?.arquivo?.url) { %>
+                          <div class="fileRow">
+                            <img class="fileIcon" src="/images/pdf.png" alt="PDF" onerror="this.style.display='none'" />
+                            <a href="/verificar/<%= encodeURIComponent(String(doc?.token || token || '')) %>/pdf?viewer=1" target="_blank" rel="noopener">Abrir PDF assinado</a>
+                            <% if (doc?.arquivo?.filename) { %>
+                              <span class="fileName">— <span class="mono"><%= String(doc.arquivo.filename) %></span></span>
+                            <% } %>
+                          </div>
+                        <% } else { %>
+                          <span class="fileName">Sem arquivo</span>
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="preview" aria-label="Pré-visualização do arquivo">
+                  <div class="previewBody">
+                    <% if (doc?.arquivo?.url) { %>
+                      <div class="thumbCanvasWrap" id="pdfThumbWrap">
+                        <canvas
+                          class="thumbCanvas"
+                          id="pdfThumb"
+                          data-pdf-url="/verificar/<%= encodeURIComponent(String(doc?.token || token || '')) %>/pdf"
+                          aria-label="Miniatura da primeira página do PDF"
+                        ></canvas>
+                      </div>
+                      <div class="thumbFallback" id="pdfThumbFallback">Prévia indisponível</div>
+                    <% } else { %>
+                      <div class="thumbFallback">Sem arquivo</div>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr class="hr" />
+            <div class="how">
+              <div style="font-weight:950; color: rgba(15,23,42,.88); margin-bottom:8px; letter-spacing:.02em;">Como verificar</div>
+              <div>1) Baixe/abra o PDF do documento.</div>
+              <div>2) Calcule o hash SHA-256 do arquivo PDF.</div>
+              <div>3) Compare com o valor exibido acima em “SHA-256 (PDF)”.</div>
+              <div style="margin-top:10px;">Se os hashes coincidirem, o arquivo corresponde exatamente ao documento registrado neste token.</div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="footer">© <%= new Date().getFullYear() %> WDGestor</div>
+  </div>
+
+  <% if (found && doc?.arquivo?.url) { %>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" crossorigin="anonymous"></script>
+    <script>
+      (function () {
+        try {
+          var canvas = document.getElementById('pdfThumb');
+          var wrap = document.getElementById('pdfThumbWrap');
+          var fallback = document.getElementById('pdfThumbFallback');
+          if (!canvas || !window.pdfjsLib) return;
+
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+          var url = canvas.getAttribute('data-pdf-url');
+          if (!url || !wrap) return;
+
+          var started = false;
+          function getBoxSize() {
+            var w = wrap.clientWidth || 0;
+            var h = wrap.clientHeight || 0;
+            return { w: w, h: h };
+          }
+
+          function renderOnce() {
+            if (started) return;
+            var size = getBoxSize();
+            if (size.w < 50 || size.h < 50) return;
+            started = true;
+
+            var cssW = Math.max(240, size.w);
+            var dpr = Math.max(1, window.devicePixelRatio || 1);
+
+            window.pdfjsLib.getDocument({ url: url }).promise
+              .then(function (pdf) { return pdf.getPage(1); })
+              .then(function (page) {
+                var viewport1 = page.getViewport({ scale: 1 });
+                // Renderiza para preencher a largura (proporção A4 do box)
+                var scale = cssW / viewport1.width;
+                scale = Math.max(0.1, scale);
+
+                var viewport = page.getViewport({ scale: scale });
+                canvas.width = Math.floor(viewport.width * dpr);
+                canvas.height = Math.floor(viewport.height * dpr);
+                canvas.style.width = Math.floor(viewport.width) + 'px';
+                canvas.style.height = Math.floor(viewport.height) + 'px';
+
+                var ctx = canvas.getContext('2d', { alpha: false });
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.imageSmoothingEnabled = true;
+
+                return page.render({ canvasContext: ctx, viewport: viewport }).promise;
+              })
+              .then(function () {
+                if (fallback) fallback.style.display = 'none';
+              })
+              .catch(function () {
+                if (fallback) fallback.style.display = 'flex';
+              });
+          }
+
+          // tenta renderizar quando layout estiver pronto
+          renderOnce();
+          requestAnimationFrame(renderOnce);
+          setTimeout(renderOnce, 0);
+        } catch (e) {
+          // fail closed: show fallback
+          var fallback2 = document.getElementById('pdfThumbFallback');
+          if (fallback2) fallback2.style.display = 'flex';
+        }
+      })();
+    </script>
+  <% } %>
+</body>
+</html>

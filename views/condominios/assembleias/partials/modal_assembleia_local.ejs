@@ -1,0 +1,209 @@
+<style>
+  /* Delimitação da lista no padrão Dirigência (faixa azul + scroll interno) */
+  #modalAssembleiaLocal .wdg-areas-tablewrap{
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    --wdg-areas-pad: 14px;
+    --wdg-areas-col2: 170px;
+  }
+  #modalAssembleiaLocal .wdg-areas-tablewrap::before{
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 52px;
+    background:
+      radial-gradient(900px 220px at 18% -10%, rgba(29,78,216,.34), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, #0b2f66 0%, #08254f 100%);
+    border-radius: 14px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  #modalAssembleiaLocal .wdg-areas-header{
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: 1fr var(--wdg-areas-col2);
+    align-items: center;
+    padding: .85rem var(--wdg-areas-pad);
+    background: transparent;
+    border-bottom: 1px solid rgba(255,255,255,.18);
+  }
+  #modalAssembleiaLocal .wdg-areas-header span{
+    font-weight: 850;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-size: .72rem;
+    color: rgba(255,255,255,.92);
+    text-align: center;
+  }
+
+  #modalAssembleiaLocal [data-areas-scroll]{
+    position: relative;
+    z-index: 2;
+    overflow: auto;
+    padding: 12px var(--wdg-areas-pad) 6px;
+    background: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(248,250,252,.92) 100%);
+    border: 1px solid rgba(15,23,42,.08);
+    border-top: 0;
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 18px 55px rgba(15,23,42,.08);
+    scrollbar-gutter: stable;
+  }
+  #modalAssembleiaLocal [data-areas-scroll]::-webkit-scrollbar{ width: 10px; }
+  #modalAssembleiaLocal [data-areas-scroll]::-webkit-scrollbar-track{ background: rgba(2,6,23,.06); }
+  #modalAssembleiaLocal [data-areas-scroll]::-webkit-scrollbar-thumb{
+    background: rgba(29,78,216,.35);
+    border-radius: 999px;
+    border: 2px solid rgba(255,255,255,.55);
+  }
+
+  #modalAssembleiaLocal [data-areas-list]{
+    background: transparent;
+  }
+  #modalAssembleiaLocal [data-areas-list] .wdg-area-row{
+    display: grid;
+    grid-template-columns: 1fr var(--wdg-areas-col2);
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  #modalAssembleiaLocal [data-areas-list] .wdg-area-left{
+    text-align: center;
+  }
+  #modalAssembleiaLocal [data-areas-list] .wdg-area-right{
+    display:flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #modalAssembleiaLocal [data-areas-list] .list-group-item{
+    border: 0;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(15,23,42,.08);
+    margin-bottom: 10px;
+    padding: .75rem .85rem;
+  }
+  #modalAssembleiaLocal [data-areas-list] .list-group-item:last-child{ margin-bottom: 2px; }
+  #modalAssembleiaLocal [data-areas-list] .list-group-item:hover{ transform: translateY(-1px); }
+  #modalAssembleiaLocal [data-areas-list] .list-group-item.active{
+    background: linear-gradient(180deg, rgba(219,234,254,.75) 0%, rgba(191,219,254,.55) 100%);
+    color: rgba(15,23,42,.92);
+    box-shadow: 0 16px 34px rgba(15,23,42,.10);
+  }
+
+  /* Centraliza a pergunta inicial + chips */
+  #modalAssembleiaLocal .wdg-local-question{ text-align: center; }
+  #modalAssembleiaLocal .wdg-local-question .wdg-choice-group{ justify-content: center; }
+
+  /* Centraliza título do bloco Áreas comuns */
+  #modalAssembleiaLocal .wdg-areas-title{ text-align: center; width: 100%; }
+
+  /* Botão de atualizar: ícone puro, sem borda/fundo */
+  #modalAssembleiaLocal .wdg-iconbtn{
+    border: 0;
+    background: transparent;
+    padding: .35rem;
+    border-radius: 999px;
+    line-height: 0;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+  }
+  #modalAssembleiaLocal .wdg-iconbtn:hover{
+    transform: translateY(-1px);
+    filter: drop-shadow(0 10px 18px rgba(15,23,42,.18));
+  }
+  #modalAssembleiaLocal .wdg-iconbtn:active{ transform: translateY(0px) scale(.98); }
+  #modalAssembleiaLocal .wdg-iconbtn:focus-visible{
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(29,78,216,.18);
+  }
+  #modalAssembleiaLocal .wdg-iconbtn img{
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    display: block;
+  }
+</style>
+
+<div class="modal fade" id="modalAssembleiaLocal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:18px;">
+      <div class="modal-header">
+        <h5 class="modal-title">Definir local</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="wdg-fieldset mb-3 wdg-local-question">
+          <label class="form-label mb-2">O local é no condomínio?</label>
+          <div class="wdg-choice-group" role="group" aria-label="Local no condomínio">
+            <input class="btn-check" type="radio" name="assembleia_local_tipo" id="assembleia_local_tipo_condo" value="condominio" checked>
+            <label class="btn wdg-choice-btn" for="assembleia_local_tipo_condo">
+              <i class="bi bi-building" style="font-size:1rem;"></i>
+              No condomínio
+            </label>
+
+            <input class="btn-check" type="radio" name="assembleia_local_tipo" id="assembleia_local_tipo_fora" value="fora">
+            <label class="btn wdg-choice-btn" for="assembleia_local_tipo_fora">
+              <i class="bi bi-geo-alt" style="font-size:1rem;"></i>
+              Fora do condomínio
+            </label>
+          </div>
+        </div>
+
+        <div data-assembleia-local-condo>
+          <div class="form-label wdg-areas-title mb-2">Área comum</div>
+          <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
+            <div class="flex-grow-1">
+              <input class="form-control" type="search" placeholder="Pesquisar área comum..." autocomplete="off" data-areas-search>
+            </div>
+            <div>
+              <button type="button" class="wdg-iconbtn" data-areas-refresh aria-label="Atualizar" title="Atualizar">
+                <img src="/images/atualizar.png" alt="" loading="lazy">
+              </button>
+            </div>
+          </div>
+
+          <div class="wdg-areas-tablewrap">
+            <div class="wdg-areas-header" aria-hidden="true">
+              <span>Área comum</span>
+              <span>Status</span>
+            </div>
+            <div data-areas-scroll>
+              <div class="list-group" data-areas-list aria-label="Lista de áreas comuns"></div>
+            </div>
+          </div>
+
+          <div class="wdg-muted small mt-2" data-areas-hint style="display:none;"></div>
+        </div>
+
+        <div class="d-none" data-assembleia-local-fora>
+          <div class="wdg-fieldset">
+            <label class="form-label">Endereço</label>
+            <div class="input-group">
+              <input class="form-control" id="assembleia_local_endereco_resumo" name="assembleia_local_endereco_resumo" placeholder="Clique em Pesquisar endereço" readonly>
+              <button type="button" class="btn btn-outline-secondary" data-open-endereco>
+                <i class="bi bi-search me-1"></i>Pesquisar endereço
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" data-assembleia-local-confirm>
+          <i class="bi bi-check2-circle me-1"></i>Usar este local
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

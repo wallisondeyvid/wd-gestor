@@ -362,8 +362,10 @@
       if(!el) return;
       el.style.display = '';
       var now0 = Date.now();
-      if(!localStorage.getItem(LS_KEY)) localStorage.setItem(LS_KEY, String(now0));
-      var last = Number(localStorage.getItem(LS_KEY)) || now0;
+      // Sempre marque atividade ao entrar em uma página autenticada.
+      // Isso evita logout instantâneo após login quando sobrou um timestamp antigo no localStorage.
+      try{ localStorage.setItem(LS_KEY, String(now0)); }catch(_){ }
+      var last = now0;
       var lastWrite = 0;
       function bump(ts){ var now = ts || Date.now(); last = now; if(now - lastWrite > 1000){ lastWrite = now; try{ localStorage.setItem(LS_KEY, String(now)); }catch(_){ } } }
   ['click','keydown','mousemove','scroll','touchstart','wheel'].forEach(function(ev){ document.addEventListener(ev, function(){ bump(); }, { passive:true }); });

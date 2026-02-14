@@ -9,9 +9,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="<%= _bp %>/css/condominios-modern.css?v=1">
   <link rel="stylesheet" href="<%= _bp %>/css/icon-buttons.css?v=1">
+  <link rel="stylesheet" href="<%= _bp %>/css/pages/cadastrar_garagem.css?v=1">
   <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
 </head>
-<body class="wdg-layout" data-base-path="<%= _bp %>">
+<body class="wdg-layout page-cadastrar-garagem" data-base-path="<%= _bp %>">
   <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
   <%- include('../shared/partials/navbar-shared', {
         moduleBasePath: _bp,
@@ -39,7 +40,11 @@
             { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
           ]},
           { label: 'Administração', children: [
-            { label: 'Assembleias', path: '/administracao/assembleias' },
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
             { label: 'Atas', path: '/administracao/atas' },
             { label: 'Financeiro', path: '/administracao/financeiro' },
             { label: 'Configurações', path: '/administracao/configuracoes' }
@@ -54,39 +59,75 @@
       }) %>
   <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: (moduleLabel||'Gestão de Condomínios'), user }) %>
 
+  <% 
+    const _isScopeAll = Boolean(user && (user.isMaster || user.role === 'master' || user.role === 'admin'));
+    const _userUnitId = (user && user.unidade_id) ? (user.unidade_id._id || user.unidade_id || user.unidadeId || '') : (user && user.unidadeId ? user.unidadeId : '');
+    const _userUnitObj = (_userUnitId && Array.isArray(unidadesOptions)) ? (unidadesOptions||[]).find(u => String(u._id) === String(_userUnitId)) : null;
+  %>
+
   <div class="container py-3">
     <div class="content mb-3 wdg-card wdg-card-hover">
       <h4 class="mb-3 text-center page-main-title">Estruturar Condomínio · Garagem</h4>
-      <form id="formVaga" class="row g-2" novalidate>
-        <!-- Linha 1: Condomínio, Nome da Vaga e Vincular na mesma linha -->
-        <div class="col-md-4">
-          <label class="form-label">Condomínio</label>
-          <select class="form-select" id="gUnidade">
-            <% if ((unidadesOptions||[]).length === 0) { %>
-              <option value="">Selecione...</option>
-            <% } %>
-            <% (unidadesOptions||[]).forEach(u => { %>
-              <option value="<%= u._id %>"><%= u.codigo ? (u.codigo + ' - ' + u.nome) : u.nome %></option>
-            <% }) %>
-          </select>
+
+      <div class="wdg-panel-subbar wdg-condo-subbar" aria-label="Filtro de condomínio">
+        <div class="wdg-condo-field">
+          <div class="wdg-condo-label">Condomínio</div>
+          <div class="wdg-condo-controlrow">
+            <img id="gUnidadeLogo" data-condo-inline-logo="1" src="/images/unidade.png" alt="" aria-hidden="true" class="wdg-condo-inline-logo">
+            <select class="form-select wdg-condo-select" id="gUnidade" <%= !_isScopeAll ? 'disabled' : '' %> aria-label="Condomínio">
+              <% if (_isScopeAll) { %>
+                <option value="">Selecione...</option>
+                <% (unidadesOptions||[]).forEach(u => { %>
+                  <option value="<%= u._id %>"><%= u.codigo ? (u.codigo + ' - ' + u.nome) : u.nome %></option>
+                <% }) %>
+              <% } else { %>
+                <% if (_userUnitObj) { %>
+                  <option value="<%= _userUnitObj._id %>" selected><%= _userUnitObj.codigo ? (_userUnitObj.codigo + ' - ' + _userUnitObj.nome) : _userUnitObj.nome %></option>
+                <% } else if (_userUnitId) { %>
+                  <option value="<%= _userUnitId %>" selected><%= _userUnitId %></option>
+                <% } else { %>
+                  <option value="" selected>Condomínio não definido</option>
+                <% } %>
+              <% } %>
+            </select>
+          </div>
+          <% if (!_isScopeAll) { %>
+            <div class="text-muted small mt-1">Condomínio fixado pelo seu perfil.</div>
+          <% } %>
         </div>
-        <div class="col-md-4">
+      </div>
+    </div>
+
+    <div class="content mb-3 wdg-card wdg-card-hover">
+      <h5 class="mb-3 text-center wdg-section-title">Cadastrar Garagem</h5>
+      <form id="formVaga" class="row g-2" novalidate>
+        <!-- Linha 1: Nome da Vaga e Vincular na mesma linha -->
+        <div class="col-md-6">
           <label class="form-label">Nome da Vaga</label>
           <input type="text" class="form-control" id="gNome" required>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label class="form-label">Vincular</label>
-          <select class="form-select" id="gVinc">
-            <option value="">(Opcional) Selecione o vínculo</option>
-          </select>
+          <div class="wdg-enq-picker" data-g-vinc-picker>
+            <div class="wdg-enq-picker-box" tabindex="0" data-g-vinc-picker-box>
+              <div data-g-vinc-picker-tokens></div>
+              <input class="wdg-enq-picker-input" type="text" data-g-vinc-picker-input placeholder="" autocomplete="off" />
+              <div class="wdg-enq-picker-placeholder" data-g-vinc-picker-placeholder hidden></div>
+            </div>
+            <div class="wdg-enq-picker-menu" data-g-vinc-picker-menu hidden></div>
+            <select class="form-select" id="gVinc" hidden aria-hidden="true" tabindex="-1">
+              <option value="">(Opcional) Selecione o vínculo</option>
+            </select>
+          </div>
         </div>
         <div class="w-100"></div>
         <!-- Linha 3: Foto (centralizada) -->
         <div class="col-md-8 mx-auto">
           <label class="form-label">Foto</label>
-          <div class="d-flex gap-2">
-            <input type="file" class="form-control" id="gFoto" accept="image/*">
+          <input type="file" class="form-control" id="gFoto" accept="image/*">
+          <div class="d-flex gap-2 justify-content-end mt-2">
             <button type="button" class="btn btn-outline-secondary" id="gFotoLimpar">Limpar</button>
+            <button type="button" class="btn btn-outline-danger d-none" id="gFotoRemover" title="Remover a foto salva">Remover foto</button>
           </div>
           <div class="mt-2 text-center"><img id="gFotoPrev" class="preview-thumb d-none" alt="Pré-visualização"></div>
         </div>
@@ -99,7 +140,7 @@
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
           <button type="button" class="btn btn-outline-secondary" id="gLimpar">Limpar</button>
-          <button type="button" class="btn btn-outline-warning d-none" id="gCancelarEdicao">Cancelar edição</button>
+          <button type="button" class="btn btn-outline-danger d-none" id="gCancelarEdicao" title="Cancelar edição">Cancelar</button>
           <button type="button" class="btn btn-primary" id="gSalvar">Cadastrar</button>
         </div>
       </form>
@@ -124,8 +165,9 @@
           <span class="ms-1">itens</span>
         </div>
       </div>
-      <div class="table-responsive table-vert-max" id="garTableWrap">
-        <table class="table table-sm align-middle text-center" id="garTable">
+      <div class="ch-table-wrap" id="garTableWrap" aria-label="Vagas cadastradas">
+        <div class="table-responsive table-vert-max ch-table-scroll">
+          <table class="table table-hover table-sm align-middle text-center mb-0 ch-table" id="garTable">
           <thead>
             <tr>
               <th data-sort="unidade">Condomínio</th>
@@ -135,13 +177,49 @@
             </tr>
           </thead>
           <tbody id="gLista"></tbody>
-        </table>
+          </table>
+          <div id="gPaginas" class="wdg-pager ch-table-pager" aria-label="Paginação da tabela"></div>
+        </div>
       </div>
-      <div id="gPaginas" class="wdg-pager mt-2"></div>
     </div>
   </div>
 
   <%- include('modal_detalhes_gar_cad') %>
+
+  <!-- Modal: confirmação de exclusão (Garagem) -->
+  <div class="modal fade" id="garDeleteConfirmModal" tabindex="-1" aria-labelledby="garDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="garDeleteConfirmTitle">
+            <i class="bi bi-trash3 text-danger" aria-hidden="true"></i>
+            Confirmar exclusão
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex gap-3">
+            <div class="text-danger" style="font-size:2rem; line-height:1">
+              <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            </div>
+            <div>
+              <div class="mb-1">Tem certeza que deseja excluir essa vaga?</div>
+              <div class="mb-1">
+                <span class="text-muted">Vaga:</span>
+                <strong><span id="garDeleteConfirmName">—</span></strong>
+              </div>
+              <div class="text-muted small">Esta exclusão é definitiva e não pode ser desfeita.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="garDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal fade" id="modalFotoGar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
@@ -160,7 +238,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
         </div>
       </div>
     </div>

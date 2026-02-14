@@ -86,6 +86,23 @@ async function carregarUsuariosDiretor(req) {
 }
 
 export async function paginaDashboard(req, res) { return res.render('dashboard-gestor', { user: req.user }); }
+
+export async function paginaFeedback(req, res) {
+  try {
+    if (!req.user || !(req.user.isMaster || req.user.role === 'admin' || req.user.role === 'master')) {
+      return res.status(403).send('Acesso negado');
+    }
+    // Não carregamos dados server-side: a página consome via fetch os endpoints /api/gestor/feedback*.
+    const basePath = deriveBasePath(req);
+    if (isDbOff(req)) {
+      return res.status(200).render('feedback', stubCtx(req, { basePath }));
+    }
+    return res.render('feedback', { user: req.user, basePath });
+  } catch (e) {
+    console.error('[pagesController] /feedback erro:', e && (e.stack || e.message || e));
+    return res.status(500).render('erro', { errorMessage: 'Erro ao carregar feedback' });
+  }
+}
 export function paginaLogin(req, res) {
   const { erro } = req.query || {};
   const basePath = deriveBasePath(req);

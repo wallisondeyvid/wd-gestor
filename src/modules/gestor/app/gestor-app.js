@@ -50,6 +50,8 @@ import miscApiRouter from './routes/miscApi.js';
 import userPhotoApiRouter from './routes/userPhotoApi.js';
 import bancoApiRouter from './routes/bancoApi.js';
 import faceBiometriaUploadApiRouter from './routes/faceBiometriaUploadApi.js';
+import feedbackApiRouter from './routes/feedbackApi.js';
+import widgetSettingsApiRouter from './routes/widgetSettingsApi.js';
 import User from '#models/user.js';
 
 const app = express();
@@ -97,6 +99,47 @@ app.use((req, res, next) => {
 		if (process.env.BUILD_TIME) res.setHeader('X-App-Build-Time', process.env.BUILD_TIME);
 		res.setHeader('X-Logo-Upload-Compat', 'true');
 	} catch { /* ignore headers errors */ }
+	next();
+});
+
+// Diagnóstico: logar somente redirects/erros do módulo Gestor com um resumo da sessão/cookie.
+// Ajuda a identificar "loga e cai" (geralmente cookie de sessão não persistindo ou algum endpoint retornando 401/302).
+app.use((req, res, next) => {
+	const startedAt = Date.now();
+	const original = String(req.originalUrl || req.url || '');
+	const baseUrl = String(req.baseUrl || '');
+	const pathOnly = String(req.path || '');
+	const hasSidCookie = (() => {
+		try {
+			const raw = String(req.headers?.cookie || '');
+			return /(?:^|;\s*)wdg\.sid=/.test(raw);
+		} catch { return false; }
+	})();
+	res.on('finish', () => {
+		try {
+			const status = Number(res.statusCode || 0);
+			const isRedirect = status >= 300 && status < 400;
+			const isError = status >= 400;
+			if (!isRedirect && !isError) return;
+			// Evitar ruído excessivo de assets
+			if (/\.(?:css|js|png|jpg|jpeg|webp|svg|ico|map)(?:\?|$)/i.test(original)) return;
+			const location = String(res.getHeader('location') || '');
+			const sessionUser = req.session && (req.session.user || req.session.escalasUser);
+			const email = sessionUser?.email || req.user?.email || null;
+			console.warn('[gestor][http]', {
+				status,
+				method: String(req.method || 'GET').toUpperCase(),
+				baseUrl,
+				path: pathOnly,
+				original,
+				location,
+				hasSidCookie,
+				hasSessionUser: !!sessionUser,
+				email,
+				ms: Date.now() - startedAt,
+			});
+		} catch { /* noop */ }
+	});
 	next();
 });
 
@@ -343,6 +386,10 @@ app.use('/api', miscApiRouter);     // agrupado em /api misc endpoints
 app.use('/api', bancoApiRouter);    // banco endpoints dentro de /api
 // Prefixo específico para evitar colisões de '/:id'
 app.use('/api/funcionarios', funcionarioApiRouter);
+// Feedback (widget + admin)
+app.use('/', feedbackApiRouter);
+// Configuração de widgets (visibilidade por módulo)
+app.use('/', widgetSettingsApiRouter);
 
 // Export principal
 export default app;

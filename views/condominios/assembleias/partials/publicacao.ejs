@@ -1,0 +1,840 @@
+<% const errs = (publishErrors && typeof publishErrors === 'object') ? publishErrors : {}; %>
+<% const showErrs = !!(typeof showPublishErrors !== 'undefined' ? showPublishErrors : false); %>
+
+<% if (!id) { %>
+  <div class="alert alert-warning py-2" role="alert">
+    Salve a assembleia para continuar.
+  </div>
+<% } %>
+
+<% const hasErrors = Object.keys(errs).length > 0; %>
+<% const editalToken0 = String(form?.editalDocumentoToken || '').trim(); %>
+<% if (hasErrors && showErrs) { %>
+  <div class="alert alert-danger" role="alert">
+    <strong>Há pendências para convocar.</strong>
+    <details class="mt-2">
+      <summary class="small" style="cursor:pointer;">Ver detalhes ▾</summary>
+      <ul class="mb-0 mt-2 small">
+        <% Object.keys(errs).forEach((k) => { %>
+          <li><%= errs[k] %></li>
+        <% }) %>
+      </ul>
+    </details>
+  </div>
+<% } %>
+
+<% const availableSafe = (typeof available === 'object' && available) ? available : { dirigentes: [], colaboradores: [], condominos: [] }; %>
+<% const availableDirigentes = Array.isArray(availableSafe?.dirigentes) ? availableSafe.dirigentes : []; %>
+<% const availableColaboradores = Array.isArray(availableSafe?.colaboradores) ? availableSafe.colaboradores : []; %>
+<% const availableCondominos = Array.isArray(availableSafe?.condominos) ? availableSafe.condominos : []; %>
+<% const selectedPersonIdsArr = Array.isArray(form?.selectedPersonIds) ? form.selectedPersonIds : []; %>
+<% const selectedSnapshot = Array.isArray(form?.selectedSnapshot) ? form.selectedSnapshot : []; %>
+<%
+  const buildPessoaFotoUrl = (raw) => {
+    const fallback = '/images/usuario.png';
+    let f = String(raw || '').trim();
+    if (!f) return fallback;
+    if (/^https?:\/\//i.test(f)) return f;
+    if (/^data:/i.test(f)) return f;
+
+    // Algumas URLs de API podem vir como '/api/...' (sem o basePath do módulo).
+    // Neste módulo, o endpoint vive em `${_bp}/api/...`.
+    try {
+      const bp = (typeof _bp === 'string' ? _bp : '').replace(/\/+$/, '');
+      if (bp && (f.startsWith('/api/usuarios/foto') || f.startsWith('/api/usuario/foto')) && !f.startsWith(bp + '/api/')) {
+        f = bp + f;
+      }
+    } catch { /* noop */ }
+
+    if (f.startsWith('/')) return f;
+    // Legado: alguns registros vêm como 'public/uploads/...'
+    if (f.startsWith('public/uploads/')) return '/' + f.replace(/^public\//, '');
+    if (f.startsWith('uploads/')) return '/' + f;
+    if (f.startsWith('users/')) return '/uploads/' + f;
+    return '/' + f;
+  };
+  const safeImgSrc = (url) => {
+    try {
+      // encodeURI preserva '/' e ':'; bom para paths com espaços/acentos.
+      return encodeURI(String(url || '').trim());
+    } catch (_e) {
+      return String(url || '').trim();
+    }
+  };
+
+  const subtitleLines = (p) => {
+    const arr = Array.isArray(p?.subtitulos) ? p.subtitulos : [];
+    const cleanArr = arr.map(s => String(s || '').trim()).filter(Boolean);
+    if (cleanArr.length) return cleanArr;
+    const s = String(p?.subtitulo || '').trim();
+    return s ? [s] : [];
+  };
+  const aliasesCsv = (p) => {
+    const arr = Array.isArray(p?.aliases) ? p.aliases : [];
+    const clean = arr.map(s => String(s || '').trim()).filter(Boolean);
+    return clean.join(',');
+  };
+%>
+
+<style>
+  /* Lista de disponíveis: altura fixa ~6 itens + rolagem vertical */
+  [data-recipients-picker]{
+    --wdg-card-bg: #ffffff;
+    --wdg-card-border: rgba(15,23,42,.10);
+    --wdg-soft: rgba(15,23,42,.06);
+    --wdg-shadow: 0 18px 45px rgba(15,23,42,.10);
+    --wdg-shadow-hover: 0 28px 70px rgba(15,23,42,.14);
+    --wdg-glow: 0 0 0 .25rem rgba(29,78,216,.12);
+    --wdg-pane-height: calc(384px + 3.85rem); /* 6 itens (64px) + gaps/padding */
+    --wdg-pane-bg: linear-gradient(180deg, rgba(248,250,252,.92), rgba(255,255,255,.94));
+    --wdg-primary: #1d4ed8;
+    --wdg-primary-2: #38bdf8;
+  }
+
+  /* Painéis (Disponíveis / Selecionados): mesma altura, rolagem e “glass” premium */
+  [data-recipients-picker] .wdg-recipients-pane{
+    display: flex;
+    flex-direction: column;
+    gap: .65rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: var(--wdg-pane-height);
+    padding: .75rem;
+    background: var(--wdg-pane-bg);
+    border: 1px solid rgba(15,23,42,.10);
+    border-radius: 18px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.70),
+      0 18px 50px rgba(15,23,42,.08);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    perspective: 900px;
+    scrollbar-gutter: stable;
+  }
+  [data-recipients-picker] .wdg-recipients-pane:focus-within{ box-shadow: var(--wdg-glow), inset 0 1px 0 rgba(255,255,255,.70), 0 20px 60px rgba(15,23,42,.10); }
+
+  /* Cabeçalho (fora do painel): azul, como no padrão de Dirigência */
+  [data-recipients-picker] .wdg-list-head{
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .65rem .85rem;
+    border-radius: 18px 18px 0 0;
+    background: linear-gradient(135deg, var(--wdg-primary), var(--wdg-primary-2));
+    color: #fff;
+    border: 1px solid rgba(15,23,42,.10);
+    box-shadow: 0 18px 45px rgba(15,23,42,.10);
+  }
+  [data-recipients-picker] .wdg-list-head .wdg-list-title{
+    margin: 0 auto;
+    font-weight: 900;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    font-size: .85rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  [data-recipients-picker] .wdg-list-head .form-check-input{
+    position: absolute;
+    left: .85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: .35rem;
+    border-color: rgba(255,255,255,.70);
+    background-color: rgba(255,255,255,.12);
+  }
+  [data-recipients-picker] .wdg-list-head .form-check-input:checked{
+    background-color: rgba(255,255,255,.92);
+    border-color: rgba(255,255,255,.92);
+  }
+  [data-recipients-picker] .wdg-list-head .form-check-input:focus{ box-shadow: 0 0 0 .25rem rgba(255,255,255,.22); }
+
+  /* Painel encaixado no cabeçalho */
+  [data-recipients-picker] .wdg-list-wrap .wdg-recipients-pane{
+    border-top: 0;
+    border-radius: 0 0 18px 18px;
+  }
+  @supports (scrollbar-color: auto){
+    [data-recipients-picker] .wdg-recipients-pane{ scrollbar-color: rgba(100,116,139,.55) transparent; scrollbar-width: thin; }
+  }
+
+  /* “Cards” das pessoas (Disponíveis) */
+  [data-recipients-picker] .wdg-recipient-row{
+    min-height: 64px;
+    border-radius: 14px;
+    border: 1px solid var(--wdg-soft);
+    background: var(--wdg-card-bg);
+    box-shadow: 0 12px 28px rgba(15,23,42,.08);
+    transform: translateZ(0);
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+    will-change: transform;
+  }
+  [data-recipients-picker] .wdg-recipient-row:hover{
+    border-color: rgba(29,78,216,.22);
+    box-shadow: var(--wdg-shadow-hover);
+    transform: translateY(-2px) rotateX(.35deg);
+  }
+  [data-recipients-picker] .wdg-recipient-row:has([data-available-checkbox]:disabled){
+    background: rgba(148,163,184,.10);
+    box-shadow: 0 8px 18px rgba(15,23,42,.06);
+  }
+
+  /* Publicação > Detalhes: summary mais destacado (premium) */
+  .wdg-tech-details{ margin-top: .9rem; }
+  .wdg-tech-summary{
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .48rem .8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(15,23,42,.10);
+    background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.92),
+      0 14px 34px rgba(15,23,42,.10);
+    color: rgba(15,23,42,.86);
+    font-weight: 800;
+    letter-spacing: .01em;
+    user-select: none;
+    cursor: pointer;
+    list-style: none;
+  }
+  .wdg-tech-summary:hover{ transform: translateY(-1px); }
+  details > summary.wdg-tech-summary::-webkit-details-marker{ display:none; }
+  .wdg-tech-caret{ transition: transform .15s ease; opacity: .85; }
+  details[open] .wdg-tech-caret{ transform: rotate(180deg); }
+  .wdg-tech-body{
+    margin-top: .65rem;
+    padding: .65rem .75rem;
+    border-radius: 16px;
+    border: 1px solid rgba(15,23,42,.08);
+    background: rgba(248,250,252,.65);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.85);
+  }
+
+  /* Publicação > Convocar: botão menor no canto direito */
+  .wdg-btn3d.wdg-btn3d--sm{
+    padding: .46rem .82rem;
+    gap: .5rem;
+    font-weight: 850;
+    box-shadow:
+      0 14px 30px rgba(2,6,23,.16),
+      0 1px 0 rgba(255,255,255,.88) inset;
+  }
+  .wdg-btn3d.wdg-btn3d--sm .wdg-btn3d-iconwrap{
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.90);
+    border: 1px solid rgba(15,23,42,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.88);
+  }
+  .wdg-btn3d.wdg-btn3d--sm .wdg-btn3d-iconwrap .wdg-btn3d-icon{
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    display: block;
+    object-fit: contain;
+  }
+  .wdg-btn3d.wdg-btn3d--success{
+    border-color: var(--bs-success-border-subtle);
+    background: linear-gradient(180deg, var(--bs-success-bg-subtle) 0%, rgba(255,255,255,.96) 100%);
+    color: var(--bs-success-text-emphasis);
+  }
+  .wdg-btn3d.wdg-btn3d--success .wdg-btn3d-icon{
+    /* Garante contraste mesmo para PNGs claros */
+    filter: brightness(0) saturate(100%) drop-shadow(0 8px 16px rgba(2,6,23,.18));
+  }
+  .wdg-btn3d.wdg-btn3d--success .wdg-btn3d-icon.wdg-btn3d-icon--fullcolor{
+    /* Mantém as cores originais do asset */
+    filter: drop-shadow(0 8px 16px rgba(2,6,23,.18));
+  }
+  .wdg-btn3d.wdg-btn3d--success:hover{ color: var(--bs-success-text-emphasis); }
+  .wdg-btn3d:disabled{
+    opacity: .65;
+    cursor: not-allowed;
+    transform: none;
+    filter: saturate(.9);
+    box-shadow: 0 10px 22px rgba(2,6,23,.14), 0 1px 0 rgba(255,255,255,.86) inset;
+  }
+
+  /* Modal: Convocação enviada (premium, alinhado com modais de exclusão) */
+  #modalConvocacaoEnviada .modal-content{
+    border: 1px solid rgba(15, 23, 42, .10);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 28px 90px rgba(15,23,42,.18);
+    background: #fff;
+  }
+  #modalConvocacaoEnviada .modal-header{
+    border: 0;
+    padding: 18px 18px 14px;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(34,197,94,.16), transparent 48%),
+      radial-gradient(circle at 82% 16%, rgba(59,130,246,.14), transparent 52%),
+      linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,.94));
+  }
+  #modalConvocacaoEnviada .modal-title{
+    font-weight: 800;
+    color: rgba(15,23,42,.92);
+    letter-spacing: -.02em;
+  }
+  #modalConvocacaoEnviada .modal-body{ padding: 16px 18px 6px; }
+  #modalConvocacaoEnviada .modal-footer{ border: 0; padding: 10px 18px 16px; }
+  #modalConvocacaoEnviada .wdg-mhdr{ display:flex; align-items:center; gap: 12px; min-width:0; }
+  #modalConvocacaoEnviada .wdg-mico{
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.85), rgba(255,255,255,0) 58%),
+      linear-gradient(135deg, rgba(34,197,94,.96), rgba(16,185,129,.70));
+    box-shadow: 0 16px 34px rgba(34,197,94,.18);
+    color:#fff;
+    flex: 0 0 auto;
+  }
+  #modalConvocacaoEnviada .wdg-msub{ margin: 2px 0 0; color: rgba(100,116,139,.95); font-weight: 650; font-size: .9rem; line-height: 1.25; }
+  #modalConvocacaoEnviada .wdg-confirm{
+    border: 1px solid rgba(15,23,42,.10);
+    background: rgba(248,250,252,.85);
+    border-radius: 16px;
+    padding: 14px 14px;
+    font-weight: 850;
+    color: rgba(15,23,42,.92);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.85);
+  }
+
+  /* Cards selecionados (coluna direita) */
+  [data-recipients-picker] [data-selected-list] .card{
+    border-radius: 16px;
+    border: 1px solid var(--wdg-soft);
+    box-shadow: 0 14px 34px rgba(15,23,42,.09);
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  }
+  [data-recipients-picker] [data-selected-list] .card:hover{
+    border-color: rgba(16,185,129,.25);
+    box-shadow: var(--wdg-shadow-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Grupo: cabeçalho com checkbox “selecionar todos” */
+  [data-recipients-picker] .wdg-recipient-group-head{
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    user-select: none;
+    padding: .35rem .45rem;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(15,23,42,.03), rgba(15,23,42,.01));
+    border: 1px solid rgba(15,23,42,.06);
+  }
+  [data-recipients-picker] .wdg-recipient-group-head:hover{ border-color: rgba(37,99,235,.14); }
+  [data-recipients-picker] .wdg-recipient-group-head .form-check-input{
+    position: absolute;
+    left: .55rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: .35rem;
+  }
+  [data-recipients-picker] .wdg-recipient-group-head > span{
+    margin: 0 auto;
+    padding-left: 1.25rem; /* espaço do checkbox absoluto */
+    padding-right: .25rem;
+  }
+
+  /* Cabeçalhos das colunas (Disponíveis / Selecionados) centralizados */
+  [data-recipients-picker] .wdg-col-head{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  [data-recipients-picker] .wdg-col-head .wdg-col-title{ margin: 0; }
+  [data-recipients-picker] .wdg-col-head [data-selected-badge]{
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  [data-recipients-picker] [data-selected-empty]{
+    padding: 1rem;
+    text-align: center;
+    color: rgba(100,116,139,.95);
+    border: 1px dashed rgba(100,116,139,.35);
+    border-radius: 16px;
+    background: rgba(255,255,255,.65);
+  }
+
+  /* Ajustes visuais gerais dentro do picker */
+  [data-recipients-picker] .rounded-circle{
+    box-shadow: 0 10px 20px rgba(15,23,42,.08);
+  }
+  [data-recipients-picker] .btn:focus{ box-shadow: var(--wdg-glow); }
+
+  /* Botões de mover (>>, >, <, <<): menores e premium */
+  [data-recipients-picker] .wdg-move-btns{ max-width: 64px !important; }
+  [data-recipients-picker] #btnAddAll,
+  [data-recipients-picker] #btnAdd,
+  [data-recipients-picker] #btnRemove,
+  [data-recipients-picker] #btnRemoveAll{
+    width: 48px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-weight: 850;
+    font-size: .95rem;
+    letter-spacing: .02em;
+    padding: 0;
+    border-width: 1px;
+    box-shadow: 0 12px 26px rgba(15,23,42,.10);
+    transform: translateZ(0);
+    transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
+  }
+  [data-recipients-picker] #btnAddAll:hover,
+  [data-recipients-picker] #btnAdd:hover,
+  [data-recipients-picker] #btnRemove:hover,
+  [data-recipients-picker] #btnRemoveAll:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 18px 42px rgba(15,23,42,.14);
+    filter: saturate(1.05);
+  }
+  [data-recipients-picker] #btnAddAll,
+  [data-recipients-picker] #btnAdd{
+    background: linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.02));
+    border-color: rgba(37,99,235,.35);
+    color: rgba(29,78,216,.95);
+  }
+  [data-recipients-picker] #btnRemove,
+  [data-recipients-picker] #btnRemoveAll{
+    background: linear-gradient(180deg, rgba(100,116,139,.12), rgba(100,116,139,.03));
+    border-color: rgba(100,116,139,.35);
+    color: rgba(51,65,85,.92);
+  }
+  [data-recipients-picker] #btnAddAll:active,
+  [data-recipients-picker] #btnAdd:active,
+  [data-recipients-picker] #btnRemove:active,
+  [data-recipients-picker] #btnRemoveAll:active{ transform: translateY(0px); }
+
+  @media (prefers-reduced-motion: reduce){
+    [data-recipients-picker] .wdg-recipient-row,
+    [data-recipients-picker] [data-selected-list] .card{ transition: none; }
+    [data-recipients-picker] #btnAddAll,
+    [data-recipients-picker] #btnAdd,
+    [data-recipients-picker] #btnRemove,
+    [data-recipients-picker] #btnRemoveAll{ transition: none; }
+  }
+</style>
+
+<div class="card mb-3 <%= editalToken0 ? '' : 'd-none' %>" data-recipients-picker data-publicacao-step3-extra>
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div class="w-100 text-center">
+        <h5 class="mb-1">Destinatários</h5>
+      </div>
+    </div>
+
+    <hr class="my-3">
+
+    <div class="row g-3">
+      <!-- COLUNA ESQUERDA: Disponíveis -->
+      <div class="col-lg-5 order-1">
+        <div class="wdg-col-head">
+          <h6 class="mb-0 wdg-col-title">Disponíveis</h6>
+        </div>
+
+        <div class="mt-3 wdg-list-wrap">
+          <div class="wdg-list-head">
+            <input class="form-check-input" type="checkbox" data-list-toggle="available" aria-label="Selecionar todos os usuários disponíveis">
+            <div class="wdg-list-title">Usuários</div>
+          </div>
+
+          <div class="wdg-recipients-pane" data-available-root>
+            <div class="mb-3">
+              <div class="fw-semibold mb-2 wdg-recipient-group-head">
+                <input class="form-check-input" type="checkbox" data-group-toggle data-group="dirigentes" aria-label="Selecionar todos os dirigentes">
+                <span>Dirigentes</span>
+              </div>
+              <div class="d-flex flex-column gap-2">
+                <% if (!availableDirigentes.length) { %>
+                  <div class="p-3 text-muted">Nenhum dirigente disponível.</div>
+                <% } else { %>
+                  <% availableDirigentes.forEach((p) => { %>
+                    <% const pid = String(p?.id || '').trim(); %>
+                    <% if (!pid) return; %>
+                    <div class="d-flex gap-2 align-items-start p-2 wdg-recipient-row" data-person-id="<%= pid %>" data-person-aliases="<%= aliasesCsv(p) %>" data-group="dirigentes" data-available-person>
+                      <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" data-available-checkbox>
+                      </div>
+                      <div class="rounded-circle border bg-light" style="width:38px;height:38px;overflow:hidden;flex:0 0 38px;">
+                        <% const __bp = String(_bp || '').replace(/\/+$/, ''); %>
+                        <% const _rawFoto = String(p?.foto || '').trim(); %>
+                        <% const _emailNorm = String(p?.email || '').trim().toLowerCase(); %>
+                        <% const _primaryFotoSrc = _rawFoto ? safeImgSrc(buildPessoaFotoUrl(_rawFoto)) : ''; %>
+                        <% const _altFotoSrc = _emailNorm ? (__bp + '/api/usuarios/foto?email=' + encodeURIComponent(_emailNorm) + '&v=' + Date.now()) : ''; %>
+                        <% const _initialFotoSrc = _primaryFotoSrc || _altFotoSrc || '/images/usuario.png'; %>
+                        <img
+                          src="<%= _initialFotoSrc %>"
+                          data-primary-src="<%= _primaryFotoSrc %>"
+                          data-alt-src="<%= _altFotoSrc %>"
+                          alt=""
+                          style="width:38px;height:38px;object-fit:cover;display:block;"
+                          onerror="(function(img){try{var a=img.getAttribute('data-alt-src')||'';var p=img.getAttribute('data-primary-src')||'';if(!img.dataset.triedAlt && a && img.src.indexOf(a)===-1){img.dataset.triedAlt='1';img.src=a;return;}if(!img.dataset.triedPrimary && p && img.src.indexOf(p)===-1){img.dataset.triedPrimary='1';img.src=p;return;} }catch(e){} img.onerror=null; img.src='/images/usuario.png';})(this)"
+                        >
+                      </div>
+                      <div class="flex-grow-1" style="min-width:0;">
+                        <div class="fw-semibold" data-person-nome><%= String(p?.nome || '').trim() || '-' %></div>
+                        <% subtitleLines(p).forEach((ln) => { %>
+                          <div class="text-muted small" data-person-subtitulo><%= ln %></div>
+                        <% }) %>
+                        <div class="text-muted small" data-person-email><%= String(p?.email || '').trim() %></div>
+                      </div>
+                    </div>
+                  <% }) %>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="fw-semibold mb-2 wdg-recipient-group-head">
+                <input class="form-check-input" type="checkbox" data-group-toggle data-group="colaboradores" aria-label="Selecionar todos os colaboradores">
+                <span>Colaboradores</span>
+              </div>
+              <div class="d-flex flex-column gap-2">
+                <% if (!availableColaboradores.length) { %>
+                  <div class="p-3 text-muted">Nenhum colaborador disponível.</div>
+                <% } else { %>
+                  <% availableColaboradores.forEach((p) => { %>
+                    <% const pid = String(p?.id || '').trim(); %>
+                    <% if (!pid) return; %>
+                    <div class="d-flex gap-2 align-items-start p-2 wdg-recipient-row" data-person-id="<%= pid %>" data-person-aliases="<%= aliasesCsv(p) %>" data-group="colaboradores" data-available-person>
+                      <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" data-available-checkbox>
+                      </div>
+                      <div class="rounded-circle border bg-light" style="width:38px;height:38px;overflow:hidden;flex:0 0 38px;">
+                        <% const __bp = String(_bp || '').replace(/\/+$/, ''); %>
+                        <% const _rawFoto = String(p?.foto || '').trim(); %>
+                        <% const _emailNorm = String(p?.email || '').trim().toLowerCase(); %>
+                        <% const _primaryFotoSrc = _rawFoto ? safeImgSrc(buildPessoaFotoUrl(_rawFoto)) : ''; %>
+                        <% const _altFotoSrc = _emailNorm ? (__bp + '/api/usuarios/foto?email=' + encodeURIComponent(_emailNorm) + '&v=' + Date.now()) : ''; %>
+                        <% const _initialFotoSrc = _primaryFotoSrc || _altFotoSrc || '/images/usuario.png'; %>
+                        <img
+                          src="<%= _initialFotoSrc %>"
+                          data-primary-src="<%= _primaryFotoSrc %>"
+                          data-alt-src="<%= _altFotoSrc %>"
+                          alt=""
+                          style="width:38px;height:38px;object-fit:cover;display:block;"
+                          onerror="(function(img){try{var a=img.getAttribute('data-alt-src')||'';var p=img.getAttribute('data-primary-src')||'';if(!img.dataset.triedAlt && a && img.src.indexOf(a)===-1){img.dataset.triedAlt='1';img.src=a;return;}if(!img.dataset.triedPrimary && p && img.src.indexOf(p)===-1){img.dataset.triedPrimary='1';img.src=p;return;} }catch(e){} img.onerror=null; img.src='/images/usuario.png';})(this)"
+                        >
+                      </div>
+                      <div class="flex-grow-1" style="min-width:0;">
+                        <div class="fw-semibold" data-person-nome><%= String(p?.nome || '').trim() || '-' %></div>
+                        <% subtitleLines(p).forEach((ln) => { %>
+                          <div class="text-muted small" data-person-subtitulo><%= ln %></div>
+                        <% }) %>
+                        <div class="text-muted small" data-person-email><%= String(p?.email || '').trim() %></div>
+                      </div>
+                    </div>
+                  <% }) %>
+                <% } %>
+              </div>
+            </div>
+
+            <div>
+              <div class="fw-semibold mb-2 wdg-recipient-group-head">
+                <input class="form-check-input" type="checkbox" data-group-toggle data-group="condominos" aria-label="Selecionar todos os condôminos">
+                <span>Condôminos</span>
+              </div>
+              <div class="d-flex flex-column gap-2">
+                <% if (!availableCondominos.length) { %>
+                  <div class="p-3 text-muted">Nenhum condômino disponível.</div>
+                <% } else { %>
+                  <% availableCondominos.forEach((p) => { %>
+                    <% const pid = String(p?.id || '').trim(); %>
+                    <% if (!pid) return; %>
+                    <div class="d-flex gap-2 align-items-start p-2 wdg-recipient-row" data-person-id="<%= pid %>" data-person-aliases="<%= aliasesCsv(p) %>" data-group="condominos" data-available-person>
+                      <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" data-available-checkbox>
+                      </div>
+                      <div class="rounded-circle border bg-light" style="width:38px;height:38px;overflow:hidden;flex:0 0 38px;">
+                        <% const __bp = String(_bp || '').replace(/\/+$/, ''); %>
+                        <% const _rawFoto = String(p?.foto || '').trim(); %>
+                        <% const _emailNorm = String(p?.email || '').trim().toLowerCase(); %>
+                        <% const _primaryFotoSrc = _rawFoto ? safeImgSrc(buildPessoaFotoUrl(_rawFoto)) : ''; %>
+                        <% const _altFotoSrc = _emailNorm ? (__bp + '/api/usuarios/foto?email=' + encodeURIComponent(_emailNorm) + '&v=' + Date.now()) : ''; %>
+                        <% const _initialFotoSrc = _primaryFotoSrc || _altFotoSrc || '/images/usuario.png'; %>
+                        <img
+                          src="<%= _initialFotoSrc %>"
+                          data-primary-src="<%= _primaryFotoSrc %>"
+                          data-alt-src="<%= _altFotoSrc %>"
+                          alt=""
+                          style="width:38px;height:38px;object-fit:cover;display:block;"
+                          onerror="(function(img){try{var a=img.getAttribute('data-alt-src')||'';var p=img.getAttribute('data-primary-src')||'';if(!img.dataset.triedAlt && a && img.src.indexOf(a)===-1){img.dataset.triedAlt='1';img.src=a;return;}if(!img.dataset.triedPrimary && p && img.src.indexOf(p)===-1){img.dataset.triedPrimary='1';img.src=p;return;} }catch(e){} img.onerror=null; img.src='/images/usuario.png';})(this)"
+                        >
+                      </div>
+                      <div class="flex-grow-1" style="min-width:0;">
+                        <div class="fw-semibold" data-person-nome><%= String(p?.nome || '').trim() || '-' %></div>
+                        <% subtitleLines(p).forEach((ln) => { %>
+                          <div class="text-muted small" data-person-subtitulo><%= ln %></div>
+                        <% }) %>
+                        <div class="text-muted small" data-person-email><%= String(p?.email || '').trim() %></div>
+                      </div>
+                    </div>
+                  <% }) %>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUNA CENTRAL: Botões -->
+      <div class="col-lg-2 order-2 d-flex align-items-center justify-content-center">
+        <div class="d-flex flex-column gap-2 w-100 wdg-move-btns" style="max-width:64px;">
+          <button type="button" class="btn btn-outline-primary" id="btnAddAll" title="Adicionar todos">&gt;&gt;</button>
+          <button type="button" class="btn btn-outline-primary" id="btnAdd" title="Adicionar selecionados">&gt;</button>
+          <button type="button" class="btn btn-outline-secondary" id="btnRemove" title="Remover selecionados">&lt;</button>
+          <button type="button" class="btn btn-outline-secondary" id="btnRemoveAll" title="Remover todos">&lt;&lt;</button>
+        </div>
+      </div>
+
+      <!-- COLUNA DIREITA: Selecionados -->
+      <div class="col-lg-5 order-3">
+        <div class="wdg-col-head">
+          <h6 class="mb-0 wdg-col-title">Selecionados</h6>
+        </div>
+
+        <input type="hidden" name="selectedPersonIds" value="<%= selectedPersonIdsArr.map(String).filter(Boolean).join(',') %>" data-selected-ids form="formPublicar">
+
+        <div class="mt-3 wdg-list-wrap">
+          <div class="wdg-list-head">
+            <input class="form-check-input" type="checkbox" data-list-toggle="selected" aria-label="Selecionar todos os usuários selecionados">
+            <div class="wdg-list-title">Usuários</div>
+          </div>
+
+          <div class="wdg-recipients-pane" data-selected-list>
+            <% if (!selectedSnapshot.length) { %>
+              <div class="text-muted" data-selected-empty>Nenhum destinatário selecionado.</div>
+            <% } else { %>
+              <% selectedSnapshot.forEach((p) => { %>
+                <% const pid = String(p?.id || '').trim(); %>
+                <% if (!pid) return; %>
+                <div class="card" data-person-id="<%= pid %>">
+                  <div class="card-body py-2">
+                    <div class="d-flex align-items-start gap-2">
+                      <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" data-selected-checkbox>
+                      </div>
+                      <div class="rounded-circle border bg-light" style="width:38px;height:38px;overflow:hidden;flex:0 0 38px;">
+                        <% const __bp = String(_bp || '').replace(/\/+$/, ''); %>
+                        <% const _rawFoto = String(p?.foto || '').trim(); %>
+                        <% const _emailNorm = String(p?.email || '').trim().toLowerCase(); %>
+                        <% const _primaryFotoSrc = _rawFoto ? safeImgSrc(buildPessoaFotoUrl(_rawFoto)) : ''; %>
+                        <% const _altFotoSrc = _emailNorm ? (__bp + '/api/usuarios/foto?email=' + encodeURIComponent(_emailNorm) + '&v=' + Date.now()) : ''; %>
+                        <% const _initialFotoSrc = _primaryFotoSrc || _altFotoSrc || '/images/usuario.png'; %>
+                        <img
+                          src="<%= _initialFotoSrc %>"
+                          data-primary-src="<%= _primaryFotoSrc %>"
+                          data-alt-src="<%= _altFotoSrc %>"
+                          alt=""
+                          style="width:38px;height:38px;object-fit:cover;display:block;"
+                          onerror="(function(img){try{var a=img.getAttribute('data-alt-src')||'';var p=img.getAttribute('data-primary-src')||'';if(!img.dataset.triedAlt && a && img.src.indexOf(a)===-1){img.dataset.triedAlt='1';img.src=a;return;}if(!img.dataset.triedPrimary && p && img.src.indexOf(p)===-1){img.dataset.triedPrimary='1';img.src=p;return;} }catch(e){} img.onerror=null; img.src='/images/usuario.png';})(this)"
+                        >
+                      </div>
+                      <div class="flex-grow-1" style="min-width:0;">
+                        <div class="fw-semibold" data-person-nome><%= String(p?.nome || '').trim() || '-' %></div>
+                        <% subtitleLines(p).forEach((ln) => { %>
+                          <div class="text-muted small" data-person-subtitulo><%= ln %></div>
+                        <% }) %>
+                        <div class="text-muted small" data-person-email><%= String(p?.email || '').trim() %></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Convocação enviada com sucesso -->
+<div class="modal fade" id="modalConvocacaoEnviada" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 640px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="wdg-mhdr">
+          <div class="wdg-mico" aria-hidden="true"><i class="bi bi-check2-circle"></i></div>
+          <div class="wdg-mmeta">
+            <h5 class="modal-title">Convocação enviada com sucesso!</h5>
+            <p class="wdg-msub">A convocação foi entregue na Caixa de Mensagens dos destinatários selecionados.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="wdg-confirm">Convocação enviada com sucesso!</div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn wdg-btn3d" data-bs-dismiss="modal" id="btnConvocacaoOk">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts (canto superior direito) -->
+<div id="wdgToastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1200;"></div>
+
+<% 
+  const editalUrl = id ? `${_bp}/assembleias/${encodeURIComponent(String(id))}/edital` : '';
+  const editalPrintUrl = editalUrl ? `${editalUrl}?print=1` : '';
+%>
+
+<div class="d-flex flex-column gap-3" data-publicacao-wizard>
+  <!-- PASSO 1 -->
+  <div class="card <%= editalToken0 ? 'd-none' : '' %>" data-publicacao-step="1">
+    <div class="card-body">
+      <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+        <div style="min-width:260px;">
+          <div class="fw-semibold">Passo 1 — Baixar edital</div>
+          <div class="text-muted small mt-1">Baixe o edital para assinatura fora do sistema.</div>
+        </div>
+        <div>
+          <a class="btn btn-outline-primary <%= editalPrintUrl ? '' : 'disabled' %>" id="btnPrintEdital" href="<%= editalPrintUrl || '#' %>" target="_blank" rel="noopener">
+            <i class="bi bi-printer me-1"></i>Baixar / Imprimir edital
+          </a>
+        </div>
+      </div>
+      <% if (!id) { %>
+        <div class="text-muted small mt-2">Salve a assembleia para liberar o download do edital.</div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- PASSO 2 -->
+  <div class="card" data-edital-certificacao-wrap data-publicacao-step="2">
+    <input type="hidden" value="<%= editalToken0 %>" data-edital-token>
+
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+        <div style="min-width:260px;">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill bg-secondary" data-edital-status-badge>PENDENTE</span>
+            <div class="fw-semibold">Passo 2 — Enviar edital assinado</div>
+          </div>
+          <div class="text-muted small mt-1" data-edital-status-desc>Envie o edital assinado.</div>
+        </div>
+      </div>
+
+      <!-- Estado: pendente -->
+      <div class="mt-3 <%= editalToken0 ? 'd-none' : '' %>" data-edital-step2-pending>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-8">
+            <label class="form-label">Arquivo (PDF)</label>
+            <input class="form-control" type="file" accept="application/pdf" data-edital-pdf-input>
+          </div>
+          <div class="col-md-4">
+            <button type="button" class="btn btn-primary w-100" data-edital-upload-btn>
+              <i class="bi bi-cloud-arrow-up me-1"></i>Enviar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado: concluído -->
+      <div class="mt-3 <%= editalToken0 ? '' : 'd-none' %>" data-edital-step2-done>
+        <div class="text-success" style="font-weight:700;">✔ Edital assinado enviado com sucesso</div>
+        <div class="d-flex gap-2 flex-wrap mt-2">
+          <a class="wdg-btn3d" data-edital-pdf-link target="_blank" rel="noopener">
+            <img class="wdg-btn3d-icon" src="/images/pdf.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/pdf.png'">
+            Abrir documento
+          </a>
+          <button type="button" class="wdg-btn3d" data-edital-copy-link>
+            <img class="wdg-btn3d-icon" src="/images/copiar.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/copiar.png'">
+            Copiar link de verificação
+          </button>
+        </div>
+
+        <details class="wdg-tech-details" data-edital-tech-details>
+          <summary class="wdg-tech-summary">Detalhes <span class="wdg-tech-caret">▾</span></summary>
+          <div class="wdg-tech-body">
+            <div class="text-muted small">
+              Token: <span data-edital-token-text><%= editalToken0 || '—' %></span>
+            </div>
+            <div class="text-muted small mt-1">
+              SHA-256: <span data-edital-hash-text>—</span>
+            </div>
+            <div class="d-flex justify-content-end gap-2 flex-wrap mt-2">
+              <a class="wdg-btn3d" data-edital-verificar-link target="_blank" rel="noopener">Abrir verificação</a>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="mt-2 d-none" data-edital-validado>
+        <div class="text-success small" style="font-weight:700;">Documento validado.</div>
+      </div>
+
+      <div class="mt-2" data-edital-upload-status></div>
+    </div>
+  </div>
+
+  <!-- PASSO 3 -->
+  <div class="card <%= editalToken0 ? '' : 'd-none' %>" data-publicacao-step="3">
+    <div class="card-body">
+      <div class="fw-semibold">Passo 3 — Convocar assembleia</div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-md-4">
+          <label class="form-label">Data de emissão</label>
+          <input class="form-control wdg-date" type="date" name="dataPublicacao" form="formPublicar" value="<%= form?.dataPublicacao ? new Date(form.dataPublicacao).toISOString().slice(0,10) : '' %>" required>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Entrega</label>
+          <div class="text-muted small">
+            A convocação será enviada via <strong>Caixa de Mensagens</strong> para as caixas de mensagens dos usuários selecionados em <strong>Destinatários</strong>.
+            O remetente será exibido como <strong>Sistema</strong>.
+          </div>
+        </div>
+      </div>
+
+      <form id="formPublicar" method="POST" action="<%= _bp %>/assembleias/nova/publicar" class="mt-3 d-flex justify-content-end">
+        <input type="hidden" name="id" value="<%= id || '' %>">
+        <button type="submit" class="wdg-btn3d wdg-btn3d--sm wdg-btn3d--success" <%= (!id || !editalToken0) ? 'disabled' : '' %>>
+          <img class="wdg-btn3d-icon wdg-btn3d-icon--fullcolor" src="/images/comunicacao.png" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='<%= _bp %>/images/comunicacao.png'">
+          Convocar assembleia
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <form method="POST" action="<%= _bp %>/assembleias/nova/salvar">
+      <input type="hidden" name="id" value="<%= id || '' %>">
+      <input type="hidden" name="tab" value="publicacao">
+      <input type="hidden" name="nav" value="prev" data-nav>
+      <button type="submit" class="wdg-btn3d" data-nav-btn="prev">
+        <img class="wdg-btn3d-icon" src="/images/anterior.png" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='<%= _bp %>/images/anterior.png'">
+        Voltar
+      </button>
+    </form>
+  </div>
+</div>

@@ -105,10 +105,12 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       path.startsWith('/api/recover')
     );
     if (wantsJson) {
+      try { console.warn('[requireLogin] 401 (sem sessão)', { original, path, basePath, accept: String(req.headers['accept']||''), referer: String(req.get?.('referer')||'') }); } catch {}
       return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
     }
     // Evita loop: se já estamos em rota pública (ex.: login/primeiroacesso), não redirecionar
     if (isLoginPath || isPublicPath) return next();
+    try { console.warn('[requireLogin] redirect login (sem sessão)', { original, path, basePath, referer: String(req.get?.('referer')||'') }); } catch {}
     return res.redirect(basePath + '/login');
   }
   try {
@@ -130,7 +132,11 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       const isMasterRole = user.role === 'master';
       const enforceMaster = process.env.ENFORCE_MASTER_FIRST_LOGIN === 'true';
       if (!isMasterRole && (user.primeiro_acesso || user.senha_provisoria) && !isPrimeiroAcessoPath && !isAuthOrAsset) {
-  if (wantsJson) return res.status(403).json({ success:false, error:'FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED', code:'FIRST_LOGIN' });
+  if (wantsJson) {
+    try { console.warn('[requireLogin] 403 FIRST_LOGIN (api)', { original, path, basePath, email: user.email }); } catch {}
+    return res.status(403).json({ success:false, error:'FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED', code:'FIRST_LOGIN' });
+  }
+  try { console.warn('[requireLogin] redirect primeiroacesso (FIRST_LOGIN)', { original, path, basePath, email: user.email }); } catch {}
   return res.redirect(basePath + '/primeiroacesso');
       }
       // Caso seja master e flags estejam setadas por engano, limpamos silenciosamente em memória (não persiste ainda)
@@ -156,7 +162,10 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     }
     throw e;
   }
-  if (!funcionario) return res.redirect(basePath + '/login');
+  if (!funcionario) {
+    try { console.warn('[requireLogin] redirect login (funcionario não encontrado)', { original, path, basePath, email: req.session?.user?.email }); } catch {}
+    return res.redirect(basePath + '/login');
+  }
     // Funcionário autenticado não passa por fluxo de primeiro acesso de usuário
   req.user = { _id: funcionario._id, id: funcionario._id, nome: funcionario.nome || 'Usuário', email: funcionario.email, foto: funcionario.foto || null, unidade_id: funcionario.unidade_id ? funcionario.unidade_id._id : null, unidade_principal_id: funcionario.unidade_id && funcionario.unidade_id.is_principal ? funcionario.unidade_id._id : (funcionario.unidade_id && funcionario.unidade_id.unidade_principal_id) || null, funcao: funcionario.funcao_id ? funcionario.funcao_id.nome : null, isMaster: false, role: 'user' };
     return next();
@@ -168,6 +177,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     return next();
   }
   if (isLoginPath) return next();
+  try { console.warn('[requireLogin] redirect login (erro inesperado)', { original, path, basePath, err: e?.message || String(e) }); } catch {}
   return res.redirect(basePath + '/login');
   }
 };

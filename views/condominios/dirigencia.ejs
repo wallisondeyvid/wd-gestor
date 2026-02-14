@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dirigência - Gestão de Condomínios - WDGestor</title>
+  <% const _bp = (typeof basePath === 'string' && basePath) ? basePath : '/condominios'; %>
+  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="shortcut icon" type="image/png" href="<%= _bp %>/images/logoWDGestor.png?v=4">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <%- include('../shared/partials/head-styles-gestor', { moduleBasePath: _bp }) %>
+
+  <style>
+    :root{
+      --wdg-bg: #f4f6fb;
+      --wdg-card: #ffffff;
+      --wdg-text: #0f172a;
+      --wdg-muted: #64748b;
+      --wdg-line: rgba(15,23,42,.10);
+      --wdg-shadow: 0 30px 90px rgba(15,23,42,.14);
+      --wdg-shadow-soft: 0 18px 55px rgba(15,23,42,.10);
+      --wdg-primary: #1d4ed8;
+      --wdg-primary-2: #38bdf8;
+      --wdg-accent: #0f172a;
+      --wdg-pill: rgba(29,78,216,.12);
+      --wdg-maxw: 1600px;
+    }
+
+    body.wdg-dirigencia{ background: var(--wdg-bg); }
+
+    /* Início: evita rolagem por padding extra do container-fluid */
+    #dirigenciaApp.wdg-view-inicio{ padding-bottom: .5rem !important; }
+
+    .wdg-drg-wrap{
+      max-width: 100%;
+      margin: 0;
+    }
+
+    .wdg-drg-hero{
+      background: linear-gradient(135deg, var(--wdg-primary), var(--wdg-primary-2));
+      color:#fff;
+      border-radius: 28px;
+      padding: 2rem 2.4rem;
+      box-shadow: 0 28px 70px rgba(15,23,42,.28);
+      position: relative;
+      overflow: hidden;
+    }
+    .wdg-drg-hero::after{
+      content:'';
+      position:absolute;
+      inset:-120px -140px auto auto;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.14);
+      filter: blur(1px);
+      transform: rotate(12deg);
+    }
+    .wdg-drg-hero h1{ font-weight: 800; font-size: 1.9rem; margin:0 0 .35rem; letter-spacing: -.02em; }
+    .wdg-drg-hero p{ margin:0; max-width: 980px; color: rgba(255,255,255,.92); }
+    .wdg-drg-kpis{ display:flex; gap:.7rem; flex-wrap:wrap; margin-top: 1.2rem; }
+    .wdg-kpi{
+      display:flex; align-items:center; gap:.55rem;
+      padding:.5rem .8rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(6px);
+      font-weight: 700;
+      font-size: .85rem;
+    }
+
+    .wdg-drg-shell{ display:grid; grid-template-columns: 320px 1fr; gap: 1.1rem; margin-top: 1.1rem; }
+    @media (max-width: 992px){
+      .wdg-drg-shell{ grid-template-columns: 1fr; }
+    }
+
+    .wdg-drg-sidenav{
+      /* Mesma identidade do menu vertical da Caixa de Mensagens (portal-morador/home.css) */
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.06), transparent 42%),
+        linear-gradient(180deg, #0b1f44, #0e2d5f 45%, #0f3c80 100%);
+      color: #f8fbff;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 22px;
+      box-shadow:
+        0 18px 36px rgba(5, 10, 26, 0.32),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+      padding: .75rem;
+      position: sticky;
+      top: 90px;
+      align-self: start;
+      overflow: hidden;
+    }
+    .wdg-drg-sidenav .title{
+      margin: .15rem 0 .65rem;
+      font-weight: 900;
+      color: #f8fbff;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      font-size: .95rem;
+      line-height: 1.15;
+      text-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.28),
+        0 1px 0 rgba(255, 255, 255, 0.35),
+        0 -1px 0 rgba(12, 34, 74, 0.35);
+    }
+
+    .wdg-navbtn{
+      width: 100%;
+      border-radius: 14px;
+      text-align: left;
+      padding: .48rem .85rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        radial-gradient(circle at 16% 24%, rgba(255, 255, 255, 0.08), transparent 55%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      color: rgba(248, 251, 255, 0.90);
+      box-shadow:
+        0 14px 26px rgba(1, 10, 28, 0.18),
+        0 1px 0 rgba(255, 255, 255, 0.05) inset;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: .75rem;
+      transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    .wdg-navbtn:focus-visible{
+      outline: 2px solid rgba(142, 197, 255, 0.55);
+      outline-offset: 2px;
+    }
+    .wdg-navbtn:hover,
+    .wdg-navbtn.active{
+      background:
+        radial-gradient(circle at 18% 40%, rgba(142, 197, 255, 0.22), transparent 52%),
+        linear-gradient(180deg, rgba(44, 123, 255, 0.16), rgba(255, 255, 255, 0.04));
+      border-color: rgba(142, 197, 255, 0.22);
+      color: #fff;
+      box-shadow:
+        0 18px 40px rgba(1, 10, 28, 0.26),
+        0 0 0 1px rgba(44, 123, 255, 0.10) inset,
+        0 0 26px rgba(44, 123, 255, 0.32);
+      transform: translateY(-1px);
+    }
+    .wdg-navbtn .left{ display:flex; align-items:center; gap:.6rem; }
+    .wdg-navbtn .left .wdg-navico{
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      flex: 0 0 40px;
+    }
+
+    .wdg-navbtn .left .wdg-navico img{
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.32));
+      opacity: .98;
+    }
+
+    .wdg-navbtn:hover .left .wdg-navico img,
+    .wdg-navbtn.active .left .wdg-navico img{
+      opacity: 1;
+    }
+    .wdg-navbtn .meta{ color: rgba(255,255,255,.82); font-weight: 700; font-size: .78rem; }
+    .wdg-navbtn:not(.active) .meta{ color: rgba(255,255,255,.70); }
+
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      .wdg-drg-sidenav{
+        -webkit-backdrop-filter: blur(16px) saturate(160%);
+        backdrop-filter: blur(16px) saturate(160%);
+      }
+    }
+
+    .wdg-drg-content{
+      background: var(--wdg-card);
+      border: 1px solid var(--wdg-line);
+      border-radius: 22px;
+      box-shadow: var(--wdg-shadow);
+      padding: 1.2rem 1.35rem;
+      min-height: 540px;
+    }
+
+    /* Início (Staff): remove o quadro branco externo do conteúdo */
+    .wdg-drg-content.wdg-drg-content--flat{
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+      min-height: var(--wdg-inicio-fill-h, 0px);
+    }
+
+    .wdg-drg-content.wdg-drg-content--flat > [data-pane="inicio"]{
+      padding: .25rem .25rem 0;
+    }
+
+    .wdg-panel-title{ display:flex; align-items:center; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+    .wdg-panel-title h2{ margin:0; font-size: 1.15rem; font-weight: 500; color: var(--wdg-text); }
+    .wdg-panel-title .desc{ color: var(--wdg-muted); font-size: .92rem; margin:0; }
+
+    /* Campo Condomínio (abaixo do título) */
+    .wdg-panel-subbar{
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      gap: .9rem;
+      margin: -.35rem 0 1rem;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .wdg-condo-field{ display:flex; flex-direction: column; gap: .45rem; min-width: 420px; max-width: 760px; width: 100%; }
+    .wdg-condo-controlrow{ display:flex; align-items:center; gap: .7rem; width: 100%; }
+    .wdg-condo-inline-logo{
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(15,23,42,.04);
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      flex: 0 0 46px;
+    }
+    .wdg-condo-label{
+      font-weight: 800;
+      font-size: .78rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(15,23,42,.65);
+    }
+    .wdg-condo-select.form-select{
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.12);
+      box-shadow: 0 10px 22px rgba(15,23,42,.06);
+      transition: box-shadow .16s ease, border-color .16s ease, transform .16s ease;
+      padding-left: 1rem;
+      padding-right: 2.2rem;
+      min-height: 62px;
+      font-size: 1.05rem;
+      font-weight: 750;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .wdg-condo-select.form-select:focus{
+      border-color: rgba(29,78,216,.35);
+      box-shadow:
+        0 0 0 .25rem rgba(29,78,216,.12),
+        0 18px 38px rgba(15,23,42,.10);
+      transform: translateY(-1px);
+    }
+    .wdg-condo-select.form-select:disabled{
+      background: rgba(2,6,23,.03);
+      opacity: 1;
+      color: rgba(15,23,42,.72);
+    }
+
+    .wdg-condo-userpickhost{ display: none; }
+    .wdg-condo-userpickhost.wdg-on{ display: block; }
+    .wdg-condo-userpickhost .wdg-userpick{ width: 100%; max-width: 100%; }
+    .wdg-condo-userpickhost.wdg-on ~ .wdg-condo-controlrow{ display:none; }
+    .wdg-condo-userpickhost .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-lg .wdg-userpick-input.form-control{
+      min-height: 66px;
+      padding-left: 84px;
+      padding-right: 66px;
+      font-size: 1.05rem;
+      font-weight: 850;
+    }
+    .wdg-condo-userpickhost .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-lg .wdg-userpick-selected{ inset: 10px 52px 10px 12px; }
+    .wdg-condo-userpickhost .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-lg .wdg-userpick-sel-avatar{ width: 46px; height: 46px; }
+
+    @media (max-width: 700px){
+      .wdg-condo-field{ min-width: 0; max-width: 100%; }
+    }
+
+    .wdg-card{
+      background: #fff;
+      border: 1px solid rgba(15,23,42,.08);
+      border-radius: 18px;
+      padding: 1rem;
+      box-shadow: 0 16px 40px rgba(15,23,42,.06);
+    }
+
+    .wdg-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+      padding:.35rem .65rem;
+      border-radius: 999px;
+      background: var(--wdg-pill);
+      color: #1d4ed8;
+      font-weight: 800;
+      font-size: .8rem;
+    }
+
+    .wdg-grid{ display:grid; grid-template-columns: 1.2fr .8fr; gap: 1rem; }
+    .wdg-grid--inicio{ grid-template-columns: 1fr; }
+
+    /* Dirigentes · Atribuições: matriz de 4 colunas com slots compactos */
+    .wdg-assignments-grid{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.2rem;
+      width: 100%;
+    }
+    .wdg-assignment-slot{
+      min-height: 180px;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+
+      /* Premium card */
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid rgba(15,23,42,.10);
+      box-shadow:
+        0 22px 55px rgba(15,23,42,.10),
+        0 1px 0 rgba(255,255,255,.8) inset;
+
+      transform-style: preserve-3d;
+      will-change: transform, box-shadow, border-color;
+      transition:
+        transform .18s cubic-bezier(.2,.8,.2,1),
+        box-shadow .18s cubic-bezier(.2,.8,.2,1),
+        border-color .18s cubic-bezier(.2,.8,.2,1),
+        background .18s ease;
+    }
+
+    /* brilho discreto (neutro) */
+    .wdg-assignment-slot::after{
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,.55) 45%,
+        rgba(255,255,255,0) 70%
+      );
+      transform: translateX(-35%) rotate(14deg);
+      mix-blend-mode: overlay;
+      opacity: .0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .35s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .wdg-assignment-slot:hover{
+      border-color: rgba(29,78,216,.22);
+      box-shadow:
+        0 30px 80px rgba(15,23,42,.14),
+        0 18px 44px rgba(29,78,216,.10),
+        0 1px 0 rgba(255,255,255,.85) inset;
+      transform: translateY(-3px) perspective(900px) rotateX(1.2deg) rotateY(-1.2deg);
+    }
+    .wdg-assignment-slot:hover::after{ opacity: .45; transform: translateX(0%) rotate(14deg); }
+
+    .wdg-assignment-slot:focus-within{
+      border-color: rgba(29,78,216,.35);
+      box-shadow:
+        0 0 0 4px rgba(29,78,216,.14),
+        0 30px 80px rgba(15,23,42,.12);
+    }
+
+    /* Quando o dropdown está aberto, não deixa o card “saltar” por hover/transform */
+    .wdg-assignment-slot.wdg-assignment-slot--picking,
+    .wdg-assignment-slot.wdg-assignment-slot--picking:hover{
+      transform: none !important;
+    }
+
+    /* tipografia mais “premium” dentro do slot */
+    .wdg-assignment-slot p{ letter-spacing: -.01em; }
+    .wdg-assignment-slot small{ color: #64748b !important; }
+
+    /* Estrutura premium do slot (head + pills + usuário + ações) */
+    .wdg-assignment-slot{
+      border-radius: 20px;
+      padding: 14px 14px 12px;
+    }
+
+    .wdg-slot-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+    .wdg-slot-role{
+      font-weight: 850;
+      color: var(--wdg-text);
+      letter-spacing: -.015em;
+      font-size: .98rem;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wdg-slot-sub{
+      font-size: .78rem;
+      color: var(--wdg-muted);
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wdg-slot-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: .35rem;
+      padding: .34rem .62rem;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: .72rem;
+      letter-spacing: .55px;
+      text-transform: uppercase;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(15,23,42,.06);
+      color: #334155;
+      box-shadow: 0 10px 24px rgba(15,23,42,.08);
+      user-select: none;
+      white-space: nowrap;
+    }
+    .wdg-slot-pill--active{ background: rgba(22,163,74,.12); border-color: rgba(22,163,74,.26); color: #166534; }
+    .wdg-slot-pill--vacant{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.28); color: #92400e; }
+    .wdg-slot-pill--ended{ background: rgba(220,38,38,.12); border-color: rgba(220,38,38,.26); color: #991b1b; }
+    .wdg-slot-pill--primary{ background: rgba(124,58,237,.14); border-color: rgba(124,58,237,.30); color: #6d28d9; }
+
+    .wdg-slot-label{
+      font-size: .72rem;
+      color: rgba(100,116,139,1);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      font-weight: 900;
+      margin-top: 8px;
+    }
+    .wdg-slot-value{ font-size: .88rem; color: var(--wdg-text); }
+
+    .wdg-slot-doclink{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 100%;
+      padding: .28rem .56rem;
+      border-radius: 999px;
+      border: 1px solid rgba(37,99,235,.18);
+      background: rgba(37,99,235,.08);
+      color: #1d4ed8;
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 12px 26px rgba(15,23,42,.08);
+    }
+    .wdg-slot-doclink:hover{ background: rgba(37,99,235,.12); border-color: rgba(37,99,235,.26); color: #1e40af; }
+
+    .wdg-slot-user{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .wdg-slot-avatar{
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      object-fit: cover;
+      flex: 0 0 40px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: #fff;
+      box-shadow: 0 14px 34px rgba(15,23,42,.12);
+      display:block;
+    }
+    .wdg-slot-usertext{ min-width: 0; }
+    .wdg-slot-username{
+      font-weight: 850;
+      color: var(--wdg-text);
+      font-size: .92rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .wdg-slot-usermeta{
+      font-size: .78rem;
+      color: var(--wdg-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+      margin-top: 2px;
+    }
+
+    .wdg-slot-row{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .wdg-slot-actions{
+      display:flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      width: 100%;
+    }
+    .wdg-slot-actions{
+      padding-top: 10px;
+      border-top: 1px solid rgba(15,23,42,.08);
+    }
+    .wdg-assignment-slot .btn{
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: .2px;
+      padding: .44rem .78rem;
+      font-size: .78rem;
+      box-shadow: 0 12px 26px rgba(15,23,42,.08);
+    }
+    .wdg-assignment-slot .btn.btn-primary{
+      background: linear-gradient(135deg, var(--wdg-primary), #2563eb 50%, #60a5fa 100%);
+      border: 0;
+    }
+    .wdg-assignment-slot .btn.btn-primary:hover{ filter: brightness(1.02); }
+    .wdg-assignment-slot .btn.btn-outline-danger{ border-color: rgba(220,38,38,.45); color: #dc2626; }
+    .wdg-assignment-slot .btn.btn-outline-danger:hover{ background: rgba(220,38,38,.10); }
+    .wdg-assignment-slot .btn.btn-outline-secondary{ border-color: rgba(15,23,42,.12); }
+    .wdg-assignment-slot .btn.btn-outline-secondary:hover{ background: rgba(29,78,216,.08); }
+
+    /* Destaque do cargo Síndico */
+    .wdg-assignment-slot.wdg-assignment-slot--featured{
+      border-color: rgba(29,78,216,.22);
+      box-shadow:
+        0 42px 110px rgba(15,23,42,.18),
+        0 26px 66px rgba(29,78,216,.16),
+        0 1px 0 rgba(255,255,255,.90) inset;
+    }
+    .wdg-assignment-slot.wdg-assignment-slot--featured::after{
+      opacity: .25;
+    }
+
+    /* UserPick PRO (input digitável + dropdown com avatar) — igual Caixa de Mensagens */
+    .wdg-assignment-slot .wdg-userpick{ width: 100%; max-width: 100%; }
+
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-field{
+      position: relative;
+      border-radius: 999px;
+      padding: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,1));
+      box-shadow:
+        0 1px 2px rgba(2,6,23,.06),
+        0 14px 34px rgba(2,6,23,.10);
+      border: 1px solid rgba(15,23,42,.10);
+      transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+      overflow: hidden;
+    }
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-field:hover{
+      box-shadow:
+        0 2px 4px rgba(2,6,23,.07),
+        0 22px 56px rgba(2,6,23,.12);
+      transform: translateY(-1px);
+    }
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-input.form-control{
+      border: 0;
+      box-shadow: none;
+      border-radius: 999px;
+      background: transparent;
+      font-weight: 650;
+      position: relative;
+      z-index: 1;
+      transition: opacity .12s ease;
+      width: 100%;
+    }
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-input.form-control:focus{
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(29,78,216,.12);
+    }
+
+    /* Tamanho compacto para caber no card */
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-sm .wdg-userpick-input.form-control{
+      min-height: 58px;
+      padding-left: 74px;
+      padding-right: 66px;
+    }
+
+    /* Tamanho grande (usado em modais / campos principais) */
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-lg .wdg-userpick-input.form-control{
+      min-height: 56px;
+      padding-left: 74px;
+      padding-right: 66px;
+      font-size: 1rem;
+      font-weight: 750;
+    }
+
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-selected{
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      pointer-events: none;
+      z-index: 2;
+      transition: opacity .12s ease;
+    }
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-sm .wdg-userpick-selected{ inset: 8px 52px 8px 10px; }
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-lg .wdg-userpick-selected{ inset: 8px 52px 8px 12px; }
+
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-has .wdg-userpick-input{ opacity: 0; }
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-has .wdg-userpick-field:focus-within .wdg-userpick-input{ opacity: 1; }
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-has .wdg-userpick-field:focus-within .wdg-userpick-selected{ opacity: 0; }
+
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-sel-avatar{
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid rgba(15,23,42,.10);
+      box-shadow: 0 1px 2px rgba(2,6,23,.08);
+      background: rgba(15,23,42,.04);
+      flex: 0 0 auto;
+      max-width: 52px;
+      max-height: 52px;
+    }
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-sm .wdg-userpick-sel-avatar{ width: 42px; height: 42px; }
+    .wdg-userpick.wdg-userpick-pro.wdg-userpick-pro-lg .wdg-userpick-sel-avatar{ width: 44px; height: 44px; }
+
+    /* Premium: modal Novo mandato */
+    .modal-backdrop{
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .modal-backdrop.show{ opacity: .55; }
+
+    #wdgMandatoModal .modal-dialog{ max-width: 980px; }
+    #wdgMandatoModal .modal-content{
+      border-radius: 26px;
+      border: 1px solid rgba(15,23,42,.10);
+      background:
+        radial-gradient(900px 240px at 20% -10%, rgba(59,130,246,.18), transparent 60%),
+        radial-gradient(900px 240px at 80% -10%, rgba(124,58,237,.18), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      box-shadow:
+        0 60px 160px rgba(2,6,23,.30),
+        0 28px 72px rgba(2,6,23,.18),
+        0 1px 0 rgba(255,255,255,.92) inset;
+      overflow: hidden;
+      position: relative;
+    }
+    #wdgMandatoModal .modal-content::before{
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, rgba(29,78,216,1), rgba(124,58,237,1), rgba(16,185,129,1));
+      opacity: .95;
+      z-index: 1;
+    }
+    #wdgMandatoModal .modal-header{
+      border-bottom: 1px solid rgba(15,23,42,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(248,250,252,.78));
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      position: relative;
+      z-index: 2;
+    }
+    #wdgMandatoModal .modal-title{
+      font-weight: 600;
+      letter-spacing: -.02em;
+      color: rgba(2,6,23,.92);
+    }
+    #wdgMandatoModal .modal-body{
+      padding: 1.35rem 1.45rem 1.2rem;
+    }
+    #wdgMandatoModal [data-mandato-role-label]{
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .45rem .75rem;
+      border-radius: 999px;
+      background: rgba(15,23,42,.04);
+      border: 1px solid rgba(15,23,42,.08);
+      color: rgba(15,23,42,.70);
+      font-size: .86rem;
+    }
+    #wdgMandatoModal .form-label{
+      font-weight: 500;
+      color: rgba(15,23,42,.78);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: .74rem;
+    }
+    #wdgMandatoModal .form-control,
+    #wdgMandatoModal .form-select{
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow:
+        0 10px 24px rgba(2,6,23,.08),
+        0 1px 0 rgba(255,255,255,.85) inset;
+      transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease, background .18s ease;
+      font-weight: 500;
+      min-height: 46px;
+    }
+    #wdgMandatoModal input[type="file"].form-control{
+      padding: .56rem .8rem;
+    }
+    #wdgMandatoModal input[type="file"].form-control::file-selector-button{
+      border: 0;
+      border-radius: 12px;
+      padding: .52rem .78rem;
+      margin-right: .75rem;
+      background: linear-gradient(135deg, rgba(29,78,216,1), rgba(124,58,237,1));
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 12px 28px rgba(29,78,216,.24);
+      cursor: pointer;
+      transition: filter .15s ease, transform .15s ease;
+    }
+    #wdgMandatoModal input[type="file"].form-control::file-selector-button:hover{
+      filter: brightness(1.04);
+      transform: translateY(-1px);
+    }
+    #wdgMandatoModal .form-control:focus,
+    #wdgMandatoModal .form-select:focus{
+      background: rgba(255,255,255,.92);
+      border-color: rgba(29,78,216,.34);
+      box-shadow:
+        0 0 0 .24rem rgba(124,58,237,.11),
+        0 20px 52px rgba(2,6,23,.14);
+      transform: translateY(-1px);
+    }
+    #wdgMandatoModal .wdg-userpick.wdg-userpick-pro .wdg-userpick-field{
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(15,23,42,.10);
+      box-shadow:
+        0 10px 24px rgba(2,6,23,.08),
+        0 1px 0 rgba(255,255,255,.85) inset;
+    }
+    #wdgMandatoModal .wdg-userpick.wdg-userpick-pro .wdg-userpick-field:hover{ transform: translateY(-1px); }
+    #wdgMandatoModal .wdg-userpick.wdg-userpick-pro .wdg-userpick-menu{
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.10);
+      box-shadow: 0 26px 72px rgba(2,6,23,.22);
+      overflow: hidden;
+    }
+    #wdgMandatoModal .modal-footer{
+      border-top: 1px solid rgba(15,23,42,.08);
+      background: rgba(248,250,252,.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    #wdgMandatoModal .btn{
+      border-radius: 999px;
+      font-weight: 600;
+      padding: .58rem 1rem;
+      box-shadow: 0 14px 34px rgba(2,6,23,.12);
+    }
+    #wdgMandatoModal .btn.btn-primary{
+      border: 0;
+      background: linear-gradient(135deg, rgba(29,78,216,1), rgba(124,58,237,1));
+      box-shadow: 0 18px 46px rgba(29,78,216,.26);
+    }
+    #wdgMandatoModal .btn.btn-primary:hover{ filter: brightness(1.03); transform: translateY(-1px); }
+    #wdgMandatoModal .btn.btn-outline-secondary{ border-color: rgba(15,23,42,.14); }
+    #wdgMandatoModal .btn.btn-outline-secondary:hover{ background: rgba(15,23,42,.04); }
+
+    /* Tipografia leve também no UserPick dentro do modal */
+    #wdgMandatoModal .wdg-userpick.wdg-userpick-pro .wdg-userpick-sel-name{ font-weight: 600; }
+    #wdgMandatoModal .wdg-userpick.wdg-userpick-pro .wdg-userpick-sel-meta{ font-weight: 500; }
+
+    /* Premium: modal Encerrar mandato (alinhado com Novo mandato) */
+    #wdgMandatoEndModal .modal-content{
+      border-radius: 26px;
+      border: 1px solid rgba(15,23,42,.10);
+      background:
+        radial-gradient(900px 240px at 20% -10%, rgba(59,130,246,.14), transparent 60%),
+        radial-gradient(900px 240px at 80% -10%, rgba(124,58,237,.14), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      box-shadow:
+        0 50px 140px rgba(2,6,23,.26),
+        0 1px 0 rgba(255,255,255,.92) inset;
+      overflow: hidden;
+      position: relative;
+    }
+    #wdgMandatoEndModal .modal-content::before{
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, rgba(220,38,38,1), rgba(245,158,11,1));
+      opacity: .95;
+      z-index: 1;
+    }
+    #wdgMandatoEndModal .modal-header{
+      border-bottom: 1px solid rgba(15,23,42,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(248,250,252,.78));
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      position: relative;
+      z-index: 2;
+    }
+    #wdgMandatoEndModal .modal-title{ font-weight: 600; letter-spacing: -.02em; }
+    #wdgMandatoEndModal .modal-body{ padding: 1.1rem 1.25rem 1.0rem; }
+    #wdgMandatoEndModal .form-label{ font-weight: 500; color: rgba(15,23,42,.80); }
+    #wdgMandatoEndModal .form-control{
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow:
+        0 10px 24px rgba(2,6,23,.08),
+        0 1px 0 rgba(255,255,255,.85) inset;
+      transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease, background .18s ease;
+      font-weight: 500;
+      min-height: 46px;
+    }
+    #wdgMandatoEndModal .form-control:focus{
+      background: rgba(255,255,255,.92);
+      border-color: rgba(220,38,38,.34);
+      box-shadow:
+        0 0 0 .24rem rgba(245,158,11,.12),
+        0 20px 52px rgba(2,6,23,.14);
+      transform: translateY(-1px);
+    }
+    #wdgMandatoEndModal .modal-footer{ border-top: 1px solid rgba(15,23,42,.08); background: rgba(248,250,252,.72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    #wdgMandatoEndModal .btn{ border-radius: 999px; font-weight: 600; padding: .58rem 1rem; box-shadow: 0 14px 34px rgba(2,6,23,.12); }
+    #wdgMandatoEndModal .btn.btn-danger{ border: 0; background: linear-gradient(135deg, rgba(220,38,38,1), rgba(245,158,11,1)); box-shadow: 0 18px 46px rgba(220,38,38,.20); }
+    #wdgMandatoEndModal .btn.btn-danger:hover{ filter: brightness(1.03); transform: translateY(-1px); }
+
+    /* Premium: modal Excluir mandato (confirmação) */
+    #wdgMandatoDeleteModal .modal-content{
+      border-radius: 26px;
+      border: 1px solid rgba(15,23,42,.10);
+      background:
+        radial-gradient(900px 240px at 20% -10%, rgba(220,38,38,.14), transparent 60%),
+        radial-gradient(900px 240px at 80% -10%, rgba(245,158,11,.10), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      box-shadow:
+        0 50px 140px rgba(2,6,23,.26),
+        0 1px 0 rgba(255,255,255,.92) inset;
+      overflow: hidden;
+      position: relative;
+    }
+    #wdgMandatoDeleteModal .modal-content::before{
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, rgba(220,38,38,1), rgba(245,158,11,1));
+      opacity: .95;
+      z-index: 1;
+    }
+    #wdgMandatoDeleteModal .modal-header{
+      border-bottom: 1px solid rgba(15,23,42,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(248,250,252,.78));
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      position: relative;
+      z-index: 2;
+    }
+    #wdgMandatoDeleteModal .modal-title{ font-weight: 600; letter-spacing: -.02em; }
+    #wdgMandatoDeleteModal .modal-body{ padding: 1.15rem 1.35rem 1.1rem; }
+    #wdgMandatoDeleteModal .wdg-delete-question{
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: -.01em;
+      font-size: 1.02rem;
+      text-align: center;
+      margin-top: .2rem;
+    }
+    #wdgMandatoDeleteModal .modal-footer{ border-top: 1px solid rgba(15,23,42,.08); background: rgba(248,250,252,.72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    #wdgMandatoDeleteModal .btn{ border-radius: 999px; font-weight: 600; padding: .58rem 1rem; box-shadow: 0 14px 34px rgba(2,6,23,.12); }
+    #wdgMandatoDeleteModal .btn.btn-danger{ border: 0; background: linear-gradient(135deg, rgba(220,38,38,1), rgba(245,158,11,1)); box-shadow: 0 18px 46px rgba(220,38,38,.20); }
+    #wdgMandatoDeleteModal .btn.btn-danger:hover{ filter: brightness(1.03); transform: translateY(-1px); }
+
+    /* Premium: modal Histórico */
+    #wdgMandatoHistoryModal .modal-dialog{ max-width: 1200px; }
+    #wdgMandatoHistoryModal .modal-content{
+      border-radius: 26px;
+      border: 1px solid rgba(15,23,42,.10);
+      background:
+        radial-gradient(900px 240px at 20% -10%, rgba(59,130,246,.12), transparent 60%),
+        radial-gradient(900px 240px at 80% -10%, rgba(124,58,237,.12), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      box-shadow:
+        0 50px 140px rgba(2,6,23,.26),
+        0 1px 0 rgba(255,255,255,.92) inset;
+      overflow: hidden;
+      position: relative;
+    }
+    #wdgMandatoHistoryModal .modal-content::before{
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, rgba(29,78,216,1), rgba(124,58,237,1));
+      opacity: .95;
+      z-index: 1;
+    }
+    #wdgMandatoHistoryModal .modal-header{ border-bottom: 1px solid rgba(15,23,42,.08); background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(248,250,252,.78)); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); position: relative; z-index: 2; }
+    #wdgMandatoHistoryModal .modal-title{ font-weight: 600; letter-spacing: -.02em; }
+    #wdgMandatoHistoryModal .modal-body{ padding: 1.15rem 1.35rem 1.1rem; }
+    #wdgMandatoHistoryModal .modal-footer{ border-top: 1px solid rgba(15,23,42,.08); background: rgba(248,250,252,.72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    #wdgMandatoHistoryModal .btn{ border-radius: 999px; font-weight: 600; padding: .58rem 1rem; box-shadow: 0 14px 34px rgba(2,6,23,.12); }
+
+    /* Tabela do histórico no mesmo look de Configuração (wdg-table) */
+    #wdgMandatoHistoryModal .wdg-history-wrap{
+      border-radius: 18px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.65);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 18px 50px rgba(2,6,23,.10);
+      overflow: hidden;
+      position: relative;
+    }
+    /* Faixa premium por trás do header (fixa no topo do wrap, não rola junto) */
+    #wdgMandatoHistoryModal .wdg-history-wrap::before{
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 58px;
+      background:
+        radial-gradient(900px 240px at 18% -10%, rgba(29,78,216,.30), rgba(0,0,0,0) 55%),
+        radial-gradient(900px 240px at 82% -10%, rgba(124,58,237,.30), rgba(0,0,0,0) 55%),
+        linear-gradient(180deg, #0b2f66 0%, #08254f 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    #wdgMandatoHistoryModal .wdg-history-scroll{
+      max-height: min(56vh, 520px);
+      overflow: auto;
+      padding: .75rem .85rem;
+      scrollbar-gutter: stable;
+      position: relative;
+      z-index: 2;
+    }
+    #wdgMandatoHistoryModal .wdg-history-table{ margin: 0; border-spacing: 0 10px; }
+    /* Centralização total (horizontal + vertical) */
+    #wdgMandatoHistoryModal .wdg-history-table th,
+    #wdgMandatoHistoryModal .wdg-history-table td{
+      text-align: center;
+      vertical-align: middle;
+    }
+    #wdgMandatoHistoryModal .wdg-history-table thead th{
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: transparent;
+      border-bottom: 1px solid rgba(255,255,255,.18);
+      padding-top: .85rem;
+      padding-bottom: .7rem;
+      color: rgba(255,255,255,.92);
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+    #wdgMandatoHistoryModal .wdg-history-table tbody tr{
+      background: rgba(255,255,255,.92);
+      box-shadow:
+        0 16px 44px rgba(15,23,42,.08),
+        0 1px 0 rgba(255,255,255,.85) inset;
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+    #wdgMandatoHistoryModal .wdg-history-table tbody tr:hover{
+      transform: translateY(-1px);
+      box-shadow:
+        0 22px 66px rgba(15,23,42,.12),
+        0 1px 0 rgba(255,255,255,.88) inset;
+    }
+    #wdgMandatoHistoryModal .wdg-history-table tbody tr td:first-child{ border-left: 3px solid rgba(124,58,237,.25); }
+
+    /* Ocupante (foto + nome + email) */
+    #wdgMandatoHistoryModal .wdg-hist-occupant{ display:flex; align-items:center; justify-content:center; gap: 10px; min-width: 0; }
+    #wdgMandatoHistoryModal .wdg-hist-avatar{
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid rgba(15,23,42,.10);
+      background: #fff;
+      box-shadow: 0 14px 34px rgba(15,23,42,.12);
+      flex: 0 0 40px;
+      display:block;
+    }
+    #wdgMandatoHistoryModal .wdg-hist-occupant-text{ min-width: 0; text-align: center; }
+    #wdgMandatoHistoryModal .wdg-hist-name{ font-weight: 650; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+    #wdgMandatoHistoryModal .wdg-hist-email{ font-size: .82rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+
+    /* Badge status premium */
+    #wdgMandatoHistoryModal .wdg-hist-badge{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .28rem .6rem;
+      border-radius: 999px;
+      font-size: .72rem;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(15,23,42,.04);
+      color: rgba(15,23,42,.82);
+      white-space: nowrap;
+      box-shadow: 0 10px 24px rgba(15,23,42,.08);
+    }
+    #wdgMandatoHistoryModal .wdg-hist-badge--ok{ background: rgba(22,163,74,.12); border-color: rgba(22,163,74,.26); color: #166534; }
+    #wdgMandatoHistoryModal .wdg-hist-badge--ended{ background: rgba(220,38,38,.12); border-color: rgba(220,38,38,.26); color: #991b1b; }
+
+    /* Badge de origem */
+    #wdgMandatoHistoryModal .wdg-hist-origin{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .28rem .6rem;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 650;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(2,6,23,.04);
+      color: #0f172a;
+      white-space: nowrap;
+    }
+    #wdgMandatoHistoryModal .wdg-hist-origin--assembleia{ background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.26); color: #1d4ed8; }
+    #wdgMandatoHistoryModal .wdg-hist-origin--judicial{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.30); color: #92400e; }
+    #wdgMandatoHistoryModal .wdg-hist-origin--provisorio{ background: rgba(124,58,237,.12); border-color: rgba(124,58,237,.26); color: #5b21b6; }
+
+    /* Botão excluir (Master) mais premium */
+    #wdgMandatoHistoryModal .wdg-hist-danger{
+      border-color: rgba(220,38,38,.38) !important;
+      color: #dc2626 !important;
+      background: rgba(255,255,255,.65);
+    }
+    #wdgMandatoHistoryModal .wdg-hist-danger:hover{
+      background: rgba(220,38,38,.10) !important;
+      transform: translateY(-1px);
+    }
+
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-sel-text{ min-width: 0; display:flex; flex-direction: column; gap: .1rem; }
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-sel-name{ font-weight: 900; color: var(--wdg-text); line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-sel-meta{ font-size: .82rem; font-weight: 650; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-clear{
+      position: absolute;
+      top: 50%;
+      right: 34px;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.85);
+      color: rgba(15,23,42,.7);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      line-height: 1;
+      box-shadow: 0 1px 2px rgba(2,6,23,.06);
+      cursor: pointer;
+      transition: background .12s ease, transform .12s ease;
+      z-index: 3;
+    }
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-clear:hover{
+      background: rgba(255,255,255,1);
+      transform: translateY(-50%) scale(1.04);
+    }
+    .wdg-userpick.wdg-userpick-pro .wdg-userpick-chevron{
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      width: 10px;
+      height: 10px;
+      border-right: 2px solid rgba(15,23,42,.55);
+      border-bottom: 2px solid rgba(15,23,42,.55);
+      transform: translateY(-55%) rotate(45deg);
+      opacity: .75;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .wdg-userpick-menu{
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      max-height: 320px;
+      overflow: auto;
+      background: #fff;
+      border: 1px solid rgba(15,23,42,.12);
+      border-radius: 14px;
+      box-shadow: 0 18px 50px rgba(2,6,23,.14);
+      z-index: 3000;
+      padding: .25rem;
+      scrollbar-gutter: stable;
+    }
+    .wdg-userpick-item{
+      width: 100%;
+      border: 0;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      padding: .45rem .55rem;
+      border-radius: 12px;
+      text-align: left;
+      position: relative;
+    }
+    .wdg-userpick-item:hover{ background: rgba(29,78,216,.06); }
+    .wdg-userpick-item[data-selected="1"]{ background: rgba(29,78,216,.09); }
+    .wdg-userpick-item--none{ border: 1px solid rgba(15,23,42,.06); background: rgba(2,6,23,.02); }
+    .wdg-userpick-avatar{
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(15,23,42,.04);
+      flex: 0 0 auto;
+    }
+    .wdg-userpick-meta{ display:flex; flex-direction: column; min-width: 0; }
+    .wdg-userpick-name{ font-weight: 900; color: var(--wdg-text); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wdg-userpick-email{ font-weight: 650; color: #64748b; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wdg-userpick-check{
+      margin-left: auto;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: .9rem;
+      color: rgba(29,78,216,.9);
+      background: rgba(29,78,216,.10);
+      border: 1px solid rgba(29,78,216,.18);
+      opacity: 0;
+      transform: scale(.92);
+      transition: opacity .12s ease, transform .12s ease;
+    }
+    .wdg-userpick-item[data-selected="1"] .wdg-userpick-check{ opacity: 1; transform: scale(1); }
+    .wdg-userpick-empty{ padding: .7rem .8rem; color: #94a3b8; font-weight: 700; text-align: center; }
+
+    @media (max-width: 1200px){
+      .wdg-assignments-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 700px){
+      .wdg-assignments-grid{ grid-template-columns: 1fr; }
+    }
+    @media (max-width: 992px){
+      .wdg-grid{ grid-template-columns: 1fr; }
+    }
+
+    .wdg-empty{
+      padding: 1.1rem;
+      border: 1px dashed rgba(15,23,42,.18);
+      border-radius: 16px;
+      color: #94a3b8;
+      font-weight: 700;
+      text-align:center;
+      background: #f8fafc;
+    }
+
+    .wdg-org{
+      padding: 1rem;
+      border-radius: 18px;
+      background: radial-gradient(1200px 600px at 40% 0%, rgba(56,189,248,.18), transparent 60%),
+                  radial-gradient(900px 500px at 100% 30%, rgba(29,78,216,.12), transparent 60%),
+                  linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(15,23,42,.08);
+      overflow: auto;
+      position: relative;
+    }
+
+    /* Pré-visualização: fundo branco (sem degradê azul) */
+    .wdg-org.wdg-org--preview{
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Início: mesmo fundo branco da pré-visualização */
+    .wdg-org.wdg-org--main{
+      background: #ffffff;
+    }
+
+    /* Staff (Início): sem “quadros brancos”/molduras — organograma direto na página */
+    [data-pane="inicio"] .wdg-grid--inicio .wdg-card{
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    [data-pane="inicio"] #orgContainer.wdg-org.wdg-org--main{
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+      overflow: visible;
+      min-height: 0;
+    }
+
+    /* Cabeçalho do organograma (logo + dados do condomínio) */
+    .wdg-org-head{ display:flex; align-items:flex-start; gap: 12px; }
+    /* Cabeçalho é apenas para impressão, mas mantemos no DOM para pré-carregar a logo */
+    .wdg-org-printheader{
+      display:flex;
+      align-items:flex-start;
+      gap: 12px;
+      min-width: 0;
+      position: absolute;
+      left: -99999px;
+      top: -99999px;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      visibility: visible;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .wdg-org-printlogo{ width: 120px; height: 44px; object-fit: contain; display:block; background: transparent; }
+    .wdg-org-printmeta{ min-width: 0; }
+    .wdg-org-printname{ font-weight: 900; font-size: 16px; line-height: 1.15; color: #0f172a; }
+    .wdg-org-printline{ font-size: 12px; color: rgba(15,23,42,.78); line-height: 1.25; }
+
+    /* Botão de imprimir (ícone) */
+    .wdg-condo-row{ display:flex; align-items:flex-end; justify-content:space-between; gap: 12px; width: 100%; flex-wrap: nowrap; }
+    .wdg-condo-row .wdg-condo-field{ flex: 1 1 auto; min-width: 0; }
+    .wdg-orgprintbtn{
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 0;
+      background: transparent;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 0;
+      cursor:pointer;
+      box-shadow: none;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .wdg-orgprintbtn:hover{ transform: translateY(-1px); filter: drop-shadow(0 12px 18px rgba(2,6,23,.18)); }
+    .wdg-orgprintbtn:active{ transform: translateY(0); filter: drop-shadow(0 8px 14px rgba(2,6,23,.14)); }
+    .wdg-orgprintbtn:focus-visible{ outline: 2px solid rgba(29,78,216,.45); outline-offset: 2px; }
+    .wdg-orgprintbtn img{ width: 30px; height: 30px; object-fit: contain; display:block; }
+
+    @media screen {
+      .wdg-orgprint-connector{ display: none; }
+    }
+
+    @page { size: A4 landscape; margin: 10mm; }
+
+    /* Impressão do organograma */
+    @media print {
+
+      html, body { height: auto !important; }
+      body { background: #fff !important; }
+
+      /* esconder tudo por padrão */
+      body * {
+        visibility: hidden !important;
+      }
+
+      /* liberar apenas a raiz de impressão */
+      #wdgPrintRoot,
+      #wdgPrintRoot * {
+        visibility: visible !important;
+      }
+
+      /* cabeçalho fixo no topo */
+      #wdgPrintRoot .wdg-org-head {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 999999 !important;
+        background: #fff !important;
+        padding: 8mm 10mm 4mm 10mm !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        justify-content: center !important;
+      }
+
+      /* remove o bloco de ações (zoom) que pode sobrar vazio e deslocar a centralização */
+      #wdgPrintRoot .wdg-org-head .ms-auto{
+        display: none !important;
+      }
+
+      /* tornar o header realmente visível (no screen ele fica fora da tela/opaco) */
+      #wdgPrintRoot .wdg-org-printheader{
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+      }
+
+      /* dados centralizados; logo permanece à esquerda */
+      #wdgPrintRoot .wdg-org-printmeta{
+        flex: 1 1 auto !important;
+        text-align: center !important;
+      }
+
+      /* empurrar organograma para baixo */
+      #wdgPrintInner {
+        margin-top: 50mm !important;
+      }
+
+      /* triplicar tamanho da logo no cabeçalho */
+      #wdgPrintRoot .wdg-org-printlogo{
+        width: 180px !important;
+        height: 66px !important;
+        max-width: 100% !important;
+        object-fit: contain !important;
+      }
+
+      /* logo acima dos dados e tudo centralizado */
+      #wdgPrintRoot .wdg-org-printheader{
+        width: auto !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      #wdgPrintRoot .wdg-org-printheader::after{
+        content: none !important;
+        display: none !important;
+      }
+
+      #wdgPrintRoot .wdg-org-printmeta{
+        flex: 0 0 auto !important;
+        text-align: center !important;
+      }
+
+      /* garantir que as linhas fiquem visíveis e acima dos cards */
+      .wdg-orgchart { position: relative !important; overflow: visible !important; }
+      svg.wdg-orglines,
+      .wdg-orglines-html {
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        pointer-events: none !important;
+        overflow: visible !important;
+        z-index: 99999 !important;
+      }
+      .wdg-orgcard { position: relative !important; z-index: 1 !important; }
+
+      /* esconder UI lixo */
+      #toastRoot,
+      .wdg-toast,
+      .modal,
+      .modal-backdrop,
+      nav,
+      header,
+      aside,
+      footer,
+      button,
+      .btn,
+      .zoom-controls,
+      .wdg-zoom,
+      .wdg-zoom-controls,
+      .wdg-org-zoom,
+      .wdg-zoombar,
+      .badge,
+      .wdg-orgpill,
+      .wdg-orgstatus {
+        display: none !important;
+      }
+
+      /* Fotos sem qualquer efeito no print */
+      img,
+      .wdg-orgcard img,
+      .wdg-avatar img {
+        filter: none !important;
+        opacity: 1 !important;
+        mix-blend-mode: normal !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        transform: none !important;
+      }
+      .wdg-avatar,
+      .wdg-orgcard {
+        filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+      }
+      .wdg-avatar::before,
+      .wdg-avatar::after,
+      .wdg-avatar--photo::before,
+      .wdg-avatar--photo::after,
+      .wdg-orgcard::before,
+      .wdg-orgcard::after {
+        content: none !important;
+        filter: none !important;
+        opacity: 0 !important;
+        mix-blend-mode: normal !important;
+      }
+
+      /* cores no PDF */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+
+    .wdg-zoombar{
+      display:flex;
+      align-items:center;
+      justify-content: flex-end;
+      gap: .5rem;
+      margin: .1rem 0 .6rem;
+      color: var(--wdg-muted);
+      font-weight: 800;
+      user-select: none;
+    }
+    .wdg-zoomlabel{ font-size: .8rem; }
+    .wdg-zoombtn{
+      border: 0;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: .9;
+      cursor: pointer;
+      transition: transform .12s ease, opacity .12s ease;
+    }
+    .wdg-zoombtn:hover{ opacity: 1; transform: translateY(-1px); }
+    .wdg-zoombtn:focus-visible{ outline: 2px solid rgba(29,78,216,.45); outline-offset: 2px; }
+    .wdg-zoombtn:disabled{ opacity: .35; cursor: not-allowed; transform:none; }
+    .wdg-zoombtn img{ width: 18px; height: 18px; display: block; }
+
+    .wdg-zoombar.wdg-zoombar--inline{ margin: 0; }
+
+    /* Preview: garante origem consistente para zoom via transform fallback */
+    .wdg-org.wdg-org--preview .wdg-orgstage{ transform-origin: top center; }
+
+    /* Organograma (layout em árvore, com conectores) */
+    .wdg-orgchart{
+      min-width: 720px; /* garante espaço para conectores em telas largas */
+      padding: .25rem .25rem .75rem;
+      position: relative;
+      z-index: 2;
+      display: inline-block;
+    }
+    @media (max-width: 992px){
+      .wdg-orgchart{ min-width: 0; }
+    }
+
+    .wdg-orgstage{
+      position: relative;
+      display: block;
+      padding: 12px 18px 22px;
+      width: max-content;
+      margin: 0 auto;
+    }
+
+    .wdg-orglines{
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: visible;
+      display: block;
+      max-width: none;
+      max-height: none;
+    }
+
+    .wdg-orglines-html{
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .wdg-orgchart ul{
+      padding-top: 18px;
+      margin: 0;
+      padding-left: 0;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: nowrap;
+    }
+    .wdg-orgchart > ul{ padding-top: 0; }
+    .wdg-orgchart li{
+      list-style: none;
+      text-align: center;
+      position: relative;
+      padding: 18px 8px 0;
+    }
+    .wdg-orgchart > ul > li{ padding-top: 0; }
+
+    /* Cards */
+    .wdg-orgchart .wdg-orgcard{ position: relative; margin: 0 auto; z-index: 2; }
+
+    .wdg-orgcard{
+      width: var(--wdg-slot-card-width, 280px);
+      border-radius: 20px;
+      border-width: var(--wdg-slot-border-width, 1px);
+      border-style: var(--wdg-slot-border-style, solid);
+      border-color: var(--wdg-slot-border-color, rgba(255,255,255,.72));
+      background:
+        radial-gradient(900px 260px at 15% 0%, rgba(255,255,255,.72), rgba(255,255,255,0) 58%),
+        linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.92)),
+        repeating-linear-gradient(135deg, rgba(15,23,42,.020) 0 1px, rgba(255,255,255,0) 1px 8px);
+      box-shadow:
+        0 26px 70px rgba(15,23,42,.14),
+        0 10px 24px rgba(15,23,42,.08),
+        0 1px 0 rgba(255,255,255,.70) inset,
+        0 -1px 0 rgba(15,23,42,.05) inset;
+      backdrop-filter: blur(18px) saturate(1.06);
+      -webkit-backdrop-filter: blur(18px) saturate(1.06);
+      position: relative;
+      overflow: hidden;
+      padding: .9rem .95rem;
+      transform: translateZ(0);
+      transform-style: preserve-3d;
+      will-change: transform;
+      transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms cubic-bezier(.2,.8,.2,1), border-color 180ms;
+    }
+
+    /* Forma: círculo (precisa ser quadrado + radius alto; se não, vira apenas "pílula") */
+    .wdg-orgcard.wdg-slot-shape-circle{
+      width: var(--wdg-slot-circle-size, var(--wdg-slot-card-width, 280px));
+      aspect-ratio: 1 / 1;
+      border-radius: 9999px;
+    }
+
+    /* Escala do conteúdo (para caber dentro das formas)
+       Importante: escalar um wrapper único evita o badge "descolar" do resto. */
+    .wdg-orgcard .wdg-orgcontent{
+      width: 100%;
+      transform: scale(var(--wdg-slot-content-scale, 1));
+      transform-origin: center center;
+    }
+    /* acento topo (premium) */
+    .wdg-orgcard .wdg-orgmain{ position: relative; z-index: 3; }
+    .wdg-orgcard .wdg-orgstatus{ position: relative; z-index: 3; }
+    .wdg-orgcard{ isolation: isolate; }
+    .wdg-orgcard > .wdg-orgcontent > .wdg-orgmain::before,
+    .wdg-orgcard > .wdg-orgmain::before{
+      content:'';
+      position:absolute;
+      left: 12px;
+      right: 12px;
+      top: -10px;
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(59,130,246,.22), rgba(167,139,250,.20), rgba(34,197,94,.18));
+      filter: blur(10px);
+      opacity: .95;
+      pointer-events:none;
+      z-index: -1;
+    }
+    /* brilho premium (vidro) */
+    .wdg-orgcard::before{
+      content: '';
+      position: absolute;
+      left: -25%;
+      top: -55%;
+      width: 80%;
+      height: 160%;
+      background: linear-gradient(115deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.62) 45%, rgba(255,255,255,0) 70%);
+      transform: rotate(18deg);
+      opacity: .35;
+      pointer-events: none;
+    }
+    /* vinheta suave */
+    .wdg-orgcard::after{
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(800px 220px at 50% 0%, rgba(15,23,42,.06), rgba(255,255,255,0) 58%),
+        radial-gradient(520px 220px at 85% 20%, rgba(15,23,42,.045), rgba(255,255,255,0) 55%);
+      opacity: .50;
+      pointer-events: none;
+    }
+    .wdg-orgcard:hover{
+      transform: perspective(900px) translateY(-2px) rotateX(2.2deg);
+      box-shadow:
+        0 34px 92px rgba(15,23,42,.18),
+        0 14px 36px rgba(15,23,42,.10),
+        0 1px 0 rgba(255,255,255,.75) inset,
+        0 -1px 0 rgba(15,23,42,.06) inset;
+      border-color: rgba(15,23,42,.10);
+    }
+    .wdg-orgcard:focus-within{
+      outline: 0;
+      box-shadow:
+        0 34px 92px rgba(15,23,42,.18),
+        0 0 0 3px rgba(15,23,42,.10),
+        0 1px 0 rgba(255,255,255,.75) inset,
+        0 -1px 0 rgba(15,23,42,.06) inset;
+      border-color: rgba(15,23,42,.12);
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .wdg-orgcard{ transition: none !important; }
+      .wdg-orgcard:hover{ transform: none; }
+    }
+
+    /* Slot editor (Configuração > Pré-visualização) */
+    .wdg-orgcardwrap{
+      position: relative;
+      display: inline-block;
+      overflow: visible;
+    }
+    .wdg-slot-editbtn{
+      position: absolute;
+      top: var(--wdg-slot-editbtn-off, -12px);
+      right: var(--wdg-slot-editbtn-off, -12px);
+      width: 32px;
+      height: 32px;
+      border: 0;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      box-shadow: none;
+      cursor: pointer;
+      opacity: .9;
+      z-index: 50;
+      transition: opacity .12s ease, filter .12s ease;
+
+      /* Não variar com zoom: compensa a escala do stage */
+      transform: scale(var(--wdg-slot-editbtn-inv-scale, 1));
+      transform-origin: top right;
+    }
+    .wdg-slot-editbtn:hover{ opacity: 1; filter: drop-shadow(0 6px 14px rgba(15,23,42,.18)); }
+    .wdg-slot-editbtn:focus-visible{ outline: 2px solid rgba(29,78,216,.45); outline-offset: 2px; }
+    .wdg-slot-editbtn img{ width: 32px; height: 32px; display: block; }
+
+    /* Cores customizadas (forma) */
+    .wdg-orgcard[data-slot-custom="1"]{
+      background: var(--wdg-slot-bg) !important;
+    }
+    .wdg-orgcard[data-slot-custom="1"]::before,
+    .wdg-orgcard[data-slot-custom="1"] > .wdg-orgcontent > .wdg-orgmain::before,
+    .wdg-orgcard[data-slot-custom="1"] > .wdg-orgmain::before{ opacity: 0 !important; }
+    /* Em slots custom, removemos só a vinheta/overlay premium, mas preservamos o ::after
+       para ser usado como camada de borda nas formas com clip-path. */
+    .wdg-orgcard[data-slot-custom="1"]::after{
+      background: none !important;
+      opacity: 1 !important;
+    }
+
+    /* Transparência real (sem efeito de "vidro" via backdrop-filter) */
+    .wdg-orgcard.wdg-slot-bg-translucent{
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+
+    /* Texto: variáveis por campo (fallback para --wdg-slot-text e depois padrão) */
+    .wdg-orgcard .wdg-orgname{
+      color: var(--wdg-slot-name-color, #0f172a);
+      font-size: var(--wdg-slot-name-size, .98rem);
+      font-weight: var(--wdg-slot-name-weight, 850);
+      font-style: var(--wdg-slot-name-style, normal);
+      text-decoration: var(--wdg-slot-name-decoration, none);
+      font-family: var(--wdg-slot-name-font, inherit);
+      text-align: var(--wdg-slot-name-align, inherit);
+      width: 100%;
+    }
+    .wdg-orgcard .wdg-orgrole{
+      color: var(--wdg-slot-role-color, #334155);
+      font-size: var(--wdg-slot-role-size, .9rem);
+      font-weight: var(--wdg-slot-role-weight, 750);
+      font-style: var(--wdg-slot-role-style, normal);
+      text-decoration: var(--wdg-slot-role-decoration, none);
+      font-family: var(--wdg-slot-role-font, inherit);
+      text-align: var(--wdg-slot-role-align, inherit);
+      width: 100%;
+    }
+    .wdg-orgcard .wdg-orgemail{
+      color: var(--wdg-slot-email-color, #64748b);
+      font-size: var(--wdg-slot-email-size, .8rem);
+      font-weight: var(--wdg-slot-email-weight, 650);
+      font-style: var(--wdg-slot-email-style, normal);
+      text-decoration: var(--wdg-slot-email-decoration, none);
+      font-family: var(--wdg-slot-email-font, inherit);
+      text-align: var(--wdg-slot-email-align, inherit);
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* Badge (Atribuído/Pendente): permite tipografia por item (textParts.pill) */
+    .wdg-orgcard .wdg-orgpill{
+      font-size: var(--wdg-slot-pill-size, .72rem);
+      font-weight: var(--wdg-slot-pill-weight, 900);
+      font-style: var(--wdg-slot-pill-style, normal);
+      text-decoration: var(--wdg-slot-pill-decoration, none);
+      font-family: var(--wdg-slot-pill-font, inherit);
+      /* sem fallback para não sobrescrever .wdg-orgpill--warn/.wdg-orgpill--primary quando não customizado */
+      color: var(--wdg-slot-pill-color);
+      background: var(--wdg-slot-pill-bg);
+      border-color: var(--wdg-slot-pill-border-color);
+    }
+    .wdg-orgcard .wdg-orgstatus{
+      justify-content: var(--wdg-slot-status-justify, flex-end);
+    }
+
+    /* ===== Borda premium nas formas com clip-path (SOLUÇÃO REAL) =====
+       Usamos um overlay SVG com stroke real (não encosta no conteúdo interno).
+       O próprio card ainda tem clip-path; o SVG desenha a borda e não “contorna texto”. */
+    .wdg-orgcard.wdg-slot-shape-triangle,
+    .wdg-orgcard.wdg-slot-shape-pentagon,
+    .wdg-orgcard.wdg-slot-shape-hexagon,
+    .wdg-orgcard.wdg-slot-shape-octagon,
+    .wdg-orgcard.wdg-slot-shape-star{
+      border-color: transparent !important; /* desativa borda retangular nativa */
+      border-width: 0 !important;
+    }
+
+    .wdg-orgcard > .wdg-slot-svg-border{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 4;
+      display: block;
+    }
+
+    .wdg-slot-svg-border .wdg-slot-svg-shape{
+      fill: none;
+      stroke: var(--wdg-slot-border-color, rgba(255,255,255,.72));
+      stroke-width: var(--wdg-slot-border-width, 1px);
+      vector-effect: non-scaling-stroke;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: scale(var(--wdg-slot-border-svg-scale, .988));
+      opacity: 1;
+    }
+
+    .wdg-orgcard.wdg-slot-shape-circle .wdg-orgemail{ max-width: 180px; }
+    .wdg-orgcard.wdg-slot-shape-circle .wdg-orgstatus{ width: 100%; }
+
+    /* Formas premium (clip-path) */
+    .wdg-orgcard.wdg-slot-shape-triangle,
+    .wdg-orgcard.wdg-slot-shape-pentagon,
+    .wdg-orgcard.wdg-slot-shape-hexagon,
+    .wdg-orgcard.wdg-slot-shape-octagon,
+    .wdg-orgcard.wdg-slot-shape-star{
+      border-radius: 0 !important;
+    }
+    .wdg-orgcard.wdg-slot-shape-triangle{
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      padding-top: 1.05rem;
+    }
+    .wdg-orgcard.wdg-slot-shape-pentagon{
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    }
+    .wdg-orgcard.wdg-slot-shape-hexagon{
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    }
+    .wdg-orgcard.wdg-slot-shape-octagon{
+      clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+    }
+    .wdg-orgcard.wdg-slot-shape-star{
+      clip-path: polygon(
+        50% 0%, 61% 35%, 98% 35%,
+        68% 57%, 79% 91%, 50% 70%,
+        21% 91%, 32% 57%, 2% 35%,
+        39% 35%
+      );
+    }
+
+    /* Borda seguindo a forma (clip-path): stroke via drop-shadow (8 direções) */
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-triangle,
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-pentagon,
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-hexagon,
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-octagon,
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-star{
+      /* Evita artefatos de borda retangular do border nativo */
+      border-color: transparent !important;
+    }
+
+    /* Borda para formas com clip-path (slot custom): usa sombra INSET no ::after.
+       - não contorna texto/filhos
+       - não é “cortada” pelo clip-path (porque é interna)
+       - funciona com qualquer fundo (inclusive com transparência real) */
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-triangle::after,
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-pentagon::after,
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-hexagon::after,
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-octagon::after,
+    .wdg-orgcard[data-slot-custom="1"].wdg-slot-shape-star::after{
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+
+      -webkit-clip-path: inherit;
+      clip-path: inherit;
+
+      opacity: 1 !important;
+      background: transparent !important;
+      box-sizing: border-box;
+
+      /* Borda real seguindo a forma (clippada) */
+      border-width: var(--wdg-slot-border-width, 1px);
+      border-style: solid;
+      border-color: var(--wdg-slot-border-color, rgba(255,255,255,.72));
+    }
+
+    /* Não altera a vinheta padrão (::after) — ela continua funcionando normalmente */
+
+    .wdg-orghead{
+      display:flex;
+      align-items:center;
+      gap: .75rem;
+      text-align:left;
+    }
+    .wdg-avatar{
+      width: 92px;
+      height: 92px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight: 900;
+      letter-spacing: .02em;
+      box-shadow:
+        0 18px 44px rgba(15,23,42,.18),
+        0 6px 18px rgba(15,23,42,.10);
+      border: none;
+      flex: 0 0 auto;
+      overflow: hidden;
+      position: relative;
+    }
+    /* aro premium (substitui qualquer borda/anel feio da foto) */
+    .wdg-avatar::before{
+      content:'';
+      position:absolute;
+      inset:-2px;
+      border-radius: inherit;
+      padding: 2px;
+      background: linear-gradient(135deg, rgba(59,130,246,.95), rgba(167,139,250,.92), rgba(34,197,94,.88));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: .62;
+      pointer-events:none;
+      filter: saturate(1.05);
+    }
+    /* brilho interno suave */
+    .wdg-avatar::after{
+      content:'';
+      position:absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.55) inset,
+        0 0 0 2px rgba(255,255,255,.18) inset;
+      opacity: .75;
+      pointer-events:none;
+    }
+    .wdg-avatar img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 999px;
+      display: block;
+      border: 0;
+      outline: 0;
+    }
+    .wdg-avatar span{ font-size: 1.4rem; }
+    .wdg-avatar--photo span{ display:none; }
+    .wdg-avatar--photo.wdg-avatar--imgfail span{ display:block; }
+    .wdg-avatar--empty{
+      background: linear-gradient(135deg, #334155, #0f172a);
+      color: rgba(255,255,255,.95);
+    }
+    .wdg-avatar--empty::before{ opacity: .35; }
+    .wdg-avatar--g1{ background: linear-gradient(135deg, #1d4ed8, #38bdf8); }
+    .wdg-avatar--g2{ background: linear-gradient(135deg, #7c3aed, #22c55e); }
+    .wdg-avatar--g3{ background: linear-gradient(135deg, #ef4444, #f59e0b); }
+    .wdg-avatar--g4{ background: linear-gradient(135deg, #0ea5e9, #22c55e); }
+    .wdg-avatar--g5{ background: linear-gradient(135deg, #111827, #6366f1); }
+
+    .wdg-orgname{ font-weight: 850; color:#0f172a; font-size: .98rem; letter-spacing: -.01em; }
+    .wdg-orgrole{ font-weight: 750; color:#334155; font-size: .9rem; margin-top: .05rem; }
+    .wdg-orgemail{ color:#64748b; font-size: .8rem; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+
+    .wdg-orgmain{ display:flex; flex-direction:column; align-items:center; gap: .12rem; text-align:center; }
+    .wdg-orgavatar{ display:flex; justify-content:center; }
+    .wdg-orgstatus{ margin-top: .65rem; display:flex; justify-content:flex-end; width:100%; }
+
+    .wdg-orgmeta{
+      margin-top: .65rem;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: .6rem;
+      text-align:left;
+    }
+    .wdg-orgpill{
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+      padding:.28rem .6rem;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: .72rem;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(15,23,42,.04);
+      color: #0f172a;
+    }
+    .wdg-orgpill--warn{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.35); color: #7c2d12; }
+    .wdg-orgpill--primary{ background: rgba(29,78,216,.12); border-color: rgba(29,78,216,.22); color: #1d4ed8; }
+    .wdg-orghint{ color:#94a3b8; font-size: .78rem; font-weight: 750; }
+
+    /* Preview mais compacto */
+    .wdg-org.wdg-org--preview .wdg-orgchart{ min-width: 0; }
+    .wdg-org.wdg-org--preview .wdg-orgcard:not(.wdg-slot-shape-circle){ width: 260px; }
+
+    /* Drag & drop (somente na pré-visualização de Configuração) */
+    #orgPreview li.wdg-dnd-item .wdg-orgcard{ cursor: grab; }
+    #orgPreview li.wdg-dnd-item .wdg-orgcard:active{ cursor: grabbing; }
+    #orgPreview li.wdg-dnd-dragging .wdg-orgcard{ opacity: .62; transform: none !important; }
+    #orgPreview li.wdg-dnd-drop .wdg-orgcard{ outline: 2px dashed rgba(29,78,216,.45); outline-offset: 4px; }
+    #orgPreview li.wdg-dnd-item{ user-select: none; }
+
+    /* Drag & drop: Atribuições (slots) */
+    .wdg-assignment-slot{ cursor: grab; user-select: none; }
+    .wdg-assignment-slot:active{ cursor: grabbing; }
+    .wdg-assignment-slot input,
+    .wdg-assignment-slot textarea,
+    .wdg-assignment-slot select,
+    .wdg-assignment-slot button{ cursor: auto; user-select: auto; }
+    .wdg-assignment-slot.wdg-dnd-dragging{ opacity: .62; }
+    .wdg-assignment-slot.wdg-dnd-drop{ outline: 2px dashed rgba(29,78,216,.45); outline-offset: 4px; }
+
+    /* Drag & drop: Tabela de cargos */
+    .wdg-row-drag{
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(15,23,42,.03);
+      border-radius: 10px;
+      padding: .2rem .45rem;
+      line-height: 1;
+      font-weight: 900;
+      color: #334155;
+      cursor: grab;
+      user-select: none;
+      box-shadow: 0 8px 18px rgba(15,23,42,.06);
+      flex: 0 0 auto;
+    }
+    .wdg-row-drag:active{ cursor: grabbing; }
+    tbody tr.wdg-dnd-dragging{ opacity: .62; }
+    tbody tr.wdg-dnd-drop > td{ background: rgba(29,78,216,.06); }
+
+    /* Pré-visualização: quadro quadrado (altura = largura). O zoom acontece apenas dentro. */
+    #orgPreview.wdg-org--preview{
+      /* Altura 10% menor que a anterior (altura = 60% da largura) */
+      aspect-ratio: 5 / 3;
+      width: 100%;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Responsivo: permite quebra de linha; conectores via SVG são desativados no JS em telas pequenas */
+    @media (max-width: 992px){
+      .wdg-orgchart ul{ flex-wrap: wrap; }
+      .wdg-orgchart li{ padding-top: 10px; }
+    }
+
+    .wdg-form-label{ text-transform: uppercase; font-size: .7rem; letter-spacing: .18em; color: #475569; font-weight: 900; }
+    .form-control, .form-select{ border-radius: 14px; border: 1px solid rgba(15,23,42,.14); padding: .65rem .85rem; }
+
+    /* Selects mais modernos (principalmente na tabela de Cargos) */
+    .wdg-select{
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-color: #fff;
+      border: 1px solid rgba(15,23,42,.14);
+      border-radius: 999px;
+      padding: .55rem 2.2rem .55rem .85rem;
+      font-weight: 500;
+      color: #0f172a;
+      box-shadow: 0 10px 22px rgba(15,23,42,.06);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .8rem center;
+      background-size: 14px 14px;
+    }
+    .wdg-select:hover{ border-color: rgba(29,78,216,.28); }
+    .wdg-select:focus{ border-color: rgba(29,78,216,.55); box-shadow: 0 0 0 .18rem rgba(29,78,216,.12); }
+
+    /* Pill-select (substitui selects vintage na tabela) */
+    .wdg-pillselect{ position: relative; display: inline-flex; align-items: center; justify-content: center; }
+    .wdg-pillselect-native{ position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important; }
+
+    .wdg-pillselect-btn{
+      border: 0;
+      background: transparent;
+      padding: 0;
+      min-height: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      box-shadow: none;
+      transition: transform .12s ease;
+      font-weight: 600;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .wdg-pillselect-btn:hover{ transform: translateY(-1px); }
+    .wdg-pillselect-btn:focus-visible{ outline: 2px solid rgba(29,78,216,.45); outline-offset: 2px; }
+    .wdg-pillselect-btn:hover .wdg-pillselect-badge{ border-color: rgba(29,78,216,.22); box-shadow: 0 14px 30px rgba(15,23,42,.10); }
+
+    .wdg-pillselect-badge{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .16rem .52rem;
+      border-radius: 999px;
+      font-size: .78rem;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(2,6,23,.04);
+      color: #0f172a;
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wdg-pillselect-badge--muted{ background: rgba(100,116,139,.10); border-color: rgba(100,116,139,.18); color: #334155; }
+    .wdg-pillselect-badge--vertical{ background: rgba(124,58,237,.12); border-color: rgba(124,58,237,.26); color: #5b21b6; }
+    .wdg-pillselect-badge--horizontal{ background: rgba(22,163,74,.12); border-color: rgba(22,163,74,.26); color: #166534; }
+
+    .wdg-pillselect-menu{
+      position: fixed;
+      left: 0;
+      top: 0;
+      transform: none;
+      min-width: 260px;
+      max-width: 360px;
+      max-height: 320px;
+      overflow: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 26px 72px rgba(2,6,23,.22);
+      padding: .35rem;
+      z-index: 9999;
+    }
+    .wdg-pillselect-item{
+      width: 100%;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      padding: .55rem .6rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 600;
+      color: #0f172a;
+      transition: background .12s ease, transform .12s ease;
+    }
+    .wdg-pillselect-item:hover{ background: rgba(29,78,216,.08); transform: translateY(-1px); }
+    .wdg-pillselect-item[data-selected="1"]{ background: rgba(124,58,237,.10); }
+    .wdg-pillselect-check{ color: rgba(124,58,237,1); font-weight: 800; opacity: .95; }
+
+    .wdg-table{ width:100%; border-collapse: separate; border-spacing: 0 10px; }
+    .wdg-table td, .wdg-table th{ padding: .65rem .75rem; }
+    .wdg-table thead th{ color:#64748b; font-size: .75rem; text-transform: uppercase; letter-spacing: .14em; }
+    .wdg-table tbody tr{ background:#fff; box-shadow: 0 12px 28px rgba(15,23,42,.06); }
+    .wdg-table tbody tr td:first-child{ border-top-left-radius: 14px; border-bottom-left-radius: 14px; }
+    .wdg-table tbody tr td:last-child{ border-top-right-radius: 14px; border-bottom-right-radius: 14px; }
+
+    /* Títulos dos blocos (Configuração) */
+    .wdg-blocktitle{
+      text-align: center;
+      letter-spacing: .02em;
+      margin-bottom: .5rem !important;
+    }
+
+    /* Configuração > Cargos & Hierarquia: colunas mais compactas */
+    #rolesTable{ table-layout: fixed; }
+    #rolesTable th,
+    #rolesTable td{ overflow: hidden; }
+    #rolesTable th:nth-child(1),
+    #rolesTable td:nth-child(1){ width: 40%; }
+    #rolesTable th:nth-child(2),
+    #rolesTable td:nth-child(2){ width: 28%; }
+    #rolesTable th:nth-child(3),
+    #rolesTable td:nth-child(3){ width: 20%; }
+    #rolesTable th:nth-child(4),
+    #rolesTable td:nth-child(4){ width: 12%; }
+
+    /* Cargo: evita “invadir” outras colunas quando o nome é longo */
+    #rolesTable td:nth-child(1) .fw-semibold,
+    #rolesTable td:nth-child(1) .text-muted{
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* O menu é portaled no body; nada de stacking na tabela */
+
+    /* Header da tabela (igual ao módulo Feedback): faixa única no wrapper, th transparentes */
+    .wdg-roles-tablewrap{ position: relative; }
+    .wdg-roles-tablewrap::before{
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 52px;
+      background:
+        radial-gradient(900px 220px at 18% -10%, rgba(29,78,216,.28), rgba(0,0,0,0) 55%),
+        linear-gradient(180deg, #0b2f66 0%, #08254f 100%);
+      border-radius: 14px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    #rolesTable thead{ position: relative; z-index: 2; }
+    #rolesTable thead th{
+      text-align: center;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid rgba(255,255,255,.18);
+      padding: .85rem .8rem;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: rgba(255,255,255,.92);
+    }
+
+    /* Layout do bloco Configuração: colunas com mesma altura e scroll interno */
+    .wdg-config-row{ align-items: stretch; }
+    .wdg-config-col{ display:flex; flex-direction:column; min-height: 0; }
+
+    .wdg-roles-block{ flex: 1; min-height: 0; display:flex; flex-direction:column; }
+    /* Bootstrap .table-responsive coloca overflow; aqui queremos que o scroll seja no .wdg-roles-scroll */
+    .table-responsive.wdg-roles-tablewrap{
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+    .wdg-roles-scroll{ flex: 1; min-height: 0; overflow: auto; position: relative; z-index: 2; scrollbar-gutter: stable; }
+
+    #rolesTable{ margin-bottom: 0; }
+
+    /* Header sticky quando rolar a lista */
+    #rolesTable thead th{ position: sticky; top: 0; z-index: 3; }
+
+    .wdg-roles-pager{
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(15,23,42,.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .wdg-roles-pager .wdg-roles-pager-left{ color: #64748b; font-weight: 500; font-size: .82rem; }
+    .wdg-roles-pager .wdg-roles-pager-center{ display:flex; align-items:center; gap: 8px; }
+    .wdg-roles-pager .wdg-roles-pager-right{ display:flex; align-items:center; gap: 8px; }
+    .wdg-roles-pager .wdg-roles-pager-info{ color: #475569; font-weight: 500; font-size: .82rem; min-width: 64px; text-align:center; }
+    .wdg-roles-pager .wdg-roles-pagesize-label{ color: #64748b; font-weight: 500; font-size: .8rem; }
+    .wdg-roles-pager .wdg-roles-pager-btn{
+      border: 1px solid rgba(15,23,42,.12);
+      background: #fff;
+      color: #0f172a;
+      border-radius: 999px;
+      padding: .38rem .7rem;
+      font-weight: 500;
+      font-size: .82rem;
+      box-shadow: 0 10px 22px rgba(15,23,42,.06);
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .wdg-roles-pager .wdg-roles-pager-btn:hover{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08); border-color: rgba(29,78,216,.22); }
+    .wdg-roles-pager .wdg-roles-pager-btn:disabled{ opacity: .45; cursor: not-allowed; transform:none; box-shadow: none; }
+    .wdg-roles-pager .wdg-roles-pagesize{
+      width: auto;
+      min-width: 86px;
+      padding-top: .45rem;
+      padding-bottom: .45rem;
+      font-weight: 500;
+    }
+
+    .wdg-preview-block{
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Conteúdo sem negrito (mantém hierarquia por cor/tamanho) */
+    #rolesTable tbody td{ font-weight: 500; color: #0f172a; }
+    #rolesTable tbody td .text-muted{ color: #64748b !important; font-weight: 500 !important; }
+
+    /* Linhas mais “premium” */
+    #rolesTable tbody tr{
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      border: 1px solid rgba(15,23,42,.08);
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+    }
+    #rolesTable tbody tr:nth-child(even){ background: linear-gradient(180deg, #ffffff, rgba(29,78,216,.03)); }
+    #rolesTable tbody tr:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 44px rgba(15,23,42,.10);
+      filter: saturate(1.05);
+    }
+
+    /* Acento lateral discreto */
+    #rolesTable tbody tr td:first-child{ border-left: 3px solid rgba(29,78,216,.25); }
+
+    /* Centraliza melhor selects nas colunas */
+    #rolesTable td:nth-child(2),
+    #rolesTable td:nth-child(3){ text-align: center; }
+    #rolesTable td:nth-child(2) .form-select,
+    #rolesTable td:nth-child(3) .form-select{ margin: 0 auto; }
+
+    /* Ações: mantém centralizado */
+    #rolesTable th:nth-child(4){ text-align: center; }
+
+    /* Reduzir a largura dos selects */
+    #rolesTable td:nth-child(2) .form-select{ width: 100%; max-width: 240px; }
+    #rolesTable td:nth-child(3) .form-select{ width: 100%; min-width: 0; max-width: 200px; }
+    @media (max-width: 992px){
+      #rolesTable td:nth-child(2) .form-select,
+      #rolesTable td:nth-child(3) .form-select{ max-width: 100%; }
+    }
+
+    /* Ações: apenas ícones, sem aparência de botão */
+    .wdg-iconbtn{
+      border: 0;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: .9;
+      cursor: pointer;
+      transition: transform .12s ease, opacity .12s ease;
+    }
+    .wdg-iconbtn:hover{ opacity: 1; transform: translateY(-1px); }
+    .wdg-iconbtn:disabled{ opacity: .35; cursor: not-allowed; transform: none; }
+    .wdg-iconbtn:focus-visible{ outline: 2px solid rgba(29,78,216,.45); outline-offset: 2px; border-radius: 8px; }
+    .wdg-iconbtn img{ width: 18px; height: 18px; display: block; }
+
+    .wdg-toast{ position: fixed; top: 1.2rem; right: 1.2rem; z-index: 2000; min-width: 260px; }
+  </style>
+</head>
+<body class="wdg-layout wdg-dirigencia">
+  <%- include('../shared/partials/header-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+  <%- include('../shared/partials/navbar-shared', {
+        moduleBasePath: _bp,
+        moduleLabel: 'Gestão de Condomínios',
+        user,
+        menuLabel: 'Menu',
+        prefixMenuPaths: true,
+        menuTree: [
+          { label: 'Estruturar condomínio', children: [
+            { label: 'Habitações', path: '/estruturar/habitacoes' },
+            { label: 'Garagem', path: '/estruturar/garagem' },
+            { label: 'Áreas comuns', path: '/estruturar/areas-comuns' }
+          ]},
+          { label: 'Cadastros', children: [
+            { label: 'Proprietários', path: '/cadastros/proprietarios' },
+            { label: 'Moradores', path: '/cadastros/moradores' },
+            { label: 'Materiais', path: '/cadastros/materiais' }
+          ]},
+          { label: 'Editar', children: [
+            { label: 'Editar habitações', path: '/editar/habitacoes' },
+            { label: 'Editar áreas comuns', path: '/editar/areas-comuns' }
+          ]},
+          { label: 'Operação', children: [
+            { label: 'Painel de habitações', path: '/operacao/painel-habitacoes' },
+            { label: 'Painel de áreas comuns', path: '/operacao/painel-areas-comuns' }
+          ]},
+          { label: 'Administração', children: [
+            { label: 'Assembleia', children: [
+              { label: 'Assembleias', path: '/assembleias' },
+              { label: 'Nova assembleia', path: '/assembleias/nova' }
+            ]},
+            { label: 'Dirigência', path: '/administracao/dirigencia' },
+            { label: 'Atas', path: '/administracao/atas' },
+            { label: 'Financeiro', path: '/administracao/financeiro' },
+            { label: 'Configurações', path: '/administracao/configuracoes' }
+          ]},
+          { label: 'Serviços', children: [
+            { label: 'Solicitar Serviços', path: '/servicos/solicitar' }
+          ]},
+          { label: 'Configurações', children: [
+            { label: 'Usuários', path: '/configuracoes/usuarios' }
+          ]}
+        ]
+      }) %>
+  <%- include('../shared/partials/perfil-shared', { moduleBasePath: _bp, moduleLabel: 'Gestão de Condomínios', user }) %>
+
+  <main class="container-fluid py-4 px-1 px-md-2" id="dirigenciaApp" data-base-path="<%= _bp %>" data-user-unit="<%= user && user.unidade_id ? (user.unidade_id._id || user.unidade_id || user.unidadeId || '') : '' %>" data-scope-all="<%= (user && (user.isMaster || user.role === 'master' || user.role === 'admin')) ? 'true' : 'false' %>" data-is-master="<%= (user && (user.isMaster || user.role === 'master')) ? 'true' : 'false' %>" data-can-edit="<%= (typeof canEditDirigencia !== 'undefined' && canEditDirigencia) ? 'true' : 'false' %>">
+    <div class="wdg-drg-wrap">
+    <section class="wdg-drg-shell">
+      <aside class="wdg-drg-sidenav" aria-label="Navegação da Dirigência">
+        <p class="title">Dirigência do Condomínio</p>
+
+        <div class="d-flex flex-column gap-1">
+          <button class="wdg-navbtn active" type="button" data-view="inicio">
+            <span class="left"><span class="wdg-navico" aria-hidden="true"><img src="<%= _bp %>/images/home.png" alt="" decoding="async"></span><span>Início</span></span>
+          </button>
+          <button class="wdg-navbtn" type="button" data-view="dirigentes">
+            <span class="left"><span class="wdg-navico" aria-hidden="true"><img src="<%= _bp %>/images/funcionario.png" alt="" decoding="async"></span><span>Dirigentes</span></span>
+          </button>
+          <button class="wdg-navbtn <%= ((user && (user.isMaster || user.role === 'master' || user.role === 'admin')) || (typeof canEditDirigencia !== 'undefined' && canEditDirigencia)) ? '' : 'd-none' %>" type="button" data-view="configuracao">
+            <span class="left"><span class="wdg-navico" aria-hidden="true"><img src="<%= _bp %>/images/configuracao.png" alt="" decoding="async"></span><span>Configuração</span></span>
+          </button>
+        </div>
+
+      </aside>
+
+      <section class="wdg-drg-content">
+        <!-- INÍCIO -->
+        <div data-pane="inicio">
+          <div class="wdg-panel-title">
+            <div>
+              <h2>Início · Organograma</h2>
+            </div>
+          </div>
+
+          <div class="wdg-panel-subbar" aria-label="Filtro de condomínio">
+            <div class="wdg-condo-row">
+              <div class="wdg-condo-field">
+                <label class="wdg-condo-label">Condomínio</label>
+                <div class="wdg-condo-userpickhost" data-condo-userpick-host="1"></div>
+                <div class="wdg-condo-controlrow">
+                  <img class="wdg-condo-inline-logo" data-condo-inline-logo="1" src="/images/unidade.png" alt="Logo do condomínio" loading="lazy">
+                  <select class="form-select wdg-select wdg-condo-select" data-condo-select aria-label="Condomínio"></select>
+                </div>
+              </div>
+
+              <button class="wdg-orgprintbtn" type="button" id="btnOrgPrint" title="Imprimir organograma" aria-label="Imprimir organograma">
+                <img src="/images/imprimir.png" alt="" loading="lazy" onerror="this.onerror=null;this.src='/images/imprimir.png'">
+              </button>
+            </div>
+          </div>
+
+          <div class="wdg-grid wdg-grid--inicio">
+            <div class="wdg-card">
+              <div id="wdgPrintRoot">
+                <div class="wdg-org-head mb-2">
+                  <div class="wdg-org-printheader" data-org-print-header="1">
+                    <img class="wdg-org-printlogo" id="orgPrintLogo" src="/images/unidade.png" alt="Logo do condomínio" loading="lazy">
+                    <div class="wdg-org-printmeta">
+                      <div class="wdg-org-printname" id="orgPrintUnitName"></div>
+                      <div class="wdg-org-printline" data-org-print-line="0" hidden></div>
+                      <div class="wdg-org-printline" data-org-print-line="1" hidden></div>
+                      <div class="wdg-org-printline" data-org-print-line="2" hidden></div>
+                      <div class="wdg-org-printline" data-org-print-line="3" hidden></div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-items-center gap-2 ms-auto">
+                    <div class="wdg-zoombar wdg-zoombar--inline" aria-label="Controles de zoom do organograma">
+                      <span class="wdg-zoomlabel">Zoom:</span>
+                      <button class="wdg-zoombtn" type="button" id="btnOrgZoomIn" aria-label="Aumentar zoom">
+                        <img src="/images/zoommais.png" alt="" loading="lazy">
+                      </button>
+                      <span class="wdg-zoomlabel" id="orgZoomLabel">100%</span>
+                      <button class="wdg-zoombtn" type="button" id="btnOrgZoomOut" aria-label="Diminuir zoom">
+                        <img src="/images/zoommenos.png" alt="" loading="lazy">
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="wdgPrintInner">
+                  <div id="orgContainer" class="wdg-org wdg-org--main"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DIRIGENTES -->
+        <div data-pane="dirigentes" class="d-none">
+          <div class="wdg-panel-title">
+            <div>
+              <h2>Dirigentes · Atribuições</h2>
+
+            </div>
+          </div>
+
+          <div class="wdg-panel-subbar" aria-label="Filtro de condomínio">
+            <div class="wdg-condo-field">
+              <label class="wdg-condo-label">Condomínio</label>
+              <div class="wdg-condo-userpickhost" data-condo-userpick-host="1"></div>
+              <div class="wdg-condo-controlrow">
+                <img class="wdg-condo-inline-logo" data-condo-inline-logo="1" src="/images/unidade.png" alt="Logo do condomínio" loading="lazy">
+                <select class="form-select wdg-select wdg-condo-select" data-condo-select aria-label="Condomínio"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="wdg-grid w-100" style="grid-template-columns: 1fr !important;">
+            <div class="wdg-card">
+              <div class="mb-2" style="width:100%; display:block;">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                  <p class="mb-0 fw-bold wdg-blocktitle w-100" style="color:#0f172a;">Atribuir responsáveis</p>
+                </div>
+              </div>
+              <div id="assignmentsContainer"></div>
+            </div>
+
+            <!-- Bloco 'Usuários (placeholder)' removido -->
+          </div>
+        </div>
+
+        <!-- CONFIGURAÇÃO -->
+        <div data-pane="configuracao" class="d-none">
+          <div class="wdg-panel-title">
+            <div>
+              <h2>Configuração · Cargos & Hierarquia</h2>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary btn-sm" type="button" id="btnAddRole"><i class="bi bi-plus-circle me-1"></i>Novo cargo</button>
+            </div>
+          </div>
+
+          <div class="wdg-panel-subbar" aria-label="Filtro de condomínio">
+            <div class="wdg-condo-field">
+              <label class="wdg-condo-label">Condomínio</label>
+              <div class="wdg-condo-userpickhost" data-condo-userpick-host="1"></div>
+              <div class="wdg-condo-controlrow">
+                <img class="wdg-condo-inline-logo" data-condo-inline-logo="1" src="/images/unidade.png" alt="Logo do condomínio" loading="lazy">
+                <select class="form-select wdg-select wdg-condo-select" data-condo-select aria-label="Condomínio"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="wdg-card">
+            <div class="row g-3 wdg-config-row">
+              <div class="col-12 col-lg-5 col-xl-4 wdg-config-col">
+                <p class="mb-1 fw-bold wdg-blocktitle" style="color:#0f172a;">Cargos</p>
+
+                <div class="wdg-roles-block">
+                  <div class="table-responsive wdg-roles-tablewrap">
+                    <div class="wdg-roles-scroll">
+                      <table class="wdg-table" id="rolesTable">
+                        <thead>
+                          <tr>
+                            <th>Cargo</th>
+                            <th>Subordinação</th>
+                            <th>Tipo</th>
+                            <th>Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody id="rolesTableBody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="wdg-roles-pager" id="rolesPager" aria-label="Paginação da lista de cargos"></div>
+                </div>
+              </div>
+
+              <div class="col-12 col-lg-7 col-xl-8 wdg-config-col">
+                <p class="mb-1 fw-bold wdg-blocktitle" style="color:#0f172a;">Pré-visualização</p>
+
+                <div class="wdg-preview-block">
+                  <div class="wdg-zoombar" aria-label="Controles de zoom da pré-visualização">
+                    <span class="wdg-zoomlabel">Zoom:</span>
+                    <button class="wdg-zoombtn" type="button" id="btnPreviewZoomIn" aria-label="Aumentar zoom">
+                      <img src="/images/zoommais.png" alt="" loading="lazy">
+                    </button>
+                    <span class="wdg-zoomlabel" id="previewZoomLabel">50%</span>
+                    <button class="wdg-zoombtn" type="button" id="btnPreviewZoomOut" aria-label="Diminuir zoom">
+                      <img src="/images/zoommenos.png" alt="" loading="lazy">
+                    </button>
+                  </div>
+                  <div id="orgPreview" class="wdg-org wdg-org--preview"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+    </div>
+  </main>
+
+  <%- include('../partials/modais/modal_editar_slot_organograma', { _bp }) %>
+  <%- include('../partials/modais/modal_cargo_organograma', { _bp }) %>
+
+  <div class="wdg-toast" id="toastRoot" aria-live="polite" aria-atomic="true"></div>
+
+  <% const __wdgBuildId = (process && process.env && (
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.VERCEL_GITHUB_COMMIT_SHA ||
+    process.env.GIT_COMMIT ||
+    process.env.RENDER_GIT_COMMIT ||
+    process.env.HEROKU_SLUG_COMMIT
+  )) || Date.now().toString(); %>
+  <script>
+    window.__WDG_BUILD_ID = <%- JSON.stringify(__wdgBuildId) %>;
+    try { console.log('[dirigencia] page build id', window.__WDG_BUILD_ID); } catch {}
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<%= _bp %>/js/condominios/dirigencia.js?v=<%= __wdgBuildId %>"></script>
+  <script src="<%= _bp %>/js/condominios/modal_cargo_organograma.js?v=<%= __wdgBuildId %>"></script>
+  <script src="<%= _bp %>/js/condominios/modal_editar_slot_organograma.js?v=<%= __wdgBuildId %>"></script>
+</body>
+</html>
