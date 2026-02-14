@@ -1,5 +1,5 @@
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import fs from 'fs';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -191,6 +191,7 @@ function resolveSexoLabelFromCode(code, fallback){
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ROOT = path.resolve(__dirname, '../../../../..');
 
 const app = express();
 
@@ -738,7 +739,6 @@ app.set('views', [
 app.set('view engine', 'ejs');
 
 // Assets compartilhados (servidos das pastas globais; o prefixo público é adicionado no mount)
-const ROOT = process.cwd();
 app.use('/css', express.static(path.join(ROOT, 'public/css')));
 // JS crítico: não cachear (evita telas continuarem com versão antiga após deploy)
 app.get('/js/condominios/caixa_de_mensagem.js', (req, res) => {

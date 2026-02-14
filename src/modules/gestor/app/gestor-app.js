@@ -15,13 +15,14 @@
 // ----------------------------------------------------------------------------------
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import mongoose from 'mongoose';
 import methodOverride from 'method-override';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ROOT = path.resolve(__dirname, '../../../../..');
 
 // Rotas (mantida mesma estrutura)
 import usuarioRouter from './routes/usuario.js';
@@ -219,7 +220,6 @@ app.set('views', [
 app.set('view engine', 'ejs');
 
 // Static roots relativos ao novo local (subir 3 níveis para raiz do projeto)
-const ROOT = process.cwd();
 
 // Compatibilidade PRIORITÁRIA: sempre atenda /js/modals/* a partir de public/gestor/js/modals
 // Registrado ANTES do static '/js' para prevalecer e evitar versões antigas de public/js/modals

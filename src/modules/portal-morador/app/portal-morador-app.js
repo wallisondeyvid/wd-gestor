@@ -1,5 +1,5 @@
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import fs from 'fs/promises';
 import { randomUUID } from 'crypto';
@@ -39,6 +39,7 @@ async function getSharp() {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ROOT = path.resolve(__dirname, '../../../../..');
 
 const app = express();
 
@@ -487,7 +488,6 @@ app.use((req, res, next) => {
   next();
 });
 
-const ROOT = process.cwd();
 app.use('/css', express.static(path.join(ROOT, 'public/css')));
 // JS crítico: não cachear (evita Portal continuar com versões antigas após deploy)
 app.get('/js/condominios/caixa_de_mensagem.js', (req, res) => {
