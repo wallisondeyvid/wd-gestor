@@ -4,6 +4,8 @@ import request from 'supertest';
 import { createServer } from '../src/server/createServer.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
 
+process.env.MONGO_MEMORY = '1';
+
 let app; let registerErrorHandlers; let closeServer;
 
 async function setupServer() {
