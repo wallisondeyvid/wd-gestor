@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { PDFDocument, degrees } from 'pdf-lib';
-import { applyOverlayStamp, sha256Hex as sha256HexHelper, getVerificationUrl } from '../services/applyCertificationStamp.js';
+import { applyOverlayStamp, sha256Hex as sha256HexHelper, getVerificationUrl } from '#legacy-services/applyCertificationStamp.js';
 
 function safeTrim(v) {
   return String(v || '').trim();

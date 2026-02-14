@@ -1,7 +1,7 @@
 // Lista até 10 funções sem descricao preenchida para diagnóstico
 // Uso: node scripts/inspecionar_funcoes_sem_descricao.js
 import mongoose from 'mongoose';
-import Funcao from '../src/core/models/funcao.js';
+import Funcao from '#core/models/funcao.js';
 import 'dotenv/config';
 
 async function run(){

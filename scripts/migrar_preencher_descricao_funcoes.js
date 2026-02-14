@@ -4,7 +4,7 @@
 // Se nome ausente (não deveria) usa codigo.
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import Funcao from '../src/core/models/funcao.js';
+import Funcao from '#core/models/funcao.js';
 
 async function run(){
   const uri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/gestor';

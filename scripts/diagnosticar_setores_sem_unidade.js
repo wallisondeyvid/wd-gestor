@@ -6,8 +6,8 @@
 
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import Setor from '../src/core/models/setor.js';
-import Unidade from '../src/core/models/unidade.js';
+import Setor from '#core/models/setor.js';
+import Unidade from '#core/models/unidade.js';
 
 async function run(){
   const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/wdgestor';

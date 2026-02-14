@@ -3,7 +3,7 @@
 // Uso: node scripts/backfill_refeicoes_computavel.js "mongodb://localhost/seu_banco"
 
 import mongoose from 'mongoose';
-import Escala from '../src/core/models/escala.js';
+import Escala from '#core/models/escala.js';
 
 const MONGO_URI = process.argv[2] || process.env.MONGO_URI;
 if(!MONGO_URI){

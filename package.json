@@ -9,7 +9,8 @@
     "#shared/*": "./src/shared/*",
     "#modules/*": "./src/modules/*",
     "#models/*": "./models/*",
-    "#services/*": "./services/*",
+    "#services/*": "./src/services/*",
+    "#legacy-services/*": "./services/*",
     "#utils/*": "./src/utils/*",
     "#mail/*": "./src/mail/*",
     "#routes/*": "./routes/*"

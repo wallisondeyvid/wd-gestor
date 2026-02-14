@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { obterPorToken } from '../services/documentos.service.js';
+import { obterPorToken } from '#services/documentos.service.js';
 
 const router = express.Router();
 

@@ -6,7 +6,7 @@
 
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import Setor from '../src/core/models/setor.js';
+import Setor from '#core/models/setor.js';
 
 async function obterNovoCodigo(){
   // Reutiliza o mesmo mecanismo do pre-save: incrementa manualmente a collection de counters

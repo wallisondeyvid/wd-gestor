@@ -2,7 +2,7 @@
 // Uso: node scripts/migrar_flag_senha_provisoria.js
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import User from '../src/core/models/user.js';
+import User from '#core/models/user.js';
 
 async function run(){
   const uri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/wdgestor';

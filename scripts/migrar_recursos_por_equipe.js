@@ -9,7 +9,7 @@
  * Execução: node scripts/migrar_recursos_por_equipe.js
  */
 import mongoose from 'mongoose';
-import Escala from '../src/core/models/escala.js';
+import Escala from '#core/models/escala.js';
 
 async function run(){
   const uri = process.env.MONGO_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/gestor';

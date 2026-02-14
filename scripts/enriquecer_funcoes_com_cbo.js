@@ -15,7 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
-import Funcao from '../src/core/models/funcao.js';
+import Funcao from '#core/models/funcao.js';
 import 'dotenv/config';
 
 function norm(str=''){ return str.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim(); }

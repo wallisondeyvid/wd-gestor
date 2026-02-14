@@ -3,7 +3,7 @@
 // Uso: node scripts/corrigir_flags_master.js
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import User from '../src/modules/gestor/app/models/user.js';
+import User from '#modules/gestor/app/models/user.js';
 
 async function run() {
   const uri = process.env.MONGO_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/wdgestor';

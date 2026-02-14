@@ -1,7 +1,7 @@
 // Migração para normalizar campo 'classificacao' em documentos Escala.
 // Uso: node scripts/migrar_classificacao_escalas.js
 import mongoose from 'mongoose';
-import Escala from '../src/core/models/escala.js';
+import Escala from '#core/models/escala.js';
 
 async function run(){
   const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/gestor';

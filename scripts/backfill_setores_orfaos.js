@@ -6,8 +6,8 @@
 
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import Setor from '../src/core/models/setor.js';
-import Unidade from '../src/core/models/unidade.js';
+import Setor from '#core/models/setor.js';
+import Unidade from '#core/models/unidade.js';
 
 function parseArgs(){
   const args = process.argv.slice(2);

@@ -3,7 +3,7 @@
 (async()=>{
   try {
     console.time('importController');
-    const mod = await import('../src/modules/gestor/app/controllers/funcionarioApiController.js');
+    const mod = await import('#modules/gestor/app/controllers/funcionarioApiController.js');
     console.timeEnd('importController');
     const fns = Object.keys(mod).filter(k=>typeof mod[k]==='function');
     console.log('[TEST] Funções exportadas:', fns);

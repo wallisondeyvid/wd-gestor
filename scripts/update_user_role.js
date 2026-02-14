@@ -5,8 +5,8 @@
 //   node scripts/update_user_role.js wallisondeyvid13@hotmail.com user
 
 import 'dotenv/config';
-import { connectMongo } from '../src/core/db/connect.js';
-import User from '../src/core/models/user.js';
+import { connectMongo } from '#core/db/connect.js';
+import User from '#core/models/user.js';
 
 async function main(){
   try {

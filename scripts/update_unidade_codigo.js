@@ -13,8 +13,8 @@
 
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import Unidade from '../src/core/models/unidade.js';
-import Escala from '../src/core/models/escala.js';
+import Unidade from '#core/models/unidade.js';
+import Escala from '#core/models/escala.js';
 
 function parseArgs() {
   const args = process.argv.slice(2);

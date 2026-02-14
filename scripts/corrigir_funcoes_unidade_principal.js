@@ -6,8 +6,8 @@ dotenv.config();
 const mongoURI = process.env.MONGODB_URI;
 if (!mongoURI) throw new Error('MONGODB_URI não definido');
 
-const Unidade = require('../models/unidade');
-const Funcao = require('../models/funcao');
+const Unidade = require('#models/unidade');
+const Funcao = require('#models/funcao');
 
 async function corrigirFuncoes() {
   await mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
