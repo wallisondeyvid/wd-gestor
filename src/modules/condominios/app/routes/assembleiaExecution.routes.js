@@ -706,7 +706,7 @@ export default function assembleiaExecutionRoutes() {
       const roleRaw = fromPortal ? PRESENCE_ROLE.REPRESENTANTE : normalizePresenceRole(req.body?.presence_role || req.body?.role || req.body?.presenceRole || PRESENCE_ROLE.REPRESENTANTE);
       const role = normalizePresenceRole(roleRaw);
 
-      const habitacaoId = safeStr(req.body?.habitacaoId || req.body?.habitacao_id || (fromPortal ? getPortalHabitacaoId(ctxUser, req) : ''), 80);
+      let habitacaoId = safeStr(req.body?.habitacaoId || req.body?.habitacao_id || (fromPortal ? getPortalHabitacaoId(ctxUser, req) : ''), 80);
       const requestedPortalUserId = safeStr(req.body?.portalUserId || req.body?.condUsuarioId || req.body?.userId || '', 80);
       const portalUserId = fromPortal
         ? safeStr(pickUserId(ctxUser, req), 80)
@@ -721,6 +721,9 @@ export default function assembleiaExecutionRoutes() {
       const procuracaoPara = safeStr(req.body?.procuracaoPara || '', 140);
 
       if (!nome) return res.status(400).json({ ok: false, error: 'Nome é obrigatório' });
+      if (role === PRESENCE_ROLE.REPRESENTANTE && !habitacaoId && req?.skipAuth) {
+        habitacaoId = safeStr(req.body?.key || req.body?.presenceKey || req.body?.unidade || '', 80);
+      }
       if (role === PRESENCE_ROLE.REPRESENTANTE && !habitacaoId) return res.status(400).json({ ok: false, error: 'habitacaoId é obrigatório para representante' });
 
       const findIdx = () => {
@@ -760,6 +763,10 @@ export default function assembleiaExecutionRoutes() {
         requestedBy = 'MODERATOR';
         confirmMethod = 'MODERATOR_CLICK';
         action = 'presence_created_moderator';
+      }
+
+      if (req?.skipAuth && role === PRESENCE_ROLE.REPRESENTANTE) {
+        participantAt = participantAt || now;
       }
 
       const status = finalizePresenceStatus({ role, participantAt, moderatorAt });

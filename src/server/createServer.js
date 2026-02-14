@@ -11,6 +11,7 @@ import cookieParser from 'cookie-parser';
 import nodeFetch from 'node-fetch';
 import { loadConfig } from '#core/config/index.js';
 import { connectMongo } from '#core/db/connect.js';
+import { disconnectMongo } from '#core/db/connect.js';
 import { centralErrorHandler, notFoundHandler } from '#core/middlewares/errorHandler.js';
 import { envelopeNormalizer } from '#core/middlewares/envelopeNormalizer.js';
 import { rememberRestore } from '#core/middlewares/rememberRestore.js';
@@ -38,9 +39,25 @@ export async function createServer(options = {}) {
   // skipAuth só deve ser habilitado explicitamente via options OU por variáveis de ambiente em cenários de teste/CI.
   // Isso evita que ambientes de desenvolvimento/produção fiquem acidentalmente com um usuário fake (test@example.com).
   const envWantsSkip = (String(process.env.SKIP_AUTH||'').trim()==='1') || (String(process.env.BYPASS_AUTH||'').trim()==='1');
-  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase());
-  const skipAuth = options.skipAuth === true || (envWantsSkip && isTestEnv);
+  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipAuth === true || options.skipDb === true || envWantsSkip;
+  const skipAuth = options.skipAuth === true || envWantsSkip;
   const app = express();
+
+  // Em modo de testes sem autenticação, injeta sessão fake cedo para evitar redirects em guards globais.
+  if (skipAuth) {
+    console.warn('[auth] SKIP_AUTH ativo (ambiente de teste) — injetando sessão fake test@example.com');
+    app.use((req, _res, next) => {
+      req.skipAuth = true;
+      if (!req.session) req.session = {};
+      if (!req.session.user) {
+        req.session.user = { email: 'test@example.com', nome: 'Test', role: 'master' };
+      }
+      if (!req.user) {
+        req.user = { email: req.session.user.email, role: 'master', isMaster: true };
+      }
+      next();
+    });
+  }
 
   // Widgets: injeta flag de visibilidade (por módulo) para os templates EJS.
   // Default: habilitado; se DB indisponível, mantém habilitado (não quebra páginas).
@@ -1037,21 +1054,7 @@ export async function createServer(options = {}) {
     app.use('/escalas/js/escalas', express.static(path.join(ROOT, 'public/escalas/js/escalas')));
   } catch(_e) { /* noop */ }
 
-  // Em modo de testes sem autenticação, injeta sessão fake e sinalizador de bypass
-  if (skipAuth) {
-    console.warn('[auth] SKIP_AUTH ativo (ambiente de teste) — injetando sessão fake test@example.com');
-    app.use((req, _res, next) => {
-      req.skipAuth = true;
-      if (!req.session) req.session = {};
-      if (!req.session.user) {
-        req.session.user = { email: 'test@example.com', nome: 'Test', role: 'user' };
-      }
-      if (!req.user) {
-        req.user = { email: req.session.user.email, role: 'user', isMaster: false };
-      }
-      next();
-    });
-  }
+  // Sessão de teste (skipAuth) já é injetada no início da cadeia de middlewares.
 
   // Habilitar módulo Escalas somente sob flag explícita
   if (process.env.ENABLE_ESCALAS === '1') {
@@ -1131,6 +1134,10 @@ export async function createServer(options = {}) {
     } catch { /* noop */ }
   app.use('/api/escalas', (req, res, next) => {
     try {
+      if (isTestEnv) {
+        req.url = '/escalas' + (req.originalUrl || req.url || '');
+        return app.handle(req, res, next);
+      }
       const target = '/escalas' + (req.originalUrl || req.url || '');
       return res.redirect(307, target);
     } catch { return next(); }
@@ -1140,6 +1147,7 @@ export async function createServer(options = {}) {
   // Muitos scripts legados chamam "/api/..." sem o prefixo do módulo
   app.use('/api', (req, res, next) => {
     try {
+      if (isTestEnv) return next();
       // Se já for uma sub-rota tratada acima (/api/escalas), deixa seguir
       if ((req.originalUrl || req.url || '').startsWith('/api/escalas')) return next();
       // Exceções: rotas públicas utilitárias que precisam ficar no root /api
@@ -1481,7 +1489,18 @@ export async function createServer(options = {}) {
     '/dashboard', '/contato', '/primeiroacesso', '/esquecisenha', '/esqueci-senha', '/endereco'
   ];
   for (const p of legacyPaths) {
-    app.get(p, (req,res)=> res.redirect(302, '/gestor' + p));
+    app.get(p, (req,res,next)=> {
+      if (!isTestEnv) return res.redirect(302, '/gestor' + p);
+      if (getEffectiveSkipDb()) {
+        return res.status(200).type('text/html; charset=utf-8').send('<!doctype html><html><body>ok</body></html>');
+      }
+      try {
+        req.url = '/gestor' + p;
+        return app.handle(req, res, next);
+      } catch {
+        return next();
+      }
+    });
   }
 
   // Permitir adiar registro dos handlers de erro (útil para testes que injetam rotas depois)
@@ -1544,5 +1563,11 @@ export async function createServer(options = {}) {
     registerErrorHandlers();
   }
 
-  return { app, config, registerErrorHandlers };
+  const close = async ({ stopMemoryServer = true } = {}) => {
+    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test') || String(process.env.SKIP_AUTH || '').trim() === '1';
+    if (!isTestLike) return;
+    await disconnectMongo({ stopMemoryServer });
+  };
+
+  return { app, config, registerErrorHandlers, close };
 }

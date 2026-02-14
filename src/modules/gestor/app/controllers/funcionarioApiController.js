@@ -832,8 +832,7 @@ export async function getFuncionario(req,res){
 	} catch(e){ return serverError(res,e); }
 }
 export async function deleteFuncionario(req,res){ try { const { id } = req.params; const funcionario = await Funcionario.findById(id); if(!funcionario) {
-	// UX: tratar como sucesso idempotente para evitar 404 ruidoso no front
-	return ok(res, { deleted:true, alreadyRemoved:true });
+	return res.status(404).json({ success:false, error:'Funcionário não encontrado', code:'NOT_FOUND' });
 }
 const usuarioVinculado = await User.findOne({ funcionario_id: funcionario._id }); if(usuarioVinculado && usuarioVinculado.role==='master') return res.status(403).json({ success:false, error:'Funcionário vinculado a usuário master não pode ser excluído.', code:'FORBIDDEN' }); await Funcionario.findByIdAndDelete(id); return ok(res, { deleted:true }); } catch(e){ console.error('[API FUNCIONARIOS][delete] Erro:', e); return serverError(res,'Erro ao excluir funcionário'); } }
 

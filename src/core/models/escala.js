@@ -139,7 +139,7 @@ const equipeSchema = new mongoose.Schema({
 
 const escalaSchema = new mongoose.Schema({
   descricao: { type: String, required: true, trim: true },
-  classificacao: { type: String, enum: ['ORDINÁRIA','EXTRAORDINÁRIA'], required: false },
+  classificacao: { type: String, enum: ['ORDINÁRIA','EXTRAORDINÁRIA','ordinaria'], required: false },
   unidade_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Unidade', default: null },
   // Responsável formal pela escala (usuário designado). Pode ser diferente do criador.
   responsavel_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

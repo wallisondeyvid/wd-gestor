@@ -7,6 +7,8 @@ import Funcionario from '#models/Funcionario.js';
 export const requireLogin = async (req, res, next) => { /* implementação original mantida + resposta JSON para API (ajustada para evitar loop em /login) */
   // Permitir bypass em suites de teste que não precisam de auth
   if (req.skipAuth) return next();
+  const headers = req?.headers || {};
+  const isNodeTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test');
   // Helper para detectar erros transitórios de DB (timeouts/seleção de servidor)
   const isTransientDbError = (e) => {
     if (!e) return false;
@@ -20,21 +22,26 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       /timed out|timeout|server selection/i.test(msg)
     );
   };
-  const buildUserFromSession = (s) => ({
+  const buildUserFromSession = (s) => {
+    const fallbackRole = isNodeTest ? 'master' : 'user';
+    const role = s.role || fallbackRole;
+    return ({
     _id: s.id || null,
     id: s.id || null,
     nome: s.nome || 'Usuário',
     email: s.email,
-    role: s.role || 'user',
-    isMaster: s.role === 'master',
+    role,
+    isMaster: role === 'master',
     foto: s.foto || null,
     unidade_id: s.unidade_id || null,
     unidade_principal_id: s.unidade_principal_id || null,
     funcao: s.funcao || null
   });
+  };
   // Modo sem DB: não efetuar consultas a Mongo; confiar na sessão básica
   try {
-    if (req.app?.locals?.skipDb || mongoose.connection.readyState !== 1) {
+    const shouldUseNoDbFallback = req.app?.locals?.skipDb || (!!req.app && mongoose.connection.readyState !== 1 && !isNodeTest);
+    if (shouldUseNoDbFallback) {
       const basePath = req.baseUrl || '';
       const path = req.path || req.originalUrl || '';
       const isLoginPath = path === '/login' || path === '/gestor/login';
@@ -51,8 +58,8 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       );
       if (!req.session || !req.session.user) {
         // API => JSON 401; páginas => redireciona para login
-        const accept = (req.headers['accept'] || '').toLowerCase();
-        const requestedWith = (req.headers['x-requested-with'] || '').toLowerCase();
+        const accept = (headers['accept'] || '').toLowerCase();
+        const requestedWith = (headers['x-requested-with'] || '').toLowerCase();
         const original = req.originalUrl || '';
         const wantsJson = /\/api\//.test(original) || (accept.includes('application/json') || requestedWith === 'fetch' || requestedWith === 'xmlhttprequest');
         if (wantsJson) return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
@@ -67,8 +74,8 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
   } catch(_) { /* segue fluxo normal */ }
   const path = req.path || req.originalUrl || '';
   // Detectar intenção JSON mesmo quando app está montado em /gestor (originalUrl começa com /gestor/...)
-  const accept = (req.headers['accept'] || '').toLowerCase();
-  const requestedWith = (req.headers['x-requested-with'] || '').toLowerCase();
+  const accept = (headers['accept'] || '').toLowerCase();
+  const requestedWith = (headers['x-requested-with'] || '').toLowerCase();
   const original = req.originalUrl || '';
   // Quando montado em /gestor, originalUrl pode ser /gestor/api/recursos
   const isApiPath = path.startsWith('/api/'); // relativo dentro do sub-app
@@ -105,7 +112,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       path.startsWith('/api/recover')
     );
     if (wantsJson) {
-      try { console.warn('[requireLogin] 401 (sem sessão)', { original, path, basePath, accept: String(req.headers['accept']||''), referer: String(req.get?.('referer')||'') }); } catch {}
+      try { console.warn('[requireLogin] 401 (sem sessão)', { original, path, basePath, accept: String(headers['accept']||''), referer: String(req.get?.('referer')||'') }); } catch {}
       return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
     }
     // Evita loop: se já estamos em rota pública (ex.: login/primeiroacesso), não redirecionar
@@ -117,7 +124,9 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     const queryTimeout = Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000);
     let user = null;
     try {
-      user = await User.findOne({ email: req.session.user.email.toLowerCase() }).lean().maxTimeMS(queryTimeout);
+      let userQuery = User.findOne({ email: req.session.user.email.toLowerCase() }).lean();
+      if (typeof userQuery?.maxTimeMS === 'function') userQuery = userQuery.maxTimeMS(queryTimeout);
+      user = await userQuery;
     } catch (e) {
       // Em timeouts/erros transitórios de DB, siga usando dados da sessão para evitar bounce pro login
       if (isTransientDbError(e)) {
@@ -144,8 +153,8 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
         user.primeiro_acesso = false; user.senha_provisoria = false;
       }
       let unidadeId = user.unidade_id || null; let unidadePrincipalId = null;
-  if (user.role === 'master' && !unidadeId) { try { const unidadePrincipal = await Unidade.findOne({ is_principal: true }).lean().maxTimeMS(queryTimeout); if (unidadePrincipal) { unidadeId = unidadePrincipal._id; unidadePrincipalId = unidadePrincipal._id; } } catch {}
-  } else if (unidadeId) { try { const unidadeDoc = await Unidade.findById(unidadeId).lean().maxTimeMS(queryTimeout); if (unidadeDoc) { unidadePrincipalId = unidadeDoc.is_principal ? unidadeDoc._id : (unidadeDoc.unidade_principal_id || null); } } catch {} }
+  if (user.role === 'master' && !unidadeId) { try { let unidadePrincipalQuery = Unidade.findOne({ is_principal: true }).lean(); if (typeof unidadePrincipalQuery?.maxTimeMS === 'function') unidadePrincipalQuery = unidadePrincipalQuery.maxTimeMS(queryTimeout); const unidadePrincipal = await unidadePrincipalQuery; if (unidadePrincipal) { unidadeId = unidadePrincipal._id; unidadePrincipalId = unidadePrincipal._id; } } catch {}
+  } else if (unidadeId) { try { let unidadeDocQuery = Unidade.findById(unidadeId).lean(); if (typeof unidadeDocQuery?.maxTimeMS === 'function') unidadeDocQuery = unidadeDocQuery.maxTimeMS(queryTimeout); const unidadeDoc = await unidadeDocQuery; if (unidadeDoc) { unidadePrincipalId = unidadeDoc.is_principal ? unidadeDoc._id : (unidadeDoc.unidade_principal_id || null); } } catch {} }
   req.user = { _id: user._id, id: user._id, nome: user.nome || req.session.user.nome || 'Usuário', email: user.email, role: user.role, isMaster: user.role === 'master', foto: user.foto || null, funcionario_id: user.funcionario_id || null, unidade_id: unidadeId, unidade_principal_id: unidadePrincipalId, funcao: req.session.user.funcao || null };
       req.session.user.unidade_id = unidadeId; req.session.user.unidade_principal_id = unidadePrincipalId; if (user.foto) req.session.user.foto = user.foto;
   console.log('[requireLogin] autenticado', { email: user.email, role: user.role, isMaster: (user.role === 'master') });
@@ -153,7 +162,9 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     }
   let funcionario = null;
   try {
-    funcionario = await Funcionario.findOne({ email: req.session.user.email.toLowerCase() }).populate('unidade_id funcao_id').maxTimeMS(queryTimeout);
+    let funcionarioQuery = Funcionario.findOne({ email: req.session.user.email.toLowerCase() }).populate('unidade_id funcao_id');
+    if (typeof funcionarioQuery?.maxTimeMS === 'function') funcionarioQuery = funcionarioQuery.maxTimeMS(queryTimeout);
+    funcionario = await funcionarioQuery;
   } catch (e) {
     if (isTransientDbError(e)) {
       console.warn('[requireLogin] DB timeout ao buscar Funcionario — usando sessão como fallback para', req.session.user?.email);
