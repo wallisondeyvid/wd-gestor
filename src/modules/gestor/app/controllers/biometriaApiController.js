@@ -1,15 +1,36 @@
 import { ok, notFound, serverError, badRequest } from '#core/utils/apiResponse.js';
-const isTest = process.env.NODE_ENV === 'test';
+const isNodeTestRunner = process.argv.includes('--test');
+const isTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || isNodeTestRunner;
 const isServerless = !!(process.env.VERCEL || process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_BRANCH_URL);
+const skipHidByEnv = String(process.env.SKIP_HID || '').trim() === '1' || String(process.env.SKIP_BIOMETRIA || '').trim() === '1';
 const biometriaDisabledByEnv = String(process.env.DISABLE_BIOMETRIA || '').trim() === '1';
 const biometriaEnabledByEnv = String(process.env.ENABLE_BIOMETRIA || '').trim() === '1';
 const biometriaEnabled = (!biometriaDisabledByEnv) && (biometriaEnabledByEnv || !isServerless);
 
+function createHidStub() {
+	class HIDDeviceStub {
+		on() { return this; }
+		close() {}
+		getFeatureReport() { return Buffer.alloc(0); }
+		sendFeatureReport() { return 0; }
+	}
+	return {
+		devices: () => [],
+		HID: HIDDeviceStub,
+	};
+}
+
 let HID;
 (async () => {
 	try {
-		// Em testes unitários, evitar efeitos colaterais (import de node-hid / acesso a dispositivos).
-		if (isTest) return;
+		// Em teste/CI (ou quando solicitado por flag), evitar efeitos colaterais do node-hid/libusb.
+		if (isTest || skipHidByEnv) {
+			HID = createHidStub();
+			if (String(process.env.DEBUG_HANDLES || '').trim() === '1') {
+				console.log('[BIOMETRIA] node-hid em modo bypass (teste/flag).');
+			}
+			return;
+		}
 		if (!biometriaEnabled) {
 			if (!isTest) console.log('[BIOMETRIA] desabilitada (serverless/flag).');
 			return;
@@ -30,7 +51,7 @@ let HID;
 		if (!isTest) console.warn('[BIOMETRIA] node-hid não disponível (modular):', e.message);
 	}
 })();
-function listarDispositivos(){ if(!HID) return []; try { return HID.devices().map(d=>({ vendorId:d.vendorId, productId:d.productId, path:d.path, product:d.product||'', manufacturer:d.manufacturer||'', usagePage:d.usagePage, usage:d.usage })); } catch(e){ if(!isTest) console.error('[BIOMETRIA] erro listando', e); return []; } }
+function listarDispositivos(){ if(!HID || typeof HID.devices !== 'function') return []; try { return HID.devices().map(d=>({ vendorId:d.vendorId, productId:d.productId, path:d.path, product:d.product||'', manufacturer:d.manufacturer||'', usagePage:d.usagePage, usage:d.usage })); } catch(e){ if(!isTest) console.error('[BIOMETRIA] erro listando', e); return []; } }
 export function listarDispositivosApi(req,res){ return ok(res, listarDispositivos()); }
 function normId(v){ if(v===undefined||v===null||v==='') return null; if(typeof v==='string'){ v=v.trim(); if(/^0x/i.test(v)) return parseInt(v,16); } return parseInt(v,10); }
 export async function capturarBiometria(req,res){

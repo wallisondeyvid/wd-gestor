@@ -1,9 +1,10 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import { createServer } from '../src/server/createServer.js';
+import { disconnectMongo } from '../src/core/db/connect.js';
 
-let app; let registerErrorHandlers;
+let app; let registerErrorHandlers; let closeServer;
 
 async function setupServer() {
   // Habilita módulo Escalas no servidor de teste
@@ -13,8 +14,27 @@ async function setupServer() {
   process.env.SKIP_AUTH = '1';
   // Usa DB real/local (fallback padrão já cuida se não houver URI)
   const built = await createServer({ skipDb: false, skipAuth: true, deferErrorHandlers: true });
-  app = built.app; registerErrorHandlers = built.registerErrorHandlers; await Promise.resolve(registerErrorHandlers());
+  app = built.app; registerErrorHandlers = built.registerErrorHandlers; closeServer = built.close;
+  await Promise.resolve(registerErrorHandlers());
 }
+
+after(async () => {
+  try {
+    if (typeof closeServer === 'function') {
+      await closeServer({ stopMemoryServer: true });
+    } else {
+      await disconnectMongo({ stopMemoryServer: true });
+    }
+  } catch {}
+  if (String(process.env.DEBUG_HANDLES || '').trim() === '1') {
+    const handles = typeof process._getActiveHandles === 'function' ? process._getActiveHandles() : [];
+    const requests = typeof process._getActiveRequests === 'function' ? process._getActiveRequests() : [];
+    const handleNames = handles.map((item) => item?.constructor?.name || typeof item);
+    const requestNames = requests.map((item) => item?.constructor?.name || typeof item);
+    console.log('[DEBUG_HANDLES] activeHandles:', handleNames);
+    console.log('[DEBUG_HANDLES] activeRequests:', requestNames);
+  }
+});
 
 async function criarEscalaBasica() {
   const hoje = new Date();
