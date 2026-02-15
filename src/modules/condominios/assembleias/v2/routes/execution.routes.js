@@ -1,0 +1,896 @@
+import express from 'express';
+import mongoose from 'mongoose';
+import CondAssembleia from '#core/models/cond_assembleia.js';
+import CondUsuario from '#core/models/cond_usuario.js';
+import CondMorador from '#core/models/cond_morador.js';
+import CondHabitacao from '#core/models/cond_habitacao.js';
+import CondProprietario from '#core/models/cond_proprietario.js';
+import executionV1, {
+  mustAuth,
+  mustControl,
+  getOrCreateExecution,
+  pushEvent,
+  safeStr,
+  getActorSource,
+  writeAuditLog,
+  isPortalRequest,
+  PRESENCE_ROLE,
+  PRESENCE_STATUS,
+  normalizePresenceRole,
+  normalizePresenceStatus,
+  getPortalHabitacaoId,
+  pickUserId,
+  getPortalPresenceKey,
+  normalizePresenceKey,
+  getPortalPresenceNome,
+  toObjectOrPlain,
+  finalizePresenceStatus,
+  newPresenceId,
+  hasOtherConfirmedRepresentative,
+  buildActorSnapshot,
+  isPresenceConfirmed,
+  computeQuorum,
+  serializePresence,
+  parsePortalUserIdFromPresenceKey
+  ,
+  voteSummary,
+  parseConvocacaoDateTime
+} from '#modules/condominios/assembleias/routes/execution.routes.js';
+import { getExecutionStatus } from '#modules/condominios/assembleias/v2/controllers/executionStatus.controller.js';
+import { getExecutionPresenceMe } from '#modules/condominios/assembleias/v2/controllers/executionPresenceMe.controller.js';
+import { getExecutionAta, getExecutionAtaPdfController } from '#modules/condominios/assembleias/v2/controllers/executionAta.controller.js';
+import { executionCloseLogic } from '#modules/condominios/assembleias/shared/executionClose.logic.js';
+import { executionPauseLogic } from '#modules/condominios/assembleias/shared/executionPause.logic.js';
+import { executionPresenceLogic } from '#modules/condominios/assembleias/shared/executionPresence.logic.js';
+import { executionPresenceConfirmLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirm.logic.js';
+import { executionVoteOpenLogic } from '#modules/condominios/assembleias/shared/executionVoteOpen.logic.js';
+import { executionVoteLogic } from '#modules/condominios/assembleias/shared/executionVote.logic.js';
+import { executionVoteCloseLogic } from '#modules/condominios/assembleias/shared/executionVoteClose.logic.js';
+import { executionOpenLogic } from '#modules/condominios/assembleias/shared/executionOpen.logic.js';
+import { executionAgendaLogic } from '#modules/condominios/assembleias/shared/executionAgenda.logic.js';
+import { verifyPortalPassword } from '#modules/portal-morador/lib/portalAuth.js';
+
+const V1_NOT_FOUND = { error: true, message: 'Recurso não encontrado', success: false };
+
+function cloneReqForShadow(req, method, url) {
+  const headers = { ...(req.headers || {}) };
+  return {
+    method,
+    url,
+    originalUrl: url,
+    baseUrl: req.baseUrl || '',
+    params: { ...(req.params || {}) },
+    query: { ...(req.query || {}) },
+    body: req.body,
+    headers,
+    session: req.session,
+    user: req.user,
+    ctxUser: req.ctxUser,
+    portalUser: req.portalUser,
+    skipAuth: req.skipAuth,
+    protocol: req.protocol,
+    get(name) {
+      return this.headers?.[String(name || '').toLowerCase()];
+    }
+  };
+}
+
+function captureRouter(router, reqLike) {
+  return new Promise((resolve) => {
+    const out = {
+      status: 200,
+      headers: {},
+      jsonBody: undefined,
+      textBody: undefined,
+      handled: false
+    };
+
+    const resLike = {
+      status(code) {
+        out.status = Number(code) || out.status;
+        return this;
+      },
+      setHeader(k, v) {
+        out.headers[String(k).toLowerCase()] = String(v);
+      },
+      set(k, v) {
+        out.headers[String(k).toLowerCase()] = String(v);
+        return this;
+      },
+      json(payload) {
+        out.headers['content-type'] = out.headers['content-type'] || 'application/json; charset=utf-8';
+        out.jsonBody = payload;
+        out.textBody = JSON.stringify(payload);
+        out.handled = true;
+        resolve(out);
+        return this;
+      },
+      send(payload) {
+        if (Buffer.isBuffer(payload)) out.textBody = payload.toString('binary');
+        else if (typeof payload === 'object') {
+          out.jsonBody = payload;
+          out.textBody = JSON.stringify(payload);
+        } else out.textBody = String(payload ?? '');
+        out.handled = true;
+        resolve(out);
+        return this;
+      }
+    };
+
+    router.handle(reqLike, resLike, () => resolve(out));
+  });
+}
+
+function normalizeForCompare(result) {
+  const body = result?.jsonBody || {};
+  return {
+    status: Number(result?.status || 0),
+    ok: body?.ok,
+    error: body?.error || null,
+    sessionStatus: body?.data?.sessionStatus || null,
+    isPaused: body?.data?.isPaused
+  };
+}
+
+function ensureCanonicalV1Result(result) {
+  if (result?.handled) return result;
+  return {
+    status: 404,
+    headers: { 'content-type': 'application/json; charset=utf-8' },
+    jsonBody: V1_NOT_FOUND,
+    textBody: JSON.stringify(V1_NOT_FOUND),
+    handled: true
+  };
+}
+
+export default function executionV2() {
+  const router = express.Router();
+  const v1Router = executionV1();
+  router.use(express.json({ limit: '220kb' }));
+  router.use(express.urlencoded({ extended: true, limit: '220kb' }));
+
+  router.post('/api/assembleias/:id/execution/open', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/open`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionOpenLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          mustControl,
+          CondAssembleia,
+          parseConvocacaoDateTime,
+          getOrCreateExecution,
+          pushEvent,
+          safeStr,
+          writeAuditLog,
+          getActorSource
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][open] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][open] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][open] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao abrir sessão' });
+    }
+  });
+
+  router.post('/api/assembleias/:id/execution/pause', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/pause`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionPauseLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          mustControl,
+          getOrCreateExecution,
+          pushEvent,
+          safeStr,
+          getActorSource,
+          writeAuditLog
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][pause] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][pause] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][pause] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao pausar/retomar sessão' });
+    }
+  });
+
+  router.post('/api/assembleias/:id/execution/close', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/close`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionCloseLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          mustControl,
+          getOrCreateExecution,
+          pushEvent,
+          safeStr,
+          getActorSource,
+          writeAuditLog
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][close] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][close] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][close] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao encerrar sessão' });
+    }
+  });
+
+  router.post('/api/assembleias/:id/execution/presence', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/presence`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionPresenceLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          isPortalRequest,
+          mustAuth,
+          mustControl,
+          getOrCreateExecution,
+          PRESENCE_ROLE,
+          PRESENCE_STATUS,
+          normalizePresenceRole,
+          safeStr,
+          getPortalHabitacaoId,
+          pickUserId,
+          getPortalPresenceKey,
+          normalizePresenceKey,
+          getPortalPresenceNome,
+          toObjectOrPlain,
+          finalizePresenceStatus,
+          newPresenceId,
+          hasOtherConfirmedRepresentative,
+          buildActorSnapshot,
+          isPresenceConfirmed,
+          pushEvent,
+          writeAuditLog,
+          getActorSource,
+          computeQuorum,
+          serializePresence
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][presence] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][presence] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][presence] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao registrar presença' });
+    }
+  });
+
+  router.post('/api/assembleias/:id/execution/presence/confirm', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/presence/confirm`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionPresenceConfirmLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          mustControl,
+          safeStr,
+          normalizePresenceKey,
+          getOrCreateExecution,
+          toObjectOrPlain,
+          normalizePresenceRole,
+          PRESENCE_ROLE,
+          parsePortalUserIdFromPresenceKey,
+          CondMorador,
+          CondHabitacao,
+          CondProprietario,
+          CondUsuario,
+          verifyPortalPassword,
+          finalizePresenceStatus,
+          PRESENCE_STATUS,
+          hasOtherConfirmedRepresentative,
+          pushEvent,
+          writeAuditLog,
+          getActorSource,
+          computeQuorum,
+          serializePresence
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][presence-confirm] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][presence-confirm] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][presence-confirm] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao confirmar presença' });
+    }
+  });
+
+  router.post('/api/assembleias/:id/execution/agenda', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/agenda`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionAgendaLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          mustControl,
+          getOrCreateExecution,
+          safeStr,
+          pushEvent,
+          writeAuditLog,
+          getActorSource
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][agenda] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][agenda] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][agenda] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao atualizar pauta' });
+    }
+  });
+
+  router.post('/api/assembleias/:id/execution/vote/open', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/vote/open`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionVoteOpenLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          mustControl,
+          getOrCreateExecution,
+          safeStr,
+          pushEvent,
+          writeAuditLog,
+          getActorSource
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][vote-open] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][vote-open] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][vote-open] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao abrir votação' });
+    }
+  });
+
+  router.post('/api/assembleias/:id/execution/vote', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/vote`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionVoteLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          isPortalRequest,
+          mustAuth,
+          mustControl,
+          getOrCreateExecution,
+          normalizePresenceKey,
+          getPortalPresenceKey,
+          safeStr,
+          normalizePresenceRole,
+          normalizePresenceStatus,
+          PRESENCE_ROLE,
+          PRESENCE_STATUS,
+          pushEvent,
+          writeAuditLog,
+          voteSummary
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][vote] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][vote] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][vote] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao registrar voto' });
+    }
+  });
+
+  router.post('/api/assembleias/:id/execution/vote/close', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/vote/close`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionVoteCloseLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          mustControl,
+          getOrCreateExecution,
+          pushEvent,
+          safeStr,
+          writeAuditLog,
+          getActorSource,
+          voteSummary
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][vote-close] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][vote-close] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][vote-close] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao encerrar votação' });
+    }
+  });
+
+  router.get('/api/assembleias/:id/execution/status', getExecutionStatus);
+  router.get('/api/assembleias/:id/execution/presence/me', getExecutionPresenceMe);
+  router.get('/api/assembleias/:id/execution/ata', getExecutionAta);
+  router.get('/api/assembleias/:id/execution/ata.pdf', getExecutionAtaPdfController);
+  router.get('/health', (req, res) => res.json({ v: 2, ok: true }));
+  return router;
+}

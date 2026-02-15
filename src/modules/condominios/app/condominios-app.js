@@ -47,7 +47,7 @@ import CondComunicado from '#core/models/cond_comunicado.js';
 import CondAssembleia from '#core/models/cond_assembleia.js';
 import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
 import CondAssembleiaSettings from '#core/models/cond_assembleia_settings.js';
-import assembleiaExecutionRoutes from './routes/assembleiaExecution.routes.js';
+import mountAssembleias from '#modules/condominios/assembleias/index.js';
 import DocumentoValidado from '#core/models/documentoValidado.js';
 import CondMsgMailbox from '#core/models/cond_msg_mailbox.js';
 import CondMsgSettings from '#core/models/cond_msg_settings.js';
@@ -726,7 +726,7 @@ app.use((req, _res, next) => {
 
 // API: Execução da Assembleia (status/presença/votos/ata)
 try {
-  app.use(assembleiaExecutionRoutes());
+  mountAssembleias(app);
 } catch (e) {
   console.error('[condominios][assembleiaExecutionRoutes] falha ao montar rotas:', e);
 }

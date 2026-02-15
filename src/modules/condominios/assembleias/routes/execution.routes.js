@@ -11,6 +11,15 @@ import CondHabitacao from '#core/models/cond_habitacao.js';
 import CondProprietario from '#core/models/cond_proprietario.js';
 import { writeAuditLog } from '#modules/condominios/app/lib/auditLog.js';
 import { verifyPortalPassword } from '#modules/portal-morador/lib/portalAuth.js';
+import { executionCloseLogic } from '#modules/condominios/assembleias/shared/executionClose.logic.js';
+import { executionPauseLogic } from '#modules/condominios/assembleias/shared/executionPause.logic.js';
+import { executionPresenceLogic } from '#modules/condominios/assembleias/shared/executionPresence.logic.js';
+import { executionPresenceConfirmLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirm.logic.js';
+import { executionVoteOpenLogic } from '#modules/condominios/assembleias/shared/executionVoteOpen.logic.js';
+import { executionVoteLogic } from '#modules/condominios/assembleias/shared/executionVote.logic.js';
+import { executionVoteCloseLogic } from '#modules/condominios/assembleias/shared/executionVoteClose.logic.js';
+import { executionOpenLogic } from '#modules/condominios/assembleias/shared/executionOpen.logic.js';
+import { executionAgendaLogic } from '#modules/condominios/assembleias/shared/executionAgenda.logic.js';
 
 function safeStr(v, max = 4000) {
   const s = String(v ?? '').trim();
@@ -515,354 +524,104 @@ export default function assembleiaExecutionRoutes() {
 
   // POST /api/assembleias/:id/execution/open
   router.post('/api/assembleias/:id/execution/open', async (req, res) => {
-    try {
-      const ctxUser = mustControl(req, res);
-      if (!ctxUser) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const assembleia = await CondAssembleia.findById(id);
-      if (!assembleia) return res.status(404).json({ ok: false, error: 'Assembleia não encontrada' });
-
-      const convocacaoAt = parseConvocacaoDateTime(assembleia);
-      if (convocacaoAt && Date.now() < convocacaoAt.getTime()) {
-        return res.status(409).json({ ok: false, error: 'Sessão não pode ser aberta antes da data/hora de convocação', data: { convocacaoAt } });
+    const result = await executionOpenLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        mustControl,
+        CondAssembleia,
+        parseConvocacaoDateTime,
+        getOrCreateExecution,
+        pushEvent,
+        safeStr,
+        writeAuditLog,
+        getActorSource
       }
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-
-      if (String(execDoc.sessionStatus) === 'encerrada') {
-        return res.status(409).json({ ok: false, error: 'Sessão já encerrada' });
-      }
-      if (String(execDoc.sessionStatus) !== 'aguardando') {
-        return res.status(409).json({ ok: false, error: 'Sessão já está aberta' });
-      }
-
-      execDoc.sessionStatus = 'aberta';
-      execDoc.isPaused = false;
-      execDoc.openedAt = new Date();
-      execDoc.pausedAt = null;
-      execDoc.pausedMs = 0;
-      execDoc.closedAt = null;
-
-      pushEvent(execDoc, {
-        type: 'session_opened',
-        message: 'Sessão aberta',
-        actorEmail: safeStr(ctxUser?.email || '')
-      });
-
-      await execDoc.save();
-
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: assembleia.unidade_id,
-        assembleiaId: assembleia._id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: 'execution.open',
-        payload: { at: execDoc.openedAt }
-      });
-
-      return res.json({ ok: true, data: { sessionStatus: execDoc.sessionStatus, openedAt: execDoc.openedAt } });
-    } catch (e) {
-      console.error('[assembleia-execution][open] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao abrir sessão' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /api/assembleias/:id/execution/pause
   router.post('/api/assembleias/:id/execution/pause', async (req, res) => {
-    try {
-      const ctxUser = mustControl(req, res);
-      if (!ctxUser) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-
-      if (String(execDoc.sessionStatus) !== 'aberta' && String(execDoc.sessionStatus) !== 'em_votacao') {
-        return res.status(409).json({ ok: false, error: 'Sessão não está aberta' });
+    const result = await executionPauseLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        mustControl,
+        getOrCreateExecution,
+        pushEvent,
+        safeStr,
+        getActorSource,
+        writeAuditLog
       }
-      if (!execDoc.openedAt) {
-        return res.status(409).json({ ok: false, error: 'Sessão ainda não foi aberta' });
-      }
-
-      if (!execDoc.isPaused) {
-        execDoc.isPaused = true;
-        execDoc.pausedAt = new Date();
-        pushEvent(execDoc, { type: 'session_paused', message: 'Sessão pausada', actorEmail: safeStr(ctxUser?.email || '') });
-      } else {
-        // Resume
-        const pausedAt = execDoc.pausedAt ? new Date(execDoc.pausedAt).getTime() : null;
-        if (pausedAt) execDoc.pausedMs = (Number(execDoc.pausedMs || 0) || 0) + Math.max(0, Date.now() - pausedAt);
-        execDoc.isPaused = false;
-        execDoc.pausedAt = null;
-        pushEvent(execDoc, { type: 'session_resumed', message: 'Sessão retomada', actorEmail: safeStr(ctxUser?.email || '') });
-      }
-
-      await execDoc.save();
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: execDoc.isPaused ? 'execution.pause' : 'execution.resume',
-        payload: { isPaused: !!execDoc.isPaused }
-      });
-
-      return res.json({ ok: true, data: { isPaused: !!execDoc.isPaused } });
-    } catch (e) {
-      console.error('[assembleia-execution][pause] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao pausar/retomar sessão' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /api/assembleias/:id/execution/close
   router.post('/api/assembleias/:id/execution/close', async (req, res) => {
-    try {
-      const ctxUser = mustControl(req, res);
-      if (!ctxUser) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-
-      if (String(execDoc.sessionStatus) === 'encerrada') {
-        return res.status(409).json({ ok: false, error: 'Sessão já encerrada' });
+    const result = await executionCloseLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        mustControl,
+        getOrCreateExecution,
+        pushEvent,
+        safeStr,
+        getActorSource,
+        writeAuditLog
       }
-
-      // Travar votação aberta
-      try {
-        const idx = Number(execDoc.currentAgendaIdx || 0) || 0;
-        const openVote = (execDoc.votes || []).find(v => Number(v?.agendaIdx) === idx && v?.openedAt && !v?.closedAt);
-        if (openVote) openVote.closedAt = new Date();
-      } catch { /* noop */ }
-
-      // Se estava pausada, contabiliza pausa
-      try {
-        if (execDoc.isPaused && execDoc.pausedAt) {
-          const pausedAt = new Date(execDoc.pausedAt).getTime();
-          execDoc.pausedMs = (Number(execDoc.pausedMs || 0) || 0) + Math.max(0, Date.now() - pausedAt);
-        }
-      } catch { /* noop */ }
-
-      execDoc.isPaused = false;
-      execDoc.pausedAt = null;
-      execDoc.sessionStatus = 'encerrada';
-      execDoc.closedAt = new Date();
-
-      pushEvent(execDoc, { type: 'session_closed', message: 'Sessão encerrada', actorEmail: safeStr(ctxUser?.email || '') });
-
-      await execDoc.save();
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: 'execution.close',
-        payload: { at: execDoc.closedAt }
-      });
-
-      return res.json({ ok: true, data: { sessionStatus: execDoc.sessionStatus, closedAt: execDoc.closedAt } });
-    } catch (e) {
-      console.error('[assembleia-execution][close] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao encerrar sessão' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /api/assembleias/:id/execution/presence (compat)
   // Portal: solicitar/confirmar presença de REPRESENTANTE.
   // Gestor: registro de REPRESENTANTE iniciado pelo moderador (ou NÃO REPRESENTANTE quando explicitado).
   router.post('/api/assembleias/:id/execution/presence', async (req, res) => {
-    try {
-      const fromPortal = isPortalRequest(req);
-      const ctxUser = fromPortal ? mustAuth(req, res) : mustControl(req, res);
-      if (!ctxUser && !req?.skipAuth) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-      if (String(execDoc.sessionStatus) === 'encerrada') return res.status(409).json({ ok: false, error: 'Assembleia encerrada' });
-
-      const now = new Date();
-      const pres = Array.isArray(execDoc.presences) ? execDoc.presences : [];
-
-      const roleRaw = fromPortal ? PRESENCE_ROLE.REPRESENTANTE : normalizePresenceRole(req.body?.presence_role || req.body?.role || req.body?.presenceRole || PRESENCE_ROLE.REPRESENTANTE);
-      const role = normalizePresenceRole(roleRaw);
-
-      let habitacaoId = safeStr(req.body?.habitacaoId || req.body?.habitacao_id || (fromPortal ? getPortalHabitacaoId(ctxUser, req) : ''), 80);
-      const requestedPortalUserId = safeStr(req.body?.portalUserId || req.body?.condUsuarioId || req.body?.userId || '', 80);
-      const portalUserId = fromPortal
-        ? safeStr(pickUserId(ctxUser, req), 80)
-        : (requestedPortalUserId && mongoose.isValidObjectId(requestedPortalUserId) ? requestedPortalUserId : '');
-
-      const key = fromPortal
-        ? getPortalPresenceKey(ctxUser, req)
-        : normalizePresenceKey(req.body?.presenceKey || req.body?.key || (portalUserId ? `portal:${portalUserId}` : '') || req.body?.nome || req.body?.unidade);
-      const nome = fromPortal ? getPortalPresenceNome(ctxUser) : safeStr(req.body?.nome || '', 140);
-      const unidadeLabel = safeStr(req.body?.unidadeLabel || req.body?.habitacaoLabel || '', 160);
-      const fracaoIdeal = Number(req.body?.fracaoIdeal || 0) || 0;
-      const procuracaoPara = safeStr(req.body?.procuracaoPara || '', 140);
-
-      if (!nome) return res.status(400).json({ ok: false, error: 'Nome é obrigatório' });
-      if (role === PRESENCE_ROLE.REPRESENTANTE && !habitacaoId && req?.skipAuth) {
-        habitacaoId = safeStr(req.body?.key || req.body?.presenceKey || req.body?.unidade || '', 80);
+    const result = await executionPresenceLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        isPortalRequest,
+        mustAuth,
+        mustControl,
+        getOrCreateExecution,
+        PRESENCE_ROLE,
+        normalizePresenceRole,
+        safeStr,
+        getPortalHabitacaoId,
+        pickUserId,
+        getPortalPresenceKey,
+        normalizePresenceKey,
+        getPortalPresenceNome,
+        toObjectOrPlain,
+        finalizePresenceStatus,
+        newPresenceId,
+        PRESENCE_STATUS,
+        hasOtherConfirmedRepresentative,
+        buildActorSnapshot,
+        isPresenceConfirmed,
+        pushEvent,
+        writeAuditLog,
+        getActorSource,
+        computeQuorum,
+        serializePresence
       }
-      if (role === PRESENCE_ROLE.REPRESENTANTE && !habitacaoId) return res.status(400).json({ ok: false, error: 'habitacaoId é obrigatório para representante' });
-
-      const findIdx = () => {
-        if (role === PRESENCE_ROLE.REPRESENTANTE && habitacaoId) {
-          const byHab = pres.findIndex((p) => String(p?.habitacao_id || '') === habitacaoId && normalizePresenceRole(p?.presence_role || 'REPRESENTANTE') === PRESENCE_ROLE.REPRESENTANTE);
-          if (byHab >= 0) return byHab;
-        }
-        if (key) {
-          const byKey = pres.findIndex((p) => normalizePresenceKey(p?.key) === key);
-          if (byKey >= 0) return byKey;
-        }
-        return -1;
-      };
-
-      const idx = findIdx();
-      const prevObj = idx >= 0 ? toObjectOrPlain(pres[idx]) : {};
-
-      let participantAt = prevObj?.confirmed_by_participant_at || null;
-      let moderatorAt = prevObj?.confirmed_by_moderator_at || null;
-      let requestedBy = safeStr(prevObj?.requested_by || '', 40);
-      let confirmMethod = safeStr(prevObj?.confirm_method || '', 40);
-      let action = '';
-
-      if (role === PRESENCE_ROLE.NAO_REPRESENTANTE) {
-        moderatorAt = now;
-        participantAt = null;
-        requestedBy = 'MODERATOR';
-        confirmMethod = 'MODERATOR_CLICK';
-        action = 'presence_created_nonrep';
-      } else if (fromPortal) {
-        participantAt = now;
-        requestedBy = 'PARTICIPANT';
-        confirmMethod = 'PORTAL';
-        action = idx >= 0 ? 'presence_confirmed_participant' : 'presence_requested_participant';
-      } else {
-        moderatorAt = now;
-        requestedBy = 'MODERATOR';
-        confirmMethod = 'MODERATOR_CLICK';
-        action = 'presence_created_moderator';
-      }
-
-      if (req?.skipAuth && role === PRESENCE_ROLE.REPRESENTANTE) {
-        participantAt = participantAt || now;
-      }
-
-      const status = finalizePresenceStatus({ role, participantAt, moderatorAt });
-      const presenceId = safeStr(prevObj?.presenceId || '', 80) || newPresenceId();
-
-      if (role === PRESENCE_ROLE.REPRESENTANTE && status === PRESENCE_STATUS.CONFIRMED) {
-        if (hasOtherConfirmedRepresentative(execDoc, { habitacaoId, excludePresenceId: presenceId })) {
-          return res.status(409).json({ ok: false, error: 'Já existe representante confirmado para esta habitação nesta assembleia' });
-        }
-      }
-
-      const createdBy = prevObj?.createdBy || buildActorSnapshot(ctxUser, req);
-      const createdAt = prevObj?.createdAt || now;
-
-      const nextPresence = {
-        ...prevObj,
-        presenceId,
-        key: key || safeStr(prevObj?.key || '', 90) || normalizePresenceKey(`hab:${habitacaoId || presenceId}`),
-        nome: nome || safeStr(prevObj?.nome || '', 140),
-        unidadeLabel: unidadeLabel || safeStr(prevObj?.unidadeLabel || '', 160),
-        source: fromPortal ? 'portal' : safeStr(req.body?.source || prevObj?.source || 'manual', 30),
-        status,
-        presence_role: role,
-        requested_by: requestedBy || (fromPortal ? 'PARTICIPANT' : 'MODERATOR'),
-        confirm_method: confirmMethod,
-        habitacao_id: habitacaoId && mongoose.isValidObjectId(habitacaoId) ? habitacaoId : (prevObj?.habitacao_id || null),
-        pessoa_id: portalUserId && mongoose.isValidObjectId(portalUserId) ? portalUserId : (prevObj?.pessoa_id || null),
-        fracaoIdeal: fromPortal ? (Number(prevObj?.fracaoIdeal || 0) || fracaoIdeal) : fracaoIdeal,
-        procuracaoPara: fromPortal ? (safeStr(prevObj?.procuracaoPara || '', 140) || procuracaoPara) : procuracaoPara,
-        createdAt,
-        createdBy,
-        confirmedBy: isPresenceConfirmed({ status, presence_role: role }) ? buildActorSnapshot(ctxUser, req) : (prevObj?.confirmedBy || null),
-        confirmed_by_participant_at: participantAt,
-        confirmed_by_moderator_at: moderatorAt,
-        confirmedAt: status === PRESENCE_STATUS.CONFIRMED ? now : (prevObj?.confirmedAt || null),
-        updatedAt: now
-      };
-
-      if (idx >= 0) pres[idx] = nextPresence;
-      else pres.push(nextPresence);
-      execDoc.presences = pres;
-
-      if (status === PRESENCE_STATUS.CONFIRMED && action !== 'presence_created_nonrep') {
-        pushEvent(execDoc, { type: 'presence_confirmed_final', message: `Presença confirmada: ${nextPresence.nome}`, actorEmail: safeStr(ctxUser?.email || '') });
-      } else {
-        pushEvent(execDoc, { type: 'presence_updated', message: `Presença atualizada: ${nextPresence.nome} (${status})`, actorEmail: safeStr(ctxUser?.email || '') });
-      }
-
-      await execDoc.save();
-
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action,
-        payload: {
-          assemblyId: String(execDoc.assembleia_id),
-          presenceId,
-          habitacaoId: nextPresence.habitacao_id ? String(nextPresence.habitacao_id) : null,
-          pessoaId: nextPresence.pessoa_id ? String(nextPresence.pessoa_id) : null,
-          role,
-          status,
-          requestedBy: requestedBy || null
-        }
-      });
-
-      if (status === PRESENCE_STATUS.CONFIRMED) {
-        await writeAuditLog({
-          req,
-          ctxUser,
-          source: getActorSource(req),
-          unidadeId: execDoc.unidade_id,
-          assembleiaId: execDoc.assembleia_id,
-          entityType: 'assembleia_execution',
-          entityId: execDoc._id,
-          action: 'presence_confirmed_final',
-          payload: {
-            assemblyId: String(execDoc.assembleia_id),
-            presenceId,
-            habitacaoId: nextPresence.habitacao_id ? String(nextPresence.habitacao_id) : null,
-            pessoaId: nextPresence.pessoa_id ? String(nextPresence.pessoa_id) : null,
-            role
-          }
-        });
-      }
-
-      const quorum = computeQuorum(execDoc);
-      return res.json({ ok: true, data: { quorum, presence: serializePresence(nextPresence), presences: execDoc.presences.slice(-200).map((p) => serializePresence(p)) } });
-    } catch (e) {
-      console.error('[assembleia-execution][presence] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao registrar presença' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // GET /api/assembleias/:id/execution/presence/me
@@ -903,195 +662,37 @@ export default function assembleiaExecutionRoutes() {
   // Gestor: confirma participante (PIN/senha) para presença representante pendente.
   // Body: { presenceId?, presenceKey|key, senha|password }
   router.post('/api/assembleias/:id/execution/presence/confirm', async (req, res) => {
-    try {
-      const ctxUser = mustControl(req, res);
-      if (!ctxUser && !req?.skipAuth) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const presenceId = safeStr(req.body?.presenceId || '', 80);
-      const presenceKey = normalizePresenceKey(req.body?.presenceKey || req.body?.key || '');
-      if (!presenceId && !presenceKey) return res.status(400).json({ ok: false, error: 'presenceId ou presenceKey é obrigatório' });
-
-      const senha = String(req.body?.senha || req.body?.password || '').trim();
-      if (!senha) return res.status(400).json({ ok: false, error: 'Senha é obrigatória' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-      if (String(execDoc.sessionStatus) === 'encerrada') return res.status(409).json({ ok: false, error: 'Assembleia encerrada' });
-
-      const pres = Array.isArray(execDoc.presences) ? execDoc.presences : [];
-      const idx = pres.findIndex((p) => (presenceId && String(p?.presenceId || '') === presenceId) || (presenceKey && normalizePresenceKey(p?.key) === presenceKey));
-      if (idx < 0) return res.status(404).json({ ok: false, error: 'Presença não encontrada' });
-
-      const prevObj = toObjectOrPlain(pres[idx]);
-      const role = normalizePresenceRole(prevObj?.presence_role || 'REPRESENTANTE');
-      if (role !== PRESENCE_ROLE.REPRESENTANTE) return res.status(409).json({ ok: false, error: 'Confirmação por PIN só é permitida para representante' });
-
-      let portalUserId = safeStr(prevObj?.pessoa_id || '', 80);
-      if (!portalUserId) portalUserId = parsePortalUserIdFromPresenceKey(prevObj?.key || '');
-
-      const candidateUserIds = [];
-      const addCandidateUserId = (v) => {
-        const idStr = safeStr(v || '', 80);
-        if (!idStr || !mongoose.isValidObjectId(idStr)) return;
-        if (!candidateUserIds.includes(idStr)) candidateUserIds.push(idStr);
-      };
-
-      addCandidateUserId(portalUserId);
-
-      const habitacaoId = safeStr(prevObj?.habitacao_id || '', 80);
-      if (habitacaoId && mongoose.isValidObjectId(habitacaoId)) {
-        try {
-          const moradores = await CondMorador.find({ habitacao_id: habitacaoId, ativo: { $ne: false } })
-            .select('cond_usuario_id')
-            .lean()
-            .catch(() => []);
-          for (const m of (Array.isArray(moradores) ? moradores : [])) {
-            addCandidateUserId(m?.cond_usuario_id);
-          }
-
-          const habDoc = await CondHabitacao.findById(habitacaoId)
-            .select('proprietario_id contrato_locacao.responsavel_morador_id contratos_locacao.responsavel_morador_id')
-            .lean()
-            .catch(() => null);
-
-          const respMoradorId = safeStr(
-            habDoc?.contrato_locacao?.responsavel_morador_id
-            || (Array.isArray(habDoc?.contratos_locacao)
-              ? (habDoc.contratos_locacao.find((c) => c?.responsavel_morador_id)?.responsavel_morador_id || '')
-              : ''),
-            80
-          );
-
-          if (respMoradorId && mongoose.isValidObjectId(respMoradorId)) {
-            const respMorador = await CondMorador.findById(respMoradorId)
-              .select('cond_usuario_id')
-              .lean()
-              .catch(() => null);
-            addCandidateUserId(respMorador?.cond_usuario_id);
-          }
-
-          if (habDoc?.proprietario_id) {
-            const propId = safeStr(habDoc.proprietario_id, 80);
-            if (propId && mongoose.isValidObjectId(propId)) {
-              const prop = await CondProprietario.findById(propId)
-                .select('cond_usuario_id')
-                .lean()
-                .catch(() => null);
-              addCandidateUserId(prop?.cond_usuario_id);
-            }
-          }
-        } catch {
-          /* noop */
-        }
+    const result = await executionPresenceConfirmLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        mustControl,
+        safeStr,
+        normalizePresenceKey,
+        getOrCreateExecution,
+        toObjectOrPlain,
+        normalizePresenceRole,
+        PRESENCE_ROLE,
+        parsePortalUserIdFromPresenceKey,
+        CondMorador,
+        CondHabitacao,
+        CondProprietario,
+        CondUsuario,
+        verifyPortalPassword,
+        finalizePresenceStatus,
+        PRESENCE_STATUS,
+        hasOtherConfirmedRepresentative,
+        pushEvent,
+        writeAuditLog,
+        getActorSource,
+        computeQuorum,
+        serializePresence
       }
-
-      if (!candidateUserIds.length) {
-        return res.status(400).json({ ok: false, error: 'Usuário do participante não identificado para validação de PIN/senha' });
-      }
-
-      let condUser = null;
-      let foundAnyCondUser = false;
-      for (const candidateId of candidateUserIds) {
-        const user = await CondUsuario.findById(candidateId);
-        if (!user) continue;
-        foundAnyCondUser = true;
-        const okPassCandidate = await verifyPortalPassword(user, senha);
-        if (okPassCandidate) {
-          condUser = user;
-          portalUserId = candidateId;
-          break;
-        }
-      }
-
-      if (!foundAnyCondUser) return res.status(404).json({ ok: false, error: 'Usuário do portal não encontrado' });
-      if (!condUser) return res.status(400).json({ ok: false, error: 'PIN/Senha incorreto' });
-
-      const now = new Date();
-      const participantSnapshot = {
-        id: String(condUser?._id || portalUserId),
-        nome: safeStr(condUser?.nome || condUser?.name || '', 140) || null,
-        email: safeStr(condUser?.email || '', 140) || null,
-        source: 'LOCAL_PIN',
-        at: now
-      };
-
-      const moderatorAt = prevObj?.confirmed_by_moderator_at || null;
-      const participantAt = now;
-      const status = finalizePresenceStatus({ role, participantAt, moderatorAt });
-
-      if (status === PRESENCE_STATUS.CONFIRMED && hasOtherConfirmedRepresentative(execDoc, {
-        habitacaoId: prevObj?.habitacao_id ? String(prevObj.habitacao_id) : '',
-        excludePresenceId: safeStr(prevObj?.presenceId || '', 80)
-      })) {
-        return res.status(409).json({ ok: false, error: 'Já existe representante confirmado para esta habitação nesta assembleia' });
-      }
-
-      const updated = {
-        ...prevObj,
-        pessoa_id: portalUserId,
-        status,
-        confirmedAt: status === PRESENCE_STATUS.CONFIRMED ? now : (prevObj?.confirmedAt || null),
-        confirmedBy: participantSnapshot,
-        confirmed_by_participant_at: participantAt,
-        confirm_method: 'LOCAL_PIN',
-        updatedAt: now
-      };
-      pres[idx] = updated;
-      execDoc.presences = pres;
-
-      pushEvent(execDoc, {
-        type: 'presence_confirmed_participant',
-        message: `Presença confirmada por PIN/senha: ${safeStr(prevObj?.nome || '')}`,
-        actorEmail: safeStr(ctxUser?.email || '')
-      });
-
-      await execDoc.save();
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: 'presence_confirmed_participant',
-        payload: {
-          assemblyId: String(execDoc.assembleia_id),
-          presenceId: safeStr(updated?.presenceId || '', 80),
-          habitacaoId: updated?.habitacao_id ? String(updated.habitacao_id) : null,
-          pessoaId: updated?.pessoa_id ? String(updated.pessoa_id) : null,
-          method: 'LOCAL_PIN'
-        }
-      });
-
-      if (status === PRESENCE_STATUS.CONFIRMED) {
-        await writeAuditLog({
-          req,
-          ctxUser,
-          source: getActorSource(req),
-          unidadeId: execDoc.unidade_id,
-          assembleiaId: execDoc.assembleia_id,
-          entityType: 'assembleia_execution',
-          entityId: execDoc._id,
-          action: 'presence_confirmed_final',
-          payload: {
-            assemblyId: String(execDoc.assembleia_id),
-            presenceId: safeStr(updated?.presenceId || '', 80),
-            habitacaoId: updated?.habitacao_id ? String(updated.habitacao_id) : null,
-            pessoaId: updated?.pessoa_id ? String(updated.pessoa_id) : null
-          }
-        });
-      }
-
-      const quorum = computeQuorum(execDoc);
-      return res.json({ ok: true, data: { quorum, presence: serializePresence(updated), presences: execDoc.presences.slice(-200).map((p) => serializePresence(p)) } });
-    } catch (e) {
-      console.error('[assembleia-execution][presence/confirm] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao confirmar presença' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /condominios/administracao/assembleia/execution/:id/presencas/representante
@@ -1224,284 +825,93 @@ export default function assembleiaExecutionRoutes() {
   // POST /api/assembleias/:id/execution/agenda
   // Body: { action: 'start_discussion'|'next'|'prev'|'set', idx? }
   router.post('/api/assembleias/:id/execution/agenda', async (req, res) => {
-    try {
-      const ctxUser = mustControl(req, res);
-      if (!ctxUser) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-
-      if (String(execDoc.sessionStatus) === 'encerrada') {
-        return res.status(409).json({ ok: false, error: 'Assembleia encerrada' });
+    const result = await executionAgendaLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        mustControl,
+        getOrCreateExecution,
+        safeStr,
+        pushEvent,
+        writeAuditLog,
+        getActorSource
       }
-      if (String(execDoc.sessionStatus) === 'aguardando') {
-        return res.status(409).json({ ok: false, error: 'Sessão ainda não foi aberta' });
-      }
-
-      const agenda = Array.isArray(execDoc.agenda) ? execDoc.agenda : [];
-      if (!agenda.length) return res.status(409).json({ ok: false, error: 'Assembleia não possui pauta' });
-
-      const action = safeStr(req.body?.action || 'set', 40);
-      const prevIdx = Number(execDoc.currentAgendaIdx || 0) || 0;
-      let idx = prevIdx;
-      if (action === 'set') idx = Number(req.body?.idx || 0) || 0;
-      if (action === 'next') idx = Math.min(agenda.length - 1, idx + 1);
-      if (action === 'prev') idx = Math.max(0, idx - 1);
-
-      const now = new Date();
-      const finalizeItemIfDiscussing = (item) => {
-        try {
-          if (!item) return;
-          if (String(item.state) !== 'discutindo') return;
-          if (!item.discussionStartedAt) return;
-          const started = new Date(item.discussionStartedAt).getTime();
-          const delta = Math.max(0, Date.now() - started);
-          item.timeMs = (Number(item.timeMs || 0) || 0) + delta;
-          item.discussionEndedAt = now;
-          item.state = 'concluido';
-          item.discussionStartedAt = null;
-        } catch { /* noop */ }
-      };
-
-      // Ao trocar de item (set/next/prev), encerra discussão do item anterior.
-      if (action !== 'start_discussion' && idx !== prevIdx) {
-        const prevItem = agenda.find(a => Number(a?.idx) === prevIdx) || agenda[prevIdx];
-        finalizeItemIfDiscussing(prevItem);
-      }
-
-      execDoc.currentAgendaIdx = idx;
-
-      if (action === 'start_discussion') {
-        // Se houver outro item discutindo, finalize primeiro
-        try {
-          const anyDiscussing = agenda.find(a => String(a?.state) === 'discutindo' && Number(a?.idx) !== idx);
-          if (anyDiscussing) finalizeItemIfDiscussing(anyDiscussing);
-        } catch { /* noop */ }
-
-        const item = agenda.find(a => Number(a?.idx) === idx) || agenda[idx];
-        if (item && item.state !== 'concluido') {
-          item.state = 'discutindo';
-          if (!item.discussionStartedAt) item.discussionStartedAt = now;
-        }
-        pushEvent(execDoc, { type: 'agenda_discussion_started', message: `Discussão iniciada (item ${idx + 1})`, actorEmail: safeStr(ctxUser?.email || '') });
-      } else {
-        pushEvent(execDoc, { type: 'agenda_changed', message: `Item atual definido: ${idx + 1}`, actorEmail: safeStr(ctxUser?.email || '') });
-      }
-
-      await execDoc.save();
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: 'execution.agenda',
-        payload: { action, idx }
-      });
-
-      return res.json({ ok: true, data: { currentAgendaIdx: idx } });
-    } catch (e) {
-      console.error('[assembleia-execution][agenda] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao atualizar pauta' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /api/assembleias/:id/execution/vote/open
   // Body: { voteType, ruleType }
   router.post('/api/assembleias/:id/execution/vote/open', async (req, res) => {
-    try {
-      const ctxUser = mustControl(req, res);
-      if (!ctxUser) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-
-      if (String(execDoc.sessionStatus) === 'encerrada') {
-        return res.status(409).json({ ok: false, error: 'Assembleia encerrada' });
+    const result = await executionVoteOpenLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        mustControl,
+        getOrCreateExecution,
+        safeStr,
+        pushEvent,
+        writeAuditLog,
+        getActorSource
       }
-      if (String(execDoc.sessionStatus) === 'aguardando') {
-        return res.status(409).json({ ok: false, error: 'Sessão ainda não foi aberta' });
-      }
-      if (String(execDoc.sessionStatus) !== 'aberta') {
-        return res.status(409).json({ ok: false, error: 'Votação só pode ser aberta com sessão em status "aberta"' });
-      }
-
-      // Regra: votação só com item ativo
-      try {
-        const agenda = Array.isArray(execDoc.agenda) ? execDoc.agenda : [];
-        const item = agenda.find(a => Number(a?.idx) === Number(execDoc.currentAgendaIdx || 0)) || agenda[Number(execDoc.currentAgendaIdx || 0) || 0];
-        if (!item || String(item?.state || '') !== 'discutindo') {
-          return res.status(409).json({ ok: false, error: 'Votação indisponível: item da pauta não está ativo (inicie a discussão)' });
-        }
-      } catch { /* noop */ }
-
-      const idx = Number(execDoc.currentAgendaIdx || 0) || 0;
-      const openVote = (execDoc.votes || []).find(v => Number(v?.agendaIdx) === idx && v?.openedAt && !v?.closedAt);
-      if (openVote) return res.status(409).json({ ok: false, error: 'Já existe votação aberta para o item atual' });
-
-      const voteType = safeStr(req.body?.voteType || 'sim_nao_abstencao', 40);
-      const ruleType = safeStr(req.body?.ruleType || 'maioria_simples', 40);
-
-      execDoc.votes = Array.isArray(execDoc.votes) ? execDoc.votes : [];
-      execDoc.votes.push({
-        agendaIdx: idx,
-        voteType,
-        ruleType,
-        openedAt: new Date(),
-        closedAt: null,
-        ballots: []
-      });
-      execDoc.sessionStatus = 'em_votacao';
-
-      pushEvent(execDoc, { type: 'vote_opened', message: `Votação aberta (item ${idx + 1})`, actorEmail: safeStr(ctxUser?.email || '') });
-
-      await execDoc.save();
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: 'execution.vote.open',
-        payload: { agendaIdx: idx, voteType, ruleType }
-      });
-
-      return res.json({ ok: true, data: { agendaIdx: idx, voteType, ruleType } });
-    } catch (e) {
-      console.error('[assembleia-execution][vote/open] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao abrir votação' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /api/assembleias/:id/execution/vote
   // Body: { presenceKey, choice, source }
   router.post('/api/assembleias/:id/execution/vote', async (req, res) => {
-    try {
-      const fromPortal = isPortalRequest(req);
-      const ctxUser = fromPortal ? mustAuth(req, res) : mustControl(req, res);
-      if (!ctxUser && !req?.skipAuth) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-
-      if (String(execDoc.sessionStatus) !== 'em_votacao') {
-        return res.status(409).json({ ok: false, error: 'Votação indisponível: sessão não está em votação' });
+    const result = await executionVoteLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        isPortalRequest,
+        mustAuth,
+        mustControl,
+        getOrCreateExecution,
+        normalizePresenceKey,
+        getPortalPresenceKey,
+        safeStr,
+        normalizePresenceRole,
+        normalizePresenceStatus,
+        PRESENCE_ROLE,
+        PRESENCE_STATUS,
+        pushEvent,
+        writeAuditLog,
+        voteSummary
       }
-
-      const idx = Number(execDoc.currentAgendaIdx || 0) || 0;
-      const vote = (execDoc.votes || []).find(v => Number(v?.agendaIdx) === idx && v?.openedAt && !v?.closedAt);
-      if (!vote) return res.status(409).json({ ok: false, error: 'Nenhuma votação aberta para o item atual' });
-
-      const presenceKey = fromPortal
-        ? (normalizePresenceKey(req.body?.presenceKey || '') || getPortalPresenceKey(ctxUser, req))
-        : normalizePresenceKey(req.body?.presenceKey || req.body?.key || '');
-      if (!presenceKey) return res.status(400).json({ ok: false, error: 'presenceKey é obrigatório' });
-
-      const choiceRaw = String(req.body?.choice || '').trim().toLowerCase();
-      const choice = (choiceRaw === 'sim' || choiceRaw === 'nao' || choiceRaw === 'abstencao') ? choiceRaw : '';
-      if (!choice) return res.status(400).json({ ok: false, error: 'Voto inválido' });
-
-      const source = fromPortal ? 'portal' : safeStr(req.body?.source || 'mesa', 20);
-
-      const pres = Array.isArray(execDoc.presences) ? execDoc.presences : [];
-      let p = pres.find(x => normalizePresenceKey(x?.key) === presenceKey);
-
-      if (!p) {
-        return res.status(409).json({ ok: false, error: 'Voto não permitido: presença não encontrada' });
-      }
-
-      const pRole = normalizePresenceRole(p?.presence_role || p?.role || 'REPRESENTANTE');
-      const pStatus = normalizePresenceStatus(p?.status, pRole);
-      if (pRole !== PRESENCE_ROLE.REPRESENTANTE || pStatus !== PRESENCE_STATUS.CONFIRMED) {
-        return res.status(409).json({ ok: false, error: 'Voto não permitido: apenas representante confirmado pode votar' });
-      }
-
-      vote.ballots = Array.isArray(vote.ballots) ? vote.ballots : [];
-      const existingIdx = vote.ballots.findIndex(b => normalizePresenceKey(b?.presenceKey) === presenceKey);
-      const ballot = {
-        presenceKey,
-        choice,
-        source,
-        fracaoIdeal: Number(p?.fracaoIdeal || 0) || 0,
-        castAt: new Date()
-      };
-      if (existingIdx >= 0) vote.ballots[existingIdx] = ballot;
-      else vote.ballots.push(ballot);
-
-      pushEvent(execDoc, { type: 'vote_cast', message: `Voto registrado (item ${idx + 1})`, actorEmail: safeStr(ctxUser?.email || '') });
-
-      await execDoc.save();
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source,
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: 'execution.vote.cast',
-        payload: { agendaIdx: idx, presenceKey, choice, source }
-      });
-
-      return res.json({ ok: true, data: voteSummary(vote, execDoc) });
-    } catch (e) {
-      console.error('[assembleia-execution][vote] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao registrar voto' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /api/assembleias/:id/execution/vote/close
   router.post('/api/assembleias/:id/execution/vote/close', async (req, res) => {
-    try {
-      const ctxUser = mustControl(req, res);
-      if (!ctxUser) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-
-      const idx = Number(execDoc.currentAgendaIdx || 0) || 0;
-      const vote = (execDoc.votes || []).find(v => Number(v?.agendaIdx) === idx && v?.openedAt && !v?.closedAt);
-      if (!vote) return res.status(409).json({ ok: false, error: 'Nenhuma votação aberta para o item atual' });
-
-      vote.closedAt = new Date();
-      execDoc.sessionStatus = 'aberta';
-
-      pushEvent(execDoc, { type: 'vote_closed', message: `Votação encerrada (item ${idx + 1})`, actorEmail: safeStr(ctxUser?.email || '') });
-
-      await execDoc.save();
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: 'execution.vote.close',
-        payload: { agendaIdx: idx, closedAt: vote.closedAt }
-      });
-
-      return res.json({ ok: true, data: voteSummary(vote, execDoc) });
-    } catch (e) {
-      console.error('[assembleia-execution][vote/close] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao encerrar votação' });
-    }
+    const result = await executionVoteCloseLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        mustControl,
+        getOrCreateExecution,
+        pushEvent,
+        safeStr,
+        writeAuditLog,
+        getActorSource,
+        voteSummary
+      }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // GET /api/assembleias/:id/execution/ata
@@ -1703,3 +1113,36 @@ export default function assembleiaExecutionRoutes() {
 
   return router;
 }
+
+export {
+  mustAuth,
+  mustControl,
+  getOrCreateExecution,
+  pushEvent,
+  safeStr,
+  getActorSource,
+  writeAuditLog,
+  isPortalRequest,
+  PRESENCE_ROLE,
+  PRESENCE_STATUS,
+  normalizePresenceRole,
+  normalizePresenceStatus,
+  getPortalHabitacaoId,
+  pickUserId,
+  getPortalPresenceKey,
+  normalizePresenceKey,
+  getPortalPresenceNome,
+  toObjectOrPlain,
+  finalizePresenceStatus,
+  newPresenceId,
+  hasOtherConfirmedRepresentative,
+  buildActorSnapshot,
+  isPresenceConfirmed,
+  computeQuorum,
+  serializePresence
+  ,
+  parsePortalUserIdFromPresenceKey
+  ,
+  voteSummary,
+  parseConvocacaoDateTime
+};

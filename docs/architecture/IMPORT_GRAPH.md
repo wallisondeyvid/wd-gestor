@@ -8,21 +8,21 @@
 - relative: 1
 
 ## module:condominios
-- #core: 43
+- #core: 57
+- #modules: 36
 - pkg:sharp: 12
-- #modules: 7
-- pkg:mongoose: 3
+- pkg:mongoose: 8
+- pkg:express: 3
 - pkg:node-fetch: 3
-- pkg:express: 2
-- pkg:pdfkit: 2
-- relative: 2
+- pkg:pdfkit: 3
+- relative: 3
+- pkg:qrcode: 2
 - #services: 1
 - pkg:@vercel: 1
 - pkg:crypto: 1
 - pkg:fs: 1
 - pkg:multer: 1
 - pkg:node:url: 1
-- pkg:path: 1
 
 ## module:escalas
 - #core: 43

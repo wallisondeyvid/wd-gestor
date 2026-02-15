@@ -28,3 +28,8 @@ export function isFeatureEnabled(featureFlags, name, fallback = false) {
   if (!featureFlags || typeof featureFlags !== 'object') return fallback;
   return parseBool(featureFlags[String(name || '').toLowerCase()], fallback);
 }
+
+export function isFlagEnabled(name, fallback = false) {
+  const flags = loadFeatureFlagsFromEnv({});
+  return isFeatureEnabled(flags, name, fallback);
+}

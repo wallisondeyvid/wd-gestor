@@ -109,6 +109,11 @@
       - condominios-app.js
       - lib/
       - routes/
+    - assembleias/
+      - index.js
+      - routes/
+      - shared/
+      - v2/
     - index.js
   - escalas/
     - app/
