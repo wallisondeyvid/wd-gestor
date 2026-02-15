@@ -1,6 +1,7 @@
 // Carregamento e validação básica de configuração
 import fs from 'fs';
 import path from 'path';
+import { loadFeatureFlagsFromEnv } from './featureFlags.js';
 
 function loadJsonIfExists(p){
   try { return JSON.parse(fs.readFileSync(p,'utf8')); } catch { return {}; }
@@ -17,14 +18,16 @@ export function loadConfig() {
   // Permitir alias MONGODB_URI além de MONGO_URI
   const envMongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || undefined;
 
+  const defaultFeatureFlags = {
+    escalas: false,
+  };
+
   const cfg = {
     env,
     port: parseInt(process.env.PORT || base.port || 3000, 10),
     mongoUri: envMongoUri || envC.mongoUri || base.mongoUri,
     sessionSecret: process.env.SESSION_SECRET || envC.sessionSecret || base.sessionSecret || 'dev-secret',
-    featureFlags: {
-      escalas: process.env.ENABLE_ESCALAS === '1' || false,
-    },
+    featureFlags: loadFeatureFlagsFromEnv(defaultFeatureFlags),
   };
 
   // Validação mínima

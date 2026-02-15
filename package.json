@@ -44,6 +44,7 @@
     "verify:legacy": "node scripts/verify-no-legacy.js",
     "guard:migration": "node scripts/guardrails/verify-migration-safety.js",
     "arch:map": "node scripts/architecture/generate-map.js",
+    "flags:print": "node -e \"import('./src/core/config/index.js').then(m=>{const c=m.loadConfig();console.log(JSON.stringify(c.featureFlags,null,2));})\"",
     "lint:paths": "node scripts/lint-paths.js",
     "cleanup:legacy": "node scripts/cleanup-legacy.js",
     "lint:data-json": "node scripts/check-data-fetch.js",
