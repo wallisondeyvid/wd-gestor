@@ -36,7 +36,7 @@ import executionV1, {
   voteSummary,
   parseConvocacaoDateTime
 } from '#modules/condominios/assembleias/routes/execution.routes.js';
-import { getExecutionAta, getExecutionAtaPdfController } from '#modules/condominios/assembleias/v2/controllers/executionAta.controller.js';
+import { getExecutionAtaPdfController } from '#modules/condominios/assembleias/v2/controllers/executionAta.controller.js';
 import { executionCloseLogic } from '#modules/condominios/assembleias/shared/executionClose.logic.js';
 import { executionPauseLogic } from '#modules/condominios/assembleias/shared/executionPause.logic.js';
 import { executionPresenceLogic } from '#modules/condominios/assembleias/shared/executionPresence.logic.js';
@@ -52,6 +52,7 @@ import { executionPresenceNaoRepresentanteLogic } from '#modules/condominios/ass
 import { executionPresenceConfirmPinLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirmPin.logic.js';
 import { executionStatusLogic } from '#modules/condominios/assembleias/shared/executionStatus.logic.js';
 import { executionPresenceMeLogic } from '#modules/condominios/assembleias/shared/executionPresenceMe.logic.js';
+import { executionAtaLogic } from '#modules/condominios/assembleias/shared/executionAta.logic.js';
 import { verifyPortalPassword } from '#modules/portal-morador/lib/portalAuth.js';
 
 const V1_NOT_FOUND = { error: true, message: 'Recurso não encontrado', success: false };
@@ -1427,7 +1428,84 @@ export default function executionV2() {
       return res.status(500).json({ ok: false, error: 'Falha ao carregar presença' });
     }
   });
-  router.get('/api/assembleias/:id/execution/ata', getExecutionAta);
+  router.get('/api/assembleias/:id/execution/ata', async (req, res, next) => {
+    const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/ata`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'GET', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionAtaLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mustControl,
+          mongoose,
+          CondAssembleia,
+          getOrCreateExecution,
+          computeQuorum,
+          voteSummary,
+          safeStr,
+          writeAuditLog,
+          getActorSource
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][ata] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][ata] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][ata] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao gerar ata' });
+    }
+  });
   router.get('/api/assembleias/:id/execution/ata.pdf', getExecutionAtaPdfController);
   router.get('/health', (req, res) => res.json({ v: 2, ok: true }));
   return router;
