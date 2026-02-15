@@ -42,6 +42,7 @@
     "migrate:indices:corrigido": "echo 'Script removido'",
     "test:multitenant": "node src/testar-multi-tenant.js",
     "verify:legacy": "node scripts/verify-no-legacy.js",
+    "guard:migration": "node scripts/guardrails/verify-migration-safety.js",
     "lint:paths": "node scripts/lint-paths.js",
     "cleanup:legacy": "node scripts/cleanup-legacy.js",
     "lint:data-json": "node scripts/check-data-fetch.js",
