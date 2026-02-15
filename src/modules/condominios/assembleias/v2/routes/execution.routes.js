@@ -1099,6 +1099,26 @@ export default function executionV2() {
   router.post('/api/assembleias/:id/execution/vote/open', async (req, res, next) => {
     const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/vote/open`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionVoteOpenLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            mongoose,
+            mustControl,
+            getOrCreateExecution,
+            safeStr,
+            pushEvent,
+            writeAuditLog,
+            getActorSource
+          }
+        });
+        if (result?.handled) return;
+        return res.status(result.status).json(result.body);
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
