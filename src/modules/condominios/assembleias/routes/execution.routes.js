@@ -25,6 +25,7 @@ import { executionPresenceRepresentanteLogic } from '#modules/condominios/assemb
 import { executionPresenceNaoRepresentanteLogic } from '#modules/condominios/assembleias/shared/executionPresenceNaoRepresentante.logic.js';
 import { executionPresenceConfirmPinLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirmPin.logic.js';
 import { executionStatusLogic } from '#modules/condominios/assembleias/shared/executionStatus.logic.js';
+import { executionPresenceMeLogic } from '#modules/condominios/assembleias/shared/executionPresenceMe.logic.js';
 
 function safeStr(v, max = 4000) {
   const s = String(v ?? '').trim();
@@ -574,35 +575,23 @@ export default function assembleiaExecutionRoutes() {
   // GET /api/assembleias/:id/execution/presence/me
   // Portal: retorna a presença do usuário logado (se existir)
   router.get('/api/assembleias/:id/execution/presence/me', async (req, res) => {
-    try {
-      const fromPortal = isPortalRequest(req);
-      if (!fromPortal) return res.status(403).json({ ok: false, error: 'Apenas Portal' });
-      const ctxUser = mustAuth(req, res);
-      if (!ctxUser && !req?.skipAuth) return;
-
-      const { id } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-
-      const key = getPortalPresenceKey(ctxUser, req);
-      const habitacaoId = getPortalHabitacaoId(ctxUser, req);
-      const pres = Array.isArray(execDoc.presences) ? execDoc.presences : [];
-      const p = pres.find((x) => {
-        const sameKey = normalizePresenceKey(x?.key) === key;
-        const sameHab = habitacaoId && String(x?.habitacao_id || '') === habitacaoId;
-        return sameKey || sameHab;
-      }) || null;
-
-      return res.json({
-        ok: true,
-        data: p ? serializePresence(p) : null
-      });
-    } catch (e) {
-      console.error('[assembleia-execution][presence/me] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao carregar presença' });
-    }
+    const result = await executionPresenceMeLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        isPortalRequest,
+        mustAuth,
+        mongoose,
+        getOrCreateExecution,
+        getPortalPresenceKey,
+        getPortalHabitacaoId,
+        normalizePresenceKey,
+        serializePresence
+      }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /api/assembleias/:id/execution/presence/confirm (compat)
