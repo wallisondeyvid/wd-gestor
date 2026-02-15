@@ -20,6 +20,10 @@ import { executionVoteLogic } from '#modules/condominios/assembleias/shared/exec
 import { executionVoteCloseLogic } from '#modules/condominios/assembleias/shared/executionVoteClose.logic.js';
 import { executionOpenLogic } from '#modules/condominios/assembleias/shared/executionOpen.logic.js';
 import { executionAgendaLogic } from '#modules/condominios/assembleias/shared/executionAgenda.logic.js';
+import { executionPresenceConfirmModeratorLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirmModerator.logic.js';
+import { executionPresenceRepresentanteLogic } from '#modules/condominios/assembleias/shared/executionPresenceRepresentante.logic.js';
+import { executionPresenceNaoRepresentanteLogic } from '#modules/condominios/assembleias/shared/executionPresenceNaoRepresentante.logic.js';
+import { executionPresenceConfirmPinLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirmPin.logic.js';
 
 function safeStr(v, max = 4000) {
   const s = String(v ?? '').trim();
@@ -697,129 +701,156 @@ export default function assembleiaExecutionRoutes() {
 
   // POST /condominios/administracao/assembleia/execution/:id/presencas/representante
   router.post('/condominios/administracao/assembleia/execution/:id/presencas/representante', async (req, res) => {
-    req.body = {
-      ...(req.body || {}),
-      presence_role: PRESENCE_ROLE.REPRESENTANTE,
-      requested_by: 'MODERATOR'
-    };
-    return router.handle({ ...req, url: `/api/assembleias/${req.params.id}/execution/presence`, method: 'POST' }, res, () => res.status(500).json({ ok: false, error: 'Falha ao registrar representante' }));
+    const result = await executionPresenceRepresentanteLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        PRESENCE_ROLE,
+        executionPresenceLogic,
+        presenceLogicDeps: {
+          mongoose,
+          isPortalRequest,
+          mustAuth,
+          mustControl,
+          getOrCreateExecution,
+          PRESENCE_ROLE,
+          PRESENCE_STATUS,
+          normalizePresenceRole,
+          safeStr,
+          getPortalHabitacaoId,
+          pickUserId,
+          getPortalPresenceKey,
+          normalizePresenceKey,
+          getPortalPresenceNome,
+          toObjectOrPlain,
+          finalizePresenceStatus,
+          newPresenceId,
+          hasOtherConfirmedRepresentative,
+          buildActorSnapshot,
+          isPresenceConfirmed,
+          pushEvent,
+          writeAuditLog,
+          getActorSource,
+          computeQuorum,
+          serializePresence
+        },
+        router
+      }
+    });
+    if (result?.handled) return;
+    if (result?.status) return res.status(result.status).json(result.body);
   });
 
   // POST /condominios/administracao/assembleia/execution/:id/presencas/nao-representante
   router.post('/condominios/administracao/assembleia/execution/:id/presencas/nao-representante', async (req, res) => {
-    req.body = {
-      ...(req.body || {}),
-      presence_role: PRESENCE_ROLE.NAO_REPRESENTANTE,
-      requested_by: 'MODERATOR'
-    };
-    return router.handle({ ...req, url: `/api/assembleias/${req.params.id}/execution/presence`, method: 'POST' }, res, () => res.status(500).json({ ok: false, error: 'Falha ao registrar não representante' }));
+    const result = await executionPresenceNaoRepresentanteLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        PRESENCE_ROLE,
+        executionPresenceLogic,
+        presenceLogicDeps: {
+          mongoose,
+          isPortalRequest,
+          mustAuth,
+          mustControl,
+          getOrCreateExecution,
+          PRESENCE_ROLE,
+          PRESENCE_STATUS,
+          normalizePresenceRole,
+          safeStr,
+          getPortalHabitacaoId,
+          pickUserId,
+          getPortalPresenceKey,
+          normalizePresenceKey,
+          getPortalPresenceNome,
+          toObjectOrPlain,
+          finalizePresenceStatus,
+          newPresenceId,
+          hasOtherConfirmedRepresentative,
+          buildActorSnapshot,
+          isPresenceConfirmed,
+          pushEvent,
+          writeAuditLog,
+          getActorSource,
+          computeQuorum,
+          serializePresence
+        },
+        router
+      }
+    });
+    if (result?.handled) return;
+    if (result?.status) return res.status(result.status).json(result.body);
   });
 
   // POST /condominios/administracao/assembleia/execution/:id/presencas/:presenceId/confirmar-moderador
   router.post('/condominios/administracao/assembleia/execution/:id/presencas/:presenceId/confirmar-moderador', async (req, res) => {
-    try {
-      const ctxUser = mustControl(req, res);
-      if (!ctxUser && !req?.skipAuth) return;
-
-      const { id, presenceId } = req.params;
-      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ ok: false, error: 'ID inválido' });
-      if (!presenceId) return res.status(400).json({ ok: false, error: 'presenceId é obrigatório' });
-
-      const execDoc = await getOrCreateExecution(id);
-      if (!execDoc) return res.status(404).json({ ok: false, error: 'Execução não encontrada' });
-      if (String(execDoc.sessionStatus) === 'encerrada') return res.status(409).json({ ok: false, error: 'Assembleia encerrada' });
-
-      const pres = Array.isArray(execDoc.presences) ? execDoc.presences : [];
-      const idx = pres.findIndex((p) => String(p?.presenceId || '') === String(presenceId));
-      if (idx < 0) return res.status(404).json({ ok: false, error: 'Presença não encontrada' });
-
-      const prevObj = toObjectOrPlain(pres[idx]);
-      const role = normalizePresenceRole(prevObj?.presence_role || 'REPRESENTANTE');
-      if (role !== PRESENCE_ROLE.REPRESENTANTE) return res.status(409).json({ ok: false, error: 'Ação permitida apenas para representante' });
-
-      const now = new Date();
-      const participantAt = prevObj?.confirmed_by_participant_at || null;
-      const moderatorAt = now;
-      const status = finalizePresenceStatus({ role, participantAt, moderatorAt });
-
-      if (status === PRESENCE_STATUS.CONFIRMED && hasOtherConfirmedRepresentative(execDoc, {
-        habitacaoId: prevObj?.habitacao_id ? String(prevObj.habitacao_id) : '',
-        excludePresenceId: safeStr(prevObj?.presenceId || '', 80)
-      })) {
-        return res.status(409).json({ ok: false, error: 'Já existe representante confirmado para esta habitação nesta assembleia' });
+    const result = await executionPresenceConfirmModeratorLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        mongoose,
+        mustControl,
+        getOrCreateExecution,
+        toObjectOrPlain,
+        normalizePresenceRole,
+        PRESENCE_ROLE,
+        finalizePresenceStatus,
+        PRESENCE_STATUS,
+        hasOtherConfirmedRepresentative,
+        safeStr,
+        buildActorSnapshot,
+        pushEvent,
+        writeAuditLog,
+        getActorSource,
+        computeQuorum,
+        serializePresence
       }
-
-      const updated = {
-        ...prevObj,
-        status,
-        requested_by: prevObj?.requested_by || 'PARTICIPANT',
-        confirm_method: 'MODERATOR_CLICK',
-        confirmed_by_moderator_at: moderatorAt,
-        confirmedAt: status === PRESENCE_STATUS.CONFIRMED ? now : (prevObj?.confirmedAt || null),
-        confirmedBy: buildActorSnapshot(ctxUser, req),
-        updatedAt: now
-      };
-      pres[idx] = updated;
-      execDoc.presences = pres;
-
-      pushEvent(execDoc, {
-        type: 'presence_confirmed_moderator',
-        message: `Presença validada pelo moderador: ${safeStr(updated?.nome || '')}`,
-        actorEmail: safeStr(ctxUser?.email || '')
-      });
-
-      await execDoc.save();
-      await writeAuditLog({
-        req,
-        ctxUser,
-        source: getActorSource(req),
-        unidadeId: execDoc.unidade_id,
-        assembleiaId: execDoc.assembleia_id,
-        entityType: 'assembleia_execution',
-        entityId: execDoc._id,
-        action: 'presence_confirmed_moderator',
-        payload: {
-          assemblyId: String(execDoc.assembleia_id),
-          presenceId: safeStr(updated?.presenceId || '', 80),
-          habitacaoId: updated?.habitacao_id ? String(updated.habitacao_id) : null,
-          pessoaId: updated?.pessoa_id ? String(updated.pessoa_id) : null
-        }
-      });
-
-      if (status === PRESENCE_STATUS.CONFIRMED) {
-        await writeAuditLog({
-          req,
-          ctxUser,
-          source: getActorSource(req),
-          unidadeId: execDoc.unidade_id,
-          assembleiaId: execDoc.assembleia_id,
-          entityType: 'assembleia_execution',
-          entityId: execDoc._id,
-          action: 'presence_confirmed_final',
-          payload: {
-            assemblyId: String(execDoc.assembleia_id),
-            presenceId: safeStr(updated?.presenceId || '', 80),
-            habitacaoId: updated?.habitacao_id ? String(updated.habitacao_id) : null,
-            pessoaId: updated?.pessoa_id ? String(updated.pessoa_id) : null
-          }
-        });
-      }
-
-      const quorum = computeQuorum(execDoc);
-      return res.json({ ok: true, data: { quorum, presence: serializePresence(updated), presences: execDoc.presences.slice(-200).map((p) => serializePresence(p)) } });
-    } catch (e) {
-      console.error('[assembleia-execution][confirmar-moderador] erro:', e);
-      return res.status(500).json({ ok: false, error: 'Falha ao confirmar presença pelo moderador' });
-    }
+    });
+    if (result?.handled) return;
+    return res.status(result.status).json(result.body);
   });
 
   // POST /condominios/administracao/assembleia/execution/:id/presencas/:presenceId/confirmar-pin
   router.post('/condominios/administracao/assembleia/execution/:id/presencas/:presenceId/confirmar-pin', async (req, res) => {
-    req.body = {
-      ...(req.body || {}),
-      presenceId: req.params?.presenceId || req.body?.presenceId || ''
-    };
-    return router.handle({ ...req, url: `/api/assembleias/${req.params.id}/execution/presence/confirm`, method: 'POST' }, res, () => res.status(500).json({ ok: false, error: 'Falha ao confirmar por PIN' }));
+    const result = await executionPresenceConfirmPinLogic({
+      req,
+      res,
+      shadow: false,
+      deps: {
+        executionPresenceConfirmLogic,
+        presenceConfirmLogicDeps: {
+          mongoose,
+          mustControl,
+          safeStr,
+          normalizePresenceKey,
+          getOrCreateExecution,
+          toObjectOrPlain,
+          normalizePresenceRole,
+          PRESENCE_ROLE,
+          parsePortalUserIdFromPresenceKey,
+          CondMorador,
+          CondHabitacao,
+          CondProprietario,
+          CondUsuario,
+          verifyPortalPassword,
+          finalizePresenceStatus,
+          PRESENCE_STATUS,
+          hasOtherConfirmedRepresentative,
+          pushEvent,
+          writeAuditLog,
+          getActorSource,
+          computeQuorum,
+          serializePresence
+        },
+        router
+      }
+    });
+    if (result?.handled) return;
+    if (result?.status) return res.status(result.status).json(result.body);
   });
 
   // POST /api/assembleias/:id/execution/agenda

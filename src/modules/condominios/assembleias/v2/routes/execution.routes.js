@@ -48,6 +48,10 @@ import { executionVoteLogic } from '#modules/condominios/assembleias/shared/exec
 import { executionVoteCloseLogic } from '#modules/condominios/assembleias/shared/executionVoteClose.logic.js';
 import { executionOpenLogic } from '#modules/condominios/assembleias/shared/executionOpen.logic.js';
 import { executionAgendaLogic } from '#modules/condominios/assembleias/shared/executionAgenda.logic.js';
+import { executionPresenceConfirmModeratorLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirmModerator.logic.js';
+import { executionPresenceRepresentanteLogic } from '#modules/condominios/assembleias/shared/executionPresenceRepresentante.logic.js';
+import { executionPresenceNaoRepresentanteLogic } from '#modules/condominios/assembleias/shared/executionPresenceNaoRepresentante.logic.js';
+import { executionPresenceConfirmPinLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirmPin.logic.js';
 import { verifyPortalPassword } from '#modules/portal-morador/lib/portalAuth.js';
 
 const V1_NOT_FOUND = { error: true, message: 'Recurso não encontrado', success: false };
@@ -567,6 +571,388 @@ export default function executionV2() {
     } catch (e) {
       console.error('[assembleias][shadow][presence-confirm] erro:', e);
       return res.status(500).json({ ok: false, error: 'Falha ao confirmar presença' });
+    }
+  });
+
+  router.post('/condominios/administracao/assembleia/execution/:id/presencas/representante', async (req, res, next) => {
+    const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/representante`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionPresenceRepresentanteLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          PRESENCE_ROLE,
+          executionPresenceLogic,
+          presenceLogicDeps: {
+            mongoose,
+            isPortalRequest,
+            mustAuth,
+            mustControl,
+            getOrCreateExecution,
+            PRESENCE_ROLE,
+            PRESENCE_STATUS,
+            normalizePresenceRole,
+            safeStr,
+            getPortalHabitacaoId,
+            pickUserId,
+            getPortalPresenceKey,
+            normalizePresenceKey,
+            getPortalPresenceNome,
+            toObjectOrPlain,
+            finalizePresenceStatus,
+            newPresenceId,
+            hasOtherConfirmedRepresentative,
+            buildActorSnapshot,
+            isPresenceConfirmed,
+            pushEvent,
+            writeAuditLog,
+            getActorSource,
+            computeQuorum,
+            serializePresence
+          },
+          router: v1Router
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][representante] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][representante] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][representante] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao registrar representante' });
+    }
+  });
+
+  router.post('/condominios/administracao/assembleia/execution/:id/presencas/nao-representante', async (req, res, next) => {
+    const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/nao-representante`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionPresenceNaoRepresentanteLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          PRESENCE_ROLE,
+          executionPresenceLogic,
+          presenceLogicDeps: {
+            mongoose,
+            isPortalRequest,
+            mustAuth,
+            mustControl,
+            getOrCreateExecution,
+            PRESENCE_ROLE,
+            PRESENCE_STATUS,
+            normalizePresenceRole,
+            safeStr,
+            getPortalHabitacaoId,
+            pickUserId,
+            getPortalPresenceKey,
+            normalizePresenceKey,
+            getPortalPresenceNome,
+            toObjectOrPlain,
+            finalizePresenceStatus,
+            newPresenceId,
+            hasOtherConfirmedRepresentative,
+            buildActorSnapshot,
+            isPresenceConfirmed,
+            pushEvent,
+            writeAuditLog,
+            getActorSource,
+            computeQuorum,
+            serializePresence
+          },
+          router: v1Router
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][nao-representante] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][nao-representante] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][nao-representante] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao registrar não representante' });
+    }
+  });
+
+  router.post('/condominios/administracao/assembleia/execution/:id/presencas/:presenceId/confirmar-moderador', async (req, res, next) => {
+    const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/${encodeURIComponent(String(req.params?.presenceId || ''))}/confirmar-moderador`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionPresenceConfirmModeratorLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          mongoose,
+          mustControl,
+          getOrCreateExecution,
+          toObjectOrPlain,
+          normalizePresenceRole,
+          PRESENCE_ROLE,
+          finalizePresenceStatus,
+          PRESENCE_STATUS,
+          hasOtherConfirmedRepresentative,
+          safeStr,
+          buildActorSnapshot,
+          pushEvent,
+          writeAuditLog,
+          getActorSource,
+          computeQuorum,
+          serializePresence
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][confirmar-moderador] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][confirmar-moderador] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][confirmar-moderador] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao confirmar presença pelo moderador' });
+    }
+  });
+
+  router.post('/condominios/administracao/assembleia/execution/:id/presencas/:presenceId/confirmar-pin', async (req, res, next) => {
+    const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/${encodeURIComponent(String(req.params?.presenceId || ''))}/confirmar-pin`;
+    try {
+      const reqForV2 = cloneReqForShadow(req, 'POST', path);
+      const shadowResState = { statusCode: 200, payload: null, handled: false };
+      const shadowRes = {
+        status(code) {
+          shadowResState.statusCode = Number(code) || shadowResState.statusCode;
+          return this;
+        },
+        json(payload) {
+          shadowResState.payload = payload;
+          shadowResState.handled = true;
+          return this;
+        }
+      };
+
+      const v2Shadow = await executionPresenceConfirmPinLogic({
+        req: reqForV2,
+        res: shadowRes,
+        shadow: true,
+        deps: {
+          executionPresenceConfirmLogic,
+          presenceConfirmLogicDeps: {
+            mongoose,
+            mustControl,
+            safeStr,
+            normalizePresenceKey,
+            getOrCreateExecution,
+            toObjectOrPlain,
+            normalizePresenceRole,
+            PRESENCE_ROLE,
+            parsePortalUserIdFromPresenceKey,
+            CondMorador,
+            CondHabitacao,
+            CondProprietario,
+            CondUsuario,
+            verifyPortalPassword,
+            finalizePresenceStatus,
+            PRESENCE_STATUS,
+            hasOtherConfirmedRepresentative,
+            pushEvent,
+            writeAuditLog,
+            getActorSource,
+            computeQuorum,
+            serializePresence
+          },
+          router: v1Router
+        }
+      });
+
+      const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+
+      res.json = (payload) => {
+        try {
+          const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: payload });
+          const v2Norm = v2Shadow?.handled
+            ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+            : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+          if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+            console.error('[assembleias][shadow][confirmar-pin] divergence', { v1: v1Norm, v2: v2Norm });
+          }
+        } catch {}
+        return originalJson(payload);
+      };
+
+      res.send = (payload) => {
+        try {
+          const contentType = String(res.getHeader('content-type') || '');
+          let parsed = null;
+          if (typeof payload === 'string' && /application\/json/i.test(contentType)) {
+            try { parsed = JSON.parse(payload); } catch {}
+          } else if (payload && typeof payload === 'object' && !Buffer.isBuffer(payload)) {
+            parsed = payload;
+          }
+          if (parsed) {
+            const v1Norm = normalizeForCompare({ status: res.statusCode || 200, jsonBody: parsed });
+            const v2Norm = v2Shadow?.handled
+              ? normalizeForCompare({ status: shadowResState.statusCode, jsonBody: shadowResState.payload })
+              : normalizeForCompare({ status: v2Shadow.status, jsonBody: v2Shadow.body });
+            if (JSON.stringify(v1Norm) !== JSON.stringify(v2Norm)) {
+              console.error('[assembleias][shadow][confirmar-pin] divergence', { v1: v1Norm, v2: v2Norm });
+            }
+          }
+        } catch {}
+        return originalSend(payload);
+      };
+
+      return v1Router(req, res, next);
+    } catch (e) {
+      console.error('[assembleias][shadow][confirmar-pin] erro:', e);
+      return res.status(500).json({ ok: false, error: 'Falha ao confirmar por PIN' });
     }
   });
 
