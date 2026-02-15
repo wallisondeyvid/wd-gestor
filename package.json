@@ -25,6 +25,7 @@
     "start:mem:seed": "set MONGO_MEMORY=1 && set GESTOR_SEEDS=1 && node src/start.js",
     "start:atlas": "node src/start.js",
     "test": "node --test tests/*.test.js",
+    "test:smoke": "node --test tests/health-and-session.test.js tests/migration.safety.smoke.test.js",
     "test:mem": "set MONGO_MEMORY=1 && node --test tests/*.test.js",
     "test:win": "set NODE_ENV=test && set MONGO_MEMORY=1 && node --test tests/*.test.js",
     "master:set": "node scripts/set-master-password.js",
