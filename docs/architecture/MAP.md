@@ -13,6 +13,7 @@
 - app.js
 - core/
   - config/
+    - featureFlags.js
     - index.js
   - db/
     - connect.js
@@ -588,6 +589,7 @@
 - health-and-session.test.js
 - helpers/
   - testServer.js
+- migration.safety.smoke.test.js
 - miscApi.test.js
 - pagesController.test.js
 - requireLogin.test.js

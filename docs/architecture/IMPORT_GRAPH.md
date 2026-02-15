@@ -91,6 +91,7 @@
 - pkg:os: 1
 - pkg:path: 1
 - pkg:util: 1
+- relative: 1
 
 ## src:escalas
 - pkg:express: 2
@@ -118,6 +119,7 @@
 - #routes: 1
 - pkg:connect-mongo: 1
 - pkg:cookie-parser: 1
+- pkg:crypto: 1
 - pkg:express: 1
 - pkg:express-async-errors: 1
 - pkg:express-session: 1
