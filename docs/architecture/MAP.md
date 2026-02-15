@@ -1,0 +1,660 @@
+# MAP
+
+## Entrypoints
+- src/start.js
+- src/server/createServer.js
+- src/server.js
+- src/app.js
+- package.json
+
+## Tree (relevante)
+
+### src
+- app.js
+- core/
+  - config/
+    - index.js
+  - db/
+    - connect.js
+  - errors/
+    - AppError.js
+  - logger/
+    - index.js
+  - mail/
+    - mailer.js
+    - templates/
+      - resetPassword.js
+  - middlewares/
+    - envelopeNormalizer.js
+    - errorHandler.js
+    - rateLimit.js
+    - rememberRestore.js
+  - models/
+    - cond_acesso_morador.js
+    - cond_andar.js
+    - cond_area_cessao.js
+    - cond_area_comum.js
+    - cond_assembleia_execution.js
+    - cond_assembleia_settings.js
+    - cond_assembleia.js
+    - cond_audit_log.js
+    - cond_bem_material.js
+    - cond_bloco.js
+    - cond_comunicado.js
+    - cond_dirigencia_cargo.js
+    - cond_dirigencia_mandato.js
+    - cond_dirigencia_settings.js
+    - cond_enquete_voto.js
+    - cond_enquete.js
+    - cond_habitacao.js
+    - cond_material_transferencia.js
+    - cond_material.js
+    - cond_morador.js
+    - cond_msg_group.js
+    - cond_msg_mailbox.js
+    - cond_msg_marker.js
+    - cond_msg_message.js
+    - cond_msg_settings.js
+    - cond_msg_signature_pref.js
+    - cond_nat_material.js
+    - cond_proprietario.js
+    - cond_qrcode_material.js
+    - cond_solicitacao_servico.js
+    - cond_usuario.js
+    - cond_vaga_garagem.js
+    - cond_veiculo.js
+    - cond_visitante.js
+    - documentoValidado.js
+    - escala.js
+    - escalaLog.js
+    - feedback.js
+    - funcao.js
+    - Funcionario.js
+    - modulo.js
+    - passwordReset.js
+    - portal_push_subscription.js
+    - recurso.js
+    - rememberToken.js
+    - setor.js
+    - unidade.js
+    - user.js
+    - widgetSetting.js
+  - security/
+    - decrypt.js
+  - utils/
+    - apiResponse.js
+    - widgetSettings.js
+- escalas/
+  - escalas-app.js
+  - routes/
+    - index.js
+- legacy/
+  - gestor-app.legacy.js
+- mail/
+  - templates/
+    - portalFirstAccess.js
+    - resetPassword.js
+    - welcomePassword.js
+- middlewares/
+  - ipKeyGenerator.js
+  - upload.js
+- modules/
+  - clinica/
+    - app/
+      - clinica-app.js
+    - index.js
+  - condominios/
+    - app/
+      - condominios-app.js
+      - lib/
+      - routes/
+    - index.js
+  - escalas/
+    - app/
+      - escalas-app.js
+      - routes/
+    - index.js
+  - gestor/
+    - app/
+      - controllers/
+      - gestor-app.js
+      - mail/
+      - middlewares/
+      - routes/
+      - services/
+      - utils/
+    - gestor-seeds.js
+    - index.js
+  - portal-morador/
+    - app/
+      - controllers/
+      - lib/
+      - middlewares/
+      - portal-morador-app.js
+    - index.js
+    - lib/
+      - portalAuth.js
+      - pushNotifications.js
+- public/
+  - data/
+    - cnaes_lista.json
+- routes/
+  - dev.js
+  - usuario.js
+- server/
+  - createServer.js
+- server.js
+- services/
+  - bank/
+    - bankClient.js
+  - documentos.service.js
+  - userService.js
+- shared/
+  - funcionarios/
+    - syncUserFuncionario.js
+- start.js
+- utils/
+  - syncUserFuncionario.js
+  - validacao-empresas.js
+
+### routes
+- verificacao.routes.js
+
+### services
+- applyCertificationStamp.js
+- bank/
+  - bankClient.js
+- documentos.service.js
+
+### public
+- css/
+  - app.css
+  - assembleias-execution-presencas.css
+  - bootstrap.min.css
+  - condominios-modern.css
+  - endereco.css
+  - escalas/
+    - login.css
+  - face-capture.css
+  - feedback-widget.css
+  - flatpickr.min.css
+  - gestor/
+    - login.css
+  - gestor-app.css
+  - gestor-fixes.css
+  - icon-buttons.css
+  - icons.css
+  - layout-modulos.css
+  - login.css
+  - modais.css
+  - modal-categoria.css
+  - pages/
+    - cadastrar_areas_comuns.css
+    - cadastrar_garagem.css
+    - cadastrar_habitacao.css
+    - cadastrar_proprietario.css
+  - perfil.css
+  - portal-morador/
+    - assembleias.css
+    - boletos.css
+    - comunicados.css
+    - enquetes.css
+    - home.css
+    - login.css
+    - mensagens.css
+    - servico.css
+    - visitante.css
+  - tipo_contrato.css
+  - vendor/
+    - flatpickr.custom.css
+    - flatpickr.min.css
+- data/
+  - bancos.json
+  - categorias_trabalhador.json
+  - cbo_full.json
+  - cnaes_lista.json
+  - cnaes_naturezas_overrides.json
+  - CNAES_POR_NATUREZA.json
+  - escolaridades.json
+  - estado_civil.json
+  - estados_civis.json
+  - estados.json
+  - fgts_opcoes.json
+  - formas_pagamento.json
+  - marcas_veiculos_por_tipo.json
+  - marcas_veiculos.json
+  - municipios_ibge.json
+  - municipios_por_uf.json
+  - nacionalidades.json
+  - naturezas_juridicas.json
+  - orgao_expedidor.json
+  - orgaos_emissor_rg.json
+  - orgaos_expedidor.json
+  - orgaos_expedidores.json
+  - orgaos_profissionais.json
+  - paises_bacen.json
+  - parentescos.json
+  - raca_cor.json
+  - regimes_contratacao.json
+  - regimes_jornada.json
+  - regimes_previdenciarios.json
+  - sexo.json
+  - sindicatos_full.json
+  - tipos_admissao.json
+  - tipos_conta.json
+  - tipos_contrato.json
+  - tipos_especial.json
+  - tipos_logradouro.json
+  - tipos_salario.json
+- escalas/
+  - js/
+    - ausencias.js
+    - cadastrar_ausencias.js
+    - cadastrar_ferias.js
+    - consulta_relatorios.js
+    - escala_diaria.js
+    - escala_nova.js
+    - escalas/
+      - aba1_dados_gerais.js
+      - aba2_turnos.js
+      - aba3_equipes.js
+      - aba4_alocacao.js
+      - aba5_recursos.js
+      - aba5_recusos.js
+      - aba6_validacao.js
+      - compat_legacy_shim.js
+      - efetivo.js
+      - escala_diaria.js
+      - escala_nova_index.js
+      - modais_popups/
+      - modais.js
+      - popup_grupo_turnos.js
+    - ferias.js
+    - modais_popups/
+      - modal_efetivo_recurso_dia.js
+      - modal_pesquisar_efetivo.js
+      - modal_responsalvel_escala.js
+      - notas.js
+      - recursos/
+      - selecionar_turnos.js
+    - pesquisar_escala.js
+    - popup_grupo_turnos.js
+    - turnos_data.js
+- favicon.ico
+- gestor/
+  - css/
+    - gestor-app.css
+    - gestor-modais.css
+    - icons.css
+    - modais-funcionarios.css
+    - modais.css
+    - modals.css
+    - pages/
+      - feedback.css
+    - README_MODAIS.md
+  - download/
+    - aspnetcorev2_inprocess.dll
+    - FingerprintAgent.exe
+    - FingerprintAgent.pdb
+    - web.config
+  - js/
+    - core/
+      - datepicker-init.js
+      - dates-global.js
+      - dates.js
+      - dom.js
+      - enums-loader.js
+      - flatpickr-loader.js
+      - masks-global.js
+      - masks.js
+      - modal-a11y-fix.js
+      - simple-datepicker.js
+      - utils-masks.js
+      - validators.js
+      - wdmasks-stub.js
+    - lib/
+      - fetchJson.js
+    - modals/
+      - banco.js
+      - cadastro_bio_digital.js
+      - cadastro_bio_facial.js
+      - categoria_trabalhador.js
+      - CBO.js
+      - cnae_principal.js
+      - cnae_secundario.js
+      - detalhes_unidades.js
+      - diretor.js
+      - endereco.js
+      - funcionario_detalhes.js
+      - naturalidade.js
+      - natureza_juridica.js
+      - orgao_expedidor.js
+      - orgao_profissional.js
+      - pais_nascimento.js
+      - selecionar_funcao.js
+      - selecionar_modulos.js
+      - selecionar_setor_refatorado.js
+      - selecionar_setor.js
+      - selecionar_setor.new.js
+      - sindicato.js
+      - tipo_contrato.js
+    - modules/
+      - diretor-module.js
+      - filiais-module.js
+      - pix-module.js
+      - tipo-unidade-module.js
+    - pages/
+      - contato.js
+      - esquecisenha.js
+      - feedback.js
+      - form-submit-unidade.js
+      - funcionarios_index.js
+      - funcionarios_selects.js
+      - login.js
+      - perfil.js
+      - primeiroacesso.js
+      - recursos.js
+      - setor.js
+      - unidades.js
+    - utils/
+      - data-url.js
+      - fetch-json.js
+    - vendor/
+      - flatpickr.min.js
+      - flatpickr.pt.js
+- images/
+  - adicionar.png
+  - arquivomensagem.png
+  - assembleia_sessao.png
+  - boleto.png
+  - caixa-de-entrada.png
+  - caixa-de-saida.png
+  - caixas.png
+  - comunicacao.png
+  - comunicar_visita.png
+  - comunicar-visita.png
+  - editar.png
+  - enquete.png
+  - financeiro.png
+  - grupo.png
+  - historico.png
+  - home.png
+  - importar.png
+  - lixeira.png
+  - logoWDGestorprata.png
+  - mensagem.png
+  - nova-mensagem.png
+  - reservado.png
+  - servicos.png
+  - solicitacao.png
+  - solicitar.png
+  - transparencia.png
+  - visita.png
+- img/
+  - default-avatar.png
+  - placeholder-logo.svg
+  - user-placeholder.svg
+- informacao_material_condominios.html
+- js/
+  - cleave.min.js
+  - condominios/
+    - assembleias/
+      - assembleia-execution.js
+      - assembleias_configuracoes.js
+      - assembleias.js
+      - modal_assembleia_local.js
+      - modal_assembleia_responsavel.js
+      - nova_assembleia.js
+    - atas.js
+    - cadastrar_areas_comuns.js
+    - cadastrar_garagem.js
+    - cadastrar_habitacao.js
+    - cadastrar_materiais.js
+    - cadastrar_morador.js
+    - cadastrar_proprietario.js
+    - caixa_de_mensagem.js
+    - common/
+      - habitacao_utils.js
+    - comunicados.js
+    - configuracoes_geral.js
+    - dirigencia.js
+    - editar_area_comum.js
+    - editar_habitacao.js
+    - enquetes.js
+    - financas.js
+    - modal_cargo_organograma.js
+    - modal_comunicar_chegada_visita.js
+    - modal_detalhes_areaconst_cad.js
+    - modal_detalhes_gar_cad.js
+    - modal_detalhes_hab_cad.js
+    - modal_detalhes_materiais_cad.js
+    - modal_detalhes_mora_cad.js
+    - modal_detalhes_pet.js
+    - modal_detalhes_prop_cad.js
+    - modal_detalhes_veiculo.js
+    - modal_edit_ac_ceder_para_uso.js
+    - modal_edit_ac_disponibilidade.js
+    - modal_edit_ac_material.js
+    - modal_edit_ac_regras_de_uso.js
+    - modal_edit_ac_restricoes.js
+    - modal_edit_hab_aluguel.js
+    - modal_edit_hab_pet.js
+    - modal_edit_hab_veiculo.js
+    - modal_editar_slot_organograma.js
+    - modal_foto_areacomum.js
+    - modal_foto_gar.js
+    - modal_foto_hab.js
+    - modal_informacoes_da_visita.js
+    - modal_nova_solicitacao_servico.js
+    - modal_qrcode_mat_cad.js
+    - modal_transferir_material.js
+    - painel_area_comum.js
+    - painel_habitacao.js
+    - servicos.js
+    - users_mod_condominio.js
+    - vendor-qrcode.min.js
+  - diretor-module.js
+  - enums-loader.js
+  - escalas/
+    - login.js
+    - pesquisar_escala.js
+  - esquecisenha.js
+  - feedback-widget.js
+  - filiais-module.js
+  - form-submit-unidade.js
+  - funcionarios/
+    - funcionarios_index.js
+    - selects.js
+  - gestor/
+    - login.js
+  - gestor-app.js
+  - init/
+    - dates-global.js
+    - masks-global.js
+  - login.js
+  - masks.js
+  - mediapipe/
+    - vision_bundle.mjs
+    - wasm/
+      - vision_wasm_internal.js
+      - vision_wasm_internal.wasm
+      - vision_wasm_nosimd_internal.js
+      - vision_wasm_nosimd_internal.wasm
+  - modal_pesquisar_pessoa.js
+  - modals/
+    - banco.js
+    - cadastro_bio_digital.js
+    - categoria_trabalhador.js
+    - CBO.js
+    - cnae_principal.js
+    - cnae_secundario.js
+    - detalhes_unidades.js
+    - diretor.js
+    - endereco.js
+    - funcionario_detalhes.js
+    - naturalidade.js
+    - natureza_juridica.js
+    - orgao_expedidor.js
+    - orgao_profissional.js
+    - pais_nascimento.js
+    - selecionar_funcao.js
+    - selecionar_modulos.js
+    - selecionar_setor.js
+    - sindicato.js
+    - tipo_contrato.js
+  - perfil-modulo.js
+  - perfil.js
+  - pix-module.js
+  - portal_morador_assembleia_presenca.js
+  - portal_morador_assembleia_status.js
+  - portal_morador_assembleias.js
+  - portal_morador_boletos.js
+  - portal_morador_comunicados.js
+  - portal_morador_comunicar_visita.js
+  - portal_morador_enquetes.js
+  - portal_morador_groups_menu.js
+  - portal_morador_hab_switcher.js
+  - portal_morador_historico_visitas.js
+  - portal_morador_home_acessos.js
+  - portal_morador_home_comunicados.js
+  - portal_morador_home_enquetes.js
+  - portal_morador_home_servicos.js
+  - portal_morador_nav_active.js
+  - portal_morador_servico.js
+  - portal_morador_user_menu.js
+  - primeiroacesso.js
+  - recursos.js
+  - simple-datepicker.js
+  - stubs/
+    - README.txt
+  - tipo-unidade-module.js
+  - unidades.js
+  - utils/
+    - datepicker-init.js
+    - dates.js
+    - dom.js
+    - masks.js
+  - validators.js
+  - vendor/
+    - flatpickr.min.js
+    - flatpickr.pt.js
+- portal-morador/
+  - data/
+    - marcas_veiculos_por_tipo.json
+  - sw.js
+- uploads/
+  - feedback/
+    - 697a47188f13bd20b640ca93/
+      - 1769621273615-5d508b.png
+    - 697a4a898f13bd20b640cb28/
+      - 1769622153484-31c382.png
+    - 6989d1cbbc792c2383492b40/
+      - 1770639819682-f29c3c.png
+  - funcionarios/
+
+### models
+- ausencia.js
+- DocumentoValidado.js
+- feedback.js
+- ferias.js
+- funcao.js
+- Funcionario.js
+- modulo.js
+- passwordReset.js
+- recurso.js
+- setor.js
+- unidade.js
+- user.js
+- widgetSetting.js
+
+### tests
+- apiResponse.test.js
+- assembleia_execution_flow.test.js
+- authRole.test.js
+- bootstrap_boot.test.js
+- bootstrap_late_init.test.js
+- bootstrap_tardio.test.js
+- cnpjUtil.test.js
+- controllers.test.js
+- debugUserAdmin.test.js
+- errorHandler.test.js
+- escala_api.test.js
+- escala_diaria.test.js
+- escala_extracao_pontual.test.js
+- escalas_locking.test.js
+- escalasSmoke.test.js
+- funcionarioDelete.test.js
+- gestor.smoke.test.js
+- health-and-session.test.js
+- helpers/
+  - testServer.js
+- miscApi.test.js
+- pagesController.test.js
+- requireLogin.test.js
+- test-helpers.js
+- turnos_data_extract.test.js
+- turnos_debounce.test.js
+- turnos_extract.test.js
+- turnos_smoke_test.cjs
+- turnos_smoke_test.js
+- usuarioAtual.session-id.test.js
+- views.roots.light.test.js
+- views.smoke.test.js
+
+### scripts
+- architecture/
+  - generate-map.js
+- auto_fix_setor_indexes.js
+- backfill_refeicoes_computavel.js
+- backfill_setores_orfaos.js
+- baixar_mediapipe.js
+- bisect_check.cjs
+- check_balance.cjs
+- check_setor_indexes.js
+- check-data-fetch.js
+- cleanup-legacy.js
+- contar_setores_por_unidade.js
+- corrigir_codigos_duplicados_setor.js
+- corrigir_flags_master.js
+- corrigir_funcoes_unidade_principal.js
+- diagnose-escalas-imports.js
+- diagnosticar_codigos_setor.js
+- diagnosticar_setores_sem_unidade.js
+- e2e_cert_proof.js
+- enriquecer_cnaes.js
+- enriquecer_funcoes_com_cbo.js
+- find_unmatched_try.cjs
+- find_unmatched_try.js
+- fix_setor_counter.js
+- fix-relative-imports.js
+- gerar_cbo_full.js
+- gerar_municipios_ibge.js
+- guardrails/
+  - verify-migration-safety.js
+- inspecionar_funcoes_sem_descricao.js
+- lint-paths.js
+- listar_funcoes_vinculos.js
+- migrar_classificacao_escalas.js
+- migrar_flag_senha_provisoria.js
+- migrar_logos_para_dataurl.js
+- migrar_preencher_descricao_funcoes.js
+- migrar_recursos_por_equipe.js
+- migrations/
+  - 2025-09-17_migrar-indices-corrigidos.js
+  - 2025-09-18_backfill-diretor-unidades.js
+  - 2026-01-09_backfill-habitacao-mailboxes.js
+- montar_cbo_de_multiplos_csv.js
+- README-funcionario-tests.md
+- repo_tree_map.py
+- set-master-password.js
+- split_cbo_chunks.js
+- test_cert_overlay.js
+- test_delete_grupo_turno.js
+- test_e2e_refeicoes_computavel.js
+- test-import-funcionario-controller.js
+- unlock_users.js
+- update_unidade_codigo.js
+- update_user_role.js
+- verify-no-legacy.js
+- verify-no-relative-imports.js
+
