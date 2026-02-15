@@ -5,6 +5,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { randomUUID } from 'crypto';
 import mongoose from 'mongoose';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
@@ -39,6 +40,37 @@ export async function createServer(options = {}) {
   const skipDbForced = options.skipDb === true;
   const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipDb === true;
   const app = express();
+
+  const traceRequests = String(process.env.WD_TRACE_REQUESTS || '').trim() === '1';
+  app.use((req, res, next) => {
+    const startedAt = Date.now();
+    const requestId = req.headers['x-request-id'] ? String(req.headers['x-request-id']) : randomUUID();
+    const originalUrl = String(req.originalUrl || req.url || '/');
+    const pathname = originalUrl.split('?')[0] || '/';
+    const firstSegment = pathname.replace(/^\/+/, '').split('/')[0] || 'root';
+    const wdPath = firstSegment.toLowerCase();
+
+    req.requestId = requestId;
+    res.locals.requestId = requestId;
+    res.locals.wdPath = wdPath;
+
+    try {
+      res.setHeader('X-Request-Id', requestId);
+      res.setHeader('X-WD-Path', wdPath);
+    } catch {
+      /* noop */
+    }
+
+    res.on('finish', () => {
+      if (!traceRequests) return;
+      const durationMs = Date.now() - startedAt;
+      const method = String(req.method || 'GET').toUpperCase();
+      const statusCode = res.statusCode;
+      console.log(`[trace] ${requestId} ${method} ${originalUrl} ${statusCode} ${durationMs}ms wdPath=${wdPath}`);
+    });
+
+    next();
+  });
 
   // Widgets: injeta flag de visibilidade (por módulo) para os templates EJS.
   // Default: habilitado; se DB indisponível, mantém habilitado (não quebra páginas).
