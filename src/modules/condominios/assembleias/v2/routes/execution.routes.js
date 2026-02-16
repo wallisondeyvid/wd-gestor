@@ -1003,6 +1003,39 @@ export default function executionV2() {
   router.post('/condominios/administracao/assembleia/execution/:id/presencas/:presenceId/confirmar-moderador', async (req, res, next) => {
     const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/${encodeURIComponent(String(req.params?.presenceId || ''))}/confirmar-moderador`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionPresenceConfirmModeratorLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            mongoose,
+            mustControl,
+            getOrCreateExecution,
+            toObjectOrPlain,
+            normalizePresenceRole,
+            PRESENCE_ROLE,
+            finalizePresenceStatus,
+            PRESENCE_STATUS,
+            hasOtherConfirmedRepresentative,
+            safeStr,
+            buildActorSnapshot,
+            pushEvent,
+            writeAuditLog,
+            getActorSource,
+            computeQuorum,
+            serializePresence
+          }
+        });
+        if (result?.handled) return;
+        if (result && typeof result.status === 'number') {
+          if (result.body === undefined) return res.sendStatus(result.status);
+          return res.status(result.status).send(result.body);
+        }
+        return res.status(500).json({ ok: false, error: 'Falha ao confirmar presença pelo moderador' });
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
