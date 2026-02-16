@@ -1963,6 +1963,40 @@ export default function executionV2() {
   router.get('/api/assembleias/:id/execution/ata.pdf', async (req, res, next) => {
     const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/ata.pdf`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionAtaPdfLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            mustControl,
+            mongoose,
+            CondAssembleia,
+            getOrCreateExecution,
+            computeQuorum,
+            voteSummary,
+            safeStr,
+            QRCode,
+            PDFDocument,
+            writeAuditLog,
+            getActorSource
+          }
+        });
+        if (result?.handled) return;
+        if (result?.headers && typeof result.headers === 'object') {
+          for (const [headerName, headerValue] of Object.entries(result.headers)) {
+            res.setHeader(headerName, headerValue);
+          }
+        }
+        if (result && typeof result.status === 'number') {
+          if (result.body === undefined) return res.sendStatus(result.status);
+          if (Buffer.isBuffer(result.body)) return res.status(result.status).send(result.body);
+          return res.status(result.status).json(result.body);
+        }
+        return res.status(500).json({ ok: false, error: 'Falha ao exportar ata' });
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'GET', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false, headers: {}, buffer: null };
       const shadowRes = {
