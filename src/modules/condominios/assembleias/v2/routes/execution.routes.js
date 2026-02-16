@@ -714,6 +714,51 @@ export default function executionV2() {
   router.post('/condominios/administracao/assembleia/execution/:id/presencas/representante', async (req, res, next) => {
     const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/representante`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionPresenceRepresentanteLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            PRESENCE_ROLE,
+            executionPresenceLogic,
+            presenceLogicDeps: {
+              mongoose,
+              isPortalRequest,
+              mustAuth,
+              mustControl,
+              getOrCreateExecution,
+              PRESENCE_ROLE,
+              PRESENCE_STATUS,
+              normalizePresenceRole,
+              safeStr,
+              getPortalHabitacaoId,
+              pickUserId,
+              getPortalPresenceKey,
+              normalizePresenceKey,
+              getPortalPresenceNome,
+              toObjectOrPlain,
+              finalizePresenceStatus,
+              newPresenceId,
+              hasOtherConfirmedRepresentative,
+              buildActorSnapshot,
+              isPresenceConfirmed,
+              pushEvent,
+              writeAuditLog,
+              getActorSource,
+              computeQuorum,
+              serializePresence
+            },
+            router: v1Router
+          }
+        });
+        if (result?.handled) return;
+        if (typeof result?.status === 'number') res.status(result.status);
+        if (result?.body !== undefined) return res.json(result.body);
+        return;
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
