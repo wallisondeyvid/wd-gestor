@@ -48,12 +48,12 @@ import CondAssembleia from '#core/models/cond_assembleia.js';
 import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
 import CondAssembleiaSettings from '#core/models/cond_assembleia_settings.js';
 import mountAssembleias from '#modules/condominios/assembleias/index.js';
-import { handleGetAndaresV2, setHandleGetAndaresV2Context } from '#modules/condominios/app/v2/routes/andares.routes.js';
-import { handleGetBlocosV2, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
-import { handleGetUnidadesV2, setHandleGetUnidadesV2Context } from '#modules/condominios/app/v2/routes/unidades.routes.js';
-import { listarUnidadesService } from '#modules/condominios/app/services/unidades.service.js';
-import { listarBlocosService } from '#modules/condominios/app/services/blocos.service.js';
-import { listarAndaresService } from '#modules/condominios/app/services/andares.service.js';
+import { handleGetAndaresV2, handleGetAndarByIdV2, handleGetAndaresRelacionadosV2, setHandleGetAndaresV2Context } from '#modules/condominios/app/v2/routes/andares.routes.js';
+import { handleGetBlocosV2, handleGetBlocoByIdV2, handleGetBlocosRelacionadosV2, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
+import { handleGetUnidadesV2, handleGetUnidadeByIdV2, handleGetUnidadesRelacionadasV2, setHandleGetUnidadesV2Context } from '#modules/condominios/app/v2/routes/unidades.routes.js';
+import { listarUnidadesService, obterUnidadePorIdService, listarUnidadesRelacionadasService } from '#modules/condominios/app/services/unidades.service.js';
+import { listarBlocosService, obterBlocoPorIdService, listarBlocosRelacionadosService } from '#modules/condominios/app/services/blocos.service.js';
+import { listarAndaresService, obterAndarPorIdService, listarAndaresRelacionadosService } from '#modules/condominios/app/services/andares.service.js';
 import DocumentoValidado from '#core/models/documentoValidado.js';
 import CondMsgMailbox from '#core/models/cond_msg_mailbox.js';
 import CondMsgSettings from '#core/models/cond_msg_settings.js';
@@ -1075,6 +1075,9 @@ async function handleGetUnidadesV1(req, res, _next) {
 
 setHandleGetUnidadesV2Context({
   mongoose,
+  Unidade,
+  CondBloco,
+  CondAndar,
   getCtxUser,
   userCanScopeAll,
   normalizeObjectIdString,
@@ -1088,6 +1091,58 @@ app.get('/api/unidades', (req, res, next) => {
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
   if (isV2On) return handleGetUnidadesV2(req, res, next);
   return handleGetUnidadesV1(req, res, next);
+});
+
+async function handleGetUnidadeByIdV1(req, res, _next) {
+  try {
+    const payload = await obterUnidadePorIdService({
+      req,
+      mongoose,
+      Unidade,
+      buildUnidadePayload
+    });
+    return res.json(payload);
+  } catch (e) {
+    if (e && e.__httpStatus === 400) return res.status(400).json(e.__httpPayload || { error: 'Identificador inválido' });
+    if (e && e.__httpStatus === 404) return res.status(404).json(e.__httpPayload || { error: 'Unidade não encontrada' });
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
+    return res.status(500).json({ error: 'Falha ao obter unidade' });
+  }
+}
+
+app.get('/api/unidades/:id([0-9a-fA-F]{24})', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetUnidadeByIdV2(req, res, next);
+  return handleGetUnidadeByIdV1(req, res, next);
+});
+
+async function handleGetUnidadesRelacionadasV1(req, res, _next) {
+  try {
+    const payload = await listarUnidadesRelacionadasService({
+      req,
+      mongoose,
+      Unidade,
+      CondBloco,
+      CondAndar,
+      buildUnidadePayload
+    });
+    return res.json(payload);
+  } catch (e) {
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
+    return res.status(500).json({ error: 'Falha ao listar unidades relacionadas' });
+  }
+}
+
+app.get('/api/unidades/relacionadas', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetUnidadesRelacionadasV2(req, res, next);
+  return handleGetUnidadesRelacionadasV1(req, res, next);
 });
 
 // API: logo da unidade (para cabeçalhos/prints e combobox)
@@ -12476,13 +12531,63 @@ async function handleGetBlocosV1(req, res, _next) {
 setHandleGetBlocosV2Context({
   mongoose,
   listarUnidadesParaUsuario,
-  CondBloco
+  CondBloco,
+  CondAndar
 });
 
 app.get('/api/blocos', (req, res, next) => {
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
   if (isV2On) return handleGetBlocosV2(req, res, next);
   return handleGetBlocosV1(req, res, next);
+});
+
+async function handleGetBlocoByIdV1(req, res, _next) {
+  try {
+    const payload = await obterBlocoPorIdService({
+      req,
+      mongoose,
+      CondBloco
+    });
+    return res.json(payload);
+  } catch (e) {
+    if (e && e.__httpStatus === 400) return res.status(400).json(e.__httpPayload || { error: 'Identificador inválido' });
+    if (e && e.__httpStatus === 404) return res.status(404).json(e.__httpPayload || { error: 'Bloco não encontrado' });
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
+    return res.status(500).json({ error: 'Falha ao obter bloco' });
+  }
+}
+
+app.get('/api/blocos/:id([0-9a-fA-F]{24})', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetBlocoByIdV2(req, res, next);
+  return handleGetBlocoByIdV1(req, res, next);
+});
+
+async function handleGetBlocosRelacionadosV1(req, res, _next) {
+  try {
+    const payload = await listarBlocosRelacionadosService({
+      req,
+      mongoose,
+      CondBloco,
+      CondAndar
+    });
+    return res.json(payload);
+  } catch (e) {
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
+    return res.status(500).json({ error: 'Falha ao listar blocos relacionados' });
+  }
+}
+
+app.get('/api/blocos/relacionados', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetBlocosRelacionadosV2(req, res, next);
+  return handleGetBlocosRelacionadosV1(req, res, next);
 });
 
 app.post('/api/blocos', express.json(), async (req, res) => {
@@ -12548,13 +12653,63 @@ async function handleGetAndaresV1(req, res, _next) {
 setHandleGetAndaresV2Context({
   mongoose,
   listarUnidadesParaUsuario,
-  CondAndar
+  CondAndar,
+  CondBloco
 });
 
 app.get('/api/andares', (req, res, next) => {
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
   if (isV2On) return handleGetAndaresV2(req, res, next);
   return handleGetAndaresV1(req, res, next);
+});
+
+async function handleGetAndarByIdV1(req, res, _next) {
+  try {
+    const payload = await obterAndarPorIdService({
+      req,
+      mongoose,
+      CondAndar
+    });
+    return res.json(payload);
+  } catch (e) {
+    if (e && e.__httpStatus === 400) return res.status(400).json(e.__httpPayload || { error: 'Identificador inválido' });
+    if (e && e.__httpStatus === 404) return res.status(404).json(e.__httpPayload || { error: 'Andar não encontrado' });
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
+    return res.status(500).json({ error: 'Falha ao obter andar' });
+  }
+}
+
+app.get('/api/andares/:id([0-9a-fA-F]{24})', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetAndarByIdV2(req, res, next);
+  return handleGetAndarByIdV1(req, res, next);
+});
+
+async function handleGetAndaresRelacionadosV1(req, res, _next) {
+  try {
+    const payload = await listarAndaresRelacionadosService({
+      req,
+      mongoose,
+      CondAndar,
+      CondBloco
+    });
+    return res.json(payload);
+  } catch (e) {
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
+    return res.status(500).json({ error: 'Falha ao listar andares relacionados' });
+  }
+}
+
+app.get('/api/andares/relacionados', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetAndaresRelacionadosV2(req, res, next);
+  return handleGetAndaresRelacionadosV1(req, res, next);
 });
 
 app.post('/api/andares', express.json(), async (req, res) => {
