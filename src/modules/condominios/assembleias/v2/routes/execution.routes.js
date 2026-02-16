@@ -890,6 +890,7 @@ export default function executionV2() {
     const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/nao-representante`;
     try {
       const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      const isShadowEnabled = String(process.env.WDG_FLAG_ASSEMBLEIAS_SHADOW ?? '1').trim() !== '0';
       if (isV2On) {
         const result = await executionPresenceNaoRepresentanteLogic({
           req,
@@ -931,6 +932,10 @@ export default function executionV2() {
         if (result?.handled) return;
         if (result?.status) return res.status(result.status).json(result.body ?? {});
         return res.json(result?.body ?? { ok: false });
+      }
+
+      if (!isShadowEnabled) {
+        return v1Router(req, res, next);
       }
 
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
