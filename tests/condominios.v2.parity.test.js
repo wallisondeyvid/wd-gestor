@@ -35,14 +35,44 @@ test('Paridade OFF/ON da WDG_FLAG_CONDOMINIOS_APP_V2 em /api/unidades, /api/bloc
       query: { search: 'a', unidadeId: 'u-test' }
     },
     {
+      label: 'GET /condominios/api/unidades/:id',
+      path: '/condominios/api/unidades/000000000000000000000001',
+      query: {}
+    },
+    {
+      label: 'GET /condominios/api/unidades/relacionadas',
+      path: '/condominios/api/unidades/relacionadas',
+      query: { condominioId: '000000000000000000000001', blocoId: '000000000000000000000002', andarId: '000000000000000000000003' }
+    },
+    {
       label: 'GET /condominios/api/blocos',
       path: '/condominios/api/blocos',
       query: { unidade_id: 'u-test' }
     },
     {
+      label: 'GET /condominios/api/blocos/:id',
+      path: '/condominios/api/blocos/000000000000000000000001',
+      query: {}
+    },
+    {
+      label: 'GET /condominios/api/blocos/relacionados',
+      path: '/condominios/api/blocos/relacionados',
+      query: { condominioId: '000000000000000000000001', blocoId: '000000000000000000000002', andarId: '000000000000000000000003' }
+    },
+    {
       label: 'GET /condominios/api/andares',
       path: '/condominios/api/andares',
       query: { unidade_id: 'u-test' }
+    },
+    {
+      label: 'GET /condominios/api/andares/:id',
+      path: '/condominios/api/andares/000000000000000000000001',
+      query: {}
+    },
+    {
+      label: 'GET /condominios/api/andares/relacionados',
+      path: '/condominios/api/andares/relacionados',
+      query: { condominioId: '000000000000000000000001', blocoId: '000000000000000000000002', andarId: '000000000000000000000003' }
     }
   ];
 

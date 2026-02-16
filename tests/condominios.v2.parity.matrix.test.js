@@ -10,31 +10,77 @@ const LONG_TEXT = 'x'.repeat(4096);
 const ENDPOINTS = [
   {
     name: 'GET /condominios/api/unidades',
-    path: '/condominios/api/unidades'
+    path: '/condominios/api/unidades',
+    type: 'list'
+  },
+  {
+    name: 'GET /condominios/api/unidades/:id',
+    path: '/condominios/api/unidades/000000000000000000000001',
+    type: 'detail'
+  },
+  {
+    name: 'GET /condominios/api/unidades/relacionadas',
+    path: '/condominios/api/unidades/relacionadas',
+    type: 'related'
   },
   {
     name: 'GET /condominios/api/blocos',
-    path: '/condominios/api/blocos'
+    path: '/condominios/api/blocos',
+    type: 'list'
+  },
+  {
+    name: 'GET /condominios/api/blocos/:id',
+    path: '/condominios/api/blocos/000000000000000000000001',
+    type: 'detail'
+  },
+  {
+    name: 'GET /condominios/api/blocos/relacionados',
+    path: '/condominios/api/blocos/relacionados',
+    type: 'related'
   },
   {
     name: 'GET /condominios/api/andares',
-    path: '/condominios/api/andares'
+    path: '/condominios/api/andares',
+    type: 'list'
+  },
+  {
+    name: 'GET /condominios/api/andares/:id',
+    path: '/condominios/api/andares/000000000000000000000001',
+    type: 'detail'
+  },
+  {
+    name: 'GET /condominios/api/andares/relacionados',
+    path: '/condominios/api/andares/relacionados',
+    type: 'related'
   }
 ];
 
+function baseQueryFor(endpoint) {
+  if (endpoint.type === 'detail') return {};
+  if (endpoint.type === 'related') {
+    return {
+      condominioId: '000000000000000000000001',
+      blocoId: '000000000000000000000002',
+      andarId: '000000000000000000000003'
+    };
+  }
+  if (endpoint.path.includes('/unidades')) return { search: 'a', unidadeId: 'u-test' };
+  return { unidade_id: 'u-test' };
+}
+
 const SCENARIOS = [
   { id: 'A', name: 'Query vazia', buildQuery: () => ({}) },
-  { id: 'B', name: 'Query parcial', buildQuery: (ep) => ep.path.includes('/unidades') ? ({ search: 'a' }) : ({ unidade_id: 'u-test' }) },
-  { id: 'C', name: 'Query inválida', buildQuery: (ep) => ep.path.includes('/unidades') ? ({ unidadeId: '@@@', search: '\u0000' }) : ({ unidade_id: '@@@' }) },
-  { id: 'D', name: 'Unicode', buildQuery: (ep) => ep.path.includes('/unidades') ? ({ search: 'áéíóú 😀 中文' }) : ({ unidade_id: 'á-😀-中' }) },
-  { id: 'E', name: 'Parâmetros inesperados', buildQuery: (ep) => ep.path.includes('/unidades') ? ({ foo: 'bar', arr: ['1', '2'], unknown: '1' }) : ({ unidade_id: 'u-test', foo: 'bar', arr: ['1', '2'], unknown: '1' }) },
-  { id: 'F', name: 'Strings longas', buildQuery: (ep) => ep.path.includes('/unidades') ? ({ search: LONG_TEXT }) : ({ unidade_id: LONG_TEXT }) },
-  { id: 'G', name: 'Null / undefined simulados', buildQuery: (ep) => ep.path.includes('/unidades') ? ({ unidadeId: null, search: undefined, extra: '' }) : ({ unidade_id: null, unidade: undefined, extra: '' }) },
-  { id: 'H', name: 'DB indisponível (erro interno)', useSkipDbApp: true, buildQuery: (ep) => ep.path.includes('/unidades') ? ({ search: 'db-off' }) : ({ unidade_id: 'u-test' }) },
+  { id: 'B', name: 'Query parcial', buildQuery: (ep) => ep.type === 'detail' ? {} : baseQueryFor(ep) },
+  { id: 'C', name: 'Query inválida', buildQuery: (ep) => ep.type === 'detail' ? ({ foo: 'invalid' }) : (ep.path.includes('/unidades') ? ({ unidadeId: '@@@', search: '\u0000' }) : ({ unidade_id: '@@@', condominioId: '@@@' })) },
+  { id: 'D', name: 'Unicode', buildQuery: (ep) => ep.type === 'detail' ? ({ note: 'áéíóú 😀 中文' }) : (ep.path.includes('/unidades') ? ({ search: 'áéíóú 😀 中文' }) : ({ unidade_id: 'á-😀-中', condominioId: 'á-😀-中' })) },
+  { id: 'E', name: 'Parâmetros inesperados', buildQuery: (ep) => ({ ...baseQueryFor(ep), foo: 'bar', arr: ['1', '2'], unknown: '1' }) },
+  { id: 'F', name: 'Strings longas', buildQuery: (ep) => ep.type === 'detail' ? ({ q: LONG_TEXT }) : (ep.path.includes('/unidades') ? ({ search: LONG_TEXT }) : ({ unidade_id: LONG_TEXT, condominioId: LONG_TEXT })) },
+  { id: 'G', name: 'Null / undefined simulados', buildQuery: (ep) => ep.type === 'detail' ? ({ extra: undefined, marker: null }) : (ep.path.includes('/unidades') ? ({ unidadeId: null, search: undefined, extra: '' }) : ({ unidade_id: null, unidade: undefined, condominioId: null, extra: '' })) },
+  { id: 'H', name: 'DB indisponível (erro interno)', useSkipDbApp: true, buildQuery: (ep) => ep.type === 'detail' ? {} : (ep.path.includes('/unidades') ? ({ search: 'db-off' }) : baseQueryFor(ep)) },
   { id: 'I', name: 'Usuário sem escopo', buildQuery: () => ({}) },
-  { id: 'J', name: 'Resultado vazio', buildQuery: (ep) => ep.path.includes('/unidades') ? ({ search: '__sem_resultado__' }) : ({ unidade_id: '__sem_resultado__' }) },
-  { id: 'K', name: 'Resultado grande', buildQuery: (ep) => ep.path.includes('/unidades') ? ({ search: 'a' }) : ({}) },
-  { id: 'L', name: 'Repetição múltipla (loop 20x)', repeat: 20, buildQuery: (ep) => ep.path.includes('/unidades') ? ({ search: 'a', unidadeId: 'u-test' }) : ({ unidade_id: 'u-test' }) }
+  { id: 'J', name: 'Resultado vazio', buildQuery: (ep) => ep.type === 'detail' ? {} : (ep.path.includes('/unidades') ? ({ search: '__sem_resultado__' }) : ({ unidade_id: '__sem_resultado__', condominioId: '__sem_resultado__' })) },
+  { id: 'K', name: 'Resultado grande', buildQuery: (ep) => ep.type === 'detail' ? {} : baseQueryFor(ep) },
+  { id: 'L', name: 'Repetição múltipla (loop 20x)', repeat: 20, buildQuery: (ep) => ep.type === 'detail' ? {} : baseQueryFor(ep) }
 ];
 
 let appDefault;
