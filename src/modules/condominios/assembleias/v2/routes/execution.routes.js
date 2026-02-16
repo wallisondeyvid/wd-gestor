@@ -1039,6 +1039,7 @@ export default function executionV2() {
     const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/${encodeURIComponent(String(req.params?.presenceId || ''))}/confirmar-moderador`;
     try {
       const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      const isShadowEnabled = String(process.env.WDG_FLAG_ASSEMBLEIAS_SHADOW ?? '1').trim() !== '0';
       if (isV2On) {
         const result = await executionPresenceConfirmModeratorLogic({
           req,
@@ -1069,6 +1070,10 @@ export default function executionV2() {
           return res.status(result.status).send(result.body);
         }
         return res.status(500).json({ ok: false, error: 'Falha ao confirmar presença pelo moderador' });
+      }
+
+      if (!isShadowEnabled) {
+        return v1Router(req, res, next);
       }
 
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
