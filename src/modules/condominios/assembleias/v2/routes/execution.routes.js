@@ -453,6 +453,44 @@ export default function executionV2() {
   router.post('/api/assembleias/:id/execution/presence', async (req, res, next) => {
     const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/presence`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionPresenceLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            mongoose,
+            isPortalRequest,
+            mustAuth,
+            mustControl,
+            getOrCreateExecution,
+            PRESENCE_ROLE,
+            PRESENCE_STATUS,
+            normalizePresenceRole,
+            safeStr,
+            getPortalHabitacaoId,
+            pickUserId,
+            getPortalPresenceKey,
+            normalizePresenceKey,
+            getPortalPresenceNome,
+            toObjectOrPlain,
+            finalizePresenceStatus,
+            newPresenceId,
+            hasOtherConfirmedRepresentative,
+            buildActorSnapshot,
+            isPresenceConfirmed,
+            pushEvent,
+            writeAuditLog,
+            getActorSource,
+            computeQuorum,
+            serializePresence
+          }
+        });
+        if (result?.handled) return;
+        return res.status(result.status).json(result.body);
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
