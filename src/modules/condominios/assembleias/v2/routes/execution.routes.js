@@ -1697,6 +1697,28 @@ export default function executionV2() {
   router.get('/api/assembleias/:id/execution/ata', async (req, res, next) => {
     const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/ata`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionAtaLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            mustControl,
+            mongoose,
+            CondAssembleia,
+            getOrCreateExecution,
+            computeQuorum,
+            voteSummary,
+            safeStr,
+            writeAuditLog,
+            getActorSource
+          }
+        });
+        if (result?.handled) return;
+        return res.status(result.status).json(result.body);
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'GET', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
