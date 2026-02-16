@@ -1733,6 +1733,7 @@ export default function executionV2() {
     const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/status`;
     try {
       const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      const isShadowEnabled = String(process.env.WDG_FLAG_ASSEMBLEIAS_SHADOW ?? '1').trim() !== '0';
       if (isV2On) {
         const result = await executionStatusLogic({
           req,
@@ -1751,6 +1752,10 @@ export default function executionV2() {
         });
         if (result?.handled) return;
         return res.status(result.status).json(result.body);
+      }
+
+      if (!isShadowEnabled) {
+        return v1Router(req, res, next);
       }
 
       const reqForV2 = cloneReqForShadow(req, 'GET', path);
