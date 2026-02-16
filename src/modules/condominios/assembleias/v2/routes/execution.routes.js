@@ -1501,6 +1501,27 @@ export default function executionV2() {
   router.get('/api/assembleias/:id/execution/status', async (req, res, next) => {
     const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/status`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionStatusLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            mustAuth,
+            mongoose,
+            getOrCreateExecution,
+            computeSessionClockMs,
+            computeQuorum,
+            voteSummary,
+            safeStr,
+            serializePresence
+          }
+        });
+        if (result?.handled) return;
+        return res.status(result.status).json(result.body);
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'GET', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
