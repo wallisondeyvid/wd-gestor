@@ -1122,6 +1122,49 @@ export default function executionV2() {
   router.post('/condominios/administracao/assembleia/execution/:id/presencas/:presenceId/confirmar-pin', async (req, res, next) => {
     const path = `/condominios/administracao/assembleia/execution/${encodeURIComponent(String(req.params?.id || ''))}/presencas/${encodeURIComponent(String(req.params?.presenceId || ''))}/confirmar-pin`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionPresenceConfirmPinLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            executionPresenceConfirmLogic,
+            presenceConfirmLogicDeps: {
+              mongoose,
+              mustControl,
+              safeStr,
+              normalizePresenceKey,
+              getOrCreateExecution,
+              toObjectOrPlain,
+              normalizePresenceRole,
+              PRESENCE_ROLE,
+              parsePortalUserIdFromPresenceKey,
+              CondMorador,
+              CondHabitacao,
+              CondProprietario,
+              CondUsuario,
+              verifyPortalPassword,
+              finalizePresenceStatus,
+              PRESENCE_STATUS,
+              hasOtherConfirmedRepresentative,
+              pushEvent,
+              writeAuditLog,
+              getActorSource,
+              computeQuorum,
+              serializePresence
+            },
+            router: v1Router
+          }
+        });
+        if (result?.handled) return;
+        if (result && typeof result.status === 'number') {
+          if (result.body === undefined) return res.sendStatus(result.status);
+          return res.status(result.status).send(result.body);
+        }
+        return res.status(500).json({ ok: false, error: 'Falha ao confirmar por PIN' });
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
