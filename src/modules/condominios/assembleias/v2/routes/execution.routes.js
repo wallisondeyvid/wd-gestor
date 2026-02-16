@@ -2044,6 +2044,7 @@ export default function executionV2() {
     const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/ata.pdf`;
     try {
       const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      const isShadowEnabled = String(process.env.WDG_FLAG_ASSEMBLEIAS_SHADOW ?? '1').trim() !== '0';
       if (isV2On) {
         const result = await executionAtaPdfLogic({
           req,
@@ -2075,6 +2076,10 @@ export default function executionV2() {
           return res.status(result.status).json(result.body);
         }
         return res.status(500).json({ ok: false, error: 'Falha ao exportar ata' });
+      }
+
+      if (!isShadowEnabled) {
+        return v1Router(req, res, next);
       }
 
       const reqForV2 = cloneReqForShadow(req, 'GET', path);
