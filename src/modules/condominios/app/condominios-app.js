@@ -48,6 +48,12 @@ import CondAssembleia from '#core/models/cond_assembleia.js';
 import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
 import CondAssembleiaSettings from '#core/models/cond_assembleia_settings.js';
 import mountAssembleias from '#modules/condominios/assembleias/index.js';
+import { handleGetAndaresV2, setHandleGetAndaresV2Context } from '#modules/condominios/app/v2/routes/andares.routes.js';
+import { handleGetBlocosV2, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
+import { handleGetUnidadesV2, setHandleGetUnidadesV2Context } from '#modules/condominios/app/v2/routes/unidades.routes.js';
+import { listarUnidadesService } from '#modules/condominios/app/services/unidades.service.js';
+import { listarBlocosService } from '#modules/condominios/app/services/blocos.service.js';
+import { listarAndaresService } from '#modules/condominios/app/services/andares.service.js';
 import DocumentoValidado from '#core/models/documentoValidado.js';
 import CondMsgMailbox from '#core/models/cond_msg_mailbox.js';
 import CondMsgSettings from '#core/models/cond_msg_settings.js';
@@ -1048,40 +1054,40 @@ app.delete('/api/cond-usuarios/:id', async (req, res) => {
 });
 
 // API: listar unidades acessíveis ao usuário atual (para combos)
-app.get('/api/unidades', async (req, res) => {
+async function handleGetUnidadesV1(req, res, _next) {
   try{
-    const canQueryDb = !(req?.app?.locals?.skipDb) && mongoose.connection.readyState === 1;
-    let ctxUser = getCtxUser(req);
-    const canScopeAllUnits = userCanScopeAll(ctxUser);
-
-    // Se for Diretor/User e ctxUser vier "magro", tenta resolver a unidade.
-    if (!canScopeAllUnits) {
-      const current = normalizeObjectIdString(getUserUnidadeId(ctxUser));
-      if (!current) {
-        try {
-          const resolved = await resolveUnidadeIdForNonScopedUser({ ctxUser, canQueryDb });
-          if (resolved) ctxUser = { ...(ctxUser || {}), unidade_id: resolved };
-        } catch {
-          /* noop */
-        }
-      }
-    }
-
-    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-    const payload = (unidadesOptions || []).map(unit => {
-      const enriched = buildUnidadePayload(unit);
-      if(enriched) return enriched;
-      return {
-        _id: unit && unit._id ? unit._id : null,
-        codigo: unit && unit.codigo || '',
-        nome: unit && unit.nome || ''
-      };
+    const payload = await listarUnidadesService({
+      req,
+      mongoose,
+      getCtxUser,
+      userCanScopeAll,
+      normalizeObjectIdString,
+      getUserUnidadeId,
+      resolveUnidadeIdForNonScopedUser,
+      listarUnidadesParaUsuario,
+      buildUnidadePayload
     });
-    // Permitir padrão de retorno flexível (array simples)
-    res.json(payload);
+    return res.json(payload);
   }catch(e){
-    res.status(500).json({ error: 'Falha ao listar unidades' });
+    return res.status(500).json({ error: 'Falha ao listar unidades' });
   }
+}
+
+setHandleGetUnidadesV2Context({
+  mongoose,
+  getCtxUser,
+  userCanScopeAll,
+  normalizeObjectIdString,
+  getUserUnidadeId,
+  resolveUnidadeIdForNonScopedUser,
+  listarUnidadesParaUsuario,
+  buildUnidadePayload
+});
+
+app.get('/api/unidades', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetUnidadesV2(req, res, next);
+  return handleGetUnidadesV1(req, res, next);
 });
 
 // API: logo da unidade (para cabeçalhos/prints e combobox)
@@ -12448,34 +12454,35 @@ app.post('/api/msg/messages/actions', express.json(), async (req, res) => {
 });
 
 // API: blocos por unidade (stub seguro; tenta usar model se existir)
-app.get('/api/blocos', async (req, res) => {
-  const unidade = req.query.unidade || req.query.unidade_id || '';
+async function handleGetBlocosV1(req, res, _next) {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      try { res.set('Retry-After','5'); } catch {}
-      return res.status(503).json({ error: 'DB indisponível' });
-    }
-    let q = { ativo: { $ne: false } };
-    if (unidade) {
-      q.unidade_id = unidade;
-    } else {
-      // Sem filtro explícito: restringe às unidades do usuário (a não ser que seja master/admin)
-      try {
-        const ctxUser = req.user || (req.session && req.session.user) || null;
-        const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-        const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-        if (!isAdmin) {
-          const unitIds = (unidadesOptions||[]).map(u => u._id);
-          q.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
-        }
-      } catch(_e){ /* mantém q básico */ }
-    }
-    const blocos = await CondBloco.find(q).select('_id nome unidade_id ordem').sort({ ordem: 1, nome: 1 }).lean();
-    res.json(blocos || []);
+    const payload = await listarBlocosService({
+      req,
+      mongoose,
+      listarUnidadesParaUsuario,
+      CondBloco
+    });
+    return res.json(payload);
   } catch(e){
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
     console.error('[api/blocos] erro GET', e);
-    res.status(500).json({ error: 'Falha ao listar blocos' });
+    return res.status(500).json({ error: 'Falha ao listar blocos' });
   }
+}
+
+setHandleGetBlocosV2Context({
+  mongoose,
+  listarUnidadesParaUsuario,
+  CondBloco
+});
+
+app.get('/api/blocos', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetBlocosV2(req, res, next);
+  return handleGetBlocosV1(req, res, next);
 });
 
 app.post('/api/blocos', express.json(), async (req, res) => {
@@ -12519,33 +12526,35 @@ app.delete('/api/blocos/:id', async (req, res) => {
 });
 
 // API: andares por unidade (stub seguro; tenta usar model se existir)
-app.get('/api/andares', async (req, res) => {
-  const unidade = req.query.unidade || req.query.unidade_id || '';
+async function handleGetAndaresV1(req, res, _next) {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      try { res.set('Retry-After','5'); } catch {}
-      return res.status(503).json({ error: 'DB indisponível' });
-    }
-    let q = { ativo: { $ne: false } };
-    if (unidade) {
-      q.unidade_id = unidade;
-    } else {
-      try {
-        const ctxUser = req.user || (req.session && req.session.user) || null;
-        const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-        const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-        if (!isAdmin) {
-          const unitIds = (unidadesOptions||[]).map(u => u._id);
-          q.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
-        }
-      } catch(_e){ }
-    }
-    const andares = await CondAndar.find(q).select('_id nome numero unidade_id ordem').sort({ ordem: 1, numero: 1, nome: 1 }).lean();
-    res.json(andares || []);
+    const payload = await listarAndaresService({
+      req,
+      mongoose,
+      listarUnidadesParaUsuario,
+      CondAndar
+    });
+    return res.json(payload);
   } catch(e){
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
     console.error('[api/andares] erro GET', e);
-    res.status(500).json({ error: 'Falha ao listar andares' });
+    return res.status(500).json({ error: 'Falha ao listar andares' });
   }
+}
+
+setHandleGetAndaresV2Context({
+  mongoose,
+  listarUnidadesParaUsuario,
+  CondAndar
+});
+
+app.get('/api/andares', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleGetAndaresV2(req, res, next);
+  return handleGetAndaresV1(req, res, next);
 });
 
 app.post('/api/andares', express.json(), async (req, res) => {
