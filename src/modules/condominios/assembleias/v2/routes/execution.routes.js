@@ -642,6 +642,11 @@ export default function executionV2() {
         return res.status(result.status).json(result.body);
       }
 
+      const isShadowEnabled = String(process.env.WDG_FLAG_ASSEMBLEIAS_SHADOW ?? '1').trim() !== '0';
+      if (!isShadowEnabled) {
+        return v1Router(req, res, next);
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
