@@ -586,6 +586,41 @@ export default function executionV2() {
   router.post('/api/assembleias/:id/execution/presence/confirm', async (req, res, next) => {
     const path = `/api/assembleias/${encodeURIComponent(String(req.params?.id || ''))}/execution/presence/confirm`;
     try {
+      const isV2On = String(process.env.WDG_FLAG_ASSEMBLEIAS_V2 || '').trim() === '1';
+      if (isV2On) {
+        const result = await executionPresenceConfirmLogic({
+          req,
+          res,
+          shadow: false,
+          deps: {
+            mongoose,
+            mustControl,
+            safeStr,
+            normalizePresenceKey,
+            getOrCreateExecution,
+            toObjectOrPlain,
+            normalizePresenceRole,
+            PRESENCE_ROLE,
+            parsePortalUserIdFromPresenceKey,
+            CondMorador,
+            CondHabitacao,
+            CondProprietario,
+            CondUsuario,
+            verifyPortalPassword,
+            finalizePresenceStatus,
+            PRESENCE_STATUS,
+            hasOtherConfirmedRepresentative,
+            pushEvent,
+            writeAuditLog,
+            getActorSource,
+            computeQuorum,
+            serializePresence
+          }
+        });
+        if (result?.handled) return;
+        return res.status(result.status).json(result.body);
+      }
+
       const reqForV2 = cloneReqForShadow(req, 'POST', path);
       const shadowResState = { statusCode: 200, payload: null, handled: false };
       const shadowRes = {
