@@ -22,7 +22,7 @@ export function mustAuth(req, res) {
   return ctxUser;
 }
 
-function computeSessionClockMs(execDoc) {
+export function computeSessionClockMs(execDoc) {
   try {
     if (!execDoc?.openedAt) return 0;
     const now = Date.now();

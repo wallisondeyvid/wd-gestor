@@ -50,6 +50,7 @@ import { executionPresenceRepresentanteLogic } from '#modules/condominios/assemb
 import { executionPresenceNaoRepresentanteLogic } from '#modules/condominios/assembleias/shared/executionPresenceNaoRepresentante.logic.js';
 import { executionPresenceConfirmPinLogic } from '#modules/condominios/assembleias/shared/executionPresenceConfirmPin.logic.js';
 import { executionStatusLogic } from '#modules/condominios/assembleias/shared/executionStatus.logic.js';
+import { computeSessionClockMs } from '#modules/condominios/assembleias/v2/services/executionStatus.service.js';
 import { executionPresenceMeLogic } from '#modules/condominios/assembleias/shared/executionPresenceMe.logic.js';
 import { executionAtaLogic } from '#modules/condominios/assembleias/shared/executionAta.logic.js';
 import { executionAtaPdfLogic } from '#modules/condominios/assembleias/shared/executionAtaPdf.logic.js';
