@@ -205,6 +205,12 @@ const app = express();
 const ENQUETE_RETENTION_MONTHS = 3;
 const ENQUETE_CLEANUP_BATCH = 500;
 let enqueteCleanupScheduled = false;
+const backgroundTimers = [];
+
+function registerTimer(t) {
+  backgroundTimers.push(t);
+  return t;
+}
 
 function getEnqueteRetentionCutoff(now = new Date()) {
   const d = new Date(now);
@@ -266,23 +272,50 @@ function scheduleEnqueteCleanup() {
 
   // primeira execução após o startup, depois periodicamente
   try {
-    const t1 = setTimeout(run, 45 * 1000);
+    const t1 = registerTimer(setTimeout(run, 45 * 1000));
     // Não manter o event-loop vivo (evita travar testes/CLI)
     if (typeof t1?.unref === 'function') t1.unref();
   } catch { /* noop */ }
   try {
-    const t2 = setInterval(run, 6 * 60 * 60 * 1000);
+    const t2 = registerTimer(setInterval(run, 6 * 60 * 60 * 1000));
     if (typeof t2?.unref === 'function') t2.unref();
   } catch { /* noop */ }
 }
 
-// Em testes, evitar jobs de background que podem segurar o processo.
-try {
-  const isTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test';
-  const isParity = String(process.env.PARITY || '').toLowerCase() === '1';
-  const disable = ['1', 'true', 'yes', 'on'].includes(String(process.env.DISABLE_CONDOMINIOS_BG_JOBS || '').toLowerCase());
-  if (!isTest && !isParity && !disable) scheduleEnqueteCleanup();
-} catch { /* noop */ }
+export function startBackgroundTimers() {
+  // Em testes, evitar jobs de background que podem segurar o processo.
+  try {
+    const isTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test';
+    const isParity = String(process.env.PARITY || '').toLowerCase() === '1';
+    const disable = ['1', 'true', 'yes', 'on'].includes(String(process.env.DISABLE_CONDOMINIOS_BG_JOBS || '').toLowerCase());
+    if (!isTest && !isParity && !disable) scheduleEnqueteCleanup();
+  } catch { /* noop */ }
+
+  try {
+    startCondMsgRetentionInterval();
+  } catch { /* noop */ }
+}
+
+export function stopBackgroundTimers() {
+  while (backgroundTimers.length) {
+    const timerRef = backgroundTimers.pop();
+    try { clearTimeout(timerRef); } catch { /* noop */ }
+    try { clearInterval(timerRef); } catch { /* noop */ }
+  }
+
+  try {
+    enqueteCleanupScheduled = false;
+  } catch { /* noop */ }
+
+  try {
+    const g = __condMsgRetentionGlobals();
+    if (g.intervalTimer) {
+      try { clearInterval(g.intervalTimer); } catch { /* noop */ }
+      g.intervalTimer = null;
+    }
+    g.intervalStarted = false;
+  } catch { /* noop */ }
+}
 
 function isMongoOfflineError(err) {
   try {
@@ -352,9 +385,12 @@ function respondDbOffline(res, req) {
     /* noop */
   }
 
+  const debugErrors = ['1', 'true', 'yes', 'on'].includes(String(process.env.WDG_DEBUG_ERRORS || '').trim().toLowerCase());
+
   return res.status(503).json({
+    success: false,
     error: 'Banco de dados temporariamente indisponível. Tente novamente em instantes.',
-    code: 'DB_OFFLINE',
+    ...(debugErrors ? { code: 'DB_OFFLINE' } : {}),
     meta: {
       mongoReadyState: mongoose.connection.readyState,
       mongoUriPresent: !!(process.env.MONGO_URI || process.env.MONGODB_URI),
@@ -671,6 +707,20 @@ async function tryReconnectMongo() {
 
 async function ensureCondominiosMongoOnline(req, res) {
   try {
+    // prioridade absoluta: skipDb forçado pelo createServer
+    try {
+      const forced =
+        !!req?.app?.locals?.__skipDbForced ||
+        !!req?.app?.parent?.locals?.__skipDbForced;
+
+      if (forced) {
+        respondDbOffline(res, req);
+        return false;
+      }
+    } catch {
+      /* noop */
+    }
+
     if (mongoose.connection.readyState === 1) return true;
 
     const uriPresent = !!(process.env.MONGO_URI || process.env.MONGODB_URI);
@@ -696,8 +746,11 @@ async function ensureCondominiosMongoOnline(req, res) {
     }
 
     try {
-      if (req?.app?.locals) req.app.locals.skipDb = false;
-      if (req?.app?.parent?.locals) req.app.parent.locals.skipDb = false;
+      const forced = !!(req?.app?.locals?.__skipDbForced || req?.app?.parent?.locals?.__skipDbForced);
+      if (!forced) {
+        if (req?.app?.locals) req.app.locals.skipDb = false;
+        if (req?.app?.parent?.locals) req.app.parent.locals.skipDb = false;
+      }
     } catch {
       /* noop */
     }
@@ -1090,6 +1143,9 @@ setHandleGetUnidadesV2Context({
 });
 
 app.get('/api/unidades', (req, res, next) => {
+  if (getEffectiveSkipDb(req)) {
+    return respondDbOffline(res, req);
+  }
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
   if (isV2On) return handleGetUnidadesV2(req, res, next);
   return handleGetUnidadesV1(req, res, next);
@@ -3204,10 +3260,11 @@ function startCondMsgRetentionInterval() {
   if (isTest || isParity) return;
   g.intervalStarted = true;
   try {
-    const t = setInterval(() => {
+    const t = registerTimer(setInterval(() => {
       // Best-effort; não bloquear a thread.
       maybeRunCondMsgRetention('interval').catch(() => { /* noop */ });
-    }, 60 * 60 * 1000);
+    }, 60 * 60 * 1000));
+    g.intervalTimer = t;
     if (typeof t?.unref === 'function') t.unref();
   } catch {
     // ignore
@@ -12544,6 +12601,9 @@ setHandleGetBlocosV2Context({
 });
 
 app.get('/api/blocos', (req, res, next) => {
+  if (getEffectiveSkipDb(req)) {
+    return respondDbOffline(res, req);
+  }
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
   if (isV2On) return handleGetBlocosV2(req, res, next);
   return handleGetBlocosV1(req, res, next);
@@ -12569,6 +12629,9 @@ async function handleGetBlocoByIdV1(req, res, _next) {
 }
 
 app.get('/api/blocos/:id([0-9a-fA-F]{24})', (req, res, next) => {
+  if (getEffectiveSkipDb(req)) {
+    return respondDbOffline(res, req);
+  }
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
   if (isV2On) return handleGetBlocoByIdV2(req, res, next);
   return handleGetBlocoByIdV1(req, res, next);
@@ -12706,6 +12769,9 @@ setHandleGetAndaresV2Context({
 });
 
 app.get('/api/andares', (req, res, next) => {
+  if (getEffectiveSkipDb(req)) {
+    return respondDbOffline(res, req);
+  }
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
   if (isV2On) return handleGetAndaresV2(req, res, next);
   return handleGetAndaresV1(req, res, next);

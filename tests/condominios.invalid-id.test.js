@@ -5,6 +5,7 @@ import test from 'node:test';
 import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
+import { assertOfflineContract } from './helpers/assertOfflineContract.js';
 
 async function requestWithFlag(app, flagValue, pathName, query = {}) {
   const prev = process.env.WDG_FLAG_CONDOMINIOS_APP_V2;
@@ -40,18 +41,34 @@ test('GET /condominios/api/blocos com unidade_id inválido retorna [] sem CastEr
 });
 
 test('GET /condominios/api/blocos com skipDb=true retorna 503 + Retry-After + payload consistente', async () => {
-  const { app } = await createServer({ skipDb: true });
-
-  const res = await requestWithFlag(app, 1, '/condominios/api/blocos', {
-    unidade_id: '000000000000000000000010'
+  await assertOfflineContract({
+    createServer,
+    path: '/condominios/api/blocos',
+    query: {
+      unidade_id: '000000000000000000000010'
+    }
   });
+});
 
-  assert.equal(res.status, 503);
-  assert.equal(String(res.headers['retry-after'] || ''), '5');
-  assert.equal(typeof res.body?.error, 'string');
-  assert.equal(res.body?.success, false);
-  assert.equal(Object.prototype.hasOwnProperty.call(res.body || {}, 'code'), false);
-  assert.ok(res.body.error.length > 0);
+test('GET /condominios/api/unidades com skipDb=true retorna contrato offline', async () => {
+  await assertOfflineContract({
+    createServer,
+    path: '/condominios/api/unidades'
+  });
+});
+
+test('GET /condominios/api/andares com skipDb=true retorna contrato offline', async () => {
+  await assertOfflineContract({
+    createServer,
+    path: '/condominios/api/andares'
+  });
+});
+
+test('GET /condominios/api/blocos/:id com skipDb=true retorna contrato offline', async () => {
+  await assertOfflineContract({
+    createServer,
+    path: '/condominios/api/blocos/000000000000000000000010'
+  });
 });
 
 test('Integridade da flag V2: wiring OFF/ON para handlers de blocos permanece explícito', async () => {
