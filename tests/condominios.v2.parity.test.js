@@ -8,11 +8,14 @@ function getContentType(res) {
   return String(res.headers['content-type'] || '');
 }
 
-async function requestWithFlag(app, { path, query }, flagValue) {
+async function requestWithFlag(app, { method = 'get', path, query, body }, flagValue) {
   const prev = process.env.WDG_FLAG_CONDOMINIOS_APP_V2;
   process.env.WDG_FLAG_CONDOMINIOS_APP_V2 = String(flagValue);
   try {
-    return await request(app).get(path).query(query || {});
+    let req = request(app)[method](path);
+    if (query && Object.keys(query).length) req = req.query(query);
+    if (body !== undefined) req = req.send(body);
+    return await req;
   } finally {
     if (prev === undefined) delete process.env.WDG_FLAG_CONDOMINIOS_APP_V2;
     else process.env.WDG_FLAG_CONDOMINIOS_APP_V2 = prev;
@@ -27,6 +30,17 @@ function assertByteParity({ offRes, onRes, label }) {
 
 test('Paridade OFF/ON da WDG_FLAG_CONDOMINIOS_APP_V2 em /api/unidades, /api/blocos e /api/andares', async () => {
   const { app } = await createServer();
+
+  const writePostBody = {
+    unidade_id: '000000000000000000000010',
+    nome: 'Bloco parity write fixed',
+    ordem: 1
+  };
+  await requestWithFlag(app, {
+    method: 'post',
+    path: '/condominios/api/blocos',
+    body: writePostBody
+  }, 0);
 
   const cases = [
     {
@@ -73,6 +87,30 @@ test('Paridade OFF/ON da WDG_FLAG_CONDOMINIOS_APP_V2 em /api/unidades, /api/bloc
       label: 'GET /condominios/api/andares/relacionados',
       path: '/condominios/api/andares/relacionados',
       query: { condominioId: '000000000000000000000001', blocoId: '000000000000000000000002', andarId: '000000000000000000000003' }
+    },
+    {
+      label: 'POST /condominios/api/blocos (válido idempotente)',
+      method: 'post',
+      path: '/condominios/api/blocos',
+      body: writePostBody
+    },
+    {
+      label: 'POST /condominios/api/blocos (campos faltantes)',
+      method: 'post',
+      path: '/condominios/api/blocos',
+      body: { nome: 'Sem unidade' }
+    },
+    {
+      label: 'PUT /condominios/api/blocos/:id',
+      method: 'put',
+      path: '/condominios/api/blocos/000000000000000000000099',
+      body: { nome: 'Novo Nome', ordem: 2, ativo: true }
+    },
+    {
+      label: 'DELETE /condominios/api/blocos/:id',
+      method: 'delete',
+      path: '/condominios/api/blocos/000000000000000000000098',
+      query: {}
     }
   ];
 

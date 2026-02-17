@@ -1,6 +1,10 @@
 import { spawn } from 'node:child_process';
 
 const child = spawn(process.execPath, ['--test', 'tests/condominios.v2.parity.test.js', 'tests/condominios.v2.parity.matrix.test.js'], {
+  env: {
+    ...process.env,
+    MONGO_MEMORY: String(process.env.MONGO_MEMORY ?? '1')
+  },
   stdio: 'inherit',
   shell: false
 });

@@ -6,6 +6,13 @@ export async function listarAndaresService({
 }) {
   const unidade = req.query.unidade || req.query.unidade_id || '';
 
+  if (unidade && !mongoose.isValidObjectId(String(unidade))) {
+    const err = new Error('unidade_id inválido');
+    err.__httpStatus = 400;
+    err.__httpPayload = { error: 'unidade_id inválido' };
+    throw err;
+  }
+
   if (mongoose.connection.readyState !== 1) {
     const err = new Error('DB indisponível');
     err.__httpStatus = 503;
@@ -24,7 +31,11 @@ export async function listarAndaresService({
       const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
       if (!isAdmin) {
         const unitIds = (unidadesOptions||[]).map(u => u._id);
-        q.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
+        if (!unitIds.length) {
+          q._id = { $exists: false };
+        } else {
+          q.unidade_id = { $in: unitIds };
+        }
       }
     } catch(_e){ }
   }

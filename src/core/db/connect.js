@@ -120,7 +120,8 @@ export async function connectMongo(uri, options = {}) {
 
   const memFlag = (process.env.MONGO_MEMORY || '').toString().trim().toLowerCase();
   const useMemory = memFlag === '1' || memFlag === 'true' || memFlag === 'on' || memFlag === 'yes';
-  const mongoUri = uri || process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/gestor';
+  const mongoUri = useMemory ? null : (uri || process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/gestor');
+  const logTargetUri = useMemory ? '(in-memory)' : mongoUri;
   const serverless = isServerlessRuntime();
   // Em serverless, valores muito altos deixam a UX travada quando o cluster está sem primary.
   // Preferimos falhar mais rápido (com 503/erro claro) do que segurar 20s+.
@@ -157,7 +158,7 @@ export async function connectMongo(uri, options = {}) {
     defaultOpts.family = 4;
   }
 
-  installMongooseListenersOnce(cache, mongoUri);
+  installMongooseListenersOnce(cache, logTargetUri);
 
   cache.promise = (async () => {
     // Se alguém já disparou o connect (readyState=2) fora deste helper,

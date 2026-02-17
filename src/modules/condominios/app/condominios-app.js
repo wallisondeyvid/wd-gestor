@@ -49,10 +49,10 @@ import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
 import CondAssembleiaSettings from '#core/models/cond_assembleia_settings.js';
 import mountAssembleias from '#modules/condominios/assembleias/index.js';
 import { handleGetAndaresV2, handleGetAndarByIdV2, handleGetAndaresRelacionadosV2, setHandleGetAndaresV2Context } from '#modules/condominios/app/v2/routes/andares.routes.js';
-import { handleGetBlocosV2, handleGetBlocoByIdV2, handleGetBlocosRelacionadosV2, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
+import { handleGetBlocosV2, handleGetBlocoByIdV2, handleGetBlocosRelacionadosV2, handlePostBlocosV2, handlePutBlocosV2, handleDeleteBlocosV2, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
 import { handleGetUnidadesV2, handleGetUnidadeByIdV2, handleGetUnidadesRelacionadasV2, setHandleGetUnidadesV2Context } from '#modules/condominios/app/v2/routes/unidades.routes.js';
 import { listarUnidadesService, obterUnidadePorIdService, listarUnidadesRelacionadasService } from '#modules/condominios/app/services/unidades.service.js';
-import { listarBlocosService, obterBlocoPorIdService, listarBlocosRelacionadosService } from '#modules/condominios/app/services/blocos.service.js';
+import { listarBlocosService, obterBlocoPorIdService, listarBlocosRelacionadosService, criarBlocoService, atualizarBlocoService, excluirBlocoService } from '#modules/condominios/app/services/blocos.service.js';
 import { listarAndaresService, obterAndarPorIdService, listarAndaresRelacionadosService } from '#modules/condominios/app/services/andares.service.js';
 import DocumentoValidado from '#core/models/documentoValidado.js';
 import CondMsgMailbox from '#core/models/cond_msg_mailbox.js';
@@ -12590,44 +12590,81 @@ app.get('/api/blocos/relacionados', (req, res, next) => {
   return handleGetBlocosRelacionadosV1(req, res, next);
 });
 
-app.post('/api/blocos', express.json(), async (req, res) => {
-  try{
-    if (mongoose.connection.readyState !== 1) {
-      try { res.set('Retry-After','5'); } catch {}
-      return res.status(503).json({ error: 'DB indisponível' });
+async function handlePostBlocosV1(req, res, _next) {
+  try {
+    const result = await criarBlocoService({
+      body: req.body,
+      mongoose,
+      skipDb: req?.app?.locals?.skipDb,
+      CondBloco
+    });
+    if (result.created) {
+      try {
+        console.info('[api/blocos] criado', {
+          id: String(result.payload?._id),
+          unidade_id: String(result.payload?.unidade_id),
+          nome: result.payload?.nome
+        });
+      } catch {}
     }
-    const { unidade_id, nome, ordem } = req.body || {};
-    if(!unidade_id || !nome) return res.status(400).json({ error: 'unidade_id e nome são obrigatórios' });
-    const nomeNorm = String(nome).trim();
-    // Idempotente: se já existir, retorna existente (200)
-    const existente = await CondBloco.findOne({ unidade_id, nome: nomeNorm }).lean();
-    if(existente) return res.json(existente);
-    const novo = await CondBloco.create({ unidade_id, nome: nomeNorm, ordem: Number(ordem)||0 });
-    try { console.info('[api/blocos] criado', { id: String(novo._id), unidade_id: String(novo.unidade_id), nome: novo.nome }); } catch {}
-    res.status(201).json(novo);
-  }catch(e){
-    const isDup = e && (e.code === 11000 || (e.message||'').includes('duplicate key'));
-    if(isDup) return res.status(409).json({ error: 'Bloco já existe para este condomínio' });
-    console.error('[api/blocos] erro POST', e);
-    res.status(500).json({ error: 'Falha ao criar bloco' });
+    return res.status(result.status).json(result.payload);
+  } catch (e) {
+    if (e && e.__httpStatus === 400) return res.status(400).json(e.__httpPayload || { error: 'unidade_id e nome são obrigatórios' });
+    if (e && e.__httpStatus === 409) return res.status(409).json(e.__httpPayload || { error: 'Bloco já existe para este condomínio' });
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+    }
+    try { console.error('[api/blocos] erro POST', e && (e.__cause || e)); } catch {}
+    return res.status(500).json({ error: 'Falha ao criar bloco' });
   }
+}
+
+app.post('/api/blocos', express.json(), (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handlePostBlocosV2(req, res, next);
+  return handlePostBlocosV1(req, res, next);
 });
 
-app.put('/api/blocos/:id', express.json(), async (req, res) => {
-  try{
-    const id = req.params.id; const { nome, ordem, ativo } = req.body || {};
-    const upd = {};
-    if(nome!=null) upd.nome = String(nome).trim();
-    if(ordem!=null) upd.ordem = Number(ordem)||0;
-    if(ativo!=null) upd.ativo = !!ativo;
-    const doc = await CondBloco.findByIdAndUpdate(id, { $set: upd }, { new: true }).lean();
-    res.json(doc);
-  }catch(e){ res.status(500).json({ error: 'Falha ao atualizar bloco' }); }
+async function handlePutBlocosV1(req, res, _next) {
+  try {
+    const result = await atualizarBlocoService({
+      id: req.params?.id,
+      body: req.body,
+      mongoose,
+      skipDb: req?.app?.locals?.skipDb,
+      CondBloco
+    });
+    return res.status(result.status).json(result.payload);
+  } catch (e) {
+    return res.status(500).json((e && e.__httpPayload) || { error: 'Falha ao atualizar bloco' });
+  }
+}
+
+app.put('/api/blocos/:id', express.json(), (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handlePutBlocosV2(req, res, next);
+  return handlePutBlocosV1(req, res, next);
 });
 
-app.delete('/api/blocos/:id', async (req, res) => {
-  try{ await CondBloco.findByIdAndDelete(req.params.id); res.json({ ok:true }); }
-  catch(e){ res.status(500).json({ error: 'Falha ao excluir bloco' }); }
+async function handleDeleteBlocosV1(req, res, _next) {
+  try {
+    const result = await excluirBlocoService({
+      id: req.params?.id,
+      mongoose,
+      skipDb: req?.app?.locals?.skipDb,
+      CondBloco
+    });
+    return res.status(result.status).json(result.payload);
+  } catch (e) {
+    return res.status(500).json((e && e.__httpPayload) || { error: 'Falha ao excluir bloco' });
+  }
+}
+
+app.delete('/api/blocos/:id', (req, res, next) => {
+  const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
+  if (isV2On) return handleDeleteBlocosV2(req, res, next);
+  return handleDeleteBlocosV1(req, res, next);
 });
 
 // API: andares por unidade (stub seguro; tenta usar model se existir)
@@ -12641,6 +12678,9 @@ async function handleGetAndaresV1(req, res, _next) {
     });
     return res.json(payload);
   } catch(e){
+    if (e && e.__httpStatus === 400) {
+      return res.status(400).json(e.__httpPayload || { error: 'unidade_id inválido' });
+    }
     if (e && e.__httpStatus === 503) {
       try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
       return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
@@ -12801,7 +12841,11 @@ app.get('/api/habitacoes/busca', async (req, res) => {
         const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
         if (!isAdmin) {
           const unitIds = (unidadesOptions||[]).map(u => u._id);
-          filtro.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
+          if (!unitIds.length) {
+            filtro._id = { $exists: false };
+          } else {
+            filtro.unidade_id = { $in: unitIds };
+          }
         }
       } catch(_e){ }
     }
@@ -14597,7 +14641,10 @@ app.get('/api/proprietarios/busca', async (req, res) => {
     const { unidade } = req.query || {};
     const filtro = { ativo: { $ne: false } };
     if (unidade) filtro.unidade_id = unidade;
-    else if (!isAdmin) filtro.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
+    else if (!isAdmin) {
+      if (!unitIds.length) filtro._id = { $exists: false };
+      else filtro.unidade_id = { $in: unitIds };
+    }
 
     const props = await CondProprietario.find(filtro).select('_id unidade_id cond_usuario_id usuario_id nome tipo rg cpf cnpj data_nascimento sexo pai mae contato_email contato_telefone whatsapp ativo').lean();
     if (!props.length) return res.json([]);
@@ -15026,7 +15073,10 @@ app.get('/api/moradores/busca', async (req, res) => {
     // Precisamos limitar pelos IDs de habitação pertencentes às unidades visíveis
     const filtroHab = {};
     if (unidade) filtroHab.unidade_id = unidade;
-    else if (!isAdmin) filtroHab.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
+    else if (!isAdmin) {
+      if (!unitIds.length) filtroHab._id = { $exists: false };
+      else filtroHab.unidade_id = { $in: unitIds };
+    }
 
     const habs = await CondHabitacao.find(filtroHab).select('_id unidade_id bloco_id andar_id numero tipo').lean();
     const habIds = habs.map(h => h._id);
@@ -15486,7 +15536,11 @@ app.get('/api/garagens/busca', async (req, res) => {
         const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
         if (!isAdmin) {
           const unitIds = (unidadesOptions||[]).map(u => u._id);
-            filtro.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
+            if (!unitIds.length) {
+              filtro._id = { $exists: false };
+            } else {
+              filtro.unidade_id = { $in: unitIds };
+            }
         }
       } catch {}
     }
@@ -17284,7 +17338,11 @@ app.get('/api/areas-comuns/busca', async (req, res) => {
         const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
         if(!isAdmin){
           const unitIds = (unidadesOptions||[]).map(u => u._id);
-          filtro.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
+          if (!unitIds.length) {
+            filtro._id = { $exists: false };
+          } else {
+            filtro.unidade_id = { $in: unitIds };
+          }
         }
       }catch{}
     }
@@ -18295,7 +18353,11 @@ app.get('/api/materiais/naturezas/busca', async (req, res) => {
         const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
         if(!isAdmin){
           const unitIds = (unidadesOptions||[]).map(u => u._id);
-          filtro.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
+          if (!unitIds.length) {
+            filtro._id = { $exists: false };
+          } else {
+            filtro.unidade_id = { $in: unitIds };
+          }
         }
       }catch{}
     }
@@ -18874,7 +18936,11 @@ app.get('/api/materiais/busca', async (req, res) => {
         const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
         if(!isAdmin){
           const unitIds = (unidadesOptions||[]).map(u => u._id);
-          filtro.unidade_id = { $in: unitIds.length ? unitIds : ['__none__'] };
+          if (!unitIds.length) {
+            filtro._id = { $exists: false };
+          } else {
+            filtro.unidade_id = { $in: unitIds };
+          }
         }
       }catch{}
     }

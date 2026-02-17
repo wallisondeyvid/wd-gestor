@@ -6,6 +6,17 @@ export function setHandleGetUnidadesV2Context(context) {
   handleGetUnidadesV2Context = context || null;
 }
 
+function toErrorPayload(payload, fallbackError, fallbackCode) {
+  const base = {
+    error: String(payload?.error || fallbackError),
+    success: false
+  };
+  if (String(process.env.WDG_DEBUG_ERRORS || '').trim() === '1') {
+    base.code = String(payload?.code || fallbackCode);
+  }
+  return base;
+}
+
 export async function handleGetUnidadesV2(req, res, _next) {
   try {
     const payload = await listarUnidadesService({
@@ -20,8 +31,12 @@ export async function handleGetUnidadesV2(req, res, _next) {
       buildUnidadePayload: handleGetUnidadesV2Context?.buildUnidadePayload
     });
     return res.json(payload);
-  } catch {
-    return res.status(500).json({ error: 'Falha ao listar unidades' });
+  } catch (e) {
+    if (e && e.__httpStatus === 503) {
+      try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
+      return res.status(503).json(toErrorPayload(e.__httpPayload, 'DB indisponível', 'DB_UNAVAILABLE'));
+    }
+    return res.status(500).json(toErrorPayload(e && e.__httpPayload, 'Falha ao listar unidades', 'INTERNAL_ERROR'));
   }
 }
 
@@ -35,13 +50,13 @@ export async function handleGetUnidadeByIdV2(req, res, _next) {
     });
     return res.json(payload);
   } catch (e) {
-    if (e && e.__httpStatus === 400) return res.status(400).json(e.__httpPayload || { error: 'Identificador inválido' });
-    if (e && e.__httpStatus === 404) return res.status(404).json(e.__httpPayload || { error: 'Unidade não encontrada' });
+    if (e && e.__httpStatus === 400) return res.status(400).json(toErrorPayload(e.__httpPayload, 'Identificador inválido', 'INVALID_ID'));
+    if (e && e.__httpStatus === 404) return res.status(404).json(toErrorPayload(e.__httpPayload, 'Unidade não encontrada', 'NOT_FOUND'));
     if (e && e.__httpStatus === 503) {
       try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
-      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+      return res.status(503).json(toErrorPayload(e.__httpPayload, 'DB indisponível', 'DB_UNAVAILABLE'));
     }
-    return res.status(500).json({ error: 'Falha ao obter unidade' });
+    return res.status(500).json(toErrorPayload(e && e.__httpPayload, 'Falha ao obter unidade', 'INTERNAL_ERROR'));
   }
 }
 
@@ -59,8 +74,8 @@ export async function handleGetUnidadesRelacionadasV2(req, res, _next) {
   } catch (e) {
     if (e && e.__httpStatus === 503) {
       try { res.set('Retry-After', e.__retryAfter || '5'); } catch {}
-      return res.status(503).json(e.__httpPayload || { error: 'DB indisponível' });
+      return res.status(503).json(toErrorPayload(e.__httpPayload, 'DB indisponível', 'DB_UNAVAILABLE'));
     }
-    return res.status(500).json({ error: 'Falha ao listar unidades relacionadas' });
+    return res.status(500).json(toErrorPayload(e && e.__httpPayload, 'Falha ao listar unidades relacionadas', 'INTERNAL_ERROR'));
   }
 }
