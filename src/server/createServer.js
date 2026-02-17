@@ -38,7 +38,8 @@ export async function createServer(options = {}) {
   const config = options.config || loadConfig();
   const skipDb = options.skipDb === true;
   const skipDbForced = options.skipDb === true;
-  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipDb === true;
+  const isParityEnv = String(process.env.PARITY || '').trim() === '1';
+  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipDb === true || isParityEnv;
   const app = express();
 
   const traceRequests = String(process.env.WD_TRACE_REQUESTS || '').trim() === '1';
@@ -1229,6 +1230,7 @@ export async function createServer(options = {}) {
       async function fetchJson(url, timeoutMs) {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), timeoutMs);
+        if (typeof t?.unref === 'function') t.unref();
         try {
           const resp = await fetchFn(url, { signal: ctrl.signal, headers: { 'accept': 'application/json' } });
           const status = resp?.status || 0;
@@ -1610,7 +1612,8 @@ export async function createServer(options = {}) {
   }
 
   const close = async ({ stopMemoryServer = true } = {}) => {
-    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test');
+    const isParityLike = String(process.env.PARITY || '').trim() === '1' || String(process.env.PARITY_RUNNER || '').trim() === '1';
+    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test') || isParityLike;
     if (!isTestLike) return;
     await disconnectMongo({ stopMemoryServer });
   };

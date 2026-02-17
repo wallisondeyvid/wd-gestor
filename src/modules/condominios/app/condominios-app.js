@@ -279,8 +279,9 @@ function scheduleEnqueteCleanup() {
 // Em testes, evitar jobs de background que podem segurar o processo.
 try {
   const isTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test';
+  const isParity = String(process.env.PARITY || '').toLowerCase() === '1';
   const disable = ['1', 'true', 'yes', 'on'].includes(String(process.env.DISABLE_CONDOMINIOS_BG_JOBS || '').toLowerCase());
-  if (!isTest && !disable) scheduleEnqueteCleanup();
+  if (!isTest && !isParity && !disable) scheduleEnqueteCleanup();
 } catch { /* noop */ }
 
 function isMongoOfflineError(err) {
@@ -635,6 +636,7 @@ async function waitForMongoReady(timeoutMs = 3000) {
         try { conn.off('error', onError); } catch {}
         resolve(mongoose.connection.readyState === 1);
       }, ms);
+      try { if (typeof timer?.unref === 'function') timer.unref(); } catch {}
 
       function cleanup(ok) {
         if (settled) return;
@@ -1181,6 +1183,7 @@ app.get('/api/unidades/:id/logo', async (req, res) => {
       try {
         const ctl = new AbortController();
         const t = setTimeout(() => ctl.abort(), 4500);
+        if (typeof t?.unref === 'function') t.unref();
         const r = await fetch(logo, { signal: ctl.signal, redirect: 'follow' });
         clearTimeout(t);
         if (!r.ok) throw new Error('fetch externo falhou: ' + r.status);
@@ -1284,6 +1287,7 @@ app.get('/api/assets/proxy', async (req, res) => {
 
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), 9000);
+    if (typeof t?.unref === 'function') t.unref();
     const r = await fetch(raw, { signal: ctl.signal, redirect: 'follow' });
     clearTimeout(t);
     if (!r.ok) return res.status(502).end();
@@ -3195,12 +3199,16 @@ async function maybeRunCondMsgRetention(reason) {
 function startCondMsgRetentionInterval() {
   const g = __condMsgRetentionGlobals();
   if (g.intervalStarted) return;
+  const isTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test';
+  const isParity = String(process.env.PARITY || '').toLowerCase() === '1';
+  if (isTest || isParity) return;
   g.intervalStarted = true;
   try {
-    setInterval(() => {
+    const t = setInterval(() => {
       // Best-effort; não bloquear a thread.
       maybeRunCondMsgRetention('interval').catch(() => { /* noop */ });
     }, 60 * 60 * 1000);
+    if (typeof t?.unref === 'function') t.unref();
   } catch {
     // ignore
   }
@@ -13839,7 +13847,10 @@ app.post('/api/visitas/:id/chegada', express.json(), async (req, res) => {
 
         notified = await Promise.race([
           pushPromise,
-          new Promise((resolve) => setTimeout(() => resolve({ ok: false, queued: true, reason: 'timeout' }), timeoutMs))
+          new Promise((resolve) => {
+            const t = setTimeout(() => resolve({ ok: false, queued: true, reason: 'timeout' }), timeoutMs);
+            if (typeof t?.unref === 'function') t.unref();
+          })
         ]);
       } catch(err){
         console.warn('[api/visitas/:id/chegada] falha ao enviar push:', err?.message || err);
@@ -24321,7 +24332,10 @@ app.post('/api/comunicados', express.json({ limit: '220kb' }), async (req, res) 
       const pushPromise = notifyComunicadoNovoPush({ emails, comunicadoId: String(doc._id), unidadeId });
       notified = await Promise.race([
         pushPromise,
-        new Promise((resolve) => setTimeout(() => resolve({ ok: false, queued: true, reason: 'timeout' }), timeoutMs))
+        new Promise((resolve) => {
+          const t = setTimeout(() => resolve({ ok: false, queued: true, reason: 'timeout' }), timeoutMs);
+          if (typeof t?.unref === 'function') t.unref();
+        })
       ]);
     } catch (err) {
       console.warn('[condominios][api/comunicados POST] falha ao enviar push (comunicado-novo):', err?.message || err);
@@ -24707,7 +24721,10 @@ app.post('/api/enquetes', express.json({ limit: '200kb' }), async (req, res) => 
       const pushPromise = notifyEnqueteNovaPush({ emails, enqueteId: String(doc._id), unidadeId });
       notified = await Promise.race([
         pushPromise,
-        new Promise((resolve) => setTimeout(() => resolve({ ok: false, queued: true, reason: 'timeout' }), timeoutMs))
+        new Promise((resolve) => {
+          const t = setTimeout(() => resolve({ ok: false, queued: true, reason: 'timeout' }), timeoutMs);
+          if (typeof t?.unref === 'function') t.unref();
+        })
       ]);
     } catch(err){
       console.warn('[condominios][api/enquetes POST] falha ao enviar push (enquete-nova):', err?.message || err);

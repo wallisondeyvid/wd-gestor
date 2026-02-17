@@ -1,8 +1,13 @@
 import { ok, notFound, serverError, badRequest } from '#core/utils/apiResponse.js';
 const isNodeTestRunner = process.argv.includes('--test');
-const isTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || isNodeTestRunner;
+const isParity = String(process.env.PARITY || '').trim() === '1' || String(process.env.PARITY_RUNNER || '').trim() === '1';
+const isTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || isNodeTestRunner || isParity;
 const isServerless = !!(process.env.VERCEL || process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_BRANCH_URL);
-const skipHidByEnv = String(process.env.SKIP_HID || '').trim() === '1' || String(process.env.SKIP_BIOMETRIA || '').trim() === '1';
+const skipHidByEnv =
+	String(process.env.SKIP_HID || '').trim() === '1' ||
+	String(process.env.SKIP_BIOMETRIA || '').trim() === '1' ||
+	String(process.env.DISABLE_HID || '').trim() === '1' ||
+	isParity;
 const biometriaDisabledByEnv = String(process.env.DISABLE_BIOMETRIA || '').trim() === '1';
 const biometriaEnabledByEnv = String(process.env.ENABLE_BIOMETRIA || '').trim() === '1';
 const biometriaEnabled = (!biometriaDisabledByEnv) && (biometriaEnabledByEnv || !isServerless);
