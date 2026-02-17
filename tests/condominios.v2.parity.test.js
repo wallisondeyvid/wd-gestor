@@ -1,8 +1,28 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import test, { after } from 'node:test';
 import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
+
+const closeFns = [];
+
+function logActiveHandlesDebug() {
+  if (String(process.env.PARITY_DEBUG || '').trim() !== '1') return;
+  try {
+    const handles = typeof process._getActiveHandles === 'function' ? process._getActiveHandles() : [];
+    const names = handles.map((handle) => String(handle?.constructor?.name || 'unknown'));
+    console.error('[parity][debug] active handles:', names);
+  } catch {}
+}
+
+after(async () => {
+  while (closeFns.length) {
+    const close = closeFns.pop();
+    try { await close(); } catch {}
+  }
+
+  logActiveHandlesDebug();
+});
 
 function getContentType(res) {
   return String(res.headers['content-type'] || '');
@@ -29,7 +49,8 @@ function assertByteParity({ offRes, onRes, label }) {
 }
 
 test('Paridade OFF/ON da WDG_FLAG_CONDOMINIOS_APP_V2 em /api/unidades, /api/blocos e /api/andares', async () => {
-  const { app } = await createServer();
+  const { app, close } = await createServer();
+  if (typeof close === 'function') closeFns.push(() => close({ stopMemoryServer: true }));
 
   const writePostBody = {
     unidade_id: '000000000000000000000010',

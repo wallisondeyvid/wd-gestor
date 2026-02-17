@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { before, describe, it } from 'node:test';
+import { before, after, describe, it } from 'node:test';
 import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
@@ -336,6 +336,16 @@ const WRITE_SCENARIOS = [
 
 let appDefault;
 let appSkipDb;
+const closeFns = [];
+
+function logActiveHandlesDebug() {
+  if (String(process.env.PARITY_DEBUG || '').trim() !== '1') return;
+  try {
+    const handles = typeof process._getActiveHandles === 'function' ? process._getActiveHandles() : [];
+    const names = handles.map((handle) => String(handle?.constructor?.name || 'unknown'));
+    console.error('[parity][debug] active handles (matrix):', names);
+  } catch {}
+}
 
 function relevantHeaders(res) {
   return {
@@ -374,8 +384,25 @@ function assertParity({ endpointName, scenarioId, scenarioName, iteration, offRe
 }
 
 before(async () => {
-  ({ app: appDefault } = await createServer());
-  ({ app: appSkipDb } = await createServer({ skipDb: true }));
+  {
+    const created = await createServer();
+    appDefault = created.app;
+    if (typeof created.close === 'function') closeFns.push(() => created.close({ stopMemoryServer: true }));
+  }
+  {
+    const created = await createServer({ skipDb: true });
+    appSkipDb = created.app;
+    if (typeof created.close === 'function') closeFns.push(() => created.close({ stopMemoryServer: true }));
+  }
+});
+
+after(async () => {
+  while (closeFns.length) {
+    const close = closeFns.pop();
+    try { await close(); } catch {}
+  }
+
+  logActiveHandlesDebug();
 });
 
 describe('Paridade V2 matrix - Condomínios', { concurrency: 1 }, () => {
