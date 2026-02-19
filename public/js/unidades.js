@@ -7,6 +7,30 @@
 })();
 /* (restante removido: funcionalidade agora em gestor/js/pages/unidades.js) */
 
+  function __wdgNormalizeBase(base) {
+    let value = String(base || '').trim();
+    if (value === '/') return '';
+    if (value.length > 1 && value.endsWith('/')) value = value.slice(0, -1);
+    return value;
+  }
+
+  function __wdgGetBasePath() {
+    try {
+      if (window.WDG_CONTEXT && typeof window.WDG_CONTEXT.basePath !== 'undefined') {
+        return __wdgNormalizeBase(window.WDG_CONTEXT.basePath);
+      }
+    } catch(_){ }
+    const bodyBase = document.body?.getAttribute('data-base-path') || '';
+    return __wdgNormalizeBase(bodyBase || '/gestor');
+  }
+
+  function __wdgApiUrl(path) {
+    let p = String(path || '');
+    if (!p.startsWith('/')) p = '/' + p;
+    const base = __wdgGetBasePath();
+    return base ? (base + p) : p;
+  }
+
   (function hookResetForm(){
     const form = byId('cadastroUnidadeForm');
     if (!form) return;
@@ -756,7 +780,7 @@
         const ids = checks.map(ch => ch.getAttribute('data-id'));
         const allActive = checks.every(ch => String(ch.closest('tr')?.getAttribute('data-is-active')) === 'true');
         const activate = !allActive;
-        const res = await fetch('/api/unidades/toggle-access', {
+        const res = await fetch(__wdgApiUrl('/api/unidades/toggle-access'), {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ unitIds: ids, activate })
         });
