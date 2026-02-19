@@ -1195,15 +1195,15 @@ export async function createServer(options = {}) {
   app.use('/api', (req, res, next) => {
     try {
       if (isTestEnv) return next();
+      const original = String(req.originalUrl || req.url || '');
       // Se já for uma sub-rota tratada acima (/api/escalas), deixa seguir
-      if ((req.originalUrl || req.url || '').startsWith('/api/escalas')) return next();
+      if (original.startsWith('/api/escalas')) return next();
       // Exceções: rotas públicas utilitárias que precisam ficar no root /api
-      if ((req.originalUrl || req.url || '').startsWith('/api/cep')) return next();
+      if (original.startsWith('/api/cep')) return next();
 
       // Importante: quando a UI do Portal do Morador (sub-app) chama por engano /api/msg/*,
       // o redirect genérico para /gestor/api/* resulta em 401 e dá a sensação de "deslogar".
       // Detecta via Referer e redireciona para o prefixo correto do Portal.
-      const original = String(req.originalUrl || req.url || '');
       if (original.startsWith('/api/msg')) {
         const ref = String(req.get('referer') || '').toLowerCase();
         if (ref.includes('/portal-morador/') || ref.includes('/portal_morador/')) {
@@ -1211,8 +1211,7 @@ export async function createServer(options = {}) {
         }
       }
 
-      const target = '/gestor' + (req.originalUrl || req.url || '');
-      return res.redirect(307, target);
+      return res.redirect(307, '/gestor' + original);
     } catch { return next(); }
   });
 
