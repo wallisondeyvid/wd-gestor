@@ -10,7 +10,6 @@
     "#modules/*": "./src/modules/*",
     "#models/*": "./models/*",
     "#services/*": "./src/services/*",
-    "#legacy-services/*": "./services/*",
     "#utils/*": "./src/utils/*",
     "#mail/*": "./src/mail/*",
     "#routes/*": "./routes/*"
