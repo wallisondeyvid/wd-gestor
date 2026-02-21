@@ -1,9 +1,14 @@
+import CondAndarModel from '#core/models/cond_andar.js';
+import { BlocosRepository } from '#modules/condominios/app/repositories/BlocosRepository.js';
+import { resolveModel } from '#shared/db/resolveModel.js';
+
 export async function listarBlocosService({
   req,
   mongoose,
   listarUnidadesParaUsuario,
   CondBloco
 }) {
+  const repo = new BlocosRepository({ unitScope: req.unitScope });
   const unidade = req.query.unidade || req.query.unidade_id || '';
 
   if (unidade && !mongoose.isValidObjectId(String(unidade))) {
@@ -37,7 +42,11 @@ export async function listarBlocosService({
     } catch(_e){ }
   }
 
-  const blocos = await CondBloco.find(q).select('_id nome unidade_id ordem').sort({ ordem: 1, nome: 1 }).lean();
+  const blocos = await repo.findMany({
+    filter: q,
+    selectFields: '_id nome unidade_id ordem',
+    sort: { ordem: 1, nome: 1 },
+  });
   return blocos || [];
 }
 
@@ -57,6 +66,7 @@ export async function criarBlocoService({
   skipDb,
   CondBloco
 }) {
+  const repo = new BlocosRepository({ unitScope: null });
   assertDbAvailable({ mongoose, skipDb });
 
   const { unidade_id, nome, ordem } = body || {};
@@ -68,13 +78,15 @@ export async function criarBlocoService({
   }
 
   const nomeNorm = String(nome).trim();
-  const existente = await CondBloco.findOne({ unidade_id, nome: nomeNorm }).lean();
+  const existente = await repo.findOne({
+    filter: { unidade_id, nome: nomeNorm },
+  });
   if (existente) {
     return { status: 200, payload: existente, created: false };
   }
 
   try {
-    const novo = await CondBloco.create({ unidade_id, nome: nomeNorm, ordem: Number(ordem) || 0 });
+    const novo = await repo.create({ unidade_id, nome: nomeNorm, ordem: Number(ordem) || 0 });
     return { status: 201, payload: novo, created: true };
   } catch (e) {
     const isDup = e && (e.code === 11000 || String(e.message || '').includes('duplicate key'));
@@ -99,6 +111,7 @@ export async function atualizarBlocoService({
   skipDb,
   CondBloco
 }) {
+  const repo = new BlocosRepository({ unitScope: null });
   assertDbAvailable({ mongoose, skipDb });
   try {
     const { nome, ordem, ativo } = body || {};
@@ -106,7 +119,7 @@ export async function atualizarBlocoService({
     if (nome != null) upd.nome = String(nome).trim();
     if (ordem != null) upd.ordem = Number(ordem) || 0;
     if (ativo != null) upd.ativo = !!ativo;
-    const payload = await CondBloco.findByIdAndUpdate(id, { $set: upd }, { new: true }).lean();
+    const payload = await repo.updateById({ id, set: upd });
     return { status: 200, payload };
   } catch (e) {
     const err = new Error('Falha ao atualizar bloco');
@@ -123,9 +136,10 @@ export async function excluirBlocoService({
   skipDb,
   CondBloco
 }) {
+  const repo = new BlocosRepository({ unitScope: null });
   assertDbAvailable({ mongoose, skipDb });
   try {
-    await CondBloco.findByIdAndDelete(id);
+    await repo.deleteById({ id });
     return { status: 200, payload: { ok: true } };
   } catch (e) {
     const err = new Error('Falha ao excluir bloco');
@@ -141,6 +155,7 @@ export async function obterBlocoPorIdService({
   mongoose,
   CondBloco
 }) {
+  const repo = new BlocosRepository({ unitScope: req.unitScope });
   const id = String(req.params?.id || '').trim();
   if (!id || !mongoose.isValidObjectId(id)) {
     const err = new Error('Identificador inválido');
@@ -157,7 +172,7 @@ export async function obterBlocoPorIdService({
     throw err;
   }
 
-  const bloco = await CondBloco.findById(id).select('_id nome unidade_id ordem').lean();
+  const bloco = await repo.findById({ id, selectFields: '_id nome unidade_id ordem' });
   if (!bloco) {
     const err = new Error('Bloco não encontrado');
     err.__httpStatus = 404;
@@ -174,6 +189,13 @@ export async function listarBlocosRelacionadosService({
   CondBloco,
   CondAndar
 }) {
+  const repo = new BlocosRepository({ unitScope: req.unitScope });
+  const CondAndarResolved = resolveModel({
+    name: (CondAndar && CondAndar.modelName) || CondAndarModel.modelName || 'CondAndar',
+    schema: (CondAndar && CondAndar.schema) || CondAndarModel.schema,
+    unitScope: req.unitScope,
+  });
+
   if (mongoose.connection.readyState !== 1) {
     const err = new Error('DB indisponível');
     err.__httpStatus = 503;
@@ -196,12 +218,16 @@ export async function listarBlocosRelacionadosService({
   }
 
   if (andarId && mongoose.isValidObjectId(andarId)) {
-    const andar = await CondAndar.findById(andarId).select('unidade_id').lean();
+    const andar = await CondAndarResolved.findById(andarId).select('unidade_id').lean();
     if (!andar?.unidade_id) return [];
     if (q.unidade_id && String(q.unidade_id) !== String(andar.unidade_id)) return [];
     q.unidade_id = andar.unidade_id;
   }
 
-  const blocos = await CondBloco.find(q).select('_id nome unidade_id ordem').sort({ ordem: 1, nome: 1 }).lean();
+  const blocos = await repo.findMany({
+    filter: q,
+    selectFields: '_id nome unidade_id ordem',
+    sort: { ordem: 1, nome: 1 },
+  });
   return blocos || [];
 }
