@@ -10,6 +10,8 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import nodeFetch from 'node-fetch';
+import '#shared/ports/bank.wiring.js';
+import '#shared/ports/documentos.wiring.js';
 import { loadConfig } from '#core/config/index.js';
 import { connectMongo } from '#core/db/connect.js';
 import { disconnectMongo } from '#core/db/connect.js';
