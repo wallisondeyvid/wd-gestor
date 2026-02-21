@@ -1,1 +1,1 @@
-export * from '#legacy-services/documentos.service.js';
+export * from '../../services/documentos.service.js';

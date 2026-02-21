@@ -1,1 +1,1 @@
-export * from '#legacy-services/bank/bankClient.js';
+export * from '../../../services/bank/bankClient.js';
