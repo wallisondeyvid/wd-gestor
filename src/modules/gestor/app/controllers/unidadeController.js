@@ -2,7 +2,7 @@
 import Unidade from '#models/unidade.js';
 import User from '#models/user.js';
 import Funcionario from '#models/Funcionario.js';
-import { callBankApi, getOAuthTokenFromConfig } from '#services/bank/bankClient.js';
+import { BankPort } from '#shared/ports/bank.port.js';
 
 export async function listarUnidades(req, res) {
   try {
@@ -121,14 +121,14 @@ export async function testarBanco(req, res) {
     let resultado = null;
 
     if (tipo === 'oauth2') {
-      const token = await getOAuthTokenFromConfig(cfg);
+      const token = await BankPort.getOAuthTokenFromConfig(cfg);
       detalhe = 'Token OAuth2 obtido com sucesso.';
       resultado = { tokenPreview: token ? `${token.slice(0, 10)}...` : null };
     } else {
       const path = (req.body?.path || '/');
       const method = (req.body?.method || 'GET');
       const data = req.body?.data;
-      resultado = await callBankApi(unidadeId, { method, path, data });
+      resultado = await BankPort.callBankApi(unidadeId, { method, path, data });
       detalhe = `${method.toUpperCase()} ${path} executado com sucesso.`;
     }
 
