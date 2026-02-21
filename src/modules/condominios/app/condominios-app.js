@@ -7,7 +7,7 @@ import multer from 'multer';
 import crypto from 'crypto';
 import { put, del } from '@vercel/blob';
 import { connectMongo } from '#core/db/connect.js';
-import { emitirDocumentoAssinadoExterno, obterPorToken as obterDocumentoValidadoPorToken, substituir as substituirDocumentoValidado } from '#services/documentos.service.js';
+import { DocumentosPort } from '#shared/ports/documentos.port.js';
 // Reutiliza API de usuário do módulo Gestor (perfil/foto/senha)
 import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
 import { excluirUsuario as gestorExcluirUsuario } from '#modules/gestor/app/controllers/userController.js';
@@ -21897,7 +21897,7 @@ app.get('/assembleias/nova', async (req, res, next) => {
     try {
       const tok = String(doc?.editalDocumentoToken || '').trim().toLowerCase();
       if (tok && canQueryDb) {
-        const vdoc = await obterDocumentoValidadoPorToken(tok);
+        const vdoc = await DocumentosPort.obterPorToken(tok);
         const st = String(vdoc?.status || '').trim().toUpperCase();
         if (!vdoc) publishErrors.editalDocumentoToken = 'Não foi possível validar o edital. Envie novamente o edital assinado.';
         else if (st !== 'VALIDO') {
@@ -22304,7 +22304,7 @@ app.post('/assembleias/nova/publicar', ...ASSEMBLEIA_BODY_PARSERS, async (req, r
     try {
       const tok = String(doc?.editalDocumentoToken || '').trim().toLowerCase();
       if (tok) {
-        const vdoc = await obterDocumentoValidadoPorToken(tok);
+        const vdoc = await DocumentosPort.obterPorToken(tok);
         vdocForAttach = vdoc || null;
         const st = String(vdoc?.status || '').trim().toUpperCase();
         if (!vdoc) errors.editalDocumentoToken = 'Certificação não encontrada. Envie o PDF assinado novamente.';
@@ -22928,7 +22928,7 @@ app.post('/assembleias/:id/edital/upload-assinado', async (req, res, next) => {
 
         const prevToken = String(doc?.editalDocumentoToken || '').trim();
 
-        const emitido = await emitirDocumentoAssinadoExterno({
+        const emitido = await DocumentosPort.emitirDocumentoAssinadoExterno({
           modulo: 'condominios',
           tipo: 'EDITAL',
           organizacaoId: unidadeId || null,
@@ -22951,7 +22951,7 @@ app.post('/assembleias/:id/edital/upload-assinado', async (req, res, next) => {
 
         // Preserva histórico do token anterior
         if (prevToken && prevToken !== emitido.token) {
-          try { await substituirDocumentoValidado(prevToken, emitido.token); } catch { /* best-effort */ }
+          try { await DocumentosPort.substituir(prevToken, emitido.token); } catch { /* best-effort */ }
         }
 
         doc.editalDocumentoToken = emitido.token;

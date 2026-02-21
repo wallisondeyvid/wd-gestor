@@ -7,6 +7,10 @@ const MODULES_ROOT = path.join(ROOT, 'src', 'modules');
 const SHARED_ROOT = path.join(ROOT, 'src', 'shared');
 const LEGACY_SPECIFIER = '#legacy-services/';
 const LEGACY_ALLOWED_PREFIXES = ['scripts/', 'docs/', 'src/services/'];
+const BANK_CLIENT_SPECIFIER = '#services/bank/bankClient.js';
+const BANK_CLIENT_ALLOWED_PREFIX = 'src/shared/adapters/bank/';
+const DOCS_SERVICE_SPECIFIER = '#services/documentos.service.js';
+const DOCS_SERVICE_ALLOWED_PREFIX = 'src/shared/adapters/documentos/';
 const CODE_EXTENSIONS = new Set(['.js', '.cjs', '.mjs', '.ts', '.tsx']);
 
 const ALLOWLIST = [
@@ -335,6 +339,78 @@ function collectSharedModuleDependencyUsages() {
   });
 }
 
+function collectDirectBankClientImports() {
+  const violations = [];
+  const files = listCodeFilesForLegacyScan();
+
+  for (const fullPath of files) {
+    const fileRelativePath = toPosix(path.relative(ROOT, fullPath));
+    if (fileRelativePath.startsWith(BANK_CLIENT_ALLOWED_PREFIX)) continue;
+
+    const source = fs.readFileSync(fullPath, 'utf8');
+    const lines = stripCommentsWithLineMap(source);
+
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      for (const pattern of ANY_IMPORT_LINE_PATTERNS) {
+        pattern.lastIndex = 0;
+        let match;
+        while ((match = pattern.exec(line)) !== null) {
+          const specifier = String(match[2] || '').replace(/\\/g, '/');
+          if (specifier !== BANK_CLIENT_SPECIFIER) continue;
+
+          violations.push({
+            file: fileRelativePath,
+            line: index + 1,
+            importString: String(match[0]).trim(),
+          });
+        }
+      }
+    }
+  }
+
+  return violations.sort((a, b) => {
+    if (a.file !== b.file) return a.file.localeCompare(b.file);
+    return a.line - b.line;
+  });
+}
+
+function collectDirectDocumentosServiceImports() {
+  const violations = [];
+  const files = listCodeFilesForLegacyScan();
+
+  for (const fullPath of files) {
+    const fileRelativePath = toPosix(path.relative(ROOT, fullPath));
+    if (fileRelativePath.startsWith(DOCS_SERVICE_ALLOWED_PREFIX)) continue;
+
+    const source = fs.readFileSync(fullPath, 'utf8');
+    const lines = stripCommentsWithLineMap(source);
+
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      for (const pattern of ANY_IMPORT_LINE_PATTERNS) {
+        pattern.lastIndex = 0;
+        let match;
+        while ((match = pattern.exec(line)) !== null) {
+          const specifier = String(match[2] || '').replace(/\\/g, '/');
+          if (specifier !== DOCS_SERVICE_SPECIFIER) continue;
+
+          violations.push({
+            file: fileRelativePath,
+            line: index + 1,
+            importString: String(match[0]).trim(),
+          });
+        }
+      }
+    }
+  }
+
+  return violations.sort((a, b) => {
+    if (a.file !== b.file) return a.file.localeCompare(b.file);
+    return a.line - b.line;
+  });
+}
+
 function printViolations(violations) {
   console.error('FAIL: imports cruzados entre módulos fora da allowlist.\n');
   for (const violation of violations) {
@@ -378,14 +454,30 @@ function printSharedDependencyViolations(violations) {
   }
 }
 
+function printBankClientDirectImportViolations(violations) {
+  console.error('ERRO: Import direto de bankClient proibido. Use BankPort.\n');
+  for (const violation of violations) {
+    console.error(`- ${violation.file}:${violation.line} | ${violation.importString}`);
+  }
+}
+
+function printDocumentosServiceDirectImportViolations(violations) {
+  console.error('ERRO: Import direto de documentos.service proibido. Use DocumentosPort.\n');
+  for (const violation of violations) {
+    console.error(`- ${violation.file}:${violation.line} | ${violation.importString}`);
+  }
+}
+
 function main() {
   const legacyViolations = collectLegacyServiceUsages();
   const sharedDependencyViolations = collectSharedModuleDependencyUsages();
+  const bankClientDirectImportViolations = collectDirectBankClientImports();
+  const documentosServiceDirectImportViolations = collectDirectDocumentosServiceImports();
   const moduleNames = listModuleNames();
   const moduleNameSet = new Set(moduleNames);
 
   const violations = moduleNames.length ? collectCrossModuleUsages(moduleNameSet) : [];
-  if (violations.length || legacyViolations.length || sharedDependencyViolations.length) {
+  if (violations.length || legacyViolations.length || sharedDependencyViolations.length || bankClientDirectImportViolations.length || documentosServiceDirectImportViolations.length) {
     if (violations.length) {
       printViolations(violations);
     }
@@ -396,6 +488,14 @@ function main() {
     if (sharedDependencyViolations.length) {
       if (violations.length || legacyViolations.length) console.error('');
       printSharedDependencyViolations(sharedDependencyViolations);
+    }
+    if (bankClientDirectImportViolations.length) {
+      if (violations.length || legacyViolations.length || sharedDependencyViolations.length) console.error('');
+      printBankClientDirectImportViolations(bankClientDirectImportViolations);
+    }
+    if (documentosServiceDirectImportViolations.length) {
+      if (violations.length || legacyViolations.length || sharedDependencyViolations.length || bankClientDirectImportViolations.length) console.error('');
+      printDocumentosServiceDirectImportViolations(documentosServiceDirectImportViolations);
     }
     process.exit(1);
   }
