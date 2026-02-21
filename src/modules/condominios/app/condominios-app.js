@@ -52,6 +52,7 @@ import { handleGetAndaresV2, handleGetAndarByIdV2, handleGetAndaresRelacionadosV
 import { handleGetBlocosV2, handleGetBlocoByIdV2, handleGetBlocosRelacionadosV2, handlePostBlocosV2, handlePutBlocosV2, handleDeleteBlocosV2, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
 import { handleGetUnidadesV2, handleGetUnidadeByIdV2, handleGetUnidadesRelacionadasV2, setHandleGetUnidadesV2Context } from '#modules/condominios/app/v2/routes/unidades.routes.js';
 import { listarUnidadesService, obterUnidadePorIdService, listarUnidadesRelacionadasService } from '#modules/condominios/app/services/unidades.service.js';
+import { UnidadesReadRepository } from '#modules/condominios/app/repositories/UnidadesReadRepository.js';
 import { listarBlocosService, obterBlocoPorIdService, listarBlocosRelacionadosService, criarBlocoService, atualizarBlocoService, excluirBlocoService } from '#modules/condominios/app/services/blocos.service.js';
 import { listarAndaresService, obterAndarPorIdService, listarAndaresRelacionadosService } from '#modules/condominios/app/services/andares.service.js';
 import DocumentoValidado from '#core/models/documentoValidado.js';
@@ -1111,6 +1112,24 @@ app.delete('/api/cond-usuarios/:id', async (req, res) => {
 // API: listar unidades acessíveis ao usuário atual (para combos)
 async function handleGetUnidadesV1(req, res, _next) {
   try{
+    const unidadesReadRepository = new UnidadesReadRepository({ unitScope: req.unitScope });
+    const listarUnidadesParaUsuarioScoped = async (user) => {
+      try {
+        const unidadeSelectFields = '_id codigo nome razaoSocial cnpj cpf pessoaTipo inscricaoEstadual inscricaoMunicipal cnaePrincipal cnaeSecundarios regimeTributario naturezaJuridica tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal diretor_usuario_id pixChave tipoPix banco agencia contaCorrente is_principal subunidade unidade_principal_id dataAbertura';
+        if (userCanScopeAll(user)) {
+          return await unidadesReadRepository.findAtivas({ selectFields: unidadeSelectFields });
+        }
+        if (user && (user.matriz_unidade_id || user.unidade_principal_id || user.unidade_id)) {
+          const matrizRef = user.matriz_unidade_id || user.unidade_principal_id || user.unidade_id;
+          const matrizId = (matrizRef && typeof matrizRef === 'object') ? (matrizRef._id || matrizRef.id || matrizRef) : matrizRef;
+          return await unidadesReadRepository.findDaMatriz({ matrizId, selectFields: unidadeSelectFields });
+        }
+        return [];
+      } catch {
+        return [];
+      }
+    };
+
     const payload = await listarUnidadesService({
       req,
       mongoose,
@@ -1119,7 +1138,7 @@ async function handleGetUnidadesV1(req, res, _next) {
       normalizeObjectIdString,
       getUserUnidadeId,
       resolveUnidadeIdForNonScopedUser,
-      listarUnidadesParaUsuario,
+      listarUnidadesParaUsuario: listarUnidadesParaUsuarioScoped,
       buildUnidadePayload
     });
     return res.json(payload);
