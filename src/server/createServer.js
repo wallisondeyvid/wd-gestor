@@ -10,8 +10,9 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import nodeFetch from 'node-fetch';
-import '#shared/ports/bank.wiring.js';
-import '#shared/ports/documentos.wiring.js';
+import { getPorts } from '#shared/container/ports.js';
+import { BankPort } from '#shared/ports/bank.port.js';
+import { DocumentosPort } from '#shared/ports/documentos.port.js';
 import { loadConfig } from '#core/config/index.js';
 import { connectMongo } from '#core/db/connect.js';
 import { disconnectMongo } from '#core/db/connect.js';
@@ -33,6 +34,16 @@ import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } fr
 // Para habilitar Escalas no futuro, use ENABLE_ESCALAS=1.
 const registry = [gestorModule, clinicaModule, condominiosModule, portalMoradorModule];
 
+let __portsBound = false;
+
+function bindPortsOnce() {
+  if (__portsBound) return;
+  const ports = getPorts();
+  Object.assign(BankPort, ports.bank);
+  Object.assign(DocumentosPort, ports.documentos);
+  __portsBound = true;
+}
+
 export async function createServer(options = {}) {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -43,6 +54,8 @@ export async function createServer(options = {}) {
   const isParityEnv = String(process.env.PARITY || '').trim() === '1';
   const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipDb === true || isParityEnv;
   const app = express();
+
+  bindPortsOnce();
 
   const traceRequests = String(process.env.WD_TRACE_REQUESTS || '').trim() === '1';
   app.use((req, res, next) => {

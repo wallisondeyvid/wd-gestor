@@ -2,10 +2,13 @@
 
 /**
  * Wiring explícito do BankPort.
- * Conecta o contrato (Port) à implementação (Adapter).
+ * Wrapper fino de compatibilidade; binding real ocorre no container.
  */
 
 import { BankPort } from '#shared/ports/bank.port.js';
-import { BankAdapter } from '#shared/adapters/bank/bank.adapter.js';
+import { getPorts } from '#shared/container/ports.js';
 
-Object.assign(BankPort, BankAdapter);
+export function bindBankPort() {
+	Object.assign(BankPort, getPorts().bank);
+	return BankPort;
+}

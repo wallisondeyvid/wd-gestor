@@ -2,11 +2,13 @@
 
 /**
  * Wiring explícito do DocumentosPort.
- * Conecta o contrato (Port) à implementação (Adapter).
- * Importar este arquivo SOMENTE no bootstrap/composition root.
+ * Wrapper fino de compatibilidade; binding real ocorre no container.
  */
 
 import { DocumentosPort } from '#shared/ports/documentos.port.js';
-import { DocumentosAdapter } from '#shared/adapters/documentos/documentos.adapter.js';
+import { getPorts } from '#shared/container/ports.js';
 
-Object.assign(DocumentosPort, DocumentosAdapter);
+export function bindDocumentosPort() {
+	Object.assign(DocumentosPort, getPorts().documentos);
+	return DocumentosPort;
+}
