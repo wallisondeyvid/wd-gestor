@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/app/utils/apiResponse.js';
 // Service para criação + envio de senha provisória
 import { createUserAndSendPassword } from '#modules/gestor/app/services/userService.js';
+import { UserProfileRepository } from '#modules/gestor/app/repositories/UserProfileRepository.js';
 
 // Lista usuários atualmente bloqueados por lock_until futuro
 export async function listLockedUsers(req, res) {
@@ -309,6 +310,8 @@ export async function obterUsuarioAtual(req, res) {
 		return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
 	}
 	try {
+		const userProfileRepository = new UserProfileRepository({ unitScope: req.unitScope });
+
 		const sessionIdRaw = req.session?.user?.id;
 		if (!sessionIdRaw || !mongoose.Types.ObjectId.isValid(String(sessionIdRaw))) {
 			return res.status(401).json({ success:false, error:'Sessão inválida', code:'UNAUTHORIZED' });
@@ -319,20 +322,14 @@ export async function obterUsuarioAtual(req, res) {
 		let targetId = objectId;
 		let baseUser = null;
 		if (targetId) {
-			const user = await User.findById(targetId)
-			.populate({ path: 'unidade_id', select: '_id codigo nome' })
-			.populate({ path: 'funcionario_id', select: '_id nome cpf telefone unidade_id', populate: { path: 'unidade_id', select: '_id codigo nome' } })
-			.lean();
+			const user = await userProfileRepository.findByIdForProfile(targetId);
 			baseUser = user;
 		}
 		// Fallback: se id ausente ou não encontrado, tentar por e-mail
 		if (!baseUser) {
 			const emailCandidate = (req.user && req.user.email) || (req.session && req.session.user && req.session.user.email) || null;
 			if (emailCandidate) {
-				baseUser = await User.findOne({ email: emailCandidate.toLowerCase() })
-					.populate({ path: 'unidade_id', select: '_id codigo nome' })
-					.populate({ path: 'funcionario_id', select: '_id nome cpf telefone unidade_id', populate: { path: 'unidade_id', select: '_id codigo nome' } })
-					.lean();
+				baseUser = await userProfileRepository.findByEmailForProfile(emailCandidate.toLowerCase());
 				if (baseUser) { targetId = baseUser._id; }
 			}
 		}
