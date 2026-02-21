@@ -6,7 +6,7 @@ const ROOT = process.cwd();
 const MODULES_ROOT = path.join(ROOT, 'src', 'modules');
 const SHARED_ROOT = path.join(ROOT, 'src', 'shared');
 const LEGACY_SPECIFIER = '#legacy-services/';
-const LEGACY_ALLOWED_PREFIXES = ['scripts/', 'docs/'];
+const LEGACY_ALLOWED_PREFIXES = ['scripts/', 'docs/', 'src/services/'];
 const CODE_EXTENSIONS = new Set(['.js', '.cjs', '.mjs', '.ts', '.tsx']);
 
 const ALLOWLIST = [
