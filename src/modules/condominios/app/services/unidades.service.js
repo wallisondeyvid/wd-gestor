@@ -1,5 +1,6 @@
 import { BlocosRepository } from '#modules/condominios/app/repositories/BlocosRepository.js';
 import { AndaresRepository } from '#modules/condominios/app/repositories/AndaresRepository.js';
+import { UnidadesRepository } from '#modules/condominios/app/repositories/UnidadesRepository.js';
 
 export async function listarUnidadesService({
   req,
@@ -47,6 +48,7 @@ export async function obterUnidadePorIdService({
   Unidade,
   buildUnidadePayload
 }) {
+  const repo = new UnidadesRepository({ unitScope: req.unitScope });
   const id = String(req.params?.id || '').trim();
   if (!id || !mongoose.isValidObjectId(id)) {
     const err = new Error('Identificador inválido');
@@ -63,7 +65,7 @@ export async function obterUnidadePorIdService({
     throw err;
   }
 
-  const unidade = await Unidade.findById(id).lean();
+  const unidade = await repo.findById({ id });
   if (!unidade) {
     const err = new Error('Unidade não encontrada');
     err.__httpStatus = 404;
@@ -87,6 +89,7 @@ export async function listarUnidadesRelacionadasService({
   CondAndar,
   buildUnidadePayload
 }) {
+  const repo = new UnidadesRepository({ unitScope: req.unitScope });
   const blocosRepo = new BlocosRepository({ unitScope: req.unitScope });
   const andaresRepo = new AndaresRepository({ unitScope: req.unitScope });
 
@@ -128,7 +131,7 @@ export async function listarUnidadesRelacionadasService({
     filtro = { _id: idsUnicos[0] };
   }
 
-  const unidades = await Unidade.find(filtro).lean();
+  const unidades = await repo.findMany({ filter: filtro });
   return (unidades || []).map(unit => {
     const payload = buildUnidadePayload(unit);
     if (payload) return payload;
