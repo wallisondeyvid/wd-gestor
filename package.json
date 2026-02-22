@@ -24,7 +24,7 @@
     "start:mem": "set MONGO_MEMORY=1 && node src/start.js",
     "start:mem:seed": "set MONGO_MEMORY=1 && set GESTOR_SEEDS=1 && node src/start.js",
     "start:atlas": "node src/start.js",
-    "test": "node --test tests/*.test.js",
+    "test": "node --test tests/*.test.js tests/architecture/*.test.js",
     "parity": "node scripts/run-parity.js",
     "precommit": "npm run parity",
     "test:smoke": "node --test tests/health-and-session.test.js tests/migration.safety.smoke.test.js",
