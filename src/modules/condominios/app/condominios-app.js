@@ -202,6 +202,11 @@ const ROOT = process.cwd();
 
 const app = express();
 
+function unidadesReadRepoFromReq(req) {
+  const unitScope = req?.unitScope || req?.ctx?.unitScope || null;
+  return new UnidadesReadRepository({ unitScope });
+}
+
 // Retenção: remove enquetes finalizadas/encerradas após 3 meses para evitar crescimento do banco
 const ENQUETE_RETENTION_MONTHS = 3;
 const ENQUETE_CLEANUP_BATCH = 500;
@@ -1248,7 +1253,7 @@ app.get('/api/unidades/:id/logo', async (req, res) => {
       return sendPlaceholder();
     }
 
-    const unidade = await Unidade.findById(id).select('_id logo').lean();
+    const unidade = await unidadesReadRepoFromReq(req).findById(id, { select: '_id logo' });
     if (!unidade) return sendPlaceholder();
 
     const logo = String(unidade.logo || '').trim();
@@ -1413,7 +1418,7 @@ app.get('/api/dirigencia/:unidadeId/state', async (req, res) => {
 
     const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
     const allowed = userCanScopeAll(ctxUser)
-      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))
+      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId, unidadesReadRepoFromReq(req)))
       || (unidadesOptions || []).some(u => String(u?._id || '') === String(unidadeId));
     if (!allowed) return res.status(403).json({ success: false, error: 'Acesso negado' });
 
@@ -1463,7 +1468,7 @@ app.put('/api/dirigencia/:unidadeId/state', express.json({ limit: '800kb' }), as
       return res.status(400).json({ success: false, error: 'Unidade inválida' });
     }
 
-    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))) {
+    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId, unidadesReadRepoFromReq(req)))) {
       return res.status(403).json({ success: false, error: 'Sem permissão para editar Dirigência (apenas Master/Admin/Diretor).' });
     }
 
@@ -1781,8 +1786,9 @@ async function resolveCondUsuarioIdFromAnyUserId(usuarioId, opts = {}) {
   }
 }
 
-async function userCanEditDirigenciaForUnidade(user, unidadeId) {
+async function userCanEditDirigenciaForUnidade(user, unidadeId, repo) {
   try {
+    const unidadeRepo = repo || new UnidadesReadRepository({ unitScope: null });
     if (!user) return false;
     if (userCanScopeAll(user)) return true;
 
@@ -1797,7 +1803,7 @@ async function userCanEditDirigenciaForUnidade(user, unidadeId) {
       }
     } catch { /* noop */ }
 
-    // Fallback robusto: considerar Diretor quando o usuário for o diretor cadastrado na Unidade.
+    // Fallback robusto: considerar Diretor quando o usuário for o diretor cadastrado na unidade.
     // (Há cenários onde o ctxUser não traz role/nivel/unidade corretamente.)
     const pickId = (v) => {
       if (!v) return '';
@@ -1809,7 +1815,7 @@ async function userCanEditDirigenciaForUnidade(user, unidadeId) {
     if (!userId || !mongoose.isValidObjectId(userId)) return false;
 
     try {
-      const unit = await Unidade.findById(target).select('diretor_usuario_id').lean();
+      const unit = await unidadeRepo.findById(target, { select: 'diretor_usuario_id' });
       const diretorId = unit?.diretor_usuario_id ? String(unit.diretor_usuario_id) : '';
       return !!(diretorId && diretorId === String(userId));
     } catch {
@@ -1834,7 +1840,7 @@ app.get('/api/dirigencia/:unidadeId/mandatos/ativos', async (req, res) => {
 
     const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
     const allowed = userCanScopeAll(ctxUser)
-      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))
+      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId, unidadesReadRepoFromReq(req)))
       || (unidadesOptions || []).some(u => String(u?._id || '') === String(unidadeId));
     if (!allowed) return res.status(403).json({ success: false, error: 'Acesso negado' });
 
@@ -1914,7 +1920,7 @@ app.get('/api/dirigencia/:unidadeId/cargos/:roleId/mandatos/historico', async (r
 
     const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
     const allowed = userCanScopeAll(ctxUser)
-      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))
+      || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId, unidadesReadRepoFromReq(req)))
       || (unidadesOptions || []).some(u => String(u?._id || '') === String(unidadeId));
     if (!allowed) return res.status(403).json({ success: false, error: 'Acesso negado' });
 
@@ -2026,7 +2032,7 @@ app.post('/api/dirigencia/:unidadeId/mandatos', parseMandatoCreateBody, async (r
       return res.status(400).json({ success: false, error: 'Unidade inválida' });
     }
 
-    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))) {
+    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId, unidadesReadRepoFromReq(req)))) {
       return res.status(403).json({ success: false, error: 'Sem permissão para editar Dirigência (apenas Master/Admin/Diretor).' });
     }
 
@@ -2225,7 +2231,7 @@ app.post('/api/dirigencia/mandatos/:mandatoId/encerrar', express.json({ limit: '
     const unidadeId = String(mandato?.unidadeId || '').trim();
     if (!unidadeId) return res.status(400).json({ success: false, error: 'Unidade inválida' });
 
-    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId))) {
+    if (!(await userCanEditDirigenciaForUnidade(ctxUser, unidadeId, unidadesReadRepoFromReq(req)))) {
       return res.status(403).json({ success: false, error: 'Sem permissão para editar Dirigência (apenas Master/Admin/Diretor).' });
     }
 
@@ -2578,7 +2584,8 @@ async function resolveHabPublicMailboxMemberKeys(hab) {
   return Array.from(members);
 }
 
-async function ensureHabPublicMailboxForHabitacao(hab, opts = {}) {
+async function ensureHabPublicMailboxForHabitacao(hab, opts = {}, repo) {
+  const unidadeRepo = repo || new UnidadesReadRepository({ unitScope: null });
   const strict = !!opts.strict;
   const habId = String(hab?._id || hab?.id || '').trim();
   const unidadeId = String(hab?.unidade_id || '').trim();
@@ -2605,7 +2612,7 @@ async function ensureHabPublicMailboxForHabitacao(hab, opts = {}) {
   const desiredName = await buildHabPublicMailboxName(hab);
   let unidadeNome = '';
   try {
-    const u = await Unidade.findById(unidadeId).select('nome nomeFantasia razaoSocial codigo').lean();
+    const u = await unidadeRepo.findById(unidadeId, { select: 'nome nomeFantasia razaoSocial codigo' });
     unidadeNome = String(u?.nome || u?.nomeFantasia || u?.razaoSocial || u?.codigo || '').trim();
   } catch { unidadeNome = ''; }
   let mailbox = await CondMsgMailbox.findOne(filter);
@@ -4504,9 +4511,10 @@ app.get('/api/msg/messages/:id([0-9a-fA-F]{24})/historico-acessos.pdf', async (r
     const msgUnidadeId = (msgDoc?.unidade_id ? String(msgDoc.unidade_id) : '');
 
     const masterHeaderUnidadeDoc = isMasterOrAdmin
-      ? await Unidade.findOne({ codigo: 'M0001' })
-        .select('codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal')
-        .lean()
+      ? await unidadesReadRepoFromReq(req).findOne(
+        { codigo: 'M0001' },
+        { select: 'codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal' }
+      )
       : null;
 
     // Regras de logo/unidade:
@@ -4524,9 +4532,10 @@ app.get('/api/msg/messages/:id([0-9a-fA-F]{24})/historico-acessos.pdf', async (r
       }
     }
     const unidadeDoc = masterHeaderUnidadeDoc || ((unidadeId && mongoose.isValidObjectId(unidadeId))
-      ? await Unidade.findById(unidadeId)
-        .select('codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal')
-        .lean()
+      ? await unidadesReadRepoFromReq(req).findById(
+        unidadeId,
+        { select: 'codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal' }
+      )
       : null);
 
     const PDF_TZ = 'America/Sao_Paulo';
@@ -5621,9 +5630,10 @@ app.get('/api/msg/messages/:id([0-9a-fA-F]{24})/imprimir.pdf', async (req, res) 
     const msgUnidadeId = (msgDoc?.unidade_id ? String(msgDoc.unidade_id) : '');
 
     const masterHeaderUnidadeDoc = isMasterOrAdmin
-      ? await Unidade.findOne({ codigo: 'M0001' })
-        .select('codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal')
-        .lean()
+      ? await unidadesReadRepoFromReq(req).findOne(
+        { codigo: 'M0001' },
+        { select: 'codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal' }
+      )
       : null;
 
     // Regras de logo/unidade:
@@ -5642,9 +5652,10 @@ app.get('/api/msg/messages/:id([0-9a-fA-F]{24})/imprimir.pdf', async (req, res) 
     }
 
     const unidadeDoc = masterHeaderUnidadeDoc || ((unidadeId && mongoose.isValidObjectId(unidadeId))
-      ? await Unidade.findById(unidadeId)
-        .select('codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal')
-        .lean()
+      ? await unidadesReadRepoFromReq(req).findById(
+        unidadeId,
+        { select: 'codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal' }
+      )
       : null);
 
     const PDF_TZ = 'America/Sao_Paulo';
@@ -7785,7 +7796,7 @@ app.post('/api/msg/mailboxes', express.json(), async (req, res) => {
     let unidadeNome = String(req.body?.unitName || req.body?.unidade_nome || req.body?.unidadeNome || '').trim();
     if (!unidadeNome) {
       try {
-        const u = await Unidade.findById(unidadeId).select('nome nomeFantasia razaoSocial codigo').lean();
+        const u = await unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'nome nomeFantasia razaoSocial codigo' });
         unidadeNome = String(u?.nome || u?.nomeFantasia || u?.razaoSocial || u?.codigo || '').trim();
       } catch { unidadeNome = ''; }
     }
@@ -9003,7 +9014,7 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
           let unitIcon = '';
           try {
             if (unitKey && mongoose.isValidObjectId(unitKey)) {
-              const unit = await Unidade.findById(unitKey).select('logo').lean().catch(() => null);
+              const unit = await unidadesReadRepoFromReq(req).findById(unitKey, { select: 'logo' }).catch(() => null);
               const raw = String(unit?.logo || '').trim();
               if (raw) {
                 if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) unitIcon = raw;
@@ -12970,7 +12981,7 @@ app.get('/api/habitacoes/busca', async (req, res) => {
       habIds.length ? CondMorador.find({ habitacao_id: { $in: habIds }, ativo: { $ne: false } })
         .select('_id nome data_nascimento inquilino habitacao_id cpf rg email telefone cond_usuario_id pai mae sexo whatsapp responsavel_email responsavel_nome')
         .lean() : [],
-      unitIds.length ? Unidade.find({ _id: { $in: unitIds } }).select(unidadeSelectFields).lean() : [],
+      unitIds.length ? unidadesReadRepoFromReq(req).find({ _id: { $in: unitIds } }, { select: unidadeSelectFields }) : [],
       habIds.length ? CondVagaGaragem.find({ link_type: 'hab', link_id: { $in: habIds } })
         .select('_id nome obs foto link_id ativa')
         .lean() : [],
@@ -14444,7 +14455,7 @@ app.get('/api/habitacoes/:id/reservas', async (req, res) => {
 
     const areaIds = [...new Set(cessaoDocs.map(doc => doc && doc.area_id ? String(doc.area_id) : null).filter(Boolean))];
     const [unidadeDoc, blocoDoc, andarDoc, areaDocs] = await Promise.all([
-      habDoc.unidade_id ? Unidade.findById(habDoc.unidade_id).select('_id codigo nome').lean() : null,
+      habDoc.unidade_id ? unidadesReadRepoFromReq(req).findById(habDoc.unidade_id, { select: '_id codigo nome' }) : null,
       habDoc.bloco_id ? CondBloco.findById(habDoc.bloco_id).select('_id nome codigo').lean() : null,
       habDoc.andar_id ? CondAndar.findById(habDoc.andar_id).select('_id nome codigo').lean() : null,
       areaIds.length ? CondAreaComum.find({ _id: { $in: areaIds } }).select('_id nome codigo').lean() : []
@@ -14597,7 +14608,7 @@ app.get('/api/colaboradores', async (req, res) => {
 
     let unidadeLabel = '';
     try {
-      const unidadeDoc = await Unidade.findById(unidadeId).select('codigo nome').lean();
+      const unidadeDoc = await unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'codigo nome' });
       if(unidadeDoc){
         const codigo = unidadeDoc.codigo ? String(unidadeDoc.codigo).trim() : '';
         const nome = unidadeDoc.nome ? String(unidadeDoc.nome).trim() : '';
@@ -15643,7 +15654,7 @@ app.get('/api/garagens/busca', async (req, res) => {
     if (nome) filtro.nome = { $regex: nome, $options: 'i' };
     const vagas = await CondVagaGaragem.find(filtro).lean();
     const unitIds = [...new Set(vagas.map(v => v.unidade_id).filter(Boolean))];
-    const unidades = unitIds.length ? await Unidade.find({ _id: { $in: unitIds } }).select('_id codigo nome').lean() : [];
+    const unidades = unitIds.length ? await unidadesReadRepoFromReq(req).find({ _id: { $in: unitIds } }, { select: '_id codigo nome' }) : [];
     const unidadeMap = new Map(unidades.map(u => [String(u._id), u]));
     const result = vagas.map(v => ({
       _id: v._id,
@@ -16329,7 +16340,8 @@ function buildTransferMaterialSnapshot(materialDoc, transferDoc, context){
   return base;
 }
 
-async function buildMaterialLogsForArea(areaDoc){
+async function buildMaterialLogsForArea(areaDoc, repo){
+  const unidadeRepo = repo || new UnidadesReadRepository({ unitScope: null });
   if(!areaDoc) return [];
   const areaId = areaDoc._id ? String(areaDoc._id) : '';
   if(!areaId) return [];
@@ -16369,7 +16381,7 @@ async function buildMaterialLogsForArea(areaDoc){
   materialDocs.forEach(doc => { if(doc && doc.unidade_id) unidadeIds.add(String(doc.unidade_id)); });
   if(areaDoc.unidade_id) unidadeIds.add(String(areaDoc.unidade_id));
 
-  const unidadeDocs = unidadeIds.size ? await Unidade.find({ _id: { $in: Array.from(unidadeIds) } }).lean() : [];
+  const unidadeDocs = unidadeIds.size ? await unidadeRepo.find({ _id: { $in: Array.from(unidadeIds) } }) : [];
   const unidadeMap = new Map();
   unidadeDocs.forEach(doc => {
     const payload = buildUnidadePayload(doc);
@@ -17450,7 +17462,7 @@ app.get('/api/areas-comuns/busca', async (req, res) => {
     const unidadeSelectFields = '_id codigo nome razaoSocial cnpj cpf pessoaTipo inscricaoEstadual inscricaoMunicipal cnaePrincipal cnaeSecundarios regimeTributario naturezaJuridica tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal diretor_usuario_id pixChave tipoPix banco agencia contaCorrente is_principal subunidade unidade_principal_id dataAbertura';
 
     const [unidades, materiaisVinculados] = await Promise.all([
-      unitIds.length ? Unidade.find({ _id: { $in: unitIds } }).select(unidadeSelectFields).lean() : [],
+      unitIds.length ? unidadesReadRepoFromReq(req).find({ _id: { $in: unitIds } }, { select: unidadeSelectFields }) : [],
       areaIds.length ? CondBemMaterial.find({ 'vinculo_area.area_id': { $in: areaIds } })
         .select('_id unidade_id tipo natureza_id serie data_aquisicao marca modelo num_serie peso cor descricao foto anexo vinculo_area ativa createdAt updatedAt')
         .lean() : []
@@ -17606,9 +17618,10 @@ app.get('/api/areas-comuns/lista', async (req, res) => {
     const unidadeIds = [...new Set(docs.map(doc => doc && doc.unidade_id ? String(doc.unidade_id) : null).filter(Boolean))];
     const [unidadeDocs, cessaoDocs] = await Promise.all([
       unidadeIds.length
-        ? Unidade.find({ _id: { $in: unidadeIds } })
-            .select('_id codigo nome razaoSocial endereco telefoneFixo telefoneCelular logo pixChave tipoPix cnpj cpf pessoaTipo cidade estado')
-            .lean()
+        ? unidadesReadRepoFromReq(req).find(
+            { _id: { $in: unidadeIds } },
+            { select: '_id codigo nome razaoSocial endereco telefoneFixo telefoneCelular logo pixChave tipoPix cnpj cpf pessoaTipo cidade estado' }
+          )
         : [],
       areaIds.length
         ? CondAreaCessao.find({ area_id: { $in: areaIds } })
@@ -17687,10 +17700,10 @@ app.get('/api/areas-comuns/:id/materiais/contexto', async (req, res) => {
     const areaDoc = await CondAreaComum.findById(areaIdParam).lean();
     if(!areaDoc) return res.status(404).json({ error: 'Área comum não encontrada' });
     if(secao === 'logs'){
-      const logs = await buildMaterialLogsForArea(areaDoc);
+      const logs = await buildMaterialLogsForArea(areaDoc, unidadesReadRepoFromReq(req));
       return res.json({ logs });
     }
-    const unidadeDoc = areaDoc.unidade_id ? await Unidade.findById(areaDoc.unidade_id).lean() : null;
+    const unidadeDoc = areaDoc.unidade_id ? await unidadesReadRepoFromReq(req).findById(areaDoc.unidade_id) : null;
     const unidadePayload = unidadeDoc ? buildUnidadePayload(unidadeDoc) : null;
     const areaPayload = buildAreaContextPayload(areaDoc, unidadePayload);
 
@@ -17979,7 +17992,7 @@ app.post('/api/areas-comuns/:id/materiais/recebimentos', express.json({ limit: '
     const unidadeId = transferDoc.unidade_id
       || (destinoAreaDoc.unidade_id ? String(destinoAreaDoc.unidade_id) : '')
       || (materialDoc.unidade_id ? String(materialDoc.unidade_id) : '');
-    const unidadeDocPromise = unidadeId ? Unidade.findById(unidadeId).lean() : Promise.resolve(null);
+    const unidadeDocPromise = unidadeId ? unidadesReadRepoFromReq(req).findById(unidadeId) : Promise.resolve(null);
 
     let updatedMaterialDoc = materialDoc;
     if(isApprove){
@@ -18461,7 +18474,7 @@ app.get('/api/materiais/naturezas/busca', async (req, res) => {
     if(nome){ filtro.nome = { $regex: nome, $options: 'i' }; }
     const list = await CondNatMaterial.find(filtro).lean();
     const unitIds = [...new Set(list.map(a => a.unidade_id).filter(Boolean))];
-    const unidades = unitIds.length ? await Unidade.find({ _id: { $in: unitIds } }).select('_id codigo nome').lean() : [];
+    const unidades = unitIds.length ? await unidadesReadRepoFromReq(req).find({ _id: { $in: unitIds } }, { select: '_id codigo nome' }) : [];
     const unidadeMap = new Map(unidades.map(u => [String(u._id), u]));
     const result = list.map(n => ({
       _id: n._id,
@@ -19056,7 +19069,7 @@ app.get('/api/materiais/busca', async (req, res) => {
       }
     });
     const [unidades, naturezas, areas] = await Promise.all([
-      unidadeIds.size ? Unidade.find({ _id: { $in: Array.from(unidadeIds) } }).select('_id codigo nome').lean() : [],
+      unidadeIds.size ? unidadesReadRepoFromReq(req).find({ _id: { $in: Array.from(unidadeIds) } }, { select: '_id codigo nome' }) : [],
       naturezaIds.size ? CondNatMaterial.find({ _id: { $in: Array.from(naturezaIds) } }).select('_id nome tipo unidade_id').lean() : [],
       areaIds.size ? CondAreaComum.find({ _id: { $in: Array.from(areaIds) } }).select('_id nome unidade_id').lean() : []
     ]);
@@ -19314,9 +19327,10 @@ app.get('/api/public/materiais/:id', async (req, res) => {
 
     const [naturezaDoc, unidadeDoc, areaDoc] = await Promise.all([
       naturezaId ? CondNatMaterial.findById(naturezaId).select('_id nome tipo').lean() : Promise.resolve(null),
-      unidadeId ? Unidade.findById(unidadeId)
-        .select('_id codigo nome razaoSocial cnpj endereco telefoneFixo telefoneCelular logo tipoLogradouro logradouro numero complemento bairro cep cidade estado')
-        .lean() : Promise.resolve(null),
+      unidadeId ? unidadesReadRepoFromReq(req).findById(
+        unidadeId,
+        { select: '_id codigo nome razaoSocial cnpj endereco telefoneFixo telefoneCelular logo tipoLogradouro logradouro numero complemento bairro cep cidade estado' }
+      ) : Promise.resolve(null),
       areaId ? CondAreaComum.findById(areaId).select('_id nome capacidade unidade_id').lean() : Promise.resolve(null)
     ]);
 
@@ -19427,7 +19441,7 @@ app.post('/api/habitacoes/backfill-caixa-publica', express.json({ limit: '200kb'
           link_id: habId
         });
 
-        await ensureHabPublicMailboxForHabitacao(hab, { strict: false });
+        await ensureHabPublicMailboxForHabitacao(hab, { strict: false }, unidadesReadRepoFromReq(req));
 
         if (existed) updated++; else created++;
       } catch (e) {
@@ -19557,7 +19571,7 @@ app.get('/api/habitacoes/:id', async (req, res) => {
     if(!h) return res.status(404).json({ error:'Habitação não encontrada' });
     // Enriquecer rótulos mínimos e carregar moradores
     const [unidade, bloco, andar, proprietario, moradores] = await Promise.all([
-      h.unidade_id ? Unidade.findById(h.unidade_id).select('_id codigo nome').lean() : null,
+      h.unidade_id ? unidadesReadRepoFromReq(req).findById(h.unidade_id, { select: '_id codigo nome' }) : null,
       h.bloco_id ? CondBloco.findById(h.bloco_id).select('_id nome').lean() : null,
       h.andar_id ? CondAndar.findById(h.andar_id).select('_id nome').lean() : null,
       h.proprietario_id ? CondProprietario.findById(h.proprietario_id).select('_id nome tipo cpf cnpj').lean() : null,
@@ -20455,15 +20469,15 @@ const renderPlaceholder = (req, res, title, description) => {
 // Helpers
 async function listarUnidadesParaUsuario(user){
   try{
-    if(!Unidade) return [];
+    const repo = new UnidadesReadRepository({ unitScope: null });
     const unidadeSelectFields = '_id codigo nome razaoSocial cnpj cpf pessoaTipo inscricaoEstadual inscricaoMunicipal cnaePrincipal cnaeSecundarios regimeTributario naturezaJuridica tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal diretor_usuario_id pixChave tipoPix banco agencia contaCorrente is_principal subunidade unidade_principal_id dataAbertura';
     if(userCanScopeAll(user)){
-      return await Unidade.find({ ativa: { $ne: false } }).select(unidadeSelectFields).lean();
+      return await repo.find({ ativa: { $ne: false } }, { select: unidadeSelectFields });
     }
     if(user && (user.matriz_unidade_id || user.unidade_principal_id || user.unidade_id)){
       const matrizRef = user.matriz_unidade_id || user.unidade_principal_id || user.unidade_id;
       const matrizId = (matrizRef && typeof matrizRef === 'object') ? (matrizRef._id || matrizRef.id || matrizRef) : matrizRef;
-      return await Unidade.find({ $or: [ { _id: matrizId }, { unidade_principal_id: matrizId } ] }).select(unidadeSelectFields).lean();
+      return await repo.find({ $or: [ { _id: matrizId }, { unidade_principal_id: matrizId } ] }, { select: unidadeSelectFields });
     }
     // fallback: lista vazia
     return [];
@@ -21335,12 +21349,12 @@ app.get('/assembleias', async (req, res, next) => {
       let unitIdForQuery = String(filtro.unidade_id || '').trim();
 
       // Compat: algumas telas antigas/fluxos podem passar o código (ex: M0005) no lugar do ObjectId.
-      // Se não for ObjectId, tenta resolver por Unidade.codigo.
+      // Se não for ObjectId, tenta resolver por codigo da unidade.
       if (unitIdForQuery && !mongoose.isValidObjectId(unitIdForQuery)) {
         try {
           if (canQueryDb && Unidade) {
             const rx = new RegExp(`^${escapeRegExp(unitIdForQuery)}$`, 'i');
-            const u = await Unidade.findOne({ codigo: rx }).select('_id').lean();
+            const u = await unidadesReadRepoFromReq(req).findOne({ codigo: rx }, { select: '_id' });
             if (u && u._id) unitIdForQuery = String(u._id);
           }
         } catch {
@@ -22801,9 +22815,10 @@ app.get('/assembleias/:id/edital', async (req, res, next) => {
     let condominio = { nome: '', cnpj: '', endereco: '' };
     if (unidadeId) {
       try {
-        const u = await Unidade.findById(unidadeId)
-          .select('nome cnpj endereco tipoLogradouro logradouro numero complemento bairro cep cidade estado')
-          .lean();
+        const u = await unidadesReadRepoFromReq(req).findById(
+          unidadeId,
+          { select: 'nome cnpj endereco tipoLogradouro logradouro numero complemento bairro cep cidade estado' }
+        );
         if (u) {
           const enderecoLinha = String(u?.endereco || '').trim() || buildEnderecoLinha(u);
           condominio = {
@@ -23129,7 +23144,7 @@ app.get('/administracao/assembleia/execucao', async (req, res) => {
       resolvedUnidadeId = unidadeId;
 
       if (unidadeId && mongoose.isValidObjectId(unidadeId)) {
-        const u = await Unidade.findById(unidadeId).select('nome razaoSocial codigo').lean();
+        const u = await unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'nome razaoSocial codigo' });
         const nome = String(u?.nome || u?.razaoSocial || u?.codigo || '').trim();
         if (nome) assembleia = { ...assembleia, condominioNome: nome };
       }
@@ -23326,8 +23341,11 @@ app.get('/administracao/dirigencia', async (req, res) => {
         return String(v).trim();
       })();
       if (!userId || !mongoose.isValidObjectId(userId)) return false;
-      const exists = await Unidade.exists({ diretor_usuario_id: new mongoose.Types.ObjectId(userId) });
-      return !!exists;
+      const existsDoc = await unidadesReadRepoFromReq(req).findOne(
+        { diretor_usuario_id: new mongoose.Types.ObjectId(userId) },
+        { select: '_id' }
+      );
+      return !!existsDoc;
     } catch {
       return false;
     }
@@ -23709,7 +23727,7 @@ app.get('/api/dirigencia/_debug/me', async (req, res) => {
     const unitId = String(getUserUnidadeId(ctxUser) || '').trim();
     const targetUnitId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || unitId || '').trim();
     const canEditForTarget = targetUnitId && mongoose.isValidObjectId(targetUnitId)
-      ? await userCanEditDirigenciaForUnidade(ctxUser, targetUnitId)
+      ? await userCanEditDirigenciaForUnidade(ctxUser, targetUnitId, unidadesReadRepoFromReq(req))
       : false;
     const snapshot = {
       role: String(ctxUser?.role || ''),
@@ -24140,7 +24158,7 @@ app.get('/api/comunicados/restricoes/habitacoes', async (req, res) => {
     const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
     if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
 
-    const unidadeDoc = await Unidade.findById(unidadeId).select('nome').lean();
+    const unidadeDoc = await unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'nome' });
     const condominioNome = String(unidadeDoc?.nome || '').trim();
 
     const habs = await CondHabitacao.find({ unidade_id: unidadeId })
@@ -24527,7 +24545,7 @@ app.get('/api/enquetes/restricoes/habitacoes', async (req, res) => {
     const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
     if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
 
-    const unidadeDoc = await Unidade.findById(unidadeId).select('nome').lean();
+    const unidadeDoc = await unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'nome' });
     const condominioNome = String(unidadeDoc?.nome || '').trim();
 
     const habs = await CondHabitacao.find({ unidade_id: unidadeId })
@@ -25028,14 +25046,16 @@ app.get('/api/enquetes/:id([0-9a-fA-F]{24})/relatorio.pdf', async (req, res) => 
     if (!enq) return res.status(404).end('Enquete não encontrada');
 
     const masterHeaderUnidadeDoc = scopeAll
-      ? await Unidade.findOne({ codigo: 'M0001' })
-        .select('codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal')
-        .lean()
+      ? await unidadesReadRepoFromReq(req).findOne(
+        { codigo: 'M0001' },
+        { select: 'codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal' }
+      )
       : null;
 
-    const unidadeDoc = masterHeaderUnidadeDoc || (await Unidade.findById(unidadeId)
-      .select('codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal')
-      .lean());
+    const unidadeDoc = masterHeaderUnidadeDoc || (await unidadesReadRepoFromReq(req).findById(
+      unidadeId,
+      { select: 'codigo nome cnpj logo tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal' }
+    ));
 
     const now = new Date();
     const st = calcStatus(enq, now);

@@ -9,8 +9,8 @@ export class UnidadesRepository extends BaseRepository {
 
   getUnidadeModel() {
     return resolveModel({
-      name: Unidade.modelName || 'Unidade',
-      schema: Unidade.schema,
+      name: Unidade['modelName'] || 'Unidade',
+      schema: Unidade['schema'],
       unitScope: this.getUnitScope(),
     });
   }

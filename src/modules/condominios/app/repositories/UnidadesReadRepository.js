@@ -9,10 +9,40 @@ export class UnidadesReadRepository extends BaseRepository {
 
   getUnidadeModel() {
     return resolveModel({
-      name: Unidade.modelName,
-      schema: Unidade.schema,
+      name: Unidade['modelName'],
+      schema: Unidade['schema'],
       unitScope: this.getUnitScope(),
     });
+  }
+
+  async findById(id, { select } = {}) {
+    const UnidadeModel = this.getUnidadeModel();
+    const query = UnidadeModel.findById(id);
+    if (select) query.select(select);
+    return query.lean();
+  }
+
+  async findOne(filter, { select } = {}) {
+    const UnidadeModel = this.getUnidadeModel();
+    const query = UnidadeModel.findOne(filter || {});
+    if (select) query.select(select);
+    return query.lean();
+  }
+
+  async findManyByIds(ids, { select } = {}) {
+    const safeIds = Array.isArray(ids) ? ids.filter(Boolean) : [];
+    if (!safeIds.length) return [];
+    const UnidadeModel = this.getUnidadeModel();
+    const query = UnidadeModel.find({ _id: { $in: safeIds } });
+    if (select) query.select(select);
+    return query.lean();
+  }
+
+  async find(filter, { select } = {}) {
+    const UnidadeModel = this.getUnidadeModel();
+    const query = UnidadeModel.find(filter || {});
+    if (select) query.select(select);
+    return query.lean();
   }
 
   async findAtivas({ selectFields } = {}) {
