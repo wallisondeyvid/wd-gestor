@@ -1,6 +1,5 @@
-import CondAndarModel from '#core/models/cond_andar.js';
+import { AndaresRepository } from '#modules/condominios/app/repositories/AndaresRepository.js';
 import { BlocosRepository } from '#modules/condominios/app/repositories/BlocosRepository.js';
-import { resolveModel } from '#shared/db/resolveModel.js';
 
 export async function listarBlocosService({
   req,
@@ -190,11 +189,7 @@ export async function listarBlocosRelacionadosService({
   CondAndar
 }) {
   const repo = new BlocosRepository({ unitScope: req.unitScope });
-  const CondAndarResolved = resolveModel({
-    name: (CondAndar && CondAndar.modelName) || CondAndarModel.modelName || 'CondAndar',
-    schema: (CondAndar && CondAndar.schema) || CondAndarModel.schema,
-    unitScope: req.unitScope,
-  });
+  const andaresRepo = new AndaresRepository({ unitScope: req.unitScope });
 
   if (mongoose.connection.readyState !== 1) {
     const err = new Error('DB indisponível');
@@ -218,10 +213,10 @@ export async function listarBlocosRelacionadosService({
   }
 
   if (andarId && mongoose.isValidObjectId(andarId)) {
-    const andar = await CondAndarResolved.findById(andarId).select('unidade_id').lean();
-    if (!andar?.unidade_id) return [];
-    if (q.unidade_id && String(q.unidade_id) !== String(andar.unidade_id)) return [];
-    q.unidade_id = andar.unidade_id;
+    const unidadeId = await andaresRepo.getUnidadeIdByAndarId(andarId);
+    if (!unidadeId) return [];
+    if (q.unidade_id && String(q.unidade_id) !== String(unidadeId)) return [];
+    q.unidade_id = unidadeId;
   }
 
   const blocos = await repo.findMany({

@@ -1,9 +1,13 @@
+import { AndaresRepository } from '#modules/condominios/app/repositories/AndaresRepository.js';
+import { BlocosRepository } from '#modules/condominios/app/repositories/BlocosRepository.js';
+
 export async function listarAndaresService({
   req,
   mongoose,
   listarUnidadesParaUsuario,
   CondAndar
 }) {
+  const repo = new AndaresRepository({ unitScope: req.unitScope });
   const unidade = req.query.unidade || req.query.unidade_id || '';
 
   if (unidade && !mongoose.isValidObjectId(String(unidade))) {
@@ -40,7 +44,11 @@ export async function listarAndaresService({
     } catch(_e){ }
   }
 
-  const andares = await CondAndar.find(q).select('_id nome numero unidade_id ordem').sort({ ordem: 1, numero: 1, nome: 1 }).lean();
+  const andares = await repo.findMany({
+    filter: q,
+    selectFields: '_id nome numero unidade_id ordem',
+    sort: { ordem: 1, numero: 1, nome: 1 },
+  });
   return andares || [];
 }
 
@@ -49,6 +57,7 @@ export async function obterAndarPorIdService({
   mongoose,
   CondAndar
 }) {
+  const repo = new AndaresRepository({ unitScope: req.unitScope });
   const id = String(req.params?.id || '').trim();
   if (!id || !mongoose.isValidObjectId(id)) {
     const err = new Error('Identificador inválido');
@@ -65,7 +74,7 @@ export async function obterAndarPorIdService({
     throw err;
   }
 
-  const andar = await CondAndar.findById(id).select('_id nome numero unidade_id ordem').lean();
+  const andar = await repo.findById({ id, selectFields: '_id nome numero unidade_id ordem' });
   if (!andar) {
     const err = new Error('Andar não encontrado');
     err.__httpStatus = 404;
@@ -82,6 +91,8 @@ export async function listarAndaresRelacionadosService({
   CondAndar,
   CondBloco
 }) {
+  const repo = new AndaresRepository({ unitScope: req.unitScope });
+  const blocosRepo = new BlocosRepository({ unitScope: req.unitScope });
   if (mongoose.connection.readyState !== 1) {
     const err = new Error('DB indisponível');
     err.__httpStatus = 503;
@@ -100,16 +111,20 @@ export async function listarAndaresRelacionadosService({
   }
 
   if (blocoId && mongoose.isValidObjectId(blocoId)) {
-    const bloco = await CondBloco.findById(blocoId).select('unidade_id').lean();
-    if (!bloco?.unidade_id) return [];
-    if (q.unidade_id && String(q.unidade_id) !== String(bloco.unidade_id)) return [];
-    q.unidade_id = bloco.unidade_id;
+    const unidadeId = await blocosRepo.getUnidadeIdByBlocoId(blocoId);
+    if (!unidadeId) return [];
+    if (q.unidade_id && String(q.unidade_id) !== String(unidadeId)) return [];
+    q.unidade_id = unidadeId;
   }
 
   if (andarId && mongoose.isValidObjectId(andarId)) {
     q._id = andarId;
   }
 
-  const andares = await CondAndar.find(q).select('_id nome numero unidade_id ordem').sort({ ordem: 1, numero: 1, nome: 1 }).lean();
+  const andares = await repo.findMany({
+    filter: q,
+    selectFields: '_id nome numero unidade_id ordem',
+    sort: { ordem: 1, numero: 1, nome: 1 },
+  });
   return andares || [];
 }

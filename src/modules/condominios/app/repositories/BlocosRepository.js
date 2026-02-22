@@ -51,4 +51,16 @@ export class BlocosRepository extends BaseRepository {
     const BlocoModel = this.getBlocoModel();
     return BlocoModel.findByIdAndDelete(id);
   }
+
+  async getUnidadeIdByBlocoId(blocoId) {
+    if (!blocoId) return null;
+
+    const BlocoModel = this.getBlocoModel();
+    const bloco = await BlocoModel
+      .findById(blocoId)
+      .select('unidade_id')
+      .lean();
+
+    return bloco?.unidade_id || null;
+  }
 }
