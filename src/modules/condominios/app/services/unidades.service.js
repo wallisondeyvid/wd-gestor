@@ -1,3 +1,6 @@
+import { BlocosRepository } from '#modules/condominios/app/repositories/BlocosRepository.js';
+import { AndaresRepository } from '#modules/condominios/app/repositories/AndaresRepository.js';
+
 export async function listarUnidadesService({
   req,
   mongoose,
@@ -84,6 +87,9 @@ export async function listarUnidadesRelacionadasService({
   CondAndar,
   buildUnidadePayload
 }) {
+  const blocosRepo = new BlocosRepository({ unitScope: req.unitScope });
+  const andaresRepo = new AndaresRepository({ unitScope: req.unitScope });
+
   if (mongoose.connection.readyState !== 1) {
     const err = new Error('DB indisponível');
     err.__httpStatus = 503;
@@ -103,13 +109,13 @@ export async function listarUnidadesRelacionadasService({
   }
 
   if (blocoId && mongoose.isValidObjectId(blocoId)) {
-    const bloco = await CondBloco.findById(blocoId).select('unidade_id').lean();
-    if (bloco?.unidade_id) unidadeIds.push(String(bloco.unidade_id));
+    const unidadeId = await blocosRepo.getUnidadeIdByBlocoId(blocoId);
+    if (unidadeId) unidadeIds.push(String(unidadeId));
   }
 
   if (andarId && mongoose.isValidObjectId(andarId)) {
-    const andar = await CondAndar.findById(andarId).select('unidade_id').lean();
-    if (andar?.unidade_id) unidadeIds.push(String(andar.unidade_id));
+    const unidadeId = await andaresRepo.getUnidadeIdByAndarId(andarId);
+    if (unidadeId) unidadeIds.push(String(unidadeId));
   }
 
   let filtro = {};
