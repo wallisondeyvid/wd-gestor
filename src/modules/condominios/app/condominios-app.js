@@ -11,7 +11,6 @@ import { DocumentosPort } from '#shared/ports/documentos.port.js';
 // Reutiliza API de usuário do módulo Gestor (perfil/foto/senha)
 import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
 import { excluirUsuario as gestorExcluirUsuario } from '#modules/gestor/app/controllers/userController.js';
-import Unidade from '#core/models/unidade.js';
 import User from '#core/models/user.js'; // apenas leitura (Gestor)
 import CondUsuario from '#core/models/cond_usuario.js';
 import Funcionario from '#core/models/Funcionario.js';
@@ -1154,7 +1153,6 @@ async function handleGetUnidadesV1(req, res, _next) {
 
 setHandleGetUnidadesV2Context({
   mongoose,
-  Unidade,
   CondBloco,
   CondAndar,
   getCtxUser,
@@ -1180,7 +1178,6 @@ async function handleGetUnidadeByIdV1(req, res, _next) {
     const payload = await obterUnidadePorIdService({
       req,
       mongoose,
-      Unidade,
       buildUnidadePayload
     });
     return res.json(payload);
@@ -1206,7 +1203,6 @@ async function handleGetUnidadesRelacionadasV1(req, res, _next) {
     const payload = await listarUnidadesRelacionadasService({
       req,
       mongoose,
-      Unidade,
       CondBloco,
       CondAndar,
       buildUnidadePayload

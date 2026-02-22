@@ -1,4 +1,4 @@
-import Unidade from '#core/models/unidade.js';
+import Unidade from '#models/unidade.js';
 import { BaseRepository } from '#shared/repositories/BaseRepository.js';
 import { resolveModel } from '#shared/db/resolveModel.js';
 
