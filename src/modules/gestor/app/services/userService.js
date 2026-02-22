@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { sendMail } from '#core/mail/mailer.js';
 import { welcomePassword } from '#modules/gestor/app/mail/templates/welcomePassword.js';
-import User from '#core/models/user.js';
+import { UserRepository } from '#modules/gestor/app/repositories/UserRepository.js';
 
 function resolveAppUrl() {
   const vercelDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL || '';
@@ -29,9 +29,10 @@ function generateTempPassword() {
 }
 
 export async function createUserAndSendPassword({ nome, email, cpf, role, unidade_id, funcionario_id, senha }) {
+  const repo = new UserRepository({ unitScope: arguments?.[0]?.req?.unitScope || { type: 'global', unidadeId: null } });
   const tempPassword = senha || generateTempPassword();
   const hash = await bcrypt.hash(tempPassword, 10);
-  const user = await User.create({ nome, email, cpf, role: role || 'user', unidade_id, funcionario_id, senha: hash, primeiro_acesso: true, senha_provisoria: true, ativo: true });
+  const user = await repo.create({ nome, email, cpf, role: role || 'user', unidade_id, funcionario_id, senha: hash, primeiro_acesso: true, senha_provisoria: true, ativo: true });
   const appUrl = resolveAppUrl();
   const { html, text } = welcomePassword({ nome, email, senha: tempPassword, appName: process.env.APP_NAME || 'WD Gestor', appUrl });
   console.log('[USER SERVICE][createUserAndSendPassword] Preparando envio boas-vindas', { email, appUrl });
