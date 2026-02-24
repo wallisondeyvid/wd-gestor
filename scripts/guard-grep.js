@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 
-const [pattern, targetPath, messageOnFail] = process.argv.slice(2);
+const [pattern, targetPath, messageOnFail, ...allowedFilesRaw] = process.argv.slice(2);
 
 if (!pattern || !targetPath || !messageOnFail) {
   console.error('Uso: node scripts/guard-grep.js "<pattern>" "<path>" "<messageOnFail>"');
@@ -19,9 +19,29 @@ if (result.error) {
 
 const stdout = String(result.stdout || '').trim();
 const stderr = String(result.stderr || '').trim();
+const allowedFiles = new Set(
+  allowedFilesRaw
+    .map(item => String(item || '').trim())
+    .filter(Boolean)
+    .map(item => item.replace(/\\/g, '/'))
+);
+
+const lines = stdout ? stdout.split(/\r?\n/).filter(Boolean) : [];
+const blockedLines = lines.filter(line => {
+  const filePart = String(line).split(':', 1)[0].replace(/\\/g, '/');
+  return !allowedFiles.has(filePart);
+});
 
 if (result.status === 0) {
-  if (stdout) process.stdout.write(`${stdout}\n`);
+  if (blockedLines.length) {
+    process.stdout.write(`${blockedLines.join('\n')}\n`);
+    console.log(`❌ ${messageOnFail}`);
+    process.exit(1);
+  }
+  if (lines.length) {
+    console.log('✅ Guard OK (somente exceções permitidas)');
+    process.exit(0);
+  }
   console.log(`❌ ${messageOnFail}`);
   process.exit(1);
 }
