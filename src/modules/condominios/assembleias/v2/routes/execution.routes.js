@@ -1,10 +1,10 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import CondAssembleia from '#core/models/cond_assembleia.js';
-import CondUsuario from '#core/models/cond_usuario.js';
-import CondMorador from '#core/models/cond_morador.js';
-import CondHabitacao from '#core/models/cond_habitacao.js';
-import CondProprietario from '#core/models/cond_proprietario.js';
+import CondAssembleia from '#models/cond_assembleia.js';
+import CondUsuario from '#models/cond_usuario.js';
+import CondMorador from '#models/cond_morador.js';
+import CondHabitacao from '#models/cond_habitacao.js';
+import CondProprietario from '#models/cond_proprietario.js';
 import executionV1, {
   mustAuth,
   mustControl,
