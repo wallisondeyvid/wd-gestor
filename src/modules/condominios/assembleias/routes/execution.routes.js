@@ -3,12 +3,12 @@ import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 
-import CondAssembleia from '#core/models/cond_assembleia.js';
-import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
-import CondUsuario from '#core/models/cond_usuario.js';
-import CondMorador from '#core/models/cond_morador.js';
-import CondHabitacao from '#core/models/cond_habitacao.js';
-import CondProprietario from '#core/models/cond_proprietario.js';
+import CondAssembleia from '#models/cond_assembleia.js';
+import CondAssembleiaExecution from '#models/cond_assembleia_execution.js';
+import CondUsuario from '#models/cond_usuario.js';
+import CondMorador from '#models/cond_morador.js';
+import CondHabitacao from '#models/cond_habitacao.js';
+import CondProprietario from '#models/cond_proprietario.js';
 import { writeAuditLog } from '#modules/condominios/app/lib/auditLog.js';
 import { verifyPortalPassword } from '#modules/portal-morador/lib/portalAuth.js';
 import { executionCloseLogic } from '#modules/condominios/assembleias/shared/executionClose.logic.js';
