@@ -1,4 +1,4 @@
-import CondAndar from '#core/models/cond_andar.js';
+import CondAndar from '#models/cond_andar.js';
 import { BaseRepository } from '#shared/repositories/BaseRepository.js';
 import { resolveModel } from '#shared/db/resolveModel.js';
 
