@@ -45,11 +45,11 @@ router.get(['/ordinaria/nova','/extraordinaria/nova'], requireEscalasAuth, rende
 // ====== Rotas de Pesquisa de Escalas ======
 async function getUnidadeModel(){
   try {
-    const mod = await import('#core/models/unidade.js');
+    const mod = await import('#models/unidade.js');
     return mod.default || mod.Unidade || mod;
   } catch (e1) {
     try {
-      const mod2 = await import('#core/models/unidade.js');
+      const mod2 = await import('#models/unidade.js');
       return mod2.default || mod2.Unidade || mod2;
     } catch (e2) {
       console.error('[escalaNova][pesquisar] Falha carregando Unidade:', e1?.message||e1, e2?.message||e2);

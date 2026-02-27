@@ -3,12 +3,12 @@ import { Router } from 'express';
 // Carrega modelo de Unidade de forma lazy para evitar custos se não usado
 async function getUnidadeModel(){
   try {
-    const mod = await import('#core/models/unidade.js');
+    const mod = await import('#models/unidade.js');
     return mod.default || mod.Unidade || mod;
   } catch (e1) {
     // Fallback quando o alias #core não está resolvendo neste módulo (ambiente sem path aliases)
     try {
-      const mod2 = await import('#core/models/unidade.js');
+      const mod2 = await import('#models/unidade.js');
       return mod2.default || mod2.Unidade || mod2;
     } catch (e2) {
       // Fallback final: tentar caminho padrão do projeto em /models/unidade.js
