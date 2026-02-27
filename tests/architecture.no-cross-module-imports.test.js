@@ -1,10 +1,36 @@
-import { test } from 'node:test';
+import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 
-test('Guardrail estrutural: sem imports cruzados entre módulos fora da allowlist', () => {
+const SHARED_TMP_PREFIX = 'tmp_guardrail_shared_test';
+
+async function cleanupSharedGuardrailTmpFiles() {
+  const root = process.cwd();
+  const sharedRoot = path.resolve(root, 'src', 'shared');
+
+  let entries;
+  try {
+    entries = await fsPromises.readdir(sharedRoot, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  const targets = entries
+    .filter((entry) => entry.isFile() && entry.name.startsWith(SHARED_TMP_PREFIX) && entry.name.endsWith('.js'))
+    .map((entry) => fsPromises.rm(path.resolve(sharedRoot, entry.name), { force: true }));
+
+  await Promise.all(targets);
+}
+
+afterEach(async () => {
+  await cleanupSharedGuardrailTmpFiles();
+});
+
+test('Guardrail estrutural: sem imports cruzados entre mÃ³dulos fora da allowlist', async () => {
+  await cleanupSharedGuardrailTmpFiles();
   const scriptPath = path.resolve(process.cwd(), 'scripts', 'guardrails', 'verify-no-cross-module-imports.js');
 
   const result = spawnSync(process.execPath, [scriptPath], {
@@ -114,20 +140,20 @@ test('Guardrail falha em uso de #legacy-services fora de scripts/docs (E2E)', ()
   }
 });
 
-test('Guardrail falha quando src/shared importa #modules/* (E2E)', () => {
+test('Guardrail falha quando src/shared importa #modules/* (E2E)', async () => {
   const root = process.cwd();
   const sharedRoot = path.resolve(root, 'src', 'shared');
   const scriptPath = path.resolve(root, 'scripts', 'guardrails', 'verify-no-cross-module-imports.js');
-  const tempFileRelative = 'src/shared/tmp_guardrail_shared_test.js';
+  const tempFileName = `${SHARED_TMP_PREFIX}.${Date.now()}.js`;
+  const tempFileRelative = `src/shared/${tempFileName}`;
   const tempFilePath = path.resolve(root, tempFileRelative);
   const forbiddenImport = "import x from '#modules/gestor/app/routes/userApi.js';\n";
 
   try {
-    if (!fs.existsSync(sharedRoot)) {
-      fs.mkdirSync(sharedRoot, { recursive: true });
-    }
+    await fsPromises.mkdir(sharedRoot, { recursive: true });
+    await fsPromises.rm(tempFilePath, { force: true });
 
-    fs.writeFileSync(tempFilePath, forbiddenImport, 'utf8');
+    await fsPromises.writeFile(tempFilePath, forbiddenImport, 'utf8');
 
     const result = spawnSync(process.execPath, [scriptPath], {
       cwd: root,
@@ -142,9 +168,7 @@ test('Guardrail falha quando src/shared importa #modules/* (E2E)', () => {
     assert.match(output, new RegExp(`${tempFileRelative.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:\\d+`), 'Saída deve conter caminho do arquivo temporário com linha (:n)');
   } finally {
     try {
-      if (fs.existsSync(tempFilePath)) {
-        fs.unlinkSync(tempFilePath);
-      }
+      await fsPromises.rm(tempFilePath, { force: true });
     } catch {}
   }
 });
