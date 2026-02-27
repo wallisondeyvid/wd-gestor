@@ -11,27 +11,27 @@ import { DocumentosPort } from '#shared/ports/documentos.port.js';
 // Reutiliza API de usuário do módulo Gestor (perfil/foto/senha)
 import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
 import { excluirUsuario as gestorExcluirUsuario } from '#modules/gestor/app/controllers/userController.js';
-import User from '#core/models/user.js'; // apenas leitura (Gestor)
-import CondUsuario from '#core/models/cond_usuario.js';
-import Funcionario from '#core/models/Funcionario.js';
+import User from '#models/user.js'; // apenas leitura (Gestor)
+import CondUsuario from '#models/cond_usuario.js';
+import Funcionario from '#models/Funcionario.js';
 // Models do módulo Condomínios
-import CondHabitacao from '#core/models/cond_habitacao.js';
-import CondMorador from '#core/models/cond_morador.js';
-import CondProprietario from '#core/models/cond_proprietario.js';
-import CondBloco from '#core/models/cond_bloco.js';
-import CondAndar from '#core/models/cond_andar.js';
-import CondVagaGaragem from '#core/models/cond_vaga_garagem.js';
-import CondAreaComum from '#core/models/cond_area_comum.js';
-import CondAreaCessao from '#core/models/cond_area_cessao.js';
-import CondNatMaterial from '#core/models/cond_nat_material.js';
-import CondBemMaterial from '#core/models/cond_bem_material.js';
-import CondQRCodeMaterial from '#core/models/cond_qrcode_material.js';
-import CondMaterialTransferencia from '#core/models/cond_material_transferencia.js';
-import CondVisitante from '#core/models/cond_visitante.js';
-import CondAcessoMorador from '#core/models/cond_acesso_morador.js';
+import CondHabitacao from '#models/cond_habitacao.js';
+import CondMorador from '#models/cond_morador.js';
+import CondProprietario from '#models/cond_proprietario.js';
+import CondBloco from '#models/cond_bloco.js';
+import CondAndar from '#models/cond_andar.js';
+import CondVagaGaragem from '#models/cond_vaga_garagem.js';
+import CondAreaComum from '#models/cond_area_comum.js';
+import CondAreaCessao from '#models/cond_area_cessao.js';
+import CondNatMaterial from '#models/cond_nat_material.js';
+import CondBemMaterial from '#models/cond_bem_material.js';
+import CondQRCodeMaterial from '#models/cond_qrcode_material.js';
+import CondMaterialTransferencia from '#models/cond_material_transferencia.js';
+import CondVisitante from '#models/cond_visitante.js';
+import CondAcessoMorador from '#models/cond_acesso_morador.js';
 import { issuePortalInvite } from '#modules/portal-morador/lib/portalAuth.js';
 import { readPortalSessionCookie } from '#modules/portal-morador/app/lib/portalSessionCookie.js';
-import CondSolicitacaoServico from '#core/models/cond_solicitacao_servico.js';
+import CondSolicitacaoServico from '#models/cond_solicitacao_servico.js';
 import {
   notifyServicoStatusPush,
   notifyVisitaChegadaPush,
@@ -40,12 +40,12 @@ import {
   sendPortalPush,
   isPortalPushConfigured
 } from '#modules/portal-morador/lib/pushNotifications.js';
-import CondEnquete from '#core/models/cond_enquete.js';
-import CondEnqueteVoto from '#core/models/cond_enquete_voto.js';
-import CondComunicado from '#core/models/cond_comunicado.js';
-import CondAssembleia from '#core/models/cond_assembleia.js';
-import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
-import CondAssembleiaSettings from '#core/models/cond_assembleia_settings.js';
+import CondEnquete from '#models/cond_enquete.js';
+import CondEnqueteVoto from '#models/cond_enquete_voto.js';
+import CondComunicado from '#models/cond_comunicado.js';
+import CondAssembleia from '#models/cond_assembleia.js';
+import CondAssembleiaExecution from '#models/cond_assembleia_execution.js';
+import CondAssembleiaSettings from '#models/cond_assembleia_settings.js';
 import mountAssembleias from '#modules/condominios/assembleias/index.js';
 import { handleGetAndaresV2, handleGetAndarByIdV2, handleGetAndaresRelacionadosV2, setHandleGetAndaresV2Context } from '#modules/condominios/app/v2/routes/andares.routes.js';
 import { handleGetBlocosV2, handleGetBlocoByIdV2, handleGetBlocosRelacionadosV2, handlePostBlocosV2, handlePutBlocosV2, handleDeleteBlocosV2, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
@@ -54,16 +54,16 @@ import { listarUnidadesService, obterUnidadePorIdService, listarUnidadesRelacion
 import { UnidadesReadRepository } from '#modules/condominios/app/repositories/UnidadesReadRepository.js';
 import { listarBlocosService, obterBlocoPorIdService, listarBlocosRelacionadosService, criarBlocoService, atualizarBlocoService, excluirBlocoService } from '#modules/condominios/app/services/blocos.service.js';
 import { listarAndaresService, obterAndarPorIdService, listarAndaresRelacionadosService } from '#modules/condominios/app/services/andares.service.js';
-import DocumentoValidado from '#core/models/documentoValidado.js';
-import CondMsgMailbox from '#core/models/cond_msg_mailbox.js';
-import CondMsgSettings from '#core/models/cond_msg_settings.js';
-import CondDirigenciaSettings from '#core/models/cond_dirigencia_settings.js';
-import CondDirigenciaCargo from '#core/models/cond_dirigencia_cargo.js';
-import CondDirigenciaMandato from '#core/models/cond_dirigencia_mandato.js';
-import CondMsgGroup from '#core/models/cond_msg_group.js';
-import CondMsgMessage from '#core/models/cond_msg_message.js';
-import CondMsgMarker from '#core/models/cond_msg_marker.js';
-import CondMsgSignaturePref from '#core/models/cond_msg_signature_pref.js';
+import DocumentoValidado from '#models/documentoValidado.js';
+import CondMsgMailbox from '#models/cond_msg_mailbox.js';
+import CondMsgSettings from '#models/cond_msg_settings.js';
+import CondDirigenciaSettings from '#models/cond_dirigencia_settings.js';
+import CondDirigenciaCargo from '#models/cond_dirigencia_cargo.js';
+import CondDirigenciaMandato from '#models/cond_dirigencia_mandato.js';
+import CondMsgGroup from '#models/cond_msg_group.js';
+import CondMsgMessage from '#models/cond_msg_message.js';
+import CondMsgMarker from '#models/cond_msg_marker.js';
+import CondMsgSignaturePref from '#models/cond_msg_signature_pref.js';
 import PDFDocument from 'pdfkit';
 // Service de criação de usuário com senha provisória (reutiliza fluxo do Gestor)
 // Não criar usuários no módulo Gestor a partir do Condomínios
