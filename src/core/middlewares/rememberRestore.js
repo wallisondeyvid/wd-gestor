@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import RememberToken from '#core/models/rememberToken.js';
-import User from '#core/models/user.js';
+import RememberToken from '#models/rememberToken.js';
+import User from '#models/user.js';
 
 export async function rememberRestore(req, res, next) {
   try {

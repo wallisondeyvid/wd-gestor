@@ -20,7 +20,7 @@ import { centralErrorHandler, notFoundHandler } from '#core/middlewares/errorHan
 import { envelopeNormalizer } from '#core/middlewares/envelopeNormalizer.js';
 import { rememberRestore } from '#core/middlewares/rememberRestore.js';
 import { isWidgetEnabledCached } from '#core/utils/widgetSettings.js';
-import User from '#core/models/user.js';
+import User from '#models/user.js';
 import verificacaoRoutes from '#routes/verificacao.routes.js';
 import * as gestorModule from '#modules/gestor/index.js';
 import * as clinicaModule from '#modules/clinica/index.js';
@@ -258,7 +258,7 @@ export async function createServer(options = {}) {
                 if (!segment || segment === 'gestor') return 'Gestor';
                 if (segment === 'escalas') return 'Escalas';
                 if (!req.app.locals.skipDb && mongoose.connection.readyState === 1) {
-                  const ModuloModel = (await import('#core/models/modulo.js')).default;
+                  const ModuloModel = (await import('#models/modulo.js')).default;
                   const m = await ModuloModel.findOne({
                     $or: [
                       { url_base: '/' + segment },
@@ -687,7 +687,7 @@ export async function createServer(options = {}) {
         // Tenta obter o nome e status a partir do banco se disponível
         try {
           if (!req.app.locals.skipDb && mongoose.connection.readyState === 1) {
-            const ModuloModel = (await import('#core/models/modulo.js')).default;
+            const ModuloModel = (await import('#models/modulo.js')).default;
             const m = await ModuloModel.findOne({
               $or: [
                 { url_base: '/' + seg },
@@ -1066,7 +1066,7 @@ export async function createServer(options = {}) {
         }
         // Carrega modelo de Módulo on-demand
         let ModuloModel = null;
-        try { const mod = await import('#core/models/modulo.js'); ModuloModel = mod.default || mod; } catch { ModuloModel = null; }
+        try { const mod = await import('#models/modulo.js'); ModuloModel = mod.default || mod; } catch { ModuloModel = null; }
         if (!ModuloModel && !isForced) return next();
         // Tenta localizar o módulo pelo url_base; se não achar, tenta variações e por nome
         let modulo = null;
@@ -1438,8 +1438,8 @@ export async function createServer(options = {}) {
           uriHint: (process.env.MONGO_URI || process.env.MONGODB_URI || (typeof cn?.client?.s?.url === 'string' ? cn.client.s.url : null)) || null,
         };
         // Contagens básicas
-        const Unidade = await importWithFallback('#core/models/unidade.js', '#core/models/unidade.js');
-        const User = await importWithFallback('#core/models/user.js', '#core/models/user.js');
+        const Unidade = await importWithFallback('#models/unidade.js', '#models/unidade.js');
+        const User = await importWithFallback('#models/user.js', '#models/user.js');
         let counts = {};
         try { counts.unidades = Unidade ? await Unidade.countDocuments({}) : null; } catch { counts.unidades = null; }
         try { counts.usuarios = User ? await User.countDocuments({}) : null; } catch { counts.usuarios = null; }
@@ -1477,7 +1477,7 @@ export async function createServer(options = {}) {
     app.get(['/', '/index'], async (req, res, next) => {
       try {
         let ModuloModel = null;
-        try { const mod = await import('#core/models/modulo.js'); ModuloModel = mod.default || mod; } catch {}
+        try { const mod = await import('#models/modulo.js'); ModuloModel = mod.default || mod; } catch {}
         let modulos = [];
         try {
           if (ModuloModel && mongoose.connection.readyState === 1) {
