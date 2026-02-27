@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import Unidade from '#core/models/unidade.js';
+import Unidade from '#models/unidade.js';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);

@@ -1,4 +1,4 @@
-import User from '#core/models/user.js';
+import User from '#models/user.js';
 import { BaseRepository } from '#shared/repositories/BaseRepository.js';
 import { resolveModel } from '#shared/db/resolveModel.js';
 

@@ -1,15 +1,15 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
-import User from '#core/models/user.js';
-import PasswordReset from '#core/models/passwordReset.js';
-import Unidade from '#core/models/unidade.js';
-import Funcionario from '#core/models/Funcionario.js';
-import Modulo from '#core/models/modulo.js';
-import Funcao from '#core/models/funcao.js';
+import User from '#models/user.js';
+import PasswordReset from '#models/passwordReset.js';
+import Unidade from '#models/unidade.js';
+import Funcionario from '#models/Funcionario.js';
+import Modulo from '#models/modulo.js';
+import Funcao from '#models/funcao.js';
 import nodemailer from 'nodemailer';
 import { resetPasswordTemplate } from '#core/mail/templates/resetPassword.js';
-import RememberToken from '#core/models/rememberToken.js';
+import RememberToken from '#models/rememberToken.js';
 
 // -----------------------------------------------------------------------------
 // Helper de Autorização de Módulo
