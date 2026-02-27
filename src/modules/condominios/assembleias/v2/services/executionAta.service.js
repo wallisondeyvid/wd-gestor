@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 
-import CondAssembleia from '#core/models/cond_assembleia.js';
-import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
+import CondAssembleia from '#models/cond_assembleia.js';
+import CondAssembleiaExecution from '#models/cond_assembleia_execution.js';
 import { writeAuditLog } from '#modules/condominios/app/lib/auditLog.js';
 
 function safeStr(v, max = 4000) {
