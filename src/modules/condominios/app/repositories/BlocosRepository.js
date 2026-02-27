@@ -1,4 +1,4 @@
-import CondBloco from '#core/models/cond_bloco.js';
+import CondBloco from '#models/cond_bloco.js';
 import { BaseRepository } from '#shared/repositories/BaseRepository.js';
 import { resolveModel } from '#shared/db/resolveModel.js';
 
