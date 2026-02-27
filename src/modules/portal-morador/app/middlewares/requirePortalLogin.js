@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import CondUsuario from '#core/models/cond_usuario.js';
+import CondUsuario from '#models/cond_usuario.js';
 import { connectMongo } from '#core/db/connect.js';
 import { buildPortalSessionPayload } from '#modules/portal-morador/lib/portalAuth.js';
 import { readPortalSessionCookie, hasPortalCookieCandidate, setPortalSessionCookie, clearPortalSessionCookie, PORTAL_SESSION_COOKIE_NAME } from '#modules/portal-morador/app/lib/portalSessionCookie.js';
