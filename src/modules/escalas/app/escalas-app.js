@@ -2,7 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 // Temporariamente substituir alias por caminho relativo para diagnosticar SyntaxError em runtime.
-import User from '#core/models/user.js';
+import User from '#models/user.js';
 import authRouter from './routes/auth.js';
 import dashboardRouter from './routes/dashboard.js';
 import userApiRouter from './routes/userApi.js';
