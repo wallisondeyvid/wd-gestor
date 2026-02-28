@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import {
+	existsUnidadeByCond,
 	findSubunidadesLean,
 	findUnidadeByCodigoLean,
 	findUnidadeByIdLean,
@@ -46,8 +47,7 @@ export async function unidadesCluster(req, res) {
 			let filtroBase = { _id: unidadeBase._id };
 			if (condAcessiveis.$or) filtroBase = { ...filtroBase, $or: condAcessiveis.$or };
 			else filtroBase = { ...filtroBase, ...condAcessiveis };
-			const baseDentroEscopo = await findUnidadesByCondLean(filtroBase);
-			const existeBaseDentroEscopo = Array.isArray(baseDentroEscopo) && baseDentroEscopo.length > 0;
+			const existeBaseDentroEscopo = await existsUnidadeByCond(filtroBase);
 			if (!existeBaseDentroEscopo) return res.json({ ok: true, total: 0, unidades: [] });
 		}
 
