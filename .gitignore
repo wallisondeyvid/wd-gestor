@@ -59,3 +59,5 @@ report.*.json
 # local artifacts
 WDGestor.zip
 _baseline_routes_*.txt
+
+activate.bat
