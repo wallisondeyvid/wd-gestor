@@ -19,7 +19,6 @@
     "src/modules/condominios/assembleias/v2/services/executionOpen.service.js",
     "src/modules/condominios/assembleias/v2/services/executionPresenceMe.service.js",
     "src/modules/condominios/assembleias/v2/services/executionStatus.service.js",
-    "src/modules/gestor/app/controllers/apiController.js",
     "src/modules/gestor/app/controllers/authController.js",
     "src/modules/gestor/app/controllers/biometriaApiController.js",
     "src/modules/gestor/app/controllers/cnaeApiController.js",
