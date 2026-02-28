@@ -1,8 +1,10 @@
-import Unidade from '#models/unidade.js';
 import { ok, badRequest, serverError } from '#core/utils/apiResponse.js';
-import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
+import {
+	findUnidadeByIdOrRawLean,
+	findClusterUnidadesByAnchorLean,
+} from '#modules/gestor/app/db/api.db.js';
 let ibgeIndex = null; let ibgeIndexLoadError = null;
 function stripDiacritics(s=''){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 function normalizeName(str){
@@ -45,4 +47,4 @@ export function obterCodigoIbge(req,res){
 		return serverError(res,e);
 	}
 }
-export async function obterClusterUnidades(req,res){ try { const { unidade_id } = req.query; if(!unidade_id) return ok(res,{ unidades: [] }); const { Types } = mongoose; const oid = Types.ObjectId.isValid(unidade_id) ? new Types.ObjectId(unidade_id) : null; const base = await Unidade.findOne(oid ? { _id: oid } : { _id: unidade_id }).lean(); if(!base) return ok(res,{ unidades: [] }); const anchorRaw = base.matriz_id || base.unidade_principal_id || base._id; const conds=[]; if(Types.ObjectId.isValid(String(anchorRaw))){ const anchorOid=new Types.ObjectId(String(anchorRaw)); conds.push({ _id: anchorOid }, { matriz_id: anchorOid }, { unidade_principal_id: anchorOid }); } conds.push({ _id: anchorRaw }, { matriz_id: anchorRaw }, { unidade_principal_id: anchorRaw }); const unidades = await Unidade.find({ $or: conds }).lean(); return ok(res,{ unidades }); } catch(e){ return serverError(res,e); } }
+export async function obterClusterUnidades(req,res){ try { const { unidade_id } = req.query; if(!unidade_id) return ok(res,{ unidades: [] }); const base = await findUnidadeByIdOrRawLean(unidade_id); if(!base) return ok(res,{ unidades: [] }); const anchorRaw = base.matriz_id || base.unidade_principal_id || base._id; const unidades = await findClusterUnidadesByAnchorLean(anchorRaw); return ok(res,{ unidades }); } catch(e){ return serverError(res,e); } }
