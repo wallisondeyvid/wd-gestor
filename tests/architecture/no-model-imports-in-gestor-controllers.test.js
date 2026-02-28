@@ -9,7 +9,6 @@ const VALID_EXTENSIONS = new Set(['.js', '.mjs', '.cjs']);
 const IGNORE_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'coverage']);
 
 const ALLOWLIST = new Set([
-  'debugApiController.js',
   'funcaoApiController.js',
   'funcaoController.js',
   'funcionarioApiController.js',

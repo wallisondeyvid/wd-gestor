@@ -1,4 +1,5 @@
 import Unidade from '#models/unidade.js';
+import User from '#models/user.js';
 import mongoose from 'mongoose';
 
 export async function findUnidadeByIdLean(id) {
@@ -45,4 +46,28 @@ export async function findClusterUnidadesByAnchorLean(anchorRaw) {
 
   conds.push({ _id: anchorRaw }, { matriz_id: anchorRaw }, { unidade_principal_id: anchorRaw });
   return Unidade.find({ $or: conds }).lean();
+}
+
+export async function findUserByEmailCondLean(cond) {
+  return User.findOne(cond).lean();
+}
+
+export async function findUserByCpfCondLean(cond) {
+  return User.findOne(cond).lean();
+}
+
+export async function findAllUnidadesLean() {
+  return Unidade.find({}).lean();
+}
+
+export async function findUnidadePrincipalLean() {
+  return Unidade.findOne({ is_principal: true }).lean();
+}
+
+export async function findUserByEmailCond(cond) {
+  return User.findOne(cond);
+}
+
+export async function deleteUserById(userId) {
+  return User.deleteOne({ _id: userId });
 }
