@@ -6,6 +6,7 @@ import Setor from '#models/setor.js';
 import Funcao from '#models/funcao.js';
 import Funcionario from '#models/Funcionario.js';
 import Feedback from '#models/feedback.js';
+import WidgetSetting from '#models/widgetSetting.js';
 import mongoose from 'mongoose';
 
 export async function findUnidadeByIdLean(id) {
@@ -662,4 +663,16 @@ export async function findFeedbackByIdAndUpdateSetNewLean(id, setData) {
 
 export async function findFeedbackByIdAndDeleteLean(id) {
   return Feedback.findByIdAndDelete(id).lean();
+}
+
+export async function findWidgetSettingsFeedbackLean() {
+  return WidgetSetting.find({ widget: 'feedback' }).lean();
+}
+
+export async function updateWidgetSettingsFeedbackModuleEnabledUpsert(moduleId, enabled) {
+  return WidgetSetting.updateOne(
+    { widget: 'feedback', module: moduleId },
+    { $set: { enabled } },
+    { upsert: true }
+  );
 }
