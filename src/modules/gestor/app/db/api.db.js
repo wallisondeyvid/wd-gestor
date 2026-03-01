@@ -65,12 +65,30 @@ export async function findAllUnidadesLean() {
   return Unidade.find({}).lean();
 }
 
+export async function findAllUnidades() {
+  return Unidade.find();
+}
+
+export async function findUnidadesByMatrizOuPrincipal(matrizRef) {
+  return Unidade.find({ $or: [{ _id: matrizRef }, { unidade_principal_id: matrizRef }] });
+}
+
+export async function findUnidadesAtivasStatusLean() {
+  return Unidade.find({ status: 'ativo' }).lean();
+}
+
 export async function findUnidadePrincipalLean() {
   return Unidade.findOne({ is_principal: true }).lean();
 }
 
 export async function findUserByEmailCond(cond) {
   return User.findOne(cond);
+}
+
+export async function findUsuariosDiretorAtivosPopulatedLean() {
+  return User.find({ ativo: true, role: 'diretor' })
+    .populate('funcionario_id', 'nome email')
+    .lean();
 }
 
 export async function findUserById(userId) {
@@ -357,6 +375,10 @@ export async function findFuncionariosDisponiveisSemUsuarioPorUnidadeSelectLean(
 
 export async function findFuncionarioByEmail(email) {
   return Funcionario.findOne({ email });
+}
+
+export async function findFuncionariosByEmailsSelectEmailNomeLean(emails) {
+  return Funcionario.find({ email: { $in: emails } }).select('email nome').lean();
 }
 
 export async function createFuncionarioDoc(doc) {
