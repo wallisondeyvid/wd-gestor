@@ -324,6 +324,37 @@ export async function findFuncionarioByCpfAndUnidade(cpf, unidadeId) {
   return Funcionario.findOne({ cpf, unidade_id: unidadeId });
 }
 
+export async function findUnidadesAtivasCodigoNomeOrdenadasSelectLean() {
+  return Unidade.find({ ativa: true }).select('codigo nome').sort({ nome: 1 }).lean();
+}
+
+export async function findFuncoesAtivasNomeOrdenadasSelectLean() {
+  return Funcao.find({ ativa: true }).select('nome').sort({ nome: 1 }).lean();
+}
+
+export async function findSetoresAtivosNomeOrdenadosSelectLean() {
+  return Setor.find({ ativo: true }).select('nome').sort({ nome: 1 }).lean();
+}
+
+export async function findFuncionariosParaListagemComRefsSelectLean(filtro) {
+  return Funcionario.find(filtro)
+    .select('nome cpf unidade_id funcao_id ativo')
+    .populate({ path: 'unidade_id', select: 'nome' })
+    .populate({ path: 'funcao_id', select: 'nome' })
+    .sort({ nome: 1 })
+    .lean();
+}
+
+export async function findFuncionariosDisponiveisSemUsuarioPorUnidadeSelectLean(unidadeId) {
+  return Funcionario.find({
+    unidade_id: unidadeId,
+    $or: [{ usuario_id: { $exists: false } }, { usuario_id: null }],
+  })
+    .select('_id nome cpf')
+    .sort({ nome: 1 })
+    .lean();
+}
+
 export async function findFuncionarioByEmail(email) {
   return Funcionario.findOne({ email });
 }
