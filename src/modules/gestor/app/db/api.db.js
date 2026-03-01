@@ -73,6 +73,14 @@ export async function findUserByEmailCond(cond) {
   return User.findOne(cond);
 }
 
+export async function findUserById(userId) {
+  return User.findById(userId);
+}
+
+export async function saveUserDoc(userDoc) {
+  return userDoc.save();
+}
+
 export async function deleteUserById(userId) {
   return User.deleteOne({ _id: userId });
 }
