@@ -1,15 +1,17 @@
 // Controller de Usuários (view) - separado de APIs já migradas
-import User from '#models/user.js';
-import Unidade from '#models/unidade.js';
-import Funcionario from '#models/Funcionario.js';
+import {
+  findUsersByQueryLean,
+  findAllUnidadesSelectIdCodigoNomeLean,
+  findAllFuncionariosSelectIdNomeCpfLean,
+} from '#modules/gestor/app/db/api.db.js';
 
 export async function listarUsuarios(req, res, next) {
   try {
     if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
     const query = req.user.isMaster ? {} : { role: { $ne: 'master' } };
-    const usuarios = await User.find(query).lean();
-    const unidadesFiltradas = await Unidade.find().select('_id codigo nome').lean();
-    const funcionarios = await Funcionario.find().select('_id nome cpf').lean();
+    const usuarios = await findUsersByQueryLean(query);
+    const unidadesFiltradas = await findAllUnidadesSelectIdCodigoNomeLean();
+    const funcionarios = await findAllFuncionariosSelectIdNomeCpfLean();
     return res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });
   } catch (e) {
     console.error('Erro na rota /usuarios:', e);
