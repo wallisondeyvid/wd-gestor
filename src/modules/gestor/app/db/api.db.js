@@ -1,5 +1,6 @@
 import Unidade from '#models/unidade.js';
 import User from '#models/user.js';
+import Modulo from '#models/modulo.js';
 import mongoose from 'mongoose';
 
 export async function findUnidadeByIdLean(id) {
@@ -70,4 +71,36 @@ export async function findUserByEmailCond(cond) {
 
 export async function deleteUserById(userId) {
   return User.deleteOne({ _id: userId });
+}
+
+export async function findAllModulosBaseLean() {
+  return Modulo.find({}).select('_id nome descricao status url_base').lean();
+}
+
+export async function findUnidadeByIdWithModulosAcessiveisLean(unidadeId) {
+  return Unidade.findById(unidadeId).populate('modulosAcessiveis').lean();
+}
+
+export async function findModuloByIdLean(id) {
+  return Modulo.findById(id).lean();
+}
+
+export async function findModuloByNome(nome) {
+  return Modulo.findOne({ nome });
+}
+
+export async function createModulo(data) {
+  return Modulo.create(data);
+}
+
+export async function findModuloById(id) {
+  return Modulo.findById(id);
+}
+
+export async function saveModulo(modulo) {
+  return modulo.save();
+}
+
+export async function deleteModuloById(id) {
+  return Modulo.deleteOne({ _id: id });
 }

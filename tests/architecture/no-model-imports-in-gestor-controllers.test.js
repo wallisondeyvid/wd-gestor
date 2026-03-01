@@ -13,7 +13,6 @@ const ALLOWLIST = new Set([
   'funcaoController.js',
   'funcionarioApiController.js',
   'funcionarioController.js',
-  'moduloApiController.js',
   'moduloController.js',
   'recursoApiController.js',
   'recursoController.js',
