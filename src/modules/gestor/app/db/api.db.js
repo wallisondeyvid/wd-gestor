@@ -5,6 +5,7 @@ import Recurso from '#models/recurso.js';
 import Setor from '#models/setor.js';
 import Funcao from '#models/funcao.js';
 import Funcionario from '#models/Funcionario.js';
+import Feedback from '#models/feedback.js';
 import mongoose from 'mongoose';
 
 export async function findUnidadeByIdLean(id) {
@@ -623,4 +624,42 @@ export async function findDiretorAtivoByUnidadeSelectId(unidadeId) {
 
 export async function deleteUnidadeById(unidadeId) {
   return Unidade.findByIdAndDelete(unidadeId);
+}
+
+export async function createFeedback(data) {
+  return Feedback.create(data);
+}
+
+export async function findFeedbackById(id) {
+  return Feedback.findById(id);
+}
+
+export async function saveFeedbackDoc(feedbackDoc) {
+  return feedbackDoc.save();
+}
+
+export async function findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter) {
+  return Feedback.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(200)
+    .lean();
+}
+
+export async function findFeedbackByIdLean(id) {
+  return Feedback.findById(id).lean();
+}
+
+export async function findFeedbackByFilterSortCreatedAtDescLimit500Lean(filter) {
+  return Feedback.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(500)
+    .lean();
+}
+
+export async function findFeedbackByIdAndUpdateSetNewLean(id, setData) {
+  return Feedback.findByIdAndUpdate(id, { $set: setData }, { new: true }).lean();
+}
+
+export async function findFeedbackByIdAndDeleteLean(id) {
+  return Feedback.findByIdAndDelete(id).lean();
 }
