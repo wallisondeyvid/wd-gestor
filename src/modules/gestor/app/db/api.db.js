@@ -137,6 +137,14 @@ export async function findAllModulos() {
   return Modulo.find();
 }
 
+export async function findAllModulosLean() {
+  return Modulo.find().lean();
+}
+
+export async function findModulosAtivosStatusLean() {
+  return Modulo.find({ status: 'ativo' }).lean();
+}
+
 export async function findUnidadeByIdWithModulosAcessiveisLean(unidadeId) {
   return Unidade.findById(unidadeId).populate('modulosAcessiveis').lean();
 }
@@ -270,12 +278,32 @@ export async function findSetoresAtivosPopulateUnidadeOrdenadosLean(filtroAtivo)
     .lean();
 }
 
+export async function findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean(filtroSetores) {
+  return Setor.find(filtroSetores)
+    .select('nome descricao unidade_id')
+    .populate({ path: 'unidade_id', select: 'nome codigo' })
+    .sort({ nome: 1 })
+    .lean();
+}
+
 export async function findUnidadesAtivasNomeCodigoOrdenadasLean() {
   return Unidade.find({ ativa: true }).select('nome codigo').sort({ nome: 1 }).lean();
 }
 
 export async function findUnidadesByIdsNomeCodigoLean(unidadeIds) {
   return Unidade.find({ _id: { $in: unidadeIds } }).select('nome codigo').lean();
+}
+
+export async function findUnidadesForSetorPageSelectLean() {
+  return Unidade.find().select('_id id codigo nome is_principal unidade_principal_id').lean();
+}
+
+export async function findUnidadesForSetorPageByCondSelectLean(cond) {
+  return Unidade.find(cond).select('_id id codigo nome is_principal unidade_principal_id').lean();
+}
+
+export async function findUnidadesForSetorPageByIdsSelectLean(unidadeIds) {
+  return Unidade.find({ _id: { $in: unidadeIds } }).select('_id id codigo nome is_principal unidade_principal_id').lean();
 }
 
 export async function findSetorByIdAndDelete(id) {
@@ -322,6 +350,10 @@ export async function findAllFuncoesPopuladas() {
 
 export async function findFuncoesByUnidadePrincipalPopuladas(unidadePrincipalId) {
   return Funcao.find({ unidade_principal_id: unidadePrincipalId }).populate('unidade_principal_id modulos_habilitados');
+}
+
+export async function findFuncoesByUnidadePrincipalIdsPopuladas(unidadePrincipalIds) {
+  return Funcao.find({ unidade_principal_id: { $in: unidadePrincipalIds } }).populate('unidade_principal_id modulos_habilitados');
 }
 
 export async function findFuncaoById(id) {
@@ -411,12 +443,20 @@ export async function findUnidadesAtivasCodigoNomeOrdenadasSelectLean() {
   return Unidade.find({ ativa: true }).select('codigo nome').sort({ nome: 1 }).lean();
 }
 
+export async function findUnidadesByCondSelectCodigoNomeOrdenadasLean(cond) {
+  return Unidade.find(cond).select('codigo nome').sort({ nome: 1 }).lean();
+}
+
 export async function findFuncoesAtivasNomeOrdenadasSelectLean() {
   return Funcao.find({ ativa: true }).select('nome').sort({ nome: 1 }).lean();
 }
 
 export async function findSetoresAtivosNomeOrdenadosSelectLean() {
   return Setor.find({ ativo: true }).select('nome').sort({ nome: 1 }).lean();
+}
+
+export async function findSetoresByCondNomeOrdenadosSelectLean(cond) {
+  return Setor.find(cond).select('nome').sort({ nome: 1 }).lean();
 }
 
 export async function findFuncionariosParaListagemComRefsSelectLean(filtro) {
@@ -555,6 +595,14 @@ export async function findUnidadesPrincipaisByIds(unitIds) {
 
 export async function findUnidadesPrincipais() {
   return Unidade.find({ is_principal: true });
+}
+
+export async function findUnidadesPrincipaisLean() {
+  return Unidade.find({ is_principal: true }).lean();
+}
+
+export async function findUnidadesPrincipaisSelectIdLean() {
+  return Unidade.find({ is_principal: true }).select('_id').lean();
 }
 
 export async function findUnidadesById(unidadeId) {
