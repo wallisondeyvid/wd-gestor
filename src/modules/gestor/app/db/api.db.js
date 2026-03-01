@@ -218,6 +218,18 @@ export async function findSetoresByFiltroPopulateUnidadeLean(filtro) {
     .lean();
 }
 
+export async function findSetoresAtivosPopulateUnidadeOrdenadosLean(filtroAtivo) {
+  return Setor.find(filtroAtivo)
+    .select('nome descricao unidade_id')
+    .populate({ path: 'unidade_id', select: 'nome codigo' })
+    .sort({ nome: 1 })
+    .lean();
+}
+
+export async function findUnidadesAtivasNomeCodigoOrdenadasLean() {
+  return Unidade.find({ ativa: true }).select('nome codigo').sort({ nome: 1 }).lean();
+}
+
 export async function findUnidadesByIdsNomeCodigoLean(unidadeIds) {
   return Unidade.find({ _id: { $in: unidadeIds } }).select('nome codigo').lean();
 }
