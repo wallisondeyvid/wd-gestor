@@ -3,6 +3,7 @@ import User from '#models/user.js';
 import Modulo from '#models/modulo.js';
 import Recurso from '#models/recurso.js';
 import Setor from '#models/setor.js';
+import Funcao from '#models/funcao.js';
 import mongoose from 'mongoose';
 
 export async function findUnidadeByIdLean(id) {
@@ -232,4 +233,56 @@ export async function findOneAndUpdateCounterSetorCodigo(targetSeq) {
     { $set: { seq: targetSeq } },
     { new: true, upsert: true }
   );
+}
+
+export async function findFuncaoByNome(nome) {
+  return Funcao.findOne({ nome });
+}
+
+export async function createFuncao(payload) {
+  return Funcao.create(payload);
+}
+
+export async function findFuncaoByIdPopulated(id) {
+  return Funcao.findById(id).populate('unidade_principal_id modulos_habilitados');
+}
+
+export async function findFuncaoById(id) {
+  return Funcao.findById(id);
+}
+
+export async function findOutraFuncaoByNomeExcludingId(id, nome) {
+  return Funcao.findOne({ nome, _id: { $ne: id } });
+}
+
+export async function updateFuncaoById(id, updates) {
+  return Funcao.findByIdAndUpdate(id, updates, { runValidators: true });
+}
+
+export async function findFuncaoByIdLean(id) {
+  return Funcao.findById(id).lean();
+}
+
+export async function findFuncoesByUnidadeLean(unidadeId) {
+  return Funcao.find({ unidade_principal_id: unidadeId }).lean();
+}
+
+export async function findFuncoesByFiltroLean(filtro) {
+  return Funcao.find(filtro).lean();
+}
+
+export async function findFuncoesByFiltroSelectLean(filtro) {
+  return Funcao.find(filtro).select('codigo nome descricao').lean();
+}
+
+export async function deleteFuncaoById(id) {
+  return Funcao.findByIdAndDelete(id);
+}
+
+export async function saveFuncao(doc) {
+  return doc.save();
+}
+
+export async function findUnidadeByIdWithModulosAcessiveis(id) {
+  return Unidade.findById(id).populate('modulosAcessiveis');
 }
