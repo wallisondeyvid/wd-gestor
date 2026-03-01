@@ -69,6 +69,10 @@ export async function findUserByCpfCondLean(cond) {
   return User.findOne(cond).lean();
 }
 
+export async function findUserByEmailCondLeanMaxTimeMs(cond, maxTimeMs) {
+  return User.findOne(cond).lean().maxTimeMS(maxTimeMs);
+}
+
 export async function findAllUnidadesLean() {
   return Unidade.find({}).lean();
 }
