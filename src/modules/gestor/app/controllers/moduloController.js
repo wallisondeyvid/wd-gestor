@@ -1,9 +1,9 @@
 // Controller de Módulos (migrado)
-import Modulo from '#models/modulo.js';
+import { findAllModulos } from '#modules/gestor/app/db/api.db.js';
 export async function listarModulos(req, res) {
   try {
     if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-    const modulos = await Modulo.find();
+    const modulos = await findAllModulos();
     return res.render('slots-modulos', { modulos, user: req.user });
   } catch (e) {
     return res.status(500).send('Erro ao carregar módulos');

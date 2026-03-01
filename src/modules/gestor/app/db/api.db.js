@@ -89,6 +89,10 @@ export async function findAllModulosBaseLean() {
   return Modulo.find({}).select('_id nome descricao status url_base').lean();
 }
 
+export async function findAllModulos() {
+  return Modulo.find();
+}
+
 export async function findUnidadeByIdWithModulosAcessiveisLean(unidadeId) {
   return Unidade.findById(unidadeId).populate('modulosAcessiveis').lean();
 }
