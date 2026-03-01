@@ -350,3 +350,71 @@ export async function findUserByEmail(email) {
 export async function findUserByFuncionarioId(funcionarioId) {
   return User.findOne({ funcionario_id: funcionarioId });
 }
+
+export async function findUnidadesByCondLeanFull(cond) {
+  return Unidade.find(cond).lean();
+}
+
+export async function findUltimaUnidadePorCodigo() {
+  return Unidade.findOne().sort({ codigo: -1 });
+}
+
+export async function findUnidadeByCodigo(codigo) {
+  return Unidade.findOne({ codigo });
+}
+
+export async function findUnidadeByCpf(cpf) {
+  return Unidade.findOne({ cpf });
+}
+
+export async function findUnidadeByCnpj(cnpj) {
+  return Unidade.findOne({ cnpj });
+}
+
+export async function findSubunidadesByUnidadePrincipal(unidadePrincipalId) {
+  return Unidade.find({ unidade_principal_id: unidadePrincipalId, is_principal: false });
+}
+
+export async function createUnidadeDoc(data) {
+  return new Unidade(data);
+}
+
+export async function saveUnidadeDoc(doc) {
+  return doc.save();
+}
+
+export async function updateUserUnidadeById(userId, unidadeId) {
+  return User.findByIdAndUpdate(userId, { unidade_id: unidadeId });
+}
+
+export async function findUnidadeByCpfExcludingId(cpf, unidadeId) {
+  return Unidade.findOne({ cpf, _id: { $ne: unidadeId } });
+}
+
+export async function findUnidadeByCnpjExcludingId(cnpj, unidadeId) {
+  return Unidade.findOne({ cnpj, _id: { $ne: unidadeId } });
+}
+
+export async function updateUnidadeByIdWithValidators(unidadeId, updated) {
+  return Unidade.findByIdAndUpdate(unidadeId, updated, { new: true, runValidators: true });
+}
+
+export async function findUnidadesPrincipaisByIds(unitIds) {
+  return Unidade.find({ _id: { $in: unitIds }, is_principal: true });
+}
+
+export async function updateManyUnidadesAccessByIds(unitIds, activate) {
+  return Unidade.updateMany({ _id: { $in: unitIds } }, { $set: { is_active: activate } });
+}
+
+export async function findUnidadesPermitidasByMatrizRef(matrizRef) {
+  return Unidade.find({ $or: [{ _id: matrizRef }, { unidade_principal_id: matrizRef }] });
+}
+
+export async function findDiretorAtivoByUnidadeSelectId(unidadeId) {
+  return User.findOne({ role: 'diretor', ativo: true, unidade_id: unidadeId }).select('_id');
+}
+
+export async function deleteUnidadeById(unidadeId) {
+  return Unidade.findByIdAndDelete(unidadeId);
+}

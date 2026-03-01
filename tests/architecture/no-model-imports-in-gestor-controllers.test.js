@@ -14,7 +14,6 @@ const ALLOWLIST = new Set([
   'moduloController.js',
   'recursoController.js',
   'setorController.js',
-  'unidadeApiController.js',
   'unidadeController.js',
   'userAdminApiController.js',
   'userController.js',

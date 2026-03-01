@@ -1,7 +1,28 @@
-import Unidade from '#models/unidade.js';
-import Modulo from '#models/modulo.js';
-import User from '#models/user.js';
 import { ok, created, badRequest, notFound, serverError } from '#core/utils/apiResponse.js';
+import {
+  findAllUnidadesLean,
+  findUnidadeUserBaseLean,
+  findUnidadesByCondLeanFull,
+  findUltimaUnidadePorCodigo,
+  findUnidadeByCodigo,
+  findUnidadeByCpf,
+  findUnidadeByCnpj,
+  findUnidadeById,
+  findSubunidadesByUnidadePrincipal,
+  createUnidadeDoc,
+  saveUnidadeDoc,
+  updateUserUnidadeById,
+  findUnidadeByCpfExcludingId,
+  findUnidadeByCnpjExcludingId,
+  updateUnidadeByIdWithValidators,
+  findUnidadesPrincipaisByIds,
+  updateManyUnidadesAccessByIds,
+  findUnidadesPermitidasByMatrizRef,
+  findDiretorAtivoByUnidadeSelectId,
+  findUnidadeByIdWithModulosAcessiveis,
+  findUnidadeByIdLean,
+  deleteUnidadeById,
+} from '#modules/gestor/app/db/api.db.js';
 import { validarCnpj, calcularDigitoVerificador } from '#modules/gestor/app/utils/cnpj.js';
 // Dependências para upload de logo
 import multer from 'multer';
@@ -101,20 +122,20 @@ export async function listUnidades(req, res) {
     const isMaster = user.isMaster === true || user.role === 'master' || user.role === 'admin';
     let unidades = [];
     if (isMaster) {
-      unidades = await Unidade.find().lean();
+      unidades = await findAllUnidadesLean();
     } else {
       // Determinar escopo por matriz do usuário
       let principalId = user.unidade_principal_id || null;
       try {
         if (!principalId && user.unidade_id) {
-          const u = await Unidade.findById(user.unidade_id).select('_id is_principal unidade_principal_id matriz_id').lean();
+          const u = await findUnidadeUserBaseLean(user.unidade_id);
           if (u) principalId = u.is_principal ? u._id : (u.unidade_principal_id || u.matriz_id || u._id);
         }
       } catch(_) {}
       const cond = principalId
         ? { $or: [ { _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId } ] }
         : { _id: user.unidade_id || null };
-      unidades = await Unidade.find(cond).lean();
+      unidades = await findUnidadesByCondLeanFull(cond);
     }
     // Normalizações leves para manter compat em front
     const safe = (unidades || []).map(u => ({
@@ -183,36 +204,36 @@ export async function createUnidade(req, res) {
     }
 
     let codigo = 'M0001';
-    const ultimaUnidade = await Unidade.findOne().sort({ codigo: -1 });
+    const ultimaUnidade = await findUltimaUnidadePorCodigo();
     if (ultimaUnidade) {
       let ultimoNumero = parseInt((ultimaUnidade.codigo || 'M0000').replace('M', ''), 10) || 0;
       do {
         ultimoNumero += 1;
         codigo = `M${ultimoNumero.toString().padStart(4, '0')}`;
-      } while (await Unidade.findOne({ codigo }));
+      } while (await findUnidadeByCodigo(codigo));
     }
 
     let cleanedCnpj = cnpj ? cnpj.replace(/\D/g, '') : null;
     if (pessoaTipo === 'pf') {
       const cleanedCpf = cpf ? cpf.replace(/\D/g, '') : null;
       if (!cleanedCpf || cleanedCpf.length !== 11) return badRequest(res, 'CPF é obrigatório para Pessoa Física e deve ter 11 dígitos.');
-      const cpfExistente = await Unidade.findOne({ cpf: cleanedCpf });
+      const cpfExistente = await findUnidadeByCpf(cleanedCpf);
       if (cpfExistente) return badRequest(res, 'CPF já cadastrado no banco de dados.');
     } else if (pessoaTipo === 'pj') {
       if (isSubunidade && !unidadePrincipal) return badRequest(res, 'Subunidade precisa de unidade principal.');
       if (isSubunidade) cleanedCnpj = null;
       if (cleanedCnpj && cleanedCnpj.length !== 14) return badRequest(res, 'CNPJ é obrigatório para Pessoa Jurídica e deve ter 14 dígitos.');
-      const cnpjExistente = await Unidade.findOne({ cnpj: cleanedCnpj });
+      const cnpjExistente = await findUnidadeByCnpj(cleanedCnpj);
       if (cnpjExistente) return badRequest(res, 'CNPJ já cadastrado no banco de dados.');
     }
 
     let finalCnpj = cleanedCnpj;
     if (pessoaTipo === 'pj' && isSubunidade) {
-      const unidadePrincipalDoc = await Unidade.findById(unidadePrincipal);
+      const unidadePrincipalDoc = await findUnidadeById(unidadePrincipal);
       if (!unidadePrincipalDoc || !unidadePrincipalDoc.is_principal) return badRequest(res, 'Unidade principal inválida.');
       const baseCnpj = (unidadePrincipalDoc.cnpj || '').replace(/\D/g, '').slice(0, 8);
       if (baseCnpj.length !== 8) return badRequest(res, 'CNPJ da unidade principal inválido.');
-      const existingSubunidades = await Unidade.find({ unidade_principal_id: unidadePrincipal, is_principal: false });
+      const existingSubunidades = await findSubunidadesByUnidadePrincipal(unidadePrincipal);
       const maxSuffix = existingSubunidades.reduce((max, sub) => Math.max(max, parseInt(sub.cnpj.slice(8, 12)) || 1), 1);
       const newSuffix = (maxSuffix + 1).toString().padStart(4, '0');
       const cnpjParcial = `${baseCnpj}${newSuffix}`;
@@ -234,7 +255,7 @@ export async function createUnidade(req, res) {
       else tipoPix = 'aleatoria';
     }
 
-    const novaUnidade = new Unidade({
+    const novaUnidade = createUnidadeDoc({
       codigo,
       nome: nomeFantasia,
       razaoSocial: razaoSocial || null,
@@ -269,10 +290,10 @@ export async function createUnidade(req, res) {
       apiBancaria: apiBancariaPayload,
     });
 
-    const unidadeSalva = await novaUnidade.save();
+    const unidadeSalva = await saveUnidadeDoc(novaUnidade);
     if (isPrincipal && diretor_usuario_id) {
       try {
-        await User.findByIdAndUpdate(diretor_usuario_id, { unidade_id: unidadeSalva._id });
+        await updateUserUnidadeById(diretor_usuario_id, unidadeSalva._id);
       } catch (e) {
         console.warn('[API UNIDADES][create] Falha ao vincular diretor à unidade:', e.message);
       }
@@ -293,7 +314,7 @@ export async function updateUnidade(req, res) {
     if (req.user.role === 'user') return badRequest(res, 'Você não tem permissão para editar unidades.');
 
     const { id: unidadeId } = req.params;
-    const unidadeExistente = await Unidade.findById(unidadeId);
+    const unidadeExistente = await findUnidadeById(unidadeId);
     if (!unidadeExistente) return notFound(res, 'Unidade não encontrada.');
 
     const {
@@ -342,11 +363,11 @@ export async function updateUnidade(req, res) {
     if (pessoaTipo === 'pf') {
       const cleanedCpf = cpf ? cpf.replace(/\D/g, '') : null;
       if (!cleanedCpf || cleanedCpf.length !== 11) return badRequest(res, 'CPF é obrigatório para Pessoa Física e deve ter 11 dígitos.');
-      const cpfExistente = await Unidade.findOne({ cpf: cleanedCpf, _id: { $ne: unidadeId } });
+      const cpfExistente = await findUnidadeByCpfExcludingId(cleanedCpf, unidadeId);
       if (cpfExistente) return badRequest(res, 'CPF já cadastrado no banco de dados.');
     } else if (pessoaTipo === 'pj') {
       if (!cleanedCnpj || cleanedCnpj.length !== 14) return badRequest(res, 'CNPJ é obrigatório para Pessoa Jurídica e deve ter 14 dígitos.');
-      const cnpjExistente = await Unidade.findOne({ cnpj: cleanedCnpj, _id: { $ne: unidadeId } });
+      const cnpjExistente = await findUnidadeByCnpjExcludingId(cleanedCnpj, unidadeId);
       if (cnpjExistente) return badRequest(res, 'CNPJ já cadastrado no banco de dados.');
       if (!validarCnpj(cleanedCnpj)) return badRequest(res, 'Dígitos verificadores do CNPJ inválidos.');
     }
@@ -408,7 +429,7 @@ export async function updateUnidade(req, res) {
 
     updated.logo = unidadeExistente.logo || null;
 
-    const unidade = await Unidade.findByIdAndUpdate(unidadeId, updated, { new: true, runValidators: true });
+    const unidade = await updateUnidadeByIdWithValidators(unidadeId, updated);
     if (!unidade) return notFound(res, 'Unidade não encontrada.');
 
     const serialized = unidade.toObject();
@@ -421,14 +442,14 @@ export async function updateUnidade(req, res) {
     return serverError(res, error);
   }
 }
-export async function toggleAccessUnidades(req, res) { try { if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para alterar o acesso de unidades.'); const { unitIds, activate } = req.body; if (!Array.isArray(unitIds) || typeof activate !== 'boolean') return badRequest(res,'Parâmetros inválidos.'); if (req.user.role === 'diretor') { const unidadesPrincipais = await Unidade.find({ _id: { $in: unitIds }, is_principal: true }); if (unidadesPrincipais.length > 0) return badRequest(res,'Diretores não podem alterar o acesso de unidades principais.'); } const result = await Unidade.updateMany({ _id: { $in: unitIds } }, { $set: { is_active: activate } }); if (result.modifiedCount === 0) return badRequest(res,'Nenhuma unidade atualizada.'); return ok(res, { newStatus: activate }); } catch (error) { console.error('[API UNIDADES][toggle-access] Erro:', error); return serverError(res, error); } }
-export async function getUnidadeById(req, res) { try { const unidadeId = req.params.id; const unidade = await Unidade.findById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); if (!req.user.isMaster) { const matrizRef = req.user.unidade_principal_id || req.user.unidade_id; if (matrizRef) { const unidadesPermitidas = await Unidade.find({ $or: [ { _id: matrizRef }, { unidade_principal_id: matrizRef } ] }); const permitidoIds = new Set(unidadesPermitidas.map(u => String(u._id))); if (!permitidoIds.has(String(unidade._id))) return badRequest(res,'Acesso à unidade não autorizado'); } else return badRequest(res,'Acesso não autorizado'); }
+export async function toggleAccessUnidades(req, res) { try { if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para alterar o acesso de unidades.'); const { unitIds, activate } = req.body; if (!Array.isArray(unitIds) || typeof activate !== 'boolean') return badRequest(res,'Parâmetros inválidos.'); if (req.user.role === 'diretor') { const unidadesPrincipais = await findUnidadesPrincipaisByIds(unitIds); if (unidadesPrincipais.length > 0) return badRequest(res,'Diretores não podem alterar o acesso de unidades principais.'); } const result = await updateManyUnidadesAccessByIds(unitIds, activate); if (result.modifiedCount === 0) return badRequest(res,'Nenhuma unidade atualizada.'); return ok(res, { newStatus: activate }); } catch (error) { console.error('[API UNIDADES][toggle-access] Erro:', error); return serverError(res, error); } }
+export async function getUnidadeById(req, res) { try { const unidadeId = req.params.id; const unidade = await findUnidadeById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); if (!req.user.isMaster) { const matrizRef = req.user.unidade_principal_id || req.user.unidade_id; if (matrizRef) { const unidadesPermitidas = await findUnidadesPermitidasByMatrizRef(matrizRef); const permitidoIds = new Set(unidadesPermitidas.map(u => String(u._id))); if (!permitidoIds.has(String(unidade._id))) return badRequest(res,'Acesso à unidade não autorizado'); } else return badRequest(res,'Acesso não autorizado'); }
   // Fallback: se for unidade principal e não houver diretor_usuario_id salvo,
   // tentar descobrir pelo usuário diretor vinculado via unidade_id
   let diretorId = unidade.diretor_usuario_id;
   if (unidade.is_principal && !diretorId) {
     try {
-      const diretor = await User.findOne({ role: 'diretor', ativo: true, unidade_id: unidade._id }).select('_id');
+      const diretor = await findDiretorAtivoByUnidadeSelectId(unidade._id);
       if (diretor) diretorId = diretor._id;
     } catch (e) {
       console.warn('[API UNIDADES][getById] Fallback diretor falhou:', e.message);
@@ -438,7 +459,7 @@ export async function getUnidadeById(req, res) { try { const unidadeId = req.par
   return ok(res, unidadeData); } catch (error) { console.error('[API UNIDADES][getById] Erro:', error); return serverError(res, error); } }
 export async function getUnidadeModulos(req, res) {
   try {
-    const unidade = await Unidade.findById(req.params.id).populate('modulosAcessiveis');
+    const unidade = await findUnidadeByIdWithModulosAcessiveis(req.params.id);
     if (!unidade) return notFound(res,'Unidade não encontrada');
     const payload = (unidade.modulosAcessiveis || []).map(m => ({ _id: m._id, nome: m.nome, status: m.status }));
     return ok(res, payload);
@@ -455,7 +476,7 @@ export async function getUnidadePublic(req, res) {
     }
     const { id } = req.params;
     if (!id) return badRequest(res, 'ID da unidade é obrigatório.');
-    const unidade = await Unidade.findById(id).lean();
+    const unidade = await findUnidadeByIdLean(id);
     if (!unidade) return notFound(res, 'Unidade não encontrada.');
     if (unidade.is_active === false) return notFound(res, 'Unidade inativa.');
     const payload = {
@@ -490,7 +511,7 @@ export async function getUnidadePublic(req, res) {
     return serverError(res, error);
   }
 }
-export async function deleteUnidade(req, res) { try { const unidadeId = req.params.id; if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para excluir unidades.'); const unidade = await Unidade.findById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); if (unidade.is_principal) { if (req.user.role === 'diretor') return badRequest(res,'Diretores não podem excluir unidades principais.'); if (!req.user.isMaster) return badRequest(res,'Apenas Master pode excluir unidades principais'); } await Unidade.findByIdAndDelete(unidadeId); return ok(res, { deleted:true, id:unidadeId }); } catch (error) { console.error('[API UNIDADES][delete] Erro:', error); return serverError(res, error); } }
+export async function deleteUnidade(req, res) { try { const unidadeId = req.params.id; if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para excluir unidades.'); const unidade = await findUnidadeById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); if (unidade.is_principal) { if (req.user.role === 'diretor') return badRequest(res,'Diretores não podem excluir unidades principais.'); if (!req.user.isMaster) return badRequest(res,'Apenas Master pode excluir unidades principais'); } await deleteUnidadeById(unidadeId); return ok(res, { deleted:true, id:unidadeId }); } catch (error) { console.error('[API UNIDADES][delete] Erro:', error); return serverError(res, error); } }
 
 // ================= Logo da Unidade: leitura (serverless-friendly) =================
 // Converte Data URL em { buffer, contentType }; retorna null se inválido
@@ -509,7 +530,7 @@ function _parseDataUrl(dataUrl){
 export async function getUnidadeLogo(req, res) {
   try {
     const { id } = req.params;
-    const unidade = await Unidade.findById(id).lean();
+    const unidade = await findUnidadeByIdLean(id);
     if (!unidade) return notFound(res, 'Unidade não encontrada');
 
     const logo = unidade.logo || '';
@@ -638,7 +659,7 @@ export const uploadLogoUnidade = [
     try {
       if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para alterar logos.');
       const { id } = req.params;
-      const unidade = await Unidade.findById(id);
+      const unidade = await findUnidadeById(id);
       if(!unidade) return notFound(res,'Unidade não encontrada');
 
       // 1) JSON dataUrl (compat serverless ou clientes antigos apontando para /logo com JSON)
@@ -666,13 +687,12 @@ export const uploadLogoUnidade = [
           }
         } catch {}
         unidade.logo = uploaded.url;
-        await unidade.save();
+        await saveUnidadeDoc(unidade);
         console.log('[API UNIDADES][uploadLogo] JSON dataUrl salvo em Blob');
         return ok(res, { uploaded: true, logo: unidade.logo });
       }
 
       // 2) Multipart (campo 'logo')
-      if(!req.file) return badRequest(res,'Arquivo (logo) não enviado.');
       console.log('[API UNIDADES][uploadLogo] handler multipart; hasFile=', !!req.file, 'size=', req.file?.size);
       let uploaded;
       try {
@@ -688,7 +708,7 @@ export const uploadLogoUnidade = [
         }
       } catch {}
       unidade.logo = uploaded.url;
-      await unidade.save();
+      await saveUnidadeDoc(unidade);
       return ok(res, { uploaded: true, logo: unidade.logo });
     } catch (e) {
       console.error('[API UNIDADES][uploadLogo] Erro:', e);
@@ -711,11 +731,11 @@ export async function uploadLogoUnidadeInline(req, res) {
     if (!base64) return badRequest(res,'dataUrl sem conteúdo.');
     // Verificação de tamanho aproximado
     const approxBytes = Math.floor((base64.length * 3) / 4);
-  if (approxBytes > 8 * 1024 * 1024) return badRequest(res,'Imagem acima de 8MB.');
+    if (approxBytes > 8 * 1024 * 1024) return badRequest(res,'Imagem acima de 8MB.');
 
     const buffer = Buffer.from(base64, 'base64');
 
-    const unidade = await Unidade.findById(id);
+    const unidade = await findUnidadeById(id);
     if(!unidade) return notFound(res,'Unidade não encontrada');
 
     let uploaded;
@@ -732,7 +752,7 @@ export async function uploadLogoUnidadeInline(req, res) {
       }
     } catch {}
     unidade.logo = uploaded.url;
-    await unidade.save();
+    await saveUnidadeDoc(unidade);
 
     console.log('[API UNIDADES][uploadLogoInline] atualizado com sucesso para unidade', id);
     return ok(res, { uploaded: true, logo: unidade.logo });
