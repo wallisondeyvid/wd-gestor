@@ -272,6 +272,14 @@ export async function findFuncaoByIdPopulated(id) {
   return Funcao.findById(id).populate('unidade_principal_id modulos_habilitados');
 }
 
+export async function findAllFuncoesPopuladas() {
+  return Funcao.find().populate('unidade_principal_id modulos_habilitados');
+}
+
+export async function findFuncoesByUnidadePrincipalPopuladas(unidadePrincipalId) {
+  return Funcao.find({ unidade_principal_id: unidadePrincipalId }).populate('unidade_principal_id modulos_habilitados');
+}
+
 export async function findFuncaoById(id) {
   return Funcao.findById(id);
 }
@@ -425,6 +433,14 @@ export async function updateUnidadeByIdWithValidators(unidadeId, updated) {
 
 export async function findUnidadesPrincipaisByIds(unitIds) {
   return Unidade.find({ _id: { $in: unitIds }, is_principal: true });
+}
+
+export async function findUnidadesPrincipais() {
+  return Unidade.find({ is_principal: true });
+}
+
+export async function findUnidadesById(unidadeId) {
+  return Unidade.find({ _id: unidadeId });
 }
 
 export async function updateManyUnidadesAccessByIds(unitIds, activate) {
