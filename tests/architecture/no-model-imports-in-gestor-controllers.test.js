@@ -10,7 +10,6 @@ const IGNORE_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'coverage'
 
 const ALLOWLIST = new Set([
   'funcaoController.js',
-  'funcionarioApiController.js',
   'funcionarioController.js',
   'moduloController.js',
   'recursoController.js',
