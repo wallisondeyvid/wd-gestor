@@ -57,12 +57,22 @@ export async function findUserByEmailCondLean(cond) {
   return User.findOne(cond).lean();
 }
 
+export async function findUsersLockedAfterSelectLean(agora) {
+  return User.find({ lock_until: { $gt: agora } })
+    .select('_id email role lock_until failed_login_attempts')
+    .lean();
+}
+
 export async function findUserByCpfCondLean(cond) {
   return User.findOne(cond).lean();
 }
 
 export async function findAllUnidadesLean() {
   return Unidade.find({}).lean();
+}
+
+export async function findAllUnidadesSelectIdCodigoNomeLean() {
+  return Unidade.find().select('_id codigo nome').lean();
 }
 
 export async function findAllUnidades() {
@@ -83,6 +93,22 @@ export async function findUnidadePrincipalLean() {
 
 export async function findUserByEmailCond(cond) {
   return User.findOne(cond);
+}
+
+export async function findUsersByQueryLean(query) {
+  return User.find(query).lean();
+}
+
+export async function findUserDuplicadoByCpfUnidadeExcludingId(userId, cleanCpf, unidadeId) {
+  return User.findOne({ _id: { $ne: userId }, cpf: cleanCpf, unidade_id: unidadeId });
+}
+
+export async function countUsersMasters() {
+  return User.countDocuments({ role: 'master' });
+}
+
+export async function findUserByIdSelectAuthLockInfo(id) {
+  return User.findById(id).select('_id email failed_login_attempts lock_until role');
 }
 
 export async function findUsuariosDiretorAtivosPopulatedLean() {
@@ -340,6 +366,45 @@ export async function findUnidadeByIdWithModulosAcessiveis(id) {
 
 export async function findFuncionarioByCpfAndUnidade(cpf, unidadeId) {
   return Funcionario.findOne({ cpf, unidade_id: unidadeId });
+}
+
+export async function findAllFuncionariosSelectIdNomeCpfLean() {
+  return Funcionario.find().select('_id nome cpf').lean();
+}
+
+export async function findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionarioId) {
+  return Funcionario.findById(funcionarioId).select('_id unidade_id usuario_id').lean();
+}
+
+export async function findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidadeId) {
+  return Funcionario.findOne({ cpf: cleanCpf, unidade_id: unidadeId }).select('_id unidade_id email').lean();
+}
+
+export async function findFuncionarioByEmailSelectIdUnidadeEmailLean(emailNorm) {
+  return Funcionario.findOne({ email: emailNorm }).select('_id unidade_id email').lean();
+}
+
+export async function findFuncionarioByCpfOrEmailLean(cleanCpf, unidadeId, emailNorm) {
+  return Funcionario.findOne({ $or: [{ cpf: cleanCpf, unidade_id: unidadeId }, { email: emailNorm }] }).lean();
+}
+
+export async function unsetFuncionarioUsuarioIdById(funcionarioId) {
+  return Funcionario.updateOne({ _id: funcionarioId }, { $unset: { usuario_id: '' } });
+}
+
+export async function setFuncionarioUsuarioIdById(funcionarioId, userId) {
+  return Funcionario.updateOne({ _id: funcionarioId }, { $set: { usuario_id: userId } });
+}
+
+export async function unsetFuncionarioUsuarioIdIfMatchesUser(funcionarioId, userId) {
+  return Funcionario.updateOne({ _id: funcionarioId, usuario_id: userId }, { $unset: { usuario_id: '' } });
+}
+
+export async function setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId) {
+  return Funcionario.updateOne(
+    { _id: funcionarioId, $or: [{ usuario_id: { $exists: false } }, { usuario_id: null }] },
+    { $set: { usuario_id: userId } }
+  );
 }
 
 export async function findUnidadesAtivasCodigoNomeOrdenadasSelectLean() {

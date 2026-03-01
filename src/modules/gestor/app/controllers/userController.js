@@ -1,7 +1,26 @@
 // Controller de Usuários (migrado)
-import User from '#models/user.js';
-import Unidade from '#models/unidade.js';
-import Funcionario from '#models/Funcionario.js';
+import {
+	findUsersLockedAfterSelectLean,
+	findUsersByQueryLean,
+	findAllUnidadesSelectIdCodigoNomeLean,
+	findAllFuncionariosSelectIdNomeCpfLean,
+	findUserById,
+	saveUserDoc,
+	findUserDuplicadoByCpfUnidadeExcludingId,
+	unsetFuncionarioUsuarioIdById,
+	setFuncionarioUsuarioIdById,
+	countUsersMasters,
+	deleteUserById,
+	unsetFuncionarioUsuarioIdIfMatchesUser,
+	findUserByEmail,
+	findFuncionarioByIdSelectIdUnidadeUsuarioLean,
+	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean,
+	findFuncionarioByEmailSelectIdUnidadeEmailLean,
+	setFuncionarioUsuarioIdIfEmpty,
+	createFuncionarioDoc,
+	findFuncionarioByCpfOrEmailLean,
+	findUserByIdSelectAuthLockInfo,
+} from '#modules/gestor/app/db/api.db.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 // Usamos o util do módulo Gestor para manter a chave `error` nas respostas 4xx/5xx
@@ -16,9 +35,7 @@ export async function listLockedUsers(req, res) {
 		if (!req.user) return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
 		if (!(req.user.isMaster || req.user.role === 'admin')) return res.status(403).json({ success:false, error:'Acesso negado', code:'FORBIDDEN' });
 		const agora = new Date();
-		const docs = await User.find({ lock_until: { $gt: agora } })
-			.select('_id email role lock_until failed_login_attempts')
-			.lean();
+		const docs = await findUsersLockedAfterSelectLean(agora);
 		return res.json({ success:true, total: docs.length, data: docs });
 	} catch (e) {
 		console.error('[listLockedUsers] erro:', e);
@@ -31,9 +48,9 @@ export async function listarUsuarios(req, res, next) {
 		if (!req.user) return res.status(401).send('Não autenticado');
 		if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
 		const query = req.user.isMaster ? {} : { role: { $ne: 'master' } };
-		const usuarios = await User.find(query).lean();
-		const unidadesFiltradas = await Unidade.find().select('_id codigo nome').lean();
-		const funcionarios = await Funcionario.find().select('_id nome cpf').lean();
+		const usuarios = await findUsersByQueryLean(query);
+		const unidadesFiltradas = await findAllUnidadesSelectIdCodigoNomeLean();
+		const funcionarios = await findAllFuncionariosSelectIdNomeCpfLean();
 		res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });
 	} catch (e) {
 		console.error('Erro na rota /usuarios:', e);
@@ -44,11 +61,11 @@ export async function listarUsuarios(req, res, next) {
 export async function toggleUsuario(req, res) {
 	if (!req.user) return res.status(401).send('Não autenticado');
 	if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-	const user = await User.findById(req.params.id);
+	const user = await findUserById(req.params.id);
 	if (!user) return res.status(404).send('Usuário não encontrado');
 	if (user.role === 'master' && !req.user.isMaster) return res.status(403).send('Apenas Master pode alterar o usuário Master');
 	user.ativo = !user.ativo;
-	await user.save();
+	await saveUserDoc(user);
 	// Se for requisição AJAX (fetch com X-Requested-With) retorna JSON
 	if (req.xhr || req.get('X-Requested-With') === 'XMLHttpRequest') {
 		return res.json({ success:true, id: user._id, ativo: user.ativo });
@@ -61,7 +78,7 @@ export async function atualizarUsuario(req, res) {
 	if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
 	try {
 		const { nome, role, cpf, unidade_id, funcionario_id } = req.body;
-		const user = await User.findById(req.params.id);
+		const user = await findUserById(req.params.id);
 		if (!user) return res.status(404).send('Usuário não encontrado');
 		if (user.role === 'master' && !req.user.isMaster) return res.status(403).send('Apenas Master pode alterar o usuário Master');
 		const isTargetMaster = user.role === 'master';
@@ -70,7 +87,7 @@ export async function atualizarUsuario(req, res) {
 		}
 		if (cpf) {
 			const cleanCpf = cpf.replace(/\D/g,'');
-			const duplicado = await User.findOne({ _id: { $ne: user._id }, cpf: cleanCpf, unidade_id: user.unidade_id });
+			const duplicado = await findUserDuplicadoByCpfUnidadeExcludingId(user._id, cleanCpf, user.unidade_id);
 			if (duplicado) return res.status(400).send('CPF já cadastrado nesta empresa');
 			user.cpf = cleanCpf;
 		} else {
@@ -87,17 +104,17 @@ export async function atualizarUsuario(req, res) {
 			if (prevFuncionarioId !== nextFuncionarioId) {
 				try {
 					if (prevFuncionarioId) {
-						await Funcionario.updateOne({ _id: prevFuncionarioId }, { $unset: { usuario_id: '' } });
+						await unsetFuncionarioUsuarioIdById(prevFuncionarioId);
 					}
 					if (nextFuncionarioId) {
-						await Funcionario.updateOne({ _id: nextFuncionarioId }, { $set: { usuario_id: user._id } });
+						await setFuncionarioUsuarioIdById(nextFuncionarioId, user._id);
 					}
 				} catch (linkErr) {
 					console.warn('[atualizarUsuario] aviso ao sincronizar vínculo de funcionário:', linkErr?.message || linkErr);
 				}
 			}
 		}
-		await user.save();
+		await saveUserDoc(user);
 		// Se for requisição AJAX/JSON, responde com JSON; caso contrário, PRG 303 para evitar re-POST
 		const wantsJson = (req.xhr || req.get('X-Requested-With') === 'XMLHttpRequest' || String(req.headers.accept||'').includes('application/json'));
 		if (wantsJson) {
@@ -115,22 +132,22 @@ export async function excluirUsuario(req, res) {
 	if (!req.user) return res.status(401).send('Não autenticado');
 	if (!req.user.isMaster) return res.status(403).send('Acesso negado');
 	try {
-		const user = await User.findById(req.params.id);
+		const user = await findUserById(req.params.id);
 		if (!user) return res.status(404).send('Usuário não encontrado');
 		if (String(user._id) === String(req.user._id)) {
 			return res.status(403).send('Você não pode excluir seu próprio usuário.');
 		}
 		if (user.role === 'master') {
-			const totalMasters = await User.countDocuments({ role: 'master' });
+			const totalMasters = await countUsersMasters();
 			console.warn('Tentativa de exclusão de master bloqueada. Total masters:', totalMasters);
 			return res.status(403).send('Usuário master não pode ser excluído.');
 		}
 		// Se estiver vinculado a um funcionário, remover vínculo no documento do funcionário
 		const vinculoFuncionarioId = user.funcionario_id ? String(user.funcionario_id) : null;
-		await User.deleteOne({ _id: user._id });
+		await deleteUserById(user._id);
 		if (vinculoFuncionarioId) {
 			try {
-				await Funcionario.updateOne({ _id: vinculoFuncionarioId, usuario_id: user._id }, { $unset: { usuario_id: '' } });
+				await unsetFuncionarioUsuarioIdIfMatchesUser(vinculoFuncionarioId, user._id);
 			} catch(unsetErr) {
 				console.warn('[excluirUsuario] aviso ao remover vínculo de funcionário:', unsetErr?.message || unsetErr);
 			}
@@ -182,7 +199,7 @@ export async function criarUsuario(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 		const emailNorm = String(email).toLowerCase();
-		const existe = await User.findOne({ email: emailNorm });
+		const existe = await findUserByEmail(emailNorm);
 		if (existe) return badRequest(res, 'Email já cadastrado', { code: 'EMAIL_DUPLICATE' });
 		if ((role === 'user' || role === 'diretor') && (!unidade_id || unidade_id.trim() === '')) {
 			return badRequest(res, 'Para usuários e diretores, é obrigatório selecionar uma unidade vinculada.', { code: 'UNIT_REQUIRED' });
@@ -192,7 +209,7 @@ export async function criarUsuario(req, res) {
 		let funcionarioDoc = null;
 		if (funcionario_id) {
 			try {
-				funcionarioDoc = await Funcionario.findById(funcionario_id).select('_id unidade_id usuario_id').lean();
+				funcionarioDoc = await findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionario_id);
 				if (!funcionarioDoc) {
 					return badRequest(res, 'Funcionário não encontrado', { code:'FUNC_NOT_FOUND' });
 				}
@@ -223,8 +240,8 @@ export async function criarUsuario(req, res) {
 		// Se funcionario_id foi enviado e validado, efetiva o vínculo no documento do Funcionário
 		if (funcionarioDoc) {
 			try {
-				user.funcionario_id = funcionarioDoc._id; if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id; await user.save();
-				await Funcionario.updateOne({ _id: funcionarioDoc._id, $or: [ { usuario_id: { $exists:false } }, { usuario_id: null } ] }, { $set: { usuario_id: user._id } });
+				user.funcionario_id = funcionarioDoc._id; if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id; await saveUserDoc(user);
+				await setFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id);
 			} catch(linkErr) {
 				console.warn('[criarUsuario] falha ao vincular funcionario_id informado:', linkErr?.message || linkErr);
 			}
@@ -240,23 +257,23 @@ export async function criarUsuario(req, res) {
 			if (!unidade_id) return badRequest(res, 'Unidade é obrigatória para criar novo funcionário.', { code: 'UNIT_REQUIRED' });
 			try {
 				// 1) Tentar localizar funcionário existente por CPF + unidade (preferencial)
-				let existente = await Funcionario.findOne({ cpf: cleanCpf, unidade_id }).select('_id unidade_id email').lean();
+				let existente = await findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidade_id);
 				// 2) Fallback por e-mail (índice único por e-mail impede duplicar)
-				if (!existente) existente = await Funcionario.findOne({ email: emailNorm }).select('_id unidade_id email').lean();
+				if (!existente) existente = await findFuncionarioByEmailSelectIdUnidadeEmailLean(emailNorm);
 				if (existente) {
 					// Vincula usuário ao funcionário já existente
 					user.funcionario_id = existente._id;
 					if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
-					await user.save();
+					await saveUserDoc(user);
 					// marca vínculo no funcionário para evitar reaparecer como disponível
-					try { await Funcionario.updateOne({ _id: existente._id }, { $set: { usuario_id: user._id } }); } catch(_up) {}
+					try { await setFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up) {}
 					console.log('[criarUsuario] Vinculado a funcionário existente', { funcionario_id: existente._id.toString(), user_id: user._id.toString() });
 				} else {
 					// Criar placeholder mínimo
 					const placeholderRG = 'RG' + Date.now();
 					const placeholderNascimento = new Date('2000-01-01');
 					const placeholderTelefone = '(00) 0000-0000';
-					funcionarioNovo = await Funcionario.create({
+					funcionarioNovo = await createFuncionarioDoc({
 						unidade_id,
 						nome: user.nome || (nome && nome.trim()) || emailNorm.split('@')[0],
 						rg: placeholderRG,
@@ -269,7 +286,7 @@ export async function criarUsuario(req, res) {
 					});
 					user.funcionario_id = funcionarioNovo._id;
 					if (!user.unidade_id) user.unidade_id = unidade_id;
-					await user.save();
+					await saveUserDoc(user);
 					console.log('[criarUsuario] Funcionário placeholder criado e vinculado', { funcionario_id: funcionarioNovo._id.toString(), user_id: user._id.toString() });
 				}
 			} catch (errFuncionario) {
@@ -279,10 +296,10 @@ export async function criarUsuario(req, res) {
 				const isDup = code === 11000 || /duplicate key/i.test(msg);
 				if (isDup) {
 					try {
-						const existente = await Funcionario.findOne({ $or: [ { cpf: cpf ? cpf.replace(/\D/g,'') : undefined, unidade_id }, { email: emailNorm } ] }).lean();
+						const existente = await findFuncionarioByCpfOrEmailLean(cpf ? cpf.replace(/\D/g,'') : undefined, unidade_id, emailNorm);
 						if (existente) {
-							user.funcionario_id = existente._id; if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id; await user.save();
-							try { await Funcionario.updateOne({ _id: existente._id }, { $set: { usuario_id: user._id } }); } catch(_up2) {}
+							user.funcionario_id = existente._id; if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id; await saveUserDoc(user);
+							try { await setFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up2) {}
 							console.warn('[criarUsuario] Conflito ao criar funcionário; vinculado a existente', { funcionario_id: existente._id.toString() });
 						}
 					} catch(_e) { /* ignora fallback de vinculação */ }
@@ -382,7 +399,7 @@ export async function atualizarSenhaUsuario(req, res) {
 	try {
 		const { senhaAtual, novaSenha } = req.body;
 		if (!senhaAtual || !novaSenha) return badRequest(res, 'Parâmetros insuficientes');
-		const user = await User.findById(req.user.id);
+		const user = await findUserById(req.user.id);
 		if (!user) return notFound(res, 'Usuário não encontrado');
 		const confere = await bcrypt.compare(senhaAtual, user.senha);
 		if (!confere) return badRequest(res, 'Senha atual inválida');
@@ -390,7 +407,7 @@ export async function atualizarSenhaUsuario(req, res) {
 		// Limpa flags de primeiro acesso / senha provisória se ainda marcadas
 		if (user.primeiro_acesso) user.primeiro_acesso = false;
 		if (user.senha_provisoria) user.senha_provisoria = false;
-		await user.save();
+		await saveUserDoc(user);
 		return ok(res, { updated:true, primeiro_acesso:false, senha_provisoria:false });
 	} catch (e) {
 		console.error('[atualizarSenhaUsuario] erro:', e);
@@ -404,11 +421,11 @@ export async function unlockUsuario(req, res) {
 		if (!req.user) return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
 		if (!(req.user.isMaster || req.user.role === 'admin')) return res.status(403).json({ success:false, error:'Acesso negado', code:'FORBIDDEN' });
 		const { id } = req.params;
-		const user = await User.findById(id);
+		const user = await findUserById(id);
 		if (!user) return res.status(404).json({ success:false, error:'Usuário não encontrado', code:'NOT_FOUND' });
 		user.failed_login_attempts = 0;
 		user.lock_until = null;
-		await user.save();
+		await saveUserDoc(user);
 		return res.json({ success:true, unlocked:true, id: user._id });
 	} catch (e) {
 		console.error('[unlockUsuario] erro:', e);
@@ -426,7 +443,7 @@ export async function statusUsuario(req, res) {
 		if (!isPriv && String(req.user.id) !== String(id)) {
 			return res.status(403).json({ success:false, error:'Acesso negado', code:'FORBIDDEN' });
 		}
-		const user = await User.findById(id).select('_id email failed_login_attempts lock_until role');
+		const user = await findUserByIdSelectAuthLockInfo(id);
 		if (!user) return res.status(404).json({ success:false, error:'Usuário não encontrado', code:'NOT_FOUND' });
 		const agora = new Date();
 		const locked = !!(user.lock_until && user.lock_until > agora);
