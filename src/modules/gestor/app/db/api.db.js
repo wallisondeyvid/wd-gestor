@@ -16,7 +16,10 @@ import {
 } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
 import { findSetorByUnidadeAndNomeNormalizadoLeanRepo } from '#modules/gestor/app/repositories/SetorReadRepository.js';
 import { findModuloByIdLeanRepo } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
-import { findFuncaoByIdLeanRepo } from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
+import {
+  findFuncaoByIdLeanRepo,
+  findFuncoesByUnidadeLeanRepo,
+} from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
 
 export async function findUnidadeByIdLean(id) {
   return findUnidadeByIdLeanRepo({
@@ -398,7 +401,10 @@ export async function findFuncaoByIdLean(id) {
 }
 
 export async function findFuncoesByUnidadeLean(unidadeId) {
-  return Funcao.find({ unidade_principal_id: unidadeId }).lean();
+  return findFuncoesByUnidadeLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
 }
 
 export async function findFuncoesByFiltroLean(filtro) {
