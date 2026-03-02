@@ -9,7 +9,11 @@ import Feedback from '#models/feedback.js';
 import WidgetSetting from '#models/widgetSetting.js';
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
-import { findSubunidadesLeanRepo, findUnidadeByIdLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
+import {
+  findSubunidadesLeanRepo,
+  findUnidadeByIdLeanRepo,
+  findUnidadesByCondLeanRepo,
+} from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
 
 export async function findUnidadeByIdLean(id) {
   return findUnidadeByIdLeanRepo({
@@ -36,7 +40,7 @@ export async function findSubunidadesLean(unidadePrincipalId) {
 }
 
 export async function findUnidadesByCondLean(cond) {
-  return Unidade.find(cond).select('_id').lean();
+  return findUnidadesByCondLeanRepo({ unitScope: null, cond });
 }
 
 export async function existsUnidadeByCond(cond) {

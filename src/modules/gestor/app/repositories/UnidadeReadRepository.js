@@ -20,3 +20,13 @@ export async function findSubunidadesLeanRepo({ unitScope, unidadePrincipalId })
 
   return UnidadeModel.find({ unidade_principal_id: unidadePrincipalId }).lean();
 }
+
+export async function findUnidadesByCondLeanRepo({ unitScope, cond }) {
+  const UnidadeModel = resolveModel({
+    name: Unidade.modelName || 'Unidade',
+    schema: Unidade.schema,
+    unitScope,
+  });
+
+  return UnidadeModel.find(cond).select('_id').lean();
+}
