@@ -1,2 +1,1 @@
-export { createUserAndSendPassword } from '#modules/gestor/app/usecases/user/createUserAndSendPassword.js';
-export { findUserByIdForProfile, findUserByEmailForProfile } from '#modules/gestor/app/usecases/user/findUserForProfile.js';
+export { createUserAndSendPassword, findUserByIdForProfile, findUserByEmailForProfile } from '#modules/gestor/app/services/legacy/userService.js';
