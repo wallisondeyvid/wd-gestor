@@ -16,6 +16,7 @@ import {
 } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
 import { findSetorByUnidadeAndNomeNormalizadoLeanRepo } from '#modules/gestor/app/repositories/SetorReadRepository.js';
 import { findModuloByIdLeanRepo } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
+import { findFuncaoByIdLeanRepo } from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
 
 export async function findUnidadeByIdLean(id) {
   return findUnidadeByIdLeanRepo({
@@ -393,7 +394,7 @@ export async function updateFuncaoById(id, updates) {
 }
 
 export async function findFuncaoByIdLean(id) {
-  return Funcao.findById(id).lean();
+  return findFuncaoByIdLeanRepo({ unitScope: null, id });
 }
 
 export async function findFuncoesByUnidadeLean(unidadeId) {
