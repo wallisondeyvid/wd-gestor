@@ -14,6 +14,7 @@ import {
   findUnidadeByIdLeanRepo,
   findUnidadesByCondLeanRepo,
 } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
+import { findSetorByUnidadeAndNomeNormalizadoLeanRepo } from '#modules/gestor/app/repositories/SetorReadRepository.js';
 
 export async function findUnidadeByIdLean(id) {
   return findUnidadeByIdLeanRepo({
@@ -248,7 +249,11 @@ export async function findUnidadeById(setorUnidadeId) {
 }
 
 export async function findSetorByUnidadeAndNomeNormalizadoLean(unidadeId, nomeNormalizado) {
-  return Setor.findOne({ unidade_id: unidadeId, nome_normalizado: nomeNormalizado }).lean();
+  return findSetorByUnidadeAndNomeNormalizadoLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+    nomeNormalizado,
+  });
 }
 
 export async function createSetor(data) {
