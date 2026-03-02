@@ -8,9 +8,14 @@ import Funcionario from '#models/Funcionario.js';
 import Feedback from '#models/feedback.js';
 import WidgetSetting from '#models/widgetSetting.js';
 import mongoose from 'mongoose';
+import { createUnitScope } from '#shared/unitScope.js';
+import { findUnidadeByIdLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
 
 export async function findUnidadeByIdLean(id) {
-  return Unidade.findById(id).lean();
+  return findUnidadeByIdLeanRepo({
+    unitScope: createUnitScope({ unidadeId: id }),
+    unidadeId: id,
+  });
 }
 
 export async function findUnidadeByCodigoLean(codigo) {
