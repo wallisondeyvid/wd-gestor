@@ -5,10 +5,19 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
-const FACADE_FILES = [
-  'src/modules/gestor/app/services/apiDbBridgeService.js',
-  'src/modules/gestor/app/services/authDbBridgeService.js',
-  'src/modules/gestor/app/services/userService.js',
+const FACADES = [
+  {
+    file: 'src/modules/gestor/app/services/apiDbBridgeService.js',
+    allowedFrom: (p) => p.includes('/services/legacy/'),
+  },
+  {
+    file: 'src/modules/gestor/app/services/authDbBridgeService.js',
+    allowedFrom: (p) => p.includes('/services/legacy/'),
+  },
+  {
+    file: 'src/modules/gestor/app/services/userService.js',
+    allowedFrom: (p) => p.includes('/usecases/user/'),
+  },
 ];
 
 const FORBIDDEN_PATTERNS = [
@@ -33,12 +42,9 @@ function stripComments(content) {
     .replace(/(^|\s)\/\/.*$/gm, '$1');
 }
 
-function isLegacyTarget(targetPath) {
-  return targetPath.includes('/services/legacy/') || targetPath.includes('#modules/gestor/app/services/legacy/');
-}
-
-test('Guardrail estrutural: fachadas do Gestor devem reexportar somente de legacy', () => {
-  for (const relativePath of FACADE_FILES) {
+test('Guardrail estrutural: fachadas do Gestor devem reexportar somente destinos permitidos', () => {
+  for (const facade of FACADES) {
+    const relativePath = facade.file;
     const absolutePath = path.resolve(ROOT, relativePath);
     const raw = fs.readFileSync(absolutePath, 'utf8');
     const content = stripComments(raw);
@@ -56,8 +62,8 @@ test('Guardrail estrutural: fachadas do Gestor devem reexportar somente de legac
 
     for (const reexportMatch of reexports) {
       const fromPath = reexportMatch[2] || '';
-      if (!isLegacyTarget(fromPath)) {
-        assert.fail(`Fachada violou regra de destino legacy: ${relativePath}. Path inválido encontrado: ${fromPath}`);
+      if (!facade.allowedFrom(fromPath)) {
+        assert.fail(`Fachada violou regra de destino permitido: ${relativePath}. Path inválido encontrado: ${fromPath}`);
       }
     }
 

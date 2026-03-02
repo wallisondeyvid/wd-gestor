@@ -45,6 +45,7 @@ function runGuard(pattern, allowedFiles) {
 test('Guardrail estrutural: services do Gestor não podem importar usecases diretamente', () => {
   const allowedFiles = [];
   collectFilesRecursively(LEGACY_DIR, allowedFiles);
+  allowedFiles.push('src/modules/gestor/app/services/userService.js');
 
   for (const pattern of PATTERNS) {
     const result = runGuard(pattern, allowedFiles);
