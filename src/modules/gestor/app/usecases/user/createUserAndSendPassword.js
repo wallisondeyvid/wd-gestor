@@ -29,9 +29,10 @@ function generateTempPassword() {
   return result;
 }
 
-export async function createUserAndSendPassword({ nome, email, cpf, role, unidade_id, unitScope }) {
-  const repo = new UserRepository({ unitScope: unitScope || { type: 'global', unidadeId: null } });
-  const tempPassword = generateTempPassword();
+export async function createUserAndSendPassword({ nome, email, cpf, role, unidade_id, funcionario_id, senha, req, unitScope }) {
+  const effectiveUnitScope = unitScope || req?.unitScope || { type: 'global', unidadeId: null };
+  const repo = new UserRepository({ unitScope: effectiveUnitScope });
+  const tempPassword = senha || generateTempPassword();
   const hash = await bcrypt.hash(tempPassword, 10);
   const createFn = typeof repo.createUser === 'function' ? repo.createUser.bind(repo) : repo.create.bind(repo);
   const user = await createFn({
@@ -40,6 +41,7 @@ export async function createUserAndSendPassword({ nome, email, cpf, role, unidad
     cpf,
     role: role || 'user',
     unidade_id,
+    funcionario_id,
     senha: hash,
     primeiro_acesso: true,
     senha_provisoria: true,
