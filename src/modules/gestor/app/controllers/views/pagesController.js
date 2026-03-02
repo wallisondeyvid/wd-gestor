@@ -33,7 +33,7 @@ import {
   findUnidadesForSetorPageByCondSelectLean,
   findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean,
   findUnidadesForSetorPageByIdsSelectLean,
-} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 // Helper consistente para derivar basePath (montagem em /gestor)
 function deriveBasePath(req){

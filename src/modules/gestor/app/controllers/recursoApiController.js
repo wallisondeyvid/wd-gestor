@@ -14,7 +14,7 @@ import {
 	findOutroRecursoByRenavam,
 	updateRecursoByIdComUnidadeNome,
 	deleteRecursoById,
-} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 // GET /gestor/api/recursos?placa=ABC1234&unidadeId=<id>
 // Regras:

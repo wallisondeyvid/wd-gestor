@@ -5,7 +5,7 @@ import {
   findAllModulos,
   findUnidadesPrincipais,
   findUnidadesById,
-} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function listarFuncoes(req, res) {
   try {

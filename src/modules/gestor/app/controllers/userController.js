@@ -20,7 +20,7 @@ import {
 	createFuncionarioDoc,
 	findFuncionarioByCpfOrEmailLean,
 	findUserByIdSelectAuthLockInfo,
-} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 // Usamos o util do módulo Gestor para manter a chave `error` nas respostas 4xx/5xx

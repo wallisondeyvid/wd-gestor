@@ -3,7 +3,7 @@ import {
   findUsersByQueryLean,
   findAllUnidadesSelectIdCodigoNomeLean,
   findAllFuncionariosSelectIdNomeCpfLean,
-} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function listarUsuarios(req, res, next) {
   try {

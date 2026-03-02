@@ -22,7 +22,7 @@ import {
   findUsersByFuncionarioIds,
   revokeRememberTokenByHash,
   saveUserDocument,
-} from '#modules/gestor/app/services/legacy/authDbBridgeService.js';
+} from '#modules/gestor/app/services/authDbBridgeService.js';
 
 // -----------------------------------------------------------------------------
 // Helper de Autorização de Módulo

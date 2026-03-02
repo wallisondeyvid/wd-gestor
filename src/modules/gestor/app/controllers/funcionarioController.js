@@ -5,7 +5,7 @@ import {
   findSetoresAtivosNomeOrdenadosSelectLean,
   findFuncionariosParaListagemComRefsSelectLean,
   findFuncionariosDisponiveisSemUsuarioPorUnidadeSelectLean,
-} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function listarFuncionarios(req, res) {
   try {

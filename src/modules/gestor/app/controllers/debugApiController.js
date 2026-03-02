@@ -9,7 +9,7 @@ import {
 	findUnidadePrincipalLean,
 	findUserByEmailCond,
 	deleteUserById,
-} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 export function debugSession(req,res){ try { return ok(res, { hasCookie: Boolean(req.headers.cookie), sessionID: req.sessionID || null, user: req.user ? { id: req.user.id, email: req.user.email, role: req.user.role } : null }); } catch(e){ return serverError(res,e); } }
 export function whoAmI(req,res){
 	if(!req.user) return badRequest(res,'Não autenticado');

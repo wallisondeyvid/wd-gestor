@@ -16,7 +16,7 @@ import {
   saveFuncao,
   findUnidadeByIdWithModulosAcessiveis,
   findUnidadesByCondLean,
-} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 function normalizarListaModulos(input){
   if (input === undefined || input === null) return [];

@@ -1,4 +1,4 @@
-import { findUserById, saveUserDoc, deleteUserById } from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
+import { findUserById, saveUserDoc, deleteUserById } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { ok, badRequest, notFound, serverError } from '#core/utils/apiResponse.js';
 function isAdminOrMaster(req){ if(!req.user) return false; const role = (req.user.role||'').toLowerCase(); return req.user.isMaster || role === 'master' || role === 'admin'; }
 export async function toggleUsuario(req,res){ try { const { id } = req.params; if(!isAdminOrMaster(req)) return badRequest(res,'Apenas admin ou master podem alterar usuários'); const user = await findUserById(id); if(!user) return notFound(res,'Usuário não encontrado'); if(user.role === 'master' && !req.user.isMaster && req.user.role !== 'master') return badRequest(res,'Apenas master pode alterar usuário master'); user.ativo = !user.ativo; await saveUserDoc(user); return ok(res,{ id:user._id, ativo:user.ativo }); } catch(e){ return serverError(res,e); } }
