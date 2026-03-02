@@ -15,6 +15,7 @@ import {
   findUnidadesByCondLeanRepo,
 } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
 import { findSetorByUnidadeAndNomeNormalizadoLeanRepo } from '#modules/gestor/app/repositories/SetorReadRepository.js';
+import { findModuloByIdLeanRepo } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
 
 export async function findUnidadeByIdLean(id) {
   return findUnidadeByIdLeanRepo({
@@ -169,7 +170,7 @@ export async function findUnidadeByIdWithModulosAcessiveisLean(unidadeId) {
 }
 
 export async function findModuloByIdLean(id) {
-  return Modulo.findById(id).lean();
+  return findModuloByIdLeanRepo({ unitScope: null, id });
 }
 
 export async function findModuloByNome(nome) {
