@@ -4,7 +4,7 @@ import path from 'path';
 import {
 	findUnidadeByIdOrRawLean,
 	findClusterUnidadesByAnchorLean,
-} from '#modules/gestor/app/db/api.db.js';
+} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 let ibgeIndex = null; let ibgeIndexLoadError = null;
 function stripDiacritics(s=''){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 function normalizeName(str){

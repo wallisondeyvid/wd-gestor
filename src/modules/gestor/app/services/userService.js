@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { sendMail } from '#core/mail/mailer.js';
 import { welcomePassword } from '#modules/gestor/app/mail/templates/welcomePassword.js';
 import { UserRepository } from '#modules/gestor/app/repositories/UserRepository.js';
+import { UserProfileRepository } from '#modules/gestor/app/repositories/UserProfileRepository.js';
 
 function resolveAppUrl() {
   const vercelDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL || '';
@@ -44,4 +45,14 @@ export async function createUserAndSendPassword({ nome, email, cpf, role, unidad
     user._temp_password_plain = tempPassword;
   }
   user._temp_password_plain = tempPassword; return user;
+}
+
+export async function findUserByIdForProfile({ unitScope, userId }) {
+  const repo = new UserProfileRepository({ unitScope });
+  return repo.findByIdForProfile(userId);
+}
+
+export async function findUserByEmailForProfile({ unitScope, email }) {
+  const repo = new UserProfileRepository({ unitScope });
+  return repo.findByEmailForProfile(email);
 }

@@ -17,7 +17,7 @@ import {
   findCounterSetorCodigoLean,
   findMaxSetorCodigoLean,
   findOneAndUpdateCounterSetorCodigo,
-} from '#modules/gestor/app/db/api.db.js';
+} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 
 // Helper para resposta 409
 function conflict(res, message, extra={}) {

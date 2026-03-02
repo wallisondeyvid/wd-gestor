@@ -8,7 +8,7 @@ import {
 	findUnidadeByIdLean,
 	findUnidadesByCondLean,
 	findUnidadeUserBaseLean,
-} from '#modules/gestor/app/db/api.db.js';
+} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

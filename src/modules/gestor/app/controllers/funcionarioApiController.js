@@ -21,7 +21,7 @@ import {
 	findFuncionarioByEmailSelectLean,
 	findUserByEmail,
 	findUserByFuncionarioId,
-} from '#modules/gestor/app/db/api.db.js';
+} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 import { normalizeFuncionarioPayload } from './utils/funcionarioNormalize.js';
 
 const __filename = fileURLToPath(import.meta.url);

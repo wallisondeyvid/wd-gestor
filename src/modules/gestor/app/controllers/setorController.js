@@ -1,5 +1,5 @@
 // Controller de Setores (migrado)
-import { findSetoresAtivosPopulateUnidadeOrdenadosLean, findUnidadesAtivasNomeCodigoOrdenadasLean } from '#modules/gestor/app/db/api.db.js';
+import { findSetoresAtivosPopulateUnidadeOrdenadosLean, findUnidadesAtivasNomeCodigoOrdenadasLean } from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 export async function listarSetores(req, res) {
   try {
     // Inclui setores legados que talvez não tenham o campo 'ativo' definido (null/undefined)

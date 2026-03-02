@@ -1,5 +1,5 @@
 // Controller de Módulos (migrado)
-import { findAllModulos } from '#modules/gestor/app/db/api.db.js';
+import { findAllModulos } from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 export async function listarModulos(req, res) {
   try {
     if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');

@@ -1,5 +1,5 @@
 // Controller de Recursos (migrado)
-import { findAllUnidadesLean, findUnidadeByIdLean, findUnidadesByCondLeanFull } from '#modules/gestor/app/db/api.db.js';
+import { findAllUnidadesLean, findUnidadeByIdLean, findUnidadesByCondLeanFull } from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 export async function listarRecursos(req, res) {
   try {
     let unidadesFiltradas = [];

@@ -8,7 +8,7 @@ import {
 	findModuloById,
 	saveModulo,
 	deleteModuloById,
-} from '#modules/gestor/app/db/api.db.js';
+} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 
 export async function listarModulos(req,res){ try { const user = req.user; if(user?.role === 'master'){ const modulos = await findAllModulosBaseLean(); return ok(res, modulos); } if(user?.unidade_id){ const unidade = await findUnidadeByIdWithModulosAcessiveisLean(user.unidade_id); if(unidade?.modulosAcessiveis){ const modulos = unidade.modulosAcessiveis.map(m=>({ _id:m._id, nome:m.nome, descricao:m.descricao, status:m.status, url_base:m.url_base })); return ok(res, modulos); } } return ok(res, []); } catch(e){ console.error('[API MODULOS][listar] Erro:', e); return serverError(res, e); } }
 export async function obterModulo(req,res){ try { const modulo = await findModuloByIdLean(req.params.id); if(!modulo) return notFound(res,'Módulo não encontrado'); return ok(res, modulo); } catch(e){ console.error('[API MODULOS][get] Erro:', e); return serverError(res, e); } }

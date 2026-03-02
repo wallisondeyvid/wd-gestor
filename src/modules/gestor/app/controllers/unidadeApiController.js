@@ -22,7 +22,7 @@ import {
   findUnidadeByIdWithModulosAcessiveis,
   findUnidadeByIdLean,
   deleteUnidadeById,
-} from '#modules/gestor/app/db/api.db.js';
+} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 import { validarCnpj, calcularDigitoVerificador } from '#modules/gestor/app/utils/cnpj.js';
 // Dependências para upload de logo
 import multer from 'multer';

@@ -20,14 +20,17 @@ import {
 	createFuncionarioDoc,
 	findFuncionarioByCpfOrEmailLean,
 	findUserByIdSelectAuthLockInfo,
-} from '#modules/gestor/app/db/api.db.js';
+} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 // Usamos o util do módulo Gestor para manter a chave `error` nas respostas 4xx/5xx
 import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/app/utils/apiResponse.js';
 // Service para criação + envio de senha provisória
-import { createUserAndSendPassword } from '#modules/gestor/app/services/userService.js';
-import { UserProfileRepository } from '#modules/gestor/app/repositories/UserProfileRepository.js';
+import {
+	createUserAndSendPassword,
+	findUserByIdForProfile,
+	findUserByEmailForProfile,
+} from '#modules/gestor/app/services/userService.js';
 
 // Lista usuários atualmente bloqueados por lock_until futuro
 export async function listLockedUsers(req, res) {
@@ -327,8 +330,6 @@ export async function obterUsuarioAtual(req, res) {
 		return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
 	}
 	try {
-		const userProfileRepository = new UserProfileRepository({ unitScope: req.unitScope });
-
 		const sessionIdRaw = req.session?.user?.id;
 		if (!sessionIdRaw || !mongoose.Types.ObjectId.isValid(String(sessionIdRaw))) {
 			return res.status(401).json({ success:false, error:'Sessão inválida', code:'UNAUTHORIZED' });
@@ -339,14 +340,14 @@ export async function obterUsuarioAtual(req, res) {
 		let targetId = objectId;
 		let baseUser = null;
 		if (targetId) {
-			const user = await userProfileRepository.findByIdForProfile(targetId);
+			const user = await findUserByIdForProfile({ unitScope: req.unitScope, userId: targetId });
 			baseUser = user;
 		}
 		// Fallback: se id ausente ou não encontrado, tentar por e-mail
 		if (!baseUser) {
 			const emailCandidate = (req.user && req.user.email) || (req.session && req.session.user && req.session.user.email) || null;
 			if (emailCandidate) {
-				baseUser = await userProfileRepository.findByEmailForProfile(emailCandidate.toLowerCase());
+				baseUser = await findUserByEmailForProfile({ unitScope: req.unitScope, email: emailCandidate.toLowerCase() });
 				if (baseUser) { targetId = baseUser._id; }
 			}
 		}

@@ -10,7 +10,7 @@ import {
   findFuncionariosByEmailsSelectEmailNomeLean,
   findUnidadeById,
   saveUnidadeDoc,
-} from '#modules/gestor/app/db/api.db.js';
+} from '#modules/gestor/app/services/legacy/apiDbBridgeService.js';
 import { BankPort } from '#shared/ports/bank.port.js';
 
 export async function listarUnidades(req, res) {
