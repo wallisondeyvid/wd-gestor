@@ -11,6 +11,7 @@ import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
 import {
   findSubunidadesLeanRepo,
+  findUnidadeByCodigoLeanRepo,
   findUnidadeByIdLeanRepo,
   findUnidadesByCondLeanRepo,
 } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
@@ -36,7 +37,7 @@ export async function findUnidadeByIdLean(id) {
 }
 
 export async function findUnidadeByCodigoLean(codigo) {
-  return Unidade.findOne({ codigo }).lean();
+  return findUnidadeByCodigoLeanRepo({ unitScope: null, codigo });
 }
 
 export async function findUnidadeUserBaseLean(id) {

@@ -30,3 +30,13 @@ export async function findUnidadesByCondLeanRepo({ unitScope, cond }) {
 
   return UnidadeModel.find(cond).select('_id').lean();
 }
+
+export async function findUnidadeByCodigoLeanRepo({ unitScope, codigo }) {
+  const UnidadeModel = resolveModel({
+    name: Unidade.modelName || 'Unidade',
+    schema: Unidade.schema,
+    unitScope,
+  });
+
+  return UnidadeModel.findOne({ codigo }).lean();
+}
