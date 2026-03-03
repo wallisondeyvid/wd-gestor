@@ -48,6 +48,7 @@ import {
 } from '#modules/gestor/app/repositories/UnidadeWriteRepository.js';
 import {
   createSetorRepo,
+  findCounterSetorCodigoLeanRepo,
   findMaxSetorCodigoLeanRepo,
   findSetorByIdAndDeleteRepo,
   findSetorByIdPopulateUnidadeRepo,
@@ -475,8 +476,7 @@ export async function findSetorByIdAndDelete(id) {
 }
 
 export async function findCounterSetorCodigoLean() {
-  const Counter = mongoose.models._Counter;
-  return Counter.findOne({ _id: 'setor_codigo' }).lean();
+  return findCounterSetorCodigoLeanRepo({ unitScope: null });
 }
 
 export async function findMaxSetorCodigoLean() {

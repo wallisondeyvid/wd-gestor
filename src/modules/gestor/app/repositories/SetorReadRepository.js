@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Setor from '#models/setor.js';
 import { resolveModel } from '#shared/db/resolveModel.js';
 
@@ -148,4 +149,15 @@ export async function findSetoresByCondNomeOrdenadosSelectLeanRepo({ unitScope, 
   });
 
   return SetorModel.find(cond).select('nome').sort({ nome: 1 }).lean();
+}
+
+export async function findCounterSetorCodigoLeanRepo({ unitScope }) {
+  const Counter = mongoose.models._Counter;
+  const CounterModel = resolveModel({
+    name: Counter.modelName || 'Counter',
+    schema: Counter.schema,
+    unitScope,
+  });
+
+  return CounterModel.findOne({ _id: 'setor_codigo' }).lean();
 }
