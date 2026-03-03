@@ -24,6 +24,7 @@ import {
   findSetoresByUnidadeIdPopulateLeanRepo,
 } from '#modules/gestor/app/repositories/SetorReadRepository.js';
 import {
+  findAllModulosLeanRepo,
   findModuloByIdLeanRepo,
   findModulosAtivosStatusLeanRepo,
 } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
@@ -173,7 +174,7 @@ export async function findAllModulos() {
 }
 
 export async function findAllModulosLean() {
-  return Modulo.find().lean();
+  return findAllModulosLeanRepo({ unitScope: null });
 }
 
 export async function findModulosAtivosStatusLean() {

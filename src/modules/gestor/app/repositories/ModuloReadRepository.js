@@ -20,3 +20,13 @@ export async function findModulosAtivosStatusLeanRepo({ unitScope }) {
 
   return ModuloModel.find({ status: 'ativo' }).lean();
 }
+
+export async function findAllModulosLeanRepo({ unitScope }) {
+  const ModuloModel = resolveModel({
+    name: Modulo.modelName || 'Modulo',
+    schema: Modulo.schema,
+    unitScope,
+  });
+
+  return ModuloModel.find().lean();
+}
