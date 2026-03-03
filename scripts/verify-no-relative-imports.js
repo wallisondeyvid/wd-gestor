@@ -11,6 +11,8 @@ const SERVICE_DIRECT_QUERY_REGEX =
   /\b[A-Z][A-Za-z0-9_$]*\s*\.\s*(?:find|findOne|findById|aggregate|updateOne|deleteOne|create|findByIdAndUpdate|findByIdAndDelete)\s*\(/;
 const DB_DIRECT_QUERY_REGEX =
   /\b[A-Z][A-Za-z0-9_$]*\s*\.\s*(?:find|findOne|findById|aggregate|updateOne|updateMany|deleteOne|deleteMany|create|findByIdAndUpdate|findByIdAndDelete)\s*\(/;
+const DB_MONGOOSE_REGISTRY_REGEX =
+  /\bmongoose\.models\b|\bmongoose\.model\s*\(|\bmongoose\.connection\.models\b|\.connection\.models\b/;
 
 function collectFiles(directoryPath, files = []) {
   if (!fs.existsSync(directoryPath)) return files;
@@ -123,6 +125,28 @@ function collectDbDirectQueryViolations(relativePath, sourceCode) {
   return violations;
 }
 
+function collectDbMongooseRegistryViolations(relativePath, sourceCode) {
+  if (!isModuleDbFile(relativePath)) return [];
+
+  const lines = sourceCode.split(/\r?\n/);
+  const violations = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const lineText = lines[index] || '';
+    const trimmed = lineText.trimStart();
+    if (trimmed.startsWith('//')) continue;
+
+    if (DB_MONGOOSE_REGISTRY_REGEX.test(lineText)) {
+      violations.push({
+        line: index + 1,
+        snippet: lineText.trim(),
+      });
+    }
+  }
+
+  return violations;
+}
+
 const scannedFiles = TARGET_DIRS.flatMap((relativeDir) => collectFiles(path.join(ROOT, relativeDir)));
 
 for (const absoluteFilePath of scannedFiles) {
@@ -158,6 +182,23 @@ for (const absoluteFilePath of scannedFiles) {
     for (const violation of dbDirectQueryViolations) {
       console.error(`${relativePath}:${violation.line}: ${violation.snippet} | migre a query para repository tenant-aware`);
     }
+    process.exit(1);
+  }
+
+  const dbMongooseRegistryViolations =
+    collectDbMongooseRegistryViolations(relativePath, sourceCode);
+
+  if (dbMongooseRegistryViolations.length) {
+    console.error(
+      '❌ Arquitetura inválida: app/db não pode acessar registry do mongoose; migre para repository tenant-aware.'
+    );
+
+    for (const violation of dbMongooseRegistryViolations) {
+      console.error(
+        `${relativePath}:${violation.line}: ${violation.snippet} | migre para repository tenant-aware`
+      );
+    }
+
     process.exit(1);
   }
 }
