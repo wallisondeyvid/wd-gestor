@@ -1,7 +1,6 @@
 import Unidade from '#models/unidade.js';
 import User from '#models/user.js';
 import Recurso from '#models/recurso.js';
-import Setor from '#models/setor.js';
 import Funcao from '#models/funcao.js';
 import Funcionario from '#models/Funcionario.js';
 import mongoose from 'mongoose';
@@ -17,7 +16,18 @@ import {
   updateUnidadeByIdWithValidatorsRepo,
 } from '#modules/gestor/app/repositories/UnidadeWriteRepository.js';
 import {
+  createSetorRepo,
+  findMaxSetorCodigoLeanRepo,
+  findSetorByIdAndDeleteRepo,
+  findSetorByIdPopulateUnidadeRepo,
+  findSetorByIdRepo,
   findSetorByUnidadeAndNomeNormalizadoLeanRepo,
+  findSetorDupByNomeNormalizadoExcludingIdRepo,
+  findSetoresAtivosNomeOrdenadosSelectLeanRepo,
+  findSetoresAtivosPopulateUnidadeOrdenadosLeanRepo,
+  findSetoresByCondDescricaoPopulateUnidadeOrdenadosLeanRepo,
+  findSetoresByCondNomeOrdenadosSelectLeanRepo,
+  findSetoresByFiltroPopulateUnidadeLeanRepo,
   findSetoresByUnidadeIdPopulateLeanRepo,
 } from '#modules/gestor/app/repositories/SetorReadRepository.js';
 import {
@@ -290,7 +300,7 @@ export async function findSetorByUnidadeAndNomeNormalizadoLean(unidadeId, nomeNo
 }
 
 export async function createSetor(data) {
-  return Setor.create(data);
+  return createSetorRepo({ unitScope: null, data });
 }
 
 export async function findSetoresByUnidadeIdPopulateLean(unidadeId) {
@@ -301,15 +311,20 @@ export async function findSetoresByUnidadeIdPopulateLean(unidadeId) {
 }
 
 export async function findSetorByIdPopulateUnidade(id) {
-  return Setor.findById(id).populate('unidade_id');
+  return findSetorByIdPopulateUnidadeRepo({ unitScope: null, id });
 }
 
 export async function findSetorById(id) {
-  return Setor.findById(id);
+  return findSetorByIdRepo({ unitScope: null, id });
 }
 
 export async function findSetorDupByNomeNormalizadoExcludingId(setorId, unidadeId, nomeNormalizado) {
-  return Setor.findOne({ _id: { $ne: setorId }, unidade_id: unidadeId, nome_normalizado: nomeNormalizado });
+  return findSetorDupByNomeNormalizadoExcludingIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    setorId,
+    unidadeId,
+    nomeNormalizado,
+  });
 }
 
 export async function saveSetor(setor) {
@@ -323,26 +338,15 @@ export async function findUnidadeUserBaseSetorLean(id) {
 }
 
 export async function findSetoresByFiltroPopulateUnidadeLean(filtro) {
-  return Setor.find(filtro)
-    .select('nome descricao unidade_id')
-    .populate({ path: 'unidade_id', select: 'nome codigo' })
-    .lean();
+  return findSetoresByFiltroPopulateUnidadeLeanRepo({ unitScope: null, filtro });
 }
 
 export async function findSetoresAtivosPopulateUnidadeOrdenadosLean(filtroAtivo) {
-  return Setor.find(filtroAtivo)
-    .select('nome descricao unidade_id')
-    .populate({ path: 'unidade_id', select: 'nome codigo' })
-    .sort({ nome: 1 })
-    .lean();
+  return findSetoresAtivosPopulateUnidadeOrdenadosLeanRepo({ unitScope: null, filtroAtivo });
 }
 
 export async function findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean(filtroSetores) {
-  return Setor.find(filtroSetores)
-    .select('nome descricao unidade_id')
-    .populate({ path: 'unidade_id', select: 'nome codigo' })
-    .sort({ nome: 1 })
-    .lean();
+  return findSetoresByCondDescricaoPopulateUnidadeOrdenadosLeanRepo({ unitScope: null, filtroSetores });
 }
 
 export async function findUnidadesAtivasNomeCodigoOrdenadasLean() {
@@ -366,7 +370,7 @@ export async function findUnidadesForSetorPageByIdsSelectLean(unidadeIds) {
 }
 
 export async function findSetorByIdAndDelete(id) {
-  return Setor.findByIdAndDelete(id);
+  return findSetorByIdAndDeleteRepo({ unitScope: null, id });
 }
 
 export async function findCounterSetorCodigoLean() {
@@ -375,11 +379,7 @@ export async function findCounterSetorCodigoLean() {
 }
 
 export async function findMaxSetorCodigoLean() {
-  return Setor.find({ codigo: { $exists: true } })
-    .sort({ codigo: -1 })
-    .limit(1)
-    .select('codigo')
-    .lean();
+  return findMaxSetorCodigoLeanRepo({ unitScope: null });
 }
 
 export async function findOneAndUpdateCounterSetorCodigo(targetSeq) {
@@ -514,11 +514,11 @@ export async function findFuncoesAtivasNomeOrdenadasSelectLean() {
 }
 
 export async function findSetoresAtivosNomeOrdenadosSelectLean() {
-  return Setor.find({ ativo: true }).select('nome').sort({ nome: 1 }).lean();
+  return findSetoresAtivosNomeOrdenadosSelectLeanRepo({ unitScope: null });
 }
 
 export async function findSetoresByCondNomeOrdenadosSelectLean(cond) {
-  return Setor.find(cond).select('nome').sort({ nome: 1 }).lean();
+  return findSetoresByCondNomeOrdenadosSelectLeanRepo({ unitScope: null, cond });
 }
 
 export async function findFuncionariosParaListagemComRefsSelectLean(filtro) {
