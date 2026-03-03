@@ -9,6 +9,8 @@ const IGNORED_DIRS = new Set(['node_modules', '.git', 'dist', 'build', '.next', 
 const IMPORT_SPECIFIER_REGEX = /\bimport\s+(?:[^'"\n;]*?\sfrom\s*)?['"](?<spec1>[^'"\n]+)['"]|\bexport\s+[^'"\n;]*?\sfrom\s*['"](?<spec2>[^'"\n]+)['"]|\brequire\s*\(\s*['"](?<spec3>[^'"\n]+)['"]\s*\)|\bimport\s*\(\s*['"](?<spec4>[^'"\n]+)['"]\s*\)/g;
 const SERVICE_DIRECT_QUERY_REGEX =
   /\b[A-Z][A-Za-z0-9_$]*\s*\.\s*(?:find|findOne|findById|aggregate|updateOne|deleteOne|create|findByIdAndUpdate|findByIdAndDelete)\s*\(/;
+const DB_DIRECT_QUERY_REGEX =
+  /\b[A-Z][A-Za-z0-9_$]*\s*\.\s*(?:find|findOne|findById|aggregate|updateOne|updateMany|deleteOne|deleteMany|create|findByIdAndUpdate|findByIdAndDelete)\s*\(/;
 
 function collectFiles(directoryPath, files = []) {
   if (!fs.existsSync(directoryPath)) return files;
@@ -103,6 +105,24 @@ function collectDbModelsImportViolations(relativePath, sourceCode) {
   return violations;
 }
 
+function collectDbDirectQueryViolations(relativePath, sourceCode) {
+  if (!isModuleDbFile(relativePath)) return [];
+
+  const lines = sourceCode.split(/\r?\n/);
+  const violations = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const lineText = lines[index] || '';
+    const trimmed = lineText.trimStart();
+    if (trimmed.startsWith('//')) continue;
+    if (DB_DIRECT_QUERY_REGEX.test(lineText)) {
+      violations.push({ line: index + 1, snippet: lineText.trim() });
+    }
+  }
+
+  return violations;
+}
+
 const scannedFiles = TARGET_DIRS.flatMap((relativeDir) => collectFiles(path.join(ROOT, relativeDir)));
 
 for (const absoluteFilePath of scannedFiles) {
@@ -128,6 +148,15 @@ for (const absoluteFilePath of scannedFiles) {
     console.error('❌ Arquitetura inválida: app/db não pode importar #models diretamente; migre para repository tenant-aware.');
     for (const violation of dbModelsViolations) {
       console.error(`${relativePath}:${violation.line}: ${violation.snippet} | import=${violation.specifier} | migre para repository tenant-aware`);
+    }
+    process.exit(1);
+  }
+
+  const dbDirectQueryViolations = collectDbDirectQueryViolations(relativePath, sourceCode);
+  if (dbDirectQueryViolations.length) {
+    console.error('❌ Arquitetura inválida: app/db não pode executar queries diretas; migre a query para repository tenant-aware.');
+    for (const violation of dbDirectQueryViolations) {
+      console.error(`${relativePath}:${violation.line}: ${violation.snippet} | migre a query para repository tenant-aware`);
     }
     process.exit(1);
   }
