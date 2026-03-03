@@ -1,6 +1,5 @@
 import Unidade from '#models/unidade.js';
 import User from '#models/user.js';
-import Modulo from '#models/modulo.js';
 import Recurso from '#models/recurso.js';
 import Setor from '#models/setor.js';
 import Funcao from '#models/funcao.js';
@@ -24,8 +23,14 @@ import {
   findSetoresByUnidadeIdPopulateLeanRepo,
 } from '#modules/gestor/app/repositories/SetorReadRepository.js';
 import {
+  createModuloRepo,
+  deleteModuloByIdRepo,
+  findAllModulosBaseLeanRepo,
   findAllModulosLeanRepo,
+  findAllModulosRepo,
+  findModuloByIdRepo,
   findModuloByIdLeanRepo,
+  findModuloByNomeRepo,
   findModulosAtivosStatusLeanRepo,
 } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
 import {
@@ -166,11 +171,11 @@ export async function deleteUserById(userId) {
 }
 
 export async function findAllModulosBaseLean() {
-  return Modulo.find({}).select('_id nome descricao status url_base').lean();
+  return findAllModulosBaseLeanRepo({ unitScope: null });
 }
 
 export async function findAllModulos() {
-  return Modulo.find();
+  return findAllModulosRepo({ unitScope: null });
 }
 
 export async function findAllModulosLean() {
@@ -190,15 +195,15 @@ export async function findModuloByIdLean(id) {
 }
 
 export async function findModuloByNome(nome) {
-  return Modulo.findOne({ nome });
+  return findModuloByNomeRepo({ unitScope: null, nome });
 }
 
 export async function createModulo(data) {
-  return Modulo.create(data);
+  return createModuloRepo({ unitScope: null, data });
 }
 
 export async function findModuloById(id) {
-  return Modulo.findById(id);
+  return findModuloByIdRepo({ unitScope: null, id });
 }
 
 export async function saveModulo(modulo) {
@@ -206,7 +211,7 @@ export async function saveModulo(modulo) {
 }
 
 export async function deleteModuloById(id) {
-  return Modulo.deleteOne({ _id: id });
+  return deleteModuloByIdRepo({ unitScope: null, id });
 }
 
 export async function findRecursosByFiltroComUnidadeLean(filtro) {
