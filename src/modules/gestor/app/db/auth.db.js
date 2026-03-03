@@ -1,10 +1,25 @@
-import User from '#models/user.js';
-import PasswordReset from '#models/passwordReset.js';
-import Unidade from '#models/unidade.js';
-import Funcionario from '#models/Funcionario.js';
-import Modulo from '#models/modulo.js';
-import Funcao from '#models/funcao.js';
-import RememberToken from '#models/rememberToken.js';
+import {
+  createPasswordResetRepo,
+  createRememberTokenRepo,
+  deletePasswordResetByIdRepo,
+  findFuncionarioByEmailPopulateRepo,
+  findFuncionarioByIdSelectRepo,
+  findFuncaoByIdSelectRepo,
+  findFuncionariosByCpfSelectRepo,
+  findModuloByOrRepo,
+  findModuloLeanByOrSelectRepo,
+  findPasswordResetByTokenRepo,
+  findUnidadeByIdSelectRepo,
+  findUnidadeLeanByIdRepo,
+  findUnidadePrincipalLeanRepo,
+  findUserByEmailRepo,
+  findUserByIdRepo,
+  findUserByIdSelectRepo,
+  findUserLeanByEmailRepo,
+  findUsersByCpfRepo,
+  findUsersByFuncionarioIdsRepo,
+  revokeRememberTokenByHashRepo,
+} from '#modules/gestor/app/repositories/AuthRepository.js';
 
 function withOptionalMaxTime(query, maxTimeMS) {
   if (Number.isFinite(maxTimeMS) && maxTimeMS > 0 && typeof query?.maxTimeMS === 'function') {
@@ -14,89 +29,89 @@ function withOptionalMaxTime(query, maxTimeMS) {
 }
 
 export async function findModuloByOr({ or, maxTimeMS }) {
-  let query = Modulo.findOne({ $or: or });
+  let query = findModuloByOrRepo({ unitScope: null, or });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findModuloLeanByOrSelect({ or, select, maxTimeMS }) {
-  let query = Modulo.findOne({ $or: or }).select(select).lean();
+  let query = findModuloLeanByOrSelectRepo({ unitScope: null, or, select });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findUnidadeByIdSelect({ id, select, maxTimeMS }) {
-  let query = Unidade.findById(id).select(select);
+  let query = findUnidadeByIdSelectRepo({ unitScope: null, id, select });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findUnidadeLeanById({ id, maxTimeMS }) {
-  let query = Unidade.findById(id).lean();
+  let query = findUnidadeLeanByIdRepo({ unitScope: null, id });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findUnidadePrincipalLean({ maxTimeMS }) {
-  let query = Unidade.findOne({ is_principal: true }).lean();
+  let query = findUnidadePrincipalLeanRepo({ unitScope: null });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findFuncionarioByIdSelect({ id, select, maxTimeMS }) {
-  let query = Funcionario.findById(id).select(select);
+  let query = findFuncionarioByIdSelectRepo({ unitScope: null, id, select });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findFuncionarioByEmailPopulate({ email, maxTimeMS }) {
-  let query = Funcionario.findOne({ email }).populate('unidade_id funcao_id');
+  let query = findFuncionarioByEmailPopulateRepo({ unitScope: null, email });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findFuncionariosByCpfSelect({ cpf, select }) {
-  return Funcionario.find({ cpf }).select(select);
+  return findFuncionariosByCpfSelectRepo({ unitScope: null, cpf, select });
 }
 
 export async function findFuncaoByIdSelect({ id, select, maxTimeMS }) {
-  let query = Funcao.findById(id).select(select);
+  let query = findFuncaoByIdSelectRepo({ unitScope: null, id, select });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findUserByEmail({ email }) {
-  return User.findOne({ email });
+  return findUserByEmailRepo({ unitScope: null, email });
 }
 
 export async function findUserByEmailForLogin({ email, maxTimeMS }) {
-  let query = User.findOne({ email });
+  let query = findUserByEmailRepo({ unitScope: null, email });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findUserLeanByEmail({ email, maxTimeMS }) {
-  let query = User.findOne({ email }).lean();
+  let query = findUserLeanByEmailRepo({ unitScope: null, email });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findUserByIdSelect({ id, select }) {
-  return User.findById(id).select(select);
+  return findUserByIdSelectRepo({ unitScope: null, id, select });
 }
 
 export async function findUserByIdWithMaxTime({ id, maxTimeMS }) {
-  let query = User.findById(id);
+  let query = findUserByIdRepo({ unitScope: null, id });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
 
 export async function findUsersByCpf({ cpf }) {
-  return User.find({ cpf });
+  return findUsersByCpfRepo({ unitScope: null, cpf });
 }
 
 export async function findUsersByFuncionarioIds({ ids }) {
-  return User.find({ funcionario_id: { $in: ids } });
+  return findUsersByFuncionarioIdsRepo({ unitScope: null, ids });
 }
 
 export async function saveUserDocument(user) {
@@ -104,24 +119,21 @@ export async function saveUserDocument(user) {
 }
 
 export async function createRememberToken(payload) {
-  return RememberToken.create(payload);
+  return createRememberTokenRepo({ unitScope: null, payload });
 }
 
 export async function revokeRememberTokenByHash({ tokenHash }) {
-  return RememberToken.updateOne(
-    { token_hash: tokenHash },
-    { $set: { revoked: true, lastUsedAt: new Date() } },
-  );
+  return revokeRememberTokenByHashRepo({ unitScope: null, tokenHash });
 }
 
 export async function findPasswordResetByToken({ token }) {
-  return PasswordReset.findOne({ token });
+  return findPasswordResetByTokenRepo({ unitScope: null, token });
 }
 
 export async function createPasswordReset(payload) {
-  return PasswordReset.create(payload);
+  return createPasswordResetRepo({ unitScope: null, payload });
 }
 
 export async function deletePasswordResetById({ id }) {
-  return PasswordReset.deleteOne({ _id: id });
+  return deletePasswordResetByIdRepo({ unitScope: null, id });
 }
