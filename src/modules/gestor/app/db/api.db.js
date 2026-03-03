@@ -23,7 +23,10 @@ import {
   findSetorByUnidadeAndNomeNormalizadoLeanRepo,
   findSetoresByUnidadeIdPopulateLeanRepo,
 } from '#modules/gestor/app/repositories/SetorReadRepository.js';
-import { findModuloByIdLeanRepo } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
+import {
+  findModuloByIdLeanRepo,
+  findModulosAtivosStatusLeanRepo,
+} from '#modules/gestor/app/repositories/ModuloReadRepository.js';
 import {
   findFuncaoByIdLeanRepo,
   findFuncoesByUnidadeLeanRepo,
@@ -174,7 +177,7 @@ export async function findAllModulosLean() {
 }
 
 export async function findModulosAtivosStatusLean() {
-  return Modulo.find({ status: 'ativo' }).lean();
+  return findModulosAtivosStatusLeanRepo({ unitScope: null });
 }
 
 export async function findUnidadeByIdWithModulosAcessiveisLean(unidadeId) {
