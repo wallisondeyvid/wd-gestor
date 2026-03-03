@@ -1,5 +1,4 @@
 import Unidade from '#models/unidade.js';
-import Funcionario from '#models/Funcionario.js';
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
 import {
@@ -73,6 +72,32 @@ import {
   findUsuariosDiretorAtivosPopulatedLeanRepo,
   updateUserUnidadeByIdRepo,
 } from '#modules/gestor/app/repositories/UserRepository.js';
+import {
+  createFuncionarioDocRepo,
+  deleteFuncionarioByIdRepo,
+  findAllFuncionariosSelectIdNomeCpfLeanRepo,
+  findFuncionarioByCpfAndUnidadeRepo,
+  findFuncionarioByCpfAndUnidadeSelectLeanRepo,
+  findFuncionarioByCpfOrEmailLeanRepo,
+  findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLeanRepo,
+  findFuncionarioByEmailRepo,
+  findFuncionarioByEmailSelectIdUnidadeEmailLeanRepo,
+  findFuncionarioByEmailSelectLeanRepo,
+  findFuncionarioByIdLeanRepo,
+  findFuncionarioByIdPopulateRefsRepo,
+  findFuncionarioByIdRepo,
+  findFuncionarioByIdSelectBasicLeanRepo,
+  findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo,
+  findFuncionariosByEmailsSelectEmailNomeLeanRepo,
+  findFuncionariosDisponiveisByUnidadeLeanRepo,
+  findFuncionariosDisponiveisSemUsuarioPorUnidadeSelectLeanRepo,
+  findFuncionariosParaListagemComRefsSelectLeanRepo,
+  setFuncionarioUsuarioIdByIdRepo,
+  setFuncionarioUsuarioIdIfEmptyRepo,
+  unsetFuncionarioUsuarioIdByIdRepo,
+  unsetFuncionarioUsuarioIdIfMatchesUserRepo,
+  updateFuncionarioByIdWithOpsRepo,
+} from '#modules/gestor/app/repositories/FuncionarioRepository.js';
 import {
   createFeedbackRepo,
   findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo,
@@ -498,46 +523,56 @@ export async function findUnidadeByIdWithModulosAcessiveis(id) {
 }
 
 export async function findFuncionarioByCpfAndUnidade(cpf, unidadeId) {
-  return Funcionario.findOne({ cpf, unidade_id: unidadeId });
+  return findFuncionarioByCpfAndUnidadeRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    cpf,
+    unidadeId,
+  });
 }
 
 export async function findAllFuncionariosSelectIdNomeCpfLean() {
-  return Funcionario.find().select('_id nome cpf').lean();
+  return findAllFuncionariosSelectIdNomeCpfLeanRepo({ unitScope: null });
 }
 
 export async function findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionarioId) {
-  return Funcionario.findById(funcionarioId).select('_id unidade_id usuario_id').lean();
+  return findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo({ unitScope: null, funcionarioId });
 }
 
 export async function findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidadeId) {
-  return Funcionario.findOne({ cpf: cleanCpf, unidade_id: unidadeId }).select('_id unidade_id email').lean();
+  return findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    cleanCpf,
+    unidadeId,
+  });
 }
 
 export async function findFuncionarioByEmailSelectIdUnidadeEmailLean(emailNorm) {
-  return Funcionario.findOne({ email: emailNorm }).select('_id unidade_id email').lean();
+  return findFuncionarioByEmailSelectIdUnidadeEmailLeanRepo({ unitScope: null, emailNorm });
 }
 
 export async function findFuncionarioByCpfOrEmailLean(cleanCpf, unidadeId, emailNorm) {
-  return Funcionario.findOne({ $or: [{ cpf: cleanCpf, unidade_id: unidadeId }, { email: emailNorm }] }).lean();
+  return findFuncionarioByCpfOrEmailLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    cleanCpf,
+    unidadeId,
+    emailNorm,
+  });
 }
 
 export async function unsetFuncionarioUsuarioIdById(funcionarioId) {
-  return Funcionario.updateOne({ _id: funcionarioId }, { $unset: { usuario_id: '' } });
+  return unsetFuncionarioUsuarioIdByIdRepo({ unitScope: null, funcionarioId });
 }
 
 export async function setFuncionarioUsuarioIdById(funcionarioId, userId) {
-  return Funcionario.updateOne({ _id: funcionarioId }, { $set: { usuario_id: userId } });
+  return setFuncionarioUsuarioIdByIdRepo({ unitScope: null, funcionarioId, userId });
 }
 
 export async function unsetFuncionarioUsuarioIdIfMatchesUser(funcionarioId, userId) {
-  return Funcionario.updateOne({ _id: funcionarioId, usuario_id: userId }, { $unset: { usuario_id: '' } });
+  return unsetFuncionarioUsuarioIdIfMatchesUserRepo({ unitScope: null, funcionarioId, userId });
 }
 
 export async function setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId) {
-  return Funcionario.updateOne(
-    { _id: funcionarioId, $or: [{ usuario_id: { $exists: false } }, { usuario_id: null }] },
-    { $set: { usuario_id: userId } }
-  );
+  return setFuncionarioUsuarioIdIfEmptyRepo({ unitScope: null, funcionarioId, userId });
 }
 
 export async function findUnidadesAtivasCodigoNomeOrdenadasSelectLean() {
@@ -561,34 +596,26 @@ export async function findSetoresByCondNomeOrdenadosSelectLean(cond) {
 }
 
 export async function findFuncionariosParaListagemComRefsSelectLean(filtro) {
-  return Funcionario.find(filtro)
-    .select('nome cpf unidade_id funcao_id ativo')
-    .populate({ path: 'unidade_id', select: 'nome' })
-    .populate({ path: 'funcao_id', select: 'nome' })
-    .sort({ nome: 1 })
-    .lean();
+  return findFuncionariosParaListagemComRefsSelectLeanRepo({ unitScope: null, filtro });
 }
 
 export async function findFuncionariosDisponiveisSemUsuarioPorUnidadeSelectLean(unidadeId) {
-  return Funcionario.find({
-    unidade_id: unidadeId,
-    $or: [{ usuario_id: { $exists: false } }, { usuario_id: null }],
-  })
-    .select('_id nome cpf')
-    .sort({ nome: 1 })
-    .lean();
+  return findFuncionariosDisponiveisSemUsuarioPorUnidadeSelectLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
 }
 
 export async function findFuncionarioByEmail(email) {
-  return Funcionario.findOne({ email });
+  return findFuncionarioByEmailRepo({ unitScope: null, email });
 }
 
 export async function findFuncionariosByEmailsSelectEmailNomeLean(emails) {
-  return Funcionario.find({ email: { $in: emails } }).select('email nome').lean();
+  return findFuncionariosByEmailsSelectEmailNomeLeanRepo({ unitScope: null, emails });
 }
 
 export async function createFuncionarioDoc(doc) {
-  return Funcionario.create(doc);
+  return createFuncionarioDocRepo({ unitScope: null, doc });
 }
 
 export async function saveFuncionario(doc) {
@@ -596,42 +623,46 @@ export async function saveFuncionario(doc) {
 }
 
 export async function findFuncionarioById(id) {
-  return Funcionario.findById(id);
+  return findFuncionarioByIdRepo({ unitScope: null, id });
 }
 
 export async function updateFuncionarioByIdWithOps(id, ops) {
-  return Funcionario.findByIdAndUpdate(id, ops, { new: true, runValidators: true });
+  return updateFuncionarioByIdWithOpsRepo({ unitScope: null, id, ops });
 }
 
 export async function findFuncionarioByIdPopulateRefs(id) {
-  return Funcionario.findById(id).populate('unidade_id funcao_id departamento');
+  return findFuncionarioByIdPopulateRefsRepo({ unitScope: null, id });
 }
 
 export async function findFuncionarioByIdLean(id) {
-  return Funcionario.findById(id).lean();
+  return findFuncionarioByIdLeanRepo({ unitScope: null, id });
 }
 
 export async function deleteFuncionarioById(id) {
-  return Funcionario.findByIdAndDelete(id);
+  return deleteFuncionarioByIdRepo({ unitScope: null, id });
 }
 
 export async function findFuncionariosDisponiveisByUnidadeLean(unidadeId) {
-  return Funcionario.find({
-    unidade_id: unidadeId,
-    $or: [{ usuario_id: { $exists: false } }, { usuario_id: null }],
-  }).select('_id nome cpf').sort({ nome: 1 }).lean();
+  return findFuncionariosDisponiveisByUnidadeLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
 }
 
 export async function findFuncionarioByIdSelectBasicLean(id) {
-  return Funcionario.findById(id).select('_id nome cpf unidade_id').lean();
+  return findFuncionarioByIdSelectBasicLeanRepo({ unitScope: null, id });
 }
 
 export async function findFuncionarioByCpfAndUnidadeSelectLean(cpf, unidadeId) {
-  return Funcionario.findOne({ cpf, unidade_id: unidadeId }).select('_id nome cpf email unidade_id usuario_id').lean();
+  return findFuncionarioByCpfAndUnidadeSelectLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    cpf,
+    unidadeId,
+  });
 }
 
 export async function findFuncionarioByEmailSelectLean(email) {
-  return Funcionario.findOne({ email }).select('_id nome cpf email unidade_id usuario_id').lean();
+  return findFuncionarioByEmailSelectLeanRepo({ unitScope: null, email });
 }
 
 export async function findUserByEmail(email) {
