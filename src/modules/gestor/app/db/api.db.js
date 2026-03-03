@@ -1,6 +1,5 @@
 import Unidade from '#models/unidade.js';
 import User from '#models/user.js';
-import Recurso from '#models/recurso.js';
 import Funcao from '#models/funcao.js';
 import Funcionario from '#models/Funcionario.js';
 import mongoose from 'mongoose';
@@ -54,6 +53,20 @@ import {
   findFeedbackByIdLeanRepo,
   findFeedbackByIdRepo,
 } from '#modules/gestor/app/repositories/FeedbackReadRepository.js';
+import {
+  createRecursoRepo,
+  deleteRecursoByIdRepo,
+  findOutroRecursoByChassiUpperRepo,
+  findOutroRecursoByPlacaUpperRepo,
+  findOutroRecursoByRenavamRepo,
+  findRecursoByChassiUpperRepo,
+  findRecursoByIdComUnidadeNomeRepo,
+  findRecursoByIdRepo,
+  findRecursoByPlacaUpperRepo,
+  findRecursoByRenavamRepo,
+  findRecursosByFiltroComUnidadeLeanRepo,
+  updateRecursoByIdComUnidadeNomeRepo,
+} from '#modules/gestor/app/repositories/RecursoReadRepository.js';
 import {
   findWidgetSettingsFeedbackLeanRepo,
   updateWidgetSettingsFeedbackModuleEnabledUpsertRepo,
@@ -236,55 +249,51 @@ export async function deleteModuloById(id) {
 }
 
 export async function findRecursosByFiltroComUnidadeLean(filtro) {
-  return Recurso.find(filtro)
-    .populate({ path: 'unidade_id', select: 'codigo nome' })
-    .sort({ placa: 1 })
-    .limit(100)
-    .lean();
+  return findRecursosByFiltroComUnidadeLeanRepo({ unitScope: null, filtro });
 }
 
 export async function findRecursoByIdComUnidadeNome(id) {
-  return Recurso.findById(id).populate('unidade_id', 'nome');
+  return findRecursoByIdComUnidadeNomeRepo({ unitScope: null, id });
 }
 
 export async function findRecursoByPlacaUpper(placaUpper) {
-  return Recurso.findOne({ placa: placaUpper });
+  return findRecursoByPlacaUpperRepo({ unitScope: null, placaUpper });
 }
 
 export async function findRecursoByChassiUpper(chassiUpper) {
-  return Recurso.findOne({ chassi: chassiUpper });
+  return findRecursoByChassiUpperRepo({ unitScope: null, chassiUpper });
 }
 
 export async function findRecursoByRenavam(renavam) {
-  return Recurso.findOne({ renavam });
+  return findRecursoByRenavamRepo({ unitScope: null, renavam });
 }
 
 export async function createRecurso(data) {
-  return Recurso.create(data);
+  return createRecursoRepo({ unitScope: null, data });
 }
 
 export async function findRecursoById(id) {
-  return Recurso.findById(id);
+  return findRecursoByIdRepo({ unitScope: null, id });
 }
 
 export async function findOutroRecursoByPlacaUpper(id, placaUpper) {
-  return Recurso.findOne({ placa: placaUpper, _id: { $ne: id } });
+  return findOutroRecursoByPlacaUpperRepo({ unitScope: null, id, placaUpper });
 }
 
 export async function findOutroRecursoByChassiUpper(id, chassiUpper) {
-  return Recurso.findOne({ chassi: chassiUpper, _id: { $ne: id } });
+  return findOutroRecursoByChassiUpperRepo({ unitScope: null, id, chassiUpper });
 }
 
 export async function findOutroRecursoByRenavam(id, renavam) {
-  return Recurso.findOne({ renavam, _id: { $ne: id } });
+  return findOutroRecursoByRenavamRepo({ unitScope: null, id, renavam });
 }
 
 export async function updateRecursoByIdComUnidadeNome(id, data) {
-  return Recurso.findByIdAndUpdate(id, data, { new: true }).populate('unidade_id', 'nome');
+  return updateRecursoByIdComUnidadeNomeRepo({ unitScope: null, id, data });
 }
 
 export async function deleteRecursoById(id) {
-  return Recurso.findByIdAndDelete(id);
+  return deleteRecursoByIdRepo({ unitScope: null, id });
 }
 
 export async function findUnidadeById(setorUnidadeId) {
