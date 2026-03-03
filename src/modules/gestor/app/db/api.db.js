@@ -14,6 +14,7 @@ import {
   findUnidadeByIdLeanRepo,
   findUnidadesByCondLeanRepo,
 } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
+import { deleteUnidadeByIdRepo } from '#modules/gestor/app/repositories/UnidadeWriteRepository.js';
 import {
   findSetorByUnidadeAndNomeNormalizadoLeanRepo,
   findSetoresByUnidadeIdPopulateLeanRepo,
@@ -659,7 +660,10 @@ export async function findDiretorAtivoByUnidadeSelectId(unidadeId) {
 }
 
 export async function deleteUnidadeById(unidadeId) {
-  return Unidade.findByIdAndDelete(unidadeId);
+  return deleteUnidadeByIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
 }
 
 export async function createFeedback(data) {
