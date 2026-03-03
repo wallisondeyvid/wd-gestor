@@ -5,7 +5,6 @@ import Setor from '#models/setor.js';
 import Funcao from '#models/funcao.js';
 import Funcionario from '#models/Funcionario.js';
 import Feedback from '#models/feedback.js';
-import WidgetSetting from '#models/widgetSetting.js';
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
 import {
@@ -37,6 +36,10 @@ import {
   findFuncaoByIdLeanRepo,
   findFuncoesByUnidadeLeanRepo,
 } from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
+import {
+  findWidgetSettingsFeedbackLeanRepo,
+  updateWidgetSettingsFeedbackModuleEnabledUpsertRepo,
+} from '#modules/gestor/app/repositories/WidgetSettingWriteRepository.js';
 
 export async function findUnidadeByIdLean(id) {
   return findUnidadeByIdLeanRepo({
@@ -722,13 +725,9 @@ export async function findFeedbackByIdAndDeleteLean(id) {
 }
 
 export async function findWidgetSettingsFeedbackLean() {
-  return WidgetSetting.find({ widget: 'feedback' }).lean();
+  return findWidgetSettingsFeedbackLeanRepo({ unitScope: null });
 }
 
 export async function updateWidgetSettingsFeedbackModuleEnabledUpsert(moduleId, enabled) {
-  return WidgetSetting.updateOne(
-    { widget: 'feedback', module: moduleId },
-    { $set: { enabled } },
-    { upsert: true }
-  );
+  return updateWidgetSettingsFeedbackModuleEnabledUpsertRepo({ unitScope: null, moduleId, enabled });
 }
