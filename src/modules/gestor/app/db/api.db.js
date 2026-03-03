@@ -50,6 +50,7 @@ import {
   createSetorRepo,
   findCounterSetorCodigoLeanRepo,
   findMaxSetorCodigoLeanRepo,
+  findOneAndUpdateCounterSetorCodigoRepo,
   findSetorByIdAndDeleteRepo,
   findSetorByIdPopulateUnidadeRepo,
   findSetorByIdRepo,
@@ -484,12 +485,7 @@ export async function findMaxSetorCodigoLean() {
 }
 
 export async function findOneAndUpdateCounterSetorCodigo(targetSeq) {
-  const Counter = mongoose.models._Counter;
-  return Counter.findOneAndUpdate(
-    { _id: 'setor_codigo', seq: { $lt: targetSeq } },
-    { $set: { seq: targetSeq } },
-    { new: true, upsert: true }
-  );
+  return findOneAndUpdateCounterSetorCodigoRepo({ unitScope: null, targetSeq });
 }
 
 export async function findFuncaoByNome(nome) {

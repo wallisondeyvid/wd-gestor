@@ -161,3 +161,18 @@ export async function findCounterSetorCodigoLeanRepo({ unitScope }) {
 
   return CounterModel.findOne({ _id: 'setor_codigo' }).lean();
 }
+
+export async function findOneAndUpdateCounterSetorCodigoRepo({ unitScope, targetSeq }) {
+  const Counter = mongoose.models._Counter;
+  const CounterModel = resolveModel({
+    name: Counter.modelName || 'Counter',
+    schema: Counter.schema,
+    unitScope,
+  });
+
+  return CounterModel.findOneAndUpdate(
+    { _id: 'setor_codigo', seq: { $lt: targetSeq } },
+    { $set: { seq: targetSeq } },
+    { new: true, upsert: true }
+  );
+}
