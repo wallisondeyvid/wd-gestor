@@ -1,11 +1,46 @@
-import Unidade from '#models/unidade.js';
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
 import {
+  createUnidadeDocRepo,
+  findAllUnidadesLeanRepo,
+  findAllUnidadesRepo,
+  findAllUnidadesSelectIdCodigoNomeLeanRepo,
+  findClusterUnidadesByAnchorLeanRepo,
   findSubunidadesLeanRepo,
+  findSubunidadesByUnidadePrincipalRepo,
+  findUltimaUnidadePorCodigoRepo,
+  findUnidadeByCnpjExcludingIdRepo,
+  findUnidadeByCnpjRepo,
+  findUnidadeByCpfExcludingIdRepo,
+  findUnidadeByCpfRepo,
+  findUnidadeByCodigoRepo,
   findUnidadeByCodigoLeanRepo,
+  findUnidadeByIdOrRawLeanRepo,
+  findUnidadeByIdRepo,
   findUnidadeByIdLeanRepo,
+  findUnidadeByIdWithModulosAcessiveisLeanRepo,
+  findUnidadeByIdWithModulosAcessiveisRepo,
+  findUnidadePrincipalLeanRepo,
+  findUnidadeUserBaseLeanRepo,
+  findUnidadeUserBaseSetorLeanRepo,
+  findUnidadesAtivasCodigoNomeOrdenadasSelectLeanRepo,
+  findUnidadesAtivasNomeCodigoOrdenadasLeanRepo,
+  findUnidadesAtivasStatusLeanRepo,
+  findUnidadesByCondLeanFullRepo,
+  findUnidadesByCondSelectCodigoNomeOrdenadasLeanRepo,
   findUnidadesByCondLeanRepo,
+  findUnidadesByIdRepo,
+  findUnidadesByIdsNomeCodigoLeanRepo,
+  findUnidadesByMatrizOuPrincipalRepo,
+  findUnidadesForSetorPageByCondSelectLeanRepo,
+  findUnidadesForSetorPageByIdsSelectLeanRepo,
+  findUnidadesForSetorPageSelectLeanRepo,
+  findUnidadesPermitidasByMatrizRefRepo,
+  findUnidadesPrincipaisByIdsRepo,
+  findUnidadesPrincipaisLeanRepo,
+  findUnidadesPrincipaisRepo,
+  findUnidadesPrincipaisSelectIdLeanRepo,
+  updateManyUnidadesAccessByIdsRepo,
 } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
 import {
   deleteUnidadeByIdRepo,
@@ -138,9 +173,7 @@ export async function findUnidadeByCodigoLean(codigo) {
 }
 
 export async function findUnidadeUserBaseLean(id) {
-  return Unidade.findById(id)
-    .select('_id is_principal unidade_principal_id matriz_id')
-    .lean();
+  return findUnidadeUserBaseLeanRepo({ unitScope: null, id });
 }
 
 export async function findSubunidadesLean(unidadePrincipalId) {
@@ -162,7 +195,10 @@ export async function existsUnidadeByCond(cond) {
 export async function findUnidadeByIdOrRawLean(unidadeId) {
   const { Types } = mongoose;
   const oid = Types.ObjectId.isValid(unidadeId) ? new Types.ObjectId(unidadeId) : null;
-  return Unidade.findOne(oid ? { _id: oid } : { _id: unidadeId }).lean();
+  return findUnidadeByIdOrRawLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    filter: oid ? { _id: oid } : { _id: unidadeId },
+  });
 }
 
 export async function findClusterUnidadesByAnchorLean(anchorRaw) {
@@ -175,7 +211,7 @@ export async function findClusterUnidadesByAnchorLean(anchorRaw) {
   }
 
   conds.push({ _id: anchorRaw }, { matriz_id: anchorRaw }, { unidade_principal_id: anchorRaw });
-  return Unidade.find({ $or: conds }).lean();
+  return findClusterUnidadesByAnchorLeanRepo({ unitScope: null, conds });
 }
 
 export async function findUserByEmailCondLean(cond) {
@@ -195,27 +231,27 @@ export async function findUserByEmailCondLeanMaxTimeMs(cond, maxTimeMs) {
 }
 
 export async function findAllUnidadesLean() {
-  return Unidade.find({}).lean();
+  return findAllUnidadesLeanRepo({ unitScope: null });
 }
 
 export async function findAllUnidadesSelectIdCodigoNomeLean() {
-  return Unidade.find().select('_id codigo nome').lean();
+  return findAllUnidadesSelectIdCodigoNomeLeanRepo({ unitScope: null });
 }
 
 export async function findAllUnidades() {
-  return Unidade.find();
+  return findAllUnidadesRepo({ unitScope: null });
 }
 
 export async function findUnidadesByMatrizOuPrincipal(matrizRef) {
-  return Unidade.find({ $or: [{ _id: matrizRef }, { unidade_principal_id: matrizRef }] });
+  return findUnidadesByMatrizOuPrincipalRepo({ unitScope: null, matrizRef });
 }
 
 export async function findUnidadesAtivasStatusLean() {
-  return Unidade.find({ status: 'ativo' }).lean();
+  return findUnidadesAtivasStatusLeanRepo({ unitScope: null });
 }
 
 export async function findUnidadePrincipalLean() {
-  return Unidade.findOne({ is_principal: true }).lean();
+  return findUnidadePrincipalLeanRepo({ unitScope: null });
 }
 
 export async function findUserByEmailCond(cond) {
@@ -276,7 +312,10 @@ export async function findModulosAtivosStatusLean() {
 }
 
 export async function findUnidadeByIdWithModulosAcessiveisLean(unidadeId) {
-  return Unidade.findById(unidadeId).populate('modulosAcessiveis').lean();
+  return findUnidadeByIdWithModulosAcessiveisLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
 }
 
 export async function findModuloByIdLean(id) {
@@ -352,7 +391,7 @@ export async function deleteRecursoById(id) {
 }
 
 export async function findUnidadeById(setorUnidadeId) {
-  return Unidade.findById(setorUnidadeId);
+  return findUnidadeByIdRepo({ unitScope: null, setorUnidadeId });
 }
 
 export async function findSetorByUnidadeAndNomeNormalizadoLean(unidadeId, nomeNormalizado) {
@@ -396,9 +435,7 @@ export async function saveSetor(setor) {
 }
 
 export async function findUnidadeUserBaseSetorLean(id) {
-  return Unidade.findById(id)
-    .select('_id is_principal unidade_principal_id')
-    .lean();
+  return findUnidadeUserBaseSetorLeanRepo({ unitScope: null, id });
 }
 
 export async function findSetoresByFiltroPopulateUnidadeLean(filtro) {
@@ -414,23 +451,23 @@ export async function findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean(fil
 }
 
 export async function findUnidadesAtivasNomeCodigoOrdenadasLean() {
-  return Unidade.find({ ativa: true }).select('nome codigo').sort({ nome: 1 }).lean();
+  return findUnidadesAtivasNomeCodigoOrdenadasLeanRepo({ unitScope: null });
 }
 
 export async function findUnidadesByIdsNomeCodigoLean(unidadeIds) {
-  return Unidade.find({ _id: { $in: unidadeIds } }).select('nome codigo').lean();
+  return findUnidadesByIdsNomeCodigoLeanRepo({ unitScope: null, unidadeIds });
 }
 
 export async function findUnidadesForSetorPageSelectLean() {
-  return Unidade.find().select('_id id codigo nome is_principal unidade_principal_id').lean();
+  return findUnidadesForSetorPageSelectLeanRepo({ unitScope: null });
 }
 
 export async function findUnidadesForSetorPageByCondSelectLean(cond) {
-  return Unidade.find(cond).select('_id id codigo nome is_principal unidade_principal_id').lean();
+  return findUnidadesForSetorPageByCondSelectLeanRepo({ unitScope: null, cond });
 }
 
 export async function findUnidadesForSetorPageByIdsSelectLean(unidadeIds) {
-  return Unidade.find({ _id: { $in: unidadeIds } }).select('_id id codigo nome is_principal unidade_principal_id').lean();
+  return findUnidadesForSetorPageByIdsSelectLeanRepo({ unitScope: null, unidadeIds });
 }
 
 export async function findSetorByIdAndDelete(id) {
@@ -519,7 +556,7 @@ export async function saveFuncao(doc) {
 }
 
 export async function findUnidadeByIdWithModulosAcessiveis(id) {
-  return Unidade.findById(id).populate('modulosAcessiveis');
+  return findUnidadeByIdWithModulosAcessiveisRepo({ unitScope: null, id });
 }
 
 export async function findFuncionarioByCpfAndUnidade(cpf, unidadeId) {
@@ -576,11 +613,11 @@ export async function setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId) {
 }
 
 export async function findUnidadesAtivasCodigoNomeOrdenadasSelectLean() {
-  return Unidade.find({ ativa: true }).select('codigo nome').sort({ nome: 1 }).lean();
+  return findUnidadesAtivasCodigoNomeOrdenadasSelectLeanRepo({ unitScope: null });
 }
 
 export async function findUnidadesByCondSelectCodigoNomeOrdenadasLean(cond) {
-  return Unidade.find(cond).select('codigo nome').sort({ nome: 1 }).lean();
+  return findUnidadesByCondSelectCodigoNomeOrdenadasLeanRepo({ unitScope: null, cond });
 }
 
 export async function findFuncoesAtivasNomeOrdenadasSelectLean() {
@@ -674,31 +711,31 @@ export async function findUserByFuncionarioId(funcionarioId) {
 }
 
 export async function findUnidadesByCondLeanFull(cond) {
-  return Unidade.find(cond).lean();
+  return findUnidadesByCondLeanFullRepo({ unitScope: null, cond });
 }
 
 export async function findUltimaUnidadePorCodigo() {
-  return Unidade.findOne().sort({ codigo: -1 });
+  return findUltimaUnidadePorCodigoRepo({ unitScope: null });
 }
 
 export async function findUnidadeByCodigo(codigo) {
-  return Unidade.findOne({ codigo });
+  return findUnidadeByCodigoRepo({ unitScope: null, codigo });
 }
 
 export async function findUnidadeByCpf(cpf) {
-  return Unidade.findOne({ cpf });
+  return findUnidadeByCpfRepo({ unitScope: null, cpf });
 }
 
 export async function findUnidadeByCnpj(cnpj) {
-  return Unidade.findOne({ cnpj });
+  return findUnidadeByCnpjRepo({ unitScope: null, cnpj });
 }
 
 export async function findSubunidadesByUnidadePrincipal(unidadePrincipalId) {
-  return Unidade.find({ unidade_principal_id: unidadePrincipalId, is_principal: false });
+  return findSubunidadesByUnidadePrincipalRepo({ unitScope: null, unidadePrincipalId });
 }
 
 export async function createUnidadeDoc(data) {
-  return new Unidade(data);
+  return createUnidadeDocRepo({ unitScope: null, data });
 }
 
 export async function saveUnidadeDoc(doc) {
@@ -714,11 +751,19 @@ export async function updateUserUnidadeById(userId, unidadeId) {
 }
 
 export async function findUnidadeByCpfExcludingId(cpf, unidadeId) {
-  return Unidade.findOne({ cpf, _id: { $ne: unidadeId } });
+  return findUnidadeByCpfExcludingIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    cpf,
+    unidadeId,
+  });
 }
 
 export async function findUnidadeByCnpjExcludingId(cnpj, unidadeId) {
-  return Unidade.findOne({ cnpj, _id: { $ne: unidadeId } });
+  return findUnidadeByCnpjExcludingIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    cnpj,
+    unidadeId,
+  });
 }
 
 export async function updateUnidadeByIdWithValidators(unidadeId, updated) {
@@ -730,31 +775,34 @@ export async function updateUnidadeByIdWithValidators(unidadeId, updated) {
 }
 
 export async function findUnidadesPrincipaisByIds(unitIds) {
-  return Unidade.find({ _id: { $in: unitIds }, is_principal: true });
+  return findUnidadesPrincipaisByIdsRepo({ unitScope: null, unitIds });
 }
 
 export async function findUnidadesPrincipais() {
-  return Unidade.find({ is_principal: true });
+  return findUnidadesPrincipaisRepo({ unitScope: null });
 }
 
 export async function findUnidadesPrincipaisLean() {
-  return Unidade.find({ is_principal: true }).lean();
+  return findUnidadesPrincipaisLeanRepo({ unitScope: null });
 }
 
 export async function findUnidadesPrincipaisSelectIdLean() {
-  return Unidade.find({ is_principal: true }).select('_id').lean();
+  return findUnidadesPrincipaisSelectIdLeanRepo({ unitScope: null });
 }
 
 export async function findUnidadesById(unidadeId) {
-  return Unidade.find({ _id: unidadeId });
+  return findUnidadesByIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
 }
 
 export async function updateManyUnidadesAccessByIds(unitIds, activate) {
-  return Unidade.updateMany({ _id: { $in: unitIds } }, { $set: { is_active: activate } });
+  return updateManyUnidadesAccessByIdsRepo({ unitScope: null, unitIds, activate });
 }
 
 export async function findUnidadesPermitidasByMatrizRef(matrizRef) {
-  return Unidade.find({ $or: [{ _id: matrizRef }, { unidade_principal_id: matrizRef }] });
+  return findUnidadesPermitidasByMatrizRefRepo({ unitScope: null, matrizRef });
 }
 
 export async function findDiretorAtivoByUnidadeSelectId(unidadeId) {
