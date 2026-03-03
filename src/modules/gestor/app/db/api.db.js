@@ -1,5 +1,4 @@
 import Unidade from '#models/unidade.js';
-import User from '#models/user.js';
 import Funcionario from '#models/Funcionario.js';
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
@@ -56,6 +55,24 @@ import {
   findOutraFuncaoByNomeExcludingIdRepo,
   updateFuncaoByIdRepo,
 } from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
+import {
+  countUsersMastersRepo,
+  deleteUserByIdRepo,
+  findDiretorAtivoByUnidadeSelectIdRepo,
+  findUserByCpfCondLeanRepo,
+  findUserByEmailCondLeanMaxTimeMsRepo,
+  findUserByEmailCondLeanRepo,
+  findUserByEmailCondRepo,
+  findUserByEmailRepo,
+  findUserByFuncionarioIdRepo,
+  findUserByIdRepo,
+  findUserByIdSelectAuthLockInfoRepo,
+  findUserDuplicadoByCpfUnidadeExcludingIdRepo,
+  findUsersByQueryLeanRepo,
+  findUsersLockedAfterSelectLeanRepo,
+  findUsuariosDiretorAtivosPopulatedLeanRepo,
+  updateUserUnidadeByIdRepo,
+} from '#modules/gestor/app/repositories/UserRepository.js';
 import {
   createFeedbackRepo,
   findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo,
@@ -137,21 +154,19 @@ export async function findClusterUnidadesByAnchorLean(anchorRaw) {
 }
 
 export async function findUserByEmailCondLean(cond) {
-  return User.findOne(cond).lean();
+  return findUserByEmailCondLeanRepo({ unitScope: null, cond });
 }
 
 export async function findUsersLockedAfterSelectLean(agora) {
-  return User.find({ lock_until: { $gt: agora } })
-    .select('_id email role lock_until failed_login_attempts')
-    .lean();
+  return findUsersLockedAfterSelectLeanRepo({ unitScope: null, agora });
 }
 
 export async function findUserByCpfCondLean(cond) {
-  return User.findOne(cond).lean();
+  return findUserByCpfCondLeanRepo({ unitScope: null, cond });
 }
 
 export async function findUserByEmailCondLeanMaxTimeMs(cond, maxTimeMs) {
-  return User.findOne(cond).lean().maxTimeMS(maxTimeMs);
+  return findUserByEmailCondLeanMaxTimeMsRepo({ unitScope: null, cond, maxTimeMs });
 }
 
 export async function findAllUnidadesLean() {
@@ -179,33 +194,36 @@ export async function findUnidadePrincipalLean() {
 }
 
 export async function findUserByEmailCond(cond) {
-  return User.findOne(cond);
+  return findUserByEmailCondRepo({ unitScope: null, cond });
 }
 
 export async function findUsersByQueryLean(query) {
-  return User.find(query).lean();
+  return findUsersByQueryLeanRepo({ unitScope: null, query });
 }
 
 export async function findUserDuplicadoByCpfUnidadeExcludingId(userId, cleanCpf, unidadeId) {
-  return User.findOne({ _id: { $ne: userId }, cpf: cleanCpf, unidade_id: unidadeId });
+  return findUserDuplicadoByCpfUnidadeExcludingIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    userId,
+    cleanCpf,
+    unidadeId,
+  });
 }
 
 export async function countUsersMasters() {
-  return User.countDocuments({ role: 'master' });
+  return countUsersMastersRepo({ unitScope: null });
 }
 
 export async function findUserByIdSelectAuthLockInfo(id) {
-  return User.findById(id).select('_id email failed_login_attempts lock_until role');
+  return findUserByIdSelectAuthLockInfoRepo({ unitScope: null, id });
 }
 
 export async function findUsuariosDiretorAtivosPopulatedLean() {
-  return User.find({ ativo: true, role: 'diretor' })
-    .populate('funcionario_id', 'nome email')
-    .lean();
+  return findUsuariosDiretorAtivosPopulatedLeanRepo({ unitScope: null });
 }
 
 export async function findUserById(userId) {
-  return User.findById(userId);
+  return findUserByIdRepo({ unitScope: null, userId });
 }
 
 export async function saveUserDoc(userDoc) {
@@ -213,7 +231,7 @@ export async function saveUserDoc(userDoc) {
 }
 
 export async function deleteUserById(userId) {
-  return User.deleteOne({ _id: userId });
+  return deleteUserByIdRepo({ unitScope: null, userId });
 }
 
 export async function findAllModulosBaseLean() {
@@ -617,11 +635,11 @@ export async function findFuncionarioByEmailSelectLean(email) {
 }
 
 export async function findUserByEmail(email) {
-  return User.findOne({ email });
+  return findUserByEmailRepo({ unitScope: null, email });
 }
 
 export async function findUserByFuncionarioId(funcionarioId) {
-  return User.findOne({ funcionario_id: funcionarioId });
+  return findUserByFuncionarioIdRepo({ unitScope: null, funcionarioId });
 }
 
 export async function findUnidadesByCondLeanFull(cond) {
@@ -657,7 +675,11 @@ export async function saveUnidadeDoc(doc) {
 }
 
 export async function updateUserUnidadeById(userId, unidadeId) {
-  return User.findByIdAndUpdate(userId, { unidade_id: unidadeId });
+  return updateUserUnidadeByIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    userId,
+    unidadeId,
+  });
 }
 
 export async function findUnidadeByCpfExcludingId(cpf, unidadeId) {
@@ -705,7 +727,10 @@ export async function findUnidadesPermitidasByMatrizRef(matrizRef) {
 }
 
 export async function findDiretorAtivoByUnidadeSelectId(unidadeId) {
-  return User.findOne({ role: 'diretor', ativo: true, unidade_id: unidadeId }).select('_id');
+  return findDiretorAtivoByUnidadeSelectIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
 }
 
 export async function deleteUnidadeById(unidadeId) {
