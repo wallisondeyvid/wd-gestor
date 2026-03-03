@@ -5,11 +5,6 @@ const ROOT = process.cwd();
 const TARGET_DIRS = ['src', 'routes', 'services', 'models', 'scripts'];
 const VALID_EXTENSIONS = new Set(['.js', '.mjs', '.cjs']);
 const IGNORED_DIRS = new Set(['node_modules', '.git', 'dist', 'build', '.next', 'coverage']);
-const DB_MODELS_IMPORT_ALLOWLIST = new Set([
-  // TODO(B2): reduzir progressivamente esta allowlist conforme migrações db -> repositories tenant-aware avançarem.
-  'src/modules/gestor/app/db/api.db.js',
-  'src/modules/gestor/app/db/auth.db.js',
-]);
 
 const IMPORT_SPECIFIER_REGEX = /\bimport\s+(?:[^'"\n;]*?\sfrom\s*)?['"](?<spec1>[^'"\n]+)['"]|\bexport\s+[^'"\n;]*?\sfrom\s*['"](?<spec2>[^'"\n]+)['"]|\brequire\s*\(\s*['"](?<spec3>[^'"\n]+)['"]\s*\)|\bimport\s*\(\s*['"](?<spec4>[^'"\n]+)['"]\s*\)/g;
 const SERVICE_DIRECT_QUERY_REGEX =
@@ -89,7 +84,6 @@ function isModuleDbFile(relativePath) {
 
 function collectDbModelsImportViolations(relativePath, sourceCode) {
   if (!isModuleDbFile(relativePath)) return [];
-  if (DB_MODELS_IMPORT_ALLOWLIST.has(relativePath)) return [];
 
   const lines = sourceCode.split(/\r?\n/);
   const violations = [];
