@@ -1,6 +1,5 @@
 import Unidade from '#models/unidade.js';
 import User from '#models/user.js';
-import Funcao from '#models/funcao.js';
 import Funcionario from '#models/Funcionario.js';
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
@@ -41,8 +40,21 @@ import {
   findModulosAtivosStatusLeanRepo,
 } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
 import {
+  createFuncaoRepo,
+  deleteFuncaoByIdRepo,
+  findAllFuncoesPopuladasRepo,
+  findFuncaoByIdPopulatedRepo,
+  findFuncaoByIdRepo,
+  findFuncaoByNomeRepo,
   findFuncaoByIdLeanRepo,
+  findFuncoesAtivasNomeOrdenadasSelectLeanRepo,
+  findFuncoesByFiltroLeanRepo,
+  findFuncoesByFiltroSelectLeanRepo,
+  findFuncoesByUnidadePrincipalIdsPopuladasRepo,
+  findFuncoesByUnidadePrincipalPopuladasRepo,
   findFuncoesByUnidadeLeanRepo,
+  findOutraFuncaoByNomeExcludingIdRepo,
+  updateFuncaoByIdRepo,
 } from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
 import {
   createFeedbackRepo,
@@ -401,39 +413,39 @@ export async function findOneAndUpdateCounterSetorCodigo(targetSeq) {
 }
 
 export async function findFuncaoByNome(nome) {
-  return Funcao.findOne({ nome });
+  return findFuncaoByNomeRepo({ unitScope: null, nome });
 }
 
 export async function createFuncao(payload) {
-  return Funcao.create(payload);
+  return createFuncaoRepo({ unitScope: null, payload });
 }
 
 export async function findFuncaoByIdPopulated(id) {
-  return Funcao.findById(id).populate('unidade_principal_id modulos_habilitados');
+  return findFuncaoByIdPopulatedRepo({ unitScope: null, id });
 }
 
 export async function findAllFuncoesPopuladas() {
-  return Funcao.find().populate('unidade_principal_id modulos_habilitados');
+  return findAllFuncoesPopuladasRepo({ unitScope: null });
 }
 
 export async function findFuncoesByUnidadePrincipalPopuladas(unidadePrincipalId) {
-  return Funcao.find({ unidade_principal_id: unidadePrincipalId }).populate('unidade_principal_id modulos_habilitados');
+  return findFuncoesByUnidadePrincipalPopuladasRepo({ unitScope: null, unidadePrincipalId });
 }
 
 export async function findFuncoesByUnidadePrincipalIdsPopuladas(unidadePrincipalIds) {
-  return Funcao.find({ unidade_principal_id: { $in: unidadePrincipalIds } }).populate('unidade_principal_id modulos_habilitados');
+  return findFuncoesByUnidadePrincipalIdsPopuladasRepo({ unitScope: null, unidadePrincipalIds });
 }
 
 export async function findFuncaoById(id) {
-  return Funcao.findById(id);
+  return findFuncaoByIdRepo({ unitScope: null, id });
 }
 
 export async function findOutraFuncaoByNomeExcludingId(id, nome) {
-  return Funcao.findOne({ nome, _id: { $ne: id } });
+  return findOutraFuncaoByNomeExcludingIdRepo({ unitScope: null, id, nome });
 }
 
 export async function updateFuncaoById(id, updates) {
-  return Funcao.findByIdAndUpdate(id, updates, { runValidators: true });
+  return updateFuncaoByIdRepo({ unitScope: null, id, updates });
 }
 
 export async function findFuncaoByIdLean(id) {
@@ -448,15 +460,15 @@ export async function findFuncoesByUnidadeLean(unidadeId) {
 }
 
 export async function findFuncoesByFiltroLean(filtro) {
-  return Funcao.find(filtro).lean();
+  return findFuncoesByFiltroLeanRepo({ unitScope: null, filtro });
 }
 
 export async function findFuncoesByFiltroSelectLean(filtro) {
-  return Funcao.find(filtro).select('codigo nome descricao').lean();
+  return findFuncoesByFiltroSelectLeanRepo({ unitScope: null, filtro });
 }
 
 export async function deleteFuncaoById(id) {
-  return Funcao.findByIdAndDelete(id);
+  return deleteFuncaoByIdRepo({ unitScope: null, id });
 }
 
 export async function saveFuncao(doc) {
@@ -519,7 +531,7 @@ export async function findUnidadesByCondSelectCodigoNomeOrdenadasLean(cond) {
 }
 
 export async function findFuncoesAtivasNomeOrdenadasSelectLean() {
-  return Funcao.find({ ativa: true }).select('nome').sort({ nome: 1 }).lean();
+  return findFuncoesAtivasNomeOrdenadasSelectLeanRepo({ unitScope: null });
 }
 
 export async function findSetoresAtivosNomeOrdenadosSelectLean() {
