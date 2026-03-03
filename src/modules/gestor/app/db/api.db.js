@@ -14,7 +14,10 @@ import {
   findUnidadeByIdLeanRepo,
   findUnidadesByCondLeanRepo,
 } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
-import { deleteUnidadeByIdRepo } from '#modules/gestor/app/repositories/UnidadeWriteRepository.js';
+import {
+  deleteUnidadeByIdRepo,
+  updateUnidadeByIdWithValidatorsRepo,
+} from '#modules/gestor/app/repositories/UnidadeWriteRepository.js';
 import {
   findSetorByUnidadeAndNomeNormalizadoLeanRepo,
   findSetoresByUnidadeIdPopulateLeanRepo,
@@ -624,7 +627,11 @@ export async function findUnidadeByCnpjExcludingId(cnpj, unidadeId) {
 }
 
 export async function updateUnidadeByIdWithValidators(unidadeId, updated) {
-  return Unidade.findByIdAndUpdate(unidadeId, updated, { new: true, runValidators: true });
+  return updateUnidadeByIdWithValidatorsRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+    updated,
+  });
 }
 
 export async function findUnidadesPrincipaisByIds(unitIds) {
