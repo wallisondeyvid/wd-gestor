@@ -4,7 +4,6 @@ import Recurso from '#models/recurso.js';
 import Setor from '#models/setor.js';
 import Funcao from '#models/funcao.js';
 import Funcionario from '#models/Funcionario.js';
-import Feedback from '#models/feedback.js';
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
 import {
@@ -36,6 +35,15 @@ import {
   findFuncaoByIdLeanRepo,
   findFuncoesByUnidadeLeanRepo,
 } from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
+import {
+  createFeedbackRepo,
+  findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo,
+  findFeedbackByFilterSortCreatedAtDescLimit500LeanRepo,
+  findFeedbackByIdAndDeleteLeanRepo,
+  findFeedbackByIdAndUpdateSetNewLeanRepo,
+  findFeedbackByIdLeanRepo,
+  findFeedbackByIdRepo,
+} from '#modules/gestor/app/repositories/FeedbackReadRepository.js';
 import {
   findWidgetSettingsFeedbackLeanRepo,
   updateWidgetSettingsFeedbackModuleEnabledUpsertRepo,
@@ -687,11 +695,11 @@ export async function deleteUnidadeById(unidadeId) {
 }
 
 export async function createFeedback(data) {
-  return Feedback.create(data);
+  return createFeedbackRepo({ unitScope: null, data });
 }
 
 export async function findFeedbackById(id) {
-  return Feedback.findById(id);
+  return findFeedbackByIdRepo({ unitScope: null, id });
 }
 
 export async function saveFeedbackDoc(feedbackDoc) {
@@ -699,29 +707,23 @@ export async function saveFeedbackDoc(feedbackDoc) {
 }
 
 export async function findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter) {
-  return Feedback.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(200)
-    .lean();
+  return findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo({ unitScope: null, filter });
 }
 
 export async function findFeedbackByIdLean(id) {
-  return Feedback.findById(id).lean();
+  return findFeedbackByIdLeanRepo({ unitScope: null, id });
 }
 
 export async function findFeedbackByFilterSortCreatedAtDescLimit500Lean(filter) {
-  return Feedback.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(500)
-    .lean();
+  return findFeedbackByFilterSortCreatedAtDescLimit500LeanRepo({ unitScope: null, filter });
 }
 
 export async function findFeedbackByIdAndUpdateSetNewLean(id, setData) {
-  return Feedback.findByIdAndUpdate(id, { $set: setData }, { new: true }).lean();
+  return findFeedbackByIdAndUpdateSetNewLeanRepo({ unitScope: null, id, setData });
 }
 
 export async function findFeedbackByIdAndDeleteLean(id) {
-  return Feedback.findByIdAndDelete(id).lean();
+  return findFeedbackByIdAndDeleteLeanRepo({ unitScope: null, id });
 }
 
 export async function findWidgetSettingsFeedbackLean() {
