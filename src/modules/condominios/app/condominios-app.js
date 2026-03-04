@@ -7,6 +7,7 @@ import multer from 'multer';
 import crypto from 'crypto';
 import { put, del } from '@vercel/blob';
 import { connectMongo } from '#core/db/connect.js';
+import { createUnitScope } from '#shared/unitScope.js';
 import { DocumentosPort } from '#shared/ports/documentos.port.js';
 // Reutiliza API de usuário do módulo Gestor (perfil/foto/senha)
 import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
@@ -202,8 +203,13 @@ const ROOT = process.cwd();
 const app = express();
 
 function unidadesReadRepoFromReq(req) {
-  const unitScope = req?.unitScope || req?.ctx?.unitScope || null;
-  return new UnidadesReadRepository({ unitScope });
+  return new UnidadesReadRepository({ unitScope: getUnitScope(req) });
+}
+
+function getUnitScope(req) {
+  if (req?.unitScope) return req.unitScope;
+  if (req?.ctx?.unitScope) return req.ctx.unitScope;
+  return { type: 'global', unidadeId: null };
 }
 
 // Retenção: remove enquetes finalizadas/encerradas após 3 meses para evitar crescimento do banco
@@ -1116,7 +1122,7 @@ app.delete('/api/cond-usuarios/:id', async (req, res) => {
 // API: listar unidades acessíveis ao usuário atual (para combos)
 async function handleGetUnidadesV1(req, res, _next) {
   try{
-    const unidadesReadRepository = new UnidadesReadRepository({ unitScope: req.unitScope });
+    const unidadesReadRepository = new UnidadesReadRepository({ unitScope: getUnitScope(req) });
     const listarUnidadesParaUsuarioScoped = async (user) => {
       try {
         const unidadeSelectFields = '_id codigo nome razaoSocial cnpj cpf pessoaTipo inscricaoEstadual inscricaoMunicipal cnaePrincipal cnaeSecundarios regimeTributario naturezaJuridica tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal diretor_usuario_id pixChave tipoPix banco agencia contaCorrente is_principal subunidade unidade_principal_id dataAbertura';
@@ -1784,7 +1790,7 @@ async function resolveCondUsuarioIdFromAnyUserId(usuarioId, opts = {}) {
 
 async function userCanEditDirigenciaForUnidade(user, unidadeId, repo) {
   try {
-    const unidadeRepo = repo || new UnidadesReadRepository({ unitScope: null });
+    const unidadeRepo = repo || new UnidadesReadRepository({ unitScope: createUnitScope({ unidadeId }) });
     if (!user) return false;
     if (userCanScopeAll(user)) return true;
 
@@ -2581,7 +2587,6 @@ async function resolveHabPublicMailboxMemberKeys(hab) {
 }
 
 async function ensureHabPublicMailboxForHabitacao(hab, opts = {}, repo) {
-  const unidadeRepo = repo || new UnidadesReadRepository({ unitScope: null });
   const strict = !!opts.strict;
   const habId = String(hab?._id || hab?.id || '').trim();
   const unidadeId = String(hab?.unidade_id || '').trim();
@@ -2594,6 +2599,8 @@ async function ensureHabPublicMailboxForHabitacao(hab, opts = {}, repo) {
     }
     return null;
   }
+
+  const unidadeRepo = repo || new UnidadesReadRepository({ unitScope: createUnitScope({ unidadeId }) });
 
   const filter = {
     ativo: { $ne: false },
