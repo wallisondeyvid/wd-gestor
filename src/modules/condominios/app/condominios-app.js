@@ -16344,7 +16344,6 @@ function buildTransferMaterialSnapshot(materialDoc, transferDoc, context){
 }
 
 async function buildMaterialLogsForArea(areaDoc, repo){
-  const unidadeRepo = repo || new UnidadesReadRepository({ unitScope: null });
   if(!areaDoc) return [];
   const areaId = areaDoc._id ? String(areaDoc._id) : '';
   if(!areaId) return [];
@@ -16383,6 +16382,21 @@ async function buildMaterialLogsForArea(areaDoc, repo){
   areaDocs.forEach(doc => { if(doc && doc.unidade_id) unidadeIds.add(String(doc.unidade_id)); });
   materialDocs.forEach(doc => { if(doc && doc.unidade_id) unidadeIds.add(String(doc.unidade_id)); });
   if(areaDoc.unidade_id) unidadeIds.add(String(areaDoc.unidade_id));
+
+  const pickUnidadeIdFromArea = (doc, ids) => {
+    const fromArea = String(doc?.unidade_id || '').trim();
+    if (fromArea && mongoose.isValidObjectId(fromArea)) return fromArea;
+
+    const firstFromSet = String(Array.from(ids || [])[0] || '').trim();
+    if (firstFromSet && mongoose.isValidObjectId(firstFromSet)) return firstFromSet;
+
+    return '';
+  };
+
+  const unidadeId = pickUnidadeIdFromArea(areaDoc, unidadeIds);
+  const unidadeRepo = repo || new UnidadesReadRepository({
+    unitScope: unidadeId ? createUnitScope({ unidadeId }) : { type: 'global', unidadeId: null }
+  });
 
   const unidadeDocs = unidadeIds.size ? await unidadeRepo.find({ _id: { $in: Array.from(unidadeIds) } }) : [];
   const unidadeMap = new Map();
@@ -20472,7 +20486,13 @@ const renderPlaceholder = (req, res, title, description) => {
 // Helpers
 async function listarUnidadesParaUsuario(user){
   try{
-    const repo = new UnidadesReadRepository({ unitScope: null });
+    const unidadeRef = user?.matriz_unidade_id || user?.unidade_principal_id || user?.unidade_id || null;
+    const unidadeRaw = (unidadeRef && typeof unidadeRef === 'object') ? (unidadeRef._id || unidadeRef.id || '') : unidadeRef;
+    const unidadeId = String(unidadeRaw || '').trim();
+    const unitScope = (unidadeId && mongoose.isValidObjectId(unidadeId))
+      ? createUnitScope({ unidadeId })
+      : { type:'global', unidadeId:null };
+    const repo = new UnidadesReadRepository({ unitScope });
     const unidadeSelectFields = '_id codigo nome razaoSocial cnpj cpf pessoaTipo inscricaoEstadual inscricaoMunicipal cnaePrincipal cnaeSecundarios regimeTributario naturezaJuridica tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal diretor_usuario_id pixChave tipoPix banco agencia contaCorrente is_principal subunidade unidade_principal_id dataAbertura';
     if(userCanScopeAll(user)){
       return await repo.find({ ativa: { $ne: false } }, { select: unidadeSelectFields });
