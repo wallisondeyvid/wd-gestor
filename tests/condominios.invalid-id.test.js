@@ -5,6 +5,7 @@ import test from 'node:test';
 import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
+import { assertOfflineResponseContract } from './helpers/assertOfflineContract.js';
 
 async function requestWithFlag(app, flagValue, pathName, query = {}) {
   const prev = process.env.WDG_FLAG_CONDOMINIOS_APP_V2;
@@ -57,13 +58,7 @@ async function assertOfflineContract(app, pathName, query = {}) {
     .set('Connection', 'close')
     .query(query);
 
-  assert.equal(res.status, 503);
-  assert.equal(String(res.headers['retry-after'] || ''), '5');
-  const ok = res.body?.success ?? res.body?.ok;
-  assert.equal(ok, false);
-  assert.equal(typeof res.body?.error, 'string');
-  assert.ok(res.body.error.length > 0);
-  assert.equal(Object.prototype.hasOwnProperty.call(res.body || {}, 'code'), false);
+  assertOfflineResponseContract(res);
 }
 
 function installTeardownSuppression() {
@@ -137,14 +132,7 @@ test('GET /condominios/api/blocos com unidade_id inválido retorna [] sem CastEr
     if (res.status === 200) {
       assert200EmptyListContract(res.body);
     } else {
-      const ok = res.body?.success ?? res.body?.ok;
-      assert.equal(ok, false);
-      assert.equal(typeof res.body?.error, 'string');
-      assert.ok(res.body.error.length > 0);
-      const retryAfter = String(res.headers?.['retry-after'] || '');
-      if (retryAfter) {
-        assert.equal(retryAfter, '5');
-      }
+      assertOfflineResponseContract(res, { allowMissingRetryAfter: true });
     }
 
     const hasCastError = logs.some((line) => /CastError|Cast to ObjectId failed/i.test(line));
