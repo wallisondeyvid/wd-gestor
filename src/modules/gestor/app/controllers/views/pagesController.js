@@ -1,12 +1,39 @@
 // pagesController.js - migrado para módulo Gestor (views)
 import fs from 'fs';
 import path from 'path';
-import Unidade from '#models/unidade.js';
-import Setor from '#models/setor.js';
-import Funcionario from '#models/Funcionario.js';
-import Funcao from '#models/funcao.js';
-import Modulo from '#models/modulo.js';
-import User from '#models/user.js';
+import {
+  findUsuariosDiretorAtivosPopulatedLean,
+  findFuncionariosByEmailsSelectEmailNomeLean,
+  findUsersByQueryLean,
+  findAllUnidadesSelectIdCodigoNomeLean,
+  findAllFuncionariosSelectIdNomeCpfLean,
+  findAllUnidades,
+  findUnidadesByMatrizOuPrincipal,
+  findUnidadesById,
+  findUnidadeByIdLean,
+  findAllModulosLean,
+  findModulosAtivosStatusLean,
+  findUnidadesPrincipaisLean,
+  findUnidadeById,
+  findAllModulos,
+  findAllFuncoesPopuladas,
+  findFuncoesByUnidadePrincipalPopuladas,
+  findUnidadesPrincipaisSelectIdLean,
+  findFuncoesByUnidadePrincipalIdsPopuladas,
+  findUnidadesPrincipais,
+  findUnidadeUserBaseLean,
+  findUnidadesByCondLean,
+  findUnidadesByCondSelectCodigoNomeOrdenadasLean,
+  findFuncoesAtivasNomeOrdenadasSelectLean,
+  findSetoresByCondNomeOrdenadosSelectLean,
+  findFuncionariosParaListagemComRefsSelectLean,
+  findAllUnidadesLean,
+  findUnidadesByCondLeanFull,
+  findUnidadesForSetorPageSelectLean,
+  findUnidadesForSetorPageByCondSelectLean,
+  findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean,
+  findUnidadesForSetorPageByIdsSelectLean,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 // Helper consistente para derivar basePath (montagem em /gestor)
 function deriveBasePath(req){
@@ -70,14 +97,12 @@ function isMasterLike(user){
 
 async function carregarUsuariosDiretor(req) {
   if (!(req.user?.isMaster || req.user?.role === 'admin')) return [];
-  let usuariosDiretor = await User.find({ ativo: true, role: 'diretor' })
-    .populate('funcionario_id', 'nome email')
-    .lean();
+  let usuariosDiretor = await findUsuariosDiretorAtivosPopulatedLean();
   const faltando = usuariosDiretor.filter(u => !((u.nome && u.nome.trim()) || (u.funcionario_id && u.funcionario_id.nome)) && u.email);
   if (faltando.length) {
     const emails = [...new Set(faltando.map(f => f.email.toLowerCase()))];
     try {
-      const funcs = await Funcionario.find({ email: { $in: emails } }).select('email nome').lean();
+      const funcs = await findFuncionariosByEmailsSelectEmailNomeLean(emails);
       const mapa = {}; funcs.forEach(f => { if (f.email) mapa[f.email.toLowerCase()] = f.nome; });
       usuariosDiretor = usuariosDiretor.map(u => { if (!u.nome && u.email) { const via = mapa[u.email.toLowerCase()]; if (via) u.nome = via; } return u; });
     } catch (e) { console.warn('[pagesController] Falha fallback nome diretor:', e.message); }
@@ -136,9 +161,9 @@ export async function paginaUsuarios(req, res, next) {
     }
     if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
     const query = req.user.isMaster ? {} : { role: { $ne: 'master' } };
-    const usuarios = await User.find(query).lean();
-    const unidadesFiltradas = await Unidade.find().select('_id codigo nome').lean();
-    const funcionarios = await Funcionario.find().select('_id nome cpf').lean();
+    const usuarios = await findUsersByQueryLean(query);
+    const unidadesFiltradas = await findAllUnidadesSelectIdCodigoNomeLean();
+    const funcionarios = await findAllFuncionariosSelectIdNomeCpfLean();
     return res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });
   } catch (e) { console.error('[pagesController] /usuarios erro:', e); next(e); }
 }
@@ -153,19 +178,19 @@ export async function paginaUnidades(req, res) {
     let unidadesFiltradas;
     if (isMaster) {
       console.log('[DEBUG SERVER] Carregando todas unidades para master');
-      unidadesFiltradas = await Unidade.find();
+      unidadesFiltradas = await findAllUnidades();
       console.log('[DEBUG SERVER] Unidades encontradas:', unidadesFiltradas.length);
     } else {
       const matrizRef = req.user.unidade_principal_id || req.user.unidade_id;
-      unidadesFiltradas = matrizRef ? await Unidade.find({ $or: [{ _id: matrizRef }, { unidade_principal_id: matrizRef }] }) : [];
+      unidadesFiltradas = matrizRef ? await findUnidadesByMatrizOuPrincipal(matrizRef) : [];
       if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && req.user.unidade_id) {
-        unidadesFiltradas = await Unidade.find({ _id: req.user.unidade_id });
+        unidadesFiltradas = await findUnidadesById(req.user.unidade_id);
       }
       console.log('[paginaUnidades] Unidades filtradas para user:', unidadesFiltradas.length);
       // Fallback: se ainda vazio mas usuário possui permissão elevada (admin), tenta recuperar todas
       if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && (req.user.role === 'admin')) {
         try {
-          const todas = await Unidade.find();
+          const todas = await findAllUnidades();
           if (todas && todas.length) {
             console.warn('[paginaUnidades] Fallback admin => carregando todas as unidades');
             unidadesFiltradas = todas;
@@ -180,13 +205,13 @@ export async function paginaUnidades(req, res) {
       unidadesFiltradas = [];
     }
     let principalUnits = unidadesFiltradas.filter(u => u.is_principal);
-    if (principalUnits.length === 0 && req.user.unidade_principal_id) { const principalDoc = await Unidade.findById(req.user.unidade_principal_id).lean(); if (principalDoc) principalUnits = [principalDoc]; }
-    if (principalUnits.length === 0 && req.user.unidade_id) { const doc = await Unidade.findById(req.user.unidade_id).lean(); if (doc) principalUnits = [doc]; }
-    const modulos = (isMaster || req.user.role === 'admin') ? await Modulo.find().lean() : await Modulo.find({ status: 'ativo' }).lean();
+    if (principalUnits.length === 0 && req.user.unidade_principal_id) { const principalDoc = await findUnidadeByIdLean(req.user.unidade_principal_id); if (principalDoc) principalUnits = [principalDoc]; }
+    if (principalUnits.length === 0 && req.user.unidade_id) { const doc = await findUnidadeByIdLean(req.user.unidade_id); if (doc) principalUnits = [doc]; }
+    const modulos = (isMaster || req.user.role === 'admin') ? await findAllModulosLean() : await findModulosAtivosStatusLean();
     if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && isMaster) {
       console.warn('[paginaUnidades] ALERTA: master sem unidades visíveis — verificando fallback matrizes');
       try {
-        const matrizes = await Unidade.find({ is_principal: true }).lean();
+        const matrizes = await findUnidadesPrincipaisLean();
         if (matrizes?.length) unidadesFiltradas = matrizes;
       } catch(_e){}
     }
@@ -209,13 +234,13 @@ export async function paginaUnidades(req, res) {
 export async function paginaEditarUnidade(req, res) {
   try {
     const unidadeId = req.params.id;
-    const unidade = await Unidade.findById(unidadeId);
+    const unidade = await findUnidadeById(unidadeId);
     if (!unidade) return res.status(404).send('Unidade não encontrada.');
     let unidadesFiltradas;
-    if (req.user.isMaster) { unidadesFiltradas = await Unidade.find(); }
+    if (req.user.isMaster) { unidadesFiltradas = await findAllUnidades(); }
     else {
       const matrizRef = req.user.unidade_principal_id || req.user.unidade_id;
-      unidadesFiltradas = matrizRef ? await Unidade.find({ $or: [{ _id: matrizRef }, { unidade_principal_id: matrizRef }] }) : [];
+      unidadesFiltradas = matrizRef ? await findUnidadesByMatrizOuPrincipal(matrizRef) : [];
       const permitidoIds = new Set(unidadesFiltradas.map(u => String(u._id)));
       if (!permitidoIds.has(String(unidade._id))) return res.status(403).send('Acesso à unidade não autorizado');
     }
@@ -228,7 +253,7 @@ export async function paginaModulos(req, res) {
     return res.status(200).render('slots-modulos', stubCtx(req, { modulos: [] }));
   }
   if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-  const modulos = await Modulo.find();
+  const modulos = await findAllModulos();
   return res.render('slots-modulos', { modulos, user: req.user });
 }
 
@@ -240,18 +265,18 @@ export async function paginaFuncoes(req, res) {
     }
     let funcoesFiltradas;
     if (isMaster || req.user.role === 'admin') {
-      funcoesFiltradas = await Funcao.find().populate('unidade_principal_id modulos_habilitados');
+      funcoesFiltradas = await findAllFuncoesPopuladas();
     } else {
-      funcoesFiltradas = await Funcao.find({ unidade_principal_id: req.user.unidade_principal_id }).populate('unidade_principal_id modulos_habilitados');
+      funcoesFiltradas = await findFuncoesByUnidadePrincipalPopuladas(req.user.unidade_principal_id);
     }
     if ((!funcoesFiltradas || funcoesFiltradas.length === 0) && (isMaster || req.user.role === 'admin')) {
       // fallback: tentar ao menos por matrizes
-      const matrizes = await Unidade.find({ is_principal: true }).select('_id').lean();
+      const matrizes = await findUnidadesPrincipaisSelectIdLean();
       const ids = matrizes.map(m => m._id);
-      funcoesFiltradas = await Funcao.find({ unidade_principal_id: { $in: ids } }).populate('unidade_principal_id modulos_habilitados');
+      funcoesFiltradas = await findFuncoesByUnidadePrincipalIdsPopuladas(ids);
     }
-    const modulosFiltrados = await Modulo.find();
-    const unidadesPrincipaisFiltradas = isMaster || req.user.role === 'admin' ? await Unidade.find({ is_principal: true }) : await Unidade.find({ _id: req.user.unidade_principal_id });
+    const modulosFiltrados = await findAllModulos();
+    const unidadesPrincipaisFiltradas = isMaster || req.user.role === 'admin' ? await findUnidadesPrincipais() : await findUnidadesById(req.user.unidade_principal_id);
     return res.render('funcoes', { funcoesFiltradas, modulosFiltrados, unidadesPrincipaisFiltradas, user: req.user });
   } catch (e) {
     console.error('[pagesController] /funcoes erro:', e.message);
@@ -273,7 +298,7 @@ export async function paginaFuncionarios(req, res) {
     if (!(req.user?.isMaster || req.user?.role === 'admin')) {
       let principalId = req.user?.unidade_principal_id;
       if (!principalId && req.user?.unidade_id) {
-        const u = await Unidade.findById(req.user.unidade_id).select('_id is_principal unidade_principal_id matriz_id').lean();
+        const u = await findUnidadeUserBaseLean(req.user.unidade_id);
         if (u) principalId = u.is_principal ? u._id : (u.unidade_principal_id || u.matriz_id || u._id);
       }
       unidadesCond = principalId ? { $or: [ { _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId } ] } : { _id: req.user?.unidade_id || null };
@@ -282,19 +307,16 @@ export async function paginaFuncionarios(req, res) {
     // Filtro de setores conforme escopo calculado
     let setoresCond = { ativo: true };
     if (!(req.user?.isMaster || req.user?.role === 'admin')) {
-      const unidadesAcessiveis = await Unidade.find(unidadesCond).select('_id').lean();
+      const unidadesAcessiveis = await findUnidadesByCondLean(unidadesCond);
       const ids = unidadesAcessiveis.map(u => u._id);
       setoresCond.unidade_id = { $in: ids };
     }
 
     const [unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios] = await Promise.all([
-      Unidade.find(unidadesCond).select('codigo nome').sort({ nome: 1 }).lean(),
-      Funcao.find({ ativa: true }).select('nome').sort({ nome: 1 }).lean(),
-      Setor.find(setoresCond).select('nome').sort({ nome: 1 }).lean(),
-      Funcionario.find(filtro).select('nome cpf unidade_id funcao_id ativo')
-        .populate({ path: 'unidade_id', select: 'nome' })
-        .populate({ path: 'funcao_id', select: 'nome' })
-        .sort({ nome: 1 }).lean(),
+      findUnidadesByCondSelectCodigoNomeOrdenadasLean(unidadesCond),
+      findFuncoesAtivasNomeOrdenadasSelectLean(),
+      findSetoresByCondNomeOrdenadosSelectLean(setoresCond),
+      findFuncionariosParaListagemComRefsSelectLean(filtro),
     ]);
     return res.render('funcionarios/funcionarios_index', { user: req.user, unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios });
   } catch (e) {
@@ -316,18 +338,18 @@ export async function paginaRecursos(req, res) {
       return res.status(200).render('recursos', stubCtx(req, { unidadesFiltradas: [] }));
     }
     let unidadesFiltradas = [];
-    if (isMaster || req.user.role === 'admin') unidadesFiltradas = await Unidade.find().lean();
+    if (isMaster || req.user.role === 'admin') unidadesFiltradas = await findAllUnidadesLean();
     else {
       let principalId = req.user.unidade_principal_id;
       if (!principalId && req.user.unidade_id) {
-        const u = await Unidade.findById(req.user.unidade_id).lean();
+        const u = await findUnidadeByIdLean(req.user.unidade_id);
         if (u) principalId = u.is_principal ? u._id : u.unidade_principal_id;
       }
       const cond = principalId ? { $or: [{ _id: principalId }, { unidade_principal_id: principalId }] } : {};
-      unidadesFiltradas = await Unidade.find(cond).lean();
+      unidadesFiltradas = await findUnidadesByCondLeanFull(cond);
     }
     if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && (isMaster || req.user.role === 'admin')) {
-      const matrizes = await Unidade.find({ is_principal: true }).lean();
+      const matrizes = await findUnidadesPrincipaisLean();
       if (matrizes?.length) unidadesFiltradas = matrizes;
     }
     return res.render('recursos', { unidadesFiltradas, user: req.user || { nome: 'Usuário Desconhecido', id: null } });
@@ -390,37 +412,28 @@ export async function paginaSetores(req, res) {
     let filtroSetores = { ativo: true };
     if (isMaster || req.user?.role === 'admin') {
       // Admin/Master: veem todas as unidades e setores
-      unidadesFiltradas = await Unidade.find().select('_id id codigo nome is_principal unidade_principal_id').lean();
+      unidadesFiltradas = await findUnidadesForSetorPageSelectLean();
     } else {
       // Usuário comum/diretor: limitar matriz e suas unidades-filhas
       let principalId = req.user?.unidade_principal_id;
       if (!principalId && req.user?.unidade_id) {
-        const u = await Unidade.findById(req.user.unidade_id).select('_id is_principal unidade_principal_id matriz_id').lean();
+        const u = await findUnidadeUserBaseLean(req.user.unidade_id);
         if (u) principalId = u.is_principal ? (u._id) : (u.unidade_principal_id || u.matriz_id || u._id);
       }
       const cond = principalId ? { $or: [ { _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId } ] } : { _id: req.user?.unidade_id || null };
-      unidadesFiltradas = await Unidade.find(cond).select('_id id codigo nome is_principal unidade_principal_id').lean();
+      unidadesFiltradas = await findUnidadesForSetorPageByCondSelectLean(cond);
       const allowedIds = unidadesFiltradas.map(u => String(u._id));
       filtroSetores.unidade_id = { $in: allowedIds };
     }
 
     // Carregar setores, já filtrados pelas unidades acessíveis
-    let setoresFiltrados = await Setor
-      .find(filtroSetores)
-      .select('nome descricao unidade_id')
-      .populate({ path: 'unidade_id', select: 'nome codigo' })
-      .sort({ nome: 1 })
-      .lean();
+    let setoresFiltrados = await findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean(filtroSetores);
     if ((!setoresFiltrados || setoresFiltrados.length === 0) && (isMaster || req.user?.role === 'admin')) {
       // fallback: tenta todos setores
-      setoresFiltrados = await Setor.find({})
-        .select('nome descricao unidade_id')
-        .populate({ path: 'unidade_id', select: 'nome codigo' })
-        .sort({ nome: 1 })
-        .lean();
+      setoresFiltrados = await findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean({});
       if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && setoresFiltrados?.length) {
         const uids = [...new Set(setoresFiltrados.map(s => String(s.unidade_id?._id || s.unidade_id)).filter(Boolean))];
-        unidadesFiltradas = await Unidade.find({ _id: { $in: uids } }).select('_id id codigo nome is_principal unidade_principal_id').lean();
+        unidadesFiltradas = await findUnidadesForSetorPageByIdsSelectLean(uids);
       }
     }
 

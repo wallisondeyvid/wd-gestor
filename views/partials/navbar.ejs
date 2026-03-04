@@ -305,7 +305,21 @@
   window.addEventListener('perfil:fotoAtualizada', async () => {
     try {
       // Reconsulta usuário para obter caminho definitivo (caso backend trate renomeação)
-      const resp = await fetch('/api/usuario', { credentials:'same-origin', cache:'no-store' });
+      var __bp = '';
+      try {
+        __bp = (window.WDG_CONTEXT && window.WDG_CONTEXT.basePath)
+          ? window.WDG_CONTEXT.basePath
+          : (document.body && document.body.getAttribute
+              ? (document.body.getAttribute('data-base-path') || '')
+              : '');
+      } catch(_) {}
+
+      __bp = String(__bp || '/gestor').replace(/\/$/, '');
+
+      const resp = await fetch(__bp + '/api/usuario', {
+        credentials: 'same-origin',
+        cache: 'no-store'
+      });
       if (!resp.ok) return;
       const raw = await resp.json();
       const user = raw?.data || raw?.usuario || raw;

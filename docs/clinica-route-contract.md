@@ -1,0 +1,12 @@
+METHOD  PATH
+GET     /clinica
+GET     /clinica/api/modulos
+GET     /clinica/api/usuario
+GET     /clinica/api/usuario/foto
+POST    /clinica/api/usuario/foto
+PUT     /clinica/api/usuario/senha
+POST    /clinica/api/usuarios
+POST    /clinica/api/usuarios/:id/delete
+POST    /clinica/api/usuarios/:id/toggle
+POST    /clinica/api/usuarios/:id/update
+GET     /clinica/dashboard

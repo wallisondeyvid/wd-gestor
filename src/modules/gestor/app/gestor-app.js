@@ -53,7 +53,7 @@ import bancoApiRouter from './routes/bancoApi.js';
 import faceBiometriaUploadApiRouter from './routes/faceBiometriaUploadApi.js';
 import feedbackApiRouter from './routes/feedbackApi.js';
 import widgetSettingsApiRouter from './routes/widgetSettingsApi.js';
-import User from '#models/user.js';
+import { findUserByEmailCondLeanMaxTimeMs } from '#modules/gestor/app/db/api.db.js';
 
 const app = express();
 // Aumenta limites de body parser para suportar upload inline (DataURL) de logos (até ~10-12MB)
@@ -170,7 +170,7 @@ app.use(async (req, res, next) => {
 		const sessionUser = req.session && req.session.user;
 		if (!sessionUser || !sessionUser.email) return next();
 		const email = (sessionUser.email || '').toLowerCase();
-		const userDoc = await User.findOne({ email }).lean().maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000));
+		const userDoc = await findUserByEmailCondLeanMaxTimeMs({ email }, Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000));
 		if (userDoc) {
 			req.user = {
 				id: userDoc._id,

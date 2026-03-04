@@ -9451,6 +9451,7 @@ try {
   // Expor funÃ§Ã£o globalmente para debug e botÃµes
   try { if(typeof renderMatrizesPorGrupo === 'function'){ window.renderMatrizesPorGrupo = renderMatrizesPorGrupo; } } catch(_e){}
   try { if(typeof renderGruposTurnos === 'function'){ window.renderGruposTurnos = renderGruposTurnos; } } catch(_e){}
+  try { if(typeof renderGruposTurnos === 'function' && typeof globalThis !== 'undefined'){ globalThis.renderGruposTurnos = renderGruposTurnos; } } catch(_e){}
   try { if(typeof forceRepaintTurnosList === 'function'){ window.forceRepaintTurnosList = forceRepaintTurnosList; } } catch(_e){}
   // Evita sobrescrita do handler do modal de detalhamento; mantemos apenas em __ESCALA_FUNCS__
   // Listener global hiper-robusto para "Excluir" na tabela de turnos

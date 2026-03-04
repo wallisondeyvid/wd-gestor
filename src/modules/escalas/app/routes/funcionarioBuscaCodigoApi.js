@@ -2,11 +2,11 @@ import { Router } from 'express';
 import mongoose from 'mongoose';
 
 async function getFuncionarioModel(){
-  const mod = await import('#core/models/Funcionario.js');
+  const mod = await import('#models/Funcionario.js');
   return mod.default || mod.Funcionario || mod;
 }
 async function getUnidadeModel(){
-  const mod = await import('#core/models/unidade.js');
+  const mod = await import('#models/unidade.js');
   return mod.default || mod.Unidade || mod;
 }
 

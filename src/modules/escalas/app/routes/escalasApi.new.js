@@ -8,26 +8,26 @@ async function getAusenciaModel(){ if(!AusenciaModel){ const m = await import('#
 
 // Carrega modelo Escala on-demand
 async function getEscalaModel(){
-  const mod = await import('#core/models/escala.js');
+  const mod = await import('#models/escala.js');
   return mod.default || mod.Escala || mod;
 }
 // Carrega modelo Funcionario sob demanda
 async function getFuncionarioModel(){
-  const mod = await import('#core/models/Funcionario.js');
+  const mod = await import('#models/Funcionario.js');
   return mod.default || mod.Funcionario || mod;
 }
 // Carrega modelos Recurso e Unidade sob demanda para reuso no endpoint de recursos
 async function getRecursoModel(){
-  const mod = await import('#core/models/recurso.js');
+  const mod = await import('#models/recurso.js');
   return mod.default || mod.Recurso || mod;
 }
 async function getUnidadeModel(){
-  const mod = await import('#core/models/unidade.js');
+  const mod = await import('#models/unidade.js');
   return mod.default || mod.Unidade || mod;
 }
 // Carrega modelo de Log de Escala sob demanda
 async function getEscalaLogModel(){
-  const mod = await import('#core/models/escalaLog.js');
+  const mod = await import('#models/escalaLog.js');
   return mod.default || mod.EscalaLog || mod;
 }
 
@@ -1839,9 +1839,9 @@ router.get('/api/escalas/resolve-responsavel', requireEscalasAuth, async (req,re
       }
       return res.status(400).json({ ok:false, error:'id inválido' });
     }
-    const modUser = await import('#core/models/user.js');
+    const modUser = await import('#models/user.js');
     const UserModel = modUser.default || modUser.User || modUser;
-    const modFunc = await import('#core/models/Funcionario.js');
+    const modFunc = await import('#models/Funcionario.js');
     const FuncModel = modFunc.default || modFunc.Funcionario || modFunc;
     let nome=null, codigo=null, origem='none';
     // 1) Tentar como Usuário
@@ -1884,9 +1884,9 @@ router.get('/api/escalas/:id', requireEscalasAuth, async (req,res)=>{
   // Resolver nome do responsável (pode ser user ou funcionario)
   let responsavel_nome=null; let responsavel_codigo=null; let responsavel_resolucao='none';
     try {
-      const modUser = await import('#core/models/user.js');
+      const modUser = await import('#models/user.js');
       const UserModel = modUser.default || modUser.User || modUser;
-      const modFunc = await import('#core/models/Funcionario.js');
+      const modFunc = await import('#models/Funcionario.js');
       const FuncModel = modFunc.default || modFunc.Funcionario || modFunc;
       // 1) Tentar via responsavel_id
       if(esc.responsavel_id){
@@ -2255,9 +2255,9 @@ router.post('/api/escalas', requireEscalasAuth, async (req,res)=>{
     if(responsavelId && !isHex24(responsavelId)) candidatasCodigo.push(String(responsavelId).trim());
     if(responsavelCPF){ const d=onlyDigits(responsavelCPF); if(d.length===11) candidatasCodigo.push(d); }
     try {
-      const modUser = await import('#core/models/user.js');
+      const modUser = await import('#models/user.js');
       const UserModel = modUser.default || modUser.User || modUser;
-      const modFunc = await import('#core/models/Funcionario.js');
+      const modFunc = await import('#models/Funcionario.js');
       const FuncModel = modFunc.default || modFunc.Funcionario || modFunc;
       if(responsavelId && isHex24(responsavelId)){
         try { const u = await UserModel.findById(responsavelId).select('nome').lean(); if(u){ resolvedResponsavelId = new mongoose.Types.ObjectId(responsavelId); resolvedResponsavelNome=u.nome||null; resolvedOrigem='user'; } } catch(_e){}
@@ -2521,9 +2521,9 @@ router.put('/api/escalas/:id', requireEscalasAuth, async (req,res)=>{
     if(responsavelId || responsavelCodigo || responsavelCPF){
       try {
         let resolved=null; let resolvedNome=null; let origem=null;
-        const modFunc = await import('#core/models/Funcionario.js');
+        const modFunc = await import('#models/Funcionario.js');
         const FuncModel = modFunc.default || modFunc.Funcionario || modFunc;
-        const modUser = await import('#core/models/user.js');
+        const modUser = await import('#models/user.js');
         const UserModel = modUser.default || modUser.User || modUser;
         const isHex24 = v=> typeof v==='string' && /^[0-9a-fA-F]{24}$/.test(v);
         const onlyDigits = v=> (v||'').replace(/\D+/g,'');
@@ -4772,7 +4772,7 @@ router.post('/api/escalas/:id/equipes/:eid/componentes', requireEscalasAuth, asy
     let nomeFinal = (nomeRaw && String(nomeRaw).trim()) ? String(nomeRaw).trim() : null;
     if(!nomeFinal){
       try {
-        const mod = await import('#core/models/Funcionario.js');
+        const mod = await import('#models/Funcionario.js');
         const FuncModel = mod.default || mod.Funcionario || mod;
         const isHex24 = (v)=> typeof v==='string' && /^[0-9a-fA-F]{24}$/.test(v);
         const onlyDigits = (v)=> (v||'').replace(/\D+/g,'');

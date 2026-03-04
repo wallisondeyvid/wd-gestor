@@ -1,6 +1,6 @@
 // Versão compartilhada para sincronização entre User e Funcionario
-import User from '#core/models/user.js';
-import Funcionario from '#core/models/Funcionario.js';
+import User from '#models/user.js';
+import Funcionario from '#models/Funcionario.js';
 
 export async function syncUserFuncionarioFields({ sourceModel, sourceDoc, updatedFields }) {
   try {

@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
+import http from 'node:http';
+import https from 'node:https';
 import { before, after, describe, it } from 'node:test';
 import request from 'supertest';
+import mongoose from 'mongoose';
 
 import { createServer } from '../src/server/createServer.js';
 
@@ -337,14 +340,68 @@ const WRITE_SCENARIOS = [
 let appDefault;
 let appSkipDb;
 const closeFns = [];
+const TEARDOWN_TIMEOUT_MS = 8000;
+
+function isDebugHangEnabled() {
+  return String(process.env.DEBUG_HANG || '').trim() === '1';
+}
+
+async function awaitWithTimeout(promise, label) {
+  let timeoutHandle;
+  const timeoutPromise = new Promise((resolve) => {
+    timeoutHandle = setTimeout(() => resolve('timeout'), TEARDOWN_TIMEOUT_MS);
+  });
+
+  const result = await Promise.race([
+    Promise.resolve(promise).then(() => 'ok').catch(() => 'error'),
+    timeoutPromise,
+  ]);
+
+  clearTimeout(timeoutHandle);
+
+  if (result === 'timeout' && isDebugHangEnabled()) {
+    console.warn(`[parity][debug] teardown timeout (matrix): ${label}`);
+  }
+}
 
 function logActiveHandlesDebug() {
-  if (String(process.env.PARITY_DEBUG || '').trim() !== '1') return;
+  if (!isDebugHangEnabled()) return;
   try {
     const handles = typeof process._getActiveHandles === 'function' ? process._getActiveHandles() : [];
     const names = handles.map((handle) => String(handle?.constructor?.name || 'unknown'));
     console.error('[parity][debug] active handles (matrix):', names);
   } catch {}
+}
+
+async function closeAllMongooseConnections() {
+  if (isDebugHangEnabled()) {
+    console.log('mongoose.connections', mongoose.connections.map((c) => ({ name: c.name, readyState: c.readyState })));
+  }
+
+  const uniqueConnections = Array.from(new Set(mongoose.connections));
+  for (const connection of uniqueConnections) {
+    if (!connection || typeof connection.close !== 'function') continue;
+    await awaitWithTimeout(connection.close(true), `mongoose.connection.close(${connection.name || 'unknown'})`);
+  }
+
+  await awaitWithTimeout(mongoose.disconnect(), 'mongoose.disconnect()');
+}
+
+function closeGlobalHttpAgents() {
+  try { http.globalAgent?.destroy?.(); } catch {}
+  try { https.globalAgent?.destroy?.(); } catch {}
+}
+
+async function closeActiveServerHandles() {
+  const handles = typeof process._getActiveHandles === 'function' ? process._getActiveHandles() : [];
+  const servers = handles.filter((handle) => String(handle?.constructor?.name || '') === 'Server');
+
+  for (const server of servers) {
+    if (!server || typeof server.close !== 'function') continue;
+    await awaitWithTimeout(new Promise((resolve) => {
+      try { server.close(() => resolve()); } catch { resolve(); }
+    }), 'activeServer.close()');
+  }
 }
 
 function relevantHeaders(res) {
@@ -399,8 +456,12 @@ before(async () => {
 after(async () => {
   while (closeFns.length) {
     const close = closeFns.pop();
-    try { await close(); } catch {}
+    await awaitWithTimeout(Promise.resolve().then(() => close()), 'closeFn()');
   }
+
+  await closeAllMongooseConnections();
+  closeGlobalHttpAgents();
+  await closeActiveServerHandles();
 
   logActiveHandlesDebug();
 });

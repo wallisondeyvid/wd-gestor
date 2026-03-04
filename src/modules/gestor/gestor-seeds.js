@@ -1,6 +1,6 @@
 // gestor-seeds.js - versão modularizada das rotinas de seed essenciais
 import bcrypt from 'bcryptjs';
-import User from '#core/models/user.js';
+import User from '#models/user.js';
 
 // Funções copiadas/adaptadas de src/gestor/bootstrap/seeds.js e seed.js
 export async function ensureMasterUser() {

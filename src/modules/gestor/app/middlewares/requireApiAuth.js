@@ -1,5 +1,5 @@
 // Middleware para APIs: garante autenticação via sessão e popula req.user mínimo
-import User from '#models/user.js';
+import { findUserByEmailCondLean } from '#modules/gestor/app/db/api.db.js';
 
 export async function requireApiAuth(req, res, next) {
   if (req.skipAuth) return next();
@@ -9,7 +9,7 @@ export async function requireApiAuth(req, res, next) {
   if (!req.user) {
     try {
       const email = (req.session.user.email || '').toLowerCase();
-      const userDoc = await User.findOne({ email }).lean();
+      const userDoc = await findUserByEmailCondLean({ email });
       if (userDoc) {
         req.user = {
           id: userDoc._id,

@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { obterPorToken } from '#services/documentos.service.js';
+import { DocumentosPort } from '#shared/ports/documentos.port.js';
 
 const router = express.Router();
 
@@ -179,7 +179,7 @@ router.get('/verificar/:token/status', async (req, res, next) => {
     const token = tokenRaw.toLowerCase();
     if (!isSafeToken(token)) return res.status(404).json({ found: false });
 
-    const doc = await obterPorToken(token);
+    const doc = await DocumentosPort.obterPorToken(token);
     if (!doc) return res.status(404).json({ found: false });
 
     const clean = sanitizePublic(doc);
@@ -215,7 +215,7 @@ router.get('/verificar/:token/pdf', async (req, res, next) => {
     const token = tokenRaw.toLowerCase();
     if (!isSafeToken(token)) return res.status(404).send('Não encontrado.');
 
-    const doc = await obterPorToken(token);
+    const doc = await DocumentosPort.obterPorToken(token);
     if (!doc) return res.status(404).send('Não encontrado.');
 
     const status = safeTrim(doc?.status).toUpperCase();
@@ -348,7 +348,7 @@ router.get('/verificar/:token', async (req, res, next) => {
       return res.status(404).render('shared/verificar_documento', { found: false, token: token || '' });
     }
 
-    const doc = await obterPorToken(token);
+    const doc = await DocumentosPort.obterPorToken(token);
     if (!doc) {
       return res.status(404).render('shared/verificar_documento', { found: false, token });
     }

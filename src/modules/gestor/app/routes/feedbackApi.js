@@ -4,7 +4,16 @@ import path from 'path';
 import multer from 'multer';
 import { put, del } from '@vercel/blob';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
-import Feedback from '#models/feedback.js';
+import {
+  createFeedback,
+  findFeedbackById,
+  saveFeedbackDoc,
+  findFeedbackByFilterSortCreatedAtDescLimit200Lean,
+  findFeedbackByIdLean,
+  findFeedbackByFilterSortCreatedAtDescLimit500Lean,
+  findFeedbackByIdAndUpdateSetNewLean,
+  findFeedbackByIdAndDeleteLean,
+} from '#modules/gestor/app/db/api.db.js';
 
 const router = express.Router();
 
@@ -193,7 +202,7 @@ router.post('/api/feedback', requireLogin, async (req, res) => {
     const inferredModulo = String(req.body?.module || req.body?.modulo || '')?.trim() || inferModuloFromUrl(ctxUrl) || inferModuloFromUrl(req.get('referer'));
     const uaFromHeader = String(req.get('user-agent') || '').trim();
 
-    const fb = await Feedback.create({
+    const fb = await createFeedback({
       tipo,
       status: 'novo',
       mensagem,
@@ -224,7 +233,7 @@ router.post('/api/feedback/:feedbackId/anexo', requireLogin, upload.any(), async
     const feedbackId = String(req.params.feedbackId || '').trim();
     if (!feedbackId) return apiFail(res, 400, 'ID inválido.');
 
-    const fb = await Feedback.findById(feedbackId);
+    const fb = await findFeedbackById(feedbackId);
     if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 
     // Segurança: só o criador pode anexar
@@ -246,7 +255,7 @@ router.post('/api/feedback/:feedbackId/anexo', requireLogin, upload.any(), async
       mime: file.mimetype,
       size: file.size || (file.buffer ? file.buffer.length : 0)
     });
-    await fb.save();
+    await saveFeedbackDoc(fb);
 
     return apiOk(res, fb.toObject(), { id: fb._id });
   } catch (e) {
@@ -272,10 +281,7 @@ router.get('/api/feedback/meus', requireLogin, async (req, res) => {
     const me = req.user?._id || req.user?.id || null;
     const filter = me ? { 'criadoPor.userId': me } : { 'criadoPor.email': req.user?.email || '' };
 
-    const items = await Feedback.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .lean();
+    const items = await findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter);
 
     return apiOk(res, items);
   } catch (e) {
@@ -288,7 +294,7 @@ router.get('/api/feedback/meus', requireLogin, async (req, res) => {
 router.get('/api/feedback/meus/:feedbackId', requireLogin, async (req, res) => {
   try {
     const id = String(req.params.feedbackId || '').trim();
-    const fb = await Feedback.findById(id).lean();
+    const fb = await findFeedbackByIdLean(id);
     if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 
     const creator = fb?.criadoPor?.userId ? String(fb.criadoPor.userId) : '';
@@ -327,10 +333,7 @@ router.get('/api/gestor/feedback', requireLogin, async (req, res) => {
       ];
     }
 
-    const items = await Feedback.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(500)
-      .lean();
+    const items = await findFeedbackByFilterSortCreatedAtDescLimit500Lean(filter);
 
     return apiOk(res, items.map(sanitizeFeedback));
   } catch (e) {
@@ -344,7 +347,7 @@ router.get('/api/gestor/feedback/:feedbackId', requireLogin, async (req, res) =>
   try {
     if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
     const id = String(req.params.feedbackId || '').trim();
-    const fb = await Feedback.findById(id).lean();
+    const fb = await findFeedbackByIdLean(id);
     if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
     return apiOk(res, sanitizeFeedback(fb));
   } catch (e) {
@@ -359,7 +362,7 @@ async function updateStatus(req, res){
     if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
     const id = String(req.params.feedbackId || '').trim();
     const status = normalizeStatus(req.body?.status);
-    const fb = await Feedback.findByIdAndUpdate(id, { $set: { status } }, { new: true }).lean();
+    const fb = await findFeedbackByIdAndUpdateSetNewLean(id, { status });
     if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
     return apiOk(res, fb);
   } catch (e) {
@@ -378,7 +381,7 @@ async function updateResposta(req, res){
     const resposta = String(req.body?.resposta || req.body?.reply || '').trim();
     const set = { resposta };
     if (resposta) set.status = 'respondido';
-    const fb = await Feedback.findByIdAndUpdate(id, { $set: set }, { new: true }).lean();
+    const fb = await findFeedbackByIdAndUpdateSetNewLean(id, set);
     if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
     return apiOk(res, fb);
   } catch (e) {
@@ -396,7 +399,7 @@ async function deleteFeedback(req, res){
     const id = String(req.params.feedbackId || '').trim();
     if (!id) return apiFail(res, 400, 'ID inválido.');
 
-    const fb = await Feedback.findByIdAndDelete(id).lean();
+    const fb = await findFeedbackByIdAndDeleteLean(id);
     if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 
     // Best-effort: remover anexos em nuvem (Blob) e pasta local (dev)

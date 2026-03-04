@@ -5,8 +5,23 @@ import { put, del } from '@vercel/blob';
 import { v4 as uuid } from 'uuid';
 import { fileURLToPath } from 'url';
 import { ok, notFound, serverError, badRequest, created, missingFields } from '#core/utils/apiResponse.js';
-import Funcionario from '#models/Funcionario.js';
-import User from '#models/user.js';
+import {
+	findFuncionarioByCpfAndUnidade,
+	findFuncionarioByEmail,
+	createFuncionarioDoc,
+	saveFuncionario,
+	findFuncionarioById,
+	updateFuncionarioByIdWithOps,
+	findFuncionarioByIdPopulateRefs,
+	findFuncionarioByIdLean,
+	deleteFuncionarioById,
+	findFuncionariosDisponiveisByUnidadeLean,
+	findFuncionarioByIdSelectBasicLean,
+	findFuncionarioByCpfAndUnidadeSelectLean,
+	findFuncionarioByEmailSelectLean,
+	findUserByEmail,
+	findUserByFuncionarioId,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { normalizeFuncionarioPayload } from './utils/funcionarioNormalize.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -266,8 +281,8 @@ function isValidPIS(pis){
 	return dv === parseInt(digits[10],10);
 }
 
-export async function createFuncionarioInitial(req,res){ try { let { unidade_id, funcao_id, nome, rg, cpf, data_nascimento, sexo, endereco, email, telefone } = req.body; const faltando=[]; function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); } ['unidade_id','nome','rg','cpf','data_nascimento','sexo','endereco','email','telefone'].forEach(c=> need(eval(c), c)); if(faltando.length) return missingFields(res, faltando); cpf = cpf.replace(/[^\d]/g,''); const [cpfExist, emailExist] = await Promise.all([ Funcionario.findOne({ cpf, unidade_id }), Funcionario.findOne({ email: email.toLowerCase() }) ]); if(cpfExist) return badRequest(res, 'Já existe um funcionário cadastrado com este CPF nesta empresa.'); if(emailExist) return badRequest(res, 'Já existe um funcionário cadastrado com este e-mail.'); const funcionario = await Funcionario.create({ unidade_id, funcao_id: funcao_id || undefined, nome: nome.trim(), rg: rg.trim(), cpf, data_nascimento: data_nascimento.trim(), sexo, endereco, email: email.toLowerCase().trim(), telefone: telefone.trim() }); await criarUsuarioAuto(funcionario); return created(res, funcionario._id, { data:{ id: funcionario._id } }); } catch(e){ console.error('[API FUNCIONARIOS][initial] Erro:', e); return serverError(res, 'Falha ao criar funcionário inicial'); } }
-async function criarUsuarioAuto(funcionario){ try { const existingUser = await User.findOne({ email: funcionario.email }); if(existingUser) return; const { createUserAndSendPassword } = await import('#modules/gestor/app/services/userService.js'); await createUserAndSendPassword({ nome: funcionario.nome, email: funcionario.email, cpf: funcionario.cpf, role: funcionario.email === 'wallisondeyvid13@gmail.com' ? 'master' : 'user', unidade_id: funcionario.unidade_id, funcionario_id: funcionario._id }); } catch(err){ console.error('[AUTO USER] Falha criação automática usuário:', err); } }
+export async function createFuncionarioInitial(req,res){ try { let { unidade_id, funcao_id, nome, rg, cpf, data_nascimento, sexo, endereco, email, telefone } = req.body; const faltando=[]; function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); } ['unidade_id','nome','rg','cpf','data_nascimento','sexo','endereco','email','telefone'].forEach(c=> need(eval(c), c)); if(faltando.length) return missingFields(res, faltando); cpf = cpf.replace(/[^\d]/g,''); const [cpfExist, emailExist] = await Promise.all([ findFuncionarioByCpfAndUnidade(cpf, unidade_id), findFuncionarioByEmail(email.toLowerCase()) ]); if(cpfExist) return badRequest(res, 'Já existe um funcionário cadastrado com este CPF nesta empresa.'); if(emailExist) return badRequest(res, 'Já existe um funcionário cadastrado com este e-mail.'); const funcionario = await createFuncionarioDoc({ unidade_id, funcao_id: funcao_id || undefined, nome: nome.trim(), rg: rg.trim(), cpf, data_nascimento: data_nascimento.trim(), sexo, endereco, email: email.toLowerCase().trim(), telefone: telefone.trim() }); await criarUsuarioAuto(funcionario); return created(res, funcionario._id, { data:{ id: funcionario._id } }); } catch(e){ console.error('[API FUNCIONARIOS][initial] Erro:', e); return serverError(res, 'Falha ao criar funcionário inicial'); } }
+async function criarUsuarioAuto(funcionario){ try { const existingUser = await findUserByEmail(funcionario.email); if(existingUser) return; const { createUserAndSendPassword } = await import('#modules/gestor/app/services/userService.js'); await createUserAndSendPassword({ nome: funcionario.nome, email: funcionario.email, cpf: funcionario.cpf, role: funcionario.email === 'wallisondeyvid13@gmail.com' ? 'master' : 'user', unidade_id: funcionario.unidade_id, funcionario_id: funcionario._id }); } catch(err){ console.error('[AUTO USER] Falha criação automática usuário:', err); } }
 const asNumber = v => { const s = asStr(v).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',', '.'); return s? Number(s): undefined; };
 export async function createFuncionario(req,res){ try {
 	if (typeof req.body.endereco === 'string') delete req.body.endereco;
@@ -307,7 +322,7 @@ if(carga_semanal !== undefined && carga_semanal !== null && carga_semanal !== ''
   const salarioBaseParsed = salarioBaseRaw ? Number(salarioBaseRaw.replace(/[R$\s]/g,'').replace(/\./g,'').replace(',', '.')) : undefined;
   salario_base = Number.isFinite(salarioBaseParsed) ? salarioBaseParsed : undefined;
 }
-tipo_salario = norm(tipo_salario); forma_pagamento = norm(forma_pagamento); forma_pagamento_desc = norm(forma_pagamento_desc); banco = norm(banco); agencia_num = norm(agencia_num); agencia_dv = norm(agencia_dv); conta_num = norm(conta_num); conta_dv = norm(conta_dv); tipo_conta = norm(tipo_conta); sindicato = norm(sindicato); fgts_optante = norm(fgts_optante); fgts_data = normalizeDate(fgts_data); regime_previdenciario = norm(regime_previdenciario); tipo_especial = norm(tipo_especial); cert_militar = norm(cert_militar); cert_militar_orgao = norm(cert_militar_orgao); cert_militar_uf = norm(cert_militar_uf); cert_militar_data = normalizeDate(cert_militar_data); titulo = norm(titulo); titulo_zona = norm(titulo_zona); titulo_secao = norm(titulo_secao); cnh = norm(cnh); cnh_categoria = norm(cnh_categoria); cnh_validade = normalizeDate(cnh_validade); cnh_uf = norm(cnh_uf); orgao_prof = norm(orgao_prof); orgao_prof_uf = norm(orgao_prof_uf); orgao_prof_numero = norm(orgao_prof_numero); const faltando=[]; function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); } if (req.user.role !== 'master') need(unidade_id,'unidade_id'); ['nome','rg','cpf','data_nascimento','sexo','endereco','email','telefone'].forEach(c=> need(eval(c),c)); if(!endereco || !endereco.cep) faltando.push('endereco[cep]'); if(faltando.length) return badRequest(res, 'Campos obrigatórios ausentes', { campos: faltando }); if (req.user.role !== 'master' && !unidade_id) unidade_id = req.user.unidade_id; const [existingCpf, existingEmail] = await Promise.all([ Funcionario.findOne({ cpf, unidade_id }), Funcionario.findOne({ email }) ]); if(existingCpf) return badRequest(res,'Já existe um funcionário cadastrado com este CPF nesta empresa.'); if(existingEmail) return badRequest(res,'Já existe um funcionário cadastrado com este e-mail.');
+tipo_salario = norm(tipo_salario); forma_pagamento = norm(forma_pagamento); forma_pagamento_desc = norm(forma_pagamento_desc); banco = norm(banco); agencia_num = norm(agencia_num); agencia_dv = norm(agencia_dv); conta_num = norm(conta_num); conta_dv = norm(conta_dv); tipo_conta = norm(tipo_conta); sindicato = norm(sindicato); fgts_optante = norm(fgts_optante); fgts_data = normalizeDate(fgts_data); regime_previdenciario = norm(regime_previdenciario); tipo_especial = norm(tipo_especial); cert_militar = norm(cert_militar); cert_militar_orgao = norm(cert_militar_orgao); cert_militar_uf = norm(cert_militar_uf); cert_militar_data = normalizeDate(cert_militar_data); titulo = norm(titulo); titulo_zona = norm(titulo_zona); titulo_secao = norm(titulo_secao); cnh = norm(cnh); cnh_categoria = norm(cnh_categoria); cnh_validade = normalizeDate(cnh_validade); cnh_uf = norm(cnh_uf); orgao_prof = norm(orgao_prof); orgao_prof_uf = norm(orgao_prof_uf); orgao_prof_numero = norm(orgao_prof_numero); const faltando=[]; function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); } if (req.user.role !== 'master') need(unidade_id,'unidade_id'); ['nome','rg','cpf','data_nascimento','sexo','endereco','email','telefone'].forEach(c=> need(eval(c),c)); if(!endereco || !endereco.cep) faltando.push('endereco[cep]'); if(faltando.length) return badRequest(res, 'Campos obrigatórios ausentes', { campos: faltando }); if (req.user.role !== 'master' && !unidade_id) unidade_id = req.user.unidade_id; const [existingCpf, existingEmail] = await Promise.all([ findFuncionarioByCpfAndUnidade(cpf, unidade_id), findFuncionarioByEmail(email) ]); if(existingCpf) return badRequest(res,'Já existe um funcionário cadastrado com este CPF nesta empresa.'); if(existingEmail) return badRequest(res,'Já existe um funcionário cadastrado com este e-mail.');
 	if(pis && !isValidPIS(pis.replace(/\D/g,''))) return badRequest(res,'PIS inválido',{ campo:'pis' });
 	// Captura buffer da foto (sem usar disco)
 	let fotoBuffer = null;
@@ -354,14 +369,14 @@ tipo_salario = norm(tipo_salario); forma_pagamento = norm(forma_pagamento); form
 		} catch(_){ }
 	}
 	const doc = { unidade_id, funcao_id: funcao_id || undefined, nome: nome.trim(), nome_social: nome_social||undefined, nome_mae: nome_mae||undefined, nome_pai: nome_pai||undefined, rg: rg.trim(), rg_orgao: rg_orgao||undefined, rg_uf: rg_uf||undefined, rg_data_expedicao: rg_data_expedicao||undefined, cpf, pis: pis? pis.replace(/[^\d]/g,''):undefined, data_nascimento: data_nascimento, sexo, estado_civil: estado_civil||undefined, raca_cor: raca_cor||undefined, escolaridade: escolaridade||undefined, nacionalidade: nacionalidade||undefined, pais_nascimento: pais_nascimento||undefined, data_chegada_brasil: data_chegada_brasil||undefined, naturalidade: naturalidade||undefined, endereco, telefone: telefone.trim(), telefone2: telefone2||undefined, email, tipo_ctps: tipo_ctps||undefined, ctps_numero: ctps_numero||undefined, ctps_serie: ctps_serie||undefined, ctps_uf: ctps_uf||undefined, pcd: pcd||undefined, tipo_deficiencia: tipo_deficiencia||undefined, cid: cid||undefined, foto: undefined, biometrico: biometrico||undefined, biometrico_face: biometrico_face||undefined, fp_template_b64: fp_template_b64||undefined, fp_template_sha256: fp_template_sha256||undefined, fp_imagem: fp_imagem||undefined, fp_dedo: fp_dedo||undefined, face_template_b64: face_template_b64||undefined, face_template_sha256: face_template_sha256||undefined, face_imagem: face_imagem||undefined, observacoes: observacoes?observacoes.trim():undefined, data_admissao: data_admissao||undefined, tipo_admissao: tipo_admissao||undefined, categoria_trabalhador: categoria_trabalhador||undefined, tipo_contrato: tipo_contrato||undefined, data_termino: data_termino||undefined, objeto_determinante: objeto_determinante||undefined, clausula_assecuratoria: clausula_assecuratoria||undefined, cargo: cargo||undefined, cbo: cbo||undefined, departamento: departamento||undefined, regime_contratacao: regime_contratacao||undefined, regime_jornada: regime_jornada||undefined, carga_semanal: carga_semanal||undefined, salario_base: salario_base||undefined, tipo_salario: tipo_salario||undefined, forma_pagamento: forma_pagamento||undefined, forma_pagamento_desc: forma_pagamento_desc||undefined, banco: banco||undefined, agencia_num: agencia_num||undefined, agencia_dv: agencia_dv||undefined, conta_num: conta_num||undefined, conta_dv: conta_dv||undefined, tipo_conta: tipo_conta||undefined, sindicato: sindicato||undefined, fgts_optante: fgts_optante||undefined, fgts_data: fgts_data||undefined, regime_previdenciario: regime_previdenciario||undefined, tipo_especial: tipo_especial||undefined, cert_militar: cert_militar||undefined, cert_militar_orgao: cert_militar_orgao||undefined, cert_militar_uf: cert_militar_uf||undefined, cert_militar_data: cert_militar_data||undefined, titulo: titulo||undefined, titulo_zona: titulo_zona||undefined, titulo_secao: titulo_secao||undefined, cnh: cnh||undefined, cnh_categoria: cnh_categoria||undefined, cnh_validade: cnh_validade||undefined, cnh_uf: cnh_uf||undefined, orgao_prof: orgao_prof||undefined, orgao_prof_uf: orgao_prof_uf||undefined, orgao_prof_numero: orgao_prof_numero||undefined, anexos: anexosFinais, extras, dependentes, beneficios: beneficiosArray, biometrias_digitais: biometriasDigitaisArr, biometrias_facial: biometriasFacialArr };
-	const novo = await Funcionario.create(doc);
+	const novo = await createFuncionarioDoc(doc);
 	// Upload da foto (se houver) após ter o _id
 	try {
 		if(fotoBuffer){
 			const inVercel = !!process.env.VERCEL; const token=getBlobToken();
 			if(inVercel || token){
 				const url = await uploadFuncionarioFotoToBlob(fotoBuffer, novo._id);
-				novo.foto = url; await novo.save();
+				novo.foto = url; await saveFuncionario(novo);
 			} else {
 				console.warn('[FUNC][FOTO][create] Blob não configurado; ignorando upload');
 			}
@@ -375,7 +390,7 @@ tipo_salario = norm(tipo_salario); forma_pagamento = norm(forma_pagamento); form
 			if(novo.face_imagem && /^data:/i.test(String(novo.face_imagem)) && mapped[0] && mapped[0].imagem && /^https?:\/\//i.test(mapped[0].imagem)){
 				novo.face_imagem = mapped[0].imagem;
 			}
-			await novo.save();
+			await saveFuncionario(novo);
 		}
 	} catch(upErr){ console.warn('[BIO FACE][create] Falha ao subir prévias:', upErr?.message); }
 	await criarUsuarioAuto(novo); return created(res, novo._id, { data:{ id: novo._id } }); } catch(err){ console.error('[API FUNCIONARIOS][create] Erro:', err); return serverError(res,'Erro ao cadastrar funcionário'); } }
@@ -425,9 +440,10 @@ function buildUpdateOpsFromBody(body){
 function filterOpsBySchema(ops){
 	try {
 		const filtered = { $set:{}, $unset:{} };
-		const schema = Funcionario.schema;
+		const schema = mongoose.models.Funcionario?.schema;
 		// Helpers: aceita nested e single; rejeita adhocOrUndefined
 		function isKnownPath(p){
+			if(!schema) return false;
 			try {
 				const t = schema.pathType(p);
 				return t && t !== 'adhocOrUndefined';
@@ -445,7 +461,7 @@ function filterOpsBySchema(ops){
 // Evita $unset em campos required do schema (e.g., data_nascimento)
 function protectRequiredFieldsFromUnset(ops){
   try {
-    const schema = Funcionario.schema;
+	const schema = mongoose.models.Funcionario?.schema;
     if(ops.$unset){
       const kept = {};
       Object.keys(ops.$unset).forEach(k=>{
@@ -460,7 +476,7 @@ function protectRequiredFieldsFromUnset(ops){
     return ops;
   } catch { return ops; }
 }
-export async function updateFuncionarioIncremental(req,res){ try { const { id } = req.params; const funcionario = await Funcionario.findById(id); if(!funcionario) return notFound(res,'Funcionário não encontrado'); const asIsoMaybe=v=>{
+export async function updateFuncionarioIncremental(req,res){ try { const { id } = req.params; const funcionario = await findFuncionarioById(id); if(!funcionario) return notFound(res,'Funcionário não encontrado'); const asIsoMaybe=v=>{
 	try {
 		if(v==null) return '';
 		// Strings: normaliza datas dd/mm/aaaa -> ISO
@@ -615,7 +631,7 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 		try { const parsed = parseDataUrl(ops.$set.face_imagem); if(parsed){ const url = await uploadFacePreviewToBlob(parsed.buffer, funcionario._id, 0); if(url) ops.$set.face_imagem = url; } } catch(err){ console.warn('[BIO FACE][incremental] face_imagem blob fail:', err?.message); }
 	}
 		try {
-			await Funcionario.findByIdAndUpdate(id, ops, { new:true, runValidators:true });
+			await updateFuncionarioByIdWithOps(id, ops);
 			return ok(res, { updated:true });
 		} catch(e){
 			// Diagnóstico rico para facilitar a correção no front
@@ -652,7 +668,7 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 // Aplica normalização de datas também no update incremental (após parsing acima mas antes de persistir)
 // Reprocessa apenas campos de data em $set que ainda sejam arrays ou strings não convertidas.
 // (Inserido logo após definição da função para garantir execução em chamadas futuras)
-export async function updateFuncionario(req,res){ try { const { id } = req.params; const funcionario = await Funcionario.findById(id); if(!funcionario) return notFound(res,'Funcionário não encontrado');
+export async function updateFuncionario(req,res){ try { const { id } = req.params; const funcionario = await findFuncionarioById(id); if(!funcionario) return notFound(res,'Funcionário não encontrado');
 	console.log('[UPLOAD][update-full] req.file?', !!req.file, 'req.files?.foto?.length', req.files?.foto?.length);
 	console.log('[UPLOAD][update-full][debug] files keys:', Object.keys(req.files||{}));
 	console.log('[UPLOAD][update-full][debug] anexos bruto length:', req.files?.anexos?.length || 0);
@@ -768,7 +784,7 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 		try { const parsed = parseDataUrl(ops.$set.face_imagem); if(parsed){ const url = await uploadFacePreviewToBlob(parsed.buffer, funcionario._id, 0); if(url) ops.$set.face_imagem = url; } } catch(err){ console.warn('[BIO FACE][update] face_imagem blob fail:', err?.message); }
 	}
 		try {
-			await Funcionario.findByIdAndUpdate(id, ops, { new:true, runValidators:true });
+			await updateFuncionarioByIdWithOps(id, ops);
 			return ok(res, { updated:true });
 		} catch(e){
 			const isValidation = e && (e.name === 'ValidationError' || e.name === 'CastError');
@@ -794,7 +810,7 @@ export async function getFuncionario(req,res){
 	try {
 		const { id } = req.params;
 		if(!isValidObjectIdLike(id)) return badRequest(res,'ID inválido');
-		const f = await Funcionario.findById(id).populate('unidade_id funcao_id departamento');
+		const f = await findFuncionarioByIdPopulateRefs(id);
 		if(!f) return notFound(res,'Não encontrado');
 		// Enriquecimento: adiciona URL absoluta e relativa normalizada da foto para o frontend
 		let payload;
@@ -831,17 +847,17 @@ export async function getFuncionario(req,res){
 		return ok(res, payload);
 	} catch(e){ return serverError(res,e); }
 }
-export async function deleteFuncionario(req,res){ try { const { id } = req.params; const funcionario = await Funcionario.findById(id); if(!funcionario) {
+export async function deleteFuncionario(req,res){ try { const { id } = req.params; const funcionario = await findFuncionarioById(id); if(!funcionario) {
 	return res.status(404).json({ success:false, error:'Funcionário não encontrado', code:'NOT_FOUND' });
 }
-const usuarioVinculado = await User.findOne({ funcionario_id: funcionario._id }); if(usuarioVinculado && usuarioVinculado.role==='master') return res.status(403).json({ success:false, error:'Funcionário vinculado a usuário master não pode ser excluído.', code:'FORBIDDEN' }); await Funcionario.findByIdAndDelete(id); return ok(res, { deleted:true }); } catch(e){ console.error('[API FUNCIONARIOS][delete] Erro:', e); return serverError(res,'Erro ao excluir funcionário'); } }
+const usuarioVinculado = await findUserByFuncionarioId(funcionario._id); if(usuarioVinculado && usuarioVinculado.role==='master') return res.status(403).json({ success:false, error:'Funcionário vinculado a usuário master não pode ser excluído.', code:'FORBIDDEN' }); await deleteFuncionarioById(id); return ok(res, { deleted:true }); } catch(e){ console.error('[API FUNCIONARIOS][delete] Erro:', e); return serverError(res,'Erro ao excluir funcionário'); } }
 
 // GET da foto do funcionário: redireciona para URL pública (Blob) ou serve arquivo/Data URL legado
 export async function getFuncionarioFoto(req, res){
 	try {
 		const { id } = req.params;
 		if(!isValidObjectIdLike(id)) return res.status(400).json({ error:'ID inválido' });
-		const f = await Funcionario.findById(id).lean();
+		const f = await findFuncionarioByIdLean(id);
 		if(!f) return res.status(404).json({ error:'Funcionário não encontrado' });
 		const foto = f.foto || '';
 		// 1) Data URL
@@ -901,15 +917,15 @@ export async function getFuncionarioFoto(req, res){
 		return res.status(500).json({ error:'Falha ao obter foto' });
 	}
 }
-export async function deleteFuncionarioPost(req,res){ try { const { id } = req.params; const funcionario = await Funcionario.findById(id); if(!funcionario) {
+export async function deleteFuncionarioPost(req,res){ try { const { id } = req.params; const funcionario = await findFuncionarioById(id); if(!funcionario) {
 	// Idempotente: sinaliza removido e segue com redirect neutro
 	return ok(res, { deleted:true, alreadyRemoved:true, redirect:'/funcionarios?deleted=1' });
 }
-const usuarioVinculado = await User.findOne({ funcionario_id: funcionario._id }); if(usuarioVinculado && usuarioVinculado.role==='master') return res.status(403).json({ success:false, error:'Funcionário vinculado a usuário master não pode ser excluído.', code:'FORBIDDEN' }); await Funcionario.findByIdAndDelete(id); return ok(res, { deleted:true, redirect:'/funcionarios?deleted=1&nome='+encodeURIComponent(funcionario.nome) }); } catch(e){ console.error('[API FUNCIONARIOS][deletePost] Erro:', e); return serverError(res,'Erro ao excluir funcionário'); } }
+const usuarioVinculado = await findUserByFuncionarioId(funcionario._id); if(usuarioVinculado && usuarioVinculado.role==='master') return res.status(403).json({ success:false, error:'Funcionário vinculado a usuário master não pode ser excluído.', code:'FORBIDDEN' }); await deleteFuncionarioById(id); return ok(res, { deleted:true, redirect:'/funcionarios?deleted=1&nome='+encodeURIComponent(funcionario.nome) }); } catch(e){ console.error('[API FUNCIONARIOS][deletePost] Erro:', e); return serverError(res,'Erro ao excluir funcionário'); } }
 export async function downloadAnexoFuncionario(req,res){
 	try {
 		const { id, idx } = req.params;
-		const funcionario = await Funcionario.findById(id);
+		const funcionario = await findFuncionarioById(id);
 		if(!funcionario) return res.status(404).send('Funcionário não encontrado');
 		const i = parseInt(idx,10);
 		if(isNaN(i) || i < 0 || !funcionario.anexos || i >= funcionario.anexos.length)
@@ -950,15 +966,12 @@ export async function listarFuncionariosDisponiveis(req,res){
 		if(!unidadeId || unidadeId==='undefined' || unidadeId==='null'){
 			return ok(res, []);
 		}
-		let funcionarios = await Funcionario.find({
-			unidade_id: unidadeId,
-			$or: [ { usuario_id: { $exists:false } }, { usuario_id: null } ]
-		}).select('_id nome cpf').sort({ nome:1 }).lean();
+		let funcionarios = await findFuncionariosDisponiveisByUnidadeLean(unidadeId);
 
 		// Opcional: incluir o funcionário atual (já vinculado) para edição, se for da mesma unidade
 		if (includeId && /^[a-fA-F0-9]{24}$/.test(includeId)) {
 			try {
-				const atual = await Funcionario.findById(includeId).select('_id nome cpf unidade_id').lean();
+				const atual = await findFuncionarioByIdSelectBasicLean(includeId);
 				if (atual && String(atual.unidade_id) === String(unidadeId)) {
 					const exists = funcionarios.some(f => String(f._id) === String(atual._id));
 					if (!exists) funcionarios = [...funcionarios, { _id: atual._id, nome: atual.nome, cpf: atual.cpf }];
@@ -985,12 +998,12 @@ export async function matchFuncionario(req, res){
 		let encontrado = null; let matchType = null;
 		// Prioriza CPF+unidade
 		if (cpfRaw && unidadeId) {
-			encontrado = await Funcionario.findOne({ cpf: cpfRaw, unidade_id: unidadeId }).select('_id nome cpf email unidade_id usuario_id').lean();
+			encontrado = await findFuncionarioByCpfAndUnidadeSelectLean(cpfRaw, unidadeId);
 			if (encontrado) matchType = 'cpf+unidade';
 		}
 		// Fallback por e-mail
 		if (!encontrado && email) {
-			encontrado = await Funcionario.findOne({ email }).select('_id nome cpf email unidade_id usuario_id').lean();
+			encontrado = await findFuncionarioByEmailSelectLean(email);
 			if (encontrado) matchType = 'email';
 		}
 

@@ -1,17 +1,21 @@
 // Controller de Funções (view) - migrado do legado
-import Funcao from '#models/funcao.js';
-import Modulo from '#models/modulo.js';
-import Unidade from '#models/unidade.js';
+import {
+  findAllFuncoesPopuladas,
+  findFuncoesByUnidadePrincipalPopuladas,
+  findAllModulos,
+  findUnidadesPrincipais,
+  findUnidadesById,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function listarFuncoes(req, res) {
   try {
     const funcoesFiltradas = req.user.isMaster
-      ? await Funcao.find().populate('unidade_principal_id modulos_habilitados')
-      : await Funcao.find({ unidade_principal_id: req.user.unidade_principal_id }).populate('unidade_principal_id modulos_habilitados');
-    const modulosFiltrados = await Modulo.find();
+      ? await findAllFuncoesPopuladas()
+      : await findFuncoesByUnidadePrincipalPopuladas(req.user.unidade_principal_id);
+    const modulosFiltrados = await findAllModulos();
     const unidadesPrincipaisFiltradas = req.user.isMaster
-      ? await Unidade.find({ is_principal: true })
-      : await Unidade.find({ _id: req.user.unidade_principal_id });
+      ? await findUnidadesPrincipais()
+      : await findUnidadesById(req.user.unidade_principal_id);
     return res.render('funcoes', { funcoesFiltradas, modulosFiltrados, unidadesPrincipaisFiltradas, user: req.user });
   } catch (e) {
     return res.status(500).send('Erro ao carregar funções');
