@@ -20,50 +20,17 @@
   let BASE_PATH = resolveBasePath();
   console.log(logPrefix, 'inicializando com basePath =', BASE_PATH || '(root)');
 
-  function normalizeBasePath(value){
-    let base = String(value || '').trim();
-    if (base === '/') return '';
-    if (base.length > 1 && base.endsWith('/')) base = base.slice(0, -1);
-    return base;
-  }
-
-  function getContextBasePath(){
-    try {
-      if (window.WDG_CONTEXT && Object.prototype.hasOwnProperty.call(window.WDG_CONTEXT, 'basePath')) {
-        return normalizeBasePath(window.WDG_CONTEXT.basePath);
-      }
-    } catch(_){ }
-    return normalizeBasePath(window.__wdgBasePath || BASE_PATH || resolveBasePath() || '');
-  }
-
-  try { console.debug('[perfil-modular] ctx', window.WDG_CONTEXT); } catch(_){ }
-
-  function getPerfilBaseKey(){
-    let scopedBase = getContextBasePath();
-    if (!scopedBase) scopedBase = 'root';
-    return scopedBase;
-  }
-
-  function getPerfilInitKey(){
-    const scopedBase = getPerfilBaseKey();
-    const scopedPath = String((window.location && window.location.pathname) || '').trim() || '/';
-    return scopedBase + '::' + scopedPath;
-  }
-
   function emitReady(stage){
     try {
       window.dispatchEvent(new CustomEvent('perfil-modular:ready', {
-        detail: { basePath: getContextBasePath(), stage: stage || 'init' }
+        detail: { basePath: BASE_PATH, stage: stage || 'init' }
       }));
     } catch(_e) { /* noop */ }
   }
 
   // Reexpõe função para permitir mudar dinamicamente se necessário
   window.__setPerfilBasePath = (p)=>{
-    BASE_PATH = normalizeBasePath(p || '');
-    try {
-      window.WDG_CONTEXT = Object.assign({}, window.WDG_CONTEXT || {}, { basePath: BASE_PATH });
-    } catch(_){ }
+    BASE_PATH = (p||'').replace(/\/$/,'');
     console.log(logPrefix,'basePath alterado para', BASE_PATH || '(root)');
     emitReady('base-changed');
   };
@@ -183,15 +150,7 @@
   })();
 
   // Utilidades de caminho
-  function getApiBase(){
-    return getContextBasePath();
-  }
-  function apiUrl(path){
-    let p = String(path || '');
-    if (!p.startsWith('/')) p = '/' + p;
-    const base = getApiBase();
-    return (base && base !== 'root') ? (base + p) : p;
-  }
+  function api(url){ return BASE_PATH + url; }
 
   // ================== Lógica principal (adaptada) ==================
   let fotoAtualizada = false;
@@ -207,16 +166,14 @@
   }
 
   async function carregarDadosPerfil(){
-    const loadKey = getPerfilInitKey();
-    window.__wdgPerfilLoadByKey = window.__wdgPerfilLoadByKey || {};
-    if (window.__wdgPerfilLoadByKey[loadKey]) return window.__wdgPerfilLoadByKey[loadKey];
+    if (carregarDadosPerfil.__inFlight) return carregarDadosPerfil.__inFlight;
 
     const startedAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     window.__perfilState?.setStatus('Carregando dados do usuário...','loading');
 
     const p = (async () => {
       try {
-        const resp = await fetch(apiUrl('/api/usuario'),{ credentials:'same-origin', cache:'no-store', headers:{'Accept':'application/json'} });
+        const resp = await fetch(api('/api/usuario'),{ credentials:'same-origin', cache:'no-store', headers:{'Accept':'application/json'} });
         if(!resp.ok){ let msg='Falha ao obter usuário'; try{ const e=await resp.json(); msg=e.error||e.message||msg; }catch{} throw new Error(msg+` (HTTP ${resp.status})`); }
         const raw = await resp.json();
         let data = raw?.data || raw?.usuario || raw;
@@ -239,15 +196,14 @@
       }
     })();
 
-    window.__wdgPerfilLoadByKey[loadKey] = p.finally(()=>{
-      try { delete window.__wdgPerfilLoadByKey[loadKey]; } catch(_){ window.__wdgPerfilLoadByKey[loadKey] = null; }
-    });
-    return window.__wdgPerfilLoadByKey[loadKey];
+    carregarDadosPerfil.__inFlight = p;
+    try { return await p; }
+    finally { carregarDadosPerfil.__inFlight = null; }
   }
 
   async function carregarModulosAcessiveis(){
     try {
-      const r = await fetch(apiUrl('/api/modulos'), { credentials:'same-origin', cache:'no-store' });
+      const r = await fetch(api('/api/modulos'), { credentials:'same-origin', cache:'no-store' });
       const cont = document.getElementById('perfilModulos');
       if(!r.ok){ cont && (cont.innerHTML='<span class="text-muted">Erro ao carregar módulos</span>'); return; }
       const payload = await r.json();
@@ -263,12 +219,12 @@
 
   function carregarFotoPerfil(){
     const img=document.getElementById('fotoPerfil'); const user=window.currentUser||{}; if(!img) return;
-    const ph = getContextBasePath() + '/img/user-placeholder.svg';
+    const ph = (BASE_PATH || '') + '/img/user-placeholder.svg';
     if(user.foto){
       // Sempre usar API para servir a imagem, evitando data URLs no src
-      const fotoApiUrl = apiUrl('/api/usuario/foto');
-      const sep = fotoApiUrl.includes('?') ? '&' : '?';
-      img.src = fotoApiUrl + sep + 'v=' + Date.now();
+      const apiUrl = BASE_PATH + '/api/usuario/foto';
+      const sep = apiUrl.includes('?') ? '&' : '?';
+      img.src = apiUrl + sep + 'v=' + Date.now();
     } else {
       img.src=ph;
     }
@@ -282,9 +238,9 @@
 
   // Helper público para construção de URL de foto de usuário (navbar, offcanvas, etc.)
   function buildUserFotoUrl(foto){
-    if(!foto) return getContextBasePath() + '/img/user-placeholder.svg';
+    if(!foto) return (BASE_PATH||'') + '/img/user-placeholder.svg';
     // Sempre retornar API URL para evitar data URLs no src
-    return apiUrl('/api/usuario/foto');
+    return BASE_PATH + '/api/usuario/foto';
   }
 
   function iniciarAlteracaoFoto(){ const input=document.createElement('input'); input.type='file'; input.accept='image/*'; input.style.display='none'; input.addEventListener('change',e=>{ const file=e.target.files?.[0]; if(!file){ input.remove(); return;} if(file.size>5*1024*1024){ alert('Arquivo muito grande. Máximo 5MB.'); input.remove(); return;} if(!file.type.startsWith('image/')){ alert('Selecione uma imagem válida.'); input.remove(); return;} const img=document.getElementById('fotoPerfil'); if(!fotoPreviewOriginal) fotoPreviewOriginal=img.src; fotoEmEdicao=file; const reader=new FileReader(); reader.onload=ev=>{ img.src=ev.target.result; }; reader.readAsDataURL(file); document.getElementById('btnAlterarFoto')?.classList.add('d-none'); document.getElementById('grupoConfirmarFoto')?.classList.remove('d-none'); }); document.body.appendChild(input); input.click(); }
@@ -294,7 +250,7 @@
   // Versão aprimorada: atualiza navbar/offcanvas imediatamente
   async function enviarFoto(file){
     const fd=new FormData(); fd.append('foto',file);
-    const r=await fetch(apiUrl('/api/usuario/foto'),{ method:'POST', body:fd, credentials:'same-origin', cache:'no-store' });
+    const r=await fetch(api('/api/usuario/foto'),{ method:'POST', body:fd, credentials:'same-origin', cache:'no-store' });
     if(r.ok){
       const result=await r.json();
       const novoNome = result.foto;
@@ -302,17 +258,17 @@
       const localImg = document.getElementById('fotoPerfil');
       try {
         // Sempre usar API URL após upload
-        const fotoApiUrl = apiUrl('/api/usuario/foto');
-        const sep = fotoApiUrl.includes('?') ? '&' : '?';
-        if(localImg) localImg.src = fotoApiUrl + sep + 'v=' + bust;
+        const apiUrl = BASE_PATH + '/api/usuario/foto';
+        const sep = apiUrl.includes('?') ? '&' : '?';
+        if(localImg) localImg.src = apiUrl + sep + 'v=' + bust;
       } catch(e){ if(localImg) localImg.src = (String(novoNome||'').startsWith('data:')? novoNome : ('/uploads/' + String(novoNome||'').replace(/^uploads\//,'') + '?v=' + bust)); }
       fotoAtualizada = true;
       if(window.currentUser) window.currentUser.foto = novoNome;
       try {
         // Atualiza avatares existentes instantaneamente, sempre via API
-        const fotoApiUrl = apiUrl('/api/usuario/foto');
-        const sep = fotoApiUrl.includes('?') ? '&' : '?';
-        const finalSrc = fotoApiUrl + sep + 'v=' + bust;
+        const apiUrl = BASE_PATH + '/api/usuario/foto';
+        const sep = apiUrl.includes('?') ? '&' : '?';
+        const finalSrc = apiUrl + sep + 'v=' + bust;
         document.querySelectorAll('.avatar-img').forEach(img=>{ img.src = finalSrc; });
       } catch(e){ console.warn('[perfil-modular] falha atualizar avatares imediatos', e); }
       // Dispara evento para listeners adicionais
@@ -326,42 +282,18 @@
   function alterarSenha(){ const mp=bootstrap.Modal.getInstance(document.getElementById('modalPerfil')); mp?.hide(); const el=document.getElementById('modalAlterarSenha'); if(el) bootstrap.Modal.getOrCreateInstance(el).show(); }
   function mostrarErro(msg){ if(window.__perfilState){ window.__perfilState.setStatus(msg,'error'); return;} alert(msg); }
 
-  function initPerfilDom(){
-    window.__wdgPerfilInitByBase = window.__wdgPerfilInitByBase || {};
-    const key = getPerfilInitKey();
-    if (window.__wdgPerfilInitByBase[key]) {
-      try { console.debug(logPrefix, 'init skip (already initialized)'); } catch(_){ }
-      return;
-    }
-    try { window.__wdgPerfilInitByBase[key] = true; } catch(_){ }
-
+  document.addEventListener('DOMContentLoaded',()=>{
     console.log(logPrefix,'DOM pronto');
     const form=document.getElementById('formAlterarSenha');
-    if(form && form.dataset.wdgBound !== '1'){
-      form.dataset.wdgBound = '1';
-      form.addEventListener('submit',e=>{ e.preventDefault(); salvarNovaSenha(); });
-    }
-
+    form && form.addEventListener('submit',e=>{ e.preventDefault(); salvarNovaSenha(); });
     const modalPerfilEl=document.getElementById('modalPerfil');
-    if(modalPerfilEl && modalPerfilEl.dataset.wdgBound !== '1'){
-      modalPerfilEl.dataset.wdgBound = '1';
+    if(modalPerfilEl){
       modalPerfilEl.addEventListener('show.bs.modal',()=>{ try{ carregarDadosPerfil(); }catch(e){ console.warn(logPrefix,'falha show',e);} });
       modalPerfilEl.addEventListener('hidden.bs.modal',()=>{ if(fotoEmEdicao && fotoPreviewOriginal){ document.getElementById('fotoPerfil').src=fotoPreviewOriginal; fotoEmEdicao=null; fotoPreviewOriginal=null; document.getElementById('btnAlterarFoto')?.classList.remove('d-none'); document.getElementById('grupoConfirmarFoto')?.classList.add('d-none'); }
         if(fotoAtualizada){ fotoAtualizada=false; window.dispatchEvent(new CustomEvent('perfil:fotoAtualizada')); }
       });
     }
-  }
-
-  if (document.readyState === 'loading') {
-    window.__wdgPerfilDomListenerBound = window.__wdgPerfilDomListenerBound || {};
-    const domListenerKey = getPerfilBaseKey() + '::DOMContentLoaded';
-    if (!window.__wdgPerfilDomListenerBound[domListenerKey]) {
-      document.addEventListener('DOMContentLoaded', initPerfilDom);
-      window.__wdgPerfilDomListenerBound[domListenerKey] = true;
-    }
-  } else {
-    initPerfilDom();
-  }
+  });
 
   async function salvarNovaSenha(){
     const statusEl=document.getElementById('statusAlterarSenha');
@@ -376,7 +308,7 @@
     if(novaSenha!==confirmar){ setStatus('Confirmação não confere.','warning'); return; }
     try {
       setStatus('Salvando...','info'); if(btnSalvar){ btnSalvar.disabled=true; btnSalvar.dataset.originalText=btnSalvar.textContent; btnSalvar.textContent='Salvando...'; }
-      const resp=await fetch(apiUrl('/api/usuario/senha'),{ method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ senhaAtual, novaSenha }), credentials:'same-origin', cache:'no-store' });
+      const resp=await fetch(api('/api/usuario/senha'),{ method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ senhaAtual, novaSenha }), credentials:'same-origin', cache:'no-store' });
       const payload=await resp.json().catch(()=>({}));
       if(!resp.ok || payload?.error){ setStatus(payload.error||payload.message||`Erro (${resp.status}) ao alterar senha`,'error'); return; }
       setStatus('Senha alterada com sucesso!','success'); senhaAtualEl.value=''; novaSenhaEl.value=''; confirmarEl.value=''; if(window.currentUser){ window.currentUser.primeiro_acesso=false; window.currentUser.senha_provisoria=false; }

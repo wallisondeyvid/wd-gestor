@@ -54,30 +54,6 @@ window.onload = function () {
 }
 });
 // ...existing code...
-function __wdgNormalizeBase(base) {
-  let value = String(base || '').trim();
-  if (value === '/') return '';
-  if (value.length > 1 && value.endsWith('/')) value = value.slice(0, -1);
-  return value;
-}
-
-function __wdgGetBasePath() {
-  try {
-    if (window.WDG_CONTEXT && typeof window.WDG_CONTEXT.basePath !== 'undefined') {
-      return __wdgNormalizeBase(window.WDG_CONTEXT.basePath);
-    }
-  } catch(_){ }
-  const bodyBase = document.body?.getAttribute('data-base-path') || '';
-  return __wdgNormalizeBase(bodyBase || '/gestor');
-}
-
-function __wdgApiUrl(path) {
-  let p = String(path || '');
-  if (!p.startsWith('/')) p = '/' + p;
-  const base = __wdgGetBasePath();
-  return base ? (base + p) : p;
-}
-
 async function atualizarFuncionarioAba(abaIdx) {
   const form = document.getElementById('formFuncionario');
   const fd = new FormData(form);
@@ -186,7 +162,7 @@ async function abrirModalBiometria(tipo = 'dedo') {
 
     statusEl.textContent = 'Carregando dispositivos...';
 
-    const response = await fetch(__wdgApiUrl('/api/biometria/dispositivos'));
+    const response = await fetch('/api/biometria/dispositivos');
     if (!response.ok) {
       console.error('[DEBUG] Falha ao carregar dispositivos:', response.status, response.statusText);
       throw new Error('Falha ao carregar dispositivos');
@@ -234,7 +210,7 @@ async function capturarBiometria() {
   statusEl.textContent = 'Capturando biometria...';
 
   try {
-    const response = await fetch(__wdgApiUrl('/api/biometria/capturar'), {
+    const response = await fetch('/api/biometria/capturar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dispositivo: JSON.parse(dispositivo) })

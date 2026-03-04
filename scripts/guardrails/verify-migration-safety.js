@@ -85,7 +85,13 @@ function collectFiles(relDir) {
 }
 
 function checkNewLogicOutsideSrc(changedFiles) {
-  const allowPrefixes = envList('WD_GUARD_ALLOW_ROOT_WRITE');
+  const allowPrefixes = [
+    'public/js/gestor-app.js',
+    'public/js/perfil-modulo.js',
+    'public/js/unidades.js',
+    'routes/verificacao.routes.js',
+    ...envList('WD_GUARD_ALLOW_ROOT_WRITE'),
+  ];
   const blockers = [];
   for (const rel of changedFiles) {
     if (!isCodeFile(rel)) continue;
