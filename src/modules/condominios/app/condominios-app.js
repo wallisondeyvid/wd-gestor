@@ -54,7 +54,7 @@ import { listarUnidadesService, obterUnidadePorIdService, listarUnidadesRelacion
 import { UnidadesReadRepository } from '#modules/condominios/app/repositories/UnidadesReadRepository.js';
 import { listarBlocosService, obterBlocoPorIdService, listarBlocosRelacionadosService, criarBlocoService, atualizarBlocoService, excluirBlocoService } from '#modules/condominios/app/services/blocos.service.js';
 import { listarAndaresService, obterAndarPorIdService, listarAndaresRelacionadosService } from '#modules/condominios/app/services/andares.service.js';
-import DocumentoValidado from '#models/documentoValidado.js';
+import DocumentoValidado from '#models/DocumentoValidado.js';
 import CondMsgMailbox from '#models/cond_msg_mailbox.js';
 import CondMsgSettings from '#models/cond_msg_settings.js';
 import CondDirigenciaSettings from '#models/cond_dirigencia_settings.js';
