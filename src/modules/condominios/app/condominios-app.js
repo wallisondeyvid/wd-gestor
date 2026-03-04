@@ -20486,15 +20486,21 @@ const renderPlaceholder = (req, res, title, description) => {
 // Helpers
 async function listarUnidadesParaUsuario(user){
   try{
-    const unidadeRef = user?.matriz_unidade_id || user?.unidade_principal_id || user?.unidade_id || null;
-    const unidadeRaw = (unidadeRef && typeof unidadeRef === 'object') ? (unidadeRef._id || unidadeRef.id || '') : unidadeRef;
-    const unidadeId = String(unidadeRaw || '').trim();
-    const unitScope = (unidadeId && mongoose.isValidObjectId(unidadeId))
-      ? createUnitScope({ unidadeId })
-      : { type:'global', unidadeId:null };
+    const isAll = userCanScopeAll(user);
+    let unitScope = { type: 'global', unidadeId: null };
+
+    if (!isAll) {
+      const ref = user?.matriz_unidade_id || user?.unidade_principal_id || user?.unidade_id || null;
+      const raw = (ref && typeof ref === 'object') ? (ref._id || ref.id || '') : ref;
+      const unidadeId = String(raw || '').trim();
+      if (unidadeId && mongoose.isValidObjectId(unidadeId)) {
+        unitScope = createUnitScope({ unidadeId });
+      }
+    }
+
     const repo = new UnidadesReadRepository({ unitScope });
     const unidadeSelectFields = '_id codigo nome razaoSocial cnpj cpf pessoaTipo inscricaoEstadual inscricaoMunicipal cnaePrincipal cnaeSecundarios regimeTributario naturezaJuridica tipoLogradouro logradouro numero complemento bairro cep cidade estado endereco telefoneFixo telefoneCelular emailPrincipal emailFiscal diretor_usuario_id pixChave tipoPix banco agencia contaCorrente is_principal subunidade unidade_principal_id dataAbertura';
-    if(userCanScopeAll(user)){
+    if(isAll){
       return await repo.find({ ativa: { $ne: false } }, { select: unidadeSelectFields });
     }
     if(user && (user.matriz_unidade_id || user.unidade_principal_id || user.unidade_id)){
