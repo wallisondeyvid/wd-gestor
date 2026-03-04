@@ -1,4 +1,4 @@
-import { getConnectionForUnit } from '#shared/db/connectionFactory.js';
+import { getConnectionForUnit, registerTrackedConnection } from '#shared/db/connectionFactory.js';
 
 const dbCache = new Map();
 
@@ -29,8 +29,15 @@ export function resolveConnection(unitScope) {
     return dbCache.get(dbName);
   }
 
-  const tenantDb = baseConnection.useDb(dbName, { useCache: true });
+  const tenantDb = registerTrackedConnection(
+    baseConnection.useDb(dbName, { useCache: true }),
+    { kind: 'tenant', dbName, parentConnection: baseConnection }
+  );
   dbCache.set(dbName, tenantDb);
 
   return tenantDb;
+}
+
+export function clearResolveConnectionCache() {
+  dbCache.clear();
 }

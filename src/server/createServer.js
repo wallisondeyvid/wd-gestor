@@ -35,6 +35,23 @@ import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } fr
 const registry = [gestorModule, clinicaModule, condominiosModule, portalMoradorModule];
 
 let __portsBound = false;
+const SERVER_CLOSE_STATE_KEY = '__wdgestorCreateServerCloseState__';
+
+function isNodeTestRuntime() {
+  const args = [...(process.execArgv || []), ...(process.argv || [])];
+  if (args.some((arg) => String(arg || '').startsWith('--test'))) {
+    return true;
+  }
+  return args.some((arg) => /\.test\.[cm]?js$/i.test(String(arg || '')));
+}
+
+function getServerCloseState() {
+  const g = globalThis;
+  if (!g[SERVER_CLOSE_STATE_KEY]) {
+    g[SERVER_CLOSE_STATE_KEY] = { activeInstances: 0, shouldStopMemoryServer: false };
+  }
+  return g[SERVER_CLOSE_STATE_KEY];
+}
 
 function bindPortsOnce() {
   if (__portsBound) return;
@@ -52,8 +69,11 @@ export async function createServer(options = {}) {
   const skipDb = options.skipDb === true;
   const skipDbForced = options.skipDb === true;
   const isParityEnv = String(process.env.PARITY || '').trim() === '1';
-  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipDb === true || isParityEnv;
+  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || isNodeTestRuntime() || options.skipDb === true || isParityEnv;
   const app = express();
+  const closeState = getServerCloseState();
+  closeState.activeInstances += 1;
+  let closeCalled = false;
 
   bindPortsOnce();
 
@@ -1626,10 +1646,20 @@ export async function createServer(options = {}) {
   }
 
   const close = async ({ stopMemoryServer = true } = {}) => {
+    if (closeCalled) return;
+    closeCalled = true;
+
+    closeState.activeInstances = Math.max(0, Number(closeState.activeInstances || 0) - 1);
+    closeState.shouldStopMemoryServer = closeState.shouldStopMemoryServer || !!stopMemoryServer;
+
     const isParityLike = String(process.env.PARITY || '').trim() === '1' || String(process.env.PARITY_RUNNER || '').trim() === '1';
-    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test') || isParityLike;
+    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || isNodeTestRuntime() || isParityLike;
     if (!isTestLike) return;
-    await disconnectMongo({ stopMemoryServer });
+    if (closeState.activeInstances > 0) return;
+
+    const shouldStopMemoryServer = closeState.shouldStopMemoryServer;
+    closeState.shouldStopMemoryServer = false;
+    await disconnectMongo({ stopMemoryServer: shouldStopMemoryServer });
   };
 
   return { app, config, registerErrorHandlers, close };
