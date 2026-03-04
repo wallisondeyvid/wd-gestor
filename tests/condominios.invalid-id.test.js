@@ -139,6 +139,12 @@ test('GET /condominios/api/blocos com unidade_id inválido retorna [] sem CastEr
     } else {
       const ok = res.body?.success ?? res.body?.ok;
       assert.equal(ok, false);
+      assert.equal(typeof res.body?.error, 'string');
+      assert.ok(res.body.error.length > 0);
+      const retryAfter = String(res.headers?.['retry-after'] || '');
+      if (retryAfter) {
+        assert.equal(retryAfter, '5');
+      }
     }
 
     const hasCastError = logs.some((line) => /CastError|Cast to ObjectId failed/i.test(line));
