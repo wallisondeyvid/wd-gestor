@@ -5,8 +5,12 @@ import fs from 'fs/promises';
 import sharp from 'sharp';
 import { v4 as uuid } from 'uuid';
 import { put, del } from '@vercel/blob';
-import User from '#models/user.js';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import {
+  findUserByEmailCond,
+  saveUserDoc,
+  findUserByEmailCondLean,
+} from '#modules/gestor/app/db/api.db.js';
 
 const router = express.Router();
 
@@ -41,7 +45,7 @@ router.post('/api/usuario/foto', requireLogin, requireApiAuth, upload.single('fo
 
     // Carregar usuário por email da sessão/req.user
     const email = (req.user?.email || '').toLowerCase();
-    const user = await User.findOne({ email });
+    const user = await findUserByEmailCond({ email });
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
 
     // Processar imagem com sharp -> WebP em memória
@@ -74,7 +78,7 @@ router.post('/api/usuario/foto', requireLogin, requireApiAuth, upload.single('fo
 
     // Persistir URL pública
     user.foto = url;
-    await user.save();
+    await saveUserDoc(user);
 
     // Atualiza sessão para refletir nova foto
     try { if (req.session && req.session.user) { req.session.user.foto = user.foto; } } catch(_) {}
@@ -100,7 +104,7 @@ async function getUserFoto(req, res) {
   try {
     const email = (req.user?.email || '').toLowerCase();
     if (!email) return redirectPlaceholder();
-    const user = await User.findOne({ email }).lean();
+    const user = await findUserByEmailCondLean({ email });
     if (!user) return redirectPlaceholder();
 
     const foto = user.foto || '';

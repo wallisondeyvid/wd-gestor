@@ -31,7 +31,7 @@ router.get('/api/usuario', async (req, res) => {
     let unidade_nome = null;
     if (role !== 'master' && unidade_id) {
       try {
-        const Unidade = (await import('#core/models/unidade.js')).default;
+        const Unidade = (await import('#models/unidade.js')).default;
         const un = await Unidade.findById(unidade_id).select('nome').lean();
         unidade_nome = un?.nome || null;
       } catch (e) {
@@ -43,7 +43,7 @@ router.get('/api/usuario', async (req, res) => {
     let funcionarioInfo = null;
     try{
       if (!telefone) {
-        const Func = (await import('#core/models/Funcionario.js')).default;
+        const Func = (await import('#models/Funcionario.js')).default;
         let func = null;
         if (userDoc?.funcionario_id) {
           func = await Func.findById(userDoc.funcionario_id).select('telefone nome').lean();
@@ -199,7 +199,7 @@ router.get('/api/modulos', async (req, res) => {
     const tryLoadUnidadeComModulos = async (unidadeId) => {
       if (!unidadeId) return null;
       try {
-        const Unidade = (await import('#core/models/unidade.js')).default;
+        const Unidade = (await import('#models/unidade.js')).default;
         const unidade = await Unidade.findById(unidadeId)
           .select('_id is_principal subunidade unidade_principal_id modulosAcessiveis')
           .populate('modulosAcessiveis')
@@ -238,8 +238,8 @@ router.get('/api/modulos', async (req, res) => {
     // 3) User: módulos da função filtrados pela unidade
     if (role === 'user') {
       try {
-        const Funcionario = (await import('#core/models/Funcionario.js')).default;
-        const Funcao = (await import('#core/models/funcao.js')).default;
+        const Funcionario = (await import('#models/Funcionario.js')).default;
+        const Funcao = (await import('#models/funcao.js')).default;
         let dbg = wantDebug ? { source: 'user', funcionario: null, funcao: null, unidade: null } : null;
 
         const funcionarioId = req.user?.funcionario_id || userDoc?.funcionario_id || null;

@@ -1,5 +1,5 @@
-import User from '#core/models/user.js';
-import Funcionario from '#core/models/Funcionario.js';
+import User from '#models/user.js';
+import Funcionario from '#models/Funcionario.js';
 
 /**
  * Sincroniza campos comuns entre User e Funcionario

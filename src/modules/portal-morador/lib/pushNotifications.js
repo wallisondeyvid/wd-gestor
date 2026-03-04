@@ -1,7 +1,7 @@
 import webpush from 'web-push';
-import PortalPushSubscription from '#core/models/portal_push_subscription.js';
-import Unidade from '#core/models/unidade.js';
-import User from '#core/models/user.js';
+import PortalPushSubscription from '#models/portal_push_subscription.js';
+import Unidade from '#models/unidade.js';
+import User from '#models/user.js';
 
 const VAPID_PUBLIC_KEY = process.env.PORTAL_PUSH_VAPID_PUBLIC_KEY
   || process.env.WDGESTOR_PORTAL_VAPID_PUBLIC_KEY

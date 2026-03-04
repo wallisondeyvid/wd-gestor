@@ -7,6 +7,18 @@
 
 <script>
 	var __perfilDesiredBasePath = '<%= __pb %>';
+	(function ensureWdgContext(){
+		try {
+			var desiredBase = String(__perfilDesiredBasePath || '').trim();
+			if (desiredBase === '/') desiredBase = '';
+			if (desiredBase.length > 1 && desiredBase.endsWith('/')) desiredBase = desiredBase.slice(0, -1);
+			var mod = 'gestor';
+			if (desiredBase === '/escalas') mod = 'escalas';
+			else if (desiredBase === '/condominios') mod = 'condominios';
+			else if (desiredBase === '/portal-morador' || desiredBase === '/portal_morador') mod = 'portal-morador';
+			window.WDG_CONTEXT = Object.assign({}, window.WDG_CONTEXT || {}, { module: mod, basePath: desiredBase });
+		} catch(_){ }
+	})();
 	// Expõe a base do módulo para o script modular (fallback e compatibilidade)
 	window.__perfilBasePath = __perfilDesiredBasePath;
 	(function syncPerfilBasePath(){

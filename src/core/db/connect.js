@@ -1,5 +1,7 @@
 // Conexão centralizada com MongoDB
 import mongoose from 'mongoose';
+import { closeAllDbConnections } from '#shared/db/connectionFactory.js';
+import { clearResolveConnectionCache } from '#shared/db/resolveConnection.js';
 let MemoryServer; // lazy import
 
 const GLOBAL_CACHE_KEY = '__wdgestorMongoCache__';
@@ -14,6 +16,8 @@ function getGlobalCache() {
 
 export async function disconnectMongo({ stopMemoryServer = true } = {}) {
   const cache = getGlobalCache();
+  try { await closeAllDbConnections(); } catch { /* noop */ }
+  try { clearResolveConnectionCache(); } catch { /* noop */ }
   try { await mongoose.disconnect(); } catch { /* noop */ }
   cache.conn = null;
   cache.promise = null;

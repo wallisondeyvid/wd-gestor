@@ -1,13 +1,13 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import CondUsuario from '#core/models/cond_usuario.js';
-import CondHabitacao from '#core/models/cond_habitacao.js';
-import CondMorador from '#core/models/cond_morador.js';
-import CondProprietario from '#core/models/cond_proprietario.js';
-import CondBloco from '#core/models/cond_bloco.js';
-import CondAndar from '#core/models/cond_andar.js';
-import Unidade from '#core/models/unidade.js';
+import CondUsuario from '#models/cond_usuario.js';
+import CondHabitacao from '#models/cond_habitacao.js';
+import CondMorador from '#models/cond_morador.js';
+import CondProprietario from '#models/cond_proprietario.js';
+import CondBloco from '#models/cond_bloco.js';
+import CondAndar from '#models/cond_andar.js';
+import Unidade from '#models/unidade.js';
 import { sendMail } from '#core/mail/mailer.js';
 import { portalFirstAccessEmail } from '#mail/templates/portalFirstAccess.js';
 

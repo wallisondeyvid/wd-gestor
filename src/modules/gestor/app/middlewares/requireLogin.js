@@ -1,8 +1,11 @@
 // (migrado) requireLogin.js
 import mongoose from 'mongoose';
-import User from '#models/user.js';
-import Unidade from '#models/unidade.js';
-import Funcionario from '#models/Funcionario.js';
+import {
+  findFuncionarioByEmailPopulate,
+  findUnidadeLeanById,
+  findUnidadePrincipalLean,
+  findUserLeanByEmail,
+} from '#modules/gestor/app/db/auth.db.js';
 
 export const requireLogin = async (req, res, next) => { /* implementação original mantida + resposta JSON para API (ajustada para evitar loop em /login) */
   // Permitir bypass em suites de teste que não precisam de auth
@@ -124,9 +127,10 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     const queryTimeout = Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000);
     let user = null;
     try {
-      let userQuery = User.findOne({ email: req.session.user.email.toLowerCase() }).lean();
-      if (typeof userQuery?.maxTimeMS === 'function') userQuery = userQuery.maxTimeMS(queryTimeout);
-      user = await userQuery;
+      user = await findUserLeanByEmail({
+        email: req.session.user.email.toLowerCase(),
+        maxTimeMS: queryTimeout,
+      });
     } catch (e) {
       // Em timeouts/erros transitórios de DB, siga usando dados da sessão para evitar bounce pro login
       if (isTransientDbError(e)) {
@@ -153,8 +157,8 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
         user.primeiro_acesso = false; user.senha_provisoria = false;
       }
       let unidadeId = user.unidade_id || null; let unidadePrincipalId = null;
-  if (user.role === 'master' && !unidadeId) { try { let unidadePrincipalQuery = Unidade.findOne({ is_principal: true }).lean(); if (typeof unidadePrincipalQuery?.maxTimeMS === 'function') unidadePrincipalQuery = unidadePrincipalQuery.maxTimeMS(queryTimeout); const unidadePrincipal = await unidadePrincipalQuery; if (unidadePrincipal) { unidadeId = unidadePrincipal._id; unidadePrincipalId = unidadePrincipal._id; } } catch {}
-  } else if (unidadeId) { try { let unidadeDocQuery = Unidade.findById(unidadeId).lean(); if (typeof unidadeDocQuery?.maxTimeMS === 'function') unidadeDocQuery = unidadeDocQuery.maxTimeMS(queryTimeout); const unidadeDoc = await unidadeDocQuery; if (unidadeDoc) { unidadePrincipalId = unidadeDoc.is_principal ? unidadeDoc._id : (unidadeDoc.unidade_principal_id || null); } } catch {} }
+  if (user.role === 'master' && !unidadeId) { try { const unidadePrincipal = await findUnidadePrincipalLean({ maxTimeMS: queryTimeout }); if (unidadePrincipal) { unidadeId = unidadePrincipal._id; unidadePrincipalId = unidadePrincipal._id; } } catch {}
+  } else if (unidadeId) { try { const unidadeDoc = await findUnidadeLeanById({ id: unidadeId, maxTimeMS: queryTimeout }); if (unidadeDoc) { unidadePrincipalId = unidadeDoc.is_principal ? unidadeDoc._id : (unidadeDoc.unidade_principal_id || null); } } catch {} }
   req.user = { _id: user._id, id: user._id, nome: user.nome || req.session.user.nome || 'Usuário', email: user.email, role: user.role, isMaster: user.role === 'master', foto: user.foto || null, funcionario_id: user.funcionario_id || null, unidade_id: unidadeId, unidade_principal_id: unidadePrincipalId, funcao: req.session.user.funcao || null };
       req.session.user.unidade_id = unidadeId; req.session.user.unidade_principal_id = unidadePrincipalId; if (user.foto) req.session.user.foto = user.foto;
   console.log('[requireLogin] autenticado', { email: user.email, role: user.role, isMaster: (user.role === 'master') });
@@ -162,9 +166,10 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     }
   let funcionario = null;
   try {
-    let funcionarioQuery = Funcionario.findOne({ email: req.session.user.email.toLowerCase() }).populate('unidade_id funcao_id');
-    if (typeof funcionarioQuery?.maxTimeMS === 'function') funcionarioQuery = funcionarioQuery.maxTimeMS(queryTimeout);
-    funcionario = await funcionarioQuery;
+    funcionario = await findFuncionarioByEmailPopulate({
+      email: req.session.user.email.toLowerCase(),
+      maxTimeMS: queryTimeout,
+    });
   } catch (e) {
     if (isTransientDbError(e)) {
       console.warn('[requireLogin] DB timeout ao buscar Funcionario — usando sessão como fallback para', req.session.user?.email);

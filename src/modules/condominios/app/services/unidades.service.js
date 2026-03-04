@@ -1,3 +1,7 @@
+import { BlocosRepository } from '#modules/condominios/app/repositories/BlocosRepository.js';
+import { AndaresRepository } from '#modules/condominios/app/repositories/AndaresRepository.js';
+import { UnidadesRepository } from '#modules/condominios/app/repositories/UnidadesRepository.js';
+
 export async function listarUnidadesService({
   req,
   mongoose,
@@ -44,6 +48,7 @@ export async function obterUnidadePorIdService({
   Unidade,
   buildUnidadePayload
 }) {
+  const repo = new UnidadesRepository({ unitScope: req.unitScope });
   const id = String(req.params?.id || '').trim();
   if (!id || !mongoose.isValidObjectId(id)) {
     const err = new Error('Identificador inválido');
@@ -60,7 +65,7 @@ export async function obterUnidadePorIdService({
     throw err;
   }
 
-  const unidade = await Unidade.findById(id).lean();
+  const unidade = await repo.findById({ id });
   if (!unidade) {
     const err = new Error('Unidade não encontrada');
     err.__httpStatus = 404;
@@ -84,6 +89,10 @@ export async function listarUnidadesRelacionadasService({
   CondAndar,
   buildUnidadePayload
 }) {
+  const repo = new UnidadesRepository({ unitScope: req.unitScope });
+  const blocosRepo = new BlocosRepository({ unitScope: req.unitScope });
+  const andaresRepo = new AndaresRepository({ unitScope: req.unitScope });
+
   if (mongoose.connection.readyState !== 1) {
     const err = new Error('DB indisponível');
     err.__httpStatus = 503;
@@ -103,13 +112,13 @@ export async function listarUnidadesRelacionadasService({
   }
 
   if (blocoId && mongoose.isValidObjectId(blocoId)) {
-    const bloco = await CondBloco.findById(blocoId).select('unidade_id').lean();
-    if (bloco?.unidade_id) unidadeIds.push(String(bloco.unidade_id));
+    const unidadeId = await blocosRepo.getUnidadeIdByBlocoId(blocoId);
+    if (unidadeId) unidadeIds.push(String(unidadeId));
   }
 
   if (andarId && mongoose.isValidObjectId(andarId)) {
-    const andar = await CondAndar.findById(andarId).select('unidade_id').lean();
-    if (andar?.unidade_id) unidadeIds.push(String(andar.unidade_id));
+    const unidadeId = await andaresRepo.getUnidadeIdByAndarId(andarId);
+    if (unidadeId) unidadeIds.push(String(unidadeId));
   }
 
   let filtro = {};
@@ -122,7 +131,7 @@ export async function listarUnidadesRelacionadasService({
     filtro = { _id: idsUnicos[0] };
   }
 
-  const unidades = await Unidade.find(filtro).lean();
+  const unidades = await repo.findMany({ filter: filtro });
   return (unidades || []).map(unit => {
     const payload = buildUnidadePayload(unit);
     if (payload) return payload;

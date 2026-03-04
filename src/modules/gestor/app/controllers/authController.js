@@ -1,15 +1,28 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
-import User from '#core/models/user.js';
-import PasswordReset from '#core/models/passwordReset.js';
-import Unidade from '#core/models/unidade.js';
-import Funcionario from '#core/models/Funcionario.js';
-import Modulo from '#core/models/modulo.js';
-import Funcao from '#core/models/funcao.js';
 import nodemailer from 'nodemailer';
 import { resetPasswordTemplate } from '#core/mail/templates/resetPassword.js';
-import RememberToken from '#core/models/rememberToken.js';
+import {
+  createPasswordReset,
+  createRememberToken,
+  deletePasswordResetById,
+  findFuncaoByIdSelect,
+  findFuncionarioByIdSelect,
+  findFuncionariosByCpfSelect,
+  findModuloByOr,
+  findModuloLeanByOrSelect,
+  findPasswordResetByToken,
+  findUnidadeByIdSelect,
+  findUserByEmail,
+  findUserByEmailForLogin,
+  findUserByIdSelect,
+  findUserByIdWithMaxTime,
+  findUsersByCpf,
+  findUsersByFuncionarioIds,
+  revokeRememberTokenByHash,
+  saveUserDocument,
+} from '#modules/gestor/app/services/authDbBridgeService.js';
 
 // -----------------------------------------------------------------------------
 // Helper de Autorização de Módulo
@@ -62,13 +75,20 @@ async function verificarAcessoModulo({ userDoc, moduloAlvoNome, basePath }) {
       or.push({ nome: /^gest[aã]o de condom[ií]nios$/i });
       or.push({ nome: /^m[oó]dulo condom[ií]nios$/i });
     }
-    const modulo = await Modulo.findOne({ $or: or }).maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||5000));
+    const modulo = await findModuloByOr({
+      or,
+      maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
+    });
     if (!modulo) return { permitido: false, motivo: 'modulo_inexistente' };
 
     // Diretor: checa se unidade do usuário possui esse módulo em modulosAcessiveis
     if (role === 'diretor') {
       if (!userDoc.unidade_id) return { permitido: false, motivo: 'diretor_sem_unidade' };
-      const unidade = await Unidade.findById(userDoc.unidade_id).select('modulosAcessiveis').maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||5000));
+      const unidade = await findUnidadeByIdSelect({
+        id: userDoc.unidade_id,
+        select: 'modulosAcessiveis',
+        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
+      });
       if (!unidade) return { permitido: false, motivo: 'unidade_inexistente' };
       const possui = unidade.modulosAcessiveis?.some(m => m.toString() === modulo._id.toString());
       return possui ? { permitido: true } : { permitido: false, motivo: 'modulo_nao_habilitado_unidade' };
@@ -77,17 +97,29 @@ async function verificarAcessoModulo({ userDoc, moduloAlvoNome, basePath }) {
     if (role === 'user') {
       // Recupera funcionário para obter função (assumindo relacionamento via funcionario_id)
       if (!userDoc.funcionario_id) return { permitido: false, motivo: 'user_sem_funcionario' };
-      const funcionario = await Funcionario.findById(userDoc.funcionario_id).select('funcao_id unidade_id').maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||5000));
+      const funcionario = await findFuncionarioByIdSelect({
+        id: userDoc.funcionario_id,
+        select: 'funcao_id unidade_id',
+        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
+      });
       if (!funcionario) return { permitido: false, motivo: 'funcionario_inexistente' };
       if (!funcionario.funcao_id) return { permitido: false, motivo: 'user_sem_funcao' };
-      const funcao = await Funcao.findById(funcionario.funcao_id).select('modulos_habilitados ativa').maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||5000));
+      const funcao = await findFuncaoByIdSelect({
+        id: funcionario.funcao_id,
+        select: 'modulos_habilitados ativa',
+        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
+      });
       if (!funcao || funcao.ativa === false) return { permitido: false, motivo: 'funcao_inativa' };
       const moduloNaFuncao = funcao.modulos_habilitados?.some(m => m.toString() === modulo._id.toString());
       if (!moduloNaFuncao) return { permitido: false, motivo: 'modulo_nao_habilitado_funcao' };
 
       // (Defesa adicional) Confere unidade vinculada ao funcionário, se existir, também possuir módulo
       if (funcionario.unidade_id) {
-        const unidade = await Unidade.findById(funcionario.unidade_id).select('modulosAcessiveis').maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||5000));
+        const unidade = await findUnidadeByIdSelect({
+          id: funcionario.unidade_id,
+          select: 'modulosAcessiveis',
+          maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
+        });
         if (unidade) {
           const moduloUnidade = unidade.modulosAcessiveis?.some(m => m.toString() === modulo._id.toString());
           if (!moduloUnidade) return { permitido: false, motivo: 'modulo_nao_habilitado_unidade' };
@@ -146,7 +178,7 @@ export async function checkUserStatus(req, res, next) {
     if (req?.app?.locals?.skipDb || mongoose.connection.readyState !== 1) {
       return next();
     }
-    const user = await User.findOne({ email });
+    const user = await findUserByEmail({ email });
   const basePath = req.baseUrl || '';
   if (user && user.ativo === false) return res.redirect(basePath + '/login?erro=suspenso');
     next();
@@ -175,7 +207,10 @@ export async function login(req, res) {
     // Consulta com tempo máximo limitado para não estourar o tempo da função serverless
     let user = null;
     try {
-      user = await User.findOne({ email: email.toLowerCase() }).maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||5000));
+      user = await findUserByEmailForLogin({
+        email: email.toLowerCase(),
+        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
+      });
     } catch(qe){
       console.warn('[login] timeout/erro find user:', qe.message);
       return res.redirect(303, basePath + '/login?erro=servidor');
@@ -203,7 +238,7 @@ export async function login(req, res) {
       // Expirou bloqueio -> reset
       user.lock_until = null;
       user.failed_login_attempts = 0;
-      try { await user.save(); } catch(e) { console.warn('[login] falha ao resetar bloqueio expirado:', e.message); }
+      try { await saveUserDocument(user); } catch(e) { console.warn('[login] falha ao resetar bloqueio expirado:', e.message); }
     }
 
   let ok = false;
@@ -223,7 +258,7 @@ export async function login(req, res) {
       const delay = Math.min(baseDelay * user.failed_login_attempts, maxDelay);
       if (user.failed_login_attempts >= maxTentativas && !(isMasterRole && masterBypassLockout)) {
         user.lock_until = new Date(Date.now() + lockMinutos * 60000);
-        try { await user.save(); } catch(e) { console.warn('[login] falha ao salvar bloqueio:', e.message); }
+        try { await saveUserDocument(user); } catch(e) { console.warn('[login] falha ao salvar bloqueio:', e.message); }
         console.warn('[login] usuario bloqueado por tentativas', { email: user.email, lock_until: user.lock_until, attempts: user.failed_login_attempts });
         // Pequeno atraso também antes de responder bloqueado para uniformizar timing
         if (delay) await new Promise(r => setTimeout(r, delay));
@@ -235,7 +270,7 @@ export async function login(req, res) {
         res.setHeader('X-Account-Lock-Minutes', String(lockMinutes));
   return res.redirect(303, basePath + '/login?erro=bloqueado&min=' + lockMinutes);
       } else {
-        try { await user.save(); } catch(e) { console.warn('[login] falha ao salvar tentativa falhada:', e.message); }
+        try { await saveUserDocument(user); } catch(e) { console.warn('[login] falha ao salvar tentativa falhada:', e.message); }
         if (delay) await new Promise(r => setTimeout(r, delay));
       }
       // Headers de tentativas restantes antes do bloqueio
@@ -251,7 +286,7 @@ export async function login(req, res) {
     if (user.failed_login_attempts || user.lock_until) {
       user.failed_login_attempts = 0;
       user.lock_until = null;
-      try { await user.save(); } catch(e) { console.warn('[login] falha ao resetar lockout:', e.message); }
+      try { await saveUserDocument(user); } catch(e) { console.warn('[login] falha ao resetar lockout:', e.message); }
     }
 
     // Mitigação de fixation: regenerar sessão antes de atribuir dados
@@ -305,7 +340,7 @@ export async function login(req, res) {
         const rounds = parseInt(parts[2], 10);
         if (!isNaN(rounds) && rounds < minRounds) {
           user.senha = await bcrypt.hash(senha, minRounds);
-          await user.save();
+          await saveUserDocument(user);
           console.info('[login] hash de senha atualizado (fortalecido)', { user: user.email, from: rounds, to: minRounds });
         }
       }
@@ -318,7 +353,7 @@ export async function login(req, res) {
         const tokenPlain = crypto.randomBytes(48).toString('hex');
         const tokenHash = crypto.createHash('sha256').update(tokenPlain).digest('hex');
         const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-        await RememberToken.create({ user_id: user._id, token_hash: tokenHash, user_agent: req.headers['user-agent'] || null, ip: req.ip, expiresAt });
+        await createRememberToken({ user_id: user._id, token_hash: tokenHash, user_agent: req.headers['user-agent'] || null, ip: req.ip, expiresAt });
         const cookieName = process.env.REMEMBER_COOKIE_NAME || 'wdg_remember';
         res.cookie(cookieName, tokenPlain, { httpOnly: true, secure: (process.env.COOKIE_SECURE === 'true'), sameSite: 'Lax', expires: expiresAt });
       }
@@ -354,7 +389,11 @@ export async function login(req, res) {
         or.push({ nome: /^gest[aã]o de condom[ií]nios$/i });
         or.push({ nome: /^m[oó]dulo condom[ií]nios$/i });
       }
-      const modulo = await Modulo.findOne({ $or: or }).select('nome status url_base').lean().maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000));
+      const modulo = await findModuloLeanByOrSelect({
+        or,
+        select: 'nome status url_base',
+        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000),
+      });
       if (modulo && String(modulo.status||'').toLowerCase() === 'planejado' && !isMasterRole) {
         console.info('[login] módulo planejado detectado para não-master → renderizando construcao');
         try { res.setHeader('Cache-Control','no-store'); } catch(_){}
@@ -380,7 +419,7 @@ export async function logout(req, res) {
   if (tokenPlain) {
     try {
       const tokenHash = crypto.createHash('sha256').update(tokenPlain).digest('hex');
-      await RememberToken.updateOne({ token_hash: tokenHash }, { $set: { revoked: true, lastUsedAt: new Date() } });
+      await revokeRememberTokenByHash({ tokenHash });
     } catch (e) { console.warn('[logout] falha revogando remember token:', e.message); }
   }
   res.clearCookie(cookieName);
@@ -391,14 +430,14 @@ export async function logout(req, res) {
 export async function renderResetPassword(req, res) {
   const { token } = req.params;
   try {
-    const pr = await PasswordReset.findOne({ token });
+    const pr = await findPasswordResetByToken({ token });
     if (!pr || pr.expiresAt < new Date()) return res.render('reset-password-error', { title: 'Link inválido', message: 'Token inválido ou expirado', showRetry: true });
     // Opcional: tentar obter nome do usuário para saudação
     let userName = 'Usuário';
     try {
       const userIdRef = pr.user_id || pr.userId;
       if (userIdRef) {
-        const u = await User.findById(userIdRef).select('nome email');
+        const u = await findUserByIdSelect({ id: userIdRef, select: 'nome email' });
         if (u?.nome) userName = u.nome.split(' ')[0];
       }
     } catch {}
@@ -413,14 +452,14 @@ export async function postResetPassword(req, res) {
   try {
     const { token, senha } = req.body;
     if (!token || !senha) return res.render('reset-password-error', { title: 'Dados incompletos', message: 'Dados incompletos', showRetry: true });
-    const pr = await PasswordReset.findOne({ token });
+    const pr = await findPasswordResetByToken({ token });
     if (!pr || pr.expiresAt < new Date()) return res.render('reset-password-error', { title: 'Link inválido', message: 'Token inválido ou expirado', showRetry: true });
     const userIdRef = pr.user_id || pr.userId; // compatibilidade
-    const user = await User.findById(userIdRef);
+    const user = await findUserByIdWithMaxTime({ id: userIdRef });
     if (!user) return res.render('reset-password-error', { title: 'Usuário não encontrado', message: 'Usuário não encontrado', showRetry: false });
     user.senha = await bcrypt.hash(senha, 10);
-    await user.save();
-    await PasswordReset.deleteOne({ _id: pr._id });
+    await saveUserDocument(user);
+    await deletePasswordResetById({ id: pr._id });
   const basePath = req.baseUrl || '';
   res.render('reset-password-success', { title: 'Senha Redefinida', message: 'Sua senha foi redefinida com sucesso.', loginLink: basePath + '/login' });
   } catch (e) {
@@ -438,12 +477,12 @@ export async function postEsqueciSenha(req, res) {
     if (cpfDigits.length !== 11) return res.status(400).json({ success: false, message: 'CPF inválido.' });
 
     // 2. Localiza usuários pelo CPF (direto) ou via Funcionario
-    let usuarios = await User.find({ cpf: cpfDigits });
+    let usuarios = await findUsersByCpf({ cpf: cpfDigits });
     if (!usuarios.length) {
-      const funcionarios = await Funcionario.find({ cpf: cpfDigits }).select('_id');
+      const funcionarios = await findFuncionariosByCpfSelect({ cpf: cpfDigits, select: '_id' });
       if (funcionarios.length) {
         const ids = funcionarios.map(f => f._id);
-        usuarios = await User.find({ funcionario_id: { $in: ids } });
+        usuarios = await findUsersByFuncionarioIds({ ids });
       }
     }
     if (!usuarios.length) return res.status(404).json({ success: false, message: 'Nenhum usuário com este CPF.' });
@@ -465,7 +504,7 @@ export async function postEsqueciSenha(req, res) {
     // 5. Cria token
     const token = crypto.randomBytes(32).toString('hex');
     const expira = new Date(Date.now() + 30 * 60 * 1000); // 30 minutos
-    await PasswordReset.create({ user_id: user._id, token, expiresAt: expira });
+    await createPasswordReset({ user_id: user._id, token, expiresAt: expira });
 
   // Link externo deve respeitar o prefixo de montagem do módulo Gestor (/gestor)
   const appBase = resolveAppUrl();
@@ -572,12 +611,12 @@ export async function listarEmailsPorCPF(req, res) {
     if (!cpf) return res.status(400).json({ success: false, message: 'CPF não informado.' });
     const cpfDigits = String(cpf).replace(/\D/g,'');
     if (cpfDigits.length !== 11) return res.status(400).json({ success: false, message: 'CPF inválido.' });
-    let usuarios = await User.find({ cpf: cpfDigits });
+    let usuarios = await findUsersByCpf({ cpf: cpfDigits });
     if (!usuarios.length) {
-      const funcionarios = await Funcionario.find({ cpf: cpfDigits }).select('_id');
+      const funcionarios = await findFuncionariosByCpfSelect({ cpf: cpfDigits, select: '_id' });
       if (funcionarios.length) {
         const ids = funcionarios.map(f=>f._id);
-        usuarios = await User.find({ funcionario_id: { $in: ids }});
+        usuarios = await findUsersByFuncionarioIds({ ids });
       }
     }
     if (!usuarios.length) return res.status(404).json({ success: false, message: 'Nenhum usuário com este CPF.' });
@@ -616,7 +655,10 @@ export async function primeiroAcessoPost(req, res) {
     if (!(/[A-Z]/.test(senha) && /[a-z]/.test(senha) && /\d/.test(senha))) {
   return res.redirect(303, basePath + '/primeiroacesso?erro=forca');
     }
-    const user = await User.findById(req.session.user.id).maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||5000));
+    const user = await findUserByIdWithMaxTime({
+      id: req.session.user.id,
+      maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
+    });
   if (!user) return res.redirect(303, basePath + '/login');
     if (!user.primeiro_acesso) {
       // Já tratado anteriormente, apenas segue
@@ -625,7 +667,7 @@ export async function primeiroAcessoPost(req, res) {
     user.senha = await bcrypt.hash(senha, 10);
     user.primeiro_acesso = false;
     user.senha_provisoria = false;
-  try { await user.save(); } catch(e) { console.warn('[primeiroAcessoPost] falha ao salvar:', e.message); return res.redirect(303, basePath + '/primeiroacesso?erro=servidor'); }
+  try { await saveUserDocument(user); } catch(e) { console.warn('[primeiroAcessoPost] falha ao salvar:', e.message); return res.redirect(303, basePath + '/primeiroacesso?erro=servidor'); }
   return res.redirect(basePath + '/dashboard');
   } catch (e) {
     console.error('[primeiroAcessoPost] erro troca senha primeiro acesso:', e);

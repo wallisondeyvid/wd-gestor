@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import process from 'node:process';
 import test, { after } from 'node:test';
 import request from 'supertest';
 
@@ -6,13 +7,77 @@ import { createServer } from '../src/server/createServer.js';
 
 const closeFns = [];
 
+function isDebugHangEnabled() {
+  return String(process.env.DEBUG_HANG || '').trim() === '1';
+}
+
 function logActiveHandlesDebug() {
-  if (String(process.env.PARITY_DEBUG || '').trim() !== '1') return;
+  if (!isDebugHangEnabled()) return;
   try {
     const handles = typeof process._getActiveHandles === 'function' ? process._getActiveHandles() : [];
+    const requests = typeof process._getActiveRequests === 'function' ? process._getActiveRequests() : [];
     const names = handles.map((handle) => String(handle?.constructor?.name || 'unknown'));
+    const requestNames = requests.map((req) => String(req?.constructor?.name || 'unknown'));
     console.error('[parity][debug] active handles:', names);
+    console.error('[parity][debug] active requests:', requestNames);
   } catch {}
+}
+
+function debugHang(reason) {
+  if (!isDebugHangEnabled()) return;
+  try {
+    const handles = typeof process._getActiveHandles === 'function' ? process._getActiveHandles() : [];
+    const requests = typeof process._getActiveRequests === 'function' ? process._getActiveRequests() : [];
+
+    const handleDetails = handles.map((handle) => {
+      const name = String(handle?.constructor?.name || 'unknown');
+      const details = { name };
+
+      if (typeof handle?.hasRef === 'function') {
+        details.hasRef = handle.hasRef();
+      }
+
+      if (name === 'Server') {
+        try {
+          details.address = typeof handle?.address === 'function' ? handle.address() : undefined;
+        } catch {
+          details.address = 'error';
+        }
+        if (typeof handle?.listening === 'boolean') {
+          details.listening = handle.listening;
+        }
+      }
+
+      if (name === 'Socket') {
+        details.localAddress = handle?.localAddress;
+        details.localPort = handle?.localPort;
+        details.remoteAddress = handle?.remoteAddress;
+        details.remotePort = handle?.remotePort;
+        if (typeof handle?.destroyed === 'boolean') {
+          details.destroyed = handle.destroyed;
+        }
+      }
+
+      return details;
+    });
+    const requestDetails = requests.map((req) => ({
+      name: String(req?.constructor?.name || 'unknown')
+    }));
+
+    console.error(`[parity][debug][${reason}] handles(${handleDetails.length}):`, handleDetails);
+    console.error(`[parity][debug][${reason}] requests(${requestDetails.length}):`, requestDetails);
+  } catch {}
+}
+
+if (isDebugHangEnabled()) {
+  process.on('beforeExit', () => debugHang('beforeExit'));
+  process.on('exit', () => debugHang('exit'));
+
+  const t2 = setTimeout(() => debugHang('T+2s'), 2000);
+  t2.unref?.();
+
+  const t10 = setTimeout(() => debugHang('T+10s'), 10000);
+  t10.unref?.();
 }
 
 after(async () => {

@@ -388,6 +388,21 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 <script>
   // Base do módulo injetada pelo servidor (ex: '/gestor' ou '/escalas')
   var __NB_BASE = '<%= __nbBase %>';
+  (function ensureWdgContext(){
+    try {
+      var desiredBase = String(__NB_BASE || '').trim();
+      if (desiredBase === '/') desiredBase = '';
+      if (desiredBase.length > 1 && desiredBase.endsWith('/')) desiredBase = desiredBase.slice(0, -1);
+      var mod = String('<%= (moduleLabel || "") %>' || '').trim().toLowerCase();
+      if (!mod) {
+        if (desiredBase === '/escalas') mod = 'escalas';
+        else if (desiredBase === '/condominios') mod = 'condominios';
+        else if (desiredBase === '/portal-morador' || desiredBase === '/portal_morador') mod = 'portal-morador';
+        else mod = 'gestor';
+      }
+      window.WDG_CONTEXT = Object.assign({}, window.WDG_CONTEXT || {}, { module: mod, basePath: desiredBase });
+    } catch(_){ }
+  })();
   var __NB_HAS_USER = (function(){ var nav = document.querySelector('.navbar.navbar-wd'); return !!(nav && nav.getAttribute('data-has-user')==='1'); })();
   // Ajusta avatar pós load se helper global existir (buildUserFotoUrl)
   document.addEventListener('DOMContentLoaded', function(){

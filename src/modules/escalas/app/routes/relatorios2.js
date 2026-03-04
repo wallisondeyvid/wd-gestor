@@ -8,11 +8,11 @@ const router = Router();
 
 // ============ Loaders dinâmicos dos modelos ============
 let EscalaModel=null, FuncionarioModel=null, RecursoModel=null, UnidadeModel=null, EscalaLogModel=null;
-async function getEscalaModel(){ if(!EscalaModel){ const m=await import('#core/models/escala.js'); EscalaModel=m.default||m; } return EscalaModel; }
-async function getFuncionarioModel(){ if(!FuncionarioModel){ const m=await import('#core/models/Funcionario.js'); FuncionarioModel=m.default||m; } return FuncionarioModel; }
-async function getRecursoModel(){ if(!RecursoModel){ const m=await import('#core/models/recurso.js'); RecursoModel=m.default||m; } return RecursoModel; }
-async function getUnidadeModel(){ if(!UnidadeModel){ const m=await import('#core/models/unidade.js'); UnidadeModel=m.default||m; } return UnidadeModel; }
-async function getEscalaLogModel(){ if(!EscalaLogModel){ const m=await import('#core/models/escalaLog.js'); EscalaLogModel=m.default||m; } return EscalaLogModel; }
+async function getEscalaModel(){ if(!EscalaModel){ const m=await import('#models/escala.js'); EscalaModel=m.default||m; } return EscalaModel; }
+async function getFuncionarioModel(){ if(!FuncionarioModel){ const m=await import('#models/Funcionario.js'); FuncionarioModel=m.default||m; } return FuncionarioModel; }
+async function getRecursoModel(){ if(!RecursoModel){ const m=await import('#models/recurso.js'); RecursoModel=m.default||m; } return RecursoModel; }
+async function getUnidadeModel(){ if(!UnidadeModel){ const m=await import('#models/unidade.js'); UnidadeModel=m.default||m; } return UnidadeModel; }
+async function getEscalaLogModel(){ if(!EscalaLogModel){ const m=await import('#models/escalaLog.js'); EscalaLogModel=m.default||m; } return EscalaLogModel; }
 // Modelos adicionais (férias/ausências)
 let FeriasModel=null, AusenciaModel=null;
 async function getFeriasModel(){ if(!FeriasModel){ const m=await import('#models/ferias.js'); FeriasModel=m.default||m; } return FeriasModel; }

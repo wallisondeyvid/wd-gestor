@@ -10,6 +10,9 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import nodeFetch from 'node-fetch';
+import { getPorts } from '#shared/container/ports.js';
+import { BankPort } from '#shared/ports/bank.port.js';
+import { DocumentosPort } from '#shared/ports/documentos.port.js';
 import { loadConfig } from '#core/config/index.js';
 import { connectMongo } from '#core/db/connect.js';
 import { disconnectMongo } from '#core/db/connect.js';
@@ -17,7 +20,7 @@ import { centralErrorHandler, notFoundHandler } from '#core/middlewares/errorHan
 import { envelopeNormalizer } from '#core/middlewares/envelopeNormalizer.js';
 import { rememberRestore } from '#core/middlewares/rememberRestore.js';
 import { isWidgetEnabledCached } from '#core/utils/widgetSettings.js';
-import User from '#core/models/user.js';
+import User from '#models/user.js';
 import verificacaoRoutes from '#routes/verificacao.routes.js';
 import * as gestorModule from '#modules/gestor/index.js';
 import * as clinicaModule from '#modules/clinica/index.js';
@@ -31,6 +34,33 @@ import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } fr
 // Para habilitar Escalas no futuro, use ENABLE_ESCALAS=1.
 const registry = [gestorModule, clinicaModule, condominiosModule, portalMoradorModule];
 
+let __portsBound = false;
+const SERVER_CLOSE_STATE_KEY = '__wdgestorCreateServerCloseState__';
+
+function isNodeTestRuntime() {
+  const args = [...(process.execArgv || []), ...(process.argv || [])];
+  if (args.some((arg) => String(arg || '').startsWith('--test'))) {
+    return true;
+  }
+  return args.some((arg) => /\.test\.[cm]?js$/i.test(String(arg || '')));
+}
+
+function getServerCloseState() {
+  const g = globalThis;
+  if (!g[SERVER_CLOSE_STATE_KEY]) {
+    g[SERVER_CLOSE_STATE_KEY] = { activeInstances: 0, shouldStopMemoryServer: false };
+  }
+  return g[SERVER_CLOSE_STATE_KEY];
+}
+
+function bindPortsOnce() {
+  if (__portsBound) return;
+  const ports = getPorts();
+  Object.assign(BankPort, ports.bank);
+  Object.assign(DocumentosPort, ports.documentos);
+  __portsBound = true;
+}
+
 export async function createServer(options = {}) {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -39,8 +69,13 @@ export async function createServer(options = {}) {
   const skipDb = options.skipDb === true;
   const skipDbForced = options.skipDb === true;
   const isParityEnv = String(process.env.PARITY || '').trim() === '1';
-  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || process.argv.includes('--test') || options.skipDb === true || isParityEnv;
+  const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || isNodeTestRuntime() || options.skipDb === true || isParityEnv;
   const app = express();
+  const closeState = getServerCloseState();
+  closeState.activeInstances += 1;
+  let closeCalled = false;
+
+  bindPortsOnce();
 
   const traceRequests = String(process.env.WD_TRACE_REQUESTS || '').trim() === '1';
   app.use((req, res, next) => {
@@ -243,7 +278,7 @@ export async function createServer(options = {}) {
                 if (!segment || segment === 'gestor') return 'Gestor';
                 if (segment === 'escalas') return 'Escalas';
                 if (!req.app.locals.skipDb && mongoose.connection.readyState === 1) {
-                  const ModuloModel = (await import('#core/models/modulo.js')).default;
+                  const ModuloModel = (await import('#models/modulo.js')).default;
                   const m = await ModuloModel.findOne({
                     $or: [
                       { url_base: '/' + segment },
@@ -672,7 +707,7 @@ export async function createServer(options = {}) {
         // Tenta obter o nome e status a partir do banco se disponível
         try {
           if (!req.app.locals.skipDb && mongoose.connection.readyState === 1) {
-            const ModuloModel = (await import('#core/models/modulo.js')).default;
+            const ModuloModel = (await import('#models/modulo.js')).default;
             const m = await ModuloModel.findOne({
               $or: [
                 { url_base: '/' + seg },
@@ -1051,7 +1086,7 @@ export async function createServer(options = {}) {
         }
         // Carrega modelo de Módulo on-demand
         let ModuloModel = null;
-        try { const mod = await import('#core/models/modulo.js'); ModuloModel = mod.default || mod; } catch { ModuloModel = null; }
+        try { const mod = await import('#models/modulo.js'); ModuloModel = mod.default || mod; } catch { ModuloModel = null; }
         if (!ModuloModel && !isForced) return next();
         // Tenta localizar o módulo pelo url_base; se não achar, tenta variações e por nome
         let modulo = null;
@@ -1195,15 +1230,15 @@ export async function createServer(options = {}) {
   app.use('/api', (req, res, next) => {
     try {
       if (isTestEnv) return next();
+      const original = String(req.originalUrl || req.url || '');
       // Se já for uma sub-rota tratada acima (/api/escalas), deixa seguir
-      if ((req.originalUrl || req.url || '').startsWith('/api/escalas')) return next();
+      if (original.startsWith('/api/escalas')) return next();
       // Exceções: rotas públicas utilitárias que precisam ficar no root /api
-      if ((req.originalUrl || req.url || '').startsWith('/api/cep')) return next();
+      if (original.startsWith('/api/cep')) return next();
 
       // Importante: quando a UI do Portal do Morador (sub-app) chama por engano /api/msg/*,
       // o redirect genérico para /gestor/api/* resulta em 401 e dá a sensação de "deslogar".
       // Detecta via Referer e redireciona para o prefixo correto do Portal.
-      const original = String(req.originalUrl || req.url || '');
       if (original.startsWith('/api/msg')) {
         const ref = String(req.get('referer') || '').toLowerCase();
         if (ref.includes('/portal-morador/') || ref.includes('/portal_morador/')) {
@@ -1211,8 +1246,7 @@ export async function createServer(options = {}) {
         }
       }
 
-      const target = '/gestor' + (req.originalUrl || req.url || '');
-      return res.redirect(307, target);
+      return res.redirect(307, '/gestor' + original);
     } catch { return next(); }
   });
 
@@ -1424,8 +1458,8 @@ export async function createServer(options = {}) {
           uriHint: (process.env.MONGO_URI || process.env.MONGODB_URI || (typeof cn?.client?.s?.url === 'string' ? cn.client.s.url : null)) || null,
         };
         // Contagens básicas
-        const Unidade = await importWithFallback('#core/models/unidade.js', '#core/models/unidade.js');
-        const User = await importWithFallback('#core/models/user.js', '#core/models/user.js');
+        const Unidade = await importWithFallback('#models/unidade.js', '#models/unidade.js');
+        const User = await importWithFallback('#models/user.js', '#models/user.js');
         let counts = {};
         try { counts.unidades = Unidade ? await Unidade.countDocuments({}) : null; } catch { counts.unidades = null; }
         try { counts.usuarios = User ? await User.countDocuments({}) : null; } catch { counts.usuarios = null; }
@@ -1463,7 +1497,7 @@ export async function createServer(options = {}) {
     app.get(['/', '/index'], async (req, res, next) => {
       try {
         let ModuloModel = null;
-        try { const mod = await import('#core/models/modulo.js'); ModuloModel = mod.default || mod; } catch {}
+        try { const mod = await import('#models/modulo.js'); ModuloModel = mod.default || mod; } catch {}
         let modulos = [];
         try {
           if (ModuloModel && mongoose.connection.readyState === 1) {
@@ -1612,10 +1646,20 @@ export async function createServer(options = {}) {
   }
 
   const close = async ({ stopMemoryServer = true } = {}) => {
+    if (closeCalled) return;
+    closeCalled = true;
+
+    closeState.activeInstances = Math.max(0, Number(closeState.activeInstances || 0) - 1);
+    closeState.shouldStopMemoryServer = closeState.shouldStopMemoryServer || !!stopMemoryServer;
+
     const isParityLike = String(process.env.PARITY || '').trim() === '1' || String(process.env.PARITY_RUNNER || '').trim() === '1';
-    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test') || isParityLike;
+    const isTestLike = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || isNodeTestRuntime() || isParityLike;
     if (!isTestLike) return;
-    await disconnectMongo({ stopMemoryServer });
+    if (closeState.activeInstances > 0) return;
+
+    const shouldStopMemoryServer = closeState.shouldStopMemoryServer;
+    closeState.shouldStopMemoryServer = false;
+    await disconnectMongo({ stopMemoryServer: shouldStopMemoryServer });
   };
 
   return { app, config, registerErrorHandlers, close };

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import CondAssembleia from '#core/models/cond_assembleia.js';
-import CondAssembleiaExecution from '#core/models/cond_assembleia_execution.js';
+import CondAssembleia from '#models/cond_assembleia.js';
+import CondAssembleiaExecution from '#models/cond_assembleia_execution.js';
 
 function safeStr(v, max = 4000) {
   const s = String(v ?? '').trim();

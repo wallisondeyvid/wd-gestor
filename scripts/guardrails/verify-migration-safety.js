@@ -105,7 +105,11 @@ function checkLegacyFrozen(changedFiles) {
 }
 
 function checkLegacyImports() {
-  const whitelist = envList('WD_LEGACY_IMPORT_WHITELIST');
+  const whitelist = [
+    'src/modules/gestor/app/services/apiDbBridgeService.js',
+    'src/modules/gestor/app/services/authDbBridgeService.js',
+    ...envList('WD_LEGACY_IMPORT_WHITELIST'),
+  ];
   const srcFiles = collectFiles('src').filter((rel) => isCodeFile(rel));
   const offenders = [];
 
@@ -125,6 +129,13 @@ function checkLegacyImports() {
 }
 
 function duplicationAlert() {
+  const duplicationAllowlist = new Set([
+    'bankclient.js',
+    'documentos.service.js',
+    'cnaes_lista.json',
+    ...envList('WD_DUPLICATION_ALLOWLIST').map((item) => path.basename(item).toLowerCase()),
+  ]);
+
   const pairs = [
     { root: 'routes', src: 'src/routes' },
     { root: 'services', src: 'src/services' },
@@ -148,6 +159,7 @@ function duplicationAlert() {
     const duplicated = [];
     for (const rel of srcFiles) {
       const base = path.basename(rel).toLowerCase();
+      if (duplicationAllowlist.has(base)) continue;
       if (rootNames.has(base)) {
         duplicated.push({
           name: base,

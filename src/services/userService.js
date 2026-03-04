@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { sendMail } from '#core/mail/mailer.js';
 import { welcomePassword } from '#mail/templates/welcomePassword.js';
 // Importar o modelo User
-import User from '#core/models/user.js';
+import User from '#models/user.js';
 
 function generateTempPassword() {
   // Gerar senha alfanumérica mais segura (8 caracteres)

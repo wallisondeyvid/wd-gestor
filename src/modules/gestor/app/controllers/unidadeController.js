@@ -1,35 +1,44 @@
 // Controller de Unidades (migrado do legado)
-import Unidade from '#models/unidade.js';
-import User from '#models/user.js';
-import Funcionario from '#models/Funcionario.js';
-import { callBankApi, getOAuthTokenFromConfig } from '#services/bank/bankClient.js';
+import {
+  findAllUnidades,
+  findUnidadesByMatrizOuPrincipal,
+  findUnidadesById,
+  findUnidadeByIdLean,
+  findAllUnidadesLean,
+  findUnidadesAtivasStatusLean,
+  findUsuariosDiretorAtivosPopulatedLean,
+  findFuncionariosByEmailsSelectEmailNomeLean,
+  findUnidadeById,
+  saveUnidadeDoc,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { BankPort } from '#shared/ports/bank.port.js';
 
 export async function listarUnidades(req, res) {
   try {
     if (!req.user) return res.redirect('/login');
     let unidadesFiltradas;
     if (req.user.isMaster) {
-      unidadesFiltradas = await Unidade.find();
+      unidadesFiltradas = await findAllUnidades();
       try {
         const principais = unidadesFiltradas.filter(u => u.is_principal);
         if (principais.length === 1) {
           const idsExistentes = new Set(unidadesFiltradas.map(u => u._id.toString()));
             const orfas = unidadesFiltradas.filter(u => !u.is_principal && u.unidade_principal_id && !idsExistentes.has(u.unidade_principal_id.toString()));
             if (orfas.length) {
-              await Promise.all(orfas.map(async f => { f.unidade_principal_id = principais[0]._id; try { await f.save(); } catch {} }));
-              unidadesFiltradas = await Unidade.find();
+              await Promise.all(orfas.map(async f => { f.unidade_principal_id = principais[0]._id; try { await saveUnidadeDoc(f); } catch {} }));
+              unidadesFiltradas = await findAllUnidades();
             }
         }
       } catch {}
     } else {
       const matrizRef = req.user.unidade_principal_id || req.user.unidade_id;
       if (matrizRef) {
-        unidadesFiltradas = await Unidade.find({ $or: [ { _id: matrizRef }, { unidade_principal_id: matrizRef } ] });
+        unidadesFiltradas = await findUnidadesByMatrizOuPrincipal(matrizRef);
       } else {
         unidadesFiltradas = [];
       }
       if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && req.user.unidade_id) {
-        const unica = await Unidade.find({ _id: req.user.unidade_id });
+        const unica = await findUnidadesById(req.user.unidade_id);
         unidadesFiltradas = unica;
       }
     }
@@ -51,27 +60,25 @@ export async function listarUnidades(req, res) {
     });
     let principalUnits = unidadesFiltradas.filter(u => u.is_principal);
     if (principalUnits.length === 0 && req.user.unidade_principal_id) {
-      const principalDoc = await Unidade.findById(req.user.unidade_principal_id).lean();
+      const principalDoc = await findUnidadeByIdLean(req.user.unidade_principal_id);
       if (principalDoc) principalUnits = [principalDoc];
     }
     if (principalUnits.length === 0 && req.user.unidade_id) {
-      const doc = await Unidade.findById(req.user.unidade_id).lean();
+      const doc = await findUnidadeByIdLean(req.user.unidade_id);
       if (doc) principalUnits = [doc];
     }
     const modulos = req.user.isMaster || req.user.role === 'admin'
-      ? await Unidade.find().lean()
-      : await Unidade.find({ status: 'ativo' }).lean();
+      ? await findAllUnidadesLean()
+      : await findUnidadesAtivasStatusLean();
     let usuariosDiretor = [];
     if (req.user.isMaster || req.user.role === 'admin') {
-      usuariosDiretor = await User.find({ ativo: true, role: 'diretor' })
-        .populate('funcionario_id', 'nome email')
-        .lean();
+      usuariosDiretor = await findUsuariosDiretorAtivosPopulatedLean();
       const faltando = usuariosDiretor.filter(u => !((u.nome && u.nome.trim()) || (u.funcionario_id && u.funcionario_id.nome) || u.email));
       let mapaFuncPorEmail = {};
       if (faltando.length){
         const emails = [...new Set(faltando.map(f=>f.email?.toLowerCase()).filter(Boolean))];
         try {
-          const funcs = await Funcionario.find({ email: { $in: emails } }).select('email nome').lean();
+          const funcs = await findFuncionariosByEmailsSelectEmailNomeLean(emails);
           funcs.forEach(f => { if(f.email) mapaFuncPorEmail[f.email.toLowerCase()] = f.nome; });
         } catch {}
       }
@@ -106,7 +113,7 @@ export async function testarBanco(req, res) {
       return res.status(400).json({ ok: false, message: 'ID da unidade é obrigatório.' });
     }
 
-    const unidade = await Unidade.findById(unidadeId);
+    const unidade = await findUnidadeById(unidadeId);
     if (!unidade) {
       return res.status(404).json({ ok: false, message: 'Unidade não encontrada.' });
     }
@@ -121,14 +128,14 @@ export async function testarBanco(req, res) {
     let resultado = null;
 
     if (tipo === 'oauth2') {
-      const token = await getOAuthTokenFromConfig(cfg);
+      const token = await BankPort.getOAuthTokenFromConfig(cfg);
       detalhe = 'Token OAuth2 obtido com sucesso.';
       resultado = { tokenPreview: token ? `${token.slice(0, 10)}...` : null };
     } else {
       const path = (req.body?.path || '/');
       const method = (req.body?.method || 'GET');
       const data = req.body?.data;
-      resultado = await callBankApi(unidadeId, { method, path, data });
+      resultado = await BankPort.callBankApi(unidadeId, { method, path, data });
       detalhe = `${method.toUpperCase()} ${path} executado com sucesso.`;
     }
 

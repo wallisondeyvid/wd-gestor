@@ -21,7 +21,7 @@ const requireApiAuth = async (req, res, next) => {
       // Para usuários master, tentar obter a unidade principal do sistema
       if (user.role === 'master' && !unidadeId) {
         try {
-          const Unidade = (await import('#core/models/unidade.js')).default;
+          const Unidade = (await import('#models/unidade.js')).default;
           const unidadePrincipal = await Unidade.findOne({ is_principal: true }).lean();
           if (unidadePrincipal) {
             unidadeId = unidadePrincipal._id;
@@ -32,7 +32,7 @@ const requireApiAuth = async (req, res, next) => {
         }
       } else if (unidadeId) {
         try {
-          const Unidade = (await import('#core/models/unidade.js')).default;
+          const Unidade = (await import('#models/unidade.js')).default;
           const unidadeDoc = await Unidade.findById(unidadeId).lean();
           if (unidadeDoc) {
             unidadePrincipalId = unidadeDoc.is_principal ? unidadeDoc._id : (unidadeDoc.unidade_principal_id || null);
@@ -59,7 +59,7 @@ const requireApiAuth = async (req, res, next) => {
           }
           // Verificar se é diretor da unidade
           try {
-            const Unidade = (await import('#core/models/unidade.js')).default;
+            const Unidade = (await import('#models/unidade.js')).default;
             const unidade = await Unidade.findById(unidadeId);
             if (!unidade || unidade.diretor_usuario_id?.toString() !== user._id.toString()) {
               return res.status(403).json({ error: 'Diretor deve ser diretor da unidade' });
@@ -99,7 +99,7 @@ const requireApiAuth = async (req, res, next) => {
 
     // Fallback: modo antigo baseado em Funcionário (se existir)
     try {
-  const Funcionario = (await import('#core/models/Funcionario.js')).default;
+  const Funcionario = (await import('#models/Funcionario.js')).default;
       const funcionario = await Funcionario.findOne({ email: req.session.user.email.toLowerCase() });
       if (!funcionario) return res.status(401).json({ error: 'Usuário não encontrado' });
 
@@ -176,7 +176,7 @@ const requireSessionBasic = async (req, res, next) => {
     }
     // Fallback para Funcionário
     try {
-  const Funcionario = (await import('#core/models/Funcionario.js')).default;
+  const Funcionario = (await import('#models/Funcionario.js')).default;
       const funcionario = await Funcionario.findOne({ email }).lean();
       if (!funcionario) return res.status(401).json({ error: 'Usuário não encontrado' });
       req.user = {
@@ -206,7 +206,7 @@ router.get('/api/usuario', requireSessionBasic, async (req, res) => {
     let userDoc = await User.findOne({ email }).lean();
     let funcDoc = null;
     if (!userDoc) {
-  const Funcionario = (await import('#core/models/Funcionario.js')).default;
+  const Funcionario = (await import('#models/Funcionario.js')).default;
       funcDoc = await Funcionario.findOne({ email }).lean();
       if (!funcDoc) return res.status(404).json({ error: 'Usuário não encontrado' });
     }
@@ -223,7 +223,7 @@ router.get('/api/usuario', requireSessionBasic, async (req, res) => {
     let unidade_nome = null;
     if (role !== 'master' && unidade_id) {
       try {
-  const Unidade = (await import('#core/models/unidade.js')).default;
+  const Unidade = (await import('#models/unidade.js')).default;
         const un = await Unidade.findById(unidade_id).select('nome').lean();
         unidade_nome = un?.nome || null;
       } catch (e) {

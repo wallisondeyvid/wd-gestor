@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import CondAuditLog from '#core/models/cond_audit_log.js';
+import CondAuditLog from '#models/cond_audit_log.js';
 
 function safeStr(v, max = 400) {
   const s = String(v ?? '').trim();

@@ -1,8 +1,8 @@
 import express from 'express';
 import Ferias from '#models/ferias.js';
-import Funcionario from '#core/models/Funcionario.js';
+import Funcionario from '#models/Funcionario.js';
 import mongoose from 'mongoose';
-import Unidade from '#core/models/unidade.js';
+import Unidade from '#models/unidade.js';
 import path from 'path';
 import fs from 'fs';
 // Import PDF kit apenas quando necessário (lazy) para não quebrar módulo se faltar dependência

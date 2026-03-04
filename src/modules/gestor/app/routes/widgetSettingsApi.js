@@ -1,8 +1,11 @@
 import express from 'express';
-import WidgetSetting from '#models/widgetSetting.js';
 import { bustWidgetEnabledCache } from '#core/utils/widgetSettings.js';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 import { requireRole } from '#modules/gestor/app/middlewares/requireRole.js';
+import {
+  findWidgetSettingsFeedbackLean,
+  updateWidgetSettingsFeedbackModuleEnabledUpsert,
+} from '#modules/gestor/app/db/api.db.js';
 
 const router = express.Router();
 
@@ -26,7 +29,7 @@ let cache = { at: 0, map: null };
 const CACHE_TTL_MS = 30_000;
 
 async function getVisibilityMapFresh() {
-  const rows = await WidgetSetting.find({ widget: 'feedback' }).lean();
+  const rows = await findWidgetSettingsFeedbackLean();
   /** @type {Record<string, boolean>} */
   const enabledByModule = {};
   for (const m of KNOWN_MODULES) enabledByModule[m.id] = true;
@@ -83,11 +86,7 @@ router.put('/api/gestor/widgets/feedback', requireLogin, requireRole(['admin'], 
     const exists = KNOWN_MODULES.some(m => m.id === moduleId);
     if (!exists) return res.status(400).json({ ok: false, error: 'Módulo não reconhecido.' });
 
-    await WidgetSetting.updateOne(
-      { widget: 'feedback', module: moduleId },
-      { $set: { enabled } },
-      { upsert: true }
-    );
+    await updateWidgetSettingsFeedbackModuleEnabledUpsert(moduleId, enabled);
 
     bustCache();
     bustWidgetEnabledCache();
