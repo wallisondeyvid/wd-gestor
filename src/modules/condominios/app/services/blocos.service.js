@@ -1,5 +1,10 @@
 import { AndaresRepository } from '#modules/condominios/app/repositories/AndaresRepository.js';
 import { BlocosRepository } from '#modules/condominios/app/repositories/BlocosRepository.js';
+import { createUnitScope } from '#shared/unitScope.js';
+
+function unitScopeFromUnidadeId(unidadeId) {
+  return unidadeId ? createUnitScope({ unidadeId }) : { type: 'global', unidadeId: null };
+}
 
 export async function listarBlocosService({
   req,
@@ -65,10 +70,11 @@ export async function criarBlocoService({
   skipDb,
   CondBloco
 }) {
-  const repo = new BlocosRepository({ unitScope: null });
+  const { unidade_id, nome, ordem } = body || {};
+  const unidadeIdDerivado = (unidade_id && mongoose.isValidObjectId(String(unidade_id))) ? String(unidade_id) : '';
+  const repo = new BlocosRepository({ unitScope: unitScopeFromUnidadeId(unidadeIdDerivado) });
   assertDbAvailable({ mongoose, skipDb });
 
-  const { unidade_id, nome, ordem } = body || {};
   if (!unidade_id || !nome) {
     const err = new Error('Dados obrigatórios ausentes');
     err.__httpStatus = 400;
@@ -110,7 +116,7 @@ export async function atualizarBlocoService({
   skipDb,
   CondBloco
 }) {
-  const repo = new BlocosRepository({ unitScope: null });
+  const repo = new BlocosRepository({ unitScope: unitScopeFromUnidadeId('') });
   assertDbAvailable({ mongoose, skipDb });
   try {
     const { nome, ordem, ativo } = body || {};
@@ -135,7 +141,7 @@ export async function excluirBlocoService({
   skipDb,
   CondBloco
 }) {
-  const repo = new BlocosRepository({ unitScope: null });
+  const repo = new BlocosRepository({ unitScope: unitScopeFromUnidadeId('') });
   assertDbAvailable({ mongoose, skipDb });
   try {
     await repo.deleteById({ id });
