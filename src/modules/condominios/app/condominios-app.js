@@ -48,9 +48,10 @@ import CondAssembleia from '#models/cond_assembleia.js';
 import CondAssembleiaExecution from '#models/cond_assembleia_execution.js';
 import CondAssembleiaSettings from '#models/cond_assembleia_settings.js';
 import mountAssembleias from '#modules/condominios/assembleias/index.js';
+import { requireUnitScope } from '#modules/condominios/app/middlewares/requireUnitScope.js';
 import { handleGetAndaresV2, handleGetAndarByIdV2, handleGetAndaresRelacionadosV2, setHandleGetAndaresV2Context } from '#modules/condominios/app/v2/routes/andares.routes.js';
-import { handleGetBlocosV2, handleGetBlocoByIdV2, handleGetBlocosRelacionadosV2, handlePostBlocosV2, handlePutBlocosV2, handleDeleteBlocosV2, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
-import { handleGetUnidadesV2, handleGetUnidadeByIdV2, handleGetUnidadesRelacionadasV2, setHandleGetUnidadesV2Context } from '#modules/condominios/app/v2/routes/unidades.routes.js';
+import { handleGetBlocosV2 as handleGetBlocosV2Raw, handleGetBlocoByIdV2, handleGetBlocosRelacionadosV2, handlePostBlocosV2 as handlePostBlocosV2Raw, handlePutBlocosV2 as handlePutBlocosV2Raw, handleDeleteBlocosV2 as handleDeleteBlocosV2Raw, setHandleGetBlocosV2Context } from '#modules/condominios/app/v2/routes/blocos.routes.js';
+import { handleGetUnidadesV2, handleGetUnidadeByIdV2 as handleGetUnidadeByIdV2Raw, handleGetUnidadesRelacionadasV2, setHandleGetUnidadesV2Context } from '#modules/condominios/app/v2/routes/unidades.routes.js';
 import { listarUnidadesService, obterUnidadePorIdService, listarUnidadesRelacionadasService } from '#modules/condominios/app/services/unidades.service.js';
 import { UnidadesReadRepository } from '#modules/condominios/app/repositories/UnidadesReadRepository.js';
 import { listarBlocosService, obterBlocoPorIdService, listarBlocosRelacionadosService, criarBlocoService, atualizarBlocoService, excluirBlocoService } from '#modules/condominios/app/services/blocos.service.js';
@@ -211,6 +212,16 @@ function getUnitScope(req) {
   if (req?.ctx?.unitScope) return req.ctx.unitScope;
   return { type: 'global', unidadeId: null };
 }
+
+function withRequiredUnitScope(handler) {
+  return (req, res, next) => requireUnitScope(req, res, () => handler(req, res, next));
+}
+
+const handleGetUnidadeByIdV2 = withRequiredUnitScope(handleGetUnidadeByIdV2Raw);
+const handleGetBlocosV2 = withRequiredUnitScope(handleGetBlocosV2Raw);
+const handlePostBlocosV2 = withRequiredUnitScope(handlePostBlocosV2Raw);
+const handlePutBlocosV2 = withRequiredUnitScope(handlePutBlocosV2Raw);
+const handleDeleteBlocosV2 = withRequiredUnitScope(handleDeleteBlocosV2Raw);
 
 // Retenção: remove enquetes finalizadas/encerradas após 3 meses para evitar crescimento do banco
 const ENQUETE_RETENTION_MONTHS = 3;
