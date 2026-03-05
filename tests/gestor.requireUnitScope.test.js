@@ -6,18 +6,13 @@ import { createServer } from '../src/server/createServer.js';
 
 async function withEnforcedMultiTenant(buildRequest) {
   const prevMultiTenant = process.env.WDG_MULTI_TENANT;
-  const prevGestorV2 = process.env.WDG_FLAG_GESTOR_V2;
   process.env.WDG_MULTI_TENANT = '1';
-  process.env.WDG_FLAG_GESTOR_V2 = '1';
 
   try {
     return await buildRequest();
   } finally {
     if (prevMultiTenant === undefined) delete process.env.WDG_MULTI_TENANT;
     else process.env.WDG_MULTI_TENANT = prevMultiTenant;
-
-    if (prevGestorV2 === undefined) delete process.env.WDG_FLAG_GESTOR_V2;
-    else process.env.WDG_FLAG_GESTOR_V2 = prevGestorV2;
   }
 }
 
