@@ -8,12 +8,23 @@ const resolveConnectionModuleUrl = pathToFileURL(
   path.join(process.cwd(), 'src/shared/db/resolveConnection.js')
 ).href;
 
+const userDbHandshakeModuleUrl = pathToFileURL(
+  path.join(process.cwd(), 'src/shared/db/userdbHandshake.js')
+).href;
+
 let importNonce = 0;
 
 async function loadResolveConnectionFresh() {
   importNonce += 1;
   const mod = await import(`${resolveConnectionModuleUrl}?test=${importNonce}`);
   return mod.resolveConnection;
+}
+
+async function clearUserDbHandshakeCacheState() {
+  const mod = await import(userDbHandshakeModuleUrl);
+  if (typeof mod.clearUserDbHandshakeCache === 'function') {
+    mod.clearUserDbHandshakeCache();
+  }
 }
 
 function setMultiDbFlag(value) {
@@ -51,6 +62,7 @@ test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama use
   };
 
   try {
+    await clearUserDbHandshakeCacheState();
     setUserDbHandshakeFlag('0');
     for (const flagValue of [undefined, '0', 'false', 'off', 'FALSE']) {
       setMultiDbFlag(flagValue);
@@ -61,6 +73,7 @@ test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama use
 
     assert.equal(useDbCalls.length, 0);
   } finally {
+    await clearUserDbHandshakeCacheState();
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
@@ -81,6 +94,7 @@ test('resolveConnection: WD_MULTI_DB ON usa useDb e retorna tenantConn', async (
   };
 
   try {
+    await clearUserDbHandshakeCacheState();
     setUserDbHandshakeFlag('0');
     setMultiDbFlag('1');
     const resolveConnection = await loadResolveConnectionFresh();
@@ -91,6 +105,7 @@ test('resolveConnection: WD_MULTI_DB ON usa useDb e retorna tenantConn', async (
     assert.equal(useDbCalls.length, 1);
     assert.deepEqual(useDbCalls[0], ['wdgestor_unit_U1', { useCache: true }]);
   } finally {
+    await clearUserDbHandshakeCacheState();
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
@@ -111,6 +126,7 @@ test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade'
   };
 
   try {
+    await clearUserDbHandshakeCacheState();
     setUserDbHandshakeFlag('0');
     setMultiDbFlag('on');
     const resolveConnection = await loadResolveConnectionFresh();
@@ -123,6 +139,7 @@ test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade'
     assert.equal(useDbCalls.length, 1);
     assert.deepEqual(useDbCalls[0], ['wdgestor_unit_U1', { useCache: true }]);
   } finally {
+    await clearUserDbHandshakeCacheState();
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
@@ -152,6 +169,7 @@ test('resolveConnection: WD_MULTI_DB OFF não dispara userdb handshake', async (
   baseConnection.useDb = () => tenantConn;
 
   try {
+    await clearUserDbHandshakeCacheState();
     setMultiDbFlag('0');
     setUserDbHandshakeFlag('1');
     const resolveConnection = await loadResolveConnectionFresh();
@@ -161,6 +179,7 @@ test('resolveConnection: WD_MULTI_DB OFF não dispara userdb handshake', async (
 
     assert.equal(pingCalls, 0);
   } finally {
+    await clearUserDbHandshakeCacheState();
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
@@ -190,6 +209,7 @@ test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=0 não dispara h
   baseConnection.useDb = () => tenantConn;
 
   try {
+    await clearUserDbHandshakeCacheState();
     setMultiDbFlag('1');
     setUserDbHandshakeFlag('0');
     const resolveConnection = await loadResolveConnectionFresh();
@@ -199,6 +219,7 @@ test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=0 não dispara h
 
     assert.equal(pingCalls, 0);
   } finally {
+    await clearUserDbHandshakeCacheState();
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
@@ -228,6 +249,7 @@ test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=1 dispara handsh
   baseConnection.useDb = () => tenantConn;
 
   try {
+    await clearUserDbHandshakeCacheState();
     setMultiDbFlag('1');
     setUserDbHandshakeFlag('1');
     const resolveConnection = await loadResolveConnectionFresh();
@@ -238,7 +260,61 @@ test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=1 dispara handsh
 
     assert.equal(pingCalls, 1);
   } finally {
+    await clearUserDbHandshakeCacheState();
     baseConnection.useDb = originalUseDb;
+    setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
+  }
+});
+
+test('resolveConnection: handshake com probe throw segue nao-bloqueante e no maximo 1x por unidade', async () => {
+  const previousFlag = process.env.WD_MULTI_DB;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const baseConnection = mongoose.connection;
+  const originalUseDb = baseConnection.useDb;
+  const originalWarn = console.warn;
+  let adminCalls = 0;
+  const warnMessages = [];
+
+  const tenantConn = {
+    db: {
+      admin() {
+        adminCalls += 1;
+        throw new Error('PROBE_THROW');
+      }
+    }
+  };
+
+  console.warn = (...args) => {
+    warnMessages.push(String(args[0] || ''));
+  };
+
+  baseConnection.useDb = () => tenantConn;
+
+  try {
+    await clearUserDbHandshakeCacheState();
+    setMultiDbFlag('1');
+    setUserDbHandshakeFlag('1');
+    const resolveConnection = await loadResolveConnectionFresh();
+
+    assert.doesNotThrow(() => {
+      const result = resolveConnection({ unidadeId: '000000000000000000000010' });
+      assert.strictEqual(result, tenantConn);
+    });
+
+    assert.doesNotThrow(() => {
+      const result = resolveConnection({ unidadeId: '000000000000000000000010' });
+      assert.strictEqual(result, tenantConn);
+    });
+
+    await flushAsyncWork();
+
+    assert.equal(adminCalls, 1);
+    assert.ok(warnMessages.some((message) => message.includes('[resolveConnection] userdb handshake falhou')));
+  } finally {
+    await clearUserDbHandshakeCacheState();
+    baseConnection.useDb = originalUseDb;
+    console.warn = originalWarn;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
   }
