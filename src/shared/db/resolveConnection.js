@@ -20,6 +20,20 @@ function isMultiDbEnabled() {
   return raw === '1' || raw === 'true' || raw === 'on';
 }
 
+function isTenantDbAllowedForUnit(unidadeId) {
+  const unitKey = String(unidadeId || '').trim().toLowerCase();
+  if (!unitKey) return false;
+
+  const rawAllowlist = String(process.env.WD_MULTI_DB_ALLOWLIST || '');
+  const allowlist = rawAllowlist
+    .split(',')
+    .map((item) => String(item || '').trim().toLowerCase())
+    .filter(Boolean);
+
+  if (allowlist.length === 0) return false;
+  return allowlist.includes(unitKey);
+}
+
 function isUserDbHandshakeEnabled() {
   const raw = String(process.env.WD_USERDB_HANDSHAKE || '').trim().toLowerCase();
   return raw === '1' || raw === 'true' || raw === 'on';
@@ -157,6 +171,10 @@ export function resolveConnection(unitScope) {
   }
 
   if (!unidadeId) {
+    return baseConnection;
+  }
+
+  if (!isTenantDbAllowedForUnit(unidadeId)) {
     return baseConnection;
   }
 

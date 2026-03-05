@@ -43,6 +43,14 @@ function setUserDbHandshakeFlag(value) {
   process.env.WD_USERDB_HANDSHAKE = value;
 }
 
+function setMultiDbAllowlist(value) {
+  if (value === undefined) {
+    delete process.env.WD_MULTI_DB_ALLOWLIST;
+    return;
+  }
+  process.env.WD_MULTI_DB_ALLOWLIST = value;
+}
+
 async function flushAsyncWork() {
   await new Promise((resolve) => setImmediate(resolve));
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -51,6 +59,7 @@ async function flushAsyncWork() {
 test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama useDb', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
   const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   const tenantConn = { name: 'tenantConn' };
@@ -64,6 +73,7 @@ test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama use
   try {
     await clearUserDbHandshakeCacheState();
     setUserDbHandshakeFlag('0');
+    setMultiDbAllowlist('U1');
     for (const flagValue of [undefined, '0', 'false', 'off', 'FALSE']) {
       setMultiDbFlag(flagValue);
       const resolveConnection = await loadResolveConnectionFresh();
@@ -77,12 +87,14 @@ test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama use
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
   }
 });
 
-test('resolveConnection: WD_MULTI_DB ON usa useDb e retorna tenantConn', async () => {
+test('resolveConnection: WD_MULTI_DB ON com allowlist contendo unidade usa useDb e retorna tenantConn', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
   const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   const tenantConn = { name: 'tenantConn' };
@@ -97,6 +109,7 @@ test('resolveConnection: WD_MULTI_DB ON usa useDb e retorna tenantConn', async (
     await clearUserDbHandshakeCacheState();
     setUserDbHandshakeFlag('0');
     setMultiDbFlag('1');
+    setMultiDbAllowlist('U1');
     const resolveConnection = await loadResolveConnectionFresh();
 
     const result = resolveConnection({ unidadeId: 'U1' });
@@ -109,12 +122,48 @@ test('resolveConnection: WD_MULTI_DB ON usa useDb e retorna tenantConn', async (
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
   }
 });
 
-test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade', async () => {
+test('resolveConnection: WD_MULTI_DB ON com allowlist vazio mantém global e não chama useDb', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
   const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+  const baseConnection = mongoose.connection;
+  const originalUseDb = baseConnection.useDb;
+  const tenantConn = { name: 'tenantConn' };
+  const useDbCalls = [];
+
+  baseConnection.useDb = (...args) => {
+    useDbCalls.push(args);
+    return tenantConn;
+  };
+
+  try {
+    await clearUserDbHandshakeCacheState();
+    setUserDbHandshakeFlag('1');
+    setMultiDbFlag('1');
+    setMultiDbAllowlist('');
+    const resolveConnection = await loadResolveConnectionFresh();
+
+    const result = resolveConnection({ unidadeId: 'U1' });
+
+    assert.strictEqual(result, baseConnection);
+    assert.equal(useDbCalls.length, 0);
+  } finally {
+    await clearUserDbHandshakeCacheState();
+    baseConnection.useDb = originalUseDb;
+    setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
+  }
+});
+
+test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade com allowlist', async () => {
+  const previousFlag = process.env.WD_MULTI_DB;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   const tenantConn = { name: 'tenantConn' };
@@ -129,6 +178,7 @@ test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade'
     await clearUserDbHandshakeCacheState();
     setUserDbHandshakeFlag('0');
     setMultiDbFlag('on');
+    setMultiDbAllowlist('U1');
     const resolveConnection = await loadResolveConnectionFresh();
 
     const resultA = resolveConnection({ unidadeId: 'U1' });
@@ -143,12 +193,14 @@ test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade'
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
   }
 });
 
 test('resolveConnection: WD_MULTI_DB OFF não dispara userdb handshake', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
   const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   let pingCalls = 0;
@@ -172,6 +224,7 @@ test('resolveConnection: WD_MULTI_DB OFF não dispara userdb handshake', async (
     await clearUserDbHandshakeCacheState();
     setMultiDbFlag('0');
     setUserDbHandshakeFlag('1');
+    setMultiDbAllowlist('000000000000000000000010');
     const resolveConnection = await loadResolveConnectionFresh();
 
     resolveConnection({ unidadeId: '000000000000000000000010' });
@@ -183,12 +236,14 @@ test('resolveConnection: WD_MULTI_DB OFF não dispara userdb handshake', async (
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
   }
 });
 
 test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=0 não dispara handshake', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
   const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   let pingCalls = 0;
@@ -212,6 +267,7 @@ test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=0 não dispara h
     await clearUserDbHandshakeCacheState();
     setMultiDbFlag('1');
     setUserDbHandshakeFlag('0');
+    setMultiDbAllowlist('000000000000000000000010');
     const resolveConnection = await loadResolveConnectionFresh();
 
     resolveConnection({ unidadeId: '000000000000000000000010' });
@@ -223,12 +279,14 @@ test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=0 não dispara h
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
   }
 });
 
 test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=1 dispara handshake uma única vez por unidade', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
   const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   let pingCalls = 0;
@@ -252,6 +310,7 @@ test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=1 dispara handsh
     await clearUserDbHandshakeCacheState();
     setMultiDbFlag('1');
     setUserDbHandshakeFlag('1');
+    setMultiDbAllowlist('000000000000000000000010');
     const resolveConnection = await loadResolveConnectionFresh();
 
     resolveConnection({ unidadeId: '000000000000000000000010' });
@@ -264,12 +323,14 @@ test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=1 dispara handsh
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
   }
 });
 
 test('resolveConnection: handshake com probe throw segue nao-bloqueante e no maximo 1x por unidade', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
   const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   const originalWarn = console.warn;
@@ -295,6 +356,7 @@ test('resolveConnection: handshake com probe throw segue nao-bloqueante e no max
     await clearUserDbHandshakeCacheState();
     setMultiDbFlag('1');
     setUserDbHandshakeFlag('1');
+    setMultiDbAllowlist('000000000000000000000010');
     const resolveConnection = await loadResolveConnectionFresh();
 
     assert.doesNotThrow(() => {
@@ -317,5 +379,6 @@ test('resolveConnection: handshake com probe throw segue nao-bloqueante e no max
     console.warn = originalWarn;
     setMultiDbFlag(previousFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
   }
 });
