@@ -24,8 +24,22 @@ function setMultiDbFlag(value) {
   process.env.WD_MULTI_DB = value;
 }
 
+function setUserDbHandshakeFlag(value) {
+  if (value === undefined) {
+    delete process.env.WD_USERDB_HANDSHAKE;
+    return;
+  }
+  process.env.WD_USERDB_HANDSHAKE = value;
+}
+
+async function flushAsyncWork() {
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama useDb', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   const tenantConn = { name: 'tenantConn' };
@@ -37,6 +51,7 @@ test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama use
   };
 
   try {
+    setUserDbHandshakeFlag('0');
     for (const flagValue of [undefined, '0', 'false', 'off', 'FALSE']) {
       setMultiDbFlag(flagValue);
       const resolveConnection = await loadResolveConnectionFresh();
@@ -48,11 +63,13 @@ test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama use
   } finally {
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
   }
 });
 
 test('resolveConnection: WD_MULTI_DB ON usa useDb e retorna tenantConn', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   const tenantConn = { name: 'tenantConn' };
@@ -64,6 +81,7 @@ test('resolveConnection: WD_MULTI_DB ON usa useDb e retorna tenantConn', async (
   };
 
   try {
+    setUserDbHandshakeFlag('0');
     setMultiDbFlag('1');
     const resolveConnection = await loadResolveConnectionFresh();
 
@@ -75,11 +93,13 @@ test('resolveConnection: WD_MULTI_DB ON usa useDb e retorna tenantConn', async (
   } finally {
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
   }
 });
 
 test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
   const baseConnection = mongoose.connection;
   const originalUseDb = baseConnection.useDb;
   const tenantConn = { name: 'tenantConn' };
@@ -91,6 +111,7 @@ test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade'
   };
 
   try {
+    setUserDbHandshakeFlag('0');
     setMultiDbFlag('on');
     const resolveConnection = await loadResolveConnectionFresh();
 
@@ -104,5 +125,121 @@ test('resolveConnection: cache evita chamar useDb duas vezes para mesma unidade'
   } finally {
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
+  }
+});
+
+test('resolveConnection: WD_MULTI_DB OFF não dispara userdb handshake', async () => {
+  const previousFlag = process.env.WD_MULTI_DB;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const baseConnection = mongoose.connection;
+  const originalUseDb = baseConnection.useDb;
+  let pingCalls = 0;
+
+  const tenantConn = {
+    db: {
+      admin() {
+        return {
+          async ping() {
+            pingCalls += 1;
+            return { ok: 1 };
+          }
+        };
+      }
+    }
+  };
+
+  baseConnection.useDb = () => tenantConn;
+
+  try {
+    setMultiDbFlag('0');
+    setUserDbHandshakeFlag('1');
+    const resolveConnection = await loadResolveConnectionFresh();
+
+    resolveConnection({ unidadeId: '000000000000000000000010' });
+    await flushAsyncWork();
+
+    assert.equal(pingCalls, 0);
+  } finally {
+    baseConnection.useDb = originalUseDb;
+    setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
+  }
+});
+
+test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=0 não dispara handshake', async () => {
+  const previousFlag = process.env.WD_MULTI_DB;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const baseConnection = mongoose.connection;
+  const originalUseDb = baseConnection.useDb;
+  let pingCalls = 0;
+
+  const tenantConn = {
+    db: {
+      admin() {
+        return {
+          async ping() {
+            pingCalls += 1;
+            return { ok: 1 };
+          }
+        };
+      }
+    }
+  };
+
+  baseConnection.useDb = () => tenantConn;
+
+  try {
+    setMultiDbFlag('1');
+    setUserDbHandshakeFlag('0');
+    const resolveConnection = await loadResolveConnectionFresh();
+
+    resolveConnection({ unidadeId: '000000000000000000000010' });
+    await flushAsyncWork();
+
+    assert.equal(pingCalls, 0);
+  } finally {
+    baseConnection.useDb = originalUseDb;
+    setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
+  }
+});
+
+test('resolveConnection: WD_MULTI_DB ON com WD_USERDB_HANDSHAKE=1 dispara handshake uma única vez por unidade', async () => {
+  const previousFlag = process.env.WD_MULTI_DB;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const baseConnection = mongoose.connection;
+  const originalUseDb = baseConnection.useDb;
+  let pingCalls = 0;
+
+  const tenantConn = {
+    db: {
+      admin() {
+        return {
+          async ping() {
+            pingCalls += 1;
+            return { ok: 1 };
+          }
+        };
+      }
+    }
+  };
+
+  baseConnection.useDb = () => tenantConn;
+
+  try {
+    setMultiDbFlag('1');
+    setUserDbHandshakeFlag('1');
+    const resolveConnection = await loadResolveConnectionFresh();
+
+    resolveConnection({ unidadeId: '000000000000000000000010' });
+    resolveConnection({ unidadeId: '000000000000000000000010' });
+    await flushAsyncWork();
+
+    assert.equal(pingCalls, 1);
+  } finally {
+    baseConnection.useDb = originalUseDb;
+    setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
   }
 });
