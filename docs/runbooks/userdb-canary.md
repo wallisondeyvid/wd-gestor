@@ -1,3 +1,23 @@
+# B5 Playbook - Rollout Canario UserDB (1 Unidade Piloto)
+
+## Objetivo
+Habilitar UserDB com risco minimo em producao para **apenas uma unidade piloto**, mantendo comportamento default protegido por deny-by-default e com rollback imediato.
+
+## Escopo e Garantias
+- Sem alteracao de rotas/controllers.
+- Sem relaxar guardrails.
+- `WD_MULTI_DB_ALLOWLIST` continua deny-by-default.
+- Handshake continua nao-bloqueante.
+- Sem novos scripts.
+
+## Variaveis de Ambiente (Exemplos)
+
+### 1) Habilitar canario (1 unidade piloto)
+```env
+WD_MULTI_DB=1
+WD_MULTI_DB_ALLOWLIST=000000000000000000000010
+WD_USERDB_HANDSHAKE=1
+WDG_MULTI_TENANT=1
 # UserDB Canary Runbook
 
 ## Objetivo
