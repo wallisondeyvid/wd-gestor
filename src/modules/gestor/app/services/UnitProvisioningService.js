@@ -1,1 +1,7 @@
-export * from '#modules/gestor/app/services/legacy/UnitProvisioningService.js';
+export {
+	ensureUnitProvisioned,
+	inspectUnitProvisioning,
+	listUnitProvisioningAuditEvents,
+	isUnitProvisioningValidationError,
+	retryUnitProvisioning,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
