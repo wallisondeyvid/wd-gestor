@@ -46,6 +46,8 @@ GET /gestor/api/unidades
 GET /gestor/api/unidades/:id
 GET /gestor/api/unidades/:id/logo
 GET /gestor/api/unidades/:id/modulos
+GET /gestor/api/unidades/:id/provisioning
+GET /gestor/api/unidades/:id/provisioning/events
 GET /gestor/api/unidades/cluster
 GET /gestor/api/usuario
 GET /gestor/api/usuario/foto
@@ -111,6 +113,7 @@ POST /gestor/api/setores/fix-counter
 POST /gestor/api/unidades
 POST /gestor/api/unidades/:id/logo
 POST /gestor/api/unidades/:id/logo-inline
+POST /gestor/api/unidades/:id/provisioning/retry
 POST /gestor/api/unidades/toggle-access
 POST /gestor/api/usuario/foto
 POST /gestor/api/usuarios
