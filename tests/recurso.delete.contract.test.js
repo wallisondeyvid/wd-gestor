@@ -126,3 +126,124 @@ test('DELETE /gestor/api/recursos/:id com req.params.id malformado retorna 400',
     }
   }
 });
+
+test('DELETE /gestor/api/recursos/:id com req.params.id valido porem inexistente retorna 404', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  try {
+    const deleteRes = await agent
+      .delete('/gestor/api/recursos/ffffffffffffffffffffffff')
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(
+      deleteRes.status,
+      404,
+      `Contrato violado: req.params.id valido porem inexistente no delete deveria retornar 404, veio ${deleteRes.status} com body ${JSON.stringify(deleteRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
+
+test('DELETE /gestor/api/recursos/:id com req.params.id existente retorna 200 e deleted true', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  try {
+    const unique = String(Date.now());
+    const createRes = await agent
+      .post('/gestor/api/recursos')
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        unidade_id: '507f1f77bcf86cd799439011',
+        tipo: 'carro',
+        placa: `ABC-${unique.slice(-4).padStart(4, '0')}`,
+        chassi: `9BWZZZ${unique.slice(-11).padStart(11, '0')}`,
+        renavam: unique.slice(-11).padStart(11, '0'),
+        ano: 2020,
+        mod: 2021,
+        marca: 'FIAT',
+        modelo: 'UNO',
+        cor: 'BRANCO',
+      });
+
+    assert.equal(
+      createRes.status,
+      201,
+      `Precondicao violada: criacao de recurso deveria retornar 201, veio ${createRes.status} com body ${JSON.stringify(createRes.body)}`,
+    );
+
+    const recursoId = String(
+      createRes.body?.data?._id
+      || createRes.body?.data?.id
+      || createRes.body?.id
+      || createRes.body?._id
+      || '',
+    );
+
+    assert.ok(
+      recursoId,
+      `Precondicao violada: resposta de criacao nao retornou id do recurso. Body: ${JSON.stringify(createRes.body)}`,
+    );
+
+    const deleteRes = await agent
+      .delete(`/gestor/api/recursos/${recursoId}`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(
+      deleteRes.status,
+      200,
+      `Contrato violado: req.params.id existente no delete deveria retornar 200, veio ${deleteRes.status} com body ${JSON.stringify(deleteRes.body)}`,
+    );
+
+    const deletePayload = deleteRes.body?.data || deleteRes.body;
+
+    assert.equal(
+      deletePayload?.deleted,
+      true,
+      `Contrato violado: body.deleted deveria ser true, veio ${JSON.stringify(deleteRes.body)}`,
+    );
+
+    assert.equal(
+      String(deletePayload?.id),
+      recursoId,
+      `Contrato violado: body.id deveria ser igual ao recursoId criado (${recursoId}), veio ${JSON.stringify(deleteRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
