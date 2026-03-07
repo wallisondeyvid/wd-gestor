@@ -446,7 +446,7 @@ export async function saveSetor(setor) {
 }
 
 export async function findUnidadeUserBaseSetorLean(id) {
-  return findUnidadeUserBaseSetorLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+  return findUnidadeUserBaseSetorLeanRepo({ unitScope: scopeFromUnidadeId(id), id });
 }
 
 export async function findSetoresByFiltroPopulateUnidadeLean(filtro) {
