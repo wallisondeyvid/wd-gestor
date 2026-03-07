@@ -1,1 +1,0 @@
-export * from '#modules/gestor/app/usecases/unit-provisioning/UnitProvisioningService.js';
