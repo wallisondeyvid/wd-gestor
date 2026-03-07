@@ -316,3 +316,377 @@ test('PUT /gestor/api/recursos/:id com req.params.id valido porem inexistente re
     }
   }
 });
+
+test('PUT /gestor/api/recursos/:id com id existente e placa invalida retorna 400', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  const unidadeId = '000000000000000000000010';
+  const suffix = String((Date.now() % 9000) + 1000);
+  const createPayload = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TPV-${suffix}`,
+    chassi: `CHASSIPV-${Date.now()}`,
+    renavam: String(Date.now()),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  try {
+    const createRes = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayload);
+
+    assert.equal(
+      createRes.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso de teste, veio ${createRes.status} com body ${JSON.stringify(createRes.body)}`,
+    );
+
+    const recursoId = extractCreatedId(createRes.body);
+    assert.ok(recursoId, `Setup falhou: resposta de criação sem id. body=${JSON.stringify(createRes.body)}`);
+
+    const updateRes = await agent
+      .put(`/gestor/api/recursos/${recursoId}`)
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        unidade_id: unidadeId,
+        tipo: 'carro',
+        placa: 'INVALIDA',
+      });
+
+    assert.equal(
+      updateRes.status,
+      400,
+      `Contrato violado: placa invalida deveria retornar 400, veio ${updateRes.status} com body ${JSON.stringify(updateRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
+
+test('PUT /gestor/api/recursos/:id com placa que pertence a outro recurso retorna 400', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  const unidadeId = '000000000000000000000010';
+  const suffixA = String((Date.now() % 9000) + 1000);
+  const suffixB = String((((Date.now() + 1) % 9000) + 1000));
+
+  const createPayloadA = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TPA-${suffixA}`,
+    chassi: `CHASSITPA-${Date.now()}`,
+    renavam: String(Date.now()),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  const createPayloadB = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TPB-${suffixB}`,
+    chassi: `CHASSITPB-${Date.now() + 1}`,
+    renavam: String(Date.now() + 1),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  try {
+    const createResA = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayloadA);
+
+    assert.equal(
+      createResA.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso A, veio ${createResA.status} com body ${JSON.stringify(createResA.body)}`,
+    );
+
+    const createResB = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayloadB);
+
+    assert.equal(
+      createResB.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso B, veio ${createResB.status} com body ${JSON.stringify(createResB.body)}`,
+    );
+
+    const recursoIdA = extractCreatedId(createResA.body);
+    assert.ok(recursoIdA, `Setup falhou: resposta de criação A sem id. body=${JSON.stringify(createResA.body)}`);
+
+    const updateRes = await agent
+      .put(`/gestor/api/recursos/${recursoIdA}`)
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        unidade_id: unidadeId,
+        tipo: 'carro',
+        placa: createPayloadB.placa,
+      });
+
+    assert.equal(
+      updateRes.status,
+      400,
+      `Contrato violado: placa de outro recurso deveria retornar 400, veio ${updateRes.status} com body ${JSON.stringify(updateRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
+
+test('PUT /gestor/api/recursos/:id com id existente e chassi que pertence a outro recurso retorna 400', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  const unidadeId = '000000000000000000000010';
+  const baseTs = Date.now();
+  const suffixA = String((baseTs % 9000) + 1000);
+  const suffixB = String((((baseTs + 1) % 9000) + 1000));
+
+  const createPayloadA = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TCA-${suffixA}`,
+    chassi: `CHASSITCA-${baseTs}`,
+    renavam: String(baseTs),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  const createPayloadB = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TCB-${suffixB}`,
+    chassi: `CHASSITCB-${baseTs + 1}`,
+    renavam: String(baseTs + 1),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  try {
+    const createResA = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayloadA);
+
+    assert.equal(
+      createResA.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso A, veio ${createResA.status} com body ${JSON.stringify(createResA.body)}`,
+    );
+
+    const createResB = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayloadB);
+
+    assert.equal(
+      createResB.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso B, veio ${createResB.status} com body ${JSON.stringify(createResB.body)}`,
+    );
+
+    const recursoIdA = extractCreatedId(createResA.body);
+    assert.ok(recursoIdA, `Setup falhou: resposta de criação A sem id. body=${JSON.stringify(createResA.body)}`);
+
+    const updateRes = await agent
+      .put(`/gestor/api/recursos/${recursoIdA}`)
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        unidade_id: unidadeId,
+        tipo: 'carro',
+        chassi: createPayloadB.chassi,
+      });
+
+    assert.equal(
+      updateRes.status,
+      400,
+      `Contrato violado: chassi de outro recurso deveria retornar 400, veio ${updateRes.status} com body ${JSON.stringify(updateRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
+
+test('PUT /gestor/api/recursos/:id com id existente e renavam que pertence a outro recurso retorna 400', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  const unidadeId = '000000000000000000000010';
+  const baseTs = Date.now();
+  const suffixA = String((baseTs % 9000) + 1000);
+  const suffixB = String((((baseTs + 1) % 9000) + 1000));
+
+  const createPayloadA = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TRA-${suffixA}`,
+    chassi: `CHASSITRA-${baseTs}`,
+    renavam: String(baseTs),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  const createPayloadB = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TRB-${suffixB}`,
+    chassi: `CHASSITRB-${baseTs + 1}`,
+    renavam: String(baseTs + 1),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  try {
+    const createResA = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayloadA);
+
+    assert.equal(
+      createResA.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso A, veio ${createResA.status} com body ${JSON.stringify(createResA.body)}`,
+    );
+
+    const createResB = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayloadB);
+
+    assert.equal(
+      createResB.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso B, veio ${createResB.status} com body ${JSON.stringify(createResB.body)}`,
+    );
+
+    const recursoIdA = extractCreatedId(createResA.body);
+    assert.ok(recursoIdA, `Setup falhou: resposta de criação A sem id. body=${JSON.stringify(createResA.body)}`);
+
+    const updateRes = await agent
+      .put(`/gestor/api/recursos/${recursoIdA}`)
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        unidade_id: unidadeId,
+        tipo: 'carro',
+        renavam: createPayloadB.renavam,
+      });
+
+    assert.equal(
+      updateRes.status,
+      400,
+      `Contrato violado: renavam de outro recurso deveria retornar 400, veio ${updateRes.status} com body ${JSON.stringify(updateRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
