@@ -12,11 +12,15 @@ import {
   PORTAL_LOGIN_MAX_ATTEMPTS
 } from '#modules/portal-morador/lib/portalAuth.js';
 import mongoose from 'mongoose';
-import User from '#models/user.js';
-import CondUsuario from '#models/cond_usuario.js';
+import { PortalAuthRepository, resolvePortalAuthUnitScope } from '#modules/portal-morador/app/repositories/PortalAuthRepository.js';
 import { setPortalSessionCookie, clearPortalSessionCookie } from '#modules/portal-morador/app/lib/portalSessionCookie.js';
 
 const FIRST_ACCESS_PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+function getPortalAuthRepository(req, options = {}) {
+  const unitScope = resolvePortalAuthUnitScope(req, options);
+  return new PortalAuthRepository({ unitScope });
+}
 
 function persistPortalSession(req, res, portalSession, condUser) {
   if (req.session) {
@@ -92,6 +96,7 @@ export async function portalLoginPost(req, res) {
     const basePath = getBasePath(req);
     const { email, senha } = req.body || {};
     const unidadeSelecionada = String(req.body?.unidade_id || req.body?.unidadeId || '').trim();
+    const portalAuthRepo = getPortalAuthRepository(req, { fallbackUnidadeId: unidadeSelecionada });
     const normalizedEmail = sanitizePortalEmail(email);
     if (!normalizedEmail || !senha) {
       if (wantsJson(req)) return res.status(400).json({ ok: false, code: 'CAMPOS', error: 'Preencha e-mail e senha.' });
@@ -105,7 +110,9 @@ export async function portalLoginPost(req, res) {
         if (wantsJson(req)) return res.status(503).json({ ok: false, code: 'DB_OFFLINE', error: 'Serviço indisponível no momento.' });
         return res.redirect(303, `${basePath}/login?erro=servidor`);
       }
-      const gestorUser = await User.findOne({ email: normalizedEmail }).maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000));
+      const gestorUser = await portalAuthRepo.findGestorUserByEmail(normalizedEmail, {
+        maxTimeMs: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000)
+      });
       if (!gestorUser) {
         if (wantsJson(req)) return res.status(404).json({ ok: false, code: 'USUARIO', error: 'Não encontramos um usuário com esse e-mail.' });
         return res.redirect(303, `${basePath}/login?erro=usuario`);
@@ -123,16 +130,14 @@ export async function portalLoginPost(req, res) {
         return res.redirect(303, `${basePath}/login?erro=senha`);
       }
       // Cria o CondUsuario mínimo para o Portal e define senha do portal igual à senha informada.
-      user = new CondUsuario({
-        email: normalizedEmail,
-        nome: gestorUser.nome || '',
-        telefone: gestorUser.telefone || '',
-        unidade_id: gestorUser.unidade_id || null,
-        ativo: true,
-        portal_acesso_ativo: true,
-        portal_primeiro_acesso_obrigatorio: false
-      });
-      try { await user.save(); } catch (_e) {
+      try {
+        user = await portalAuthRepo.createPortalUserFromGestor({
+          email: normalizedEmail,
+          nome: gestorUser.nome || '',
+          telefone: gestorUser.telefone || '',
+          unidade_id: gestorUser.unidade_id || null,
+        });
+      } catch (_e) {
         // Se houve corrida com índice único, recarrega
         user = await findPortalUserByEmail(normalizedEmail);
       }
@@ -157,7 +162,9 @@ export async function portalLoginPost(req, res) {
     // aceita a senha do Gestor (se houver) e salva como senha do portal.
     if (!senhaOk && !String(user.portal_password_hash || '').trim()) {
       try {
-        const gestorUser = await User.findOne({ email: normalizedEmail }).maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000));
+        const gestorUser = await portalAuthRepo.findGestorUserByEmail(normalizedEmail, {
+          maxTimeMs: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000)
+        });
         if (gestorUser) {
           const bcrypt = (await import('bcryptjs')).default;
           const ok = await bcrypt.compare(String(senha), String(gestorUser.senha || ''));

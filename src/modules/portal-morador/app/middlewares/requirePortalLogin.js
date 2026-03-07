@@ -1,8 +1,13 @@
 import mongoose from 'mongoose';
-import CondUsuario from '#models/cond_usuario.js';
+import { PortalAuthRepository, resolvePortalAuthUnitScope } from '#modules/portal-morador/app/repositories/PortalAuthRepository.js';
 import { connectMongo } from '#core/db/connect.js';
 import { buildPortalSessionPayload } from '#modules/portal-morador/lib/portalAuth.js';
 import { readPortalSessionCookie, hasPortalCookieCandidate, setPortalSessionCookie, clearPortalSessionCookie, PORTAL_SESSION_COOKIE_NAME } from '#modules/portal-morador/app/lib/portalSessionCookie.js';
+
+function getPortalAuthRepository(req, options = {}) {
+  const unitScope = resolvePortalAuthUnitScope(req, options);
+  return new PortalAuthRepository({ unitScope });
+}
 
 // Middleware específico do Portal do Morador para validar sessão em memória
 function wantsJson(req) {
@@ -83,7 +88,10 @@ async function restorePortalSessionFromCookie(req, res, options = {}) {
         return null;
       }
     }
-    const condUser = await CondUsuario.findById(cookiePayload.userId);
+    const portalAuthRepo = getPortalAuthRepository(req, {
+      fallbackUnidadeId: cookiePayload?.session?.unidade_id || null,
+    });
+    const condUser = await portalAuthRepo.findPortalUserById(cookiePayload.userId);
     if (!condUser) {
       clearPortalSessionCookie(res);
       onResult?.({ ok: false, reason: 'cookie-user-missing' });
