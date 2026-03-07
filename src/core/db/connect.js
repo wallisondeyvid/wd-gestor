@@ -182,11 +182,14 @@ export async function connectMongo(uri, options = {}) {
         if (mongoose.connection.readyState === 3) {
           try { await mongoose.disconnect(); } catch { /* noop */ }
         }
+        console.log("🔎 Tentando conectar no Mongo:", mongoUri);
         await mongoose.connect(mongoUri, { ...defaultOpts, ...options });
+        console.log("✅ Mongo conectado");
         const conn = mongoose.connection;
         cache.conn = conn;
         return conn;
       } catch (err) {
+        console.error("❌ Falha conexão Mongo:", err);
         console.warn('[mongo] falha conexão primária:', err?.message || err);
         const fbFlag = (process.env.FALLBACK_MEM_ON_FAIL || '').toString().trim().toLowerCase();
         const allowFallback = fbFlag === '1' || fbFlag === 'true' || fbFlag === 'on' || fbFlag === 'yes';
@@ -212,7 +215,9 @@ export async function connectMongo(uri, options = {}) {
         const memUri = mem.getUri();
         cache.mem = mem;
         cache.memUri = memUri;
+        console.log("🔎 Tentando conectar no Mongo:", memUri);
         await mongoose.connect(memUri, { ...defaultOpts, ...options });
+        console.log("✅ Mongo conectado");
         const conn = mongoose.connection;
         console.log('[mongo] conectado em memória (fallback):', memUri);
         cache.conn = conn;
@@ -235,7 +240,9 @@ export async function connectMongo(uri, options = {}) {
     const memUri = mem.getUri();
     cache.mem = mem;
     cache.memUri = memUri;
+    console.log("🔎 Tentando conectar no Mongo:", memUri);
     await mongoose.connect(memUri, { ...defaultOpts, ...options });
+    console.log("✅ Mongo conectado");
     const conn = mongoose.connection;
     console.log('[mongo] conectado em memória:', memUri);
     cache.conn = conn;
