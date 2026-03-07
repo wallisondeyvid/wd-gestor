@@ -2,8 +2,7 @@ import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 
-import CondAssembleia from '#models/cond_assembleia.js';
-import CondAssembleiaExecution from '#models/cond_assembleia_execution.js';
+import { ExecutionRepository, resolveExecutionUnitScope } from '#modules/condominios/assembleias/v2/repositories/ExecutionRepository.js';
 import { writeAuditLog } from '#modules/condominios/app/lib/auditLog.js';
 
 function safeStr(v, max = 4000) {
@@ -170,41 +169,9 @@ function computeQuorum(execDoc) {
   return { pessoas: count, fracaoIdeal: fracao, presentCount: count, fracaoIdealPresent: fracao };
 }
 
-async function getOrCreateExecution(assembleiaId) {
-  let execDoc = await CondAssembleiaExecution.findOne({ assembleia_id: assembleiaId });
-  if (execDoc) return execDoc;
-
-  const assembleia = await CondAssembleia.findById(assembleiaId).lean();
-  if (!assembleia) return null;
-
-  const agenda = (Array.isArray(assembleia.pauta) ? assembleia.pauta : []).map((it, idx) => ({
-    idx,
-    tipo: safeStr(it?.tipo || '', 80),
-    descricao: safeStr(it?.descricao || '', 4000),
-    state: idx === 0 ? 'pendente' : 'pendente',
-    discussionStartedAt: null,
-    discussionEndedAt: null,
-    timeMs: 0
-  }));
-
-  execDoc = await CondAssembleiaExecution.create({
-    assembleia_id: assembleia._id,
-    unidade_id: assembleia.unidade_id || null,
-    sessionStatus: 'aguardando',
-    isPaused: false,
-    openedAt: null,
-    pausedAt: null,
-    pausedMs: 0,
-    closedAt: null,
-    virtualLink: safeStr(assembleia.link || '', 800),
-    currentAgendaIdx: 0,
-    presences: [],
-    agenda,
-    votes: [],
-    events: []
-  });
-
-  return execDoc;
+function getExecutionRepository(req, options = {}) {
+  const unitScope = resolveExecutionUnitScope(req, options);
+  return new ExecutionRepository({ unitScope });
 }
 
 function voteSummary(vote, execDoc) {
@@ -266,9 +233,11 @@ export async function getExecutionAtaJson(req, res) {
   const { id } = req.params;
   if (!id || !mongoose.isValidObjectId(id)) return { kind: 'error', status: 400, body: { ok: false, error: 'ID inválido' } };
 
+  const executionRepo = getExecutionRepository(req);
+
   const [assembleia, execDoc] = await Promise.all([
-    CondAssembleia.findById(id).lean(),
-    getOrCreateExecution(id)
+    executionRepo.findAssembleiaById(id, { lean: true }),
+    executionRepo.getOrCreateExecution(id)
   ]);
   if (!assembleia || !execDoc) return { kind: 'error', status: 404, body: { ok: false, error: 'Assembleia não encontrada' } };
 
@@ -321,10 +290,12 @@ export async function getExecutionAtaPdf(req, res) {
   const { id } = req.params;
   if (!id || !mongoose.isValidObjectId(id)) return { kind: 'error', status: 400, body: { ok: false, error: 'ID inválido' } };
 
+  const executionRepo = getExecutionRepository(req);
+
   const ataRes = await (async () => {
     const [assembleia, execDoc] = await Promise.all([
-      CondAssembleia.findById(id).lean(),
-      getOrCreateExecution(id)
+      executionRepo.findAssembleiaById(id, { lean: true }),
+      executionRepo.getOrCreateExecution(id)
     ]);
     if (!assembleia || !execDoc) return null;
     const { ataText } = buildAtaText(assembleia, execDoc);

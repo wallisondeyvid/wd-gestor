@@ -6,7 +6,7 @@ export async function getExecutionStatus(req, res) {
     if (!ctxUser && !req?.skipAuth) return;
 
     const { id } = req.params;
-    const result = await buildExecutionStatusById(id);
+    const result = await buildExecutionStatusById(id, { req });
     if (result.kind === 'error') {
       return res.status(result.status).json(result.body);
     }

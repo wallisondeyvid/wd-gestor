@@ -381,7 +381,7 @@ async function closeAllMongooseConnections() {
   const uniqueConnections = Array.from(new Set(mongoose.connections));
   for (const connection of uniqueConnections) {
     if (!connection || typeof connection.close !== 'function') continue;
-    await awaitWithTimeout(connection.close(true), `mongoose.connection.close(${connection.name || 'unknown'})`);
+    await awaitWithTimeout(connection.close(false), `mongoose.connection.close(${connection.name || 'unknown'})`);
   }
 
   await awaitWithTimeout(mongoose.disconnect(), 'mongoose.disconnect()');

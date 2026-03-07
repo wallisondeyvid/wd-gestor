@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
-import CondAssembleia from '#models/cond_assembleia.js';
-import CondAssembleiaExecution from '#models/cond_assembleia_execution.js';
+import { ExecutionRepository, resolveExecutionUnitScope } from '#modules/condominios/assembleias/v2/repositories/ExecutionRepository.js';
 
 function safeStr(v, max = 4000) {
   const s = String(v ?? '').trim();
@@ -130,41 +129,9 @@ function serializePresence(p) {
   };
 }
 
-async function getOrCreateExecution(assembleiaId) {
-  let execDoc = await CondAssembleiaExecution.findOne({ assembleia_id: assembleiaId });
-  if (execDoc) return execDoc;
-
-  const assembleia = await CondAssembleia.findById(assembleiaId).lean();
-  if (!assembleia) return null;
-
-  const agenda = (Array.isArray(assembleia.pauta) ? assembleia.pauta : []).map((it, idx) => ({
-    idx,
-    tipo: safeStr(it?.tipo || '', 80),
-    descricao: safeStr(it?.descricao || '', 4000),
-    state: idx === 0 ? 'pendente' : 'pendente',
-    discussionStartedAt: null,
-    discussionEndedAt: null,
-    timeMs: 0
-  }));
-
-  execDoc = await CondAssembleiaExecution.create({
-    assembleia_id: assembleia._id,
-    unidade_id: assembleia.unidade_id || null,
-    sessionStatus: 'aguardando',
-    isPaused: false,
-    openedAt: null,
-    pausedAt: null,
-    pausedMs: 0,
-    closedAt: null,
-    virtualLink: safeStr(assembleia.link || '', 800),
-    currentAgendaIdx: 0,
-    presences: [],
-    agenda,
-    votes: [],
-    events: []
-  });
-
-  return execDoc;
+function getExecutionRepository(req, options = {}) {
+  const unitScope = resolveExecutionUnitScope(req, options);
+  return new ExecutionRepository({ unitScope });
 }
 
 export async function getPresenceMeByExecutionId(req, res) {
@@ -177,7 +144,8 @@ export async function getPresenceMeByExecutionId(req, res) {
   const { id } = req.params;
   if (!id || !mongoose.isValidObjectId(id)) return { kind: 'error', status: 400, body: { ok: false, error: 'ID inválido' } };
 
-  const execDoc = await getOrCreateExecution(id);
+  const executionRepo = getExecutionRepository(req);
+  const execDoc = await executionRepo.getOrCreateExecution(id);
   if (!execDoc) return { kind: 'error', status: 404, body: { ok: false, error: 'Execução não encontrada' } };
 
   const key = getPortalPresenceKey(ctxUser, req);
