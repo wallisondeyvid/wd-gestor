@@ -5,6 +5,10 @@ const trackedConnections = new Set();
 const tenantConnectionKeys = new Set();
 const tenantMetadataByKey = new Map();
 
+function normalizeTenantDbKey(dbName) {
+  return String(dbName || '').trim();
+}
+
 function trackConnection(connection) {
   if (!connection || typeof connection.close !== 'function') return;
   trackedConnections.add(connection);
@@ -26,15 +30,45 @@ export function registerTrackedConnection(connection, options = {}) {
   trackConnection(connection);
 
   if (options.kind === 'tenant') {
-    const key = String(options.dbName || 'tenant');
+    const key = normalizeTenantDbKey(options.dbName || 'tenant');
+    const previous = tenantMetadataByKey.get(key);
+    const previousConnection = previous?.connection;
+
+    if (previousConnection && previousConnection !== connection) {
+      tenantConnectionKeys.delete(previousConnection);
+      trackedConnections.delete(previousConnection);
+    }
+
     tenantConnectionKeys.add(connection);
     tenantMetadataByKey.set(key, {
       parentConnection: options.parentConnection,
       dbName: options.dbName,
+      connection,
     });
   }
 
   return connection;
+}
+
+export function releaseTrackedTenantConnection(dbName, connection) {
+  const key = normalizeTenantDbKey(dbName);
+  const metadata = key ? tenantMetadataByKey.get(key) : null;
+  const trackedTenantConnection = connection || metadata?.connection || null;
+
+  if (key) {
+    tenantMetadataByKey.delete(key);
+  }
+
+  if (trackedTenantConnection) {
+    tenantConnectionKeys.delete(trackedTenantConnection);
+    trackedConnections.delete(trackedTenantConnection);
+  }
+}
+
+export function getConnectionTrackerDiagnostics() {
+  return {
+    tenantMetadataSize: tenantMetadataByKey.size,
+  };
 }
 
 export async function closeAllDbConnections() {
@@ -63,7 +97,7 @@ export async function closeAllDbConnections() {
   for (const connection of toClose) {
     if (!connection || typeof connection.close !== 'function') continue;
     try {
-      await connection.close(true);
+      await connection.close();
     } catch {
       /* noop */
     }
