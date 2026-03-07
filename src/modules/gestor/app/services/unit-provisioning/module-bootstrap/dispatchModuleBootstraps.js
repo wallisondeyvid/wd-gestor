@@ -1,6 +1,6 @@
-import { bootstrapCondominioModule } from '#modules/gestor/app/usecases/unit-provisioning/module-bootstrap/condominio.bootstrap.js';
-import { bootstrapClinicaModule } from '#modules/gestor/app/usecases/unit-provisioning/module-bootstrap/clinica.bootstrap.js';
-import { bootstrapEscalasModule } from '#modules/gestor/app/usecases/unit-provisioning/module-bootstrap/escalas.bootstrap.js';
+import { bootstrapCondominioModule } from '#modules/gestor/app/services/unit-provisioning/module-bootstrap/condominio.bootstrap.js';
+import { bootstrapClinicaModule } from '#modules/gestor/app/services/unit-provisioning/module-bootstrap/clinica.bootstrap.js';
+import { bootstrapEscalasModule } from '#modules/gestor/app/services/unit-provisioning/module-bootstrap/escalas.bootstrap.js';
 
 const MODULE_BOOTSTRAP_HANDLERS = new Map([
   ['condominio', bootstrapCondominioModule],

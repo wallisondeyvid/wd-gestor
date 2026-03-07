@@ -30,7 +30,7 @@ import {
   listUnitProvisioningAuditEvents,
   isUnitProvisioningValidationError,
   retryUnitProvisioning,
-} from '#modules/gestor/app/usecases/unit-provisioning/UnitProvisioningService.js';
+} from '#modules/gestor/app/services/UnitProvisioningService.js';
 // Dependências para upload de logo
 import multer from 'multer';
 import path from 'path';
