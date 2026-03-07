@@ -165,3 +165,74 @@ test('PUT /gestor/api/recursos/:id sem unidade_id retorna 400', async () => {
     }
   }
 });
+
+test('PUT /gestor/api/recursos/:id com unidade_id malformado retorna 400', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  const unidadeId = '000000000000000000000010';
+  const suffix = String((Date.now() % 9000) + 1000);
+  const createPayload = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TSM-${suffix}`,
+    chassi: `CHASSIM-${Date.now()}`,
+    renavam: String(Date.now()),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  try {
+    const createRes = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayload);
+
+    assert.equal(
+      createRes.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso de teste, veio ${createRes.status} com body ${JSON.stringify(createRes.body)}`,
+    );
+
+    const recursoId = extractCreatedId(createRes.body);
+    assert.ok(recursoId, `Setup falhou: resposta de criação sem id. body=${JSON.stringify(createRes.body)}`);
+
+    const updateRes = await agent
+      .put(`/gestor/api/recursos/${recursoId}`)
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        unidade_id: 'unidade-malformada',
+        tipo: 'carro',
+      });
+
+    assert.equal(
+      updateRes.status,
+      400,
+      `Contrato violado: unidade_id malformado deveria retornar 400, veio ${updateRes.status} com body ${JSON.stringify(updateRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
