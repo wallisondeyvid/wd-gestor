@@ -1,0 +1,128 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import request from 'supertest';
+import bcrypt from 'bcryptjs';
+
+import { createServer } from '../src/server/createServer.js';
+import User from '../src/core/models/user.js';
+
+async function authenticateMasterAgent(app) {
+  const email = `recurso.delete.contract.${Date.now()}@example.com`;
+  const senha = 'Senha@123456';
+  const senhaHash = await bcrypt.hash(senha, 10);
+  const cpf = String(Date.now()).slice(-11).padStart(11, '0');
+
+  await User.create({
+    email,
+    senha: senhaHash,
+    cpf,
+    role: 'master',
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: 'Teste Contrato Recurso Delete',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await agent
+    .post('/gestor/login')
+    .type('form')
+    .send({ email, senha });
+
+  assert.ok(
+    loginRes.status >= 300 && loginRes.status < 400,
+    `Login master deve redirecionar, recebido ${loginRes.status}`,
+  );
+
+  return { agent, authEmail: email };
+}
+
+function installTeardownSuppression() {
+  let shuttingDown = false;
+  const originalEmit = process.emit;
+
+  const shouldIgnore = (err) => {
+    if (!shuttingDown) return false;
+    return String(err?.message || err).includes('Connection was force closed');
+  };
+
+  const onUnhandledRejection = (err) => {
+    if (shouldIgnore(err)) return;
+    throw err instanceof Error ? err : new Error(String(err));
+  };
+
+  const onUncaughtException = (err) => {
+    if (shouldIgnore(err)) return;
+    throw err instanceof Error ? err : new Error(String(err));
+  };
+
+  process.emit = function patchedEmit(eventName, ...args) {
+    if (
+      (eventName === 'unhandledRejection' || eventName === 'uncaughtException')
+      && shouldIgnore(args[0])
+    ) {
+      return false;
+    }
+    return originalEmit.call(this, eventName, ...args);
+  };
+
+  process.prependListener('unhandledRejection', onUnhandledRejection);
+  process.prependListener('uncaughtException', onUncaughtException);
+
+  return {
+    startShutdown() {
+      shuttingDown = true;
+    },
+    async remove() {
+      await new Promise((resolve) => setImmediate(resolve));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      process.off('unhandledRejection', onUnhandledRejection);
+      process.off('uncaughtException', onUncaughtException);
+      process.emit = originalEmit;
+    },
+  };
+}
+
+async function closeWithTeardownGuard(close, teardownGuard) {
+  if (typeof close !== 'function') return;
+
+  teardownGuard.startShutdown();
+  await close({ stopMemoryServer: true });
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+test('DELETE /gestor/api/recursos/:id com req.params.id malformado retorna 400', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  try {
+    const deleteRes = await agent
+      .delete('/gestor/api/recursos/id-malformado')
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(
+      deleteRes.status,
+      400,
+      `Contrato violado: req.params.id malformado no delete deveria retornar 400, veio ${deleteRes.status} com body ${JSON.stringify(deleteRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
