@@ -769,3 +769,82 @@ test('PUT /gestor/api/recursos/:id com mesma placa do proprio recurso nao retorn
     }
   }
 });
+
+test('PUT /gestor/api/recursos/:id com mesmo chassi do proprio recurso nao retorna 400 por duplicidade', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  const unidadeId = '000000000000000000000010';
+  const suffix = String((Date.now() % 9000) + 1000);
+  const createPayload = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TMC-${suffix}`,
+    chassi: `CHASSITMC-${Date.now()}`,
+    renavam: String(Date.now()),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  try {
+    const createRes = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayload);
+
+    assert.equal(
+      createRes.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso de teste, veio ${createRes.status} com body ${JSON.stringify(createRes.body)}`,
+    );
+
+    const recursoId = extractCreatedId(createRes.body);
+    assert.ok(recursoId, `Setup falhou: resposta de criação sem id. body=${JSON.stringify(createRes.body)}`);
+
+    const updateRes = await agent
+      .put(`/gestor/api/recursos/${recursoId}`)
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        unidade_id: unidadeId,
+        tipo: createPayload.tipo,
+        placa: createPayload.placa,
+        chassi: createPayload.chassi,
+        renavam: createPayload.renavam,
+        ano: createPayload.ano,
+        mod: createPayload.mod,
+        marca: createPayload.marca,
+        modelo: createPayload.modelo,
+        cor: createPayload.cor,
+      });
+
+    assert.notEqual(
+      updateRes.status,
+      400,
+      `Contrato violado: mantendo o mesmo chassi do proprio recurso nao deveria retornar 400 por duplicidade, veio ${updateRes.status} com body ${JSON.stringify(updateRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
