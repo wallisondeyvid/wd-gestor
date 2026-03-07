@@ -1,7 +1,26 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import RememberToken from '#models/rememberToken.js';
-import User from '#models/user.js';
+import { createUnitScope } from '#shared/unitScope.js';
+import { RememberSessionRepository } from '#shared/repositories/RememberSessionRepository.js';
+
+function resolveRememberSessionUnitScope(req) {
+  if (req?.unitScope) return req.unitScope;
+  if (req?.ctx?.unitScope) return req.ctx.unitScope;
+
+  const unidadeId = req?.session?.user?.unidade_id
+    || req?.session?.user?.unidadeId
+    || req?.session?.escalasUser?.unidade_id
+    || req?.session?.escalasUser?.unidadeId
+    || null;
+
+  return createUnitScope({ unidadeId });
+}
+
+function getRememberSessionRepository(req) {
+  return new RememberSessionRepository({
+    unitScope: resolveRememberSessionUnitScope(req),
+  });
+}
 
 export async function rememberRestore(req, res, next) {
   try {
@@ -34,20 +53,19 @@ export async function rememberRestore(req, res, next) {
     const cookieName = process.env.REMEMBER_COOKIE_NAME || 'wdg_remember';
     const tokenPlain = req.cookies ? req.cookies[cookieName] : null;
     if (!tokenPlain) return next();
+
+    const rememberSessionRepository = getRememberSessionRepository(req);
     const tokenHash = crypto.createHash('sha256').update(tokenPlain).digest('hex');
-    const rt = await RememberToken
-      .findOne({ token_hash: tokenHash, revoked: false, expiresAt: { $gt: new Date() } })
-      .maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000));
+    const rt = await rememberSessionRepository.findValidRememberTokenByHash(tokenHash);
     if (!rt) return next();
-    const user = await User.findById(rt.user_id).maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000));
+    const user = await rememberSessionRepository.findActiveUserById(rt.user_id);
     if (!user || !user.ativo) return next();
     if (!req.session) return next();
 
     const sessPayload = { id: user._id, email: user.email, nome: user.nome, role: user.role, funcionario_id: user.funcionario_id || null, unidade_id: user.unidade_id || null };
     const isEscalas = req.originalUrl && req.originalUrl.startsWith('/escalas');
     if (isEscalas) req.session.escalasUser = sessPayload;
-    rt.lastUsedAt = new Date();
-    await rt.save();
+    await rememberSessionRepository.touchRememberTokenLastUsed(rt._id);
     return next();
   } catch (e) {
     console.warn('[rememberRestore] falha:', e.message);

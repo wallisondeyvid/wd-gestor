@@ -2,8 +2,8 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { sendMail } from '#core/mail/mailer.js';
 import { welcomePassword } from '#mail/templates/welcomePassword.js';
-// Importar o modelo User
-import User from '#models/user.js';
+import { UserRepository } from '#modules/gestor/app/repositories/UserRepository.js';
+import { createUnitScope } from '#shared/unitScope.js';
 
 function generateTempPassword() {
   // Gerar senha alfanumérica mais segura (8 caracteres)
@@ -34,12 +34,23 @@ function resolveAppUrl() {
   return `http://localhost:${port}`;
 }
 
-async function createUserAndSendPassword({ nome, email, cpf, role, unidade_id, funcionario_id, senha }) {
+function resolveUserServiceUnitScope({ unitScope, unidadeId }) {
+  if (unitScope && typeof unitScope === 'object') return unitScope;
+  return createUnitScope({ unidadeId });
+}
+
+async function createUserAndSendPassword({ nome, email, cpf, role, unidade_id, funcionario_id, senha, unitScope }) {
   // Usar senha fornecida ou gerar uma nova se não fornecida
   const tempPassword = senha || generateTempPassword();
   const hash = await bcrypt.hash(tempPassword, 10);
 
-  const user = await User.create({
+  const effectiveUnitScope = resolveUserServiceUnitScope({
+    unitScope,
+    unidadeId: unidade_id,
+  });
+  const userRepository = new UserRepository({ unitScope: effectiveUnitScope });
+
+  const user = await userRepository.create({
     nome,
     email,
     cpf, // Adicionar CPF do funcionário
