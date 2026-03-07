@@ -161,6 +161,159 @@ export async function listUnidades(req, res) {
   }
 }
 
+function resolveTipoUnidadeProvisionada(unidade) {
+  if (unidade?.is_principal) return 'principal';
+  if (unidade?.subunidade) return 'subunidade';
+  return 'filial';
+}
+
+async function ensureCanAccessUnidade(req, unidadeId) {
+  if (req?.user?.isMaster) return true;
+
+  const matrizRef = req?.user?.unidade_principal_id || req?.user?.unidade_id;
+  if (!matrizRef) return false;
+
+  const unidadesPermitidas = await findUnidadesPermitidasByMatrizRef(matrizRef);
+  const permitidoIds = new Set((unidadesPermitidas || []).map((u) => String(u._id)));
+  return permitidoIds.has(String(unidadeId));
+}
+
+function normalizeProvisioningSnapshotResponse(snapshot) {
+  const safeSnapshot = (snapshot && typeof snapshot === 'object') ? snapshot : {};
+  const modulosIds = Array.isArray(safeSnapshot.modulosHabilitados)
+    ? safeSnapshot.modulosHabilitados.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+  const modulosDisplay = Array.isArray(safeSnapshot.modulosHabilitadosDisplay)
+    ? safeSnapshot.modulosHabilitadosDisplay.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+
+  return {
+    ...safeSnapshot,
+    modulosHabilitados: modulosIds,
+    modulosHabilitadosDisplay: modulosDisplay.length > 0 ? modulosDisplay : modulosIds,
+  };
+}
+
+function normalizeRetryModulesInput(rawValue) {
+  const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+  const normalized = [];
+  const known = new Set();
+
+  for (const value of values) {
+    const text = String(value || '').trim();
+    if (!text) continue;
+
+    const tokens = text
+      .split(',')
+      .map((token) => String(token || '').trim())
+      .filter(Boolean);
+
+    for (const token of tokens) {
+      if (known.has(token)) continue;
+      known.add(token);
+      normalized.push(token);
+    }
+  }
+
+  return normalized;
+}
+
+function resolveRetryModulesFromRequest(req) {
+  const modules = [];
+  const known = new Set();
+
+  const collect = (value) => {
+    const normalizedValues = normalizeRetryModulesInput(value);
+    for (const item of normalizedValues) {
+      if (known.has(item)) continue;
+      known.add(item);
+      modules.push(item);
+    }
+  };
+
+  collect(req?.body?.modulo);
+  collect(req?.body?.moduloKey);
+  collect(req?.body?.moduleKey);
+  collect(req?.body?.modulosRetry);
+  collect(req?.body?.modulosRetryKeys);
+  collect(req?.query?.modulo);
+  collect(req?.query?.moduloKey);
+  collect(req?.query?.moduleKey);
+  collect(req?.query?.modulosRetry);
+  collect(req?.query?.modulosRetryKeys);
+
+  return modules;
+}
+
+function normalizeProvisioningEventsLimit(rawLimit) {
+  if (rawLimit === undefined || rawLimit === null || rawLimit === '') {
+    return 100;
+  }
+
+  const parsed = Number(rawLimit);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return Math.min(Math.trunc(parsed), 500);
+}
+
+function normalizeProvisioningEventsScope(rawScope) {
+  const normalized = String(rawScope || '').trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === 'unit' || normalized === 'module') return normalized;
+  return null;
+}
+
+function normalizeProvisioningEventsModuleKey(rawModuleKey) {
+  const normalized = String(rawModuleKey || '').trim();
+  return normalized || null;
+}
+
+function normalizeProvisioningEventsOperation(rawOperation) {
+  const normalized = String(rawOperation || '').trim().toLowerCase();
+  return normalized || null;
+}
+
+function normalizeProvisioningEventsStatus(rawStatus) {
+  const normalized = String(rawStatus || '').trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === 'started' || normalized === 'success' || normalized === 'error' || normalized === 'info') {
+    return normalized;
+  }
+  return null;
+}
+
+function normalizeProvisioningEventsBefore(rawBefore) {
+  const raw = String(rawBefore || '').trim();
+  if (!raw) return null;
+
+  const [rawDate, rawEventId = ''] = raw.split('|', 2);
+  const dateText = String(rawDate || '').trim();
+  if (!dateText) return null;
+
+  const parsedDate = new Date(dateText);
+  if (Number.isNaN(parsedDate.getTime())) return null;
+
+  const eventId = String(rawEventId || '').trim().toLowerCase();
+  if (eventId && !/^[a-f\d]{24}$/i.test(eventId)) return null;
+
+  return eventId
+    ? `${parsedDate.toISOString()}|${eventId}`
+    : parsedDate.toISOString();
+}
+
+function buildProvisioningEventsNextBefore(events = []) {
+  if (!Array.isArray(events) || events.length === 0) return null;
+  const last = events[events.length - 1] || {};
+  const createdAt = last?.createdAt ? new Date(last.createdAt) : null;
+  if (!createdAt || Number.isNaN(createdAt.getTime())) return null;
+
+  const eventId = String(last?.eventId || '').trim().toLowerCase();
+  if (!eventId) return createdAt.toISOString();
+  return `${createdAt.toISOString()}|${eventId}`;
+}
+
 export async function createUnidade(req, res) {
   try {
     if (req.user.role === 'user') return badRequest(res, 'Você não tem permissão para criar unidades.');
