@@ -1,6 +1,21 @@
 // (migrado) unidadeApi
 import express from 'express';
-import { createUnidade, updateUnidade, toggleAccessUnidades, getUnidadeById, getUnidadeModulos, deleteUnidade, uploadLogoUnidade, uploadLogoUnidadeInline, getUnidadeLogo, listUnidades, getUnidadePublic } from '#modules/gestor/app/controllers/unidadeApiController.js';
+import {
+	createUnidade,
+	updateUnidade,
+	toggleAccessUnidades,
+	getUnidadeById,
+	getUnidadeModulos,
+	getUnidadeProvisioningStatus,
+	getUnidadeProvisioningEvents,
+	retryUnidadeProvisioning,
+	deleteUnidade,
+	uploadLogoUnidade,
+	uploadLogoUnidadeInline,
+	getUnidadeLogo,
+	listUnidades,
+	getUnidadePublic,
+} from '#modules/gestor/app/controllers/unidadeApiController.js';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 const router = express.Router();
 router.post('/api/unidades', requireLogin, createUnidade);
@@ -18,5 +33,8 @@ router.get('/api/public/unidades/:id', getUnidadePublic);
 // Leitura da logo (binário) — retorna imagem a partir do armazenamento atual (Data URL ou legado em disco)
 router.get('/api/unidades/:id/logo', requireLogin, getUnidadeLogo);
 router.get('/api/unidades/:id/modulos', requireLogin, getUnidadeModulos);
+router.get('/api/unidades/:id/provisioning', requireLogin, getUnidadeProvisioningStatus);
+router.get('/api/unidades/:id/provisioning/events', requireLogin, getUnidadeProvisioningEvents);
+router.post('/api/unidades/:id/provisioning/retry', requireLogin, retryUnidadeProvisioning);
 router.delete('/api/unidades/:id', requireLogin, deleteUnidade);
 export default router;

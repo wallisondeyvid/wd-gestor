@@ -24,6 +24,13 @@ import {
   deleteUnidadeById,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { validarCnpj, calcularDigitoVerificador } from '#modules/gestor/app/utils/cnpj.js';
+import {
+  ensureUnitProvisioned,
+  inspectUnitProvisioning,
+  listUnitProvisioningAuditEvents,
+  isUnitProvisioningValidationError,
+  retryUnitProvisioning,
+} from '#modules/gestor/app/services/UnitProvisioningService.js';
 // Dependências para upload de logo
 import multer from 'multer';
 import path from 'path';
@@ -192,6 +199,9 @@ export async function createUnidade(req, res) {
     const isPrincipal = (principal === true || principal === 'true');
     const isSubunidade = (subunidade === true || subunidade === 'true');
     const canCreatePrincipal = req.user.isMaster || req.user.role === 'admin';
+    const modulosSelecionados = Array.isArray(modulosAcessiveis)
+      ? modulosAcessiveis
+      : (modulosAcessiveis ? [modulosAcessiveis] : []);
 
     if (isSubunidade && !unidadePrincipal) return badRequest(res, 'Uma subunidade deve ter uma unidade principal associada.');
     if (!canCreatePrincipal && isPrincipal) return badRequest(res, 'Apenas Master/Admin podem criar unidades principais.');
@@ -283,7 +293,7 @@ export async function createUnidade(req, res) {
       contaCorrente: contaCorrente || null,
       pixChave: pixChave || null,
       tipoPix,
-      modulosAcessiveis: Array.isArray(modulosAcessiveis) ? modulosAcessiveis : (modulosAcessiveis ? [modulosAcessiveis] : []),
+      modulosAcessiveis: modulosSelecionados,
       diretor_usuario_id: isPrincipal && diretor_usuario_id ? diretor_usuario_id : null,
       is_active: true,
       logo: null,
@@ -298,6 +308,16 @@ export async function createUnidade(req, res) {
         console.warn('[API UNIDADES][create] Falha ao vincular diretor à unidade:', e.message);
       }
     }
+
+    const tipoUnidadeProvisionada = resolveTipoUnidadeProvisionada({
+      is_principal: isPrincipal,
+      subunidade: isSubunidade,
+    });
+    await ensureUnitProvisioned({
+      unidadeId: unidadeSalva._id,
+      tipo: tipoUnidadeProvisionada,
+      modulosHabilitados: modulosSelecionados,
+    });
 
     const serialized = unidadeSalva.toObject();
     serialized.logo = unidadeSalva.logo || null;
@@ -466,6 +486,136 @@ export async function getUnidadeModulos(req, res) {
   } catch (e) {
     console.error('[API UNIDADES][getModulos] Erro:', e);
     return serverError(res, e);
+  }
+}
+
+export async function getUnidadeProvisioningStatus(req, res) {
+  try {
+    const unidadeId = String(req.params.id || '').trim();
+    if (!unidadeId) return badRequest(res, 'ID da unidade e obrigatorio.');
+
+    const unidade = await findUnidadeById(unidadeId);
+    if (!unidade) return notFound(res, 'Unidade nao encontrada');
+
+    const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+    if (!canAccess) return badRequest(res, 'Acesso a unidade nao autorizado');
+
+    const snapshot = await inspectUnitProvisioning({ unidadeId: unidade._id });
+    return ok(res, normalizeProvisioningSnapshotResponse(snapshot));
+  } catch (error) {
+    console.error('[API UNIDADES][inspectProvisioning] Erro:', error);
+    return serverError(res, error);
+  }
+}
+
+export async function getUnidadeProvisioningEvents(req, res) {
+  try {
+    const unidadeId = String(req.params.id || '').trim();
+    if (!unidadeId) return badRequest(res, 'ID da unidade e obrigatorio.');
+
+    const unidade = await findUnidadeById(unidadeId);
+    if (!unidade) return notFound(res, 'Unidade nao encontrada');
+
+    const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+    if (!canAccess) return badRequest(res, 'Acesso a unidade nao autorizado');
+
+    const limit = normalizeProvisioningEventsLimit(req.query?.limit);
+    if (limit === null) {
+      return badRequest(res, 'Parametro limit invalido. Use inteiro positivo.');
+    }
+
+    const scopeRaw = req.query?.scope;
+    const scope = normalizeProvisioningEventsScope(scopeRaw);
+    if (scopeRaw !== undefined && scopeRaw !== null && String(scopeRaw).trim() !== '' && !scope) {
+      return badRequest(res, 'Parametro scope invalido. Use unit ou module.');
+    }
+
+    const moduleKey = normalizeProvisioningEventsModuleKey(req.query?.moduleKey);
+    const operation = normalizeProvisioningEventsOperation(req.query?.operation);
+
+    const statusRaw = req.query?.status;
+    const status = normalizeProvisioningEventsStatus(statusRaw);
+    if (statusRaw !== undefined && statusRaw !== null && String(statusRaw).trim() !== '' && !status) {
+      return badRequest(res, 'Parametro status invalido. Use started, success, error ou info.');
+    }
+
+    const beforeRaw = req.query?.before;
+    const before = normalizeProvisioningEventsBefore(beforeRaw);
+    if (beforeRaw !== undefined && beforeRaw !== null && String(beforeRaw).trim() !== '' && !before) {
+      return badRequest(res, 'Parametro before invalido. Use ISO date ou ISO|eventId.');
+    }
+
+    const queryLimit = limit + 1;
+
+    const queriedEvents = await listUnitProvisioningAuditEvents({
+      unidadeId: unidade._id,
+      limit: queryLimit,
+      scope,
+      moduleKey,
+      operation,
+      status,
+      before,
+    });
+
+    const hasMore = queriedEvents.length > limit;
+    const events = hasMore ? queriedEvents.slice(0, limit) : queriedEvents;
+    const nextBefore = hasMore ? buildProvisioningEventsNextBefore(events) : null;
+
+    return ok(res, {
+      unidadeId: String(unidade._id),
+      filters: {
+        limit,
+        scope: scope || null,
+        moduleKey,
+        operation,
+        status,
+        before,
+      },
+      pagination: {
+        hasMore,
+        nextBefore,
+      },
+      total: events.length,
+      events,
+    });
+  } catch (error) {
+    console.error('[API UNIDADES][listProvisioningEvents] Erro:', error);
+    return serverError(res, error);
+  }
+}
+
+export async function retryUnidadeProvisioning(req, res) {
+  try {
+    if (req.user.role === 'user') {
+      return badRequest(res, 'Voce nao tem permissao para reprocessar provisioning de unidades.');
+    }
+
+    const unidadeId = String(req.params.id || '').trim();
+    if (!unidadeId) return badRequest(res, 'ID da unidade e obrigatorio.');
+
+    const unidade = await findUnidadeById(unidadeId);
+    if (!unidade) return notFound(res, 'Unidade nao encontrada');
+
+    const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+    if (!canAccess) return badRequest(res, 'Acesso a unidade nao autorizado');
+
+    const modulosRetry = resolveRetryModulesFromRequest(req);
+
+    const retryResult = await retryUnitProvisioning({
+      unidadeId: unidade._id,
+      tipo: resolveTipoUnidadeProvisionada(unidade),
+      modulosHabilitados: Array.isArray(unidade.modulosAcessiveis) ? unidade.modulosAcessiveis : [],
+      modulosRetry,
+    });
+
+    return ok(res, retryResult);
+  } catch (error) {
+    if (isUnitProvisioningValidationError(error)) {
+      return badRequest(res, String(error?.message || 'Solicitacao de retry seletivo invalida.'));
+    }
+
+    console.error('[API UNIDADES][retryProvisioning] Erro:', error);
+    return serverError(res, error);
   }
 }
 
