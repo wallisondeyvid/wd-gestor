@@ -276,3 +276,43 @@ test('PUT /gestor/api/recursos/:id com req.params.id malformado retorna 400', as
     }
   }
 });
+
+test('PUT /gestor/api/recursos/:id com req.params.id valido porem inexistente retorna 404', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  try {
+    const updateRes = await agent
+      .put('/gestor/api/recursos/ffffffffffffffffffffffff')
+      .query({ unidadeId: '000000000000000000000010' })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        unidade_id: '000000000000000000000010',
+        tipo: 'carro',
+      });
+
+    assert.equal(
+      updateRes.status,
+      404,
+      `Contrato violado: req.params.id valido porem inexistente deveria retornar 404, veio ${updateRes.status} com body ${JSON.stringify(updateRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
