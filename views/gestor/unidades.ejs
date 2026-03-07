@@ -514,7 +514,7 @@
           </div>
         </div>
   <div id="wrapperTabelaUnidades" class="table-responsive table-vert-max mb-0" style="overflow-x:auto; white-space:nowrap;">
-          <table class="table table-bordered table-hover align-middle mb-0" id="tabelaUnidades" style="min-width:1400px;">
+          <table class="table table-bordered table-hover align-middle mb-0" id="tabelaUnidades" style="min-width:1520px;">
             <thead class="table-light text-center align-middle">
               <tr>
                 <th style="width:50px;">&nbsp;</th>
@@ -523,6 +523,7 @@
                 <th style="min-width:130px;">Tipo de Unidade</th>
                 <th style="min-width:170px;">CPF/CNPJ</th>
                 <th style="min-width:300px;">Endereço</th>
+                <th style="min-width:210px;">Provisioning</th>
                 <th class="col-acoes" style="min-width:160px;">Ação</th>
               </tr>
             </thead>
@@ -565,6 +566,12 @@
                     <% } %>
                   </td>
                   <td><%= u.endereco || '' %></td>
+                  <td class="td-provisioning text-start" data-provisioning-cell data-unidade-id="<%= u._id %>" data-provisioning-state="idle">
+                    <div class="prov-summary">
+                      <div class="prov-line-1"><span class="badge text-bg-warning text-dark">Pendente</span></div>
+                      <div class="prov-line-2">ver detalhes</div>
+                    </div>
+                  </td>
                   <td>
                     <div class="d-flex gap-1 justify-content-center flex-nowrap">
                       <button type="button" class="wdg-icon-btn" data-action="abrirDetalhes" data-id="<%= u._id %>" title="Detalhes" aria-label="Detalhes">
@@ -592,7 +599,7 @@
                 </tr>
               <% }); %>
               <% if (!unidadesFiltradas || !unidadesFiltradas.length){ %>
-                <tr><td colspan="7" class="text-center text-muted">Nenhuma unidade cadastrada.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted">Nenhuma unidade cadastrada.</td></tr>
               <% } %>
             </tbody>
           </table>
@@ -610,6 +617,47 @@
       .filial-expanded-highlight { animation: flashBg 2s ease; }
       @keyframes flashBg { 0% { background:#fff3cd; } 100% { background:inherit; } }
       #tabelaUnidades .col-acoes { width: 160px; }
+      #tabelaUnidades .td-provisioning {
+        min-width: 210px;
+        max-width: 230px;
+        white-space: normal;
+        line-height: 1.05;
+        padding-top: .35rem;
+        padding-bottom: .35rem;
+      }
+      #tabelaUnidades .prov-summary {
+        display: grid;
+        grid-template-rows: auto auto;
+        gap: 2px;
+        text-align: left;
+        max-width: 100%;
+      }
+      #tabelaUnidades .prov-line-1 {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 18px;
+      }
+      #tabelaUnidades .prov-line-1 .badge {
+        font-size: .68rem;
+        line-height: 1;
+        font-weight: 600;
+        padding: .18rem .45rem;
+      }
+      #tabelaUnidades .prov-time {
+        font-size: .68rem;
+        color: #6c757d;
+        white-space: nowrap;
+      }
+      #tabelaUnidades .prov-line-2 {
+        font-size: .74rem;
+        line-height: 1.15;
+        color: #6c757d;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-height: 16px;
+      }
   /* Diferenciação visual das filiais por cor (aplicar no TD para sobrepor Bootstrap) */
   /* Linhas sempre brancas (inclusive filiais) */
   #tabelaUnidades tbody tr > td { background-color: #ffffff !important; }

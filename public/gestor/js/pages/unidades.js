@@ -1024,6 +1024,324 @@ document.addEventListener('DOMContentLoaded', () => {
 		filtrar(byId('contaDV'),       /[^0-9xX]/g, true);
 	})();
 
+	// ===================== Provisioning resumido na lista =====================
+	const provisioningSummaryCache = new Map();
+	const provisioningSummaryInFlight = new Map();
+	const provisioningSummaryQueue = [];
+	const provisioningSummaryQueuedIds = new Set();
+	const PROVISIONING_SUCCESS_TTL_MS = 2 * 60 * 1000;
+	const PROVISIONING_ERROR_TTL_MS = 20 * 1000;
+	const PROVISIONING_MAX_CONCURRENCY = 4;
+	let provisioningSummaryActiveCount = 0;
+	let provisioningSummaryRefreshTimer = null;
+
+	function notifyTabelaUnidadesRenderizada(){
+		document.dispatchEvent(new CustomEvent('unidades:tabela-renderizada'));
+	}
+
+	function escapeHtmlProvisioning(value){
+		return String(value || '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	}
+
+	function normalizeProvisioningPayload(payload){
+		if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+			return payload.data;
+		}
+		return payload;
+	}
+
+	function formatarDataHoraProvisioningCurta(value){
+		if (!value) return '';
+		try {
+			const d = new Date(value);
+			if (Number.isNaN(d.getTime())) return '';
+			const diffMs = Date.now() - d.getTime();
+			if (diffMs >= 0 && diffMs < 2 * 60 * 1000) return 'ha pouco';
+			if (diffMs >= 0 && diffMs < 60 * 60 * 1000) {
+				const mins = Math.max(1, Math.floor(diffMs / (60 * 1000)));
+				return `ha ${mins}m`;
+			}
+			return d.toLocaleString('pt-BR', {
+				day: '2-digit',
+				month: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit',
+			}).replace(',', '');
+		} catch (_) {
+			return '';
+		}
+	}
+
+	function formatarNomeModuloProvisioningResumo(modulo){
+		const nomeOriginal = String(modulo || '').trim();
+		if (!nomeOriginal) return '';
+
+		const chave = nomeOriginal
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, ' ')
+			.trim();
+
+		const nomesAmigaveis = {
+			'gestao de condominio': 'Gestao de Condominio',
+			clinica: 'Clinica',
+			escalas: 'Escalas',
+			gestor: 'Gestor',
+		};
+
+		return nomesAmigaveis[chave] || nomeOriginal;
+	}
+
+	function normalizarModulosProvisioningResumo(modulos){
+		if (!Array.isArray(modulos)) return [];
+		return modulos
+			.map((item) => formatarNomeModuloProvisioningResumo(item))
+			.map((item) => String(item || '').trim())
+			.filter(Boolean);
+	}
+
+	function montarResumoModulosProvisioning(modulos, snapshot){
+		const total = Array.isArray(modulos) ? modulos.length : 0;
+		if (total === 0) {
+			if (String(snapshot?.status || '').trim().toLowerCase() === 'error') return 'ver detalhes';
+			return 'sem bootstrap';
+		}
+
+		const todosTecnicos = modulos.every((item) => /^[a-f\d]{24}$/i.test(String(item || '').trim()));
+		if (todosTecnicos) return `${total} ${total === 1 ? 'modulo' : 'modulos'}`;
+
+		if (total === 1) return modulos[0];
+		if (total === 2) return `${modulos[0]}, ${modulos[1]}`;
+		return `${modulos[0]}, ${modulos[1]} +${total - 2}`;
+	}
+
+	function getProvisioningStatusVisual(snapshot){
+		const status = String(snapshot?.status || '').trim().toLowerCase();
+		if (status === 'error') {
+			return { badgeClass: 'text-bg-danger', badgeLabel: 'Erro', state: 'error' };
+		}
+		if (snapshot?.ready === true) {
+			return { badgeClass: 'text-bg-success', badgeLabel: 'Pronto', state: 'ready' };
+		}
+		return { badgeClass: 'text-bg-warning text-dark', badgeLabel: 'Pendente', state: 'pending' };
+	}
+
+	function renderProvisioningLoadingCell(cell){
+		if (!cell) return;
+		cell.dataset.provisioningState = 'loading';
+		cell.innerHTML = [
+			'<div class="prov-summary">',
+				'<div class="prov-line-1"><span class="badge text-bg-warning text-dark">Pendente</span></div>',
+				'<div class="prov-line-2">consultando...</div>',
+			'</div>'
+		].join('');
+	}
+
+	function renderProvisioningErrorCell(cell, errorMessage){
+		if (!cell) return;
+		cell.dataset.provisioningState = 'error';
+		const msg = String(errorMessage || 'Falha ao consultar provisioning.').trim();
+		cell.setAttribute('title', msg);
+		cell.innerHTML = [
+			'<div class="prov-summary">',
+				'<div class="prov-line-1"><span class="badge text-bg-danger">Erro</span></div>',
+				'<div class="prov-line-2">ver detalhes</div>',
+			'</div>'
+		].join('');
+	}
+
+	function renderProvisioningSnapshotCell(cell, snapshot){
+		if (!cell) return;
+		const visual = getProvisioningStatusVisual(snapshot);
+		const modulosView = Array.isArray(snapshot?.modulosHabilitadosDisplay) && snapshot.modulosHabilitadosDisplay.length
+			? snapshot.modulosHabilitadosDisplay
+			: snapshot?.modulosHabilitados;
+		const modulos = normalizarModulosProvisioningResumo(modulosView);
+		const modulosResumo = montarResumoModulosProvisioning(modulos, snapshot);
+		const tempoCurto = formatarDataHoraProvisioningCurta(snapshot?.lastProvisionedAt);
+
+		cell.dataset.provisioningState = visual.state;
+		cell.removeAttribute('title');
+		cell.innerHTML = `
+			<div class="prov-summary">
+				<div class="prov-line-1">
+					<span class="badge ${visual.badgeClass}">${visual.badgeLabel}</span>
+					${tempoCurto ? `<span class="prov-time">${escapeHtmlProvisioning(tempoCurto)}</span>` : ''}
+				</div>
+				<div class="prov-line-2">${escapeHtmlProvisioning(modulosResumo)}</div>
+			</div>
+		`;
+	}
+
+	function isProvisioningCacheEntryFresh(entry){
+		if (!entry || typeof entry !== 'object') return false;
+		const fetchedAt = Number(entry.fetchedAt || 0);
+		if (!fetchedAt) return false;
+		const age = Date.now() - fetchedAt;
+		const ttl = entry.ok ? PROVISIONING_SUCCESS_TTL_MS : PROVISIONING_ERROR_TTL_MS;
+		return age <= ttl;
+	}
+
+	function getProvisioningCacheEntry(unidadeId){
+		const key = String(unidadeId || '').trim();
+		if (!key) return null;
+		const entry = provisioningSummaryCache.get(key);
+		if (!isProvisioningCacheEntryFresh(entry)) {
+			provisioningSummaryCache.delete(key);
+			return null;
+		}
+		return entry;
+	}
+
+	function setProvisioningCacheEntry(unidadeId, entry){
+		const key = String(unidadeId || '').trim();
+		if (!key) return;
+		provisioningSummaryCache.set(key, {
+			ok: entry?.ok === true,
+			snapshot: entry?.snapshot || null,
+			errorMessage: String(entry?.errorMessage || ''),
+			fetchedAt: Date.now(),
+		});
+	}
+
+	async function fetchProvisioningSummary(unidadeId){
+		const key = String(unidadeId || '').trim();
+		if (!key) {
+			const invalid = { ok: false, snapshot: null, errorMessage: 'ID da unidade invalido.' };
+			setProvisioningCacheEntry(key, invalid);
+			return invalid;
+		}
+
+		const cached = getProvisioningCacheEntry(key);
+		if (cached) return cached;
+
+		if (provisioningSummaryInFlight.has(key)) {
+			return provisioningSummaryInFlight.get(key);
+		}
+
+		const request = (async () => {
+			try {
+				const url = `${BASE}/api/unidades/${encodeURIComponent(key)}/provisioning`;
+				const resp = await fetch(url, {
+					credentials: 'same-origin',
+					headers: { Accept: 'application/json' },
+				});
+				const payload = await resp.json().catch(() => ({}));
+				if (!resp.ok || payload?.success === false) {
+					throw new Error(payload?.message || payload?.error || `Falha na consulta (${resp.status})`);
+				}
+
+				const snapshot = normalizeProvisioningPayload(payload) || {};
+				const result = { ok: true, snapshot, errorMessage: '' };
+				setProvisioningCacheEntry(key, result);
+				return getProvisioningCacheEntry(key) || result;
+			} catch (error) {
+				const result = {
+					ok: false,
+					snapshot: null,
+					errorMessage: String(error?.message || 'Falha ao consultar provisioning.'),
+				};
+				setProvisioningCacheEntry(key, result);
+				return getProvisioningCacheEntry(key) || result;
+			}
+		})();
+
+		provisioningSummaryInFlight.set(key, request);
+		return request.finally(() => {
+			provisioningSummaryInFlight.delete(key);
+		});
+	}
+
+	function applyProvisioningCacheToCells(unidadeId){
+		const key = String(unidadeId || '').trim();
+		if (!key) return;
+		const entry = getProvisioningCacheEntry(key);
+		if (!entry) return;
+
+		document.querySelectorAll('[data-provisioning-cell]').forEach((cell) => {
+			if (String(cell.getAttribute('data-unidade-id') || '') !== key) return;
+			if (entry.ok) renderProvisioningSnapshotCell(cell, entry.snapshot || {});
+			else renderProvisioningErrorCell(cell, entry.errorMessage);
+		});
+	}
+
+	function processProvisioningQueue(){
+		while (provisioningSummaryActiveCount < PROVISIONING_MAX_CONCURRENCY && provisioningSummaryQueue.length > 0) {
+			const unidadeId = provisioningSummaryQueue.shift();
+			provisioningSummaryQueuedIds.delete(unidadeId);
+			provisioningSummaryActiveCount += 1;
+
+			void fetchProvisioningSummary(unidadeId)
+				.finally(() => {
+					provisioningSummaryActiveCount -= 1;
+					applyProvisioningCacheToCells(unidadeId);
+					processProvisioningQueue();
+				});
+		}
+	}
+
+	function enqueueProvisioningSummaryFetch(unidadeId){
+		const key = String(unidadeId || '').trim();
+		if (!key) return;
+		if (provisioningSummaryQueuedIds.has(key)) return;
+		if (provisioningSummaryInFlight.has(key)) return;
+		provisioningSummaryQueuedIds.add(key);
+		provisioningSummaryQueue.push(key);
+		processProvisioningQueue();
+	}
+
+	function isRowVisibleForProvisioning(row){
+		if (!row || !row.isConnected) return false;
+		if (row.style.display === 'none') return false;
+		try {
+			const computed = window.getComputedStyle(row);
+			return computed.display !== 'none' && computed.visibility !== 'hidden';
+		} catch (_) {
+			return true;
+		}
+	}
+
+	function carregarResumoProvisioningVisivel(){
+		const rows = document.querySelectorAll('#tabelaUnidades tbody tr.unidade-row');
+		if (!rows.length) return;
+
+		rows.forEach((row) => {
+			if (!isRowVisibleForProvisioning(row)) return;
+			const cell = row.querySelector('[data-provisioning-cell]');
+			if (!cell) return;
+
+			const unidadeId = String(cell.getAttribute('data-unidade-id') || row.getAttribute('data-id') || '').trim();
+			if (!unidadeId) return;
+
+			const cached = getProvisioningCacheEntry(unidadeId);
+			if (cached) {
+				if (cached.ok) renderProvisioningSnapshotCell(cell, cached.snapshot || {});
+				else renderProvisioningErrorCell(cell, cached.errorMessage);
+				return;
+			}
+
+			renderProvisioningLoadingCell(cell);
+			enqueueProvisioningSummaryFetch(unidadeId);
+		});
+	}
+
+	function agendarResumoProvisioningVisivel(){
+		if (provisioningSummaryRefreshTimer) {
+			clearTimeout(provisioningSummaryRefreshTimer);
+		}
+		provisioningSummaryRefreshTimer = setTimeout(() => {
+			provisioningSummaryRefreshTimer = null;
+			carregarResumoProvisioningVisivel();
+		}, 50);
+	}
+
+	document.addEventListener('unidades:tabela-renderizada', agendarResumoProvisioningVisivel);
+	agendarResumoProvisioningVisivel();
+
 	// ===================== Tabela: filiais expand/collapse =====================
 	function reclasificarFiliaisOrfas(principalId) {
 		try {
@@ -1070,6 +1388,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			} catch(_) {}
 		}
+		notifyTabelaUnidadesRenderizada();
 	}
 	inicializarFiliaisOrfas();
 	document.addEventListener('click', function(e){
@@ -1155,9 +1474,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			tbody.innerHTML = '';
 			if (!groups.length){
 				const tr = document.createElement('tr');
-				tr.innerHTML = '<td colspan="7" class="text-center text-muted">Nenhuma unidade cadastrada.</td>';
+				tr.innerHTML = '<td colspan="8" class="text-center text-muted">Nenhuma unidade cadastrada.</td>';
 				tbody.appendChild(tr);
 				buildPager(1, 0);
+				notifyTabelaUnidadesRenderizada();
 				return;
 			}
 			for (let i=start;i<end;i++){
@@ -1165,6 +1485,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				rows.forEach(r => { tbody.appendChild(r); });
 			}
 			buildPager(totalPages, groups.length);
+			notifyTabelaUnidadesRenderizada();
 		}
 
 		pageSizeSel.addEventListener('change', function(){ state.page = 0; render(); });
@@ -1876,6 +2197,12 @@ document.addEventListener('DOMContentLoaded', () => {
 					<td>${isFilial?'Filial':'Matriz'}</td>
 					<td>${tipoDoc?cpfFmt:cnpjFmt}</td>
 					<td>${u.endereco||''}</td>
+					<td class="td-provisioning text-start" data-provisioning-cell data-unidade-id="${id}" data-provisioning-state="idle">
+						<div class="prov-summary">
+							<div class="prov-line-1"><span class="badge text-bg-warning text-dark">Pendente</span></div>
+							<div class="prov-line-2">ver detalhes</div>
+						</div>
+					</td>
 					<td>
 						<div class="d-flex gap-1 justify-content-center flex-nowrap">
 							<button type="button" class="wdg-icon-btn" data-action="abrirDetalhes" data-id="${id}" title="Detalhes" aria-label="Detalhes">
@@ -1891,7 +2218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					</td>
 				</tr>`;
 			};
-			tbody.innerHTML = unidades.length ? unidades.map(fmtDoc).join('') : '<tr><td colspan="7" class="text-center text-muted">Nenhuma unidade cadastrada.</td></tr>';
+			tbody.innerHTML = unidades.length ? unidades.map(fmtDoc).join('') : '<tr><td colspan="8" class="text-center text-muted">Nenhuma unidade cadastrada.</td></tr>';
 			// Popular select de matrizes
 			const sel = document.getElementById('unidadePrincipal');
 			if (sel) {
@@ -1899,6 +2226,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 			// Reclassificar e esconder filiais inicialmente
 			try { inicializarFiliaisOrfas(); document.querySelectorAll('tr.filial-row').forEach(tr => { tr.classList.add('filial-hidden'); tr.style.display = 'none'; }); } catch(_){ }
+			notifyTabelaUnidadesRenderizada();
 		} catch(e) { console.warn('[unidades.js] fallback hidratação falhou:', e); }
 	})();
 });
