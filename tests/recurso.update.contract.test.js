@@ -927,3 +927,101 @@ test('PUT /gestor/api/recursos/:id com mesmo renavam do proprio recurso nao reto
     }
   }
 });
+
+test('PUT /gestor/api/recursos/:id com id existente e payload valido retorna 200', async () => {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  process.env.MONGO_MEMORY = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  const teardownGuard = installTeardownSuppression();
+
+  const { agent, authEmail } = await authenticateMasterAgent(app);
+
+  const unidadeId = '000000000000000000000010';
+  const baseTs = Date.now();
+  const suffix = String((baseTs % 9000) + 1000);
+
+  const createPayload = {
+    unidade_id: unidadeId,
+    tipo: 'carro',
+    placa: `TPU-${suffix}`,
+    chassi: `CHASSITPU-${baseTs}`,
+    renavam: String(baseTs),
+    ano: 2024,
+    mod: 2025,
+    marca: 'Marca Teste',
+    modelo: 'Modelo Teste',
+    cor: 'preto',
+  };
+
+  try {
+    const createRes = await agent
+      .post('/gestor/api/recursos')
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(createPayload);
+
+    assert.equal(
+      createRes.status,
+      201,
+      `Setup falhou: esperava 201 ao criar recurso de teste, veio ${createRes.status} com body ${JSON.stringify(createRes.body)}`,
+    );
+
+    const recursoId = extractCreatedId(createRes.body);
+    assert.ok(recursoId, `Setup falhou: resposta de criação sem id. body=${JSON.stringify(createRes.body)}`);
+
+    const updatePayload = {
+      unidade_id: unidadeId,
+      tipo: createPayload.tipo,
+      placa: createPayload.placa,
+      chassi: createPayload.chassi,
+      renavam: createPayload.renavam,
+      ano: createPayload.ano,
+      mod: createPayload.mod,
+      marca: createPayload.marca,
+      modelo: 'Modelo Atualizado',
+      cor: createPayload.cor,
+    };
+
+    const updateRes = await agent
+      .put(`/gestor/api/recursos/${recursoId}`)
+      .query({ unidadeId })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send(updatePayload);
+
+    assert.equal(
+      updateRes.status,
+      200,
+      `Contrato violado: update com id existente e payload valido deveria retornar 200, veio ${updateRes.status} com body ${JSON.stringify(updateRes.body)}`,
+    );
+
+    const updated = updateRes.body?.data || updateRes.body;
+    const updatedId = String(updated?._id || updated?.id || '');
+
+    assert.equal(
+      updatedId,
+      String(recursoId),
+      `Contrato violado: id retornado no update deveria ser o mesmo recursoId (${recursoId}), veio ${JSON.stringify(updateRes.body)}`,
+    );
+
+    assert.equal(
+      updated?.modelo,
+      updatePayload.modelo,
+      `Contrato violado: campo alterado (modelo) deveria refletir o payload atualizado, veio ${JSON.stringify(updateRes.body)}`,
+    );
+  } finally {
+    try {
+      try {
+        await User.deleteMany({ email: authEmail });
+      } catch {}
+
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+    }
+  }
+});
