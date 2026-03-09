@@ -629,6 +629,15 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       for (const item of filteredItems) {
         assert.equal(item?.tipo, 'elogio', 'filtro tipo deve retornar apenas tipo normalizado esperado');
       }
+
+      const invalidFilteredByTipo = await adminAgent
+        .get(CANONICAL_ADMIN_LIST_ENDPOINT)
+        .query({ tipo: 'tipo-invalido' })
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiFailEnvelope(invalidFilteredByTipo, 400);
+      assert.equal(invalidFilteredByTipo.body?.error, 'Tipo inválido.');
     });
 
     await t.test('PATCH/POST status admin: sucesso + 401 + 403 + 404 + 500(id malformado)', async () => {

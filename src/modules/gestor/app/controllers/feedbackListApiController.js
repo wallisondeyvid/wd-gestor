@@ -7,6 +7,13 @@ const ALLOWED_FEEDBACK_STATUSES = new Set([
   'cancelado',
 ]);
 
+const ALLOWED_FEEDBACK_TYPES = new Set([
+  'sugestao',
+  'erro',
+  'elogio',
+  'outro',
+]);
+
 export function createAdminFeedbackListHandler({
   isAdminLike,
   apiOk,
@@ -31,7 +38,11 @@ export function createAdminFeedbackListHandler({
         if (!ALLOWED_FEEDBACK_STATUSES.has(normalizedStatus)) return apiFail(res, 400, 'Status inválido.');
         filter.status = normalizedStatus;
       }
-      if (tipo) filter.tipo = normalizeTipo(tipo);
+      if (tipo) {
+        const normalizedTipo = normalizeTipo(tipo);
+        if (!ALLOWED_FEEDBACK_TYPES.has(normalizedTipo)) return apiFail(res, 400, 'Tipo inválido.');
+        filter.tipo = normalizedTipo;
+      }
 
       if (q) {
         const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
