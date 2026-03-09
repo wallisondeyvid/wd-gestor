@@ -32,10 +32,40 @@ import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } fr
 
 // Módulos registrados: por padrão, NÃO montar Escalas (fora do escopo atual).
 // Para habilitar Escalas no futuro, use ENABLE_ESCALAS=1.
-const registry = [gestorModule, clinicaModule, condominiosModule, portalMoradorModule];
+const BASE_REGISTRY = Object.freeze([gestorModule, clinicaModule, condominiosModule, portalMoradorModule]);
 
 let __portsBound = false;
 const SERVER_CLOSE_STATE_KEY = '__wdgestorCreateServerCloseState__';
+
+async function buildIsolatedPortalMoradorModule() {
+  // Garante uma instância nova do sub-app por boot para evitar vazamento de `parent`
+  // entre chamadas de createServer no mesmo processo.
+  const portalAppUrl = new URL('../modules/portal-morador/app/portal-morador-app.js', import.meta.url);
+  portalAppUrl.searchParams.set('instance', `${Date.now()}-${randomUUID()}`);
+  const isolatedPortalApp = (await import(portalAppUrl.href)).default;
+
+  return {
+    ...portalMoradorModule,
+    buildModule() {
+      return isolatedPortalApp;
+    },
+  };
+}
+
+async function buildIsolatedCondominiosModule() {
+  // Garante uma instância nova do sub-app por boot para evitar vazamento de `parent`
+  // entre chamadas de createServer no mesmo processo.
+  const condominiosAppUrl = new URL('../modules/condominios/app/condominios-app.js', import.meta.url);
+  condominiosAppUrl.searchParams.set('instance', `${Date.now()}-${randomUUID()}`);
+  const isolatedCondominiosApp = (await import(condominiosAppUrl.href)).default;
+
+  return {
+    ...condominiosModule,
+    buildModule() {
+      return isolatedCondominiosApp;
+    },
+  };
+}
 
 function isNodeTestRuntime() {
   const args = [...(process.execArgv || []), ...(process.argv || [])];
@@ -74,6 +104,24 @@ export async function createServer(options = {}) {
   const closeState = getServerCloseState();
   closeState.activeInstances += 1;
   let closeCalled = false;
+  // Cada inicialização usa uma cópia local da lista-base para evitar acúmulo entre boots.
+  const registry = [...BASE_REGISTRY];
+  try {
+    const condominiosIdx = registry.findIndex((mod) => mod?.meta?.name === 'condominios');
+    if (condominiosIdx >= 0) {
+      registry[condominiosIdx] = await buildIsolatedCondominiosModule();
+    }
+  } catch (err) {
+    console.warn('[server] condominios isolado indisponivel; usando modulo padrao:', err?.message || err);
+  }
+  try {
+    const portalIdx = registry.findIndex((mod) => mod?.meta?.name === 'portal-morador');
+    if (portalIdx >= 0) {
+      registry[portalIdx] = await buildIsolatedPortalMoradorModule();
+    }
+  } catch (err) {
+    console.warn('[server] portal-morador isolado indisponível; usando módulo padrão:', err?.message || err);
+  }
 
   bindPortsOnce();
 
@@ -1201,10 +1249,6 @@ export async function createServer(options = {}) {
         console.log('[server] módulo montado (alias): condominios em /condominio');
       }
     } catch { /* noop */ }
-  }
-
-  // Compat: permitir chamadas sem o prefixo /escalas para rotas do módulo Escalas
-  // Ex.: GET /api/escalas/:id -> redireciona para /escalas/api/escalas/:id mantendo método/corpo (307)
 
     // Compat: algumas instalações antigas usam /portal_morador (underscore).
     // Monta o mesmo sub-app também nesse path para evitar 404 em deploy.
@@ -1214,6 +1258,10 @@ export async function createServer(options = {}) {
         console.log('[server] módulo montado (alias): portal-morador em /portal_morador');
       }
     } catch { /* noop */ }
+  }
+
+  // Compat: permitir chamadas sem o prefixo /escalas para rotas do módulo Escalas
+  // Ex.: GET /api/escalas/:id -> redireciona para /escalas/api/escalas/:id mantendo método/corpo (307)
   app.use('/api/escalas', (req, res, next) => {
     try {
       if (isTestEnv) {
