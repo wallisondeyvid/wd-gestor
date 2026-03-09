@@ -515,13 +515,13 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       expectApiFailEnvelope(myDetailNotFound, 404);
       assert.equal(myDetailNotFound.body?.error, 'Feedback não encontrado.');
 
-      const myDetailServerError = await creatorAgent
+      const myDetailBadRequest = await creatorAgent
         .get(withRouteParam(CANONICAL_MY_DETAIL_ENDPOINT, 'id-malformado'))
         .set('Accept', 'application/json')
         .set('Connection', 'close');
 
-      expectApiFailEnvelope(myDetailServerError, 500);
-      assert.equal(myDetailServerError.body?.error, 'Erro ao detalhar.');
+      expectApiFailEnvelope(myDetailBadRequest, 400);
+      assert.equal(myDetailBadRequest.body?.error, 'ID inválido.');
     });
 
     let legacySanitizedFeedbackId = '';
@@ -595,13 +595,13 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       expectApiFailEnvelope(detailNotFound, 404);
       assert.equal(detailNotFound.body?.error, 'Feedback não encontrado.');
 
-      const detailServerError = await adminAgent
+      const detailBadRequest = await adminAgent
         .get(withRouteParam(CANONICAL_ADMIN_DETAIL_ENDPOINT, 'id-malformado'))
         .set('Accept', 'application/json')
         .set('Connection', 'close');
 
-      expectApiFailEnvelope(detailServerError, 500);
-      assert.equal(detailServerError.body?.error, 'Erro ao detalhar.');
+      expectApiFailEnvelope(detailBadRequest, 400);
+      assert.equal(detailBadRequest.body?.error, 'ID inválido.');
     });
 
     await t.test('GET admin list: filtro por tipo normaliza entrada e restringe resultado', async () => {
@@ -852,12 +852,12 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       expectApiFailEnvelope(notFound, 404);
       assert.equal(notFound.body?.error, 'Feedback não encontrado.');
 
-      const serverError = await adminAgent
+      const badRequest = await adminAgent
         .delete(withRouteParam(CANONICAL_ADMIN_DELETE_ENDPOINT, 'id-malformado'))
         .set('Accept', 'application/json')
         .set('Connection', 'close');
-      expectApiFailEnvelope(serverError, 500);
-      assert.equal(serverError.body?.error, 'Erro ao excluir feedback.');
+      expectApiFailEnvelope(badRequest, 400);
+      assert.equal(badRequest.body?.error, 'ID inválido.');
     });
 
     await t.test('POST /gestor/api/feedback/:id/anexo: sucesso + acesso URL + 401 + 403 + 400 + 404 + 503(blob) + 500(fs)', async () => {
