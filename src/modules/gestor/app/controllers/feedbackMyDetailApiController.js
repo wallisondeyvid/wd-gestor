@@ -7,6 +7,7 @@ export function createMyFeedbackDetailHandler({
   return async function detailMyFeedback(req, res) {
     try {
       const id = String(req.params.feedbackId || '').trim();
+      if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
       const fb = await findFeedbackByIdLean(id);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 

@@ -10,6 +10,7 @@ export function createAdminFeedbackDetailHandler({
     try {
       if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
       const id = String(req.params.feedbackId || '').trim();
+      if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
       const fb = await findFeedbackByIdLean(id);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
       return apiOk(res, sanitizeFeedback(fb));
