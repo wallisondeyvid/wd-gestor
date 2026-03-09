@@ -205,6 +205,72 @@ test('createServer: sub-app de condominios nao deve ficar preso ao parent da ult
   );
 });
 
+test('condominios: getEffectiveSkipDb nao considera parent.locals.skipDb no request path', () => {
+  const result = runScenario(
+    'condominios-getEffectiveSkipDb-parent-read',
+    `
+      process.env.ENABLE_ESCALAS = '0';
+
+      const express = (await import('express')).default;
+      const { createServer } = await import('./src/server/createServer.js');
+      const request = (await import('supertest')).default;
+
+      const originalUse = express.application.use;
+      let capturedCondominiosApp = null;
+
+      express.application.use = function patchedUse(...args) {
+        try {
+          if (args[0] === '/condominios' && args[1] && args[1].locals) {
+            capturedCondominiosApp = args[1];
+          }
+        } catch {
+          // noop
+        }
+        return originalUse.apply(this, args);
+      };
+
+      let built = null;
+      try {
+        built = await createServer({ skipDb: false, deferErrorHandlers: true });
+      } finally {
+        express.application.use = originalUse;
+      }
+      const condApp = capturedCondominiosApp;
+
+      if (!condApp || !built.app || !built.app.locals) {
+        throw new Error('nao foi possivel capturar app de condominios durante a montagem');
+      }
+
+      condApp.locals.skipDb = false;
+      built.app.locals.skipDb = true;
+
+      const res = await request(built.app)
+        .get('/condominios/api/blocos')
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      await built.close({ stopMemoryServer: true });
+
+      console.log('${RESULT_PREFIX}' + JSON.stringify({
+        status: res.status,
+        effective: String(res.headers['x-condominios-effective-skipdb'] || ''),
+        subApp: String(res.headers['x-condominios-subapp-skipdb'] || ''),
+        parent: String(res.headers['x-condominios-parent-skipdb'] || ''),
+      }));
+    `,
+  );
+
+  assert.equal(result.status, 503, 'o cenario continua em indisponibilidade de DB, sem herdar parent no effective');
+  assert.notEqual(
+    result.effective,
+    'true',
+    'novo contrato: parent.locals.skipDb nao deve mais influenciar effectiveSkipDb',
+  );
+  if (result.effective !== '') {
+    assert.equal(result.effective, 'false', 'quando presente, effectiveSkipDb deve refletir apenas skipDb local');
+  }
+});
+
 test('createServer: alias /portal_morador monta o mesmo sub-app do portal', () => {
   const result = runScenario(
     'portal-underscore-alias',

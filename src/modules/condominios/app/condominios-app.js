@@ -387,8 +387,7 @@ function isMongoOfflineError(err) {
 function getEffectiveSkipDb(req) {
   try {
     const local = !!req?.app?.locals?.skipDb;
-    const parent = !!req?.app?.parent?.locals?.skipDb;
-    return local || parent;
+    return local;
   } catch {
     return false;
   }
@@ -771,7 +770,6 @@ async function ensureCondominiosMongoOnline(req, res) {
       const forced = !!(req?.app?.locals?.__skipDbForced || req?.app?.parent?.locals?.__skipDbForced);
       if (!forced) {
         if (req?.app?.locals) req.app.locals.skipDb = false;
-        if (req?.app?.parent?.locals) req.app.parent.locals.skipDb = false;
       }
     } catch {
       /* noop */
