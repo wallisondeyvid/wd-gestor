@@ -740,6 +740,15 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       for (const item of filteredItems) {
         assert.equal(item?.status, 'em_andamento', 'filtro status deve retornar apenas status normalizado esperado');
       }
+
+      const invalidFilteredByStatus = await adminAgent
+        .get(CANONICAL_ADMIN_LIST_ENDPOINT)
+        .query({ status: 'status-invalido' })
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiFailEnvelope(invalidFilteredByStatus, 400);
+      assert.equal(invalidFilteredByStatus.body?.error, 'Status inválido.');
     });
 
     await t.test('PATCH/POST resposta admin: sucesso + 401 + 403 + 404 + 500(id malformado)', async () => {

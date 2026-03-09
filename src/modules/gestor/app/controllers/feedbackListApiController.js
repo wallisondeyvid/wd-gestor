@@ -1,3 +1,12 @@
+const ALLOWED_FEEDBACK_STATUSES = new Set([
+  'novo',
+  'respondido',
+  'aberto',
+  'em_andamento',
+  'resolvido',
+  'cancelado',
+]);
+
 export function createAdminFeedbackListHandler({
   isAdminLike,
   apiOk,
@@ -17,7 +26,11 @@ export function createAdminFeedbackListHandler({
       const tipo = String(req.query?.tipo || '').trim();
 
       const filter = {};
-      if (status) filter.status = normalizeStatus(status);
+      if (status) {
+        const normalizedStatus = normalizeStatus(status);
+        if (!ALLOWED_FEEDBACK_STATUSES.has(normalizedStatus)) return apiFail(res, 400, 'Status inválido.');
+        filter.status = normalizedStatus;
+      }
       if (tipo) filter.tipo = normalizeTipo(tipo);
 
       if (q) {
