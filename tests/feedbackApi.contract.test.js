@@ -883,6 +883,14 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       expectApiFailEnvelope(invalidId, 400);
       assert.equal(invalidId.body?.error, 'ID inválido.');
 
+      const malformedId = await creatorAgent
+        .post(withRouteParam(CANONICAL_UPLOAD_ENDPOINT, 'id-malformado'))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .attach('anexo', tinyPng, 'malformed-id.png');
+      expectApiFailEnvelope(malformedId, 400);
+      assert.equal(malformedId.body?.error, 'ID inválido.');
+
       const notFound = await creatorAgent
         .post(withRouteParam(CANONICAL_UPLOAD_ENDPOINT, 'ffffffffffffffffffffffff'))
         .set('Accept', 'application/json')

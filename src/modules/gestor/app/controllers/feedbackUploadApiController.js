@@ -11,6 +11,7 @@ export function createUploadFeedbackAnexoHandler({
     try {
       const feedbackId = String(req.params.feedbackId || '').trim();
       if (!feedbackId) return apiFail(res, 400, 'ID inválido.');
+      if (!/^[0-9a-fA-F]{24}$/.test(feedbackId)) return apiFail(res, 400, 'ID inválido.');
 
       const fb = await findFeedbackById(feedbackId);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
