@@ -48,7 +48,6 @@ import moduloApiRouter from './routes/moduloApi.js';
 import debugApiRouter from './routes/debugApi.js';
 import userAdminApiRouter from './routes/userAdminApi.js';
 import miscApiRouter from './routes/miscApi.js';
-import userPhotoApiRouter from './routes/userPhotoApi.js';
 import bancoApiRouter from './routes/bancoApi.js';
 import faceBiometriaUploadApiRouter from './routes/faceBiometriaUploadApi.js';
 import feedbackApiRouter from './routes/feedbackApi.js';
@@ -380,7 +379,6 @@ app.use('/', cnaeApiRouter);
 app.use('/', moduloApiRouter);
 app.use('/', debugApiRouter);
 app.use('/', userAdminApiRouter);
-app.use('/', userPhotoApiRouter);
 app.use('/', faceBiometriaUploadApiRouter);
 app.use('/api', miscApiRouter);     // agrupado em /api misc endpoints
 app.use('/api', bancoApiRouter);    // banco endpoints dentro de /api

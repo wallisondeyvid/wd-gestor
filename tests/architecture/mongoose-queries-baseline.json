@@ -49,7 +49,6 @@
     "src/modules/gestor/app/routes/recursoApi.js",
     "src/modules/gestor/app/routes/setorApi.js",
     "src/modules/gestor/app/routes/unidadeApi.js",
-    "src/modules/gestor/app/routes/userPhotoApi.js",
     "src/modules/gestor/app/routes/widgetSettingsApi.js",
     "src/modules/gestor/app/utils/syncUserFuncionario.js",
     "src/modules/gestor/gestor-seeds.js"
