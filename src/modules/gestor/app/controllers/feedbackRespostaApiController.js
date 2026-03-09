@@ -11,6 +11,7 @@ export function createUpdateFeedbackRespostaHandler({
       const id = String(req.params.feedbackId || '').trim();
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
       const resposta = String(req.body?.resposta || req.body?.reply || '').trim();
+      if (resposta.length > 4000) return apiFail(res, 400, 'Resposta deve ter no máximo 4000 caracteres.');
       const set = { resposta };
       if (resposta) set.status = 'respondido';
       const fb = await findFeedbackByIdAndUpdateSetNewLean(id, set);

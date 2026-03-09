@@ -791,6 +791,16 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
 
       expectApiFailEnvelope(badRequest, 400);
       assert.equal(badRequest.body?.error, 'ID inválido.');
+
+      const hugeResposta = 'x'.repeat(5001);
+      const oversizedResposta = await adminAgent
+        .patch(withRouteParam(CANONICAL_ADMIN_REPLY_ENDPOINT, forReply))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({ resposta: hugeResposta });
+
+      expectApiFailEnvelope(oversizedResposta, 400);
+      assert.equal(oversizedResposta.body?.error, 'Resposta deve ter no máximo 4000 caracteres.');
     });
 
     await t.test('DELETE/POST delete admin: sucesso + 401 + 403 + 400 + 404 + 500(id malformado)', async () => {
