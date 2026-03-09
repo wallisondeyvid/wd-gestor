@@ -10,6 +10,7 @@ export function createCreateFeedbackHandler({
     try {
       const mensagem = String(req.body?.mensagem || req.body?.message || '').trim();
       if (!mensagem) return apiFail(res, 400, 'Mensagem é obrigatória.');
+      if (mensagem.length > 4000) return apiFail(res, 400, 'Mensagem deve ter no máximo 4000 caracteres.');
 
       const tipo = normalizeTipo(req.body?.tipo || req.body?.type);
 

@@ -386,15 +386,14 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       expectApiFailEnvelope(badRequest, 400);
       assert.equal(badRequest.body?.error, 'Mensagem é obrigatória.');
 
-      // Comportamento atual: validação de schema (maxlength) cai no catch geral e retorna 500.
       const hugeMessage = 'x'.repeat(5001);
       const serverError = await creatorAgent
         .post(CANONICAL_CREATE_ENDPOINT)
         .set('Accept', 'application/json')
         .set('Connection', 'close')
         .send({ mensagem: hugeMessage, tipo: 'erro' });
-      expectApiFailEnvelope(serverError, 500);
-      assert.equal(serverError.body?.error, 'Erro ao criar feedback.');
+      expectApiFailEnvelope(serverError, 400);
+      assert.equal(serverError.body?.error, 'Mensagem deve ter no máximo 4000 caracteres.');
     });
 
     await t.test('POST /gestor/api/feedback: normaliza tipo e infere modulo por precedencia (module > contexto.url > referer)', async () => {
