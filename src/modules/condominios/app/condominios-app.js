@@ -399,7 +399,6 @@ function respondDbOffline(res, req) {
     res.set('Retry-After', '5');
     res.set('X-Condominios-Effective-SkipDb', String(!!getEffectiveSkipDb(req)));
     res.set('X-Condominios-SubApp-SkipDb', String(!!req?.app?.locals?.skipDb));
-    res.set('X-Condominios-Parent-SkipDb', String(!!req?.app?.parent?.locals?.skipDb));
     res.set('X-Condominios-Mongo-State', String(mongoose.connection.readyState));
     res.set('X-Condominios-Mongo-Uri-Present', String(!!(process.env.MONGO_URI || process.env.MONGODB_URI)));
   } catch {
@@ -417,7 +416,6 @@ function respondDbOffline(res, req) {
       mongoUriPresent: !!(process.env.MONGO_URI || process.env.MONGODB_URI),
       effectiveSkipDb: !!getEffectiveSkipDb(req),
       subAppSkipDb: !!req?.app?.locals?.skipDb,
-      parentSkipDb: !!req?.app?.parent?.locals?.skipDb,
     }
   });
 }
@@ -730,9 +728,7 @@ async function ensureCondominiosMongoOnline(req, res) {
   try {
     // prioridade absoluta: skipDb forçado pelo createServer
     try {
-      const forced =
-        !!req?.app?.locals?.__skipDbForced ||
-        !!req?.app?.parent?.locals?.__skipDbForced;
+      const forced = !!req?.app?.locals?.__skipDbForced;
 
       if (forced) {
         respondDbOffline(res, req);
@@ -767,7 +763,7 @@ async function ensureCondominiosMongoOnline(req, res) {
     }
 
     try {
-      const forced = !!(req?.app?.locals?.__skipDbForced || req?.app?.parent?.locals?.__skipDbForced);
+      const forced = !!req?.app?.locals?.__skipDbForced;
       if (!forced) {
         if (req?.app?.locals) req.app.locals.skipDb = false;
       }
