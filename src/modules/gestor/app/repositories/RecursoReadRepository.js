@@ -15,14 +15,17 @@ export async function findRecursosByFiltroComUnidadeLeanRepo({ unitScope, filtro
     .lean();
 }
 
-export async function findRecursoByIdComUnidadeNomeRepo({ unitScope, id }) {
+export async function findRecursoByIdComUnidadeNomeRepo({ unitScope, id, unidadeId = null }) {
   const RecursoModel = resolveModel({
     name: Recurso.modelName || 'Recurso',
     schema: Recurso.schema,
     unitScope,
   });
 
-  return RecursoModel.findById(id).populate('unidade_id', 'nome');
+  const filtro = { _id: id };
+  if (unidadeId) filtro.unidade_id = unidadeId;
+
+  return RecursoModel.findOne(filtro).populate('unidade_id', 'nome');
 }
 
 export async function findRecursoByPlacaUpperRepo({ unitScope, placaUpper }) {
@@ -105,22 +108,28 @@ export async function findOutroRecursoByRenavamRepo({ unitScope, id, renavam }) 
   return RecursoModel.findOne({ renavam, _id: { $ne: id } });
 }
 
-export async function updateRecursoByIdComUnidadeNomeRepo({ unitScope, id, data }) {
+export async function updateRecursoByIdComUnidadeNomeRepo({ unitScope, id, data, unidadeId = null }) {
   const RecursoModel = resolveModel({
     name: Recurso.modelName || 'Recurso',
     schema: Recurso.schema,
     unitScope,
   });
 
-  return RecursoModel.findByIdAndUpdate(id, data, { new: true }).populate('unidade_id', 'nome');
+  const filtro = { _id: id };
+  if (unidadeId) filtro.unidade_id = unidadeId;
+
+  return RecursoModel.findOneAndUpdate(filtro, data, { new: true }).populate('unidade_id', 'nome');
 }
 
-export async function deleteRecursoByIdRepo({ unitScope, id }) {
+export async function deleteRecursoByIdRepo({ unitScope, id, unidadeId = null }) {
   const RecursoModel = resolveModel({
     name: Recurso.modelName || 'Recurso',
     schema: Recurso.schema,
     unitScope,
   });
 
-  return RecursoModel.findByIdAndDelete(id);
+  const filtro = { _id: id };
+  if (unidadeId) filtro.unidade_id = unidadeId;
+
+  return RecursoModel.findOneAndDelete(filtro);
 }

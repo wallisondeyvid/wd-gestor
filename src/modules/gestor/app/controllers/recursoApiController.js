@@ -90,7 +90,139 @@ export async function listarRecursosApi(req, res) {
 		return serverError(res, error);
 	}
 }
-export async function getRecurso(req, res) { try { const recurso = await findRecursoByIdComUnidadeNome(req.params.id); if (!recurso) return notFound(res,'Recurso não encontrado'); return ok(res, recurso); } catch (error) { console.error('[API RECURSOS][get] Erro:', error); return serverError(res, error); } }
-export async function createRecurso(req, res) { try { const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor } = req.body; if (!unidade_id || !tipo || !placa || !chassi || !renavam || !ano || !mod || !marca || !modelo || !cor) return badRequest(res,'Todos os campos são obrigatórios'); const placaRegexAntiga = /^[A-Z]{3}-[0-9]{4}$/; const placaRegexMercosul = /^[A-Z]{3}-[0-9][A-Z][0-9]{2}$/; if (!placaRegexAntiga.test(placa.toUpperCase()) && !placaRegexMercosul.test(placa.toUpperCase())) return badRequest(res,'Formato de placa inválido. Use ABC-1234 ou ABC-1D34'); if(await findRecursoByPlacaUpper(placa.toUpperCase())) return badRequest(res,'Placa já cadastrada'); if(await findRecursoByChassiUpper(chassi.toUpperCase())) return badRequest(res,'Chassi já cadastrado'); if(await findRecursoByRenavam(renavam)) return badRequest(res,'RENAVAM já cadastrado'); const novoRecurso = await createRecursoDb({ unidade_id, tipo, placa: placa.toUpperCase(), chassi: chassi.toUpperCase(), renavam, ano: parseInt(ano), mod: parseInt(mod), marca, modelo, cor, ativo: true }); return created(res, novoRecurso._id, { data: novoRecurso }); } catch (error) { console.error('[API RECURSOS][create] Erro:', error); return serverError(res, error); } }
-export async function updateRecurso(req, res) { try { const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor, ativo } = req.body; if (!unidade_id) return badRequest(res,'Unidade é obrigatória'); if (!/^[0-9a-fA-F]{24}$/.test(String(unidade_id))) return badRequest(res,'Unidade inválida'); if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res,'ID inválido'); const recurso = await findRecursoById(req.params.id); if (!recurso) return notFound(res,'Recurso não encontrado'); if (placa) { const placaRegexAntiga = /^[A-Z]{3}-[0-9]{4}$/; const placaRegexMercosul = /^[A-Z]{3}-[0-9][A-Z][0-9]{2}$/; if (!placaRegexAntiga.test(placa.toUpperCase()) && !placaRegexMercosul.test(placa.toUpperCase())) return badRequest(res,'Formato de placa inválido. Use ABC-1234 ou ABC-1D34'); } if (placa && placa.toUpperCase() !== recurso.placa && await findOutroRecursoByPlacaUpper(req.params.id, placa.toUpperCase())) return badRequest(res,'Placa já cadastrada para outro recurso'); if (chassi && chassi.toUpperCase() !== recurso.chassi && await findOutroRecursoByChassiUpper(req.params.id, chassi.toUpperCase())) return badRequest(res,'Chassi já cadastrado para outro recurso'); if (renavam && renavam !== recurso.renavam && await findOutroRecursoByRenavam(req.params.id, renavam)) return badRequest(res,'RENAVAM já cadastrado para outro recurso'); const atualizado = await updateRecursoByIdComUnidadeNome( req.params.id, { unidade_id, tipo, placa: placa ? placa.toUpperCase() : recurso.placa, chassi: chassi ? chassi.toUpperCase() : recurso.chassi, renavam, ano: ano ? parseInt(ano) : recurso.ano, mod: mod ? parseInt(mod) : recurso.mod, marca, modelo, cor, ativo: ativo !== undefined ? ativo : recurso.ativo } ); return ok(res, atualizado); } catch (error) { console.error('[API RECURSOS][update] Erro:', error); return serverError(res, error); } }
-export async function deleteRecurso(req, res) { try { if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res,'ID inválido'); const recurso = await deleteRecursoById(req.params.id); if (!recurso) return notFound(res,'Recurso não encontrado'); return ok(res, { deleted:true, id:req.params.id }); } catch (error) { console.error('[API RECURSOS][delete] Erro:', error); return serverError(res, error); } }
+export async function getRecurso(req, res) {
+	try {
+		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
+		const unidadeEfetiva = !isMasterOrAdmin ? String(req.user?.unidade_id || '').trim() : null;
+
+		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
+		if (!recurso) return notFound(res, 'Recurso não encontrado');
+
+		return ok(res, recurso);
+	} catch (error) {
+		console.error('[API RECURSOS][get] Erro:', error);
+		return serverError(res, error);
+	}
+}
+export async function createRecurso(req, res) {
+	try {
+		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor } = req.body;
+		if (!unidade_id || !tipo || !placa || !chassi || !renavam || !ano || !mod || !marca || !modelo || !cor) {
+			return badRequest(res, 'Todos os campos são obrigatórios');
+		}
+
+		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
+		if (!isMasterOrAdmin) {
+			const unidadeEfetiva = String(req.user?.unidade_id || '').trim();
+			const unidadeSolicitada = String(unidade_id || '').trim();
+			if (!unidadeEfetiva || unidadeSolicitada !== unidadeEfetiva) {
+				return notFound(res, 'Unidade não encontrada');
+			}
+		}
+
+		const placaRegexAntiga = /^[A-Z]{3}-[0-9]{4}$/;
+		const placaRegexMercosul = /^[A-Z]{3}-[0-9][A-Z][0-9]{2}$/;
+		if (!placaRegexAntiga.test(placa.toUpperCase()) && !placaRegexMercosul.test(placa.toUpperCase())) {
+			return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
+		}
+
+		if (await findRecursoByPlacaUpper(placa.toUpperCase())) return badRequest(res, 'Placa já cadastrada');
+		if (await findRecursoByChassiUpper(chassi.toUpperCase())) return badRequest(res, 'Chassi já cadastrado');
+		if (await findRecursoByRenavam(renavam)) return badRequest(res, 'RENAVAM já cadastrado');
+
+		const novoRecurso = await createRecursoDb({
+			unidade_id,
+			tipo,
+			placa: placa.toUpperCase(),
+			chassi: chassi.toUpperCase(),
+			renavam,
+			ano: parseInt(ano),
+			mod: parseInt(mod),
+			marca,
+			modelo,
+			cor,
+			ativo: true,
+		});
+
+		return created(res, novoRecurso._id, { data: novoRecurso });
+	} catch (error) {
+		console.error('[API RECURSOS][create] Erro:', error);
+		return serverError(res, error);
+	}
+}
+export async function updateRecurso(req, res) {
+	try {
+		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor, ativo } = req.body;
+
+		if (!unidade_id) return badRequest(res, 'Unidade é obrigatória');
+		if (!/^[0-9a-fA-F]{24}$/.test(String(unidade_id))) return badRequest(res, 'Unidade inválida');
+		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
+
+		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
+		const unidadeEfetiva = !isMasterOrAdmin ? String(req.user?.unidade_id || '').trim() : null;
+
+		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
+		if (!recurso) return notFound(res, 'Recurso não encontrado');
+
+		if (placa) {
+			const placaRegexAntiga = /^[A-Z]{3}-[0-9]{4}$/;
+			const placaRegexMercosul = /^[A-Z]{3}-[0-9][A-Z][0-9]{2}$/;
+			if (!placaRegexAntiga.test(placa.toUpperCase()) && !placaRegexMercosul.test(placa.toUpperCase())) {
+				return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
+			}
+		}
+
+		if (placa && placa.toUpperCase() !== recurso.placa && await findOutroRecursoByPlacaUpper(req.params.id, placa.toUpperCase())) {
+			return badRequest(res, 'Placa já cadastrada para outro recurso');
+		}
+
+		if (chassi && chassi.toUpperCase() !== recurso.chassi && await findOutroRecursoByChassiUpper(req.params.id, chassi.toUpperCase())) {
+			return badRequest(res, 'Chassi já cadastrado para outro recurso');
+		}
+
+		if (renavam && renavam !== recurso.renavam && await findOutroRecursoByRenavam(req.params.id, renavam)) {
+			return badRequest(res, 'RENAVAM já cadastrado para outro recurso');
+		}
+
+		const atualizado = await updateRecursoByIdComUnidadeNome(
+			req.params.id,
+			{
+				unidade_id,
+				tipo,
+				placa: placa ? placa.toUpperCase() : recurso.placa,
+				chassi: chassi ? chassi.toUpperCase() : recurso.chassi,
+				renavam,
+				ano: ano ? parseInt(ano) : recurso.ano,
+				mod: mod ? parseInt(mod) : recurso.mod,
+				marca,
+				modelo,
+				cor,
+				ativo: ativo !== undefined ? ativo : recurso.ativo,
+			},
+			unidadeEfetiva || null,
+		);
+
+		if (!atualizado) return notFound(res, 'Recurso não encontrado');
+
+		return ok(res, atualizado);
+	} catch (error) {
+		console.error('[API RECURSOS][update] Erro:', error);
+		return serverError(res, error);
+	}
+}
+export async function deleteRecurso(req, res) {
+	try {
+		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
+
+		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
+		const unidadeEfetiva = !isMasterOrAdmin ? String(req.user?.unidade_id || '').trim() : null;
+
+		const recurso = await deleteRecursoById(req.params.id, unidadeEfetiva || null);
+		if (!recurso) return notFound(res, 'Recurso não encontrado');
+
+		return ok(res, { deleted: true, id: req.params.id });
+	} catch (error) {
+		console.error('[API RECURSOS][delete] Erro:', error);
+		return serverError(res, error);
+	}
+}

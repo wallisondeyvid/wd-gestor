@@ -357,8 +357,8 @@ export async function findRecursosByFiltroComUnidadeLean(filtro) {
   return findRecursosByFiltroComUnidadeLeanRepo({ unitScope: GLOBAL_SCOPE, filtro });
 }
 
-export async function findRecursoByIdComUnidadeNome(id) {
-  return findRecursoByIdComUnidadeNomeRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findRecursoByIdComUnidadeNome(id, unidadeId = null) {
+  return findRecursoByIdComUnidadeNomeRepo({ unitScope: GLOBAL_SCOPE, id, unidadeId });
 }
 
 export async function findRecursoByPlacaUpper(placaUpper) {
@@ -393,12 +393,12 @@ export async function findOutroRecursoByRenavam(id, renavam) {
   return findOutroRecursoByRenavamRepo({ unitScope: GLOBAL_SCOPE, id, renavam });
 }
 
-export async function updateRecursoByIdComUnidadeNome(id, data) {
-  return updateRecursoByIdComUnidadeNomeRepo({ unitScope: GLOBAL_SCOPE, id, data });
+export async function updateRecursoByIdComUnidadeNome(id, data, unidadeId = null) {
+  return updateRecursoByIdComUnidadeNomeRepo({ unitScope: GLOBAL_SCOPE, id, data, unidadeId });
 }
 
-export async function deleteRecursoById(id) {
-  return deleteRecursoByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function deleteRecursoById(id, unidadeId = null) {
+  return deleteRecursoByIdRepo({ unitScope: GLOBAL_SCOPE, id, unidadeId });
 }
 
 export async function findUnidadeById(setorUnidadeId) {
