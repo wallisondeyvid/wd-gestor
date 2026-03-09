@@ -687,6 +687,15 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
 
       expectApiFailEnvelope(badRequest, 400);
       assert.equal(badRequest.body?.error, 'ID inválido.');
+
+      const invalidStatus = await adminAgent
+        .patch(withRouteParam(CANONICAL_ADMIN_STATUS_ENDPOINT, forStatus))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({ status: 'status-invalido' });
+
+      expectApiFailEnvelope(invalidStatus, 400);
+      assert.equal(invalidStatus.body?.error, 'Status inválido.');
     });
 
     await t.test('PATCH status admin + GET admin list: normalizacao de status observavel no filtro', async () => {
