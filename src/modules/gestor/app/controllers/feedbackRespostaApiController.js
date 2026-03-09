@@ -9,6 +9,7 @@ export function createUpdateFeedbackRespostaHandler({
     try {
       if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
       const id = String(req.params.feedbackId || '').trim();
+      if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
       const resposta = String(req.body?.resposta || req.body?.reply || '').trim();
       const set = { resposta };
       if (resposta) set.status = 'respondido';

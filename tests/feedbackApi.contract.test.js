@@ -680,14 +680,14 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       expectApiFailEnvelope(notFound, 404);
       assert.equal(notFound.body?.error, 'Feedback não encontrado.');
 
-      const serverError = await adminAgent
+      const badRequest = await adminAgent
         .patch(withRouteParam(CANONICAL_ADMIN_STATUS_ENDPOINT, 'id-malformado'))
         .set('Accept', 'application/json')
         .set('Connection', 'close')
         .send({ status: 'novo' });
 
-      expectApiFailEnvelope(serverError, 500);
-      assert.equal(serverError.body?.error, 'Erro ao salvar status.');
+      expectApiFailEnvelope(badRequest, 400);
+      assert.equal(badRequest.body?.error, 'ID inválido.');
     });
 
     await t.test('PATCH status admin + GET admin list: normalizacao de status observavel no filtro', async () => {
@@ -784,14 +784,14 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       expectApiFailEnvelope(notFound, 404);
       assert.equal(notFound.body?.error, 'Feedback não encontrado.');
 
-      const serverError = await adminAgent
+      const badRequest = await adminAgent
         .patch(withRouteParam(CANONICAL_ADMIN_REPLY_ENDPOINT, 'id-malformado'))
         .set('Accept', 'application/json')
         .set('Connection', 'close')
         .send({ resposta: 'x' });
 
-      expectApiFailEnvelope(serverError, 500);
-      assert.equal(serverError.body?.error, 'Erro ao salvar resposta.');
+      expectApiFailEnvelope(badRequest, 400);
+      assert.equal(badRequest.body?.error, 'ID inválido.');
     });
 
     await t.test('DELETE/POST delete admin: sucesso + 401 + 403 + 400 + 404 + 500(id malformado)', async () => {
