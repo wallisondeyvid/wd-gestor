@@ -4,6 +4,15 @@ import path from 'path';
 import multer from 'multer';
 import { put, del } from '@vercel/blob';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { createAdminFeedbackDetailHandler } from '#modules/gestor/app/controllers/feedbackDetailApiController.js';
+import { createCreateFeedbackHandler } from '#modules/gestor/app/controllers/feedbackCreateApiController.js';
+import { createUploadFeedbackAnexoHandler } from '#modules/gestor/app/controllers/feedbackUploadApiController.js';
+import { createAdminFeedbackListHandler } from '#modules/gestor/app/controllers/feedbackListApiController.js';
+import { createMyFeedbackDetailHandler } from '#modules/gestor/app/controllers/feedbackMyDetailApiController.js';
+import { createMyFeedbackListHandler } from '#modules/gestor/app/controllers/feedbackMyListApiController.js';
+import { createDeleteFeedbackHandler } from '#modules/gestor/app/controllers/feedbackDeleteApiController.js';
+import { createUpdateFeedbackRespostaHandler } from '#modules/gestor/app/controllers/feedbackRespostaApiController.js';
+import { createUpdateFeedbackStatusHandler } from '#modules/gestor/app/controllers/feedbackStatusApiController.js';
 import {
   createFeedback,
   findFeedbackById,
@@ -187,251 +196,98 @@ function sanitizeFeedback(fb){
 // =============== Widget (usuário) ===============
 
 // Criar feedback
-router.post('/api/feedback', requireLogin, async (req, res) => {
-  try {
-    const mensagem = String(req.body?.mensagem || req.body?.message || '').trim();
-    if (!mensagem) return apiFail(res, 400, 'Mensagem é obrigatória.');
-
-    const tipo = normalizeTipo(req.body?.tipo || req.body?.type);
-
-    // Compat com o widget: { contexto: { url, timezone, user_agent, page_label, viewport } }
-    const ctx = (req.body && typeof req.body === 'object' && req.body.contexto && typeof req.body.contexto === 'object') ? req.body.contexto : null;
-    const ctxUrl = String((ctx && (ctx.url || ctx.path)) || req.body?.url || '').trim();
-    const ctxTz = String((ctx && (ctx.timezone || ctx.tz)) || req.body?.timezone || '').trim();
-    const ctxUa = String((ctx && (ctx.user_agent || ctx.userAgent)) || req.body?.userAgent || '').trim();
-    const inferredModulo = String(req.body?.module || req.body?.modulo || '')?.trim() || inferModuloFromUrl(ctxUrl) || inferModuloFromUrl(req.get('referer'));
-    const uaFromHeader = String(req.get('user-agent') || '').trim();
-
-    const fb = await createFeedback({
-      tipo,
-      status: 'novo',
-      mensagem,
-      criadoPor: {
-        userId: req.user?._id || req.user?.id || null,
-        email: req.user?.email || '',
-        nome: req.user?.nome || '',
-        role: req.user?.role || ''
-      },
-      origem: {
-        modulo: String(inferredModulo || '').trim(),
-        path: String(ctxUrl || '').trim(),
-        userAgent: String(ctxUa || uaFromHeader || '').trim(),
-        timezone: String(ctxTz || '').trim(),
-      }
-    });
-
-    return apiOk(res, fb.toObject(), { id: fb._id, created: true });
-  } catch (e) {
-    console.error('[feedbackApi] POST /api/feedback erro:', e);
-    return apiFail(res, 500, 'Erro ao criar feedback.');
-  }
+const createFeedbackHandler = createCreateFeedbackHandler({
+  apiOk,
+  apiFail,
+  normalizeTipo,
+  inferModuloFromUrl,
+  createFeedback,
 });
+router.post('/api/feedback', requireLogin, createFeedbackHandler);
 
 // Upload de anexo para um feedback
-router.post('/api/feedback/:feedbackId/anexo', requireLogin, upload.any(), async (req, res) => {
-  try {
-    const feedbackId = String(req.params.feedbackId || '').trim();
-    if (!feedbackId) return apiFail(res, 400, 'ID inválido.');
-
-    const fb = await findFeedbackById(feedbackId);
-    if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
-
-    // Segurança: só o criador pode anexar
-    const creator = fb?.criadoPor?.userId ? String(fb.criadoPor.userId) : '';
-    const me = req.user?._id || req.user?.id;
-    if (creator && me && String(me) !== creator) {
-      return apiFail(res, 403, 'Acesso negado.');
-    }
-
-    const file = pickFile(req);
-    if (!file || !file.buffer) return apiFail(res, 400, 'Arquivo ausente.');
-
-    const stored = await storeFeedbackAnexo({ req, feedbackId: String(fb._id), file });
-
-    fb.anexos = Array.isArray(fb.anexos) ? fb.anexos : [];
-    fb.anexos.push({
-      nome: stored.originalName,
-      url: stored.url,
-      mime: file.mimetype,
-      size: file.size || (file.buffer ? file.buffer.length : 0)
-    });
-    await saveFeedbackDoc(fb);
-
-    return apiOk(res, fb.toObject(), { id: fb._id });
-  } catch (e) {
-    if (e?.code === 'BLOB_NOT_CONFIGURED') {
-      return apiFail(
-        res,
-        503,
-        'Upload de anexo indisponível: configure o Vercel Blob (Store) ou defina BLOB_READ_WRITE_TOKEN/WDGESTOR_DB_DADOS_READ_WRITE_TOKEN.',
-        { code: 'BLOB_NOT_CONFIGURED' }
-      );
-    }
-    if (e?.code === 'BLOB_UPLOAD_FAILED') {
-      return apiFail(res, 503, 'Falha ao enviar anexo para a nuvem. Tente novamente em instantes.', { code: 'BLOB_UPLOAD_FAILED' });
-    }
-    console.error('[feedbackApi] POST /api/feedback/:id/anexo erro:', e);
-    return apiFail(res, 500, 'Erro ao anexar arquivo.');
-  }
+const uploadFeedbackAnexoHandler = createUploadFeedbackAnexoHandler({
+  apiOk,
+  apiFail,
+  findFeedbackById,
+  saveFeedbackDoc,
+  pickFile,
+  storeFeedbackAnexo,
 });
+router.post('/api/feedback/:feedbackId/anexo', requireLogin, upload.any(), uploadFeedbackAnexoHandler);
 
 // Meus feedbacks
-router.get('/api/feedback/meus', requireLogin, async (req, res) => {
-  try {
-    const me = req.user?._id || req.user?.id || null;
-    const filter = me ? { 'criadoPor.userId': me } : { 'criadoPor.email': req.user?.email || '' };
-
-    const items = await findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter);
-
-    return apiOk(res, items);
-  } catch (e) {
-    console.error('[feedbackApi] GET /api/feedback/meus erro:', e);
-    return apiFail(res, 500, 'Erro ao listar.');
-  }
+const listMyFeedback = createMyFeedbackListHandler({
+  apiOk,
+  apiFail,
+  findFeedbackByFilterSortCreatedAtDescLimit200Lean,
 });
+router.get('/api/feedback/meus', requireLogin, listMyFeedback);
 
 // Detalhar meu feedback
-router.get('/api/feedback/meus/:feedbackId', requireLogin, async (req, res) => {
-  try {
-    const id = String(req.params.feedbackId || '').trim();
-    const fb = await findFeedbackByIdLean(id);
-    if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
-
-    const creator = fb?.criadoPor?.userId ? String(fb.criadoPor.userId) : '';
-    const me = req.user?._id || req.user?.id;
-    if (creator && me && String(me) !== creator) return apiFail(res, 403, 'Acesso negado.');
-
-    return apiOk(res, fb);
-  } catch (e) {
-    console.error('[feedbackApi] GET /api/feedback/meus/:id erro:', e);
-    return apiFail(res, 500, 'Erro ao detalhar.');
-  }
+const detailMyFeedback = createMyFeedbackDetailHandler({
+  apiOk,
+  apiFail,
+  findFeedbackByIdLean,
 });
+router.get('/api/feedback/meus/:feedbackId', requireLogin, detailMyFeedback);
 
 // =============== Admin (Gestor) ===============
 
 // Listar feedbacks (admin)
-router.get('/api/gestor/feedback', requireLogin, async (req, res) => {
-  try {
-    if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
-
-    const q = String(req.query?.q || '').trim();
-    const status = String(req.query?.status || '').trim();
-    const tipo = String(req.query?.tipo || '').trim();
-
-    const filter = {};
-    if (status) filter.status = normalizeStatus(status);
-    if (tipo) filter.tipo = normalizeTipo(tipo);
-
-    if (q) {
-      const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-      filter.$or = [
-        { mensagem: rx },
-        { resposta: rx },
-        { 'criadoPor.email': rx },
-        { 'criadoPor.nome': rx },
-      ];
-    }
-
-    const items = await findFeedbackByFilterSortCreatedAtDescLimit500Lean(filter);
-
-    return apiOk(res, items.map(sanitizeFeedback));
-  } catch (e) {
-    console.error('[feedbackApi] GET /api/gestor/feedback erro:', e);
-    return apiFail(res, 500, 'Erro ao listar feedbacks.');
-  }
+const listFeedbackAdmin = createAdminFeedbackListHandler({
+  isAdminLike,
+  apiOk,
+  apiFail,
+  normalizeStatus,
+  normalizeTipo,
+  findFeedbackByFilterSortCreatedAtDescLimit500Lean,
+  sanitizeFeedback,
 });
+router.get('/api/gestor/feedback', requireLogin, listFeedbackAdmin);
 
 // Detalhar (admin)
-router.get('/api/gestor/feedback/:feedbackId', requireLogin, async (req, res) => {
-  try {
-    if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
-    const id = String(req.params.feedbackId || '').trim();
-    const fb = await findFeedbackByIdLean(id);
-    if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
-    return apiOk(res, sanitizeFeedback(fb));
-  } catch (e) {
-    console.error('[feedbackApi] GET /api/gestor/feedback/:id erro:', e);
-    return apiFail(res, 500, 'Erro ao detalhar.');
-  }
+const detailFeedbackAdmin = createAdminFeedbackDetailHandler({
+  isAdminLike,
+  apiOk,
+  apiFail,
+  findFeedbackByIdLean,
+  sanitizeFeedback,
 });
+router.get('/api/gestor/feedback/:feedbackId', requireLogin, detailFeedbackAdmin);
 
 // Atualizar status (admin)
-async function updateStatus(req, res){
-  try {
-    if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
-    const id = String(req.params.feedbackId || '').trim();
-    const status = normalizeStatus(req.body?.status);
-    const fb = await findFeedbackByIdAndUpdateSetNewLean(id, { status });
-    if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
-    return apiOk(res, fb);
-  } catch (e) {
-    console.error('[feedbackApi] status update erro:', e);
-    return apiFail(res, 500, 'Erro ao salvar status.');
-  }
-}
+const updateStatus = createUpdateFeedbackStatusHandler({
+  isAdminLike,
+  apiOk,
+  apiFail,
+  normalizeStatus,
+  findFeedbackByIdAndUpdateSetNewLean,
+});
 router.patch('/api/gestor/feedback/:feedbackId/status', requireLogin, updateStatus);
 router.post('/api/gestor/feedback/:feedbackId/status', requireLogin, updateStatus);
 
 // Atualizar resposta (admin)
-async function updateResposta(req, res){
-  try {
-    if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
-    const id = String(req.params.feedbackId || '').trim();
-    const resposta = String(req.body?.resposta || req.body?.reply || '').trim();
-    const set = { resposta };
-    if (resposta) set.status = 'respondido';
-    const fb = await findFeedbackByIdAndUpdateSetNewLean(id, set);
-    if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
-    return apiOk(res, fb);
-  } catch (e) {
-    console.error('[feedbackApi] resposta update erro:', e);
-    return apiFail(res, 500, 'Erro ao salvar resposta.');
-  }
-}
+const updateResposta = createUpdateFeedbackRespostaHandler({
+  isAdminLike,
+  apiOk,
+  apiFail,
+  findFeedbackByIdAndUpdateSetNewLean,
+});
 router.patch('/api/gestor/feedback/:feedbackId/resposta', requireLogin, updateResposta);
 router.post('/api/gestor/feedback/:feedbackId/resposta', requireLogin, updateResposta);
 
 // Excluir feedback (admin)
-async function deleteFeedback(req, res){
-  try {
-    if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
-    const id = String(req.params.feedbackId || '').trim();
-    if (!id) return apiFail(res, 400, 'ID inválido.');
-
-    const fb = await findFeedbackByIdAndDeleteLean(id);
-    if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
-
-    // Best-effort: remover anexos em nuvem (Blob) e pasta local (dev)
-    try {
-      const blobToken = getBlobToken();
-      const anexos = Array.isArray(fb?.anexos) ? fb.anexos : [];
-      const urls = anexos.map(a => a && a.url).filter(Boolean).map(String);
-      for (const u of urls) {
-        try {
-          await del(u, blobToken ? { token: blobToken } : undefined);
-        } catch {
-          /* noop */
-        }
-      }
-    } catch (e) {
-      console.warn('[feedbackApi] aviso: falha ao remover anexos do feedback (blob):', id, e?.message || e);
-    }
-
-    try {
-      const ROOT = path.join(process.cwd());
-      const absDir = path.join(ROOT, 'public', 'uploads', 'feedback', String(id));
-      if (fs.existsSync(absDir)) fs.rmSync(absDir, { recursive: true, force: true });
-    } catch (e) {
-      console.warn('[feedbackApi] aviso: falha ao remover anexos do feedback (fs):', id, e?.message || e);
-    }
-
-    return apiOk(res, { id, deleted: true });
-  } catch (e) {
-    console.error('[feedbackApi] delete erro:', e);
-    return apiFail(res, 500, 'Erro ao excluir feedback.');
-  }
-}
+const deleteFeedback = createDeleteFeedbackHandler({
+  isAdminLike,
+  apiOk,
+  apiFail,
+  findFeedbackByIdAndDeleteLean,
+  getBlobToken,
+  delBlob: del,
+  fsModule: fs,
+  pathModule: path,
+});
 router.delete('/api/gestor/feedback/:feedbackId', requireLogin, deleteFeedback);
 router.post('/api/gestor/feedback/:feedbackId', requireLogin, deleteFeedback);
 

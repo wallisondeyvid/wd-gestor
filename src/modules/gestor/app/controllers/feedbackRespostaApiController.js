@@ -1,0 +1,23 @@
+export function createUpdateFeedbackRespostaHandler({
+  isAdminLike,
+  apiOk,
+  apiFail,
+  findFeedbackByIdAndUpdateSetNewLean,
+  logError = console.error,
+}) {
+  return async function updateResposta(req, res) {
+    try {
+      if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
+      const id = String(req.params.feedbackId || '').trim();
+      const resposta = String(req.body?.resposta || req.body?.reply || '').trim();
+      const set = { resposta };
+      if (resposta) set.status = 'respondido';
+      const fb = await findFeedbackByIdAndUpdateSetNewLean(id, set);
+      if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
+      return apiOk(res, fb);
+    } catch (e) {
+      logError('[feedbackApi] resposta update erro:', e);
+      return apiFail(res, 500, 'Erro ao salvar resposta.');
+    }
+  };
+}
