@@ -89,7 +89,7 @@ const funcionarioSchema = new mongoose.Schema({
 funcionarioSchema.index({ nome: 1 });
 funcionarioSchema.index({ unidade_id: 1 });
 funcionarioSchema.index({ unidade_id: 1, cpf: 1 }, { unique: true });
-funcionarioSchema.index({ email: 1 }, { unique: true });
+funcionarioSchema.index({ unidade_id: 1, email: 1 }, { unique: true });
 
 funcionarioSchema.pre('validate', function(next) {
 	if (this.beneficios && Array.isArray(this.beneficios)) {
