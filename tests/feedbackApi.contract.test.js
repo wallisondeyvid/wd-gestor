@@ -394,6 +394,14 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
         .send({ mensagem: hugeMessage, tipo: 'erro' });
       expectApiFailEnvelope(serverError, 400);
       assert.equal(serverError.body?.error, 'Mensagem deve ter no máximo 4000 caracteres.');
+
+      const invalidType = await creatorAgent
+        .post(CANONICAL_CREATE_ENDPOINT)
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({ mensagem: 'create com tipo invalido', tipo: 'tipo-invalido' });
+      expectApiFailEnvelope(invalidType, 400);
+      assert.equal(invalidType.body?.error, 'Tipo inválido.');
     });
 
     await t.test('POST /gestor/api/feedback: normaliza tipo e infere modulo por precedencia (module > contexto.url > referer)', async () => {
@@ -705,6 +713,24 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
 
       expectApiFailEnvelope(invalidStatus, 400);
       assert.equal(invalidStatus.body?.error, 'Status inválido.');
+
+      const missingStatus = await adminAgent
+        .patch(withRouteParam(CANONICAL_ADMIN_STATUS_ENDPOINT, forStatus))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({});
+
+      expectApiFailEnvelope(missingStatus, 400);
+      assert.equal(missingStatus.body?.error, 'Status é obrigatório.');
+
+      const blankStatus = await adminAgent
+        .patch(withRouteParam(CANONICAL_ADMIN_STATUS_ENDPOINT, forStatus))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({ status: '   ' });
+
+      expectApiFailEnvelope(blankStatus, 400);
+      assert.equal(blankStatus.body?.error, 'Status é obrigatório.');
     });
 
     await t.test('PATCH status admin + GET admin list: normalizacao de status observavel no filtro', async () => {
@@ -818,6 +844,54 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
 
       expectApiFailEnvelope(badRequest, 400);
       assert.equal(badRequest.body?.error, 'ID inválido.');
+
+      const forMissingResposta = await createFeedbackViaApi(creatorAgent, {
+        mensagem: 'feedback para caracterizar resposta ausente',
+      });
+      createdFeedbackIds.add(forMissingResposta);
+
+      const missingResposta = await adminAgent
+        .patch(withRouteParam(CANONICAL_ADMIN_REPLY_ENDPOINT, forMissingResposta))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({});
+
+      expectApiSuccessEnvelope(missingResposta, 200);
+      assert.equal(missingResposta.body?.data?.resposta, '');
+      assert.equal(missingResposta.body?.data?.status, 'novo');
+
+      const missingRespostaDetail = await adminAgent
+        .get(withRouteParam(CANONICAL_ADMIN_DETAIL_ENDPOINT, forMissingResposta))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiSuccessEnvelope(missingRespostaDetail, 200);
+      assert.equal(missingRespostaDetail.body?.data?.resposta, '');
+      assert.equal(missingRespostaDetail.body?.data?.status, 'novo');
+
+      const forBlankResposta = await createFeedbackViaApi(creatorAgent, {
+        mensagem: 'feedback para caracterizar resposta em branco',
+      });
+      createdFeedbackIds.add(forBlankResposta);
+
+      const blankResposta = await adminAgent
+        .patch(withRouteParam(CANONICAL_ADMIN_REPLY_ENDPOINT, forBlankResposta))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({ resposta: '   ' });
+
+      expectApiSuccessEnvelope(blankResposta, 200);
+      assert.equal(blankResposta.body?.data?.resposta, '');
+      assert.equal(blankResposta.body?.data?.status, 'novo');
+
+      const blankRespostaDetail = await adminAgent
+        .get(withRouteParam(CANONICAL_ADMIN_DETAIL_ENDPOINT, forBlankResposta))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiSuccessEnvelope(blankRespostaDetail, 200);
+      assert.equal(blankRespostaDetail.body?.data?.resposta, '');
+      assert.equal(blankRespostaDetail.body?.data?.status, 'novo');
 
       const hugeResposta = 'x'.repeat(5001);
       const oversizedResposta = await adminAgent
@@ -942,6 +1016,34 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
         .send({});
       expectApiFailEnvelope(missingFile, 400);
       assert.equal(missingFile.body?.error, 'Arquivo ausente.');
+
+      const invalidMime = await creatorAgent
+        .post(withRouteParam(CANONICAL_UPLOAD_ENDPOINT, forUpload))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .attach('anexo', Buffer.from('nao-e-imagem'), 'mime-invalido.txt');
+      expectApiFailEnvelope(invalidMime, 400);
+      assert.equal(invalidMime.body?.error, 'Tipo de arquivo inválido.');
+
+      const oversizedFile = await creatorAgent
+        .post(withRouteParam(CANONICAL_UPLOAD_ENDPOINT, forUpload))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .attach('anexo', Buffer.alloc((5 * 1024 * 1024) + 1, 1), {
+          filename: 'arquivo-grande.png',
+          contentType: 'image/png',
+        });
+      expectApiFailEnvelope(oversizedFile, 400);
+      assert.equal(oversizedFile.body?.error, 'Arquivo excede o limite de 5 MB.');
+
+      const tooManyFiles = await creatorAgent
+        .post(withRouteParam(CANONICAL_UPLOAD_ENDPOINT, forUpload))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .attach('anexo', tinyPng, 'primeiro.png')
+        .attach('anexo', tinyPng, 'segundo.png');
+      expectApiFailEnvelope(tooManyFiles, 400);
+      assert.equal(tooManyFiles.body?.error, 'Envie no máximo 1 arquivo.');
 
       const forbidden = await otherAgent
         .post(withRouteParam(CANONICAL_UPLOAD_ENDPOINT, forUpload))

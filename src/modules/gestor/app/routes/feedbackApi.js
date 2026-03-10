@@ -61,6 +61,21 @@ const upload = multer({
   }
 });
 
+function uploadFeedbackAnexoMiddleware(req, res, next) {
+  upload.any()(req, res, (err) => {
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return apiFail(res, 400, 'Tipo de arquivo inválido.');
+    }
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      return apiFail(res, 400, 'Arquivo excede o limite de 5 MB.');
+    }
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_COUNT') {
+      return apiFail(res, 400, 'Envie no máximo 1 arquivo.');
+    }
+    return next(err);
+  });
+}
+
 function pickFile(req){
   if (req.file) return req.file;
   const files = Array.isArray(req.files) ? req.files : [];
@@ -214,7 +229,7 @@ const uploadFeedbackAnexoHandler = createUploadFeedbackAnexoHandler({
   pickFile,
   storeFeedbackAnexo,
 });
-router.post('/api/feedback/:feedbackId/anexo', requireLogin, upload.any(), uploadFeedbackAnexoHandler);
+router.post('/api/feedback/:feedbackId/anexo', requireLogin, uploadFeedbackAnexoMiddleware, uploadFeedbackAnexoHandler);
 
 // Meus feedbacks
 const listMyFeedback = createMyFeedbackListHandler({

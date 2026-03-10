@@ -20,7 +20,9 @@ export function createUpdateFeedbackStatusHandler({
       if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
       const id = String(req.params.feedbackId || '').trim();
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
-      const status = normalizeStatus(req.body?.status);
+      const rawStatus = String(req.body?.status || '').trim();
+      if (!rawStatus) return apiFail(res, 400, 'Status é obrigatório.');
+      const status = normalizeStatus(rawStatus);
       if (!ALLOWED_FEEDBACK_STATUSES.has(status)) return apiFail(res, 400, 'Status inválido.');
       const fb = await findFeedbackByIdAndUpdateSetNewLean(id, { status });
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');

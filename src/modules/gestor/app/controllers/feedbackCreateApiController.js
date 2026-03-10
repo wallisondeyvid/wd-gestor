@@ -1,3 +1,10 @@
+const ALLOWED_FEEDBACK_TYPES = new Set([
+  'sugestao',
+  'erro',
+  'elogio',
+  'outro',
+]);
+
 export function createCreateFeedbackHandler({
   apiOk,
   apiFail,
@@ -12,7 +19,9 @@ export function createCreateFeedbackHandler({
       if (!mensagem) return apiFail(res, 400, 'Mensagem é obrigatória.');
       if (mensagem.length > 4000) return apiFail(res, 400, 'Mensagem deve ter no máximo 4000 caracteres.');
 
-      const tipo = normalizeTipo(req.body?.tipo || req.body?.type);
+      const rawTipo = String(req.body?.tipo || req.body?.type || '').trim();
+      const tipo = normalizeTipo(rawTipo);
+      if (rawTipo && !ALLOWED_FEEDBACK_TYPES.has(tipo)) return apiFail(res, 400, 'Tipo inválido.');
 
       // Compat com o widget: { contexto: { url, timezone, user_agent, page_label, viewport } }
       const ctx = (req.body && typeof req.body === 'object' && req.body.contexto && typeof req.body.contexto === 'object') ? req.body.contexto : null;
