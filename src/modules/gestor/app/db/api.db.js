@@ -172,6 +172,15 @@ function scopeFromUnidadeId(unidadeId) {
     : GLOBAL_SCOPE;
 }
 
+function scopeFromRecursoListFiltro(filtro) {
+  if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
+
+  const unidadeId = filtro.unidade_id;
+  if (typeof unidadeId !== 'string') return GLOBAL_SCOPE;
+
+  return scopeFromUnidadeId(unidadeId);
+}
+
 export async function findUnidadeByIdLean(id) {
   return findUnidadeByIdLeanRepo({
     unitScope: createUnitScope({ unidadeId: id }),
@@ -354,11 +363,18 @@ export async function deleteModuloById(id) {
 }
 
 export async function findRecursosByFiltroComUnidadeLean(filtro) {
-  return findRecursosByFiltroComUnidadeLeanRepo({ unitScope: GLOBAL_SCOPE, filtro });
+  return findRecursosByFiltroComUnidadeLeanRepo({
+    unitScope: scopeFromRecursoListFiltro(filtro),
+    filtro,
+  });
 }
 
 export async function findRecursoByIdComUnidadeNome(id, unidadeId = null) {
-  return findRecursoByIdComUnidadeNomeRepo({ unitScope: GLOBAL_SCOPE, id, unidadeId });
+  return findRecursoByIdComUnidadeNomeRepo({
+    unitScope: scopeFromUnidadeId(unidadeId),
+    id,
+    unidadeId,
+  });
 }
 
 export async function findRecursoByPlacaUpper(placaUpper) {
@@ -394,11 +410,20 @@ export async function findOutroRecursoByRenavam(id, renavam) {
 }
 
 export async function updateRecursoByIdComUnidadeNome(id, data, unidadeId = null) {
-  return updateRecursoByIdComUnidadeNomeRepo({ unitScope: GLOBAL_SCOPE, id, data, unidadeId });
+  return updateRecursoByIdComUnidadeNomeRepo({
+    unitScope: scopeFromUnidadeId(unidadeId),
+    id,
+    data,
+    unidadeId,
+  });
 }
 
 export async function deleteRecursoById(id, unidadeId = null) {
-  return deleteRecursoByIdRepo({ unitScope: GLOBAL_SCOPE, id, unidadeId });
+  return deleteRecursoByIdRepo({
+    unitScope: scopeFromUnidadeId(unidadeId),
+    id,
+    unidadeId,
+  });
 }
 
 export async function findUnidadeById(setorUnidadeId) {

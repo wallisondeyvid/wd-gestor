@@ -92,6 +92,7 @@ export async function listarRecursosApi(req, res) {
 }
 export async function getRecurso(req, res) {
 	try {
+		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
 		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
 		const unidadeEfetiva = !isMasterOrAdmin ? String(req.user?.unidade_id || '').trim() : null;
 
@@ -126,9 +127,15 @@ export async function createRecurso(req, res) {
 			return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
 		}
 
-		if (await findRecursoByPlacaUpper(placa.toUpperCase())) return badRequest(res, 'Placa já cadastrada');
-		if (await findRecursoByChassiUpper(chassi.toUpperCase())) return badRequest(res, 'Chassi já cadastrado');
-		if (await findRecursoByRenavam(renavam)) return badRequest(res, 'RENAVAM já cadastrado');
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id, placa: placa.toUpperCase() })).length > 0) {
+			return badRequest(res, 'Placa já cadastrada');
+		}
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id, chassi: chassi.toUpperCase() })).length > 0) {
+			return badRequest(res, 'Chassi já cadastrado');
+		}
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id, renavam })).length > 0) {
+			return badRequest(res, 'RENAVAM já cadastrado');
+		}
 
 		const novoRecurso = await createRecursoDb({
 			unidade_id,
