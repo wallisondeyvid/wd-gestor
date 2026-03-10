@@ -1,7 +1,7 @@
 // (migrado) requireLogin.js
 import mongoose from 'mongoose';
 import {
-  findFuncionarioByEmailPopulate,
+  findFuncionarioByIdPopulate,
   findUnidadeLeanById,
   findUnidadePrincipalLean,
   findUserLeanByEmail,
@@ -164,22 +164,29 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
   console.log('[requireLogin] autenticado', { email: user.email, role: user.role, isMaster: (user.role === 'master') });
       return next();
     }
+  const sessionFuncionarioId = req.session.user?.funcionario_id || null;
+  const hasReliableFuncionarioId = !!(sessionFuncionarioId && mongoose.isValidObjectId(String(sessionFuncionarioId)));
+  if (!hasReliableFuncionarioId) {
+    try { console.warn('[requireLogin] redirect login (sem funcionario_id confiável no fallback)', { original, path, basePath, email: req.session?.user?.email, funcionario_id: sessionFuncionarioId }); } catch {}
+    return res.redirect(basePath + '/login');
+  }
+
   let funcionario = null;
   try {
-    funcionario = await findFuncionarioByEmailPopulate({
-      email: req.session.user.email.toLowerCase(),
+    funcionario = await findFuncionarioByIdPopulate({
+      id: sessionFuncionarioId,
       maxTimeMS: queryTimeout,
     });
   } catch (e) {
     if (isTransientDbError(e)) {
-      console.warn('[requireLogin] DB timeout ao buscar Funcionario — usando sessão como fallback para', req.session.user?.email);
+      console.warn('[requireLogin] DB timeout ao buscar Funcionario por funcionario_id — usando sessão como fallback para', req.session.user?.email);
       req.user = buildUserFromSession(req.session.user);
       return next();
     }
     throw e;
   }
   if (!funcionario) {
-    try { console.warn('[requireLogin] redirect login (funcionario não encontrado)', { original, path, basePath, email: req.session?.user?.email }); } catch {}
+    try { console.warn('[requireLogin] redirect login (funcionario fallback não encontrado)', { original, path, basePath, email: req.session?.user?.email, funcionario_id: sessionFuncionarioId }); } catch {}
     return res.redirect(basePath + '/login');
   }
     // Funcionário autenticado não passa por fluxo de primeiro acesso de usuário

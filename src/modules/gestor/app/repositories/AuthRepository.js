@@ -67,6 +67,16 @@ export async function findFuncionarioByIdSelectRepo({ unitScope, id, select }) {
   return FuncionarioModel.findById(id).select(select);
 }
 
+export async function findFuncionarioByIdPopulateRepo({ unitScope, id }) {
+  const FuncionarioModel = resolveModel({
+    name: Funcionario.modelName || 'Funcionario',
+    schema: Funcionario.schema,
+    unitScope,
+  });
+
+  return FuncionarioModel.findById(id).populate('unidade_id funcao_id');
+}
+
 export async function findFuncionarioByEmailPopulateRepo({ unitScope, email }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',

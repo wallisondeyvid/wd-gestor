@@ -3,6 +3,7 @@ import {
   createRememberTokenRepo,
   deletePasswordResetByIdRepo,
   findFuncionarioByEmailPopulateRepo,
+  findFuncionarioByIdPopulateRepo,
   findFuncionarioByIdSelectRepo,
   findFuncaoByIdSelectRepo,
   findFuncionariosByCpfSelectRepo,
@@ -70,6 +71,12 @@ export async function findUnidadePrincipalLean({ maxTimeMS }) {
 
 export async function findFuncionarioByIdSelect({ id, select, maxTimeMS }) {
   let query = findFuncionarioByIdSelectRepo({ unitScope: GLOBAL_SCOPE, id, select });
+  query = withOptionalMaxTime(query, maxTimeMS);
+  return query;
+}
+
+export async function findFuncionarioByIdPopulate({ id, maxTimeMS }) {
+  let query = findFuncionarioByIdPopulateRepo({ unitScope: GLOBAL_SCOPE, id });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }

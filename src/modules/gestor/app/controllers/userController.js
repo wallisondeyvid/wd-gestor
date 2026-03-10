@@ -15,10 +15,8 @@ import {
 	findUserByEmail,
 	findFuncionarioByIdSelectIdUnidadeUsuarioLean,
 	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean,
-	findFuncionarioByEmailSelectIdUnidadeEmailLean,
 	setFuncionarioUsuarioIdIfEmpty,
 	createFuncionarioDoc,
-	findFuncionarioByCpfOrEmailLean,
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import mongoose from 'mongoose';
@@ -259,10 +257,8 @@ export async function criarUsuario(req, res) {
 			if (!cleanCpf) return badRequest(res, 'CPF é obrigatório para criar novo funcionário automaticamente.', { code: 'CPF_REQUIRED' });
 			if (!unidade_id) return badRequest(res, 'Unidade é obrigatória para criar novo funcionário.', { code: 'UNIT_REQUIRED' });
 			try {
-				// 1) Tentar localizar funcionário existente por CPF + unidade (preferencial)
-				let existente = await findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidade_id);
-				// 2) Fallback por e-mail (índice único por e-mail impede duplicar)
-				if (!existente) existente = await findFuncionarioByEmailSelectIdUnidadeEmailLean(emailNorm);
+				// Tentar localizar funcionário existente apenas por CPF + unidade.
+				const existente = await findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidade_id);
 				if (existente) {
 					// Vincula usuário ao funcionário já existente
 					user.funcionario_id = existente._id;
@@ -294,12 +290,15 @@ export async function criarUsuario(req, res) {
 				}
 			} catch (errFuncionario) {
 				// Tratamento amigável: se erro de duplicidade (11000), tenta localizar e vincular
+				// apenas por CPF + unidade para evitar associação cross-tenant por e-mail.
 				const msg = String(errFuncionario && (errFuncionario.message || errFuncionario))
 				const code = (errFuncionario && (errFuncionario.code || errFuncionario?.original?.code)) || null;
 				const isDup = code === 11000 || /duplicate key/i.test(msg);
 				if (isDup) {
 					try {
-						const existente = await findFuncionarioByCpfOrEmailLean(cpf ? cpf.replace(/\D/g,'') : undefined, unidade_id, emailNorm);
+						const existente = cleanCpf
+							? await findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidade_id)
+							: null;
 						if (existente) {
 							user.funcionario_id = existente._id; if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id; await saveUserDoc(user);
 							try { await setFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up2) {}
