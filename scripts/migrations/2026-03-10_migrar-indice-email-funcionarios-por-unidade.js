@@ -45,13 +45,21 @@ async function migrarIndiceEmailFuncionariosPorUnidade() {
     (index) => index.name === TARGET_INDEX.name || sameKey(index.key, TARGET_INDEX.key)
   );
 
+  const existingTargetByName = indexes.find((index) => index.name === TARGET_INDEX.name);
+
+  if (existingTargetByName && !sameKey(existingTargetByName.key, TARGET_INDEX.key)) {
+    throw new Error(
+      `Ja existe um indice com o nome alvo ${COLLECTION}.${TARGET_INDEX.name}, mas com shape incompat√≠vel: ${JSON.stringify(existingTargetByName.key)}`
+    );
+  }
+
   if (existingTarget?.unique && sameKey(existingTarget.key, TARGET_INDEX.key)) {
     console.log(`Indice composto ja existe: ${COLLECTION}.${existingTarget.name}`);
   } else {
     if (existingTarget && sameKey(existingTarget.key, TARGET_INDEX.key) && !existingTarget.unique) {
-      console.log(`Indice composto incompatÌvel encontrado sem unicidade: ${COLLECTION}.${existingTarget.name}`);
+      console.log(`Indice composto incompat√≠vel encontrado sem unicidade: ${COLLECTION}.${existingTarget.name}`);
       await collection.dropIndex(existingTarget.name);
-      console.log(`Indice incompatÌvel removido: ${COLLECTION}.${existingTarget.name}`);
+      console.log(`Indice incompat√≠vel removido: ${COLLECTION}.${existingTarget.name}`);
     }
 
     await collection.createIndex(TARGET_INDEX.key, TARGET_INDEX.options);
