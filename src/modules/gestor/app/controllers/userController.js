@@ -13,6 +13,8 @@ import {
 	deleteUserById,
 	unsetFuncionarioUsuarioIdIfMatchesUser,
 	findUserByEmail,
+	findUserMembershipByUserAndUnidade,
+	createUserMembership,
 	findFuncionarioByIdSelectIdUnidadeUsuarioLean,
 	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean,
 	setFuncionarioUsuarioIdIfEmpty,
@@ -77,6 +79,47 @@ function buildUsuarioAuthContextExtras(authContext) {
 			}))
 			: [],
 	};
+}
+
+function normalizeRoleValue(value) {
+	return String(value || '').trim().toLowerCase();
+}
+
+function resolveRequestedUserRole(value) {
+	const normalizedRole = normalizeRoleValue(value);
+	if (!normalizedRole || normalizedRole === 'master') {
+		return 'user';
+	}
+	return normalizedRole;
+}
+
+function resolvePapelContextualFromRole(role) {
+	const normalizedRole = normalizeRoleValue(role);
+	if (normalizedRole === 'diretor') return 'gestor';
+	if (normalizedRole === 'user') return 'user';
+	return null;
+}
+
+function buildUserMembershipPayload({ userId, role, unidadeId, funcionarioId = null }) {
+	const papelContextual = resolvePapelContextualFromRole(role);
+	const unidadeIdNorm = String(unidadeId || '').trim();
+	if (!userId || !papelContextual || !unidadeIdNorm) {
+		return null;
+	}
+
+	return {
+		user_id: userId,
+		unidade_id: unidadeIdNorm,
+		papel_contextual: papelContextual,
+		status: 'active',
+		funcionario_id: funcionarioId || null,
+		origem: 'gestor-user-admin',
+	};
+}
+
+function isDuplicateKeyError(error) {
+	const code = error?.code || error?.original?.code || null;
+	return code === 11000 || /duplicate key/i.test(String(error?.message || error || ''));
 }
 
 // Lista usuários atualmente bloqueados por lock_until futuro
@@ -249,9 +292,18 @@ export async function criarUsuario(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 		const emailNorm = String(email).toLowerCase();
-		const existe = await findUserByEmail(emailNorm);
-		if (existe) return badRequest(res, 'Email já cadastrado', { code: 'EMAIL_DUPLICATE' });
-		if ((role === 'user' || role === 'diretor') && (!unidade_id || unidade_id.trim() === '')) {
+		const existingUser = await findUserByEmail(emailNorm);
+		const requestedUserRole = resolveRequestedUserRole(role);
+		const normalizedRole = normalizeRoleValue(role);
+		const canLinkExistingUser = !!buildUserMembershipPayload({
+			userId: existingUser?._id || null,
+			role: requestedUserRole,
+			unidadeId: unidade_id,
+		});
+		if (existingUser && !canLinkExistingUser) {
+			return badRequest(res, 'Email já cadastrado', { code: 'EMAIL_DUPLICATE' });
+		}
+		if ((normalizedRole === 'user' || normalizedRole === 'diretor') && (!unidade_id || unidade_id.trim() === '')) {
 			return badRequest(res, 'Para usuários e diretores, é obrigatório selecionar uma unidade vinculada.', { code: 'UNIT_REQUIRED' });
 		}
 
@@ -275,22 +327,40 @@ export async function criarUsuario(req, res) {
 				return badRequest(res, 'Funcionário inválido', { code:'FUNC_INVALID' });
 			}
 		}
+
+		if (existingUser) {
+			const existingMembership = await findUserMembershipByUserAndUnidade(existingUser._id, unidade_id);
+			if (existingMembership) {
+				return badRequest(res, 'Usuário já vinculado a esta unidade', { code: 'USER_MEMBERSHIP_DUPLICATE' });
+			}
+		}
+
 		// Utiliza service central que já gera/usa senha, seta primeiro_acesso e dispara e-mail
-		console.log('[criarUsuario] disparando createUserAndSendPassword');
-		let user = await createUserAndSendPassword({
-			nome: (nome && nome.trim()) || emailNorm.split('@')[0],
-			email: emailNorm,
-			cpf: cpf ? cpf.replace(/\D/g,'') : undefined,
-			role: role && role !== 'master' ? role : 'user',
-			unidade_id: unidade_id || null,
-			funcionario_id: funcionario_id || null,
-			senha // pode vir definida ou service gera temporária
-		});
+		const isExistingUser = !!existingUser;
+		let user = existingUser;
+		if (!user) {
+			console.log('[criarUsuario] disparando createUserAndSendPassword');
+			user = await createUserAndSendPassword({
+				nome: (nome && nome.trim()) || emailNorm.split('@')[0],
+				email: emailNorm,
+				cpf: cpf ? cpf.replace(/\D/g,'') : undefined,
+				role: requestedUserRole,
+				unidade_id: unidade_id || null,
+				funcionario_id: funcionario_id || null,
+				senha // pode vir definida ou service gera temporária
+			});
+		}
+
+		let linkedFuncionarioId = funcionarioDoc?._id || null;
 
 		// Se funcionario_id foi enviado e validado, efetiva o vínculo no documento do Funcionário
 		if (funcionarioDoc) {
 			try {
-				user.funcionario_id = funcionarioDoc._id; if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id; await saveUserDoc(user);
+				if (!isExistingUser) {
+					user.funcionario_id = funcionarioDoc._id;
+					if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id;
+					await saveUserDoc(user);
+				}
 				await setFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id);
 			} catch(linkErr) {
 				console.warn('[criarUsuario] falha ao vincular funcionario_id informado:', linkErr?.message || linkErr);
@@ -309,10 +379,13 @@ export async function criarUsuario(req, res) {
 				// Tentar localizar funcionário existente apenas por CPF + unidade.
 				const existente = await findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidade_id);
 				if (existente) {
+					linkedFuncionarioId = existente._id;
 					// Vincula usuário ao funcionário já existente
-					user.funcionario_id = existente._id;
-					if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
-					await saveUserDoc(user);
+					if (!isExistingUser) {
+						user.funcionario_id = existente._id;
+						if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
+						await saveUserDoc(user);
+					}
 					// marca vínculo no funcionário para evitar reaparecer como disponível
 					try { await setFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up) {}
 					console.log('[criarUsuario] Vinculado a funcionário existente', { funcionario_id: existente._id.toString(), user_id: user._id.toString() });
@@ -332,9 +405,12 @@ export async function criarUsuario(req, res) {
 						telefone: placeholderTelefone,
 						usuario_id: user._id
 					});
-					user.funcionario_id = funcionarioNovo._id;
-					if (!user.unidade_id) user.unidade_id = unidade_id;
-					await saveUserDoc(user);
+					linkedFuncionarioId = funcionarioNovo._id;
+					if (!isExistingUser) {
+						user.funcionario_id = funcionarioNovo._id;
+						if (!user.unidade_id) user.unidade_id = unidade_id;
+						await saveUserDoc(user);
+					}
 					console.log('[criarUsuario] Funcionário placeholder criado e vinculado', { funcionario_id: funcionarioNovo._id.toString(), user_id: user._id.toString() });
 				}
 			} catch (errFuncionario) {
@@ -349,7 +425,12 @@ export async function criarUsuario(req, res) {
 							? await findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidade_id)
 							: null;
 						if (existente) {
-							user.funcionario_id = existente._id; if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id; await saveUserDoc(user);
+							linkedFuncionarioId = existente._id;
+							if (!isExistingUser) {
+								user.funcionario_id = existente._id;
+								if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
+								await saveUserDoc(user);
+							}
 							try { await setFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up2) {}
 							console.warn('[criarUsuario] Conflito ao criar funcionário; vinculado a existente', { funcionario_id: existente._id.toString() });
 						}
@@ -361,8 +442,30 @@ export async function criarUsuario(req, res) {
 				}
 			}
 		}
+
+		const membershipPayload = buildUserMembershipPayload({
+			userId: user._id,
+			role: requestedUserRole,
+			unidadeId: unidade_id,
+			funcionarioId: linkedFuncionarioId,
+		});
+		if (membershipPayload) {
+			try {
+				await createUserMembership(membershipPayload);
+			} catch (membershipErr) {
+				if (isDuplicateKeyError(membershipErr)) {
+					return badRequest(res, 'Usuário já vinculado a esta unidade', { code: 'USER_MEMBERSHIP_DUPLICATE' });
+				}
+				console.error('[criarUsuario] falha ao criar membership:', membershipErr);
+				return serverError(res, 'Falha ao criar vínculo do usuário com a unidade');
+			}
+		}
 		// Retorna também senha temporária apenas em ambiente não-produção para permitir exibição imediata
-		const payload = { id: user._id, funcionario_id: (user.funcionario_id || funcionarioNovo?._id) || null };
+		const payload = {
+			id: user._id,
+			funcionario_id: linkedFuncionarioId || user.funcionario_id || funcionarioNovo?._id || null,
+			outcome: isExistingUser ? 'linked' : 'created',
+		};
 		if (user._temp_password_plain && process.env.NODE_ENV !== 'production') {
 			payload.tempPassword = user._temp_password_plain;
 		}

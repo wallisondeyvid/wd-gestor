@@ -66,6 +66,9 @@
           <div class="col-12 col-lg-6">
             <label class="form-label">E-mail</label>
             <input name="email" type="email" required class="form-control" placeholder="E-mail" autocomplete="email">
+            <div class="form-text text-muted">
+              <small>Se o e-mail já existir em outra unidade, o sistema reutiliza o usuário e cria apenas o vínculo desta unidade.</small>
+            </div>
           </div>
 
           <!-- Linha 2 -->
@@ -128,7 +131,7 @@
             <div class="d-block ms-auto">
               <button type="submit" class="btn btn-primary" id="btnSubmitUsuario" data-mode="create">
                 <span class="spinner-border spinner-border-sm d-none" role="status"></span>
-                Cadastrar
+                Criar ou vincular
               </button>
             </div>
           </div>
@@ -1015,8 +1018,12 @@
   try { result = await response.json(); } catch(_e){ result = null; }
 
         if (response.ok) {
-          // Sucesso - mostrar mensagem e recarregar página
-          showAlert('Usuário criado com sucesso!', 'success');
+          // Sucesso - mostrar mensagem específica e recarregar página
+          const outcome = String(result?.data?.outcome || (result?.data?.tempPassword ? 'created' : 'linked')).toLowerCase();
+          const successMessage = outcome === 'linked'
+            ? 'Usuário existente vinculado à unidade com sucesso!'
+            : 'Usuário criado com sucesso!';
+          showAlert(successMessage, 'success');
           setTimeout(() => {
             window.location.reload();
           }, 1500);
@@ -1032,6 +1039,8 @@
 
             if (serverCode === 'EMAIL_REQUIRED' || errorText.includes('email obrigatório') || errorText.includes('e-mail obrigatório')) {
               errorMessage = 'E-mail é obrigatório';
+            } else if (serverCode === 'USER_MEMBERSHIP_DUPLICATE' || errorText.includes('já vinculado a esta unidade')) {
+            errorMessage = 'Este e-mail já está vinculado a esta unidade';
             } else if (serverCode === 'EMAIL_DUPLICATE' || errorText.includes('usuário já cadastrado') || errorText.includes('usuário já existe') || errorText.includes('email já cadastrado')) {
               errorMessage = 'Este e-mail já está cadastrado para outro usuário';
             } else if (serverCode === 'UNIT_REQUIRED' || errorText.includes('unidade é obrigatória') || errorText.includes('campo obrigatório para usuários e diretores')) {
