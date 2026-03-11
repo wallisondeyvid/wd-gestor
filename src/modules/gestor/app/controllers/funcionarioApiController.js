@@ -9,6 +9,7 @@ import {
 	findFuncionarioByCpfAndUnidade,
 	createFuncionarioDoc,
 	saveFuncionario,
+	saveUserDoc,
 	findFuncionarioById,
 	updateFuncionarioByIdWithOps,
 	findFuncionarioByIdPopulateRefs,
@@ -19,6 +20,9 @@ import {
 	findFuncionarioByCpfAndUnidadeSelectLean,
 	findUserByEmail,
 	findUserByFuncionarioId,
+	findUserMembershipByUserAndUnidade,
+	createUserMembership,
+	setUserMembershipFuncionarioIdIfEmpty,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { normalizeFuncionarioPayload } from './utils/funcionarioNormalize.js';
 
@@ -291,8 +295,94 @@ function handleFuncionarioCreateDuplicateError(res, error) {
 	return badRequest(res, 'Registro duplicado');
 }
 
-export async function createFuncionarioInitial(req,res){ try { let { unidade_id, funcao_id, nome, rg, cpf, data_nascimento, sexo, endereco, email, telefone } = req.body; const faltando=[]; function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); } ['unidade_id','nome','rg','cpf','data_nascimento','sexo','endereco','email','telefone'].forEach(c=> need(eval(c), c)); if(faltando.length) return missingFields(res, faltando); cpf = cpf.replace(/[^\d]/g,''); const cpfExist = await findFuncionarioByCpfAndUnidade(cpf, unidade_id); if(cpfExist) return badRequest(res, 'Já existe um funcionário cadastrado com este CPF nesta empresa.'); const funcionario = await createFuncionarioDoc({ unidade_id, funcao_id: funcao_id || undefined, nome: nome.trim(), rg: rg.trim(), cpf, data_nascimento: data_nascimento.trim(), sexo, endereco, email: email.toLowerCase().trim(), telefone: telefone.trim() }); await criarUsuarioAuto(funcionario); return created(res, funcionario._id, { data:{ id: funcionario._id } }); } catch(e){ const duplicateResponse = handleFuncionarioCreateDuplicateError(res, e); if (duplicateResponse) return duplicateResponse; console.error('[API FUNCIONARIOS][initial] Erro:', e); return serverError(res, 'Falha ao criar funcionário inicial'); } }
-async function criarUsuarioAuto(funcionario){ try { const existingUser = await findUserByEmail(funcionario.email); if(existingUser) return; const { createUserAndSendPassword } = await import('#modules/gestor/app/services/userService.js'); await createUserAndSendPassword({ nome: funcionario.nome, email: funcionario.email, cpf: funcionario.cpf, role: funcionario.email === 'wallisondeyvid13@gmail.com' ? 'master' : 'user', unidade_id: funcionario.unidade_id, funcionario_id: funcionario._id }); } catch(err){ console.error('[AUTO USER] Falha criação automática usuário:', err); } }
+function normalizeRoleValue(value) {
+	return String(value || '').trim().toLowerCase();
+}
+
+function resolveAutoUserRole(funcionario) {
+	const emailNorm = String(funcionario?.email || '').trim().toLowerCase();
+	return emailNorm === 'wallisondeyvid13@gmail.com' ? 'master' : 'user';
+}
+
+function resolvePapelContextualFromRole(role) {
+	const normalizedRole = normalizeRoleValue(role);
+	if (normalizedRole === 'diretor') return 'gestor';
+	if (normalizedRole === 'user') return 'user';
+	return null;
+}
+
+function buildAutoUserMembershipPayload({ userId, role, unidadeId, funcionarioId }) {
+	const papelContextual = resolvePapelContextualFromRole(role);
+	const unidadeIdNorm = String(unidadeId || '').trim();
+	if (!userId || !papelContextual || !unidadeIdNorm) {
+		return null;
+	}
+
+	return {
+		user_id: userId,
+		unidade_id: unidadeIdNorm,
+		papel_contextual: papelContextual,
+		status: 'active',
+		funcionario_id: funcionarioId || null,
+		origem: 'gestor-funcionario-auto',
+	};
+}
+
+function isDuplicateKeyError(error) {
+	const code = error?.code || error?.original?.code || null;
+	return code === 11000 || /duplicate key/i.test(String(error?.message || error || ''));
+}
+
+function resolveAutoUserMessage(outcome, fallbackMessage = null) {
+	if (fallbackMessage) return fallbackMessage;
+	if (outcome === 'created') return 'Usuário criado automaticamente para o funcionário.';
+	if (outcome === 'linked') return 'Usuário existente vinculado automaticamente à unidade do funcionário.';
+	if (outcome === 'already-linked') return 'Usuário já estava vinculado a esta unidade.';
+	if (outcome === 'conflict') return 'Usuário já possui vínculo com esta unidade associado a outro funcionário.';
+	if (outcome === 'error') return 'Falha ao criar ou vincular usuário automaticamente.';
+	return 'Resultado do usuário automático processado.';
+}
+
+async function syncFuncionarioUsuarioIfEmpty(funcionario, userId) {
+	if (!funcionario || !userId) return false;
+	if (String(funcionario.usuario_id || '') === String(userId)) return false;
+	if (funcionario.usuario_id) return false;
+	funcionario.usuario_id = userId;
+	await saveFuncionario(funcionario);
+	return true;
+}
+
+async function syncLegacyUserFuncionarioIfEmpty(user, funcionario) {
+	if (!user || !funcionario?._id) return false;
+	if (String(user.funcionario_id || '') === String(funcionario._id)) return false;
+	if (user.funcionario_id) return false;
+	user.funcionario_id = funcionario._id;
+	if (!user.unidade_id) user.unidade_id = funcionario.unidade_id;
+	await saveUserDoc(user);
+	return true;
+}
+
+async function syncExistingMembershipFuncionario(existingMembership, funcionarioId) {
+	if (!existingMembership?._id || !funcionarioId) {
+		return { updated: false, conflict: false };
+	}
+
+	const currentFuncionarioId = String(existingMembership.funcionario_id || '');
+	const targetFuncionarioId = String(funcionarioId || '');
+	if (!currentFuncionarioId) {
+		const updated = await setUserMembershipFuncionarioIdIfEmpty(existingMembership._id, funcionarioId);
+		return { updated: !!updated, conflict: !updated };
+	}
+
+	if (currentFuncionarioId === targetFuncionarioId) {
+		return { updated: false, conflict: false };
+	}
+
+	return { updated: false, conflict: true };
+}
+
+export async function createFuncionarioInitial(req,res){ try { let { unidade_id, funcao_id, nome, rg, cpf, data_nascimento, sexo, endereco, email, telefone } = req.body; const faltando=[]; function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); } ['unidade_id','nome','rg','cpf','data_nascimento','sexo','endereco','email','telefone'].forEach(c=> need(eval(c), c)); if(faltando.length) return missingFields(res, faltando); cpf = cpf.replace(/[^\d]/g,''); const cpfExist = await findFuncionarioByCpfAndUnidade(cpf, unidade_id); if(cpfExist) return badRequest(res, 'Já existe um funcionário cadastrado com este CPF nesta empresa.'); const funcionario = await createFuncionarioDoc({ unidade_id, funcao_id: funcao_id || undefined, nome: nome.trim(), rg: rg.trim(), cpf, data_nascimento: data_nascimento.trim(), sexo, endereco, email: email.toLowerCase().trim(), telefone: telefone.trim() }); const autoUser = await criarUsuarioAuto(funcionario); return created(res, funcionario._id, { data:{ id: funcionario._id, autoUser } }); } catch(e){ const duplicateResponse = handleFuncionarioCreateDuplicateError(res, e); if (duplicateResponse) return duplicateResponse; console.error('[API FUNCIONARIOS][initial] Erro:', e); return serverError(res, 'Falha ao criar funcionário inicial'); } }
+async function criarUsuarioAuto(funcionario){ try { const emailNorm = String(funcionario?.email || '').trim().toLowerCase(); const unidadeId = String(funcionario?.unidade_id || '').trim(); const role = resolveAutoUserRole(funcionario); let user = await findUserByEmail(emailNorm); const reusedUser = !!user; if(!user){ const { createUserAndSendPassword } = await import('#modules/gestor/app/services/userService.js'); user = await createUserAndSendPassword({ nome: funcionario.nome, email: emailNorm, cpf: funcionario.cpf, role, unidade_id: funcionario.unidade_id, funcionario_id: funcionario._id }); } const membershipPayload = buildAutoUserMembershipPayload({ userId: user._id, role, unidadeId, funcionarioId: funcionario._id }); let outcome = reusedUser ? 'linked' : 'created'; let code = null; let membershipCreated = false; let existingMembership = membershipPayload ? await findUserMembershipByUserAndUnidade(user._id, unidadeId) : null; if(existingMembership){ const membershipSync = await syncExistingMembershipFuncionario(existingMembership, funcionario._id); if(membershipSync.conflict){ outcome = 'conflict'; code = 'AUTO_USER_MEMBERSHIP_CONFLICT'; } else { outcome = 'already-linked'; } } else if(membershipPayload){ try { await createUserMembership(membershipPayload); membershipCreated = true; } catch(membershipErr){ if(isDuplicateKeyError(membershipErr)){ existingMembership = await findUserMembershipByUserAndUnidade(user._id, unidadeId); const membershipSync = await syncExistingMembershipFuncionario(existingMembership, funcionario._id); if(membershipSync.conflict){ outcome = 'conflict'; code = 'AUTO_USER_MEMBERSHIP_CONFLICT'; } else { outcome = 'already-linked'; } } else { throw membershipErr; } } } const funcionarioLinked = outcome === 'conflict' ? false : await syncFuncionarioUsuarioIfEmpty(funcionario, user._id); const legacyUserLinked = outcome === 'conflict' ? false : await syncLegacyUserFuncionarioIfEmpty(user, funcionario); return { ok: outcome !== 'conflict', outcome, code, message: resolveAutoUserMessage(outcome), userId: String(user._id), reusedUser, membershipCreated, funcionarioLinked, legacyUserLinked }; } catch(err){ console.error('[AUTO USER] Falha criação automática usuário:', err); return { ok:false, outcome:'error', code:'AUTO_USER_ERROR', message: resolveAutoUserMessage('error', err?.message || null) }; } }
 const asNumber = v => { const s = asStr(v).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',', '.'); return s? Number(s): undefined; };
 export async function createFuncionario(req,res){ try {
 	if (typeof req.body.endereco === 'string') delete req.body.endereco;
@@ -403,7 +493,7 @@ tipo_salario = norm(tipo_salario); forma_pagamento = norm(forma_pagamento); form
 			await saveFuncionario(novo);
 		}
 	} catch(upErr){ console.warn('[BIO FACE][create] Falha ao subir prévias:', upErr?.message); }
-	await criarUsuarioAuto(novo); return created(res, novo._id, { data:{ id: novo._id } }); } catch(err){ const duplicateResponse = handleFuncionarioCreateDuplicateError(res, err); if (duplicateResponse) return duplicateResponse; console.error('[API FUNCIONARIOS][create] Erro:', err); return serverError(res,'Erro ao cadastrar funcionário'); } }
+	const autoUser = await criarUsuarioAuto(novo); return created(res, novo._id, { data:{ id: novo._id, autoUser } }); } catch(err){ const duplicateResponse = handleFuncionarioCreateDuplicateError(res, err); if (duplicateResponse) return duplicateResponse; console.error('[API FUNCIONARIOS][create] Erro:', err); return serverError(res,'Erro ao cadastrar funcionário'); } }
 const bracketToDot = s => String(s||'').replace(/\]/g,'').replace(/\[/g,'.');
 function buildUpdateOpsFromBody(body){
 	const $set={}; const $unset={};

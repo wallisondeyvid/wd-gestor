@@ -2261,16 +2261,21 @@ async function handleFormSubmission(e) {
     try { data = await resp.json(); } catch (_) {}
   if (data && (data.sucesso === false || data.success === false)) throw new Error(data.mensagem || data.message || 'Falha ao salvar.');
 
+  const autoUser = data?.data?.autoUser || null;
+  const autoUserMessage = typeof autoUser?.message === 'string' ? autoUser.message.trim() : '';
+  const autoUserAlertType = autoUser?.outcome === 'conflict' ? 'warning' : 'success';
+  const successMessage = autoUserMessage ? `Dados salvos com sucesso. ${autoUserMessage}` : 'Dados salvos com sucesso.';
+
   // Sucesso: não redirecionar em edição. Em criação, recarregar lista para exibir novo funcionário.
     localStorage.removeItem('aba3_temp_data');
     try {
       const alertHost = document.getElementById('alertArea');
       if (alertHost) {
-        alertHost.innerHTML = '<div class="alert alert-success py-2 mb-2">Dados salvos com sucesso.</div>';
+        alertHost.innerHTML = `<div class="alert alert-${autoUserAlertType} py-2 mb-2">${successMessage}</div>`;
         setTimeout(()=> { if(alertHost.firstChild) alertHost.firstChild.classList.add('fade','show'); }, 10);
         setTimeout(()=> { alertHost.innerHTML=''; }, 5000);
       } else {
-        console.log('[SALVAR] Sucesso (sem alertArea)');
+        console.log('[SALVAR] Sucesso (sem alertArea)', successMessage);
       }
       // Atualizar título/botões
       const titulo = document.getElementById('tituloFormFuncionario');
