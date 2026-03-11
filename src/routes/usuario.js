@@ -100,18 +100,25 @@ const requireApiAuth = async (req, res, next) => {
     // Fallback: modo antigo baseado em Funcionário (se existir)
     try {
   const Funcionario = (await import('#models/Funcionario.js')).default;
-      const funcionario = await Funcionario.findOne({ email: req.session.user.email.toLowerCase() });
+      const sessionFuncionarioId = req.session.user.funcionario_id || null;
+      const sessionUnidadeId = req.session.user.unidade_id || req.session.user.unidadeId || null;
+      const sessionCpf = String(req.session.user.cpf || '').replace(/\D/g, '');
+      let funcionario = null;
+      if (sessionFuncionarioId) {
+        funcionario = await Funcionario.findById(sessionFuncionarioId).lean();
+      }
+      if (!funcionario && sessionCpf && sessionUnidadeId) {
+        funcionario = await Funcionario.findOne({ cpf: sessionCpf, unidade_id: sessionUnidadeId }).lean();
+      }
       if (!funcionario) return res.status(401).json({ error: 'Usuário não encontrado' });
 
       req.user = {
         id: funcionario._id,
         nome: funcionario.nome || 'Usuário',
-        email: funcionario.email,
-        unidade_id: funcionario.unidade_id ? funcionario.unidade_id._id : null,
-        unidade_principal_id: funcionario.unidade_id && funcionario.unidade_id.is_principal
-          ? funcionario.unidade_id._id
-          : (funcionario.unidade_id && funcionario.unidade_id.unidade_principal_id) || null,
-        funcao: funcionario.funcao_id ? funcionario.funcao_id.nome : null,
+        email: funcionario.email || req.session.user.email || null,
+        unidade_id: funcionario.unidade_id || sessionUnidadeId || null,
+        unidade_principal_id: req.session.user.unidade_principal_id || null,
+        funcao: req.session.user.funcao || null,
         isMaster: funcionario.email === 'wallisondeyvid13@gmail.com',
         role: 'user'
       };
@@ -177,17 +184,26 @@ const requireSessionBasic = async (req, res, next) => {
     // Fallback para Funcionário
     try {
   const Funcionario = (await import('#models/Funcionario.js')).default;
-      const funcionario = await Funcionario.findOne({ email }).lean();
+      const sessionFuncionarioId = req.session.user.funcionario_id || null;
+      const sessionUnidadeId = req.session.user.unidade_id || req.session.user.unidadeId || null;
+      const sessionCpf = String(req.session.user.cpf || '').replace(/\D/g, '');
+      let funcionario = null;
+      if (sessionFuncionarioId) {
+        funcionario = await Funcionario.findById(sessionFuncionarioId).lean();
+      }
+      if (!funcionario && sessionCpf && sessionUnidadeId) {
+        funcionario = await Funcionario.findOne({ cpf: sessionCpf, unidade_id: sessionUnidadeId }).lean();
+      }
       if (!funcionario) return res.status(401).json({ error: 'Usuário não encontrado' });
       req.user = {
         id: funcionario._id,
         nome: funcionario.nome || 'Usuário',
-        email: funcionario.email,
+        email: funcionario.email || email || null,
         role: 'user',
         isMaster: funcionario.email === 'wallisondeyvid13@gmail.com',
-        unidade_id: funcionario.unidade_id || null,
-        unidade_principal_id: null,
-        funcao: funcionario.funcao_id || null
+        unidade_id: funcionario.unidade_id || sessionUnidadeId || null,
+        unidade_principal_id: req.session.user.unidade_principal_id || null,
+        funcao: req.session.user.funcao || null
       };
       return next();
     } catch (e) {
@@ -207,7 +223,7 @@ router.get('/api/usuario', requireSessionBasic, async (req, res) => {
     let funcDoc = null;
     if (!userDoc) {
   const Funcionario = (await import('#models/Funcionario.js')).default;
-      funcDoc = await Funcionario.findOne({ email }).lean();
+      funcDoc = await Funcionario.findById(req.user?.id).lean();
       if (!funcDoc) return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 

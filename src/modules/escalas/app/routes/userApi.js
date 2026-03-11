@@ -243,18 +243,16 @@ router.get('/api/modulos', async (req, res) => {
         let dbg = wantDebug ? { source: 'user', funcionario: null, funcao: null, unidade: null } : null;
 
         const funcionarioId = req.user?.funcionario_id || userDoc?.funcionario_id || null;
+        const unidadeIdFuncionario = req.user?.unidade_id || userDoc?.unidade_id || sessionUser?.unidade_id || sessionUser?.unidadeId || null;
+        const cpfFuncionario = String(userDoc?.cpf || req.user?.cpf || '').replace(/\D/g,'');
         let funcionario = null;
         if (funcionarioId) funcionario = await Funcionario.findById(funcionarioId).select('_id funcao_id unidade_id usuario_id cpf email').lean();
         if (!funcionario && (userDoc?._id || req.user?._id)) {
           const uid = userDoc?._id || req.user?._id;
           funcionario = await Funcionario.findOne({ usuario_id: uid }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
         }
-        if (!funcionario && (userDoc?.cpf || req.user?.cpf)) {
-          const cpf = String(userDoc?.cpf || req.user?.cpf || '').replace(/\D/g,'');
-          if (cpf) funcionario = await Funcionario.findOne({ cpf }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
-        }
-        if (!funcionario && email) {
-          funcionario = await Funcionario.findOne({ email }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
+        if (!funcionario && cpfFuncionario && unidadeIdFuncionario) {
+          funcionario = await Funcionario.findOne({ cpf: cpfFuncionario, unidade_id: unidadeIdFuncionario }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
         }
 
         if (dbg) dbg.funcionario = funcionario ? { _id: funcionario._id, funcao_id: funcionario.funcao_id, unidade_id: funcionario.unidade_id } : null;

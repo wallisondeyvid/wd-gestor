@@ -206,17 +206,16 @@ router.get('/api/modulos', async (req, res) => {
 				let dbg = wantDebug ? { source: 'user', funcionario: null, funcao: null, unidade: null } : null;
 				let funcionario = null;
 				const funcionarioId = req.user?.funcionario_id || null;
+				const unidadeId = req.user?.unidade_id || null;
+				const cpf = req.user?.cpf ? String(req.user.cpf).replace(/\D/g,'') : '';
 				if (funcionarioId) {
 					funcionario = await Funcionario.findById(funcionarioId).select('_id funcao_id unidade_id usuario_id cpf email').lean();
 				}
 				if (!funcionario && req.user?._id) {
 					funcionario = await Funcionario.findOne({ usuario_id: req.user._id }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
 				}
-				if (!funcionario && req.user?.cpf) {
-					funcionario = await Funcionario.findOne({ cpf: String(req.user.cpf).replace(/\D/g,'') }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
-				}
-				if (!funcionario && req.user?.email) {
-					funcionario = await Funcionario.findOne({ email: String(req.user.email).toLowerCase().trim() }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
+				if (!funcionario && cpf && unidadeId) {
+					funcionario = await Funcionario.findOne({ cpf, unidade_id: unidadeId }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
 				}
 				if (dbg) dbg.funcionario = funcionario ? { _id: funcionario._id, funcao_id: funcionario.funcao_id, unidade_id: funcionario.unidade_id } : null;
 
