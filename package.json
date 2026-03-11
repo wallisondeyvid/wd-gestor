@@ -67,6 +67,7 @@
     "migrate:backfill-diretor": "node scripts/migrations/2025-09-18_backfill-diretor-unidades.js",
     "migrate:backfill-habitacao-mailboxes": "node scripts/migrations/2026-01-09_backfill-habitacao-mailboxes.js",
     "migrate:user-memberships-phase1": "node scripts/migrations/2026-03-11_criar-user-memberships-fase1.js",
+    "migrate:user-memberships-phase2": "node scripts/migrations/2026-03-11_backfill-user-memberships-fase2.js",
     "backfill:refeicoes": "node scripts/backfill_refeicoes_computavel.js \"%MONGO_URI%\"",
     "backfill:refeicoes:uri": "node scripts/backfill_refeicoes_computavel.js",
     "test:e2e:refeicoes": "node scripts/test_e2e_refeicoes_computavel.js",
