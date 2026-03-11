@@ -25,7 +25,6 @@ import { buildPortalSessionPayload, verifyPortalPassword, setPortalPassword } fr
 import { setPortalSessionCookie } from './lib/portalSessionCookie.js';
 import { portalLoginPost, portalLogout, portalAuthContextGet, portalSelectVinculoPost } from './controllers/authController.js';
 import { getPortalVapidPublicKey, savePortalPushSubscription, sendPortalPush } from '#modules/portal-morador/lib/pushNotifications.js';
-import gestorUserApi from '#modules/gestor/app/routes/userApi.js';
 import fetch from 'node-fetch';
 
 let sharpPromise = null;
@@ -329,8 +328,8 @@ app.use((req, res, next) => {
 });
 
 function buildPortalContext(req) {
-  const sessionUser = (req && req.session && (req.session.portalUser || req.session.user)) || null;
-  const user = (req && (req.user || sessionUser)) || null;
+  const sessionUser = (req && req.session && req.session.portalUser) || null;
+  const user = (req && (req.portalUser || sessionUser)) || null;
   const unidadeInfo = user && (user.unidade || user.unidade_nome || user.unidadeNome);
   const unidadeObjeto = user && (user.unidade_id || user.unidadeId);
   const unidadeCodigo = (user && (user.unidade_codigo || user.unidadeCodigo)) || (unidadeObjeto && (unidadeObjeto.codigo || unidadeObjeto.codigo_unidade));
@@ -376,8 +375,8 @@ const PORTAL_UI_REV = 'pm-msg-ui-2026-01-12-01';
 app.use((req, res, next) => {
   res.locals.basePath = req.baseUrl || '/portal-morador';
   try {
-    const sessionUser = (req && req.session && (req.session.portalUser || req.session.user)) || null;
-    res.locals.user = req.user || sessionUser || null;
+    const sessionUser = (req && req.session && req.session.portalUser) || null;
+    res.locals.user = req.portalUser || sessionUser || null;
   } catch {
     res.locals.user = null;
   }
@@ -546,36 +545,6 @@ app.use('/api', (_req, res, next) => {
     /* noop */
   }
   next();
-});
-
-// Delegação seletiva para API de usuário do Gestor, sem interceptar APIs próprias do Portal.
-app.use((req, res, next) => {
-  try {
-    const method = String(req.method || 'GET').toUpperCase();
-    const pathOnly = String(req.path || (req.originalUrl || req.url || '')).split('?')[0];
-    const isObjectId = (s) => /^[0-9a-fA-F]{24}$/.test(String(s || ''));
-
-    const shouldDelegate = (() => {
-      if (!pathOnly.startsWith('/api/')) return false;
-
-      if (pathOnly === '/api/usuario') return true;
-      if (pathOnly === '/api/usuario/foto') return true;
-      if (pathOnly === '/api/usuario/senha') return true;
-      if (pathOnly === '/api/modulos' && method === 'GET') return true;
-
-      if (pathOnly === '/api/usuarios' && method === 'POST') return true;
-
-      const m = pathOnly.match(/^\/api\/usuarios\/([^\/]+)\/(update|toggle|delete|status)$/i);
-      if (m && isObjectId(m[1])) return true;
-
-      return false;
-    })();
-
-    if (!shouldDelegate) return next();
-    return gestorUserApi(req, res, next);
-  } catch {
-    return next();
-  }
 });
 
 app.get('/', (req, res) => res.redirect((req.baseUrl || '/portal-morador') + '/login'));
@@ -824,7 +793,7 @@ app.get('/mensagens', requirePortalLogin, (req, res) => {
 });
 
 app.get('/mensagens/:view', requirePortalLogin, (req, res) => {
-  const ctxUser = req.user || (req.session && (req.session.portalUser || req.session.user)) || null;
+  const ctxUser = req.portalUser || (req.session && req.session.portalUser) || null;
   if (!ctxUser) {
     const bp = res.locals.basePath || req.baseUrl || '/portal-morador';
     return res.redirect(302, `${bp}/login`);
@@ -2024,7 +1993,7 @@ app.get('/api/auth/condominios', wrapAsync(async (req, res) => {
 
 app.get('/api/user', requirePortalLogin, (req, res) => {
   try {
-    const user = req.user || null;
+    const user = req.portalUser || req.session?.portalUser || null;
     const avatarUrl = user && (user.avatar_url || user.avatarUrl || user.foto_url || user.fotoUrl || null);
     return res.json({
       ok: true,
@@ -2040,16 +2009,10 @@ app.get('/api/user', requirePortalLogin, (req, res) => {
 // GET /api/modulos — retorna lista simples de módulos acessíveis (para badges do perfil)
 app.get('/api/modulos', requirePortalLogin, wrapAsync(async (req, res) => {
   try {
-    const role = String(req.user?.role || '').toLowerCase();
+    const portalUser = req.portalUser || req.session?.portalUser || null;
 
-    // 1) Master/Admin: listar todos os módulos cadastrados
-    if (role === 'master' || role === 'admin') {
-      const todos = await Modulo.find({}).select('_id nome descricao status url_base').lean();
-      return res.json({ data: todos });
-    }
-
-    // 2) Usuário com contexto de unidade: usar modulosAcessiveis da unidade
-    const unidadeId = req.user?.unidade_id || req.user?.unidadeId || null;
+    // Usuário com contexto de unidade: usar modulosAcessiveis da unidade
+    const unidadeId = portalUser?.unidade_id || portalUser?.unidadeId || null;
     if (unidadeId && mongoose.isValidObjectId(String(unidadeId))) {
       const unidade = await Unidade.findById(unidadeId).populate('modulosAcessiveis').lean();
       if (unidade?.modulosAcessiveis?.length) {
@@ -2064,7 +2027,7 @@ app.get('/api/modulos', requirePortalLogin, wrapAsync(async (req, res) => {
       }
     }
 
-    // 3) Fallback mínimo: exibir ao menos o Portal como ativo
+    // Fallback mínimo: exibir ao menos o Portal como ativo
     return res.json({ data: [{ nome: 'Portal do Morador', status: 'ativo' }] });
   } catch (err) {
     console.error('[portal-morador][api/modulos] erro:', err?.message || err);

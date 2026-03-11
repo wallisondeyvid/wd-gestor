@@ -1041,7 +1041,10 @@ export async function createServer(options = {}) {
   // Não altera contrato da sessão: continua mínima em req.session.user.
   app.use(async (req, _res, next) => {
     try {
+      const originalUrl = String(req.originalUrl || req.url || '');
+      const isPortalRequest = /^\/portal(?:-|_)morador(?:\/|$)/i.test(originalUrl);
       if (req.user) return next();
+      if (isPortalRequest) return next();
       const sess = req.session?.user;
       if (!sess || (!sess.id && !sess.email)) return next();
       if (mongoose.connection.readyState !== 1) return next();

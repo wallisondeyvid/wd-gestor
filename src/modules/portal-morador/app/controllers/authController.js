@@ -258,7 +258,7 @@ export async function portalLoginPost(req, res) {
 
 export async function portalAuthContextGet(req, res) {
   try {
-    const sessionUser = (req?.session?.portalUser) || (req?.user) || null;
+    const sessionUser = req?.portalUser || req?.session?.portalUser || null;
     if (!sessionUser) {
       return res.status(401).json({ ok: false, code: 'PORTAL_UNAUTHORIZED', error: 'Não autenticado.' });
     }
@@ -282,7 +282,7 @@ export async function portalAuthContextGet(req, res) {
 export async function portalSelectVinculoPost(req, res) {
   try {
     const basePath = getBasePath(req);
-    const sessionUser = (req?.session?.portalUser) || (req?.user) || null;
+    const sessionUser = req?.portalUser || req?.session?.portalUser || null;
     if (!sessionUser) {
       return res.status(401).json({ ok: false, code: 'PORTAL_UNAUTHORIZED', error: 'Não autenticado.' });
     }

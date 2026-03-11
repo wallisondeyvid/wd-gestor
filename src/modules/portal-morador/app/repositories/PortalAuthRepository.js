@@ -22,7 +22,7 @@ export function resolvePortalAuthUnitScope(req, { fallbackUnidadeId = null } = {
   if (req?.unitScope) return req.unitScope;
   if (req?.ctx?.unitScope) return req.ctx.unitScope;
 
-  const ctxUser = req?.ctxUser || req?.user || req?.portalUser || req?.session?.portalUser || req?.session?.user || null;
+  const ctxUser = req?.portalUser || req?.session?.portalUser || null;
 
   const unidadeId = firstNonEmpty(
     req?.query?.unidadeId,

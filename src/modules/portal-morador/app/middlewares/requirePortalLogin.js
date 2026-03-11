@@ -136,9 +136,7 @@ async function restorePortalSessionFromCookie(req, res, options = {}) {
 
 function attachPortalUser(req, res, sessionUser) {
   req.portalUser = sessionUser;
-  if (!req.user) {
-    req.user = sessionUser;
-  }
+  req.user = sessionUser;
   try {
     res.locals.portalUser = sessionUser;
   } catch (_e) {
