@@ -55,6 +55,11 @@
     <div class="wdg-card content wdg-card-hover">
       <div class="wdg-card-body wdg-form wdg-tight">
 
+        <div class="alert alert-info py-2 px-3 mb-3" role="note" id="usuarioCreateOrLinkHint">
+          <strong>Como funciona o vínculo multiunidade:</strong>
+          <span>E-mail novo cria o usuário e o vínculo da unidade atual. E-mail já existente em outra unidade adiciona o vínculo à unidade atual. E-mail já vinculado nesta unidade gera aviso e não duplica o vínculo.</span>
+        </div>
+
         <!-- FORM: grid limpo e responsivo -->
   <form id="formNovoUsuario" method="POST" action="<%= _basePath %>/api/usuarios" class="row gy-3 wdg-form auto-colon" onsubmit="return submitUsuarioForm(event)">
           <!-- Linha 1 -->
@@ -67,7 +72,7 @@
             <label class="form-label">E-mail</label>
             <input name="email" type="email" required class="form-control" placeholder="E-mail" autocomplete="email">
             <div class="form-text text-muted">
-              <small>Se o e-mail já existir em outra unidade, o sistema reutiliza o usuário e cria apenas o vínculo desta unidade.</small>
+              <small>Se o e-mail já existir em outra unidade, o sistema reutiliza o usuário e cria apenas o vínculo desta unidade. Se já estiver vinculado nesta unidade, a tela exibirá um aviso e não duplicará o vínculo.</small>
             </div>
           </div>
 
@@ -131,7 +136,7 @@
             <div class="d-block ms-auto">
               <button type="submit" class="btn btn-primary" id="btnSubmitUsuario" data-mode="create">
                 <span class="spinner-border spinner-border-sm d-none" role="status"></span>
-                Criar ou vincular
+                Criar usuário ou adicionar vínculo
               </button>
             </div>
           </div>
@@ -1021,8 +1026,8 @@
           // Sucesso - mostrar mensagem específica e recarregar página
           const outcome = String(result?.data?.outcome || (result?.data?.tempPassword ? 'created' : 'linked')).toLowerCase();
           const successMessage = outcome === 'linked'
-            ? 'Usuário existente vinculado à unidade com sucesso!'
-            : 'Usuário criado com sucesso!';
+            ? 'Usuário existente vinculado à unidade atual com sucesso!'
+            : 'Usuário criado e vinculado à unidade com sucesso!';
           showAlert(successMessage, 'success');
           setTimeout(() => {
             window.location.reload();
@@ -1030,6 +1035,7 @@
         } else {
           // Erro - mostrar mensagem específica baseada no tipo de erro
           let errorMessage = 'Erro desconhecido ao criar usuário';
+          let alertType = 'error';
           const serverCode = result && (result.code || result.errorCode || result.error_code);
           const serverMsg = result && (result.error || result.message);
           console.warn('[usuarios][criarUsuario] 400/erro', { status: response.status, code: serverCode, serverMsg, payload: result });
@@ -1040,7 +1046,8 @@
             if (serverCode === 'EMAIL_REQUIRED' || errorText.includes('email obrigatório') || errorText.includes('e-mail obrigatório')) {
               errorMessage = 'E-mail é obrigatório';
             } else if (serverCode === 'USER_MEMBERSHIP_DUPLICATE' || errorText.includes('já vinculado a esta unidade')) {
-            errorMessage = 'Este e-mail já está vinculado a esta unidade';
+            errorMessage = 'Este e-mail já está vinculado a esta unidade. Nenhum vínculo duplicado foi criado.';
+              alertType = 'warning';
             } else if (serverCode === 'EMAIL_DUPLICATE' || errorText.includes('usuário já cadastrado') || errorText.includes('usuário já existe') || errorText.includes('email já cadastrado')) {
               errorMessage = 'Este e-mail já está cadastrado para outro usuário';
             } else if (serverCode === 'UNIT_REQUIRED' || errorText.includes('unidade é obrigatória') || errorText.includes('campo obrigatório para usuários e diretores')) {
@@ -1057,7 +1064,7 @@
             }
           }
 
-          showAlert(errorMessage, 'error');
+          showAlert(errorMessage, alertType);
         }
       } catch (error) {
         console.error('Erro na requisição:', error);
