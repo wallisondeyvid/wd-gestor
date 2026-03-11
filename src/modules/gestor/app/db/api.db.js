@@ -110,6 +110,10 @@ import {
   updateUserUnidadeByIdRepo,
 } from '#modules/gestor/app/repositories/UserRepository.js';
 import {
+  createUserMembershipRepo,
+  findUserMembershipByUserAndUnidadeLeanRepo,
+} from '#modules/gestor/app/repositories/UserMembershipRepository.js';
+import {
   createFuncionarioDocRepo,
   deleteFuncionarioByIdRepo,
   findAllFuncionariosSelectIdNomeCpfLeanRepo,
@@ -738,6 +742,18 @@ export async function findUserByEmail(email) {
 
 export async function findUserByFuncionarioId(funcionarioId) {
   return findUserByFuncionarioIdRepo({ unitScope: GLOBAL_SCOPE, funcionarioId });
+}
+
+export async function findUserMembershipByUserAndUnidade(userId, unidadeId) {
+  return findUserMembershipByUserAndUnidadeLeanRepo({
+    unitScope: GLOBAL_SCOPE,
+    userId,
+    unidadeId,
+  });
+}
+
+export async function createUserMembership(data) {
+  return createUserMembershipRepo({ unitScope: GLOBAL_SCOPE, data });
 }
 
 export async function findUnidadesByCondLeanFull(cond) {

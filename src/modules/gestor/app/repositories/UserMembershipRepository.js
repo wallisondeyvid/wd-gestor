@@ -13,3 +13,25 @@ export async function findActiveMembershipsByUserIdLeanRepo({ unitScope, userId 
     .sort({ createdAt: 1 })
     .lean();
 }
+
+export async function findUserMembershipByUserAndUnidadeLeanRepo({ unitScope, userId, unidadeId }) {
+  const UserMembershipModel = resolveModel({
+    name: UserMembership.modelName || 'UserMembership',
+    schema: UserMembership.schema,
+    unitScope,
+  });
+
+  return UserMembershipModel.findOne({ user_id: userId, unidade_id: unidadeId })
+    .select('_id user_id unidade_id papel_contextual status funcionario_id')
+    .lean();
+}
+
+export async function createUserMembershipRepo({ unitScope, data }) {
+  const UserMembershipModel = resolveModel({
+    name: UserMembership.modelName || 'UserMembership',
+    schema: UserMembership.schema,
+    unitScope,
+  });
+
+  return UserMembershipModel.create(data || {});
+}
