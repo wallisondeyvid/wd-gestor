@@ -1,6 +1,8 @@
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
-import Unidade from '#models/unidade.js';
-import UserMembership from '#models/userMembership.js';
+import {
+  loadActiveMembershipsByUserId as loadActiveMembershipsByUserIdFromDb,
+  loadUnidadeById as loadUnidadeByIdFromDb,
+} from '#modules/gestor/app/services/authContextDbBridgeService.js';
 
 export const GESTOR_AUTH_CONTEXT_RESOLVER_FLAG = 'gestor_auth_context_resolver';
 export const AUTH_CONTEXT_SOURCE_LEGACY = 'legacy';
@@ -206,31 +208,12 @@ function isResolverEnabled(featureFlags = null) {
 
 async function defaultLoadActiveMembershipsByUserId({ userId, maxTimeMS }) {
   if (!normalizeId(userId)) return [];
-
-  let query = UserMembership.find({ user_id: userId, status: 'active' })
-    .select('_id user_id unidade_id papel_contextual status funcionario_id')
-    .sort({ createdAt: 1 })
-    .lean();
-
-  if (Number.isFinite(maxTimeMS) && maxTimeMS > 0) {
-    query = query.maxTimeMS(maxTimeMS);
-  }
-
-  return query;
+  return loadActiveMembershipsByUserIdFromDb({ userId, maxTimeMS });
 }
 
 async function defaultLoadUnidadeById({ unidadeId, maxTimeMS }) {
   if (!normalizeId(unidadeId)) return null;
-
-  let query = Unidade.findById(unidadeId)
-    .select('_id nome codigo is_principal unidade_principal_id')
-    .lean();
-
-  if (Number.isFinite(maxTimeMS) && maxTimeMS > 0) {
-    query = query.maxTimeMS(maxTimeMS);
-  }
-
-  return query;
+  return loadUnidadeByIdFromDb({ unidadeId, maxTimeMS });
 }
 
 async function normalizeMembership(rawMembership, { loadUnidadeById, maxTimeMS }) {
