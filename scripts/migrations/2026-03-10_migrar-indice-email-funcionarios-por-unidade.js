@@ -4,6 +4,8 @@
 
 import 'dotenv/config';
 import mongoose from 'mongoose';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const COLLECTION = 'funcionarios';
 
@@ -81,7 +83,9 @@ async function migrarIndiceEmailFuncionariosPorUnidade() {
   console.log('Migracao concluida. Regra aplicada: email unico por unidade_id em funcionarios.');
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
+
+if (isDirectRun) {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/wdgestor';
 
   (async () => {
