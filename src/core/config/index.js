@@ -22,6 +22,7 @@ export function loadConfig() {
 
   const defaultFeatureFlags = {
     escalas: false,
+    gestor_auth_context_resolver: false,
   };
 
   const cfg = {

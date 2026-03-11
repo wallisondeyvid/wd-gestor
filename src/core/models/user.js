@@ -5,7 +5,16 @@ const userSchema = new mongoose.Schema({
 	email: { type: String, required: true, lowercase: true, trim: true },
 	senha: { type: String, required: true },
 	nome: { type: String, trim: true },
-	global_role: { type: String, enum: ['master', 'admin'], default: null },
+	global_role: {
+		type: String,
+		default: null,
+		validate: {
+			validator(value) {
+				return value === null || value === undefined || value === 'master' || value === 'admin';
+			},
+			message: '`{VALUE}` is not a valid global_role',
+		},
+	},
 	cpf: { type: String, trim: true },
 	rg: { type: String, trim: true, default: '' },
 	data_nascimento: { type: Date, default: null },
@@ -24,6 +33,9 @@ const userSchema = new mongoose.Schema({
 	failed_login_attempts: { type: Number, default: 0 },
 	lock_until: { type: Date, default: null }
 }, { timestamps: true });
+
+userSchema.path('global_role').options.enum = ['master', 'admin'];
+userSchema.path('global_role').enumValues = ['master', 'admin'];
 
 userSchema.index({ unidade_id: 1, cpf: 1 }, { unique: true, sparse: true });
 userSchema.index({ email: 1 }, { unique: true });

@@ -1,16 +1,23 @@
 // (migrado) requireLogin.js
 import mongoose from 'mongoose';
+import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 import {
   findFuncionarioByIdPopulate,
   findUnidadeLeanById,
   findUnidadePrincipalLean,
   findUserLeanByEmail,
 } from '#modules/gestor/app/db/auth.db.js';
+import { GESTOR_AUTH_CONTEXT_RESOLVER_FLAG } from '#modules/gestor/app/services/authContextResolver.js';
 
 export const requireLogin = async (req, res, next) => { /* implementação original mantida + resposta JSON para API (ajustada para evitar loop em /login) */
   // Permitir bypass em suites de teste que não precisam de auth
   if (req.skipAuth) return next();
   const headers = req?.headers || {};
+  const resolvedPath = req.path || req.originalUrl || '';
+  const resolvedBasePath = req.baseUrl || '';
+  const resolvedOriginal = req.originalUrl || '';
+  const acceptHeader = (headers['accept'] || '').toLowerCase();
+  const requestedWithHeader = (headers['x-requested-with'] || '').toLowerCase();
   const isNodeTest = String(process.env.NODE_ENV || '').toLowerCase() === 'test' || process.argv.includes('--test');
   // Helper para detectar erros transitórios de DB (timeouts/seleção de servidor)
   const isTransientDbError = (e) => {
@@ -41,6 +48,71 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     funcao: s.funcao || null
   });
   };
+  const isAuthContextSelectionGuardEnabled = () => {
+    const featureFlags = req.app?.locals?.gestorAuthContextFeatureFlags || null;
+    if (featureFlags && typeof featureFlags === 'object') {
+      return isFeatureEnabled(featureFlags, GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+    }
+    return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+  };
+  const hasPendingAuthUnitSelection = () => {
+    if (!isAuthContextSelectionGuardEnabled()) return false;
+    const authContext = req.session?.gestorAuthContext;
+    if (!authContext || typeof authContext !== 'object') return false;
+
+    const needsSelection = authContext.needs_selection === true || authContext.needsSelection === true;
+    const hasActiveContext = Boolean(
+      authContext.active_membership_id ||
+      authContext.activeMembershipId ||
+      authContext.active_unidade_id ||
+      authContext.activeUnidadeId ||
+      authContext.activeContext
+    );
+    const hasGlobalRole = Boolean(authContext.global_role || authContext.globalRole);
+
+    return needsSelection && !hasActiveContext && !hasGlobalRole;
+  };
+  const shouldBypassPendingSelectionGuard = () => {
+    const isApiUsuarioPath = resolvedPath === '/api/usuario' || resolvedPath.startsWith('/api/usuario/');
+    const isApiModulosPath = resolvedPath === '/api/modulos' || resolvedPath.startsWith('/api/modulos/');
+
+    return (
+      resolvedPath.startsWith('/login') ||
+      resolvedPath.startsWith('/logout') ||
+      resolvedPath.startsWith('/auth/context') ||
+      resolvedPath.startsWith('/auth/select-unit') ||
+      resolvedPath.startsWith('/auth/switch-unit') ||
+      isApiUsuarioPath ||
+      isApiModulosPath
+    );
+  };
+  const isPendingSelectionApiRequest = (
+    resolvedPath.startsWith('/api/') ||
+    resolvedOriginal.startsWith('/gestor/api/') ||
+    (/\/api\//.test(resolvedOriginal) && (acceptHeader.includes('application/json') || requestedWithHeader === 'fetch' || requestedWithHeader === 'xmlhttprequest'))
+  );
+  const enforcePendingSelectionGuard = () => {
+    if (!req.session?.user || !hasPendingAuthUnitSelection() || shouldBypassPendingSelectionGuard()) {
+      return false;
+    }
+
+    const redirect = `${resolvedBasePath}/login?step=select`;
+    if (isPendingSelectionApiRequest) {
+      res.status(409).json({
+        success: false,
+        authenticated: true,
+        error: 'Seleção de unidade pendente',
+        code: 'GESTOR_SELECTION_REQUIRED',
+        needsUnitSelection: true,
+        redirect,
+      });
+      return true;
+    }
+
+    res.redirect(redirect);
+    return true;
+  };
+  if (enforcePendingSelectionGuard()) return;
   // Modo sem DB: não efetuar consultas a Mongo; confiar na sessão básica
   try {
     const shouldUseNoDbFallback = req.app?.locals?.skipDb || (!!req.app && mongoose.connection.readyState !== 1 && !isNodeTest);

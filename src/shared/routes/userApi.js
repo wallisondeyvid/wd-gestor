@@ -7,7 +7,32 @@ import multer from 'multer';
 import sharp from 'sharp';
 import { randomUUID as uuid } from 'crypto';
 import { put, del } from '@vercel/blob';
+import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
+import {
+	GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
+	resolveGestorAuthContext,
+} from '#modules/gestor/app/services/authContextResolver.js';
 import User from '#models/user.js';
+
+function isAuthContextResolverEnabledForRequest(req) {
+	const featureFlags = req.app?.locals?.gestorAuthContextFeatureFlags || null;
+	if (featureFlags && typeof featureFlags === 'object') {
+		return isFeatureEnabled(featureFlags, GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+	}
+	return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+}
+
+function buildPendingSelectionRequiredPayload(req) {
+	return {
+		success: false,
+		authenticated: true,
+		error: 'Seleção de unidade pendente',
+		code: 'GESTOR_SELECTION_REQUIRED',
+		needsUnitSelection: true,
+		redirect: '/gestor/login?step=select',
+	};
+}
+
 export function createUserApiRouter({
 	criarUsuario,
 	obterUsuarioAtual,
@@ -21,6 +46,270 @@ export function createUserApiRouter({
 	requireLogin,
 } = {}) {
 const router = express.Router();
+	const handleApiModulos = async (req, res) => {
+		try {
+			const role = String(req.user?.role || 'user').toLowerCase();
+			const wantDebug = String(req.query?.debug || '').trim() === '1';
+
+			const tryLoadUnidadeComModulos = async (unidadeId) => {
+				if (!unidadeId) return null;
+				try {
+					const Unidade = (await import('#models/unidade.js')).default;
+					const unidade = await Unidade.findById(unidadeId)
+						.select('_id is_principal subunidade unidade_principal_id modulosAcessiveis')
+						.populate('modulosAcessiveis')
+						.lean();
+					if (!unidade) return null;
+					if (unidade?.modulosAcessiveis?.length) return unidade;
+					if (unidade.subunidade && unidade.unidade_principal_id) {
+						const principal = await Unidade.findById(unidade.unidade_principal_id)
+							.select('_id is_principal subunidade unidade_principal_id modulosAcessiveis')
+							.populate('modulosAcessiveis')
+							.lean();
+						if (principal) return principal;
+					}
+					return unidade;
+				} catch {
+					return null;
+				}
+			};
+			const mapMods = (mods) => (mods || []).filter(Boolean).map(m => ({
+				_id: m._id,
+				nome: m.nome,
+				descricao: m.descricao,
+				status: m.status,
+				url_base: m.url_base,
+			}));
+			const uniqById = (mods) => {
+				const out = [];
+				const seen = new Set();
+				for (const m of (mods || [])) {
+					const id = m?._id ? String(m._id) : '';
+					if (id && seen.has(id)) continue;
+					if (id) seen.add(id);
+					out.push(m);
+				}
+				return out;
+			};
+			const intersectById = (baseMods, allowedMods) => {
+				const allowedIds = new Set(
+					(allowedMods || [])
+						.filter(Boolean)
+						.map((mod) => (mod?._id ? String(mod._id) : ''))
+						.filter(Boolean)
+				);
+				return (baseMods || []).filter((mod) => {
+					const id = mod?._id ? String(mod._id) : '';
+					return id && allowedIds.has(id);
+				});
+			};
+			const buildDebugPayload = ({ source, authContext = null, unidade = null, funcionario = null, funcao = null } = {}) => {
+				if (!wantDebug) return null;
+				return {
+					source,
+					authContext: authContext
+						? {
+							source: authContext.source,
+							globalRole: authContext.globalRole || null,
+							effectiveRole: authContext.effectiveRole || null,
+							needsUnitSelection: !!authContext.needsUnitSelection,
+							membershipCount: Number(authContext.membershipCount || 0),
+							activeContext: authContext.activeContext
+								? {
+									unidadeId: authContext.activeContext.unidadeId,
+									funcionarioId: authContext.activeContext.funcionarioId || null,
+									papelContextual: authContext.activeContext.papelContextual || null,
+									legacyRole: authContext.activeContext.legacyRole || null,
+								}
+								: null,
+						}
+						: null,
+					funcionario: funcionario
+						? {
+							_id: funcionario._id,
+							funcao_id: funcionario.funcao_id,
+							unidade_id: funcionario.unidade_id,
+						}
+						: null,
+					funcao: funcao
+						? {
+							_id: funcao._id,
+							ativa: funcao.ativa !== false,
+							modulosCount: (funcao.modulos_habilitados || []).length,
+						}
+						: null,
+					unidade: unidade
+						? {
+							_id: unidade._id,
+							subunidade: !!unidade.subunidade,
+							unidade_principal_id: unidade.unidade_principal_id,
+							modulosCount: (unidade.modulosAcessiveis || []).length,
+						}
+						: null,
+				};
+			};
+
+			if (isAuthContextResolverEnabledForRequest(req)) {
+				try {
+					const authContext = await resolveGestorAuthContext({
+						authenticatedUser: req.user || null,
+						sessionUser: req.session?.user || null,
+						existingAuthContext: req.session?.gestorAuthContext || null,
+						featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
+						deps: req.app?.locals?.gestorAuthContextResolverDeps || {},
+						maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
+					});
+
+					if (authContext?.source === 'auth-context-v1') {
+						if (authContext.needsUnitSelection) {
+							return res.status(409).json(buildPendingSelectionRequiredPayload(req));
+						}
+
+						const effectiveRole = String(authContext.effectiveRole || '').toLowerCase();
+						const globalRole = String(authContext.globalRole || '').toLowerCase();
+
+						if (globalRole === 'master' || globalRole === 'admin' || effectiveRole === 'master' || effectiveRole === 'admin') {
+							try {
+								const Modulo = (await import('#models/modulo.js')).default;
+								const todos = await Modulo.find({}).select('_id nome descricao status url_base').lean();
+								const payload = { data: todos };
+								const debug = buildDebugPayload({ source: 'auth-context-v1-global', authContext });
+								if (debug) payload.debug = debug;
+								return res.json(payload);
+							} catch (e) {
+								console.warn('[gestor][api/modulos] fallback master/admin auth-context:', e?.message || e);
+							}
+						}
+
+						if (effectiveRole === 'diretor') {
+							const unidade = await tryLoadUnidadeComModulos(authContext.activeContext?.unidadeId || null);
+							const payload = { data: mapMods(unidade?.modulosAcessiveis || []) };
+							const debug = buildDebugPayload({ source: 'auth-context-v1-gestor', authContext, unidade });
+							if (debug) payload.debug = debug;
+							return res.json(payload);
+						}
+
+						if (effectiveRole === 'user') {
+							try {
+								const Funcionario = (await import('#models/Funcionario.js')).default;
+								const Funcao = (await import('#models/funcao.js')).default;
+								const activeUnitId = authContext.activeContext?.unidadeId || null;
+								const activeFuncionarioId = authContext.activeContext?.funcionarioId || null;
+
+								const unidade = await tryLoadUnidadeComModulos(activeUnitId);
+								const modsUnidade = (unidade?.modulosAcessiveis || []).filter(Boolean);
+
+								let funcionario = null;
+								if (activeFuncionarioId) {
+									funcionario = await Funcionario.findById(activeFuncionarioId)
+										.select('_id funcao_id unidade_id usuario_id cpf email')
+										.lean();
+								}
+
+								let funcao = null;
+								let modsFuncao = [];
+								const funcionarioUnidadeId = funcionario?.unidade_id ? String(funcionario.unidade_id) : null;
+								if (funcionario?.funcao_id && activeUnitId && funcionarioUnidadeId === String(activeUnitId)) {
+									funcao = await Funcao.findById(funcionario.funcao_id)
+										.populate('modulos_habilitados')
+										.lean();
+									modsFuncao = (funcao?.modulos_habilitados || []).filter(Boolean);
+								}
+
+								const intersection = uniqById(intersectById(modsUnidade, modsFuncao));
+								const payload = { data: mapMods(intersection) };
+								const debug = buildDebugPayload({ source: 'auth-context-v1-user', authContext, unidade, funcionario, funcao });
+								if (debug) payload.debug = debug;
+								return res.json(payload);
+							} catch (e) {
+								console.warn('[gestor][api/modulos] auth-context user:', e?.message || e);
+								const payload = { data: [] };
+								const debug = buildDebugPayload({ source: 'auth-context-v1-user-error', authContext });
+								if (debug) payload.debug = debug;
+								return res.json(payload);
+							}
+						}
+
+						const payload = { data: [] };
+						const debug = buildDebugPayload({ source: 'auth-context-v1-empty', authContext });
+						if (debug) payload.debug = debug;
+						return res.json(payload);
+					}
+				} catch (e) {
+					console.warn('[gestor][api/modulos] auth-context fallback:', e?.message || e);
+				}
+			}
+
+			if (role === 'master' || role === 'admin') {
+				try {
+					const Modulo = (await import('#models/modulo.js')).default;
+					const todos = await Modulo.find({}).select('_id nome descricao status url_base').lean();
+					return res.json({ data: todos });
+				} catch (e) {
+					console.warn('[gestor][api/modulos] fallback master/admin:', e?.message || e);
+				}
+			}
+
+			if (role === 'diretor') {
+				const unidadeId = req.user?.unidade_id || req.user?.unidade_principal_id || null;
+				const unidade = await tryLoadUnidadeComModulos(unidadeId);
+				if (unidade?.modulosAcessiveis?.length) {
+					return res.json({ data: mapMods(unidade.modulosAcessiveis) });
+				}
+			}
+
+			if (role === 'user') {
+				try {
+					const Funcionario = (await import('#models/Funcionario.js')).default;
+					const Funcao = (await import('#models/funcao.js')).default;
+					let dbg = wantDebug ? { source: 'user', funcionario: null, funcao: null, unidade: null } : null;
+					let funcionario = null;
+					const funcionarioId = req.user?.funcionario_id || null;
+					const unidadeId = req.user?.unidade_id || null;
+					const cpf = req.user?.cpf ? String(req.user.cpf).replace(/\D/g, '') : '';
+					if (funcionarioId) {
+						funcionario = await Funcionario.findById(funcionarioId).select('_id funcao_id unidade_id usuario_id cpf email').lean();
+					}
+					if (!funcionario && req.user?._id) {
+						funcionario = await Funcionario.findOne({ usuario_id: req.user._id }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
+					}
+					if (!funcionario && cpf && unidadeId) {
+						funcionario = await Funcionario.findOne({ cpf, unidade_id: unidadeId }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
+					}
+					if (dbg) dbg.funcionario = funcionario ? { _id: funcionario._id, funcao_id: funcionario.funcao_id, unidade_id: funcionario.unidade_id } : null;
+
+					const unidade = await tryLoadUnidadeComModulos(funcionario?.unidade_id || req.user?.unidade_id || req.user?.unidade_principal_id || null);
+					if (dbg) dbg.unidade = unidade ? { _id: unidade._id, subunidade: !!unidade.subunidade, unidade_principal_id: unidade.unidade_principal_id, modulosCount: (unidade.modulosAcessiveis || []).length } : null;
+					const modsUnidade = (unidade?.modulosAcessiveis || []).filter(Boolean);
+					let modsFuncao = [];
+
+					if (funcionario?.funcao_id) {
+						const funcao = await Funcao.findById(funcionario.funcao_id).populate('modulos_habilitados').lean();
+						if (dbg) dbg.funcao = funcao ? { _id: funcao._id, ativa: funcao.ativa !== false, modulosCount: (funcao.modulos_habilitados || []).length } : null;
+						modsFuncao = (funcao?.modulos_habilitados || []).filter(Boolean);
+					}
+
+					const union = uniqById([...modsFuncao, ...modsUnidade]);
+					if (union.length) {
+						const payload = { data: mapMods(union) };
+						if (wantDebug) payload.debug = dbg;
+						return res.json(payload);
+					}
+				} catch (e) {
+					console.warn('[gestor][api/modulos] fallback user:', e?.message || e);
+				}
+			}
+
+			{
+				const unidade = await tryLoadUnidadeComModulos(req.user?.unidade_id || req.user?.unidade_principal_id || null);
+				if (unidade?.modulosAcessiveis?.length) return res.json({ data: mapMods(unidade.modulosAcessiveis) });
+			}
+
+			return res.json({ data: [{ nome: 'Gestor', status: 'ativo' }] });
+		} catch {
+			return res.json({ data: [{ nome: 'Gestor', status: 'ativo' }] });
+		}
+	};
 
 // GET /api/usuario/foto — endpoint de imagem deve ser resiliente.
 // Importante: não devolver 401 aqui, porque é comumente consumido por <img> (e alguns front-ends interpretam 401 como “deslogou”).
@@ -119,6 +408,8 @@ router.get('/api/usuario/foto', async (req, res) => {
 });
 
 // Aplique autenticação apenas às rotas /api/* deste router, para não interferir em páginas públicas
+router.get('/api/usuario', requireLogin, obterUsuarioAtual);
+router.get('/api/modulos', requireLogin, handleApiModulos);
 router.use('/api', requireLogin);
 router.post('/api/usuarios', criarUsuario);
 // Suporta edição via endpoint canônico /api (usado pelo modal). Mantém semântica de redirect pós-sucesso.
@@ -126,134 +417,7 @@ router.post('/api/usuarios/:id/update', atualizarUsuario);
 // Endpoints de administração também disponíveis sob /api para compatibilidade com o front
 router.post('/api/usuarios/:id/toggle', requireLogin, requireRole(['admin']), toggleUsuario);
 router.post('/api/usuarios/:id/delete', requireApiAuth, requireRole(['admin']), deleteUsuario);
-router.get('/api/usuario', obterUsuarioAtual);
 router.put('/api/usuario/senha', atualizarSenhaUsuario);
-
-// GET /api/modulos — lista simples para badges do perfil (contexto Gestor)
-router.get('/api/modulos', async (req, res) => {
-	try {
-		const role = String(req.user?.role || 'user').toLowerCase();
-		const wantDebug = String(req.query?.debug || '').trim() === '1';
-
-		// 1) Master/Admin: listar todos os módulos cadastrados
-		if (role === 'master' || role === 'admin') {
-			try {
-				const Modulo = (await import('#models/modulo.js')).default;
-				const todos = await Modulo.find({}).select('_id nome descricao status url_base').lean();
-				return res.json({ data: todos });
-			} catch (e) {
-				console.warn('[gestor][api/modulos] fallback master/admin:', e?.message || e);
-			}
-		}
-
-		// Helpers
-		const tryLoadUnidadeComModulos = async (unidadeId) => {
-			if (!unidadeId) return null;
-			try {
-				const Unidade = (await import('#models/unidade.js')).default;
-				const unidade = await Unidade.findById(unidadeId)
-					.select('_id is_principal subunidade unidade_principal_id modulosAcessiveis')
-					.populate('modulosAcessiveis')
-					.lean();
-				if (!unidade) return null;
-				if (unidade?.modulosAcessiveis?.length) return unidade;
-				// Herança: se subunidade e não tem modulosAcessiveis, tenta na principal
-				if (unidade.subunidade && unidade.unidade_principal_id) {
-					const principal = await Unidade.findById(unidade.unidade_principal_id)
-						.select('_id is_principal subunidade unidade_principal_id modulosAcessiveis')
-						.populate('modulosAcessiveis')
-						.lean();
-					if (principal) return principal;
-				}
-				return unidade;
-			} catch {
-				return null;
-			}
-		};
-		const mapMods = (mods) => (mods || []).filter(Boolean).map(m => ({
-			_id: m._id,
-			nome: m.nome,
-			descricao: m.descricao,
-			status: m.status,
-			url_base: m.url_base,
-		}));
-		const uniqById = (mods) => {
-			const out = [];
-			const seen = new Set();
-			for (const m of (mods || [])) {
-				const id = m?._id ? String(m._id) : '';
-				if (id && seen.has(id)) continue;
-				if (id) seen.add(id);
-				out.push(m);
-			}
-			return out;
-		};
-
-		// 2) Diretor: módulos da unidade (unidade_id ou unidade_principal_id)
-		if (role === 'diretor') {
-			const unidadeId = req.user?.unidade_id || req.user?.unidade_principal_id || null;
-			const unidade = await tryLoadUnidadeComModulos(unidadeId);
-			if (unidade?.modulosAcessiveis?.length) {
-				return res.json({ data: mapMods(unidade.modulosAcessiveis) });
-			}
-		}
-
-		// 3) User: módulos da função (modulos_habilitados) filtrados pelos módulos da unidade (defesa)
-		if (role === 'user') {
-			try {
-				const Funcionario = (await import('#models/Funcionario.js')).default;
-				const Funcao = (await import('#models/funcao.js')).default;
-				let dbg = wantDebug ? { source: 'user', funcionario: null, funcao: null, unidade: null } : null;
-				let funcionario = null;
-				const funcionarioId = req.user?.funcionario_id || null;
-				const unidadeId = req.user?.unidade_id || null;
-				const cpf = req.user?.cpf ? String(req.user.cpf).replace(/\D/g,'') : '';
-				if (funcionarioId) {
-					funcionario = await Funcionario.findById(funcionarioId).select('_id funcao_id unidade_id usuario_id cpf email').lean();
-				}
-				if (!funcionario && req.user?._id) {
-					funcionario = await Funcionario.findOne({ usuario_id: req.user._id }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
-				}
-				if (!funcionario && cpf && unidadeId) {
-					funcionario = await Funcionario.findOne({ cpf, unidade_id: unidadeId }).select('_id funcao_id unidade_id usuario_id cpf email').lean();
-				}
-				if (dbg) dbg.funcionario = funcionario ? { _id: funcionario._id, funcao_id: funcionario.funcao_id, unidade_id: funcionario.unidade_id } : null;
-
-				const unidade = await tryLoadUnidadeComModulos(funcionario?.unidade_id || req.user?.unidade_id || req.user?.unidade_principal_id || null);
-				if (dbg) dbg.unidade = unidade ? { _id: unidade._id, subunidade: !!unidade.subunidade, unidade_principal_id: unidade.unidade_principal_id, modulosCount: (unidade.modulosAcessiveis||[]).length } : null;
-				const modsUnidade = (unidade?.modulosAcessiveis || []).filter(Boolean);
-				let modsFuncao = [];
-
-				if (funcionario?.funcao_id) {
-					const funcao = await Funcao.findById(funcionario.funcao_id).populate('modulos_habilitados').lean();
-					if (dbg) dbg.funcao = funcao ? { _id: funcao._id, ativa: funcao.ativa !== false, modulosCount: (funcao.modulos_habilitados||[]).length } : null;
-					modsFuncao = (funcao?.modulos_habilitados || []).filter(Boolean);
-				}
-
-				// Regra de exibição: união (função ∪ unidade), deduplicando por _id
-				const union = uniqById([ ...modsFuncao, ...modsUnidade ]);
-				if (union.length) {
-					const payload = { data: mapMods(union) };
-					if (wantDebug) payload.debug = dbg;
-					return res.json(payload);
-				}
-			} catch (e) {
-				console.warn('[gestor][api/modulos] fallback user:', e?.message || e);
-			}
-		}
-
-		// 4) Outros roles (ou fallback genérico): tenta unidade, depois Gestor
-		{
-			const unidade = await tryLoadUnidadeComModulos(req.user?.unidade_id || req.user?.unidade_principal_id || null);
-			if (unidade?.modulosAcessiveis?.length) return res.json({ data: mapMods(unidade.modulosAcessiveis) });
-		}
-
-		// 3) Fallback mínimo: sempre expor Gestor como ativo
-		return res.json({ data: [{ nome: 'Gestor', status: 'ativo' }] });
-	} catch {
-		return res.json({ data: [{ nome: 'Gestor', status: 'ativo' }] });
-	}
-});
 
 // POST /api/usuario/foto — upload e atualização via Vercel Blob
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -270,13 +434,18 @@ router.post('/api/usuario/foto', upload.single('foto'), async (req, res) => {
 		let webpBuf;
 		try {
 			webpBuf = await sharp(req.file.buffer).rotate().resize(512,512,{ fit:'cover', position:'center', withoutEnlargement:true }).toFormat('webp',{ quality:90 }).toBuffer();
-		} catch { return res.status(400).json({ error: 'Arquivo inválido' }); }
+		} catch {
+			return res.status(400).json({ error: 'Arquivo inválido' });
+		}
 		const key = `users/${userDoc._id}-${uuid()}.webp`;
-		const putOptions = { access:'public', contentType:'image/webp', cacheControl:'public, max-age=31536000, immutable', ...(blobToken?{ token: blobToken }: {}) };
+		const putOptions = { access:'public', contentType:'image/webp', cacheControl:'public, max-age=31536000, immutable', ...(blobToken ? { token: blobToken } : {}) };
 		const { url } = await put(key, webpBuf, putOptions);
 		const prev = userDoc.foto;
-		if (prev && /^https?:\/\/.*blob\.vercel-storage\.com\//i.test(prev)) { try { await del(prev, blobToken?{ token: blobToken }: undefined); } catch {} }
-		userDoc.foto = url; await userDoc.save();
+		if (prev && /^https?:\/\/.*blob\.vercel-storage\.com\//i.test(prev)) {
+			try { await del(prev, blobToken ? { token: blobToken } : undefined); } catch {}
+		}
+		userDoc.foto = url;
+		await userDoc.save();
 		return res.json({ ok:true, foto: url });
 	} catch (err) {
 		console.error('[gestor][api/usuario/foto POST] erro:', err);

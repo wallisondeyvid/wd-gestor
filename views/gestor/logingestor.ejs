@@ -53,64 +53,79 @@
           </div>
         <% } %>
 
-    <!-- Form -->
-  <form id="loginForm" action="<%= _basePath %>/login" method="POST" novalidate>
-          <!-- Garante roteamento correto do módulo no backend -->
-    <input type="hidden" name="modulo" value="<%= _bp.replace(/^\//,'') %>" />
+        <div id="loginFormSection">
+          <!-- Form -->
+          <form id="loginForm" action="<%= _basePath %>/login" method="POST" novalidate>
+            <!-- Garante roteamento correto do módulo no backend -->
+            <input type="hidden" name="modulo" value="<%= _bp.replace(/^\//,'') %>" />
+            <div class="mb-3">
+              <label for="email" class="form-label small text-muted mb-1">E-mail</label>
+              <div class="input-group">
+                <span class="input-group-text"><img src="<%= _bp %>/images/email.png" alt="E-mail" class="icon icon-sm"></span>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  placeholder="email@empresa.com"
+                  autocomplete="username"
+                  autofocus
+                  required
+                  value="<%= typeof email !== 'undefined' ? email : '' %>"
+                />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="senha" class="form-label small text-muted mb-1">Senha</label>
+              <div class="input-group">
+                <span class="input-group-text"><img src="<%= _bp %>/images/senha.png" alt="Senha" class="icon icon-sm"></span>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="senha"
+                  name="senha"
+                  placeholder="••••••••"
+                  autocomplete="current-password"
+                  required
+                />
+                <button class="btn btn-outline-secondary toggle-pass" type="button" aria-label="Mostrar/ocultar senha">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="1" id="lembrar" name="lembrar" />
+                <label class="form-check-label" for="lembrar">Lembrar-me</label>
+              </div>
+              <a class="small" href="<%= _basePath %>/esquecisenha">Esqueci minha senha</a>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+            </div>
+
+            <div class="text-center mt-3">
+              <span class="small text-muted">Ainda não é usuário?</span>
+              <a class="small" href="<%= _basePath %>/contato">Entre em contato</a>
+            </div>
+          </form>
+        </div>
+
+        <section id="loginSelectionPanel" class="d-none" aria-live="polite" aria-labelledby="loginSelectionTitle">
+          <div class="alert alert-primary mb-3" role="status">
+            Sua autenticação foi concluída. Escolha a unidade para continuar.
+          </div>
           <div class="mb-3">
-            <label for="email" class="form-label small text-muted mb-1">E-mail</label>
-            <div class="input-group">
-              <span class="input-group-text"><img src="<%= _bp %>/images/email.png" alt="E-mail" class="icon icon-sm"></span>
-              <input
-                type="email"
-                class="form-control"
-                id="email"
-                name="email"
-                placeholder="email@empresa.com"
-                autocomplete="username"
-                autofocus
-                required
-                value="<%= typeof email !== 'undefined' ? email : '' %>"
-              />
-            </div>
+            <h2 id="loginSelectionTitle" class="h5 mb-1">Selecionar unidade</h2>
+            <p class="small text-muted mb-0">Use um dos vínculos disponíveis para entrar no dashboard do Gestor.</p>
           </div>
-
-          <div class="mb-3">
-            <label for="senha" class="form-label small text-muted mb-1">Senha</label>
-            <div class="input-group">
-              <span class="input-group-text"><img src="<%= _bp %>/images/senha.png" alt="Senha" class="icon icon-sm"></span>
-              <input
-                type="password"
-                class="form-control"
-                id="senha"
-                name="senha"
-                placeholder="••••••••"
-                autocomplete="current-password"
-                required
-              />
-              <button class="btn btn-outline-secondary toggle-pass" type="button" aria-label="Mostrar/ocultar senha">
-                <i class="bi bi-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" value="1" id="lembrar" name="lembrar" />
-              <label class="form-check-label" for="lembrar">Lembrar-me</label>
-            </div>
-            <a class="small" href="<%= _basePath %>/esquecisenha">Esqueci minha senha</a>
-          </div>
-
-          <div class="d-grid">
-            <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
-          </div>
-
-          <div class="text-center mt-3">
-            <span class="small text-muted">Ainda não é usuário?</span>
-            <a class="small" href="<%= _basePath %>/contato">Entre em contato</a>
-          </div>
-        </form>
+          <div id="loginSelectionAlert" class="alert alert-danger d-none" role="alert"></div>
+          <div id="loginSelectionStatus" class="small text-muted mb-3">Carregando suas unidades...</div>
+          <div id="loginUnitSelectionList" class="list-group"></div>
+        </section>
 
       </div>
     </div>

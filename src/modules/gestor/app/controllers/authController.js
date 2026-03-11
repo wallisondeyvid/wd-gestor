@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 import { resetPasswordTemplate } from '#core/mail/templates/resetPassword.js';
 import {
   createPasswordReset,
@@ -23,6 +24,11 @@ import {
   revokeRememberTokenByHash,
   saveUserDocument,
 } from '#modules/gestor/app/services/authDbBridgeService.js';
+import {
+  GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
+  projectLegacySessionUserFromAuthContext,
+  resolveGestorAuthContext,
+} from '#modules/gestor/app/services/authContextResolver.js';
 
 // -----------------------------------------------------------------------------
 // Helper de Autorização de Módulo
@@ -222,7 +228,7 @@ export async function login(req, res) {
   const maxTentativas = Number(process.env.LOGIN_MAX_ATTEMPTS || 5);
   const lockMinutos = Number(process.env.LOGIN_LOCK_MINUTES || 15);
     const agora = new Date();
-  const isMasterRole = user.role === 'master';
+  const isMasterRole = user.role === 'master' || user.global_role === 'master';
   const masterBypassLockout = (process.env.MASTER_BYPASS_LOCKOUT || 'true').toLowerCase() !== 'false';
   if (user.lock_until && user.lock_until > agora && !(isMasterRole && masterBypassLockout)) {
       // Usuário ainda bloqueado
@@ -307,14 +313,43 @@ export async function login(req, res) {
     }
 
     console.log('[login] autenticado', { id: user._id.toString(), primeiro_acesso: user.primeiro_acesso, senha_provisoria: user.senha_provisoria, role: user.role });
+    clearGestorAuthContextSession(req);
     req.session.user = {
       id: user._id.toString(),
       email: user.email
     };
+    let effectiveLoginUser = user;
+
+    if (isAuthContextResolverEnabledForRequest(req)) {
+      const resolvedLoginAuthContext = await resolveGestorAuthContext({
+        authenticatedUser: user,
+        sessionUser: req.session?.user || null,
+        existingAuthContext: req.session?.gestorAuthContext || null,
+        featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
+        deps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
+        maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
+      });
+
+      const authContextState = classifyLoginResolvedAuthContext(resolvedLoginAuthContext);
+      if (authContextState === 'no-context') {
+        clearGestorAuthContextSession(req);
+        delete req.session.user;
+        await saveSessionSafe(req);
+        return res.redirect(303, basePath + '/login?erro=contexto');
+      }
+
+      storeResolvedLoginAuthContext(req, user, resolvedLoginAuthContext);
+      if (authContextState === 'needs-selection') {
+        await saveSessionSafe(req);
+        return res.redirect(303, basePath + '/login?step=select');
+      }
+
+      effectiveLoginUser = buildLoginUserFromAuthContext(user, resolvedLoginAuthContext);
+    }
 
     // Importante: garantir persistência da sessão antes de redirecionar.
     // Em alguns cenários (principalmente com session store remoto + redirect), a gravação pode atrasar.
-    const saveSessionSafe = async () => {
+    const saveSessionAfterLogin = async () => {
       try {
         if (!req.session || typeof req.session.save !== 'function') return;
         await new Promise((resolve) => req.session.save(() => resolve()));
@@ -328,7 +363,7 @@ export async function login(req, res) {
     const enforceMaster = String(process.env.ENFORCE_MASTER_FIRST_LOGIN || '').toLowerCase() === 'true';
     if (precisaTrocar && (!isMasterRole || (isMasterRole && enforceMaster))) {
       console.log('[login] redirecionando (senha_provisoria/primeiro_acesso)', { isMasterRole, enforceMaster });
-      await saveSessionSafe();
+      await saveSessionAfterLogin();
   return res.redirect(303, basePath + '/primeiroacesso');
     }
 
@@ -364,7 +399,7 @@ export async function login(req, res) {
     // -----------------------------------------------------------------------
     // Checagem de módulo com timeout defensivo
     const checagem = await Promise.race([
-      verificarAcessoModulo({ userDoc: user, moduloAlvoNome: moduloAlvo, basePath }),
+      verificarAcessoModulo({ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath }),
       new Promise(resolve=> setTimeout(()=> resolve({ permitido:false, motivo:'timeout_modulo' }), Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000)))
     ]);
     if (!checagem.permitido) {
@@ -403,7 +438,7 @@ export async function login(req, res) {
       }
     } catch (eCheck) { console.warn('[login] falha checando status planejado:', eCheck.message); }
     
-    await saveSessionSafe();
+    await saveSessionAfterLogin();
   return res.redirect(303, basePath + '/dashboard');
   } catch (e) {
     console.error('[login] erro:', e);
@@ -425,6 +460,307 @@ export async function logout(req, res) {
   res.clearCookie(cookieName);
   const basePath = req.baseUrl || '';
   req.session.destroy(() => { res.clearCookie('wdg.sid'); res.redirect(basePath + '/login'); });
+}
+
+function buildAuthContextHttpPayload(authContext) {
+  return {
+    authenticated: !!authContext?.authenticated,
+    source: authContext?.source || 'legacy',
+    identity: authContext?.identity || {
+      id: null,
+      email: '',
+      nome: null,
+      authenticated: false,
+    },
+    globalRole: authContext?.globalRole || null,
+    membershipCount: Number(authContext?.membershipCount || 0),
+    memberships: Array.isArray(authContext?.memberships)
+      ? authContext.memberships.map((membership) => ({
+          membershipId: membership.membershipId,
+          unidadeId: membership.unidadeId,
+          unidadePrincipalId: membership.unidadePrincipalId || null,
+          unidadeNome: membership.unidadeNome || null,
+          unidadeCodigo: membership.unidadeCodigo || null,
+          papelContextual: membership.papelContextual || null,
+          legacyRole: membership.legacyRole || null,
+        }))
+      : [],
+    needsUnitSelection: !!authContext?.needsUnitSelection,
+    activeContext: authContext?.activeContext || null,
+    effectiveRole: authContext?.effectiveRole || null,
+  };
+}
+
+function buildAuthContextResolverOptions(req) {
+  return {
+    authenticatedUser: req.user || null,
+    sessionUser: req.session?.user || null,
+    existingAuthContext: req.session?.gestorAuthContext || null,
+    featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
+    deps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
+    maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
+  };
+}
+
+function buildRequestIdentity(req) {
+  const user = req?.user || req?.session?.user || null;
+  const id = user?._id || user?.id || null;
+  const email = String(user?.email || '').trim().toLowerCase();
+  const nome = String(user?.nome || '').trim() || null;
+
+  return {
+    id: id ? String(id).trim() : null,
+    email,
+    nome,
+    authenticated: Boolean(id || email),
+  };
+}
+
+function isAuthContextResolverEnabledForRequest(req) {
+  const featureFlags = req.app?.locals?.gestorAuthContextFeatureFlags || null;
+  if (featureFlags && typeof featureFlags === 'object') {
+    return isFeatureEnabled(featureFlags, GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+  }
+  return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+}
+
+function clearGestorAuthContextSession(req) {
+  if (!req?.session || !Object.prototype.hasOwnProperty.call(req.session, 'gestorAuthContext')) {
+    return;
+  }
+  delete req.session.gestorAuthContext;
+}
+
+function buildStoredGestorAuthContext(authContext) {
+  if (!authContext?.authenticated || authContext?.source !== 'auth-context-v1') {
+    return null;
+  }
+
+  return {
+    user_id: authContext.identity?.id || null,
+    user_email: authContext.identity?.email || '',
+    global_role: authContext.globalRole || null,
+    active_membership_id: authContext.activeContext?.membershipId || null,
+    active_unidade_id: authContext.activeContext?.unidadeId || null,
+    active_unidade_principal_id: authContext.activeContext?.unidadePrincipalId || null,
+    active_papel_contextual: authContext.activeContext?.papelContextual || null,
+    active_funcionario_id: authContext.activeContext?.funcionarioId || null,
+    legacy_role: authContext.activeContext?.legacyRole || authContext.effectiveRole || null,
+    needs_selection: !!authContext.needsUnitSelection,
+  };
+}
+
+function classifyLoginResolvedAuthContext(authContext) {
+  if (authContext?.source !== 'auth-context-v1') return 'legacy';
+  if (authContext?.globalRole || authContext?.activeContext) return 'ready';
+  if (authContext?.needsUnitSelection) return 'needs-selection';
+  return 'no-context';
+}
+
+function buildLoginUserFromAuthContext(user, authContext) {
+  if (!authContext || authContext.source !== 'auth-context-v1') {
+    return user;
+  }
+
+  const baseUser = user && typeof user.toObject === 'function' ? user.toObject() : { ...user };
+  return {
+    ...baseUser,
+    role: authContext.effectiveRole || authContext.globalRole || null,
+    unidade_id: authContext.activeContext?.unidadeId || null,
+    unidade_principal_id: authContext.activeContext?.unidadePrincipalId || null,
+    funcionario_id: authContext.activeContext?.funcionarioId || null,
+    global_role: authContext.globalRole || null,
+  };
+}
+
+function projectLoginSessionUser(req, user, authContext) {
+  const fallbackSessionUser = {
+    ...(req.session?.user && typeof req.session.user === 'object' ? req.session.user : {}),
+    id: user?._id ? String(user._id) : String(user?.id || ''),
+    email: String(user?.email || req.session?.user?.email || '').trim().toLowerCase(),
+  };
+
+  const projected = projectLegacySessionUserFromAuthContext({
+    authContext,
+    sessionUser: fallbackSessionUser,
+  });
+
+  return projected || fallbackSessionUser;
+}
+
+function storeResolvedLoginAuthContext(req, user, authContext) {
+  req.session = req.session || {};
+  clearGestorAuthContextSession(req);
+
+  const storedAuthContext = buildStoredGestorAuthContext(authContext);
+  if (storedAuthContext) {
+    req.session.gestorAuthContext = storedAuthContext;
+  }
+
+  req.session.user = projectLoginSessionUser(req, user, authContext);
+  return req.session.user;
+}
+
+function buildLightweightAuthContextPayload(req) {
+  return {
+    authenticated: buildRequestIdentity(req).authenticated,
+    source: isAuthContextResolverEnabledForRequest(req) ? 'auth-context-v1' : 'legacy',
+    identity: buildRequestIdentity(req),
+    globalRole: null,
+    membershipCount: 0,
+    memberships: [],
+    needsUnitSelection: false,
+    activeContext: null,
+    effectiveRole: null,
+  };
+}
+
+function buildAuthContextMutationErrorPayload(code) {
+  return {
+    ok: false,
+    authenticated: false,
+    source: 'legacy',
+    identity: {
+      id: null,
+      email: '',
+      nome: null,
+      authenticated: false,
+    },
+    globalRole: null,
+    membershipCount: 0,
+    memberships: [],
+    needsUnitSelection: false,
+    activeContext: null,
+    effectiveRole: null,
+    code,
+  };
+}
+
+function findMembershipByUnidadeId(authContext, unidadeId) {
+  return Array.isArray(authContext?.memberships)
+    ? authContext.memberships.find((membership) => membership.unidadeId === unidadeId) || null
+    : null;
+}
+
+function persistActiveMembershipInSession(req, selectedMembership) {
+  req.session = req.session || {};
+  req.session.gestorAuthContext = {
+    ...(req.session.gestorAuthContext && typeof req.session.gestorAuthContext === 'object'
+      ? req.session.gestorAuthContext
+      : {}),
+    active_membership_id: selectedMembership.membershipId,
+    active_unidade_id: selectedMembership.unidadeId,
+    active_unidade_principal_id: selectedMembership.unidadePrincipalId,
+    active_papel_contextual: selectedMembership.papelContextual,
+    active_funcionario_id: selectedMembership.funcionarioId,
+    legacy_role: selectedMembership.legacyRole,
+    needs_selection: false,
+  };
+}
+
+async function mutateAuthUnitContext(req, {
+  requirePendingSelection = false,
+  disabledCode = 'GESTOR_AUTH_CONTEXT_SELECTION_DISABLED',
+  notRequiredCode = 'GESTOR_SELECTION_NOT_REQUIRED',
+} = {}) {
+  const requestIdentity = buildRequestIdentity(req);
+  const lightweightPayload = buildLightweightAuthContextPayload(req);
+
+  if (!requestIdentity.authenticated) {
+    const authContext = await resolveGestorAuthContext(buildAuthContextResolverOptions(req));
+    return { status: 401, body: { ok: false, ...buildAuthContextHttpPayload(authContext), code: 'GESTOR_UNAUTHORIZED' } };
+  }
+
+  const unidadeId = String(req.body?.unidade_id || '').trim();
+  if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
+    return { status: 400, body: { ok: false, ...lightweightPayload, code: 'GESTOR_INVALID_UNIDADE_ID' } };
+  }
+
+  const authContext = await resolveGestorAuthContext(buildAuthContextResolverOptions(req));
+  const basePayload = buildAuthContextHttpPayload(authContext);
+
+  if (authContext.source !== 'auth-context-v1') {
+    return { status: 409, body: { ok: false, ...basePayload, code: disabledCode } };
+  }
+
+  if (requirePendingSelection && !authContext.needsUnitSelection) {
+    return { status: 409, body: { ok: false, ...basePayload, code: notRequiredCode } };
+  }
+
+  const selectedMembership = findMembershipByUnidadeId(authContext, unidadeId);
+  if (!selectedMembership) {
+    return { status: 403, body: { ok: false, ...basePayload, code: 'GESTOR_UNIT_NOT_ALLOWED' } };
+  }
+
+  persistActiveMembershipInSession(req, selectedMembership);
+  await saveSessionSafe(req);
+
+  const resolvedAfterMutation = await resolveGestorAuthContext(buildAuthContextResolverOptions(req));
+  return { status: 200, body: { ok: true, ...buildAuthContextHttpPayload(resolvedAfterMutation) } };
+}
+
+async function saveSessionSafe(req) {
+  if (!req?.session || typeof req.session.save !== 'function') return;
+  await new Promise((resolve) => req.session.save(() => resolve()));
+}
+
+export async function getAuthContext(req, res) {
+  try {
+    const authContext = await resolveGestorAuthContext(buildAuthContextResolverOptions(req));
+
+    const payload = buildAuthContextHttpPayload(authContext);
+    if (!authContext?.authenticated) {
+      return res.status(401).json({ ok: false, ...payload });
+    }
+
+    return res.status(200).json({ ok: true, ...payload });
+  } catch (e) {
+    console.error('[getAuthContext] erro:', e?.message || e);
+    return res.status(500).json({
+      ok: false,
+      authenticated: false,
+      source: 'legacy',
+      identity: {
+        id: null,
+        email: '',
+        nome: null,
+        authenticated: false,
+      },
+      globalRole: null,
+      membershipCount: 0,
+      needsUnitSelection: false,
+      activeContext: null,
+      effectiveRole: null,
+      code: 'GESTOR_AUTH_CONTEXT_ERROR',
+    });
+  }
+}
+
+export async function selectAuthUnit(req, res) {
+  try {
+    const result = await mutateAuthUnitContext(req, {
+      requirePendingSelection: true,
+      disabledCode: 'GESTOR_AUTH_CONTEXT_SELECTION_DISABLED',
+      notRequiredCode: 'GESTOR_SELECTION_NOT_REQUIRED',
+    });
+    return res.status(result.status).json(result.body);
+  } catch (e) {
+    console.error('[selectAuthUnit] erro:', e?.message || e);
+    return res.status(500).json(buildAuthContextMutationErrorPayload('GESTOR_AUTH_CONTEXT_SELECTION_ERROR'));
+  }
+}
+
+export async function switchAuthUnit(req, res) {
+  try {
+    const result = await mutateAuthUnitContext(req, {
+      requirePendingSelection: false,
+      disabledCode: 'GESTOR_AUTH_CONTEXT_SWITCH_DISABLED',
+    });
+    return res.status(result.status).json(result.body);
+  } catch (e) {
+    console.error('[switchAuthUnit] erro:', e?.message || e);
+    return res.status(500).json(buildAuthContextMutationErrorPayload('GESTOR_AUTH_CONTEXT_SWITCH_ERROR'));
+  }
 }
 
 export async function renderResetPassword(req, res) {

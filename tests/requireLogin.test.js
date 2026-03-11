@@ -171,3 +171,230 @@ test('quando User não é encontrado e não há funcionario_id confiável na ses
     funcionarioModel.default.findOne = originalFindOneFuncionario;
   }
 });
+
+test('requireLogin mantém o comportamento atual com flag desligada mesmo se a sessão tiver needs_selection=true', async () => {
+  const req = {
+    path: '/dashboard',
+    baseUrl: '/gestor',
+    originalUrl: '/gestor/dashboard',
+    headers: { accept: 'text/html' },
+    app: {
+      locals: {
+        skipDb: true,
+        gestorAuthContextFeatureFlags: {
+          gestor_auth_context_resolver: false,
+        },
+      },
+    },
+    session: {
+      user: {
+        id: 'u1',
+        email: 'x@y',
+      },
+      gestorAuthContext: {
+        needs_selection: true,
+        active_membership_id: null,
+        active_unidade_id: null,
+      },
+    },
+  };
+  const res = mockRes();
+  let nextCalled = false;
+
+  await requireLogin(req, res, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, true);
+  assert.equal(res.redirectUrl, null);
+  assert.equal(res.statusCode, 200);
+});
+
+test('requireLogin redireciona páginas protegidas para /gestor/login?step=select quando há seleção pendente', async () => {
+  const req = {
+    path: '/dashboard',
+    baseUrl: '/gestor',
+    originalUrl: '/gestor/dashboard',
+    headers: { accept: 'text/html' },
+    app: {
+      locals: {
+        skipDb: true,
+        gestorAuthContextFeatureFlags: {
+          gestor_auth_context_resolver: true,
+        },
+      },
+    },
+    session: {
+      user: {
+        id: 'u1',
+        email: 'x@y',
+      },
+      gestorAuthContext: {
+        needs_selection: true,
+        active_membership_id: null,
+        active_unidade_id: null,
+      },
+    },
+  };
+  const res = mockRes();
+  let nextCalled = false;
+
+  await requireLogin(req, res, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.redirectUrl, '/gestor/login?step=select');
+});
+
+test('requireLogin responde 409 funcional em APIs protegidas quando há seleção pendente', async () => {
+  const req = {
+    path: '/api/unidades',
+    baseUrl: '/gestor',
+    originalUrl: '/gestor/api/unidades',
+    headers: { accept: 'application/json' },
+    app: {
+      locals: {
+        skipDb: true,
+        gestorAuthContextFeatureFlags: {
+          gestor_auth_context_resolver: true,
+        },
+      },
+    },
+    session: {
+      user: {
+        id: 'u1',
+        email: 'x@y',
+      },
+      gestorAuthContext: {
+        needs_selection: true,
+        active_membership_id: null,
+        active_unidade_id: null,
+      },
+    },
+  };
+  const res = mockRes();
+  let nextCalled = false;
+
+  await requireLogin(req, res, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 409);
+  assert.deepEqual(res.jsonPayload, {
+    success: false,
+    authenticated: true,
+    error: 'Seleção de unidade pendente',
+    code: 'GESTOR_SELECTION_REQUIRED',
+    needsUnitSelection: true,
+    redirect: '/gestor/login?step=select',
+  });
+});
+
+test('requireLogin preserva /api/usuario durante seleção pendente', async () => {
+  const req = {
+    path: '/api/usuario',
+    baseUrl: '/gestor',
+    originalUrl: '/gestor/api/usuario',
+    headers: { accept: 'application/json' },
+    app: {
+      locals: {
+        skipDb: true,
+        gestorAuthContextFeatureFlags: {
+          gestor_auth_context_resolver: true,
+        },
+      },
+    },
+    session: {
+      user: {
+        id: 'u1',
+        email: 'x@y',
+      },
+      gestorAuthContext: {
+        needs_selection: true,
+        active_membership_id: null,
+        active_unidade_id: null,
+      },
+    },
+  };
+  const res = mockRes();
+  let nextCalled = false;
+
+  await requireLogin(req, res, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, true);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.redirectUrl, null);
+  assert.equal(res.jsonPayload, undefined);
+});
+
+test('requireLogin preserva /api/modulos durante seleção pendente', async () => {
+  const req = {
+    path: '/api/modulos',
+    baseUrl: '/gestor',
+    originalUrl: '/gestor/api/modulos',
+    headers: { accept: 'application/json' },
+    app: {
+      locals: {
+        skipDb: true,
+        gestorAuthContextFeatureFlags: {
+          gestor_auth_context_resolver: true,
+        },
+      },
+    },
+    session: {
+      user: {
+        id: 'u1',
+        email: 'x@y',
+      },
+      gestorAuthContext: {
+        needs_selection: true,
+        active_membership_id: null,
+        active_unidade_id: null,
+      },
+    },
+  };
+  const res = mockRes();
+  let nextCalled = false;
+
+  await requireLogin(req, res, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, true);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.redirectUrl, null);
+  assert.equal(res.jsonPayload, undefined);
+});
+
+test('requireLogin mantém rotas protegidas funcionando quando o contexto já está completo', async () => {
+  const req = {
+    path: '/dashboard',
+    baseUrl: '/gestor',
+    originalUrl: '/gestor/dashboard',
+    headers: { accept: 'text/html' },
+    app: {
+      locals: {
+        skipDb: true,
+        gestorAuthContextFeatureFlags: {
+          gestor_auth_context_resolver: true,
+        },
+      },
+    },
+    session: {
+      user: {
+        id: 'u1',
+        email: 'x@y',
+        role: 'diretor',
+        unidade_id: 'un1',
+      },
+      gestorAuthContext: {
+        needs_selection: false,
+        active_membership_id: 'mem1',
+        active_unidade_id: 'un1',
+        legacy_role: 'diretor',
+      },
+    },
+  };
+  const res = mockRes();
+  let nextCalled = false;
+
+  await requireLogin(req, res, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, true);
+  assert.equal(res.redirectUrl, null);
+  assert.equal(res.statusCode, 200);
+});

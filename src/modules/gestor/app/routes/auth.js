@@ -1,6 +1,6 @@
 // (migrado) Rotas de auth
 import express from 'express';
-import { login, logout, renderResetPassword, postResetPassword, postEsqueciSenha, primeiroAcessoPost, listarEmailsPorCPF } from '#modules/gestor/app/controllers/authController.js';
+import { getAuthContext, login, logout, renderResetPassword, postResetPassword, postEsqueciSenha, primeiroAcessoPost, listarEmailsPorCPF, selectAuthUnit, switchAuthUnit } from '#modules/gestor/app/controllers/authController.js';
 const router = express.Router();
 // Métricas simples de adoção de rotas prefixadas vs raiz
 router.use((req,res,next)=> {
@@ -17,6 +17,9 @@ const disableRoot = process.env.DISABLE_ROOT_AUTH_ROUTES === 'true';
 // Login (rota interna relativa; basePath externo aplica /gestor)
 // Removido checkUserStatus aqui para evitar uma consulta prévia ao banco que pode estourar timeout
 // em ambientes serverless. O próprio login() já valida user.ativo e retorna erro apropriado.
+router.get('/auth/context', getAuthContext);
+router.post('/auth/select-unit', selectAuthUnit);
+router.post('/auth/switch-unit', switchAuthUnit);
 router.post('/login', login);
 router.get('/logout', logout);
 // Reset password (root e alias prefixado)

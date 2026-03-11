@@ -21,6 +21,7 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 // Usamos o util do módulo Gestor para manter a chave `error` nas respostas 4xx/5xx
 import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/app/utils/apiResponse.js';
 // Service para criação + envio de senha provisória
@@ -29,6 +30,54 @@ import {
 	findUserByIdForProfile,
 	findUserByEmailForProfile,
 } from '#modules/gestor/app/services/userService.js';
+import {
+	GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
+	resolveGestorAuthContext,
+} from '#modules/gestor/app/services/authContextResolver.js';
+
+function isAuthContextResolverEnabledForRequest(req) {
+	const featureFlags = req.app?.locals?.gestorAuthContextFeatureFlags || null;
+	if (featureFlags && typeof featureFlags === 'object') {
+		return isFeatureEnabled(featureFlags, GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+	}
+	return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+}
+
+function buildUsuarioAuthContextExtras(authContext) {
+	if (!authContext || authContext.source !== 'auth-context-v1') {
+		return null;
+	}
+
+	return {
+		authenticated: !!authContext.authenticated,
+		source: authContext.source,
+		globalRole: authContext.globalRole || null,
+		effectiveRole: authContext.effectiveRole || null,
+		needsUnitSelection: !!authContext.needsUnitSelection,
+		membershipCount: Number(authContext.membershipCount || 0),
+		activeContext: authContext.activeContext
+			? {
+				membershipId: authContext.activeContext.membershipId,
+				unidadeId: authContext.activeContext.unidadeId,
+				unidadePrincipalId: authContext.activeContext.unidadePrincipalId || null,
+				papelContextual: authContext.activeContext.papelContextual || null,
+				funcionarioId: authContext.activeContext.funcionarioId || null,
+				legacyRole: authContext.activeContext.legacyRole || null,
+			}
+			: null,
+		membershipsSummary: Array.isArray(authContext.memberships)
+			? authContext.memberships.map((membership) => ({
+				membershipId: membership.membershipId,
+				unidadeId: membership.unidadeId,
+				unidadePrincipalId: membership.unidadePrincipalId || null,
+				unidadeNome: membership.unidadeNome || null,
+				unidadeCodigo: membership.unidadeCodigo || null,
+				papelContextual: membership.papelContextual || null,
+				legacyRole: membership.legacyRole || null,
+			}))
+			: [],
+	};
+}
 
 // Lista usuários atualmente bloqueados por lock_until futuro
 export async function listLockedUsers(req, res) {
@@ -372,7 +421,7 @@ export async function obterUsuarioAtual(req, res) {
 		const unidade_nome = unidadeResolved?.nome || null;
 		const unidade_codigo = unidadeResolved?.codigo || null;
 
-		return ok(res, {
+		const payload = {
 			id: _id,
 			nome: resolvedNome,
 			email,
@@ -385,7 +434,25 @@ export async function obterUsuarioAtual(req, res) {
 			foto: foto || null,
 			cpf: resolvedCpf,
 			telefone: resolvedTelefone
-		});
+		};
+
+		if (isAuthContextResolverEnabledForRequest(req)) {
+			const authContext = await resolveGestorAuthContext({
+				authenticatedUser: baseUser,
+				sessionUser: req.session?.user || null,
+				existingAuthContext: req.session?.gestorAuthContext || null,
+				featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
+				deps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
+				maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
+			});
+
+			const authContextExtras = buildUsuarioAuthContextExtras(authContext);
+			if (authContextExtras) {
+				Object.assign(payload, authContextExtras);
+			}
+		}
+
+		return ok(res, payload);
 	} catch (e) {
 		console.error('[obterUsuarioAtual] erro ao montar perfil enriquecido:', e);
 		return serverError(res, 'Falha ao obter usuário');

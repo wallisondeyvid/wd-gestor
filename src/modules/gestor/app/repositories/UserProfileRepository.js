@@ -2,7 +2,7 @@ import User from '#models/user.js';
 import { BaseRepository } from '#shared/repositories/BaseRepository.js';
 import { resolveModel } from '#shared/db/resolveModel.js';
 
-const USER_PROFILE_SELECT = '_id email role isMaster foto nome cpf telefone unidade_id funcionario_id';
+const USER_PROFILE_SELECT = '_id email role global_role isMaster foto nome cpf telefone unidade_id funcionario_id';
 
 const USER_PROFILE_POPULATE = [
   { path: 'unidade_id', select: '_id codigo nome' },
