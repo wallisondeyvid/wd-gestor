@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
 	email: { type: String, required: true, lowercase: true, trim: true },
 	senha: { type: String, required: true },
 	nome: { type: String, trim: true },
+	global_role: { type: String, enum: ['master', 'admin'], default: null },
 	cpf: { type: String, trim: true },
 	rg: { type: String, trim: true, default: '' },
 	data_nascimento: { type: Date, default: null },
