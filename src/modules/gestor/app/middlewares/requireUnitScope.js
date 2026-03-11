@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
+import { GESTOR_AUTH_CONTEXT_RESOLVER_FLAG } from '#modules/gestor/app/services/authContextResolver.js';
 import { createUnitScope } from '#shared/unitScope.js';
 
 function normalizeObjectIdString(value) {
@@ -18,7 +20,7 @@ function resolveUser(req) {
   return req?.user || req?.session?.user || null;
 }
 
-function resolveUnidadeId(req) {
+function resolveLegacyUnidadeId(req) {
   const user = resolveUser(req);
 
   return firstNonEmpty(
@@ -34,12 +36,96 @@ function resolveUnidadeId(req) {
   );
 }
 
+function isAuthContextResolverEnabledForRequest(req) {
+  const featureFlags = req.app?.locals?.gestorAuthContextFeatureFlags || null;
+  if (featureFlags && typeof featureFlags === 'object') {
+    return isFeatureEnabled(featureFlags, GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+  }
+  return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
+}
+
+function getStoredAuthContext(req) {
+  const authContext = req.session?.gestorAuthContext;
+  return authContext && typeof authContext === 'object' ? authContext : null;
+}
+
+function resolveAuthContextUnidadeId(authContext) {
+  if (!authContext || typeof authContext !== 'object') return '';
+
+  return firstNonEmpty(
+    authContext.active_unidade_id,
+    authContext.activeUnidadeId,
+    authContext.activeContext?.unidadeId
+  );
+}
+
+function hasPendingAuthUnitSelection(authContext) {
+  if (!authContext || typeof authContext !== 'object') return false;
+
+  const needsSelection = authContext.needs_selection === true || authContext.needsUnitSelection === true;
+  const hasActiveContext = Boolean(
+    authContext.active_membership_id ||
+    authContext.activeMembershipId ||
+    authContext.active_unidade_id ||
+    authContext.activeUnidadeId ||
+    authContext.activeContext
+  );
+  const hasGlobalRole = Boolean(authContext.global_role || authContext.globalRole);
+
+  return needsSelection && !hasActiveContext && !hasGlobalRole;
+}
+
+function getRequestTransport(req) {
+  const headers = req?.headers || {};
+  const path = req.path || req.originalUrl || '';
+  const originalUrl = req.originalUrl || '';
+  const basePath = req.baseUrl || '';
+  const accept = String(headers.accept || '').toLowerCase();
+  const requestedWith = String(headers['x-requested-with'] || '').toLowerCase();
+  const isApiRequest = (
+    path.startsWith('/api/') ||
+    originalUrl.startsWith('/gestor/api/') ||
+    (/\/api\//.test(originalUrl) && (accept.includes('application/json') || requestedWith === 'fetch' || requestedWith === 'xmlhttprequest'))
+  );
+
+  return {
+    basePath,
+    isApiRequest,
+  };
+}
+
+function respondPendingSelection(res, transport) {
+  const redirect = `${transport.basePath}/login?step=select`;
+  if (transport.isApiRequest) {
+    return res.status(409).json({
+      success: false,
+      authenticated: true,
+      error: 'Seleção de unidade pendente',
+      code: 'GESTOR_SELECTION_REQUIRED',
+      needsUnitSelection: true,
+      redirect,
+    });
+  }
+
+  return res.redirect(redirect);
+}
+
 function isMultiTenantEnforced() {
   return String(process.env.WDG_MULTI_TENANT || '').trim() === '1';
 }
 
 export function requireUnitScope(req, res, next) {
-  const unidadeId = resolveUnidadeId(req);
+  const authContextEnabled = isAuthContextResolverEnabledForRequest(req);
+  const authContext = authContextEnabled ? getStoredAuthContext(req) : null;
+
+  if (authContextEnabled && resolveUser(req) && hasPendingAuthUnitSelection(authContext)) {
+    return respondPendingSelection(res, getRequestTransport(req));
+  }
+
+  const unidadeId = firstNonEmpty(
+    authContextEnabled ? resolveAuthContextUnidadeId(authContext) : '',
+    resolveLegacyUnidadeId(req)
+  );
 
   if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
     if (isMultiTenantEnforced()) {
