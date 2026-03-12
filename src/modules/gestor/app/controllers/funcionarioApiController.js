@@ -1074,7 +1074,7 @@ export async function listarFuncionariosDisponiveis(req,res){
 				const atual = await findFuncionarioByIdSelectBasicLean(includeId);
 				if (atual && String(atual.unidade_id) === String(unidadeId)) {
 					const exists = funcionarios.some(f => String(f._id) === String(atual._id));
-					if (!exists) funcionarios = [...funcionarios, { _id: atual._id, nome: atual.nome, cpf: atual.cpf }];
+					if (!exists) funcionarios = [...funcionarios, { _id: atual._id, nome: atual.nome, cpf: atual.cpf, email: atual.email || '' }];
 				}
 			} catch(_e) { /* noop */ }
 		}

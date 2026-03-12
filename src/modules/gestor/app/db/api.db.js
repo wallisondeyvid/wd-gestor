@@ -111,7 +111,9 @@ import {
 } from '#modules/gestor/app/repositories/UserRepository.js';
 import {
   createUserMembershipRepo,
+  findUserMembershipsByUserIdsLeanRepo,
   findUserMembershipByUserAndUnidadeLeanRepo,
+  setUserMembershipFuncionarioIdIfEmptyRepo,
 } from '#modules/gestor/app/repositories/UserMembershipRepository.js';
 import {
   createFuncionarioDocRepo,
@@ -284,6 +286,10 @@ export async function findUserByEmailCond(cond) {
 
 export async function findUsersByQueryLean(query) {
   return findUsersByQueryLeanRepo({ unitScope: GLOBAL_SCOPE, query });
+}
+
+export async function findUserMembershipsByUserIdsLean(userIds) {
+  return findUserMembershipsByUserIdsLeanRepo({ unitScope: GLOBAL_SCOPE, userIds });
 }
 
 export async function findUserDuplicadoByCpfUnidadeExcludingId(userId, cleanCpf, unidadeId) {
@@ -754,6 +760,14 @@ export async function findUserMembershipByUserAndUnidade(userId, unidadeId) {
 
 export async function createUserMembership(data) {
   return createUserMembershipRepo({ unitScope: GLOBAL_SCOPE, data });
+}
+
+export async function setUserMembershipFuncionarioIdIfEmpty(membershipId, funcionarioId) {
+  return setUserMembershipFuncionarioIdIfEmptyRepo({
+    unitScope: GLOBAL_SCOPE,
+    membershipId,
+    funcionarioId,
+  });
 }
 
 export async function findUnidadesByCondLeanFull(cond) {

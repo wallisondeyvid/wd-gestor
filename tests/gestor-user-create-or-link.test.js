@@ -191,7 +191,7 @@ test('POST /gestor/api/usuarios reaproveita o mesmo User e adiciona membership e
   const res = await agent
     .post('/gestor/api/usuarios')
     .send({
-      nome: 'Usuário Multiunidade',
+      nome: 'Nome Divergente Ignorado',
       email,
       role: 'diretor',
       unidade_id: String(unidadeB._id),
@@ -206,6 +206,8 @@ test('POST /gestor/api/usuarios reaproveita o mesmo User e adiciona membership e
 
   const users = await User.find({ email }).lean();
   assert.equal(users.length, 1);
+  assert.equal(users[0].nome, 'Usuário Multiunidade');
+  assert.equal(users[0].cpf, existingUser.cpf);
 
   const memberships = await UserMembership.find({ user_id: existingUser._id }).sort({ createdAt: 1 }).lean();
   assert.equal(memberships.length, 2);

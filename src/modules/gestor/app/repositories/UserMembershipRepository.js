@@ -14,6 +14,25 @@ export async function findActiveMembershipsByUserIdLeanRepo({ unitScope, userId 
     .lean();
 }
 
+export async function findUserMembershipsByUserIdsLeanRepo({ unitScope, userIds }) {
+  const normalizedUserIds = Array.isArray(userIds)
+    ? userIds.map((userId) => String(userId || '').trim()).filter(Boolean)
+    : [];
+
+  if (normalizedUserIds.length === 0) return [];
+
+  const UserMembershipModel = resolveModel({
+    name: UserMembership.modelName || 'UserMembership',
+    schema: UserMembership.schema,
+    unitScope,
+  });
+
+  return UserMembershipModel.find({ user_id: { $in: normalizedUserIds } })
+    .select('_id user_id unidade_id papel_contextual status funcionario_id')
+    .sort({ user_id: 1, createdAt: 1 })
+    .lean();
+}
+
 export async function findUserMembershipByUserAndUnidadeLeanRepo({ unitScope, userId, unidadeId }) {
   const UserMembershipModel = resolveModel({
     name: UserMembership.modelName || 'UserMembership',
@@ -34,4 +53,26 @@ export async function createUserMembershipRepo({ unitScope, data }) {
   });
 
   return UserMembershipModel.create(data || {});
+}
+
+export async function setUserMembershipFuncionarioIdIfEmptyRepo({ unitScope, membershipId, funcionarioId }) {
+  const UserMembershipModel = resolveModel({
+    name: UserMembership.modelName || 'UserMembership',
+    schema: UserMembership.schema,
+    unitScope,
+  });
+
+  return UserMembershipModel.findOneAndUpdate(
+    {
+      _id: membershipId,
+      $or: [
+        { funcionario_id: null },
+        { funcionario_id: { $exists: false } },
+      ],
+    },
+    {
+      $set: { funcionario_id: funcionarioId },
+    },
+    { new: true }
+  ).lean();
 }

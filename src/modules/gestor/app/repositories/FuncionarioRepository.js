@@ -225,7 +225,7 @@ export async function findFuncionariosDisponiveisByUnidadeLeanRepo({ unitScope, 
   return FuncionarioModel.find({
     unidade_id: unidadeId,
     $or: [{ usuario_id: { $exists: false } }, { usuario_id: null }],
-  }).select('_id nome cpf').sort({ nome: 1 }).lean();
+  }).select('_id nome cpf email').sort({ nome: 1 }).lean();
 }
 
 export async function findFuncionarioByIdSelectBasicLeanRepo({ unitScope, id }) {
@@ -235,7 +235,7 @@ export async function findFuncionarioByIdSelectBasicLeanRepo({ unitScope, id }) 
     unitScope,
   });
 
-  return FuncionarioModel.findById(id).select('_id nome cpf unidade_id').lean();
+  return FuncionarioModel.findById(id).select('_id nome cpf email unidade_id').lean();
 }
 
 export async function findFuncionarioByCpfAndUnidadeSelectLeanRepo({ unitScope, cpf, unidadeId }) {

@@ -1,6 +1,6 @@
 // (wrapper) userApi
 import createUserApiRouter from '#shared/routes/userApi.js';
-import { criarUsuario, obterUsuarioAtual, atualizarSenhaUsuario, atualizarUsuario } from '#modules/gestor/app/controllers/userController.js';
+import { criarUsuario, checkUsuarioEmail, obterUsuarioAtual, atualizarSenhaUsuario, atualizarUsuario } from '#modules/gestor/app/controllers/userController.js';
 import { toggleUsuario, deleteUsuario, updateUsuario as updateUsuarioJson } from '#modules/gestor/app/controllers/userAdminApiController.js';
 import { requireRole } from '#modules/gestor/app/middlewares/requireRole.js';
 import requireApiAuth from '#modules/gestor/app/middlewares/requireApiAuth.js';
@@ -18,5 +18,7 @@ const router = createUserApiRouter({
   requireApiAuth,
   requireLogin,
 });
+
+router.get('/api/usuarios/check-email', requireLogin, requireRole(['admin']), checkUsuarioEmail);
 
 export default router;
