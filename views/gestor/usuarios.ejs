@@ -228,7 +228,8 @@
         <% const membershipsCount = Number(u.membershipsCount || membershipsSummary.length || 0); %>
         <% const membershipsCountLabel = membershipsCount === 1 ? '1 unidade vinculada' : membershipsCount + ' unidades vinculadas'; %>
         <% const normalizedRole = String(u.role || '').toLowerCase(); %>
-        <% const displayRole = normalizedRole === 'gestor' ? 'diretor' : (u.role || '-'); %>
+        <% const validUserRoles = ['master', 'admin', 'diretor', 'user']; %>
+        <% const displayRole = validUserRoles.includes(normalizedRole) ? (u.role || '-') : '-'; %>
         <% const hasLegacyMembershipGap = membershipsCount === 0 && !!u.unidade_id; %>
         <% const hasGlobalAccessWithoutContext = membershipsCount === 0 && !u.unidade_id && (normalizedRole === 'master' || normalizedRole === 'admin'); %>
         <tr data-user-id="<%= u._id %>"
