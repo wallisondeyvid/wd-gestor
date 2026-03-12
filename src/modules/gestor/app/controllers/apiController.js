@@ -2,11 +2,10 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import {
-	existsUnidadeByCond,
-	findSubunidadesLean,
+	findClusterUnidadesByAnchorLean,
 	findUnidadeByCodigoLean,
 	findUnidadeByIdLean,
-	findUnidadesByCondLean,
+	findUnidadeByIdOrRawLean,
 	findUnidadeUserBaseLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 
@@ -14,52 +13,39 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let municipiosCache = null; let municipiosMtimeMs = 0;
 async function loadMunicipios() { if (municipiosCache) return municipiosCache; const filePath = path.resolve(process.cwd(), 'public', 'data', 'municipios_ibge.json'); try { const stat = await fs.stat(filePath); if (!municipiosCache || stat.mtimeMs !== municipiosMtimeMs) { const raw = await fs.readFile(filePath, 'utf-8'); municipiosCache = JSON.parse(raw); municipiosMtimeMs = stat.mtimeMs; } } catch (e) { console.error('[ibge] Falha ao carregar municipios_ibge.json:', e.message); municipiosCache = []; } return municipiosCache; }
+function normalizeUnitId(value) { return String(value || '').trim(); }
+function isPrivilegedGestorUser(user) { return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin'; }
+function getScopedUnitId(req) { return normalizeUnitId(req.unitScope?.unidadeId); }
+function resolveClusterAnchorFromUnit(unidade) {
+	if (!unidade) return '';
+	return normalizeUnitId(unidade.matriz_id || unidade.unidade_principal_id || unidade._id);
+}
 export async function unidadesCluster(req, res) {
 	try {
 		const { unidade_id } = req.query;
 		if (!unidade_id) return res.status(400).json({ ok: false, error: 'Parametro unidade_id ausente' });
 
-		// Localiza a unidade base por id (ObjectId) ou código
 		let unidadeBase = null;
-		if (/^[0-9a-fA-F]{24}$/.test(unidade_id)) unidadeBase = await findUnidadeByIdLean(unidade_id);
+		if (/^[0-9a-fA-F]{24}$/.test(unidade_id)) unidadeBase = await findUnidadeByIdOrRawLean(unidade_id);
 		if (!unidadeBase) unidadeBase = await findUnidadeByCodigoLean(unidade_id);
 		if (!unidadeBase) return res.status(404).json({ ok: false, error: 'Unidade base nao encontrada' });
+		const requestedAnchor = resolveClusterAnchorFromUnit(unidadeBase);
+		if (!requestedAnchor) return res.json({ ok: true, total: 0, unidades: [] });
 
-		// Determina escopo do usuário
-		const isPrivileged = req.user?.isMaster || req.user?.role === 'admin';
-		let condAcessiveis = null;
+		const isPrivileged = isPrivilegedGestorUser(req.user);
+		let clusterAnchor = requestedAnchor;
 		if (!isPrivileged) {
-			// ancora do usuário: matriz ou principal; fallback unidade atual
-			let anchor = req.user?.unidade_principal_id || null;
-			if (!anchor && req.user?.unidade_id) {
-				const u = await findUnidadeUserBaseLean(req.user.unidade_id);
-				if (u) anchor = u.is_principal ? u._id : (u.unidade_principal_id || u.matriz_id || u._id);
-			}
-			if (anchor) {
-				condAcessiveis = { $or: [ { _id: anchor }, { unidade_principal_id: anchor }, { matriz_id: anchor } ] };
-			} else if (req.user?.unidade_id) {
-				condAcessiveis = { _id: req.user.unidade_id };
-			} else {
-				// Sem escopo definido: não retorna nada
+			const scopedUnitId = getScopedUnitId(req) || normalizeUnitId(req.user?.unidade_id);
+			if (!scopedUnitId) return res.json({ ok: true, total: 0, unidades: [] });
+			const scopedUnit = await findUnidadeUserBaseLean(scopedUnitId);
+			const scopedAnchor = resolveClusterAnchorFromUnit(scopedUnit);
+			if (!scopedAnchor || scopedAnchor !== requestedAnchor) {
 				return res.json({ ok: true, total: 0, unidades: [] });
 			}
-			// Se unidade solicitada estiver fora do escopo, não retornar dados
-			let filtroBase = { _id: unidadeBase._id };
-			if (condAcessiveis.$or) filtroBase = { ...filtroBase, $or: condAcessiveis.$or };
-			else filtroBase = { ...filtroBase, ...condAcessiveis };
-			const existeBaseDentroEscopo = await existsUnidadeByCond(filtroBase);
-			if (!existeBaseDentroEscopo) return res.json({ ok: true, total: 0, unidades: [] });
+			clusterAnchor = scopedAnchor;
 		}
 
-		// Monta cluster: base + filiais diretas
-		const subunidades = await findSubunidadesLean(unidadeBase._id);
-		let todas = [unidadeBase, ...subunidades];
-		// Caso não privilegiado, filtra pelo escopo
-		if (condAcessiveis) {
-			const acessiveis = await findUnidadesByCondLean(condAcessiveis);
-			const ids = new Set(acessiveis.map(u => String(u._id)));
-			todas = todas.filter(u => ids.has(String(u._id)));
-		}
+		const todas = await findClusterUnidadesByAnchorLean(clusterAnchor);
 		return res.json({ ok: true, total: todas.length, unidades: todas.map(u => ({ id: u._id, codigo: u.codigo, nome: u.nome, is_principal: u.is_principal, subunidade: u.subunidade, unidade_principal_id: u.unidade_principal_id, cidade: u.cidade, estado: u.estado })) });
 	} catch (err) {
 		console.error('[unidadesCluster] Erro:', err);

@@ -6,6 +6,10 @@ import {
 	findClusterUnidadesByAnchorLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 let ibgeIndex = null; let ibgeIndexLoadError = null;
+function normalizeUnitId(value){ return String(value || '').trim(); }
+function isPrivilegedGestorUser(user){ return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin'; }
+function getScopedUnitId(req){ return normalizeUnitId(req?.unitScope?.unidadeId); }
+async function resolveClusterAnchor(unidadeId){ const unidadeIdNorm = normalizeUnitId(unidadeId); if(!unidadeIdNorm) return { base:null, anchor:'' }; const base = await findUnidadeByIdOrRawLean(unidadeIdNorm); if(!base) return { base:null, anchor:'' }; return { base, anchor: normalizeUnitId(base.matriz_id || base.unidade_principal_id || base._id) }; }
 function stripDiacritics(s=''){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 function normalizeName(str){
 	// remove acentos, compacta espaços, remove pontuação supérflua, minúsculas
@@ -47,4 +51,4 @@ export function obterCodigoIbge(req,res){
 		return serverError(res,e);
 	}
 }
-export async function obterClusterUnidades(req,res){ try { const { unidade_id } = req.query; if(!unidade_id) return ok(res,{ unidades: [] }); const base = await findUnidadeByIdOrRawLean(unidade_id); if(!base) return ok(res,{ unidades: [] }); const anchorRaw = base.matriz_id || base.unidade_principal_id || base._id; const unidades = await findClusterUnidadesByAnchorLean(anchorRaw); return ok(res,{ unidades }); } catch(e){ return serverError(res,e); } }
+export async function obterClusterUnidades(req,res){ try { const { unidade_id } = req.query; if(!unidade_id) return ok(res,{ unidades: [] }); const requestedCluster = await resolveClusterAnchor(unidade_id); if(!requestedCluster.base) return ok(res,{ unidades: [] }); if(!isPrivilegedGestorUser(req.user)){ const scopedUnitId = getScopedUnitId(req); if(!scopedUnitId) return ok(res,{ unidades: [] }); const scopedCluster = await resolveClusterAnchor(scopedUnitId); if(!scopedCluster.base) return ok(res,{ unidades: [] }); if(scopedCluster.anchor !== requestedCluster.anchor) return ok(res,{ unidades: [] }); const unidades = await findClusterUnidadesByAnchorLean(scopedCluster.anchor); return ok(res,{ unidades }); } const unidades = await findClusterUnidadesByAnchorLean(requestedCluster.anchor); return ok(res,{ unidades }); } catch(e){ return serverError(res,e); } }
