@@ -32,6 +32,24 @@
     .wdg-users-table .col-ativo{ min-width: 110px; }
     .wdg-users-table .col-vinc { min-width: 160px; }
   .wdg-users-table .col-acoes{ width: 160px; } /* espaço otimizado para ícones */
+    .wdg-users-table th.col-email,
+    .wdg-users-table td.col-email{ text-align: left; }
+    .wdg-users-table td.col-email{ white-space: normal; }
+    .wdg-user-identity{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+    .wdg-user-email{ font-weight:600; word-break:break-word; }
+    .wdg-user-meta{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:.78rem; color:#6c757d; }
+    .wdg-user-memberships{ display:flex; flex-wrap:wrap; gap:6px; }
+    .wdg-user-membership-chip{ display:inline-flex; flex-wrap:wrap; gap:4px; align-items:center; padding:3px 8px; border-radius:999px; background:#f8f9fa; border:1px solid #dee2e6; font-size:.75rem; color:#495057; }
+    .wdg-user-membership-chip.is-inactive{ background:#fff3cd; border-color:#ffe69c; color:#7a5a00; }
+    .wdg-user-legacy-note{ font-size:.75rem; color:#8a6d3b; }
+    .wdg-email-precheck-card{ border:1px solid #dee2e6; border-radius:10px; background:#f8f9fa; padding:10px 12px; }
+    .wdg-email-precheck-card.is-pending{ background:#eef4ff; border-color:#c9dafc; }
+    .wdg-email-precheck-card.is-new{ background:#eef9f0; border-color:#b7dfbf; }
+    .wdg-email-precheck-card.is-existing{ background:#fff8e1; border-color:#f0d58c; }
+    .wdg-email-precheck-title{ font-weight:600; margin-bottom:4px; }
+    .wdg-email-precheck-meta{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .wdg-email-precheck-units{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .wdg-email-precheck-warning{ font-size:.78rem; margin-top:8px; color:#8a6d3b; }
   </style>
  </head>
 <body class="wdg-layout">
@@ -63,80 +81,104 @@
         <!-- FORM: grid limpo e responsivo -->
   <form id="formNovoUsuario" method="POST" action="<%= _basePath %>/api/usuarios" class="row gy-3 wdg-form auto-colon" onsubmit="return submitUsuarioForm(event)">
           <!-- Linha 1 -->
-          <div class="col-12 col-lg-6">
-            <label class="form-label">Nome</label>
-            <input name="nome" type="text" class="form-control" placeholder="Nome completo" autocomplete="name">
-          </div>
-
-          <div class="col-12 col-lg-6">
-            <label class="form-label">E-mail</label>
-            <input name="email" type="email" required class="form-control" placeholder="E-mail" autocomplete="email">
-            <div class="form-text text-muted">
-              <small>Se o e-mail já existir em outra unidade, o sistema reutiliza o usuário e cria apenas o vínculo desta unidade. Se já estiver vinculado nesta unidade, a tela exibirá um aviso e não duplicará o vínculo.</small>
-            </div>
-          </div>
-
-          <!-- Linha 2 -->
-          <div class="col-6 col-lg-3">
-            <label class="form-label">CPF</label>
-            <input name="cpf" id="cpfUsuario" type="text" class="form-control" placeholder="CPF" maxlength="14" autocomplete="off">
-          </div>
-
-          <div class="col-12 col-sm-6 col-lg-5">
-            <label class="form-label">Senha inicial</label>
-            <div class="input-group">
-              <input name="senha" id="senhaInicial" type="text" class="form-control" placeholder="Deixe vazio para gerar automaticamente" autocomplete="new-password">
-              <button class="btn btn-outline-primary" type="button" id="btnGerarSenha">Gerar</button>
-            </div>
-            <div class="form-text text-muted" id="senhaHelpText">
-              <small>Se vazio, uma senha provisória será gerada automaticamente</small>
-            </div>
-          </div>
-
-          <div class="col-6 col-lg-4">
+          <div class="col-12 col-lg-4">
             <label class="form-label">Nível de acesso</label>
-            <select name="role" id="roleSelect" class="form-select">
+            <select name="role" id="roleSelect" class="form-select" required>
+              <option value="" selected>-- Selecione o nível de acesso --</option>
+              <option value="master" disabled>Master</option>
               <option value="admin">Admin</option>
               <option value="diretor">Diretor</option>
-              <option value="user" selected>User</option>
+              <option value="user">User</option>
             </select>
+            <div class="form-text text-muted" id="roleHelpText">
+              <small>Escolha primeiro o papel visível deste vínculo. Master permanece fora deste formulário.</small>
+            </div>
           </div>
 
-          <!-- Linha 3 -->
-          <div class="col-12 col-lg-6">
+          <div class="col-12 col-lg-8">
             <label class="form-label" id="unidadeLabel">Unidade vinculada</label>
-            <select name="unidade_id" id="unidadeSelect" class="form-select">
+            <select name="unidade_id" id="unidadeSelect" class="form-select" disabled>
               <option value="">-- Selecionar --</option>
               <% if (typeof unidadesFiltradas !== 'undefined') { (unidadesFiltradas||[]).forEach(u => { %>
                 <option value="<%= u._id %>"><%= (u.codigo && u.nome) ? u.codigo + ' - ' + u.nome : (u.nome || u.codigo || u._id) %></option>
               <% }) } %>
             </select>
             <div class="form-text text-muted" id="unidadeHelpText">
-              <small>Campo obrigatório para usuários e diretores</small>
+              <small>Selecione o nível de acesso primeiro.</small>
+            </div>
+          </div>
+
+          <!-- Linha 2 -->
+          <div class="col-12 col-lg-6">
+            <label class="form-label">E-mail</label>
+            <input name="email" type="email" required class="form-control" placeholder="Selecione o nível de acesso e a unidade primeiro" autocomplete="email" id="emailUsuario" disabled>
+            <div class="form-text text-muted" id="emailHelpText">
+              <small>O e-mail é a chave operacional do fluxo. Depois da validação, os demais campos serão liberados com base nesta identidade.</small>
+            </div>
+            <div id="emailPrecheckCard" class="wdg-email-precheck-card d-none mt-2" aria-live="polite">
+              <div class="wdg-email-precheck-title" id="emailPrecheckTitle"></div>
+              <div class="small text-muted" id="emailPrecheckMessage"></div>
+              <div id="emailPrecheckMeta" class="wdg-email-precheck-meta d-none"></div>
+              <div id="emailPrecheckUnits" class="wdg-email-precheck-units d-none"></div>
+              <div id="emailPrecheckWarning" class="wdg-email-precheck-warning d-none"></div>
             </div>
           </div>
 
           <div class="col-12 col-lg-6">
+            <label class="form-label">Nome</label>
+            <input name="nome" id="nomeUsuario" type="text" class="form-control" placeholder="Nome completo" autocomplete="name" disabled>
+            <div class="form-text text-muted" id="nomeHelpText">
+              <small>Disponível após validar o e-mail.</small>
+            </div>
+          </div>
+
+          <!-- Linha 3 -->
+          <div class="col-12 col-lg-4">
+            <label class="form-label">CPF</label>
+            <input name="cpf" id="cpfUsuario" type="text" class="form-control" placeholder="CPF" maxlength="14" autocomplete="off" disabled>
+            <div class="form-text text-muted" id="cpfHelpText">
+              <small>Disponível após validar o e-mail.</small>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-4">
             <label class="form-label">Funcionário existente</label>
-            <select name="funcionario_id" id="funcionarioSelect" class="form-select">
-              <option value="">-- Selecione uma unidade primeiro --</option>
+            <select name="funcionario_id" id="funcionarioSelect" class="form-select" disabled>
+              <option value="">-- Valide o e-mail primeiro --</option>
             </select>
+            <div class="form-text text-muted" id="funcionarioHelpText">
+              <small>Disponível após validar o e-mail e escolher uma unidade.</small>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6 col-lg-4">
+            <label class="form-label">Senha inicial</label>
+            <div class="input-group">
+              <input name="senha" id="senhaInicial" type="text" class="form-control" placeholder="Valide o e-mail para continuar" autocomplete="new-password" disabled>
+              <button class="btn btn-outline-primary" type="button" id="btnGerarSenha" disabled>Gerar</button>
+            </div>
+            <div class="form-text text-muted" id="senhaHelpText">
+              <small>Disponível após validar o e-mail.</small>
+            </div>
           </div>
 
           <!-- Linha 4 -->
-          <div class="col-12 col-lg-6 d-flex align-items-center">
+          <div class="col-12 col-lg-6">
             <div class="form-check mt-1">
-              <input class="form-check-input" type="checkbox" id="criarNovoFuncionario" name="criarNovoFuncionario">
+              <input class="form-check-input" type="checkbox" id="criarNovoFuncionario" name="criarNovoFuncionario" disabled>
               <label class="form-check-label" for="criarNovoFuncionario">Criar novo funcionário</label>
+            </div>
+            <div class="form-text text-muted" id="criarNovoFuncionarioHelpText">
+              <small>Disponível após validar o e-mail.</small>
             </div>
           </div>
 
           <div class="col-12 col-lg-6 d-flex justify-content-end align-items-center">
             <!-- alinhado à direita em todas as larguras -->
             <div class="d-block ms-auto">
-              <button type="submit" class="btn btn-primary" id="btnSubmitUsuario" data-mode="create">
+              <button type="submit" class="btn btn-primary" id="btnSubmitUsuario" data-mode="create" disabled>
                 <span class="spinner-border spinner-border-sm d-none" role="status"></span>
-                Criar usuário ou adicionar vínculo
+                <span id="btnSubmitUsuarioLabel">Criar usuário ou adicionar vínculo</span>
               </button>
             </div>
           </div>
@@ -182,6 +224,13 @@
           </thead>
           <tbody>
             <% (usuarios||[]).forEach(u => { %>
+        <% const membershipsSummary = Array.isArray(u.membershipsSummary) ? u.membershipsSummary : []; %>
+        <% const membershipsCount = Number(u.membershipsCount || membershipsSummary.length || 0); %>
+        <% const membershipsCountLabel = membershipsCount === 1 ? '1 unidade vinculada' : membershipsCount + ' unidades vinculadas'; %>
+        <% const normalizedRole = String(u.role || '').toLowerCase(); %>
+        <% const displayRole = normalizedRole === 'gestor' ? 'diretor' : (u.role || '-'); %>
+        <% const hasLegacyMembershipGap = membershipsCount === 0 && !!u.unidade_id; %>
+        <% const hasGlobalAccessWithoutContext = membershipsCount === 0 && !u.unidade_id && (normalizedRole === 'master' || normalizedRole === 'admin'); %>
         <tr data-user-id="<%= u._id %>"
           data-user-email="<%= u.email %>"
           data-user-nome="<%= u.nome || '' %>"
@@ -189,9 +238,41 @@
                   data-user-cpf="<%= u.cpf || '' %>"
                   data-user-unidade="<%= u.unidade_id || '' %>"
                   data-user-funcionario="<%= u.funcionario_id || '' %>">
-                <td class="col-email"><%= u.email %></td>
+                <td class="col-email">
+                  <div class="wdg-user-identity">
+                    <div class="wdg-user-email"><%= u.email %></div>
+                    <div class="wdg-user-meta">
+                      <span class="badge text-bg-light border">Identidade global</span>
+                      <% if (membershipsCount > 0) { %>
+                        <span><%= membershipsCountLabel %></span>
+                      <% } else if (hasLegacyMembershipGap) { %>
+                        <span>Vínculos ainda não sincronizados</span>
+                      <% } else if (hasGlobalAccessWithoutContext) { %>
+                        <span>Acesso global</span>
+                      <% } %>
+                    </div>
+                    <% if (membershipsCount > 0) { %>
+                      <div class="wdg-user-memberships">
+                        <% membershipsSummary.forEach((membership) => { %>
+                          <% const statusLabel = membership.status === 'inactive' ? 'inativo' : (membership.status === 'active' ? 'ativo' : (membership.status || 'sem status')); %>
+                          <% const membershipRoleLabel = membership.papel_contextual === 'gestor' ? 'diretor' : membership.papel_contextual; %>
+                          <span class="wdg-user-membership-chip <%= membership.status === 'inactive' ? 'is-inactive' : '' %>" title="unidade_id: <%= membership.unidade_id %>">
+                            <span><%= membership.unidade_nome || membership.unidade_id %></span>
+                            <% if (membershipRoleLabel) { %><span>· <%= membershipRoleLabel %></span><% } %>
+                            <span>· <%= statusLabel %></span>
+                            <% if (membership.funcionario_id) { %><span title="funcionario_id: <%= membership.funcionario_id %>">· func. vinculado</span><% } %>
+                          </span>
+                        <% }) %>
+                      </div>
+                    <% } else if (hasLegacyMembershipGap) { %>
+                      <div class="wdg-user-legacy-note">Cadastro legado sem user_memberships sincronizados.</div>
+                    <% } else if (hasGlobalAccessWithoutContext) { %>
+                      <div class="wdg-user-legacy-note">Sem vínculo contextual necessário.</div>
+                    <% } %>
+                  </div>
+                </td>
                 <td class="col-nome"><%= u.nome || '-' %></td>
-                <td class="col-role"><%= u.role %></td>
+                <td class="col-role"><%= displayRole %></td>
 
                 <!-- Dica: para não escapar HTML em EJS use &lt;%- ... %&gt; -->
                 <td class="col-ativo">
@@ -254,6 +335,27 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-danger" id="usrDeleteConfirmYes">Excluir definitivamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: e-mail já vinculado à unidade atual -->
+  <div class="modal fade" id="usrEmailAlreadyLinkedModal" tabindex="-1" aria-labelledby="usrEmailAlreadyLinkedTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-danger">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger" id="usrEmailAlreadyLinkedTitle">
+            <i class="bi bi-x-octagon-fill me-2"></i>
+            E-mail já vinculado à unidade
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0" id="usrEmailAlreadyLinkedMessage">Este e-mail já está vinculado à unidade selecionada.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="usrEmailAlreadyLinkedOk">OK</button>
         </div>
       </div>
     </div>
@@ -510,84 +612,775 @@
 
     // Novo usuário
     const btnGerar = document.getElementById('btnGerarSenha');
+    const submitButton = document.getElementById('btnSubmitUsuario');
+    const submitButtonLabel = document.getElementById('btnSubmitUsuarioLabel');
+    const roleSelect = document.getElementById('roleSelect');
+    const roleHelpText = document.getElementById('roleHelpText');
+    const unidadeLabel = document.getElementById('unidadeLabel');
+    const unidadeSelect = document.getElementById('unidadeSelect');
+    const unidadeHelpText = document.getElementById('unidadeHelpText');
+    const emailInput = document.getElementById('emailUsuario');
+    const emailHelpText = document.getElementById('emailHelpText');
+    const nomeInput = document.getElementById('nomeUsuario');
+    const nomeHelpText = document.getElementById('nomeHelpText');
+    const cpfNovo = document.getElementById('cpfUsuario');
+    const cpfHelpText = document.getElementById('cpfHelpText');
     const senhaEl  = document.getElementById('senhaInicial');
     const senhaHelpText = document.getElementById('senhaHelpText');
     const criarNovoFuncionarioEl = document.getElementById('criarNovoFuncionario');
+    const criarNovoFuncionarioHelpText = document.getElementById('criarNovoFuncionarioHelpText');
     const funcionarioSelect = document.getElementById('funcionarioSelect');
+    const funcionarioHelpText = document.getElementById('funcionarioHelpText');
+    const emailPrecheckCard = document.getElementById('emailPrecheckCard');
+    const emailPrecheckTitle = document.getElementById('emailPrecheckTitle');
+    const emailPrecheckMessage = document.getElementById('emailPrecheckMessage');
+    const emailPrecheckMeta = document.getElementById('emailPrecheckMeta');
+    const emailPrecheckUnits = document.getElementById('emailPrecheckUnits');
+    const emailPrecheckWarning = document.getElementById('emailPrecheckWarning');
+    const usrEmailAlreadyLinkedModalEl = document.getElementById('usrEmailAlreadyLinkedModal');
+    const usrEmailAlreadyLinkedMessageEl = document.getElementById('usrEmailAlreadyLinkedMessage');
+    const EMAIL_PRECHECK_DEBOUNCE_MS = 350;
+    let emailPrecheckTimer = null;
+    let emailPrecheckRequestId = 0;
+    let emailValidationStatus = 'idle';
+    let identityPrefilledFromExistingUser = false;
+    let sameUnitDuplicateModalKey = '';
+    let emailPrecheckState = {
+      checkedEmail: '',
+      exists: false,
+      user: null,
+      membershipsSummary: [],
+      blockedUnidadeIds: [],
+    };
 
-    btnGerar?.addEventListener('click', ()=>{
-      const novaSenha = gerarSenha(8);
-      senhaEl.value = novaSenha;
-      // Mostrar feedback temporário
-      const originalText = senhaHelpText.innerHTML;
-      senhaHelpText.innerHTML = '<small class="text-success">✅ Senha gerada: ' + novaSenha + '</small>';
-      setTimeout(() => {
-        senhaHelpText.innerHTML = originalText;
-      }, 3000);
+    Array.from(unidadeSelect?.options || []).forEach((option) => {
+      option.dataset.baseLabel = option.textContent;
+      option.dataset.baseDisabled = option.disabled ? '1' : '0';
     });
 
-    // Função para atualizar o estado do campo senha baseado nas seleções
+    function normalizeEmailValue(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function normalizeIdValue(value) {
+      return String(value || '').trim();
+    }
+
+    function normalizeCpfDigits(value) {
+      return String(value || '').replace(/\D/g, '');
+    }
+
+    function normalizeComparableText(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+    }
+
+    function isValidEmailForPrecheck(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+    }
+
+    function formatCpfForUi(value) {
+      const digits = normalizeCpfDigits(value);
+      if (!digits) return '';
+      return window.WDMasks ? window.WDMasks.formatCPF(digits) : digits;
+    }
+
+    function formatVisibleRoleLabel(value) {
+      const normalizedValue = String(value || '').trim().toLowerCase();
+      if (!normalizedValue) return null;
+      if (normalizedValue === 'gestor' || normalizedValue === 'diretor') return 'Diretor';
+      if (normalizedValue === 'user') return 'User';
+      if (normalizedValue === 'admin') return 'Admin';
+      if (normalizedValue === 'master') return 'Master';
+      return value;
+    }
+
+    function roleRequiresUnit(role = String(roleSelect?.value || '').trim().toLowerCase()) {
+      return role === 'user' || role === 'diretor';
+    }
+
+    function hasSelectedRole() {
+      return !!String(roleSelect?.value || '').trim();
+    }
+
+    function canValidateEmailNow() {
+      if (!hasSelectedRole()) return false;
+      if (!roleRequiresUnit()) return true;
+      return !!normalizeIdValue(unidadeSelect?.value);
+    }
+
+    function currentRoleAllowsContextualLink() {
+      const selectedRole = String(roleSelect?.value || '').toLowerCase();
+      return selectedRole === 'user' || selectedRole === 'diretor';
+    }
+
+    function hasValidatedEmail() {
+      return emailValidationStatus === 'validated' && emailPrecheckState.checkedEmail === normalizeEmailValue(emailInput?.value);
+    }
+
+    function hasExistingValidatedEmail() {
+      return hasValidatedEmail() && emailPrecheckState.exists === true;
+    }
+
+    function getActiveIdentityCpfDigits() {
+      return normalizeCpfDigits(cpfNovo?.value);
+    }
+
+    function getExistingIdentityCpfDigits() {
+      return normalizeCpfDigits(emailPrecheckState.user?.cpf);
+    }
+
+    function hasCompleteExistingIdentity() {
+      if (!hasExistingValidatedEmail()) return true;
+      const nome = String(emailPrecheckState.user?.nome || '').trim();
+      const cpf = getExistingIdentityCpfDigits();
+      return !!nome && cpf.length === 11;
+    }
+
+    function setFieldReadOnly(field, shouldLock) {
+      if (!field) return;
+      field.readOnly = !!shouldLock;
+      field.classList.toggle('bg-light', !!shouldLock);
+    }
+
+    function clearPrefilledIdentityFields() {
+      if (!identityPrefilledFromExistingUser) return;
+      if (nomeInput) nomeInput.value = '';
+      if (cpfNovo) cpfNovo.value = '';
+      identityPrefilledFromExistingUser = false;
+    }
+
+    function prepareFuncionarioOptions() {
+      Array.from(funcionarioSelect?.options || []).forEach((option) => {
+        option.dataset.baseLabel = option.dataset.baseLabel || option.textContent;
+        option.dataset.baseDisabled = option.dataset.baseDisabled || (option.disabled ? '1' : '0');
+        option.dataset.cpf = option.dataset.cpf || normalizeCpfDigits(option.textContent);
+        option.dataset.nome = option.dataset.nome || '';
+        option.dataset.email = option.dataset.email || '';
+      });
+    }
+
+    function resetFuncionarioOptionState() {
+      Array.from(funcionarioSelect?.options || []).forEach((option) => {
+        option.textContent = option.dataset.baseLabel || option.textContent;
+        option.disabled = option.dataset.baseDisabled === '1';
+      });
+    }
+
+    function resetUnidadeOptionState() {
+      Array.from(unidadeSelect?.options || []).forEach((option) => {
+        option.textContent = option.dataset.baseLabel || option.textContent;
+        option.disabled = option.dataset.baseDisabled === '1';
+      });
+    }
+
+    function getAvailableUnitOptionCount() {
+      return Array.from(unidadeSelect?.options || []).filter((option) => option.value && !option.disabled).length;
+    }
+
+    function resetSameUnitDuplicateModalState() {
+      sameUnitDuplicateModalKey = '';
+    }
+
+    function isSelectedUnitBlocked(unidadeId = unidadeSelect?.value) {
+      const selectedUnitId = normalizeIdValue(unidadeId);
+      if (!selectedUnitId) return false;
+
+      return (Array.isArray(emailPrecheckState.blockedUnidadeIds) ? emailPrecheckState.blockedUnidadeIds : [])
+        .some((blockedUnidadeId) => normalizeIdValue(blockedUnidadeId) === selectedUnitId);
+    }
+
+    function showSameUnitDuplicateModal({ email = emailInput?.value, unidadeId = unidadeSelect?.value, force = false } = {}) {
+      const normalizedEmail = normalizeEmailValue(email);
+      const normalizedUnidadeId = normalizeIdValue(unidadeId);
+      if (!normalizedEmail || !normalizedUnidadeId) return;
+
+      const modalKey = `${normalizedEmail}::${normalizedUnidadeId}`;
+      if (!force && sameUnitDuplicateModalKey === modalKey) return;
+      sameUnitDuplicateModalKey = modalKey;
+
+      const selectedOption = Array.from(unidadeSelect?.options || []).find((option) => normalizeIdValue(option.value) === normalizedUnidadeId);
+      const unidadeLabel = String(selectedOption?.dataset?.baseLabel || selectedOption?.textContent || '').trim();
+      const fullMessage = unidadeLabel
+        ? `O e-mail ${normalizedEmail} já está vinculado à unidade selecionada (${unidadeLabel}). Nenhum novo vínculo foi criado porque este vínculo já existe.`
+        : `O e-mail ${normalizedEmail} já está vinculado à unidade selecionada. Nenhum novo vínculo foi criado porque este vínculo já existe.`;
+
+      if (usrEmailAlreadyLinkedMessageEl) {
+        usrEmailAlreadyLinkedMessageEl.textContent = fullMessage;
+      }
+
+      if (!usrEmailAlreadyLinkedModalEl || !(window.bootstrap && window.bootstrap.Modal)) {
+        showAlert(fullMessage, 'error');
+        return;
+      }
+
+      const modal = window.bootstrap.Modal.getOrCreateInstance(usrEmailAlreadyLinkedModalEl);
+      modal.show();
+    }
+
+    function hideEmailPrecheckCard() {
+      if (!emailPrecheckCard) return;
+      emailPrecheckCard.className = 'wdg-email-precheck-card d-none mt-2';
+      emailPrecheckTitle.textContent = '';
+      emailPrecheckMessage.textContent = '';
+      emailPrecheckMeta.innerHTML = '';
+      emailPrecheckUnits.innerHTML = '';
+      emailPrecheckWarning.textContent = '';
+      emailPrecheckMeta.classList.add('d-none');
+      emailPrecheckUnits.classList.add('d-none');
+      emailPrecheckWarning.classList.add('d-none');
+    }
+
+    function invalidateValidatedEmail({ preserveTypedIdentity = true } = {}) {
+      emailValidationStatus = 'idle';
+      emailPrecheckState = {
+        checkedEmail: '',
+        exists: false,
+        user: null,
+        membershipsSummary: [],
+        blockedUnidadeIds: [],
+      };
+      resetSameUnitDuplicateModalState();
+      resetUnidadeOptionState();
+      hideEmailPrecheckCard();
+      if (!preserveTypedIdentity || identityPrefilledFromExistingUser) {
+        clearPrefilledIdentityFields();
+      }
+      setFieldReadOnly(nomeInput, false);
+      setFieldReadOnly(cpfNovo, false);
+    }
+
+    function applyExistingIdentityToForm() {
+      const user = emailPrecheckState.user || {};
+      if (nomeInput) nomeInput.value = String(user.nome || '').trim();
+      if (cpfNovo) cpfNovo.value = formatCpfForUi(user.cpf || '');
+      identityPrefilledFromExistingUser = true;
+      setFieldReadOnly(nomeInput, true);
+      setFieldReadOnly(cpfNovo, true);
+      nomeHelpText.innerHTML = '<small class="text-warning">Preenchido automaticamente a partir da identidade global existente.</small>';
+      cpfHelpText.innerHTML = '<small class="text-warning">Preenchido automaticamente a partir da identidade global existente.</small>';
+    }
+
+    function releaseIdentityFieldsForNewUser() {
+      if (identityPrefilledFromExistingUser) {
+        clearPrefilledIdentityFields();
+      }
+      setFieldReadOnly(nomeInput, false);
+      setFieldReadOnly(cpfNovo, false);
+      nomeHelpText.innerHTML = '<small>Preencha o nome da identidade global que será criada.</small>';
+      cpfHelpText.innerHTML = '<small>Informe o CPF da mesma pessoa antes de vincular funcionário.</small>';
+    }
+
+    function getSubmitBlockedReason() {
+      if (!hasSelectedRole()) return 'Selecione o nível de acesso para continuar.';
+      if (roleRequiresUnit() && !normalizeIdValue(unidadeSelect?.value)) return 'Selecione a unidade vinculada para continuar.';
+      if (!isValidEmailForPrecheck(emailInput?.value)) return 'Informe um e-mail válido e valide a identidade.';
+      if (emailValidationStatus === 'pending') return 'Aguarde a validação do e-mail.';
+      if (!hasValidatedEmail()) return 'Valide o e-mail para liberar os demais campos.';
+      if (hasExistingValidatedEmail()) {
+        if (!currentRoleAllowsContextualLink()) return 'Para vincular usuário existente, selecione User ou Diretor.';
+        if (!hasCompleteExistingIdentity()) return 'A identidade global existente está incompleta. Corrija nome e CPF fora deste fluxo antes de vincular.';
+        if (isSelectedUnitBlocked()) return 'Este e-mail já está vinculado à unidade selecionada.';
+        if (getAvailableUnitOptionCount() === 0) return 'Este usuário já está vinculado a todas as unidades disponíveis para este formulário.';
+      }
+      return '';
+    }
+
+    function applyFuncionarioIdentityConstraints() {
+      prepareFuncionarioOptions();
+      resetFuncionarioOptionState();
+
+      const hasUnitSelected = !!normalizeIdValue(unidadeSelect?.value);
+      const emailValidated = hasValidatedEmail();
+      const existingUser = hasExistingValidatedEmail();
+      const activeCpfDigits = getActiveIdentityCpfDigits();
+      const activeEmail = normalizeEmailValue(emailInput?.value);
+      const activeName = normalizeComparableText(nomeInput?.value);
+
+      if (!emailValidated) {
+        funcionarioSelect.disabled = true;
+        funcionarioSelect.value = '';
+        criarNovoFuncionarioEl.checked = false;
+        criarNovoFuncionarioEl.disabled = true;
+        funcionarioHelpText.innerHTML = '<small>Disponível após validar o e-mail e escolher uma unidade.</small>';
+        criarNovoFuncionarioHelpText.innerHTML = '<small>Disponível após validar o e-mail.</small>';
+        return;
+      }
+
+      if (!hasUnitSelected) {
+        funcionarioSelect.disabled = true;
+        funcionarioSelect.value = '';
+        criarNovoFuncionarioEl.checked = false;
+        criarNovoFuncionarioEl.disabled = true;
+        funcionarioHelpText.innerHTML = '<small>Selecione uma unidade antes de vincular funcionário.</small>';
+        criarNovoFuncionarioHelpText.innerHTML = '<small>Selecione uma unidade antes de criar funcionário.</small>';
+        return;
+      }
+
+      if (activeCpfDigits.length !== 11) {
+        funcionarioSelect.disabled = true;
+        funcionarioSelect.value = '';
+        criarNovoFuncionarioEl.checked = false;
+        criarNovoFuncionarioEl.disabled = true;
+        funcionarioHelpText.innerHTML = '<small>Informe um CPF válido para cruzar com o Funcionário da mesma pessoa.</small>';
+        criarNovoFuncionarioHelpText.innerHTML = '<small>Informe um CPF válido para manter consistência entre User e Funcionário.</small>';
+        return;
+      }
+
+      funcionarioSelect.disabled = false;
+      criarNovoFuncionarioEl.disabled = false;
+
+      let availableCompatibleOptions = 0;
+      Array.from(funcionarioSelect?.options || []).forEach((option) => {
+        if (!option.value) return;
+        const optionCpf = normalizeCpfDigits(option.dataset.cpf || option.textContent);
+        const optionEmail = normalizeEmailValue(option.dataset.email || '');
+        const optionName = normalizeComparableText(option.dataset.nome || '');
+        let incompatibilityReason = '';
+
+        if (optionCpf !== activeCpfDigits) {
+          incompatibilityReason = 'CPF divergente da identidade';
+        } else if (optionEmail && activeEmail && optionEmail !== activeEmail) {
+          incompatibilityReason = 'e-mail divergente da identidade';
+        } else if (optionName && activeName && optionName !== activeName) {
+          incompatibilityReason = 'nome divergente da identidade';
+        }
+
+        if (!incompatibilityReason) {
+          availableCompatibleOptions += 1;
+          return;
+        }
+        option.disabled = true;
+        option.textContent = `${option.dataset.baseLabel || option.textContent} (${incompatibilityReason})`;
+      });
+
+      const selectedOption = funcionarioSelect.options[funcionarioSelect.selectedIndex] || null;
+      if (selectedOption?.disabled) {
+        funcionarioSelect.value = '';
+      }
+
+      if (existingUser) {
+        funcionarioHelpText.innerHTML = availableCompatibleOptions > 0
+          ? '<small class="text-warning">Somente funcionários compatíveis com o mesmo Nome, CPF e e-mail da identidade global foram mantidos disponíveis.</small>'
+          : '<small class="text-warning">Nenhum funcionário compatível com o Nome, CPF e e-mail desta identidade global está disponível na unidade selecionada.</small>';
+        criarNovoFuncionarioHelpText.innerHTML = '<small class="text-warning">Se necessário, o novo funcionário será criado com o mesmo Nome/CPF da identidade global.</small>';
+      } else {
+        funcionarioHelpText.innerHTML = availableCompatibleOptions > 0
+          ? '<small>Somente funcionários compatíveis com o Nome, CPF e e-mail informados permanecem disponíveis.</small>'
+          : '<small>Nenhum funcionário compatível com o Nome, CPF e e-mail informados está disponível na unidade selecionada.</small>';
+        criarNovoFuncionarioHelpText.innerHTML = '<small>Se marcado, o novo funcionário será criado com o mesmo Nome/CPF deste cadastro.</small>';
+      }
+    }
+
     function atualizarEstadoSenha() {
+      const emailValidated = hasValidatedEmail();
+      const existingUser = hasExistingValidatedEmail();
       const criarNovoFuncionario = criarNovoFuncionarioEl.checked;
       const funcionarioSelecionado = funcionarioSelect.value && !criarNovoFuncionario;
 
-      if (funcionarioSelecionado) {
-        // Se funcionário existente selecionado, desabilitar campo e mostrar mensagem
+      if (!emailValidated) {
         senhaEl.disabled = true;
-        senhaEl.placeholder = "Será gerada automaticamente";
-        senhaHelpText.innerHTML = '<small class="text-info">🔐 Senha será gerada automaticamente para funcionário existente</small>';
-        senhaEl.value = ''; // Limpar qualquer valor
+        btnGerar.disabled = true;
+        senhaEl.placeholder = 'Valide o e-mail para continuar';
+        senhaEl.value = '';
+        senhaHelpText.innerHTML = '<small>Disponível após validar o e-mail.</small>';
+        return;
+      }
+
+      if (existingUser) {
+        senhaEl.disabled = true;
+        btnGerar.disabled = true;
+        senhaEl.placeholder = 'Não aplicável ao vincular identidade global existente';
+        senhaEl.value = '';
+        senhaHelpText.innerHTML = '<small class="text-warning">Ao vincular usuário existente, a senha global atual é preservada.</small>';
+        return;
+      }
+
+      if (funcionarioSelecionado) {
+        senhaEl.disabled = true;
+        btnGerar.disabled = true;
+        senhaEl.placeholder = 'Será gerada automaticamente';
+        senhaEl.value = '';
+        senhaHelpText.innerHTML = '<small class="text-info">🔐 Senha será gerada automaticamente para funcionário existente.</small>';
+        return;
+      }
+
+      senhaEl.disabled = false;
+      btnGerar.disabled = false;
+      senhaEl.placeholder = 'Deixe vazio para gerar automaticamente';
+      senhaHelpText.innerHTML = '<small>Se vazio, uma senha provisória será gerada automaticamente.</small>';
+    }
+
+    function updateUserFormAvailability() {
+      const emailValidated = hasValidatedEmail();
+      const roleSelected = hasSelectedRole();
+      const selectedRole = String(roleSelect?.value || '').trim().toLowerCase();
+
+      nomeInput.disabled = !emailValidated;
+      cpfNovo.disabled = !emailValidated;
+
+      if (!emailValidated) {
+        nomeHelpText.innerHTML = '<small>Disponível após validar o e-mail.</small>';
+        cpfHelpText.innerHTML = '<small>Disponível após validar o e-mail.</small>';
+        setFieldReadOnly(nomeInput, false);
+        setFieldReadOnly(cpfNovo, false);
+      } else if (hasExistingValidatedEmail()) {
+        applyExistingIdentityToForm();
       } else {
-        // Habilitar campo normalmente
-        senhaEl.disabled = false;
-        senhaEl.placeholder = "Deixe vazio para gerar automaticamente";
-        senhaHelpText.innerHTML = '<small>Se vazio, uma senha provisória será gerada automaticamente</small>';
+        releaseIdentityFieldsForNewUser();
+      }
+
+      applyFuncionarioIdentityConstraints();
+      atualizarEstadoSenha();
+
+      const submitBlockedReason = getSubmitBlockedReason();
+      submitButton.disabled = !!submitBlockedReason;
+      submitButton.title = submitBlockedReason || '';
+      if (submitButtonLabel) {
+        if (hasExistingValidatedEmail()) {
+          submitButtonLabel.textContent = 'Adicionar vínculo à unidade';
+        } else if (emailValidated) {
+          submitButtonLabel.textContent = 'Criar usuário e vincular unidade';
+        } else {
+          submitButtonLabel.textContent = 'Criar usuário ou adicionar vínculo';
+        }
+      }
+
+      roleHelpText.innerHTML = roleSelected
+        ? '<small>Papel selecionado. O fluxo seguirá com a mesma identidade global do e-mail validado.</small>'
+        : '<small>Escolha primeiro o papel visível deste vínculo.</small>';
+
+      if (!roleSelected) {
+        emailInput.disabled = true;
+        emailInput.placeholder = 'Selecione o nível de acesso primeiro';
+      } else if (selectedRole === 'admin') {
+        emailInput.disabled = false;
+        emailInput.placeholder = 'E-mail';
+      } else if (roleRequiresUnit(selectedRole) && !normalizeIdValue(unidadeSelect?.value)) {
+        emailInput.disabled = true;
+        emailInput.placeholder = 'Selecione a unidade antes do e-mail';
+      } else {
+        emailInput.disabled = false;
+        emailInput.placeholder = 'E-mail';
       }
     }
 
-    // Event listeners para atualizar estado da senha
-    criarNovoFuncionarioEl.addEventListener('change', atualizarEstadoSenha);
-    funcionarioSelect.addEventListener('change', atualizarEstadoSenha);
+    function renderEmailPrecheckMeta(user) {
+      emailPrecheckMeta.innerHTML = '';
+      if (!user) {
+        emailPrecheckMeta.classList.add('d-none');
+        return;
+      }
 
-    // Atualizar estado inicial
-    atualizarEstadoSenha();
+      const items = [];
+      if (user.nome) items.push(`Nome: ${user.nome}`);
+      if (user.cpf) items.push(`CPF: ${formatCpfForUi(user.cpf)}`);
+      if (user.global_role) items.push(`Acesso global: ${formatVisibleRoleLabel(user.global_role)}`);
+      if (user.role) items.push(`Perfil atual: ${formatVisibleRoleLabel(user.role)}`);
 
-    // Função para atualizar o campo unidade baseado no role selecionado
+      items.forEach((item) => {
+        const badge = document.createElement('span');
+        badge.className = 'badge text-bg-light border';
+        badge.textContent = item;
+        emailPrecheckMeta.appendChild(badge);
+      });
+
+      emailPrecheckMeta.classList.toggle('d-none', items.length === 0);
+    }
+
+    function renderEmailPrecheckUnits(membershipsSummary) {
+      emailPrecheckUnits.innerHTML = '';
+      if (!Array.isArray(membershipsSummary) || membershipsSummary.length === 0) {
+        emailPrecheckUnits.classList.add('d-none');
+        return;
+      }
+
+      membershipsSummary.forEach((membership) => {
+        const chip = document.createElement('span');
+        const statusLabel = membership.status === 'inactive'
+          ? 'inativo'
+          : (membership.status === 'active' ? 'ativo' : (membership.status || 'sem status'));
+        const papelVisivel = formatVisibleRoleLabel(membership.papel_contextual);
+        chip.className = `wdg-user-membership-chip ${membership.status === 'inactive' ? 'is-inactive' : ''}`.trim();
+        chip.textContent = `${membership.unidade_nome || membership.unidade_id}${papelVisivel ? ` · ${papelVisivel}` : ''} · ${statusLabel}${membership.funcionario_id ? ' · func. vinculado' : ''}`;
+        emailPrecheckUnits.appendChild(chip);
+      });
+
+      emailPrecheckUnits.classList.remove('d-none');
+    }
+
+    function applyBlockedUnitOptions() {
+      resetUnidadeOptionState();
+      const selectedUnitId = normalizeIdValue(unidadeSelect?.value);
+      const blockedUnidadeIds = new Set(
+        (Array.isArray(emailPrecheckState.blockedUnidadeIds) ? emailPrecheckState.blockedUnidadeIds : [])
+          .map((unidadeId) => normalizeIdValue(unidadeId))
+          .filter(Boolean)
+      );
+
+      Array.from(unidadeSelect?.options || []).forEach((option) => {
+        if (!option.value) return;
+        if (!blockedUnidadeIds.has(normalizeIdValue(option.value))) return;
+
+        option.disabled = true;
+        option.textContent = `${option.dataset.baseLabel || option.textContent} (já vinculada a este usuário)`;
+      });
+
+      const selectedUnitIsBlocked = blockedUnidadeIds.has(selectedUnitId);
+
+      return {
+        availableUnitCount: getAvailableUnitOptionCount(),
+        selectedUnitIsBlocked,
+      };
+    }
+
+    function renderEmailPrecheckState() {
+      const emailValue = normalizeEmailValue(emailInput?.value);
+      if (!emailValue || emailValue !== emailPrecheckState.checkedEmail) {
+        resetUnidadeOptionState();
+        hideEmailPrecheckCard();
+        updateUserFormAvailability();
+        return;
+      }
+
+      const { availableUnitCount, selectedUnitIsBlocked } = applyBlockedUnitOptions();
+      const roleAllowsContextualLink = currentRoleAllowsContextualLink();
+      const selectedUnitId = normalizeIdValue(unidadeSelect?.value);
+
+      if (!emailPrecheckState.exists) {
+        emailPrecheckCard.className = 'wdg-email-precheck-card is-new mt-2';
+        emailPrecheckTitle.textContent = 'Novo usuário será criado';
+        emailPrecheckMessage.textContent = 'Esta validação liberou a criação de uma nova identidade global. Preencha Nome e CPF antes de vincular um funcionário.';
+        emailPrecheckMeta.classList.add('d-none');
+        emailPrecheckUnits.classList.add('d-none');
+        emailPrecheckWarning.classList.add('d-none');
+        updateUserFormAvailability();
+        return;
+      }
+
+      emailPrecheckCard.className = 'wdg-email-precheck-card is-existing mt-2';
+      emailPrecheckTitle.textContent = 'Este e-mail já existe globalmente';
+
+      let message = 'Nome e CPF foram carregados automaticamente para deixar claro que se trata da mesma pessoa.';
+      if (!roleAllowsContextualLink) {
+        message += ' Para adicionar novo vínculo, selecione User ou Diretor e uma unidade disponível.';
+      } else if (!selectedUnitId) {
+        message += ' Selecione uma unidade disponível para adicionar o vínculo contextual.';
+      } else if (selectedUnitIsBlocked) {
+        message += ' Este e-mail já está vinculado à unidade selecionada. Escolha outra unidade apenas se quiser adicionar um vínculo em outro contexto.';
+      } else {
+        message += ' Ao salvar, o sistema criará apenas o vínculo desta unidade, sem criar nova identidade global.';
+      }
+      emailPrecheckMessage.textContent = message;
+
+      renderEmailPrecheckMeta(emailPrecheckState.user);
+      renderEmailPrecheckUnits(emailPrecheckState.membershipsSummary);
+
+      let warningMessage = '';
+      if (!hasCompleteExistingIdentity()) {
+        warningMessage = 'A identidade global existente está sem Nome ou CPF completo. Corrija esses dados fora deste fluxo antes de vincular.';
+      } else if (selectedUnitIsBlocked) {
+        warningMessage = 'Erro: este e-mail já está vinculado à unidade selecionada. Nenhum novo vínculo será criado para a mesma unidade.';
+      } else if (availableUnitCount === 0) {
+        warningMessage = 'Este usuário já está vinculado a todas as unidades disponíveis para este formulário.';
+      }
+
+      if (warningMessage) {
+        emailPrecheckWarning.textContent = warningMessage;
+        emailPrecheckWarning.classList.remove('d-none');
+      } else {
+        emailPrecheckWarning.classList.add('d-none');
+      }
+
+      if (selectedUnitIsBlocked) {
+        showSameUnitDuplicateModal({ email: emailValue, unidadeId: selectedUnitId });
+      } else {
+        resetSameUnitDuplicateModalState();
+      }
+
+      updateUserFormAvailability();
+    }
+
+    function renderEmailPrecheckPending() {
+      emailValidationStatus = 'pending';
+      if (!emailPrecheckCard) return;
+      emailPrecheckCard.className = 'wdg-email-precheck-card is-pending mt-2';
+      emailPrecheckTitle.textContent = 'Consultando e-mail global';
+      emailPrecheckMessage.textContent = 'Verificando se este e-mail já pertence a um usuário existente.';
+      emailPrecheckMeta.classList.add('d-none');
+      emailPrecheckUnits.classList.add('d-none');
+      emailPrecheckWarning.classList.add('d-none');
+      updateUserFormAvailability();
+    }
+
+    async function runEmailPrecheck(rawEmail) {
+      const email = normalizeEmailValue(rawEmail);
+      if (!canValidateEmailNow() || !isValidEmailForPrecheck(email)) {
+        invalidateValidatedEmail({ preserveTypedIdentity: true });
+        updateUserFormAvailability();
+        return null;
+      }
+
+      if (emailValidationStatus === 'validated' && emailPrecheckState.checkedEmail === email) {
+        renderEmailPrecheckState();
+        return emailPrecheckState;
+      }
+
+      renderEmailPrecheckPending();
+      const requestId = ++emailPrecheckRequestId;
+
+      try {
+        const response = await fetch(basePath + '/api/usuarios/check-email?email=' + encodeURIComponent(email), {
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          cache: 'no-store'
+        });
+        const json = await response.json().catch(() => null);
+        if (requestId !== emailPrecheckRequestId) return emailPrecheckState;
+
+        if (!response.ok) {
+          invalidateValidatedEmail({ preserveTypedIdentity: true });
+          updateUserFormAvailability();
+          return null;
+        }
+
+        const payload = json?.data || {};
+        emailValidationStatus = 'validated';
+        emailPrecheckState = {
+          checkedEmail: email,
+          exists: payload.exists === true,
+          user: payload.user || null,
+          membershipsSummary: Array.isArray(payload.membershipsSummary) ? payload.membershipsSummary : [],
+          blockedUnidadeIds: Array.isArray(payload.blockedUnidadeIds) ? payload.blockedUnidadeIds : [],
+        };
+
+        renderEmailPrecheckState();
+        return emailPrecheckState;
+      } catch (error) {
+        if (requestId === emailPrecheckRequestId) {
+          invalidateValidatedEmail({ preserveTypedIdentity: true });
+          console.warn('[usuarios][check-email] falhou:', error);
+          updateUserFormAvailability();
+        }
+        return null;
+      }
+    }
+
+    function scheduleEmailPrecheck() {
+      clearTimeout(emailPrecheckTimer);
+      emailPrecheckRequestId += 1;
+      invalidateValidatedEmail({ preserveTypedIdentity: true });
+      updateUserFormAvailability();
+
+      const email = normalizeEmailValue(emailInput?.value);
+      if (!canValidateEmailNow() || !isValidEmailForPrecheck(email)) {
+        return;
+      }
+
+      emailPrecheckTimer = setTimeout(() => {
+        runEmailPrecheck(email);
+      }, EMAIL_PRECHECK_DEBOUNCE_MS);
+    }
+
     function atualizarCampoUnidade() {
-      const roleSelect = document.getElementById('roleSelect');
-      const unidadeLabel = document.getElementById('unidadeLabel');
-      const unidadeSelect = document.getElementById('unidadeSelect');
-      const unidadeHelpText = document.getElementById('unidadeHelpText');
+      const selectedRole = String(roleSelect?.value || '').trim().toLowerCase();
 
-      if (!roleSelect || !unidadeLabel || !unidadeSelect || !unidadeHelpText) return;
+      if (!selectedRole) {
+        unidadeLabel.textContent = 'Unidade vinculada';
+        unidadeSelect.required = false;
+        unidadeSelect.disabled = true;
+        unidadeHelpText.innerHTML = '<small>Selecione o nível de acesso primeiro.</small>';
+        unidadeHelpText.className = 'form-text text-muted';
+        emailHelpText.innerHTML = '<small>O e-mail será liberado depois do papel e da unidade, quando aplicável.</small>';
+        invalidateValidatedEmail({ preserveTypedIdentity: true });
+        updateUserFormAvailability();
+        return;
+      }
 
-      const selectedRole = roleSelect.value;
-
+      unidadeSelect.disabled = false;
       if (selectedRole === 'admin') {
-        // Para admin: campo opcional
         unidadeLabel.textContent = 'Unidade vinculada (opcional)';
         unidadeSelect.required = false;
-        unidadeHelpText.innerHTML = '<small>Campo opcional para administradores</small>';
+        unidadeHelpText.innerHTML = '<small>Campo opcional para administradores.</small>';
         unidadeHelpText.className = 'form-text text-muted';
+        emailHelpText.innerHTML = '<small>Agora informe e valide o e-mail para continuar o fluxo.</small>';
       } else {
-        // Para user e diretor: campo obrigatório
         unidadeLabel.textContent = 'Unidade vinculada *';
         unidadeSelect.required = true;
-        unidadeHelpText.innerHTML = '<small class="text-danger">Campo obrigatório para usuários e diretores</small>';
+        unidadeHelpText.innerHTML = '<small class="text-danger">Campo obrigatório para usuários e diretores.</small>';
         unidadeHelpText.className = 'form-text text-danger';
+        emailHelpText.innerHTML = normalizeIdValue(unidadeSelect?.value)
+          ? '<small>Agora informe e valide o e-mail desta pessoa.</small>'
+          : '<small>Selecione a unidade antes de validar o e-mail.</small>';
       }
+
+      updateUserFormAvailability();
     }
 
-    // Event listener para mudança no role
-    const roleSelect = document.getElementById('roleSelect');
-    if (roleSelect) {
-      roleSelect.addEventListener('change', atualizarCampoUnidade);
-    }
+    btnGerar?.addEventListener('click', ()=>{
+      if (btnGerar.disabled) return;
+      const novaSenha = gerarSenha(8);
+      senhaEl.value = novaSenha;
+      const originalText = senhaHelpText.innerHTML;
+      senhaHelpText.innerHTML = '<small class="text-success">Senha gerada: ' + novaSenha + '</small>';
+      setTimeout(() => {
+        if (!hasExistingValidatedEmail()) {
+          senhaHelpText.innerHTML = originalText;
+        }
+      }, 3000);
+    });
 
-    // Atualizar estado inicial do campo unidade
+    criarNovoFuncionarioEl.addEventListener('change', () => {
+      updateUserFormAvailability();
+    });
+    funcionarioSelect.addEventListener('change', () => {
+      const selectedOption = funcionarioSelect.options[funcionarioSelect.selectedIndex] || null;
+      if (selectedOption?.value) {
+        const selectedNome = String(selectedOption.dataset.nome || '').trim();
+        const selectedCpf = formatCpfForUi(selectedOption.dataset.cpf || '');
+        if (selectedNome && !hasExistingValidatedEmail()) {
+          nomeInput.value = selectedNome;
+          nomeHelpText.innerHTML = '<small class="text-info">Nome alinhado ao Funcionário selecionado para manter consistência.</small>';
+        }
+        if (selectedCpf && !hasExistingValidatedEmail()) {
+          cpfNovo.value = selectedCpf;
+          cpfHelpText.innerHTML = '<small class="text-info">CPF alinhado ao Funcionário selecionado para manter consistência.</small>';
+        }
+      }
+      updateUserFormAvailability();
+    });
+    nomeInput?.addEventListener('input', () => {
+      if (!hasValidatedEmail()) return;
+      updateUserFormAvailability();
+    });
+    cpfNovo?.addEventListener('input', () => {
+      if (!hasValidatedEmail()) return;
+      updateUserFormAvailability();
+    });
+    roleSelect?.addEventListener('change', () => {
+      atualizarCampoUnidade();
+      renderEmailPrecheckState();
+    });
+    emailInput?.addEventListener('input', scheduleEmailPrecheck);
+    emailInput?.addEventListener('blur', () => {
+      clearTimeout(emailPrecheckTimer);
+      const email = normalizeEmailValue(emailInput.value);
+      if (!canValidateEmailNow() || !isValidEmailForPrecheck(email)) {
+        invalidateValidatedEmail({ preserveTypedIdentity: true });
+        updateUserFormAvailability();
+        return;
+      }
+      runEmailPrecheck(email);
+    });
+
     atualizarCampoUnidade();
 
-    const cpfNovo = document.getElementById('cpfUsuario');
     if (cpfNovo && window.WDMasks) {
       window.WDMasks.bindCPFMask(cpfNovo);
     }
@@ -642,14 +1435,11 @@
       } catch(_){ /* noop */ }
     });
 
-    // Hover desabilitado: manter apenas clique para abrir/fechar dropdown (padrão Bootstrap)
-
-    // Carregamento dinâmico de funcionários baseado na unidade selecionada
-    const unidadeSelect = document.getElementById('unidadeSelect');
-
     async function carregarFuncionariosDisponiveis(unidadeId) {
       if (!unidadeId) {
         funcionarioSelect.innerHTML = '<option value="">-- Selecione uma unidade primeiro --</option>';
+        prepareFuncionarioOptions();
+        updateUserFormAvailability();
         return;
       }
 
@@ -665,20 +1455,30 @@
 
           if (data.funcionarios && data.funcionarios.length > 0) {
             data.funcionarios.forEach(func => {
-              options += `<option value="${func._id}">${func.nome} - ${func.cpf}</option>`;
+              const cpfDigits = normalizeCpfDigits(func.cpf);
+              const nome = String(func.nome || '').trim();
+              const email = normalizeEmailValue(func.email || '');
+              const cpfLabel = formatCpfForUi(func.cpf) || (func.cpf || '-');
+              options += `<option value="${func._id}" data-cpf="${cpfDigits}" data-nome="${nome}" data-email="${email}">${nome} - ${cpfLabel}</option>`;
             });
           } else {
             options += '<option value="" disabled>Nenhum funcionário disponível nesta unidade</option>';
           }
 
           funcionarioSelect.innerHTML = options;
+          prepareFuncionarioOptions();
+          updateUserFormAvailability();
         } else {
           console.error('Erro ao carregar funcionários:', data.error);
           funcionarioSelect.innerHTML = '<option value="">Erro ao carregar funcionários</option>';
+          prepareFuncionarioOptions();
+          updateUserFormAvailability();
         }
       } catch (error) {
         console.error('Erro na requisição:', error);
         funcionarioSelect.innerHTML = '<option value="">Erro ao carregar funcionários</option>';
+        prepareFuncionarioOptions();
+        updateUserFormAvailability();
       }
     }
 
@@ -686,6 +1486,8 @@
     unidadeSelect.addEventListener('change', function() {
       const unidadeId = this.value;
       carregarFuncionariosDisponiveis(unidadeId);
+      renderEmailPrecheckState();
+      updateUserFormAvailability();
     });
 
     // Funcionalidade para o modal de edição
@@ -909,7 +1711,12 @@
   spinner.classList.remove('d-none');
 
   // Helper para encerrar estado de loading em early-returns
-  const stopLoading = () => { try { btnSubmit.disabled = false; spinner.classList.add('d-none'); } catch(_){} };
+  const stopLoading = () => {
+    try {
+      spinner.classList.add('d-none');
+      updateUserFormAvailability();
+    } catch(_){}
+  };
 
       try {
         // Coletar dados do formulário manualmente
@@ -925,6 +1732,12 @@
           }
         }
 
+        if (!data.role) {
+          showAlert('Selecione o nível de acesso antes de continuar.', 'warning');
+          stopLoading();
+          return false;
+        }
+
         // Validação básica de e-mail (o atributo required do HTML não é acionado pois interceptamos o submit)
         const emailVal = (data.email || '').trim().toLowerCase();
         if (!emailVal) {
@@ -934,6 +1747,21 @@
         }
         data.email = emailVal;
 
+        const emailPrecheck = await runEmailPrecheck(emailVal);
+        const emailExistsGlobal = emailPrecheck?.exists === true;
+        const emailValidated = hasValidatedEmail();
+        const blockedUnidadeIds = new Set(
+          (Array.isArray(emailPrecheck?.blockedUnidadeIds) ? emailPrecheck.blockedUnidadeIds : [])
+            .map((blockedId) => normalizeIdValue(blockedId))
+            .filter(Boolean)
+        );
+
+        if (!emailValidated) {
+          showAlert('Valide o e-mail antes de continuar.', 'warning');
+          stopLoading();
+          return false;
+        }
+
         // Validação: unidade obrigatória para user e diretor
         const userRole = data.role;
         const unidadeId = data.unidade_id;
@@ -942,6 +1770,34 @@
           showAlert('Para usuários e diretores, é obrigatório selecionar uma unidade vinculada.', 'warning');
           stopLoading();
           return false;
+        }
+
+        if (emailExistsGlobal) {
+          if (!currentRoleAllowsContextualLink()) {
+            showAlert('Este e-mail já existe globalmente. Para adicionar novo vínculo, selecione User ou Diretor e uma unidade disponível.', 'warning');
+            stopLoading();
+            return false;
+          }
+          if (!hasCompleteExistingIdentity()) {
+            showAlert('Este e-mail já existe globalmente, mas a identidade está sem Nome ou CPF completo. Corrija isso fora deste fluxo antes de vincular.', 'warning');
+            stopLoading();
+            return false;
+          }
+          if (getAvailableUnitOptionCount() === 0) {
+            showAlert('Este usuário já está vinculado a todas as unidades disponíveis para este formulário.', 'warning');
+            stopLoading();
+            return false;
+          }
+          if (!unidadeId) {
+            showAlert('Este e-mail já existe globalmente. Selecione uma unidade disponível para adicionar novo vínculo.', 'warning');
+            stopLoading();
+            return false;
+          }
+          if (blockedUnidadeIds.has(normalizeIdValue(unidadeId))) {
+            showSameUnitDuplicateModal({ email: emailVal, unidadeId, force: true });
+            stopLoading();
+            return false;
+          }
         }
 
         // Validação de CPF (se informado)
@@ -956,11 +1812,15 @@
         const criarNovoFuncionario = data.criarNovoFuncionario === 'on';
         const funcionarioId = data.funcionario_id;
 
+        if (emailExistsGlobal) {
+          delete data.senha;
+        }
+
         // Se senha estiver vazia OU se for criado a partir de funcionário, gerar senha automaticamente
-        if (!senhaInicial || senhaInicial.trim() === '' || (funcionarioId && !criarNovoFuncionario)) {
+        if (!emailExistsGlobal && (!senhaInicial || senhaInicial.trim() === '' || (funcionarioId && !criarNovoFuncionario))) {
           data.senha = gerarSenha(8);
           console.log('Senha provisória gerada automaticamente:', data.senha);
-        } else {
+        } else if (!emailExistsGlobal) {
           // Validar senha fornecida manualmente
           const senhaFornecida = senhaInicial.trim();
           if (senhaFornecida.length < 6) {
@@ -1071,8 +1931,8 @@
         showAlert('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
       } finally {
         // Esconder loading
-        btnSubmit.disabled = false;
         spinner.classList.add('d-none');
+        updateUserFormAvailability();
       }
 
       return false;
