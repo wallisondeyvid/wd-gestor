@@ -114,7 +114,7 @@ test('requireUnitScope mantém o comportamento legado integral quando a flag est
   assert.equal(nextCalled, true);
   assert.deepEqual(req.unitScope, {
     type: 'unit',
-    unidadeId: '000000000000000000000010',
+    unidadeId: '000000000000000000000001',
   });
 });
 
