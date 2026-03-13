@@ -17,7 +17,10 @@ Testes: clinica.public-contract + watchdog OK
 Notas: contrato de rotas congelado (clinica-route-contract.md)
 
 ## Gestor
-Status: WRAPPER VALIDADO (flip binário por ENABLE_GESTOR_WRAPPER)
-Risco: baixo
-Testes: gestor.public-contract + gestor.handle-leak + gestor.root-compat + watchdog OK
-Notas: contrato de rotas e compat root congelados (gestor-route-contract.md + gestor-compat-root.md)
+Status: HIBRIDO CONTROLADO (wrapper validado + infra tenant-aware existente)
+Risco: medio-baixo
+Testes: gestor.public-contract + gestor.handle-leak + gestor.root-compat + watchdog OK; suites focais verdes nos slices checkpointados
+Notas:
+- Concluido: infra tenant-aware em src/shared/db/ com resolveConnection e resolveModel sustentando routing multi-db/tenant; reducao local da bridge checkpointada em checkpoint-bridge-subfase-1 e bridge-subfase-2; pages/auth-context checkpointado em checkpoint-pages-auth-context-subfase-1 com requireLogin, requireRole e requireUnitScope priorizando contexto canonico nos fluxos criticos; paginas principais em modo context-first com fallback legado controlado; leitura contextual de Unidades com reducao local da bridge checkpointada em checkpoint-unidades-read-slice-1 e checkpoint-unidades-read-slice-2; Recursos com isolamento por unidade corrigido e checkpointado em 913c2cd e checkpoint-recursos-unit-isolation-slice-1, incluindo listagem isolada por unidade e exigencia de unidade_id explicito em create/update.
+- Hibrido controlado: a bridge generica controller -> service/db wrapper ainda existe como camada de compatibilidade e alguns fluxos permanecem mistos; bridge e pages/auth-context entraram em retorno decrescente e nao sao mais a frente primaria.
+- Proxima frente prioritaria: consolidar infra/repositories reduzindo dependencia da bridge generica controller -> service/db wrapper, com avancos por fatias pequenas e ja cobertas, nao por refactor amplo.
