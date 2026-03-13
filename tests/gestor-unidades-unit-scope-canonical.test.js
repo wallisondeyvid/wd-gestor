@@ -6,6 +6,9 @@ import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
+import { clearResolveConnectionCache } from '../src/shared/db/resolveConnection.js';
+import { resolveModel } from '../src/shared/db/resolveModel.js';
+import { createUnitScope } from '../src/shared/unitScope.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
@@ -65,6 +68,36 @@ async function createUnit({ nome, principalUnitId = null } = {}) {
   }
 
   return Unidade.create(payload);
+}
+
+function getTenantUnitModel(unidadeId) {
+  return resolveModel({
+    name: Unidade.modelName,
+    schema: Unidade.schema,
+    unitScope: createUnitScope({ unidadeId: String(unidadeId) }),
+  });
+}
+
+function buildTenantUnitDoc(unidade, overrides = {}) {
+  return {
+    _id: unidade._id,
+    codigo: unidade.codigo || String(unidade._id).slice(-6).toUpperCase(),
+    nome: unidade.nome,
+    pessoaTipo: unidade.pessoaTipo || 'pj',
+    ativa: unidade.ativa !== undefined ? unidade.ativa : true,
+    modulosAcessiveis: Array.isArray(unidade.modulosAcessiveis) ? unidade.modulosAcessiveis : [],
+    is_principal: !!unidade.is_principal,
+    subunidade: !!unidade.subunidade,
+    unidade_principal_id: unidade.unidade_principal_id || undefined,
+    matriz_id: unidade.matriz_id || undefined,
+    ...overrides,
+  };
+}
+
+async function seedTenantUnitCluster(unidadeId, unidades) {
+  const UnidadeTenantModel = getTenantUnitModel(unidadeId);
+  await UnidadeTenantModel.deleteMany({});
+  await UnidadeTenantModel.insertMany(unidades);
 }
 
 async function createUser({
@@ -195,6 +228,59 @@ test('GET /gestor/api/unidades hidrata apenas o cluster da unidade ativa', async
 
   assert.deepEqual(nomes, [unidadeFilialB.nome, unidadePrincipalA.nome].sort());
   assert.equal(nomes.includes(unidadePrincipalC.nome), false);
+});
+
+test('GET /gestor/api/unidades usa o anchor canônico para resolver o cluster em multi-db', async () => {
+  const previousMultiDb = process.env.WD_MULTI_DB;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+  const previousHandshake = process.env.WD_USERDB_HANDSHAKE;
+
+  try {
+    const { agent, unidadePrincipalA, unidadeFilialB, unidadePrincipalC } = await createContextualAgent();
+
+    process.env.WD_MULTI_DB = '1';
+    process.env.WD_MULTI_DB_ALLOWLIST = [String(unidadePrincipalA._id), String(unidadeFilialB._id)].join(',');
+    process.env.WD_USERDB_HANDSHAKE = '0';
+    clearResolveConnectionCache();
+
+    const tenantPrincipalName = `${unidadePrincipalA.nome} TENANT`;
+    const tenantFilialName = `${unidadeFilialB.nome} TENANT`;
+
+    await seedTenantUnitCluster(unidadeFilialB._id, [
+      buildTenantUnitDoc(unidadeFilialB, { nome: tenantFilialName }),
+    ]);
+
+    await seedTenantUnitCluster(unidadePrincipalA._id, [
+      buildTenantUnitDoc(unidadePrincipalA, { nome: tenantPrincipalName }),
+      buildTenantUnitDoc(unidadeFilialB, { nome: tenantFilialName }),
+    ]);
+
+    const res = await agent
+      .get('/gestor/api/unidades')
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200);
+    const unidades = extractUnidadesFromListResponse(res);
+    const nomes = unidades.map((unidade) => unidade.nome).sort();
+
+    assert.deepEqual(nomes, [tenantFilialName, tenantPrincipalName].sort());
+    assert.equal(nomes.includes(unidadePrincipalA.nome), false);
+    assert.equal(nomes.includes(unidadePrincipalC.nome), false);
+  } finally {
+    clearResolveConnectionCache();
+
+    if (previousMultiDb === undefined) delete process.env.WD_MULTI_DB;
+    else process.env.WD_MULTI_DB = previousMultiDb;
+
+    if (previousAllowlist === undefined) delete process.env.WD_MULTI_DB_ALLOWLIST;
+    else process.env.WD_MULTI_DB_ALLOWLIST = previousAllowlist;
+
+    if (previousHandshake === undefined) delete process.env.WD_USERDB_HANDSHAKE;
+    else process.env.WD_USERDB_HANDSHAKE = previousHandshake;
+
+    clearResolveConnectionCache();
+  }
 });
 
 test('GET /gestor/api/unidades/:id bloqueia leitura fora do contexto ativo', async () => {
