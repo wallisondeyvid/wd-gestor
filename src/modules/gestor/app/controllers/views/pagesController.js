@@ -494,31 +494,44 @@ export async function paginaFuncionarios(req, res) {
       });
     }
 
+    const privilegedUser = !!(req.user?.isMaster || req.user?.role === 'admin');
     const filtro = {};
     if (!req.user?.isMaster && req.user?.unidade_id) filtro.unidade_id = req.user.unidade_id;
 
     // Calcular escopo de unidades (matriz + filiais) para o usuário
     let unidadesCond = { ativa: true };
-    if (!(req.user?.isMaster || req.user?.role === 'admin')) {
-      let principalId = req.user?.unidade_principal_id;
-      if (!principalId && req.user?.unidade_id) {
+    let principalIdLegado = '';
+    if (!privilegedUser) {
+      principalIdLegado = req.user?.unidade_principal_id;
+      if (!principalIdLegado && req.user?.unidade_id) {
         const u = await findUnidadeUserBaseLean(req.user.unidade_id);
-        if (u) principalId = u.is_principal ? u._id : (u.unidade_principal_id || u.matriz_id || u._id);
+        if (u) principalIdLegado = u.is_principal ? u._id : (u.unidade_principal_id || u.matriz_id || u._id);
       }
-      unidadesCond = principalId ? { $or: [ { _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId } ] } : { _id: req.user?.unidade_id || null };
+      unidadesCond = principalIdLegado ? { $or: [ { _id: principalIdLegado }, { unidade_principal_id: principalIdLegado }, { matriz_id: principalIdLegado } ] } : { _id: req.user?.unidade_id || null };
     }
 
     // Filtro de setores conforme escopo calculado
     let setoresCond = { ativo: true };
-    if (!(req.user?.isMaster || req.user?.role === 'admin')) {
+    if (!privilegedUser) {
       const unidadesAcessiveis = await findUnidadesByCondLean(unidadesCond);
       const ids = unidadesAcessiveis.map(u => u._id);
       setoresCond.unidade_id = { $in: ids };
     }
 
+    const funcoesPromise = privilegedUser
+      ? findFuncoesAtivasNomeOrdenadasSelectLean()
+      : principalIdLegado
+        ? findFuncoesByUnidadePrincipalPopuladas(principalIdLegado).then((funcoes) => (funcoes || []).map((funcao) => ({
+          _id: funcao._id,
+          codigo: funcao.codigo,
+          nome: funcao.nome,
+          descricao: funcao.descricao || '',
+        })))
+        : [];
+
     const [unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios] = await Promise.all([
       findUnidadesByCondSelectCodigoNomeOrdenadasLean(unidadesCond),
-      findFuncoesAtivasNomeOrdenadasSelectLean(),
+      funcoesPromise,
       findSetoresByCondNomeOrdenadosSelectLean(setoresCond),
       findFuncionariosParaListagemComRefsSelectLean(filtro),
     ]);
