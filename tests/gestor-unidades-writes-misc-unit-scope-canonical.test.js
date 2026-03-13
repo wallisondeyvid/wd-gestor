@@ -7,6 +7,7 @@ import request from 'supertest';
 import { createServer } from '../src/server/createServer.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
 import { calcularDigitoVerificador } from '../src/modules/gestor/app/utils/cnpj.js';
+import { BankPort } from '../src/shared/ports/bank.port.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
@@ -281,4 +282,66 @@ test('GET /gestor/api/unidades/:id/logo bloqueia leitura fora do contexto ativo'
     .set('Connection', 'close');
 
   assert.equal(res.status, 400);
+});
+
+test('POST /gestor/unidades/:id/testar-banco respeita o unitScope ativo e bloqueia unidade fora do contexto', async () => {
+  const { agent, unidadeFilialB, unidadePrincipalC } = await createContextualDiretorAgent();
+
+  await Unidade.updateOne(
+    { _id: unidadeFilialB._id },
+    {
+      $set: {
+        apiBancaria: {
+          apiBaseUrl: 'https://bank.example.test',
+          tipoAutenticacaoAPI: '',
+        },
+      },
+    },
+  );
+
+  await Unidade.updateOne(
+    { _id: unidadePrincipalC._id },
+    {
+      $set: {
+        apiBancaria: {
+          apiBaseUrl: 'https://bank.example.test',
+          tipoAutenticacaoAPI: '',
+        },
+      },
+    },
+  );
+
+  const originalCallBankApi = BankPort.callBankApi;
+  const bankCalls = [];
+  BankPort.callBankApi = async (unitId, payload) => {
+    bankCalls.push({ unitId: String(unitId), payload });
+    return { status: 'ok' };
+  };
+
+  try {
+    const allowedRes = await agent
+      .post(`/gestor/unidades/${unidadeFilialB._id}/testar-banco`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({ method: 'GET', path: '/status' });
+
+    assert.equal(allowedRes.status, 200, JSON.stringify(allowedRes.body));
+    assert.equal(allowedRes.body?.ok, true);
+    assert.equal(bankCalls.length, 1);
+    assert.equal(bankCalls[0]?.unitId, String(unidadeFilialB._id));
+    assert.equal(bankCalls[0]?.payload?.path, '/status');
+
+    const blockedRes = await agent
+      .post(`/gestor/unidades/${unidadePrincipalC._id}/testar-banco`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({ method: 'GET', path: '/status' });
+
+    assert.equal(blockedRes.status, 400, JSON.stringify(blockedRes.body));
+    assert.equal(blockedRes.body?.ok, false);
+    assert.equal(blockedRes.body?.message, 'Acesso à unidade não autorizado.');
+    assert.equal(bankCalls.length, 1);
+  } finally {
+    BankPort.callBankApi = originalCallBankApi;
+  }
 });
