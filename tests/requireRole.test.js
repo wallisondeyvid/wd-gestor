@@ -137,6 +137,63 @@ test('requireRole usa o effectiveRole do AuthContext ativo quando a flag está l
   assert.equal(req.user.isMaster, false);
 });
 
+test('requireRole prioriza o contexto canônico ativo ao sincronizar o shape legado', async () => {
+  const middleware = requireRole(['diretor']);
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'gestor@example.com',
+      role: 'user',
+      isMaster: false,
+      unidade_id: 'req-legacy-unit',
+      unidade_principal_id: 'req-legacy-principal',
+      funcionario_id: 'req-legacy-funcionario',
+    },
+    sessionUser: {
+      id: 'u1',
+      email: 'gestor@example.com',
+      role: 'user',
+      unidade_id: 'session-legacy-unit',
+      unidade_principal_id: 'session-legacy-principal',
+      funcionario_id: 'session-legacy-funcionario',
+    },
+    authContext: {
+      needs_selection: false,
+      active_membership_id: 'mem1',
+      active_unidade_id: 'unit-canonical',
+      active_unidade_principal_id: 'principal-canonical',
+      active_funcionario_id: 'funcionario-canonico',
+      legacy_role: 'diretor',
+      effectiveRole: 'diretor',
+      activeContext: {
+        membershipId: 'mem1',
+        unidadeId: 'unit-canonical',
+        unidadePrincipalId: 'principal-canonical',
+        funcionarioId: 'funcionario-canonico',
+        legacyRole: 'diretor',
+      },
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await runMw(middleware, req, res);
+
+  assert.equal(nextCalled, true);
+  assert.equal(req.user.role, 'diretor');
+  assert.equal(req.user.global_role, null);
+  assert.equal(req.user.isMaster, false);
+  assert.equal(req.user.unidade_id, 'unit-canonical');
+  assert.equal(req.user.unidade_principal_id, 'principal-canonical');
+  assert.equal(req.user.funcionario_id, 'funcionario-canonico');
+  assert.equal(req.session.user.role, 'diretor');
+  assert.equal(req.session.user.global_role, null);
+  assert.equal(req.session.user.unidade_id, 'unit-canonical');
+  assert.equal(req.session.user.unidade_principal_id, 'principal-canonical');
+  assert.equal(req.session.user.funcionario_id, 'funcionario-canonico');
+  assert.equal(req.session.user.auth_version, 'phase3');
+});
+
 test('requireRole com a flag ligada continua aceitando o shape legado quando não há AuthContext salvo', async () => {
   const middleware = requireRole(['admin']);
   const req = createReq({
