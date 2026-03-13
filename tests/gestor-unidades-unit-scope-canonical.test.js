@@ -218,7 +218,7 @@ test('GET /gestor/unidades usa req.unitScope e ignora unidade legada divergente'
   assert.doesNotMatch(res.text, new RegExp(unidadePrincipalC.nome));
 });
 
-test('GET /gestor/api/unidades hidrata apenas o cluster da unidade ativa', async () => {
+test('GET /gestor/api/unidades hidrata apenas o cluster da unidade ativa e ignora unidade legada divergente', async () => {
   const { agent, unidadePrincipalA, unidadeFilialB, unidadePrincipalC } = await createContextualAgent();
 
   const res = await agent
@@ -230,6 +230,7 @@ test('GET /gestor/api/unidades hidrata apenas o cluster da unidade ativa', async
   const unidades = extractUnidadesFromListResponse(res);
   const nomes = unidades.map((unidade) => unidade.nome).sort();
 
+  assert.equal(unidades.length, 2);
   assert.deepEqual(nomes, [unidadeFilialB.nome, unidadePrincipalA.nome].sort());
   assert.equal(nomes.includes(unidadePrincipalC.nome), false);
 });

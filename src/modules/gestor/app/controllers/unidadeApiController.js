@@ -23,6 +23,8 @@ import {
   findUnidadeByIdLean,
   deleteUnidadeById,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { findUnidadesByCondLeanFullRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
+import { createUnitScope } from '#shared/unitScope.js';
 import { validarCnpj, calcularDigitoVerificador } from '#modules/gestor/app/utils/cnpj.js';
 import {
   ensureUnitProvisioned,
@@ -168,12 +170,15 @@ async function loadScopedAccessibleUnidades(req) {
   }
 
   let unidades = scopedContext.principalUnitId
-    ? await findUnidadesByCondLeanFull({
-      $or: [
-        { _id: scopedContext.principalUnitId },
-        { unidade_principal_id: scopedContext.principalUnitId },
-        { matriz_id: scopedContext.principalUnitId },
-      ],
+    ? await findUnidadesByCondLeanFullRepo({
+      unitScope: createUnitScope({ unidadeId: scopedContext.principalUnitId }),
+      cond: {
+        $or: [
+          { _id: scopedContext.principalUnitId },
+          { unidade_principal_id: scopedContext.principalUnitId },
+          { matriz_id: scopedContext.principalUnitId },
+        ],
+      },
     })
     : [];
 
