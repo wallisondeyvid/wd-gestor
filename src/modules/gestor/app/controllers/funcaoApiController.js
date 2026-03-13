@@ -9,7 +9,7 @@ import {
   findOutraFuncaoByNomeExcludingId,
   updateFuncaoById,
   findFuncaoByIdLean,
-  findFuncoesByUnidadeLean,
+  findFuncoesByPrincipalUnitIdLean,
   findFuncoesByFiltroLean,
   findFuncoesByFiltroSelectLean,
   deleteFuncaoById,
@@ -169,7 +169,7 @@ export async function getFuncoesPorUnidade(req,res){
     if (!unidadeId || unidadeId==='null') return ok(res,[]);
     if (!(await requestedUnitWithinContextCluster(req, unidadeId))) return ok(res,[]);
     const principalUnitId = await resolvePrincipalUnitId(unidadeId);
-    const funcoes = await findFuncoesByUnidadeLean(principalUnitId || unidadeId);
+    const funcoes = await findFuncoesByPrincipalUnitIdLean(principalUnitId || unidadeId);
     return ok(res, funcoes.map(f=>{
       const nome = f.nome || '';
       const rawDesc = (f.descricao && f.descricao.trim()) ? f.descricao.trim() : '';

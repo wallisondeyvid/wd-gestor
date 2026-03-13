@@ -648,6 +648,13 @@ export async function findFuncoesByUnidadeLean(unidadeId) {
   });
 }
 
+export async function findFuncoesByPrincipalUnitIdLean(unidadePrincipalId) {
+  return findFuncoesByUnidadeLeanRepo({
+    unitScope: createUnitScope({ unidadeId: unidadePrincipalId }),
+    unidadeId: unidadePrincipalId,
+  });
+}
+
 export async function findFuncoesByFiltroLean(filtro) {
   return findFuncoesByFiltroLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
 }
