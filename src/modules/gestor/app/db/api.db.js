@@ -289,15 +289,16 @@ export async function findUnidadeByIdOrRawLean(unidadeId) {
 
 export async function findClusterUnidadesByAnchorLean(anchorRaw) {
   const { Types } = mongoose;
+  const anchor = String(anchorRaw || '').trim();
   const conds = [];
 
-  if (Types.ObjectId.isValid(String(anchorRaw))) {
-    const anchorOid = new Types.ObjectId(String(anchorRaw));
+  if (Types.ObjectId.isValid(anchor)) {
+    const anchorOid = new Types.ObjectId(anchor);
     conds.push({ _id: anchorOid }, { matriz_id: anchorOid }, { unidade_principal_id: anchorOid });
   }
 
   conds.push({ _id: anchorRaw }, { matriz_id: anchorRaw }, { unidade_principal_id: anchorRaw });
-  return findClusterUnidadesByAnchorLeanRepo({ unitScope: GLOBAL_SCOPE, conds });
+  return findClusterUnidadesByAnchorLeanRepo({ unitScope: anchor ? scopeFromUnidadeId(anchor) : GLOBAL_SCOPE, conds });
 }
 
 export async function findUserByEmailCondLean(cond) {
