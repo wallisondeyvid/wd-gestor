@@ -77,29 +77,34 @@ export async function listarRecursosApi(req, res) {
 			placaTermNorm = placa.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
 		}
 
-		if (canonicalUnitId) {
-			filtro.unidade_id = canonicalUnitId;
-		} else if (unidadeId) {
-			filtro.unidade_id = unidadeId;
-		}
-
-		// Fallback legado isolado: enquanto ainda houver sessões sem unitScope canônico
-		if (!canonicalUnitId && !isMasterOrAdmin(req)) {
-			let principalId = req.user?.unidade_principal_id;
-			if (!principalId && req.user?.unidade_id) {
-				const u = await findUnidadeUserBaseLean(req.user.unidade_id);
-				if (u) principalId = u.is_principal ? (u._id) : (u.unidade_principal_id || u.matriz_id || u._id);
+		if (isMasterOrAdmin(req)) {
+			if (unidadeId) {
+				filtro.unidade_id = unidadeId;
 			}
+		} else {
+			let principalId = null;
+			const anchorUnitId = canonicalUnitId || getLegacyUserUnitId(req);
+
+			if (anchorUnitId) {
+				const unidadeAnchor = await findUnidadeUserBaseLean(anchorUnitId);
+				if (unidadeAnchor) {
+					principalId = unidadeAnchor.is_principal
+						? unidadeAnchor._id
+						: (unidadeAnchor.unidade_principal_id || unidadeAnchor.matriz_id || unidadeAnchor._id);
+				}
+			}
+
 			const cond = principalId
 				? { $or: [ { _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId } ] }
-				: { _id: req.user?.unidade_id || null };
+				: { _id: anchorUnitId || null };
 			const unidadesAcessiveis = await findUnidadesByCondLean(cond);
 			const ids = unidadesAcessiveis.map(u => String(u._id));
+
 			if (unidadeId) {
 				if (!ids.includes(String(unidadeId))) {
-					// Unidade requisitada fora do escopo => lista vazia
 					return ok(res, []);
 				}
+				filtro.unidade_id = unidadeId;
 			} else {
 				filtro.unidade_id = { $in: ids };
 			}
@@ -155,12 +160,12 @@ export async function getRecurso(req, res) {
 export async function createRecurso(req, res) {
 	try {
 		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor } = req.body;
-		const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
-		if (!canonicalUnitId || !tipo || !placa || !chassi || !renavam || !ano || !mod || !marca || !modelo || !cor) {
+		const requestedUnitId = normalizeUnitId(unidade_id);
+		if (!requestedUnitId || !tipo || !placa || !chassi || !renavam || !ano || !mod || !marca || !modelo || !cor) {
 			return badRequest(res, 'Todos os campos são obrigatórios');
 		}
 
-		if (!requestedUnitMatchesContext(req, unidade_id || canonicalUnitId)) {
+		if (!requestedUnitMatchesContext(req, requestedUnitId)) {
 			return notFound(res, 'Unidade não encontrada');
 		}
 
@@ -170,18 +175,18 @@ export async function createRecurso(req, res) {
 			return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
 		}
 
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: canonicalUnitId, placa: placa.toUpperCase() })).length > 0) {
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: requestedUnitId, placa: placa.toUpperCase() })).length > 0) {
 			return badRequest(res, 'Placa já cadastrada');
 		}
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: canonicalUnitId, chassi: chassi.toUpperCase() })).length > 0) {
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: requestedUnitId, chassi: chassi.toUpperCase() })).length > 0) {
 			return badRequest(res, 'Chassi já cadastrado');
 		}
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: canonicalUnitId, renavam })).length > 0) {
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: requestedUnitId, renavam })).length > 0) {
 			return badRequest(res, 'RENAVAM já cadastrado');
 		}
 
 		const novoRecurso = await createRecursoDb({
-			unidade_id: canonicalUnitId,
+			unidade_id: requestedUnitId,
 			tipo,
 			placa: placa.toUpperCase(),
 			chassi: chassi.toUpperCase(),
@@ -203,14 +208,14 @@ export async function createRecurso(req, res) {
 export async function updateRecurso(req, res) {
 	try {
 		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor, ativo } = req.body;
-		const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
+		const requestedUnitId = normalizeUnitId(unidade_id);
 
-		if (!canonicalUnitId) return badRequest(res, 'Unidade é obrigatória');
-		if (!/^[0-9a-fA-F]{24}$/.test(String(canonicalUnitId))) return badRequest(res, 'Unidade inválida');
+		if (!requestedUnitId) return badRequest(res, 'Unidade é obrigatória');
+		if (!/^[0-9a-fA-F]{24}$/.test(String(requestedUnitId))) return badRequest(res, 'Unidade inválida');
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
-		if (!requestedUnitMatchesContext(req, unidade_id || canonicalUnitId)) return notFound(res, 'Unidade não encontrada');
+		if (!requestedUnitMatchesContext(req, requestedUnitId)) return notFound(res, 'Unidade não encontrada');
 
-		const unidadeEfetiva = canonicalUnitId || null;
+		const unidadeEfetiva = requestedUnitId || null;
 
 		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
@@ -238,7 +243,7 @@ export async function updateRecurso(req, res) {
 		const atualizado = await updateRecursoByIdComUnidadeNome(
 			req.params.id,
 			{
-				unidade_id: canonicalUnitId,
+				unidade_id: requestedUnitId,
 				tipo,
 				placa: placa ? placa.toUpperCase() : recurso.placa,
 				chassi: chassi ? chassi.toUpperCase() : recurso.chassi,
