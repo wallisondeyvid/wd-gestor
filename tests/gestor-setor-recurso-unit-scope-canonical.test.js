@@ -8,7 +8,7 @@ import { clearResolveConnectionCache } from '../src/shared/db/resolveConnection.
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 import { createUnitScope } from '../src/shared/unitScope.js';
 import { findUnidadesByIdsNomeCodigoLean } from '../src/modules/gestor/app/db/api.db.js';
-import { paginaSetores } from '../src/modules/gestor/app/controllers/views/pagesController.js';
+import { paginaRecursos, paginaSetores } from '../src/modules/gestor/app/controllers/views/pagesController.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
@@ -467,6 +467,67 @@ test('Recursos HTML: renderiza apenas a unidade contextual atual', async () => {
     assert.doesNotMatch(res.text, new RegExp(escapeRegExp(normalizeId(unidadeB._id))));
     assert.match(res.text, new RegExp(escapeRegExp(unidadeA.nome)));
     assert.doesNotMatch(res.text, new RegExp(escapeRegExp(unidadeB.nome)));
+  });
+});
+
+test('Recursos fallback: unidade já alinhada no request evita voltar ao legado amplo', async () => {
+  await withHarness(async ({ app, unidadeA, unidadeB }) => {
+    const email = uniqueEmail('pagina-recursos-fallback');
+    const req = {
+      app,
+      path: '/recursos',
+      originalUrl: '/gestor/recursos',
+      baseUrl: '/gestor',
+      headers: { accept: 'text/html' },
+      user: {
+        id: 'context-user-recursos',
+        _id: 'context-user-recursos',
+        email,
+        role: 'diretor',
+        isMaster: false,
+        unidade_id: unidadeB._id,
+        unidade_principal_id: unidadeA._id,
+      },
+      session: {
+        user: {
+          id: 'context-user-recursos',
+          email,
+          role: 'diretor',
+          unidade_id: unidadeB._id,
+          unidade_principal_id: unidadeA._id,
+        },
+      },
+    };
+
+    const renderState = {
+      statusCode: 200,
+      view: null,
+      locals: null,
+    };
+    const res = {
+      status(code) {
+        renderState.statusCode = code;
+        return this;
+      },
+      render(view, locals) {
+        renderState.view = view;
+        renderState.locals = locals;
+        return this;
+      },
+      send(payload) {
+        renderState.sendPayload = payload;
+        return this;
+      },
+    };
+
+    await paginaRecursos(req, res);
+
+    assert.equal(renderState.statusCode, 200);
+    assert.equal(renderState.view, 'recursos');
+
+    const unidadesIds = (renderState.locals?.unidadesFiltradas || []).map((unidade) => normalizeId(unidade?._id));
+    assert.ok(unidadesIds.includes(normalizeId(unidadeB._id)));
+    assert.equal(unidadesIds.includes(normalizeId(unidadeA._id)), false);
   });
 });
 

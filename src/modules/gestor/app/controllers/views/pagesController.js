@@ -585,6 +585,14 @@ export async function paginaRecursos(req, res) {
     const unidadeContextual = await loadScopedUnidadeForPage(req);
     let unidadesFiltradas = unidadeContextual ? [unidadeContextual] : [];
 
+    if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && !privilegedUser) {
+      const unidadeContextualFallbackId = normalizeId(req.user?.unidade_id || req.user?.unidade_principal_id);
+      if (unidadeContextualFallbackId) {
+        const unidadeContextualFallback = await findUnidadeByIdLean(unidadeContextualFallbackId);
+        if (unidadeContextualFallback) unidadesFiltradas = [unidadeContextualFallback];
+      }
+    }
+
     if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && privilegedUser) {
       // Fallback legado isolado: sessão privilegiada ainda sem unitScope contextual ativo.
       unidadesFiltradas = await findAllUnidadesLean();
