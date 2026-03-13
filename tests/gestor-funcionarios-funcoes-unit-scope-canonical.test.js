@@ -9,6 +9,7 @@ import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
 import Funcao from '../src/core/models/funcao.js';
 import Funcionario from '../src/core/models/Funcionario.js';
+import Setor from '../src/core/models/setor.js';
 import { createUnitScope } from '../src/shared/unitScope.js';
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 
@@ -332,4 +333,63 @@ test('Funcionários HTML: filial contextual renderiza apenas a unidade canônica
     assert.match(res.headers['content-type'] || '', /text\/html/i);
     assert.match(res.text, new RegExp(`data-unidade-default="${escapeRegExp(normalizeId(unidadeA._id))}"`));
   });
+});
+
+test('Funcionários bridge: findSetoresByCondNomeOrdenadosSelectLean usa tenant quando o filtro aponta para uma única unidade', async () => {
+  const prevMultiDb = process.env.WD_MULTI_DB;
+  const prevAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+  const prevHandshake = process.env.WD_USERDB_HANDSHAKE;
+
+  process.env.WD_MULTI_DB = '1';
+  process.env.WD_USERDB_HANDSHAKE = '0';
+
+  try {
+    await withHarness(async ({ unidadeC }) => {
+      const setorNome = `Setor Tenant C ${Date.now()}-${nextCounter()}`;
+      process.env.WD_MULTI_DB_ALLOWLIST = normalizeId(unidadeC._id);
+
+      const cacheBust = `bridge-setor-${Date.now()}-${nextCounter()}`;
+      const [apiDbModule, resolveModelModule] = await Promise.all([
+        import(`../src/modules/gestor/app/db/api.db.js?${cacheBust}`),
+        import(`../src/shared/db/resolveModel.js?${cacheBust}`),
+      ]);
+
+      const TenantSetor = resolveModelModule.resolveModel({
+        name: Setor.modelName,
+        schema: Setor.schema,
+        unitScope: createUnitScope({ unidadeId: normalizeId(unidadeC._id) }),
+      });
+
+      await Setor.deleteMany({ nome: setorNome });
+      await TenantSetor.deleteMany({ nome: setorNome });
+
+      await TenantSetor.create({
+        codigo: nextCounter(),
+        nome: setorNome,
+        descricao: 'Setor servido pela bridge tenant-aware',
+        unidade_id: unidadeC._id,
+        ativo: true,
+      });
+
+      const setores = await apiDbModule.findSetoresByCondNomeOrdenadosSelectLean({
+        ativo: true,
+        unidade_id: { $in: [unidadeC._id] },
+      });
+
+      assert.equal(Array.isArray(setores), true);
+      assert.equal(
+        setores.some((setor) => String(setor?.nome || '') === setorNome),
+        true,
+      );
+    });
+  } finally {
+    if (prevMultiDb === undefined) delete process.env.WD_MULTI_DB;
+    else process.env.WD_MULTI_DB = prevMultiDb;
+
+    if (prevAllowlist === undefined) delete process.env.WD_MULTI_DB_ALLOWLIST;
+    else process.env.WD_MULTI_DB_ALLOWLIST = prevAllowlist;
+
+    if (prevHandshake === undefined) delete process.env.WD_USERDB_HANDSHAKE;
+    else process.env.WD_USERDB_HANDSHAKE = prevHandshake;
+  }
 });

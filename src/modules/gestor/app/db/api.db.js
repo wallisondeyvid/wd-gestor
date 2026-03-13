@@ -742,7 +742,7 @@ export async function findSetoresAtivosNomeOrdenadosSelectLean() {
 }
 
 export async function findSetoresByCondNomeOrdenadosSelectLean(cond) {
-  return findSetoresByCondNomeOrdenadosSelectLeanRepo({ unitScope: GLOBAL_SCOPE, cond });
+  return findSetoresByCondNomeOrdenadosSelectLeanRepo({ unitScope: scopeFromSetorFiltro(cond), cond });
 }
 
 export async function findFuncionariosParaListagemComRefsSelectLean(filtro) {
