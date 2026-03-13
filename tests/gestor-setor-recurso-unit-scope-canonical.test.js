@@ -8,6 +8,7 @@ import { clearResolveConnectionCache } from '../src/shared/db/resolveConnection.
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 import { createUnitScope } from '../src/shared/unitScope.js';
 import { findUnidadesByIdsNomeCodigoLean } from '../src/modules/gestor/app/db/api.db.js';
+import { paginaSetores } from '../src/modules/gestor/app/controllers/views/pagesController.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
@@ -499,5 +500,85 @@ test('Setores HTML: renderiza dropdown e lista apenas a unidade contextual atual
     assert.doesNotMatch(res.text, new RegExp(escapeRegExp(setorBName)));
     assert.match(res.text, new RegExp(escapeRegExp(unidadeA.nome)));
     assert.doesNotMatch(res.text, new RegExp(escapeRegExp(unidadeB.nome)));
+  });
+});
+
+test('Setores fallback: principal já alinhada no request evita voltar ao vazio ou ao legado amplo', async () => {
+  await withHarness(async ({ app, unidadeA, unidadeB, masterAgent }) => {
+    const setorAName = `Setor Fallback A ${Date.now()}-${nextCounter()}`;
+    const setorBName = `Setor Fallback B ${Date.now()}-${nextCounter()}`;
+    const email = uniqueEmail('pagina-setores-fallback');
+
+    await createSetorViaApi(masterAgent, {
+      nome: setorAName,
+      descricao: 'Setor da principal já alinhada no request',
+      unidade_id: normalizeId(unidadeA._id),
+    });
+
+    await createSetorViaApi(masterAgent, {
+      nome: setorBName,
+      descricao: 'Setor fora do contexto esperado',
+      unidade_id: normalizeId(unidadeB._id),
+    });
+
+    const req = {
+      app,
+      path: '/setores',
+      originalUrl: '/gestor/setores',
+      baseUrl: '/gestor',
+      headers: { accept: 'text/html' },
+      user: {
+        id: 'context-user-setores',
+        _id: 'context-user-setores',
+        email,
+        role: 'diretor',
+        isMaster: false,
+        unidade_id: unidadeB._id,
+        unidade_principal_id: unidadeA._id,
+      },
+      session: {
+        user: {
+          id: 'context-user-setores',
+          email,
+          role: 'diretor',
+          unidade_id: unidadeB._id,
+          unidade_principal_id: unidadeA._id,
+        },
+      },
+    };
+
+    const renderState = {
+      statusCode: 200,
+      view: null,
+      locals: null,
+    };
+    const res = {
+      status(code) {
+        renderState.statusCode = code;
+        return this;
+      },
+      render(view, locals) {
+        renderState.view = view;
+        renderState.locals = locals;
+        return this;
+      },
+      send(payload) {
+        renderState.sendPayload = payload;
+        return this;
+      },
+    };
+
+    await paginaSetores(req, res);
+
+    assert.equal(renderState.statusCode, 200);
+    assert.equal(renderState.view, 'setor');
+
+    const unidadesIds = (renderState.locals?.unidadesFiltradas || []).map((unidade) => normalizeId(unidade?._id));
+    assert.ok(unidadesIds.includes(normalizeId(unidadeA._id)));
+    assert.equal(unidadesIds.includes(normalizeId(unidadeB._id)), false);
+
+    const setoresIds = (renderState.locals?.setoresFiltrados || []).map((setor) => String(setor?.nome || ''));
+    assert.ok(setoresIds.includes(setorAName));
+    assert.equal(setoresIds.includes(setorBName), false);
   });
 });

@@ -668,6 +668,30 @@ export async function paginaSetores(req, res) {
     let unidadesFiltradas = [];
     let setoresFiltrados = [];
 
+    if (!privilegedUser) {
+      let unidadeContextualFallbackId = normalizeId(req.user?.unidade_principal_id);
+      if (!unidadeContextualFallbackId && req.user?.unidade_id) {
+        const unidadeBase = await findUnidadeUserBaseLean(req.user.unidade_id);
+        if (unidadeBase) {
+          unidadeContextualFallbackId = normalizeId(
+            unidadeBase.is_principal
+              ? unidadeBase._id
+              : (unidadeBase.unidade_principal_id || unidadeBase.matriz_id || unidadeBase._id),
+          );
+        }
+      }
+
+      if (unidadeContextualFallbackId) {
+        const [unidadeContextual, setoresContextuais] = await Promise.all([
+          findUnidadeByIdLean(unidadeContextualFallbackId),
+          findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean({ ativo: true, unidade_id: unidadeContextualFallbackId }),
+        ]);
+
+        unidadesFiltradas = unidadeContextual ? [unidadeContextual] : [];
+        setoresFiltrados = setoresContextuais || [];
+      }
+    }
+
     if (privilegedUser) {
       // Fallback legado isolado: sessão privilegiada ainda sem unitScope contextual ativo.
       unidadesFiltradas = await findUnidadesForSetorPageSelectLean();
