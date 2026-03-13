@@ -397,6 +397,9 @@ export async function paginaEditarUnidade(req, res) {
       // Fallback legado isolado: só usado quando ainda não há unitScope canônico.
       const matrizRef = req.user.unidade_principal_id || req.user.unidade_id;
       unidadesFiltradas = matrizRef ? await findUnidadesByMatrizOuPrincipal(matrizRef) : [];
+      if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && req.user.unidade_id) {
+        unidadesFiltradas = await findUnidadesById(req.user.unidade_id);
+      }
       const permitidoIds = new Set(unidadesFiltradas.map(u => String(u._id)));
       if (!permitidoIds.has(String(unidade._id))) return res.status(403).send('Acesso à unidade não autorizado');
     }
