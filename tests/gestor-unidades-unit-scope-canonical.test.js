@@ -9,6 +9,7 @@ import { disconnectMongo } from '../src/core/db/connect.js';
 import { clearResolveConnectionCache } from '../src/shared/db/resolveConnection.js';
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 import { createUnitScope } from '../src/shared/unitScope.js';
+import { findUnidadesByCondLean } from '../src/modules/gestor/app/db/api.db.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
@@ -267,6 +268,56 @@ test('GET /gestor/api/unidades usa o anchor canônico para resolver o cluster em
     assert.deepEqual(nomes, [tenantFilialName, tenantPrincipalName].sort());
     assert.equal(nomes.includes(unidadePrincipalA.nome), false);
     assert.equal(nomes.includes(unidadePrincipalC.nome), false);
+  } finally {
+    clearResolveConnectionCache();
+
+    if (previousMultiDb === undefined) delete process.env.WD_MULTI_DB;
+    else process.env.WD_MULTI_DB = previousMultiDb;
+
+    if (previousAllowlist === undefined) delete process.env.WD_MULTI_DB_ALLOWLIST;
+    else process.env.WD_MULTI_DB_ALLOWLIST = previousAllowlist;
+
+    if (previousHandshake === undefined) delete process.env.WD_USERDB_HANDSHAKE;
+    else process.env.WD_USERDB_HANDSHAKE = previousHandshake;
+
+    clearResolveConnectionCache();
+  }
+});
+
+test('findUnidadesByCondLean usa o anchor canônico para resolver o cluster em multi-db', async () => {
+  const previousMultiDb = process.env.WD_MULTI_DB;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+  const previousHandshake = process.env.WD_USERDB_HANDSHAKE;
+
+  try {
+    const unidadePrincipalA = await createUnit({ nome: `Principal A Bridge ${nextSequence()}` });
+    const unidadeFilialB = await createUnit({
+      nome: `Filial B Bridge ${nextSequence()}`,
+      principalUnitId: unidadePrincipalA._id,
+    });
+
+    process.env.WD_MULTI_DB = '1';
+    process.env.WD_MULTI_DB_ALLOWLIST = String(unidadePrincipalA._id);
+    process.env.WD_USERDB_HANDSHAKE = '0';
+    clearResolveConnectionCache();
+
+    await seedTenantUnitCluster(unidadePrincipalA._id, [
+      buildTenantUnitDoc(unidadePrincipalA, { nome: `${unidadePrincipalA.nome} TENANT` }),
+      buildTenantUnitDoc(unidadeFilialB, { nome: `${unidadeFilialB.nome} TENANT` }),
+    ]);
+
+    await Unidade.deleteMany({ _id: { $in: [unidadePrincipalA._id, unidadeFilialB._id] } });
+
+    const unidades = await findUnidadesByCondLean({
+      $or: [
+        { _id: unidadePrincipalA._id },
+        { unidade_principal_id: unidadePrincipalA._id },
+        { matriz_id: unidadePrincipalA._id },
+      ],
+    });
+
+    const ids = unidades.map((entry) => String(entry?._id || '')).sort();
+    assert.deepEqual(ids, [String(unidadeFilialB._id), String(unidadePrincipalA._id)].sort());
   } finally {
     clearResolveConnectionCache();
 

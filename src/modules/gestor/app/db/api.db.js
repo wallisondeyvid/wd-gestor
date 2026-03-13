@@ -270,7 +270,11 @@ export async function findSubunidadesLean(unidadePrincipalId) {
 }
 
 export async function findUnidadesByCondLean(cond) {
-  return findUnidadesByCondLeanRepo({ unitScope: GLOBAL_SCOPE, cond });
+  const anchor = extractScopedClusterAnchorFromUnidadesCond(cond);
+  return findUnidadesByCondLeanRepo({
+    unitScope: anchor ? scopeFromUnidadeId(anchor) : GLOBAL_SCOPE,
+    cond,
+  });
 }
 
 export async function existsUnidadeByCond(cond) {
