@@ -1,7 +1,8 @@
 // (migrado) Rotas de funcionários
 import express from 'express';
-import { funcionariosDisponiveis } from '#modules/gestor/app/controllers/funcionarioController.js';
-// View /funcionarios é servida por pagesRouter com requireLogin. Mantemos apenas API auxiliar.
+
+// View /funcionarios é servida por pagesRouter com requireLogin.
+// A URL pública /api/funcionarios/* deve ser atendida apenas por funcionarioApiRouter.
 const router = express.Router();
-router.get('/api/funcionarios/disponiveis/:unidadeId', funcionariosDisponiveis);
+
 export default router;
