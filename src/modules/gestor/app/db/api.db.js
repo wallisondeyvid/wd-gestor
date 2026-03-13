@@ -571,7 +571,7 @@ export async function findFuncaoByNome(nome, unidadePrincipalId = null) {
 }
 
 export async function createFuncao(payload) {
-  return createFuncaoRepo({ unitScope: GLOBAL_SCOPE, payload });
+  return createFuncaoRepo({ unitScope: scopeFromUnidadeId(payload?.unidade_principal_id), payload });
 }
 
 export async function findFuncaoByIdPopulated(id, unidadePrincipalId = null) {
