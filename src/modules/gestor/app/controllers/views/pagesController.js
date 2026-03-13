@@ -416,6 +416,7 @@ export async function paginaModulos(req, res) {
 export async function paginaFuncoes(req, res) {
   try {
     const isMaster = isMasterLike(req.user);
+    const privilegedUser = isMaster || req.user.role === 'admin';
     if (isDbOff(req)) {
       return res.status(200).render('funcoes', stubCtx(req, { funcoesFiltradas: [], modulosFiltrados: [], unidadesPrincipaisFiltradas: [] }));
     }
@@ -435,20 +436,34 @@ export async function paginaFuncoes(req, res) {
       });
     }
 
+    let principalIdLegado = '';
     let funcoesFiltradas;
-    if (isMaster || req.user.role === 'admin') {
+    if (privilegedUser) {
       funcoesFiltradas = await findAllFuncoesPopuladas();
     } else {
-      funcoesFiltradas = await findFuncoesByUnidadePrincipalPopuladas(req.user.unidade_principal_id);
+      principalIdLegado = req.user.unidade_principal_id;
+      if (!principalIdLegado && req.user.unidade_id) {
+        const unidadeBase = await findUnidadeUserBaseLean(req.user.unidade_id);
+        if (unidadeBase) {
+          principalIdLegado = unidadeBase.is_principal
+            ? unidadeBase._id
+            : (unidadeBase.unidade_principal_id || unidadeBase.matriz_id || unidadeBase._id);
+        }
+      }
+      funcoesFiltradas = principalIdLegado ? await findFuncoesByUnidadePrincipalPopuladas(principalIdLegado) : [];
     }
-    if ((!funcoesFiltradas || funcoesFiltradas.length === 0) && (isMaster || req.user.role === 'admin')) {
+    if ((!funcoesFiltradas || funcoesFiltradas.length === 0) && privilegedUser) {
       // fallback: tentar ao menos por matrizes
       const matrizes = await findUnidadesPrincipaisSelectIdLean();
       const ids = matrizes.map(m => m._id);
       funcoesFiltradas = await findFuncoesByUnidadePrincipalIdsPopuladas(ids);
     }
     const modulosFiltrados = await findAllModulos();
-    const unidadesPrincipaisFiltradas = isMaster || req.user.role === 'admin' ? await findUnidadesPrincipais() : await findUnidadesById(req.user.unidade_principal_id);
+    const unidadesPrincipaisFiltradas = privilegedUser
+      ? await findUnidadesPrincipais()
+      : principalIdLegado
+        ? await findUnidadesById(principalIdLegado)
+        : [];
     return res.render('funcoes', { funcoesFiltradas, modulosFiltrados, unidadesPrincipaisFiltradas, user: req.user });
   } catch (e) {
     console.error('[pagesController] /funcoes erro:', e.message);
