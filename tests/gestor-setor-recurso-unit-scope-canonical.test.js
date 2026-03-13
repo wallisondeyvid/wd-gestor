@@ -4,6 +4,10 @@ import request from 'supertest';
 import bcrypt from 'bcryptjs';
 
 import { createServer } from '../src/server/createServer.js';
+import { clearResolveConnectionCache } from '../src/shared/db/resolveConnection.js';
+import { resolveModel } from '../src/shared/db/resolveModel.js';
+import { createUnitScope } from '../src/shared/unitScope.js';
+import { findUnidadesByIdsNomeCodigoLean } from '../src/modules/gestor/app/db/api.db.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
@@ -25,6 +29,36 @@ function uniqueCpf() {
 
 function normalizeId(value) {
   return String(value || '');
+}
+
+function getTenantUnitModel(unidadeId) {
+  return resolveModel({
+    name: Unidade.modelName,
+    schema: Unidade.schema,
+    unitScope: createUnitScope({ unidadeId: normalizeId(unidadeId) }),
+  });
+}
+
+function buildTenantUnitDoc(unidade, overrides = {}) {
+  return {
+    _id: unidade._id,
+    codigo: unidade.codigo || String(unidade._id).slice(-6).toUpperCase(),
+    nome: unidade.nome,
+    pessoaTipo: unidade.pessoaTipo || 'pj',
+    ativa: unidade.ativa !== undefined ? unidade.ativa : true,
+    modulosAcessiveis: Array.isArray(unidade.modulosAcessiveis) ? unidade.modulosAcessiveis : [],
+    is_principal: !!unidade.is_principal,
+    subunidade: !!unidade.subunidade,
+    unidade_principal_id: unidade.unidade_principal_id || undefined,
+    matriz_id: unidade.matriz_id || undefined,
+    ...overrides,
+  };
+}
+
+async function seedTenantUnits(unidadeId, unidades) {
+  const UnidadeTenantModel = getTenantUnitModel(unidadeId);
+  await UnidadeTenantModel.deleteMany({});
+  await UnidadeTenantModel.insertMany(unidades);
 }
 
 function escapeRegExp(value) {
@@ -341,6 +375,48 @@ test('Setores: GET lista apenas a unidade canônica do contexto atual', async ()
     assert.ok(Array.isArray(res.body?.data));
     assert.ok(res.body.data.some((item) => normalizeId(item?._id || item?.id) === setorAId));
     assert.equal(res.body.data.some((item) => normalizeId(item?._id || item?.id) === setorBId), false);
+  });
+});
+
+test('Setores bridge: findUnidadesByIdsNomeCodigoLean usa tenant quando a lista carrega uma unidade única em multi-db', async () => {
+  await withHarness(async ({ unidadeA }) => {
+    const previousMultiDb = process.env.WD_MULTI_DB;
+    const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+    const previousHandshake = process.env.WD_USERDB_HANDSHAKE;
+
+    try {
+      process.env.WD_MULTI_DB = '1';
+      process.env.WD_MULTI_DB_ALLOWLIST = normalizeId(unidadeA._id);
+      process.env.WD_USERDB_HANDSHAKE = '0';
+      clearResolveConnectionCache();
+
+      const tenantName = `${unidadeA.nome} TENANT`;
+
+      await seedTenantUnits(unidadeA._id, [
+        buildTenantUnitDoc(unidadeA, { nome: tenantName }),
+      ]);
+
+      await Unidade.deleteMany({ _id: unidadeA._id });
+
+      const unidades = await findUnidadesByIdsNomeCodigoLean([normalizeId(unidadeA._id)]);
+
+      assert.equal(unidades.length, 1);
+      assert.equal(normalizeId(unidades[0]?._id), normalizeId(unidadeA._id));
+      assert.equal(unidades[0]?.nome, tenantName);
+    } finally {
+      clearResolveConnectionCache();
+
+      if (previousMultiDb === undefined) delete process.env.WD_MULTI_DB;
+      else process.env.WD_MULTI_DB = previousMultiDb;
+
+      if (previousAllowlist === undefined) delete process.env.WD_MULTI_DB_ALLOWLIST;
+      else process.env.WD_MULTI_DB_ALLOWLIST = previousAllowlist;
+
+      if (previousHandshake === undefined) delete process.env.WD_USERDB_HANDSHAKE;
+      else process.env.WD_USERDB_HANDSHAKE = previousHandshake;
+
+      clearResolveConnectionCache();
+    }
   });
 });
 

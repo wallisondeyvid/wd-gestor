@@ -566,7 +566,11 @@ export async function findUnidadesAtivasNomeCodigoOrdenadasLean() {
 }
 
 export async function findUnidadesByIdsNomeCodigoLean(unidadeIds) {
-  return findUnidadesByIdsNomeCodigoLeanRepo({ unitScope: GLOBAL_SCOPE, unidadeIds });
+  const singleUnitId = extractSingleScopedUnitId({ $in: unidadeIds });
+  return findUnidadesByIdsNomeCodigoLeanRepo({
+    unitScope: singleUnitId ? scopeFromUnidadeId(singleUnitId) : GLOBAL_SCOPE,
+    unidadeIds,
+  });
 }
 
 export async function findUnidadesForSetorPageSelectLean() {
