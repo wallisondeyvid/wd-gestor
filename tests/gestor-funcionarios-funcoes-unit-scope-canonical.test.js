@@ -10,6 +10,7 @@ import User from '../src/core/models/user.js';
 import Funcao from '../src/core/models/funcao.js';
 import Funcionario from '../src/core/models/Funcionario.js';
 import Setor from '../src/core/models/setor.js';
+import { paginaFuncionarios } from '../src/modules/gestor/app/controllers/views/pagesController.js';
 import { createUnitScope } from '../src/shared/unitScope.js';
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 
@@ -332,6 +333,94 @@ test('Funcionários HTML: filial contextual renderiza apenas a unidade canônica
     assert.equal(res.status, 200);
     assert.match(res.headers['content-type'] || '', /text\/html/i);
     assert.match(res.text, new RegExp(`data-unidade-default="${escapeRegExp(normalizeId(unidadeA._id))}"`));
+  });
+});
+
+test('Funcionários fallback: principal já alinhada no request evita voltar para a unidade legada ao montar default e lista', async () => {
+  await withHarness(async ({ app, unidadeA, unidadeB, unidadeC }) => {
+    const funcionarioAName = `Funcionario Principal A ${Date.now()}-${nextCounter()}`;
+    const funcionarioBName = `Funcionario Filial B ${Date.now()}-${nextCounter()}`;
+    const funcionarioCName = `Funcionario Principal C ${Date.now()}-${nextCounter()}`;
+    const email = uniqueEmail('pagina-funcionarios-fallback');
+
+    await createFuncionarioInTenant(unidadeA._id, {
+      nome: funcionarioAName,
+      email: email,
+      cpf: uniqueCpf(),
+      sexo: 'M',
+    });
+
+    await createFuncionarioInTenant(unidadeB._id, {
+      nome: funcionarioBName,
+      email: uniqueEmail('pagina-funcionarios-filial'),
+      cpf: uniqueCpf(),
+      sexo: 'F',
+    });
+
+    await createFuncionarioInTenant(unidadeC._id, {
+      nome: funcionarioCName,
+      email: uniqueEmail('pagina-funcionarios-fora-contexto'),
+      cpf: uniqueCpf(),
+      sexo: 'F',
+    });
+
+    const req = {
+      app,
+      path: '/funcionarios',
+      originalUrl: '/gestor/funcionarios',
+      baseUrl: '/gestor',
+      headers: { accept: 'text/html' },
+      user: {
+        id: 'context-user',
+        _id: 'context-user',
+        email,
+        role: 'diretor',
+        isMaster: false,
+        unidade_id: unidadeB._id,
+        unidade_principal_id: unidadeA._id,
+      },
+      session: {
+        user: {
+          id: 'context-user',
+          email,
+          role: 'diretor',
+          unidade_id: unidadeB._id,
+          unidade_principal_id: unidadeA._id,
+        },
+      },
+    };
+
+    const renderState = {
+      statusCode: 200,
+      view: null,
+      locals: null,
+    };
+    const res = {
+      status(code) {
+        renderState.statusCode = code;
+        return this;
+      },
+      render(view, locals) {
+        renderState.view = view;
+        renderState.locals = locals;
+        return this;
+      },
+      send(payload) {
+        renderState.sendPayload = payload;
+        return this;
+      },
+    };
+
+    await paginaFuncionarios(req, res);
+
+    assert.equal(renderState.statusCode, 200);
+    assert.equal(renderState.view, 'funcionarios/funcionarios_index');
+    assert.equal(renderState.locals?.unidadeContextualId, normalizeId(unidadeA._id));
+
+    const nomesFuncionarios = (renderState.locals?.funcionarios || []).map((funcionario) => String(funcionario?.nome || ''));
+    assert.ok(nomesFuncionarios.includes(funcionarioAName));
+    assert.equal(nomesFuncionarios.includes(funcionarioBName), false);
+    assert.equal(nomesFuncionarios.includes(funcionarioCName), false);
   });
 });
 

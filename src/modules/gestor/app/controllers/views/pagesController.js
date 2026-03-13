@@ -513,8 +513,6 @@ export async function paginaFuncionarios(req, res) {
     }
 
     const privilegedUser = !!(req.user?.isMaster || req.user?.role === 'admin');
-    const filtro = {};
-    if (!req.user?.isMaster && req.user?.unidade_id) filtro.unidade_id = req.user.unidade_id;
 
     // Calcular escopo de unidades (matriz + filiais) para o usuário
     let unidadesCond = { ativa: true };
@@ -527,6 +525,12 @@ export async function paginaFuncionarios(req, res) {
       }
       unidadesCond = principalIdLegado ? { $or: [ { _id: principalIdLegado }, { unidade_principal_id: principalIdLegado }, { matriz_id: principalIdLegado } ] } : { _id: req.user?.unidade_id || null };
     }
+
+    const unidadeContextualFallbackId = !privilegedUser
+      ? normalizeId(principalIdLegado || req.user?.unidade_id)
+      : '';
+    const filtro = {};
+    if (unidadeContextualFallbackId) filtro.unidade_id = unidadeContextualFallbackId;
 
     // Filtro de setores conforme escopo calculado
     let setoresCond = { ativo: true };
@@ -553,7 +557,7 @@ export async function paginaFuncionarios(req, res) {
       findSetoresByCondNomeOrdenadosSelectLean(setoresCond),
       findFuncionariosParaListagemComRefsSelectLean(filtro),
     ]);
-    return res.render('funcionarios/funcionarios_index', { user: req.user, unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios, unidadeContextualId: scopedUnitId });
+    return res.render('funcionarios/funcionarios_index', { user: req.user, unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios, unidadeContextualId: scopedUnitId || unidadeContextualFallbackId });
   } catch (e) {
     console.error('[pagesController] /funcionarios erro:', e && (e.stack || e.message || e));
     // Fallback: renderizar página vazia para evitar 500 e permitir diagnóstico no front
