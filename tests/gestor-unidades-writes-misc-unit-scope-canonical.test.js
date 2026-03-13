@@ -284,6 +284,28 @@ test('GET /gestor/api/unidades/:id/logo bloqueia leitura fora do contexto ativo'
   assert.equal(res.status, 400);
 });
 
+test('POST /gestor/api/unidades/toggle-access permite ids do contexto ativo e bloqueia ids fora do cluster', async () => {
+  const { agent, unidadeFilialB, unidadeFilialC } = await createContextualDiretorAgent();
+
+  const allowedRes = await agent
+    .post('/gestor/api/unidades/toggle-access')
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({ unitIds: [String(unidadeFilialB._id)], activate: false });
+
+  assert.equal(allowedRes.status, 200, JSON.stringify(allowedRes.body));
+  assert.equal(allowedRes.body?.data?.newStatus ?? allowedRes.body?.newStatus, false);
+
+  const blockedRes = await agent
+    .post('/gestor/api/unidades/toggle-access')
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({ unitIds: [String(unidadeFilialC._id)], activate: false });
+
+  assert.equal(blockedRes.status, 400, JSON.stringify(blockedRes.body));
+  assert.equal(blockedRes.body?.message || blockedRes.body?.error, 'Acesso à unidade não autorizado.');
+});
+
 test('POST /gestor/unidades/:id/testar-banco respeita o unitScope ativo e bloqueia unidade fora do contexto', async () => {
   const { agent, unidadeFilialB, unidadePrincipalC } = await createContextualDiretorAgent();
 

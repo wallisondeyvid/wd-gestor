@@ -744,7 +744,35 @@ export async function updateUnidade(req, res) {
     return serverError(res, error);
   }
 }
-export async function toggleAccessUnidades(req, res) { try { if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para alterar o acesso de unidades.'); const { unitIds, activate } = req.body; if (!Array.isArray(unitIds) || typeof activate !== 'boolean') return badRequest(res,'Parâmetros inválidos.'); if (req.user.role === 'diretor') { const unidadesPrincipais = await findUnidadesPrincipaisByIds(unitIds); if (unidadesPrincipais.length > 0) return badRequest(res,'Diretores não podem alterar o acesso de unidades principais.'); } const result = await updateManyUnidadesAccessByIds(unitIds, activate); if (result.modifiedCount === 0) return badRequest(res,'Nenhuma unidade atualizada.'); return ok(res, { newStatus: activate }); } catch (error) { console.error('[API UNIDADES][toggle-access] Erro:', error); return serverError(res, error); } }
+export async function toggleAccessUnidades(req, res) {
+  try {
+    if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para alterar o acesso de unidades.');
+
+    const { unitIds, activate } = req.body;
+    if (!Array.isArray(unitIds) || typeof activate !== 'boolean') return badRequest(res,'Parâmetros inválidos.');
+
+    const normalizedUnitIds = [...new Set(unitIds.map((unitId) => normalizeUnitId(unitId)).filter(Boolean))];
+    if (normalizedUnitIds.length === 0) return badRequest(res,'Parâmetros inválidos.');
+
+    const accessChecks = await Promise.all(normalizedUnitIds.map((unitId) => ensureCanAccessUnidade(req, unitId)));
+    if (accessChecks.some((canAccess) => !canAccess)) {
+      return badRequest(res,'Acesso à unidade não autorizado.');
+    }
+
+    if (req.user.role === 'diretor') {
+      const unidadesPrincipais = await findUnidadesPrincipaisByIds(normalizedUnitIds);
+      if (unidadesPrincipais.length > 0) return badRequest(res,'Diretores não podem alterar o acesso de unidades principais.');
+    }
+
+    const result = await updateManyUnidadesAccessByIds(normalizedUnitIds, activate);
+    if (result.modifiedCount === 0) return badRequest(res,'Nenhuma unidade atualizada.');
+
+    return ok(res, { newStatus: activate });
+  } catch (error) {
+    console.error('[API UNIDADES][toggle-access] Erro:', error);
+    return serverError(res, error);
+  }
+}
 export async function getUnidadeById(req, res) { try { const unidadeId = req.params.id; const unidade = await findUnidadeById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await ensureCanAccessUnidade(req, unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado');
   // Fallback: se for unidade principal e não houver diretor_usuario_id salvo,
   // tentar descobrir pelo usuário diretor vinculado via unidade_id

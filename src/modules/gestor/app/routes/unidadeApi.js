@@ -32,7 +32,7 @@ router.put('/api/unidades/:id', withLoginAndRequiredUnitScope(updateUnidade));
 router.post('/api/unidades/:id/logo', withLoginAndRequiredUnitScope(uploadLogoUnidade));
 // Upload inline (DataURL via JSON) — alternativa serverless sem multipart
 router.post('/api/unidades/:id/logo-inline', withLoginAndRequiredUnitScope(uploadLogoUnidadeInline));
-router.post('/api/unidades/toggle-access', requireLogin, toggleAccessUnidades);
+router.post('/api/unidades/toggle-access', withLoginAndRequiredUnitScope(toggleAccessUnidades));
 router.get('/api/unidades/:id', withLoginAndRequiredUnitScope(getUnidadeById));
 // Público para QR (sem requireLogin) – dados limitados
 router.get('/api/public/unidades/:id', getUnidadePublic);
