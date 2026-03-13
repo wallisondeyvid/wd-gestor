@@ -722,7 +722,11 @@ export async function findUnidadesAtivasCodigoNomeOrdenadasSelectLean() {
 }
 
 export async function findUnidadesByCondSelectCodigoNomeOrdenadasLean(cond) {
-  return findUnidadesByCondSelectCodigoNomeOrdenadasLeanRepo({ unitScope: GLOBAL_SCOPE, cond });
+  const anchor = extractScopedClusterAnchorFromUnidadesCond(cond);
+  return findUnidadesByCondSelectCodigoNomeOrdenadasLeanRepo({
+    unitScope: anchor ? scopeFromUnidadeId(anchor) : GLOBAL_SCOPE,
+    cond,
+  });
 }
 
 export async function findFuncoesAtivasNomeOrdenadasSelectLean() {
