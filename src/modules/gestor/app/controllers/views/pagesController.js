@@ -28,6 +28,7 @@ import {
   findUnidadesByCondSelectCodigoNomeOrdenadasLean,
   findFuncoesAtivasNomeOrdenadasSelectLean,
   findSetoresByCondNomeOrdenadosSelectLean,
+  findSetoresByUnidadeIdPopulateLean,
   findFuncionariosParaListagemComRefsSelectLean,
   findAllUnidadesLean,
   findUnidadesByCondLeanFull,
@@ -99,6 +100,79 @@ function isMasterLike(user){
 
 function normalizeId(value) {
   return String(value || '').trim();
+}
+
+function isPrivilegedGestorUser(user) {
+  return isMasterLike(user) || user?.role === 'admin';
+}
+
+function getScopedUnitId(req) {
+  return normalizeId(req?.unitScope?.unidadeId);
+}
+
+async function loadScopedUnidadeForPage(req) {
+  const unidadeId = getScopedUnitId(req);
+  if (!unidadeId) return null;
+  return findUnidadeByIdLean(unidadeId);
+}
+
+async function loadScopedUnitContextForPage(req) {
+  const scopedUnitId = getScopedUnitId(req);
+  if (!scopedUnitId) {
+    return {
+      scopedUnitId: '',
+      scopedUnit: null,
+      principalUnitId: '',
+      principalUnit: null,
+    };
+  }
+
+  const [scopedUnit, scopedUnitBase] = await Promise.all([
+    findUnidadeByIdLean(scopedUnitId),
+    findUnidadeUserBaseLean(scopedUnitId),
+  ]);
+
+  const principalUnitId = normalizeId(
+    scopedUnitBase?.is_principal
+      ? scopedUnitBase?._id
+      : scopedUnitBase?.unidade_principal_id || scopedUnitBase?.matriz_id || scopedUnitId,
+  );
+
+  const principalUnit = !principalUnitId
+    ? null
+    : principalUnitId === scopedUnitId
+      ? scopedUnit
+      : await findUnidadeByIdLean(principalUnitId);
+
+  return {
+    scopedUnitId,
+    scopedUnit,
+    principalUnitId,
+    principalUnit,
+  };
+}
+
+async function loadScopedUnidadesClusterForPage(req) {
+  const scopedContext = await loadScopedUnitContextForPage(req);
+  if (!scopedContext.scopedUnitId) {
+    return {
+      ...scopedContext,
+      unidadesFiltradas: [],
+    };
+  }
+
+  let unidadesFiltradas = scopedContext.principalUnitId
+    ? await findUnidadesByMatrizOuPrincipal(scopedContext.principalUnitId)
+    : [];
+
+  if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && scopedContext.scopedUnit) {
+    unidadesFiltradas = [scopedContext.scopedUnit];
+  }
+
+  return {
+    ...scopedContext,
+    unidadesFiltradas,
+  };
 }
 
 function buildUnidadeMembershipLabel(unidade) {
@@ -237,12 +311,17 @@ export async function paginaUnidades(req, res) {
     if (isDbOff(req)) {
       return res.status(200).render('unidades', stubCtx(req, { unidadesFiltradas: [], principalUnits: [], isMaster: !!req.user?.isMaster, modulos: [], usuariosDiretor: [] }));
     }
+    const scopedContext = await loadScopedUnidadesClusterForPage(req);
     let unidadesFiltradas;
-    if (isMaster) {
+    if (scopedContext.scopedUnitId) {
+      unidadesFiltradas = scopedContext.unidadesFiltradas;
+      console.log('[paginaUnidades] Unidades filtradas via unitScope:', unidadesFiltradas.length);
+    } else if (isMaster) {
       console.log('[DEBUG SERVER] Carregando todas unidades para master');
       unidadesFiltradas = await findAllUnidades();
       console.log('[DEBUG SERVER] Unidades encontradas:', unidadesFiltradas.length);
     } else {
+      // Fallback legado isolado: só usado quando ainda não há unitScope canônico.
       const matrizRef = req.user.unidade_principal_id || req.user.unidade_id;
       unidadesFiltradas = matrizRef ? await findUnidadesByMatrizOuPrincipal(matrizRef) : [];
       if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && req.user.unidade_id) {
@@ -261,12 +340,21 @@ export async function paginaUnidades(req, res) {
       }
     }
     try {
-      unidadesFiltradas = unidadesFiltradas.map(u => ({ ...u.toObject(), naturezaJuridica: u.naturezaJuridica || '', modulosAcessiveis: Array.isArray(u.modulosAcessiveis) ? u.modulosAcessiveis : [] }));
+      unidadesFiltradas = unidadesFiltradas.map((u) => {
+        const plain = u?.toObject ? u.toObject() : { ...u };
+        return {
+          ...plain,
+          naturezaJuridica: plain.naturezaJuridica || '',
+          modulosAcessiveis: Array.isArray(plain.modulosAcessiveis) ? plain.modulosAcessiveis : [],
+        };
+      });
     } catch (mapErr) {
       console.error('[DEBUG paginaUnidades] Erro no map:', mapErr);
       unidadesFiltradas = [];
     }
     let principalUnits = unidadesFiltradas.filter(u => u.is_principal);
+    if (principalUnits.length === 0 && scopedContext.principalUnit) principalUnits = [scopedContext.principalUnit];
+    if (principalUnits.length === 0 && scopedContext.scopedUnit) principalUnits = [scopedContext.scopedUnit];
     if (principalUnits.length === 0 && req.user.unidade_principal_id) { const principalDoc = await findUnidadeByIdLean(req.user.unidade_principal_id); if (principalDoc) principalUnits = [principalDoc]; }
     if (principalUnits.length === 0 && req.user.unidade_id) { const doc = await findUnidadeByIdLean(req.user.unidade_id); if (doc) principalUnits = [doc]; }
     const modulos = (isMaster || req.user.role === 'admin') ? await findAllModulosLean() : await findModulosAtivosStatusLean();
@@ -299,8 +387,14 @@ export async function paginaEditarUnidade(req, res) {
     const unidade = await findUnidadeById(unidadeId);
     if (!unidade) return res.status(404).send('Unidade não encontrada.');
     let unidadesFiltradas;
-    if (req.user.isMaster) { unidadesFiltradas = await findAllUnidades(); }
+    const scopedContext = await loadScopedUnidadesClusterForPage(req);
+    if (scopedContext.scopedUnitId) {
+      unidadesFiltradas = scopedContext.unidadesFiltradas;
+      const permitidoIds = new Set(unidadesFiltradas.map(u => String(u._id)));
+      if (!permitidoIds.has(String(unidade._id))) return res.status(403).send('Acesso à unidade não autorizado');
+    } else if (req.user.isMaster) { unidadesFiltradas = await findAllUnidades(); }
     else {
+      // Fallback legado isolado: só usado quando ainda não há unitScope canônico.
       const matrizRef = req.user.unidade_principal_id || req.user.unidade_id;
       unidadesFiltradas = matrizRef ? await findUnidadesByMatrizOuPrincipal(matrizRef) : [];
       const permitidoIds = new Set(unidadesFiltradas.map(u => String(u._id)));
@@ -325,6 +419,22 @@ export async function paginaFuncoes(req, res) {
     if (isDbOff(req)) {
       return res.status(200).render('funcoes', stubCtx(req, { funcoesFiltradas: [], modulosFiltrados: [], unidadesPrincipaisFiltradas: [] }));
     }
+
+    const { principalUnitId, principalUnit } = await loadScopedUnitContextForPage(req);
+    if (principalUnitId) {
+      const [funcoesFiltradas, modulosFiltrados] = await Promise.all([
+        findFuncoesByUnidadePrincipalPopuladas(principalUnitId),
+        findAllModulos(),
+      ]);
+
+      return res.render('funcoes', {
+        funcoesFiltradas,
+        modulosFiltrados,
+        unidadesPrincipaisFiltradas: principalUnit ? [principalUnit] : [],
+        user: req.user,
+      });
+    }
+
     let funcoesFiltradas;
     if (isMaster || req.user.role === 'admin') {
       funcoesFiltradas = await findAllFuncoesPopuladas();
@@ -350,8 +460,40 @@ export async function paginaFuncionarios(req, res) {
   try {
     console.log('[paginaFuncionarios] Iniciando carregamento, user:', req.user ? { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster } : 'null');
     if (isDbOff(req)) {
-      return res.status(200).render('funcionarios/funcionarios_index', stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [] }));
+      return res.status(200).render('funcionarios/funcionarios_index', stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [], unidadeContextualId: getScopedUnitId(req) }));
     }
+
+    const { scopedUnitId, scopedUnit, principalUnitId } = await loadScopedUnitContextForPage(req);
+    if (scopedUnitId) {
+      const [funcoesContextuais, setoresContextuais, funcionarios] = await Promise.all([
+        principalUnitId ? findFuncoesByUnidadePrincipalPopuladas(principalUnitId) : [],
+        findSetoresByUnidadeIdPopulateLean(scopedUnitId),
+        findFuncionariosParaListagemComRefsSelectLean({ unidade_id: scopedUnitId }),
+      ]);
+
+      const funcoesFiltradas = (funcoesContextuais || []).map((funcao) => ({
+        _id: funcao._id,
+        codigo: funcao.codigo,
+        nome: funcao.nome,
+        descricao: funcao.descricao || '',
+      }));
+
+      const setoresFiltrados = (setoresContextuais || []).map((setor) => ({
+        _id: setor._id,
+        nome: setor.nome,
+        descricao: setor.descricao || '',
+      }));
+
+      return res.render('funcionarios/funcionarios_index', {
+        user: req.user,
+        unidadesFiltradas: scopedUnit ? [scopedUnit] : [],
+        funcoesFiltradas,
+        setoresFiltrados,
+        funcionarios,
+        unidadeContextualId: scopedUnitId,
+      });
+    }
+
     const filtro = {};
     if (!req.user?.isMaster && req.user?.unidade_id) filtro.unidade_id = req.user.unidade_id;
 
@@ -380,12 +522,12 @@ export async function paginaFuncionarios(req, res) {
       findSetoresByCondNomeOrdenadosSelectLean(setoresCond),
       findFuncionariosParaListagemComRefsSelectLean(filtro),
     ]);
-    return res.render('funcionarios/funcionarios_index', { user: req.user, unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios });
+    return res.render('funcionarios/funcionarios_index', { user: req.user, unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios, unidadeContextualId: scopedUnitId });
   } catch (e) {
     console.error('[pagesController] /funcionarios erro:', e && (e.stack || e.message || e));
     // Fallback: renderizar página vazia para evitar 500 e permitir diagnóstico no front
     try {
-      return res.status(200).render('funcionarios/funcionarios_index', stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [] }));
+      return res.status(200).render('funcionarios/funcionarios_index', stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [], unidadeContextualId: getScopedUnitId(req) }));
     } catch (e2) {
       console.error('[pagesController] /funcionarios fallback render falhou:', e2 && (e2.stack || e2.message || e2));
       return res.status(500).send('Erro ao carregar funcionários');
@@ -395,25 +537,23 @@ export async function paginaFuncionarios(req, res) {
 
 export async function paginaRecursos(req, res) {
   try {
-    const isMaster = isMasterLike(req.user);
+    const privilegedUser = isPrivilegedGestorUser(req.user);
     if (isDbOff(req)) {
       return res.status(200).render('recursos', stubCtx(req, { unidadesFiltradas: [] }));
     }
-    let unidadesFiltradas = [];
-    if (isMaster || req.user.role === 'admin') unidadesFiltradas = await findAllUnidadesLean();
-    else {
-      let principalId = req.user.unidade_principal_id;
-      if (!principalId && req.user.unidade_id) {
-        const u = await findUnidadeByIdLean(req.user.unidade_id);
-        if (u) principalId = u.is_principal ? u._id : u.unidade_principal_id;
-      }
-      const cond = principalId ? { $or: [{ _id: principalId }, { unidade_principal_id: principalId }] } : {};
-      unidadesFiltradas = await findUnidadesByCondLeanFull(cond);
+    const unidadeContextual = await loadScopedUnidadeForPage(req);
+    let unidadesFiltradas = unidadeContextual ? [unidadeContextual] : [];
+
+    if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && privilegedUser) {
+      // Fallback legado isolado: sessão privilegiada ainda sem unitScope contextual ativo.
+      unidadesFiltradas = await findAllUnidadesLean();
     }
-    if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && (isMaster || req.user.role === 'admin')) {
+
+    if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && privilegedUser) {
       const matrizes = await findUnidadesPrincipaisLean();
       if (matrizes?.length) unidadesFiltradas = matrizes;
     }
+
     return res.render('recursos', { unidadesFiltradas, user: req.user || { nome: 'Usuário Desconhecido', id: null } });
   } catch (e) { console.error('[pagesController] /recursos erro:', e); return res.status(500).render('erro', { errorMessage: 'Erro ao carregar recursos: ' + e.message }); }
 }
@@ -465,32 +605,35 @@ export async function partialEndereco(req, res) {
 
 export async function paginaSetores(req, res) {
   try {
-    const isMaster = isMasterLike(req.user);
+    const privilegedUser = isPrivilegedGestorUser(req.user);
     if (isDbOff(req)) {
       return res.status(200).render('setor', stubCtx(req, { setoresFiltrados: [], unidadesFiltradas: [] }));
     }
-    // Determinar unidades acessíveis ao usuário (matriz + filiais)
-    let unidadesFiltradas = [];
-    let filtroSetores = { ativo: true };
-    if (isMaster || req.user?.role === 'admin') {
-      // Admin/Master: veem todas as unidades e setores
-      unidadesFiltradas = await findUnidadesForSetorPageSelectLean();
-    } else {
-      // Usuário comum/diretor: limitar matriz e suas unidades-filhas
-      let principalId = req.user?.unidade_principal_id;
-      if (!principalId && req.user?.unidade_id) {
-        const u = await findUnidadeUserBaseLean(req.user.unidade_id);
-        if (u) principalId = u.is_principal ? (u._id) : (u.unidade_principal_id || u.matriz_id || u._id);
-      }
-      const cond = principalId ? { $or: [ { _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId } ] } : { _id: req.user?.unidade_id || null };
-      unidadesFiltradas = await findUnidadesForSetorPageByCondSelectLean(cond);
-      const allowedIds = unidadesFiltradas.map(u => String(u._id));
-      filtroSetores.unidade_id = { $in: allowedIds };
+    const scopedUnitId = getScopedUnitId(req);
+
+    if (scopedUnitId) {
+      const [unidadeContextual, setoresFiltrados] = await Promise.all([
+        loadScopedUnidadeForPage(req),
+        findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean({ ativo: true, unidade_id: scopedUnitId }),
+      ]);
+
+      return res.render('setor', {
+        setoresFiltrados,
+        unidadesFiltradas: unidadeContextual ? [unidadeContextual] : [],
+        user: req.user,
+      });
     }
 
-    // Carregar setores, já filtrados pelas unidades acessíveis
-    let setoresFiltrados = await findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean(filtroSetores);
-    if ((!setoresFiltrados || setoresFiltrados.length === 0) && (isMaster || req.user?.role === 'admin')) {
+    let unidadesFiltradas = [];
+    let setoresFiltrados = [];
+
+    if (privilegedUser) {
+      // Fallback legado isolado: sessão privilegiada ainda sem unitScope contextual ativo.
+      unidadesFiltradas = await findUnidadesForSetorPageSelectLean();
+      setoresFiltrados = await findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean({ ativo: true });
+    }
+
+    if ((!setoresFiltrados || setoresFiltrados.length === 0) && privilegedUser) {
       // fallback: tenta todos setores
       setoresFiltrados = await findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean({});
       if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && setoresFiltrados?.length) {

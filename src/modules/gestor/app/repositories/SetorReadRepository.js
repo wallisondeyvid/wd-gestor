@@ -36,24 +36,30 @@ export async function createSetorRepo({ unitScope, data }) {
   return SetorModel.create(data);
 }
 
-export async function findSetorByIdPopulateUnidadeRepo({ unitScope, id }) {
+export async function findSetorByIdPopulateUnidadeRepo({ unitScope, id, unidadeId = null }) {
   const SetorModel = resolveModel({
     name: Setor.modelName || 'Setor',
     schema: Setor.schema,
     unitScope,
   });
 
-  return SetorModel.findById(id).populate('unidade_id');
+	const filtro = { _id: id };
+	if (unidadeId) filtro.unidade_id = unidadeId;
+
+	return SetorModel.findOne(filtro).populate('unidade_id');
 }
 
-export async function findSetorByIdRepo({ unitScope, id }) {
+export async function findSetorByIdRepo({ unitScope, id, unidadeId = null }) {
   const SetorModel = resolveModel({
     name: Setor.modelName || 'Setor',
     schema: Setor.schema,
     unitScope,
   });
 
-  return SetorModel.findById(id);
+	const filtro = { _id: id };
+	if (unidadeId) filtro.unidade_id = unidadeId;
+
+	return SetorModel.findOne(filtro);
 }
 
 export async function findSetorDupByNomeNormalizadoExcludingIdRepo({ unitScope, setorId, unidadeId, nomeNormalizado }) {
@@ -107,14 +113,17 @@ export async function findSetoresByCondDescricaoPopulateUnidadeOrdenadosLeanRepo
     .lean();
 }
 
-export async function findSetorByIdAndDeleteRepo({ unitScope, id }) {
+export async function findSetorByIdAndDeleteRepo({ unitScope, id, unidadeId = null }) {
   const SetorModel = resolveModel({
     name: Setor.modelName || 'Setor',
     schema: Setor.schema,
     unitScope,
   });
 
-  return SetorModel.findByIdAndDelete(id);
+	const filtro = { _id: id };
+	if (unidadeId) filtro.unidade_id = unidadeId;
+
+	return SetorModel.findOneAndDelete(filtro);
 }
 
 export async function findMaxSetorCodigoLeanRepo({ unitScope }) {

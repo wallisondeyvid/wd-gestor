@@ -1,19 +1,30 @@
 // Controller de Recursos (migrado)
-import { findAllUnidadesLean, findUnidadeByIdLean, findUnidadesByCondLeanFull } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { findAllUnidadesLean, findUnidadeByIdLean } from '#modules/gestor/app/services/apiDbBridgeService.js';
+
+function normalizeId(value) {
+  return String(value || '').trim();
+}
+
+function isPrivilegedGestorUser(user) {
+  return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+}
+
+function getScopedUnitId(req) {
+  return normalizeId(req?.unitScope?.unidadeId);
+}
+
 export async function listarRecursos(req, res) {
   try {
+    const scopedUnitId = getScopedUnitId(req);
     let unidadesFiltradas = [];
-    if (req.user.isMaster) {
+
+    if (scopedUnitId) {
+      const unidadeContextual = await findUnidadeByIdLean(scopedUnitId);
+      unidadesFiltradas = unidadeContextual ? [unidadeContextual] : [];
+    } else if (isPrivilegedGestorUser(req.user)) {
       unidadesFiltradas = await findAllUnidadesLean();
-    } else {
-      let principalId = req.user.unidade_principal_id;
-      if (!principalId && req.user.unidade_id) {
-        const u = await findUnidadeByIdLean(req.user.unidade_id);
-        if (u) principalId = u.is_principal ? u._id : u.unidade_principal_id;
-      }
-      const cond = principalId ? { $or: [{ _id: principalId }, { unidade_principal_id: principalId }] } : {};
-      unidadesFiltradas = await findUnidadesByCondLeanFull(cond);
     }
+
     return res.render('recursos', { unidadesFiltradas, user: req.user || { nome: 'Usuário Desconhecido', id: null } });
   } catch (error) {
     return res.status(500).render('erro', { errorMessage: 'Erro ao carregar recursos: ' + error.message });

@@ -16,6 +16,48 @@ import {
 	deleteRecursoById,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 
+function normalizeUnitId(value) {
+	return String(value || '').trim();
+}
+
+function isMasterOrAdmin(req) {
+	return req.user?.isMaster || req.user?.role === 'admin';
+}
+
+function getScopedUnitId(req) {
+	return normalizeUnitId(req.unitScope?.unidadeId);
+}
+
+function getLegacyUserUnitId(req) {
+	return normalizeUnitId(req.user?.unidade_id);
+}
+
+function getCanonicalContextUnitId(req) {
+	const scopedUnitId = getScopedUnitId(req);
+	if (scopedUnitId) return scopedUnitId;
+
+	if (!isMasterOrAdmin(req)) {
+		return getLegacyUserUnitId(req);
+	}
+
+	return '';
+}
+
+function requestedUnitMatchesContext(req, requestedUnitId) {
+	const requested = normalizeUnitId(requestedUnitId);
+	if (!requested) return true;
+
+	const scopedUnitId = getScopedUnitId(req);
+	if (scopedUnitId && scopedUnitId !== requested) return false;
+
+	if (!isMasterOrAdmin(req)) {
+		const legacyUserUnitId = getLegacyUserUnitId(req);
+		if (legacyUserUnitId && legacyUserUnitId !== requested) return false;
+	}
+
+	return true;
+}
+
 // GET /gestor/api/recursos?placa=ABC1234&unidadeId=<id>
 // Regras:
 //  - Filtro parcial de placa (case-insensitive) se informado (mín 2 chars)
@@ -27,16 +69,22 @@ export async function listarRecursosApi(req, res) {
 		let { placa, unidadeId } = req.query;
 		placa = (placa || '').trim();
 		unidadeId = (unidadeId || '').trim();
+		const canonicalUnitId = getCanonicalContextUnitId(req);
 
 		const filtro = {};
 		let placaTermNorm = null;
 		if (placa && placa.length >= 2) {
 			placaTermNorm = placa.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
 		}
-		if (unidadeId) filtro.unidade_id = unidadeId; // validaremos escopo depois
 
-		// Escopo de unidades para usuários não master/admin
-		if (!(req.user?.isMaster || req.user?.role === 'admin')) {
+		if (canonicalUnitId) {
+			filtro.unidade_id = canonicalUnitId;
+		} else if (unidadeId) {
+			filtro.unidade_id = unidadeId;
+		}
+
+		// Fallback legado isolado: enquanto ainda houver sessões sem unitScope canônico
+		if (!canonicalUnitId && !isMasterOrAdmin(req)) {
 			let principalId = req.user?.unidade_principal_id;
 			if (!principalId && req.user?.unidade_id) {
 				const u = await findUnidadeUserBaseLean(req.user.unidade_id);
@@ -93,8 +141,7 @@ export async function listarRecursosApi(req, res) {
 export async function getRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
-		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
-		const unidadeEfetiva = !isMasterOrAdmin ? String(req.user?.unidade_id || '').trim() : null;
+		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
 
 		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
@@ -108,17 +155,13 @@ export async function getRecurso(req, res) {
 export async function createRecurso(req, res) {
 	try {
 		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor } = req.body;
-		if (!unidade_id || !tipo || !placa || !chassi || !renavam || !ano || !mod || !marca || !modelo || !cor) {
+		const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
+		if (!canonicalUnitId || !tipo || !placa || !chassi || !renavam || !ano || !mod || !marca || !modelo || !cor) {
 			return badRequest(res, 'Todos os campos são obrigatórios');
 		}
 
-		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
-		if (!isMasterOrAdmin) {
-			const unidadeEfetiva = String(req.user?.unidade_id || '').trim();
-			const unidadeSolicitada = String(unidade_id || '').trim();
-			if (!unidadeEfetiva || unidadeSolicitada !== unidadeEfetiva) {
-				return notFound(res, 'Unidade não encontrada');
-			}
+		if (!requestedUnitMatchesContext(req, unidade_id || canonicalUnitId)) {
+			return notFound(res, 'Unidade não encontrada');
 		}
 
 		const placaRegexAntiga = /^[A-Z]{3}-[0-9]{4}$/;
@@ -127,18 +170,18 @@ export async function createRecurso(req, res) {
 			return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
 		}
 
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id, placa: placa.toUpperCase() })).length > 0) {
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: canonicalUnitId, placa: placa.toUpperCase() })).length > 0) {
 			return badRequest(res, 'Placa já cadastrada');
 		}
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id, chassi: chassi.toUpperCase() })).length > 0) {
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: canonicalUnitId, chassi: chassi.toUpperCase() })).length > 0) {
 			return badRequest(res, 'Chassi já cadastrado');
 		}
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id, renavam })).length > 0) {
+		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: canonicalUnitId, renavam })).length > 0) {
 			return badRequest(res, 'RENAVAM já cadastrado');
 		}
 
 		const novoRecurso = await createRecursoDb({
-			unidade_id,
+			unidade_id: canonicalUnitId,
 			tipo,
 			placa: placa.toUpperCase(),
 			chassi: chassi.toUpperCase(),
@@ -160,13 +203,14 @@ export async function createRecurso(req, res) {
 export async function updateRecurso(req, res) {
 	try {
 		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor, ativo } = req.body;
+		const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
 
-		if (!unidade_id) return badRequest(res, 'Unidade é obrigatória');
-		if (!/^[0-9a-fA-F]{24}$/.test(String(unidade_id))) return badRequest(res, 'Unidade inválida');
+		if (!canonicalUnitId) return badRequest(res, 'Unidade é obrigatória');
+		if (!/^[0-9a-fA-F]{24}$/.test(String(canonicalUnitId))) return badRequest(res, 'Unidade inválida');
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
+		if (!requestedUnitMatchesContext(req, unidade_id || canonicalUnitId)) return notFound(res, 'Unidade não encontrada');
 
-		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
-		const unidadeEfetiva = !isMasterOrAdmin ? String(req.user?.unidade_id || '').trim() : null;
+		const unidadeEfetiva = canonicalUnitId || null;
 
 		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
@@ -179,22 +223,22 @@ export async function updateRecurso(req, res) {
 			}
 		}
 
-		if (placa && placa.toUpperCase() !== recurso.placa && await findOutroRecursoByPlacaUpper(req.params.id, placa.toUpperCase())) {
+		if (placa && placa.toUpperCase() !== recurso.placa && await findOutroRecursoByPlacaUpper(req.params.id, placa.toUpperCase(), unidadeEfetiva)) {
 			return badRequest(res, 'Placa já cadastrada para outro recurso');
 		}
 
-		if (chassi && chassi.toUpperCase() !== recurso.chassi && await findOutroRecursoByChassiUpper(req.params.id, chassi.toUpperCase())) {
+		if (chassi && chassi.toUpperCase() !== recurso.chassi && await findOutroRecursoByChassiUpper(req.params.id, chassi.toUpperCase(), unidadeEfetiva)) {
 			return badRequest(res, 'Chassi já cadastrado para outro recurso');
 		}
 
-		if (renavam && renavam !== recurso.renavam && await findOutroRecursoByRenavam(req.params.id, renavam)) {
+		if (renavam && renavam !== recurso.renavam && await findOutroRecursoByRenavam(req.params.id, renavam, unidadeEfetiva)) {
 			return badRequest(res, 'RENAVAM já cadastrado para outro recurso');
 		}
 
 		const atualizado = await updateRecursoByIdComUnidadeNome(
 			req.params.id,
 			{
-				unidade_id,
+				unidade_id: canonicalUnitId,
 				tipo,
 				placa: placa ? placa.toUpperCase() : recurso.placa,
 				chassi: chassi ? chassi.toUpperCase() : recurso.chassi,
@@ -221,8 +265,7 @@ export async function deleteRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
 
-		const isMasterOrAdmin = req.user?.isMaster || req.user?.role === 'admin';
-		const unidadeEfetiva = !isMasterOrAdmin ? String(req.user?.unidade_id || '').trim() : null;
+		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
 
 		const recurso = await deleteRecursoById(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');

@@ -78,34 +78,43 @@ export async function findRecursoByIdRepo({ unitScope, id }) {
   return RecursoModel.findById(id);
 }
 
-export async function findOutroRecursoByPlacaUpperRepo({ unitScope, id, placaUpper }) {
+export async function findOutroRecursoByPlacaUpperRepo({ unitScope, id, placaUpper, unidadeId = null }) {
   const RecursoModel = resolveModel({
     name: Recurso.modelName || 'Recurso',
     schema: Recurso.schema,
     unitScope,
   });
 
-  return RecursoModel.findOne({ placa: placaUpper, _id: { $ne: id } });
+	const filtro = { placa: placaUpper, _id: { $ne: id } };
+	if (unidadeId) filtro.unidade_id = unidadeId;
+
+	return RecursoModel.findOne(filtro);
 }
 
-export async function findOutroRecursoByChassiUpperRepo({ unitScope, id, chassiUpper }) {
+export async function findOutroRecursoByChassiUpperRepo({ unitScope, id, chassiUpper, unidadeId = null }) {
   const RecursoModel = resolveModel({
     name: Recurso.modelName || 'Recurso',
     schema: Recurso.schema,
     unitScope,
   });
 
-  return RecursoModel.findOne({ chassi: chassiUpper, _id: { $ne: id } });
+	const filtro = { chassi: chassiUpper, _id: { $ne: id } };
+	if (unidadeId) filtro.unidade_id = unidadeId;
+
+	return RecursoModel.findOne(filtro);
 }
 
-export async function findOutroRecursoByRenavamRepo({ unitScope, id, renavam }) {
+export async function findOutroRecursoByRenavamRepo({ unitScope, id, renavam, unidadeId = null }) {
   const RecursoModel = resolveModel({
     name: Recurso.modelName || 'Recurso',
     schema: Recurso.schema,
     unitScope,
   });
 
-  return RecursoModel.findOne({ renavam, _id: { $ne: id } });
+	const filtro = { renavam, _id: { $ne: id } };
+	if (unidadeId) filtro.unidade_id = unidadeId;
+
+	return RecursoModel.findOne(filtro);
 }
 
 export async function updateRecursoByIdComUnidadeNomeRepo({ unitScope, id, data, unidadeId = null }) {

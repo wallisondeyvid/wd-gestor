@@ -52,7 +52,7 @@
     #fDeleteConfirmModal .btn-close{ filter:none !important; }
   </style>
 </head>
-  <body class="wdg-layout" data-unidade-default="<%= user && user.unidade_id ? user.unidade_id.toString() : '' %>" data-base-path="<%= _basePath %>">
+  <body class="wdg-layout" data-unidade-default="<%= unidadeContextualId || (user && user.unidade_id ? user.unidade_id.toString() : '') %>" data-base-path="<%= _basePath %>">
   <%- include('../../shared/partials/header-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
   <%- include('../../shared/partials/navbar-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
   <%- include('../../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>

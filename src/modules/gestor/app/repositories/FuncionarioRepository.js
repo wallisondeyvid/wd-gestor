@@ -165,52 +165,72 @@ export async function createFuncionarioDocRepo({ unitScope, doc }) {
   return FuncionarioModel.create(doc);
 }
 
-export async function findFuncionarioByIdRepo({ unitScope, id }) {
+export async function findFuncionarioByIdRepo({ unitScope, id, unidadeId = null }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',
     schema: Funcionario.schema,
     unitScope,
   });
+
+  if (unidadeId) {
+    return FuncionarioModel.findOne({ _id: id, unidade_id: unidadeId });
+  }
 
   return FuncionarioModel.findById(id);
 }
 
-export async function updateFuncionarioByIdWithOpsRepo({ unitScope, id, ops }) {
+export async function updateFuncionarioByIdWithOpsRepo({ unitScope, id, ops, unidadeId = null }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',
     schema: Funcionario.schema,
     unitScope,
   });
+
+  if (unidadeId) {
+    return FuncionarioModel.findOneAndUpdate({ _id: id, unidade_id: unidadeId }, ops, { new: true, runValidators: true });
+  }
 
   return FuncionarioModel.findByIdAndUpdate(id, ops, { new: true, runValidators: true });
 }
 
-export async function findFuncionarioByIdPopulateRefsRepo({ unitScope, id }) {
+export async function findFuncionarioByIdPopulateRefsRepo({ unitScope, id, unidadeId = null }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',
     schema: Funcionario.schema,
     unitScope,
   });
+
+  if (unidadeId) {
+    return FuncionarioModel.findOne({ _id: id, unidade_id: unidadeId }).populate('unidade_id funcao_id departamento');
+  }
 
   return FuncionarioModel.findById(id).populate('unidade_id funcao_id departamento');
 }
 
-export async function findFuncionarioByIdLeanRepo({ unitScope, id }) {
+export async function findFuncionarioByIdLeanRepo({ unitScope, id, unidadeId = null }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',
     schema: Funcionario.schema,
     unitScope,
   });
+
+  if (unidadeId) {
+    return FuncionarioModel.findOne({ _id: id, unidade_id: unidadeId }).lean();
+  }
 
   return FuncionarioModel.findById(id).lean();
 }
 
-export async function deleteFuncionarioByIdRepo({ unitScope, id }) {
+export async function deleteFuncionarioByIdRepo({ unitScope, id, unidadeId = null }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',
     schema: Funcionario.schema,
     unitScope,
   });
+
+  if (unidadeId) {
+    return FuncionarioModel.findOneAndDelete({ _id: id, unidade_id: unidadeId });
+  }
 
   return FuncionarioModel.findByIdAndDelete(id);
 }
@@ -228,12 +248,16 @@ export async function findFuncionariosDisponiveisByUnidadeLeanRepo({ unitScope, 
   }).select('_id nome cpf email').sort({ nome: 1 }).lean();
 }
 
-export async function findFuncionarioByIdSelectBasicLeanRepo({ unitScope, id }) {
+export async function findFuncionarioByIdSelectBasicLeanRepo({ unitScope, id, unidadeId = null }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',
     schema: Funcionario.schema,
     unitScope,
   });
+
+  if (unidadeId) {
+    return FuncionarioModel.findOne({ _id: id, unidade_id: unidadeId }).select('_id nome cpf email unidade_id').lean();
+  }
 
   return FuncionarioModel.findById(id).select('_id nome cpf email unidade_id').lean();
 }

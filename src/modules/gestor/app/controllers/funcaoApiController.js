@@ -15,8 +15,68 @@ import {
   deleteFuncaoById,
   saveFuncao,
   findUnidadeByIdWithModulosAcessiveis,
-  findUnidadesByCondLean,
+  findUnidadeUserBaseLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+
+function normalizeUnitId(value){
+  return String(value || '').trim();
+}
+
+function isMasterOrAdmin(req) {
+  return req.user?.isMaster || req.user?.role === 'admin';
+}
+
+function getScopedUnitId(req) {
+  return normalizeUnitId(req.unitScope?.unidadeId);
+}
+
+function getLegacyUserUnitId(req) {
+  return normalizeUnitId(req.user?.unidade_id);
+}
+
+function getLegacyUserPrincipalUnitId(req) {
+  return normalizeUnitId(req.user?.unidade_principal_id);
+}
+
+async function resolvePrincipalUnitId(unidadeId) {
+  const unidadeIdNorm = normalizeUnitId(unidadeId);
+  if (!unidadeIdNorm) return '';
+
+  const unidade = await findUnidadeUserBaseLean(unidadeIdNorm);
+  if (!unidade) return unidadeIdNorm;
+
+  return normalizeUnitId(
+    unidade.is_principal
+      ? unidade._id
+      : unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeIdNorm,
+  );
+}
+
+async function getCanonicalContextPrincipalUnitId(req) {
+  const scopedUnitId = getScopedUnitId(req);
+  if (scopedUnitId) return resolvePrincipalUnitId(scopedUnitId);
+
+  if (!isMasterOrAdmin(req)) {
+    const legacyPrincipalUnitId = getLegacyUserPrincipalUnitId(req);
+    if (legacyPrincipalUnitId) return legacyPrincipalUnitId;
+
+    const legacyUnitId = getLegacyUserUnitId(req);
+    if (legacyUnitId) return resolvePrincipalUnitId(legacyUnitId);
+  }
+
+  return '';
+}
+
+async function requestedUnitWithinContextCluster(req, requestedUnitId) {
+  const requestedUnitIdNorm = normalizeUnitId(requestedUnitId);
+  if (!requestedUnitIdNorm) return true;
+
+  const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+  if (!contextPrincipalUnitId) return true;
+
+  const requestedPrincipalUnitId = await resolvePrincipalUnitId(requestedUnitIdNorm);
+  return !!requestedPrincipalUnitId && requestedPrincipalUnitId === contextPrincipalUnitId;
+}
 
 function normalizarListaModulos(input){
   if (input === undefined || input === null) return [];
@@ -34,22 +94,26 @@ function normalizarListaModulos(input){
 export async function createFuncao(req,res){
   try {
     const { nome, descricao, unidade_principal_id, modulos_habilitados } = req.body;
+    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const canonicalPrincipalUnitId = contextPrincipalUnitId || normalizeUnitId(unidade_principal_id);
     if (!nome) return badRequest(res,'Nome é obrigatório');
-    if (!unidade_principal_id) return badRequest(res,'Unidade principal é obrigatória');
-    const dup = await findFuncaoByNome(nome); if (dup) return badRequest(res,'Função já cadastrada');
-    const unidade = await findUnidadeByIdWithModulosAcessiveis(unidade_principal_id);
+    if (!canonicalPrincipalUnitId) return badRequest(res,'Unidade principal é obrigatória');
+    if (!(await requestedUnitWithinContextCluster(req, unidade_principal_id || canonicalPrincipalUnitId))) return notFound(res,'Unidade principal não encontrada');
+    const dup = await findFuncaoByNome(nome, canonicalPrincipalUnitId); if (dup) return badRequest(res,'Função já cadastrada');
+    const unidade = await findUnidadeByIdWithModulosAcessiveis(canonicalPrincipalUnitId);
     if (!unidade) return badRequest(res,'Unidade inválida');
     const lista = normalizarListaModulos(modulos_habilitados);
     const permitidos = new Set((unidade.modulosAcessiveis||[]).map(m=>String(m._id)));
     const modsFiltrados = lista.filter(id=>permitidos.has(String(id)));
-    const funcao = await createFuncaoDb({ nome, descricao, unidade_principal_id, modulos_habilitados: modsFiltrados });
+    const funcao = await createFuncaoDb({ nome, descricao, unidade_principal_id: canonicalPrincipalUnitId, modulos_habilitados: modsFiltrados });
     return created(res, funcao._id, { data:{ _id: funcao._id } });
   } catch(e){ console.error('[API FUNCOES][create] Erro:', e); return serverError(res,e); }
 }
 
 export async function getFuncao(req,res){
   try {
-    const funcao = await findFuncaoByIdPopulated(req.params.id);
+    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const funcao = await findFuncaoByIdPopulated(req.params.id, contextPrincipalUnitId || null);
     if (!funcao) return notFound(res,'Função não encontrada');
     return ok(res,{ _id:funcao._id, nome:funcao.nome, descricao:funcao.descricao||'', unidade_principal_id: funcao.unidade_principal_id?funcao.unidade_principal_id._id:null, modulos_habilitados:(funcao.modulos_habilitados||[]).map(m=>({_id:m._id,nome:m.nome})) });
   } catch(e){ console.error('[API FUNCOES][get] Erro:', e); return serverError(res,e); }
@@ -59,32 +123,38 @@ export async function updateFuncao(req,res){
   try {
     const { id } = req.params;
     const { nome, descricao, unidade_principal_id, modulos_habilitados } = req.body;
-    const existente = await findFuncaoById(id);
+    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const existente = await findFuncaoById(id, contextPrincipalUnitId || null);
     if (!existente) return notFound(res,'Função não encontrada');
+    const unidadePrincipalExistenteId = normalizeUnitId(existente.unidade_principal_id);
+    const targetPrincipalUnitId = contextPrincipalUnitId || normalizeUnitId(unidade_principal_id || unidadePrincipalExistenteId);
     if (nome && nome !== existente.nome) {
-      const dup = await findOutraFuncaoByNomeExcludingId(id, nome);
+      const dup = await findOutraFuncaoByNomeExcludingId(id, nome, targetPrincipalUnitId || unidadePrincipalExistenteId || null);
       if (dup) return badRequest(res,'Já existe uma função com este nome');
     }
     const updates = {};
     if (nome) updates.nome = nome;
     if (descricao !== undefined) updates.descricao = descricao;
-    if (unidade_principal_id){
-      const unidade = await findUnidadeByIdWithModulosAcessiveis(unidade_principal_id);
+    if (unidade_principal_id && !(await requestedUnitWithinContextCluster(req, unidade_principal_id))) {
+      return notFound(res,'Unidade principal não encontrada');
+    }
+    if (targetPrincipalUnitId){
+      const unidade = await findUnidadeByIdWithModulosAcessiveis(targetPrincipalUnitId);
       if (!unidade) return badRequest(res,'Unidade inválida');
-      updates.unidade_principal_id = unidade_principal_id;
+      updates.unidade_principal_id = targetPrincipalUnitId;
       if (modulos_habilitados !== undefined){
         const lista = normalizarListaModulos(modulos_habilitados);
         const permitidos = new Set((unidade.modulosAcessiveis||[]).map(m=>String(m._id)));
         updates.modulos_habilitados = lista.filter(id=>permitidos.has(String(id)));
       }
     } else if (modulos_habilitados !== undefined){
-      const unidade = await findUnidadeByIdWithModulosAcessiveis(existente.unidade_principal_id);
+      const unidade = await findUnidadeByIdWithModulosAcessiveis(unidadePrincipalExistenteId);
       const lista = normalizarListaModulos(modulos_habilitados);
       const permitidos = new Set((unidade.modulosAcessiveis||[]).map(m=>String(m._id)));
       updates.modulos_habilitados = lista.filter(id=>permitidos.has(String(id)));
     }
-    await updateFuncaoById(id, updates);
-    const updated = await findFuncaoByIdLean(id);
+    await updateFuncaoById(id, updates, targetPrincipalUnitId || unidadePrincipalExistenteId || null);
+    const updated = await findFuncaoByIdLean(id, targetPrincipalUnitId || unidadePrincipalExistenteId || null);
     const nomeF = updated?.nome || '';
     const rawDesc = (updated?.descricao && updated.descricao.trim()) ? updated.descricao.trim() : '';
     const codigo = updated?.codigo || '';
@@ -95,9 +165,11 @@ export async function updateFuncao(req,res){
 
 export async function getFuncoesPorUnidade(req,res){
   try {
-    const { unidadeId } = req.params;
+    const unidadeId = normalizeUnitId(req.params.unidadeId);
     if (!unidadeId || unidadeId==='null') return ok(res,[]);
-    const funcoes = await findFuncoesByUnidadeLean(unidadeId);
+    if (!(await requestedUnitWithinContextCluster(req, unidadeId))) return ok(res,[]);
+    const principalUnitId = await resolvePrincipalUnitId(unidadeId);
+    const funcoes = await findFuncoesByUnidadeLean(principalUnitId || unidadeId);
     return ok(res, funcoes.map(f=>{
       const nome = f.nome || '';
       const rawDesc = (f.descricao && f.descricao.trim()) ? f.descricao.trim() : '';
@@ -114,10 +186,9 @@ export async function listarFuncoesApi(req,res){
   try {
     const { unidade_cluster, q, unidade_id } = req.query;
     if (unidade_cluster){
-      const clusterRes = await findUnidadesByCondLean({ $or:[ { _id:unidade_cluster }, { unidade_principal_id:unidade_cluster }, { matriz_id:unidade_cluster } ] });
-      let unidadeIds = clusterRes.map(u=>u._id);
-      if (!unidadeIds.some(id=>String(id)===String(unidade_cluster))) unidadeIds.push(unidade_cluster);
-      const filtro = { unidade_principal_id:{ $in:unidadeIds.map(id=> new mongoose.Types.ObjectId(String(id))) } };
+      if (!(await requestedUnitWithinContextCluster(req, unidade_cluster))) return ok(res, []);
+      const principalUnitId = await resolvePrincipalUnitId(unidade_cluster);
+      const filtro = { unidade_principal_id: principalUnitId };
       let funcoes = await findFuncoesByFiltroLean(filtro);
       if (q && q.trim()){
         const searchTerm = q.trim().toLowerCase();
@@ -127,7 +198,14 @@ export async function listarFuncoesApi(req,res){
       return ok(res, funcoes.map(f=>({ _id:f._id, nome:f.nome, descricao:f.descricao||'', codigo:f.codigo||'' })) );
     }
     if (unidade_id){
-      const ids = String(unidade_id).split(',').map(s=>s.trim()).filter(Boolean);
+      const resolvedIds = [];
+      for (const candidateId of String(unidade_id).split(',').map(s=>s.trim()).filter(Boolean)) {
+        if (!(await requestedUnitWithinContextCluster(req, candidateId))) continue;
+        const principalUnitId = await resolvePrincipalUnitId(candidateId);
+        if (principalUnitId) resolvedIds.push(principalUnitId);
+      }
+      const ids = [...new Set(resolvedIds)];
+      if (ids.length === 0) return ok(res, []);
       const filtro = ids.length===1 ? { unidade_principal_id: ids[0] } : { unidade_principal_id:{ $in: ids } };
       const funcoes = await findFuncoesByFiltroSelectLean(filtro);
       return ok(res, funcoes.map(f=>{
@@ -145,9 +223,10 @@ export async function listarFuncoesApi(req,res){
 
 export async function deleteFuncao(req,res){
   try {
-    const funcao = await findFuncaoById(req.params.id);
+    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const funcao = await findFuncaoById(req.params.id, contextPrincipalUnitId || null);
     if (!funcao) return notFound(res,'Função não encontrada');
-    await deleteFuncaoById(req.params.id);
+    await deleteFuncaoById(req.params.id, contextPrincipalUnitId || normalizeUnitId(funcao.unidade_principal_id) || null);
     return ok(res,{ deleted:true, id:req.params.id });
   } catch(e){ console.error('[API FUNCOES][delete] Erro:', e); return serverError(res,e); }
 }

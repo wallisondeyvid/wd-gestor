@@ -19,6 +19,48 @@ import {
   findOneAndUpdateCounterSetorCodigo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 
+function normalizeUnitId(value) {
+	return String(value || '').trim();
+}
+
+function isMasterOrAdmin(req) {
+	return req.user?.isMaster || req.user?.role === 'admin';
+}
+
+function getScopedUnitId(req) {
+	return normalizeUnitId(req.unitScope?.unidadeId);
+}
+
+function getLegacyUserUnitId(req) {
+	return normalizeUnitId(req.user?.unidade_id);
+}
+
+function getCanonicalContextUnitId(req) {
+	const scopedUnitId = getScopedUnitId(req);
+	if (scopedUnitId) return scopedUnitId;
+
+	if (!isMasterOrAdmin(req)) {
+		return getLegacyUserUnitId(req);
+	}
+
+	return '';
+}
+
+function requestedUnitMatchesContext(req, requestedUnitId) {
+	const requested = normalizeUnitId(requestedUnitId);
+	if (!requested) return true;
+
+	const scopedUnitId = getScopedUnitId(req);
+	if (scopedUnitId && scopedUnitId !== requested) return false;
+
+	if (!isMasterOrAdmin(req)) {
+		const legacyUserUnitId = getLegacyUserUnitId(req);
+		if (legacyUserUnitId && legacyUserUnitId !== requested) return false;
+	}
+
+	return true;
+}
+
 // Helper para resposta 409
 function conflict(res, message, extra={}) {
   return res.status(409).json({ error: message, ...extra });
@@ -27,16 +69,18 @@ function conflict(res, message, extra={}) {
 export async function createSetor(req,res){
   try {
     let { nome, descricao, unidade_id } = req.body;
+    const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
     if (!nome) return badRequest(res,'Nome é obrigatório');
-    if (!unidade_id) return badRequest(res,'Unidade é obrigatória');
+    if (!canonicalUnitId) return badRequest(res,'Unidade é obrigatória');
+    if (!requestedUnitMatchesContext(req, unidade_id || canonicalUnitId)) return notFound(res,'Unidade não encontrada');
     const nomeNormalizado = String(nome).trim().replace(/\s+/g,' ').toLowerCase();
-    const unidade = await findUnidadeById(unidade_id);
+    const unidade = await findUnidadeById(canonicalUnitId);
     if (!unidade) return badRequest(res,'Unidade inválida');
-    const existing = await findSetorByUnidadeAndNomeNormalizadoLean(unidade_id, nomeNormalizado);
+    const existing = await findSetorByUnidadeAndNomeNormalizadoLean(canonicalUnitId, nomeNormalizado);
     if (existing) {
       return conflict(res,'Setor já cadastrado nesta unidade', { duplicateField:'nome', duplicateValue: nome, duplicateId: existing._id });
     }
-    const setor = await createSetorDb({ nome, nome_normalizado: nomeNormalizado, descricao, unidade_id });
+    const setor = await createSetorDb({ nome, nome_normalizado: nomeNormalizado, descricao, unidade_id: canonicalUnitId });
     return created(res, setor._id, { data:{ _id:setor._id, codigo: setor.codigo } });
   } catch(e){
     if (e && e.code === 11000) {
@@ -55,7 +99,7 @@ export async function createSetor(req,res){
 
 export async function getSetoresPorUnidade(req,res){
   try {
-    const { unidadeId } = req.params;
+    const unidadeId = getCanonicalContextUnitId(req) || normalizeUnitId(req.params.unidadeId);
     if (!unidadeId || unidadeId==='null') return ok(res,[]);
     const setores = await findSetoresByUnidadeIdPopulateLean(unidadeId);
     return ok(res,setores);
@@ -64,7 +108,7 @@ export async function getSetoresPorUnidade(req,res){
 
 export async function getSetor(req,res){
   try {
-    const setor = await findSetorByIdPopulateUnidade(req.params.id);
+    const setor = await findSetorByIdPopulateUnidade(req.params.id, getCanonicalContextUnitId(req) || null);
     if (!setor) return notFound(res,'Setor não encontrado');
     return ok(res,{ _id:setor._id, nome:setor.nome, descricao:setor.descricao||'', unidade_id: setor.unidade_id ? setor.unidade_id._id : null });
   } catch(e){ console.error('[API SETORES][get] Erro:', e); return serverError(res,e); }
@@ -73,12 +117,14 @@ export async function getSetor(req,res){
 export async function updateSetor(req,res){
   try {
     let { nome, descricao, unidade_id } = req.body;
-    const setor = await findSetorById(req.params.id);
+    const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
+    if (unidade_id && !requestedUnitMatchesContext(req, unidade_id)) return notFound(res,'Unidade não encontrada');
+    const setor = await findSetorById(req.params.id, canonicalUnitId || null);
     if (!setor) return notFound(res,'Setor não encontrado');
-    if (unidade_id && String(setor.unidade_id)!==String(unidade_id)){
-      const unidade = await findUnidadeById(unidade_id);
+    if (canonicalUnitId && String(setor.unidade_id)!==String(canonicalUnitId)){
+      const unidade = await findUnidadeById(canonicalUnitId);
       if (!unidade) return badRequest(res,'Unidade inválida');
-      setor.unidade_id = unidade_id;
+      setor.unidade_id = canonicalUnitId;
     }
     if (nome){
       const nomeNormalizado = String(nome).trim().replace(/\s+/g,' ').toLowerCase();
@@ -104,11 +150,16 @@ export async function listarSetores(req,res){
   try {
     const { unidade_id } = req.query;
     let filtro = {};
-    if (unidade_id) {
+    const canonicalUnitId = getCanonicalContextUnitId(req);
+
+    if (canonicalUnitId) {
+      filtro.unidade_id = canonicalUnitId;
+    } else if (unidade_id) {
       filtro.unidade_id = unidade_id;
     }
-    // Restringir por escopo do usuário (exceto admin/master)
-    if (!(req.user?.isMaster || req.user?.role === 'admin')) {
+
+    // Fallback legado isolado: enquanto ainda houver páginas/sessões sem unitScope canônico
+    if (!canonicalUnitId && !(req.user?.isMaster || req.user?.role === 'admin')) {
       let principalId = req.user?.unidade_principal_id;
       if (!principalId && req.user?.unidade_id) {
         const u = await findUnidadeUserBaseSetorLean(req.user.unidade_id);
@@ -170,9 +221,10 @@ export async function listarSetores(req,res){
 
 export async function deleteSetor(req,res){
   try {
-    const setor = await findSetorById(req.params.id);
+    const unidadeId = getCanonicalContextUnitId(req) || null;
+    const setor = await findSetorById(req.params.id, unidadeId);
     if (!setor) return notFound(res,'Setor não encontrado');
-    await findSetorByIdAndDelete(req.params.id);
+    await findSetorByIdAndDelete(req.params.id, unidadeId);
     return ok(res,{ deleted:true, id:req.params.id });
   } catch(e){ console.error('[API SETORES][delete] Erro:', e); return serverError(res,e); }
 }

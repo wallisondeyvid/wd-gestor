@@ -1,22 +1,28 @@
 // (migrado) funcionarioApi
 import express from 'express';
 import { requireLogin } from '#modules/gestor/app/middlewares/requireLogin.js';
+import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 import { uploadFuncionario } from '#modules/gestor/app/middlewares/uploadFuncionario.js';
 import rateLimit from 'express-rate-limit';
 import { createFuncionario, createFuncionarioInitial, updateFuncionarioIncremental, updateFuncionario, getFuncionario, deleteFuncionario, deleteFuncionarioPost, downloadAnexoFuncionario, listarFuncionariosDisponiveis, getFuncionarioFoto, matchFuncionario } from '#modules/gestor/app/controllers/funcionarioApiController.js';
 const uploadLimiter = rateLimit({ windowMs: 15*60*1000, max: 300 });
 const router = express.Router();
 router.use(requireLogin);
+
+function withRequiredUnitScope(handler) {
+	return (req, res, next) => requireUnitScope(req, res, () => handler(req, res, next));
+}
+
 // As rotas abaixo são relativas ao prefixo '/api/funcionarios' configurado no gestor-app
-router.get('/disponiveis/:unidadeId', listarFuncionariosDisponiveis);
-router.get('/match', matchFuncionario);
-router.post('/initial', createFuncionarioInitial);
-router.post('/', uploadLimiter, uploadFuncionario, createFuncionario);
-router.put('/:id/incremental', uploadLimiter, uploadFuncionario, updateFuncionarioIncremental);
-router.put('/:id', uploadLimiter, uploadFuncionario, updateFuncionario);
-router.get('/:id', getFuncionario);
-router.get('/:id/foto', getFuncionarioFoto);
-router.delete('/:id', deleteFuncionario);
-router.post('/:id/delete', deleteFuncionarioPost);
-router.get('/:id/anexo/:idx', downloadAnexoFuncionario);
+router.get('/disponiveis/:unidadeId', withRequiredUnitScope(listarFuncionariosDisponiveis));
+router.get('/match', withRequiredUnitScope(matchFuncionario));
+router.post('/initial', withRequiredUnitScope(createFuncionarioInitial));
+router.post('/', uploadLimiter, uploadFuncionario, withRequiredUnitScope(createFuncionario));
+router.put('/:id/incremental', uploadLimiter, uploadFuncionario, withRequiredUnitScope(updateFuncionarioIncremental));
+router.put('/:id', uploadLimiter, uploadFuncionario, withRequiredUnitScope(updateFuncionario));
+router.get('/:id', withRequiredUnitScope(getFuncionario));
+router.get('/:id/foto', withRequiredUnitScope(getFuncionarioFoto));
+router.delete('/:id', withRequiredUnitScope(deleteFuncionario));
+router.post('/:id/delete', withRequiredUnitScope(deleteFuncionarioPost));
+router.get('/:id/anexo/:idx', withRequiredUnitScope(downloadAnexoFuncionario));
 export default router;

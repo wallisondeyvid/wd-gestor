@@ -2,8 +2,14 @@
 import express from 'express';
 import { unidadesCluster, debugSession, debugWhoami, ibge, favicon } from '#modules/gestor/app/controllers/apiController.js';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 const router = express.Router();
-router.get('/api/unidades/cluster', requireLogin, unidadesCluster);
+
+function withLoginAndRequiredUnitScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => requireUnitScope(req, res, () => handler(req, res, next)));
+}
+
+router.get('/api/unidades/cluster', withLoginAndRequiredUnitScope(unidadesCluster));
 router.get('/api/debug/session', debugSession);
 router.get('/api/debug/whoami', debugWhoami);
 router.get('/api/ibge', ibge);

@@ -187,6 +187,40 @@ function scopeFromRecursoListFiltro(filtro) {
   return scopeFromUnidadeId(unidadeId);
 }
 
+function scopeFromSetorFiltro(filtro) {
+  if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
+
+  const unidadeId = filtro.unidade_id;
+  if (typeof unidadeId !== 'string') return GLOBAL_SCOPE;
+
+  return scopeFromUnidadeId(unidadeId);
+}
+
+function extractSingleScopedUnitId(value) {
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return '';
+
+  const inValues = Array.isArray(value.$in)
+    ? [...new Set(value.$in.map((item) => String(item || '').trim()).filter(Boolean))]
+    : [];
+
+  return inValues.length === 1 ? inValues[0] : '';
+}
+
+function scopeFromFuncaoFiltro(filtro) {
+  if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
+
+  const unidadePrincipalId = extractSingleScopedUnitId(filtro.unidade_principal_id);
+  return unidadePrincipalId ? scopeFromUnidadeId(unidadePrincipalId) : GLOBAL_SCOPE;
+}
+
+function scopeFromFuncionarioFiltro(filtro) {
+  if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
+
+  const unidadeId = extractSingleScopedUnitId(filtro.unidade_id);
+  return unidadeId ? scopeFromUnidadeId(unidadeId) : GLOBAL_SCOPE;
+}
+
 export async function findUnidadeByIdLean(id) {
   return findUnidadeByIdLeanRepo({
     unitScope: createUnitScope({ unidadeId: id }),
@@ -400,23 +434,23 @@ export async function findRecursoByRenavam(renavam) {
 }
 
 export async function createRecurso(data) {
-  return createRecursoRepo({ unitScope: GLOBAL_SCOPE, data });
+  return createRecursoRepo({ unitScope: scopeFromUnidadeId(data?.unidade_id), data });
 }
 
 export async function findRecursoById(id) {
   return findRecursoByIdRepo({ unitScope: GLOBAL_SCOPE, id });
 }
 
-export async function findOutroRecursoByPlacaUpper(id, placaUpper) {
-  return findOutroRecursoByPlacaUpperRepo({ unitScope: GLOBAL_SCOPE, id, placaUpper });
+export async function findOutroRecursoByPlacaUpper(id, placaUpper, unidadeId = null) {
+  return findOutroRecursoByPlacaUpperRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, placaUpper, unidadeId });
 }
 
-export async function findOutroRecursoByChassiUpper(id, chassiUpper) {
-  return findOutroRecursoByChassiUpperRepo({ unitScope: GLOBAL_SCOPE, id, chassiUpper });
+export async function findOutroRecursoByChassiUpper(id, chassiUpper, unidadeId = null) {
+  return findOutroRecursoByChassiUpperRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, chassiUpper, unidadeId });
 }
 
-export async function findOutroRecursoByRenavam(id, renavam) {
-  return findOutroRecursoByRenavamRepo({ unitScope: GLOBAL_SCOPE, id, renavam });
+export async function findOutroRecursoByRenavam(id, renavam, unidadeId = null) {
+  return findOutroRecursoByRenavamRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, renavam, unidadeId });
 }
 
 export async function updateRecursoByIdComUnidadeNome(id, data, unidadeId = null) {
@@ -449,7 +483,7 @@ export async function findSetorByUnidadeAndNomeNormalizadoLean(unidadeId, nomeNo
 }
 
 export async function createSetor(data) {
-  return createSetorRepo({ unitScope: GLOBAL_SCOPE, data });
+  return createSetorRepo({ unitScope: scopeFromUnidadeId(data?.unidade_id), data });
 }
 
 export async function findSetoresByUnidadeIdPopulateLean(unidadeId) {
@@ -459,12 +493,12 @@ export async function findSetoresByUnidadeIdPopulateLean(unidadeId) {
   });
 }
 
-export async function findSetorByIdPopulateUnidade(id) {
-  return findSetorByIdPopulateUnidadeRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findSetorByIdPopulateUnidade(id, unidadeId = null) {
+  return findSetorByIdPopulateUnidadeRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, unidadeId });
 }
 
-export async function findSetorById(id) {
-  return findSetorByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findSetorById(id, unidadeId = null) {
+  return findSetorByIdRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, unidadeId });
 }
 
 export async function findSetorDupByNomeNormalizadoExcludingId(setorId, unidadeId, nomeNormalizado) {
@@ -485,7 +519,7 @@ export async function findUnidadeUserBaseSetorLean(id) {
 }
 
 export async function findSetoresByFiltroPopulateUnidadeLean(filtro) {
-  return findSetoresByFiltroPopulateUnidadeLeanRepo({ unitScope: GLOBAL_SCOPE, filtro });
+  return findSetoresByFiltroPopulateUnidadeLeanRepo({ unitScope: scopeFromSetorFiltro(filtro), filtro });
 }
 
 export async function findSetoresAtivosPopulateUnidadeOrdenadosLean(filtroAtivo) {
@@ -493,7 +527,7 @@ export async function findSetoresAtivosPopulateUnidadeOrdenadosLean(filtroAtivo)
 }
 
 export async function findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean(filtroSetores) {
-  return findSetoresByCondDescricaoPopulateUnidadeOrdenadosLeanRepo({ unitScope: GLOBAL_SCOPE, filtroSetores });
+  return findSetoresByCondDescricaoPopulateUnidadeOrdenadosLeanRepo({ unitScope: scopeFromSetorFiltro(filtroSetores), filtroSetores });
 }
 
 export async function findUnidadesAtivasNomeCodigoOrdenadasLean() {
@@ -516,8 +550,8 @@ export async function findUnidadesForSetorPageByIdsSelectLean(unidadeIds) {
   return findUnidadesForSetorPageByIdsSelectLeanRepo({ unitScope: GLOBAL_SCOPE, unidadeIds });
 }
 
-export async function findSetorByIdAndDelete(id) {
-  return findSetorByIdAndDeleteRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findSetorByIdAndDelete(id, unidadeId = null) {
+  return findSetorByIdAndDeleteRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, unidadeId });
 }
 
 export async function findCounterSetorCodigoLean() {
@@ -532,16 +566,16 @@ export async function findOneAndUpdateCounterSetorCodigo(targetSeq) {
   return findOneAndUpdateCounterSetorCodigoRepo({ unitScope: GLOBAL_SCOPE, targetSeq });
 }
 
-export async function findFuncaoByNome(nome) {
-  return findFuncaoByNomeRepo({ unitScope: GLOBAL_SCOPE, nome });
+export async function findFuncaoByNome(nome, unidadePrincipalId = null) {
+  return findFuncaoByNomeRepo({ unitScope: scopeFromUnidadeId(unidadePrincipalId), nome });
 }
 
 export async function createFuncao(payload) {
   return createFuncaoRepo({ unitScope: GLOBAL_SCOPE, payload });
 }
 
-export async function findFuncaoByIdPopulated(id) {
-  return findFuncaoByIdPopulatedRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFuncaoByIdPopulated(id, unidadePrincipalId = null) {
+  return findFuncaoByIdPopulatedRepo({ unitScope: scopeFromUnidadeId(unidadePrincipalId), id });
 }
 
 export async function findAllFuncoesPopuladas() {
@@ -556,20 +590,20 @@ export async function findFuncoesByUnidadePrincipalIdsPopuladas(unidadePrincipal
   return findFuncoesByUnidadePrincipalIdsPopuladasRepo({ unitScope: GLOBAL_SCOPE, unidadePrincipalIds });
 }
 
-export async function findFuncaoById(id) {
-  return findFuncaoByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFuncaoById(id, unidadePrincipalId = null) {
+  return findFuncaoByIdRepo({ unitScope: scopeFromUnidadeId(unidadePrincipalId), id });
 }
 
-export async function findOutraFuncaoByNomeExcludingId(id, nome) {
-  return findOutraFuncaoByNomeExcludingIdRepo({ unitScope: GLOBAL_SCOPE, id, nome });
+export async function findOutraFuncaoByNomeExcludingId(id, nome, unidadePrincipalId = null) {
+  return findOutraFuncaoByNomeExcludingIdRepo({ unitScope: scopeFromUnidadeId(unidadePrincipalId), id, nome });
 }
 
-export async function updateFuncaoById(id, updates) {
-  return updateFuncaoByIdRepo({ unitScope: GLOBAL_SCOPE, id, updates });
+export async function updateFuncaoById(id, updates, unidadePrincipalId = null) {
+  return updateFuncaoByIdRepo({ unitScope: scopeFromUnidadeId(unidadePrincipalId), id, updates });
 }
 
-export async function findFuncaoByIdLean(id) {
-  return findFuncaoByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFuncaoByIdLean(id, unidadePrincipalId = null) {
+  return findFuncaoByIdLeanRepo({ unitScope: scopeFromUnidadeId(unidadePrincipalId), id });
 }
 
 export async function findFuncoesByUnidadeLean(unidadeId) {
@@ -580,15 +614,15 @@ export async function findFuncoesByUnidadeLean(unidadeId) {
 }
 
 export async function findFuncoesByFiltroLean(filtro) {
-  return findFuncoesByFiltroLeanRepo({ unitScope: GLOBAL_SCOPE, filtro });
+  return findFuncoesByFiltroLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
 }
 
 export async function findFuncoesByFiltroSelectLean(filtro) {
-  return findFuncoesByFiltroSelectLeanRepo({ unitScope: GLOBAL_SCOPE, filtro });
+  return findFuncoesByFiltroSelectLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
 }
 
-export async function deleteFuncaoById(id) {
-  return deleteFuncaoByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function deleteFuncaoById(id, unidadePrincipalId = null) {
+  return deleteFuncaoByIdRepo({ unitScope: scopeFromUnidadeId(unidadePrincipalId), id });
 }
 
 export async function saveFuncao(doc) {
@@ -673,7 +707,7 @@ export async function findSetoresByCondNomeOrdenadosSelectLean(cond) {
 }
 
 export async function findFuncionariosParaListagemComRefsSelectLean(filtro) {
-  return findFuncionariosParaListagemComRefsSelectLeanRepo({ unitScope: GLOBAL_SCOPE, filtro });
+  return findFuncionariosParaListagemComRefsSelectLeanRepo({ unitScope: scopeFromFuncionarioFiltro(filtro), filtro });
 }
 
 export async function findFuncionariosDisponiveisSemUsuarioPorUnidadeSelectLean(unidadeId) {
@@ -692,31 +726,31 @@ export async function findFuncionariosByEmailsSelectEmailNomeLean(emails) {
 }
 
 export async function createFuncionarioDoc(doc) {
-  return createFuncionarioDocRepo({ unitScope: GLOBAL_SCOPE, doc });
+  return createFuncionarioDocRepo({ unitScope: scopeFromUnidadeId(doc?.unidade_id), doc });
 }
 
 export async function saveFuncionario(doc) {
   return doc.save();
 }
 
-export async function findFuncionarioById(id) {
-  return findFuncionarioByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFuncionarioById(id, unidadeId = null) {
+  return findFuncionarioByIdRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, unidadeId });
 }
 
-export async function updateFuncionarioByIdWithOps(id, ops) {
-  return updateFuncionarioByIdWithOpsRepo({ unitScope: GLOBAL_SCOPE, id, ops });
+export async function updateFuncionarioByIdWithOps(id, ops, unidadeId = null) {
+  return updateFuncionarioByIdWithOpsRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, ops, unidadeId });
 }
 
-export async function findFuncionarioByIdPopulateRefs(id) {
-  return findFuncionarioByIdPopulateRefsRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFuncionarioByIdPopulateRefs(id, unidadeId = null) {
+  return findFuncionarioByIdPopulateRefsRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, unidadeId });
 }
 
-export async function findFuncionarioByIdLean(id) {
-  return findFuncionarioByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFuncionarioByIdLean(id, unidadeId = null) {
+  return findFuncionarioByIdLeanRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, unidadeId });
 }
 
-export async function deleteFuncionarioById(id) {
-  return deleteFuncionarioByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function deleteFuncionarioById(id, unidadeId = null) {
+  return deleteFuncionarioByIdRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, unidadeId });
 }
 
 export async function findFuncionariosDisponiveisByUnidadeLean(unidadeId) {
@@ -726,8 +760,8 @@ export async function findFuncionariosDisponiveisByUnidadeLean(unidadeId) {
   });
 }
 
-export async function findFuncionarioByIdSelectBasicLean(id) {
-  return findFuncionarioByIdSelectBasicLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFuncionarioByIdSelectBasicLean(id, unidadeId = null) {
+  return findFuncionarioByIdSelectBasicLeanRepo({ unitScope: scopeFromUnidadeId(unidadeId), id, unidadeId });
 }
 
 export async function findFuncionarioByCpfAndUnidadeSelectLean(cpf, unidadeId) {

@@ -1,12 +1,18 @@
 // (migrado) pagesRouter.js
 import express from 'express';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 import { paginaDashboard, paginaLogin, paginaContato, paginaPrimeiroAcesso, paginaEsqueciSenha, paginaErro, paginaUsuarios, paginaUnidades, paginaEditarUnidade, paginaModulos, paginaFuncoes, paginaFuncionarios, paginaRecursos, partialEndereco, paginaSetores, paginaFeedback } from '#modules/gestor/app/controllers/views/pagesController.js';
 // Wrapper inline para advanced recovery (reutiliza template compartilhado)
 function paginaEsqueciSenhaAvancada(req,res){
 	const basePath = req.urlBasePath || '';
 	return res.render('gestor/esquecisenha-avancada', { basePath, moduleLabel: 'WDGestor' });
 }
+
+function withLoginAndRequiredUnitScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => requireUnitScope(req, res, () => handler(req, res, next)));
+}
+
 const router = express.Router();
 // Métricas de adoção de rotas
 router.use((req,res,next)=> {
@@ -30,13 +36,13 @@ router.get('/dashboard', requireLogin, paginaDashboard);
 router.get('/esquecisenha-avancada', (req,res)=> paginaEsqueciSenhaAvancada(req,res));
 router.get('/usuarios', requireLogin, paginaUsuarios);
 router.get('/feedback', requireLogin, paginaFeedback);
-router.get('/unidades', requireLogin, paginaUnidades);
-router.get('/editar-unidades/:id', requireLogin, paginaEditarUnidade);
+router.get('/unidades', withLoginAndRequiredUnitScope(paginaUnidades));
+router.get('/editar-unidades/:id', withLoginAndRequiredUnitScope(paginaEditarUnidade));
 router.get('/modulos', requireLogin, paginaModulos);
-router.get('/funcoes', requireLogin, paginaFuncoes);
-router.get('/funcionarios', requireLogin, paginaFuncionarios);
-router.get('/recursos', requireLogin, paginaRecursos);
-router.get('/setores', requireLogin, paginaSetores);
+router.get('/funcoes', withLoginAndRequiredUnitScope(paginaFuncoes));
+router.get('/funcionarios', withLoginAndRequiredUnitScope(paginaFuncionarios));
+router.get('/recursos', withLoginAndRequiredUnitScope(paginaRecursos));
+router.get('/setores', withLoginAndRequiredUnitScope(paginaSetores));
 router.get('/endereco', partialEndereco);
 router.get('/erro', paginaErro);
 // Debug: quem sou eu (para validar isMaster/role)
