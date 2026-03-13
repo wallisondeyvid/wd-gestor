@@ -10,7 +10,7 @@ import User from '../src/core/models/user.js';
 import Funcao from '../src/core/models/funcao.js';
 import Funcionario from '../src/core/models/Funcionario.js';
 import Setor from '../src/core/models/setor.js';
-import { paginaFuncionarios } from '../src/modules/gestor/app/controllers/views/pagesController.js';
+import { paginaFuncoes, paginaFuncionarios } from '../src/modules/gestor/app/controllers/views/pagesController.js';
 import { createUnitScope } from '../src/shared/unitScope.js';
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 
@@ -306,6 +306,85 @@ test('Funções API: filial contextual bloqueia criação em principal fora do c
       });
 
     assert.equal(res.status, 404);
+  });
+});
+
+test('Funções fallback: principal já alinhada no request evita voltar para a unidade legada ao montar principal e lista', async () => {
+  await withHarness(async ({ app, unidadeA, unidadeB, unidadeC }) => {
+    const funcaoAName = `Funcao Fallback A ${Date.now()}-${nextCounter()}`;
+    const funcaoCName = `Funcao Fallback C ${Date.now()}-${nextCounter()}`;
+    const email = uniqueEmail('pagina-funcoes-fallback');
+
+    await createFuncaoInTenant(unidadeA._id, {
+      nome: funcaoAName,
+      descricao: 'Função da principal já alinhada no request',
+    });
+
+    await createFuncaoInTenant(unidadeC._id, {
+      nome: funcaoCName,
+      descricao: 'Função fora do contexto esperado',
+    });
+
+    const req = {
+      app,
+      path: '/funcoes',
+      originalUrl: '/gestor/funcoes',
+      baseUrl: '/gestor',
+      headers: { accept: 'text/html' },
+      user: {
+        id: 'context-user-funcoes',
+        _id: 'context-user-funcoes',
+        email,
+        role: 'diretor',
+        isMaster: false,
+        unidade_id: unidadeB._id,
+        unidade_principal_id: unidadeA._id,
+      },
+      session: {
+        user: {
+          id: 'context-user-funcoes',
+          email,
+          role: 'diretor',
+          unidade_id: unidadeB._id,
+          unidade_principal_id: unidadeA._id,
+        },
+      },
+    };
+
+    const renderState = {
+      statusCode: 200,
+      view: null,
+      locals: null,
+    };
+    const res = {
+      status(code) {
+        renderState.statusCode = code;
+        return this;
+      },
+      render(view, locals) {
+        renderState.view = view;
+        renderState.locals = locals;
+        return this;
+      },
+      send(payload) {
+        renderState.sendPayload = payload;
+        return this;
+      },
+    };
+
+    await paginaFuncoes(req, res);
+
+    assert.equal(renderState.statusCode, 200);
+    assert.equal(renderState.view, 'funcoes');
+
+    const nomesFuncoes = (renderState.locals?.funcoesFiltradas || []).map((funcao) => String(funcao?.nome || ''));
+    assert.ok(nomesFuncoes.includes(funcaoAName));
+    assert.equal(nomesFuncoes.includes(funcaoCName), false);
+
+    const unidadesPrincipaisIds = (renderState.locals?.unidadesPrincipaisFiltradas || []).map((unidade) => normalizeId(unidade?._id));
+    assert.ok(unidadesPrincipaisIds.includes(normalizeId(unidadeA._id)));
+    assert.equal(unidadesPrincipaisIds.includes(normalizeId(unidadeB._id)), false);
+    assert.equal(unidadesPrincipaisIds.includes(normalizeId(unidadeC._id)), false);
   });
 });
 

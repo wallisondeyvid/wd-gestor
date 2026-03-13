@@ -453,7 +453,13 @@ export async function paginaFuncoes(req, res) {
             : (unidadeBase.unidade_principal_id || unidadeBase.matriz_id || unidadeBase._id);
         }
       }
-      funcoesFiltradas = principalIdLegado ? await findFuncoesByUnidadePrincipalPopuladas(principalIdLegado) : [];
+    }
+    const principalContextualFallbackId = !privilegedUser ? normalizeId(principalIdLegado) : '';
+    const principalContextualFallbackUnit = principalContextualFallbackId
+      ? await findUnidadeByIdLean(principalContextualFallbackId)
+      : null;
+    if (!privilegedUser) {
+      funcoesFiltradas = principalContextualFallbackId ? await findFuncoesByUnidadePrincipalPopuladas(principalContextualFallbackId) : [];
     }
     if ((!funcoesFiltradas || funcoesFiltradas.length === 0) && privilegedUser) {
       // fallback: tentar ao menos por matrizes
@@ -464,8 +470,8 @@ export async function paginaFuncoes(req, res) {
     const modulosFiltrados = await findAllModulos();
     const unidadesPrincipaisFiltradas = privilegedUser
       ? await findUnidadesPrincipais()
-      : principalIdLegado
-        ? await findUnidadesById(principalIdLegado)
+      : principalContextualFallbackUnit
+        ? [principalContextualFallbackUnit]
         : [];
     return res.render('funcoes', { funcoesFiltradas, modulosFiltrados, unidadesPrincipaisFiltradas, user: req.user });
   } catch (e) {
