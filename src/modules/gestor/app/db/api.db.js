@@ -181,10 +181,8 @@ function scopeFromUnidadeId(unidadeId) {
 function scopeFromRecursoListFiltro(filtro) {
   if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
 
-  const unidadeId = filtro.unidade_id;
-  if (typeof unidadeId !== 'string') return GLOBAL_SCOPE;
-
-  return scopeFromUnidadeId(unidadeId);
+  const unidadeId = extractSingleScopedUnitId(filtro?.unidade_id);
+  return unidadeId ? scopeFromUnidadeId(unidadeId) : GLOBAL_SCOPE;
 }
 
 function scopeFromSetorFiltro(filtro) {
