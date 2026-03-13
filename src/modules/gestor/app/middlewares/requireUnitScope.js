@@ -20,9 +20,11 @@ function resolveUser(req) {
   return req?.user || req?.session?.user || null;
 }
 
-function resolveLegacyUnidadeId(req) {
-  const user = resolveUser(req);
+function isPrivilegedGestorUser(user) {
+  return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+}
 
+function resolveRequestUnidadeId(req) {
   return firstNonEmpty(
     req?.query?.unidadeId,
     req?.query?.unidade_id,
@@ -30,10 +32,31 @@ function resolveLegacyUnidadeId(req) {
     req?.params?.unidade_id,
     req?.body?.unidadeId,
     req?.body?.unidade_id,
+  );
+}
+
+function resolveLegacyUserUnidadeId(req) {
+  const user = resolveUser(req);
+
+  return firstNonEmpty(
     user?.matriz_unidade_id,
     user?.unidade_principal_id,
-    user?.unidade_id
+    user?.unidade_id,
   );
+}
+
+function resolveLegacyUnidadeId(req) {
+  const user = resolveUser(req);
+  const requestUnidadeId = resolveRequestUnidadeId(req);
+  const legacyUserUnidadeId = resolveLegacyUserUnidadeId(req);
+
+  if (!user) return requestUnidadeId;
+
+  if (isPrivilegedGestorUser(user)) {
+    return firstNonEmpty(requestUnidadeId, legacyUserUnidadeId);
+  }
+
+  return legacyUserUnidadeId;
 }
 
 function isAuthContextResolverEnabledForRequest(req) {

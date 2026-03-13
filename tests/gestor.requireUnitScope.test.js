@@ -3,6 +3,7 @@ import test from 'node:test';
 import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
+import { requireUnitScope } from '../src/modules/gestor/app/middlewares/requireUnitScope.js';
 
 async function withEnforcedMultiTenant(buildRequest) {
   const prevMultiTenant = process.env.WDG_MULTI_TENANT;
@@ -30,6 +31,14 @@ function installSessionSeedRoute(app) {
         return res.status(500).json({ success: false, error: 'SESSION_SEED_FAILED' });
       }
       return res.status(204).end();
+    });
+  });
+}
+
+function installRequireUnitScopeEchoRoute(app) {
+  app.get('/__tests__/require-unit-scope', requireUnitScope, (req, res) => {
+    return res.status(200).json({
+      unidadeId: req.unitScope?.unidadeId || null,
     });
   });
 }
@@ -139,6 +148,53 @@ test('gestor requireUnitScope: com unidadeId valido nao retorna 400', async () =
       .set('Connection', 'close'));
 
     assert.notEqual(res.status, 400);
+  } finally {
+    try {
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+    }
+  }
+});
+
+test('gestor requireUnitScope: usuario nao privilegiado nao consegue injetar unidade por query acima do contexto legado persistido', async () => {
+  const { app, close, registerErrorHandlers } = await createServer({ skipDb: true, deferErrorHandlers: true });
+  const teardownGuard = installTeardownSuppression();
+  installRequireUnitScopeEchoRoute(app);
+  app.get('/__tests__/seed-gestor-diretor-session', (req, res) => {
+    req.session.user = {
+      id: '000000000000000000000001',
+      email: 'diretor@example.com',
+      role: 'diretor',
+      nome: 'Diretor Teste',
+      unidade_id: '0000000000000000000000aa',
+    };
+
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: 'SESSION_SEED_FAILED' });
+      }
+      return res.status(204).end();
+    });
+  });
+  registerErrorHandlers();
+
+  const agent = request.agent(app);
+  const seed = await agent
+    .get('/__tests__/seed-gestor-diretor-session')
+    .set('Connection', 'close');
+
+  assert.equal(seed.status, 204);
+
+  try {
+    const res = await withEnforcedMultiTenant(() => agent
+      .get('/__tests__/require-unit-scope')
+      .query({ unidadeId: '0000000000000000000000bb' })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close'));
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body?.unidadeId, '0000000000000000000000aa');
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);
