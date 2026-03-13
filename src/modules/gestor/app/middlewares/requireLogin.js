@@ -7,7 +7,12 @@ import {
   findUnidadePrincipalLean,
   findUserLeanByEmail,
 } from '#modules/gestor/app/db/auth.db.js';
-import { GESTOR_AUTH_CONTEXT_RESOLVER_FLAG } from '#modules/gestor/app/services/authContextResolver.js';
+import {
+  AUTH_CONTEXT_SOURCE_V1,
+  GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
+  projectLegacySessionUserFromAuthContext,
+  resolveGestorAuthContext,
+} from '#modules/gestor/app/services/authContextResolver.js';
 
 export const requireLogin = async (req, res, next) => { /* implementação original mantida + resposta JSON para API (ajustada para evitar loop em /login) */
   // Permitir bypass em suites de teste que não precisam de auth
@@ -41,8 +46,10 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     nome: s.nome || 'Usuário',
     email: s.email,
     role,
+    global_role: s.global_role || null,
     isMaster: role === 'master',
     foto: s.foto || null,
+    funcionario_id: s.funcionario_id || null,
     unidade_id: s.unidade_id || null,
     unidade_principal_id: s.unidade_principal_id || null,
     funcao: s.funcao || null
@@ -227,6 +234,44 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       // Caso seja master e flags estejam setadas por engano, limpamos silenciosamente em memória (não persiste ainda)
       if (isMasterRole && (user.primeiro_acesso || user.senha_provisoria) && !enforceMaster) {
         user.primeiro_acesso = false; user.senha_provisoria = false;
+      }
+      if (isAuthContextSelectionGuardEnabled() && req.session?.gestorAuthContext) {
+        try {
+          const resolvedAuthContext = await resolveGestorAuthContext({
+            authenticatedUser: user,
+            sessionUser: req.session.user,
+            existingAuthContext: req.session.gestorAuthContext,
+            featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
+            deps: req.app?.locals?.gestorAuthContextResolverDeps || {},
+            maxTimeMS: Number(req.app?.locals?.gestorAuthContextMaxTimeMS || queryTimeout),
+          });
+          const hasCanonicalProjection = (
+            resolvedAuthContext?.source === AUTH_CONTEXT_SOURCE_V1 &&
+            Boolean(resolvedAuthContext.globalRole || resolvedAuthContext.activeContext)
+          );
+
+          if (hasCanonicalProjection) {
+            const projectedSessionUser = projectLegacySessionUserFromAuthContext({
+              authContext: resolvedAuthContext,
+              sessionUser: {
+                ...(req.session.user || {}),
+                nome: user.nome || req.session.user?.nome || 'Usuário',
+                foto: user.foto || req.session.user?.foto || null,
+                funcao: req.session.user?.funcao || null,
+              },
+            });
+
+            if (projectedSessionUser) {
+              req.session.user = projectedSessionUser;
+              req.user = buildUserFromSession(projectedSessionUser);
+              console.log('[requireLogin] autenticado', { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster });
+              return next();
+            }
+          }
+        } catch (e) {
+          if (!isTransientDbError(e)) throw e;
+          console.warn('[requireLogin] auth-context resolver transitório — usando fallback legado para', req.session.user?.email);
+        }
       }
       let unidadeId = user.unidade_id || null; let unidadePrincipalId = null;
   if (user.role === 'master' && !unidadeId) { try { const unidadePrincipal = await findUnidadePrincipalLean({ maxTimeMS: queryTimeout }); if (unidadePrincipal) { unidadeId = unidadePrincipal._id; unidadePrincipalId = unidadePrincipal._id; } } catch {}

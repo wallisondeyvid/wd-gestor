@@ -360,6 +360,156 @@ test('requireLogin preserva /api/modulos durante seleção pendente', async () =
   assert.equal(res.jsonPayload, undefined);
 });
 
+test('requireLogin reidrata req.user e req.session.user a partir do auth-context canônico já selecionado', async () => {
+  const originalFindOneUser = userModel.default.findOne;
+  const originalFindByIdUnidade = unidadeModel.default.findById;
+  const originalFindOneUnidade = unidadeModel.default.findOne;
+  const originalNodeEnv = process.env.NODE_ENV;
+  try {
+    process.env.NODE_ENV = 'test';
+    userModel.default.findOne = () => ({
+      lean() {
+        return {
+          _id: 'u1',
+          nome: 'Usuário DB',
+          email: 'x@y',
+          role: 'user',
+          foto: 'db.png',
+          unidade_id: 'legacy-unit',
+          funcionario_id: 'funcionario-db-legado',
+        };
+      },
+      exec() {
+        return Promise.resolve({
+          _id: 'u1',
+          nome: 'Usuário DB',
+          email: 'x@y',
+          role: 'user',
+          foto: 'db.png',
+          unidade_id: 'legacy-unit',
+          funcionario_id: 'funcionario-db-legado',
+        });
+      }
+    });
+    unidadeModel.default.findById = () => ({
+      lean() {
+        return {
+          _id: 'legacy-unit',
+          is_principal: false,
+          unidade_principal_id: 'legacy-principal',
+        };
+      },
+      exec() {
+        return Promise.resolve({
+          _id: 'legacy-unit',
+          is_principal: false,
+          unidade_principal_id: 'legacy-principal',
+        });
+      }
+    });
+    unidadeModel.default.findOne = () => ({
+      lean() { return null; },
+      exec() { return Promise.resolve(null); }
+    });
+
+    const req = {
+      path: '/dashboard',
+      baseUrl: '/gestor',
+      originalUrl: '/gestor/dashboard',
+      headers: { accept: 'text/html' },
+      app: {
+        locals: {
+          gestorAuthContextFeatureFlags: {
+            gestor_auth_context_resolver: true,
+          },
+          gestorAuthContextResolverDeps: {
+            async loadActiveMembershipsByUserId({ userId }) {
+              return [
+                {
+                  _id: 'mem-legado',
+                  user_id: userId,
+                  unidade_id: 'legacy-unit',
+                  papel_contextual: 'user',
+                  funcionario_id: 'funcionario-legado',
+                },
+                {
+                  _id: 'mem-canonica',
+                  user_id: userId,
+                  unidade_id: 'unit-canonical',
+                  papel_contextual: 'gestor',
+                  funcionario_id: 'funcionario-canonico',
+                },
+              ];
+            },
+            async loadUnidadeById({ unidadeId }) {
+              if (unidadeId === 'unit-canonical') {
+                return {
+                  _id: 'unit-canonical',
+                  is_principal: false,
+                  unidade_principal_id: 'principal-canonical',
+                  nome: 'Unidade Canônica',
+                  codigo: 'UC1',
+                };
+              }
+              if (unidadeId === 'legacy-unit') {
+                return {
+                  _id: 'legacy-unit',
+                  is_principal: false,
+                  unidade_principal_id: 'legacy-principal',
+                  nome: 'Unidade Legada',
+                  codigo: 'UL1',
+                };
+              }
+              return null;
+            },
+          },
+        },
+      },
+      session: {
+        user: {
+          id: 'u1',
+          email: 'x@y',
+          nome: 'Sessão Atual',
+          role: 'user',
+          unidade_id: 'legacy-session-unit',
+          unidade_principal_id: 'legacy-session-principal',
+          funcionario_id: 'funcionario-session-legado',
+          funcao: 'Analista',
+        },
+        gestorAuthContext: {
+          needs_selection: false,
+          active_membership_id: 'mem-canonica',
+          active_unidade_id: 'unit-canonical',
+          global_role: null,
+        },
+      },
+    };
+    const res = mockRes();
+    let nextCalled = false;
+
+    await requireLogin(req, res, () => { nextCalled = true; });
+
+    assert.equal(nextCalled, true);
+    assert.equal(res.redirectUrl, null);
+    assert.equal(req.user.role, 'diretor');
+    assert.equal(req.user.global_role, null);
+    assert.equal(String(req.user.unidade_id), 'unit-canonical');
+    assert.equal(String(req.user.unidade_principal_id), 'principal-canonical');
+    assert.equal(String(req.user.funcionario_id), 'funcionario-canonico');
+    assert.equal(req.session.user.role, 'diretor');
+    assert.equal(req.session.user.global_role, null);
+    assert.equal(String(req.session.user.unidade_id), 'unit-canonical');
+    assert.equal(String(req.session.user.unidade_principal_id), 'principal-canonical');
+    assert.equal(String(req.session.user.funcionario_id), 'funcionario-canonico');
+    assert.equal(req.session.user.auth_version, 'phase3');
+  } finally {
+    process.env.NODE_ENV = originalNodeEnv;
+    userModel.default.findOne = originalFindOneUser;
+    unidadeModel.default.findById = originalFindByIdUnidade;
+    unidadeModel.default.findOne = originalFindOneUnidade;
+  }
+});
+
 test('requireLogin mantém rotas protegidas funcionando quando o contexto já está completo', async () => {
   const req = {
     path: '/dashboard',
