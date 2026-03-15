@@ -435,3 +435,37 @@ test('POST /gestor/unidades/:id/testar-banco respeita o unitScope ativo e bloque
     BankPort.callBankApi = originalCallBankApi;
   }
 });
+
+test('POST /gestor/api/unidades/:id/provisioning/retry bloqueia unidade fora do contexto e nao executa retry', async () => {
+  const { agent, unidadePrincipalC } = await createContextualDiretorAgent();
+  const blockedUnitId = String(unidadePrincipalC._id);
+
+  const snapshotBefore = await mongoose.connection.db.collection('unit_provisioning_status').findOne({
+    unidadeId: blockedUnitId,
+  });
+  const eventsBefore = await mongoose.connection.db.collection('unit_provisioning_events')
+    .find({ unidadeId: blockedUnitId })
+    .toArray();
+
+  const res = await agent
+    .post(`/gestor/api/unidades/${blockedUnitId}/provisioning/retry`)
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({ modulosRetry: ['clinica'] });
+
+  assert.equal(res.status, 400, JSON.stringify(res.body));
+  assert.equal(res.body?.success, false);
+  assert.match(String(res.body?.message || res.body?.error || ''), /acesso.*unidade.*autorizado/i);
+
+  const snapshotAfter = await mongoose.connection.db.collection('unit_provisioning_status').findOne({
+    unidadeId: blockedUnitId,
+  });
+  const eventsAfter = await mongoose.connection.db.collection('unit_provisioning_events')
+    .find({ unidadeId: blockedUnitId })
+    .toArray();
+
+  assert.equal(snapshotBefore, null);
+  assert.equal(snapshotAfter, null);
+  assert.equal(eventsBefore.length, 0);
+  assert.equal(eventsAfter.length, 0);
+});
