@@ -352,6 +352,33 @@ test('GET /gestor/api/unidades/:id/logo bloqueia leitura fora do contexto ativo'
   assert.equal(res.status, 400);
 });
 
+test('GET /gestor/api/unidades/:id/logo retorna binario de Data URL para unidade acessivel', async () => {
+  const { agent, unidadeFilialB } = await createContextualDiretorAgent();
+  const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO2Zr0YAAAAASUVORK5CYII=';
+
+  await Unidade.updateOne(
+    { _id: unidadeFilialB._id },
+    { $set: { logo: dataUrl } },
+  );
+
+  const res = await agent
+    .get(`/gestor/api/unidades/${unidadeFilialB._id}/logo`)
+    .buffer(true)
+    .parse((response, callback) => {
+      const chunks = [];
+      response.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+      response.on('end', () => callback(null, Buffer.concat(chunks)));
+      response.on('error', callback);
+    })
+    .set('Accept', 'image/png')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'] || '', /^image\/png\b/i);
+  assert.equal(Buffer.isBuffer(res.body), true);
+  assert.ok(res.body.length > 0);
+});
+
 test('POST /gestor/api/unidades/toggle-access permite ids do contexto ativo e bloqueia ids fora do cluster', async () => {
   const { agent, unidadeFilialB, unidadeFilialC } = await createContextualDiretorAgent();
 
