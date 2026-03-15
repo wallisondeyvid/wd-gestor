@@ -469,3 +469,75 @@ test('POST /gestor/api/unidades/:id/provisioning/retry bloqueia unidade fora do 
   assert.equal(eventsBefore.length, 0);
   assert.equal(eventsAfter.length, 0);
 });
+
+test('GET /gestor/api/unidades/:id/provisioning bloqueia leitura fora do contexto ativo sem expor snapshot', async () => {
+  const { agent, unidadePrincipalC } = await createContextualDiretorAgent();
+  const blockedUnitId = String(unidadePrincipalC._id);
+  const expectedDbName = `wdgestor_unit_${blockedUnitId}`;
+
+  await mongoose.connection.db.collection('unit_provisioning_status').insertOne({
+    unidadeId: blockedUnitId,
+    dbName: expectedDbName,
+    tipo: 'principal',
+    status: 'error',
+    ready: false,
+    lastProvisioningError: 'blocked_seed_error',
+    modulosHabilitados: [],
+    tenantBase: {
+      model: 'unidade',
+      unidadeId: blockedUnitId,
+      dbName: expectedDbName,
+    },
+    tenantBaseModel: 'unidade',
+    tenantBaseUnidadeId: blockedUnitId,
+    tenantBaseDbName: expectedDbName,
+    moduleStatuses: [{ moduleKey: 'gestor', status: 'error' }],
+    snapshotVersion: 'unit-tenant-v1',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastProvisionedAt: new Date(),
+  });
+
+  const res = await agent
+    .get(`/gestor/api/unidades/${blockedUnitId}/provisioning`)
+    .set('Accept', 'application/json')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 400, JSON.stringify(res.body));
+  assert.equal(res.body?.success, false);
+  assert.match(String(res.body?.message || res.body?.error || ''), /acesso.*unidade.*autorizado/i);
+  assert.equal(Boolean(res.body?.data?.dbName), false);
+  assert.equal(Boolean(res.body?.data?.tenantBase), false);
+  assert.equal(Boolean(res.body?.data?.moduleStatuses), false);
+});
+
+test('GET /gestor/api/unidades/:id/provisioning/events bloqueia leitura fora do contexto ativo sem expor eventos', async () => {
+  const { agent, unidadePrincipalC } = await createContextualDiretorAgent();
+  const blockedUnitId = String(unidadePrincipalC._id);
+
+  await mongoose.connection.db.collection('unit_provisioning_events').insertOne({
+    unidadeId: blockedUnitId,
+    dbName: `wdgestor_unit_${blockedUnitId}`,
+    eventType: 'unit_retry_failed',
+    scope: 'unit',
+    status: 'error',
+    message: 'evento fora do escopo',
+    reason: 'blocked_seed_error',
+    operation: 'retry_selective',
+    metadata: { source: 'blocked-seed' },
+    createdAt: new Date(),
+  });
+
+  const res = await agent
+    .get(`/gestor/api/unidades/${blockedUnitId}/provisioning/events`)
+    .query({ limit: 1 })
+    .set('Accept', 'application/json')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 400, JSON.stringify(res.body));
+  assert.equal(res.body?.success, false);
+  assert.match(String(res.body?.message || res.body?.error || ''), /acesso.*unidade.*autorizado/i);
+  assert.equal(Boolean(res.body?.data?.events), false);
+  assert.equal(Boolean(res.body?.data?.pagination), false);
+  assert.equal(Boolean(res.body?.data?.filters), false);
+});
