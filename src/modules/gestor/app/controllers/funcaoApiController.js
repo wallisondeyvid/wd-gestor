@@ -236,10 +236,14 @@ export async function bulkUpdateFuncoes(req,res){
   try {
     const itens = Array.isArray(req.body?.itens)?req.body.itens:[];
     if(!itens.length) return badRequest(res,'Lista vazia');
+    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
     const resultados=[]; let atualizados=0;
     for(const it of itens){
       const id = it._id || it.id; if(!id) { resultados.push({ ok:false, motivo:'Sem _id' }); continue; }
-      const f = await findFuncaoById(id); if(!f){ resultados.push({ _id:id, ok:false, motivo:'Nao encontrada' }); continue; }
+      const f = await findFuncaoById(id, contextPrincipalUnitId || null); if(!f){ resultados.push({ _id:id, ok:false, motivo:'Nao encontrada' }); continue; }
+      if (contextPrincipalUnitId && normalizeUnitId(f.unidade_principal_id) !== contextPrincipalUnitId) {
+        resultados.push({ _id:id, ok:false, motivo:'Nao encontrada' }); continue;
+      }
       let changed=false;
       if(it.nome && it.nome!==f.nome){ f.nome = it.nome; changed=true; }
       if(it.descricao!==undefined && it.descricao!==f.descricao){ f.descricao = it.descricao; changed=true; }

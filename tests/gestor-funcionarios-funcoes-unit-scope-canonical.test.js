@@ -309,6 +309,65 @@ test('Funções API: filial contextual bloqueia criação em principal fora do c
   });
 });
 
+test('Funções API: bulk update contextual atualiza apenas o cluster permitido e trata item externo como nao encontrada', async () => {
+  await withHarness(async ({ unidadeA, unidadeC, diretorFilialAgent }) => {
+    const funcaoPermitida = await createFuncaoInTenant(unidadeA._id, {
+      nome: `Funcao Bulk Permitida ${Date.now()}-${nextCounter()}`,
+      descricao: 'Funcao do cluster contextual atual',
+    });
+    const funcaoExterna = await createFuncaoInTenant(unidadeC._id, {
+      nome: `Funcao Bulk Externa ${Date.now()}-${nextCounter()}`,
+      descricao: 'Funcao fora do contexto atual',
+    });
+
+    const nomeAtualizado = `Funcao Bulk Atualizada ${Date.now()}-${nextCounter()}`;
+    const descricaoAtualizada = 'Descricao atualizada no cluster permitido';
+    const nomeExternoTentado = `Funcao Bulk Externa Tentada ${Date.now()}-${nextCounter()}`;
+    const descricaoExternaTentada = 'Descricao que nao deveria persistir fora do contexto';
+
+    const res = await diretorFilialAgent
+      .post('/gestor/api/funcoes/bulk-update')
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({
+        itens: [
+          {
+            _id: normalizeId(funcaoPermitida._id),
+            nome: nomeAtualizado,
+            descricao: descricaoAtualizada,
+          },
+          {
+            _id: normalizeId(funcaoExterna._id),
+            nome: nomeExternoTentado,
+            descricao: descricaoExternaTentada,
+          },
+        ],
+      });
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+
+    const payload = res.body?.data || res.body;
+    assert.equal(payload.updated, 1);
+    assert.ok(Array.isArray(payload.results));
+
+    const resultadoPermitido = payload.results.find((item) => String(item?._id || '') === normalizeId(funcaoPermitida._id));
+    const resultadoExterno = payload.results.find((item) => String(item?._id || '') === normalizeId(funcaoExterna._id));
+
+    assert.equal(resultadoPermitido?.ok, true);
+    assert.equal(resultadoPermitido?.changed, true);
+    assert.equal(resultadoExterno?.ok, false);
+    assert.equal(resultadoExterno?.motivo, 'Nao encontrada');
+
+    const funcaoPermitidaAtualizada = await getTenantModel(Funcao, unidadeA._id).findById(funcaoPermitida._id).lean();
+    const funcaoExternaAtual = await getTenantModel(Funcao, unidadeC._id).findById(funcaoExterna._id).lean();
+
+    assert.equal(funcaoPermitidaAtualizada?.nome, nomeAtualizado);
+    assert.equal(funcaoPermitidaAtualizada?.descricao, descricaoAtualizada);
+    assert.equal(funcaoExternaAtual?.nome, funcaoExterna.nome);
+    assert.equal(funcaoExternaAtual?.descricao, funcaoExterna.descricao);
+  });
+});
+
 test('Funções fallback: principal já alinhada no request evita voltar para a unidade legada ao montar principal e lista', async () => {
   await withHarness(async ({ app, unidadeA, unidadeB, unidadeC }) => {
     const funcaoAName = `Funcao Fallback A ${Date.now()}-${nextCounter()}`;
