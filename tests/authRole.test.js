@@ -9,11 +9,22 @@ function mockRes() {
   r.statusCode = 200;
   r.payload = null;
   r.headers = {};
+  r.redirectUrl = null;
+  r.location = null;
   r.status = (c) => { r.statusCode = c; return r; };
   r.set = (k, v) => { r.headers[k] = v; return r; };
   r.json = (p) => { r.payload = p; return r; };
   r.send = (p) => { r.payload = p; return r; };
   r.sendStatus = (c) => { r.statusCode = c; r.payload = undefined; return r; };
+  r.redirect = (statusOrUrl, maybeUrl) => {
+    const hasStatus = typeof statusOrUrl === 'number';
+    const url = hasStatus ? maybeUrl : statusOrUrl;
+    r.statusCode = hasStatus ? statusOrUrl : (r.statusCode === 200 ? 401 : r.statusCode);
+    r.redirectUrl = url;
+    r.location = url;
+    r.headers.Location = url;
+    return r;
+  };
   r.end = () => r;
   return r;
 }
