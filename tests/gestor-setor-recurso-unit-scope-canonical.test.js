@@ -264,7 +264,7 @@ async function withHarness(run) {
   }
 }
 
-test('Recursos: GET lista apenas a unidade canônica do contexto atual', async () => {
+test('Recursos: GET sem unidadeId agrega os recursos do escopo acessível do diretor', async () => {
   await withHarness(async ({ unidadeA, unidadeB, masterAgent, diretorAgent }) => {
     const recursoAId = await createRecursoViaApi(masterAgent, {
       unidade_id: normalizeId(unidadeA._id),
@@ -301,7 +301,7 @@ test('Recursos: GET lista apenas a unidade canônica do contexto atual', async (
     assert.equal(res.body?.success, true);
     assert.ok(Array.isArray(res.body?.data));
     assert.ok(res.body.data.some((item) => normalizeId(item?._id || item?.id) === recursoAId));
-    assert.equal(res.body.data.some((item) => normalizeId(item?._id || item?.id) === recursoBId), false);
+    assert.ok(res.body.data.some((item) => normalizeId(item?._id || item?.id) === recursoBId));
   });
 });
 
