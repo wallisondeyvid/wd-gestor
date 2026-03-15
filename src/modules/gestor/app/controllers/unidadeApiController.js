@@ -23,9 +23,6 @@ import {
   findUnidadeByIdLean,
   deleteUnidadeById,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
-import { findUnidadesByCondLeanFullRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
-import { findUnidadeByIdRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
-import { createUnitScope } from '#shared/unitScope.js';
 import { validarCnpj, calcularDigitoVerificador } from '#modules/gestor/app/utils/cnpj.js';
 import {
   ensureUnitProvisioned,
@@ -171,15 +168,12 @@ async function loadScopedAccessibleUnidades(req) {
   }
 
   let unidades = scopedContext.principalUnitId
-    ? await findUnidadesByCondLeanFullRepo({
-      unitScope: createUnitScope({ unidadeId: scopedContext.principalUnitId }),
-      cond: {
-        $or: [
-          { _id: scopedContext.principalUnitId },
-          { unidade_principal_id: scopedContext.principalUnitId },
-          { matriz_id: scopedContext.principalUnitId },
-        ],
-      },
+    ? await findUnidadesByCondLeanFull({
+      $or: [
+        { _id: scopedContext.principalUnitId },
+        { unidade_principal_id: scopedContext.principalUnitId },
+        { matriz_id: scopedContext.principalUnitId },
+      ],
     })
     : [];
 
@@ -779,7 +773,7 @@ export async function toggleAccessUnidades(req, res) {
     return serverError(res, error);
   }
 }
-export async function getUnidadeById(req, res) { try { const unidadeId = req.params.id; const unidade = await findUnidadeByIdRepo({ unitScope: createUnitScope({ unidadeId }), setorUnidadeId: unidadeId }); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await ensureCanAccessUnidade(req, unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado');
+export async function getUnidadeById(req, res) { try { const unidadeId = req.params.id; const unidade = await findUnidadeById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await ensureCanAccessUnidade(req, unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado');
   // Fallback: se for unidade principal e não houver diretor_usuario_id salvo,
   // tentar descobrir pelo usuário diretor vinculado via unidade_id
   let diretorId = unidade.diretor_usuario_id;
