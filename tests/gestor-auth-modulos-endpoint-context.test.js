@@ -257,6 +257,163 @@ test('GET /gestor/api/modulos usa os módulos da unidade ativa para papel gestor
   assert.deepEqual(extractNames(res), [moduloEscala.nome, moduloGestor.nome].sort());
 });
 
+test('GET /gestor/api/unidades/:id/modulos retorna os modulos acessiveis da unidade com shape minimo esperado', async () => {
+  const moduloGestor = await ensureGestorModulo();
+  const moduloEscala = await createModulo({ nome: `modulo-unidade-escala-${nextSequence()}`, urlBase: '/escalas' });
+  const moduloClinica = await createModulo({ nome: `modulo-unidade-clinica-${nextSequence()}`, urlBase: '/clinica' });
+  const unidade = await createEnabledUnit({
+    nome: `Unidade Endpoint Modulos ${nextSequence()}`,
+    moduloIds: [moduloGestor._id, moduloEscala._id, moduloClinica._id],
+  });
+  const user = await createUser({
+    email: buildUniqueEmail('gestor-unidade-modulos'),
+    nome: 'Gestor Endpoint Modulos Unidade',
+    role: 'user',
+  });
+
+  await UserMembership.create({
+    user_id: user._id,
+    unidade_id: unidade._id,
+    papel_contextual: 'gestor',
+    status: 'active',
+    origem: 'gestor-auth-modulos-endpoint-context-test',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  const res = await agent.get(`/gestor/api/unidades/${unidade._id}/modulos`);
+
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  assert.equal(res.body?.success, true, JSON.stringify(res.body));
+  assert.equal(Array.isArray(res.body?.data), true, JSON.stringify(res.body));
+
+  const actual = (res.body?.data || [])
+    .map((item) => ({
+      _id: String(item?._id || ''),
+      nome: String(item?.nome || ''),
+      status: String(item?.status || ''),
+      keys: Object.keys(item || {}).sort(),
+    }))
+    .sort((left, right) => left.nome.localeCompare(right.nome));
+
+  const expected = [moduloGestor, moduloEscala, moduloClinica]
+    .map((modulo) => ({
+      _id: String(modulo._id),
+      nome: modulo.nome,
+      status: modulo.status,
+      keys: ['_id', 'nome', 'status'],
+    }))
+    .sort((left, right) => left.nome.localeCompare(right.nome));
+
+  assert.deepEqual(actual, expected);
+});
+
+test('GET /gestor/api/unidades/:id/modulos retorna lista vazia quando a unidade acessivel nao tem modulosAcessiveis', async () => {
+  const unidade = await createEnabledUnit({
+    nome: `Unidade Sem Modulos ${nextSequence()}`,
+    moduloIds: [],
+  });
+  const user = await createUser({
+    email: buildUniqueEmail('gestor-unidade-sem-modulos'),
+    nome: 'Admin Endpoint Modulos Sem Lista',
+    role: 'user',
+    globalRole: 'admin',
+  });
+
+  await UserMembership.create({
+    user_id: user._id,
+    unidade_id: unidade._id,
+    papel_contextual: 'gestor',
+    status: 'active',
+    origem: 'gestor-auth-modulos-endpoint-context-test',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+
+  const res = await agent.get(`/gestor/api/unidades/${unidade._id}/modulos`);
+
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  assert.equal(res.body?.success, true, JSON.stringify(res.body));
+  assert.deepEqual(res.body?.data, []);
+});
+
+test('GET /gestor/api/unidades/:id/modulos retorna not found quando a unidade do contexto deixa de existir', async () => {
+  const moduloGestor = await ensureGestorModulo();
+  const unidade = await createEnabledUnit({
+    nome: `Unidade Removida ${nextSequence()}`,
+    moduloIds: [moduloGestor._id],
+  });
+  const user = await createUser({
+    email: buildUniqueEmail('gestor-unidade-removida'),
+    nome: 'Gestor Endpoint Modulos Unidade Removida',
+    role: 'user',
+  });
+
+  await UserMembership.create({
+    user_id: user._id,
+    unidade_id: unidade._id,
+    papel_contextual: 'gestor',
+    status: 'active',
+    origem: 'gestor-auth-modulos-endpoint-context-test',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  await Unidade.deleteOne({ _id: unidade._id });
+
+  const res = await agent.get(`/gestor/api/unidades/${unidade._id}/modulos`);
+
+  assert.equal(res.status, 404, JSON.stringify(res.body));
+  assert.equal(res.body?.success, false, JSON.stringify(res.body));
+  assert.equal(res.body?.code, 'NOT_FOUND', JSON.stringify(res.body));
+  assert.equal(res.body?.message, 'Unidade não encontrada', JSON.stringify(res.body));
+});
+
+test('GET /gestor/api/unidades/:id/modulos bloqueia unidade fora do contexto ativo', async () => {
+  const moduloGestor = await ensureGestorModulo();
+  const unidadePermitida = await createEnabledUnit({
+    nome: `Unidade Permitida ${nextSequence()}`,
+    moduloIds: [moduloGestor._id],
+  });
+  const unidadeBloqueada = await createEnabledUnit({
+    nome: `Unidade Bloqueada ${nextSequence()}`,
+    moduloIds: [moduloGestor._id],
+  });
+  const user = await createUser({
+    email: buildUniqueEmail('gestor-unidade-bloqueada'),
+    nome: 'Gestor Endpoint Modulos Fora do Contexto',
+    role: 'user',
+  });
+
+  await UserMembership.create({
+    user_id: user._id,
+    unidade_id: unidadePermitida._id,
+    papel_contextual: 'gestor',
+    status: 'active',
+    origem: 'gestor-auth-modulos-endpoint-context-test',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  const res = await agent.get(`/gestor/api/unidades/${unidadeBloqueada._id}/modulos`);
+
+  assert.equal(res.status, 400, JSON.stringify(res.body));
+  assert.equal(res.body?.success, false, JSON.stringify(res.body));
+  assert.equal(res.body?.code, 'BAD_REQUEST', JSON.stringify(res.body));
+  assert.equal(res.body?.message, 'Acesso à unidade não autorizado', JSON.stringify(res.body));
+});
+
 test('GET /gestor/api/modulos usa interseção entre unidade ativa e função para papel user', async () => {
   const moduloGestor = await ensureGestorModulo();
   const moduloComum = await createModulo({ nome: `modulo-comum-${nextSequence()}`, urlBase: '/comum' });
