@@ -1,45 +1,24 @@
-# Checkpoint de Autenticação – GET /gestor/api/bancos
+# Diagnóstico objetivo
+O endpoint GET /gestor/api/bancos está PROTEGIDO no wiring real. Sem sessão, responde 401 com envelope JSON padronizado de erro de autenticação. Não houve patch de produção. Classificação: LACUNA_DE_COBERTURA_FECHADA.
 
-## Caminho real do endpoint
-- **GET /gestor/api/bancos**
+---
 
-## Teste criado
-Arquivo: tests/bancoApi.contract.test.js
+## Caminho canônico
+GET /gestor/api/bancos
 
-```js
-import assert from 'node:assert/strict';
-import test from 'node:test';
-import request from 'supertest';
-import { createServer } from '../src/server/createServer.js';
-
-const BANCOS_ENDPOINT = '/gestor/api/bancos';
-
-test('GET /gestor/api/bancos exige autenticação', async () => {
-  const { app, close } = await createServer();
-  try {
-    const res = await request(app).get(BANCOS_ENDPOINT);
-    assert.equal(res.status, 401);
-    assert.equal(res.type, 'application/json');
-    assert.deepEqual(res.body, {
-      ok: false,
-      error: 'Não autenticado',
-      code: 'UNAUTHORIZED',
-    });
-  } finally {
-    await close();
-  }
-});
-```
-
-## Contrato observado sem sessão
-- **Status:** 401
-- **Content-Type:** application/json
-- **Body:**
-  - ok: false
+## Contrato real observado (sem sessão)
+- status: 401
+- content-type: application/json
+- body:
+  - success: false
   - error: "Não autenticado"
   - code: "UNAUTHORIZED"
 
+## Teste criado
+Arquivo: tests/bancoApi.contract.test.js
+O teste automatizado valida que, sem sessão, o endpoint retorna exatamente o contrato acima.
+
 ## Conclusão
-- O endpoint está **PROTEGIDO** por autenticação no wiring real.
-- Não houve patch de produção.
-- Classificação final: **LACUNA_DE_COBERTURA_FECHADA**
+- Endpoint PROTEGIDO no wiring real
+- Não houve patch de produção
+- Classificação final: LACUNA_DE_COBERTURA_FECHADA
