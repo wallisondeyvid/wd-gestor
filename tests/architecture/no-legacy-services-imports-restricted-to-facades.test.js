@@ -8,7 +8,7 @@ const ROOT = process.cwd();
 const GUARD_SCRIPT = path.resolve(ROOT, 'scripts/guard-grep.js');
 const TARGET = 'src/modules/gestor/app/services';
 const LEGACY_DIR = path.resolve(ROOT, 'src/modules/gestor/app/services/legacy');
-const ERROR_MESSAGE = 'Importação de services/legacy só é permitida dentro de services/legacy/** e nas 3 fachadas oficiais.';
+const ERROR_MESSAGE = 'Importação de services/legacy só é permitida dentro de services/legacy/** e nas fachadas oficiais.';
 
 const PATTERNS = [
   '#modules/gestor/app/services/legacy/',
@@ -19,6 +19,7 @@ const PATTERNS = [
 const FIXED_ALLOWED_FILES = [
   'src/modules/gestor/app/services/apiDbBridgeService.js',
   'src/modules/gestor/app/services/authDbBridgeService.js',
+  'src/modules/gestor/app/services/authContextDbBridgeService.js',
   'src/modules/gestor/app/services/userService.js',
 ];
 
