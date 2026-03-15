@@ -21,6 +21,18 @@ const QUERY_TOKENS = [
   '.aggregate(',
 ];
 
+const ARRAY_FIND_CALLBACK_PATTERN = /\.find\(\s*(?:\([^)]*\)\s*=>|[A-Za-z_$][\w$]*\s*=>|function\b)/;
+
+function hasSuspiciousQueryToken(content) {
+  return QUERY_TOKENS.some((token) => {
+    if (token !== '.find(') return content.includes(token);
+
+    return content
+      .split(/\r?\n/)
+      .some((line) => line.includes(token) && !ARRAY_FIND_CALLBACK_PATTERN.test(line));
+  });
+}
+
 function walkSourceFilesSync(dirPath, files) {
   let entries;
   try {
@@ -74,7 +86,7 @@ test('Guardrail estrutural: bloqueia queries Mongoose fora de repositories', () 
       continue;
     }
 
-    const hasQueryToken = QUERY_TOKENS.some((token) => content.includes(token));
+    const hasQueryToken = hasSuspiciousQueryToken(content);
     if (!hasQueryToken) continue;
 
     violations.push(relativeFromRoot);
