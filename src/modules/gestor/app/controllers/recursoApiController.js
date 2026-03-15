@@ -84,7 +84,6 @@ export async function listarRecursosApi(req, res) {
 		} else {
 			let principalId = null;
 			const anchorUnitId = canonicalUnitId || getLegacyUserUnitId(req);
-			const defaultUnitId = canonicalUnitId || anchorUnitId;
 
 			if (anchorUnitId) {
 				const unidadeAnchor = await findUnidadeUserBaseLean(anchorUnitId);
@@ -107,8 +106,7 @@ export async function listarRecursosApi(req, res) {
 				}
 				filtro.unidade_id = unidadeId;
 			} else {
-				if (!defaultUnitId) return ok(res, []);
-				filtro.unidade_id = defaultUnitId;
+				filtro.unidade_id = { $in: ids };
 			}
 		}
 
