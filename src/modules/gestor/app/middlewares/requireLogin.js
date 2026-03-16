@@ -103,7 +103,10 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       return false;
     }
 
-    const redirect = `${resolvedBasePath}/login?step=select`;
+    const redirectBasePath = resolvedBasePath.endsWith('/api')
+      ? resolvedBasePath.slice(0, -4)
+      : resolvedBasePath;
+    const redirect = `${redirectBasePath}/login?step=select`;
     if (isPendingSelectionApiRequest) {
       res.status(409).json({
         success: false,

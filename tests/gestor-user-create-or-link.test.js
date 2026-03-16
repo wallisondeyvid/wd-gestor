@@ -136,6 +136,104 @@ after(async () => {
   } catch {}
 });
 
+test('POST /gestor/api/usuarios aplica gates mínimos de autenticação e autorização no caminho montado real', async () => {
+  const anonymous = request(app);
+
+  const unauthenticatedRes = await anonymous
+    .post('/gestor/api/usuarios')
+    .send({});
+
+  assert.equal(unauthenticatedRes.status, 401);
+  assert.equal(unauthenticatedRes.body?.success, false);
+  assert.equal(unauthenticatedRes.body?.error, 'Não autenticado');
+  assert.equal(unauthenticatedRes.body?.code, 'UNAUTHORIZED');
+
+  const unidade = await createEnabledUnit(`Unidade Gate Usuários ${nextSequence()}`);
+  const basicUser = await createUser({
+    email: buildUniqueEmail('usuario-sem-permissao'),
+    nome: 'Usuário Sem Permissão',
+    role: 'diretor',
+    unidadeId: unidade._id,
+  });
+
+  await UserMembership.create({
+    user_id: basicUser._id,
+    unidade_id: unidade._id,
+    papel_contextual: 'gestor',
+    status: 'active',
+    origem: 'gestor-user-create-or-link-test',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: basicUser.email });
+  assert.equal(loginRes.status, 303);
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  const forbiddenRes = await agent
+    .post('/gestor/api/usuarios')
+    .send({});
+
+  assert.equal(forbiddenRes.status, 403);
+  assert.equal(forbiddenRes.body?.success, false);
+  assert.equal(forbiddenRes.body?.error, 'Acesso negado');
+  assert.equal(forbiddenRes.body?.code, 'FORBIDDEN');
+});
+
+test('POST /gestor/api/usuarios bloqueia seleção pendente no middleware antes do controller no caminho montado real', async () => {
+  const unidadeA = await createEnabledUnit(`Unidade Seleção Pendente A ${nextSequence()}`);
+  const unidadeB = await createEnabledUnit(`Unidade Seleção Pendente B ${nextSequence()}`);
+  const attemptedEmail = buildUniqueEmail('nao-deve-criar');
+
+  const pendingSelectionUser = await createUser({
+    email: buildUniqueEmail('usuario-selecao-pendente'),
+    nome: 'Usuário Seleção Pendente',
+    role: 'user',
+    unidadeId: unidadeA._id,
+  });
+
+  await UserMembership.create({
+    user_id: pendingSelectionUser._id,
+    unidade_id: unidadeA._id,
+    papel_contextual: 'user',
+    status: 'active',
+    origem: 'gestor-user-create-or-link-test',
+  });
+
+  await UserMembership.create({
+    user_id: pendingSelectionUser._id,
+    unidade_id: unidadeB._id,
+    papel_contextual: 'gestor',
+    status: 'active',
+    origem: 'gestor-user-create-or-link-test',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: pendingSelectionUser.email });
+  assert.equal(loginRes.status, 303);
+  assert.equal(loginRes.headers.location, '/gestor/login?step=select');
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Não Deve Entrar no Controller',
+      email: attemptedEmail,
+      role: 'user',
+      unidade_id: String(unidadeA._id),
+    });
+
+  assert.equal(res.status, 409);
+  assert.equal(res.body?.success, false);
+  assert.equal(res.body?.authenticated, true);
+  assert.equal(res.body?.error, 'Seleção de unidade pendente');
+  assert.equal(res.body?.code, 'GESTOR_SELECTION_REQUIRED');
+  assert.equal(res.body?.needsUnitSelection, true);
+  assert.equal(res.body?.redirect, '/gestor/login?step=select');
+  assert.notEqual(res.body?.code, 'FORBIDDEN');
+
+  const createdUser = await User.findOne({ email: attemptedEmail }).lean();
+  assert.equal(createdUser, null);
+});
+
 test('POST /gestor/api/usuarios cria usuário novo com membership contextual', async () => {
   const unidade = await createEnabledUnit(`Unidade Novo Usuário ${nextSequence()}`);
   const { agent } = await createAdminAgent();
