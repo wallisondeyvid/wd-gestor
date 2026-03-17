@@ -280,6 +280,74 @@ test('POST /gestor/api/usuarios falha com UNIT_REQUIRED no bloco pre-efeito prin
   assert.equal(usersAfter, usersBefore);
 });
 
+test('POST /gestor/api/usuarios falha com EMAIL_DUPLICATE no bloco pre-efeito principal do controller', async () => {
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('email-duplicado');
+  const existingUser = await createUser({
+    email,
+    nome: 'Usuário Existente Email Duplicado',
+    role: 'user',
+  });
+  const usersBefore = await User.countDocuments();
+  const membershipsBefore = await UserMembership.countDocuments({ user_id: existingUser._id });
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Tentativa Duplicada',
+      email,
+      role: 'admin',
+      cpf: buildUniqueCpf(),
+    });
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body?.success, false);
+  assert.equal(res.body?.error, 'Email já cadastrado');
+  assert.equal(res.body?.code, 'EMAIL_DUPLICATE');
+
+  const usersAfter = await User.countDocuments();
+  assert.equal(usersAfter, usersBefore);
+
+  const duplicateUsers = await User.find({ email }).lean();
+  assert.equal(duplicateUsers.length, 1);
+  assert.equal(String(duplicateUsers[0]._id), String(existingUser._id));
+
+  const membershipsAfter = await UserMembership.countDocuments({ user_id: existingUser._id });
+  assert.equal(membershipsAfter, membershipsBefore);
+});
+
+test('POST /gestor/api/usuarios falha com FUNC_NOT_FOUND no bloco pre-efeito principal do controller', async () => {
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('funcionario-inexistente');
+  const missingFuncionarioId = new mongoose.Types.ObjectId();
+  const usersBefore = await User.countDocuments();
+  const membershipsBefore = await UserMembership.countDocuments();
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Usuário com Funcionário Inexistente',
+      email,
+      role: 'admin',
+      cpf: buildUniqueCpf(),
+      funcionario_id: String(missingFuncionarioId),
+    });
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body?.success, false);
+  assert.equal(res.body?.error, 'Funcionário não encontrado');
+  assert.equal(res.body?.code, 'FUNC_NOT_FOUND');
+
+  const usersAfter = await User.countDocuments();
+  assert.equal(usersAfter, usersBefore);
+
+  const createdUser = await User.findOne({ email }).lean();
+  assert.equal(createdUser, null);
+
+  const membershipsAfter = await UserMembership.countDocuments();
+  assert.equal(membershipsAfter, membershipsBefore);
+});
+
 test('POST /gestor/api/usuarios cria usuário novo com membership contextual', async () => {
   const unidade = await createEnabledUnit(`Unidade Novo Usuário ${nextSequence()}`);
   const { agent } = await createAdminAgent();
