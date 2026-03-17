@@ -395,7 +395,8 @@ export async function criarUsuario(req, res) {
 		// Se funcionario_id foi enviado e validado, efetiva o vínculo no documento do Funcionário
 		if (funcionarioDoc) {
 			try {
-				if (!isExistingUser) {
+				const shouldSyncUserFuncionarioId = !user.funcionario_id;
+				if (!isExistingUser || shouldSyncUserFuncionarioId) {
 					user.funcionario_id = funcionarioDoc._id;
 					if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id;
 					await saveUserDoc(user);

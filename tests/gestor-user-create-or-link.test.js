@@ -567,6 +567,83 @@ test('POST /gestor/api/usuarios reaproveita o mesmo User e adiciona membership e
   assert.equal(contextRes.body.membershipCount, 2);
 });
 
+test('POST /gestor/api/usuarios reaproveita User existente com funcionario_id valido em nova unidade contextual mantendo coerencia interna', async () => {
+  const unidadeA = await createEnabledUnit(`Unidade Existente Funcionario A ${nextSequence()}`);
+  const unidadeB = await createEnabledUnit(`Unidade Existente Funcionario B ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('link-contextual-funcionario');
+
+  const existingUser = await createUser({
+    email,
+    nome: 'Usuário Multiunidade com Funcionário',
+    role: 'user',
+    unidadeId: unidadeA._id,
+  });
+
+  await UserMembership.create({
+    user_id: existingUser._id,
+    unidade_id: unidadeA._id,
+    papel_contextual: 'user',
+    status: 'active',
+    origem: 'gestor-user-create-or-link-test',
+  });
+
+  const funcionario = await Funcionario.create({
+    unidade_id: unidadeB._id,
+    nome: 'Funcionário Disponível Multiunidade',
+    rg: `RG${Date.now()}${nextSequence()}`,
+    cpf: buildUniqueCpf(),
+    data_nascimento: new Date('2000-01-01T00:00:00.000Z'),
+    sexo: 'N',
+    email: buildUniqueEmail('funcionario-link-contextual'),
+    telefone: '(11) 99999-9999',
+  });
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Nome Divergente Ignorado com Funcionário',
+      email,
+      role: 'diretor',
+      unidade_id: String(unidadeB._id),
+      cpf: buildUniqueCpf(),
+      funcionario_id: String(funcionario._id),
+    });
+
+  assert.equal(res.status, 201);
+  assert.equal(res.body.success, true);
+  assert.equal(res.body.data?.outcome, 'linked');
+  assert.equal(String(res.body.id), String(existingUser._id));
+  assert.equal(String(res.body.data?.funcionario_id), String(funcionario._id));
+
+  const users = await User.find({ email }).lean();
+  assert.equal(users.length, 1);
+  assert.equal(String(users[0]._id), String(existingUser._id));
+
+  const memberships = await UserMembership.find({ user_id: existingUser._id }).sort({ createdAt: 1 }).lean();
+  assert.equal(memberships.length, 2);
+
+  const membershipNovaUnidade = memberships.find(
+    (membership) => String(membership.unidade_id) === String(unidadeB._id),
+  );
+  assert.ok(membershipNovaUnidade);
+  assert.equal(membershipNovaUnidade.papel_contextual, 'gestor');
+  assert.equal(membershipNovaUnidade.status, 'active');
+  assert.equal(String(membershipNovaUnidade.funcionario_id), String(funcionario._id));
+  assert.equal(membershipNovaUnidade.origem, 'gestor-user-admin');
+
+  const funcionarioAtualizado = await Funcionario.findById(funcionario._id).lean();
+  assert.ok(funcionarioAtualizado);
+  assert.equal(String(funcionarioAtualizado.usuario_id), String(existingUser._id));
+
+  const reusedUserAfter = await User.findById(existingUser._id).lean();
+  assert.ok(reusedUserAfter);
+  assert.equal(
+    reusedUserAfter.funcionario_id ? String(reusedUserAfter.funcionario_id) : null,
+    String(funcionario._id),
+  );
+});
+
 test('POST /gestor/api/usuarios falha claramente quando o usuário já está vinculado à mesma unidade', async () => {
   const unidade = await createEnabledUnit(`Unidade Duplicada ${nextSequence()}`);
   const { agent } = await createAdminAgent();
