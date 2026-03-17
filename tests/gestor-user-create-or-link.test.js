@@ -446,6 +446,37 @@ test('POST /gestor/api/usuarios falha com FUNC_WRONG_UNIT no bloco pre-efeito pr
   assert.equal(membershipsAfter, membershipsBefore);
 });
 
+test('POST /gestor/api/usuarios falha com FUNC_INVALID no bloco pre-efeito principal do controller', async () => {
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('funcionario-invalido-target');
+  const usersBefore = await User.countDocuments();
+  const membershipsBefore = await UserMembership.countDocuments();
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Usuário Alvo Funcionário Inválido',
+      email,
+      role: 'admin',
+      cpf: buildUniqueCpf(),
+      funcionario_id: 'funcionario-id-invalido',
+    });
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body?.success, false);
+  assert.equal(res.body?.error, 'Funcionário inválido');
+  assert.equal(res.body?.code, 'FUNC_INVALID');
+
+  const usersAfter = await User.countDocuments();
+  assert.equal(usersAfter, usersBefore);
+
+  const createdUser = await User.findOne({ email }).lean();
+  assert.equal(createdUser, null);
+
+  const membershipsAfter = await UserMembership.countDocuments();
+  assert.equal(membershipsAfter, membershipsBefore);
+});
+
 test('POST /gestor/api/usuarios cria usuário novo com membership contextual', async () => {
   const unidade = await createEnabledUnit(`Unidade Novo Usuário ${nextSequence()}`);
   const { agent } = await createAdminAgent();
