@@ -6,6 +6,7 @@ import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
+import Funcionario from '../src/core/models/Funcionario.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
@@ -337,6 +338,103 @@ test('POST /gestor/api/usuarios falha com FUNC_NOT_FOUND no bloco pre-efeito pri
   assert.equal(res.body?.success, false);
   assert.equal(res.body?.error, 'Funcionário não encontrado');
   assert.equal(res.body?.code, 'FUNC_NOT_FOUND');
+
+  const usersAfter = await User.countDocuments();
+  assert.equal(usersAfter, usersBefore);
+
+  const createdUser = await User.findOne({ email }).lean();
+  assert.equal(createdUser, null);
+
+  const membershipsAfter = await UserMembership.countDocuments();
+  assert.equal(membershipsAfter, membershipsBefore);
+});
+
+test('POST /gestor/api/usuarios falha com FUNC_ALREADY_LINKED no bloco pre-efeito principal do controller', async () => {
+  const unidade = await createEnabledUnit(`Unidade Funcionario Ja Vinculado ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('funcionario-ja-vinculado-target');
+  const linkedUser = await createUser({
+    email: buildUniqueEmail('funcionario-ja-vinculado-owner'),
+    nome: 'Usuário Já Vinculado ao Funcionário',
+    role: 'user',
+    unidadeId: unidade._id,
+  });
+
+  const funcionario = await Funcionario.create({
+    unidade_id: unidade._id,
+    usuario_id: linkedUser._id,
+    nome: 'Funcionário Já Vinculado',
+    rg: `RG${Date.now()}${nextSequence()}`,
+    cpf: buildUniqueCpf(),
+    data_nascimento: new Date('2000-01-01T00:00:00.000Z'),
+    sexo: 'N',
+    email: buildUniqueEmail('funcionario-ja-vinculado-existing'),
+    telefone: '(11) 99999-9999',
+  });
+
+  const usersBefore = await User.countDocuments();
+  const membershipsBefore = await UserMembership.countDocuments();
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Usuário Alvo Funcionário Já Vinculado',
+      email,
+      role: 'admin',
+      cpf: buildUniqueCpf(),
+      funcionario_id: String(funcionario._id),
+    });
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body?.success, false);
+  assert.equal(res.body?.error, 'Funcionário já vinculado a um usuário');
+  assert.equal(res.body?.code, 'FUNC_ALREADY_LINKED');
+
+  const usersAfter = await User.countDocuments();
+  assert.equal(usersAfter, usersBefore);
+
+  const createdUser = await User.findOne({ email }).lean();
+  assert.equal(createdUser, null);
+
+  const membershipsAfter = await UserMembership.countDocuments();
+  assert.equal(membershipsAfter, membershipsBefore);
+});
+
+test('POST /gestor/api/usuarios falha com FUNC_WRONG_UNIT no bloco pre-efeito principal do controller', async () => {
+  const unidadeFuncionario = await createEnabledUnit(`Unidade Funcionario Origem ${nextSequence()}`);
+  const unidadeAlvo = await createEnabledUnit(`Unidade Funcionario Destino ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('funcionario-outra-unidade-target');
+
+  const funcionario = await Funcionario.create({
+    unidade_id: unidadeFuncionario._id,
+    nome: 'Funcionário Outra Unidade',
+    rg: `RG${Date.now()}${nextSequence()}`,
+    cpf: buildUniqueCpf(),
+    data_nascimento: new Date('2000-01-01T00:00:00.000Z'),
+    sexo: 'N',
+    email: buildUniqueEmail('funcionario-outra-unidade-existing'),
+    telefone: '(11) 99999-9999',
+  });
+
+  const usersBefore = await User.countDocuments();
+  const membershipsBefore = await UserMembership.countDocuments();
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Usuário Alvo Funcionário Outra Unidade',
+      email,
+      role: 'admin',
+      cpf: buildUniqueCpf(),
+      unidade_id: String(unidadeAlvo._id),
+      funcionario_id: String(funcionario._id),
+    });
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body?.success, false);
+  assert.equal(res.body?.error, 'Funcionário pertence a outra unidade');
+  assert.equal(res.body?.code, 'FUNC_WRONG_UNIT');
 
   const usersAfter = await User.countDocuments();
   assert.equal(usersAfter, usersBefore);
