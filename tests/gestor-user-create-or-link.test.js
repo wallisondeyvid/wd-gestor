@@ -508,6 +508,56 @@ test('POST /gestor/api/usuarios cria usuário novo com membership contextual', a
   assert.equal(String(res.body.id), String(user._id));
 });
 
+test('POST /gestor/api/usuarios cria usuário novo com funcionario_id válido e membership contextual coerente', async () => {
+  const unidade = await createEnabledUnit(`Unidade Novo Usuário com Funcionário ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('novo-contextual-funcionario');
+
+  const funcionario = await Funcionario.create({
+    unidade_id: unidade._id,
+    nome: 'Funcionário Novo Contextual',
+    rg: `RG${Date.now()}${nextSequence()}`,
+    cpf: buildUniqueCpf(),
+    data_nascimento: new Date('2000-01-01T00:00:00.000Z'),
+    sexo: 'N',
+    email: buildUniqueEmail('funcionario-novo-contextual'),
+    telefone: '(11) 99999-9999',
+  });
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Novo Contextual com Funcionário',
+      email,
+      role: 'diretor',
+      unidade_id: String(unidade._id),
+      cpf: buildUniqueCpf(),
+      funcionario_id: String(funcionario._id),
+    });
+
+  assert.equal(res.status, 201);
+  assert.equal(res.body.success, true);
+  assert.equal(res.body.data?.outcome, 'created');
+
+  const users = await User.find({ email }).lean();
+  assert.equal(users.length, 1);
+
+  const user = users[0];
+  assert.equal(user ? String(user.funcionario_id) : null, String(funcionario._id));
+
+  const funcionarioAtualizado = await Funcionario.findById(funcionario._id).lean();
+  assert.ok(funcionarioAtualizado);
+  assert.equal(String(funcionarioAtualizado.usuario_id), String(user._id));
+
+  const memberships = await UserMembership.find({ user_id: user._id }).lean();
+  assert.equal(memberships.length, 1);
+  assert.equal(String(memberships[0].unidade_id), String(unidade._id));
+  assert.equal(memberships[0].papel_contextual, 'gestor');
+  assert.equal(String(memberships[0].funcionario_id), String(funcionario._id));
+  assert.equal(memberships[0].status, 'active');
+  assert.equal(memberships[0].origem, 'gestor-user-admin');
+});
+
 test('POST /gestor/api/usuarios reaproveita o mesmo User e adiciona membership em outra unidade', async () => {
   const unidadeA = await createEnabledUnit(`Unidade Existente A ${nextSequence()}`);
   const unidadeB = await createEnabledUnit(`Unidade Existente B ${nextSequence()}`);
