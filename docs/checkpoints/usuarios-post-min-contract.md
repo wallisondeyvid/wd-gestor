@@ -28,17 +28,31 @@ Classificacao: MICRO_PASSO_SEGURO consumido
 
 - 401 sem sessão: success=false, error="Não autenticado", code="UNAUTHORIZED".
 - 403 para autenticado sem papel permitido: success=false, error="Acesso negado", code="FORBIDDEN".
-- Ramos já sustentados na mesma suíte focal:
-  - 201 cria usuário novo com membership contextual.
-  - 201 reaproveita o mesmo User e adiciona membership em outra unidade.
-  - 400 quando o usuário já está vinculado à mesma unidade, com code="USER_MEMBERSHIP_DUPLICATE".
+- 409 de seleção pendente no middleware: success=false, authenticated=true, error="Seleção de unidade pendente", code="GESTOR_SELECTION_REQUIRED", needsUnitSelection=true e redirect="/gestor/login?step=select".
+- 400 no pré-efeito principal com e-mail ausente: error="E-mail obrigatório", code="EMAIL_REQUIRED" e nenhum efeito colateral.
+- 400 no pré-efeito principal com unidade ausente para role contextual: error="Para usuários e diretores, é obrigatório selecionar uma unidade vinculada.", code="UNIT_REQUIRED" e nenhum efeito colateral.
+- 400 no pré-efeito principal com e-mail global já existente sem cenário de vínculo permitido: error="Email já cadastrado", code="EMAIL_DUPLICATE" e nenhum efeito colateral.
+- 400 no pré-efeito principal com funcionario_id inexistente: error="Funcionário não encontrado", code="FUNC_NOT_FOUND" e nenhum efeito colateral.
+- 400 no pré-efeito principal com funcionário já vinculado: error="Funcionário já vinculado a um usuário", code="FUNC_ALREADY_LINKED" e nenhum efeito colateral.
+- 400 no pré-efeito principal com unidade explícita divergente da unidade do funcionário: error="Funcionário pertence a outra unidade", code="FUNC_WRONG_UNIT" e nenhum efeito colateral.
+- 400 no pré-efeito principal com funcionario_id inválido: error="Funcionário inválido", code="FUNC_INVALID" e nenhum efeito colateral.
+- 201 created: cria usuário novo com membership contextual e retorna outcome="created".
+- 201 linked: reaproveita o mesmo User e adiciona membership em outra unidade, retornando outcome="linked".
+- 400 quando o usuário já está vinculado à mesma unidade: error="Usuário já vinculado a esta unidade", code="USER_MEMBERSHIP_DUPLICATE".
 
 ## Cobertura validada
 
 - Arquivo de teste: tests/gestor-user-create-or-link.test.js.
-- Cenário novo de gates mínimos:
+- Cenários agora congelados na suíte focal:
   - POST /gestor/api/usuarios aplica gates mínimos de autenticação e autorização no caminho montado real.
-- Ramos já existentes na mesma suíte focal:
+  - POST /gestor/api/usuarios bloqueia seleção pendente no middleware antes do controller no caminho montado real.
+  - POST /gestor/api/usuarios falha com EMAIL_REQUIRED antes de qualquer efeito no caminho montado real.
+  - POST /gestor/api/usuarios falha com UNIT_REQUIRED no bloco pre-efeito principal do controller.
+  - POST /gestor/api/usuarios falha com EMAIL_DUPLICATE no bloco pre-efeito principal do controller.
+  - POST /gestor/api/usuarios falha com FUNC_NOT_FOUND no bloco pre-efeito principal do controller.
+  - POST /gestor/api/usuarios falha com FUNC_ALREADY_LINKED no bloco pre-efeito principal do controller.
+  - POST /gestor/api/usuarios falha com FUNC_WRONG_UNIT no bloco pre-efeito principal do controller.
+  - POST /gestor/api/usuarios falha com FUNC_INVALID no bloco pre-efeito principal do controller.
   - POST /gestor/api/usuarios cria usuário novo com membership contextual.
   - POST /gestor/api/usuarios reaproveita o mesmo User e adiciona membership em outra unidade.
   - POST /gestor/api/usuarios falha claramente quando o usuário já está vinculado à mesma unidade.
