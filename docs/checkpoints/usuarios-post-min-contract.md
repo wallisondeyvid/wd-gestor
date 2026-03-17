@@ -6,7 +6,7 @@ Classificacao: MICRO_PASSO_SEGURO consumido
 ## Objetivo encerrado
 
 - Consolidar documentalmente o contrato mínimo real de POST /gestor/api/usuarios no caminho montado atual do app.
-- Encerrar o micro-passo sem patch de produção, sem nova cobertura além da suíte focal e sem abrir fluxos mais amplos de criação de usuário, membership, funcionário, mailer ou bridge.
+- Consolidar no mesmo checkpoint os congelamentos adicionais de Fase 2 já validados pela suíte focal, sem patch de produção e sem abrir fluxos mais amplos de criação de usuário, membership, funcionário, mailer ou bridge.
 
 ## Caminho canônico real
 
@@ -38,6 +38,11 @@ Classificacao: MICRO_PASSO_SEGURO consumido
 - 400 no pré-efeito principal com funcionario_id inválido: error="Funcionário inválido", code="FUNC_INVALID" e nenhum efeito colateral.
 - 201 created: cria usuário novo com membership contextual e retorna outcome="created".
 - 201 linked: reaproveita o mesmo User e adiciona membership em outra unidade, retornando outcome="linked".
+- 201 created com funcionario_id válido e role contextual: mantém coerência final entre User.funcionario_id, Funcionario.usuario_id e UserMembership.funcionario_id, com status="active" e origem="gestor-user-admin" no membership criado.
+- 201 linked com funcionario_id válido em nova unidade contextual: reaproveita o mesmo User, cria exatamente um novo UserMembership na nova unidade, preenche UserMembership.funcionario_id, aponta Funcionario.usuario_id para o User reutilizado e preserva User.funcionario_id coerente no estado final.
+- Role vazia e role="master" são normalizadas para role efetiva "user" no fluxo created.
+- Quando a role não gera papel_contextual, o endpoint ainda pode responder 201 created sem criar UserMembership; com funcionario_id válido, o vínculo User.funcionario_id e Funcionario.usuario_id é efetivado mesmo sem membership contextual.
+- ExistingUser + role="admin" + unidade_id presente + funcionario_id válido e existente, sem possibilidade de membership contextual, aborta com 400 EMAIL_DUPLICATE antes do bloco de vínculo por funcionário: sem data.outcome, sem segundo User, sem UserMembership, User existente permanece sem funcionario_id e Funcionario permanece sem usuario_id.
 - 400 quando o usuário já está vinculado à mesma unidade: error="Usuário já vinculado a esta unidade", code="USER_MEMBERSHIP_DUPLICATE".
 
 ## Cobertura validada
@@ -49,12 +54,17 @@ Classificacao: MICRO_PASSO_SEGURO consumido
   - POST /gestor/api/usuarios falha com EMAIL_REQUIRED antes de qualquer efeito no caminho montado real.
   - POST /gestor/api/usuarios falha com UNIT_REQUIRED no bloco pre-efeito principal do controller.
   - POST /gestor/api/usuarios falha com EMAIL_DUPLICATE no bloco pre-efeito principal do controller.
+  - POST /gestor/api/usuarios mantém EMAIL_DUPLICATE para User existente com role admin, unidade_id presente e funcionario_id válido sem membership contextual.
   - POST /gestor/api/usuarios falha com FUNC_NOT_FOUND no bloco pre-efeito principal do controller.
   - POST /gestor/api/usuarios falha com FUNC_ALREADY_LINKED no bloco pre-efeito principal do controller.
   - POST /gestor/api/usuarios falha com FUNC_WRONG_UNIT no bloco pre-efeito principal do controller.
   - POST /gestor/api/usuarios falha com FUNC_INVALID no bloco pre-efeito principal do controller.
   - POST /gestor/api/usuarios cria usuário novo com membership contextual.
+  - POST /gestor/api/usuarios normaliza role vazia e master para user no fluxo created.
+  - POST /gestor/api/usuarios cria User com funcionario_id válido e sem membership contextual quando a role não mapeia para papel_contextual.
+  - POST /gestor/api/usuarios cria usuário novo com funcionario_id válido e membership contextual coerente.
   - POST /gestor/api/usuarios reaproveita o mesmo User e adiciona membership em outra unidade.
+  - POST /gestor/api/usuarios reaproveita User existente com funcionario_id valido em nova unidade contextual mantendo coerencia interna.
   - POST /gestor/api/usuarios falha claramente quando o usuário já está vinculado à mesma unidade.
 - Execução focal validada: node --test tests/gestor-user-create-or-link.test.js.
 - A origem do 401 permanece em requireLogin.
@@ -62,7 +72,7 @@ Classificacao: MICRO_PASSO_SEGURO consumido
 
 ## Conclusão
 
-- POST /gestor/api/usuarios tem contrato mínimo inicial suficientemente congelado no caminho montado real do app.
-- O micro-passo seguro desta rodada foi consumido apenas fechando os gates mínimos do endpoint.
+- POST /gestor/api/usuarios tem contrato mínimo real e os microcortes documentados de Fase 2 suficientemente congelados no caminho montado real do app.
+- O checkpoint agora registra tanto os gates mínimos quanto os comportamentos contextuais já validados para created, linked, coerência User/Funcionario/UserMembership, normalização de role e abortos sem membership contextual.
 - Não houve alteração em produção.
 - O restante do endpoint sobe para EXIGE_AUDITORIA_MAIOR.
