@@ -754,6 +754,204 @@ test('POST /gestor/api/usuarios retorna CPF_REQUIRED no ramo automático após c
   assert.equal(memberships.length, 0);
 });
 
+test('POST /gestor/api/usuarios retorna UNIT_REQUIRED no ramo automático após criar o User e antes de criar Funcionario', async () => {
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('auto-funcionario-unit-required');
+  const cpf = buildUniqueCpf();
+
+  const usersBefore = await User.countDocuments();
+  const membershipsBefore = await UserMembership.countDocuments();
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Usuário Sem Unidade no Automático',
+      email,
+      role: 'admin',
+      cpf,
+      criarNovoFuncionario: true,
+    });
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body.success, false);
+  assert.equal(res.body.error, 'Unidade é obrigatória para criar novo funcionário.');
+  assert.equal(res.body.code, 'UNIT_REQUIRED');
+  assert.equal(res.body.data, undefined);
+
+  const users = await User.find({ email }).lean();
+  assert.equal(users.length, 1);
+
+  const user = users[0];
+  assert.equal(user.role, 'admin');
+  assert.equal(user.unidade_id ?? null, null);
+  assert.equal(user.funcionario_id ?? null, null);
+
+  const usersAfter = await User.countDocuments();
+  assert.equal(usersAfter, usersBefore + 1);
+
+  const funcionariosCriados = await Funcionario.find({ email }).lean();
+  assert.equal(funcionariosCriados.length, 0);
+
+  const membershipsAfter = await UserMembership.countDocuments();
+  assert.equal(membershipsAfter, membershipsBefore);
+
+  const memberships = await UserMembership.find({ user_id: user._id }).lean();
+  assert.equal(memberships.length, 0);
+});
+
+test('POST /gestor/api/usuarios reaproveita Funcionario existente por cpf e unidade no ramo automático', async () => {
+  const unidade = await createEnabledUnit(`Unidade Reaproveita Funcionario Automatico ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('auto-funcionario-existente');
+  const cpf = buildUniqueCpf();
+
+  const funcionarioExistente = await Funcionario.create({
+    unidade_id: unidade._id,
+    nome: 'Funcionário Existente no Automático',
+    rg: `RG${Date.now()}${nextSequence()}`,
+    cpf,
+    data_nascimento: new Date('2000-01-01T00:00:00.000Z'),
+    sexo: 'N',
+    email: buildUniqueEmail('funcionario-automatico-existente'),
+    telefone: '(11) 99999-9999',
+  });
+
+  const funcionariosAntes = await Funcionario.find({
+    cpf,
+    unidade_id: unidade._id,
+  }).lean();
+  assert.equal(funcionariosAntes.length, 1);
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Usuário com Funcionário Existente no Automático',
+      email,
+      role: 'diretor',
+      unidade_id: String(unidade._id),
+      cpf,
+      criarNovoFuncionario: true,
+    });
+
+  assert.equal(res.status, 201);
+  assert.equal(res.body.success, true);
+  assert.equal(res.body.created, true);
+  assert.equal(res.body.data?.outcome, 'created');
+  assert.equal(String(res.body.data?.funcionario_id), String(funcionarioExistente._id));
+
+  const users = await User.find({ email }).lean();
+  assert.equal(users.length, 1);
+
+  const user = users[0];
+  assert.equal(String(user.unidade_id), String(unidade._id));
+  assert.equal(String(user.funcionario_id), String(funcionarioExistente._id));
+
+  const funcionariosDepois = await Funcionario.find({
+    cpf,
+    unidade_id: unidade._id,
+  }).lean();
+  assert.equal(funcionariosDepois.length, 1);
+  assert.equal(String(funcionariosDepois[0]._id), String(funcionarioExistente._id));
+
+  const funcionarioAtualizado = await Funcionario.findById(funcionarioExistente._id).lean();
+  assert.ok(funcionarioAtualizado);
+  assert.equal(String(funcionarioAtualizado.usuario_id), String(user._id));
+
+  const memberships = await UserMembership.find({ user_id: user._id }).lean();
+  assert.equal(memberships.length, 1);
+  assert.equal(String(memberships[0].unidade_id), String(unidade._id));
+  assert.equal(memberships[0].papel_contextual, 'gestor');
+  assert.equal(String(memberships[0].funcionario_id), String(funcionarioExistente._id));
+  assert.equal(memberships[0].status, 'active');
+  assert.equal(memberships[0].origem, 'gestor-user-admin');
+});
+
+test('POST /gestor/api/usuarios reaproveita User existente e Funcionario existente por cpf e unidade em nova unidade contextual no ramo automático', async () => {
+  const unidadeA = await createEnabledUnit(`Unidade Existing User Automático A ${nextSequence()}`);
+  const unidadeB = await createEnabledUnit(`Unidade Existing User Automático B ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('auto-existing-user-funcionario');
+  const cpf = buildUniqueCpf();
+
+  const existingUser = await createUser({
+    email,
+    nome: 'Usuário Existente no Automático',
+    role: 'user',
+    unidadeId: unidadeA._id,
+  });
+
+  await UserMembership.create({
+    user_id: existingUser._id,
+    unidade_id: unidadeA._id,
+    papel_contextual: 'user',
+    status: 'active',
+    origem: 'gestor-user-create-or-link-test',
+  });
+
+  const funcionarioExistente = await Funcionario.create({
+    unidade_id: unidadeB._id,
+    nome: 'Funcionário Existente em Nova Unidade',
+    rg: `RG${Date.now()}${nextSequence()}`,
+    cpf,
+    data_nascimento: new Date('2000-01-01T00:00:00.000Z'),
+    sexo: 'N',
+    email: buildUniqueEmail('funcionario-auto-existing-user'),
+    telefone: '(11) 99999-9999',
+  });
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Usuário Existente Vinculando Funcionario Automático',
+      email,
+      role: 'diretor',
+      unidade_id: String(unidadeB._id),
+      cpf,
+      criarNovoFuncionario: true,
+    });
+
+  assert.equal(res.status, 201);
+  assert.equal(res.body.success, true);
+  assert.equal(res.body.created, true);
+  assert.equal(res.body.data?.outcome, 'linked');
+  assert.equal(String(res.body.id), String(existingUser._id));
+  assert.equal(String(res.body.data?.funcionario_id), String(funcionarioExistente._id));
+
+  const users = await User.find({ email }).lean();
+  assert.equal(users.length, 1);
+  assert.equal(String(users[0]._id), String(existingUser._id));
+
+  const funcionariosDepois = await Funcionario.find({
+    cpf,
+    unidade_id: unidadeB._id,
+  }).lean();
+  assert.equal(funcionariosDepois.length, 1);
+  assert.equal(String(funcionariosDepois[0]._id), String(funcionarioExistente._id));
+
+  const memberships = await UserMembership.find({ user_id: existingUser._id }).sort({ createdAt: 1 }).lean();
+  assert.equal(memberships.length, 2);
+
+  const membershipNovaUnidade = memberships.find(
+    (membership) => String(membership.unidade_id) === String(unidadeB._id),
+  );
+  assert.ok(membershipNovaUnidade);
+  assert.equal(membershipNovaUnidade.papel_contextual, 'gestor');
+  assert.equal(String(membershipNovaUnidade.funcionario_id), String(funcionarioExistente._id));
+  assert.equal(membershipNovaUnidade.status, 'active');
+  assert.equal(membershipNovaUnidade.origem, 'gestor-user-admin');
+
+  const funcionarioAtualizado = await Funcionario.findById(funcionarioExistente._id).lean();
+  assert.ok(funcionarioAtualizado);
+  assert.equal(String(funcionarioAtualizado.usuario_id), String(existingUser._id));
+
+  const reusedUserAfter = await User.findById(existingUser._id).lean();
+  assert.ok(reusedUserAfter);
+  assert.equal(
+    reusedUserAfter.funcionario_id ? String(reusedUserAfter.funcionario_id) : null,
+    String(funcionarioExistente._id),
+  );
+});
+
 test('POST /gestor/api/usuarios cria funcionário automaticamente quando solicitado sem funcionario_id prévio', async () => {
   const unidade = await createEnabledUnit(`Unidade Funcionário Automático ${nextSequence()}`);
   const { agent } = await createAdminAgent();
