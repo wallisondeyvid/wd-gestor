@@ -421,7 +421,8 @@ export async function criarUsuario(req, res) {
 				if (existente) {
 					linkedFuncionarioId = existente._id;
 					// Vincula usuário ao funcionário já existente
-					if (!isExistingUser) {
+					const shouldSyncUserFuncionarioId = !user.funcionario_id;
+					if (!isExistingUser || shouldSyncUserFuncionarioId) {
 						user.funcionario_id = existente._id;
 						if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
 						await saveUserDoc(user);
