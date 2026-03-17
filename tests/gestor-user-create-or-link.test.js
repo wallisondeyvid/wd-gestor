@@ -508,6 +508,40 @@ test('POST /gestor/api/usuarios cria usuário novo com membership contextual', a
   assert.equal(String(res.body.id), String(user._id));
 });
 
+test('POST /gestor/api/usuarios normaliza role vazia e master para user no fluxo created', async () => {
+  const unidade = await createEnabledUnit(`Unidade Role Normalizada ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+
+  for (const role of ['', 'master']) {
+    const email = buildUniqueEmail(role || 'role-vazia');
+
+    const res = await agent
+      .post('/gestor/api/usuarios')
+      .send({
+        nome: `Usuário ${role || 'vazio'}`,
+        email,
+        role,
+        unidade_id: String(unidade._id),
+        cpf: buildUniqueCpf(),
+      });
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.data?.outcome, 'created');
+
+    const users = await User.find({ email }).lean();
+    assert.equal(users.length, 1);
+    assert.equal(users[0].role, 'user');
+
+    const memberships = await UserMembership.find({ user_id: users[0]._id }).lean();
+    assert.equal(memberships.length, 1);
+    assert.equal(String(memberships[0].unidade_id), String(unidade._id));
+    assert.equal(memberships[0].papel_contextual, 'user');
+    assert.equal(memberships[0].status, 'active');
+    assert.equal(memberships[0].origem, 'gestor-user-admin');
+  }
+});
+
 test('POST /gestor/api/usuarios cria usuário novo com funcionario_id válido e membership contextual coerente', async () => {
   const unidade = await createEnabledUnit(`Unidade Novo Usuário com Funcionário ${nextSequence()}`);
   const { agent } = await createAdminAgent();
