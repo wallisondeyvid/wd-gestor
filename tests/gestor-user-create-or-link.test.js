@@ -234,6 +234,52 @@ test('POST /gestor/api/usuarios bloqueia seleção pendente no middleware antes 
   assert.equal(createdUser, null);
 });
 
+test('POST /gestor/api/usuarios falha com EMAIL_REQUIRED antes de qualquer efeito no caminho montado real', async () => {
+  const unidade = await createEnabledUnit(`Unidade Email Obrigatório ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+  const usersBefore = await User.countDocuments();
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Sem Email',
+      role: 'user',
+      unidade_id: String(unidade._id),
+      cpf: buildUniqueCpf(),
+    });
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body?.success, false);
+  assert.equal(res.body?.error, 'E-mail obrigatório');
+  assert.equal(res.body?.code, 'EMAIL_REQUIRED');
+
+  const usersAfter = await User.countDocuments();
+  assert.equal(usersAfter, usersBefore);
+});
+
+test('POST /gestor/api/usuarios falha com UNIT_REQUIRED no bloco pre-efeito principal do controller', async () => {
+  const { agent } = await createAdminAgent();
+  const attemptedEmail = buildUniqueEmail('sem-unidade');
+  const usersBefore = await User.countDocuments();
+
+  const res = await agent
+    .post('/gestor/api/usuarios')
+    .send({
+      nome: 'Sem Unidade',
+      email: attemptedEmail,
+      role: 'user',
+      cpf: buildUniqueCpf(),
+    });
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body?.success, false);
+  assert.equal(res.body?.error, 'Para usuários e diretores, é obrigatório selecionar uma unidade vinculada.');
+  assert.equal(res.body?.code, 'UNIT_REQUIRED');
+
+  const usersAfter = await User.countDocuments();
+  assert.equal(usersAfter, usersBefore);
+});
+
 test('POST /gestor/api/usuarios cria usuário novo com membership contextual', async () => {
   const unidade = await createEnabledUnit(`Unidade Novo Usuário ${nextSequence()}`);
   const { agent } = await createAdminAgent();
