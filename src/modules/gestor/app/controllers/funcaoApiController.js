@@ -22,20 +22,8 @@ function normalizeUnitId(value){
   return String(value || '').trim();
 }
 
-function isMasterOrAdmin(req) {
-  return req.user?.isMaster || req.user?.role === 'admin';
-}
-
 function getScopedUnitId(req) {
   return normalizeUnitId(req.unitScope?.unidadeId);
-}
-
-function getLegacyUserUnitId(req) {
-  return normalizeUnitId(req.user?.unidade_id);
-}
-
-function getLegacyUserPrincipalUnitId(req) {
-  return normalizeUnitId(req.user?.unidade_principal_id);
 }
 
 async function resolvePrincipalUnitId(unidadeId) {
@@ -55,14 +43,6 @@ async function resolvePrincipalUnitId(unidadeId) {
 async function getCanonicalContextPrincipalUnitId(req) {
   const scopedUnitId = getScopedUnitId(req);
   if (scopedUnitId) return resolvePrincipalUnitId(scopedUnitId);
-
-  if (!isMasterOrAdmin(req)) {
-    const legacyPrincipalUnitId = getLegacyUserPrincipalUnitId(req);
-    if (legacyPrincipalUnitId) return legacyPrincipalUnitId;
-
-    const legacyUnitId = getLegacyUserUnitId(req);
-    if (legacyUnitId) return resolvePrincipalUnitId(legacyUnitId);
-  }
 
   return '';
 }
