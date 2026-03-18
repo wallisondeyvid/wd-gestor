@@ -28,32 +28,16 @@ function getScopedUnitId(req) {
 	return normalizeUnitId(req.unitScope?.unidadeId);
 }
 
-function getLegacyUserUnitId(req) {
-	return normalizeUnitId(req.user?.unidade_id);
-}
-
 function getCanonicalContextUnitId(req) {
-	const scopedUnitId = getScopedUnitId(req);
-	if (scopedUnitId) return scopedUnitId;
-
-	if (!isMasterOrAdmin(req)) {
-		return getLegacyUserUnitId(req);
-	}
-
-	return '';
+	return getScopedUnitId(req);
 }
 
 function requestedUnitMatchesContext(req, requestedUnitId) {
 	const requested = normalizeUnitId(requestedUnitId);
 	if (!requested) return true;
 
-	const scopedUnitId = getScopedUnitId(req);
-	if (scopedUnitId && scopedUnitId !== requested) return false;
-
-	if (!isMasterOrAdmin(req)) {
-		const legacyUserUnitId = getLegacyUserUnitId(req);
-		if (legacyUserUnitId && legacyUserUnitId !== requested) return false;
-	}
+	const canonicalContextUnitId = getCanonicalContextUnitId(req);
+	if (canonicalContextUnitId) return canonicalContextUnitId === requested;
 
 	return true;
 }
@@ -69,7 +53,7 @@ export async function listarRecursosApi(req, res) {
 		let { placa, unidadeId } = req.query;
 		placa = (placa || '').trim();
 		unidadeId = (unidadeId || '').trim();
-		const canonicalUnitId = getCanonicalContextUnitId(req);
+		const scopedUnitId = getScopedUnitId(req);
 
 		const filtro = {};
 		let placaTermNorm = null;
@@ -83,7 +67,11 @@ export async function listarRecursosApi(req, res) {
 			}
 		} else {
 			let principalId = null;
-			const anchorUnitId = canonicalUnitId || getLegacyUserUnitId(req);
+			const anchorUnitId = scopedUnitId;
+
+			if (!anchorUnitId) {
+				return ok(res, []);
+			}
 
 			if (anchorUnitId) {
 				const unidadeAnchor = await findUnidadeUserBaseLean(anchorUnitId);
@@ -146,7 +134,7 @@ export async function listarRecursosApi(req, res) {
 export async function getRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
-		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
+		const unidadeEfetiva = getScopedUnitId(req) || null;
 
 		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
@@ -270,7 +258,7 @@ export async function deleteRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
 
-		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
+		const unidadeEfetiva = getScopedUnitId(req) || null;
 
 		const recurso = await deleteRecursoById(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');

@@ -9,8 +9,6 @@ import {
   findSetorById,
   findSetorDupByNomeNormalizadoExcludingId,
   saveSetor,
-  findUnidadeUserBaseSetorLean,
-  findUnidadesByCondLean,
   findSetoresByFiltroPopulateUnidadeLean,
   findUnidadesByIdsNomeCodigoLean,
   findSetorByIdAndDelete,
@@ -31,32 +29,16 @@ function getScopedUnitId(req) {
 	return normalizeUnitId(req.unitScope?.unidadeId);
 }
 
-function getLegacyUserUnitId(req) {
-	return normalizeUnitId(req.user?.unidade_id);
-}
-
 function getCanonicalContextUnitId(req) {
-	const scopedUnitId = getScopedUnitId(req);
-	if (scopedUnitId) return scopedUnitId;
-
-	if (!isMasterOrAdmin(req)) {
-		return getLegacyUserUnitId(req);
-	}
-
-	return '';
+  return getScopedUnitId(req);
 }
 
 function requestedUnitMatchesContext(req, requestedUnitId) {
 	const requested = normalizeUnitId(requestedUnitId);
 	if (!requested) return true;
 
-	const scopedUnitId = getScopedUnitId(req);
-	if (scopedUnitId && scopedUnitId !== requested) return false;
-
-	if (!isMasterOrAdmin(req)) {
-		const legacyUserUnitId = getLegacyUserUnitId(req);
-		if (legacyUserUnitId && legacyUserUnitId !== requested) return false;
-	}
+  const canonicalContextUnitId = getCanonicalContextUnitId(req);
+  if (canonicalContextUnitId) return canonicalContextUnitId === requested;
 
 	return true;
 }
@@ -150,7 +132,7 @@ export async function listarSetores(req,res){
   try {
     const { unidade_id } = req.query;
     let filtro = {};
-    const canonicalUnitId = getCanonicalContextUnitId(req);
+    const canonicalUnitId = getScopedUnitId(req);
 
     if (canonicalUnitId) {
       filtro.unidade_id = canonicalUnitId;
@@ -158,24 +140,8 @@ export async function listarSetores(req,res){
       filtro.unidade_id = unidade_id;
     }
 
-    // Fallback legado isolado: enquanto ainda houver páginas/sessões sem unitScope canônico
-    if (!canonicalUnitId && !(req.user?.isMaster || req.user?.role === 'admin')) {
-      let principalId = req.user?.unidade_principal_id;
-      if (!principalId && req.user?.unidade_id) {
-        const u = await findUnidadeUserBaseSetorLean(req.user.unidade_id);
-        if (u) principalId = u.is_principal ? u._id : u.unidade_principal_id;
-      }
-      const cond = principalId ? { $or: [{ _id: principalId }, { unidade_principal_id: principalId }] } : { _id: req.user?.unidade_id || null };
-      const unidadesAcessiveis = await findUnidadesByCondLean(cond);
-      const ids = unidadesAcessiveis.map(u => String(u._id));
-      filtro.unidade_id = filtro.unidade_id ? filtro.unidade_id : { $in: ids };
-      if (typeof filtro.unidade_id === 'string' && !ids.includes(String(filtro.unidade_id))) {
-        // Se query pedir unidade fora do escopo, retornar vazio
-        return ok(res, []);
-      }
-      if (filtro.unidade_id && filtro.unidade_id.$in && filtro.unidade_id.$in.length === 0) {
-        return ok(res, []);
-      }
+    if (!canonicalUnitId && !isMasterOrAdmin(req)) {
+      return ok(res, []);
     }
     const setores = await findSetoresByFiltroPopulateUnidadeLean(filtro);
 
