@@ -36,7 +36,16 @@ function installSessionSeedRoute(app) {
 }
 
 function installRequireUnitScopeEchoRoute(app) {
-  app.get('/__tests__/require-unit-scope', requireUnitScope, (req, res) => {
+  app.get('/__tests__/require-unit-scope', (req, res, next) => {
+    req.user = req.session?.user
+      ? {
+          ...req.session.user,
+          _id: req.session.user.id || null,
+          isMaster: req.session.user.role === 'master',
+        }
+      : null;
+    next();
+  }, requireUnitScope, (req, res) => {
     return res.status(200).json({
       unidadeId: req.unitScope?.unidadeId || null,
     });

@@ -95,7 +95,7 @@ function createReq({
 test('requireUnitScope mantém o comportamento legado integral quando a flag está desligada', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: false },
-    sessionUser: {
+    user: {
       id: 'u1',
       email: 'legacy@example.com',
       unidade_id: '000000000000000000000001',
@@ -121,7 +121,7 @@ test('requireUnitScope mantém o comportamento legado integral quando a flag est
 test('requireUnitScope retorna 409 funcional para API quando a seleção de unidade está pendente', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: true },
-    sessionUser: {
+    user: {
       id: 'u1',
       email: 'pending@example.com',
     },
@@ -151,7 +151,7 @@ test('requireUnitScope retorna 409 funcional para API quando a seleção de unid
 test('requireUnitScope redireciona páginas HTML para seleção quando o contexto está pendente', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: true },
-    sessionUser: {
+    user: {
       id: 'u1',
       email: 'pending@example.com',
     },
@@ -176,7 +176,7 @@ test('requireUnitScope redireciona páginas HTML para seleção quando o context
 test('requireUnitScope usa a unidade ativa do AuthContext e ignora query body e params quando a flag está ligada', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: true },
-    sessionUser: {
+    user: {
       id: 'u1',
       email: 'gestor@example.com',
       unidade_id: '000000000000000000000001',
@@ -209,10 +209,114 @@ test('requireUnitScope usa a unidade ativa do AuthContext e ignora query body e 
   });
 });
 
+test('requireUnitScope não usa matriz_unidade_id sozinha no fallback legado autenticado', async () => {
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'matriz-only@example.com',
+      role: 'diretor',
+      matriz_unidade_id: '000000000000000000000031',
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.jsonPayload, {
+    success: false,
+    error: 'UNIDADE_ID_REQUIRED',
+  });
+});
+
+test('requireUnitScope continua priorizando unidade_principal_id no fallback legado autenticado', async () => {
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'principal@example.com',
+      role: 'diretor',
+      matriz_unidade_id: '000000000000000000000031',
+      unidade_principal_id: '000000000000000000000032',
+      unidade_id: '000000000000000000000033',
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
+
+  assert.equal(nextCalled, true);
+  assert.deepEqual(req.unitScope, {
+    type: 'unit',
+    unidadeId: '000000000000000000000032',
+  });
+});
+
+test('requireUnitScope continua usando unidade_id quando unidade_principal_id não existe', async () => {
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'unit-only@example.com',
+      role: 'diretor',
+      matriz_unidade_id: '000000000000000000000031',
+      unidade_id: '000000000000000000000033',
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
+
+  assert.equal(nextCalled, true);
+  assert.deepEqual(req.unitScope, {
+    type: 'unit',
+    unidadeId: '000000000000000000000033',
+  });
+});
+
+test('requireUnitScope sem usuário não aceita unidadeId explícito quando multi-tenant está enforced', async () => {
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    query: {
+      unidadeId: '000000000000000000000030',
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.jsonPayload, {
+    success: false,
+    error: 'UNIDADE_ID_REQUIRED',
+  });
+});
+
+test('requireUnitScope sem usuário segue com unitScope nulo quando enforcement está desligado', async () => {
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    query: {
+      unidadeId: '000000000000000000000030',
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await runMw(requireUnitScope, req, res);
+
+  assert.equal(nextCalled, true);
+  assert.deepEqual(req.unitScope, {
+    type: 'global',
+    unidadeId: null,
+  });
+});
+
 test('requireUnitScope com a flag ligada continua aceitando unidadeId explícito quando não há contexto ativo', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: true },
-    sessionUser: {
+    user: {
       id: 'u1',
       email: 'admin@example.com',
       role: 'admin',

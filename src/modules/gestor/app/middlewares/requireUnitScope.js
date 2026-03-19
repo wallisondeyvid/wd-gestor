@@ -17,7 +17,7 @@ function firstNonEmpty(...values) {
 }
 
 function resolveUser(req) {
-  return req?.user || req?.session?.user || null;
+  return req?.user || null;
 }
 
 function isPrivilegedGestorUser(user) {
@@ -39,7 +39,6 @@ function resolveLegacyUserUnidadeId(req) {
   const user = resolveUser(req);
 
   return firstNonEmpty(
-    user?.matriz_unidade_id,
     user?.unidade_principal_id,
     user?.unidade_id,
   );
@@ -50,7 +49,7 @@ function resolveLegacyUnidadeId(req) {
   const requestUnidadeId = resolveRequestUnidadeId(req);
   const legacyUserUnidadeId = resolveLegacyUserUnidadeId(req);
 
-  if (!user) return requestUnidadeId;
+  if (!user) return '';
 
   if (isPrivilegedGestorUser(user)) {
     return firstNonEmpty(requestUnidadeId, legacyUserUnidadeId);
