@@ -280,7 +280,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
   if (user.role === 'master' && !unidadeId) { try { const unidadePrincipal = await findUnidadePrincipalLean({ maxTimeMS: queryTimeout }); if (unidadePrincipal) { unidadeId = unidadePrincipal._id; unidadePrincipalId = unidadePrincipal._id; } } catch {}
   } else if (unidadeId) { try { const unidadeDoc = await findUnidadeLeanById({ id: unidadeId, maxTimeMS: queryTimeout }); if (unidadeDoc) { unidadePrincipalId = unidadeDoc.is_principal ? unidadeDoc._id : (unidadeDoc.unidade_principal_id || null); } } catch {} }
   req.user = { _id: user._id, id: user._id, nome: user.nome || req.session.user.nome || 'Usuário', email: user.email, role: user.role, isMaster: user.role === 'master', foto: user.foto || null, funcionario_id: user.funcionario_id || null, unidade_id: unidadeId, unidade_principal_id: unidadePrincipalId, funcao: req.session.user.funcao || null };
-      req.session.user.unidade_id = unidadeId; req.session.user.unidade_principal_id = unidadePrincipalId; if (user.foto) req.session.user.foto = user.foto;
+      if (user.foto) req.session.user.foto = user.foto;
   console.log('[requireLogin] autenticado', { email: user.email, role: user.role, isMaster: (user.role === 'master') });
       return next();
     }
