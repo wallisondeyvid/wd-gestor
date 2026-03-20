@@ -16,7 +16,6 @@ import {
 	findUserMembershipsByUserIdsLean,
 	findUnidadesByIdsNomeCodigoLean,
 	findUserMembershipByUserAndUnidade,
-	createUserMembership,
 	findFuncionarioByIdSelectIdUnidadeUsuarioLean,
 	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean,
 	setFuncionarioUsuarioIdIfEmpty,
@@ -24,7 +23,7 @@ import {
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { findUserByEmailRepo, findUserByIdRepo } from '#modules/gestor/app/repositories/UserRepository.js';
-import { findUserMembershipByUserAndUnidadeLeanRepo, findUserMembershipsByUserIdsLeanRepo } from '#modules/gestor/app/repositories/UserMembershipRepository.js';
+import { createUserMembershipRepo, findUserMembershipByUserAndUnidadeLeanRepo, findUserMembershipsByUserIdsLeanRepo } from '#modules/gestor/app/repositories/UserMembershipRepository.js';
 import { findUnidadesByIdsNomeCodigoLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
@@ -502,7 +501,10 @@ export async function criarUsuario(req, res) {
 		});
 		if (membershipPayload) {
 			try {
-				await createUserMembership(membershipPayload);
+				await createUserMembershipRepo({
+					unitScope: CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE,
+					data: membershipPayload,
+				});
 			} catch (membershipErr) {
 				if (isDuplicateKeyError(membershipErr)) {
 					return badRequest(res, 'Usuário já vinculado a esta unidade', { code: 'USER_MEMBERSHIP_DUPLICATE' });
