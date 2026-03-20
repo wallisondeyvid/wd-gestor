@@ -23,6 +23,9 @@ import {
 	createFuncionarioDoc,
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { findUserByEmailRepo, findUserByIdRepo } from '#modules/gestor/app/repositories/UserRepository.js';
+import { findUserMembershipByUserAndUnidadeLeanRepo, findUserMembershipsByUserIdsLeanRepo } from '#modules/gestor/app/repositories/UserMembershipRepository.js';
+import { findUnidadesByIdsNomeCodigoLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
@@ -134,6 +137,9 @@ function buildUnidadeSummaryLabel(unidade) {
 	if (codigo && nome) return `${codigo} - ${nome}`;
 	return nome || codigo || null;
 }
+
+const CHECK_USUARIO_EMAIL_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+const CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
 
 async function loadMembershipsSummaryForUserId(userId) {
 	const normalizedUserId = normalizeEntityId(userId);
@@ -331,7 +337,7 @@ export async function criarUsuario(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 		const emailNorm = String(email).toLowerCase();
-		const existingUser = await findUserByEmail(emailNorm);
+		const existingUser = await findUserByEmailRepo({ unitScope: CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE, email: emailNorm });
 		const requestedUserRole = resolveRequestedUserRole(role);
 		const normalizedRole = normalizeRoleValue(role);
 		const canLinkExistingUser = !!buildUserMembershipPayload({
@@ -368,7 +374,11 @@ export async function criarUsuario(req, res) {
 		}
 
 		if (existingUser) {
-			const existingMembership = await findUserMembershipByUserAndUnidade(existingUser._id, unidade_id);
+			const existingMembership = await findUserMembershipByUserAndUnidadeLeanRepo({
+				unitScope: CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE,
+				userId: existingUser._id,
+				unidadeId: unidade_id,
+			});
 			if (existingMembership) {
 				return badRequest(res, 'Usuário já vinculado a esta unidade', { code: 'USER_MEMBERSHIP_DUPLICATE' });
 			}
@@ -528,7 +538,7 @@ export async function checkUsuarioEmail(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 
-		const user = await findUserByEmail(email);
+		const user = await findUserByEmailRepo({ unitScope: CHECK_USUARIO_EMAIL_GLOBAL_SCOPE, email });
 		if (!user) {
 			return ok(res, {
 				email,
@@ -541,7 +551,29 @@ export async function checkUsuarioEmail(req, res) {
 			});
 		}
 
-		const membershipsSummary = await loadMembershipsSummaryForUserId(user._id);
+		const normalizedUserId = normalizeEntityId(user._id);
+		const memberships = await findUserMembershipsByUserIdsLeanRepo({
+			unitScope: CHECK_USUARIO_EMAIL_GLOBAL_SCOPE,
+			userIds: [normalizedUserId],
+		});
+		const unidadeIds = [...new Set((Array.isArray(memberships) ? memberships : []).map((membership) => normalizeEntityId(membership?.unidade_id)).filter(Boolean))];
+		const unidades = unidadeIds.length > 0
+			? await findUnidadesByIdsNomeCodigoLeanRepo({ unitScope: CHECK_USUARIO_EMAIL_GLOBAL_SCOPE, unidadeIds })
+			: [];
+		const unidadesById = new Map(
+			(Array.isArray(unidades) ? unidades : []).map((unidade) => [normalizeEntityId(unidade?._id), unidade])
+		);
+		const membershipsSummary = (Array.isArray(memberships) ? memberships : []).map((membership) => {
+			const unidadeId = normalizeEntityId(membership?.unidade_id);
+			const unidade = unidadesById.get(unidadeId) || null;
+			return {
+				unidade_id: unidadeId,
+				unidade_nome: buildUnidadeSummaryLabel(unidade) || unidadeId,
+				papel_contextual: String(membership?.papel_contextual || '').trim() || null,
+				status: String(membership?.status || '').trim() || null,
+				funcionario_id: normalizeEntityId(membership?.funcionario_id) || null,
+			};
+		});
 		const linkedUnidadeIds = [...new Set(membershipsSummary.map((membership) => membership.unidade_id).filter(Boolean))];
 
 		return ok(res, {
@@ -661,7 +693,7 @@ export async function atualizarSenhaUsuario(req, res) {
 	try {
 		const { senhaAtual, novaSenha } = req.body;
 		if (!senhaAtual || !novaSenha) return badRequest(res, 'Parâmetros insuficientes');
-		const user = await findUserById(req.user.id);
+		const user = await findUserByIdRepo({ unitScope: CHECK_USUARIO_EMAIL_GLOBAL_SCOPE, userId: req.user.id });
 		if (!user) return notFound(res, 'Usuário não encontrado');
 		const confere = await bcrypt.compare(senhaAtual, user.senha);
 		if (!confere) return badRequest(res, 'Senha atual inválida');
@@ -669,7 +701,7 @@ export async function atualizarSenhaUsuario(req, res) {
 		// Limpa flags de primeiro acesso / senha provisória se ainda marcadas
 		if (user.primeiro_acesso) user.primeiro_acesso = false;
 		if (user.senha_provisoria) user.senha_provisoria = false;
-		await saveUserDoc(user);
+		await user.save();
 		return ok(res, { updated:true, primeiro_acesso:false, senha_provisoria:false });
 	} catch (e) {
 		console.error('[atualizarSenhaUsuario] erro:', e);
