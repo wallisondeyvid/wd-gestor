@@ -35,7 +35,7 @@ export async function unidadesCluster(req, res) {
 		const isPrivileged = isPrivilegedGestorUser(req.user);
 		let clusterAnchor = requestedAnchor;
 		if (!isPrivileged) {
-			const scopedUnitId = getScopedUnitId(req) || normalizeUnitId(req.user?.unidade_id);
+			const scopedUnitId = getScopedUnitId(req);
 			if (!scopedUnitId) return res.json({ ok: true, total: 0, unidades: [] });
 			const scopedUnit = await findUnidadeUserBaseLean(scopedUnitId);
 			const scopedAnchor = resolveClusterAnchorFromUnit(scopedUnit);

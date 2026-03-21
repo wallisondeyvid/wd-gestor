@@ -166,7 +166,7 @@ test('gestor requireUnitScope: com unidadeId valido nao retorna 400', async () =
   }
 });
 
-test('gestor requireUnitScope: usuario nao privilegiado nao consegue injetar unidade por query acima do contexto legado persistido', async () => {
+test('gestor requireUnitScope: usuario nao privilegiado sem AuthContext ativo recebe 400 mesmo com query e unidade_id legado em sessão', async () => {
   const { app, close, registerErrorHandlers } = await createServer({ skipDb: true, deferErrorHandlers: true });
   const teardownGuard = installTeardownSuppression();
   installRequireUnitScopeEchoRoute(app);
@@ -202,8 +202,9 @@ test('gestor requireUnitScope: usuario nao privilegiado nao consegue injetar uni
       .set('Accept', 'application/json')
       .set('Connection', 'close'));
 
-    assert.equal(res.status, 200);
-    assert.equal(res.body?.unidadeId, '0000000000000000000000aa');
+    assert.equal(res.status, 400);
+    assert.equal(res.body?.success, false);
+    assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED');
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);

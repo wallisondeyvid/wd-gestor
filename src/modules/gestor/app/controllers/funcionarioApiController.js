@@ -11,6 +11,7 @@ import {
 	createFuncionarioDoc,
 	saveFuncionario,
 	saveUserDoc,
+	findUnidadeUserBaseLean,
 	findFuncionarioById,
 	updateFuncionarioByIdWithOps,
 	findFuncionarioByIdPopulateRefs,
@@ -43,10 +44,6 @@ function firstNonEmptyUnitId(...values) {
 	return '';
 }
 
-function isPrivilegedGestorUser(user) {
-	return user?.isMaster || user?.role === 'admin' || user?.role === 'master';
-}
-
 function getScopedUnitId(req) {
 	return normalizeUnitId(req?.unitScope?.unidadeId);
 }
@@ -60,36 +57,54 @@ function getAuthContextActiveUnitId(req) {
 	);
 }
 
-function getLegacyContextUnitId(req) {
-	if (isPrivilegedGestorUser(req?.user)) return '';
-	const user = req?.user || req?.session?.user || null;
-	return firstNonEmptyUnitId(
-		user?.matriz_unidade_id,
-		user?.unidade_principal_id,
-		user?.unidade_id,
-	);
-}
-
 function getCanonicalContextUnitId(req) {
 	return firstNonEmptyUnitId(
 		getAuthContextActiveUnitId(req),
 		getScopedUnitId(req),
-		getLegacyContextUnitId(req),
 	);
+}
+
+async function resolveAuxiliaryOperationalUnitId(req) {
+	const authContextUnitId = getAuthContextActiveUnitId(req);
+	if (authContextUnitId) return authContextUnitId;
+
+	const scopedUnitId = getScopedUnitId(req);
+	if (!scopedUnitId) return '';
+
+	const requestUserUnitId = firstNonEmptyUnitId(
+		req?.user?.unidade_id,
+		req?.session?.user?.unidade_id,
+	);
+	if (!requestUserUnitId || requestUserUnitId === scopedUnitId) return scopedUnitId;
+
+	const requestUserUnitBase = await findUnidadeUserBaseLean(requestUserUnitId);
+	const requestUserPrincipalUnitId = normalizeUnitId(
+		requestUserUnitBase?.is_principal
+			? requestUserUnitBase?._id
+			: requestUserUnitBase?.unidade_principal_id || requestUserUnitBase?.matriz_id || requestUserUnitId,
+	);
+
+	return requestUserPrincipalUnitId === scopedUnitId
+		? requestUserUnitId
+		: scopedUnitId;
+}
+
+function requestedUnitMatchesResolvedContext(requestedUnitId, resolvedUnitId) {
+	const requested = normalizeUnitId(requestedUnitId);
+	if (!requested) return true;
+
+	const resolved = normalizeUnitId(resolvedUnitId);
+	if (resolved) return requested === resolved;
+
+	return true;
 }
 
 function requestedUnitMatchesContext(req, requestedUnitId) {
 	const requested = normalizeUnitId(requestedUnitId);
 	if (!requested) return true;
 
-	const authContextUnitId = getAuthContextActiveUnitId(req);
-	if (authContextUnitId) return requested === authContextUnitId;
-
-	const legacyContextUnitId = getLegacyContextUnitId(req);
-	if (legacyContextUnitId) return requested === legacyContextUnitId;
-
-	const scopedUnitId = getScopedUnitId(req);
-	if (scopedUnitId) return requested === scopedUnitId;
+	const canonicalContextUnitId = getCanonicalContextUnitId(req);
+	if (canonicalContextUnitId) return requested === canonicalContextUnitId;
 
 	return true;
 }
@@ -448,11 +463,12 @@ async function syncExistingMembershipFuncionario(existingMembership, funcionario
 export async function createFuncionarioInitial(req,res){ try {
 	let { unidade_id, funcao_id, nome, rg, cpf, data_nascimento, sexo, endereco, email, telefone } = req.body;
 	const requestedUnitId = normalizeUnitId(unidade_id);
-	const canonicalUnitId = getCanonicalContextUnitId(req) || requestedUnitId;
-	if (requestedUnitId && !requestedUnitMatchesContext(req, requestedUnitId)) {
+	const operationalUnitId = await resolveAuxiliaryOperationalUnitId(req);
+	const resolvedUnitId = operationalUnitId || requestedUnitId;
+	if (requestedUnitId && !requestedUnitMatchesResolvedContext(requestedUnitId, resolvedUnitId)) {
 		return notFound(res, 'Unidade não encontrada');
 	}
-	unidade_id = canonicalUnitId;
+	unidade_id = resolvedUnitId;
 	const faltando=[];
 	function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); }
 	['unidade_id','nome','rg','cpf','data_nascimento','sexo','endereco','email','telefone'].forEach(c=> need(eval(c), c));
@@ -1171,17 +1187,18 @@ export async function listarFuncionariosDisponiveis(req,res){
 		if(!unidadeId || unidadeId==='undefined' || unidadeId==='null'){
 			return ok(res, []);
 		}
-		if (!requestedUnitMatchesContext(req, unidadeId)) {
+		const operationalUnitId = await resolveAuxiliaryOperationalUnitId(req);
+		const resolvedUnitId = operationalUnitId || normalizeUnitId(unidadeId);
+		if (!requestedUnitMatchesResolvedContext(unidadeId, resolvedUnitId)) {
 			return ok(res, []);
 		}
-		const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidadeId);
-		let funcionarios = await findFuncionariosDisponiveisByUnidadeLean(canonicalUnitId);
+		let funcionarios = await findFuncionariosDisponiveisByUnidadeLean(resolvedUnitId);
 
 		// Opcional: incluir o funcionário atual (já vinculado) para edição, se for da mesma unidade
 		if (includeId && /^[a-fA-F0-9]{24}$/.test(includeId)) {
 			try {
-				const atual = await findFuncionarioByIdSelectBasicLean(includeId, canonicalUnitId || null);
-				if (atual && String(atual.unidade_id) === String(canonicalUnitId)) {
+				const atual = await findFuncionarioByIdSelectBasicLean(includeId, resolvedUnitId || null);
+				if (atual && String(atual.unidade_id) === String(resolvedUnitId)) {
 					const exists = funcionarios.some(f => String(f._id) === String(atual._id));
 					if (!exists) funcionarios = [...funcionarios, { _id: atual._id, nome: atual.nome, cpf: atual.cpf, email: atual.email || '' }];
 				}
@@ -1201,15 +1218,16 @@ export async function matchFuncionario(req, res){
 	try {
 		const cpfRaw = asStr(req.query.cpf || req.body?.cpf || '').replace(/\D/g,'');
 		const unidadeId = asStr(req.query.unidade_id || req.body?.unidade_id || '').trim();
-		const canonicalUnitId = getCanonicalContextUnitId(req) || unidadeId;
-		if (unidadeId && !requestedUnitMatchesContext(req, unidadeId)) {
+		const operationalUnitId = await resolveAuxiliaryOperationalUnitId(req);
+		const resolvedUnitId = operationalUnitId || unidadeId;
+		if (unidadeId && !requestedUnitMatchesResolvedContext(unidadeId, resolvedUnitId)) {
 			return ok(res, { exists:false });
 		}
 
 		let encontrado = null; let matchType = null;
 		// Match apenas por CPF+unidade
-		if (cpfRaw && canonicalUnitId) {
-			encontrado = await findFuncionarioByCpfAndUnidadeSelectLean(cpfRaw, canonicalUnitId);
+		if (cpfRaw && resolvedUnitId) {
+			encontrado = await findFuncionarioByCpfAndUnidadeSelectLean(cpfRaw, resolvedUnitId);
 			if (encontrado) matchType = 'cpf+unidade';
 		}
 

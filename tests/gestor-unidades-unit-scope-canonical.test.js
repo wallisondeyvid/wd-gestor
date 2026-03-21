@@ -179,8 +179,9 @@ async function createContextualAgent() {
     email: buildUniqueEmail('unidades-context-user'),
     nome: 'Gestor Contextual de Unidades',
     role: 'user',
-    unidadeId: unidadePrincipalC._id,
   });
+
+  assert.equal(user.unidade_id, null);
 
   await UserMembership.create({
     user_id: user._id,

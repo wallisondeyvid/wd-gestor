@@ -56,19 +56,7 @@ async function ensureCanAccessUnidade(req, unidadeId) {
   }
 
   if (isPrivilegedGestorUser(req?.user)) return true;
-
-  const matrizRef = req?.user?.unidade_principal_id || req?.user?.unidade_id;
-  if (!matrizRef) return false;
-
-  let unidadesPermitidas = await findUnidadesByMatrizOuPrincipal(matrizRef);
-  if ((!unidadesPermitidas || unidadesPermitidas.length === 0) && req?.user?.unidade_id) {
-    unidadesPermitidas = await findUnidadesById(req.user.unidade_id);
-  }
-
-  const permitidoIds = new Set(
-    (unidadesPermitidas || []).map((unidade) => normalizeUnitId(unidade?._id)).filter(Boolean),
-  );
-  return permitidoIds.has(targetUnitId);
+  return false;
 }
 
 export async function listarUnidades(req, res) {

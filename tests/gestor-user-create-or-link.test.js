@@ -1184,3 +1184,86 @@ test('POST /gestor/api/usuarios falha claramente quando o usuário já está vin
   const memberships = await UserMembership.find({ user_id: existingUser._id, unidade_id: unidade._id }).lean();
   assert.equal(memberships.length, 1);
 });
+
+test('POST /gestor/api/usuarios relocaliza Funcionario por cpf e unidade quando createFuncionarioDoc falha com duplicidade', async () => {
+  const unidade = await createEnabledUnit(`Unidade Duplicidade Funcionario ${nextSequence()}`);
+  const { agent } = await createAdminAgent();
+  const email = buildUniqueEmail('auto-funcionario-duplicate-fallback');
+  const cpf = buildUniqueCpf();
+
+  const funcionariosAntes = await Funcionario.find({
+    cpf,
+    unidade_id: unidade._id,
+  }).lean();
+  assert.equal(funcionariosAntes.length, 0);
+
+  const originalCreate = Funcionario.create.bind(Funcionario);
+  let duplicateFallbackTriggered = false;
+
+  Funcionario.create = async function patchedCreate(payload, ...args) {
+    const sameCpf = String(payload?.cpf || '') === String(cpf);
+    const sameUnit = String(payload?.unidade_id || '') === String(unidade._id);
+    const hasUserId = !!payload?.usuario_id;
+
+    if (!duplicateFallbackTriggered && sameCpf && sameUnit && hasUserId) {
+      duplicateFallbackTriggered = true;
+      await originalCreate(payload, ...args);
+
+      const duplicateError = new Error('E11000 duplicate key error collection: funcionarios');
+      duplicateError.code = 11000;
+      throw duplicateError;
+    }
+
+    return originalCreate(payload, ...args);
+  };
+
+  try {
+    const res = await agent
+      .post('/gestor/api/usuarios')
+      .send({
+        nome: 'Usuário com Fallback de Duplicidade',
+        email,
+        role: 'diretor',
+        unidade_id: String(unidade._id),
+        cpf,
+        criarNovoFuncionario: true,
+      });
+
+    assert.equal(duplicateFallbackTriggered, true);
+    assert.equal(res.status, 201);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.created, true);
+    assert.equal(res.body.data?.outcome, 'created');
+    assert.ok(res.body.data?.funcionario_id);
+
+    const users = await User.find({ email }).lean();
+    assert.equal(users.length, 1);
+
+    const user = users[0];
+    assert.equal(String(user.unidade_id), String(unidade._id));
+    assert.equal(String(user.funcionario_id), String(res.body.data?.funcionario_id));
+
+    const funcionariosDepois = await Funcionario.find({
+      cpf,
+      unidade_id: unidade._id,
+    }).lean();
+    assert.equal(funcionariosDepois.length, 1);
+
+    const funcionarioReutilizado = funcionariosDepois[0];
+    assert.equal(String(funcionarioReutilizado._id), String(res.body.data?.funcionario_id));
+
+    const funcionarioAtualizado = await Funcionario.findById(funcionarioReutilizado._id).lean();
+    assert.ok(funcionarioAtualizado);
+    assert.equal(String(funcionarioAtualizado.usuario_id), String(user._id));
+
+    const memberships = await UserMembership.find({ user_id: user._id }).lean();
+    assert.equal(memberships.length, 1);
+    assert.equal(String(memberships[0].unidade_id), String(unidade._id));
+    assert.equal(memberships[0].papel_contextual, 'gestor');
+    assert.equal(String(memberships[0].funcionario_id), String(funcionarioReutilizado._id));
+    assert.equal(memberships[0].status, 'active');
+    assert.equal(memberships[0].origem, 'gestor-user-admin');
+  } finally {
+    Funcionario.create = originalCreate;
+  }
+});

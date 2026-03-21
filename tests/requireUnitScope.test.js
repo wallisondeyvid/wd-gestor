@@ -92,7 +92,7 @@ function createReq({
   return req;
 }
 
-test('requireUnitScope mantém o comportamento legado integral quando a flag está desligada', async () => {
+test('requireUnitScope com a flag desligada não usa mais unidade_id legado do usuário', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: false },
     user: {
@@ -111,10 +111,11 @@ test('requireUnitScope mantém o comportamento legado integral quando a flag est
 
   const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
 
-  assert.equal(nextCalled, true);
-  assert.deepEqual(req.unitScope, {
-    type: 'unit',
-    unidadeId: '000000000000000000000001',
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.jsonPayload, {
+    success: false,
+    error: 'UNIDADE_ID_REQUIRED',
   });
 });
 
@@ -231,7 +232,7 @@ test('requireUnitScope não usa matriz_unidade_id sozinha no fallback legado aut
   });
 });
 
-test('requireUnitScope continua priorizando unidade_principal_id no fallback legado autenticado', async () => {
+test('requireUnitScope ignora unidade_principal_id e rejeita fallback legado autenticado sem AuthContext ativo', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: true },
     user: {
@@ -247,14 +248,15 @@ test('requireUnitScope continua priorizando unidade_principal_id no fallback leg
 
   const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
 
-  assert.equal(nextCalled, true);
-  assert.deepEqual(req.unitScope, {
-    type: 'unit',
-    unidadeId: '000000000000000000000032',
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.jsonPayload, {
+    success: false,
+    error: 'UNIDADE_ID_REQUIRED',
   });
 });
 
-test('requireUnitScope continua usando unidade_id quando unidade_principal_id não existe', async () => {
+test('requireUnitScope sem AuthContext ativo rejeita usuário não privilegiado mesmo quando unidade_id existe', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: true },
     user: {
@@ -269,10 +271,11 @@ test('requireUnitScope continua usando unidade_id quando unidade_principal_id n�
 
   const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
 
-  assert.equal(nextCalled, true);
-  assert.deepEqual(req.unitScope, {
-    type: 'unit',
-    unidadeId: '000000000000000000000033',
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.jsonPayload, {
+    success: false,
+    error: 'UNIDADE_ID_REQUIRED',
   });
 });
 

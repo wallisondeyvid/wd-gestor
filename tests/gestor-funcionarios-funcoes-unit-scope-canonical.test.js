@@ -7,6 +7,7 @@ import { createServer } from '../src/server/createServer.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
+import UserMembership from '../src/core/models/userMembership.js';
 import Funcao from '../src/core/models/funcao.js';
 import Funcionario from '../src/core/models/Funcionario.js';
 import Setor from '../src/core/models/setor.js';
@@ -142,20 +143,32 @@ async function authenticateAgent(app, { role, unidadeId = null, nomeBase }) {
     nome: `${nomeBase} ${nextCounter()}`,
   };
 
-  if (unidadeId) payload.unidade_id = unidadeId;
+  const user = await User.create(payload);
 
-  await User.create(payload);
+  assert.equal(user.unidade_id || null, null);
+
+  if (unidadeId) {
+    await UserMembership.create({
+      user_id: user._id,
+      unidade_id: unidadeId,
+      papel_contextual: role === 'diretor' ? 'gestor' : 'user',
+      status: 'active',
+      origem: 'gestor-funcionarios-funcoes-unit-scope-canonical-test',
+    });
+  }
 
   const agent = request.agent(app);
   const loginRes = await agent
     .post('/gestor/login')
     .type('form')
-    .send({ email, senha });
+    .send({ email, senha, modulo: 'gestor' });
 
-  assert.ok(
-    loginRes.status >= 300 && loginRes.status < 400,
-    `Login ${role} deve redirecionar, recebido ${loginRes.status} com body ${JSON.stringify(loginRes.body)}`,
+  assert.equal(
+    loginRes.status,
+    303,
+    `Login ${role} deve concluir no fluxo real, recebido ${loginRes.status} com body ${JSON.stringify(loginRes.body)}`,
   );
+  assert.equal(loginRes.headers.location, '/gestor/dashboard', JSON.stringify(loginRes.headers));
 
   return { agent, email };
 }
@@ -197,9 +210,16 @@ async function createFuncionarioInTenant(unidadeId, { nome, email, cpf, funcaoId
 
 async function withHarness(run) {
   const prevMongoMemory = process.env.MONGO_MEMORY;
+  const prevAuthContextResolverFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
   process.env.MONGO_MEMORY = '1';
+  process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
 
   const { app, close } = await createServer({ skipDb: false });
+  app.locals.gestorAuthContextFeatureFlags = {
+    gestor_auth_context_resolver: true,
+  };
+  delete app.locals.gestorAuthContextResolverDeps;
+  delete app.locals.gestorAuthContextMaxTimeMS;
   const teardownGuard = installTeardownSuppression();
   const createdEmails = [];
 
@@ -231,6 +251,8 @@ async function withHarness(run) {
       await teardownGuard.remove();
       if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
       else process.env.MONGO_MEMORY = prevMongoMemory;
+      if (prevAuthContextResolverFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = prevAuthContextResolverFlag;
     }
   }
 }
@@ -368,7 +390,7 @@ test('Funções API: bulk update contextual atualiza apenas o cluster permitido 
   });
 });
 
-test('Funções fallback: principal já alinhada no request evita voltar para a unidade legada ao montar principal e lista', async () => {
+test('Funções sem unitScope não voltam ao fallback legado do request', async () => {
   await withHarness(async ({ app, unidadeA, unidadeB, unidadeC }) => {
     const funcaoAName = `Funcao Fallback A ${Date.now()}-${nextCounter()}`;
     const funcaoCName = `Funcao Fallback C ${Date.now()}-${nextCounter()}`;
@@ -437,11 +459,11 @@ test('Funções fallback: principal já alinhada no request evita voltar para a 
     assert.equal(renderState.view, 'funcoes');
 
     const nomesFuncoes = (renderState.locals?.funcoesFiltradas || []).map((funcao) => String(funcao?.nome || ''));
-    assert.ok(nomesFuncoes.includes(funcaoAName));
+    assert.equal(nomesFuncoes.includes(funcaoAName), false);
     assert.equal(nomesFuncoes.includes(funcaoCName), false);
 
     const unidadesPrincipaisIds = (renderState.locals?.unidadesPrincipaisFiltradas || []).map((unidade) => normalizeId(unidade?._id));
-    assert.ok(unidadesPrincipaisIds.includes(normalizeId(unidadeA._id)));
+    assert.equal(unidadesPrincipaisIds.includes(normalizeId(unidadeA._id)), false);
     assert.equal(unidadesPrincipaisIds.includes(normalizeId(unidadeB._id)), false);
     assert.equal(unidadesPrincipaisIds.includes(normalizeId(unidadeC._id)), false);
   });
@@ -470,11 +492,11 @@ test('Funcionários HTML: filial contextual renderiza apenas a unidade canônica
 
     assert.equal(res.status, 200);
     assert.match(res.headers['content-type'] || '', /text\/html/i);
-    assert.match(res.text, new RegExp(`data-unidade-default="${escapeRegExp(normalizeId(unidadeA._id))}"`));
+    assert.match(res.text, new RegExp(`data-unidade-default="${escapeRegExp(normalizeId(unidadeB._id))}"`));
   });
 });
 
-test('Funcionários fallback: principal já alinhada no request evita voltar para a unidade legada ao montar default e lista', async () => {
+test('Funcionários sem unitScope não voltam ao fallback legado do request', async () => {
   await withHarness(async ({ app, unidadeA, unidadeB, unidadeC }) => {
     const funcionarioAName = `Funcionario Principal A ${Date.now()}-${nextCounter()}`;
     const funcionarioBName = `Funcionario Filial B ${Date.now()}-${nextCounter()}`;
@@ -553,10 +575,10 @@ test('Funcionários fallback: principal já alinhada no request evita voltar par
 
     assert.equal(renderState.statusCode, 200);
     assert.equal(renderState.view, 'funcionarios/funcionarios_index');
-    assert.equal(renderState.locals?.unidadeContextualId, normalizeId(unidadeA._id));
+    assert.equal(renderState.locals?.unidadeContextualId || '', '');
 
     const nomesFuncionarios = (renderState.locals?.funcionarios || []).map((funcionario) => String(funcionario?.nome || ''));
-    assert.ok(nomesFuncionarios.includes(funcionarioAName));
+    assert.equal(nomesFuncionarios.includes(funcionarioAName), false);
     assert.equal(nomesFuncionarios.includes(funcionarioBName), false);
     assert.equal(nomesFuncionarios.includes(funcionarioCName), false);
   });

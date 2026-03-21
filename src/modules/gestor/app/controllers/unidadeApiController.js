@@ -220,18 +220,7 @@ export async function listUnidades(req, res) {
     } else if (isMaster) {
       unidades = await findAllUnidadesLean();
     } else {
-      // Fallback legado isolado: só usado quando ainda não há unitScope canônico.
-      let principalId = user.unidade_principal_id || null;
-      try {
-        if (!principalId && user.unidade_id) {
-          const u = await findUnidadeUserBaseLean(user.unidade_id);
-          if (u) principalId = u.is_principal ? u._id : (u.unidade_principal_id || u.matriz_id || u._id);
-        }
-      } catch(_) {}
-      const cond = principalId
-        ? { $or: [ { _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId } ] }
-        : { _id: user.unidade_id || null };
-      unidades = await findUnidadesByCondLeanFull(cond);
+      unidades = [];
     }
     // Normalizações leves para manter compat em front
     const safe = (unidades || []).map((u) => {
@@ -278,12 +267,7 @@ async function ensureCanAccessUnidade(req, unidadeId) {
 
   if (isPrivilegedGestorUser(req?.user)) return true;
 
-  const matrizRef = req?.user?.unidade_principal_id || req?.user?.unidade_id;
-  if (!matrizRef) return false;
-
-  const unidadesPermitidas = await findUnidadesPermitidasByMatrizRef(matrizRef);
-  const permitidoIds = new Set((unidadesPermitidas || []).map((u) => String(u._id)));
-  return permitidoIds.has(String(unidadeId));
+  return false;
 }
 
 function normalizeProvisioningSnapshotResponse(snapshot) {

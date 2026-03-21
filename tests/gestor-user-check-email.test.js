@@ -130,6 +130,44 @@ after(async () => {
   } catch {}
 });
 
+test('GET /gestor/api/usuarios/check-email retorna 401 sem sessão', async () => {
+  const email = buildUniqueEmail('anon-precheck');
+
+  const res = await request(app).get('/gestor/api/usuarios/check-email').query({ email });
+
+  assert.equal(res.status, 401);
+  assert.deepEqual(res.body, {
+    success: false,
+    error: 'Não autenticado',
+    code: 'UNAUTHORIZED',
+  });
+});
+
+test('GET /gestor/api/usuarios/check-email retorna 403 para usuário autenticado sem papel admin', async () => {
+  const unidade = await createEnabledUnit(`Unidade Check Gate ${nextSequence()}`);
+  const user = await createUser({
+    email: buildUniqueEmail('user-gate-precheck'),
+    nome: 'Usuário Sem Permissão Check Email',
+    role: 'user',
+    unidadeId: unidade._id,
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+
+  const res = await agent
+    .get('/gestor/api/usuarios/check-email')
+    .query({ email: buildUniqueEmail('probe-precheck') });
+
+  assert.equal(res.status, 403);
+  assert.deepEqual(res.body, {
+    success: false,
+    error: 'Acesso negado',
+    code: 'FORBIDDEN',
+  });
+});
+
 test('GET /gestor/api/usuarios/check-email informa quando o e-mail ainda não existe globalmente', async () => {
   const { agent } = await createAdminAgent();
   const email = buildUniqueEmail('novo-precheck');

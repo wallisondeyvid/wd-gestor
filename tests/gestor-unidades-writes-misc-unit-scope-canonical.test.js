@@ -209,8 +209,9 @@ async function createContextualDiretorAgent() {
     email: buildUniqueEmail('diretor-contextual-unidades'),
     nome: 'Diretor Contextual Unidades',
     role: 'diretor',
-    unidadeId: unidadePrincipalC._id,
   });
+
+  assert.equal(user.unidade_id, null);
 
   await UserMembership.create({
     user_id: user._id,
@@ -379,6 +380,31 @@ test('GET /gestor/api/unidades/:id/logo retorna binario de Data URL para unidade
   assert.ok(res.body.length > 0);
 });
 
+test('POST /gestor/api/unidades/toggle-access bloqueia diretor ao tentar alterar unidade principal acessivel no proprio cluster', async () => {
+  const { agent, unidadePrincipalA } = await createContextualDiretorAgent();
+
+  const before = await Unidade.findById(unidadePrincipalA._id).lean();
+  assert.ok(before);
+  const beforeIsActive = before?.is_active;
+  const beforeAtiva = before?.ativa;
+
+  const res = await agent
+    .post('/gestor/api/unidades/toggle-access')
+    .set('Accept', 'application/json')
+    .set('Connection', 'close')
+    .send({ unitIds: [String(unidadePrincipalA._id)], activate: false });
+
+  assert.equal(res.status, 400, JSON.stringify(res.body));
+  assert.equal(res.body?.success, false, JSON.stringify(res.body));
+  assert.equal(res.body?.code, 'BAD_REQUEST', JSON.stringify(res.body));
+  assert.equal(res.body?.message, 'Diretores não podem alterar o acesso de unidades principais.', JSON.stringify(res.body));
+
+  const after = await Unidade.findById(unidadePrincipalA._id).lean();
+  assert.ok(after);
+  assert.equal(after?.is_active, beforeIsActive);
+  assert.equal(after?.ativa, beforeAtiva);
+});
+
 test('POST /gestor/api/unidades/toggle-access permite ids do contexto ativo e bloqueia ids fora do cluster', async () => {
   const { agent, unidadeFilialB, unidadeFilialC } = await createContextualDiretorAgent();
 
@@ -460,6 +486,47 @@ test('POST /gestor/unidades/:id/testar-banco respeita o unitScope ativo e bloque
     assert.equal(bankCalls.length, 1);
   } finally {
     BankPort.callBankApi = originalCallBankApi;
+  }
+});
+
+test('POST /gestor/unidades/:id/testar-banco retorna 400 para unidade acessivel sem apiBaseUrl e nao chama integracoes bancarias', async () => {
+  const { agent, unidadeFilialB } = await createContextualDiretorAgent();
+
+  await Unidade.updateOne(
+    { _id: unidadeFilialB._id },
+    { $unset: { apiBancaria: 1 } },
+  );
+
+  const originalCallBankApi = BankPort.callBankApi;
+  const originalGetOAuthTokenFromConfig = BankPort.getOAuthTokenFromConfig;
+  let callBankApiCalled = false;
+  let getOAuthTokenCalled = false;
+
+  BankPort.callBankApi = async () => {
+    callBankApiCalled = true;
+    return { status: 'ok' };
+  };
+
+  BankPort.getOAuthTokenFromConfig = async () => {
+    getOAuthTokenCalled = true;
+    return 'token-preview';
+  };
+
+  try {
+    const res = await agent
+      .post(`/gestor/unidades/${unidadeFilialB._id}/testar-banco`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close')
+      .send({ method: 'GET', path: '/status' });
+
+    assert.equal(res.status, 400, JSON.stringify(res.body));
+    assert.equal(res.body?.ok, false);
+    assert.equal(res.body?.message, 'Base URL da API bancária não configurada para esta unidade.');
+    assert.equal(callBankApiCalled, false);
+    assert.equal(getOAuthTokenCalled, false);
+  } finally {
+    BankPort.callBankApi = originalCallBankApi;
+    BankPort.getOAuthTokenFromConfig = originalGetOAuthTokenFromConfig;
   }
 });
 

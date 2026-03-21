@@ -36,12 +36,7 @@ function resolveRequestUnidadeId(req) {
 }
 
 function resolveLegacyUserUnidadeId(req) {
-  const user = resolveUser(req);
-
-  return firstNonEmpty(
-    user?.unidade_principal_id,
-    user?.unidade_id,
-  );
+  return '';
 }
 
 function resolveLegacyUnidadeId(req) {

@@ -48,7 +48,7 @@ function escapeRegex(s) {
   return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-async function verificarAcessoModulo({ userDoc, moduloAlvoNome, basePath }) {
+async function verificarAcessoModulo({ userDoc, moduloAlvoNome, basePath, authContext = null }) {
   try {
     if (!userDoc) return { permitido: false, motivo: 'usuario_invalido' };
     if (!moduloAlvoNome) return { permitido: false, motivo: 'modulo_nao_informado' };
@@ -89,9 +89,13 @@ async function verificarAcessoModulo({ userDoc, moduloAlvoNome, basePath }) {
 
     // Diretor: checa se unidade do usuário possui esse módulo em modulosAcessiveis
     if (role === 'diretor') {
-      if (!userDoc.unidade_id) return { permitido: false, motivo: 'diretor_sem_unidade' };
+      const unidadeIdCanonica = authContext?.source === 'auth-context-v1'
+        ? (authContext.activeContext?.unidadeId || authContext.active_unidade_id || null)
+        : null;
+      const unidadeIdEfetiva = unidadeIdCanonica || userDoc.unidade_id || null;
+      if (!unidadeIdEfetiva) return { permitido: false, motivo: 'diretor_sem_unidade' };
       const unidade = await findUnidadeByIdSelect({
-        id: userDoc.unidade_id,
+        id: unidadeIdEfetiva,
         select: 'modulosAcessiveis',
         maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
       });
@@ -319,9 +323,10 @@ export async function login(req, res) {
       email: user.email
     };
     let effectiveLoginUser = user;
+    let resolvedLoginAuthContext = null;
 
     if (isAuthContextResolverEnabledForRequest(req)) {
-      const resolvedLoginAuthContext = await resolveGestorAuthContext({
+      resolvedLoginAuthContext = await resolveGestorAuthContext({
         authenticatedUser: user,
         sessionUser: req.session?.user || null,
         existingAuthContext: req.session?.gestorAuthContext || null,
@@ -399,7 +404,7 @@ export async function login(req, res) {
     // -----------------------------------------------------------------------
     // Checagem de módulo com timeout defensivo
     const checagem = await Promise.race([
-      verificarAcessoModulo({ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath }),
+      verificarAcessoModulo({ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath, authContext: resolvedLoginAuthContext }),
       new Promise(resolve=> setTimeout(()=> resolve({ permitido:false, motivo:'timeout_modulo' }), Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000)))
     ]);
     if (!checagem.permitido) {

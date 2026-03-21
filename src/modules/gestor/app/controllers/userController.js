@@ -16,15 +16,19 @@ import {
 	findUserMembershipsByUserIdsLean,
 	findUnidadesByIdsNomeCodigoLean,
 	findUserMembershipByUserAndUnidade,
-	findFuncionarioByIdSelectIdUnidadeUsuarioLean,
-	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean,
-	setFuncionarioUsuarioIdIfEmpty,
-	createFuncionarioDoc,
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import {
+	findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo,
+	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLeanRepo,
+	setFuncionarioUsuarioIdIfEmptyRepo,
+	setFuncionarioUsuarioIdByIdRepo,
+	createFuncionarioDocRepo,
+} from '#modules/gestor/app/repositories/FuncionarioRepository.js';
 import { findUserByEmailRepo, findUserByIdRepo } from '#modules/gestor/app/repositories/UserRepository.js';
 import { createUserMembershipRepo, findUserMembershipByUserAndUnidadeLeanRepo, findUserMembershipsByUserIdsLeanRepo } from '#modules/gestor/app/repositories/UserMembershipRepository.js';
 import { findUnidadesByIdsNomeCodigoLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
+import { createUnitScope } from '#shared/unitScope.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
@@ -139,6 +143,103 @@ function buildUnidadeSummaryLabel(unidade) {
 
 const CHECK_USUARIO_EMAIL_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
 const CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+const CRIAR_USUARIO_FUNCIONARIO_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+
+function buildCriarUsuarioFuncionarioUnitScope(unidadeId) {
+	return createUnitScope({ unidadeId: normalizeEntityId(unidadeId) });
+}
+
+async function findCriarUsuarioFuncionarioById(funcionarioId) {
+	return findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo({
+		unitScope: CRIAR_USUARIO_FUNCIONARIO_GLOBAL_SCOPE,
+		funcionarioId,
+	});
+}
+
+async function findCriarUsuarioFuncionarioByCpfUnidade(cleanCpf, unidadeId) {
+	const normalizedUnidadeId = normalizeEntityId(unidadeId);
+	if (!cleanCpf || !normalizedUnidadeId) return null;
+
+	return findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLeanRepo({
+		unitScope: buildCriarUsuarioFuncionarioUnitScope(normalizedUnidadeId),
+		cleanCpf,
+		unidadeId: normalizedUnidadeId,
+	});
+}
+
+async function setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioId, userId) {
+	return setFuncionarioUsuarioIdIfEmptyRepo({
+		unitScope: CRIAR_USUARIO_FUNCIONARIO_GLOBAL_SCOPE,
+		funcionarioId,
+		userId,
+	});
+}
+
+async function setCriarUsuarioFuncionarioUsuarioIdById(funcionarioId, userId) {
+	return setFuncionarioUsuarioIdByIdRepo({
+		unitScope: CRIAR_USUARIO_FUNCIONARIO_GLOBAL_SCOPE,
+		funcionarioId,
+		userId,
+	});
+}
+
+async function createCriarUsuarioFuncionarioDoc(doc) {
+	return createFuncionarioDocRepo({
+		unitScope: buildCriarUsuarioFuncionarioUnitScope(doc?.unidade_id),
+		doc,
+	});
+}
+
+async function resolveCriarUsuarioProvidedFuncionario({ funcionarioId, unidadeId }) {
+	if (!funcionarioId) {
+		return {
+			funcionarioDoc: null,
+			unidadeId,
+		};
+	}
+
+	try {
+		const funcionarioDoc = await findCriarUsuarioFuncionarioById(funcionarioId);
+		if (!funcionarioDoc) {
+			return {
+				error: {
+					message: 'Funcionário não encontrado',
+					code: 'FUNC_NOT_FOUND',
+				},
+			};
+		}
+
+		if (funcionarioDoc.usuario_id) {
+			return {
+				error: {
+					message: 'Funcionário já vinculado a um usuário',
+					code: 'FUNC_ALREADY_LINKED',
+				},
+			};
+		}
+
+		if (unidadeId && String(funcionarioDoc.unidade_id) !== String(unidadeId)) {
+			return {
+				error: {
+					message: 'Funcionário pertence a outra unidade',
+					code: 'FUNC_WRONG_UNIT',
+				},
+			};
+		}
+
+		return {
+			funcionarioDoc,
+			unidadeId: unidadeId || String(funcionarioDoc.unidade_id),
+		};
+	} catch (_error) {
+		return {
+			error: {
+				message: 'Funcionário inválido',
+				code: 'FUNC_INVALID',
+			},
+		};
+	}
+}
 
 async function loadMembershipsSummaryForUserId(userId) {
 	const normalizedUserId = normalizeEntityId(userId);
@@ -354,22 +455,18 @@ export async function criarUsuario(req, res) {
 		// Se um funcionario_id foi enviado, validar que ele pertence à unidade selecionada e não possui usuario vinculado
 		let funcionarioDoc = null;
 		if (funcionario_id) {
-			try {
-				funcionarioDoc = await findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionario_id);
-				if (!funcionarioDoc) {
-					return badRequest(res, 'Funcionário não encontrado', { code:'FUNC_NOT_FOUND' });
-				}
-				if (funcionarioDoc.usuario_id) {
-					return badRequest(res, 'Funcionário já vinculado a um usuário', { code:'FUNC_ALREADY_LINKED' });
-				}
-				if (unidade_id && String(funcionarioDoc.unidade_id) !== String(unidade_id)) {
-					return badRequest(res, 'Funcionário pertence a outra unidade', { code:'FUNC_WRONG_UNIT' });
-				}
-				// Se unidade não foi enviada, herda do funcionário para coerência
-				if (!unidade_id) unidade_id = String(funcionarioDoc.unidade_id);
-			} catch(valErr) {
-				return badRequest(res, 'Funcionário inválido', { code:'FUNC_INVALID' });
+			const resolvedProvidedFuncionario = await resolveCriarUsuarioProvidedFuncionario({
+				funcionarioId: funcionario_id,
+				unidadeId: unidade_id,
+			});
+			if (resolvedProvidedFuncionario.error) {
+				return badRequest(res, resolvedProvidedFuncionario.error.message, {
+					code: resolvedProvidedFuncionario.error.code,
+				});
 			}
+
+			funcionarioDoc = resolvedProvidedFuncionario.funcionarioDoc;
+			unidade_id = resolvedProvidedFuncionario.unidadeId;
 		}
 
 		if (existingUser) {
@@ -408,9 +505,9 @@ export async function criarUsuario(req, res) {
 				if (!isExistingUser || shouldSyncUserFuncionarioId) {
 					user.funcionario_id = funcionarioDoc._id;
 					if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id;
-					await saveUserDoc(user);
+					await user.save();
 				}
-				await setFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id);
+				await setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id);
 			} catch(linkErr) {
 				console.warn('[criarUsuario] falha ao vincular funcionario_id informado:', linkErr?.message || linkErr);
 			}
@@ -426,7 +523,7 @@ export async function criarUsuario(req, res) {
 			if (!unidade_id) return badRequest(res, 'Unidade é obrigatória para criar novo funcionário.', { code: 'UNIT_REQUIRED' });
 			try {
 				// Tentar localizar funcionário existente apenas por CPF + unidade.
-				const existente = await findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidade_id);
+				const existente = await findCriarUsuarioFuncionarioByCpfUnidade(cleanCpf, unidade_id);
 				if (existente) {
 					linkedFuncionarioId = existente._id;
 					// Vincula usuário ao funcionário já existente
@@ -434,17 +531,17 @@ export async function criarUsuario(req, res) {
 					if (!isExistingUser || shouldSyncUserFuncionarioId) {
 						user.funcionario_id = existente._id;
 						if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
-						await saveUserDoc(user);
+						await user.save();
 					}
 					// marca vínculo no funcionário para evitar reaparecer como disponível
-					try { await setFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up) {}
+					try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up) {}
 					console.log('[criarUsuario] Vinculado a funcionário existente', { funcionario_id: existente._id.toString(), user_id: user._id.toString() });
 				} else {
 					// Criar placeholder mínimo
 					const placeholderRG = 'RG' + Date.now();
 					const placeholderNascimento = new Date('2000-01-01');
 					const placeholderTelefone = '(00) 0000-0000';
-					funcionarioNovo = await createFuncionarioDoc({
+					funcionarioNovo = await createCriarUsuarioFuncionarioDoc({
 						unidade_id,
 						nome: user.nome || (nome && nome.trim()) || emailNorm.split('@')[0],
 						rg: placeholderRG,
@@ -459,7 +556,7 @@ export async function criarUsuario(req, res) {
 					if (!isExistingUser) {
 						user.funcionario_id = funcionarioNovo._id;
 						if (!user.unidade_id) user.unidade_id = unidade_id;
-						await saveUserDoc(user);
+						await user.save();
 					}
 					console.log('[criarUsuario] Funcionário placeholder criado e vinculado', { funcionario_id: funcionarioNovo._id.toString(), user_id: user._id.toString() });
 				}
@@ -472,16 +569,16 @@ export async function criarUsuario(req, res) {
 				if (isDup) {
 					try {
 						const existente = cleanCpf
-							? await findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidade_id)
+							? await findCriarUsuarioFuncionarioByCpfUnidade(cleanCpf, unidade_id)
 							: null;
 						if (existente) {
 							linkedFuncionarioId = existente._id;
 							if (!isExistingUser) {
 								user.funcionario_id = existente._id;
 								if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
-								await saveUserDoc(user);
+								await user.save();
 							}
-							try { await setFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up2) {}
+							try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up2) {}
 							console.warn('[criarUsuario] Conflito ao criar funcionário; vinculado a existente', { funcionario_id: existente._id.toString() });
 						}
 					} catch(_e) { /* ignora fallback de vinculação */ }

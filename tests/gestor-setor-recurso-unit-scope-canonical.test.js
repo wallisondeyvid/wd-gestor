@@ -12,6 +12,7 @@ import { paginaRecursos, paginaSetores } from '../src/modules/gestor/app/control
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
+import UserMembership from '../src/core/models/userMembership.js';
 
 let uniqueCounter = 0;
 
@@ -147,7 +148,13 @@ async function createModuloAndUnits() {
   return { unidadeA, unidadeB };
 }
 
-async function authenticateAgent(app, { role, unidadeId = null, nomeBase }) {
+async function authenticateAgent(app, {
+  role,
+  unidadeId = null,
+  nomeBase,
+  globalRole = null,
+  useCanonicalMembership = false,
+}) {
   const email = uniqueEmail(`tenant-only-${role}`);
   const senha = 'Senha@123456';
   const senhaHash = await bcrypt.hash(senha, 10);
@@ -163,22 +170,41 @@ async function authenticateAgent(app, { role, unidadeId = null, nomeBase }) {
     nome: `${nomeBase} ${nextCounter()}`,
   };
 
-  if (unidadeId) {
+  if (globalRole) {
+    payload.global_role = globalRole;
+  }
+
+  if (unidadeId && !useCanonicalMembership) {
     payload.unidade_id = unidadeId;
   }
 
-  await User.create(payload);
+  const user = await User.create(payload);
+
+  if (useCanonicalMembership) {
+    assert.ok(unidadeId, 'Setup canônico exige unidadeId para a membership ativa');
+    assert.equal(user.unidade_id || null, null);
+
+    await UserMembership.create({
+      user_id: user._id,
+      unidade_id: unidadeId,
+      papel_contextual: role === 'diretor' ? 'gestor' : 'user',
+      status: 'active',
+      origem: 'gestor-setor-recurso-unit-scope-canonical-test',
+    });
+  }
 
   const agent = request.agent(app);
   const loginRes = await agent
     .post('/gestor/login')
     .type('form')
-    .send({ email, senha });
+    .send({ email, senha, modulo: 'gestor' });
 
-  assert.ok(
-    loginRes.status >= 300 && loginRes.status < 400,
-    `Login ${role} deve redirecionar, recebido ${loginRes.status} com body ${JSON.stringify(loginRes.body)}`,
+  assert.equal(
+    loginRes.status,
+    303,
+    `Login ${role} deve concluir no fluxo real, recebido ${loginRes.status} com body ${JSON.stringify(loginRes.body)}`,
   );
+  assert.equal(loginRes.headers.location, '/gestor/dashboard', JSON.stringify(loginRes.headers));
 
   return { agent, email };
 }
@@ -217,9 +243,16 @@ async function createSetorViaApi(agent, payload) {
 
 async function withHarness(run) {
   const prevMongoMemory = process.env.MONGO_MEMORY;
+  const prevAuthContextResolverFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
   process.env.MONGO_MEMORY = '1';
+  process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
 
   const { app, close } = await createServer({ skipDb: false });
+  app.locals.gestorAuthContextFeatureFlags = {
+    gestor_auth_context_resolver: true,
+  };
+  delete app.locals.gestorAuthContextResolverDeps;
+  delete app.locals.gestorAuthContextMaxTimeMS;
   const teardownGuard = installTeardownSuppression();
   const createdEmails = [];
 
@@ -228,6 +261,7 @@ async function withHarness(run) {
     const masterAuth = await authenticateAgent(app, {
       role: 'master',
       nomeBase: 'Master Unit Scope',
+      globalRole: 'master',
     });
     createdEmails.push(masterAuth.email);
 
@@ -235,6 +269,7 @@ async function withHarness(run) {
       role: 'diretor',
       unidadeId: unidadeA._id,
       nomeBase: 'Diretor Unit Scope',
+      useCanonicalMembership: true,
     });
     createdEmails.push(diretorAuth.email);
 
@@ -260,6 +295,8 @@ async function withHarness(run) {
       await teardownGuard.remove();
       if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
       else process.env.MONGO_MEMORY = prevMongoMemory;
+      if (prevAuthContextResolverFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = prevAuthContextResolverFlag;
     }
   }
 }
@@ -470,7 +507,7 @@ test('Recursos HTML: renderiza apenas a unidade contextual atual', async () => {
   });
 });
 
-test('Recursos fallback: unidade já alinhada no request evita voltar ao legado amplo', async () => {
+test('Recursos sem unitScope não volta ao fallback legado do request', async () => {
   await withHarness(async ({ app, unidadeA, unidadeB }) => {
     const email = uniqueEmail('pagina-recursos-fallback');
     const req = {
@@ -526,7 +563,7 @@ test('Recursos fallback: unidade já alinhada no request evita voltar ao legado 
     assert.equal(renderState.view, 'recursos');
 
     const unidadesIds = (renderState.locals?.unidadesFiltradas || []).map((unidade) => normalizeId(unidade?._id));
-    assert.ok(unidadesIds.includes(normalizeId(unidadeB._id)));
+    assert.equal(unidadesIds.includes(normalizeId(unidadeB._id)), false);
     assert.equal(unidadesIds.includes(normalizeId(unidadeA._id)), false);
   });
 });
@@ -564,7 +601,7 @@ test('Setores HTML: renderiza dropdown e lista apenas a unidade contextual atual
   });
 });
 
-test('Setores fallback: principal já alinhada no request evita voltar ao vazio ou ao legado amplo', async () => {
+test('Setores sem unitScope não volta ao fallback legado do request', async () => {
   await withHarness(async ({ app, unidadeA, unidadeB, masterAgent }) => {
     const setorAName = `Setor Fallback A ${Date.now()}-${nextCounter()}`;
     const setorBName = `Setor Fallback B ${Date.now()}-${nextCounter()}`;
@@ -635,11 +672,11 @@ test('Setores fallback: principal já alinhada no request evita voltar ao vazio 
     assert.equal(renderState.view, 'setor');
 
     const unidadesIds = (renderState.locals?.unidadesFiltradas || []).map((unidade) => normalizeId(unidade?._id));
-    assert.ok(unidadesIds.includes(normalizeId(unidadeA._id)));
     assert.equal(unidadesIds.includes(normalizeId(unidadeB._id)), false);
+    assert.equal(unidadesIds.includes(normalizeId(unidadeA._id)), false);
 
     const setoresIds = (renderState.locals?.setoresFiltrados || []).map((setor) => String(setor?.nome || ''));
-    assert.ok(setoresIds.includes(setorAName));
+    assert.equal(setoresIds.includes(setorAName), false);
     assert.equal(setoresIds.includes(setorBName), false);
   });
 });
