@@ -3,6 +3,9 @@ import { enforceTenantFilter } from '#shared/db/queryIsolation.js';
 
 export class BaseRepository {
   constructor({ unitScope } = {}) {
+    console.warn('[BaseRepository][constructor][before-assertTenantScope]', {
+      unitScope: unitScope ?? null
+    });
     this.unitScope = assertTenantScope(unitScope);
   }
 

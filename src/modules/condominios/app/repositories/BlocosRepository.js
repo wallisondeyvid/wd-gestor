@@ -4,6 +4,9 @@ import { resolveModel } from '#shared/db/resolveModel.js';
 
 export class BlocosRepository extends BaseRepository {
   constructor({ unitScope } = {}) {
+    console.warn('[BlocosRepository][constructor]', {
+      unitScope: unitScope ?? null
+    });
     super({ unitScope });
   }
 
