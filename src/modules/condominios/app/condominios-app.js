@@ -219,6 +219,8 @@ function withRequiredUnitScope(handler) {
 
 const handleGetUnidadeByIdV2 = withRequiredUnitScope(handleGetUnidadeByIdV2Raw);
 const handleGetBlocosV2 = withRequiredUnitScope(handleGetBlocosV2Raw);
+const handleGetBlocoByIdV2Scoped = withRequiredUnitScope(handleGetBlocoByIdV2);
+const handleGetBlocosRelacionadosV2Scoped = withRequiredUnitScope(handleGetBlocosRelacionadosV2);
 const handlePostBlocosV2 = withRequiredUnitScope(handlePostBlocosV2Raw);
 const handlePutBlocosV2 = withRequiredUnitScope(handlePutBlocosV2Raw);
 const handleDeleteBlocosV2 = withRequiredUnitScope(handleDeleteBlocosV2Raw);
@@ -12671,7 +12673,7 @@ app.get('/api/blocos/:id([0-9a-fA-F]{24})', (req, res, next) => {
     return respondDbOffline(res, req);
   }
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
-  if (isV2On) return handleGetBlocoByIdV2(req, res, next);
+  if (isV2On) return handleGetBlocoByIdV2Scoped(req, res, next);
   return handleGetBlocoByIdV1(req, res, next);
 });
 
@@ -12695,7 +12697,7 @@ async function handleGetBlocosRelacionadosV1(req, res, _next) {
 
 app.get('/api/blocos/relacionados', (req, res, next) => {
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
-  if (isV2On) return handleGetBlocosRelacionadosV2(req, res, next);
+  if (isV2On) return handleGetBlocosRelacionadosV2Scoped(req, res, next);
   return handleGetBlocosRelacionadosV1(req, res, next);
 });
 

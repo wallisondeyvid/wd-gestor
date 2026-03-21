@@ -94,7 +94,14 @@ export async function handlePostBlocosV2(req, res, _next) {
 
 export async function handlePutBlocosV2(req, res, _next) {
   try {
+    console.warn('[handlePutBlocosV2][input]', {
+      method: req?.method,
+      path: req?.path,
+      query: req?.query,
+      unitScope: req?.unitScope ?? null
+    });
     const result = await atualizarBlocoService({
+      unitScope: req?.unitScope,
       id: req.params?.id,
       body: req.body,
       mongoose: handleGetBlocosV2Context?.mongoose,
@@ -109,7 +116,14 @@ export async function handlePutBlocosV2(req, res, _next) {
 
 export async function handleDeleteBlocosV2(req, res, _next) {
   try {
+    console.warn('[handleDeleteBlocosV2][input]', {
+      method: req?.method,
+      path: req?.path,
+      query: req?.query,
+      unitScope: req?.unitScope ?? null
+    });
     const result = await excluirBlocoService({
+      unitScope: req?.unitScope,
       id: req.params?.id,
       mongoose: handleGetBlocosV2Context?.mongoose,
       skipDb: req?.app?.locals?.skipDb,

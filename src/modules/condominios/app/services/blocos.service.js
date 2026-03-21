@@ -110,13 +110,19 @@ export async function criarBlocoService({
 }
 
 export async function atualizarBlocoService({
+  unitScope,
   id,
   body,
   mongoose,
   skipDb,
   CondBloco
 }) {
-  const repo = new BlocosRepository({ unitScope: unitScopeFromUnidadeId('') });
+  console.warn('[atualizarBlocoService][input]', {
+    unitScope: unitScope ?? null,
+    id,
+    skipDb: skipDb === true
+  });
+  const repo = new BlocosRepository({ unitScope });
   assertDbAvailable({ mongoose, skipDb });
   try {
     const { nome, ordem, ativo } = body || {};
@@ -136,12 +142,18 @@ export async function atualizarBlocoService({
 }
 
 export async function excluirBlocoService({
+  unitScope,
   id,
   mongoose,
   skipDb,
   CondBloco
 }) {
-  const repo = new BlocosRepository({ unitScope: unitScopeFromUnidadeId('') });
+  console.warn('[excluirBlocoService][input]', {
+    unitScope: unitScope ?? null,
+    id,
+    skipDb: skipDb === true
+  });
+  const repo = new BlocosRepository({ unitScope });
   assertDbAvailable({ mongoose, skipDb });
   try {
     await repo.deleteById({ id });
