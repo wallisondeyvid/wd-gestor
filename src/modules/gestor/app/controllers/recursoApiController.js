@@ -32,14 +32,28 @@ function getCanonicalContextUnitId(req) {
 	return getScopedUnitId(req);
 }
 
+function hasCanonicalContextUnitId(req) {
+	return Boolean(getCanonicalContextUnitId(req));
+}
+
+function shouldBlockForMissingContext(req) {
+	return !isMasterOrAdmin(req) && !hasCanonicalContextUnitId(req);
+}
+
+function respondMissingContext(res) {
+	return notFound(res, 'Unidade não encontrada');
+}
+
 function requestedUnitMatchesContext(req, requestedUnitId) {
 	const requested = normalizeUnitId(requestedUnitId);
 	if (!requested) return true;
+	if (isMasterOrAdmin(req)) return true;
 
 	const canonicalContextUnitId = getCanonicalContextUnitId(req);
+	if (!canonicalContextUnitId) return false;
 	if (canonicalContextUnitId) return canonicalContextUnitId === requested;
 
-	return true;
+	return false;
 }
 
 // GET /gestor/api/recursos?placa=ABC1234&unidadeId=<id>
@@ -53,6 +67,11 @@ export async function listarRecursosApi(req, res) {
 		let { placa, unidadeId } = req.query;
 		placa = (placa || '').trim();
 		unidadeId = (unidadeId || '').trim();
+
+		if (shouldBlockForMissingContext(req)) {
+			return respondMissingContext(res);
+		}
+
 		const scopedUnitId = getScopedUnitId(req);
 
 		const filtro = {};
@@ -134,6 +153,7 @@ export async function listarRecursosApi(req, res) {
 export async function getRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
+		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
 		const unidadeEfetiva = getScopedUnitId(req) || null;
 
 		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
@@ -149,6 +169,7 @@ export async function createRecurso(req, res) {
 	try {
 		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor } = req.body;
 		const requestedUnitId = normalizeUnitId(unidade_id);
+		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
 		if (!requestedUnitId || !tipo || !placa || !chassi || !renavam || !ano || !mod || !marca || !modelo || !cor) {
 			return badRequest(res, 'Todos os campos são obrigatórios');
 		}
@@ -197,6 +218,7 @@ export async function updateRecurso(req, res) {
 	try {
 		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor, ativo } = req.body;
 		const requestedUnitId = normalizeUnitId(unidade_id);
+		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
 
 		if (!requestedUnitId) return badRequest(res, 'Unidade é obrigatória');
 		if (!/^[0-9a-fA-F]{24}$/.test(String(requestedUnitId))) return badRequest(res, 'Unidade inválida');
@@ -257,6 +279,7 @@ export async function updateRecurso(req, res) {
 export async function deleteRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
+		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
 
 		const unidadeEfetiva = getScopedUnitId(req) || null;
 

@@ -48,6 +48,15 @@ function getScopedUnitId(req) {
 	return normalizeUnitId(req?.unitScope?.unidadeId);
 }
 
+function getRequestUnitId(req) {
+	return firstNonEmptyUnitId(
+		req?.query?.unidade_id,
+		req?.query?.unidadeId,
+		req?.body?.unidade_id,
+		req?.body?.unidadeId,
+	);
+}
+
 function getAuthContextActiveUnitId(req) {
 	const authContext = req?.session?.gestorAuthContext;
 	return firstNonEmptyUnitId(
@@ -486,6 +495,7 @@ export async function createFuncionario(req,res){ try {
 	if (typeof req.body.endereco === 'string') delete req.body.endereco;
 	logDateDebug('create.raw-body', req.body);
 		let { unidade_id, funcao_id, nome, nome_social, nome_mae, nome_pai, rg, rg_orgao, rg_uf, rg_data_expedicao, cpf, pis, data_nascimento, sexo, estado_civil, raca_cor, escolaridade, nacionalidade, pais_nascimento, data_chegada_brasil, naturalidade, endereco, telefone, telefone2, email, tipo_ctps, ctps_numero, ctps_serie, ctps_uf, pcd, tipo_deficiencia, cid, biometrico, biometrico_face, fp_template_b64, fp_template_sha256, fp_imagem, fp_dedo, face_template_b64, face_template_sha256, face_imagem, data_admissao, tipo_admissao, categoria_trabalhador, tipo_contrato, data_termino, objeto_determinante, clausula_assecuratoria, cargo, cbo, departamento, regime_contratacao, regime_jornada, carga_semanal, salario_base, tipo_salario, forma_pagamento, forma_pagamento_desc, banco, agencia_num, agencia_dv, conta_num, conta_dv, tipo_conta, sindicato, fgts_optante, fgts_data, regime_previdenciario, tipo_especial, cert_militar, cert_militar_orgao, cert_militar_uf, cert_militar_data, titulo, titulo_zona, titulo_secao, cnh, cnh_categoria, cnh_validade, cnh_uf, orgao_prof, orgao_prof_uf, orgao_prof_numero } = req.body;
+	const requestUnitId = getRequestUnitId(req);
 	const observacoes = req.body.observacoes ?? req.body.extra_observacoes ?? undefined;
 	const normalizeDate = v => asISODate(v ?? undefined);
 	const norm = v => asStr(v);
@@ -522,8 +532,10 @@ if(carga_semanal !== undefined && carga_semanal !== null && carga_semanal !== ''
 }
 	tipo_salario = norm(tipo_salario); forma_pagamento = norm(forma_pagamento); forma_pagamento_desc = norm(forma_pagamento_desc); banco = norm(banco); agencia_num = norm(agencia_num); agencia_dv = norm(agencia_dv); conta_num = norm(conta_num); conta_dv = norm(conta_dv); tipo_conta = norm(tipo_conta); sindicato = norm(sindicato); fgts_optante = norm(fgts_optante); fgts_data = normalizeDate(fgts_data); regime_previdenciario = norm(regime_previdenciario); tipo_especial = norm(tipo_especial); cert_militar = norm(cert_militar); cert_militar_orgao = norm(cert_militar_orgao); cert_militar_uf = norm(cert_militar_uf); cert_militar_data = normalizeDate(cert_militar_data); titulo = norm(titulo); titulo_zona = norm(titulo_zona); titulo_secao = norm(titulo_secao); cnh = norm(cnh); cnh_categoria = norm(cnh_categoria); cnh_validade = normalizeDate(cnh_validade); cnh_uf = norm(cnh_uf); orgao_prof = norm(orgao_prof); orgao_prof_uf = norm(orgao_prof_uf); orgao_prof_numero = norm(orgao_prof_numero);
 	const requestedUnitId = normalizeUnitId(unidade_id);
+	if (requestUnitId && requestedUnitId && requestUnitId !== requestedUnitId) return notFound(res,'Unidade não encontrada');
 	const canonicalUnitId = getCanonicalContextUnitId(req) || requestedUnitId;
 	if (requestedUnitId && !requestedUnitMatchesContext(req, requestedUnitId)) return notFound(res,'Unidade não encontrada');
+	if (requestUnitId && !requestedUnitMatchesContext(req, requestUnitId)) return notFound(res,'Unidade não encontrada');
 	unidade_id = canonicalUnitId;
 	const faltando=[];
 	function need(v,c){ if(!v) faltando.push(c); else if(typeof v==='string' && !v.trim()) faltando.push(c); else if(typeof v==='object' && (Array.isArray(v)? v.length===0 : Object.keys(v).length===0)) faltando.push(c); }

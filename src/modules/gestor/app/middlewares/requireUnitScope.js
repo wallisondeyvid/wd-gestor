@@ -36,7 +36,14 @@ function resolveRequestUnidadeId(req) {
 }
 
 function resolveLegacyUserUnidadeId(req) {
-  return '';
+  return firstNonEmpty(
+    req?.user?.unidade_id,
+    req?.user?.unidadeId,
+    req?.user?.active_unidade_id,
+    req?.user?.activeUnidadeId,
+    req?.session?.user?.unidade_id,
+    req?.session?.user?.unidadeId,
+  );
 }
 
 function resolveLegacyUnidadeId(req) {
