@@ -48,6 +48,13 @@ function getScopedUnitId(req) {
 	return normalizeUnitId(req?.unitScope?.unidadeId);
 }
 
+function getLegacyAuthenticatedUnitId(req) {
+	return firstNonEmptyUnitId(
+		req?.user?.unidade_id,
+		req?.session?.user?.unidade_id,
+	);
+}
+
 function getRequestUnitId(req) {
 	return firstNonEmptyUnitId(
 		req?.query?.unidade_id,
@@ -70,6 +77,7 @@ function getCanonicalContextUnitId(req) {
 	return firstNonEmptyUnitId(
 		getAuthContextActiveUnitId(req),
 		getScopedUnitId(req),
+		getLegacyAuthenticatedUnitId(req),
 	);
 }
 
@@ -78,7 +86,7 @@ async function resolveAuxiliaryOperationalUnitId(req) {
 	if (authContextUnitId) return authContextUnitId;
 
 	const scopedUnitId = getScopedUnitId(req);
-	if (!scopedUnitId) return '';
+	if (!scopedUnitId) return getLegacyAuthenticatedUnitId(req);
 
 	const requestUserUnitId = firstNonEmptyUnitId(
 		req?.user?.unidade_id,

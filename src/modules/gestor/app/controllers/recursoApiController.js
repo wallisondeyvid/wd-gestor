@@ -28,8 +28,12 @@ function getScopedUnitId(req) {
 	return normalizeUnitId(req.unitScope?.unidadeId);
 }
 
+function getLegacyAuthenticatedUnitId(req) {
+	return normalizeUnitId(req.user?.unidade_id || req.session?.user?.unidade_id);
+}
+
 function getCanonicalContextUnitId(req) {
-	return getScopedUnitId(req);
+	return normalizeUnitId(getScopedUnitId(req) || getLegacyAuthenticatedUnitId(req));
 }
 
 function hasCanonicalContextUnitId(req) {
@@ -72,7 +76,7 @@ export async function listarRecursosApi(req, res) {
 			return respondMissingContext(res);
 		}
 
-		const scopedUnitId = getScopedUnitId(req);
+		const scopedUnitId = getCanonicalContextUnitId(req);
 
 		const filtro = {};
 		let placaTermNorm = null;
@@ -154,7 +158,7 @@ export async function getRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
 		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
-		const unidadeEfetiva = getScopedUnitId(req) || null;
+		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
 
 		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
@@ -281,7 +285,7 @@ export async function deleteRecurso(req, res) {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
 		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
 
-		const unidadeEfetiva = getScopedUnitId(req) || null;
+		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
 
 		const recurso = await deleteRecursoById(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
