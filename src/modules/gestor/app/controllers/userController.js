@@ -4,11 +4,16 @@ import {
 	findUsersByQueryLean,
 	findAllUnidadesSelectIdCodigoNomeLean,
 	findAllFuncionariosSelectIdNomeCpfLean,
+	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean,
+	findFuncionarioByIdSelectIdUnidadeUsuarioLean,
 	findUserById,
 	saveUserDoc,
 	findUserDuplicadoByCpfUnidadeExcludingId,
+	createFuncionarioDoc,
+	createUserMembership,
 	unsetFuncionarioUsuarioIdById,
 	setFuncionarioUsuarioIdById,
+	setFuncionarioUsuarioIdIfEmpty,
 	countUsersMasters,
 	deleteUserById,
 	unsetFuncionarioUsuarioIdIfMatchesUser,
@@ -18,17 +23,6 @@ import {
 	findUserMembershipByUserAndUnidade,
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
-import {
-	findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo,
-	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLeanRepo,
-	setFuncionarioUsuarioIdIfEmptyRepo,
-	setFuncionarioUsuarioIdByIdRepo,
-	createFuncionarioDocRepo,
-} from '#modules/gestor/app/repositories/FuncionarioRepository.js';
-import { findUserByEmailRepo, findUserByIdRepo } from '#modules/gestor/app/repositories/UserRepository.js';
-import { createUserMembershipRepo, findUserMembershipByUserAndUnidadeLeanRepo, findUserMembershipsByUserIdsLeanRepo } from '#modules/gestor/app/repositories/UserMembershipRepository.js';
-import { findUnidadesByIdsNomeCodigoLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
-import { createUnitScope } from '#shared/unitScope.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
@@ -143,51 +137,28 @@ function buildUnidadeSummaryLabel(unidade) {
 
 const CHECK_USUARIO_EMAIL_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
 const CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
-const CRIAR_USUARIO_FUNCIONARIO_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
-
-function buildCriarUsuarioFuncionarioUnitScope(unidadeId) {
-	return createUnitScope({ unidadeId: normalizeEntityId(unidadeId) });
-}
 
 async function findCriarUsuarioFuncionarioById(funcionarioId) {
-	return findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo({
-		unitScope: CRIAR_USUARIO_FUNCIONARIO_GLOBAL_SCOPE,
-		funcionarioId,
-	});
+	return findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionarioId);
 }
 
 async function findCriarUsuarioFuncionarioByCpfUnidade(cleanCpf, unidadeId) {
 	const normalizedUnidadeId = normalizeEntityId(unidadeId);
 	if (!cleanCpf || !normalizedUnidadeId) return null;
 
-	return findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLeanRepo({
-		unitScope: buildCriarUsuarioFuncionarioUnitScope(normalizedUnidadeId),
-		cleanCpf,
-		unidadeId: normalizedUnidadeId,
-	});
+	return findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, normalizedUnidadeId);
 }
 
 async function setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioId, userId) {
-	return setFuncionarioUsuarioIdIfEmptyRepo({
-		unitScope: CRIAR_USUARIO_FUNCIONARIO_GLOBAL_SCOPE,
-		funcionarioId,
-		userId,
-	});
+	return setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId);
 }
 
 async function setCriarUsuarioFuncionarioUsuarioIdById(funcionarioId, userId) {
-	return setFuncionarioUsuarioIdByIdRepo({
-		unitScope: CRIAR_USUARIO_FUNCIONARIO_GLOBAL_SCOPE,
-		funcionarioId,
-		userId,
-	});
+	return setFuncionarioUsuarioIdById(funcionarioId, userId);
 }
 
 async function createCriarUsuarioFuncionarioDoc(doc) {
-	return createFuncionarioDocRepo({
-		unitScope: buildCriarUsuarioFuncionarioUnitScope(doc?.unidade_id),
-		doc,
-	});
+	return createFuncionarioDoc(doc);
 }
 
 async function resolveCriarUsuarioProvidedFuncionario({ funcionarioId, unidadeId }) {
@@ -437,7 +408,7 @@ export async function criarUsuario(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 		const emailNorm = String(email).toLowerCase();
-		const existingUser = await findUserByEmailRepo({ unitScope: CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE, email: emailNorm });
+		const existingUser = await findUserByEmail(emailNorm);
 		const requestedUserRole = resolveRequestedUserRole(role);
 		const normalizedRole = normalizeRoleValue(role);
 		const canLinkExistingUser = !!buildUserMembershipPayload({
@@ -470,11 +441,7 @@ export async function criarUsuario(req, res) {
 		}
 
 		if (existingUser) {
-			const existingMembership = await findUserMembershipByUserAndUnidadeLeanRepo({
-				unitScope: CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE,
-				userId: existingUser._id,
-				unidadeId: unidade_id,
-			});
+			const existingMembership = await findUserMembershipByUserAndUnidade(existingUser._id, unidade_id);
 			if (existingMembership) {
 				return badRequest(res, 'Usuário já vinculado a esta unidade', { code: 'USER_MEMBERSHIP_DUPLICATE' });
 			}
@@ -505,7 +472,7 @@ export async function criarUsuario(req, res) {
 				if (!isExistingUser || shouldSyncUserFuncionarioId) {
 					user.funcionario_id = funcionarioDoc._id;
 					if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id;
-					await user.save();
+					await saveUserDoc(user);
 				}
 				await setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id);
 			} catch(linkErr) {
@@ -531,7 +498,7 @@ export async function criarUsuario(req, res) {
 					if (!isExistingUser || shouldSyncUserFuncionarioId) {
 						user.funcionario_id = existente._id;
 						if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
-						await user.save();
+						await saveUserDoc(user);
 					}
 					// marca vínculo no funcionário para evitar reaparecer como disponível
 					try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up) {}
@@ -556,7 +523,7 @@ export async function criarUsuario(req, res) {
 					if (!isExistingUser) {
 						user.funcionario_id = funcionarioNovo._id;
 						if (!user.unidade_id) user.unidade_id = unidade_id;
-						await user.save();
+						await saveUserDoc(user);
 					}
 					console.log('[criarUsuario] Funcionário placeholder criado e vinculado', { funcionario_id: funcionarioNovo._id.toString(), user_id: user._id.toString() });
 				}
@@ -576,7 +543,7 @@ export async function criarUsuario(req, res) {
 							if (!isExistingUser) {
 								user.funcionario_id = existente._id;
 								if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
-								await user.save();
+								await saveUserDoc(user);
 							}
 							try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up2) {}
 							console.warn('[criarUsuario] Conflito ao criar funcionário; vinculado a existente', { funcionario_id: existente._id.toString() });
@@ -598,10 +565,7 @@ export async function criarUsuario(req, res) {
 		});
 		if (membershipPayload) {
 			try {
-				await createUserMembershipRepo({
-					unitScope: CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE,
-					data: membershipPayload,
-				});
+				await createUserMembership(membershipPayload);
 			} catch (membershipErr) {
 				if (isDuplicateKeyError(membershipErr)) {
 					return badRequest(res, 'Usuário já vinculado a esta unidade', { code: 'USER_MEMBERSHIP_DUPLICATE' });
@@ -637,7 +601,7 @@ export async function checkUsuarioEmail(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 
-		const user = await findUserByEmailRepo({ unitScope: CHECK_USUARIO_EMAIL_GLOBAL_SCOPE, email });
+		const user = await findUserByEmail(email);
 		if (!user) {
 			return ok(res, {
 				email,
@@ -651,13 +615,10 @@ export async function checkUsuarioEmail(req, res) {
 		}
 
 		const normalizedUserId = normalizeEntityId(user._id);
-		const memberships = await findUserMembershipsByUserIdsLeanRepo({
-			unitScope: CHECK_USUARIO_EMAIL_GLOBAL_SCOPE,
-			userIds: [normalizedUserId],
-		});
+		const memberships = await findUserMembershipsByUserIdsLean([normalizedUserId]);
 		const unidadeIds = [...new Set((Array.isArray(memberships) ? memberships : []).map((membership) => normalizeEntityId(membership?.unidade_id)).filter(Boolean))];
 		const unidades = unidadeIds.length > 0
-			? await findUnidadesByIdsNomeCodigoLeanRepo({ unitScope: CHECK_USUARIO_EMAIL_GLOBAL_SCOPE, unidadeIds })
+			? await findUnidadesByIdsNomeCodigoLean(unidadeIds)
 			: [];
 		const unidadesById = new Map(
 			(Array.isArray(unidades) ? unidades : []).map((unidade) => [normalizeEntityId(unidade?._id), unidade])
@@ -792,7 +753,7 @@ export async function atualizarSenhaUsuario(req, res) {
 	try {
 		const { senhaAtual, novaSenha } = req.body;
 		if (!senhaAtual || !novaSenha) return badRequest(res, 'Parâmetros insuficientes');
-		const user = await findUserByIdRepo({ unitScope: CHECK_USUARIO_EMAIL_GLOBAL_SCOPE, userId: req.user.id });
+		const user = await findUserById(req.user.id);
 		if (!user) return notFound(res, 'Usuário não encontrado');
 		const confere = await bcrypt.compare(senhaAtual, user.senha);
 		if (!confere) return badRequest(res, 'Senha atual inválida');
@@ -800,7 +761,7 @@ export async function atualizarSenhaUsuario(req, res) {
 		// Limpa flags de primeiro acesso / senha provisória se ainda marcadas
 		if (user.primeiro_acesso) user.primeiro_acesso = false;
 		if (user.senha_provisoria) user.senha_provisoria = false;
-		await user.save();
+		await saveUserDoc(user);
 		return ok(res, { updated:true, primeiro_acesso:false, senha_provisoria:false });
 	} catch (e) {
 		console.error('[atualizarSenhaUsuario] erro:', e);
