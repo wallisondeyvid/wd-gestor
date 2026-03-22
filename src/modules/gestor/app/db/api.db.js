@@ -294,6 +294,7 @@ export async function findUnidadeByIdOrRawLean(unidadeId) {
 export async function findClusterUnidadesByAnchorLean(anchorRaw) {
   const { Types } = mongoose;
   const anchor = String(anchorRaw || '').trim();
+  if (!anchor) return [];
   const conds = [];
 
   if (Types.ObjectId.isValid(anchor)) {
@@ -302,7 +303,7 @@ export async function findClusterUnidadesByAnchorLean(anchorRaw) {
   }
 
   conds.push({ _id: anchorRaw }, { matriz_id: anchorRaw }, { unidade_principal_id: anchorRaw });
-  return findClusterUnidadesByAnchorLeanRepo({ unitScope: anchor ? scopeFromUnidadeId(anchor) : GLOBAL_SCOPE, conds });
+  return findClusterUnidadesByAnchorLeanRepo({ unitScope: scopeFromUnidadeId(anchor), conds });
 }
 
 export async function findUserByEmailCondLean(cond) {
@@ -852,8 +853,9 @@ export async function setUserMembershipFuncionarioIdIfEmpty(membershipId, funcio
 
 export async function findUnidadesByCondLeanFull(cond) {
   const anchor = extractScopedClusterAnchorFromUnidadesCond(cond);
+  if (!anchor) return [];
   return findUnidadesByCondLeanFullRepo({
-    unitScope: anchor ? scopeFromUnidadeId(anchor) : GLOBAL_SCOPE,
+    unitScope: scopeFromUnidadeId(anchor),
     cond,
   });
 }

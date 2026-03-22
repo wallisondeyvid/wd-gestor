@@ -26,11 +26,11 @@ import {
 import { validarCnpj, calcularDigitoVerificador } from '#modules/gestor/app/utils/cnpj.js';
 import {
   ensureUnitProvisioned,
-  inspectUnitProvisioning,
-  listUnitProvisioningAuditEvents,
   isUnitProvisioningValidationError,
   retryUnitProvisioning,
 } from '#modules/gestor/app/services/UnitProvisioningService.js';
+import { inspectUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/UnitProvisioningService.js';
+import { listUnitProvisioningAuditEvents } from '#modules/gestor/app/usecases/unit-provisioning/UnitProvisioningService.js';
 // Dependências para upload de logo
 import multer from 'multer';
 import path from 'path';
