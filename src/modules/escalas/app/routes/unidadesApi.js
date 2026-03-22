@@ -29,6 +29,53 @@ async function getUnidadeModel(){
 
 const router = Router();
 
+function getRequestUser(req) {
+  return req.user || req.session.escalasUser || req.session.user || {};
+}
+
+function mapObservableUnit(unidade) {
+  return {
+    id: unidade._id,
+    codigo: unidade.codigo || null,
+    nome: unidade.nome,
+    is_principal: !!unidade.is_principal,
+  };
+}
+
+function sortUnitsWithMatricesFirst(unidades) {
+  unidades.sort((a, b) => {
+    if (!!b.is_principal - !!a.is_principal !== 0) return (!!b.is_principal - !!a.is_principal);
+    const codigoCompare = (a.codigo || '').localeCompare(b.codigo || '');
+    if (codigoCompare !== 0) return codigoCompare;
+    return (a.nome || '').localeCompare(b.nome || '');
+  });
+  return unidades;
+}
+
+function sortUnitsByCodeThenName(unidades) {
+  unidades.sort((a, b) => {
+    const codigoCompare = (a.codigo || '').localeCompare(b.codigo || '');
+    if (codigoCompare !== 0) return codigoCompare;
+    return (a.nome || '').localeCompare(b.nome || '');
+  });
+  return unidades;
+}
+
+function resolveMatrizId(unidade) {
+  if (unidade.is_principal) return unidade._id;
+  if (unidade.unidade_principal_id) return unidade.unidade_principal_id;
+  return unidade._id;
+}
+
+async function buildOrderedClusterUnits(Unidade, matrizId, campos) {
+  const filtro = { $or: [{ _id: matrizId }, { unidade_principal_id: matrizId }] };
+  const todas = await Unidade.find(filtro).select(campos).lean();
+  const matriz = todas.find((unidade) => String(unidade._id) === String(matrizId));
+  const filiais = todas.filter((unidade) => String(unidade._id) !== String(matrizId));
+  sortUnitsByCodeThenName(filiais);
+  return [matriz, ...filiais].filter(Boolean);
+}
+
 // Middleware simples garantindo usuário logado no módulo Escalas
 function requireEscalasAuth(req, res, next){
   // Aceita sessão do módulo Escalas, sessão geral do Gestor ou usuário já populado
@@ -43,7 +90,7 @@ function requireEscalasAuth(req, res, next){
 // Caso usuário não tenha unidade_id: retorna lista vazia.
 router.get('/api/unidades-relacionadas', requireEscalasAuth, async (req, res) => {
   try {
-    const usuario = req.user || req.session.escalasUser || req.session.user || {};
+    const usuario = getRequestUser(req);
     const unidadeId = usuario.unidade_id || usuario.unidadeId || null;
     const isMaster = !!(usuario.isMaster || usuario.role === 'master');
     const isAdmin = !!(usuario.role === 'admin');
@@ -54,14 +101,8 @@ router.get('/api/unidades-relacionadas', requireEscalasAuth, async (req, res) =>
     if(isMaster || isAdmin){
       const campos = 'codigo nome is_principal unidade_principal_id';
       const todas = await Unidade.find({}).select(campos).lean();
-      // Ordenar: matrizes primeiro, depois filiais por código, depois nome
-      todas.sort((a,b)=>{
-        if(!!b.is_principal - !!a.is_principal !== 0) return (!!b.is_principal - !!a.is_principal); // true antes de false
-        const ca = (a.codigo||'').localeCompare(b.codigo||'');
-        if(ca!==0) return ca;
-        return (a.nome||'').localeCompare(b.nome||'');
-      });
-      const data = todas.map(u=>({ id:u._id, codigo:u.codigo||null, nome:u.nome, is_principal:!!u.is_principal }));
+      sortUnitsWithMatricesFirst(todas);
+      const data = todas.map(mapObservableUnit);
       return res.json({ data, master: isMaster, admin: isAdmin });
     }
 
@@ -69,45 +110,18 @@ router.get('/api/unidades-relacionadas', requireEscalasAuth, async (req, res) =>
     if(!unidadeId){
       const campos = 'codigo nome is_principal unidade_principal_id';
       const matrizes = await Unidade.find({ is_principal: true }).select(campos).lean();
-      matrizes.sort((a,b)=>{
-        const ca = (a.codigo||'').localeCompare(b.codigo||'');
-        if(ca!==0) return ca; return (a.nome||'').localeCompare(b.nome||'');
-      });
-      const data = matrizes.map(u=>({ id:u._id, codigo:u.codigo||null, nome:u.nome, is_principal:true }));
+      sortUnitsByCodeThenName(matrizes);
+      const data = matrizes.map(mapObservableUnit);
       return res.json({ data, fallback: 'no-unidade-matrizes' });
     }
+
     const unidadeUser = await Unidade.findById(unidadeId).lean();
     if(!unidadeUser) return res.json({ data: [] });
 
-    // Determinar id da matriz (principal) do cluster
-    let matrizId = null;
-    if(unidadeUser.is_principal){
-      matrizId = unidadeUser._id;
-    } else if(unidadeUser.unidade_principal_id){
-      matrizId = unidadeUser.unidade_principal_id;
-    } else {
-      // fallback: considerar própria unidade como cluster singular
-      matrizId = unidadeUser._id;
-    }
-
-    const filtro = { $or: [ { _id: matrizId }, { unidade_principal_id: matrizId } ] };
     const campos = 'codigo nome is_principal unidade_principal_id';
-    const todas = await Unidade.find(filtro).select(campos).lean();
-
-    // Ordenar: matriz primeiro, depois filiais por código ou nome
-    const matriz = todas.find(u => String(u._id) === String(matrizId));
-    const filiais = todas.filter(u => String(u._id) !== String(matrizId));
-    filiais.sort((a,b)=>{
-      const ca = (a.codigo||'').localeCompare(b.codigo||'');
-      if(ca!==0) return ca; return (a.nome||'').localeCompare(b.nome||'');
-    });
-    const ordered = [ matriz, ...filiais ].filter(Boolean);
-    const data = ordered.map(u=>({
-      id: u._id,
-      codigo: u.codigo || null,
-      nome: u.nome,
-      is_principal: !!u.is_principal
-    }));
+    const matrizId = resolveMatrizId(unidadeUser);
+    const ordered = await buildOrderedClusterUnits(Unidade, matrizId, campos);
+    const data = ordered.map(mapObservableUnit);
     return res.json({ data });
   } catch(e){
     console.error('[escalas][api/unidades-relacionadas] erro:', e);
