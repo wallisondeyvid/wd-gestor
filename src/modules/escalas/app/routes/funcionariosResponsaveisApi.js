@@ -58,6 +58,42 @@ function mapObservableFuncionario(doc, unidadesMap){
   };
 }
 
+function parseFuncionariosPorIdsQuery(idsRaw){
+  const normalized = String(idsRaw || '').trim();
+  if(!normalized) return [];
+
+  return normalized
+    .split(',')
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .filter((value) => /^[0-9a-fA-F]{24}$/.test(value))
+    .map((value) => new mongoose.Types.ObjectId(value));
+}
+
+async function buildUnidadesMapByDocs(Unidade, docs){
+  const unidadeIds = [...new Set(docs.map((doc) => doc.unidade_id).filter(Boolean))];
+  if(!unidadeIds.length) return {};
+
+  const unidadesMap = {};
+  const unis = await Unidade.find({ _id: { $in: unidadeIds } }).select('nome codigo').lean();
+  unis.forEach((unidade) => {
+    unidadesMap[unidade._id.toString()] = {
+      nome: unidade.nome,
+      codigo: unidade.codigo || null
+    };
+  });
+  return unidadesMap;
+}
+
+function serializeFuncionarioPorIds(doc, unidadesMap){
+  const mapped = mapObservableFuncionario(doc, unidadesMap);
+  return {
+    ...mapped,
+    id: doc._id?.toString() || null,
+    unidade_id: doc.unidade_id?.toString() || null
+  };
+}
+
 // GET /api/funcionarios-responsaveis?unidade=&cpf=&codigo=&nome=
 // Regras:
 // - Filtra apenas unidades relacionadas ao usuário (mesma lógica de unidades-relacionadas) salvo se master.
@@ -186,32 +222,14 @@ router.get('/api/funcionarios-responsaveis', requireEscalasAuth, async (req,res)
 // Retorna { id, nome, codigo, cpf, unidade_id, unidade_nome, unidade_codigo } para os IDs informados.
 router.get('/api/funcionarios/por-ids', requireEscalasAuth, async (req,res)=>{
   try {
-    const idsRaw = String(req.query?.ids||'').trim();
-    if(!idsRaw) return res.json({ data: [] });
-    const ids = idsRaw.split(',').map(s=> s.trim()).filter(Boolean);
-    if(!ids.length) return res.json({ data: [] });
-    const mongoose = (await import('mongoose')).default || (await import('mongoose'));
-    const isHex24 = (v)=> typeof v==='string' && /^[0-9a-fA-F]{24}$/.test(v);
-    const oids = ids.filter(isHex24).map(x=> new mongoose.Types.ObjectId(x));
+    const oids = parseFuncionariosPorIdsQuery(req.query?.ids);
     if(!oids.length) return res.json({ data: [] });
+
     const Funcionario = await getFuncionarioModel();
     const Unidade = await getUnidadeModel();
     const docs = await Funcionario.find({ _id: { $in: oids } }).select('nome cpf codigo unidade_id').lean();
-    const unidadeIds = [...new Set(docs.map(d=> d.unidade_id).filter(Boolean))];
-    let unidadesMap = {};
-    if(unidadeIds.length){
-      const unis = await Unidade.find({ _id: { $in: unidadeIds } }).select('nome codigo').lean();
-      unis.forEach(u=>{ unidadesMap[u._id.toString()] = { nome: u.nome, codigo: u.codigo||null }; });
-    }
-    const data = docs.map(d=> ({
-      id: d._id.toString(),
-      nome: d.nome||null,
-      cpf: d.cpf||null,
-      codigo: d.codigo||null,
-      unidade_id: d.unidade_id || null,
-      unidade_nome: (d.unidade_id && unidadesMap[d.unidade_id.toString()]?.nome) || null,
-      unidade_codigo: (d.unidade_id && unidadesMap[d.unidade_id.toString()]?.codigo) || null
-    }));
+    const unidadesMap = await buildUnidadesMapByDocs(Unidade, docs);
+    const data = docs.map((doc) => serializeFuncionarioPorIds(doc, unidadesMap));
     return res.json({ data });
   } catch(e){
     console.error('[escalas][GET /api/funcionarios/por-ids] erro:', e);
