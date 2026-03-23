@@ -28,6 +28,39 @@ function renderAusencias(req,res){
   res.render('ausencias', { title:'Gestão Ausências', meta });
 }
 
+function parseAusenciasListQuery(req){
+  const { funcionarioId, unidadeId: rawUnidadeId, tipo, inicio, fim } = req.query;
+  const unidadeId = (rawUnidadeId && rawUnidadeId !== 'undefined') ? rawUnidadeId : null;
+  return { funcionarioId, unidadeId, tipo, inicio, fim };
+}
+
+function validateAusenciasListQuery({ funcionarioId, unidadeId, inicio, fim }){
+  if(funcionarioId && unidadeId){
+    return 'Informe apenas UNIDADE ou FUNCIONÁRIO (não ambos).';
+  }
+  if(!funcionarioId && !unidadeId){
+    return 'Informe uma UNIDADE ou um FUNCIONÁRIO.';
+  }
+  if(!inicio || !fim){
+    return 'Período (início e fim) obrigatório.';
+  }
+  return null;
+}
+
+async function resolveAusenciasListUnitFilter(unidadeId){
+  if(!mongoose.isValidObjectId(unidadeId)){
+    return { error: 'unidadeId inválido.' };
+  }
+
+  const funcionarios = await Funcionario.find({ unidade_id: unidadeId }, { _id:1 }).lean();
+  const ids = funcionarios.map(f=> f._id.toString());
+  if(!ids.length){
+    return { data: [] };
+  }
+
+  return { funcionarioId: { $in: ids } };
+}
+
 // Helper para converter WEBP local em PNG em diretório temporário quando necessário
 async function ensurePngIfWebp(absPath){
   try{
@@ -51,18 +84,10 @@ router.get('/ausencias', (req,res)=> res.redirect('/escalas/gestao/ausencias'));
 // Listar ausências com filtros simples
 router.get('/api/ausencias', requireEscalasAuth, async (req,res)=>{
   try {
-  const { funcionarioId, unidadeId: rawUnidadeId, tipo, inicio, fim } = req.query;
-  const unidadeId = (rawUnidadeId && rawUnidadeId !== 'undefined') ? rawUnidadeId : null;
-
-    // Regras de exclusividade
-    if(funcionarioId && unidadeId){
-      return res.status(400).json({ ok:false, error:'Informe apenas UNIDADE ou FUNCIONÁRIO (não ambos).' });
-    }
-    if(!funcionarioId && !unidadeId){
-      return res.status(400).json({ ok:false, error:'Informe uma UNIDADE ou um FUNCIONÁRIO.' });
-    }
-    if(!inicio || !fim){
-      return res.status(400).json({ ok:false, error:'Período (início e fim) obrigatório.' });
+    const { funcionarioId, unidadeId, tipo, inicio, fim } = parseAusenciasListQuery(req);
+    const validationError = validateAusenciasListQuery({ funcionarioId, unidadeId, inicio, fim });
+    if(validationError){
+      return res.status(400).json({ ok:false, error: validationError });
     }
 
     const base = {};
@@ -74,16 +99,14 @@ router.get('/api/ausencias', requireEscalasAuth, async (req,res)=>{
     if(funcionarioId){
       filtroFinal.funcionarioId = funcionarioId;
     } else if(unidadeId){
-      if(!mongoose.isValidObjectId(unidadeId)){
-        return res.status(400).json({ ok:false, error:'unidadeId inválido.' });
+      const unitFilter = await resolveAusenciasListUnitFilter(unidadeId);
+      if(unitFilter.error){
+        return res.status(400).json({ ok:false, error: unitFilter.error });
       }
-      // Buscar todos os funcionários da unidade e aplicar $in
-      const funcionarios = await Funcionario.find({ unidade_id: unidadeId }, { _id:1 }).lean();
-      const ids = funcionarios.map(f=> f._id.toString());
-      if(!ids.length){
+      if(unitFilter.data){
         return res.json({ ok:true, data: [] });
       }
-      filtroFinal.funcionarioId = { $in: ids };
+      filtroFinal.funcionarioId = unitFilter.funcionarioId;
     }
 
     const lista = await Ausencia.find(filtroFinal).sort({ inicioISO: 1, funcionarioNome:1 }).limit(1000);

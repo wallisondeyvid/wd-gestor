@@ -136,62 +136,208 @@ export default router;
 // ====== API de Disponibilidade de Funcionário no Período da Escala ======
 // GET /escalas/api/disponibilidade-funcionario?funcionarioId=...&inicio=YYYY-MM-DD&fim=YYYY-MM-DD
 // Retorna blocos livres e bloqueados (férias + ausências) dentro do período base
+function parseDisponibilidadeQuery(req){
+  const { funcionarioId, inicio, fim } = req.query;
+  return { funcionarioId, inicio, fim };
+}
+
+function validateDisponibilidadeQuery(input){
+  const { funcionarioId, inicio, fim } = input;
+
+  if(!funcionarioId || !inicio || !fim){ return 'Parâmetros obrigatórios: funcionarioId, inicio, fim'; }
+  if(!mongoose.isValidObjectId(funcionarioId)){ return 'funcionarioId inválido'; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(inicio) || !/^\d{4}-\d{2}-\d{2}$/.test(fim)){ return 'Formato de data deve ser YYYY-MM-DD'; }
+  if(fim < inicio){ return 'fim anterior a inicio'; }
+
+  return null;
+}
+
+function buildDisponibilidadeBase({ inicio, fim, funcionarioId }){
+  const dtIni = new Date(inicio+'T00:00:00');
+  const dtFim = new Date(fim+'T00:00:00');
+  const diffDias = Math.round((dtFim - dtIni)/86400000)+1;
+
+  return { inicio, fim, funcionarioId, dtIni, dtFim, diffDias };
+}
+
+function buildDisponibilidadeBlockedSourcesQuery({ funcionarioId, inicio, fim }){
+  return { funcionarioId, inicioISO:{ $lte:fim }, fimISO:{ $gte:inicio } };
+}
+
+function getDisponibilidadeBlockedSourcesProjection(){
+  return { inicioISO:1, fimISO:1 };
+}
+
+function loadFeriasBlockedSource(query, projection){
+  return Ferias.find(query, projection).lean();
+}
+
+function loadAusenciasBlockedSource(query, projection){
+  return Ausencia.find(query, projection).lean();
+}
+
+async function loadDisponibilidadeBlockedSources({ funcionarioId, inicio, fim }){
+  const query = buildDisponibilidadeBlockedSourcesQuery({ funcionarioId, inicio, fim });
+  const projection = getDisponibilidadeBlockedSourcesProjection();
+
+  const [ferias, ausencias] = await Promise.all([
+    loadFeriasBlockedSource(query, projection),
+    loadAusenciasBlockedSource(query, projection)
+  ]);
+
+  return { ferias, ausencias };
+}
+
+function clipRangeToBase(inicioISO, fimISO, baseIni, baseFim){
+  const rangeInicio = new Date(inicioISO+'T00:00:00');
+  const rangeFim = new Date(fimISO+'T00:00:00');
+
+  if(rangeFim < baseIni || rangeInicio > baseFim) return null;
+
+  const clippedInicio = new Date(Math.max(rangeInicio, baseIni));
+  const clippedFim = new Date(Math.min(rangeFim, baseFim));
+  if(clippedFim < clippedInicio) return null;
+
+  return { ini: clippedInicio, fim: clippedFim };
+}
+
+function collectFeriasBlockedRanges(ferias, baseIni, baseFim){
+  return ferias.reduce((blocks, item) => {
+    const clipped = clipRangeToBase(item.inicioISO, item.fimISO, baseIni, baseFim);
+    if(clipped){
+      blocks.push({ ...clipped, tipo:'ferias' });
+    }
+    return blocks;
+  }, []);
+}
+
+function collectAusenciasBlockedRanges(ausencias, baseIni, baseFim){
+  return ausencias.reduce((blocks, item) => {
+    const clipped = clipRangeToBase(item.inicioISO, item.fimISO, baseIni, baseFim);
+    if(clipped){
+      blocks.push({ ...clipped, tipo:'ausencia' });
+    }
+    return blocks;
+  }, []);
+}
+
+function buildBlockedRanges({ ferias, ausencias, baseIniDate, baseFimDate }){
+  return [
+    ...collectFeriasBlockedRanges(ferias, baseIniDate, baseFimDate),
+    ...collectAusenciasBlockedRanges(ausencias, baseIniDate, baseFimDate)
+  ];
+}
+
+function mergeBlockedTypes(currentType, nextType){
+  return currentType === nextType ? currentType : 'misto';
+}
+
+function mergeBlockedRanges(blocks){
+  const sortedBlocks = [...blocks].sort((a,b)=> a.ini - b.ini || a.fim - b.fim);
+  const merged=[];
+
+  for(const block of sortedBlocks){
+    if(!merged.length){
+      merged.push({ ...block });
+      continue;
+    }
+
+    const last=merged[merged.length-1];
+    const nextDayAfterLast = new Date(last.fim);
+    nextDayAfterLast.setDate(nextDayAfterLast.getDate()+1);
+
+    if(block.ini <= nextDayAfterLast){
+      if(block.fim > last.fim) last.fim = new Date(block.fim);
+      last.tipo = mergeBlockedTypes(last.tipo, block.tipo);
+    } else {
+      merged.push({ ...block });
+    }
+  }
+
+  return merged;
+}
+
+function buildFreeRangesFromMerged(merged, baseIni, baseFim){
+  const free=[];
+  let cursor = new Date(baseIni);
+
+  for(const block of merged){
+    if(block.ini > cursor){
+      const freeFim = new Date(block.ini);
+      freeFim.setDate(freeFim.getDate()-1);
+      free.push({ ini:new Date(cursor), fim:freeFim });
+    }
+
+    cursor = new Date(block.fim);
+    cursor.setDate(cursor.getDate()+1);
+  }
+
+  if(cursor <= baseFim){
+    free.push({ ini:new Date(cursor), fim:new Date(baseFim) });
+  }
+
+  return free;
+}
+
+async function calculateDisponibilidadeRanges({ funcionarioId, inicio, fim, dtIni, dtFim }){
+  const { ferias, ausencias } = await loadDisponibilidadeBlockedSources({ funcionarioId, inicio, fim });
+  const blocks = buildBlockedRanges({ ferias, ausencias, baseIniDate: dtIni, baseFimDate: dtFim });
+  const merged = mergeBlockedRanges(blocks);
+  const free = buildFreeRangesFromMerged(merged, dtIni, dtFim);
+
+  return { merged, free };
+}
+
+function toISODateString(date){
+  const year = date.getFullYear();
+  const month = String(date.getMonth()+1).padStart(2,'0');
+  const day = String(date.getDate()).padStart(2,'0');
+  return `${year}-${month}-${day}`;
+}
+
+function serializeBlockedRanges(blocked){
+  return blocked.map(item => ({ inicio: toISODateString(item.ini), fim: toISODateString(item.fim), tipo:item.tipo }));
+}
+
+function serializeFreeRanges(free){
+  return free.filter(item => item.fim >= item.ini).map(item => ({ inicio: toISODateString(item.ini), fim: toISODateString(item.fim) }));
+}
+
+function buildDisponibilidadePayload({ inicio, fim, funcionarioId, blocked, free }){
+  return {
+    base: { inicio, fim },
+    funcionarioId,
+    blocked: serializeBlockedRanges(blocked),
+    free: serializeFreeRanges(free)
+  };
+}
+
+function sendDisponibilidadeValidationError(res, message){
+  return res.status(400).json({ ok:false, error:message });
+}
+
+function sendDisponibilidadeSuccess(res, payload){
+  return res.json({ ok:true, data:payload });
+}
+
+function sendDisponibilidadeInternalError(res){
+  return res.status(500).json({ ok:false, error:'Erro ao calcular disponibilidade' });
+}
+
 router.get('/api/disponibilidade-funcionario', requireEscalasAuth, async (req,res)=>{
   try {
-    const { funcionarioId, inicio, fim } = req.query;
-    if(!funcionarioId || !inicio || !fim){ return res.status(400).json({ ok:false, error:'Parâmetros obrigatórios: funcionarioId, inicio, fim' }); }
-    if(!mongoose.isValidObjectId(funcionarioId)){ return res.status(400).json({ ok:false, error:'funcionarioId inválido' }); }
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(inicio) || !/^\d{4}-\d{2}-\d{2}$/.test(fim)){ return res.status(400).json({ ok:false, error:'Formato de data deve ser YYYY-MM-DD' }); }
-    if(fim < inicio){ return res.status(400).json({ ok:false, error:'fim anterior a inicio' }); }
+    const input = parseDisponibilidadeQuery(req);
+    const validationError = validateDisponibilidadeQuery(input);
+    if(validationError){ return sendDisponibilidadeValidationError(res, validationError); }
+
     // Limite sanidade: máximo 370 dias
-    const dtIni=new Date(inicio+'T00:00:00'); const dtFim=new Date(fim+'T00:00:00');
-    const diffDias = Math.round((dtFim - dtIni)/86400000)+1; if(diffDias>370){ return res.status(400).json({ ok:false, error:'Janela muito extensa (>370 dias)' }); }
+    const { funcionarioId, inicio, fim, dtIni, dtFim, diffDias } = buildDisponibilidadeBase(input);
+    if(diffDias>370){ return sendDisponibilidadeValidationError(res, 'Janela muito extensa (>370 dias)'); }
 
-    function clip(a,b,baseIni,baseFim){ // retorna [max(a,baseIni), min(b,baseFim)] ou null
-      if(b < baseIni || a > baseFim) return null; const ini=Math.max(a,baseIni); const fim=Math.min(b,baseFim); if(fim<ini) return null; return [ini,fim]; }
-    function toISO(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
-    function addDay(d){ const nd=new Date(d.getTime()); nd.setDate(nd.getDate()+1); return nd; }
+    const { merged, free } = await calculateDisponibilidadeRanges({ funcionarioId, inicio, fim, dtIni, dtFim });
 
-    // Busca blocos de férias e ausências sobrepostos ao período base
-    const ferias = await Ferias.find({ funcionarioId, inicioISO:{ $lte:fim }, fimISO:{ $gte:inicio } }, { inicioISO:1, fimISO:1 }).lean();
-    const ausencias = await Ausencia.find({ funcionarioId, inicioISO:{ $lte:fim }, fimISO:{ $gte:inicio } }, { inicioISO:1, fimISO:1 }).lean();
-
-    const baseIniDate=dtIni; const baseFimDate=dtFim;
-    const blocks=[]; // {ini:Date,fim:Date,tipo:'ferias'|'ausencia'}
-    ferias.forEach(f=>{ const c=clip(new Date(f.inicioISO+'T00:00:00'), new Date(f.fimISO+'T00:00:00'), baseIniDate, baseFimDate); if(c) blocks.push({ ini:new Date(c[0]), fim:new Date(c[1]), tipo:'ferias' }); });
-    ausencias.forEach(a=>{ const c=clip(new Date(a.inicioISO+'T00:00:00'), new Date(a.fimISO+'T00:00:00'), baseIniDate, baseFimDate); if(c) blocks.push({ ini:new Date(c[0]), fim:new Date(c[1]), tipo:'ausencia' }); });
-
-    // Merge de blocos sobrepostos/adjacentes preservando tipos (se múltiplos tipos, marcar 'misto')
-    blocks.sort((a,b)=> a.ini - b.ini || a.fim - b.fim);
-    const merged=[];
-    for(const b of blocks){
-      if(!merged.length){ merged.push({ ...b }); continue; }
-      const last=merged[merged.length-1];
-      if(b.ini <= addDay(last.fim)){ // sobreposto ou adjacente (fim+1 >= ini) -> mescla
-        if(b.fim > last.fim) last.fim = new Date(b.fim);
-        if(last.tipo !== b.tipo) last.tipo = 'misto';
-      } else {
-        merged.push({ ...b });
-      }
-    }
-
-    // Subtração: base - merged => free intervals
-    const free=[];
-    let cursor = new Date(baseIniDate);
-    for(const blk of merged){
-      if(blk.ini > cursor){ // intervalo livre antes do bloco
-        free.push({ ini:new Date(cursor), fim:new Date(new Date(blk.ini).setDate(blk.ini.getDate()-1)) });
-      }
-      cursor = new Date(blk.fim); cursor.setDate(cursor.getDate()+1); // dia após o bloco
-    }
-    if(cursor <= baseFimDate){ free.push({ ini:new Date(cursor), fim:new Date(baseFimDate) }); }
-
-    function toObj(int){ return { inicio: toISO(int.ini), fim: toISO(int.fim) }; }
-    const blockedOut = merged.map(m=>({ inicio: toISO(m.ini), fim: toISO(m.fim), tipo:m.tipo }));
-    const freeOut = free.filter(f=> f.fim >= f.ini).map(toObj);
-
-    return res.json({ ok:true, data:{ base:{ inicio, fim }, funcionarioId, blocked: blockedOut, free: freeOut } });
+    return sendDisponibilidadeSuccess(res, buildDisponibilidadePayload({ inicio, fim, funcionarioId, blocked: merged, free }));
   } catch(err){
-    console.error('[ESCALA][API][DISPONIBILIDADE] erro', err); return res.status(500).json({ ok:false, error:'Erro ao calcular disponibilidade' });
+    console.error('[ESCALA][API][DISPONIBILIDADE] erro', err); return sendDisponibilidadeInternalError(res);
   }
 });

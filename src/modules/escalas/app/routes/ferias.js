@@ -52,23 +52,70 @@ router.get('/gestao/ferias', requireEscalasAuth, renderFerias);
 router.get('/ferias', (req,res)=> res.redirect('/escalas/gestao/ferias'));
 
 // --- API CRUD Férias ---
+function parseFeriasListQuery(req){
+  const { funcionarioId, unidadeId: rawUnidadeId, ano } = req.query;
+  const unidadeId = (rawUnidadeId && rawUnidadeId !== 'undefined') ? rawUnidadeId : null;
+  const anoNum = parseInt(ano,10);
+
+  return { funcionarioId, unidadeId, ano, anoNum };
+}
+
+function validateFeriasListQuery({ funcionarioId, unidadeId, ano, anoNum }){
+  if(funcionarioId && unidadeId){ return 'Informe apenas UNIDADE ou FUNCIONÁRIO (exclusivos).'; }
+  if(!funcionarioId && !unidadeId){ return 'Informe uma UNIDADE ou um FUNCIONÁRIO.'; }
+  if(!ano){ return 'Ano obrigatório.'; }
+  if(isNaN(anoNum) || anoNum<1900 || anoNum>3000){ return 'Ano inválido.'; }
+
+  return null;
+}
+
+async function resolveFeriasListUnitFilter(unidadeId){
+  if(!mongoose.isValidObjectId(unidadeId)){
+    return { error:'unidadeId inválido.' };
+  }
+
+  const funcionarios = await Funcionario.find({ unidade_id: unidadeId }, { _id:1 }).lean();
+  const ids = funcionarios.map(f=> f._id.toString());
+
+  if(!ids.length){
+    return { empty:true };
+  }
+
+  return { filter:{ $in: ids } };
+}
+
+function parseFeriasReportQuery(req){
+  const { funcionarioId, ano, unidadeId: rawUnidadeId } = req.query;
+  const unidadeId = (rawUnidadeId && rawUnidadeId !== 'undefined') ? rawUnidadeId : null;
+  const anoNum = parseInt(ano,10);
+
+  return { funcionarioId, unidadeId, ano, anoNum };
+}
+
+function validateFeriasReportQuery({ funcionarioId, unidadeId, ano, anoNum }){
+  if(funcionarioId && unidadeId){ return 'Use UNIDADE ou FUNCIONÁRIO (exclusivos).'; }
+  if(!funcionarioId && !unidadeId){ return 'Informe uma UNIDADE ou um FUNCIONÁRIO.'; }
+  if(!ano){ return 'Ano obrigatório.'; }
+  if(isNaN(anoNum) || anoNum<1900 || anoNum>3000){ return 'Ano inválido.'; }
+
+  return null;
+}
+
 router.get('/api/ferias', requireEscalasAuth, async (req,res)=>{
   try {
-    const { funcionarioId, unidadeId: rawUnidadeId, ano } = req.query;
-    const unidadeId = (rawUnidadeId && rawUnidadeId !== 'undefined') ? rawUnidadeId : null;
-    if(funcionarioId && unidadeId){ return res.status(400).json({ ok:false, error:'Informe apenas UNIDADE ou FUNCIONÁRIO (exclusivos).' }); }
-    if(!funcionarioId && !unidadeId){ return res.status(400).json({ ok:false, error:'Informe uma UNIDADE ou um FUNCIONÁRIO.' }); }
-    if(!ano){ return res.status(400).json({ ok:false, error:'Ano obrigatório.' }); }
-    const anoNum = parseInt(ano,10); if(isNaN(anoNum) || anoNum<1900 || anoNum>3000){ return res.status(400).json({ ok:false, error:'Ano inválido.' }); }
+    const input = parseFeriasListQuery(req);
+    const validationError = validateFeriasListQuery(input);
+    if(validationError){ return res.status(400).json({ ok:false, error:validationError }); }
+
+    const { funcionarioId, unidadeId, anoNum } = input;
     const q = { ano: anoNum };
     if(funcionarioId){
       q.funcionarioId = funcionarioId;
     } else if(unidadeId){
-      if(!mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ ok:false, error:'unidadeId inválido.' });
-      const funcionarios = await Funcionario.find({ unidade_id: unidadeId }, { _id:1 }).lean();
-      const ids = funcionarios.map(f=> f._id.toString());
-      if(!ids.length){ return res.json({ ok:true, data: [] }); }
-      q.funcionarioId = { $in: ids };
+      const unitFilter = await resolveFeriasListUnitFilter(unidadeId);
+      if(unitFilter.error){ return res.status(400).json({ ok:false, error:unitFilter.error }); }
+      if(unitFilter.empty){ return res.json({ ok:true, data: [] }); }
+      q.funcionarioId = unitFilter.filter;
     }
     const lista = await Ferias.find(q).sort({ inicioISO:1, funcionarioNome:1 }).limit(1000);
     res.json({ ok:true, data: lista });
@@ -80,12 +127,11 @@ router.get('/api/ferias', requireEscalasAuth, async (req,res)=>{
 // --- Relatório Férias (PDF) ---
 router.get('/api/ferias/relatorio', requireEscalasAuth, async (req,res)=>{
   try {
-    const { funcionarioId, ano, unidadeId: rawUnidadeId } = req.query;
-    const unidadeId = (rawUnidadeId && rawUnidadeId !== 'undefined') ? rawUnidadeId : null;
-    if(funcionarioId && unidadeId){ return res.status(400).json({ ok:false, error:'Use UNIDADE ou FUNCIONÁRIO (exclusivos).' }); }
-    if(!funcionarioId && !unidadeId){ return res.status(400).json({ ok:false, error:'Informe uma UNIDADE ou um FUNCIONÁRIO.' }); }
-    if(!ano){ return res.status(400).json({ ok:false, error:'Ano obrigatório.' }); }
-    const anoNum = parseInt(ano,10); if(isNaN(anoNum) || anoNum<1900 || anoNum>3000){ return res.status(400).json({ ok:false, error:'Ano inválido.' }); }
+    const input = parseFeriasReportQuery(req);
+    const validationError = validateFeriasReportQuery(input);
+    if(validationError){ return res.status(400).json({ ok:false, error:validationError }); }
+
+    const { funcionarioId, unidadeId, ano, anoNum } = input;
     const q = { ano: anoNum };
     let unidade = null;
     if(funcionarioId){
