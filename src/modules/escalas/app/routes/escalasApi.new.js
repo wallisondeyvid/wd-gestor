@@ -1816,62 +1816,113 @@ router.get('/api/relatorios/horas-trabalhadas', requireEscalasAuth, async (req,r
 // Resolver responsável por ID (pode ser ID de usuário ou de funcionário)
 // Colocado ANTES de /api/escalas/:id para evitar captura por rota paramétrica
 // GET /escalas/api/escalas/resolve-responsavel?id=<ObjectId>
+function resolveRawResponsavelId(req){
+  const q = req.query || {};
+  let raw = '';
+  const cand = q.id || q._id || q.uid || q.userId || q.funcionarioId || q.fid || '';
+
+  if(typeof cand === 'string'){
+    raw = cand.trim();
+  }
+
+  if(!raw && typeof q.ids === 'string'){
+    const first = q.ids.split(',').map((segment) => segment.trim()).filter(Boolean)[0];
+    raw = first || '';
+  }
+
+  if(!raw){
+    try {
+      const u = new URL('http://local' + (req.originalUrl || req.url || ''));
+      raw = (u.searchParams.get('id') || '').trim();
+    } catch(_e){ /* noop */ }
+  }
+
+  return raw;
+}
+
+function normalizeResponsavelId(raw){
+  const normalized = typeof raw === 'string' ? raw.trim() : '';
+  if(!normalized || !/^[0-9a-fA-F]{24}$/.test(normalized)) return null;
+  return normalized;
+}
+
+async function getResolveResponsavelModels(){
+  const modUser = await import('#models/user.js');
+  const UserModel = modUser.default || modUser.User || modUser;
+  const modFunc = await import('#models/Funcionario.js');
+  const FuncModel = modFunc.default || modFunc.Funcionario || modFunc;
+  return { UserModel, FuncModel };
+}
+
+async function resolveResponsavelById({ UserModel, FuncModel, id }){
+  let nome = null;
+  let codigo = null;
+  let origem = 'none';
+
+  try {
+    const u = await UserModel.findById(id).select('nome funcionario_id funcionarioId').lean();
+    if(u){
+      const fid = u.funcionario_id || u.funcionarioId || null;
+      if(fid){
+        const f = await FuncModel.findById(fid).select('nome codigo').lean();
+        if(f){
+          nome = f.nome || u.nome || null;
+          codigo = f.codigo || null;
+          origem = 'user>funcionario_id';
+        } else {
+          nome = u.nome || null;
+          origem = 'user(nome)';
+        }
+      } else {
+        nome = u.nome || null;
+        origem = 'user(nome)';
+      }
+    }
+  } catch(_e){ /* noop */ }
+
+  if(!(nome || codigo)){
+    try {
+      const f = await FuncModel.findById(id).select('nome codigo').lean();
+      if(f){
+        nome = f.nome || null;
+        codigo = f.codigo || null;
+        origem = 'funcionario(_id)';
+      }
+    } catch(_f){ /* noop */ }
+  }
+
+  if(!(nome || codigo)){
+    try {
+      const f = await FuncModel.findOne({ usuario_id: id }).select('nome codigo').lean();
+      if(f){
+        nome = f.nome || null;
+        codigo = f.codigo || null;
+        origem = 'funcionario(usuario_id)';
+      }
+    } catch(_fu){ /* noop */ }
+  }
+
+  return { nome, codigo, origem };
+}
+
+function serializeResolvedResponsavel({ id, nome, codigo, origem }){
+  const display = (codigo && nome) ? `${codigo} - ${nome}` : (nome || null);
+  return { ok:true, id, nome, codigo, display, origem };
+}
+
 router.get('/api/escalas/resolve-responsavel', requireEscalasAuth, async (req,res)=>{
   try {
-    const q = req.query || {};
-    let raw = '';
-    // aceitar múltiplas chaves comuns
-    const cand = q.id || q._id || q.uid || q.userId || q.funcionarioId || q.fid || '';
-    if(typeof cand==='string'){ raw = cand.trim(); }
-    // aceitar também "ids" (lista) e pegar o primeiro
-    if(!raw && typeof q.ids==='string'){
-      const first = q.ids.split(',').map(s=> s.trim()).filter(Boolean)[0];
-      raw = first || '';
-    }
-    // fallback: reparse a partir da URL original
-    if(!raw){
-      try { const u = new URL('http://local'+(req.originalUrl||req.url||'')); raw = (u.searchParams.get('id')||'').trim(); } catch(_e){}
-    }
-    const isHex24 = (v)=> typeof v==='string' && /^[0-9a-fA-F]{24}$/.test(v);
-    if(!raw || !isHex24(raw)){
+    const raw = resolveRawResponsavelId(req);
+    const normalizedId = normalizeResponsavelId(raw);
+    if(!normalizedId){
       if(process.env.NODE_ENV !== 'production'){
-        console.warn('[resolve-responsavel] id inválido', { raw, query:q, url:req.url, originalUrl:req.originalUrl });
+        console.warn('[resolve-responsavel] id inválido', { raw, query:req.query || {}, url:req.url, originalUrl:req.originalUrl });
       }
       return res.status(400).json({ ok:false, error:'id inválido' });
     }
-    const modUser = await import('#models/user.js');
-    const UserModel = modUser.default || modUser.User || modUser;
-    const modFunc = await import('#models/Funcionario.js');
-    const FuncModel = modFunc.default || modFunc.Funcionario || modFunc;
-    let nome=null, codigo=null, origem='none';
-    // 1) Tentar como Usuário
-    try {
-      const u = await UserModel.findById(raw).select('nome funcionario_id funcionarioId').lean();
-      if(u){
-        const fid = u.funcionario_id || u.funcionarioId || null;
-        if(fid){
-          const f = await FuncModel.findById(fid).select('nome codigo').lean();
-          if(f){ nome = f.nome||u.nome||null; codigo = f.codigo||null; origem='user>funcionario_id'; }
-          else { nome = u.nome||null; origem='user(nome)'; }
-        } else { nome = u.nome||null; origem='user(nome)'; }
-      }
-    } catch(_e){ /* noop */ }
-    // 2) Tentar como Funcionário direto
-    if(!(nome||codigo)){
-      try {
-        const f = await FuncModel.findById(raw).select('nome codigo').lean();
-        if(f){ nome=f.nome||null; codigo=f.codigo||null; origem='funcionario(_id)'; }
-      } catch(_f){}
-    }
-    // 3) Funcionário por usuario_id
-    if(!(nome||codigo)){
-      try {
-        const f = await FuncModel.findOne({ usuario_id: raw }).select('nome codigo').lean();
-        if(f){ nome=f.nome||null; codigo=f.codigo||null; origem='funcionario(usuario_id)'; }
-      } catch(_fu){}
-    }
-    const display = (codigo && nome) ? `${codigo} - ${nome}` : (nome || null);
-    return res.json({ ok:true, id: raw, nome, codigo, display, origem });
+    const { UserModel, FuncModel } = await getResolveResponsavelModels();
+    const resolved = await resolveResponsavelById({ UserModel, FuncModel, id: normalizedId });
+    return res.json(serializeResolvedResponsavel({ id: normalizedId, ...resolved }));
   } catch(e){ console.error('[escalasApi.new][GET resolve-responsavel] erro', e); return res.status(500).json({ ok:false, error:'Falha ao resolver responsável' }); }
 });
 
