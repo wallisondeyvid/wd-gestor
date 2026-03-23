@@ -47,6 +47,25 @@ function validateAusenciasListQuery({ funcionarioId, unidadeId, inicio, fim }){
   return null;
 }
 
+function parseAusenciasReportQuery(req){
+  const { funcionarioId, unidadeId: rawUnidadeId, tipo, inicio, fim } = req.query;
+  const unidadeId = (rawUnidadeId && rawUnidadeId !== 'undefined') ? rawUnidadeId : null;
+  return { funcionarioId, unidadeId, tipo, inicio, fim };
+}
+
+function validateAusenciasReportQuery({ funcionarioId, unidadeId, inicio, fim }){
+  if(funcionarioId && unidadeId){
+    return 'Use UNIDADE ou FUNCIONÁRIO (exclusivos).';
+  }
+  if(!funcionarioId && !unidadeId){
+    return 'Informe uma UNIDADE ou um FUNCIONÁRIO.';
+  }
+  if(!inicio || !fim){
+    return 'Período obrigatório';
+  }
+  return null;
+}
+
 async function resolveAusenciasListUnitFilter(unidadeId){
   if(!mongoose.isValidObjectId(unidadeId)){
     return { error: 'unidadeId inválido.' };
@@ -119,11 +138,11 @@ router.get('/api/ausencias', requireEscalasAuth, async (req,res)=>{
 // --- Relatório Ausências (PDF) ---
 router.get('/api/ausencias/relatorio', requireEscalasAuth, async (req,res)=>{
   try {
-  const { funcionarioId, unidadeId: rawUnidadeId, tipo, inicio, fim } = req.query;
-  const unidadeId = (rawUnidadeId && rawUnidadeId !== 'undefined') ? rawUnidadeId : null;
-    if(funcionarioId && unidadeId){ return res.status(400).json({ ok:false, error:'Use UNIDADE ou FUNCIONÁRIO (exclusivos).' }); }
-    if(!funcionarioId && !unidadeId){ return res.status(400).json({ ok:false, error:'Informe uma UNIDADE ou um FUNCIONÁRIO.' }); }
-    if(!inicio || !fim){ return res.status(400).json({ ok:false, error:'Período obrigatório' }); }
+    const input = parseAusenciasReportQuery(req);
+    const validationError = validateAusenciasReportQuery(input);
+    if(validationError){ return res.status(400).json({ ok:false, error: validationError }); }
+
+    const { funcionarioId, unidadeId, tipo, inicio, fim } = input;
     const base = {};
     if(tipo) base.tipo = tipo;
     let filtro = { ...base, inicioISO: { $lte: fim }, fimISO: { $gte: inicio } };
