@@ -562,60 +562,6 @@ router.get('/api/escalas/__debug/schema', requireEscalasAuth, async (req,res)=>{
   } catch(e){ return res.status(500).json({ ok:false, error:'Falha debug schema'}); }
 });
 
-// ===== API direta de Recursos (fallback interno do módulo Escalas) =====
-// GET /escalas/api/recursos?placa=&unidadeId=
-router.get('/api/recursos', requireEscalasAuth, async (req,res)=>{
-  try {
-    let { placa, unidadeId } = req.query || {};
-    placa = (placa||'').trim();
-    unidadeId = (unidadeId||'').trim();
-    const Recurso = await getRecursoModel();
-    const Unidade = await getUnidadeModel();
-    const filtro = {};
-    let placaTermNorm = null;
-    if(placa && placa.length>=2){
-      placaTermNorm = placa.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
-    }
-    if(unidadeId){ filtro.unidade_id = unidadeId; }
-    // Escopo por cluster de unidades do usuário (se não master)
-    const su = req.session?.escalasUser || {};
-    const role = (su.role||su.perfil||'user').toLowerCase();
-    if(role!=='master' && role!=='admin'){
-      let principalId = su.unidade_principal_id || su.unidadePrincipalId || null;
-      if(!principalId && su.unidade_id){
-        const u = await Unidade.findById(su.unidade_id).select('_id is_principal unidade_principal_id matriz_id').lean();
-        if(u) principalId = u.is_principal? u._id : (u.unidade_principal_id || u.matriz_id || u._id);
-      }
-      const cond = principalId ? { $or:[{ _id:principalId }, { unidade_principal_id:principalId }, { matriz_id:principalId }] } : { _id: su.unidade_id || null };
-      const unidadesAcessiveis = await Unidade.find(cond).select('_id').lean();
-      const ids = unidadesAcessiveis.map(u=> String(u._id));
-      if(unidadeId && !ids.includes(String(unidadeId))){ return res.json([]); }
-      if(!unidadeId){ filtro.unidade_id = { $in: ids }; }
-    }
-    let recursos = await Recurso.find(filtro)
-      .populate({ path:'unidade_id', select:'codigo nome' })
-      .sort({ placa:1 })
-      .limit(100)
-      .lean();
-    if(placaTermNorm){
-      recursos = recursos.filter(r=>{
-        const normR = (r.placa||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();
-        return normR.includes(placaTermNorm);
-      });
-    }
-    const mapped = recursos.map(r=>({
-      id: r._id,
-      placa: r.placa,
-      descricao: [r.marca, r.modelo].filter(Boolean).join(' ') || r.modelo || r.marca || '',
-      unidadeFormatada: r.unidade_id ? ((r.unidade_id.codigo? r.unidade_id.codigo+' - ':'') + (r.unidade_id.nome||'')) : ''
-    }));
-    return res.json(mapped);
-  } catch(err){
-    console.error('[escalasApi.new][GET /api/recursos] erro', err);
-    return res.status(500).json({ error:'erro_interno' });
-  }
-});
-
 // Debug leve de recursos (ids e nomes) para diagnosticar sumiço
 
 // Validação intra-escala

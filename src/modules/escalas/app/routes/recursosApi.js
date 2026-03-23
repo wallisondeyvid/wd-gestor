@@ -70,7 +70,7 @@ router.get('/api/recursos', async (req,res)=>{
   console.log('[Escalas][recursosApi] HIT /api/recursos query=', req.query, 'sessionUser?', !!req.session?.escalasUser);
   try {
     if(!req.session?.escalasUser){
-      return res.status(401).json({ error:'nao_autenticado' });
+      return res.status(401).json({ error:'Não autenticado' });
     }
     let { placa, unidadeId } = req.query;
     placa = (placa||'').trim();
@@ -113,9 +113,6 @@ router.get('/api/recursos', async (req,res)=>{
     const mapped = recursos.map(r=>({
       id: r._id,
       placa: r.placa,
-      // Expor também marca/modelo para clientes que desejem hidratar rótulos
-      marca: r.marca || r.fabricante || null,
-      modelo: r.modelo || r.model || null,
       descricao: [r.marca, r.modelo].filter(Boolean).join(' ') || r.modelo || r.marca || '',
       unidadeFormatada: r.unidade_id ? ((r.unidade_id.codigo? r.unidade_id.codigo+' - ':'') + (r.unidade_id.nome||'')) : ''
     }));
