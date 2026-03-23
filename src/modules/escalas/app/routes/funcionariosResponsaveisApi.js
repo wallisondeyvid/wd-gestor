@@ -17,6 +17,47 @@ function requireEscalasAuth(req,res,next){
   next();
 }
 
+function getRequestUser(req){
+  return req.user || req.session.escalasUser || {};
+}
+
+function isPrivilegedUser(usuario){
+  return !!usuario.isMaster || usuario.role === 'master' || usuario.role === 'admin';
+}
+
+function resolveMatrizId(unidade){
+  if(unidade.is_principal) return unidade._id;
+  if(unidade.unidade_principal_id) return unidade.unidade_principal_id;
+  return unidade._id;
+}
+
+async function resolveClusterIdsByUnitId(Unidade, unidadeId){
+  const unidade = await Unidade.findById(unidadeId).lean();
+  if(!unidade) return null;
+
+  const matrizId = resolveMatrizId(unidade);
+  const relacionadas = await Unidade.find({
+    $or:[
+      { _id: matrizId },
+      { unidade_principal_id: matrizId }
+    ]
+  }).select('_id').lean();
+
+  return relacionadas.map((relacionada) => relacionada._id.toString());
+}
+
+function mapObservableFuncionario(doc, unidadesMap){
+  return {
+    id: doc._id,
+    nome: doc.nome,
+    cpf: doc.cpf,
+    codigo: doc.codigo || null,
+    unidade_id: doc.unidade_id,
+    unidade_nome: (doc.unidade_id && unidadesMap[doc.unidade_id.toString()]?.nome) || null,
+    unidade_codigo: (doc.unidade_id && unidadesMap[doc.unidade_id.toString()]?.codigo) || null
+  };
+}
+
 // GET /api/funcionarios-responsaveis?unidade=&cpf=&codigo=&nome=
 // Regras:
 // - Filtra apenas unidades relacionadas ao usuário (mesma lógica de unidades-relacionadas) salvo se master.
@@ -24,9 +65,9 @@ function requireEscalasAuth(req,res,next){
 // - nome: regex case-insensitive contendo termo
 router.get('/api/funcionarios-responsaveis', requireEscalasAuth, async (req,res)=>{
   try {
-    const usuario = req.user || req.session.escalasUser || {};
-  const isMaster = !!usuario.isMaster || usuario.role === 'master' || usuario.role === 'admin';
-  const { unidade, cpf, codigo, nome, incluirFiliais } = req.query;
+    const usuario = getRequestUser(req);
+    const isMaster = isPrivilegedUser(usuario);
+    const { unidade, cpf, codigo, nome, incluirFiliais } = req.query;
     const Funcionario = await getFuncionarioModel();
     const Unidade = await getUnidadeModel();
 
@@ -38,14 +79,11 @@ router.get('/api/funcionarios-responsaveis', requireEscalasAuth, async (req,res)
       if(!unidadeId){
         return res.json({ data: [] });
       }
-      const uniUser = await Unidade.findById(unidadeId).lean();
-      if(!uniUser){
+      const clusterIds = await resolveClusterIdsByUnitId(Unidade, unidadeId);
+      if(!clusterIds){
         return res.json({ data: [] });
       }
-      let matrizId;
-      if(uniUser.is_principal){ matrizId = uniUser._id; } else if(uniUser.unidade_principal_id){ matrizId = uniUser.unidade_principal_id; } else { matrizId = uniUser._id; }
-      const relacionadas = await Unidade.find({ $or:[ { _id: matrizId }, { unidade_principal_id: matrizId } ] }).select('_id').lean();
-      unidadesPermitidasIds = relacionadas.map(r=> r._id.toString());
+      unidadesPermitidasIds = clusterIds;
     }
 
     const filtro = { ativo: true };
@@ -56,12 +94,8 @@ router.get('/api/funcionarios-responsaveis', requireEscalasAuth, async (req,res)
       if(incluirFiliais==='1' || incluirFiliais==='true'){
         // Buscar cluster da unidade passada (se for matriz pega filiais; se for filial pega matriz + irmãs)
         try {
-          const uniSel = await Unidade.findById(unidade).lean();
-          if(uniSel){
-            let matrizId;
-            if(uniSel.is_principal){ matrizId = uniSel._id; } else if(uniSel.unidade_principal_id){ matrizId = uniSel.unidade_principal_id; } else { matrizId = uniSel._id; }
-            const relacionadas = await Unidade.find({ $or:[ { _id: matrizId }, { unidade_principal_id: matrizId } ] }).select('_id').lean();
-            const clusterIds = relacionadas.map(r=> r._id.toString());
+          const clusterIds = await resolveClusterIdsByUnitId(Unidade, unidade);
+          if(clusterIds){
             filtro.unidade_id = { $in: clusterIds };
           } else {
             filtro.unidade_id = unidade;
@@ -140,15 +174,7 @@ router.get('/api/funcionarios-responsaveis', requireEscalasAuth, async (req,res)
       const unis = await Unidade.find({ _id: { $in: unidadeIds } }).select('nome codigo').lean();
       unis.forEach(u=>{ unidadesMap[u._id.toString()] = { nome: u.nome, codigo: u.codigo||null }; });
     }
-    const data = docs.map(d=> ({
-      id: d._id,
-      nome: d.nome,
-      cpf: d.cpf,
-      codigo: d.codigo || null,
-      unidade_id: d.unidade_id,
-      unidade_nome: (d.unidade_id && unidadesMap[d.unidade_id.toString()]?.nome) || null,
-      unidade_codigo: (d.unidade_id && unidadesMap[d.unidade_id.toString()]?.codigo) || null
-    }));
+    const data = docs.map((doc) => mapObservableFuncionario(doc, unidadesMap));
     return res.json({ data });
   } catch(e){
     console.error('[escalas][GET /api/funcionarios-responsaveis] erro:', e);
