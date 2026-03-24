@@ -1,0 +1,420 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import request from 'supertest';
+import bcrypt from 'bcryptjs';
+
+import { createServer } from '../src/server/createServer.js';
+import Modulo from '../src/core/models/modulo.js';
+import Unidade from '../src/core/models/unidade.js';
+import User from '../src/core/models/user.js';
+import UserMembership from '../src/core/models/userMembership.js';
+import Funcionario from '../src/core/models/Funcionario.js';
+import { createUnitScope } from '../src/shared/unitScope.js';
+import { resolveModel } from '../src/shared/db/resolveModel.js';
+
+let uniqueCounter = 0;
+
+function nextCounter() {
+  uniqueCounter += 1;
+  return uniqueCounter;
+}
+
+function uniqueEmail(prefix) {
+  return `${prefix}.${Date.now()}.${nextCounter()}@example.com`;
+}
+
+function uniqueCpf() {
+  return String(Date.now() + nextCounter()).slice(-11).padStart(11, '0');
+}
+
+function normalizeId(value) {
+  return String(value || '').trim();
+}
+
+function buildRg() {
+  return `RG-${Date.now()}-${nextCounter()}`;
+}
+
+function installTeardownSuppression() {
+  let shuttingDown = false;
+  const originalEmit = process.emit;
+
+  const shouldIgnore = (err) => {
+    if (!shuttingDown) return false;
+    return String(err?.message || err).includes('Connection was force closed');
+  };
+
+  const onUnhandledRejection = (err) => {
+    if (shouldIgnore(err)) return;
+    throw err instanceof Error ? err : new Error(String(err));
+  };
+
+  const onUncaughtException = (err) => {
+    if (shouldIgnore(err)) return;
+    throw err instanceof Error ? err : new Error(String(err));
+  };
+
+  process.emit = function patchedEmit(eventName, ...args) {
+    if (
+      (eventName === 'unhandledRejection' || eventName === 'uncaughtException')
+      && shouldIgnore(args[0])
+    ) {
+      return false;
+    }
+    return originalEmit.call(this, eventName, ...args);
+  };
+
+  process.prependListener('unhandledRejection', onUnhandledRejection);
+  process.prependListener('uncaughtException', onUncaughtException);
+
+  return {
+    startShutdown() {
+      shuttingDown = true;
+    },
+    async remove() {
+      await new Promise((resolve) => setImmediate(resolve));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      process.off('unhandledRejection', onUnhandledRejection);
+      process.off('uncaughtException', onUncaughtException);
+      process.emit = originalEmit;
+    },
+  };
+}
+
+async function closeWithTeardownGuard(close, teardownGuard) {
+  if (typeof close !== 'function') return;
+
+  teardownGuard.startShutdown();
+  await close({ stopMemoryServer: true });
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function createModuloAndUnits() {
+  const moduloGestor = await Modulo.create({
+    nome: 'gestor',
+    status: 'ativo',
+    url_base: '/gestor',
+  });
+
+  const unidadeA = await Unidade.create({
+    nome: `Principal A ${Date.now()}-${nextCounter()}`,
+    pessoaTipo: 'pj',
+    is_principal: true,
+    ativa: true,
+    modulosAcessiveis: [moduloGestor._id],
+  });
+
+  const unidadeB = await Unidade.create({
+    nome: `Filial B ${Date.now()}-${nextCounter()}`,
+    pessoaTipo: 'pj',
+    ativa: true,
+    unidade_principal_id: unidadeA._id,
+    modulosAcessiveis: [moduloGestor._id],
+  });
+
+  const unidadeC = await Unidade.create({
+    nome: `Principal C ${Date.now()}-${nextCounter()}`,
+    pessoaTipo: 'pj',
+    is_principal: true,
+    ativa: true,
+    modulosAcessiveis: [moduloGestor._id],
+  });
+
+  return { unidadeA, unidadeB, unidadeC };
+}
+
+function getTenantModel(modelClass, unidadeId) {
+  return resolveModel({
+    name: modelClass.modelName,
+    schema: modelClass.schema,
+    unitScope: createUnitScope({ unidadeId: normalizeId(unidadeId) }),
+  });
+}
+
+async function createFuncionarioInTenant(unidadeId, { nome, email, cpf, sexo = 'M' }) {
+  const FuncionarioModel = getTenantModel(Funcionario, unidadeId);
+  return FuncionarioModel.create({
+    unidade_id: unidadeId,
+    nome,
+    rg: buildRg(),
+    cpf,
+    data_nascimento: new Date('1990-01-01T00:00:00.000Z'),
+    sexo,
+    endereco: { cep: '01001000' },
+    email,
+    telefone: '(11) 99999-9999',
+    ativo: true,
+  });
+}
+
+async function authenticateContextualAgent(app, { unidadeId, papelContextual = 'gestor', role = 'user' }) {
+  const email = uniqueEmail('funcionario-delete-post-runtime');
+  const senha = 'Senha@123456';
+  const senhaHash = await bcrypt.hash(senha, 10);
+
+  const user = await User.create({
+    email,
+    senha: senhaHash,
+    cpf: uniqueCpf(),
+    role,
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: `Delete Post Runtime ${nextCounter()}`,
+  });
+
+  await UserMembership.create({
+    user_id: user._id,
+    unidade_id: unidadeId,
+    papel_contextual: papelContextual,
+    status: 'active',
+    origem: 'gestor-funcionarios-delete-post-runtime-contract-test',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await agent
+    .post('/gestor/login')
+    .type('form')
+    .send({ email, senha, modulo: 'gestor' });
+
+  assert.equal(loginRes.status, 303, JSON.stringify(loginRes.body));
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  return { agent, email, userId: user._id };
+}
+
+async function withHarness(run) {
+  const prevMongoMemory = process.env.MONGO_MEMORY;
+  const prevAuthContextFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+  process.env.MONGO_MEMORY = '1';
+  process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
+
+  const { app, close } = await createServer({ skipDb: false });
+  app.locals.gestorAuthContextFeatureFlags = {
+    gestor_auth_context_resolver: true,
+  };
+  delete app.locals.gestorAuthContextResolverDeps;
+  delete app.locals.gestorAuthContextMaxTimeMS;
+
+  const teardownGuard = installTeardownSuppression();
+  const createdEmails = [];
+
+  try {
+    const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
+    const contextualAuth = await authenticateContextualAgent(app, { unidadeId: unidadeB._id });
+    const outsiderAuth = await authenticateContextualAgent(app, { unidadeId: unidadeC._id });
+    createdEmails.push(contextualAuth.email, outsiderAuth.email);
+
+    await run({
+      app,
+      unidadeA,
+      unidadeB,
+      unidadeC,
+      contextualAgent: contextualAuth.agent,
+      outsiderAgent: outsiderAuth.agent,
+    });
+  } finally {
+    try {
+      if (createdEmails.length > 0) {
+        try {
+          await User.deleteMany({ email: { $in: createdEmails } });
+        } catch {}
+      }
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = prevMongoMemory;
+      if (prevAuthContextFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = prevAuthContextFlag;
+    }
+  }
+}
+
+test('POST /gestor/api/funcionarios/:id/delete sem sessao retorna unauthorized em JSON', async () => {
+  await withHarness(async ({ app, unidadeB }) => {
+    const funcionario = await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Sem Sessao ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-delete-post-anon'),
+      cpf: uniqueCpf(),
+    });
+
+    const res = await request(app)
+      .post(`/gestor/api/funcionarios/${normalizeId(funcionario._id)}/delete`)
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 401, JSON.stringify(res.body));
+    assert.equal(res.body?.success, false, JSON.stringify(res.body));
+    assert.equal(res.body?.code, 'UNAUTHORIZED', JSON.stringify(res.body));
+    assert.match(String(res.body?.error || ''), /não autenticado/i);
+  });
+});
+
+test('POST /gestor/api/funcionarios/:id/delete fora do escopo contextual retorna alreadyRemoved sem tocar no alvo', async () => {
+  await withHarness(async ({ unidadeB, outsiderAgent }) => {
+    const funcionario = await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Fora Escopo ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-delete-post-escopo'),
+      cpf: uniqueCpf(),
+    });
+
+    const res = await outsiderAgent
+      .post(`/gestor/api/funcionarios/${normalizeId(funcionario._id)}/delete`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body?.success, true, JSON.stringify(res.body));
+    assert.equal(res.body?.data?.deleted, true, JSON.stringify(res.body));
+    assert.equal(res.body?.data?.alreadyRemoved, true, JSON.stringify(res.body));
+    assert.equal(res.body?.data?.redirect, '/funcionarios?deleted=1', JSON.stringify(res.body));
+
+    const preserved = await getTenantModel(Funcionario, unidadeB._id).findById(funcionario._id).lean();
+    assert.ok(preserved);
+  });
+});
+
+test('POST /gestor/api/funcionarios/:id/delete com alvo master vinculado retorna forbidden', async () => {
+  await withHarness(async ({ unidadeB, contextualAgent }) => {
+    const funcionario = await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Master Vinculado ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-delete-post-master'),
+      cpf: uniqueCpf(),
+    });
+
+    await User.create({
+      email: uniqueEmail('master-delete-post'),
+      senha: await bcrypt.hash('Senha@123456', 10),
+      cpf: uniqueCpf(),
+      role: 'master',
+      global_role: 'master',
+      funcionario_id: funcionario._id,
+      ativo: true,
+      primeiro_acesso: false,
+      senha_provisoria: false,
+      nome: `Master Delete Post ${nextCounter()}`,
+    });
+
+    const res = await contextualAgent
+      .post(`/gestor/api/funcionarios/${normalizeId(funcionario._id)}/delete`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 403, JSON.stringify(res.body));
+    assert.equal(res.body?.success, false, JSON.stringify(res.body));
+    assert.equal(res.body?.code, 'FORBIDDEN', JSON.stringify(res.body));
+    assert.match(String(res.body?.error || ''), /master/i);
+
+    const preserved = await getTenantModel(Funcionario, unidadeB._id).findById(funcionario._id).lean();
+    assert.ok(preserved);
+  });
+});
+
+test('POST /gestor/api/funcionarios/:id/delete remove o funcionario da unidade ativa e retorna redirect em JSON', async () => {
+  await withHarness(async ({ unidadeB, contextualAgent }) => {
+    const funcionario = await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Delete Post ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-delete-post-ok'),
+      cpf: uniqueCpf(),
+    });
+
+    const res = await contextualAgent
+      .post(`/gestor/api/funcionarios/${normalizeId(funcionario._id)}/delete`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body?.success, true, JSON.stringify(res.body));
+    assert.equal(res.body?.data?.deleted, true, JSON.stringify(res.body));
+    assert.equal(res.body?.data?.alreadyRemoved ?? false, false, JSON.stringify(res.body));
+    assert.equal(
+      res.body?.data?.redirect,
+      `/funcionarios?deleted=1&nome=${encodeURIComponent(funcionario.nome)}`,
+      JSON.stringify(res.body),
+    );
+
+    const deleted = await getTenantModel(Funcionario, unidadeB._id).findById(funcionario._id).lean();
+    assert.equal(deleted, null);
+  });
+});
+
+test('POST /gestor/api/funcionarios/:id/delete com id inexistente preserva a idempotencia observavel', async () => {
+  await withHarness(async ({ contextualAgent }) => {
+    const res = await contextualAgent
+      .post('/gestor/api/funcionarios/64f111111111111111111111/delete')
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body?.success, true, JSON.stringify(res.body));
+    assert.equal(res.body?.data?.deleted, true, JSON.stringify(res.body));
+    assert.equal(res.body?.data?.alreadyRemoved, true, JSON.stringify(res.body));
+    assert.equal(res.body?.data?.redirect, '/funcionarios?deleted=1', JSON.stringify(res.body));
+  });
+});
+
+test('POST /gestor/api/funcionarios/:id/delete repetido apos sucesso retorna alreadyRemoved', async () => {
+  await withHarness(async ({ unidadeB, contextualAgent }) => {
+    const funcionario = await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Delete Post Repetido ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-delete-post-repeat'),
+      cpf: uniqueCpf(),
+    });
+
+    const first = await contextualAgent
+      .post(`/gestor/api/funcionarios/${normalizeId(funcionario._id)}/delete`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(first.status, 200, JSON.stringify(first.body));
+    assert.equal(first.body?.data?.deleted, true, JSON.stringify(first.body));
+    assert.equal(first.body?.data?.alreadyRemoved ?? false, false, JSON.stringify(first.body));
+
+    const second = await contextualAgent
+      .post(`/gestor/api/funcionarios/${normalizeId(funcionario._id)}/delete`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(second.status, 200, JSON.stringify(second.body));
+    assert.equal(second.body?.success, true, JSON.stringify(second.body));
+    assert.equal(second.body?.data?.deleted, true, JSON.stringify(second.body));
+    assert.equal(second.body?.data?.alreadyRemoved, true, JSON.stringify(second.body));
+    assert.equal(second.body?.data?.redirect, '/funcionarios?deleted=1', JSON.stringify(second.body));
+  });
+});
+
+test('POST /gestor/api/funcionarios/:id/delete propaga falha interna como 500 JSON', async () => {
+  await withHarness(async ({ unidadeB, contextualAgent }) => {
+    const funcionario = await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Delete Post Falha ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-delete-post-fail'),
+      cpf: uniqueCpf(),
+    });
+
+    const originalFindOne = User.findOne;
+    User.findOne = function patchedFindOne(...args) {
+      const query = args[0] || {};
+      if (query && Object.prototype.hasOwnProperty.call(query, 'funcionario_id')) {
+        throw new Error('forced delete-post failure');
+      }
+      return originalFindOne.apply(this, args);
+    };
+
+    try {
+      const res = await contextualAgent
+        .post(`/gestor/api/funcionarios/${normalizeId(funcionario._id)}/delete`)
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      assert.equal(res.status, 500, JSON.stringify(res.body));
+      assert.equal(res.body?.success, false, JSON.stringify(res.body));
+      assert.match(String(res.body?.message || res.body?.error || ''), /erro interno/i);
+
+      const preserved = await getTenantModel(Funcionario, unidadeB._id).findById(funcionario._id).lean();
+      assert.ok(preserved);
+    } finally {
+      User.findOne = originalFindOne;
+    }
+  });
+});
