@@ -1,0 +1,342 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { pathToFileURL } from 'node:url';
+import path from 'node:path';
+import { registerHooks } from 'node:module';
+import express from 'express';
+
+const VALID_RESOURCE_ID = '507f1f77bcf86cd799439011';
+const CONTEXTUAL_UNIT_ID = '507f191e810c19729de860ea';
+const projectRoot = process.cwd();
+const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/recursoApiController.js')).href;
+const gestorAppModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/gestor-app.js')).href;
+const actualDbBridgeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
+const dbBridgeMockModuleUrl = 'mock:gestor-recursos-get-by-id-api-db-bridge';
+const DB_BRIDGE_EXPORTS = [
+	'findRecursoByIdComUnidadeNome',
+];
+
+registerHooks({
+	resolve(specifier, context, nextResolve) {
+		if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
+			return { url: dbBridgeMockModuleUrl, shortCircuit: true };
+		}
+		return nextResolve(specifier, context);
+	},
+	load(url, context, nextLoad) {
+		if (url === dbBridgeMockModuleUrl) {
+			const lines = [
+				`export * from '${actualDbBridgeModuleUrl}';`,
+				`import * as actual from '${actualDbBridgeModuleUrl}';`,
+				"const getMocks = () => globalThis.__GESTOR_RECURSOS_GET_DB_MOCKS__ || {};",
+			];
+
+			for (const exportName of DB_BRIDGE_EXPORTS) {
+				lines.push(`export async function ${exportName}(...args) { const fn = getMocks()['${exportName}']; if (typeof fn === 'function') return await fn(...args); return await actual['${exportName}'](...args); }`);
+			}
+
+			return {
+				format: 'module',
+				shortCircuit: true,
+				source: lines.join('\n'),
+			};
+		}
+
+		return nextLoad(url, context);
+	},
+});
+
+function uniqueSuffix() {
+	return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function createResponseCapture() {
+	return {
+		statusCode: 200,
+		body: undefined,
+		headers: {},
+		finished: false,
+		status(code) {
+			this.statusCode = code;
+			return this;
+		},
+		json(payload) {
+			this.body = payload;
+			this.finished = true;
+			return this;
+		},
+		send(payload) {
+			this.body = payload;
+			this.finished = true;
+			return this;
+		},
+		set(name, value) {
+			this.headers[String(name).toLowerCase()] = value;
+			return this;
+		},
+		setHeader(name, value) {
+			this.headers[String(name).toLowerCase()] = value;
+		},
+		type(value) {
+			this.headers['content-type'] = value;
+			return this;
+		},
+		end(payload) {
+			if (payload !== undefined) this.body = payload;
+			this.finished = true;
+			return this;
+		}
+	};
+}
+
+function createRequest(overrides = {}) {
+	return {
+		params: { id: VALID_RESOURCE_ID },
+		query: {},
+		body: {},
+		headers: {},
+		session: {},
+		user: null,
+		unitScope: null,
+		...overrides,
+		params: {
+			id: VALID_RESOURCE_ID,
+			...(overrides.params || {})
+		},
+		query: {
+			...(overrides.query || {})
+		},
+		body: {
+			...(overrides.body || {})
+		},
+		headers: {
+			...(overrides.headers || {})
+		},
+		session: {
+			...(overrides.session || {})
+		}
+	};
+}
+
+function setDbMocks(overrides = {}) {
+	globalThis.__GESTOR_RECURSOS_GET_DB_MOCKS__ = { ...overrides };
+}
+
+function clearDbMocks() {
+	globalThis.__GESTOR_RECURSOS_GET_DB_MOCKS__ = {};
+}
+
+async function invokeOwner({ reqOverrides = {}, bridgeOverrides = {} } = {}) {
+	setDbMocks(bridgeOverrides);
+	const { getRecurso } = await import(`${controllerModuleUrl}?case=${encodeURIComponent(uniqueSuffix())}`);
+	const req = createRequest(reqOverrides);
+	const res = createResponseCapture();
+
+	await getRecurso(req, res);
+	return { req, res };
+}
+
+async function requestGestorApp(pathname) {
+	const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app-${encodeURIComponent(uniqueSuffix())}`);
+	const rootApp = express();
+	rootApp.use('/gestor', gestorApp);
+
+	const server = await new Promise((resolve) => {
+		const instance = rootApp.listen(0, '127.0.0.1', () => resolve(instance));
+	});
+
+	try {
+		const { port } = server.address();
+		const response = await fetch(`http://127.0.0.1:${port}${pathname}`, {
+			method: 'GET',
+			redirect: 'manual',
+			headers: { accept: 'application/json' },
+		});
+		const text = await response.text();
+		let body = null;
+		try {
+			body = text ? JSON.parse(text) : null;
+		} catch {
+			body = null;
+		}
+		return { status: response.status, body, text };
+	} finally {
+		await new Promise((resolve, reject) => {
+			server.close((error) => {
+				if (error) reject(error);
+				else resolve();
+			});
+		});
+	}
+}
+
+test.afterEach(() => {
+	clearDbMocks();
+});
+
+test('GET /gestor/api/recursos/:id sem sessao retorna 401 JSON no app real', async () => {
+	const response = await requestGestorApp(`/gestor/api/recursos/${VALID_RESOURCE_ID}`);
+
+	assert.equal(response.status, 401);
+	assert.deepEqual(response.body, {
+		success: false,
+		error: 'Não autenticado',
+		code: 'UNAUTHORIZED'
+	});
+});
+
+test('getRecurso retorna 400 e nao consulta lookup quando o id e invalido', async () => {
+	const calls = [];
+	const { res } = await invokeOwner({
+		reqOverrides: {
+			params: { id: 'invalido' },
+			user: { role: 'admin' }
+		},
+		bridgeOverrides: {
+			findRecursoByIdComUnidadeNome: async (...args) => {
+				calls.push(args);
+				return null;
+			}
+		}
+	});
+
+	assert.equal(res.statusCode, 400);
+	assert.deepEqual(res.body, {
+		success: false,
+		code: 'BAD_REQUEST',
+		message: 'ID inválido'
+	});
+	assert.equal(calls.length, 0);
+});
+
+test('getRecurso retorna 404 quando falta contexto canonico para usuario nao privilegiado', async () => {
+	const calls = [];
+	const { res } = await invokeOwner({
+		reqOverrides: {
+			user: { role: 'diretor' },
+			session: { user: {} }
+		},
+		bridgeOverrides: {
+			findRecursoByIdComUnidadeNome: async (...args) => {
+				calls.push(args);
+				return null;
+			}
+		}
+	});
+
+	assert.equal(res.statusCode, 404);
+	assert.deepEqual(res.body, {
+		success: false,
+		code: 'NOT_FOUND',
+		message: 'Unidade não encontrada'
+	});
+	assert.equal(calls.length, 0);
+});
+
+test('getRecurso retorna 404 para recurso inexistente e lookup sem unidade efetiva para admin', async () => {
+	const calls = [];
+	const { res } = await invokeOwner({
+		reqOverrides: {
+			user: { role: 'admin' }
+		},
+		bridgeOverrides: {
+			findRecursoByIdComUnidadeNome: async (...args) => {
+				calls.push(args);
+				return null;
+			}
+		}
+	});
+
+	assert.deepEqual(calls, [[VALID_RESOURCE_ID, null]]);
+	assert.equal(res.statusCode, 404);
+	assert.deepEqual(res.body, {
+		success: false,
+		code: 'NOT_FOUND',
+		message: 'Recurso não encontrado'
+	});
+});
+
+test('getRecurso restringe o lookup ao contexto e fora do escopo contextual permanece 404', async () => {
+	const calls = [];
+	const { res } = await invokeOwner({
+		reqOverrides: {
+			user: { role: 'diretor' },
+			unitScope: { unidadeId: CONTEXTUAL_UNIT_ID }
+		},
+		bridgeOverrides: {
+			findRecursoByIdComUnidadeNome: async (...args) => {
+				calls.push(args);
+				return null;
+			}
+		}
+	});
+
+	assert.deepEqual(calls, [[VALID_RESOURCE_ID, CONTEXTUAL_UNIT_ID]]);
+	assert.equal(res.statusCode, 404);
+	assert.deepEqual(res.body, {
+		success: false,
+		code: 'NOT_FOUND',
+		message: 'Recurso não encontrado'
+	});
+});
+
+test('getRecurso retorna sucesso com payload bruto em data', async () => {
+	const recurso = {
+		_id: VALID_RESOURCE_ID,
+		placa: 'ABC-1D34',
+		tipo: 'carro',
+		marca: 'Fiat',
+		modelo: 'Argo',
+		chassi: '9BWZZZ377VT004251',
+		renavam: '12345678901',
+		ano: 2024,
+		mod: 2025,
+		cor: 'Branco',
+		ativo: true,
+		unidade_id: {
+			_id: CONTEXTUAL_UNIT_ID,
+			codigo: 'M001',
+			nome: 'Matriz Centro'
+		}
+	};
+	const calls = [];
+	const { res } = await invokeOwner({
+		reqOverrides: {
+			user: { role: 'diretor' },
+			unitScope: { unidadeId: CONTEXTUAL_UNIT_ID }
+		},
+		bridgeOverrides: {
+			findRecursoByIdComUnidadeNome: async (...args) => {
+				calls.push(args);
+				return recurso;
+			}
+		}
+	});
+
+	assert.deepEqual(calls, [[VALID_RESOURCE_ID, CONTEXTUAL_UNIT_ID]]);
+	assert.equal(res.statusCode, 200);
+	assert.deepEqual(res.body, {
+		success: true,
+		data: recurso
+	});
+});
+
+test('getRecurso retorna 500 quando o lookup lanca erro interno', async () => {
+	const { res } = await invokeOwner({
+		reqOverrides: {
+			user: { role: 'admin' }
+		},
+		bridgeOverrides: {
+			findRecursoByIdComUnidadeNome: async () => {
+				throw new Error('forced-recursos-get-failure');
+			}
+		}
+	});
+
+	assert.equal(res.statusCode, 500);
+	assert.deepEqual(res.body, {
+		success: false,
+		code: 'SERVER_ERROR',
+		message: 'forced-recursos-get-failure'
+	});
+});
