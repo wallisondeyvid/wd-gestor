@@ -168,6 +168,18 @@ app.use(async (req, res, next) => {
 		if (req.skipAuth) return next();
 		const sessionUser = req.session && req.session.user;
 		if (!sessionUser || !sessionUser.email) return next();
+		const sessionAuthContext = req.session && req.session.gestorAuthContext;
+		const hasProjectedAuthContext = Boolean(
+			sessionUser.auth_version === 'phase3'
+			|| sessionAuthContext?.active_unidade_id
+			|| sessionAuthContext?.active_funcionario_id
+		);
+		const contextualUnidadeId = hasProjectedAuthContext
+			? (sessionUser.unidade_id || sessionAuthContext?.active_unidade_id || null)
+			: null;
+		const contextualFuncionarioId = hasProjectedAuthContext
+			? (sessionUser.funcionario_id || sessionAuthContext?.active_funcionario_id || null)
+			: null;
 		const email = (sessionUser.email || '').toLowerCase();
 		const userDoc = await findUserByEmailCondLeanMaxTimeMs({ email }, Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000));
 		if (userDoc) {
@@ -178,8 +190,8 @@ app.use(async (req, res, next) => {
 				email: userDoc.email,
 				role: userDoc.role,
 				isMaster: (userDoc.role === 'master'),
-				unidade_id: userDoc.unidade_id || null,
-				funcionario_id: userDoc.funcionario_id || null,
+				unidade_id: contextualUnidadeId || userDoc.unidade_id || null,
+				funcionario_id: contextualFuncionarioId || userDoc.funcionario_id || null,
 				foto: userDoc.foto || null
 			};
 		} else {
