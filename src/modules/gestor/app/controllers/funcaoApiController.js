@@ -10,13 +10,12 @@ import {
   updateFuncaoById,
   findFuncaoByIdLean,
   findFuncoesByPrincipalUnitIdLean,
-  findFuncoesByFiltroLean,
-  findFuncoesByFiltroSelectLean,
   deleteFuncaoById,
   saveFuncao,
   findUnidadeByIdWithModulosAcessiveis,
   findUnidadeUserBaseLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { listarFuncoesService } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
 
 function normalizeUnitId(value){
   return String(value || '').trim();
@@ -164,40 +163,8 @@ export async function getFuncoesPorUnidade(req,res){
 
 export async function listarFuncoesApi(req,res){
   try {
-    const { unidade_cluster, q, unidade_id } = req.query;
-    if (unidade_cluster){
-      if (!(await requestedUnitWithinContextCluster(req, unidade_cluster))) return ok(res, []);
-      const principalUnitId = await resolvePrincipalUnitId(unidade_cluster);
-      const filtro = { unidade_principal_id: principalUnitId };
-      let funcoes = await findFuncoesByFiltroLean(filtro);
-      if (q && q.trim()){
-        const searchTerm = q.trim().toLowerCase();
-        funcoes = funcoes.filter(f => (f.nome&&f.nome.toLowerCase().includes(searchTerm)) || (f.codigo&&f.codigo.toLowerCase().includes(searchTerm)) || (f.descricao&&f.descricao.toLowerCase().includes(searchTerm)) );
-      }
-      funcoes.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
-      return ok(res, funcoes.map(f=>({ _id:f._id, nome:f.nome, descricao:f.descricao||'', codigo:f.codigo||'' })) );
-    }
-    if (unidade_id){
-      const resolvedIds = [];
-      for (const candidateId of String(unidade_id).split(',').map(s=>s.trim()).filter(Boolean)) {
-        if (!(await requestedUnitWithinContextCluster(req, candidateId))) continue;
-        const principalUnitId = await resolvePrincipalUnitId(candidateId);
-        if (principalUnitId) resolvedIds.push(principalUnitId);
-      }
-      const ids = [...new Set(resolvedIds)];
-      if (ids.length === 0) return ok(res, []);
-      const filtro = ids.length===1 ? { unidade_principal_id: ids[0] } : { unidade_principal_id:{ $in: ids } };
-      const funcoes = await findFuncoesByFiltroSelectLean(filtro);
-      return ok(res, funcoes.map(f=>{
-        const nome = f.nome || '';
-        const rawDesc = (f.descricao && f.descricao.trim()) ? f.descricao.trim() : '';
-        const codigo = f.codigo || '';
-        const descricaoDisplay = rawDesc || (nome && nome !== codigo ? nome : codigo);
-        const descricao_final = rawDesc || nome || codigo;
-        return { _id:f._id, codigo, nome, descricao: rawDesc, descricao_display: descricaoDisplay, descricao_final, hasDescricaoReal: !!rawDesc };
-      }));
-    }
-    return ok(res,[]);
+    const funcoes = await listarFuncoesService({ query: req.query, unitScope: req.unitScope });
+    return ok(res, funcoes);
   } catch(e){ console.error('[API FUNCOES][listar] Erro:', e); return serverError(res,e); }
 }
 

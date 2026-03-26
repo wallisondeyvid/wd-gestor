@@ -2,6 +2,10 @@ import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
 import { findClusterUnidadesByAnchorService } from '#modules/gestor/app/services/unidades/findClusterUnidadesByAnchor.service.js';
 import {
+  findFuncoesByFiltroService,
+  findFuncoesByFiltroSelectService,
+} from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
+import {
   createUnidadeDocRepo,
   findAllUnidadesLeanRepo,
   findAllUnidadesRepo,
@@ -84,8 +88,6 @@ import {
   findFuncaoByNomeRepo,
   findFuncaoByIdLeanRepo,
   findFuncoesAtivasNomeOrdenadasSelectLeanRepo,
-  findFuncoesByFiltroLeanRepo,
-  findFuncoesByFiltroSelectLeanRepo,
   findFuncoesByUnidadePrincipalIdsPopuladasRepo,
   findFuncoesByUnidadePrincipalPopuladasRepo,
   findFuncoesByUnidadeLeanRepo,
@@ -647,11 +649,11 @@ export async function findFuncoesByPrincipalUnitIdLean(unidadePrincipalId) {
 }
 
 export async function findFuncoesByFiltroLean(filtro) {
-  return findFuncoesByFiltroLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
+  return findFuncoesByFiltroService(filtro);
 }
 
 export async function findFuncoesByFiltroSelectLean(filtro) {
-  return findFuncoesByFiltroSelectLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
+  return findFuncoesByFiltroSelectService(filtro);
 }
 
 export async function deleteFuncaoById(id, unidadePrincipalId = null) {
