@@ -14,8 +14,6 @@ import {
 	setFuncionarioUsuarioIdById,
 	setFuncionarioUsuarioIdIfEmpty,
 	countUsersMasters,
-	deleteUserById,
-	unsetFuncionarioUsuarioIdIfMatchesUser,
 	findUserByEmail,
 	findUserMembershipsByUserIdsLean,
 	findUnidadesByIdsNomeCodigoLean,
@@ -23,6 +21,8 @@ import {
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/listLockedUsers.service.js';
+import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
+import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
@@ -273,8 +273,7 @@ export async function toggleUsuario(req, res) {
 	const user = await findUserById(req.params.id);
 	if (!user) return res.status(404).send('Usuário não encontrado');
 	if (user.role === 'master' && !req.user.isMaster) return res.status(403).send('Apenas Master pode alterar o usuário Master');
-	user.ativo = !user.ativo;
-	await saveUserDoc(user);
+	await toggleUsuarioExecutionService({ user });
 	// Se for requisição AJAX (fetch com X-Requested-With) retorna JSON
 	if (req.xhr || req.get('X-Requested-With') === 'XMLHttpRequest') {
 		return res.json({ success:true, id: user._id, ativo: user.ativo });
@@ -353,14 +352,7 @@ export async function excluirUsuario(req, res) {
 		}
 		// Se estiver vinculado a um funcionário, remover vínculo no documento do funcionário
 		const vinculoFuncionarioId = user.funcionario_id ? String(user.funcionario_id) : null;
-		await deleteUserById(user._id);
-		if (vinculoFuncionarioId) {
-			try {
-				await unsetFuncionarioUsuarioIdIfMatchesUser(vinculoFuncionarioId, user._id);
-			} catch(unsetErr) {
-				console.warn('[excluirUsuario] aviso ao remover vínculo de funcionário:', unsetErr?.message || unsetErr);
-			}
-		}
+		await deleteUsuarioExecutionService({ userId: user._id, vinculoFuncionarioId });
 		if (req.xhr || req.get('X-Requested-With') === 'XMLHttpRequest') {
 			return res.json({ success:true, deleted:true, id: user._id });
 		}

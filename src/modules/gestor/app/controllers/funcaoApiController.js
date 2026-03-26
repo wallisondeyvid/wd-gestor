@@ -5,17 +5,16 @@ import {
   findFuncaoByNome,
   createFuncao as createFuncaoDb,
   findFuncaoByIdPopulated,
-  findFuncaoById,
   findOutraFuncaoByNomeExcludingId,
   updateFuncaoById,
   findFuncaoByIdLean,
   findFuncoesByPrincipalUnitIdLean,
-  deleteFuncaoById,
   saveFuncao,
   findUnidadeByIdWithModulosAcessiveis,
   findUnidadeUserBaseLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listarFuncoesService } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
+import { deleteFuncaoScopedService } from '#modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js';
 
 function normalizeUnitId(value){
   return String(value || '').trim();
@@ -171,9 +170,11 @@ export async function listarFuncoesApi(req,res){
 export async function deleteFuncao(req,res){
   try {
     const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
-    const funcao = await findFuncaoById(req.params.id, contextPrincipalUnitId || null);
+    const funcao = await deleteFuncaoScopedService({
+      funcaoId: req.params.id,
+      canonicalPrincipalUnitId: contextPrincipalUnitId || null,
+    });
     if (!funcao) return notFound(res,'Função não encontrada');
-    await deleteFuncaoById(req.params.id, contextPrincipalUnitId || normalizeUnitId(funcao.unidade_principal_id) || null);
     return ok(res,{ deleted:true, id:req.params.id });
   } catch(e){ console.error('[API FUNCOES][delete] Erro:', e); return serverError(res,e); }
 }
