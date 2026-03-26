@@ -122,6 +122,12 @@ export async function atualizarBlocoService({
     id,
     skipDb: skipDb === true
   });
+  if (unitScope?.type !== 'unit') {
+    return {
+      status: 400,
+      payload: { success: false, error: 'UNIDADE_ID_REQUIRED' }
+    };
+  }
   const repo = new BlocosRepository({ unitScope });
   assertDbAvailable({ mongoose, skipDb });
   try {
@@ -153,6 +159,12 @@ export async function excluirBlocoService({
     id,
     skipDb: skipDb === true
   });
+  if (unitScope?.type !== 'unit') {
+    return {
+      status: 400,
+      payload: { success: false, error: 'UNIDADE_ID_REQUIRED' }
+    };
+  }
   const repo = new BlocosRepository({ unitScope });
   assertDbAvailable({ mongoose, skipDb });
   try {
