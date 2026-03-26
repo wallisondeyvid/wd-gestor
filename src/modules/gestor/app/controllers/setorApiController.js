@@ -6,16 +6,15 @@ import {
   createSetor as createSetorDb,
   findSetoresByUnidadeIdPopulateLean,
   findSetorByIdPopulateUnidade,
-  findSetorById,
   findSetorDupByNomeNormalizadoExcludingId,
   saveSetor,
   findSetoresByFiltroPopulateUnidadeLean,
   findUnidadesByIdsNomeCodigoLean,
-  findSetorByIdAndDelete,
   findCounterSetorCodigoLean,
   findMaxSetorCodigoLean,
   findOneAndUpdateCounterSetorCodigo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { deleteSetorScopedService } from '#modules/gestor/app/services/setores/deleteSetorScoped.service.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -188,9 +187,8 @@ export async function listarSetores(req,res){
 export async function deleteSetor(req,res){
   try {
     const unidadeId = getCanonicalContextUnitId(req) || null;
-    const setor = await findSetorById(req.params.id, unidadeId);
+    const setor = await deleteSetorScopedService({ setorId: req.params.id, unidadeId });
     if (!setor) return notFound(res,'Setor não encontrado');
-    await findSetorByIdAndDelete(req.params.id, unidadeId);
     return ok(res,{ deleted:true, id:req.params.id });
   } catch(e){ console.error('[API SETORES][delete] Erro:', e); return serverError(res,e); }
 }
