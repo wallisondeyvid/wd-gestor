@@ -15,6 +15,7 @@ import {
   findOneAndUpdateCounterSetorCodigo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { deleteSetorScopedService } from '#modules/gestor/app/services/setores/deleteSetorScoped.service.js';
+import { updateSetorScopedService } from '#modules/gestor/app/services/setores/updateSetorScoped.service.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -54,9 +55,6 @@ export async function createSetor(req,res){
     if (!nome) return badRequest(res,'Nome é obrigatório');
     if (!canonicalUnitId) return badRequest(res,'Unidade é obrigatória');
     if (!requestedUnitMatchesContext(req, unidade_id || canonicalUnitId)) return notFound(res,'Unidade não encontrada');
-    const nomeNormalizado = String(nome).trim().replace(/\s+/g,' ').toLowerCase();
-    const unidade = await findUnidadeById(canonicalUnitId);
-    if (!unidade) return badRequest(res,'Unidade inválida');
     const existing = await findSetorByUnidadeAndNomeNormalizadoLean(canonicalUnitId, nomeNormalizado);
     if (existing) {
       return conflict(res,'Setor já cadastrado nesta unidade', { duplicateField:'nome', duplicateValue: nome, duplicateId: existing._id });
@@ -100,23 +98,13 @@ export async function updateSetor(req,res){
     let { nome, descricao, unidade_id } = req.body;
     const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
     if (unidade_id && !requestedUnitMatchesContext(req, unidade_id)) return notFound(res,'Unidade não encontrada');
-    const setor = await findSetorById(req.params.id, canonicalUnitId || null);
-    if (!setor) return notFound(res,'Setor não encontrado');
-    if (canonicalUnitId && String(setor.unidade_id)!==String(canonicalUnitId)){
-      const unidade = await findUnidadeById(canonicalUnitId);
-      if (!unidade) return badRequest(res,'Unidade inválida');
-      setor.unidade_id = canonicalUnitId;
-    }
-    if (nome){
-      const nomeNormalizado = String(nome).trim().replace(/\s+/g,' ').toLowerCase();
-      // Verifica se outro setor já usa esse nome na mesma unidade
-      const dup = await findSetorDupByNomeNormalizadoExcludingId(setor._id, setor.unidade_id, nomeNormalizado);
-      if (dup) return badRequest(res,'Já existe outro setor com este nome nesta unidade.');
-      setor.nome = nome; // será normalizado pelo hook + nome_normalizado será ajustado
-      setor.nome_normalizado = nomeNormalizado;
-    }
-    setor.descricao = descricao || '';
-    await saveSetor(setor);
+    const result = await updateSetorScopedService({
+      setorId: req.params.id,
+      canonicalUnitId: canonicalUnitId || null,
+      changes: { nome, descricao },
+    });
+    if (result.kind === 'not_found') return notFound(res,'Setor não encontrado');
+    if (result.kind === 'duplicate_name') return badRequest(res,'Já existe outro setor com este nome nesta unidade.');
     return ok(res,{ updated:true });
   } catch(e){
     if (e && e.code === 11000) {
