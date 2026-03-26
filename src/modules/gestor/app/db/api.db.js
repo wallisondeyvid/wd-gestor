@@ -7,6 +7,7 @@ import {
 } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
 import { findModuloByIdLeanService } from '#modules/gestor/app/services/modulos/findModuloByIdLean.service.js';
 import { findRecursosByFiltroComUnidadeService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
+import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/listLockedUsers.service.js';
 import {
   createUnidadeDocRepo,
   findAllUnidadesLeanRepo,
@@ -305,7 +306,7 @@ export async function findUserByEmailCondLean(cond) {
 }
 
 export async function findUsersLockedAfterSelectLean(agora) {
-  return findUsersLockedAfterSelectLeanRepo({ unitScope: GLOBAL_SCOPE, agora });
+  return listLockedUsersService(agora);
 }
 
 export async function findUserByCpfCondLean(cond) {

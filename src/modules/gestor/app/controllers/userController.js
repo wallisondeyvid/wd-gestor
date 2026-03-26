@@ -1,6 +1,5 @@
 // Controller de Usuários (migrado)
 import {
-	findUsersLockedAfterSelectLean,
 	findUsersByQueryLean,
 	findAllUnidadesSelectIdCodigoNomeLean,
 	findAllFuncionariosSelectIdNomeCpfLean,
@@ -23,6 +22,7 @@ import {
 	findUserMembershipByUserAndUnidade,
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/listLockedUsers.service.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
@@ -244,7 +244,7 @@ export async function listLockedUsers(req, res) {
 		if (!req.user) return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
 		if (!(req.user.isMaster || req.user.role === 'admin')) return res.status(403).json({ success:false, error:'Acesso negado', code:'FORBIDDEN' });
 		const agora = new Date();
-		const docs = await findUsersLockedAfterSelectLean(agora);
+		const docs = await listLockedUsersService(agora);
 		return res.json({ success:true, total: docs.length, data: docs });
 	} catch (e) {
 		console.error('[listLockedUsers] erro:', e);
