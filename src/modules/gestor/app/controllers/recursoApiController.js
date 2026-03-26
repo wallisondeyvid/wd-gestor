@@ -2,7 +2,6 @@ import { ok, created, badRequest, notFound, serverError } from '#core/utils/apiR
 import {
 	findUnidadeUserBaseLean,
 	findUnidadesByCondLean,
-	findRecursosByFiltroComUnidadeLean,
 	findRecursoByIdComUnidadeNome,
 	findRecursoByPlacaUpper,
 	findRecursoByChassiUpper,
@@ -15,6 +14,7 @@ import {
 	updateRecursoByIdComUnidadeNome,
 	deleteRecursoById,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { listarRecursosService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -68,87 +68,18 @@ function requestedUnitMatchesContext(req, requestedUnitId) {
 //  - Retorna lista curta com campos usados no modal (id, placa, descricao, unidadeFormatada)
 export async function listarRecursosApi(req, res) {
 	try {
-		let { placa, unidadeId } = req.query;
-		placa = (placa || '').trim();
-		unidadeId = (unidadeId || '').trim();
+		const result = await listarRecursosService({
+			query: req.query,
+			user: req.user,
+			session: req.session,
+			unitScope: req.unitScope,
+		});
 
-		if (shouldBlockForMissingContext(req)) {
+		if (result.blocked) {
 			return respondMissingContext(res);
 		}
 
-		const scopedUnitId = getCanonicalContextUnitId(req);
-
-		const filtro = {};
-		let placaTermNorm = null;
-		if (placa && placa.length >= 2) {
-			placaTermNorm = placa.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
-		}
-
-		if (isMasterOrAdmin(req)) {
-			if (unidadeId) {
-				filtro.unidade_id = unidadeId;
-			}
-		} else {
-			let principalId = null;
-			const anchorUnitId = scopedUnitId;
-
-			if (!anchorUnitId) {
-				return ok(res, []);
-			}
-
-			if (anchorUnitId) {
-				const unidadeAnchor = await findUnidadeUserBaseLean(anchorUnitId);
-				if (unidadeAnchor) {
-					principalId = unidadeAnchor.is_principal
-						? unidadeAnchor._id
-						: (unidadeAnchor.unidade_principal_id || unidadeAnchor.matriz_id || unidadeAnchor._id);
-				}
-			}
-
-			const cond = principalId
-				? { $or: [ { _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId } ] }
-				: { _id: anchorUnitId || null };
-			const unidadesAcessiveis = await findUnidadesByCondLean(cond);
-			const ids = unidadesAcessiveis.map(u => String(u._id));
-
-			if (unidadeId) {
-				if (!ids.includes(String(unidadeId))) {
-					return ok(res, []);
-				}
-				filtro.unidade_id = unidadeId;
-			} else {
-				filtro.unidade_id = { $in: ids };
-			}
-		}
-
-		let recursos = await findRecursosByFiltroComUnidadeLean(filtro);
-
-		if (placaTermNorm) {
-			recursos = recursos.filter(r => (r.placa||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase().includes(placaTermNorm));
-		}
-
-			// Retornar shape completo para não quebrar página de gestão (que espera _id, tipo, marca, etc.)
-			// e simultaneamente manter campos resumidos usados no modal de busca (id, descricao, unidadeFormatada)
-			const mapped = recursos.map(r => ({
-				// Identificadores (ambos para retrocompatibilidade)
-				id: r._id,
-				_id: r._id,
-				// Campos principais
-				placa: r.placa,
-				tipo: r.tipo,
-				marca: r.marca,
-				modelo: r.modelo,
-				ano: r.ano,
-				mod: r.mod,
-				cor: r.cor,
-				ativo: r.ativo,
-				// Relação unidade (mantém estrutura parecida com populate original)
-				unidade_id: r.unidade_id ? { _id: r.unidade_id._id, codigo: r.unidade_id.codigo, nome: r.unidade_id.nome } : null,
-				// Campos derivados para modal
-				descricao: [r.marca, r.modelo].filter(Boolean).join(' ') || r.modelo || r.marca || '',
-				unidadeFormatada: r.unidade_id ? ((r.unidade_id.codigo ? r.unidade_id.codigo + ' - ' : '') + (r.unidade_id.nome || '')) : '',
-			}));
-			return ok(res, mapped);
+		return ok(res, result.data);
 	} catch (error) {
 		console.error('[API RECURSOS][listar] Erro:', error);
 		return serverError(res, error);

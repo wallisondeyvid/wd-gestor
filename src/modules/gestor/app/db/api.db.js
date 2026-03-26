@@ -5,6 +5,7 @@ import {
   findFuncoesByFiltroService,
   findFuncoesByFiltroSelectService,
 } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
+import { findRecursosByFiltroComUnidadeService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
 import {
   createUnidadeDocRepo,
   findAllUnidadesLeanRepo,
@@ -431,10 +432,7 @@ export async function deleteModuloById(id) {
 }
 
 export async function findRecursosByFiltroComUnidadeLean(filtro) {
-  return findRecursosByFiltroComUnidadeLeanRepo({
-    unitScope: scopeFromRecursoListFiltro(filtro),
-    filtro,
-  });
+  return findRecursosByFiltroComUnidadeService(filtro);
 }
 
 export async function findRecursoByIdComUnidadeNome(id, unidadeId = null) {
