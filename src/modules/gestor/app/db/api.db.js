@@ -5,6 +5,7 @@ import {
   findFuncoesByFiltroService,
   findFuncoesByFiltroSelectService,
 } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
+import { findModuloByIdLeanService } from '#modules/gestor/app/services/modulos/findModuloByIdLean.service.js';
 import { findRecursosByFiltroComUnidadeService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
 import {
   createUnidadeDocRepo,
@@ -408,7 +409,7 @@ export async function findUnidadeByIdWithModulosAcessiveisLean(unidadeId) {
 }
 
 export async function findModuloByIdLean(id) {
-  return findModuloByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+  return findModuloByIdLeanService(id);
 }
 
 export async function findModuloByNome(nome) {
