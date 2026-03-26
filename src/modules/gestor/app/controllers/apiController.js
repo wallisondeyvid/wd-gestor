@@ -2,12 +2,12 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import {
-	findClusterUnidadesByAnchorLean,
 	findUnidadeByCodigoLean,
 	findUnidadeByIdLean,
 	findUnidadeByIdOrRawLean,
 	findUnidadeUserBaseLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { findClusterUnidadesByAnchorService } from '#modules/gestor/app/services/unidades/findClusterUnidadesByAnchor.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,7 +45,7 @@ export async function unidadesCluster(req, res) {
 			clusterAnchor = scopedAnchor;
 		}
 
-		const todas = await findClusterUnidadesByAnchorLean(clusterAnchor);
+		const todas = await findClusterUnidadesByAnchorService(clusterAnchor);
 		return res.json({ ok: true, total: todas.length, unidades: todas.map(u => ({ id: u._id, codigo: u.codigo, nome: u.nome, is_principal: u.is_principal, subunidade: u.subunidade, unidade_principal_id: u.unidade_principal_id, cidade: u.cidade, estado: u.estado })) });
 	} catch (err) {
 		console.error('[unidadesCluster] Erro:', err);

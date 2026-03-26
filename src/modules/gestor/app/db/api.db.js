@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
+import { findClusterUnidadesByAnchorService } from '#modules/gestor/app/services/unidades/findClusterUnidadesByAnchor.service.js';
 import {
   createUnidadeDocRepo,
   findAllUnidadesLeanRepo,
@@ -292,18 +293,7 @@ export async function findUnidadeByIdOrRawLean(unidadeId) {
 }
 
 export async function findClusterUnidadesByAnchorLean(anchorRaw) {
-  const { Types } = mongoose;
-  const anchor = String(anchorRaw || '').trim();
-  if (!anchor) return [];
-  const conds = [];
-
-  if (Types.ObjectId.isValid(anchor)) {
-    const anchorOid = new Types.ObjectId(anchor);
-    conds.push({ _id: anchorOid }, { matriz_id: anchorOid }, { unidade_principal_id: anchorOid });
-  }
-
-  conds.push({ _id: anchorRaw }, { matriz_id: anchorRaw }, { unidade_principal_id: anchorRaw });
-  return findClusterUnidadesByAnchorLeanRepo({ unitScope: scopeFromUnidadeId(anchor), conds });
+  return findClusterUnidadesByAnchorService(anchorRaw);
 }
 
 export async function findUserByEmailCondLean(cond) {
