@@ -31,6 +31,7 @@ import {
   isUnitProvisioningValidationError,
   retryUnitProvisioning,
 } from '#modules/gestor/app/services/UnitProvisioningService.js';
+import { getUnidadeProvisioningStatusOwnerService } from '#modules/gestor/app/services/unidades/getUnidadeProvisioningStatusOwner.service.js';
 import {
   findUnidadeDeleteCandidateService,
   deleteUnidadeExecutionService,
@@ -792,15 +793,29 @@ export async function getUnidadeModulos(req, res) {
 export async function getUnidadeProvisioningStatus(req, res) {
   try {
     const unidadeId = String(req.params.id || '').trim();
-    if (!unidadeId) return badRequest(res, 'ID da unidade e obrigatorio.');
+    const result = (typeof getUnidadeProvisioningStatusOwnerService === 'function')
+      ? await getUnidadeProvisioningStatusOwnerService({
+          unidadeId,
+          canAccessUnidade: (candidateUnidadeId) => ensureCanAccessUnidade(req, candidateUnidadeId),
+        })
+      : await (async () => {
+          if (!unidadeId) return { kind: 'bad_request', message: 'ID da unidade e obrigatorio.' };
 
-    const unidade = await findUnidadeById(unidadeId);
-    if (!unidade) return notFound(res, 'Unidade nao encontrada');
+          const unidade = await findUnidadeById(unidadeId);
+          if (!unidade) return { kind: 'not_found', message: 'Unidade nao encontrada' };
 
-    const canAccess = await ensureCanAccessUnidade(req, unidade._id);
-    if (!canAccess) return badRequest(res, 'Acesso a unidade nao autorizado');
+          const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+          if (!canAccess) return { kind: 'forbidden', message: 'Acesso a unidade nao autorizado' };
 
-    const snapshot = await inspectUnitProvisioning({ unidadeId: unidade._id });
+          const snapshot = await inspectUnitProvisioning({ unidadeId: unidade._id });
+          return { kind: 'ok', snapshot };
+        })();
+
+    if (result.kind === 'bad_request') return badRequest(res, result.message);
+    if (result.kind === 'not_found') return notFound(res, result.message);
+    if (result.kind === 'forbidden') return badRequest(res, result.message);
+
+    const { snapshot } = result;
     return ok(res, normalizeProvisioningSnapshotResponse(snapshot));
   } catch (error) {
     console.error('[API UNIDADES][inspectProvisioning] Erro:', error);
