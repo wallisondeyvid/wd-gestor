@@ -12,6 +12,7 @@ import {
   saveUnidadeDoc,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { BankPort } from '#shared/ports/bank.port.js';
+import { resolveTestarBancoTargetService } from '#modules/gestor/app/services/unidades/resolveTestarBancoTarget.service.js';
 
 function normalizeUnitId(value) {
   return String(value || '').trim();
@@ -57,6 +58,24 @@ async function ensureCanAccessUnidade(req, unidadeId) {
 
   if (isPrivilegedGestorUser(req?.user)) return true;
   return false;
+}
+
+async function resolveTestarBancoTarget(req, unidadeId) {
+  if (typeof resolveTestarBancoTargetService === 'function') {
+    return resolveTestarBancoTargetService({ req, unidadeId });
+  }
+
+  const unidade = await findUnidadeById(unidadeId);
+  if (!unidade) {
+    return { kind: 'not_found', unidade: null };
+  }
+
+  const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+  if (!canAccess) {
+    return { kind: 'forbidden', unidade: null };
+  }
+
+  return { kind: 'authorized', unidade };
 }
 
 export async function listarUnidades(req, res) {
@@ -159,15 +178,16 @@ export async function testarBanco(req, res) {
       return res.status(400).json({ ok: false, message: 'ID da unidade é obrigatório.' });
     }
 
-    const unidade = await findUnidadeById(unidadeId);
-    if (!unidade) {
+    const target = await resolveTestarBancoTarget(req, unidadeId);
+    if (target.kind === 'not_found') {
       return res.status(404).json({ ok: false, message: 'Unidade não encontrada.' });
     }
 
-    const canAccess = await ensureCanAccessUnidade(req, unidade._id);
-    if (!canAccess) {
+    if (target.kind === 'forbidden') {
       return res.status(400).json({ ok: false, message: 'Acesso à unidade não autorizado.' });
     }
+
+    const { unidade } = target;
 
     const cfg = unidade.apiBancaria || {};
     if (!cfg.apiBaseUrl) {
