@@ -1,8 +1,5 @@
 // Controller de Usuários (migrado)
 import {
-	findUsersByQueryLean,
-	findAllUnidadesSelectIdCodigoNomeLean,
-	findAllFuncionariosSelectIdNomeCpfLean,
 	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean,
 	findFuncionarioByIdSelectIdUnidadeUsuarioLean,
 	findUserById,
@@ -21,6 +18,7 @@ import {
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/listLockedUsers.service.js';
+import { listUsuariosOwnerService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
 import mongoose from 'mongoose';
@@ -256,10 +254,8 @@ export async function listarUsuarios(req, res, next) {
     try {
 		if (!req.user) return res.status(401).send('Não autenticado');
 		if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-		const query = req.user.isMaster ? {} : { role: { $ne: 'master' } };
-		const usuarios = await findUsersByQueryLean(query);
-		const unidadesFiltradas = await findAllUnidadesSelectIdCodigoNomeLean();
-		const funcionarios = await findAllFuncionariosSelectIdNomeCpfLean();
+		const result = await listUsuariosOwnerService({ isMaster: req.user.isMaster });
+		const { usuarios, unidadesFiltradas, funcionarios } = result;
 		res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });
 	} catch (e) {
 		console.error('Erro na rota /usuarios:', e);
