@@ -1,9 +1,41 @@
+import mongoose from 'mongoose';
+import { createUnitScope } from '#shared/unitScope.js';
 import {
-  findUnidadesByMatrizOuPrincipal,
-  findUnidadesById,
-  findUnidadeByIdLean,
-  findUnidadeById,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+  findUnidadesByIdRepo,
+  findUnidadesByMatrizOuPrincipalRepo,
+  findUnidadeByIdLeanRepo,
+} from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
+import { findUnidadeById } from '#modules/gestor/app/services/apiDbBridgeService.js';
+
+const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+
+function scopeFromUnidadeId(unidadeId) {
+  const unidadeIdNorm = String(unidadeId || '').trim();
+  return unidadeIdNorm && mongoose.isValidObjectId(unidadeIdNorm)
+    ? createUnitScope({ unidadeId: unidadeIdNorm })
+    : GLOBAL_SCOPE;
+}
+
+async function findUnidadeByIdLean(unidadeId) {
+  return findUnidadeByIdLeanRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
+}
+
+async function findUnidadesByMatrizOuPrincipal(matrizRef) {
+  return findUnidadesByMatrizOuPrincipalRepo({
+    unitScope: scopeFromUnidadeId(matrizRef),
+    matrizRef,
+  });
+}
+
+async function findUnidadesById(unidadeId) {
+  return findUnidadesByIdRepo({
+    unitScope: createUnitScope({ unidadeId }),
+    unidadeId,
+  });
+}
 
 function normalizeUnitId(value) {
   return String(value || '').trim();
