@@ -13,6 +13,7 @@ import { createMyFeedbackListHandler } from '#modules/gestor/app/controllers/fee
 import { createDeleteFeedbackHandler } from '#modules/gestor/app/controllers/feedbackDeleteApiController.js';
 import { createUpdateFeedbackRespostaHandler } from '#modules/gestor/app/controllers/feedbackRespostaApiController.js';
 import { createUpdateFeedbackStatusHandler } from '#modules/gestor/app/controllers/feedbackStatusApiController.js';
+import { updateFeedbackStatusService } from '#modules/gestor/app/services/feedback/updateFeedbackStatus.service.js';
 import {
   createFeedback,
   findFeedbackById,
@@ -272,6 +273,13 @@ const detailFeedbackAdmin = createAdminFeedbackDetailHandler({
 router.get('/api/gestor/feedback/:feedbackId', requireLogin, detailFeedbackAdmin);
 
 // Atualizar status (admin)
+const updateStatusPatch = createUpdateFeedbackStatusHandler({
+  isAdminLike,
+  apiOk,
+  apiFail,
+  normalizeStatus,
+  findFeedbackByIdAndUpdateSetNewLean: updateFeedbackStatusService,
+});
 const updateStatus = createUpdateFeedbackStatusHandler({
   isAdminLike,
   apiOk,
@@ -279,7 +287,7 @@ const updateStatus = createUpdateFeedbackStatusHandler({
   normalizeStatus,
   findFeedbackByIdAndUpdateSetNewLean,
 });
-router.patch('/api/gestor/feedback/:feedbackId/status', requireLogin, updateStatus);
+router.patch('/api/gestor/feedback/:feedbackId/status', requireLogin, updateStatusPatch);
 router.post('/api/gestor/feedback/:feedbackId/status', requireLogin, updateStatus);
 
 // Atualizar resposta (admin)
