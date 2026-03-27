@@ -31,6 +31,10 @@ import {
   isUnitProvisioningValidationError,
   retryUnitProvisioning,
 } from '#modules/gestor/app/services/UnitProvisioningService.js';
+import {
+  findUnidadeDeleteCandidateService,
+  deleteUnidadeExecutionService,
+} from '#modules/gestor/app/services/unidades/deleteUnidadeExecution.service.js';
 // Dependências para upload de logo
 import multer from 'multer';
 import path from 'path';
@@ -957,7 +961,7 @@ export async function getUnidadePublic(req, res) {
     return serverError(res, error);
   }
 }
-export async function deleteUnidade(req, res) { try { const unidadeId = req.params.id; if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para excluir unidades.'); const unidade = await findUnidadeById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await ensureCanAccessUnidade(req, unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado.'); if (unidade.is_principal) { if (req.user.role === 'diretor') return badRequest(res,'Diretores não podem excluir unidades principais.'); if (!req.user.isMaster) return badRequest(res,'Apenas Master pode excluir unidades principais'); } await deleteUnidadeById(unidadeId); return ok(res, { deleted:true, id:unidadeId }); } catch (error) { console.error('[API UNIDADES][delete] Erro:', error); return serverError(res, error); } }
+export async function deleteUnidade(req, res) { try { const unidadeId = req.params.id; if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para excluir unidades.'); const unidade = await findUnidadeDeleteCandidateService({ unidadeId }); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await ensureCanAccessUnidade(req, unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado.'); if (unidade.is_principal) { if (req.user.role === 'diretor') return badRequest(res,'Diretores não podem excluir unidades principais.'); if (!req.user.isMaster) return badRequest(res,'Apenas Master pode excluir unidades principais'); } await deleteUnidadeExecutionService({ unidadeId }); return ok(res, { deleted:true, id:unidadeId }); } catch (error) { console.error('[API UNIDADES][delete] Erro:', error); return serverError(res, error); } }
 
 // ================= Logo da Unidade: leitura (serverless-friendly) =================
 // Converte Data URL em { buffer, contentType }; retorna null se inválido
