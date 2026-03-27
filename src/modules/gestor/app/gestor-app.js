@@ -54,6 +54,7 @@ import feedbackApiRouter from './routes/feedbackApi.js';
 import widgetSettingsApiRouter from './routes/widgetSettingsApi.js';
 import { findUserByEmailCondLeanMaxTimeMs } from '#modules/gestor/app/db/api.db.js';
 
+export function buildGestorApp() {
 const app = express();
 // Aumenta limites de body parser para suportar upload inline (DataURL) de logos (até ~10-12MB)
 app.use(express.urlencoded({ extended: true, limit: '12mb' }));
@@ -402,4 +403,7 @@ app.use('/', feedbackApiRouter);
 app.use('/', widgetSettingsApiRouter);
 
 // Export principal
-export default app;
+return app;
+}
+
+export default buildGestorApp;

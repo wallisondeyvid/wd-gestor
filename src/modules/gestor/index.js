@@ -24,7 +24,7 @@ export const meta = {
 
 // Mantém API consistente caso futuramente seja necessário criar nova instância
 export function buildModule(/* core */) {
-  return gestorApp; // já é um express app pronto
+  return gestorApp();
 }
 
 export default buildModule;
