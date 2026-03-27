@@ -29,6 +29,7 @@ import {
   projectLegacySessionUserFromAuthContext,
   resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
+import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js';
 
 // -----------------------------------------------------------------------------
 // Helper de Autorização de Módulo
@@ -996,19 +997,17 @@ export async function primeiroAcessoPost(req, res) {
     if (!(/[A-Z]/.test(senha) && /[a-z]/.test(senha) && /\d/.test(senha))) {
   return res.redirect(303, basePath + '/primeiroacesso?erro=forca');
     }
-    const user = await findUserByIdWithMaxTime({
-      id: req.session.user.id,
+    const result = await primeiroAcessoExecutionService({
+      userId: req.session.user.id,
+      senhaHash: await bcrypt.hash(senha, 10),
       maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
     });
-  if (!user) return res.redirect(303, basePath + '/login');
-    if (!user.primeiro_acesso) {
+  if (result.kind === 'not_found') return res.redirect(303, basePath + '/login');
+    if (result.kind === 'already_completed') {
       // Já tratado anteriormente, apenas segue
   return res.redirect(303, basePath + '/dashboard');
     }
-    user.senha = await bcrypt.hash(senha, 10);
-    user.primeiro_acesso = false;
-    user.senha_provisoria = false;
-  try { await saveUserDocument(user); } catch(e) { console.warn('[primeiroAcessoPost] falha ao salvar:', e.message); return res.redirect(303, basePath + '/primeiroacesso?erro=servidor'); }
+  if (result.kind === 'save_failed') { console.warn('[primeiroAcessoPost] falha ao salvar:', result.error?.message || result.error); return res.redirect(303, basePath + '/primeiroacesso?erro=servidor'); }
   return res.redirect(basePath + '/dashboard');
   } catch (e) {
     console.error('[primeiroAcessoPost] erro troca senha primeiro acesso:', e);
