@@ -717,6 +717,124 @@ export async function createServer(options = {}) {
         return { erro, mensagem };
       } catch { return { erro:null, mensagem:null }; }
     }
+    function resolveGenericPublicSegment(rawSeg) {
+      const seg = String(rawSeg || '').toLowerCase();
+      if (!seg || seg === 'gestor' || seg === 'escalas') return '';
+      return seg;
+    }
+    function isPortalMoradorSegment(seg) {
+      return seg === 'portal-morador' || seg === 'portal_morador';
+    }
+    function assignGenericSegmentBaseUrl(req, seg) {
+      try { req.baseUrl = '/' + seg; } catch { /* noop */ }
+    }
+    async function renderGenericSegmentLogin(req, res, next, seg) {
+      const queryStr = (req.originalUrl && req.originalUrl.includes('?')) ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1) : '';
+      const params = new URLSearchParams(queryStr);
+      const { erro, mensagem } = parseErroMensagem(true, queryStr);
+      const motivo = params.get('motivo') || null;
+      let moduleLabel = seg.charAt(0).toUpperCase() + seg.slice(1);
+      const isPortalMorador = isPortalMoradorSegment(seg);
+      if (isPortalMorador) {
+        const basePath = '/' + seg;
+        const email = params.get('email') || '';
+        return res.render('portal-morador/login', { basePath, moduleLabel: 'Portal do Morador', erro, mensagem, email }, (err, html) => {
+          if (err) return next();
+          try {
+            res.set('Content-Type', 'text/html; charset=utf-8');
+            res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+            res.set('Pragma', 'no-cache');
+            res.set('Expires', '0');
+            res.set('X-Server-Direct', 'login-portal-morador');
+          } catch {}
+          return res.status(200).send(html);
+        });
+      }
+      try {
+        if (!req.app.locals.skipDb && mongoose.connection.readyState === 1) {
+          const ModuloModel = (await import('#models/modulo.js')).default;
+          const m = await ModuloModel.findOne({
+            $or: [
+              { url_base: '/' + seg },
+              { url_base: seg },
+              { nome: new RegExp('^'+seg+'$', 'i') }
+            ]
+          }).select('nome status url_base').lean().maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000));
+          if (!m) {
+            try {
+              res.status(404);
+              return res.render('erro', { errorMessage: `Módulo \'${seg}\' não encontrado.` });
+            } catch {
+              return res.status(404).send('Módulo não encontrado.');
+            }
+          }
+          if (m?.nome) moduleLabel = m.nome;
+          const status = String(m?.status || '').toLowerCase();
+          const permitido = (status === 'ativo' || status === 'planejado' || status === 'em planejamento');
+          if (!permitido) {
+            const basePath = String(m?.url_base || '/' + seg);
+            return res.status(200).render('partials/construcao', { moduleName: moduleLabel, basePath });
+          }
+        }
+      } catch {}
+      try {
+        const meta = registry
+          .map(m => m.meta || {})
+          .find(mt => (String(mt.basePath||'').replace(/^\//,'') === seg) || (String(mt.name||'') === seg));
+        if (meta && meta.displayName) moduleLabel = meta.displayName;
+      } catch {}
+      const basePath = '/' + seg;
+      if (erro === 'modulo' && (motivo === 'modulo_inexistente' || motivo === 'planejado' || motivo === 'indisponivel')) {
+        try {
+          return res.status(200).render('partials/construcao', { moduleName: moduleLabel, basePath });
+        } catch (_e) {
+          return res.render('partials/construcao', { moduleName: moduleLabel, basePath }, (err, html) => {
+            if (err) return next();
+            try {
+              res.set('Content-Type', 'text/html; charset=utf-8');
+              res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+              res.set('Pragma', 'no-cache');
+              res.set('Expires', '0');
+            } catch {}
+            return res.status(200).send(html);
+          });
+        }
+      }
+      return res.render('gestor/logingestor', { basePath, moduleLabel, erro, mensagem }, (err, html) => {
+        if (err) return next();
+        try {
+          res.set('Content-Type', 'text/html; charset=utf-8');
+          res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+          res.set('Pragma', 'no-cache');
+          res.set('Expires', '0');
+          res.set('X-Server-Direct', 'login-generico');
+        } catch {}
+        return res.status(200).send(html);
+      });
+    }
+    function handoffGenericSegmentLogin(req, res, next, seg) {
+      assignGenericSegmentBaseUrl(req, seg);
+      if (isPortalMoradorSegment(seg)) {
+        return Promise.resolve(portalLoginPost(req, res)).catch(next);
+      }
+      return Promise.resolve(genericLogin(req, res)).catch(next);
+    }
+    function renderGenericSegmentPrimeiroAcesso(req, res, next, seg) {
+      assignGenericSegmentBaseUrl(req, seg);
+      if (isPortalMoradorSegment(seg)) {
+        return Promise.resolve(portalPrimeiroAcessoGet(req, res)).catch(next);
+      }
+      const basePath = '/' + seg;
+      const moduleLabel = seg.charAt(0).toUpperCase() + seg.slice(1);
+      return res.render('gestor/primeiroacesso', { basePath, moduleLabel }, (err, html)=> err ? next() : res.status(200).send(html));
+    }
+    function handoffGenericSegmentPrimeiroAcesso(req, res, next, seg) {
+      assignGenericSegmentBaseUrl(req, seg);
+      if (isPortalMoradorSegment(seg)) {
+        return Promise.resolve(portalPrimeiroAcessoPost(req, res)).catch(next);
+      }
+      return Promise.resolve(genericPrimeiroAcessoPost(req, res)).catch(next);
+    }
     app.get('/gestor/login', (req, res, next) => {
       try {
         const isLogin = true;
@@ -738,95 +856,9 @@ export async function createServer(options = {}) {
     // Login genérico: /:seg/login -> renderiza mesma view com basePath dinâmico
     app.get('/:seg/login', async (req, res, next) => {
       try {
-        const seg = String(req.params.seg||'').toLowerCase();
-        if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-        const queryStr = (req.originalUrl && req.originalUrl.includes('?')) ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1) : '';
-        const params = new URLSearchParams(queryStr);
-        const { erro, mensagem } = parseErroMensagem(true, queryStr);
-        const motivo = params.get('motivo') || null;
-        let moduleLabel = seg.charAt(0).toUpperCase() + seg.slice(1);
-        const isPortalMorador = seg === 'portal-morador' || seg === 'portal_morador';
-        if (isPortalMorador) {
-          const basePath = '/' + seg;
-          const email = params.get('email') || '';
-          return res.render('portal-morador/login', { basePath, moduleLabel: 'Portal do Morador', erro, mensagem, email }, (err, html) => {
-            if (err) return next();
-            try {
-              res.set('Content-Type', 'text/html; charset=utf-8');
-              res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-              res.set('Pragma', 'no-cache');
-              res.set('Expires', '0');
-              res.set('X-Server-Direct', 'login-portal-morador');
-            } catch {}
-            return res.status(200).send(html);
-          });
-        }
-        // Tenta obter o nome e status a partir do banco se disponível
-        try {
-          if (!req.app.locals.skipDb && mongoose.connection.readyState === 1) {
-            const ModuloModel = (await import('#models/modulo.js')).default;
-            const m = await ModuloModel.findOne({
-              $or: [
-                { url_base: '/' + seg },
-                { url_base: seg },
-                { nome: new RegExp('^'+seg+'$', 'i') }
-              ]
-            }).select('nome status url_base').lean().maxTimeMS(Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000));
-            if (!m) {
-              // Módulo não existe no banco -> página de erro comum (404)
-              try {
-                res.status(404);
-                return res.render('erro', { errorMessage: `Módulo \'${seg}\' não encontrado.` });
-              } catch {
-                return res.status(404).send('Módulo não encontrado.');
-              }
-            }
-            if (m?.nome) moduleLabel = m.nome;
-            const status = String(m?.status || '').toLowerCase();
-            const permitido = (status === 'ativo' || status === 'planejado' || status === 'em planejamento');
-            if (!permitido) {
-              const basePath = String(m?.url_base || '/' + seg);
-              return res.status(200).render('partials/construcao', { moduleName: moduleLabel, basePath });
-            }
-          }
-        } catch {}
-        // Fallback: procurar no registry estático (metadados do módulo) para nome amigável
-        try {
-          const meta = registry
-            .map(m => m.meta || {})
-            .find(mt => (String(mt.basePath||'').replace(/^\//,'') === seg) || (String(mt.name||'') === seg));
-          if (meta && meta.displayName) moduleLabel = meta.displayName;
-        } catch {}
-        const basePath = '/' + seg;
-        // Quando o roteador anterior indicar módulo inexistente/planejado, renderiza página de construção
-        if (erro === 'modulo' && (motivo === 'modulo_inexistente' || motivo === 'planejado' || motivo === 'indisponivel')) {
-          try {
-            return res.status(200).render('partials/construcao', { moduleName: moduleLabel, basePath });
-          } catch (_e) {
-            // fallback de renderização
-            return res.render('partials/construcao', { moduleName: moduleLabel, basePath }, (err, html) => {
-              if (err) return next();
-              try {
-                res.set('Content-Type', 'text/html; charset=utf-8');
-                res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-                res.set('Pragma', 'no-cache');
-                res.set('Expires', '0');
-              } catch {}
-              return res.status(200).send(html);
-            });
-          }
-        }
-        return res.render('gestor/logingestor', { basePath, moduleLabel, erro, mensagem }, (err, html) => {
-          if (err) return next();
-          try {
-            res.set('Content-Type', 'text/html; charset=utf-8');
-            res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-            res.set('Pragma', 'no-cache');
-            res.set('Expires', '0');
-            res.set('X-Server-Direct', 'login-generic');
-          } catch {}
-          return res.status(200).send(html);
-        });
+        const seg = resolveGenericPublicSegment(req.params.seg);
+        if (!seg) return next();
+        return renderGenericSegmentLogin(req, res, next, seg);
       } catch (e) { return next(); }
     });
   } catch(_e) { /* noop */ }
@@ -1409,17 +1441,9 @@ export async function createServer(options = {}) {
   try {
     app.post('/:seg/login', express.urlencoded({ extended: true, limit: '12mb' }), express.json({ limit: '12mb' }), (req, res, next) => {
       try {
-        const rawSeg = String(req.params.seg||'');
-        const seg = rawSeg.toLowerCase();
-        if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-        const isPortal = seg === 'portal-morador' || seg === 'portal_morador';
-        // Express pode definir req.baseUrl como propriedade não configurável.
-        // Usar defineProperty aqui pode lançar "Cannot redefine property" e virar 500 no login.
-        try { req.baseUrl = '/' + seg; } catch { /* noop */ }
-        if (isPortal) {
-          return Promise.resolve(portalLoginPost(req, res)).catch(next);
-        }
-        return Promise.resolve(genericLogin(req, res)).catch(next);
+        const seg = resolveGenericPublicSegment(req.params.seg);
+        if (!seg) return next();
+        return handoffGenericSegmentLogin(req, res, next, seg);
       } catch (e) { return next(); }
     });
     // Logout genérico: limpa sessão básica e volta ao login do módulo
@@ -1443,30 +1467,16 @@ export async function createServer(options = {}) {
     // Primeiro acesso genérico
     app.get('/:seg/primeiroacesso', (req, res, next) => {
       try {
-        const rawSeg = String(req.params.seg||'');
-        const seg = rawSeg.toLowerCase();
-        if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-        const isPortal = seg === 'portal-morador' || seg === 'portal_morador';
-        try { req.baseUrl = '/' + seg; } catch { /* noop */ }
-        if (isPortal) {
-          return Promise.resolve(portalPrimeiroAcessoGet(req, res)).catch(next);
-        }
-        const basePath = '/' + seg;
-        const moduleLabel = seg.charAt(0).toUpperCase() + seg.slice(1);
-        return res.render('gestor/primeiroacesso', { basePath, moduleLabel }, (err, html)=> err ? next() : res.status(200).send(html));
+        const seg = resolveGenericPublicSegment(req.params.seg);
+        if (!seg) return next();
+        return renderGenericSegmentPrimeiroAcesso(req, res, next, seg);
       } catch (e) { return next(); }
     });
     app.post('/:seg/primeiroacesso', express.urlencoded({ extended: true, limit: '12mb' }), express.json({ limit: '12mb' }), (req, res, next) => {
       try {
-        const rawSeg = String(req.params.seg||'');
-        const seg = rawSeg.toLowerCase();
-        if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-        const isPortal = seg === 'portal-morador' || seg === 'portal_morador';
-        try { req.baseUrl = '/' + seg; } catch { /* noop */ }
-        if (isPortal) {
-          return Promise.resolve(portalPrimeiroAcessoPost(req, res)).catch(next);
-        }
-        return Promise.resolve(genericPrimeiroAcessoPost(req, res)).catch(next);
+        const seg = resolveGenericPublicSegment(req.params.seg);
+        if (!seg) return next();
+        return handoffGenericSegmentPrimeiroAcesso(req, res, next, seg);
       } catch (e) { return next(); }
     });
   } catch(_) { /* noop */ }
