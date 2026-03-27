@@ -295,39 +295,63 @@ export async function createServer(options = {}) {
   // Se algum middleware tentar redirecionar essas páginas públicas, renderizamos o EJS diretamente.
   try {
     const ROOTi = path.join(ROOT, '.');
+    function resolvePublicRedirectInterceptionDecision(req, statusOrUrl, maybeUrl) {
+      const method = String(req.method || 'GET').toUpperCase();
+      let status = 302;
+      let url = '';
+      if (typeof statusOrUrl === 'number') {
+        status = statusOrUrl;
+        url = String(maybeUrl || '');
+      } else {
+        url = String(statusOrUrl || '');
+      }
+
+      const target = url.split('#')[0];
+      const isLogin = /(^|\/)[^?#]*\blogin(\/?|\?|$)/i.test(target);
+      const isPA = /(^|\/)[^?#]*\bprimeiroacesso(\/?|\?|$)/i.test(target);
+      if (!(isLogin || isPA) || (method !== 'GET' && method !== 'HEAD')) {
+        return null;
+      }
+
+      const qIndex = target.indexOf('?');
+      const qs = qIndex >= 0 ? target.slice(qIndex + 1) : (url.includes('?') ? url.slice(url.indexOf('?') + 1) : '');
+      const params = new URLSearchParams(qs);
+      const erro = params.get('erro') || null;
+      let mensagem = null;
+      if (isPA && erro) {
+        switch (erro) {
+          case 'campos': mensagem = 'Preencha todos os campos.'; break;
+          case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
+          case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
+          case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
+          case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
+        }
+      }
+
+      let seg = null;
+      const mm = target.match(/^\/([^\/?#]+)\/(login|primeiroacesso)(?:[?#].*)?$/i);
+      if (mm) seg = (mm[1] || '').toLowerCase();
+      if (!seg) seg = /^\/escalas\b/i.test(target) ? 'escalas' : (/^\/gestor\b/i.test(target) ? 'gestor' : null);
+
+      return {
+        status,
+        url,
+        target,
+        isLogin,
+        isPA,
+        erro,
+        mensagem,
+        seg,
+        basePath: seg ? ('/' + seg) : '/gestor',
+      };
+    }
     app.use((req, res, next) => {
       const originalRedirect = res.redirect.bind(res);
       res.redirect = async function(statusOrUrl, maybeUrl) {
         try {
-          const method = String(req.method||'GET').toUpperCase();
-          let status = 302;
-          let url = '';
-          if (typeof statusOrUrl === 'number') { status = statusOrUrl; url = String(maybeUrl||''); }
-          else { url = String(statusOrUrl||''); }
-          const target = url.split('#')[0];
-          const isLogin = /(^|\/)[^?#]*\blogin(\/?|\?|$)/i.test(target);
-          const isPA    = /(^|\/)[^?#]*\bprimeiroacesso(\/?|\?|$)/i.test(target);
-          if ((isLogin || isPA) && (method === 'GET' || method === 'HEAD')) {
-            const qIndex = target.indexOf('?');
-            const qs = qIndex >= 0 ? target.slice(qIndex + 1) : (url.includes('?') ? url.slice(url.indexOf('?') + 1) : '');
-            const params = new URLSearchParams(qs);
-            const erro = params.get('erro') || null;
-            let mensagem = null;
-            if (isPA && erro) {
-              switch (erro) {
-                case 'campos': mensagem = 'Preencha todos os campos.'; break;
-                case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
-                case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
-                case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
-                case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
-              }
-            }
-            // Detecta módulo pelo alvo do redirect
-            let seg = null;
-            const mm = target.match(/^\/([^\/?#]+)\/(login|primeiroacesso)(?:[?#].*)?$/i);
-            if (mm) seg = (mm[1]||'').toLowerCase();
-            if (!seg) seg = /^\/escalas\b/i.test(target) ? 'escalas' : (/^\/gestor\b/i.test(target) ? 'gestor' : null);
-            const basePath = seg ? ('/' + seg) : '/gestor';
+          const redirectDecision = resolvePublicRedirectInterceptionDecision(req, statusOrUrl, maybeUrl);
+          if (redirectDecision) {
+            const { status, url, isLogin, isPA, erro, mensagem, seg, basePath } = redirectDecision;
 
             // Resolve o label do módulo de forma idêntica à rota GET /:seg/login
             async function resolveModuleLabel(segment) {
