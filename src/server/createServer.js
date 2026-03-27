@@ -1285,28 +1285,30 @@ export async function createServer(options = {}) {
     } catch { return next(); }
   });
 
+  function resolveGestorRootApiCompatTarget(req) {
+    const original = String(req.originalUrl || req.url || '');
+
+    if (original.startsWith('/api/escalas')) return '';
+    if (original.startsWith('/api/cep')) return '';
+
+    if (original.startsWith('/api/msg')) {
+      const ref = String(req.get('referer') || '').toLowerCase();
+      if (ref.includes('/portal-morador/') || ref.includes('/portal_morador/')) {
+        return '/portal-morador' + original;
+      }
+    }
+
+    return '/gestor' + original;
+  }
+
   // Compat geral: mapear /api/* raiz para /gestor/api/* (mantém método e corpo)
   // Muitos scripts legados chamam "/api/..." sem o prefixo do módulo
   app.use('/api', (req, res, next) => {
     try {
       if (isTestEnv) return next();
-      const original = String(req.originalUrl || req.url || '');
-      // Se já for uma sub-rota tratada acima (/api/escalas), deixa seguir
-      if (original.startsWith('/api/escalas')) return next();
-      // Exceções: rotas públicas utilitárias que precisam ficar no root /api
-      if (original.startsWith('/api/cep')) return next();
-
-      // Importante: quando a UI do Portal do Morador (sub-app) chama por engano /api/msg/*,
-      // o redirect genérico para /gestor/api/* resulta em 401 e dá a sensação de "deslogar".
-      // Detecta via Referer e redireciona para o prefixo correto do Portal.
-      if (original.startsWith('/api/msg')) {
-        const ref = String(req.get('referer') || '').toLowerCase();
-        if (ref.includes('/portal-morador/') || ref.includes('/portal_morador/')) {
-          return res.redirect(307, '/portal-morador' + original);
-        }
-      }
-
-      return res.redirect(307, '/gestor' + original);
+      const target = resolveGestorRootApiCompatTarget(req);
+      if (!target) return next();
+      return res.redirect(307, target);
     } catch { return next(); }
   });
 
