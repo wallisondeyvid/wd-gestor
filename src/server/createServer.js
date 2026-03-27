@@ -422,28 +422,45 @@ export async function createServer(options = {}) {
   // Cobre GET e HEAD, preserva query (?erro=...) e evita qualquer redirecionamento acidental
   try {
     const ROOT2 = path.join(ROOT, '.');
+    function resolveUltraEarlyGuardDecision(req) {
+      const method = String(req.method || 'GET').toUpperCase();
+      if (method !== 'GET' && method !== 'HEAD') return null;
+
+      const url = String(req.originalUrl || req.url || '');
+      const isLogin = /^\/gestor\/login(?:[?#].*)?$/.test(url) || /^\/login(?:[?#].*)?$/.test(url);
+      const isPA = /^\/gestor\/primeiroacesso(?:[?#].*)?$/.test(url) || /^\/primeiroacesso(?:[?#].*)?$/.test(url);
+      if (!isPA) return null;
+
+      const queryStr = (url.includes('?')) ? url.slice(url.indexOf('?') + 1) : '';
+      const params = new URLSearchParams(queryStr);
+      const raw = params.get('raw');
+      const erro = params.get('erro') || null;
+      let mensagem = null;
+      if (isPA && erro) {
+        switch (erro) {
+          case 'campos': mensagem = 'Preencha todos os campos.'; break;
+          case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
+          case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
+          case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
+          case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
+        }
+      }
+
+      return {
+        url,
+        isLogin,
+        isPA,
+        queryStr,
+        raw,
+        erro,
+        mensagem,
+      };
+    }
     app.use(async (req, res, next) => {
       try {
-        const m = String(req.method||'GET').toUpperCase();
-        if (m !== 'GET' && m !== 'HEAD') return next();
-        const url = String(req.originalUrl || req.url || '');
-        const isLogin = /^\/gestor\/login(?:[?#].*)?$/.test(url) || /^\/login(?:[?#].*)?$/.test(url);
-        const isPA    = /^\/gestor\/primeiroacesso(?:[?#].*)?$/.test(url) || /^\/primeiroacesso(?:[?#].*)?$/.test(url);
-        if (!isPA) return next();
-        const queryStr = (url.includes('?')) ? url.slice(url.indexOf('?') + 1) : '';
-        const params = new URLSearchParams(queryStr);
-        const raw = params.get('raw');
-        const erro = params.get('erro') || null;
-        let mensagem = null;
-        if (isPA && erro) {
-          switch (erro) {
-            case 'campos': mensagem = 'Preencha todos os campos.'; break;
-            case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
-            case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
-            case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
-            case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
-          }
-        }
+        const guardDecision = resolveUltraEarlyGuardDecision(req);
+        if (!guardDecision) return next();
+        const { isLogin, raw, erro, mensagem } = guardDecision;
         if (raw === '1' || raw === 'true') {
           const tag = isLogin ? 'login' : 'primeiroacesso';
           res.set('Content-Type', 'text/plain; charset=utf-8');
