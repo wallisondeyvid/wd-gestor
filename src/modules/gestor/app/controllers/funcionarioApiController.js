@@ -27,6 +27,7 @@ import {
 	setUserMembershipFuncionarioIdIfEmpty,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { normalizeFuncionarioPayload } from './utils/funcionarioNormalize.js';
+import { deleteFuncionarioPostExecutionService } from '#modules/gestor/app/services/funcionarios/deleteFuncionarioPostExecution.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1157,11 +1158,11 @@ export async function getFuncionarioFoto(req, res){
 		return res.status(500).json({ error:'Falha ao obter foto' });
 	}
 }
-export async function deleteFuncionarioPost(req,res){ try { const { id } = req.params; const canonicalUnitId = getCanonicalContextUnitId(req) || null; const funcionario = await findFuncionarioById(id, canonicalUnitId); if(!funcionario) {
+export async function deleteFuncionarioPost(req,res){ try { const { id } = req.params; const canonicalUnitId = getCanonicalContextUnitId(req) || null; const result = await deleteFuncionarioPostExecutionService({ funcionarioId: id, canonicalUnitId }); if(result.kind === 'already_removed') {
 	// Idempotente: sinaliza removido e segue com redirect neutro
 	return ok(res, { deleted:true, alreadyRemoved:true, redirect:'/funcionarios?deleted=1' });
 }
-const usuarioVinculado = await findUserByFuncionarioId(funcionario._id); if(usuarioVinculado && usuarioVinculado.role==='master') return res.status(403).json({ success:false, error:'Funcionário vinculado a usuário master não pode ser excluído.', code:'FORBIDDEN' }); await deleteFuncionarioById(id, canonicalUnitId || normalizeUnitId(funcionario?.unidade_id) || null); return ok(res, { deleted:true, redirect:'/funcionarios?deleted=1&nome='+encodeURIComponent(funcionario.nome) }); } catch(e){ console.error('[API FUNCIONARIOS][deletePost] Erro:', e); return serverError(res,'Erro ao excluir funcionário'); } }
+if(result.kind === 'forbidden_master_link') return res.status(403).json({ success:false, error:'Funcionário vinculado a usuário master não pode ser excluído.', code:'FORBIDDEN' }); return ok(res, { deleted:true, redirect:'/funcionarios?deleted=1&nome='+encodeURIComponent(result.funcionarioNome) }); } catch(e){ console.error('[API FUNCIONARIOS][deletePost] Erro:', e); return serverError(res,'Erro ao excluir funcionário'); } }
 export async function downloadAnexoFuncionario(req,res){
 	try {
 		const { id, idx } = req.params;
