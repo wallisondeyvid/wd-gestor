@@ -32,7 +32,16 @@ import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } fr
 
 // Módulos registrados: por padrão, NÃO montar Escalas (fora do escopo atual).
 // Para habilitar Escalas no futuro, use ENABLE_ESCALAS=1.
-const BASE_REGISTRY = Object.freeze([gestorModule, clinicaModule, condominiosModule, portalMoradorModule]);
+const BASE_REGISTRY = Object.freeze([clinicaModule, condominiosModule, portalMoradorModule]);
+
+function resolveGestorRegistryModule() {
+  const wrapperEnabled = String(process.env.ENABLE_GESTOR_WRAPPER || '').trim() === '1';
+  if (wrapperEnabled && typeof gestorModule.buildRegistryWrapper === 'function') {
+    return gestorModule.buildRegistryWrapper();
+  }
+
+  return gestorModule;
+}
 
 let __portsBound = false;
 const SERVER_CLOSE_STATE_KEY = '__wdgestorCreateServerCloseState__';
@@ -105,7 +114,7 @@ export async function createServer(options = {}) {
   closeState.activeInstances += 1;
   let closeCalled = false;
   // Cada inicialização usa uma cópia local da lista-base para evitar acúmulo entre boots.
-  const registry = [...BASE_REGISTRY];
+  const registry = [resolveGestorRegistryModule(), ...BASE_REGISTRY];
   try {
     const condominiosIdx = registry.findIndex((mod) => mod?.meta?.name === 'condominios');
     if (condominiosIdx >= 0) {

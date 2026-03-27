@@ -27,4 +27,11 @@ export function buildModule(/* core */) {
   return gestorApp();
 }
 
+export function buildRegistryWrapper() {
+  return {
+    meta,
+    buildModule,
+  };
+}
+
 export default buildModule;
