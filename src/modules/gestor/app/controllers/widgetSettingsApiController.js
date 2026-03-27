@@ -1,8 +1,8 @@
 import { bustWidgetEnabledCache } from '#core/utils/widgetSettings.js';
 import {
   findWidgetSettingsFeedbackLean,
-  updateWidgetSettingsFeedbackModuleEnabledUpsert,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { updateFeedbackWidgetVisibilityService } from '#modules/gestor/app/services/widgetSettings/updateFeedbackWidgetVisibility.service.js';
 
 const KNOWN_MODULES = [
   { id: 'gestor', name: 'Gestor', basePath: '/gestor' },
@@ -76,11 +76,14 @@ export async function updateFeedbackWidgetVisibility(req, res) {
     const exists = KNOWN_MODULES.some((m) => m.id === moduleId);
     if (!exists) return res.status(400).json({ ok: false, error: 'Módulo não reconhecido.' });
 
-    await updateWidgetSettingsFeedbackModuleEnabledUpsert(moduleId, enabled);
+    const enabledByModule = await updateFeedbackWidgetVisibilityService({
+      moduleId,
+      enabled,
+      knownModules: KNOWN_MODULES,
+    });
 
     bustCache();
     bustWidgetEnabledCache();
-    const enabledByModule = await getVisibilityMapCached();
     return res.json({ ok: true, enabledByModule });
   } catch (e) {
     console.error('[widgetSettingsApi] PUT feedback visibility erro:', e);
