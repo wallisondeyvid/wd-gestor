@@ -12,9 +12,9 @@ import {
 	findOutroRecursoByChassiUpper,
 	findOutroRecursoByRenavam,
 	updateRecursoByIdComUnidadeNome,
-	deleteRecursoById,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listarRecursosService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
+import { deleteRecursoScopedService } from '#modules/gestor/app/services/recursos/deleteRecursoScoped.service.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -218,7 +218,10 @@ export async function deleteRecurso(req, res) {
 
 		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
 
-		const recurso = await deleteRecursoById(req.params.id, unidadeEfetiva || null);
+		const recurso = await deleteRecursoScopedService({
+			recursoId: req.params.id,
+			unidadeEfetiva: unidadeEfetiva || null,
+		});
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
 
 		return ok(res, { deleted: true, id: req.params.id });
