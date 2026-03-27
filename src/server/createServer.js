@@ -835,22 +835,25 @@ export async function createServer(options = {}) {
       }
       return Promise.resolve(genericPrimeiroAcessoPost(req, res)).catch(next);
     }
+    function renderDirectGestorLogin(req, res, next) {
+      const isLogin = true;
+      const queryStr = (req.originalUrl && req.originalUrl.includes('?')) ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1) : '';
+      const { erro, mensagem } = parseErroMensagem(isLogin, queryStr);
+      return res.render('gestor/logingestor', { basePath: '/gestor', moduleLabel: 'WDGestor', erro, mensagem }, (err, html) => {
+        if (err) return next();
+        try {
+          res.set('Content-Type', 'text/html; charset=utf-8');
+          res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+          res.set('Pragma', 'no-cache');
+          res.set('Expires', '0');
+          res.set('X-Server-Direct', 'login');
+        } catch {}
+        return res.status(200).send(html);
+      });
+    }
     app.get('/gestor/login', (req, res, next) => {
       try {
-        const isLogin = true;
-        const queryStr = (req.originalUrl && req.originalUrl.includes('?')) ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1) : '';
-        const { erro, mensagem } = parseErroMensagem(isLogin, queryStr);
-        return res.render('gestor/logingestor', { basePath: '/gestor', moduleLabel: 'WDGestor', erro, mensagem }, (err, html) => {
-          if (err) return next();
-          try {
-            res.set('Content-Type', 'text/html; charset=utf-8');
-            res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-            res.set('Pragma', 'no-cache');
-            res.set('Expires', '0');
-            res.set('X-Server-Direct', 'login');
-          } catch {}
-          return res.status(200).send(html);
-        });
+        return renderDirectGestorLogin(req, res, next);
       } catch (e) { return next(); }
     });
     // Login genérico: /:seg/login -> renderiza mesma view com basePath dinâmico
