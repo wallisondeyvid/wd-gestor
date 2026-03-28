@@ -4,8 +4,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 
-import { projectLegacySessionUserFromAuthContext } from '../src/modules/gestor/app/services/authContextResolver.js';
-
 const MIDDLEWARE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/middlewares/requireRole.js');
 const MIDDLEWARE_SOURCE = fs.readFileSync(MIDDLEWARE_PATH, 'utf8');
 
@@ -42,32 +40,9 @@ function buildFunction(source, signature, context = {}) {
 
 test('requireRole consome auth-context canonico ativo, resolve o papel efetivo, sincroniza o shape legado e preserva o next', async () => {
   const normalizeRole = buildFunction(MIDDLEWARE_SOURCE, 'function normalizeRole');
-  const buildCanonicalLegacyProjection = buildFunction(
-    MIDDLEWARE_SOURCE,
-    'function buildCanonicalLegacyProjection',
-    {
-      normalizeRole,
-      projectLegacySessionUserFromAuthContext,
-      AUTH_CONTEXT_SOURCE_V1: 'auth-context-v1',
-    }
-  );
-  const actualResolveEffectiveRole = buildFunction(
-    MIDDLEWARE_SOURCE,
-    'function resolveEffectiveRole',
-    { normalizeRole }
-  );
-  const actualSyncLegacyUserShape = buildFunction(
-    MIDDLEWARE_SOURCE,
-    'function syncLegacyUserShape',
-    {
-      normalizeRole,
-      buildCanonicalLegacyProjection,
-    }
-  );
   const hasPendingUnitSelection = buildFunction(MIDDLEWARE_SOURCE, 'function hasPendingUnitSelection');
 
-  const resolveCalls = [];
-  const syncCalls = [];
+  const serviceCalls = [];
 
   const requireRole = buildFunction(
     MIDDLEWARE_SOURCE,
@@ -78,21 +53,37 @@ test('requireRole consome auth-context canonico ativo, resolve o papel efetivo, 
       isAuthContextResolverEnabledForRequest: () => true,
       getStoredAuthContext: (req) => req.session?.gestorAuthContext || null,
       hasPendingUnitSelection,
-      resolveEffectiveRole(input) {
-        resolveCalls.push({
+      resolveRequireRoleLegacyUser(input) {
+        serviceCalls.push({
           authContext: JSON.parse(JSON.stringify(input.authContext || null)),
           requestUser: JSON.parse(JSON.stringify(input.requestUser || null)),
           sessionUser: JSON.parse(JSON.stringify(input.sessionUser || null)),
         });
-        return actualResolveEffectiveRole(input);
-      },
-      syncLegacyUserShape(req, input) {
-        syncCalls.push({
-          authContext: JSON.parse(JSON.stringify(input.authContext || null)),
-          effectiveRole: input.effectiveRole,
-          globalRole: input.globalRole,
-        });
-        return actualSyncLegacyUserShape(req, input);
+        return {
+          requestUser: {
+            id: 'u-1',
+            _id: 'u-1',
+            nome: 'Usuario Canonico',
+            email: 'gestor@example.com',
+            role: 'diretor',
+            global_role: null,
+            isMaster: false,
+            unidade_id: 'unit-canonical',
+            unidade_principal_id: 'principal-canonical',
+            funcionario_id: 'funcionario-canonico',
+          },
+          sessionUser: {
+            id: 'u-1',
+            email: 'gestor@example.com',
+            nome: 'Usuario Canonico',
+            role: 'diretor',
+            global_role: null,
+            unidade_id: 'unit-canonical',
+            unidade_principal_id: 'principal-canonical',
+            funcionario_id: 'funcionario-canonico',
+            auth_version: 'phase3',
+          },
+        };
       },
       respondPendingSelection(res) {
         return res.status(409).json({ success: false, code: 'GESTOR_SELECTION_REQUIRED' });
@@ -171,12 +162,10 @@ test('requireRole consome auth-context canonico ativo, resolve o papel efetivo, 
     nextCalled = true;
   });
 
-  assert.equal(resolveCalls.length, 1);
-  assert.equal(resolveCalls[0].authContext.active_unidade_id, 'unit-canonical');
-  assert.equal(resolveCalls[0].sessionUser.role, 'user');
-  assert.equal(syncCalls.length, 1);
-  assert.equal(syncCalls[0].effectiveRole, 'diretor');
-  assert.equal(syncCalls[0].globalRole, null);
+  assert.equal(serviceCalls.length, 1);
+  assert.equal(serviceCalls[0].authContext.active_unidade_id, 'unit-canonical');
+  assert.equal(serviceCalls[0].sessionUser.role, 'user');
+  assert.equal(serviceCalls[0].requestUser, null);
 
   assert.equal(nextCalled, true);
   assert.equal(res.statusCode, 200);
