@@ -31,6 +31,8 @@ import {
   isUnitProvisioningValidationError,
   retryUnitProvisioning,
 } from '#modules/gestor/app/services/UnitProvisioningService.js';
+import { orchestrateUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/orchestrateUnitProvisioning.js';
+import { createUnidadeWrite } from '#modules/gestor/app/usecases/unidades/createUnidadeWrite.js';
 import { getUnidadeProvisioningStatusOwnerService } from '#modules/gestor/app/services/unidades/getUnidadeProvisioningStatusOwner.service.js';
 import {
   findUnidadeDeleteCandidateService,
@@ -520,58 +522,47 @@ export async function createUnidade(req, res) {
       else tipoPix = 'aleatoria';
     }
 
-    const novaUnidade = await createUnidadeDoc({
-      codigo,
-      nome: nomeFantasia,
-      razaoSocial: razaoSocial || null,
-      cnpj: finalCnpj,
-      cpf: cpf ? cpf.replace(/\D/g, '') : null,
-      pessoaTipo,
-      inscricaoEstadual: inscricaoEstadual || null,
-      inscricaoMunicipal: inscricaoMunicipal || null,
-      cnaePrincipal: cnaePrincipal || null,
-      cnaeSecundarios: cnaeSecundarios || null,
-      regimeTributario: regimeTributario || null,
-      naturezaJuridica: naturezaJuridica || null,
-      is_principal: isPrincipal,
-      subunidade: isSubunidade,
-      unidade_principal_id: isSubunidade ? effectivePrincipalUnitId : null,
-      dataAbertura: parseDateBRorISO(dataAbertura),
-      endereco: endereco || null,
-      telefoneFixo: telefoneFixo || null,
-      telefoneCelular: telefoneCelular || null,
-      emailPrincipal: emailPrincipal || null,
-      emailFiscal: emailFiscal || null,
-      site: site || null,
-      banco: banco || null,
-      agencia: agencia || null,
-      contaCorrente: contaCorrente || null,
-      pixChave: pixChave || null,
-      tipoPix,
-      modulosAcessiveis: modulosSelecionados,
-      diretor_usuario_id: isPrincipal && diretor_usuario_id ? diretor_usuario_id : null,
-      is_active: true,
-      logo: null,
-      apiBancaria: apiBancariaPayload,
-    });
-
-    const unidadeSalva = await saveUnidadeDoc(novaUnidade);
-    if (isPrincipal && diretor_usuario_id) {
-      try {
-        await updateUserUnidadeById(diretor_usuario_id, unidadeSalva._id);
-      } catch (e) {
-        console.warn('[API UNIDADES][create] Falha ao vincular diretor à unidade:', e.message);
-      }
-    }
-
-    const tipoUnidadeProvisionada = resolveTipoUnidadeProvisionada({
-      is_principal: isPrincipal,
-      subunidade: isSubunidade,
-    });
-    await ensureUnitProvisioned({
-      unidadeId: unidadeSalva._id,
-      tipo: tipoUnidadeProvisionada,
-      modulosHabilitados: modulosSelecionados,
+    const unidadeSalva = await createUnidadeWrite({
+      input: {
+        codigo,
+        nomeFantasia,
+        razaoSocial,
+        finalCnpj,
+        cpf,
+        pessoaTipo,
+        inscricaoEstadual,
+        inscricaoMunicipal,
+        cnaePrincipal,
+        cnaeSecundarios,
+        regimeTributario,
+        naturezaJuridica,
+        isPrincipal,
+        isSubunidade,
+        effectivePrincipalUnitId,
+        dataAbertura,
+        endereco,
+        telefoneFixo,
+        telefoneCelular,
+        emailPrincipal,
+        emailFiscal,
+        site,
+        banco,
+        agencia,
+        contaCorrente,
+        pixChave,
+        tipoPix,
+        modulosSelecionados,
+        diretor_usuario_id,
+        apiBancariaPayload,
+      },
+      createUnidadeDoc,
+      saveUnidadeDoc,
+      updateUserUnidadeById,
+      orchestrateUnitProvisioning,
+      resolveTipoUnidadeProvisionada,
+      ensureUnitProvisioned,
+      parseDateBRorISO,
+      warn: console.warn,
     });
 
     const serialized = unidadeSalva.toObject();

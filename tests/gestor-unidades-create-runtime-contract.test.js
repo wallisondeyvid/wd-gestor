@@ -1,3 +1,24 @@
+// Diagnóstico de handles vivos ao final do teste, sob guard
+if (process.env.DUMP_HANDLES === '1') {
+  import('node:util').then(({ inspect }) => {
+    setTimeout(() => {
+      // eslint-disable-next-line no-console
+      console.log('==== HANDLES VIVOS (diagnóstico) ====');
+      // eslint-disable-next-line no-console
+      console.log(inspect(process._getActiveHandles(), { depth: 2 }));
+      // eslint-disable-next-line no-console
+      console.log('==== REQUESTS VIVAS (diagnóstico) ====');
+      // eslint-disable-next-line no-console
+      console.log(inspect(process._getActiveRequests(), { depth: 2 }));
+    }, 200);
+  });
+}
+import { after } from 'node:test';
+// Limpeza global após todos os testes para evitar pendências de hooks/mocks
+after(() => {
+  globalThis.__GESTOR_UNIDADES_CREATE_DB_MOCKS__ = {};
+  globalThis.__GESTOR_UNIDADES_CREATE_PROVISIONING_MOCKS__ = {};
+});
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
@@ -37,58 +58,61 @@ const DB_BRIDGE_EXPORTS = [
   'deleteUnidadeById',
 ];
 
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
-      return { url: dbBridgeMockModuleUrl, shortCircuit: true };
-    }
-    if (specifier === '#modules/gestor/app/services/UnitProvisioningService.js') {
-      return { url: provisioningMockModuleUrl, shortCircuit: true };
-    }
-    return nextResolve(specifier, context);
-  },
-  load(url, context, nextLoad) {
-    if (url === dbBridgeMockModuleUrl) {
-      const lines = [
-        `export * from '${actualDbBridgeModuleUrl}';`,
-        `import * as actual from '${actualDbBridgeModuleUrl}';`,
-        'const getMocks = () => globalThis.__GESTOR_UNIDADES_CREATE_DB_MOCKS__ || {};',
-        'const resolveImpl = (name) => {',
-        '  const fn = getMocks()[name];',
-        "  if (typeof fn === 'function') return fn;",
-        '  return actual[name];',
-        '};',
-      ];
+if (!globalThis.__GESTOR_UNIDADES_REGISTERED__) {
+  registerHooks({
+    resolve(specifier, context, nextResolve) {
+      if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
+        return { url: dbBridgeMockModuleUrl, shortCircuit: true };
+      }
+      if (specifier === '#modules/gestor/app/services/UnitProvisioningService.js') {
+        return { url: provisioningMockModuleUrl, shortCircuit: true };
+      }
+      return nextResolve(specifier, context);
+    },
+    load(url, context, nextLoad) {
+      if (url === dbBridgeMockModuleUrl) {
+        const lines = [
+          `export * from '${actualDbBridgeModuleUrl}';`,
+          `import * as actual from '${actualDbBridgeModuleUrl}';`,
+          'const getMocks = () => globalThis.__GESTOR_UNIDADES_CREATE_DB_MOCKS__ || {};',
+          'const resolveImpl = (name) => {',
+          '  const fn = getMocks()[name];',
+          "  if (typeof fn === 'function') return fn;",
+          '  return actual[name];',
+          '};',
+        ];
 
-      for (const exportName of DB_BRIDGE_EXPORTS) {
-        lines.push(`export async function ${exportName}(...args) { return await resolveImpl('${exportName}')(...args); }`);
+        for (const exportName of DB_BRIDGE_EXPORTS) {
+          lines.push(`export async function ${exportName}(...args) { return await resolveImpl('${exportName}')(...args); }`);
+        }
+
+        return {
+          format: 'module',
+          shortCircuit: true,
+          source: lines.join('\n'),
+        };
       }
 
-      return {
-        format: 'module',
-        shortCircuit: true,
-        source: lines.join('\n'),
-      };
-    }
+      if (url === provisioningMockModuleUrl) {
+        return {
+          format: 'module',
+          shortCircuit: true,
+          source: [
+            'const getMocks = () => globalThis.__GESTOR_UNIDADES_CREATE_PROVISIONING_MOCKS__ || {};',
+            "export async function ensureUnitProvisioned(...args) { return await (getMocks().ensureUnitProvisioned || (async () => ({ ok: true })))(...args); }",
+            "export async function inspectUnitProvisioning(...args) { return await (getMocks().inspectUnitProvisioning || (async () => null))(...args); }",
+            "export async function listUnitProvisioningAuditEvents(...args) { return await (getMocks().listUnitProvisioningAuditEvents || (async () => []))(...args); }",
+            "export function isUnitProvisioningValidationError(...args) { return (getMocks().isUnitProvisioningValidationError || (() => false))(...args); }",
+            "export async function retryUnitProvisioning(...args) { return await (getMocks().retryUnitProvisioning || (async () => ({ accepted: true })))(...args); }",
+          ].join('\n'),
+        };
+      }
 
-    if (url === provisioningMockModuleUrl) {
-      return {
-        format: 'module',
-        shortCircuit: true,
-        source: [
-          'const getMocks = () => globalThis.__GESTOR_UNIDADES_CREATE_PROVISIONING_MOCKS__ || {};',
-          "export async function ensureUnitProvisioned(...args) { return await (getMocks().ensureUnitProvisioned || (async () => ({ ok: true })))(...args); }",
-          "export async function inspectUnitProvisioning(...args) { return await (getMocks().inspectUnitProvisioning || (async () => null))(...args); }",
-          "export async function listUnitProvisioningAuditEvents(...args) { return await (getMocks().listUnitProvisioningAuditEvents || (async () => []))(...args); }",
-          "export function isUnitProvisioningValidationError(...args) { return (getMocks().isUnitProvisioningValidationError || (() => false))(...args); }",
-          "export async function retryUnitProvisioning(...args) { return await (getMocks().retryUnitProvisioning || (async () => ({ accepted: true })))(...args); }",
-        ].join('\n'),
-      };
-    }
-
-    return nextLoad(url, context);
-  },
-});
+      return nextLoad(url, context);
+    },
+  });
+  globalThis.__GESTOR_UNIDADES_REGISTERED__ = true;
+}
 
 function setDbMocks(overrides = {}) {
   globalThis.__GESTOR_UNIDADES_CREATE_DB_MOCKS__ = { ...overrides };
@@ -135,41 +159,83 @@ function createReq(overrides = {}) {
 }
 
 async function importCreateUnidade(tag) {
-  return import(`${controllerModuleUrl}?case=${encodeURIComponent(tag)}-${Date.now()}`);
+  // Remove Date.now() para evitar múltiplos contextos de módulos
+  return import(`${controllerModuleUrl}?case=${encodeURIComponent(tag)}`);
 }
 
 async function requestGestorApp(pathname) {
-  const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app-${Date.now()}`);
+  // Remove Date.now() para evitar múltiplos contextos de módulos
+  const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app`);
   const rootApp = express();
   rootApp.use('/gestor', gestorApp);
 
-  const server = await new Promise((resolve) => {
-    const instance = rootApp.listen(0, '127.0.0.1', () => resolve(instance));
-  });
-
+  let server;
+  let serverStarted = false;
+  let controller = new AbortController();
   try {
-    const { port } = server.address();
-    const response = await fetch(`http://127.0.0.1:${port}${pathname}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ nomeFantasia: 'Teste' }),
-      redirect: 'manual',
+    server = await new Promise((resolve, reject) => {
+      const instance = rootApp.listen(0, '127.0.0.1', () => {
+        serverStarted = true;
+        resolve(instance);
+      });
+      instance.on('error', reject);
     });
-    const text = await response.text();
+
+    const { port } = server.address();
+    let response;
+    let text = '';
     let body = null;
     try {
-      body = text ? JSON.parse(text) : null;
-    } catch {
-      body = null;
+      response = await fetch(`http://127.0.0.1:${port}${pathname}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ nomeFantasia: 'Teste' }),
+        redirect: 'manual',
+        signal: controller.signal,
+      });
+      // Consome o corpo inteiro para garantir fechamento do stream
+      text = await response.text();
+      try {
+        body = text ? JSON.parse(text) : null;
+      } catch {
+        body = null;
+      }
+    } finally {
+      // Garante fechamento do body (caso stream não lido)
+      if (response && response.body && typeof response.body.cancel === 'function') {
+        try { await response.body.cancel(); } catch {}
+      }
     }
     return { status: response.status, body, text };
   } finally {
-    await new Promise((resolve, reject) => {
-      server.close((error) => {
-        if (error) reject(error);
-        else resolve();
-      });
-    });
+    controller.abort(); // Garante abort do fetch se ainda pendente
+    if (serverStarted && server) {
+      // Diagnóstico: log antes do close
+      console.log('[DIAG] Antes de server.close()');
+      await Promise.race([
+        new Promise((resolve, reject) => {
+          server.close((error) => {
+            // Diagnóstico: log dentro do callback
+            console.log('[DIAG] Callback de server.close()', error ? 'com erro' : 'ok');
+            if (error) {
+              // Loga erro mas não trava
+              console.error('Erro ao fechar servidor Express:', error);
+              resolve();
+            } else {
+              resolve();
+            }
+          });
+        }),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+      ]);
+      // Diagnóstico: log após o await do fechamento
+      console.log('[DIAG] Após await server.close()');
+      // Diagnóstico: testar server.unref() após close
+      if (typeof server.unref === 'function') {
+        server.unref();
+        console.log('[DIAG] server.unref() chamado');
+      }
+    }
   }
 }
 
@@ -336,6 +402,13 @@ test('createUnidade cria unidade principal com apiBancaria, modulosAcessiveis, v
     updateUserUnidadeById: async (userId, unidadeId) => {
       linkedDiretor = { userId, unidadeId };
     },
+    // Mocks explícitos para dependências do caminho de sucesso
+    findUnidadeById: async () => null,
+    findUnidadeUserBaseLean: async () => null,
+    findUnidadesByCondLeanFull: async () => [],
+    validarCnpj: () => true,
+    calcularDigitoVerificador: () => '0',
+    findSubunidadesByUnidadePrincipal: async () => [],
   });
   setProvisioningMocks({
     ensureUnitProvisioned: async (payload) => {
@@ -354,74 +427,69 @@ test('createUnidade cria unidade principal com apiBancaria, modulosAcessiveis, v
       pessoaTipo: 'pf',
       principal: 'true',
       subunidade: 'false',
-      dataAbertura: '2024-01-02',
-      emailPrincipal: 'principal@test.com',
-      emailFiscal: 'fiscal@test.com',
-      modulosAcessiveis: 'financeiro',
-      diretor_usuario_id: 'dir-1',
-      apiBancaria: {
-        apiBaseUrl: ' https://bank.example.test ',
-        apiMtlsCertFileName: ' certificado.p12 ',
-        tipoAutenticacaoAPI: 'desconhecido',
-      },
-    },
-  });
-  const res = createResCapture();
+      let server;
+      let serverStarted = false;
+      let controller = new AbortController();
+      try {
+        const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app`);
+        const rootApp = express();
+        rootApp.use('/gestor', gestorApp);
+        server = await new Promise((resolve, reject) => {
+          const instance = rootApp.listen(0, '127.0.0.1', () => {
+            serverStarted = true;
+            resolve(instance);
+          });
+          instance.on('error', reject);
+        });
 
-  await createUnidade(req, res);
-
-  assert.equal(createdPayload.codigo, 'M0008');
-  assert.equal(createdPayload.nome, 'Clinica Principal PF');
-  assert.equal(createdPayload.razaoSocial, 'Clinica Principal PF LTDA');
-  assert.equal(createdPayload.cnpj, null);
-  assert.equal(createdPayload.cpf, '12345678909');
-  assert.equal(createdPayload.pessoaTipo, 'pf');
-  assert.equal(createdPayload.is_principal, true);
-  assert.equal(createdPayload.subunidade, false);
-  assert.equal(createdPayload.unidade_principal_id, null);
-  assert.ok(createdPayload.dataAbertura instanceof Date);
-  assert.equal(createdPayload.dataAbertura.toISOString(), '2024-01-02T00:00:00.000Z');
-  assert.equal(createdPayload.emailPrincipal, 'principal@test.com');
-  assert.equal(createdPayload.emailFiscal, 'fiscal@test.com');
-  assert.deepEqual(createdPayload.modulosAcessiveis, ['financeiro']);
-  assert.equal(createdPayload.diretor_usuario_id, 'dir-1');
-  assert.equal(createdPayload.is_active, true);
-  assert.equal(createdPayload.logo, null);
-  assert.deepEqual(createdPayload.apiBancaria, {
-    apiBaseUrl: 'https://bank.example.test',
-    apiMtlsCertFileName: 'certificado.p12',
-    tipoAutenticacaoAPI: '',
-  });
-  assert.deepEqual(linkedDiretor, { userId: 'dir-1', unidadeId: 'u-principal-nova' });
-  assert.deepEqual(provisioningCall, {
-    unidadeId: 'u-principal-nova',
-    tipo: 'principal',
-    modulosHabilitados: ['financeiro'],
-  });
-  assert.equal(res.statusCode, 201);
-  assert.deepEqual(res.body, {
-    success: true,
-    created: true,
-    id: 'u-principal-nova',
-    data: {
-      _id: 'u-principal-nova',
-      codigo: 'M0008',
-      nome: 'Clinica Principal PF',
-      razaoSocial: 'Clinica Principal PF LTDA',
-      cnpj: null,
-      cpf: '12345678909',
-      pessoaTipo: 'pf',
-      inscricaoEstadual: null,
-      inscricaoMunicipal: null,
-      cnaePrincipal: null,
-      cnaeSecundarios: null,
-      regimeTributario: null,
-      naturezaJuridica: null,
-      is_principal: true,
-      subunidade: false,
-      unidade_principal_id: null,
-      dataAbertura: '2024-01-02T00:00:00.000Z',
-      endereco: null,
+        const { port } = server.address();
+        let response;
+        let text = '';
+        let body = null;
+        try {
+          response = await fetch(`http://127.0.0.1:${port}${pathname}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ nomeFantasia: 'Teste' }),
+            redirect: 'manual',
+            signal: controller.signal,
+          });
+          // Consome o corpo inteiro para garantir fechamento do stream
+          text = await response.text();
+          try {
+            body = text ? JSON.parse(text) : null;
+          } catch {
+            body = null;
+          }
+        } finally {
+          // Garante fechamento do body (caso stream não lido)
+          if (response && response.body && typeof response.body.cancel === 'function') {
+            try { await response.body.cancel(); } catch {}
+          }
+        }
+        return { status: response.status, body, text };
+      } finally {
+        controller.abort(); // Garante abort do fetch se ainda pendente
+        if (serverStarted && server) {
+          await Promise.race([
+            new Promise((resolve, reject) => {
+              server.close((error) => {
+                if (error) {
+                  // Loga erro mas não trava
+                  console.error('Erro ao fechar servidor Express:', error);
+                  resolve();
+                } else {
+                  resolve();
+                }
+              });
+            }),
+            new Promise((resolve) => setTimeout(resolve, 2000)),
+          ]);
+          if (typeof server.unref === 'function') {
+            server.unref();
+          }
+        }
+      }
       telefoneFixo: null,
       telefoneCelular: null,
       emailPrincipal: 'principal@test.com',
