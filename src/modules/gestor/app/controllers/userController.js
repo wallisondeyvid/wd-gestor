@@ -24,6 +24,7 @@ import { getUsuarioAtualProfileOwnerService } from '#modules/gestor/app/services
 import { listUsuariosOwnerService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
+import { unlockUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/unlockUsuarioExecution.service.js';
 import { updateUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
@@ -555,10 +556,8 @@ export async function unlockUsuario(req, res) {
 		const { id } = req.params;
 		const user = await findUserById(id);
 		if (!user) return res.status(404).json({ success:false, error:'Usuário não encontrado', code:'NOT_FOUND' });
-		user.failed_login_attempts = 0;
-		user.lock_until = null;
-		await saveUserDoc(user);
-		return res.json({ success:true, unlocked:true, id: user._id });
+		const result = await unlockUsuarioExecutionService({ user });
+		return res.json({ success:true, unlocked: result.unlocked, id: result.userId });
 	} catch (e) {
 		console.error('[unlockUsuario] erro:', e);
 		return res.status(500).json({ success:false, error:'Falha ao desbloquear usuário', code:'SERVER_ERROR' });
