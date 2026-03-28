@@ -18,6 +18,7 @@ import {
 	findUserByIdSelectAuthLockInfo,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/listLockedUsers.service.js';
+import { checkUsuarioEmailOwnerService } from '#modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js';
 import { listUsuariosOwnerService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
@@ -589,58 +590,15 @@ export async function checkUsuarioEmail(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 
-		const user = await findUserByEmail(email);
-		if (!user) {
-			return ok(res, {
-				email,
-				exists: false,
-				user: null,
-				membershipsCount: 0,
-				membershipsSummary: [],
-				linkedUnidadeIds: [],
-				blockedUnidadeIds: [],
-			});
-		}
-
-		const normalizedUserId = normalizeEntityId(user._id);
-		const memberships = await findUserMembershipsByUserIdsLean([normalizedUserId]);
-		const unidadeIds = [...new Set((Array.isArray(memberships) ? memberships : []).map((membership) => normalizeEntityId(membership?.unidade_id)).filter(Boolean))];
-		const unidades = unidadeIds.length > 0
-			? await findUnidadesByIdsNomeCodigoLean(unidadeIds)
-			: [];
-		const unidadesById = new Map(
-			(Array.isArray(unidades) ? unidades : []).map((unidade) => [normalizeEntityId(unidade?._id), unidade])
-		);
-		const membershipsSummary = (Array.isArray(memberships) ? memberships : []).map((membership) => {
-			const unidadeId = normalizeEntityId(membership?.unidade_id);
-			const unidade = unidadesById.get(unidadeId) || null;
-			return {
-				unidade_id: unidadeId,
-				unidade_nome: buildUnidadeSummaryLabel(unidade) || unidadeId,
-				papel_contextual: String(membership?.papel_contextual || '').trim() || null,
-				status: String(membership?.status || '').trim() || null,
-				funcionario_id: normalizeEntityId(membership?.funcionario_id) || null,
-			};
-		});
-		const linkedUnidadeIds = [...new Set(membershipsSummary.map((membership) => membership.unidade_id).filter(Boolean))];
-
+		const result = await checkUsuarioEmailOwnerService({ email });
 		return ok(res, {
-			email,
-			exists: true,
-			user: {
-				id: String(user._id),
-				nome: String(user.nome || '').trim() || null,
-				cpf: String(user.cpf || '').trim() || null,
-				role: String(user.role || '').trim() || null,
-				global_role: String(user.global_role || '').trim() || null,
-				unidade_id: normalizeEntityId(user.unidade_id) || null,
-				funcionario_id: normalizeEntityId(user.funcionario_id) || null,
-				ativo: user.ativo !== false,
-			},
-			membershipsCount: membershipsSummary.length,
-			membershipsSummary,
-			linkedUnidadeIds,
-			blockedUnidadeIds: linkedUnidadeIds,
+			email: result.email,
+			exists: result.exists,
+			user: result.user,
+			membershipsCount: result.membershipsCount,
+			membershipsSummary: result.membershipsSummary,
+			linkedUnidadeIds: result.linkedUnidadeIds,
+			blockedUnidadeIds: result.blockedUnidadeIds,
 		});
 	} catch (e) {
 		console.error('[checkUsuarioEmail] erro:', e);
