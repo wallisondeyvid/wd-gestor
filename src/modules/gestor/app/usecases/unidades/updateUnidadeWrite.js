@@ -1,0 +1,52 @@
+export async function updateUnidadeWrite({
+  unidadeId,
+  input,
+  parseDateBRorISO,
+  updateUnidadeByIdWithValidators,
+}) {
+  const updated = {
+    nome: input.nomeFantasia,
+    razaoSocial: input.razaoSocial || null,
+    cnpj: input.pessoaTipo === 'pj' ? input.cleanedCnpj : null,
+    cpf: input.pessoaTipo === 'pf' ? (input.cpf ? input.cpf.replace(/\D/g, '') : null) : null,
+    pessoaTipo: input.pessoaTipo,
+    dataAbertura: parseDateBRorISO(input.dataAbertura),
+    inscricaoEstadual: input.inscricaoEstadual || null,
+    inscricaoMunicipal: input.inscricaoMunicipal || null,
+    cnaePrincipal: input.cnaePrincipal || null,
+    cnaeSecundarios: input.cnaeSecundarios || null,
+    regimeTributario: input.regimeTributario || null,
+    naturezaJuridica: input.naturezaJuridica || null,
+    tipoLogradouro: input.tipoLogradouro || null,
+    logradouro: input.logradouro || null,
+    numero: input.numero || null,
+    complemento: input.complemento || null,
+    bairro: input.bairro || null,
+    cep: input.cep || null,
+    cidade: input.cidade || null,
+    estado: input.estado || null,
+    codigoIbgeMunicipio: input.codigoIbgeMunicipio || null,
+    telefoneFixo: input.telefoneFixo || null,
+    telefoneCelular: input.telefoneCelular || null,
+    emailPrincipal: input.emailPrincipal || null,
+    emailFiscal: input.emailFiscal || null,
+    site: input.site || null,
+    banco: input.banco || null,
+    agencia: input.agencia || null,
+    contaCorrente: input.contaCorrente || null,
+    pixChave: input.pixChave || null,
+    tipoPix: input.tipoPix,
+    modulosAcessiveis: Array.isArray(input.modulosAcessiveis)
+      ? input.modulosAcessiveis
+      : (input.modulosAcessiveis ? [input.modulosAcessiveis] : []),
+    diretor_usuario_id: input.diretor_usuario_id,
+    is_principal: input.subunidade === 'false',
+    subunidade: input.subunidade === 'true',
+    unidade_principal_id: input.effectivePrincipalUnitId,
+    endereco: input.endereco || null,
+    apiBancaria: input.apiBancariaPayload,
+    logo: input.logo || null,
+  };
+
+  return updateUnidadeByIdWithValidators(unidadeId, updated);
+}

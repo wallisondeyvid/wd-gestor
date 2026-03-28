@@ -33,6 +33,7 @@ import {
 } from '#modules/gestor/app/services/UnitProvisioningService.js';
 import { orchestrateUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/orchestrateUnitProvisioning.js';
 import { createUnidadeWrite } from '#modules/gestor/app/usecases/unidades/createUnidadeWrite.js';
+import { updateUnidadeWrite } from '#modules/gestor/app/usecases/unidades/updateUnidadeWrite.js';
 import { getUnidadeProvisioningStatusOwnerService } from '#modules/gestor/app/services/unidades/getUnidadeProvisioningStatusOwner.service.js';
 import {
   findUnidadeDeleteCandidateService,
@@ -668,50 +669,51 @@ export async function updateUnidade(req, res) {
       if (!unidadePrincipalDoc || !unidadePrincipalDoc.is_principal) return badRequest(res, 'Unidade principal inválida.');
     }
 
-    const updated = {
-      nome: nomeFantasia,
-      razaoSocial: razaoSocial || null,
-      cnpj: pessoaTipo === 'pj' ? cleanedCnpj : null,
-      cpf: pessoaTipo === 'pf' ? (cpf ? cpf.replace(/\D/g, '') : null) : null,
-      pessoaTipo,
-      dataAbertura: parseDateBRorISO(dataAbertura),
-      inscricaoEstadual: inscricaoEstadual || null,
-      inscricaoMunicipal: inscricaoMunicipal || null,
-      cnaePrincipal: cnaePrincipal || null,
-      cnaeSecundarios: cnaeSecundarios || null,
-      regimeTributario: regimeTributario || null,
-      naturezaJuridica: naturezaJuridica || null,
-      tipoLogradouro: tipoLogradouro || null,
-      logradouro: logradouro || null,
-      numero: numero || null,
-      complemento: complemento || null,
-      bairro: bairro || null,
-      cep: cep || null,
-      cidade: cidade || null,
-      estado: estado || null,
-      codigoIbgeMunicipio: codigoIbgeMunicipio || null,
-      telefoneFixo: telefoneFixo || null,
-      telefoneCelular: telefoneCelular || null,
-      emailPrincipal: emailPrincipal || null,
-      emailFiscal: emailFiscal || null,
-      site: site || null,
-      banco: banco || null,
-      agencia: agencia || null,
-      contaCorrente: contaCorrente || null,
-      pixChave: pixChave || null,
-      tipoPix,
-      modulosAcessiveis: Array.isArray(modulosAcessiveis) ? modulosAcessiveis : (modulosAcessiveis ? [modulosAcessiveis] : []),
-      diretor_usuario_id: unidadeExistente.diretor_usuario_id,
-      is_principal: subunidade === 'false',
-      subunidade: subunidade === 'true',
-      unidade_principal_id: effectivePrincipalUnitId,
-      endereco: req.body.endereco || null,
-      apiBancaria: apiBancariaPayload,
-    };
-
-    updated.logo = unidadeExistente.logo || null;
-
-    const unidade = await updateUnidadeByIdWithValidators(unidadeId, updated);
+    const unidade = await updateUnidadeWrite({
+      unidadeId,
+      input: {
+        nomeFantasia,
+        razaoSocial,
+        cleanedCnpj,
+        cpf,
+        pessoaTipo,
+        dataAbertura,
+        inscricaoEstadual,
+        inscricaoMunicipal,
+        cnaePrincipal,
+        cnaeSecundarios,
+        regimeTributario,
+        naturezaJuridica,
+        tipoLogradouro,
+        logradouro,
+        numero,
+        complemento,
+        bairro,
+        cep,
+        cidade,
+        estado,
+        codigoIbgeMunicipio,
+        telefoneFixo,
+        telefoneCelular,
+        emailPrincipal,
+        emailFiscal,
+        site,
+        banco,
+        agencia,
+        contaCorrente,
+        pixChave,
+        tipoPix,
+        modulosAcessiveis,
+        diretor_usuario_id: unidadeExistente.diretor_usuario_id,
+        subunidade,
+        effectivePrincipalUnitId,
+        endereco: req.body.endereco || null,
+        apiBancariaPayload,
+        logo: unidadeExistente.logo || null,
+      },
+      parseDateBRorISO,
+      updateUnidadeByIdWithValidators,
+    });
     if (!unidade) return notFound(res, 'Unidade não encontrada.');
 
     const serialized = unidade.toObject();
