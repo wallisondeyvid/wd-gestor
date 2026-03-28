@@ -10,8 +10,8 @@ import { put, del } from '@vercel/blob';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 import {
 	GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
-	resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
+import { resolveUserApiModulosCanonicalResult } from '#modules/gestor/app/services/auth/resolveUserApiModulosCanonicalResult.service.js';
 import User from '#models/user.js';
 
 function isAuthContextResolverEnabledForRequest(req) {
@@ -91,152 +91,27 @@ const router = express.Router();
 				}
 				return out;
 			};
-			const intersectById = (baseMods, allowedMods) => {
-				const allowedIds = new Set(
-					(allowedMods || [])
-						.filter(Boolean)
-						.map((mod) => (mod?._id ? String(mod._id) : ''))
-						.filter(Boolean)
-				);
-				return (baseMods || []).filter((mod) => {
-					const id = mod?._id ? String(mod._id) : '';
-					return id && allowedIds.has(id);
-				});
-			};
-			const buildDebugPayload = ({ source, authContext = null, unidade = null, funcionario = null, funcao = null } = {}) => {
-				if (!wantDebug) return null;
-				return {
-					source,
-					authContext: authContext
-						? {
-							source: authContext.source,
-							globalRole: authContext.globalRole || null,
-							effectiveRole: authContext.effectiveRole || null,
-							needsUnitSelection: !!authContext.needsUnitSelection,
-							membershipCount: Number(authContext.membershipCount || 0),
-							activeContext: authContext.activeContext
-								? {
-									unidadeId: authContext.activeContext.unidadeId,
-									funcionarioId: authContext.activeContext.funcionarioId || null,
-									papelContextual: authContext.activeContext.papelContextual || null,
-									legacyRole: authContext.activeContext.legacyRole || null,
-								}
-								: null,
-						}
-						: null,
-					funcionario: funcionario
-						? {
-							_id: funcionario._id,
-							funcao_id: funcionario.funcao_id,
-							unidade_id: funcionario.unidade_id,
-						}
-						: null,
-					funcao: funcao
-						? {
-							_id: funcao._id,
-							ativa: funcao.ativa !== false,
-							modulosCount: (funcao.modulos_habilitados || []).length,
-						}
-						: null,
-					unidade: unidade
-						? {
-							_id: unidade._id,
-							subunidade: !!unidade.subunidade,
-							unidade_principal_id: unidade.unidade_principal_id,
-							modulosCount: (unidade.modulosAcessiveis || []).length,
-						}
-						: null,
-				};
-			};
 
 			if (isAuthContextResolverEnabledForRequest(req)) {
-				try {
-					const authContext = await resolveGestorAuthContext({
-						authenticatedUser: req.user || null,
-						sessionUser: req.session?.user || null,
-						existingAuthContext: req.session?.gestorAuthContext || null,
-						featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
-						deps: req.app?.locals?.gestorAuthContextResolverDeps || {},
-						maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
-					});
+				const canonicalResult = await resolveUserApiModulosCanonicalResult({
+					authenticatedUser: req.user || null,
+					sessionUser: req.session?.user || null,
+					existingAuthContext: req.session?.gestorAuthContext || null,
+					featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
+					resolverDeps: req.app?.locals?.gestorAuthContextResolverDeps || {},
+					maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
+					wantDebug,
+					deps: {
+						tryLoadUnidadeComModulos,
+					},
+				});
 
-					if (authContext?.source === 'auth-context-v1') {
-						if (authContext.needsUnitSelection) {
-							return res.status(409).json(buildPendingSelectionRequiredPayload(req));
-						}
+				if (canonicalResult.kind === 'selection-required') {
+					return res.status(409).json(buildPendingSelectionRequiredPayload(req));
+				}
 
-						const effectiveRole = String(authContext.effectiveRole || '').toLowerCase();
-						const globalRole = String(authContext.globalRole || '').toLowerCase();
-
-						if (globalRole === 'master' || globalRole === 'admin' || effectiveRole === 'master' || effectiveRole === 'admin') {
-							try {
-								const Modulo = (await import('#models/modulo.js')).default;
-								const todos = await Modulo.find({}).select('_id nome descricao status url_base').lean();
-								const payload = { data: todos };
-								const debug = buildDebugPayload({ source: 'auth-context-v1-global', authContext });
-								if (debug) payload.debug = debug;
-								return res.json(payload);
-							} catch (e) {
-								console.warn('[gestor][api/modulos] fallback master/admin auth-context:', e?.message || e);
-							}
-						}
-
-						if (effectiveRole === 'diretor') {
-							const unidade = await tryLoadUnidadeComModulos(authContext.activeContext?.unidadeId || null);
-							const payload = { data: mapMods(unidade?.modulosAcessiveis || []) };
-							const debug = buildDebugPayload({ source: 'auth-context-v1-gestor', authContext, unidade });
-							if (debug) payload.debug = debug;
-							return res.json(payload);
-						}
-
-						if (effectiveRole === 'user') {
-							try {
-								const Funcionario = (await import('#models/Funcionario.js')).default;
-								const Funcao = (await import('#models/funcao.js')).default;
-								const activeUnitId = authContext.activeContext?.unidadeId || null;
-								const activeFuncionarioId = authContext.activeContext?.funcionarioId || null;
-
-								const unidade = await tryLoadUnidadeComModulos(activeUnitId);
-								const modsUnidade = (unidade?.modulosAcessiveis || []).filter(Boolean);
-
-								let funcionario = null;
-								if (activeFuncionarioId) {
-									funcionario = await Funcionario.findById(activeFuncionarioId)
-										.select('_id funcao_id unidade_id usuario_id cpf email')
-										.lean();
-								}
-
-								let funcao = null;
-								let modsFuncao = [];
-								const funcionarioUnidadeId = funcionario?.unidade_id ? String(funcionario.unidade_id) : null;
-								if (funcionario?.funcao_id && activeUnitId && funcionarioUnidadeId === String(activeUnitId)) {
-									funcao = await Funcao.findById(funcionario.funcao_id)
-										.populate('modulos_habilitados')
-										.lean();
-									modsFuncao = (funcao?.modulos_habilitados || []).filter(Boolean);
-								}
-
-								const intersection = uniqById(intersectById(modsUnidade, modsFuncao));
-								const payload = { data: mapMods(intersection) };
-								const debug = buildDebugPayload({ source: 'auth-context-v1-user', authContext, unidade, funcionario, funcao });
-								if (debug) payload.debug = debug;
-								return res.json(payload);
-							} catch (e) {
-								console.warn('[gestor][api/modulos] auth-context user:', e?.message || e);
-								const payload = { data: [] };
-								const debug = buildDebugPayload({ source: 'auth-context-v1-user-error', authContext });
-								if (debug) payload.debug = debug;
-								return res.json(payload);
-							}
-						}
-
-						const payload = { data: [] };
-						const debug = buildDebugPayload({ source: 'auth-context-v1-empty', authContext });
-						if (debug) payload.debug = debug;
-						return res.json(payload);
-					}
-				} catch (e) {
-					console.warn('[gestor][api/modulos] auth-context fallback:', e?.message || e);
+				if (canonicalResult.kind === 'resolved') {
+					return res.json(canonicalResult.payload);
 				}
 			}
 
