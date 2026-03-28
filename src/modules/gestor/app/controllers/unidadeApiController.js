@@ -861,7 +861,6 @@ export async function getUnidadeProvisioningEvents(req, res) {
     }
 
     const queryLimit = limit + 1;
-
     const queriedEvents = await listUnitProvisioningAuditEvents({
       unidadeId: unidade._id,
       limit: queryLimit,
