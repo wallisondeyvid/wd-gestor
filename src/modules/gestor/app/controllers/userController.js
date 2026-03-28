@@ -34,8 +34,8 @@ import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/app/utils/apiResponse.js';
 import {
 	GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
-	resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
+import { resolveUsuarioAtualAuthContextExtras } from '#modules/gestor/app/services/auth/resolveUsuarioAtualAuthContextExtras.service.js';
 
 function isAuthContextResolverEnabledForRequest(req) {
 	const featureFlags = req.app?.locals?.gestorAuthContextFeatureFlags || null;
@@ -43,42 +43,6 @@ function isAuthContextResolverEnabledForRequest(req) {
 		return isFeatureEnabled(featureFlags, GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
 	}
 	return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
-}
-
-function buildUsuarioAuthContextExtras(authContext) {
-	if (!authContext || authContext.source !== 'auth-context-v1') {
-		return null;
-	}
-
-	return {
-		authenticated: !!authContext.authenticated,
-		source: authContext.source,
-		globalRole: authContext.globalRole || null,
-		effectiveRole: authContext.effectiveRole || null,
-		needsUnitSelection: !!authContext.needsUnitSelection,
-		membershipCount: Number(authContext.membershipCount || 0),
-		activeContext: authContext.activeContext
-			? {
-				membershipId: authContext.activeContext.membershipId,
-				unidadeId: authContext.activeContext.unidadeId,
-				unidadePrincipalId: authContext.activeContext.unidadePrincipalId || null,
-				papelContextual: authContext.activeContext.papelContextual || null,
-				funcionarioId: authContext.activeContext.funcionarioId || null,
-				legacyRole: authContext.activeContext.legacyRole || null,
-			}
-			: null,
-		membershipsSummary: Array.isArray(authContext.memberships)
-			? authContext.memberships.map((membership) => ({
-				membershipId: membership.membershipId,
-				unidadeId: membership.unidadeId,
-				unidadePrincipalId: membership.unidadePrincipalId || null,
-				unidadeNome: membership.unidadeNome || null,
-				unidadeCodigo: membership.unidadeCodigo || null,
-				papelContextual: membership.papelContextual || null,
-				legacyRole: membership.legacyRole || null,
-			}))
-			: [],
-	};
 }
 
 function normalizeRoleValue(value) {
@@ -504,16 +468,14 @@ export async function obterUsuarioAtual(req, res) {
 		const { baseUser, payload } = result;
 
 		if (isAuthContextResolverEnabledForRequest(req)) {
-			const authContext = await resolveGestorAuthContext({
-				authenticatedUser: baseUser,
+			const authContextExtras = await resolveUsuarioAtualAuthContextExtras({
+				baseUser,
 				sessionUser: req.session?.user || null,
 				existingAuthContext: req.session?.gestorAuthContext || null,
 				featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
-				deps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
+				resolverDeps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
 				maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
 			});
-
-			const authContextExtras = buildUsuarioAuthContextExtras(authContext);
 			if (authContextExtras) {
 				Object.assign(payload, authContextExtras);
 			}

@@ -58,7 +58,7 @@ function createApiRes() {
 
 test('obterUsuarioAtual delega ao owner service e preserva o enriquecimento final por auth-context', async () => {
   const serviceCalls = [];
-  const authContextCalls = [];
+  const authContextExtrasCalls = [];
   const baseUser = {
     _id: 'u-1',
     email: 'usuario@example.com',
@@ -92,16 +92,15 @@ test('obterUsuarioAtual delega ao owner service e preserva o enriquecimento fina
     getUsuarioAtualProfileOwnerService,
     mongoose,
     isAuthContextResolverEnabledForRequest: () => true,
-    resolveGestorAuthContext: async (input) => {
-      authContextCalls.push(input);
-      return { source: 'auth-context-v1' };
-    },
-    buildUsuarioAuthContextExtras: () => ({
+    resolveUsuarioAtualAuthContextExtras: async (input) => {
+      authContextExtrasCalls.push(input);
+      return {
       authenticated: true,
       source: 'auth-context-v1',
       needsUnitSelection: false,
       activeContext: { unidadeId: 'un-1' },
-    }),
+      };
+    },
     ok: (res, data = {}) => res.status(200).json({ success: true, data }),
     serverError: (res, error) => res.status(500).json({ success: false, error }),
     console,
@@ -131,13 +130,13 @@ test('obterUsuarioAtual delega ao owner service e preserva o enriquecimento fina
   assert.equal(serviceCalls[0].unitScope.unidadeId, 'ctx-1');
   assert.equal(String(serviceCalls[0].sessionUserId), sessionId);
   assert.equal(serviceCalls[0].fallbackEmail, 'req-user@example.com');
-  assert.equal(authContextCalls.length, 1);
-  assert.equal(authContextCalls[0].authenticatedUser, baseUser);
-  assert.equal(authContextCalls[0].sessionUser, req.session.user);
-  assert.equal(authContextCalls[0].existingAuthContext, req.session.gestorAuthContext);
-  assert.equal(authContextCalls[0].featureFlags, req.app.locals.gestorAuthContextFeatureFlags);
-  assert.equal(authContextCalls[0].deps, req.app.locals.gestorAuthContextResolverDeps);
-  assert.equal(authContextCalls[0].maxTimeMS, 15);
+  assert.equal(authContextExtrasCalls.length, 1);
+  assert.equal(authContextExtrasCalls[0].baseUser, baseUser);
+  assert.equal(authContextExtrasCalls[0].sessionUser, req.session.user);
+  assert.equal(authContextExtrasCalls[0].existingAuthContext, req.session.gestorAuthContext);
+  assert.equal(authContextExtrasCalls[0].featureFlags, req.app.locals.gestorAuthContextFeatureFlags);
+  assert.equal(authContextExtrasCalls[0].resolverDeps, req.app.locals.gestorAuthContextResolverDeps);
+  assert.equal(authContextExtrasCalls[0].maxTimeMS, 15);
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.success, true);
   assert.equal(res.body.data.id, 'u-1');
