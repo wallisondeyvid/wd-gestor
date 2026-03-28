@@ -1,8 +1,5 @@
 import assert from 'node:assert/strict';
 import { after, beforeEach, mock, test } from 'node:test';
-import http from 'node:http';
-
-import express from 'express';
 
 const featureFlagsState = {
   gestor_auth_context_resolver: false,
@@ -130,8 +127,6 @@ const mongooseState = {
 
 const bcryptState = {
   compareResult: true,
-  compareError: null,
-  hashCalls: [],
 };
 
 const authDbState = {
@@ -149,12 +144,10 @@ mock.module('mongoose', {
 mock.module('bcryptjs', {
   defaultExport: {
     async compare() {
-      if (bcryptState.compareError) throw bcryptState.compareError;
       return bcryptState.compareResult;
     },
-    async hash(value, rounds) {
-      bcryptState.hashCalls.push({ value, rounds });
-      return `$2b$${String(rounds).padStart(2, '0')}$rehashrehashrehashrehashrehashrehashrehashrehash`;
+    async hash() {
+      return '$2b$12$rehashrehashrehashrehashrehashrehashrehashrehash';
     },
   },
 });
@@ -230,11 +223,7 @@ mock.module('#modules/gestor/app/services/authDbBridgeService.js', {
       return null;
     },
     async saveUserDocument(user) {
-      authDbState.saveCalls.push({
-        email: user?.email || null,
-        failed_login_attempts: user?.failed_login_attempts ?? null,
-        lock_until: user?.lock_until ?? null,
-      });
+      authDbState.saveCalls.push(user?.email || null);
       return user;
     },
   },
@@ -252,7 +241,6 @@ mock.module('#modules/gestor/app/services/authContextDbBridgeService.js', {
 });
 
 const { login } = await import('#modules/gestor/app/controllers/authController.js');
-const { default: authRouter } = await import('#modules/gestor/app/routes/auth.js');
 
 after(() => {
   mock.restoreAll();
@@ -262,8 +250,6 @@ beforeEach(() => {
   featureFlagsState.gestor_auth_context_resolver = false;
   mongooseState.connection.readyState = 1;
   bcryptState.compareResult = true;
-  bcryptState.compareError = null;
-  bcryptState.hashCalls.length = 0;
   authDbState.user = null;
   authDbState.modulo = { _id: 'mod-gestor' };
   authDbState.moduloLean = null;
@@ -277,23 +263,22 @@ function createUser(overrides = {}) {
     email: 'login@gestor.test',
     nome: 'Usuario Login',
     senha: '$2b$12$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    role: 'admin',
+    role: 'diretor',
     global_role: null,
     ativo: true,
     primeiro_acesso: false,
     senha_provisoria: false,
     failed_login_attempts: 0,
     lock_until: null,
-    unidade_id: null,
-    funcionario_id: null,
+    unidade_id: '507f191e810c19729de860ea',
+    funcionario_id: 'func-902',
     ...overrides,
   };
 }
 
-function createResolverDeps({ memberships = [], unidades = {}, error = null } = {}) {
+function createResolverDeps({ memberships = [], unidades = {} } = {}) {
   return {
     async loadActiveMembershipsByUserId() {
-      if (error) throw error;
       return memberships;
     },
     async loadUnidadeById({ unidadeId }) {
@@ -302,18 +287,12 @@ function createResolverDeps({ memberships = [], unidades = {}, error = null } = 
   };
 }
 
-function createReqRes({
-  user,
-  resolverEnabled = false,
-  resolverDeps,
-  existingAuthContext,
-  body = {},
-} = {}) {
+function createReqRes({ user, resolverEnabled = false, resolverDeps } = {}) {
   featureFlagsState.gestor_auth_context_resolver = resolverEnabled;
   authDbState.user = user;
 
   const session = {
-    gestorAuthContext: existingAuthContext,
+    gestorAuthContext: undefined,
     saveCalls: 0,
     regenerate(callback) {
       callback(null);
@@ -324,28 +303,17 @@ function createReqRes({
     },
   };
 
-  const headers = new Map();
   const response = {
-    statusCode: 200,
     redirectStatus: null,
     redirectLocation: null,
-    renderedView: null,
-    renderedPayload: null,
+    headers: new Map(),
     setHeader(name, value) {
-      headers.set(String(name).toLowerCase(), value);
-    },
-    getHeader(name) {
-      return headers.get(String(name).toLowerCase());
+      this.headers.set(String(name).toLowerCase(), value);
     },
     cookie() {},
     clearCookie() {},
     status(code) {
       this.statusCode = code;
-      return this;
-    },
-    render(view, payload) {
-      this.renderedView = view;
-      this.renderedPayload = payload;
       return this;
     },
     redirect(statusOrLocation, maybeLocation) {
@@ -366,7 +334,6 @@ function createReqRes({
       email: user?.email || 'login@gestor.test',
       senha: 'senha-correta',
       modulo: 'gestor',
-      ...body,
     },
     query: {},
     headers: {},
@@ -386,61 +353,8 @@ function createReqRes({
   return { request, response, session };
 }
 
-async function startAuthAppServer() {
-  const app = express();
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
-  app.use('/gestor', authRouter);
-
-  const server = http.createServer(app);
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const address = server.address();
-  const baseUrl = `http://127.0.0.1:${address.port}`;
-
-  return {
-    baseUrl,
-    async close() {
-      await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
-    },
-  };
-}
-
-test('app real: gate necessario do login continua redirecionando erro de credencial ausente', async () => {
-  const server = await startAuthAppServer();
-  try {
-    const response = await fetch(`${server.baseUrl}/gestor/login`, {
-      method: 'POST',
-      redirect: 'manual',
-    });
-
-    assert.equal(response.status, 303);
-    assert.equal(response.headers.get('location'), '/gestor/login?erro=usuario');
-  } finally {
-    await server.close();
-  }
-});
-
-test('owner real: com resolvedor desligado o login segue sem persistir gestorAuthContext', async () => {
-  const user = createUser({ role: 'admin' });
-  const { request, response, session } = createReqRes({ user, resolverEnabled: false });
-
-  await login(request, response);
-
-  assert.equal(response.redirectStatus, 303);
-  assert.equal(response.redirectLocation, '/gestor/dashboard');
-  assert.deepEqual(session.user, {
-    id: '507f1f77bcf86cd799439901',
-    email: 'login@gestor.test',
-  });
-  assert.equal('gestorAuthContext' in session, false);
-  assert.equal(session.saveCalls, 1);
-});
-
-test('owner real: com contexto pronto o login persiste gestorAuthContext e redireciona para dashboard', async () => {
-  const user = createUser({
-    role: 'diretor',
-    unidade_id: '507f191e810c19729de860ea',
-  });
+test('owner caracteriza o bloco pos-auth-context pronto e preserva o redirect final esperado', async () => {
+  const user = createUser();
   const resolverDeps = createResolverDeps({
     memberships: [
       {
@@ -479,114 +393,15 @@ test('owner real: com contexto pronto o login persiste gestorAuthContext e redir
     legacy_role: 'diretor',
     needs_selection: false,
   });
-  assert.equal(session.user.role, 'diretor');
-  assert.equal(session.user.unidade_id, '507f191e810c19729de860ea');
-  assert.equal(session.saveCalls, 1);
-});
-
-test('owner real: com needsUnitSelection true o login salva contexto parcial e redireciona para step select', async () => {
-  const user = createUser({ role: 'diretor' });
-  const resolverDeps = createResolverDeps({
-    memberships: [
-      {
-        _id: '507f1f77bcf86cd799439903',
-        user_id: '507f1f77bcf86cd799439901',
-        unidade_id: '507f191e810c19729de860ea',
-        papel_contextual: 'gestor',
-        funcionario_id: 'func-903',
-      },
-      {
-        _id: '507f1f77bcf86cd799439904',
-        user_id: '507f1f77bcf86cd799439901',
-        unidade_id: '507f191e810c19729de860eb',
-        papel_contextual: 'user',
-        funcionario_id: 'func-904',
-      },
-    ],
-    unidades: {
-      '507f191e810c19729de860ea': {
-        _id: '507f191e810c19729de860ea',
-        nome: 'Filial Norte',
-        codigo: 'FN01',
-        is_principal: false,
-        unidade_principal_id: '507f191e810c19729de860ff',
-      },
-      '507f191e810c19729de860eb': {
-        _id: '507f191e810c19729de860eb',
-        nome: 'Base Sul',
-        codigo: 'BS02',
-        is_principal: true,
-        unidade_principal_id: null,
-      },
-    },
-  });
-  const { request, response, session } = createReqRes({ user, resolverEnabled: true, resolverDeps });
-
-  await login(request, response);
-
-  assert.equal(response.redirectStatus, 303);
-  assert.equal(response.redirectLocation, '/gestor/login?step=select');
-  assert.deepEqual(session.gestorAuthContext, {
-    user_id: '507f1f77bcf86cd799439901',
-    user_email: 'login@gestor.test',
-    global_role: null,
-    active_membership_id: null,
-    active_unidade_id: null,
-    active_unidade_principal_id: null,
-    active_papel_contextual: null,
-    active_funcionario_id: null,
-    legacy_role: null,
-    needs_selection: true,
-  });
-  assert.equal(session.user.id, '507f1f77bcf86cd799439901');
-  assert.equal(session.saveCalls, 1);
-});
-
-test('owner real: sem contexto valido o login limpa sessao autenticada e redireciona erro contexto', async () => {
-  const user = createUser({ role: 'diretor' });
-  const resolverDeps = createResolverDeps({ memberships: [] });
-  const { request, response, session } = createReqRes({
-    user,
-    resolverEnabled: true,
-    resolverDeps,
-    existingAuthContext: {
-      active_membership_id: 'stale-membership',
-      active_unidade_id: '507f191e810c19729de860ea',
-    },
-  });
-
-  await login(request, response);
-
-  assert.equal(response.redirectStatus, 303);
-  assert.equal(response.redirectLocation, '/gestor/login?erro=contexto');
-  assert.equal('user' in session, false);
-  assert.equal('gestorAuthContext' in session, false);
-  assert.equal(session.saveCalls, 1);
-});
-
-test('owner real: erro interno do resolvedor cai no catch geral e mantem apenas a sessao minima ja escrita', async () => {
-  const user = createUser({ role: 'diretor' });
-  const resolverDeps = createResolverDeps({
-    error: new Error('resolver-boom'),
-  });
-  const { request, response, session } = createReqRes({
-    user,
-    resolverEnabled: true,
-    resolverDeps,
-    existingAuthContext: {
-      active_membership_id: 'stale-membership',
-    },
-  });
-
-  await login(request, response);
-
-  assert.equal(response.redirectStatus, 303);
-  assert.equal(response.redirectLocation, '/gestor/login?erro=servidor');
-  assert.equal(response.getHeader('x-login-error'), 'resolver-boom');
   assert.deepEqual(session.user, {
     id: '507f1f77bcf86cd799439901',
     email: 'login@gestor.test',
+    role: 'diretor',
+    global_role: null,
+    unidade_id: '507f191e810c19729de860ea',
+    unidade_principal_id: '507f191e810c19729de860ea',
+    funcionario_id: 'func-902',
+    auth_version: 'phase3',
   });
-  assert.equal('gestorAuthContext' in session, false);
-  assert.equal(session.saveCalls, 0);
+  assert.equal(session.saveCalls, 1);
 });

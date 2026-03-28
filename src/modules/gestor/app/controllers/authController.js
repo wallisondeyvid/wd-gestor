@@ -26,10 +26,11 @@ import {
 } from '#modules/gestor/app/services/authDbBridgeService.js';
 import {
   GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
-  projectLegacySessionUserFromAuthContext,
   resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
 import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js';
+import { mutateAuthUnitContextService } from '#modules/gestor/app/services/auth/mutateAuthUnitContext.service.js';
+import { resolveLoginPostAuthContext } from '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js';
 
 // -----------------------------------------------------------------------------
 // Helper de Autorização de Módulo
@@ -326,32 +327,27 @@ export async function login(req, res) {
     let effectiveLoginUser = user;
     let resolvedLoginAuthContext = null;
 
-    if (isAuthContextResolverEnabledForRequest(req)) {
-      resolvedLoginAuthContext = await resolveGestorAuthContext({
-        authenticatedUser: user,
-        sessionUser: req.session?.user || null,
-        existingAuthContext: req.session?.gestorAuthContext || null,
-        featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
-        deps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
-        maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
-      });
+    const loginPostAuthContextResult = await resolveLoginPostAuthContext({
+      authenticatedUser: user,
+      session: req.session,
+      resolverEnabled: isAuthContextResolverEnabledForRequest(req),
+      featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
+      deps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
+      maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
+    });
 
-      const authContextState = classifyLoginResolvedAuthContext(resolvedLoginAuthContext);
-      if (authContextState === 'no-context') {
-        clearGestorAuthContextSession(req);
-        delete req.session.user;
-        await saveSessionSafe(req);
-        return res.redirect(303, basePath + '/login?erro=contexto');
-      }
-
-      storeResolvedLoginAuthContext(req, user, resolvedLoginAuthContext);
-      if (authContextState === 'needs-selection') {
-        await saveSessionSafe(req);
-        return res.redirect(303, basePath + '/login?step=select');
-      }
-
-      effectiveLoginUser = buildLoginUserFromAuthContext(user, resolvedLoginAuthContext);
+    resolvedLoginAuthContext = loginPostAuthContextResult.resolvedAuthContext;
+    if (loginPostAuthContextResult.kind === 'no-context') {
+      await saveSessionSafe(req);
+      return res.redirect(303, basePath + '/login?erro=contexto');
     }
+
+    if (loginPostAuthContextResult.kind === 'needs-selection') {
+      await saveSessionSafe(req);
+      return res.redirect(303, basePath + '/login?step=select');
+    }
+
+    effectiveLoginUser = loginPostAuthContextResult.effectiveLoginUser;
 
     // Importante: garantir persistência da sessão antes de redirecionar.
     // Em alguns cenários (principalmente com session store remoto + redirect), a gravação pode atrasar.
@@ -537,76 +533,6 @@ function clearGestorAuthContextSession(req) {
   delete req.session.gestorAuthContext;
 }
 
-function buildStoredGestorAuthContext(authContext) {
-  if (!authContext?.authenticated || authContext?.source !== 'auth-context-v1') {
-    return null;
-  }
-
-  return {
-    user_id: authContext.identity?.id || null,
-    user_email: authContext.identity?.email || '',
-    global_role: authContext.globalRole || null,
-    active_membership_id: authContext.activeContext?.membershipId || null,
-    active_unidade_id: authContext.activeContext?.unidadeId || null,
-    active_unidade_principal_id: authContext.activeContext?.unidadePrincipalId || null,
-    active_papel_contextual: authContext.activeContext?.papelContextual || null,
-    active_funcionario_id: authContext.activeContext?.funcionarioId || null,
-    legacy_role: authContext.activeContext?.legacyRole || authContext.effectiveRole || null,
-    needs_selection: !!authContext.needsUnitSelection,
-  };
-}
-
-function classifyLoginResolvedAuthContext(authContext) {
-  if (authContext?.source !== 'auth-context-v1') return 'legacy';
-  if (authContext?.globalRole || authContext?.activeContext) return 'ready';
-  if (authContext?.needsUnitSelection) return 'needs-selection';
-  return 'no-context';
-}
-
-function buildLoginUserFromAuthContext(user, authContext) {
-  if (!authContext || authContext.source !== 'auth-context-v1') {
-    return user;
-  }
-
-  const baseUser = user && typeof user.toObject === 'function' ? user.toObject() : { ...user };
-  return {
-    ...baseUser,
-    role: authContext.effectiveRole || authContext.globalRole || null,
-    unidade_id: authContext.activeContext?.unidadeId || null,
-    unidade_principal_id: authContext.activeContext?.unidadePrincipalId || null,
-    funcionario_id: authContext.activeContext?.funcionarioId || null,
-    global_role: authContext.globalRole || null,
-  };
-}
-
-function projectLoginSessionUser(req, user, authContext) {
-  const fallbackSessionUser = {
-    ...(req.session?.user && typeof req.session.user === 'object' ? req.session.user : {}),
-    id: user?._id ? String(user._id) : String(user?.id || ''),
-    email: String(user?.email || req.session?.user?.email || '').trim().toLowerCase(),
-  };
-
-  const projected = projectLegacySessionUserFromAuthContext({
-    authContext,
-    sessionUser: fallbackSessionUser,
-  });
-
-  return projected || fallbackSessionUser;
-}
-
-function storeResolvedLoginAuthContext(req, user, authContext) {
-  req.session = req.session || {};
-  clearGestorAuthContextSession(req);
-
-  const storedAuthContext = buildStoredGestorAuthContext(authContext);
-  if (storedAuthContext) {
-    req.session.gestorAuthContext = storedAuthContext;
-  }
-
-  req.session.user = projectLoginSessionUser(req, user, authContext);
-  return req.session.user;
-}
-
 function buildLightweightAuthContextPayload(req) {
   return {
     authenticated: buildRequestIdentity(req).authenticated,
@@ -671,38 +597,64 @@ async function mutateAuthUnitContext(req, {
 } = {}) {
   const requestIdentity = buildRequestIdentity(req);
   const lightweightPayload = buildLightweightAuthContextPayload(req);
+  const semanticResult = await mutateAuthUnitContextService({
+    authenticated: requestIdentity.authenticated,
+    unidadeId: String(req.body?.unidade_id || '').trim(),
+    session: req.session,
+    resolverOptions: buildAuthContextResolverOptions(req),
+    requirePendingSelection,
+    deps: {
+      resolveAuthContext: resolveGestorAuthContext,
+      isValidObjectId: (value) => mongoose.isValidObjectId(value),
+      findMembershipByUnidadeId,
+      persistActiveMembershipInSession: (session, selectedMembership) => {
+        persistActiveMembershipInSession({ session }, selectedMembership);
+      },
+      saveSession: async (session) => {
+        await saveSessionSafe({ session });
+      },
+    },
+  });
 
-  if (!requestIdentity.authenticated) {
-    const authContext = await resolveGestorAuthContext(buildAuthContextResolverOptions(req));
-    return { status: 401, body: { ok: false, ...buildAuthContextHttpPayload(authContext), code: 'GESTOR_UNAUTHORIZED' } };
+  if (semanticResult.kind === 'unauthorized') {
+    return {
+      status: 401,
+      body: { ok: false, ...buildAuthContextHttpPayload(semanticResult.authContext), code: 'GESTOR_UNAUTHORIZED' },
+    };
   }
 
-  const unidadeId = String(req.body?.unidade_id || '').trim();
-  if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
-    return { status: 400, body: { ok: false, ...lightweightPayload, code: 'GESTOR_INVALID_UNIDADE_ID' } };
+  if (semanticResult.kind === 'invalid-unidade-id') {
+    return {
+      status: 400,
+      body: { ok: false, ...lightweightPayload, code: 'GESTOR_INVALID_UNIDADE_ID' },
+    };
   }
 
-  const authContext = await resolveGestorAuthContext(buildAuthContextResolverOptions(req));
-  const basePayload = buildAuthContextHttpPayload(authContext);
-
-  if (authContext.source !== 'auth-context-v1') {
-    return { status: 409, body: { ok: false, ...basePayload, code: disabledCode } };
+  if (semanticResult.kind === 'resolver-disabled') {
+    return {
+      status: 409,
+      body: { ok: false, ...buildAuthContextHttpPayload(semanticResult.authContext), code: disabledCode },
+    };
   }
 
-  if (requirePendingSelection && !authContext.needsUnitSelection) {
-    return { status: 409, body: { ok: false, ...basePayload, code: notRequiredCode } };
+  if (semanticResult.kind === 'selection-not-required') {
+    return {
+      status: 409,
+      body: { ok: false, ...buildAuthContextHttpPayload(semanticResult.authContext), code: notRequiredCode },
+    };
   }
 
-  const selectedMembership = findMembershipByUnidadeId(authContext, unidadeId);
-  if (!selectedMembership) {
-    return { status: 403, body: { ok: false, ...basePayload, code: 'GESTOR_UNIT_NOT_ALLOWED' } };
+  if (semanticResult.kind === 'unit-not-allowed') {
+    return {
+      status: 403,
+      body: { ok: false, ...buildAuthContextHttpPayload(semanticResult.authContext), code: 'GESTOR_UNIT_NOT_ALLOWED' },
+    };
   }
 
-  persistActiveMembershipInSession(req, selectedMembership);
-  await saveSessionSafe(req);
-
-  const resolvedAfterMutation = await resolveGestorAuthContext(buildAuthContextResolverOptions(req));
-  return { status: 200, body: { ok: true, ...buildAuthContextHttpPayload(resolvedAfterMutation) } };
+  return {
+    status: 200,
+    body: { ok: true, ...buildAuthContextHttpPayload(semanticResult.authContext) },
+  };
 }
 
 async function saveSessionSafe(req) {
