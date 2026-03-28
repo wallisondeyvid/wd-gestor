@@ -23,6 +23,7 @@ import { createUsuarioExecutionService } from '#modules/gestor/app/services/usua
 import { getUsuarioAtualProfileOwnerService } from '#modules/gestor/app/services/usuarios/getUsuarioAtualProfileOwner.service.js';
 import { listUsuariosOwnerService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
+import { statusUsuarioLockStateOwnerService } from '#modules/gestor/app/services/usuarios/statusUsuarioLockStateOwner.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
 import { unlockUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/unlockUsuarioExecution.service.js';
 import { updateUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js';
@@ -576,22 +577,10 @@ export async function statusUsuario(req, res) {
 		}
 		const user = await findUserByIdSelectAuthLockInfo(id);
 		if (!user) return res.status(404).json({ success:false, error:'Usuário não encontrado', code:'NOT_FOUND' });
-		const agora = new Date();
-		const locked = !!(user.lock_until && user.lock_until > agora);
-		const secondsRemaining = locked ? Math.max(0, Math.ceil((user.lock_until.getTime() - agora.getTime()) / 1000)) : 0;
-		const minutesRemaining = locked ? Math.max(0, Math.ceil(secondsRemaining / 60)) : 0;
+		const result = await statusUsuarioLockStateOwnerService({ user, now: new Date() });
 		return res.json({
 			success: true,
-			data: {
-				id: user._id,
-				email: user.email,
-				role: user.role,
-				failed_login_attempts: user.failed_login_attempts || 0,
-				lock_until: user.lock_until || null,
-				locked,
-				seconds_remaining: secondsRemaining,
-				minutes_remaining: minutesRemaining
-			}
+			data: result.data,
 		});
 	} catch (e) {
 		console.error('[statusUsuario] erro:', e);
