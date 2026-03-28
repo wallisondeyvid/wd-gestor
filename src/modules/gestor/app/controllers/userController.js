@@ -19,6 +19,7 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/listLockedUsers.service.js';
 import { checkUsuarioEmailOwnerService } from '#modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js';
+import { getUsuarioAtualProfileOwnerService } from '#modules/gestor/app/services/usuarios/getUsuarioAtualProfileOwner.service.js';
 import { listUsuariosOwnerService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
@@ -30,8 +31,6 @@ import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/
 // Service para criação + envio de senha provisória
 import {
 	createUserAndSendPassword,
-	findUserByIdForProfile,
-	findUserByEmailForProfile,
 } from '#modules/gestor/app/services/userService.js';
 import {
 	GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
@@ -616,58 +615,17 @@ export async function obterUsuarioAtual(req, res) {
 			return res.status(401).json({ success:false, error:'Sessão inválida', code:'UNAUTHORIZED' });
 		}
 
-		// Recarregar usuário do banco para garantir populates consistentes
-		const objectId = new mongoose.Types.ObjectId(String(sessionIdRaw));
-		let targetId = objectId;
-		let baseUser = null;
-		if (targetId) {
-			const user = await findUserByIdForProfile({ unitScope: req.unitScope, userId: targetId });
-			baseUser = user;
-		}
-		// Fallback: se id ausente ou não encontrado, tentar por e-mail
-		if (!baseUser) {
-			const emailCandidate = (req.user && req.user.email) || (req.session && req.session.user && req.session.user.email) || null;
-			if (emailCandidate) {
-				baseUser = await findUserByEmailForProfile({ unitScope: req.unitScope, email: emailCandidate.toLowerCase() });
-				if (baseUser) { targetId = baseUser._id; }
-			}
-		}
-		if (!baseUser) {
-			console.warn('[obterUsuarioAtual] usuário não encontrado', { id: targetId || null, email: (req.user && req.user.email) || null });
+		const result = await getUsuarioAtualProfileOwnerService({
+			unitScope: req.unitScope,
+			sessionUserId: new mongoose.Types.ObjectId(String(sessionIdRaw)),
+			fallbackEmail: req.user?.email || req.session?.user?.email || null,
+		});
+		if (result.kind === 'not_found') {
+			console.warn('[obterUsuarioAtual] usuário não encontrado', { id: result.targetId || null, email: result.email || null });
 			return res.status(404).json({ success:false, error:'Usuário não encontrado', code:'NOT_FOUND' });
 		}
 
-		// Extrair dados diretos
-		const { _id, email, role, isMaster, foto } = baseUser;
-		// Campos diretos podem existir no user ou no funcionario vinculado
-		const funcionario = baseUser.funcionario_id && typeof baseUser.funcionario_id === 'object' ? baseUser.funcionario_id : null;
-		const unidadeFromUser = baseUser.unidade_id && typeof baseUser.unidade_id === 'object' ? baseUser.unidade_id : null;
-		const unidadeFromFuncionario = funcionario?.unidade_id && typeof funcionario.unidade_id === 'object' ? funcionario.unidade_id : null;
-
-		// Resolução de campos (preferência: user > funcionario) para evitar sobrescrever dados específicos de usuário
-		const resolvedNome = baseUser.nome || funcionario?.nome || null;
-		const resolvedCpf = baseUser.cpf || funcionario?.cpf || null;
-		const resolvedTelefone = baseUser.telefone || funcionario?.telefone || null;
-		// Unidade: preferência user.unidade_id, fallback funcionario.unidade_id
-		const unidadeResolved = unidadeFromUser || unidadeFromFuncionario || null;
-		const unidade_id = unidadeResolved?._id || baseUser.unidade_id || funcionario?.unidade_id || null;
-		const unidade_nome = unidadeResolved?.nome || null;
-		const unidade_codigo = unidadeResolved?.codigo || null;
-
-		const payload = {
-			id: _id,
-			nome: resolvedNome,
-			email,
-			role,
-			isMaster: !!isMaster,
-			unidade_id,
-			unidade_nome,
-			unidade_codigo,
-			funcionario_id: funcionario?._id || baseUser.funcionario_id || null,
-			foto: foto || null,
-			cpf: resolvedCpf,
-			telefone: resolvedTelefone
-		};
+		const { baseUser, payload } = result;
 
 		if (isAuthContextResolverEnabledForRequest(req)) {
 			const authContext = await resolveGestorAuthContext({
