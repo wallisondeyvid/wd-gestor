@@ -24,6 +24,7 @@ import { getUsuarioAtualProfileOwnerService } from '#modules/gestor/app/services
 import { listUsuariosOwnerService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
+import { updateUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
@@ -286,40 +287,25 @@ export async function atualizarUsuario(req, res) {
 		if (role && (role === 'user' || role === 'diretor') && (!unidade_id || unidade_id.trim() === '')) {
 			return res.status(400).send('Para usuários e diretores, é obrigatório selecionar uma unidade vinculada.');
 		}
+		const cleanCpf = cpf ? cpf.replace(/\D/g,'') : null;
 		if (cpf) {
-			const cleanCpf = cpf.replace(/\D/g,'');
 			const duplicado = await findUserDuplicadoByCpfUnidadeExcludingId(user._id, cleanCpf, user.unidade_id);
 			if (duplicado) return res.status(400).send('CPF já cadastrado nesta empresa');
-			user.cpf = cleanCpf;
-		} else {
-			user.cpf = undefined;
 		}
-		if (nome) user.nome = nome.trim();
-		if (!isTargetMaster) {
-			if (role && role !== 'master') user.role = role;
-			user.unidade_id = unidade_id || null;
-			// Gerenciar (des)vinculação de funcionário: manter consistência em Funcionario.usuario_id
-			const prevFuncionarioId = user.funcionario_id ? String(user.funcionario_id) : null;
-			const nextFuncionarioId = funcionario_id ? String(funcionario_id) : null;
-			user.funcionario_id = nextFuncionarioId || null;
-			if (prevFuncionarioId !== nextFuncionarioId) {
-				try {
-					if (prevFuncionarioId) {
-						await unsetFuncionarioUsuarioIdById(prevFuncionarioId);
-					}
-					if (nextFuncionarioId) {
-						await setFuncionarioUsuarioIdById(nextFuncionarioId, user._id);
-					}
-				} catch (linkErr) {
-					console.warn('[atualizarUsuario] aviso ao sincronizar vínculo de funcionário:', linkErr?.message || linkErr);
-				}
-			}
-		}
-		await saveUserDoc(user);
+
+		const result = await updateUsuarioExecutionService({
+			user,
+			isTargetMaster,
+			cleanCpf,
+			trimmedNome: nome ? nome.trim() : null,
+			role,
+			unidadeId: unidade_id,
+			funcionarioId: funcionario_id,
+		});
 		// Se for requisição AJAX/JSON, responde com JSON; caso contrário, PRG 303 para evitar re-POST
 		const wantsJson = (req.xhr || req.get('X-Requested-With') === 'XMLHttpRequest' || String(req.headers.accept||'').includes('application/json'));
 		if (wantsJson) {
-			return res.json({ success:true, id: user._id, updated:true });
+			return res.json({ success:true, id: result.userId, updated: result.updated });
 		}
 		const bp = (req.baseUrl && req.baseUrl.trim()) || '/gestor';
 		return res.redirect(303, `${bp}/usuarios`);
