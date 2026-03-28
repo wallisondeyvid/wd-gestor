@@ -13,6 +13,10 @@ import {
   projectLegacySessionUserFromAuthContext,
   resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
+import {
+  classifyRequireLoginEntry,
+  REQUIRE_LOGIN_ENTRY_REASON,
+} from '#modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js';
 
 export const requireLogin = async (req, res, next) => { /* implementação original mantida + resposta JSON para API (ajustada para evitar loop em /login) */
   // Permitir bypass em suites de teste que não precisam de auth
@@ -99,7 +103,14 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     (/\/api\//.test(resolvedOriginal) && (acceptHeader.includes('application/json') || requestedWithHeader === 'fetch' || requestedWithHeader === 'xmlhttprequest'))
   );
   const enforcePendingSelectionGuard = () => {
-    if (!req.session?.user || !hasPendingAuthUnitSelection() || shouldBypassPendingSelectionGuard()) {
+    const decision = classifyRequireLoginEntry({
+      stage: 'pending-selection',
+      hasSessionUser: Boolean(req.session?.user),
+      hasPendingSelection: hasPendingAuthUnitSelection(),
+      shouldBypassPendingSelectionGuard: shouldBypassPendingSelectionGuard(),
+    });
+
+    if (decision.reason !== REQUIRE_LOGIN_ENTRY_REASON.SELECTION_REQUIRED) {
       return false;
     }
 
@@ -141,16 +152,24 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
         path.startsWith('/img/') || path.startsWith('/uploads/') || path.startsWith('/images/') ||
         path.startsWith('/api/recover')
       );
-      if (!req.session || !req.session.user) {
+      const routeAccessDecision = classifyRequireLoginEntry({
+        stage: 'route-access',
+        hasSessionUser: Boolean(req.session?.user),
+        isLoginPath,
+        isPublicPath,
+        isEscalasPath: false,
+      });
+
+      if (routeAccessDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.UNAUTHENTICATED) {
         // API => JSON 401; páginas => redireciona para login
         const accept = (headers['accept'] || '').toLowerCase();
         const requestedWith = (headers['x-requested-with'] || '').toLowerCase();
         const original = req.originalUrl || '';
         const wantsJson = /\/api\//.test(original) || (accept.includes('application/json') || requestedWith === 'fetch' || requestedWith === 'xmlhttprequest');
         if (wantsJson) return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
-        if (isLoginPath || isPublicPath) return next();
         return res.redirect(basePath + '/login');
       }
+      if (routeAccessDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.PUBLIC_ROUTE) return next();
       // Popular req.user mínimo a partir da sessão
       const s = req.session.user;
       req.user = buildUserFromSession(s);
@@ -167,8 +186,6 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
   const isApiOriginal = /\/api\//.test(original);
   const startsWithGestorApi = original.startsWith('/gestor/api/');
   const wantsJson = isApiPath || startsWithGestorApi || (isApiOriginal && (accept.includes('application/json') || requestedWith === 'fetch' || requestedWith === 'xmlhttprequest'));
-  // Bypass completo para módulo Escalas, que possui seu próprio fluxo e sessão (req.session.escalasUser)
-  if (path.startsWith('/escalas')) return next();
   // Suporte a aliases prefixados /gestor/* (futura padronização). Consideramos públicas as mesmas rotas raiz.
   const isPrimeiroAcessoPath = path.startsWith('/primeiroacesso') || path.startsWith('/gestor/primeiroacesso');
   const basePath = req.baseUrl || '';
@@ -184,27 +201,24 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     path.startsWith('/api/recover')
   );
   const isLoginPath = path === '/login' || path === '/gestor/login';
-  if (!req.session || !req.session.user) {
+  const routeAccessDecision = classifyRequireLoginEntry({
+    stage: 'route-access',
+    hasSessionUser: Boolean(req.session?.user),
+    isLoginPath,
+    isPublicPath: isAuthOrAsset,
+    isEscalasPath: path.startsWith('/escalas'),
+  });
+  if (routeAccessDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.ESCALAS_BYPASS) return next();
+  if (routeAccessDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.UNAUTHENTICATED) {
     // Páginas públicas devem seguir sem redirecionar (inclusive em modo full)
-    const isPublicPath = (
-      path.startsWith('/login') ||
-      path.startsWith('/logout') ||
-      path.startsWith('/esquecisenha') || path.startsWith('/esqueci-senha') ||
-      path.startsWith('/reset-password') || path.startsWith('/contato') ||
-      path.startsWith('/primeiroacesso') || path.startsWith('/gestor/primeiroacesso') ||
-      path.startsWith('/css/') || path.startsWith('/js/') ||
-      path.startsWith('/img/') || path.startsWith('/uploads/') || path.startsWith('/images/') ||
-      path.startsWith('/api/recover')
-    );
     if (wantsJson) {
       try { console.warn('[requireLogin] 401 (sem sessão)', { original, path, basePath, accept: String(headers['accept']||''), referer: String(req.get?.('referer')||'') }); } catch {}
       return res.status(401).json({ success:false, error:'Não autenticado', code:'UNAUTHORIZED' });
     }
-    // Evita loop: se já estamos em rota pública (ex.: login/primeiroacesso), não redirecionar
-    if (isLoginPath || isPublicPath) return next();
     try { console.warn('[requireLogin] redirect login (sem sessão)', { original, path, basePath, referer: String(req.get?.('referer')||'') }); } catch {}
     return res.redirect(basePath + '/login');
   }
+  if (routeAccessDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.PUBLIC_ROUTE) return next();
   try {
     const queryTimeout = Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000);
     let user = null;
@@ -215,25 +229,41 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       });
     } catch (e) {
       // Em timeouts/erros transitórios de DB, siga usando dados da sessão para evitar bounce pro login
-      if (isTransientDbError(e)) {
+      const transientErrorDecision = classifyRequireLoginEntry({
+        stage: 'transient-error',
+        hasTransientError: isTransientDbError(e),
+        hasSessionUser: Boolean(req.session?.user),
+      });
+      if (transientErrorDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.SESSION_FALLBACK) {
         console.warn('[requireLogin] DB timeout/seleção — usando sessão como fallback para', req.session.user?.email);
         req.user = buildUserFromSession(req.session.user);
         return next();
       }
       throw e;
     }
-    if (user) {
+    const resolvedUserDecision = classifyRequireLoginEntry({
+      stage: 'resolved-user',
+      hasUser: Boolean(user),
+      requiresFirstAccess: Boolean(
+        user &&
+        user.role !== 'master' &&
+        (user.primeiro_acesso || user.senha_provisoria) &&
+        !isPrimeiroAcessoPath &&
+        !isAuthOrAsset
+      ),
+    });
+    if (resolvedUserDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.FIRST_ACCESS_REQUIRED) {
+      if (wantsJson) {
+        try { console.warn('[requireLogin] 403 FIRST_LOGIN (api)', { original, path, basePath, email: user.email }); } catch {}
+        return res.status(403).json({ success:false, error:'FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED', code:'FIRST_LOGIN' });
+      }
+      try { console.warn('[requireLogin] redirect primeiroacesso (FIRST_LOGIN)', { original, path, basePath, email: user.email }); } catch {}
+      return res.redirect(basePath + '/primeiroacesso');
+    }
+    if (resolvedUserDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.AUTHENTICATED_USER) {
       // Enforcement de primeiro acesso ou senha provisória (exceto master, a menos que explicitamente configurado)
       const isMasterRole = user.role === 'master';
       const enforceMaster = process.env.ENFORCE_MASTER_FIRST_LOGIN === 'true';
-      if (!isMasterRole && (user.primeiro_acesso || user.senha_provisoria) && !isPrimeiroAcessoPath && !isAuthOrAsset) {
-  if (wantsJson) {
-    try { console.warn('[requireLogin] 403 FIRST_LOGIN (api)', { original, path, basePath, email: user.email }); } catch {}
-    return res.status(403).json({ success:false, error:'FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED', code:'FIRST_LOGIN' });
-  }
-  try { console.warn('[requireLogin] redirect primeiroacesso (FIRST_LOGIN)', { original, path, basePath, email: user.email }); } catch {}
-  return res.redirect(basePath + '/primeiroacesso');
-      }
       // Caso seja master e flags estejam setadas por engano, limpamos silenciosamente em memória (não persiste ainda)
       if (isMasterRole && (user.primeiro_acesso || user.senha_provisoria) && !enforceMaster) {
         user.primeiro_acesso = false; user.senha_provisoria = false;
@@ -272,7 +302,12 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
             }
           }
         } catch (e) {
-          if (!isTransientDbError(e)) throw e;
+          const transientErrorDecision = classifyRequireLoginEntry({
+            stage: 'transient-error',
+            hasTransientError: isTransientDbError(e),
+            hasSessionUser: Boolean(req.session?.user),
+          });
+          if (transientErrorDecision.reason !== REQUIRE_LOGIN_ENTRY_REASON.SESSION_FALLBACK) throw e;
           console.warn('[requireLogin] auth-context resolver transitório — usando fallback legado para', req.session.user?.email);
         }
       }
@@ -286,7 +321,11 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     }
   const sessionFuncionarioId = req.session.user?.funcionario_id || null;
   const hasReliableFuncionarioId = !!(sessionFuncionarioId && mongoose.isValidObjectId(String(sessionFuncionarioId)));
-  if (!hasReliableFuncionarioId) {
+  const missingFuncionarioDecision = classifyRequireLoginEntry({
+    stage: 'funcionario-fallback',
+    hasReliableFuncionarioId,
+  });
+  if (missingFuncionarioDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.LOGIN_REQUIRED) {
     try { console.warn('[requireLogin] redirect login (sem funcionario_id confiável no fallback)', { original, path, basePath, email: req.session?.user?.email, funcionario_id: sessionFuncionarioId }); } catch {}
     return res.redirect(basePath + '/login');
   }
@@ -298,14 +337,24 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       maxTimeMS: queryTimeout,
     });
   } catch (e) {
-    if (isTransientDbError(e)) {
+    const transientErrorDecision = classifyRequireLoginEntry({
+      stage: 'transient-error',
+      hasTransientError: isTransientDbError(e),
+      hasSessionUser: Boolean(req.session?.user),
+    });
+    if (transientErrorDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.SESSION_FALLBACK) {
       console.warn('[requireLogin] DB timeout ao buscar Funcionario por funcionario_id — usando sessão como fallback para', req.session.user?.email);
       req.user = buildUserFromSession(req.session.user);
       return next();
     }
     throw e;
   }
-  if (!funcionario) {
+  const funcionarioFallbackDecision = classifyRequireLoginEntry({
+    stage: 'funcionario-fallback',
+    hasReliableFuncionarioId,
+    hasFuncionario: Boolean(funcionario),
+  });
+  if (funcionarioFallbackDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.LOGIN_REQUIRED) {
     try { console.warn('[requireLogin] redirect login (funcionario fallback não encontrado)', { original, path, basePath, email: req.session?.user?.email, funcionario_id: sessionFuncionarioId }); } catch {}
     return res.redirect(basePath + '/login');
   }
@@ -314,7 +363,12 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     return next();
   } catch (e) {
   // Em caso de erro inesperado: se for transitório, usar sessão; senão, não gerar loop se já estamos em /login
-  if (isTransientDbError(e) && req.session?.user) {
+  const transientErrorDecision = classifyRequireLoginEntry({
+    stage: 'transient-error',
+    hasTransientError: isTransientDbError(e),
+    hasSessionUser: Boolean(req.session?.user),
+  });
+  if (transientErrorDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.SESSION_FALLBACK) {
     try { console.warn('[requireLogin] erro transitório — fallback para sessão:', e.message); } catch{}
     req.user = buildUserFromSession(req.session.user);
     return next();
