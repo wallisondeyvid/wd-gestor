@@ -19,6 +19,7 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/listLockedUsers.service.js';
 import { checkUsuarioEmailOwnerService } from '#modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js';
+import { createUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/createUsuarioExecution.service.js';
 import { getUsuarioAtualProfileOwnerService } from '#modules/gestor/app/services/usuarios/getUsuarioAtualProfileOwner.service.js';
 import { listUsuariosOwnerService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
@@ -28,10 +29,6 @@ import bcrypt from 'bcryptjs';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 // Usamos o util do módulo Gestor para manter a chave `error` nas respostas 4xx/5xx
 import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/app/utils/apiResponse.js';
-// Service para criação + envio de senha provisória
-import {
-	createUserAndSendPassword,
-} from '#modules/gestor/app/services/userService.js';
 import {
 	GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
 	resolveGestorAuthContext,
@@ -435,143 +432,34 @@ export async function criarUsuario(req, res) {
 			}
 		}
 
-		// Utiliza service central que já gera/usa senha, seta primeiro_acesso e dispara e-mail
-		const isExistingUser = !!existingUser;
-		let user = existingUser;
-		if (!user) {
-			console.log('[criarUsuario] disparando createUserAndSendPassword');
-			user = await createUserAndSendPassword({
-				nome: (nome && nome.trim()) || emailNorm.split('@')[0],
-				email: emailNorm,
-				cpf: cpf ? cpf.replace(/\D/g,'') : undefined,
-				role: requestedUserRole,
-				unidade_id: unidade_id || null,
-				funcionario_id: funcionario_id || null,
-				senha // pode vir definida ou service gera temporária
-			});
-		}
-
-		let linkedFuncionarioId = funcionarioDoc?._id || null;
-
-		// Se funcionario_id foi enviado e validado, efetiva o vínculo no documento do Funcionário
-		if (funcionarioDoc) {
-			try {
-				const shouldSyncUserFuncionarioId = !user.funcionario_id;
-				if (!isExistingUser || shouldSyncUserFuncionarioId) {
-					user.funcionario_id = funcionarioDoc._id;
-					if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id;
-					await saveUserDoc(user);
-				}
-				await setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id);
-			} catch(linkErr) {
-				console.warn('[criarUsuario] falha ao vincular funcionario_id informado:', linkErr?.message || linkErr);
-			}
-		}
-
-		// Criação ou vinculação opcional de Funcionário quando solicitado e nenhum funcionario_id fornecido
-		let funcionarioNovo = null;
 		const wantsNewFuncionario = (criarNovoFuncionario === 'on' || criarNovoFuncionario === 'true' || criarNovoFuncionario === true);
+		const cleanCpf = cpf ? cpf.replace(/\D/g,'') : null;
 		if (wantsNewFuncionario && !funcionario_id) {
-			// Validar campos mínimos necessários para criar um funcionário placeholder
-			const cleanCpf = cpf ? cpf.replace(/\D/g,'') : null;
 			if (!cleanCpf) return badRequest(res, 'CPF é obrigatório para criar novo funcionário automaticamente.', { code: 'CPF_REQUIRED' });
 			if (!unidade_id) return badRequest(res, 'Unidade é obrigatória para criar novo funcionário.', { code: 'UNIT_REQUIRED' });
-			try {
-				// Tentar localizar funcionário existente apenas por CPF + unidade.
-				const existente = await findCriarUsuarioFuncionarioByCpfUnidade(cleanCpf, unidade_id);
-				if (existente) {
-					linkedFuncionarioId = existente._id;
-					// Vincula usuário ao funcionário já existente
-					const shouldSyncUserFuncionarioId = !user.funcionario_id;
-					if (!isExistingUser || shouldSyncUserFuncionarioId) {
-						user.funcionario_id = existente._id;
-						if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
-						await saveUserDoc(user);
-					}
-					// marca vínculo no funcionário para evitar reaparecer como disponível
-					try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up) {}
-					console.log('[criarUsuario] Vinculado a funcionário existente', { funcionario_id: existente._id.toString(), user_id: user._id.toString() });
-				} else {
-					// Criar placeholder mínimo
-					const placeholderRG = 'RG' + Date.now();
-					const placeholderNascimento = new Date('2000-01-01');
-					const placeholderTelefone = '(00) 0000-0000';
-					funcionarioNovo = await createCriarUsuarioFuncionarioDoc({
-						unidade_id,
-						nome: user.nome || (nome && nome.trim()) || emailNorm.split('@')[0],
-						rg: placeholderRG,
-						cpf: cleanCpf,
-						data_nascimento: placeholderNascimento,
-						sexo: 'N',
-						email: emailNorm,
-						telefone: placeholderTelefone,
-						usuario_id: user._id
-					});
-					linkedFuncionarioId = funcionarioNovo._id;
-					if (!isExistingUser) {
-						user.funcionario_id = funcionarioNovo._id;
-						if (!user.unidade_id) user.unidade_id = unidade_id;
-						await saveUserDoc(user);
-					}
-					console.log('[criarUsuario] Funcionário placeholder criado e vinculado', { funcionario_id: funcionarioNovo._id.toString(), user_id: user._id.toString() });
-				}
-			} catch (errFuncionario) {
-				// Tratamento amigável: se erro de duplicidade (11000), tenta localizar e vincular
-				// apenas por CPF + unidade para evitar associação cross-tenant por e-mail.
-				const msg = String(errFuncionario && (errFuncionario.message || errFuncionario))
-				const code = (errFuncionario && (errFuncionario.code || errFuncionario?.original?.code)) || null;
-				const isDup = code === 11000 || /duplicate key/i.test(msg);
-				if (isDup) {
-					try {
-						const existente = cleanCpf
-							? await findCriarUsuarioFuncionarioByCpfUnidade(cleanCpf, unidade_id)
-							: null;
-						if (existente) {
-							linkedFuncionarioId = existente._id;
-							if (!isExistingUser) {
-								user.funcionario_id = existente._id;
-								if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidade_id;
-								await saveUserDoc(user);
-							}
-							try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch(_up2) {}
-							console.warn('[criarUsuario] Conflito ao criar funcionário; vinculado a existente', { funcionario_id: existente._id.toString() });
-						}
-					} catch(_e) { /* ignora fallback de vinculação */ }
-					// Mesmo em duplicidade, não falhar a criação do usuário
-				} else {
-					console.error('[criarUsuario] Falha ao criar funcionário automático:', errFuncionario);
-					return serverError(res, 'Falha ao criar funcionário automático: ' + (errFuncionario.message || 'erro'));
-				}
-			}
 		}
 
-		const membershipPayload = buildUserMembershipPayload({
-			userId: user._id,
-			role: requestedUserRole,
+		const result = await createUsuarioExecutionService({
+			existingUser,
+			nome,
+			email: emailNorm,
+			cleanCpf,
+			requestedUserRole,
 			unidadeId: unidade_id,
-			funcionarioId: linkedFuncionarioId,
+			funcionarioId: funcionario_id,
+			funcionarioDoc,
+			wantsNewFuncionario,
+			senha,
 		});
-		if (membershipPayload) {
-			try {
-				await createUserMembership(membershipPayload);
-			} catch (membershipErr) {
-				if (isDuplicateKeyError(membershipErr)) {
-					return badRequest(res, 'Usuário já vinculado a esta unidade', { code: 'USER_MEMBERSHIP_DUPLICATE' });
-				}
-				console.error('[criarUsuario] falha ao criar membership:', membershipErr);
-				return serverError(res, 'Falha ao criar vínculo do usuário com a unidade');
-			}
+
+		if (result.kind === 'membership_duplicate') {
+			return badRequest(res, 'Usuário já vinculado a esta unidade', { code: 'USER_MEMBERSHIP_DUPLICATE' });
 		}
-		// Retorna também senha temporária apenas em ambiente não-produção para permitir exibição imediata
-		const payload = {
-			id: user._id,
-			funcionario_id: linkedFuncionarioId || user.funcionario_id || funcionarioNovo?._id || null,
-			outcome: isExistingUser ? 'linked' : 'created',
-		};
-		if (user._temp_password_plain && process.env.NODE_ENV !== 'production') {
-			payload.tempPassword = user._temp_password_plain;
+		if (result.kind === 'funcionario_create_error' || result.kind === 'membership_error') {
+			return serverError(res, result.message);
 		}
-		return created(res, user._id, { data: payload });
+
+		return created(res, result.userId, { data: result.payload });
 	} catch (e) {
 		console.error('[criarUsuario] erro:', e);
 		return serverError(res, 'Falha ao criar usuário');
