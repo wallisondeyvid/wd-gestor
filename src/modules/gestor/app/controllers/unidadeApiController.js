@@ -34,6 +34,7 @@ import {
 import { orchestrateUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/orchestrateUnitProvisioning.js';
 import { createUnidadeWrite } from '#modules/gestor/app/usecases/unidades/createUnidadeWrite.js';
 import { getUnidadeDetailsPayload } from '#modules/gestor/app/usecases/unidades/getUnidadeDetailsPayload.js';
+import { uploadLogoUnidadeInlineWrite } from '#modules/gestor/app/usecases/unidades/uploadLogoUnidadeInlineWrite.js';
 import { updateUnidadeWrite } from '#modules/gestor/app/usecases/unidades/updateUnidadeWrite.js';
 import { getUnidadeProvisioningStatusOwnerService } from '#modules/gestor/app/services/unidades/getUnidadeProvisioningStatusOwner.service.js';
 import {
@@ -1191,21 +1192,20 @@ export async function uploadLogoUnidadeInline(req, res) {
   const canAccess = await ensureCanAccessUnidade(req, unidade._id);
   if (!canAccess) return badRequest(res, 'Acesso à unidade não autorizado.');
 
-    let uploaded;
+    let uploadedLogo;
     try {
-      uploaded = await _processarEEnviarParaBlob(buffer, { keyPrefix: `unidades/${unidade._id}` });
+      uploadedLogo = await uploadLogoUnidadeInlineWrite({
+        unidade,
+        buffer,
+        processarEEnviarParaBlob: _processarEEnviarParaBlob,
+        removeBlobLogo: del,
+        saveUnidade: saveUnidadeDoc,
+      });
     } catch (err) {
       if (err && err.code === 'BLOB_NOT_CONFIGURED') return badRequest(res, err.message);
       throw err;
     }
-    // Remove anterior (best-effort) se era Blob
-    try {
-      if (unidade.logo && /^https?:\/\/.*blob\.vercel-storage\.com\//i.test(unidade.logo)) {
-        await del(unidade.logo, uploaded.token ? { token: uploaded.token } : undefined);
-      }
-    } catch {}
-    unidade.logo = uploaded.url;
-    await saveUnidadeDoc(unidade);
+    unidade.logo = uploadedLogo.logo;
 
     console.log('[API UNIDADES][uploadLogoInline] atualizado com sucesso para unidade', id);
     return ok(res, { uploaded: true, logo: unidade.logo });
