@@ -34,6 +34,7 @@ import {
 import { orchestrateUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/orchestrateUnitProvisioning.js';
 import { createUnidadeWrite } from '#modules/gestor/app/usecases/unidades/createUnidadeWrite.js';
 import { buildUnidadePublicPayload } from '#modules/gestor/app/usecases/unidades/buildUnidadePublicPayload.js';
+import { executeToggleAccessCore } from '#modules/gestor/app/usecases/unidades/executeToggleAccessCore.js';
 import { getUnidadeDetailsPayload } from '#modules/gestor/app/usecases/unidades/getUnidadeDetailsPayload.js';
 import { resolveUnidadeLogoResource } from '#modules/gestor/app/usecases/unidades/resolveUnidadeLogoResource.js';
 import { uploadLogoUnidadeInlineWrite } from '#modules/gestor/app/usecases/unidades/uploadLogoUnidadeInlineWrite.js';
@@ -740,18 +741,15 @@ export async function toggleAccessUnidades(req, res) {
     const normalizedUnitIds = [...new Set(unitIds.map((unitId) => normalizeUnitId(unitId)).filter(Boolean))];
     if (normalizedUnitIds.length === 0) return badRequest(res,'Parâmetros inválidos.');
 
-    const accessChecks = await Promise.all(normalizedUnitIds.map((unitId) => ensureCanAccessUnidade(req, unitId)));
-    if (accessChecks.some((canAccess) => !canAccess)) {
-      return badRequest(res,'Acesso à unidade não autorizado.');
-    }
-
-    if (req.user.role === 'diretor') {
-      const unidadesPrincipais = await findUnidadesPrincipaisByIds(normalizedUnitIds);
-      if (unidadesPrincipais.length > 0) return badRequest(res,'Diretores não podem alterar o acesso de unidades principais.');
-    }
-
-    const result = await updateManyUnidadesAccessByIds(normalizedUnitIds, activate);
-    if (result.modifiedCount === 0) return badRequest(res,'Nenhuma unidade atualizada.');
+    const coreResult = await executeToggleAccessCore({
+      unitIds: normalizedUnitIds,
+      activate,
+      role: req.user.role,
+      canAccessUnitId: (unitId) => ensureCanAccessUnidade(req, unitId),
+      findUnidadesPrincipaisByIds,
+      updateManyUnidadesAccessByIds,
+    });
+    if (coreResult.kind === 'bad_request') return badRequest(res, coreResult.message);
 
     return ok(res, { newStatus: activate });
   } catch (error) {

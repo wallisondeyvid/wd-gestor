@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import request from 'supertest';
 import app from '../src/modules/gestor/app/gestor-app.js';
+import { executeToggleAccessCore } from '../src/modules/gestor/app/usecases/unidades/executeToggleAccessCore.js';
 
 const ROOT = process.cwd();
 const CONTROLLER_PATH = path.join(ROOT, 'src/modules/gestor/app/controllers/unidadeApiController.js');
@@ -65,6 +66,7 @@ function loadToggleAccessHarness(overrides = {}) {
     'updateManyUnidadesAccessByIds',
     'findAllUnidadesLean',
     'buildApiBancariaForResponse',
+    'executeToggleAccessCore',
     'ok',
     'badRequest',
     'serverError',
@@ -81,6 +83,7 @@ function loadToggleAccessHarness(overrides = {}) {
       deps.updateManyUnidadesAccessByIds,
       deps.findAllUnidadesLean,
       deps.buildApiBancariaForResponse,
+      executeToggleAccessCore,
       deps.ok,
       deps.badRequest,
       deps.serverError,
