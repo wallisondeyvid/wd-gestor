@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import request from 'supertest';
 import app from '../src/modules/gestor/app/gestor-app.js';
+import { buildUnidadePublicPayload } from '../src/modules/gestor/app/usecases/unidades/buildUnidadePublicPayload.js';
 
 const ROOT = process.cwd();
 const CONTROLLER_PATH = path.join(ROOT, 'src/modules/gestor/app/controllers/unidadeApiController.js');
@@ -53,6 +54,7 @@ function loadUnidadePublicHarness(overrides = {}) {
 
   const factory = new Function(
     'findUnidadeByIdLean',
+    'buildUnidadePublicPayload',
     'ok',
     'badRequest',
     'notFound',
@@ -64,6 +66,7 @@ function loadUnidadePublicHarness(overrides = {}) {
   return {
     ...factory(
       deps.findUnidadeByIdLean,
+      buildUnidadePublicPayload,
       deps.ok,
       deps.badRequest,
       deps.notFound,

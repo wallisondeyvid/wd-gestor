@@ -33,6 +33,7 @@ import {
 } from '#modules/gestor/app/services/UnitProvisioningService.js';
 import { orchestrateUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/orchestrateUnitProvisioning.js';
 import { createUnidadeWrite } from '#modules/gestor/app/usecases/unidades/createUnidadeWrite.js';
+import { buildUnidadePublicPayload } from '#modules/gestor/app/usecases/unidades/buildUnidadePublicPayload.js';
 import { getUnidadeDetailsPayload } from '#modules/gestor/app/usecases/unidades/getUnidadeDetailsPayload.js';
 import { resolveUnidadeLogoResource } from '#modules/gestor/app/usecases/unidades/resolveUnidadeLogoResource.js';
 import { uploadLogoUnidadeInlineWrite } from '#modules/gestor/app/usecases/unidades/uploadLogoUnidadeInlineWrite.js';
@@ -928,32 +929,7 @@ export async function getUnidadePublic(req, res) {
     const unidade = await findUnidadeByIdLean(id);
     if (!unidade) return notFound(res, 'Unidade não encontrada.');
     if (unidade.is_active === false) return notFound(res, 'Unidade inativa.');
-    const payload = {
-      _id: unidade._id,
-      nome: unidade.nome || '',
-      razaoSocial: unidade.razaoSocial || '',
-      endereco: unidade.endereco || '',
-      telefone: unidade.telefoneCelular || unidade.telefoneFixo || '',
-      emailPrincipal: unidade.emailPrincipal || '',
-      banco: unidade.banco || '',
-      agencia: unidade.agencia || '',
-      contaCorrente: unidade.contaCorrente || '',
-      pixChave: unidade.pixChave || '',
-      tipoPix: unidade.tipoPix || '',
-      is_principal: !!unidade.is_principal,
-      subunidade: !!unidade.subunidade
-    };
-    if (typeof unidade.logo === 'string' && unidade.logo) {
-      if (/^https?:\/\//i.test(unidade.logo)) {
-        payload.logoUrl = unidade.logo;
-      } else if (/^data:/i.test(unidade.logo)) {
-        payload.logoDataUrl = unidade.logo;
-      } else {
-        payload.logoUrl = `/api/unidades/${unidade._id}/logo`;
-      }
-    } else {
-      payload.logoUrl = null;
-    }
+    const payload = buildUnidadePublicPayload({ unidade });
     return ok(res, payload);
   } catch (error) {
     console.error('[API UNIDADES][getPublic] Erro:', error);
