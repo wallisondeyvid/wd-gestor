@@ -34,6 +34,7 @@ import {
 import { orchestrateUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/orchestrateUnitProvisioning.js';
 import { createUnidadeWrite } from '#modules/gestor/app/usecases/unidades/createUnidadeWrite.js';
 import { getUnidadeDetailsPayload } from '#modules/gestor/app/usecases/unidades/getUnidadeDetailsPayload.js';
+import { resolveUnidadeLogoResource } from '#modules/gestor/app/usecases/unidades/resolveUnidadeLogoResource.js';
 import { uploadLogoUnidadeInlineWrite } from '#modules/gestor/app/usecases/unidades/uploadLogoUnidadeInlineWrite.js';
 import { updateUnidadeWrite } from '#modules/gestor/app/usecases/unidades/updateUnidadeWrite.js';
 import { getUnidadeProvisioningStatusOwnerService } from '#modules/gestor/app/services/unidades/getUnidadeProvisioningStatusOwner.service.js';
@@ -983,59 +984,35 @@ export async function getUnidadeLogo(req, res) {
     const unidade = await findUnidadeByIdLean(id);
     if (!unidade) return notFound(res, 'Unidade não encontrada');
 
-    const logo = unidade.logo || '';
-    // 0) URL pública (Blob/S3/Cloudinary): redireciona
-    if (/^https?:\/\//i.test(logo)) {
-      res.set('Cache-Control', 'public, max-age=60');
-      return res.redirect(logo);
-    }
-    // 1) Data URL (novo formato)
-    if (/^data:/i.test(logo)) {
-      const parsed = _parseDataUrl(logo);
-      if (!parsed) return res.status(204).end();
-      res.set('Content-Type', parsed.contentType);
-      res.set('Cache-Control', 'private, max-age=300');
-      return res.send(parsed.buffer);
+    const resolvedLogoResource = await resolveUnidadeLogoResource({
+      unidade,
+      parseDataUrl: _parseDataUrl,
+      fs,
+      path,
+      cwd: () => process.cwd(),
+    });
+
+    if (resolvedLogoResource.kind === 'redirect') {
+      res.set('Cache-Control', resolvedLogoResource.cacheControl);
+      return res.redirect(resolvedLogoResource.url);
     }
 
-    // 2) Caminho legado em disco (melhor esforço; em ambientes serverless pode não existir)
-    try {
-      if (typeof logo === 'string' && logo) {
-        const rel = logo.replace(/^\/*/, '');
-        const ROOT = process.cwd();
-        const candidates = [
-          path.join(ROOT, 'public', rel),
-          path.join(ROOT, rel),
-          path.join(ROOT, 'public/uploads', rel),
-        ];
-        for (const p of candidates) {
-          try {
-            const st = await fs.stat(p).catch(()=>null);
-            if (st && st.isFile()) {
-              // Best-effort content-type
-              const ext = path.extname(p).toLowerCase();
-              const type = ext === '.svg' ? 'image/svg+xml'
-                        : ext === '.png' ? 'image/png'
-                        : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg'
-                        : ext === '.webp' ? 'image/webp'
-                        : 'application/octet-stream';
-              res.set('Content-Type', type);
-              res.set('Cache-Control', 'private, max-age=300');
-              return res.sendFile(p);
-            }
-          } catch {}
-        }
+    if (resolvedLogoResource.kind === 'buffer') {
+      res.set('Content-Type', resolvedLogoResource.contentType);
+      res.set('Cache-Control', resolvedLogoResource.cacheControl);
+      return res.send(resolvedLogoResource.buffer);
+    }
+
+    if (resolvedLogoResource.kind === 'file') {
+      res.set('Content-Type', resolvedLogoResource.contentType);
+      res.set('Cache-Control', resolvedLogoResource.cacheControl);
+      if (resolvedLogoResource.fallbackTo204OnError) {
+        return res.sendFile(resolvedLogoResource.filePath, err => err ? res.status(204).end() : undefined);
       }
-    } catch {}
+      return res.sendFile(resolvedLogoResource.filePath);
+    }
 
-    // 3) Placeholder
-    try {
-      const ROOT = process.cwd();
-      const ph = path.join(ROOT, 'public', 'img', 'placeholder-logo.svg');
-      res.set('Content-Type', 'image/svg+xml');
-      res.set('Cache-Control', 'public, max-age=600');
-      return res.sendFile(ph, err => err ? res.status(204).end() : undefined);
-    } catch { return res.status(204).end(); }
+    return res.status(204).end();
   } catch (e) {
     console.error('[API UNIDADES][getLogo] Erro:', e);
     return serverError(res, e);
@@ -1125,21 +1102,20 @@ export const uploadLogoUnidade = [
         const approxBytes = Math.floor((base64.length * 3) / 4);
         if (approxBytes > 8 * 1024 * 1024) return badRequest(res,'Imagem acima de 8MB.');
         const buffer = Buffer.from(base64, 'base64');
-        let uploaded;
+        let uploadedLogo;
         try {
-          uploaded = await _processarEEnviarParaBlob(buffer, { keyPrefix: `unidades/${unidade._id}` });
+          uploadedLogo = await uploadLogoUnidadeInlineWrite({
+            unidade,
+            buffer,
+            processarEEnviarParaBlob: _processarEEnviarParaBlob,
+            removeBlobLogo: del,
+            saveUnidade: saveUnidadeDoc,
+          });
         } catch (err) {
           if (err && err.code === 'BLOB_NOT_CONFIGURED') return badRequest(res, err.message);
           throw err;
         }
-        // Remove anterior (best-effort) se era Blob
-        try {
-          if (unidade.logo && /^https?:\/\/.*blob\.vercel-storage\.com\//i.test(unidade.logo)) {
-            await del(unidade.logo, uploaded.token ? { token: uploaded.token } : undefined);
-          }
-        } catch {}
-        unidade.logo = uploaded.url;
-        await saveUnidadeDoc(unidade);
+        unidade.logo = uploadedLogo.logo;
         console.log('[API UNIDADES][uploadLogo] JSON dataUrl salvo em Blob');
         return ok(res, { uploaded: true, logo: unidade.logo });
       }
