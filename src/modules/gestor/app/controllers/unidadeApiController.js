@@ -33,6 +33,7 @@ import {
 } from '#modules/gestor/app/services/UnitProvisioningService.js';
 import { orchestrateUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/orchestrateUnitProvisioning.js';
 import { createUnidadeWrite } from '#modules/gestor/app/usecases/unidades/createUnidadeWrite.js';
+import { getUnidadeDetailsPayload } from '#modules/gestor/app/usecases/unidades/getUnidadeDetailsPayload.js';
 import { updateUnidadeWrite } from '#modules/gestor/app/usecases/unidades/updateUnidadeWrite.js';
 import { getUnidadeProvisioningStatusOwnerService } from '#modules/gestor/app/services/unidades/getUnidadeProvisioningStatusOwner.service.js';
 import {
@@ -756,18 +757,7 @@ export async function toggleAccessUnidades(req, res) {
   }
 }
 export async function getUnidadeById(req, res) { try { const unidadeId = req.params.id; const unidade = await findUnidadeById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await ensureCanAccessUnidade(req, unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado');
-  // Fallback: se for unidade principal e não houver diretor_usuario_id salvo,
-  // tentar descobrir pelo usuário diretor vinculado via unidade_id
-  let diretorId = unidade.diretor_usuario_id;
-  if (unidade.is_principal && !diretorId) {
-    try {
-      const diretor = await findDiretorAtivoByUnidadeSelectId(unidade._id);
-      if (diretor) diretorId = diretor._id;
-    } catch (e) {
-      console.warn('[API UNIDADES][getById] Fallback diretor falhou:', e.message);
-    }
-  }
-  const unidadeData = { _id: unidade._id, codigo: unidade.codigo, nome: unidade.nome, razaoSocial: unidade.razaoSocial, cnpj: unidade.cnpj, cpf: unidade.cpf, pessoaTipo: unidade.pessoaTipo, inscricaoEstadual: unidade.inscricaoEstadual, inscricaoMunicipal: unidade.inscricaoMunicipal, cnaePrincipal: unidade.cnaePrincipal, cnaeSecundarios: unidade.cnaeSecundarios, regimeTributario: unidade.regimeTributario, naturezaJuridica: unidade.naturezaJuridica, is_principal: unidade.is_principal, subunidade: unidade.subunidade, unidade_principal_id: unidade.unidade_principal_id, dataAbertura: unidade.dataAbertura, telefoneFixo: unidade.telefoneFixo, telefoneCelular: unidade.telefoneCelular, emailPrincipal: unidade.emailPrincipal, emailFiscal: unidade.emailFiscal, site: unidade.site, banco: unidade.banco, agencia: unidade.agencia, contaCorrente: unidade.contaCorrente, pixChave: unidade.pixChave, tipoPix: unidade.tipoPix, modulosAcessiveis: unidade.modulosAcessiveis, diretor_usuario_id: diretorId || null, endereco: unidade.endereco, logo: unidade.logo || null, apiBancaria: buildApiBancariaForResponse(unidade.apiBancaria) };
+  const unidadeData = await getUnidadeDetailsPayload({ unidade, findDiretorAtivoByUnidadeSelectId, buildApiBancariaForResponse, warn: console.warn });
   return ok(res, unidadeData); } catch (error) { console.error('[API UNIDADES][getById] Erro:', error); return serverError(res, error); } }
 export async function getUnidadeModulos(req, res) {
   try {
