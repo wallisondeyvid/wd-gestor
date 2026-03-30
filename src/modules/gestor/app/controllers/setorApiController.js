@@ -17,6 +17,7 @@ import {
 import { deleteSetorScopedService } from '#modules/gestor/app/services/setores/deleteSetorScoped.service.js';
 import { updateSetorScopedService } from '#modules/gestor/app/services/setores/updateSetorScoped.service.js';
 import { processCreateSetorCore } from './utils/processCreateSetorCore.js';
+import { getSetorByIdCore } from './utils/getSetorByIdCore.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -93,9 +94,14 @@ export async function getSetoresPorUnidade(req,res){
 
 export async function getSetor(req,res){
   try {
-    const setor = await findSetorByIdPopulateUnidade(req.params.id, getCanonicalContextUnitId(req) || null);
+    const canonicalUnitId = getCanonicalContextUnitId(req) || null;
+    const setor = await getSetorByIdCore({
+      id: req.params.id,
+      canonicalUnitId,
+      findSetorByIdPopulateUnidade,
+    });
     if (!setor) return notFound(res,'Setor não encontrado');
-    return ok(res,{ _id:setor._id, nome:setor.nome, descricao:setor.descricao||'', unidade_id: setor.unidade_id ? setor.unidade_id._id : null });
+    return ok(res, setor);
   } catch(e){ console.error('[API SETORES][get] Erro:', e); return serverError(res,e); }
 }
 
