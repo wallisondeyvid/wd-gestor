@@ -14,6 +14,7 @@ import { createDeleteFeedbackHandler } from '#modules/gestor/app/controllers/fee
 import { createUpdateFeedbackRespostaHandler } from '#modules/gestor/app/controllers/feedbackRespostaApiController.js';
 import { createUpdateFeedbackStatusHandler } from '#modules/gestor/app/controllers/feedbackStatusApiController.js';
 import { updateFeedbackStatusService } from '#modules/gestor/app/services/feedback/updateFeedbackStatus.service.js';
+import { processFeedbackUploadStorageCore } from '#modules/gestor/app/routes/utils/processFeedbackUploadStorageCore.js';
 import {
   createFeedback,
   findFeedbackById,
@@ -132,49 +133,21 @@ function safeExtFromFile({ originalName, mimeType }) {
 }
 
 async function storeFeedbackAnexo({ req, feedbackId, file }) {
-  const original = safeFileName(file?.originalname);
-  const ext = safeExtFromFile({ originalName: original, mimeType: file?.mimetype });
-  const stamped = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}${ext}`;
-
-  // Produção (Vercel): salva no Blob quando possível
-  if (shouldUseBlobStorage()) {
-    const blobToken = getBlobToken();
-    const key = `feedback/${String(feedbackId)}/${stamped}`;
-    const putOptions = {
-      access: 'public',
-      contentType: String(file?.mimetype || 'application/octet-stream'),
-      cacheControl: 'public, max-age=31536000, immutable',
-      ...(blobToken ? { token: blobToken } : {})
-    };
-    try {
-      const { url } = await put(key, file.buffer, putOptions);
-      if (url) {
-        return { url: String(url), storedIn: 'blob', originalName: original, stampedName: stamped };
-      }
-    } catch (err) {
-      // Em dev, se o Blob falhar, cai para FS.
-      // Em produção (Vercel), não faz sentido tentar FS: preferimos erro claro.
-      if (process.env.VERCEL) {
-        const e = new Error('BLOB_UPLOAD_FAILED');
-        e.code = isBlobNotConfiguredError(err) ? 'BLOB_NOT_CONFIGURED' : 'BLOB_UPLOAD_FAILED';
-        e.cause = err;
-        throw e;
-      }
-    }
-  }
-
-  // Fallback local (dev): salva em disco e serve via /uploads
-  const ROOT = path.join(process.cwd());
-  const relDir = path.join('public', 'uploads', 'feedback', String(feedbackId));
-  const absDir = path.join(ROOT, relDir);
-  fs.mkdirSync(absDir, { recursive: true });
-  const absFile = path.join(absDir, stamped);
-  fs.writeFileSync(absFile, file.buffer);
-
-  // URL pública (lembre que o app está montado em /gestor)
-  const bp = req.baseUrl || '';
-  const url = `${bp}/uploads/feedback/${encodeURIComponent(String(feedbackId))}/${encodeURIComponent(stamped)}`;
-  return { url: String(url), storedIn: 'fs', originalName: original, stampedName: stamped };
+  return processFeedbackUploadStorageCore({
+    baseUrl: req.baseUrl || '',
+    feedbackId,
+    file,
+    safeFileName,
+    safeExtFromFile,
+    shouldUseBlobStorage,
+    getBlobToken,
+    putBlob: put,
+    fsModule: fs,
+    pathModule: path,
+    cwdProvider: () => process.cwd(),
+    isBlobNotConfiguredError,
+    isVercel: Boolean(process.env.VERCEL),
+  });
 }
 
 function inferModuloFromUrl(url){
