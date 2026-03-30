@@ -16,6 +16,7 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { deleteSetorScopedService } from '#modules/gestor/app/services/setores/deleteSetorScoped.service.js';
 import { updateSetorScopedService } from '#modules/gestor/app/services/setores/updateSetorScoped.service.js';
+import { processCreateSetorCore } from './utils/processCreateSetorCore.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -55,11 +56,16 @@ export async function createSetor(req,res){
     if (!nome) return badRequest(res,'Nome é obrigatório');
     if (!canonicalUnitId) return badRequest(res,'Unidade é obrigatória');
     if (!requestedUnitMatchesContext(req, unidade_id || canonicalUnitId)) return notFound(res,'Unidade não encontrada');
-    const existing = await findSetorByUnidadeAndNomeNormalizadoLean(canonicalUnitId, nomeNormalizado);
-    if (existing) {
-      return conflict(res,'Setor já cadastrado nesta unidade', { duplicateField:'nome', duplicateValue: nome, duplicateId: existing._id });
+    const setor = await processCreateSetorCore({
+      nome,
+      descricao,
+      canonicalUnitId,
+      findSetorByUnidadeAndNomeNormalizadoLean,
+      createSetorDb,
+    });
+    if (setor?.error === 'duplicate_name') {
+      return conflict(res,'Setor já cadastrado nesta unidade', { duplicateField:'nome', duplicateValue: nome, duplicateId: setor.duplicateId });
     }
-    const setor = await createSetorDb({ nome, nome_normalizado: nomeNormalizado, descricao, unidade_id: canonicalUnitId });
     return created(res, setor._id, { data:{ _id:setor._id, codigo: setor.codigo } });
   } catch(e){
     if (e && e.code === 11000) {
