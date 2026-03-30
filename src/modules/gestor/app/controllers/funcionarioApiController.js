@@ -27,7 +27,9 @@ import {
 	setUserMembershipFuncionarioIdIfEmpty,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { normalizeFuncionarioPayload } from './utils/funcionarioNormalize.js';
+import { reconcileUpdateFuncionarioIncrementalAnexos } from './utils/reconcileFuncionarioAnexos.js';
 import { deleteFuncionarioPostExecutionService } from '#modules/gestor/app/services/funcionarios/deleteFuncionarioPostExecution.service.js';
+import { executeCreateFuncionarioCore } from '#modules/gestor/app/usecases/funcionarios/executeCreateFuncionarioCore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -562,45 +564,96 @@ if(carga_semanal !== undefined && carga_semanal !== null && carga_semanal !== ''
 	} else if(req.files?.foto?.length){
 		const f=req.files.foto[0]; fotoBuffer = f?.buffer || null;
 	}
-	let anexosExistentes=[]; if(req.body.anexos_existentes){ try { anexosExistentes=JSON.parse(req.body.anexos_existentes);} catch{} }
-	const anexosNovos = mapFiles(req.files?.anexos || []);
-	console.log('[UPLOAD][create] anexosNovos normalizados =', anexosNovos.length);
-	const anexosFinais = [...anexosExistentes, ...anexosNovos];
-	console.log('[UPLOAD][create] anexosFinais total =', anexosFinais.length);
-	delete req.body.anexos; delete req.body.anexos_existentes;
-	let dependentes=[], beneficiosArray=[], extras={};
-	if(req.body.dependentes_json){ try { dependentes=JSON.parse(req.body.dependentes_json); if(!Array.isArray(dependentes)) dependentes=[]; } catch{} }
-	// Normaliza CPF dependentes (create)
-	if(Array.isArray(dependentes)){
-		dependentes = dependentes.map(d=>{
-			if(d && d.cpf) d.cpf = String(d.cpf).replace(/\D/g,'');
-			return d;
-		});
-	}
-	if(req.body.beneficios_json){ try { const arr=JSON.parse(req.body.beneficios_json); if(Array.isArray(arr)) beneficiosArray=arr.map(b=>({ tipo:b.tipo, nome:b.nome, cnpj_plano:b.cnpj_plano, tipo_valor:b.tipo_valor, valor:b.valor, inicio:b.inicio, data_inicio:b.data_inicio })); } catch{} }
-	Object.entries(req.body).forEach(([k,v])=>{ if(k.startsWith('extra_')){ const campoBase=k.substring(6); const ignorar=['nome_social','nome_mae','nome_pai','rg_orgao','rg_uf','rg_data_expedicao','pis','estado_civil','raca_cor','escolaridade','nacionalidade','pais_nascimento','data_chegada_brasil','telefone2','tipo_ctps','ctps_numero','ctps_serie','ctps_uf','pcd','tipo_deficiencia','cid','biometrico','biometrico_face','data_admissao','tipo_admissao','categoria_trabalhador','tipo_contrato','data_termino','objeto_determinante','clausula_assecuratoria','cargo','cbo','departamento','regime_contratacao','regime_jornada','carga_semanal','salario_base','tipo_salario','forma_pagamento','forma_pagamento_desc','banco','agencia_num','agencia_dv','conta_num','conta_dv','tipo_conta','sindicato','fgts_optante','fgts_data','regime_previdenciario','tipo_especial','cert_militar','cert_militar_orgao','cert_militar_uf','cert_militar_data','titulo','titulo_zona','titulo_secao','cnh','cnh_categoria','cnh_validade','cnh_uf','orgao_prof','orgao_prof_uf','orgao_prof_numero','observacoes']; if(!ignorar.includes(campoBase)) extras[campoBase]=v; }});
-	// --- Parse arrays de capturas biométricas (novos campos JSON opcionais) ---
-	let biometriasDigitaisArr = undefined; let biometriasFacialArr = undefined;
-	// Guardrails de tamanho bruto (evita payloads gigantes maliciosos)
-	if (req.body.fp_capturas_json && req.body.fp_capturas_json.length > 500000) { console.warn('[BIO JSON][create] fp_capturas_json excede limite'); delete req.body.fp_capturas_json; }
-	if (req.body.face_capturas_json && req.body.face_capturas_json.length > 500000) { console.warn('[BIO JSON][create] face_capturas_json excede limite'); delete req.body.face_capturas_json; }
-
-	if(req.body.face_capturas_json){
-		try {
-			const parsed = JSON.parse(req.body.face_capturas_json);
-			if(Array.isArray(parsed)){
-				biometriasFacialArr = parsed.filter(o=>o && (o.hash||o.imagem)).map(o=>({
-					hash: (o.hash||'').substring(0,128),
-					imagem: o.imagem && String(o.imagem).length < 500000 ? o.imagem : undefined,
-					template_b64: o.template_b64 && String(o.template_b64).length < 500000 ? o.template_b64 : undefined,
-					template_sha256: o.template_sha256 || undefined,
-					qualidade: o.qualidade && Number.isFinite(Number(o.qualidade)) ? Number(o.qualidade) : undefined
-				}));
-			}
-		} catch(_){ }
-	}
-	const doc = { unidade_id, funcao_id: funcao_id || undefined, nome: nome.trim(), nome_social: nome_social||undefined, nome_mae: nome_mae||undefined, nome_pai: nome_pai||undefined, rg: rg.trim(), rg_orgao: rg_orgao||undefined, rg_uf: rg_uf||undefined, rg_data_expedicao: rg_data_expedicao||undefined, cpf, pis: pis? pis.replace(/[^\d]/g,''):undefined, data_nascimento: data_nascimento, sexo, estado_civil: estado_civil||undefined, raca_cor: raca_cor||undefined, escolaridade: escolaridade||undefined, nacionalidade: nacionalidade||undefined, pais_nascimento: pais_nascimento||undefined, data_chegada_brasil: data_chegada_brasil||undefined, naturalidade: naturalidade||undefined, endereco, telefone: telefone.trim(), telefone2: telefone2||undefined, email, tipo_ctps: tipo_ctps||undefined, ctps_numero: ctps_numero||undefined, ctps_serie: ctps_serie||undefined, ctps_uf: ctps_uf||undefined, pcd: pcd||undefined, tipo_deficiencia: tipo_deficiencia||undefined, cid: cid||undefined, foto: undefined, biometrico: biometrico||undefined, biometrico_face: biometrico_face||undefined, fp_template_b64: fp_template_b64||undefined, fp_template_sha256: fp_template_sha256||undefined, fp_imagem: fp_imagem||undefined, fp_dedo: fp_dedo||undefined, face_template_b64: face_template_b64||undefined, face_template_sha256: face_template_sha256||undefined, face_imagem: face_imagem||undefined, observacoes: observacoes?observacoes.trim():undefined, data_admissao: data_admissao||undefined, tipo_admissao: tipo_admissao||undefined, categoria_trabalhador: categoria_trabalhador||undefined, tipo_contrato: tipo_contrato||undefined, data_termino: data_termino||undefined, objeto_determinante: objeto_determinante||undefined, clausula_assecuratoria: clausula_assecuratoria||undefined, cargo: cargo||undefined, cbo: cbo||undefined, departamento: departamento||undefined, regime_contratacao: regime_contratacao||undefined, regime_jornada: regime_jornada||undefined, carga_semanal: carga_semanal||undefined, salario_base: salario_base||undefined, tipo_salario: tipo_salario||undefined, forma_pagamento: forma_pagamento||undefined, forma_pagamento_desc: forma_pagamento_desc||undefined, banco: banco||undefined, agencia_num: agencia_num||undefined, agencia_dv: agencia_dv||undefined, conta_num: conta_num||undefined, conta_dv: conta_dv||undefined, tipo_conta: tipo_conta||undefined, sindicato: sindicato||undefined, fgts_optante: fgts_optante||undefined, fgts_data: fgts_data||undefined, regime_previdenciario: regime_previdenciario||undefined, tipo_especial: tipo_especial||undefined, cert_militar: cert_militar||undefined, cert_militar_orgao: cert_militar_orgao||undefined, cert_militar_uf: cert_militar_uf||undefined, cert_militar_data: cert_militar_data||undefined, titulo: titulo||undefined, titulo_zona: titulo_zona||undefined, titulo_secao: titulo_secao||undefined, cnh: cnh||undefined, cnh_categoria: cnh_categoria||undefined, cnh_validade: cnh_validade||undefined, cnh_uf: cnh_uf||undefined, orgao_prof: orgao_prof||undefined, orgao_prof_uf: orgao_prof_uf||undefined, orgao_prof_numero: orgao_prof_numero||undefined, anexos: anexosFinais, extras, dependentes, beneficios: beneficiosArray, biometrias_digitais: biometriasDigitaisArr, biometrias_facial: biometriasFacialArr };
-	const novo = await createFuncionarioDoc(doc);
+	const { novo } = await executeCreateFuncionarioCore({
+		unidade_id,
+		funcao_id,
+		nome,
+		nome_social,
+		nome_mae,
+		nome_pai,
+		rg,
+		rg_orgao,
+		rg_uf,
+		rg_data_expedicao,
+		cpf,
+		pis,
+		data_nascimento,
+		sexo,
+		estado_civil,
+		raca_cor,
+		escolaridade,
+		nacionalidade,
+		pais_nascimento,
+		data_chegada_brasil,
+		naturalidade,
+		endereco,
+		telefone,
+		telefone2,
+		email,
+		tipo_ctps,
+		ctps_numero,
+		ctps_serie,
+		ctps_uf,
+		pcd,
+		tipo_deficiencia,
+		cid,
+		biometrico,
+		biometrico_face,
+		fp_template_b64,
+		fp_template_sha256,
+		fp_imagem,
+		fp_dedo,
+		face_template_b64,
+		face_template_sha256,
+		face_imagem,
+		observacoes,
+		data_admissao,
+		tipo_admissao,
+		categoria_trabalhador,
+		tipo_contrato,
+		data_termino,
+		objeto_determinante,
+		clausula_assecuratoria,
+		cargo,
+		cbo,
+		departamento,
+		regime_contratacao,
+		regime_jornada,
+		carga_semanal,
+		salario_base,
+		tipo_salario,
+		forma_pagamento,
+		forma_pagamento_desc,
+		banco,
+		agencia_num,
+		agencia_dv,
+		conta_num,
+		conta_dv,
+		tipo_conta,
+		sindicato,
+		fgts_optante,
+		fgts_data,
+		regime_previdenciario,
+		tipo_especial,
+		cert_militar,
+		cert_militar_orgao,
+		cert_militar_uf,
+		cert_militar_data,
+		titulo,
+		titulo_zona,
+		titulo_secao,
+		cnh,
+		cnh_categoria,
+		cnh_validade,
+		cnh_uf,
+		orgao_prof,
+		orgao_prof_uf,
+		orgao_prof_numero,
+		rawBody: req.body,
+		anexosFiles: req.files?.anexos || [],
+		mapFiles,
+		createFuncionarioDoc,
+	});
 	// Upload da foto (se houver) após ter o _id
 	try {
 		if(fotoBuffer){
@@ -786,7 +839,18 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 		if(ops.$unset && ops.$unset.foto){ delete ops.$unset.foto; }
 		if(ops.$set && ops.$set.foto===null){ delete ops.$set.foto; }
 	}
-	if(req.files?.anexos?.length){ const novos=mapFiles(req.files.anexos); console.log('[UPLOAD][incremental] novos anexos normalizados:', novos.length); const existentes=ops.$set.anexos || funcionario.anexos || []; ops.$set.anexos = existentes.concat(novos); console.log('[UPLOAD][incremental] anexos total após concat:', ops.$set.anexos.length); }
+	const hasAnexosMutation = req.body.anexos_existentes !== undefined || req.body.anexos_excluidos !== undefined || !!req.files?.anexos?.length;
+	if(hasAnexosMutation){
+		const anexosReconciliados = reconcileUpdateFuncionarioIncrementalAnexos({
+			funcionarioAtual: funcionario,
+			anexosExistentes: req.body.anexos_existentes,
+			anexosExcluidos: req.body.anexos_excluidos,
+			novosUploads: req.files?.anexos || [],
+			mapFiles,
+		});
+		if(anexosReconciliados.length > 0) ops.$set.anexos = anexosReconciliados;
+		else ops.$unset.anexos = 1;
+	}
 
 	// Snapshot de diagnóstico do que será atualizado
 	try {

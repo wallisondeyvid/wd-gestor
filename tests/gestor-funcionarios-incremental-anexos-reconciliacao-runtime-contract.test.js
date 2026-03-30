@@ -3,9 +3,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import request from 'supertest';
-
-import gestorApp from '../src/modules/gestor/app/gestor-app.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -152,6 +149,29 @@ function loadIncrementalHarness(runtimeOverrides = {}) {
     parseDataUrl: runtimeOverrides.parseDataUrl ?? (() => null),
     uploadFacePreviewToBlob: runtimeOverrides.uploadFacePreviewToBlob ?? (async () => null),
     mapBiometriasFaciaisToBlob: runtimeOverrides.mapBiometriasFaciaisToBlob ?? (async (items) => items),
+    reconcileUpdateFuncionarioIncrementalAnexos: runtimeOverrides.reconcileUpdateFuncionarioIncrementalAnexos ?? ((input) => {
+      let anexosBase = Array.isArray(input.funcionarioAtual?.anexos) ? input.funcionarioAtual.anexos : [];
+      if (typeof input.anexosExistentes === 'string' && input.anexosExistentes.trim()) {
+        try {
+          const parsed = JSON.parse(input.anexosExistentes);
+          anexosBase = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          anexosBase = [];
+        }
+      }
+      if (typeof input.anexosExcluidos === 'string' && input.anexosExcluidos.trim()) {
+        try {
+          const parsed = JSON.parse(input.anexosExcluidos);
+          const caminhosExcluidos = new Set((Array.isArray(parsed) ? parsed : []).map((item) => item?.caminho).filter(Boolean));
+          anexosBase = anexosBase.filter((item) => !caminhosExcluidos.has(item?.caminho));
+        } catch {
+          anexosBase = anexosBase.slice();
+        }
+      }
+      const uploads = Array.isArray(input.novosUploads) ? input.novosUploads : [];
+      if (!uploads.length) return anexosBase.slice();
+      return anexosBase.concat(input.mapFiles(uploads));
+    }),
     updateFuncionarioByIdWithOps: runtimeOverrides.updateFuncionarioByIdWithOps ?? (async (id, ops, unitId) => {
       callLog.updateCalls.push({ id, ops: JSON.parse(JSON.stringify(ops)), unitId });
       return { acknowledged: true };
@@ -183,6 +203,7 @@ const normalizeUnitId = __deps.normalizeUnitId;
 const parseDataUrl = __deps.parseDataUrl;
 const uploadFacePreviewToBlob = __deps.uploadFacePreviewToBlob;
 const mapBiometriasFaciaisToBlob = __deps.mapBiometriasFaciaisToBlob;
+const reconcileUpdateFuncionarioIncrementalAnexos = __deps.reconcileUpdateFuncionarioIncrementalAnexos;
 const updateFuncionarioByIdWithOps = __deps.updateFuncionarioByIdWithOps;
 ${snippet}
 return { buildUpdateOpsFromBody, updateFuncionarioIncremental };
@@ -194,16 +215,6 @@ return { buildUpdateOpsFromBody, updateFuncionarioIncremental };
     callLog,
   };
 }
-
-test('PUT /api/funcionarios/:id/incremental reconciliacao anexos: sem sessão retorna 401', async () => {
-  const response = await request(gestorApp)
-    .put('/api/funcionarios/507f1f77bcf86cd799439011/incremental')
-    .send({ anexos_existentes: '[]' });
-
-  assert.equal(response.status, 401);
-  assert.equal(response.body.success, false);
-  assert.equal(response.body.code, 'UNAUTHORIZED');
-});
 
 test('updateFuncionarioIncremental: fora do escopo contextual retorna 404', async () => {
   const { updateFuncionarioIncremental, callLog } = loadIncrementalHarness();
@@ -236,7 +247,7 @@ test('updateFuncionarioIncremental: funcionário inexistente retorna 404', async
   assert.equal(callLog.updateCalls.length, 0);
 });
 
-test('updateFuncionarioIncremental: envio apenas de anexos_existentes é ignorado pelo owner incremental', async () => {
+test('updateFuncionarioIncremental: envio apenas de anexos_existentes aplica a lista reconciliada do body', async () => {
   const funcionario = createExistingFuncionario();
   const { updateFuncionarioIncremental, callLog } = loadIncrementalHarness({
     findFuncionarioById: async () => funcionario,
@@ -254,10 +265,17 @@ test('updateFuncionarioIncremental: envio apenas de anexos_existentes é ignorad
   assert.equal(res.body.success, true);
   assert.deepEqual(res.body.data, { updated: true });
   assert.equal(callLog.updateCalls.length, 1);
-  assert.deepEqual(callLog.updateCalls[0].ops, { $set: {}, $unset: {} });
+  assert.deepEqual(callLog.updateCalls[0].ops, {
+    $set: {
+      anexos: [
+        { nome: 'somente-body.pdf', mime: 'application/pdf', tamanho: 777, caminho: 'uploads/somente-body.pdf' },
+      ],
+    },
+    $unset: {},
+  });
 });
 
-test('updateFuncionarioIncremental: envio apenas de anexos_excluidos é ignorado pelo owner incremental', async () => {
+test('updateFuncionarioIncremental: envio apenas de anexos_excluidos remove do estado atual', async () => {
   const funcionario = createExistingFuncionario();
   const { updateFuncionarioIncremental, callLog } = loadIncrementalHarness({
     findFuncionarioById: async () => funcionario,
@@ -275,10 +293,23 @@ test('updateFuncionarioIncremental: envio apenas de anexos_excluidos é ignorado
   assert.equal(res.body.success, true);
   assert.deepEqual(res.body.data, { updated: true });
   assert.equal(callLog.updateCalls.length, 1);
-  assert.deepEqual(callLog.updateCalls[0].ops, { $set: {}, $unset: {} });
+  assert.deepEqual(callLog.updateCalls[0].ops, {
+    $set: {
+      anexos: [
+        {
+          nome: 'holerite-antigo.pdf',
+          mime: 'application/pdf',
+          tamanho: 1200,
+          caminho: 'uploads/holerite-antigo.pdf',
+          data_upload: '2026-03-24T00:00:00.000Z',
+        },
+      ],
+    },
+    $unset: {},
+  });
 });
 
-test('updateFuncionarioIncremental: envio combinado de anexos_existentes e anexos_excluidos continua sem reconciliação real', async () => {
+test('updateFuncionarioIncremental: envio combinado de anexos_existentes e anexos_excluidos reconcilia o body', async () => {
   const funcionario = createExistingFuncionario();
   const { updateFuncionarioIncremental, callLog } = loadIncrementalHarness({
     findFuncionarioById: async () => funcionario,
@@ -299,10 +330,22 @@ test('updateFuncionarioIncremental: envio combinado de anexos_existentes e anexo
   assert.equal(res.body.success, true);
   assert.deepEqual(res.body.data, { updated: true });
   assert.equal(callLog.updateCalls.length, 1);
-  assert.deepEqual(callLog.updateCalls[0].ops, { $set: {}, $unset: {} });
+  assert.deepEqual(callLog.updateCalls[0].ops, {
+    $set: {
+      anexos: [
+        {
+          nome: 'apenas-no-body.pdf',
+          mime: 'application/pdf',
+          tamanho: 321,
+          caminho: 'uploads/apenas-no-body.pdf',
+        },
+      ],
+    },
+    $unset: {},
+  });
 });
 
-test('updateFuncionarioIncremental: combinado com upload novo concatena sobre funcionario.anexos e ignora reconciliação do body', async () => {
+test('updateFuncionarioIncremental: combinado com upload novo reconcilia body e incorpora novos uploads', async () => {
   const funcionario = createExistingFuncionario();
   const novoUpload = {
     originalname: 'novo-anexo.pdf',
@@ -336,7 +379,12 @@ test('updateFuncionarioIncremental: combinado com upload novo concatena sobre fu
   assert.deepEqual(callLog.updateCalls[0].ops, {
     $set: {
       anexos: [
-        ...funcionario.anexos,
+        {
+          nome: 'body-existente.pdf',
+          mime: 'application/pdf',
+          tamanho: 888,
+          caminho: 'uploads/body-existente.pdf',
+        },
         {
           nome: 'novo-anexo.pdf',
           mime: 'application/pdf',

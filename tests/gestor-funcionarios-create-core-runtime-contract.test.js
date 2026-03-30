@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import request from 'supertest';
 
 import gestorApp from '../src/modules/gestor/app/gestor-app.js';
+import { executeCreateFuncionarioCore } from '../src/modules/gestor/app/usecases/funcionarios/executeCreateFuncionarioCore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -197,6 +198,7 @@ function loadCreateFuncionarioWithDeps(runtimeOverrides = {}) {
     ...responseHelpers,
     ...bridge,
     normalizeFuncionarioPayload: runtimeOverrides.normalizeFuncionarioPayload ?? ((payload) => payload),
+    executeCreateFuncionarioCore: runtimeOverrides.executeCreateFuncionarioCore ?? executeCreateFuncionarioCore,
     importUserService: runtimeOverrides.importUserService ?? (async () => ({
       createUserAndSendPassword: async ({ nome, email, cpf, role, unidade_id, funcionario_id }) => ({
         _id: `user-${email}`,
@@ -246,6 +248,7 @@ const findUserMembershipByUserAndUnidade = __deps.findUserMembershipByUserAndUni
 const createUserMembership = __deps.createUserMembership;
 const setUserMembershipFuncionarioIdIfEmpty = __deps.setUserMembershipFuncionarioIdIfEmpty;
 const normalizeFuncionarioPayload = __deps.normalizeFuncionarioPayload;
+const executeCreateFuncionarioCore = __deps.executeCreateFuncionarioCore;
 ${controllerBody}
 return { createFuncionario };
 `
