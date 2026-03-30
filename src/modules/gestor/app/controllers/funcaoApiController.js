@@ -20,6 +20,7 @@ import { processCreateFuncaoCore } from './utils/processCreateFuncaoCore.js';
 import { getFuncaoByIdCore } from './utils/getFuncaoByIdCore.js';
 import { getFuncoesByUnitCore } from './utils/getFuncoesByUnitCore.js';
 import { processBulkUpdateFuncoesItems } from './utils/processBulkUpdateFuncoes.js';
+import { executeUpdateFuncaoCore } from './utils/executeUpdateFuncaoCore.js';
 
 function normalizeUnitId(value){
   return String(value || '').trim();
@@ -118,40 +119,26 @@ export async function updateFuncao(req,res){
     const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
     const existente = await findFuncaoById(id, contextPrincipalUnitId || null);
     if (!existente) return notFound(res,'Função não encontrada');
-    const unidadePrincipalExistenteId = normalizeUnitId(existente.unidade_principal_id);
-    const targetPrincipalUnitId = contextPrincipalUnitId || normalizeUnitId(unidade_principal_id || unidadePrincipalExistenteId);
-    if (nome && nome !== existente.nome) {
-      const dup = await findOutraFuncaoByNomeExcludingId(id, nome, targetPrincipalUnitId || unidadePrincipalExistenteId || null);
-      if (dup) return badRequest(res,'Já existe uma função com este nome');
-    }
-    const updates = {};
-    if (nome) updates.nome = nome;
-    if (descricao !== undefined) updates.descricao = descricao;
-    if (unidade_principal_id && !(await requestedUnitWithinContextCluster(req, unidade_principal_id))) {
-      return notFound(res,'Unidade principal não encontrada');
-    }
-    if (targetPrincipalUnitId){
-      const unidade = await findUnidadeByIdWithModulosAcessiveis(targetPrincipalUnitId);
-      if (!unidade) return badRequest(res,'Unidade inválida');
-      updates.unidade_principal_id = targetPrincipalUnitId;
-      if (modulos_habilitados !== undefined){
-        const lista = normalizarListaModulos(modulos_habilitados);
-        const permitidos = new Set((unidade.modulosAcessiveis||[]).map(m=>String(m._id)));
-        updates.modulos_habilitados = lista.filter(id=>permitidos.has(String(id)));
-      }
-    } else if (modulos_habilitados !== undefined){
-      const unidade = await findUnidadeByIdWithModulosAcessiveis(unidadePrincipalExistenteId);
-      const lista = normalizarListaModulos(modulos_habilitados);
-      const permitidos = new Set((unidade.modulosAcessiveis||[]).map(m=>String(m._id)));
-      updates.modulos_habilitados = lista.filter(id=>permitidos.has(String(id)));
-    }
-    await updateFuncaoById(id, updates, targetPrincipalUnitId || unidadePrincipalExistenteId || null);
-    const updated = await findFuncaoByIdLean(id, targetPrincipalUnitId || unidadePrincipalExistenteId || null);
-    const nomeF = updated?.nome || '';
-    const rawDesc = (updated?.descricao && updated.descricao.trim()) ? updated.descricao.trim() : '';
-    const codigo = updated?.codigo || '';
-    const descricaoDisplay = rawDesc || (nomeF && nomeF !== codigo ? nomeF : '');
-    return ok(res,{ updated:true, funcao:{ _id:updated._id, codigo, nome:nomeF, descricao: rawDesc, descricao_display: descricaoDisplay, hasDescricaoReal: !!rawDesc } });
+    const updated = await executeUpdateFuncaoCore({
+      id,
+      nome,
+      descricao,
+      unidade_principal_id,
+      modulos_habilitados,
+      contextPrincipalUnitId,
+      existente,
+      normalizeUnitId,
+      requestedUnitWithinContextCluster: async (unitId) => requestedUnitWithinContextCluster(req, unitId),
+      findOutraFuncaoByNomeExcludingId,
+      findUnidadeByIdWithModulosAcessiveis,
+      normalizarListaModulos,
+      updateFuncaoById,
+      findFuncaoByIdLean,
+    });
+    if (updated?.error === 'Unidade principal não encontrada') return notFound(res,'Unidade principal não encontrada');
+    if (updated?.error === 'Já existe uma função com este nome') return badRequest(res,'Já existe uma função com este nome');
+    if (updated?.error === 'Unidade inválida') return badRequest(res,'Unidade inválida');
+    return ok(res,{ updated:true, funcao: updated });
   } catch(e){ console.error('[API FUNCOES][update] Erro:', e); return serverError(res,e); }
 }
 
