@@ -18,6 +18,7 @@ import { listarFuncoesService } from '#modules/gestor/app/services/funcoes/lista
 import { deleteFuncaoScopedService } from '#modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js';
 import { processCreateFuncaoCore } from './utils/processCreateFuncaoCore.js';
 import { getFuncaoByIdCore } from './utils/getFuncaoByIdCore.js';
+import { getFuncoesByUnitCore } from './utils/getFuncoesByUnitCore.js';
 import { processBulkUpdateFuncoesItems } from './utils/processBulkUpdateFuncoes.js';
 
 function normalizeUnitId(value){
@@ -160,16 +161,11 @@ export async function getFuncoesPorUnidade(req,res){
     if (!unidadeId || unidadeId==='null') return ok(res,[]);
     if (!(await requestedUnitWithinContextCluster(req, unidadeId))) return ok(res,[]);
     const principalUnitId = await resolvePrincipalUnitId(unidadeId);
-    const funcoes = await findFuncoesByPrincipalUnitIdLean(principalUnitId || unidadeId);
-    return ok(res, funcoes.map(f=>{
-      const nome = f.nome || '';
-      const rawDesc = (f.descricao && f.descricao.trim()) ? f.descricao.trim() : '';
-      const codigo = f.codigo || '';
-      // Novo fallback: se não há descricao real e nome==codigo, usa o próprio código como descricao_display
-      const descricaoDisplay = rawDesc || (nome && nome !== codigo ? nome : codigo);
-      const descricao_final = rawDesc || nome || codigo;
-      return { _id:f._id, nome, codigo, descricao: rawDesc, descricao_display: descricaoDisplay, descricao_final, hasDescricaoReal: !!rawDesc };
-    }));
+    const funcoes = await getFuncoesByUnitCore({
+      effectiveUnitId: principalUnitId || unidadeId,
+      findFuncoesByPrincipalUnitIdLean,
+    });
+    return ok(res, funcoes);
   } catch(e){ console.error('[API FUNCOES][getPorUnidade] Erro:', e); return serverError(res,e); }
 }
 
