@@ -27,7 +27,12 @@ import {
 	setUserMembershipFuncionarioIdIfEmpty,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { normalizeFuncionarioPayload } from './utils/funcionarioNormalize.js';
-import { reconcileUpdateFuncionarioIncrementalAnexos } from './utils/reconcileFuncionarioAnexos.js';
+import {
+	reconcileUpdateFuncionarioIncrementalAnexos,
+	reconcileUpdateFuncionarioFullAnexos,
+} from './utils/reconcileFuncionarioAnexos.js';
+import { reconcileUpdateFuncionarioFullBiometria } from './utils/reconcileFuncionarioBiometria.js';
+import { reconcileUpdateFuncionarioFullFoto } from './utils/reconcileFuncionarioFoto.js';
 import { deleteFuncionarioPostExecutionService } from '#modules/gestor/app/services/funcionarios/deleteFuncionarioPostExecution.service.js';
 import { executeCreateFuncionarioCore } from '#modules/gestor/app/usecases/funcionarios/executeCreateFuncionarioCore.js';
 
@@ -1007,84 +1012,71 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 		if (ops.$unset?.unidade_id) delete ops.$unset.unidade_id;
 	}
 	const blobReadyUpdate = canUseBlob();
-	if(req.file && req.file.fieldname === 'foto'){
-		if(!blobReadyUpdate){ return res.status(503).json({ error:'Blob não configurado (conecte a Store no Vercel ou defina BLOB_READ_WRITE_TOKEN/WDGESTOR_DB_DADOS_READ_WRITE_TOKEN)' }); }
-		try { const url = await uploadFuncionarioFotoToBlob(req.file.buffer, funcionario._id); ops.$set.foto = url; await deleteFromBlobIfNeeded(funcionario.foto); } catch(err){ console.warn('[UPLOAD][update] Falha processar foto:', err.message); return res.status(500).json({ error:'Falha ao processar foto' }); }
-	} else if(req.files?.foto?.length){
-		if(!blobReadyUpdate){ return res.status(503).json({ error:'Blob não configurado (conecte a Store no Vercel ou defina BLOB_READ_WRITE_TOKEN/WDGESTOR_DB_DADOS_READ_WRITE_TOKEN)' }); }
-		try { const f=req.files.foto[0]; const url = await uploadFuncionarioFotoToBlob(f.buffer, funcionario._id); ops.$set.foto = url; await deleteFromBlobIfNeeded(funcionario.foto); } catch(err){ console.warn('[UPLOAD][update] Falha processar foto multi:', err.message); return res.status(500).json({ error:'Falha ao processar foto' }); }
-	} else if(req.body.excluir_foto==='true' && funcionario.foto){
-		ops.$unset.foto=1; // remoção explícita
-		await deleteFromBlobIfNeeded(funcionario.foto);
-	} else {
-		// Nem upload nem exclusão solicitada -> protege campo foto
-		if(ops.$unset && ops.$unset.foto){ delete ops.$unset.foto; }
-		if(ops.$set && ops.$set.foto===null){ delete ops.$set.foto; }
+	try {
+		const fotoResult = await reconcileUpdateFuncionarioFullFoto({
+			reqFile: req.file,
+			reqFilesFoto: req.files?.foto || [],
+			excluirFoto: req.body.excluir_foto,
+			fotoAtual: funcionario.foto,
+			funcionarioId: funcionario._id,
+			blobReady: blobReadyUpdate,
+			uploadFuncionarioFotoToBlob,
+			deleteFromBlobIfNeeded,
+		});
+
+		if (fotoResult?.mode === 'set') {
+			ops.$set.foto = fotoResult.fotoUrl;
+			if (ops.$unset?.foto) delete ops.$unset.foto;
+		} else if (fotoResult?.mode === 'unset') {
+			ops.$unset.foto = 1;
+			if (ops.$set && ops.$set.foto === null) delete ops.$set.foto;
+		} else {
+			if (ops.$unset && ops.$unset.foto) delete ops.$unset.foto;
+			if (ops.$set && ops.$set.foto === null) delete ops.$set.foto;
+		}
+	} catch(err){
+		if (err?.code === 'BLOB_NOT_CONFIGURED') {
+			return res.status(503).json({ error: err.message });
+		}
+		if (err?.code === 'FOTO_PROCESSING_FAILED') {
+			console.warn('[UPLOAD][update] Falha processar foto:', err?.cause?.message || err.message);
+			return res.status(500).json({ error: err.message });
+		}
+		throw err;
 	}
-	let anexosFinal=[]; if(req.body.anexos_existentes && typeof req.body.anexos_existentes === 'string'){ try { anexosFinal=JSON.parse(req.body.anexos_existentes); } catch{} }
-	if(req.body.anexos_excluidos && typeof req.body.anexos_excluidos === 'string'){ try { const excluidos=JSON.parse(req.body.anexos_excluidos); const caminhos=new Set(excluidos.map(a=>a.caminho)); anexosFinal = anexosFinal.filter(e=>!caminhos.has(e.caminho)); for(const ex of excluidos){ if(ex.caminho){ const abs=path.join(ROOT, '.', ex.caminho.replace(/^public\//,'')); try { if(fs.existsSync(abs)) fs.unlinkSync(abs); } catch{} } } } catch{} }
-	if(req.files?.anexos?.length){ const novos=mapFiles(req.files.anexos); console.log('[UPLOAD][update-full] novos anexos normalizados:', novos.length); anexosFinal = anexosFinal.concat(novos); }
-	if(anexosFinal.length>0) ops.$set.anexos = anexosFinal; else ops.$unset.anexos=1;
+	const anexosReconciliados = reconcileUpdateFuncionarioFullAnexos({
+		anexosExistentes: req.body.anexos_existentes,
+		anexosExcluidos: req.body.anexos_excluidos,
+		novosUploads: req.files?.anexos || [],
+		mapFiles,
+		fs,
+		path,
+		rootDir: ROOT,
+	});
+	if(anexosReconciliados.length>0) ops.$set.anexos = anexosReconciliados; else ops.$unset.anexos=1;
 
 	// Filtra caminhos desconhecidos (update completo) e protege required
 	ops = filterOpsBySchema(ops);
 	ops = protectRequiredFieldsFromUnset(ops);
 
-	// --- Patch: parse arrays biométricas via *_capturas_json (update completo) ---
-	try {
-		if (req.body.face_capturas_json && req.body.face_capturas_json.length > 500000) { console.warn('[BIO JSON][update-full] face_capturas_json excede limite'); delete req.body.face_capturas_json; }
-		if (req.body.fp_capturas_json && req.body.fp_capturas_json.length > 500000) { console.warn('[BIO JSON][update-full] fp_capturas_json excede limite'); delete req.body.fp_capturas_json; }
-		if (req.body.face_capturas_json) {
-			let arr; try { 
-				if (typeof req.body.face_capturas_json === 'string') {
-					arr = JSON.parse(req.body.face_capturas_json); 
-				} else {
-					console.warn('[BIO JSON][update-full] face_capturas_json não é string:', typeof req.body.face_capturas_json);
-					arr = null;
-				}
-			} catch { arr = null; }
-			if (Array.isArray(arr)) {
-				let norm = arr.filter(o=>o && (o.hash||o.imagem)).map(o=>(
-					{
-						hash: String(o.hash||'').substring(0,128),
-						imagem: o.imagem && String(o.imagem).length < 500000 ? o.imagem : undefined,
-						template_b64: o.template_b64 && String(o.template_b64).length < 500000 ? o.template_b64 : undefined,
-						template_sha256: o.template_sha256 || undefined,
-						qualidade: (o.qualidade!=null && Number.isFinite(Number(o.qualidade))) ? Number(o.qualidade) : undefined
-					}
-				));
-				// Converte base64 -> Blob URL quando possível
-				try { if (canUseBlob()) norm = await mapBiometriasFaciaisToBlob(norm, funcionario._id); } catch(err){ console.warn('[BIO FACE][update-full] map blob falhou:', err?.message); }
-				if (norm.length) { ops.$set.biometrias_facial = norm; } else { ops.$unset.biometrias_facial = 1; }
-			}
+	const biometriaPatch = await reconcileUpdateFuncionarioFullBiometria({
+		faceCapturasJson: req.body.face_capturas_json,
+		fpCapturasJson: req.body.fp_capturas_json,
+		faceImagem: ops.$set?.face_imagem,
+		blobReady: blobReadyUpdate,
+		funcionarioId: funcionario._id,
+		mapBiometriasFaciaisToBlob,
+		parseDataUrl,
+		uploadFacePreviewToBlob,
+	});
+	if (biometriaPatch?.set && typeof biometriaPatch.set === 'object') {
+		Object.assign(ops.$set, biometriaPatch.set);
+	}
+	if (Array.isArray(biometriaPatch?.unset)) {
+		for (const field of biometriaPatch.unset) {
+			ops.$unset[field] = 1;
+			if (ops.$set && Object.prototype.hasOwnProperty.call(ops.$set, field) && biometriaPatch?.set?.[field] === undefined) delete ops.$set[field];
 		}
-		if (req.body.fp_capturas_json) {
-			let arr; try { 
-				if (typeof req.body.fp_capturas_json === 'string') {
-					arr = JSON.parse(req.body.fp_capturas_json); 
-				} else {
-					console.warn('[BIO JSON][update-full] fp_capturas_json não é string:', typeof req.body.fp_capturas_json);
-					arr = null;
-				}
-			} catch { arr = null; }
-			if (Array.isArray(arr)) {
-				const norm = arr.filter(o=>o && (o.hash||o.imagem)).map(o=>(
-					{
-						hash: String(o.hash||'').substring(0,128),
-						imagem: o.imagem && String(o.imagem).length < 500000 ? o.imagem : undefined,
-						template_b64: o.template_b64 && String(o.template_b64).length < 500000 ? o.template_b64 : undefined,
-						template_sha256: o.template_sha256 || undefined,
-						// idx -> dedo
-						dedo: (Number.isInteger(o.idx) && o.idx>=0 && o.idx<10) ? ('D'+(o.idx+1)) : undefined
-					}
-				));
-				if (norm.length) { ops.$set.biometrias_digitais = norm; } else { ops.$unset.biometrias_digitais = 1; }
-			}
-		}
-	} catch(parseErr){ console.warn('[BIO JSON][update-full] falha parse:', parseErr.message); }
-	// face_imagem base64 -> Blob URL, se presente
-	if (blobReadyUpdate && ops.$set && typeof ops.$set.face_imagem === 'string' && /^data:/i.test(ops.$set.face_imagem)){
-		try { const parsed = parseDataUrl(ops.$set.face_imagem); if(parsed){ const url = await uploadFacePreviewToBlob(parsed.buffer, funcionario._id, 0); if(url) ops.$set.face_imagem = url; } } catch(err){ console.warn('[BIO FACE][update] face_imagem blob fail:', err?.message); }
 	}
 		try {
 			await updateFuncionarioByIdWithOps(id, ops, canonicalUnitId || normalizeUnitId(funcionario?.unidade_id) || null);
