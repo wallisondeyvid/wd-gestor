@@ -1,3 +1,5 @@
+import { processFeedbackDeleteCleanupCore } from './utils/processFeedbackDeleteCleanupCore.js';
+
 export function createDeleteFeedbackHandler({
   isAdminLike,
   apiOk,
@@ -21,28 +23,16 @@ export function createDeleteFeedbackHandler({
       const fb = await findFeedbackByIdAndDeleteLean(id);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 
-      try {
-        const blobToken = getBlobToken();
-        const anexos = Array.isArray(fb?.anexos) ? fb.anexos : [];
-        const urls = anexos.map((a) => a && a.url).filter(Boolean).map(String);
-        for (const u of urls) {
-          try {
-            await delBlob(u, blobToken ? { token: blobToken } : undefined);
-          } catch {
-            // noop
-          }
-        }
-      } catch (e) {
-        logWarn('[feedbackApi] aviso: falha ao remover anexos do feedback (blob):', id, e?.message || e);
-      }
-
-      try {
-        const ROOT = pathModule.join(cwdProvider());
-        const absDir = pathModule.join(ROOT, 'public', 'uploads', 'feedback', String(id));
-        if (fsModule.existsSync(absDir)) fsModule.rmSync(absDir, { recursive: true, force: true });
-      } catch (e) {
-        logWarn('[feedbackApi] aviso: falha ao remover anexos do feedback (fs):', id, e?.message || e);
-      }
+      await processFeedbackDeleteCleanupCore({
+        id,
+        fb,
+        getBlobToken,
+        delBlob,
+        fsModule,
+        pathModule,
+        cwdProvider,
+        logWarn,
+      });
 
       return apiOk(res, { id, deleted: true });
     } catch (e) {
