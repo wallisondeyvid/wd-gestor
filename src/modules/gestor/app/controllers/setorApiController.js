@@ -19,6 +19,7 @@ import { updateSetorScopedService } from '#modules/gestor/app/services/setores/u
 import { processCreateSetorCore } from './utils/processCreateSetorCore.js';
 import { getSetorByIdCore } from './utils/getSetorByIdCore.js';
 import { getSetoresByUnitCore } from './utils/getSetoresByUnitCore.js';
+import { listSetoresCore } from './utils/listSetoresCore.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -146,43 +147,10 @@ export async function listarSetores(req,res){
     if (!canonicalUnitId && !isMasterOrAdmin(req)) {
       return ok(res, []);
     }
-    const setores = await findSetoresByFiltroPopulateUnidadeLean(filtro);
-
-    // Fallback: construir mapa de unidades se algum setor veio sem populate resolvido
-    let needsLookup = setores.some(s => s.unidade_id && typeof s.unidade_id === 'string');
-    const unidadeIdsRaw = new Set();
-    if (needsLookup) {
-      setores.forEach(s => { if (s.unidade_id && typeof s.unidade_id === 'string') unidadeIdsRaw.add(s.unidade_id); });
-    }
-    let unidadesMap = {};
-    if (unidadeIdsRaw.size) {
-      const unidadesDB = await findUnidadesByIdsNomeCodigoLean(Array.from(unidadeIdsRaw));
-      unidadesDB.forEach(u => { unidadesMap[String(u._id)] = u; });
-    }
-
-    const mapped = setores.map((s) => {
-      let unidade_nome = '';
-      let unidade_label = '';
-      let unidade_id_raw = null;
-      if (s.unidade_id) {
-        if (typeof s.unidade_id === 'object' && s.unidade_id !== null) {
-          const codigo = s.unidade_id.codigo || '';
-          const nome = s.unidade_id.nome || '';
-          unidade_label = codigo && nome ? `${codigo} - ${nome}` : (nome || codigo || '');
-          unidade_nome = unidade_label;
-          unidade_id_raw = s.unidade_id._id || null;
-        } else if (typeof s.unidade_id === 'string') {
-          unidade_id_raw = s.unidade_id;
-          const u = unidadesMap[s.unidade_id];
-          if (u) {
-            const codigo = u.codigo || '';
-            const nome = u.nome || '';
-            unidade_label = codigo && nome ? `${codigo} - ${nome}` : (nome || codigo || '');
-            unidade_nome = unidade_label;
-          }
-        }
-      }
-      return { ...s, unidade_nome, unidade_label, unidade_id_raw };
+    const mapped = await listSetoresCore({
+      filtro,
+      findSetoresByFiltroPopulateUnidadeLean,
+      findUnidadesByIdsNomeCodigoLean,
     });
     return ok(res, mapped);
   } catch(e){ console.error('[API SETORES][listar] Erro:', e); return serverError(res,e); }
