@@ -3,6 +3,7 @@ import {
 	findUnidadeUserBaseLean,
 	findUnidadesByCondLean,
 	findRecursoByIdComUnidadeNome,
+	findRecursosByFiltroComUnidadeLean,
 	findRecursoByPlacaUpper,
 	findRecursoByChassiUpper,
 	findRecursoByRenavam,
@@ -16,6 +17,8 @@ import {
 import { listarRecursosService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
 import { deleteRecursoScopedService } from '#modules/gestor/app/services/recursos/deleteRecursoScoped.service.js';
 import { getRecursoByIdCore } from './utils/getRecursoByIdCore.js';
+import { processCreateRecursoCore } from './utils/processCreateRecursoCore.js';
+import { processUpdateRecursoCore } from './utils/processUpdateRecursoCore.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -124,31 +127,25 @@ export async function createRecurso(req, res) {
 			return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
 		}
 
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: requestedUnitId, placa: placa.toUpperCase() })).length > 0) {
-			return badRequest(res, 'Placa já cadastrada');
-		}
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: requestedUnitId, chassi: chassi.toUpperCase() })).length > 0) {
-			return badRequest(res, 'Chassi já cadastrado');
-		}
-		if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: requestedUnitId, renavam })).length > 0) {
-			return badRequest(res, 'RENAVAM já cadastrado');
-		}
-
-		const novoRecurso = await createRecursoDb({
-			unidade_id: requestedUnitId,
+		const createResult = await processCreateRecursoCore({
+			requestedUnitId,
 			tipo,
-			placa: placa.toUpperCase(),
-			chassi: chassi.toUpperCase(),
+			placa,
+			chassi,
 			renavam,
-			ano: parseInt(ano),
-			mod: parseInt(mod),
+			ano,
+			mod,
 			marca,
 			modelo,
 			cor,
-			ativo: true,
+			findRecursosByFiltroComUnidadeLean,
+			createRecursoDb,
 		});
+		if (createResult?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada');
+		if (createResult?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado');
+		if (createResult?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado');
 
-		return created(res, novoRecurso._id, { data: novoRecurso });
+		return created(res, createResult._id, { data: createResult });
 	} catch (error) {
 		console.error('[API RECURSOS][create] Erro:', error);
 		return serverError(res, error);
@@ -178,39 +175,31 @@ export async function updateRecurso(req, res) {
 			}
 		}
 
-		if (placa && placa.toUpperCase() !== recurso.placa && await findOutroRecursoByPlacaUpper(req.params.id, placa.toUpperCase(), unidadeEfetiva)) {
-			return badRequest(res, 'Placa já cadastrada para outro recurso');
-		}
+		const updateResult = await processUpdateRecursoCore({
+			id: req.params.id,
+			unidadeEfetiva,
+			recurso,
+			tipo,
+			placa,
+			chassi,
+			renavam,
+			ano,
+			mod,
+			marca,
+			modelo,
+			cor,
+			ativo,
+			findOutroRecursoByPlacaUpper,
+			findOutroRecursoByChassiUpper,
+			findOutroRecursoByRenavam,
+			updateRecursoByIdComUnidadeNome,
+		});
+		if (updateResult?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada para outro recurso');
+		if (updateResult?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado para outro recurso');
+		if (updateResult?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado para outro recurso');
+		if (!updateResult) return notFound(res, 'Recurso não encontrado');
 
-		if (chassi && chassi.toUpperCase() !== recurso.chassi && await findOutroRecursoByChassiUpper(req.params.id, chassi.toUpperCase(), unidadeEfetiva)) {
-			return badRequest(res, 'Chassi já cadastrado para outro recurso');
-		}
-
-		if (renavam && renavam !== recurso.renavam && await findOutroRecursoByRenavam(req.params.id, renavam, unidadeEfetiva)) {
-			return badRequest(res, 'RENAVAM já cadastrado para outro recurso');
-		}
-
-		const atualizado = await updateRecursoByIdComUnidadeNome(
-			req.params.id,
-			{
-				unidade_id: requestedUnitId,
-				tipo,
-				placa: placa ? placa.toUpperCase() : recurso.placa,
-				chassi: chassi ? chassi.toUpperCase() : recurso.chassi,
-				renavam,
-				ano: ano ? parseInt(ano) : recurso.ano,
-				mod: mod ? parseInt(mod) : recurso.mod,
-				marca,
-				modelo,
-				cor,
-				ativo: ativo !== undefined ? ativo : recurso.ativo,
-			},
-			unidadeEfetiva || null,
-		);
-
-		if (!atualizado) return notFound(res, 'Recurso não encontrado');
-
-		return ok(res, atualizado);
+		return ok(res, updateResult);
 	} catch (error) {
 		console.error('[API RECURSOS][update] Erro:', error);
 		return serverError(res, error);
