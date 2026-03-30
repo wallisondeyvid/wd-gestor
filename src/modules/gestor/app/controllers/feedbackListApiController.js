@@ -14,6 +14,8 @@ const ALLOWED_FEEDBACK_TYPES = new Set([
   'outro',
 ]);
 
+import { processAdminFeedbackListFilterCore } from './utils/processAdminFeedbackListFilterCore.js';
+
 export function createAdminFeedbackListHandler({
   isAdminLike,
   apiOk,
@@ -28,31 +30,17 @@ export function createAdminFeedbackListHandler({
     try {
       if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
 
-      const q = String(req.query?.q || '').trim();
-      const status = String(req.query?.status || '').trim();
-      const tipo = String(req.query?.tipo || '').trim();
+      const filterResult = await processAdminFeedbackListFilterCore({
+        q: String(req.query?.q || '').trim(),
+        status: String(req.query?.status || '').trim(),
+        tipo: String(req.query?.tipo || '').trim(),
+        normalizeStatus,
+        normalizeTipo,
+      });
+      if (filterResult?.error === 'invalid_status') return apiFail(res, 400, 'Status inválido.');
+      if (filterResult?.error === 'invalid_tipo') return apiFail(res, 400, 'Tipo inválido.');
 
-      const filter = {};
-      if (status) {
-        const normalizedStatus = normalizeStatus(status);
-        if (!ALLOWED_FEEDBACK_STATUSES.has(normalizedStatus)) return apiFail(res, 400, 'Status inválido.');
-        filter.status = normalizedStatus;
-      }
-      if (tipo) {
-        const normalizedTipo = normalizeTipo(tipo);
-        if (!ALLOWED_FEEDBACK_TYPES.has(normalizedTipo)) return apiFail(res, 400, 'Tipo inválido.');
-        filter.tipo = normalizedTipo;
-      }
-
-      if (q) {
-        const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-        filter.$or = [
-          { mensagem: rx },
-          { resposta: rx },
-          { 'criadoPor.email': rx },
-          { 'criadoPor.nome': rx },
-        ];
-      }
+      const filter = filterResult?.filter || {};
 
       const items = await findFeedbackByFilterSortCreatedAtDescLimit500Lean(filter);
       return apiOk(res, items.map(sanitizeFeedback));
