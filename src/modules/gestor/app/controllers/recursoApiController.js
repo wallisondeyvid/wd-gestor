@@ -15,6 +15,7 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listarRecursosService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
 import { deleteRecursoScopedService } from '#modules/gestor/app/services/recursos/deleteRecursoScoped.service.js';
+import { getRecursoByIdCore } from './utils/getRecursoByIdCore.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -91,7 +92,11 @@ export async function getRecurso(req, res) {
 		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
 		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
 
-		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
+		const recurso = await getRecursoByIdCore({
+			id: req.params.id,
+			unidadeEfetiva,
+			findRecursoByIdComUnidadeNome,
+		});
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
 
 		return ok(res, recurso);
