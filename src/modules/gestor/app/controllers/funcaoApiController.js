@@ -16,6 +16,7 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listarFuncoesService } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
 import { deleteFuncaoScopedService } from '#modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js';
+import { processCreateFuncaoCore } from './utils/processCreateFuncaoCore.js';
 import { processBulkUpdateFuncoesItems } from './utils/processBulkUpdateFuncoes.js';
 
 function normalizeUnitId(value){
@@ -79,13 +80,18 @@ export async function createFuncao(req,res){
     if (!nome) return badRequest(res,'Nome é obrigatório');
     if (!canonicalPrincipalUnitId) return badRequest(res,'Unidade principal é obrigatória');
     if (!(await requestedUnitWithinContextCluster(req, unidade_principal_id || canonicalPrincipalUnitId))) return notFound(res,'Unidade principal não encontrada');
-    const dup = await findFuncaoByNome(nome, canonicalPrincipalUnitId); if (dup) return badRequest(res,'Função já cadastrada');
-    const unidade = await findUnidadeByIdWithModulosAcessiveis(canonicalPrincipalUnitId);
-    if (!unidade) return badRequest(res,'Unidade inválida');
-    const lista = normalizarListaModulos(modulos_habilitados);
-    const permitidos = new Set((unidade.modulosAcessiveis||[]).map(m=>String(m._id)));
-    const modsFiltrados = lista.filter(id=>permitidos.has(String(id)));
-    const funcao = await createFuncaoDb({ nome, descricao, unidade_principal_id: canonicalPrincipalUnitId, modulos_habilitados: modsFiltrados });
+    const funcao = await processCreateFuncaoCore({
+      nome,
+      descricao,
+      canonicalPrincipalUnitId,
+      modulosHabilitados: modulos_habilitados,
+      findFuncaoByNome,
+      findUnidadeByIdWithModulosAcessiveis,
+      normalizarListaModulos,
+      createFuncaoDb,
+    });
+    if (funcao?.error === 'Função já cadastrada') return badRequest(res,'Função já cadastrada');
+    if (funcao?.error === 'Unidade inválida') return badRequest(res,'Unidade inválida');
     return created(res, funcao._id, { data:{ _id: funcao._id } });
   } catch(e){ console.error('[API FUNCOES][create] Erro:', e); return serverError(res,e); }
 }
