@@ -1,3 +1,5 @@
+import { processUpdateFeedbackRespostaCore } from './utils/processUpdateFeedbackRespostaCore.js';
+
 export function createUpdateFeedbackRespostaHandler({
   isAdminLike,
   apiOk,
@@ -12,9 +14,11 @@ export function createUpdateFeedbackRespostaHandler({
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
       const resposta = String(req.body?.resposta || req.body?.reply || '').trim();
       if (resposta.length > 4000) return apiFail(res, 400, 'Resposta deve ter no máximo 4000 caracteres.');
-      const set = { resposta };
-      if (resposta) set.status = 'respondido';
-      const fb = await findFeedbackByIdAndUpdateSetNewLean(id, set);
+      const fb = await processUpdateFeedbackRespostaCore({
+        id,
+        resposta,
+        findFeedbackByIdAndUpdateSetNewLean,
+      });
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
       return apiOk(res, fb);
     } catch (e) {
