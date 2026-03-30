@@ -17,6 +17,7 @@ import {
 import { listarFuncoesService } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
 import { deleteFuncaoScopedService } from '#modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js';
 import { processCreateFuncaoCore } from './utils/processCreateFuncaoCore.js';
+import { getFuncaoByIdCore } from './utils/getFuncaoByIdCore.js';
 import { processBulkUpdateFuncoesItems } from './utils/processBulkUpdateFuncoes.js';
 
 function normalizeUnitId(value){
@@ -99,9 +100,13 @@ export async function createFuncao(req,res){
 export async function getFuncao(req,res){
   try {
     const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
-    const funcao = await findFuncaoByIdPopulated(req.params.id, contextPrincipalUnitId || null);
+    const funcao = await getFuncaoByIdCore({
+      id: req.params.id,
+      contextPrincipalUnitId,
+      findFuncaoByIdPopulated,
+    });
     if (!funcao) return notFound(res,'Função não encontrada');
-    return ok(res,{ _id:funcao._id, nome:funcao.nome, descricao:funcao.descricao||'', unidade_principal_id: funcao.unidade_principal_id?funcao.unidade_principal_id._id:null, modulos_habilitados:(funcao.modulos_habilitados||[]).map(m=>({_id:m._id,nome:m.nome})) });
+    return ok(res, funcao);
   } catch(e){ console.error('[API FUNCOES][get] Erro:', e); return serverError(res,e); }
 }
 
