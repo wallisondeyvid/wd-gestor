@@ -5,6 +5,7 @@ import {
   findFuncaoByNome,
   createFuncao as createFuncaoDb,
   findFuncaoByIdPopulated,
+  findFuncaoById,
   findOutraFuncaoByNomeExcludingId,
   updateFuncaoById,
   findFuncaoByIdLean,
@@ -15,6 +16,7 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listarFuncoesService } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
 import { deleteFuncaoScopedService } from '#modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js';
+import { processBulkUpdateFuncoesItems } from './utils/processBulkUpdateFuncoes.js';
 
 function normalizeUnitId(value){
   return String(value || '').trim();
@@ -185,20 +187,14 @@ export async function bulkUpdateFuncoes(req,res){
     const itens = Array.isArray(req.body?.itens)?req.body.itens:[];
     if(!itens.length) return badRequest(res,'Lista vazia');
     const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
-    const resultados=[]; let atualizados=0;
-    for(const it of itens){
-      const id = it._id || it.id; if(!id) { resultados.push({ ok:false, motivo:'Sem _id' }); continue; }
-      const f = await findFuncaoById(id, contextPrincipalUnitId || null); if(!f){ resultados.push({ _id:id, ok:false, motivo:'Nao encontrada' }); continue; }
-      if (contextPrincipalUnitId && normalizeUnitId(f.unidade_principal_id) !== contextPrincipalUnitId) {
-        resultados.push({ _id:id, ok:false, motivo:'Nao encontrada' }); continue;
-      }
-      let changed=false;
-      if(it.nome && it.nome!==f.nome){ f.nome = it.nome; changed=true; }
-      if(it.descricao!==undefined && it.descricao!==f.descricao){ f.descricao = it.descricao; changed=true; }
-      if(changed){ await saveFuncao(f); atualizados++; }
-      resultados.push({ _id:f._id, ok:true, changed });
-    }
-    return ok(res,{ updated:atualizados, results:resultados });
+    const bulkResult = await processBulkUpdateFuncoesItems({
+      itens,
+      contextPrincipalUnitId,
+      findFuncaoById,
+      saveFuncao,
+      normalizeUnitId,
+    });
+    return ok(res,{ updated:bulkResult.updated, results:bulkResult.results });
   } catch(e){ console.error('[API FUNCOES][bulkUpdate] Erro:', e); return serverError(res,e); }
 }
 
