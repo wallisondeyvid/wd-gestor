@@ -5,6 +5,8 @@ const ALLOWED_FEEDBACK_TYPES = new Set([
   'outro',
 ]);
 
+import { processCreateFeedbackCore } from './utils/processCreateFeedbackCore.js';
+
 export function createCreateFeedbackHandler({
   apiOk,
   apiFail,
@@ -23,30 +25,19 @@ export function createCreateFeedbackHandler({
       const tipo = normalizeTipo(rawTipo);
       if (rawTipo && !ALLOWED_FEEDBACK_TYPES.has(tipo)) return apiFail(res, 400, 'Tipo inválido.');
 
-      // Compat com o widget: { contexto: { url, timezone, user_agent, page_label, viewport } }
-      const ctx = (req.body && typeof req.body === 'object' && req.body.contexto && typeof req.body.contexto === 'object') ? req.body.contexto : null;
-      const ctxUrl = String((ctx && (ctx.url || ctx.path)) || req.body?.url || '').trim();
-      const ctxTz = String((ctx && (ctx.timezone || ctx.tz)) || req.body?.timezone || '').trim();
-      const ctxUa = String((ctx && (ctx.user_agent || ctx.userAgent)) || req.body?.userAgent || '').trim();
-      const inferredModulo = String(req.body?.module || req.body?.modulo || '')?.trim() || inferModuloFromUrl(ctxUrl) || inferModuloFromUrl(req.get('referer'));
-      const uaFromHeader = String(req.get('user-agent') || '').trim();
-
-      const fb = await createFeedback({
-        tipo,
-        status: 'novo',
+      const fb = await processCreateFeedbackCore({
         mensagem,
-        criadoPor: {
-          userId: req.user?._id || req.user?.id || null,
-          email: req.user?.email || '',
-          nome: req.user?.nome || '',
-          role: req.user?.role || ''
-        },
-        origem: {
-          modulo: String(inferredModulo || '').trim(),
-          path: String(ctxUrl || '').trim(),
-          userAgent: String(ctxUa || uaFromHeader || '').trim(),
-          timezone: String(ctxTz || '').trim(),
-        }
+        tipo,
+        rawModulo: String(req.body?.module || req.body?.modulo || '').trim(),
+        contexto: req.body && typeof req.body === 'object' && req.body.contexto && typeof req.body.contexto === 'object' ? req.body.contexto : null,
+        bodyUrl: String(req.body?.url || '').trim(),
+        bodyTimezone: String(req.body?.timezone || '').trim(),
+        bodyUserAgent: String(req.body?.userAgent || '').trim(),
+        referer: String(req.get('referer') || '').trim(),
+        headerUserAgent: String(req.get('user-agent') || '').trim(),
+        user: req.user || null,
+        inferModuloFromUrl,
+        createFeedback,
       });
 
       return apiOk(res, fb.toObject(), { id: fb._id, created: true });
