@@ -1,3 +1,5 @@
+import { processMyFeedbackListFilterCore } from './utils/processMyFeedbackListFilterCore.js';
+
 export function createMyFeedbackListHandler({
   apiOk,
   apiFail,
@@ -6,8 +8,10 @@ export function createMyFeedbackListHandler({
 }) {
   return async function listMyFeedback(req, res) {
     try {
-      const me = req.user?._id || req.user?.id || null;
-      const filter = me ? { 'criadoPor.userId': me } : { 'criadoPor.email': req.user?.email || '' };
+      const filterResult = await processMyFeedbackListFilterCore({
+        currentUser: req.user || null,
+      });
+      const filter = filterResult?.filter || {};
 
       const items = await findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter);
 
