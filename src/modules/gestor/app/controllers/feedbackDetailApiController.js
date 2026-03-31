@@ -1,3 +1,5 @@
+import { processAdminFeedbackDetailCore } from './utils/processAdminFeedbackDetailCore.js';
+
 export function createAdminFeedbackDetailHandler({
   isAdminLike,
   apiOk,
@@ -13,7 +15,10 @@ export function createAdminFeedbackDetailHandler({
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
       const fb = await findFeedbackByIdLean(id);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
-      return apiOk(res, sanitizeFeedback(fb));
+      const detailResult = await processAdminFeedbackDetailCore({
+        feedback: fb,
+      });
+      return apiOk(res, detailResult?.feedback || fb);
     } catch (e) {
       logError('[feedbackApi] GET /api/gestor/feedback/:id erro:', e);
       return apiFail(res, 500, 'Erro ao detalhar.');
