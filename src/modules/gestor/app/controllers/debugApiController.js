@@ -12,6 +12,9 @@ import { removeWrongMasterExecutionService } from '#modules/gestor/app/services/
 async function readUserByEmail(email) {
 	return findUserByEmailCondLean({ email });
 }
+async function readUserByCpf(cpf) {
+	return findUserByCpfCondLean({ cpf });
+}
 export function debugSession(req,res){ try { return ok(res, { hasCookie: Boolean(req.headers.cookie), sessionID: req.sessionID || null, user: req.user ? { id: req.user.id, email: req.user.email, role: req.user.role } : null }); } catch(e){ return serverError(res,e); } }
 export function whoAmI(req,res){
 	if(!req.user) return badRequest(res,'Não autenticado');
@@ -19,7 +22,7 @@ export function whoAmI(req,res){
 	return ok(res, { user: req.user, skipAuth: skip });
 }
 export async function userByEmail(req,res){ try { const { email } = req.params; if(!email) return badRequest(res,'Email obrigatório'); const user = await readUserByEmail(email.toLowerCase()); if(!user) return notFound(res,'Usuário não encontrado'); return ok(res, { _id:user._id, email:user.email, role:user.role, ativo:user.ativo, unidade_id:user.unidade_id }); } catch(e){ return serverError(res,e); } }
-export async function userByCpf(req,res){ try { const { cpf } = req.params; if(!cpf) return badRequest(res,'CPF obrigatório'); const clean = cpf.replace(/\D/g,''); const user = await findUserByCpfCondLean({ cpf: clean }); if(!user) return notFound(res,'Usuário não encontrado'); return ok(res, { _id:user._id, email:user.email, role:user.role, ativo:user.ativo, unidade_id:user.unidade_id }); } catch(e){ return serverError(res,e); } }
+export async function userByCpf(req,res){ try { const { cpf } = req.params; if(!cpf) return badRequest(res,'CPF obrigatório'); const clean = cpf.replace(/\D/g,''); const user = await readUserByCpf(clean); if(!user) return notFound(res,'Usuário não encontrado'); return ok(res, { _id:user._id, email:user.email, role:user.role, ativo:user.ativo, unidade_id:user.unidade_id }); } catch(e){ return serverError(res,e); } }
 export async function testUnidades(req,res){ try { const unidades = await findAllUnidadesLean(); const unidadePrincipal = await findUnidadePrincipalLean(); return ok(res, { total_unidades: unidades.length, unidade_principal: unidadePrincipal ? { id:unidadePrincipal._id, nome:unidadePrincipal.nome, is_principal:unidadePrincipal.is_principal } : null, unidades: unidades.map(u=>({ id:u._id, nome:u.nome, is_principal:u.is_principal })) }); } catch(e){ return serverError(res,e); } }
 export async function removeWrongMaster(req,res){ try { if(!req.user?.isMaster) return badRequest(res,'Acesso negado'); const wrongEmail = 'wallisondeyvdi13@gmail.com'; const result = await removeWrongMasterExecutionService({ email: wrongEmail }); if(result.kind === 'not_found') return ok(res, { removed:false, message:'Usuário incorreto não encontrado' }); return ok(res, { removed:true, message:'Usuário incorreto removido' }); } catch(e){ return serverError(res,e); } }
 
