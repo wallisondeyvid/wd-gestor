@@ -43,6 +43,14 @@ async function getVisibilityMapCached() {
   return fresh;
 }
 
+async function readFeedbackWidgetVisibilityPayload(moduleId = '') {
+  const enabledByModule = await getVisibilityMapCached();
+  if (moduleId) {
+    return { module: moduleId, enabled: enabledByModule[moduleId] !== false };
+  }
+  return { enabledByModule };
+}
+
 function bustCache() {
   cache = { at: 0, map: null };
 }
@@ -53,13 +61,10 @@ export function listWidgetModules(_req, res) {
 
 export async function getFeedbackWidgetVisibility(req, res) {
   try {
-    const enabledByModule = await getVisibilityMapCached();
     const moduleQ = normalizeModuleIdFromInput(req.query?.module);
-    if (moduleQ) {
-      const key = moduleQ === 'portal_morador' ? 'portal-morador' : moduleQ;
-      return res.json({ ok: true, module: key, enabled: enabledByModule[key] !== false });
-    }
-    return res.json({ ok: true, enabledByModule });
+    const moduleId = moduleQ === 'portal_morador' ? 'portal-morador' : moduleQ;
+    const payload = await readFeedbackWidgetVisibilityPayload(moduleId);
+    return res.json({ ok: true, ...payload });
   } catch (e) {
     console.error('[widgetSettingsApi] GET feedback visibility erro:', e);
     return res.status(500).json({ ok: false, error: 'Erro ao carregar configuração do widget.' });
