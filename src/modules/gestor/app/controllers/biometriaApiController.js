@@ -43,7 +43,8 @@ let HID;
 	}
 })();
 function listarDispositivos(){ if(!biometriaEnabled || !HID || typeof HID.devices !== 'function') return []; try { return HID.devices().map(d=>({ vendorId:d.vendorId, productId:d.productId, path:d.path, product:d.product||'', manufacturer:d.manufacturer||'', usagePage:d.usagePage, usage:d.usage })); } catch(e){ if(!isTest) console.error('[BIOMETRIA] erro listando', e); return []; } }
-export function listarDispositivosApi(req,res){ return ok(res, listarDispositivos()); }
+function readDispositivosCore(){ return listarDispositivos(); }
+export function listarDispositivosApi(req,res){ return ok(res, readDispositivosCore()); }
 function normId(v){ if(v===undefined||v===null||v==='') return null; if(typeof v==='string'){ v=v.trim(); if(/^0x/i.test(v)) return parseInt(v,16); } return parseInt(v,10); }
 export async function capturarBiometria(req,res){
 	if (!biometriaEnabled) {
