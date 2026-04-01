@@ -13,22 +13,28 @@ const BANCOS_FILE = path.join(ROOT, 'public', 'data', 'bancos.json');
 let cache = { data: null, ts: 0 };
 const TTL_MS = 1000 * 60 * 10; // 10 minutos
 
+async function listBancosCore({ now }) {
+  if (!cache.data || (now - cache.ts) > TTL_MS) {
+    let json;
+    try {
+      const raw = await readFile(BANCOS_FILE, 'utf8');
+      json = JSON.parse(raw);
+      if (!Array.isArray(json)) throw new Error('Formato inválido: esperado array');
+    } catch (err) {
+      console.warn('[bancos][api] falha ao ler arquivo, usando fallback básico:', err.message);
+      json = [];
+    }
+
+    cache = { data: json.map(normalizarBanco).filter(v=>v.codigo && v.nome), ts: now };
+  }
+
+  return { bancos: cache.data, total: cache.data.length };
+}
+
 export async function listarBancos(req, res, next) {
   try {
-    const now = Date.now();
-    if (!cache.data || (now - cache.ts) > TTL_MS) {
-      let json;
-      try {
-        const raw = await readFile(BANCOS_FILE, 'utf8');
-        json = JSON.parse(raw);
-        if (!Array.isArray(json)) throw new Error('Formato inválido: esperado array');
-      } catch (err) {
-        console.warn('[bancos][api] falha ao ler arquivo, usando fallback básico:', err.message);
-        json = [];
-      }
-      cache = { data: json.map(normalizarBanco).filter(v=>v.codigo && v.nome), ts: now };
-    }
-    return res.json({ ok: true, bancos: cache.data, total: cache.data.length, cached: true });
+    const result = await listBancosCore({ now: Date.now() });
+    return res.json({ ok: true, bancos: result.bancos, total: result.total, cached: true });
   } catch (err) {
     next(err);
   }
