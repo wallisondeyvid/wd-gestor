@@ -765,55 +765,66 @@ function protectRequiredFieldsFromUnset(ops){
     return ops;
   } catch { return ops; }
 }
-export async function updateFuncionarioIncremental(req,res){ try { const { id } = req.params; const canonicalUnitId = getCanonicalContextUnitId(req) || ''; const funcionario = await findFuncionarioById(id, canonicalUnitId || null); if(!funcionario) return notFound(res,'Funcionário não encontrado'); if (req.body?.unidade_id && !requestedUnitMatchesContext(req, req.body.unidade_id)) return notFound(res,'Unidade não encontrada'); const asIsoMaybe=v=>{
-	try {
-		if(v==null) return '';
-		// Strings: normaliza datas dd/mm/aaaa -> ISO
-		if(typeof v==='string'){ return v.includes('/') ? asISODate(v) : v; }
-		// Arrays: usa primeiro elemento (se string e aparenta data, normaliza)
-		if(Array.isArray(v)){
-			const f=v.find(x=>x!=null);
-			if(typeof f==='string') return f.includes('/')? asISODate(f) : f;
-			return f ?? '';
+function requestedUnitMatchesCanonicalContext(canonicalUnitId, requestedUnitId) {
+	const requested = normalizeUnitId(requestedUnitId);
+	if (!requested) return true;
+
+	const canonical = normalizeUnitId(canonicalUnitId);
+	if (canonical) return requested === canonical;
+
+	return true;
+}
+function coerceBodyValues(body){
+	const asIsoMaybe=v=>{
+		try {
+			if(v==null) return '';
+			if(typeof v==='string'){ return v.includes('/') ? asISODate(v) : v; }
+			if(Array.isArray(v)){
+				const f=v.find(x=>x!=null);
+				if(typeof f==='string') return f.includes('/')? asISODate(f) : f;
+				return f ?? '';
+			}
+			if(v instanceof Date && !isNaN(v.getTime())) return v.toISOString().slice(0,10);
+			if(typeof v==='object') return v;
+			return String(v);
+		} catch(err){
+			console.warn('[incremental][coerce] falha ao normalizar valor', err?.message);
+			return v;
 		}
-		// Date: mantém string ISO
-		if(v instanceof Date && !isNaN(v.getTime())) return v.toISOString().slice(0,10);
-		// Objetos e outros tipos: retorna como está (evita String(obj) que pode falhar)
-		if(typeof v==='object') return v;
-		// number/boolean/etc: converte para string simples
-		return String(v);
-	} catch(err){
-		console.warn('[incremental][coerce] falha ao normalizar valor', err?.message);
-		return v;
+	};
+	Object.keys(body || {}).forEach(k=>{ try { body[k]=asIsoMaybe(body[k]); } catch(err){ console.warn('[incremental][body-map] falha chave=',k, err?.message); } });
+}
+async function createFuncionarioUpdateSharedCore({ id, body, canonicalUnitId } = {}) {
+	const funcionario = await findFuncionarioById(id, canonicalUnitId || null);
+	if(!funcionario) return { kind:'not_found' };
+	if (body?.unidade_id && !requestedUnitMatchesCanonicalContext(canonicalUnitId, body.unidade_id)) {
+		return { kind:'unit_not_allowed' };
 	}
-}; Object.keys(req.body).forEach(k=>{ try { req.body[k]=asIsoMaybe(req.body[k]); } catch(err){ console.warn('[incremental][body-map] falha chave=',k, err?.message); } });
-	console.log('[UPLOAD][incremental] req.file?', !!req.file, 'req.files?.foto?.length', req.files?.foto?.length);
-	console.log('[UPLOAD][incremental][debug] files keys:', Object.keys(req.files||{}));
-	console.log('[UPLOAD][incremental][debug] anexos bruto length:', req.files?.anexos?.length || 0);
-	if(req.body.anexos_existentes) console.log('[UPLOAD][incremental][debug] anexos_existentes strlen:', req.body.anexos_existentes.length);
-	logDateDebug('incremental.before-normalize', req.body);
-	applyDateNormalizationToBody(req.body);
-	logDateDebug('incremental.after-normalize', req.body);
-	if(req.body.pis && !isValidPIS(String(req.body.pis).replace(/\D/g,''))) return badRequest(res,'PIS inválido',{ campo:'pis' });
-	if(req.body.pis_pasep && !isValidPIS(String(req.body.pis_pasep).replace(/\D/g,''))) return badRequest(res,'PIS/PASEP inválido',{ campo:'pis_pasep' });
-	let ops = buildUpdateOpsFromBody(req.body);
-	// Normalização de CPF (incremental)
+
+	coerceBodyValues(body);
+	applyDateNormalizationToBody(body);
+
+	if(body?.pis && !isValidPIS(String(body.pis).replace(/\D/g,''))) {
+		return { kind:'validation_error', field:'pis', message:'PIS inválido' };
+	}
+	if(body?.pis_pasep && !isValidPIS(String(body.pis_pasep).replace(/\D/g,''))) {
+		return { kind:'validation_error', field:'pis_pasep', message:'PIS/PASEP inválido' };
+	}
+
+	let ops = buildUpdateOpsFromBody(body);
 	if(ops.$set && Object.prototype.hasOwnProperty.call(ops.$set,'cpf')){
 		const rawCpf = String(ops.$set.cpf||'').replace(/\D/g,'');
 		if(!rawCpf){ delete ops.$set.cpf; ops.$unset.cpf = 1; }
-		else if(rawCpf.length !== 11){ return badRequest(res,'CPF inválido',{ campo:'cpf' }); }
+		else if(rawCpf.length !== 11){ return { kind:'validation_error', field:'cpf', message:'CPF inválido' }; }
 		else { ops.$set.cpf = rawCpf; }
 	}
-	// Remover anexos de update incremental direto
 	if(ops.$set){
-		// dependentes normalização CPF
 		if(Array.isArray(ops.$set.dependentes)){
 			ops.$set.dependentes = ops.$set.dependentes.map(d=>{ if(d && d.cpf) d.cpf = String(d.cpf).replace(/\D/g,''); return d; });
 		}
 		Object.keys(ops.$set).forEach(k=>{ if(k==='anexos' || k.startsWith('anexos.')) delete ops.$set[k]; });
 	}
 	if(ops.$unset){ Object.keys(ops.$unset).forEach(k=>{ if(k==='anexos' || k.startsWith('anexos.')) delete ops.$unset[k]; }); }
-	// Normalização específica de salario_base se presente (string formatada BR)
 	if(ops.$set && Object.prototype.hasOwnProperty.call(ops.$set,'salario_base')) {
 		const raw = String(ops.$set.salario_base||'').trim();
 		if(!raw) { delete ops.$set.salario_base; ops.$unset.salario_base = 1; }
@@ -822,11 +833,34 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 			if(Number.isFinite(parsed)) ops.$set.salario_base = parsed; else { delete ops.$set.salario_base; ops.$unset.salario_base = 1; }
 		}
 	}
-	if(req.body.pcd==='N'){ ops.$unset['tipo_deficiencia']=1; ops.$unset['cid']=1; }
-	if (canonicalUnitId && Object.prototype.hasOwnProperty.call(req.body || {}, 'unidade_id')) {
+	if(body?.pcd==='N'){ ops.$unset['tipo_deficiencia']=1; ops.$unset['cid']=1; }
+	if (canonicalUnitId && Object.prototype.hasOwnProperty.call(body || {}, 'unidade_id')) {
 		ops.$set.unidade_id = canonicalUnitId;
 		if (ops.$unset?.unidade_id) delete ops.$unset.unidade_id;
 	}
+
+	ops = filterOpsBySchema(ops);
+	ops = protectRequiredFieldsFromUnset(ops);
+
+	return {
+		kind: 'ready',
+		funcionario,
+		effectiveUnitId: canonicalUnitId || normalizeUnitId(funcionario?.unidade_id) || null,
+		ops,
+	};
+}
+export async function updateFuncionarioIncremental(req,res){ try { const { id } = req.params; const canonicalUnitId = getCanonicalContextUnitId(req) || '';
+	console.log('[UPLOAD][incremental] req.file?', !!req.file, 'req.files?.foto?.length', req.files?.foto?.length);
+	console.log('[UPLOAD][incremental][debug] files keys:', Object.keys(req.files||{}));
+	console.log('[UPLOAD][incremental][debug] anexos bruto length:', req.files?.anexos?.length || 0);
+	if(req.body.anexos_existentes) console.log('[UPLOAD][incremental][debug] anexos_existentes strlen:', req.body.anexos_existentes.length);
+	logDateDebug('incremental.before-normalize', req.body);
+	const sharedUpdate = await createFuncionarioUpdateSharedCore({ id, body: req.body, canonicalUnitId });
+	if(sharedUpdate.kind === 'not_found') return notFound(res,'Funcionário não encontrado');
+	if(sharedUpdate.kind === 'unit_not_allowed') return notFound(res,'Unidade não encontrada');
+	if(sharedUpdate.kind === 'validation_error') return badRequest(res, sharedUpdate.message, { campo: sharedUpdate.field });
+	logDateDebug('incremental.after-normalize', req.body);
+	let { funcionario, ops, effectiveUnitId } = sharedUpdate;
 	const blobReady = canUseBlob();
 	if(req.file && req.file.fieldname === 'foto'){
 		if(!blobReady){ return res.status(503).json({ error:'Blob não configurado (conecte a Store no Vercel ou defina BLOB_READ_WRITE_TOKEN/WDGESTOR_DB_DADOS_READ_WRITE_TOKEN)' }); }
@@ -868,10 +902,6 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 			unsetCount: unsetKeys.length
 		});
 	} catch(_d){ /* noop */ }
-
-	// Filtra caminhos desconhecidos (evita StrictModeError) e protege required de serem unsetados
-	ops = filterOpsBySchema(ops);
-	ops = protectRequiredFieldsFromUnset(ops);
 
 	// --- Patch: parse arrays biométricas via *_capturas_json (incremental) ---
 	try {
@@ -935,7 +965,7 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 		try { const parsed = parseDataUrl(ops.$set.face_imagem); if(parsed){ const url = await uploadFacePreviewToBlob(parsed.buffer, funcionario._id, 0); if(url) ops.$set.face_imagem = url; } } catch(err){ console.warn('[BIO FACE][incremental] face_imagem blob fail:', err?.message); }
 	}
 		try {
-			await updateFuncionarioByIdWithOps(id, ops, canonicalUnitId || normalizeUnitId(funcionario?.unidade_id) || null);
+			await updateFuncionarioByIdWithOps(id, ops, effectiveUnitId);
 			return ok(res, { updated:true });
 		} catch(e){
 			// Diagnóstico rico para facilitar a correção no front
@@ -972,45 +1002,18 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 // Aplica normalização de datas também no update incremental (após parsing acima mas antes de persistir)
 // Reprocessa apenas campos de data em $set que ainda sejam arrays ou strings não convertidas.
 // (Inserido logo após definição da função para garantir execução em chamadas futuras)
-export async function updateFuncionario(req,res){ try { const { id } = req.params; const canonicalUnitId = getCanonicalContextUnitId(req) || ''; const funcionario = await findFuncionarioById(id, canonicalUnitId || null); if(!funcionario) return notFound(res,'Funcionário não encontrado'); if (req.body?.unidade_id && !requestedUnitMatchesContext(req, req.body.unidade_id)) return notFound(res,'Unidade não encontrada');
+export async function updateFuncionario(req,res){ try { const { id } = req.params; const canonicalUnitId = getCanonicalContextUnitId(req) || '';
 	console.log('[UPLOAD][update-full] req.file?', !!req.file, 'req.files?.foto?.length', req.files?.foto?.length);
 	console.log('[UPLOAD][update-full][debug] files keys:', Object.keys(req.files||{}));
 	console.log('[UPLOAD][update-full][debug] anexos bruto length:', req.files?.anexos?.length || 0);
 	if(req.body.anexos_existentes) console.log('[UPLOAD][update-full][debug] anexos_existentes strlen:', req.body.anexos_existentes.length);
 	logDateDebug('update.before-normalize', req.body);
-	applyDateNormalizationToBody(req.body);
+	const sharedUpdate = await createFuncionarioUpdateSharedCore({ id, body: req.body, canonicalUnitId });
+	if(sharedUpdate.kind === 'not_found') return notFound(res,'Funcionário não encontrado');
+	if(sharedUpdate.kind === 'unit_not_allowed') return notFound(res,'Unidade não encontrada');
+	if(sharedUpdate.kind === 'validation_error') return badRequest(res, sharedUpdate.message, { campo: sharedUpdate.field });
 	logDateDebug('update.after-normalize', req.body);
-	if(req.body.pis && !isValidPIS(String(req.body.pis).replace(/\D/g,''))) return badRequest(res,'PIS inválido',{ campo:'pis' });
-	if(req.body.pis_pasep && !isValidPIS(String(req.body.pis_pasep).replace(/\D/g,''))) return badRequest(res,'PIS/PASEP inválido',{ campo:'pis_pasep' });
-	let ops = buildUpdateOpsFromBody(req.body);
-	// Normalização de CPF (update completo)
-	if(ops.$set && Object.prototype.hasOwnProperty.call(ops.$set,'cpf')){
-		const rawCpf = String(ops.$set.cpf||'').replace(/\D/g,'');
-		if(!rawCpf){ delete ops.$set.cpf; ops.$unset.cpf = 1; }
-		else if(rawCpf.length !== 11){ return badRequest(res,'CPF inválido',{ campo:'cpf' }); }
-		else { ops.$set.cpf = rawCpf; }
-	}
-	if(ops.$set){
-		if(Array.isArray(ops.$set.dependentes)){
-			ops.$set.dependentes = ops.$set.dependentes.map(d=>{ if(d && d.cpf) d.cpf = String(d.cpf).replace(/\D/g,''); return d; });
-		}
-		Object.keys(ops.$set).forEach(k=>{ if(k==='anexos' || k.startsWith('anexos.')) delete ops.$set[k]; });
-	}
-	if(ops.$unset){ Object.keys(ops.$unset).forEach(k=>{ if(k==='anexos' || k.startsWith('anexos.')) delete ops.$unset[k]; }); }
-	// Normalização salario_base (string PT-BR -> number)
-	if(ops.$set && Object.prototype.hasOwnProperty.call(ops.$set,'salario_base')) {
-		const raw = String(ops.$set.salario_base||'').trim();
-		if(!raw) { delete ops.$set.salario_base; ops.$unset.salario_base = 1; }
-		else {
-			const parsed = Number(raw.replace(/[R$\s]/g,'').replace(/\./g,'').replace(',', '.'));
-			if(Number.isFinite(parsed)) ops.$set.salario_base = parsed; else { delete ops.$set.salario_base; ops.$unset.salario_base = 1; }
-		}
-	}
-	if(req.body.pcd==='N'){ ops.$unset['tipo_deficiencia']=1; ops.$unset['cid']=1; }
-	if (canonicalUnitId && Object.prototype.hasOwnProperty.call(req.body || {}, 'unidade_id')) {
-		ops.$set.unidade_id = canonicalUnitId;
-		if (ops.$unset?.unidade_id) delete ops.$unset.unidade_id;
-	}
+	let { funcionario, ops, effectiveUnitId } = sharedUpdate;
 	const blobReadyUpdate = canUseBlob();
 	try {
 		const fotoResult = await reconcileUpdateFuncionarioFullFoto({
@@ -1055,10 +1058,6 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 	});
 	if(anexosReconciliados.length>0) ops.$set.anexos = anexosReconciliados; else ops.$unset.anexos=1;
 
-	// Filtra caminhos desconhecidos (update completo) e protege required
-	ops = filterOpsBySchema(ops);
-	ops = protectRequiredFieldsFromUnset(ops);
-
 	const biometriaPatch = await reconcileUpdateFuncionarioFullBiometria({
 		faceCapturasJson: req.body.face_capturas_json,
 		fpCapturasJson: req.body.fp_capturas_json,
@@ -1079,7 +1078,7 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 		}
 	}
 		try {
-			await updateFuncionarioByIdWithOps(id, ops, canonicalUnitId || normalizeUnitId(funcionario?.unidade_id) || null);
+			await updateFuncionarioByIdWithOps(id, ops, effectiveUnitId);
 			return ok(res, { updated:true });
 		} catch(e){
 			const isValidation = e && (e.name === 'ValidationError' || e.name === 'CastError');
