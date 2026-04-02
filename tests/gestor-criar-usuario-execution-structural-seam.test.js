@@ -207,6 +207,19 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
     Date,
     String,
   });
+  const materializeCriarUsuarioMembershipCore = buildFunction(SERVICE_SOURCE, 'async function materializeCriarUsuarioMembershipCore', {
+    buildUserMembershipPayload,
+    createUserMembership: async (payload) => {
+      membershipCalls.push(payload);
+      if (membershipCalls.length === 3) {
+        const error = new Error('duplicate key');
+        error.code = 11000;
+        throw error;
+      }
+    },
+    isDuplicateKeyError,
+    console,
+  });
 
   const createUsuarioExecutionService = buildFunction(SERVICE_SOURCE, 'export async function createUsuarioExecutionService', {
     createUserAndSendPassword: async (input) => {
@@ -219,17 +232,8 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
         _temp_password_plain: 'TEMP9999',
       };
     },
-    createUserMembership: async (payload) => {
-      membershipCalls.push(payload);
-      if (membershipCalls.length === 3) {
-        const error = new Error('duplicate key');
-        error.code = 11000;
-        throw error;
-      }
-    },
-    buildUserMembershipPayload,
-    isDuplicateKeyError,
     materializeCriarUsuarioFuncionarioLinkCore,
+    materializeCriarUsuarioMembershipCore,
     console,
     Date,
     String,
@@ -328,13 +332,11 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
       unidade_id: null,
       funcionario_id: null,
     }),
-    createUserMembership: async () => {},
-    buildUserMembershipPayload,
-    isDuplicateKeyError,
     materializeCriarUsuarioFuncionarioLinkCore: async () => ({
       kind: 'funcionario_create_error',
       message: 'Falha ao criar funcionário automático: falha inesperada',
     }),
+    materializeCriarUsuarioMembershipCore: async () => ({ kind: 'ok' }),
     console,
     Date,
     String,

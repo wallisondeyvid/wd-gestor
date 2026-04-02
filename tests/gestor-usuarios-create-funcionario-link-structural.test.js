@@ -185,12 +185,11 @@ function toPlainJson(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-test('createUsuarioExecutionService real atual delega o subfluxo de funcionario e preserva a orquestracao geral', () => {
+test('createUsuarioExecutionService real atual delega funcionario e preserva sua fronteira isolada', () => {
   const serviceSource = stripComments(extractFunction(SERVICE_SOURCE, 'export async function createUsuarioExecutionService'));
   const seamSource = stripComments(extractFunction(SERVICE_SOURCE, 'async function materializeCriarUsuarioFuncionarioLinkCore'));
 
   assert.match(serviceSource, /createUserAndSendPassword\(/);
-  assert.match(serviceSource, /createUserMembership\(/);
   assert.match(serviceSource, /materializeCriarUsuarioFuncionarioLinkCore\(/);
   assert.doesNotMatch(serviceSource, /findCriarUsuarioFuncionarioByCpfUnidade\(/);
   assert.doesNotMatch(serviceSource, /setCriarUsuarioFuncionarioUsuarioIdIfEmpty\(/);
@@ -205,14 +204,9 @@ test('createUsuarioExecutionService real atual delega o subfluxo de funcionario 
 
 test('a seam futura de funcionario recebe apenas o contexto minimo de vinculo e materializacao', async () => {
   const seamCalls = [];
-  const membershipCalls = [];
   const createUsuarioExecutionService = buildFunction(buildDelegatedCreateServiceSource(), 'async function createUsuarioExecutionService', {
     createUserAndSendPassword: async () => ({ _id: 'u-1', nome: 'Novo Usuario', unidade_id: null, funcionario_id: null }),
-    buildUserMembershipPayload: ({ userId, role, unidadeId, funcionarioId }) => ({ user_id: userId, unidade_id: unidadeId, role, funcionario_id: funcionarioId }),
-    isDuplicateKeyError: () => false,
-    createUserMembership: async (payload) => {
-      membershipCalls.push(toPlainJson(payload));
-    },
+    materializeCriarUsuarioMembershipCore: async () => ({ kind: 'ok' }),
     materializeCriarUsuarioFuncionarioLinkCore: async (input) => {
       seamCalls.push(toPlainJson({
         ...input,
@@ -254,7 +248,6 @@ test('a seam futura de funcionario recebe apenas o contexto minimo de vinculo e 
     funcionarioDoc: null,
     wantsNewFuncionario: true,
   }]);
-  assert.deepEqual(membershipCalls, [{ user_id: 'u-1', unidade_id: 'un-1', role: 'user', funcionario_id: 'f-1' }]);
   assert.deepEqual(toPlainJson(result), {
     kind: 'created',
     userId: 'u-1',
@@ -264,17 +257,12 @@ test('a seam futura de funcionario recebe apenas o contexto minimo de vinculo e 
 
 test('createUsuarioExecutionService com seam futura preserva a orquestracao geral e o ramo funcionario_create_error', async () => {
   const createUserCalls = [];
-  const membershipCalls = [];
   const createUsuarioExecutionService = buildFunction(buildDelegatedCreateServiceSource(), 'async function createUsuarioExecutionService', {
     createUserAndSendPassword: async (input) => {
       createUserCalls.push(toPlainJson(input));
       return { _id: 'u-2', nome: input.nome, unidade_id: null, funcionario_id: null };
     },
-    buildUserMembershipPayload: ({ userId, role, unidadeId, funcionarioId }) => ({ user_id: userId, unidade_id: unidadeId, role, funcionario_id: funcionarioId }),
-    isDuplicateKeyError: () => false,
-    createUserMembership: async (payload) => {
-      membershipCalls.push(payload);
-    },
+    materializeCriarUsuarioMembershipCore: async () => ({ kind: 'ok' }),
     materializeCriarUsuarioFuncionarioLinkCore: async () => ({
       kind: 'funcionario_create_error',
       message: 'Falha ao criar funcionário automático: erro',
@@ -298,7 +286,6 @@ test('createUsuarioExecutionService com seam futura preserva a orquestracao gera
   });
 
   assert.equal(createUserCalls.length, 1);
-  assert.deepEqual(membershipCalls, []);
   assert.deepEqual(toPlainJson(result), {
     kind: 'funcionario_create_error',
     message: 'Falha ao criar funcionário automático: erro',
@@ -310,7 +297,7 @@ test('createUsuarioExecutionService futuro deixa de conter diretamente o subflux
 
   assert.match(delegatedSource, /materializeCriarUsuarioFuncionarioLinkCore\(/);
   assert.match(delegatedSource, /createUserAndSendPassword\(/);
-  assert.match(delegatedSource, /createUserMembership\(/);
+  assert.match(delegatedSource, /materializeCriarUsuarioMembershipCore\(/);
   assert.doesNotMatch(delegatedSource, /findCriarUsuarioFuncionarioByCpfUnidade\(/);
   assert.doesNotMatch(delegatedSource, /setCriarUsuarioFuncionarioUsuarioIdIfEmpty\(/);
   assert.doesNotMatch(delegatedSource, /setCriarUsuarioFuncionarioUsuarioIdById\(/);
@@ -327,7 +314,7 @@ test('a futura seam de funcionario concentra localizar, vincular, materializar e
   assert.match(seamSource, /createCriarUsuarioFuncionarioDoc\(/);
   assert.match(seamSource, /saveUserDoc\(user\)/);
   assert.doesNotMatch(seamSource, /createUserAndSendPassword\(/);
-  assert.doesNotMatch(seamSource, /createUserMembership\(/);
+  assert.doesNotMatch(seamSource, /materializeCriarUsuarioMembershipCore\(/);
 });
 
 test('a futura seam de funcionario preserva os ramos de vinculo existente, criacao placeholder e erro semantico', async () => {

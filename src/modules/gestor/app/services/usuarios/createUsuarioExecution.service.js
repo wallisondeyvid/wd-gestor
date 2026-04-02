@@ -160,6 +160,40 @@ async function materializeCriarUsuarioFuncionarioLinkCore({
 	return { kind: 'ok', linkedFuncionarioId, funcionarioNovo };
 }
 
+async function materializeCriarUsuarioMembershipCore({
+	userId,
+	requestedUserRole,
+	unidadeId,
+	linkedFuncionarioId,
+}) {
+	const membershipPayload = buildUserMembershipPayload({
+		userId,
+		role: requestedUserRole,
+		unidadeId,
+		funcionarioId: linkedFuncionarioId,
+	});
+	if (!membershipPayload) {
+		return { kind: 'ok' };
+	}
+
+	try {
+		await createUserMembership(membershipPayload);
+	} catch (membershipErr) {
+		if (isDuplicateKeyError(membershipErr)) {
+			return {
+				kind: 'membership_duplicate',
+			};
+		}
+		console.error('[criarUsuario] falha ao criar membership:', membershipErr);
+		return {
+			kind: 'membership_error',
+			message: 'Falha ao criar vínculo do usuário com a unidade',
+		};
+	}
+
+	return { kind: 'ok' };
+}
+
 export async function createUsuarioExecutionService({
 	existingUser = null,
 	nome,
@@ -207,27 +241,14 @@ export async function createUsuarioExecutionService({
 
 	const { linkedFuncionarioId, funcionarioNovo } = funcionarioLinkResult;
 
-	const membershipPayload = buildUserMembershipPayload({
+	const membershipResult = await materializeCriarUsuarioMembershipCore({
 		userId: user._id,
-		role: requestedUserRole,
+		requestedUserRole,
 		unidadeId,
-		funcionarioId: linkedFuncionarioId,
+		linkedFuncionarioId,
 	});
-	if (membershipPayload) {
-		try {
-			await createUserMembership(membershipPayload);
-		} catch (membershipErr) {
-			if (isDuplicateKeyError(membershipErr)) {
-				return {
-					kind: 'membership_duplicate',
-				};
-			}
-			console.error('[criarUsuario] falha ao criar membership:', membershipErr);
-			return {
-				kind: 'membership_error',
-				message: 'Falha ao criar vínculo do usuário com a unidade',
-			};
-		}
+	if (membershipResult.kind !== 'ok') {
+		return membershipResult;
 	}
 
 	const payload = {
