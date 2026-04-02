@@ -491,6 +491,109 @@ async function syncExistingMembershipFuncionario(existingMembership, funcionario
 	return { updated: false, conflict: true };
 }
 
+async function createFuncionarioAutoUserLinkCore({
+	funcionario,
+	resolveRole = resolveAutoUserRole,
+	buildMembershipPayload = buildAutoUserMembershipPayload,
+	findUserByEmail: findUserByEmailFn = findUserByEmail,
+	provisionUser,
+	findUserMembershipByUserAndUnidade: findUserMembershipByUserAndUnidadeFn = findUserMembershipByUserAndUnidade,
+	createUserMembership: createUserMembershipFn = createUserMembership,
+	syncMembershipFuncionario: syncMembershipFuncionarioFn = syncExistingMembershipFuncionario,
+	syncFuncionarioUsuario: syncFuncionarioUsuarioFn = syncFuncionarioUsuarioIfEmpty,
+	syncLegacyUserFuncionario: syncLegacyUserFuncionarioFn = syncLegacyUserFuncionarioIfEmpty,
+	isDuplicateMembershipError = isDuplicateKeyError,
+	resolveMessage = resolveAutoUserMessage,
+} = {}) {
+	try {
+		const emailNorm = String(funcionario?.email || '').trim().toLowerCase();
+		const unidadeId = String(funcionario?.unidade_id || '').trim();
+		const role = resolveRole(funcionario);
+		let user = await findUserByEmailFn(emailNorm);
+		const reusedUser = !!user;
+
+		if (!user) {
+			user = await provisionUser({
+				nome: funcionario?.nome,
+				email: emailNorm,
+				cpf: funcionario?.cpf,
+				role,
+				unidade_id: funcionario?.unidade_id,
+				funcionario_id: funcionario?._id,
+			});
+		}
+
+		const membershipPayload = buildMembershipPayload({
+			userId: user?._id,
+			role,
+			unidadeId,
+			funcionarioId: funcionario?._id,
+		});
+
+		let outcome = reusedUser ? 'linked' : 'created';
+		let code = null;
+		let membershipCreated = false;
+		let existingMembership = membershipPayload
+			? await findUserMembershipByUserAndUnidadeFn(user?._id, unidadeId)
+			: null;
+
+		if (existingMembership) {
+			const membershipSync = await syncMembershipFuncionarioFn(existingMembership, funcionario?._id);
+			if (membershipSync.conflict) {
+				outcome = 'conflict';
+				code = 'AUTO_USER_MEMBERSHIP_CONFLICT';
+			} else {
+				outcome = 'already-linked';
+			}
+		} else if (membershipPayload) {
+			try {
+				await createUserMembershipFn(membershipPayload);
+				membershipCreated = true;
+			} catch (membershipErr) {
+				if (isDuplicateMembershipError(membershipErr)) {
+					existingMembership = await findUserMembershipByUserAndUnidadeFn(user?._id, unidadeId);
+					const membershipSync = await syncMembershipFuncionarioFn(existingMembership, funcionario?._id);
+					if (membershipSync.conflict) {
+						outcome = 'conflict';
+						code = 'AUTO_USER_MEMBERSHIP_CONFLICT';
+					} else {
+						outcome = 'already-linked';
+					}
+				} else {
+					throw membershipErr;
+				}
+			}
+		}
+
+		const funcionarioLinked = outcome === 'conflict'
+			? false
+			: await syncFuncionarioUsuarioFn(funcionario, user?._id);
+		const legacyUserLinked = outcome === 'conflict'
+			? false
+			: await syncLegacyUserFuncionarioFn(user, funcionario);
+
+		return {
+			ok: outcome !== 'conflict',
+			outcome,
+			code,
+			message: resolveMessage(outcome),
+			userId: String(user?._id || ''),
+			reusedUser,
+			membershipCreated,
+			funcionarioLinked,
+			legacyUserLinked,
+		};
+	} catch (err) {
+		console.error('[AUTO USER] Falha criação automática usuário:', err);
+		return {
+			ok:false,
+			outcome:'error',
+			code:'AUTO_USER_ERROR',
+			message: resolveMessage('error', err?.message || null),
+		};
+	}
+}
+
 export async function createFuncionarioInitial(req,res){ try {
 	let { unidade_id, funcao_id, nome, rg, cpf, data_nascimento, sexo, endereco, email, telefone } = req.body;
 	const requestedUnitId = normalizeUnitId(unidade_id);
@@ -511,7 +614,15 @@ export async function createFuncionarioInitial(req,res){ try {
 	const autoUser = await criarUsuarioAuto(funcionario);
 	return created(res, funcionario._id, { data:{ id: funcionario._id, autoUser } });
 } catch(e){ const duplicateResponse = handleFuncionarioCreateDuplicateError(res, e); if (duplicateResponse) return duplicateResponse; console.error('[API FUNCIONARIOS][initial] Erro:', e); return serverError(res, 'Falha ao criar funcionário inicial'); } }
-async function criarUsuarioAuto(funcionario){ try { const emailNorm = String(funcionario?.email || '').trim().toLowerCase(); const unidadeId = String(funcionario?.unidade_id || '').trim(); const role = resolveAutoUserRole(funcionario); let user = await findUserByEmail(emailNorm); const reusedUser = !!user; if(!user){ const { createUserAndSendPassword } = await import('#modules/gestor/app/services/userService.js'); user = await createUserAndSendPassword({ nome: funcionario.nome, email: emailNorm, cpf: funcionario.cpf, role, unidade_id: funcionario.unidade_id, funcionario_id: funcionario._id }); } const membershipPayload = buildAutoUserMembershipPayload({ userId: user._id, role, unidadeId, funcionarioId: funcionario._id }); let outcome = reusedUser ? 'linked' : 'created'; let code = null; let membershipCreated = false; let existingMembership = membershipPayload ? await findUserMembershipByUserAndUnidade(user._id, unidadeId) : null; if(existingMembership){ const membershipSync = await syncExistingMembershipFuncionario(existingMembership, funcionario._id); if(membershipSync.conflict){ outcome = 'conflict'; code = 'AUTO_USER_MEMBERSHIP_CONFLICT'; } else { outcome = 'already-linked'; } } else if(membershipPayload){ try { await createUserMembership(membershipPayload); membershipCreated = true; } catch(membershipErr){ if(isDuplicateKeyError(membershipErr)){ existingMembership = await findUserMembershipByUserAndUnidade(user._id, unidadeId); const membershipSync = await syncExistingMembershipFuncionario(existingMembership, funcionario._id); if(membershipSync.conflict){ outcome = 'conflict'; code = 'AUTO_USER_MEMBERSHIP_CONFLICT'; } else { outcome = 'already-linked'; } } else { throw membershipErr; } } } const funcionarioLinked = outcome === 'conflict' ? false : await syncFuncionarioUsuarioIfEmpty(funcionario, user._id); const legacyUserLinked = outcome === 'conflict' ? false : await syncLegacyUserFuncionarioIfEmpty(user, funcionario); return { ok: outcome !== 'conflict', outcome, code, message: resolveAutoUserMessage(outcome), userId: String(user._id), reusedUser, membershipCreated, funcionarioLinked, legacyUserLinked }; } catch(err){ console.error('[AUTO USER] Falha criação automática usuário:', err); return { ok:false, outcome:'error', code:'AUTO_USER_ERROR', message: resolveAutoUserMessage('error', err?.message || null) }; } }
+async function criarUsuarioAuto(funcionario){
+	return createFuncionarioAutoUserLinkCore({
+		funcionario,
+		provisionUser: async (payload) => {
+			const { createUserAndSendPassword } = await import('#modules/gestor/app/services/userService.js');
+			return createUserAndSendPassword(payload);
+		},
+	});
+}
 const asNumber = v => { const s = asStr(v).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',', '.'); return s? Number(s): undefined; };
 export async function createFuncionario(req,res){ try {
 	if (typeof req.body.endereco === 'string') delete req.body.endereco;
