@@ -64,33 +64,17 @@ async function createCriarUsuarioFuncionarioDoc(doc) {
 	return createFuncionarioDoc(doc);
 }
 
-export async function createUsuarioExecutionService({
-	existingUser = null,
+async function materializeCriarUsuarioFuncionarioLinkCore({
+	user,
+	isExistingUser,
 	nome,
 	email,
 	cleanCpf,
-	requestedUserRole,
 	unidadeId,
-	funcionarioId = null,
-	funcionarioDoc = null,
-	wantsNewFuncionario = false,
-	senha,
-} = {}) {
-	const isExistingUser = !!existingUser;
-	let user = existingUser;
-	if (!user) {
-		console.log('[criarUsuario] disparando createUserAndSendPassword');
-		user = await createUserAndSendPassword({
-			nome: (nome && nome.trim()) || String(email || '').split('@')[0],
-			email,
-			cpf: cleanCpf || undefined,
-			role: requestedUserRole,
-			unidade_id: unidadeId || null,
-			funcionario_id: funcionarioId || null,
-			senha,
-		});
-	}
-
+	funcionarioId,
+	funcionarioDoc,
+	wantsNewFuncionario,
+}) {
 	let linkedFuncionarioId = funcionarioDoc?._id || null;
 	let funcionarioNovo = null;
 
@@ -172,6 +156,56 @@ export async function createUsuarioExecutionService({
 			}
 		}
 	}
+
+	return { kind: 'ok', linkedFuncionarioId, funcionarioNovo };
+}
+
+export async function createUsuarioExecutionService({
+	existingUser = null,
+	nome,
+	email,
+	cleanCpf,
+	requestedUserRole,
+	unidadeId,
+	funcionarioId = null,
+	funcionarioDoc = null,
+	wantsNewFuncionario = false,
+	senha,
+} = {}) {
+	const isExistingUser = !!existingUser;
+	let user = existingUser;
+	if (!user) {
+		console.log('[criarUsuario] disparando createUserAndSendPassword');
+		user = await createUserAndSendPassword({
+			nome: (nome && nome.trim()) || String(email || '').split('@')[0],
+			email,
+			cpf: cleanCpf || undefined,
+			role: requestedUserRole,
+			unidade_id: unidadeId || null,
+			funcionario_id: funcionarioId || null,
+			senha,
+		});
+	}
+
+	const funcionarioLinkResult = await materializeCriarUsuarioFuncionarioLinkCore({
+		user,
+		isExistingUser,
+		nome,
+		email,
+		cleanCpf,
+		unidadeId,
+		funcionarioId,
+		funcionarioDoc,
+		wantsNewFuncionario,
+	});
+	if (funcionarioLinkResult.kind === 'funcionario_create_error') {
+		return {
+			kind: 'funcionario_create_error',
+			message: funcionarioLinkResult.message,
+		};
+	}
+
+	const { linkedFuncionarioId, funcionarioNovo } = funcionarioLinkResult;
 
 	const membershipPayload = buildUserMembershipPayload({
 		userId: user._id,

@@ -191,6 +191,22 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
       };
     },
   });
+  const materializeCriarUsuarioFuncionarioLinkCore = buildFunction(SERVICE_SOURCE, 'async function materializeCriarUsuarioFuncionarioLinkCore', {
+    saveUserDoc: async (user) => {
+      saveCalls.push({
+        _id: user._id,
+        unidade_id: user.unidade_id,
+        funcionario_id: user.funcionario_id,
+      });
+    },
+    findCriarUsuarioFuncionarioByCpfUnidade,
+    setCriarUsuarioFuncionarioUsuarioIdIfEmpty,
+    setCriarUsuarioFuncionarioUsuarioIdById,
+    createCriarUsuarioFuncionarioDoc,
+    console,
+    Date,
+    String,
+  });
 
   const createUsuarioExecutionService = buildFunction(SERVICE_SOURCE, 'export async function createUsuarioExecutionService', {
     createUserAndSendPassword: async (input) => {
@@ -203,13 +219,6 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
         _temp_password_plain: 'TEMP9999',
       };
     },
-    saveUserDoc: async (user) => {
-      saveCalls.push({
-        _id: user._id,
-        unidade_id: user.unidade_id,
-        funcionario_id: user.funcionario_id,
-      });
-    },
     createUserMembership: async (payload) => {
       membershipCalls.push(payload);
       if (membershipCalls.length === 3) {
@@ -220,10 +229,7 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
     },
     buildUserMembershipPayload,
     isDuplicateKeyError,
-    findCriarUsuarioFuncionarioByCpfUnidade,
-    setCriarUsuarioFuncionarioUsuarioIdIfEmpty,
-    setCriarUsuarioFuncionarioUsuarioIdById,
-    createCriarUsuarioFuncionarioDoc,
+    materializeCriarUsuarioFuncionarioLinkCore,
     console,
     Date,
     String,
@@ -322,16 +328,13 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
       unidade_id: null,
       funcionario_id: null,
     }),
-    saveUserDoc: async () => {},
     createUserMembership: async () => {},
     buildUserMembershipPayload,
     isDuplicateKeyError,
-    findCriarUsuarioFuncionarioByCpfUnidade: async () => {
-      throw new Error('falha inesperada');
-    },
-    setCriarUsuarioFuncionarioUsuarioIdIfEmpty,
-    setCriarUsuarioFuncionarioUsuarioIdById,
-    createCriarUsuarioFuncionarioDoc,
+    materializeCriarUsuarioFuncionarioLinkCore: async () => ({
+      kind: 'funcionario_create_error',
+      message: 'Falha ao criar funcionário automático: falha inesperada',
+    }),
     console,
     Date,
     String,
