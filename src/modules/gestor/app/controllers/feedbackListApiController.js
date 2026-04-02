@@ -17,9 +17,9 @@ const ALLOWED_FEEDBACK_TYPES = new Set([
 import { processAdminFeedbackListFilterCore } from './utils/processAdminFeedbackListFilterCore.js';
 
 export function createAdminFeedbackListHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   normalizeStatus,
   normalizeTipo,
   findFeedbackByFilterSortCreatedAtDescLimit500Lean,
@@ -28,7 +28,8 @@ export function createAdminFeedbackListHandler({
 }) {
   return async function listFeedbackAdmin(req, res) {
     try {
-      if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
+      const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });
+      if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');
 
       const filterResult = await processAdminFeedbackListFilterCore({
         q: String(req.query?.q || '').trim(),

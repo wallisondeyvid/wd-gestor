@@ -1,8 +1,7 @@
-import { processMyFeedbackDetailOwnershipCore } from './utils/processMyFeedbackDetailOwnershipCore.js';
-
 export function createMyFeedbackDetailHandler({
   apiOk,
   apiFail,
+  feedbackPolicy,
   findFeedbackByIdLean,
   logError = console.error,
 }) {
@@ -13,13 +12,13 @@ export function createMyFeedbackDetailHandler({
       const fb = await findFeedbackByIdLean(id);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 
-      const ownershipResult = await processMyFeedbackDetailOwnershipCore({
+      const ownershipResult = feedbackPolicy.ensureCreatorOwnership({
         feedback: fb,
         currentUser: req.user || null,
       });
-      if (ownershipResult?.error === 'forbidden') return apiFail(res, 403, 'Acesso negado.');
+      if (!ownershipResult.allowed) return apiFail(res, 403, 'Acesso negado.');
 
-      return apiOk(res, ownershipResult?.feedback || fb);
+      return apiOk(res, fb);
     } catch (e) {
       logError('[feedbackApi] GET /api/feedback/meus/:id erro:', e);
       return apiFail(res, 500, 'Erro ao detalhar.');

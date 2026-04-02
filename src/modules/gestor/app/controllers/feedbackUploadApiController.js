@@ -2,6 +2,7 @@ export function createUploadFeedbackAnexoHandler({
   apiOk,
   apiFail,
   findFeedbackById,
+  feedbackPolicy,
   saveFeedbackDoc,
   uploadStorageInfra,
   logError = console.error,
@@ -15,10 +16,11 @@ export function createUploadFeedbackAnexoHandler({
       const fb = await findFeedbackById(feedbackId);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 
-      // Seguranca: so o criador pode anexar
-      const creator = fb?.criadoPor?.userId ? String(fb.criadoPor.userId) : '';
-      const me = req.user?._id || req.user?.id;
-      if (creator && me && String(me) !== creator) {
+      const access = feedbackPolicy.ensureCreatorOwnership({
+        currentUser: req.user || null,
+        feedback: fb,
+      });
+      if (!access.allowed) {
         return apiFail(res, 403, 'Acesso negado.');
       }
 

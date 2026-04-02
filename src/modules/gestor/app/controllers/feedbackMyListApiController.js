@@ -1,14 +1,13 @@
-import { processMyFeedbackListFilterCore } from './utils/processMyFeedbackListFilterCore.js';
-
 export function createMyFeedbackListHandler({
   apiOk,
   apiFail,
+  feedbackPolicy,
   findFeedbackByFilterSortCreatedAtDescLimit200Lean,
   logError = console.error,
 }) {
   return async function listMyFeedback(req, res) {
     try {
-      const filterResult = await processMyFeedbackListFilterCore({
+      const filterResult = feedbackPolicy.buildMyFeedbackFilter({
         currentUser: req.user || null,
       });
       const filter = filterResult?.filter || {};

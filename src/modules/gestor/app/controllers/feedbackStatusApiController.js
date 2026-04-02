@@ -8,16 +8,17 @@ const ALLOWED_FEEDBACK_STATUSES = new Set([
 ]);
 
 export function createUpdateFeedbackStatusHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   normalizeStatus,
   findFeedbackByIdAndUpdateSetNewLean,
   logError = console.error,
 }) {
   return async function updateStatus(req, res) {
     try {
-      if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
+      const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });
+      if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');
       const id = String(req.params.feedbackId || '').trim();
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
       const rawStatus = String(req.body?.status || '').trim();

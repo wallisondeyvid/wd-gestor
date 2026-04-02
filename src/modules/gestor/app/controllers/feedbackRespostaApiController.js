@@ -1,15 +1,16 @@
 import { processUpdateFeedbackRespostaCore } from './utils/processUpdateFeedbackRespostaCore.js';
 
 export function createUpdateFeedbackRespostaHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   findFeedbackByIdAndUpdateSetNewLean,
   logError = console.error,
 }) {
   return async function updateResposta(req, res) {
     try {
-      if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');
+      const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });
+      if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');
       const id = String(req.params.feedbackId || '').trim();
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
       const resposta = String(req.body?.resposta || req.body?.reply || '').trim();

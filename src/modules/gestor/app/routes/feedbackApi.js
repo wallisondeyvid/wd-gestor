@@ -178,6 +178,50 @@ function createFeedbackUploadStorageInfraCore({
   };
 }
 
+function createFeedbackPolicyOwnershipCore({
+  isAdminLike: isAdminLikeFn = isAdminLike,
+} = {}) {
+  function resolveActor(currentUser) {
+    const actorId = currentUser?._id || currentUser?.id || null;
+
+    return {
+      id: actorId ? String(actorId) : null,
+      email: String(currentUser?.email || '').trim(),
+      isAdmin: !!isAdminLikeFn(currentUser || null),
+    };
+  }
+
+  function ensureAdminAccess({ currentUser } = {}) {
+    const actor = resolveActor(currentUser);
+    if (!actor.isAdmin) return { allowed: false, error: 'forbidden' };
+    return { allowed: true, actor };
+  }
+
+  function ensureCreatorOwnership({ currentUser, feedback } = {}) {
+    const actor = resolveActor(currentUser);
+    const creatorId = feedback?.criadoPor?.userId ? String(feedback.criadoPor.userId) : '';
+
+    if (creatorId && actor.id && actor.id !== creatorId) {
+      return { allowed: false, error: 'forbidden', actor };
+    }
+
+    return { allowed: true, actor };
+  }
+
+  function buildMyFeedbackFilter({ currentUser } = {}) {
+    const actor = resolveActor(currentUser);
+    const filter = actor.id ? { 'criadoPor.userId': actor.id } : { 'criadoPor.email': actor.email };
+
+    return { filter, actor };
+  }
+
+  return {
+    ensureAdminAccess,
+    ensureCreatorOwnership,
+    buildMyFeedbackFilter,
+  };
+}
+
 function inferModuloFromUrl(url){
   const raw = String(url || '').trim();
   if (!raw) return '';
@@ -224,11 +268,13 @@ router.post('/api/feedback', requireLogin, createFeedbackHandler);
 
 // Upload de anexo para um feedback
 const uploadStorageInfra = createFeedbackUploadStorageInfraCore();
+const feedbackPolicy = createFeedbackPolicyOwnershipCore({ isAdminLike });
 const uploadFeedbackAnexoHandler = createUploadFeedbackAnexoHandler({
   apiOk,
   apiFail,
   findFeedbackById,
   saveFeedbackDoc,
+  feedbackPolicy,
   uploadStorageInfra,
 });
 router.post('/api/feedback/:feedbackId/anexo', requireLogin, uploadFeedbackAnexoMiddleware, uploadFeedbackAnexoHandler);
@@ -237,6 +283,7 @@ router.post('/api/feedback/:feedbackId/anexo', requireLogin, uploadFeedbackAnexo
 const listMyFeedback = createMyFeedbackListHandler({
   apiOk,
   apiFail,
+  feedbackPolicy,
   findFeedbackByFilterSortCreatedAtDescLimit200Lean,
 });
 router.get('/api/feedback/meus', requireLogin, listMyFeedback);
@@ -245,6 +292,7 @@ router.get('/api/feedback/meus', requireLogin, listMyFeedback);
 const detailMyFeedback = createMyFeedbackDetailHandler({
   apiOk,
   apiFail,
+  feedbackPolicy,
   findFeedbackByIdLean,
 });
 router.get('/api/feedback/meus/:feedbackId', requireLogin, detailMyFeedback);
@@ -253,9 +301,9 @@ router.get('/api/feedback/meus/:feedbackId', requireLogin, detailMyFeedback);
 
 // Listar feedbacks (admin)
 const listFeedbackAdmin = createAdminFeedbackListHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   normalizeStatus,
   normalizeTipo,
   findFeedbackByFilterSortCreatedAtDescLimit500Lean,
@@ -265,9 +313,9 @@ router.get('/api/gestor/feedback', requireLogin, listFeedbackAdmin);
 
 // Detalhar (admin)
 const detailFeedbackAdmin = createAdminFeedbackDetailHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   findFeedbackByIdLean,
   sanitizeFeedback,
 });
@@ -275,16 +323,16 @@ router.get('/api/gestor/feedback/:feedbackId', requireLogin, detailFeedbackAdmin
 
 // Atualizar status (admin)
 const updateStatusPatch = createUpdateFeedbackStatusHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   normalizeStatus,
   findFeedbackByIdAndUpdateSetNewLean: updateFeedbackStatusService,
 });
 const updateStatus = createUpdateFeedbackStatusHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   normalizeStatus,
   findFeedbackByIdAndUpdateSetNewLean,
 });
@@ -293,9 +341,9 @@ router.post('/api/gestor/feedback/:feedbackId/status', requireLogin, updateStatu
 
 // Atualizar resposta (admin)
 const updateResposta = createUpdateFeedbackRespostaHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   findFeedbackByIdAndUpdateSetNewLean,
 });
 router.patch('/api/gestor/feedback/:feedbackId/resposta', requireLogin, updateResposta);
@@ -303,9 +351,9 @@ router.post('/api/gestor/feedback/:feedbackId/resposta', requireLogin, updateRes
 
 // Excluir feedback (admin)
 const deleteFeedback = createDeleteFeedbackHandler({
-  isAdminLike,
   apiOk,
   apiFail,
+  feedbackPolicy,
   findFeedbackByIdAndDeleteLean,
   getBlobToken,
   delBlob: del,
