@@ -3,7 +3,6 @@ import {
 	findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean,
 	findFuncionarioByIdSelectIdUnidadeUsuarioLean,
 	findUserById,
-	saveUserDoc,
 	findUserDuplicadoByCpfUnidadeExcludingId,
 	createFuncionarioDoc,
 	createUserMembership,
@@ -26,9 +25,9 @@ import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usua
 import { statusUsuarioLockStateOwnerService } from '#modules/gestor/app/services/usuarios/statusUsuarioLockStateOwner.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
 import { unlockUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/unlockUsuarioExecution.service.js';
+import { atualizarSenhaUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/atualizarSenhaUsuarioExecution.service.js';
 import { updateUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js';
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 // Usamos o util do módulo Gestor para manter a chave `error` nas respostas 4xx/5xx
 import { ok, created, badRequest, notFound, serverError } from '#modules/gestor/app/utils/apiResponse.js';
@@ -495,15 +494,9 @@ export async function atualizarSenhaUsuario(req, res) {
 	try {
 		const { senhaAtual, novaSenha } = req.body;
 		if (!senhaAtual || !novaSenha) return badRequest(res, 'Parâmetros insuficientes');
-		const user = await findUserById(req.user.id);
-		if (!user) return notFound(res, 'Usuário não encontrado');
-		const confere = await bcrypt.compare(senhaAtual, user.senha);
-		if (!confere) return badRequest(res, 'Senha atual inválida');
-		user.senha = await bcrypt.hash(novaSenha, 10);
-		// Limpa flags de primeiro acesso / senha provisória se ainda marcadas
-		if (user.primeiro_acesso) user.primeiro_acesso = false;
-		if (user.senha_provisoria) user.senha_provisoria = false;
-		await saveUserDoc(user);
+		const result = await atualizarSenhaUsuarioExecutionService({ userId: req.user.id, senhaAtual, novaSenha });
+		if (result.kind === 'not_found') return notFound(res, 'Usuário não encontrado');
+		if (result.kind === 'invalid_current_password') return badRequest(res, 'Senha atual inválida');
 		return ok(res, { updated:true, primeiro_acesso:false, senha_provisoria:false });
 	} catch (e) {
 		console.error('[atualizarSenhaUsuario] erro:', e);
