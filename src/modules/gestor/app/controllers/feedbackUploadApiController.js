@@ -3,8 +3,7 @@ export function createUploadFeedbackAnexoHandler({
   apiFail,
   findFeedbackById,
   saveFeedbackDoc,
-  pickFile,
-  storeFeedbackAnexo,
+  uploadStorageInfra,
   logError = console.error,
 }) {
   return async function uploadFeedbackAnexoHandler(req, res) {
@@ -23,17 +22,20 @@ export function createUploadFeedbackAnexoHandler({
         return apiFail(res, 403, 'Acesso negado.');
       }
 
-      const file = pickFile(req);
-      if (!file || !file.buffer) return apiFail(res, 400, 'Arquivo ausente.');
-
-      const stored = await storeFeedbackAnexo({ req, feedbackId: String(fb._id), file });
+      const uploadResult = await uploadStorageInfra.processUpload({
+        file: req.file,
+        files: req.files,
+        baseUrl: req.baseUrl || '',
+        feedbackId: String(fb._id),
+      });
+      if (uploadResult.kind === 'missing_file') return apiFail(res, 400, 'Arquivo ausente.');
 
       fb.anexos = Array.isArray(fb.anexos) ? fb.anexos : [];
       fb.anexos.push({
-        nome: stored.originalName,
-        url: stored.url,
-        mime: file.mimetype,
-        size: file.size || (file.buffer ? file.buffer.length : 0)
+        nome: uploadResult.stored.originalName,
+        url: uploadResult.stored.url,
+        mime: uploadResult.file.mimetype,
+        size: uploadResult.file.size || (uploadResult.file.buffer ? uploadResult.file.buffer.length : 0)
       });
       await saveFeedbackDoc(fb);
 

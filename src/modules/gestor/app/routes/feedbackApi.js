@@ -78,19 +78,6 @@ function uploadFeedbackAnexoMiddleware(req, res, next) {
   });
 }
 
-function pickFile(req){
-  if (req.file) return req.file;
-  const files = Array.isArray(req.files) ? req.files : [];
-  if (!files.length) return null;
-  // tenta priorizar campos usados pelo widget
-  const preferred = ['anexo', 'file', 'attachment'];
-  for (const name of preferred){
-    const f = files.find(x => x && x.fieldname === name);
-    if (f) return f;
-  }
-  return files[0] || null;
-}
-
 function safeFileName(name){
   const base = String(name || '').trim() || 'anexo';
   return base.replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 80);
@@ -132,22 +119,63 @@ function safeExtFromFile({ originalName, mimeType }) {
   return '.jpg';
 }
 
-async function storeFeedbackAnexo({ req, feedbackId, file }) {
-  return processFeedbackUploadStorageCore({
-    baseUrl: req.baseUrl || '',
-    feedbackId,
-    file,
-    safeFileName,
-    safeExtFromFile,
-    shouldUseBlobStorage,
-    getBlobToken,
-    putBlob: put,
-    fsModule: fs,
-    pathModule: path,
-    cwdProvider: () => process.cwd(),
-    isBlobNotConfiguredError,
-    isVercel: Boolean(process.env.VERCEL),
-  });
+function createFeedbackUploadStorageInfraCore({
+  safeFileName: safeFileNameFn = safeFileName,
+  safeExtFromFile: safeExtFromFileFn = safeExtFromFile,
+  shouldUseBlobStorage: shouldUseBlobStorageFn = shouldUseBlobStorage,
+  getBlobToken: getBlobTokenFn = getBlobToken,
+  putBlob = put,
+  fsModule = fs,
+  pathModule = path,
+  cwdProvider = () => process.cwd(),
+  isBlobNotConfiguredError: isBlobNotConfiguredErrorFn = isBlobNotConfiguredError,
+  isVercel = Boolean(process.env.VERCEL),
+  processStorageCore = processFeedbackUploadStorageCore,
+} = {}) {
+  function pickFileFromRequest({ file, files }) {
+    if (file) return file;
+    const list = Array.isArray(files) ? files : [];
+    if (!list.length) return null;
+    const preferred = ['anexo', 'file', 'attachment'];
+    for (const fieldName of preferred) {
+      const current = list.find((item) => item && item.fieldname === fieldName);
+      if (current) return current;
+    }
+    return list[0] || null;
+  }
+
+  async function processUpload({ file, files, baseUrl, feedbackId }) {
+    const selectedFile = pickFileFromRequest({ file, files });
+    if (!selectedFile || !selectedFile.buffer) {
+      return { kind: 'missing_file' };
+    }
+
+    const stored = await processStorageCore({
+      baseUrl,
+      feedbackId,
+      file: selectedFile,
+      safeFileName: safeFileNameFn,
+      safeExtFromFile: safeExtFromFileFn,
+      shouldUseBlobStorage: shouldUseBlobStorageFn,
+      getBlobToken: getBlobTokenFn,
+      putBlob,
+      fsModule,
+      pathModule,
+      cwdProvider,
+      isBlobNotConfiguredError: isBlobNotConfiguredErrorFn,
+      isVercel,
+    });
+
+    return {
+      kind: 'stored',
+      file: selectedFile,
+      stored,
+    };
+  }
+
+  return {
+    processUpload,
+  };
 }
 
 function inferModuloFromUrl(url){
@@ -195,13 +223,13 @@ const createFeedbackHandler = createCreateFeedbackHandler({
 router.post('/api/feedback', requireLogin, createFeedbackHandler);
 
 // Upload de anexo para um feedback
+const uploadStorageInfra = createFeedbackUploadStorageInfraCore();
 const uploadFeedbackAnexoHandler = createUploadFeedbackAnexoHandler({
   apiOk,
   apiFail,
   findFeedbackById,
   saveFeedbackDoc,
-  pickFile,
-  storeFeedbackAnexo,
+  uploadStorageInfra,
 });
 router.post('/api/feedback/:feedbackId/anexo', requireLogin, uploadFeedbackAnexoMiddleware, uploadFeedbackAnexoHandler);
 
