@@ -1021,6 +1021,36 @@ export async function ensureBaseIndexes({ unidadeId }) {
   }
 }
 
+async function sharedUnitProvisioningBootstrapCore({
+  normalizedUnidadeId,
+  dbName,
+  normalizedModulos,
+  targetModuleKeys,
+  operation,
+  retryMode,
+} = {}) {
+  const baseResult = await ensureBaseIndexes({ unidadeId: normalizedUnidadeId });
+  const moduleBootstrap = await dispatchModuleBootstraps({
+    unidadeId: normalizedUnidadeId,
+    dbName,
+    modulosHabilitados: normalizedModulos,
+    targetModuleKeys,
+    repository: provisioningRepository,
+  });
+  await registerModuleBootstrapAuditEvents({
+    unidadeId: normalizedUnidadeId,
+    dbName,
+    operation,
+    moduleBootstrap,
+    retryMode,
+  });
+
+  return {
+    baseResult,
+    moduleBootstrap,
+  };
+}
+
 export async function ensureUnitProvisioned({ unidadeId, tipo, modulosHabilitados } = {}) {
   const normalizedUnidadeId = normalizeUnidadeId(unidadeId);
   const normalizedTipo = normalizeTipo(tipo);
@@ -1042,18 +1072,11 @@ export async function ensureUnitProvisioned({ unidadeId, tipo, modulosHabilitado
   });
 
   try {
-    const baseResult = await ensureBaseIndexes({ unidadeId: normalizedUnidadeId });
-    const moduleBootstrap = await dispatchModuleBootstraps({
-      unidadeId: normalizedUnidadeId,
+    const { baseResult, moduleBootstrap } = await sharedUnitProvisioningBootstrapCore({
+      normalizedUnidadeId,
       dbName,
-      modulosHabilitados: normalizedModulos,
-      repository: provisioningRepository,
-    });
-    await registerModuleBootstrapAuditEvents({
-      unidadeId: normalizedUnidadeId,
-      dbName,
+      normalizedModulos,
       operation: 'ensure',
-      moduleBootstrap,
     });
 
     await provisioningRepository.ensureGlobalProvisioningIndex({
@@ -1343,19 +1366,12 @@ export async function retryUnitProvisioning({ unidadeId, tipo, modulosHabilitado
   const tenantBase = buildTenantBaseDescriptor({ unidadeId: normalizedUnidadeId, dbName });
 
   try {
-    const baseResult = await ensureBaseIndexes({ unidadeId: normalizedUnidadeId });
-    const moduleBootstrap = await dispatchModuleBootstraps({
-      unidadeId: normalizedUnidadeId,
+    const { baseResult, moduleBootstrap } = await sharedUnitProvisioningBootstrapCore({
+      normalizedUnidadeId,
       dbName,
-      modulosHabilitados: normalizedModulos,
+      normalizedModulos,
       targetModuleKeys: retryModuleKeys,
-      repository: provisioningRepository,
-    });
-    await registerModuleBootstrapAuditEvents({
-      unidadeId: normalizedUnidadeId,
-      dbName,
       operation: 'retry_selective',
-      moduleBootstrap,
       retryMode: 'selective',
     });
 
