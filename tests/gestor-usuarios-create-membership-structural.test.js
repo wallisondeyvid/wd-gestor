@@ -118,7 +118,7 @@ test('createUsuarioExecutionService real atual delega membership e preserva a or
   const serviceSource = stripComments(extractFunction(SERVICE_SOURCE, 'export async function createUsuarioExecutionService'));
   const seamSource = stripComments(extractFunction(SERVICE_SOURCE, 'async function materializeCriarUsuarioMembershipCore'));
 
-  assert.match(serviceSource, /createUserAndSendPassword\(/);
+  assert.match(serviceSource, /materializeCriarUsuarioUserMaterializationCore\(/);
   assert.match(serviceSource, /materializeCriarUsuarioFuncionarioLinkCore\(/);
   assert.match(serviceSource, /materializeCriarUsuarioMembershipCore\(/);
   assert.doesNotMatch(serviceSource, /buildUserMembershipPayload\(/);
@@ -137,11 +137,15 @@ test('createUsuarioExecutionService real atual delega membership e preserva a or
 test('a seam futura de membership recebe apenas o contexto minimo', async () => {
   const seamCalls = [];
   const createUsuarioExecutionService = buildFunction(buildDelegatedCreateServiceSource(), 'async function createUsuarioExecutionService', {
-    createUserAndSendPassword: async () => ({
-      _id: 'u-1',
-      nome: 'Novo Usuario',
-      unidade_id: null,
-      funcionario_id: null,
+    materializeCriarUsuarioUserMaterializationCore: async () => ({
+      user: {
+        _id: 'u-1',
+        nome: 'Novo Usuario',
+        unidade_id: null,
+        funcionario_id: null,
+      },
+      isExistingUser: false,
+      tempPasswordPlain: null,
     }),
     materializeCriarUsuarioFuncionarioLinkCore: async () => ({
       kind: 'ok',
@@ -190,11 +194,15 @@ test('createUsuarioExecutionService com seam futura preserva os ramos membership
   ];
 
   const createUsuarioExecutionService = buildFunction(buildDelegatedCreateServiceSource(), 'async function createUsuarioExecutionService', {
-    createUserAndSendPassword: async () => ({
-      _id: 'u-2',
-      nome: 'Usuario',
-      unidade_id: null,
-      funcionario_id: null,
+    materializeCriarUsuarioUserMaterializationCore: async () => ({
+      user: {
+        _id: 'u-2',
+        nome: 'Usuario',
+        unidade_id: null,
+        funcionario_id: null,
+      },
+      isExistingUser: false,
+      tempPasswordPlain: null,
     }),
     materializeCriarUsuarioFuncionarioLinkCore: async () => ({
       kind: 'ok',
@@ -242,7 +250,7 @@ test('createUsuarioExecutionService com seam futura preserva os ramos membership
 test('createUsuarioExecutionService futuro deixa de conter diretamente a traducao semantica de membership', () => {
   const delegatedSource = stripComments(buildDelegatedCreateServiceSource());
 
-  assert.match(delegatedSource, /createUserAndSendPassword\(/);
+  assert.match(delegatedSource, /materializeCriarUsuarioUserMaterializationCore\(/);
   assert.match(delegatedSource, /materializeCriarUsuarioFuncionarioLinkCore\(/);
   assert.match(delegatedSource, /materializeCriarUsuarioMembershipCore\(/);
   assert.match(delegatedSource, /const payload = \{/);
@@ -263,7 +271,7 @@ test('a futura seam de membership concentra apenas payload, persistencia e tradu
   assert.match(seamSource, /kind: "membership_duplicate"/);
   assert.match(seamSource, /kind: "membership_error"/);
   assert.match(seamSource, /return \{ kind: "ok" \}/);
-  assert.doesNotMatch(seamSource, /createUserAndSendPassword\(/);
+  assert.doesNotMatch(seamSource, /materializeCriarUsuarioUserMaterializationCore\(/);
   assert.doesNotMatch(seamSource, /materializeCriarUsuarioFuncionarioLinkCore\(/);
   assert.doesNotMatch(seamSource, /const payload = \{/);
   assert.doesNotMatch(seamSource, /outcome:/);

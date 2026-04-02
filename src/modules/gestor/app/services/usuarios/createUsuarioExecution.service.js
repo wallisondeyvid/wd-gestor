@@ -194,6 +194,37 @@ async function materializeCriarUsuarioMembershipCore({
 	return { kind: 'ok' };
 }
 
+async function materializeCriarUsuarioUserMaterializationCore({
+	existingUser = null,
+	nome,
+	email,
+	cleanCpf,
+	requestedUserRole,
+	unidadeId,
+	funcionarioId = null,
+	senha,
+}) {
+	const isExistingUser = !!existingUser;
+	let user = existingUser;
+	let tempPasswordPlain = null;
+
+	if (!user) {
+		console.log('[criarUsuario] disparando createUserAndSendPassword');
+		user = await createUserAndSendPassword({
+			nome: (nome && nome.trim()) || String(email || '').split('@')[0],
+			email,
+			cpf: cleanCpf || undefined,
+			role: requestedUserRole,
+			unidade_id: unidadeId || null,
+			funcionario_id: funcionarioId || null,
+			senha,
+		});
+		tempPasswordPlain = user._temp_password_plain || null;
+	}
+
+	return { user, isExistingUser, tempPasswordPlain };
+}
+
 export async function createUsuarioExecutionService({
 	existingUser = null,
 	nome,
@@ -206,20 +237,17 @@ export async function createUsuarioExecutionService({
 	wantsNewFuncionario = false,
 	senha,
 } = {}) {
-	const isExistingUser = !!existingUser;
-	let user = existingUser;
-	if (!user) {
-		console.log('[criarUsuario] disparando createUserAndSendPassword');
-		user = await createUserAndSendPassword({
-			nome: (nome && nome.trim()) || String(email || '').split('@')[0],
-			email,
-			cpf: cleanCpf || undefined,
-			role: requestedUserRole,
-			unidade_id: unidadeId || null,
-			funcionario_id: funcionarioId || null,
-			senha,
-		});
-	}
+	const userMaterializationResult = await materializeCriarUsuarioUserMaterializationCore({
+		existingUser,
+		nome,
+		email,
+		cleanCpf,
+		requestedUserRole,
+		unidadeId,
+		funcionarioId,
+		senha,
+	});
+	const { user, isExistingUser, tempPasswordPlain } = userMaterializationResult;
 
 	const funcionarioLinkResult = await materializeCriarUsuarioFuncionarioLinkCore({
 		user,
@@ -256,8 +284,8 @@ export async function createUsuarioExecutionService({
 		funcionario_id: linkedFuncionarioId || user.funcionario_id || funcionarioNovo?._id || null,
 		outcome: isExistingUser ? 'linked' : 'created',
 	};
-	if (user._temp_password_plain && process.env.NODE_ENV !== 'production') {
-		payload.tempPassword = user._temp_password_plain;
+	if (tempPasswordPlain && process.env.NODE_ENV !== 'production') {
+		payload.tempPassword = tempPasswordPlain;
 	}
 
 	return {

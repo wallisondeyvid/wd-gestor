@@ -220,8 +220,7 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
     isDuplicateKeyError,
     console,
   });
-
-  const createUsuarioExecutionService = buildFunction(SERVICE_SOURCE, 'export async function createUsuarioExecutionService', {
+  const materializeCriarUsuarioUserMaterializationCore = buildFunction(SERVICE_SOURCE, 'async function materializeCriarUsuarioUserMaterializationCore', {
     createUserAndSendPassword: async (input) => {
       createCalls.push(input);
       return {
@@ -232,6 +231,12 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
         _temp_password_plain: 'TEMP9999',
       };
     },
+    console,
+    String,
+  });
+
+  const createUsuarioExecutionService = buildFunction(SERVICE_SOURCE, 'export async function createUsuarioExecutionService', {
+    materializeCriarUsuarioUserMaterializationCore,
     materializeCriarUsuarioFuncionarioLinkCore,
     materializeCriarUsuarioMembershipCore,
     console,
@@ -326,11 +331,15 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
   assert.equal(result.kind, 'membership_duplicate');
 
   const createUsuarioExecutionServiceWithFuncionarioError = buildFunction(SERVICE_SOURCE, 'export async function createUsuarioExecutionService', {
-    createUserAndSendPassword: async () => ({
-      _id: 'u-error',
-      nome: 'Erro',
-      unidade_id: null,
-      funcionario_id: null,
+    materializeCriarUsuarioUserMaterializationCore: async () => ({
+      user: {
+        _id: 'u-error',
+        nome: 'Erro',
+        unidade_id: null,
+        funcionario_id: null,
+      },
+      isExistingUser: false,
+      tempPasswordPlain: null,
     }),
     materializeCriarUsuarioFuncionarioLinkCore: async () => ({
       kind: 'funcionario_create_error',

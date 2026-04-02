@@ -189,7 +189,7 @@ test('createUsuarioExecutionService real atual delega funcionario e preserva sua
   const serviceSource = stripComments(extractFunction(SERVICE_SOURCE, 'export async function createUsuarioExecutionService'));
   const seamSource = stripComments(extractFunction(SERVICE_SOURCE, 'async function materializeCriarUsuarioFuncionarioLinkCore'));
 
-  assert.match(serviceSource, /createUserAndSendPassword\(/);
+  assert.match(serviceSource, /materializeCriarUsuarioUserMaterializationCore\(/);
   assert.match(serviceSource, /materializeCriarUsuarioFuncionarioLinkCore\(/);
   assert.doesNotMatch(serviceSource, /findCriarUsuarioFuncionarioByCpfUnidade\(/);
   assert.doesNotMatch(serviceSource, /setCriarUsuarioFuncionarioUsuarioIdIfEmpty\(/);
@@ -205,7 +205,11 @@ test('createUsuarioExecutionService real atual delega funcionario e preserva sua
 test('a seam futura de funcionario recebe apenas o contexto minimo de vinculo e materializacao', async () => {
   const seamCalls = [];
   const createUsuarioExecutionService = buildFunction(buildDelegatedCreateServiceSource(), 'async function createUsuarioExecutionService', {
-    createUserAndSendPassword: async () => ({ _id: 'u-1', nome: 'Novo Usuario', unidade_id: null, funcionario_id: null }),
+    materializeCriarUsuarioUserMaterializationCore: async () => ({
+      user: { _id: 'u-1', nome: 'Novo Usuario', unidade_id: null, funcionario_id: null },
+      isExistingUser: false,
+      tempPasswordPlain: null,
+    }),
     materializeCriarUsuarioMembershipCore: async () => ({ kind: 'ok' }),
     materializeCriarUsuarioFuncionarioLinkCore: async (input) => {
       seamCalls.push(toPlainJson({
@@ -256,12 +260,12 @@ test('a seam futura de funcionario recebe apenas o contexto minimo de vinculo e 
 });
 
 test('createUsuarioExecutionService com seam futura preserva a orquestracao geral e o ramo funcionario_create_error', async () => {
-  const createUserCalls = [];
   const createUsuarioExecutionService = buildFunction(buildDelegatedCreateServiceSource(), 'async function createUsuarioExecutionService', {
-    createUserAndSendPassword: async (input) => {
-      createUserCalls.push(toPlainJson(input));
-      return { _id: 'u-2', nome: input.nome, unidade_id: null, funcionario_id: null };
-    },
+    materializeCriarUsuarioUserMaterializationCore: async () => ({
+      user: { _id: 'u-2', nome: 'Erro Usuario', unidade_id: null, funcionario_id: null },
+      isExistingUser: false,
+      tempPasswordPlain: null,
+    }),
     materializeCriarUsuarioMembershipCore: async () => ({ kind: 'ok' }),
     materializeCriarUsuarioFuncionarioLinkCore: async () => ({
       kind: 'funcionario_create_error',
@@ -285,7 +289,6 @@ test('createUsuarioExecutionService com seam futura preserva a orquestracao gera
     senha: 'Senha@123',
   });
 
-  assert.equal(createUserCalls.length, 1);
   assert.deepEqual(toPlainJson(result), {
     kind: 'funcionario_create_error',
     message: 'Falha ao criar funcionário automático: erro',
@@ -296,7 +299,7 @@ test('createUsuarioExecutionService futuro deixa de conter diretamente o subflux
   const delegatedSource = stripComments(buildDelegatedCreateServiceSource());
 
   assert.match(delegatedSource, /materializeCriarUsuarioFuncionarioLinkCore\(/);
-  assert.match(delegatedSource, /createUserAndSendPassword\(/);
+  assert.match(delegatedSource, /materializeCriarUsuarioUserMaterializationCore\(/);
   assert.match(delegatedSource, /materializeCriarUsuarioMembershipCore\(/);
   assert.doesNotMatch(delegatedSource, /findCriarUsuarioFuncionarioByCpfUnidade\(/);
   assert.doesNotMatch(delegatedSource, /setCriarUsuarioFuncionarioUsuarioIdIfEmpty\(/);
@@ -313,7 +316,7 @@ test('a futura seam de funcionario concentra localizar, vincular, materializar e
   assert.match(seamSource, /setCriarUsuarioFuncionarioUsuarioIdById\(/);
   assert.match(seamSource, /createCriarUsuarioFuncionarioDoc\(/);
   assert.match(seamSource, /saveUserDoc\(user\)/);
-  assert.doesNotMatch(seamSource, /createUserAndSendPassword\(/);
+  assert.doesNotMatch(seamSource, /materializeCriarUsuarioUserMaterializationCore\(/);
   assert.doesNotMatch(seamSource, /materializeCriarUsuarioMembershipCore\(/);
 });
 
