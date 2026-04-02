@@ -104,31 +104,48 @@ function stripComments(source) {
 
 function buildDelegatedPerCaptureSource() {
   const original = extractFunction(CONTROLLER_SOURCE, 'processFaceUploadCaptureCore');
-  if (original.includes('persistFaceUploadBlobCore(')) {
+  if (original.includes('normalizeFaceUploadImageCore(')) {
     return original;
   }
 
-  const withoutId = original.replace(/\s*const id = uuid\(\);\s*/, '\n');
-  const currentBlobBlock = /const key = `faces\/\$\{id\}-\$\{index \+ 1\}\.webp`;[\s\S]*?return \{ url, file: url, mime: 'image\/webp' \};/;
-  const delegatedBlock = "const savedItem = await persistFaceUploadBlobCore({ webpBuf, index, blobToken });\n  return savedItem;";
-  const replaced = withoutId.replace(currentBlobBlock, delegatedBlock);
-  assert.notEqual(replaced, original, 'Nao foi possivel instalar a seam estrutural de blob em memoria.');
-  return replaced;
+  const imageStart = original.indexOf("const m = /^data:(image\\/(png|jpeg|webp));base64,(.+)$/i.exec(dataUrl);");
+  const blobStart = original.indexOf('const savedItem = await persistFaceUploadBlobCore({ webpBuf, index, blobToken });');
+
+  assert.notEqual(imageStart, -1, 'Bloco atual de imagem nao encontrado.');
+  assert.notEqual(blobStart, -1, 'Delegacao atual para blob nao encontrada.');
+
+  const delegatedBlock = [
+    'const webpBuf = await normalizeFaceUploadImageCore({ dataUrl });',
+    '  if (!webpBuf) return null;',
+    '',
+    '  ',
+  ].join('\n');
+
+  return `${original.slice(0, imageStart)}${delegatedBlock}${original.slice(blobStart)}`;
 }
 
-function buildBlobAdapterSource() {
+function buildImageUnitSource() {
   return [
-    'async function persistFaceUploadBlobCore({ webpBuf, index, blobToken }) {',
-    '  const id = uuid();',
-    '  const key = `faces/${id}-${index + 1}.webp`;',
-    '  const putOptions = {',
-    "    access: 'public',",
-    "    contentType: 'image/webp',",
-    "    cacheControl: 'public, max-age=31536000, immutable',",
-    '    ...(blobToken ? { token: blobToken } : {}),',
-    '  };',
-    '  const { url } = await put(key, webpBuf, putOptions);',
-    "  return { url, file: url, mime: 'image/webp' };",
+    'async function normalizeFaceUploadImageCore({ dataUrl }) {',
+    '  const m = /^data:(image\\/(png|jpeg|webp));base64,(.+)$/i.exec(dataUrl);',
+    '  if (!m) return null;',
+    '',
+    '  const b64 = m[3];',
+    "  const buf = Buffer.from(b64, 'base64');",
+    '',
+    '  try {',
+    '    const image = sharp(buf);',
+    '    const metadata = await image.metadata();',
+    '    const width = Math.min(metadata.width || 640, 1024);',
+    '    const height = Math.min(metadata.height || 640, 1024);',
+    '    const webpBuf = await image',
+    "      .resize(width, height, { fit: 'inside', withoutEnlargement: true })",
+    "      .toFormat('webp', { quality: 92 })",
+    '      .toBuffer();',
+    '    return webpBuf;',
+    '  } catch {',
+    '    return null;',
+    '  }',
     '}',
   ].join('\n');
 }
@@ -141,13 +158,25 @@ function loadDelegatedPerCaptureCore(dependencies = {}) {
     exports: {},
     normalizeFaceUploadImageCore: dependencies.normalizeFaceUploadImageCore,
     persistFaceUploadBlobCore: dependencies.persistFaceUploadBlobCore,
+  };
+
+  vm.runInNewContext(executableSource, sandbox, { filename: CONTROLLER_PATH });
+  return sandbox.module.exports.processFaceUploadCaptureCore;
+}
+
+function loadImageUnit(dependencies = {}) {
+  const functionSource = buildImageUnitSource();
+  const executableSource = `${functionSource}\nmodule.exports = { normalizeFaceUploadImageCore };`;
+  const sandbox = {
+    module: { exports: {} },
+    exports: {},
     sharp: dependencies.sharp,
     Buffer,
     Math,
   };
 
   vm.runInNewContext(executableSource, sandbox, { filename: CONTROLLER_PATH });
-  return sandbox.module.exports.processFaceUploadCaptureCore;
+  return sandbox.module.exports.normalizeFaceUploadImageCore;
 }
 
 function createSharpSuccessStub({ metadata = { width: 320, height: 240 }, output = 'WEBP_BUFFER' } = {}) {
@@ -188,42 +217,42 @@ function createSharpFailureStub() {
   };
 }
 
-test('face/upload per-capture/blob: o helper real atual delega imagem e preserva a delegacao ao blob', () => {
+test('face/upload per-capture/image: o helper real atual delega imagem e blob, sem reter regex, Buffer.from ou sharp inline', () => {
   const helperSource = stripComments(extractFunction(CONTROLLER_SOURCE, 'processFaceUploadCaptureCore'));
 
   assert.match(helperSource, /const webpBuf = await normalizeFaceUploadImageCore\(\{ dataUrl \}\);/);
   assert.match(helperSource, /if \(!webpBuf\) return null;/);
-  assert.match(helperSource, /const savedItem = await persistFaceUploadBlobCore\(\{ webpBuf, index, blobToken \}\);/);
-  assert.match(helperSource, /return savedItem;/);
+  assert.match(helperSource, /persistFaceUploadBlobCore\(\{ webpBuf, index, blobToken \}\)/);
   assert.doesNotMatch(helperSource, /const m = .*exec\(dataUrl\);/);
   assert.doesNotMatch(helperSource, /Buffer\.from\(b64, 'base64'\);/);
   assert.doesNotMatch(helperSource, /sharp\(buf\)/);
-  assert.doesNotMatch(helperSource, /const id = uuid\(\);/);
-  assert.doesNotMatch(helperSource, /const key = /);
-  assert.doesNotMatch(helperSource, /const putOptions = /);
-  assert.doesNotMatch(helperSource, /await put\(/);
 });
 
-test('face/upload per-capture/blob: a seam futura de blob recebe apenas o buffer normalizado e o contexto minimo de persistencia', async () => {
-  const seamCalls = [];
+test('face/upload per-capture/image: a seam futura de imagem recebe apenas dataUrl', async () => {
+  const imageCalls = [];
+  const blobCalls = [];
   const processFaceUploadCaptureCore = loadDelegatedPerCaptureCore({
-    async normalizeFaceUploadImageCore() {
+    async normalizeFaceUploadImageCore(args) {
+      imageCalls.push(JSON.parse(JSON.stringify(args)));
       return 'WEBP_READY';
     },
     async persistFaceUploadBlobCore(args) {
-      seamCalls.push(JSON.parse(JSON.stringify(args)));
+      blobCalls.push(JSON.parse(JSON.stringify(args)));
       return { url: 'https://blob.test/file.webp', file: 'https://blob.test/file.webp', mime: 'image/webp' };
     },
   });
 
   const result = await processFaceUploadCaptureCore({
     dataUrl: 'data:image/png;base64,AAAA',
-    index: 1,
+    index: 2,
     blobToken: 'blob-token',
   });
 
-  assert.deepEqual(seamCalls, [
-    { webpBuf: 'WEBP_READY', index: 1, blobToken: 'blob-token' },
+  assert.deepEqual(imageCalls, [
+    { dataUrl: 'data:image/png;base64,AAAA' },
+  ]);
+  assert.deepEqual(blobCalls, [
+    { webpBuf: 'WEBP_READY', index: 2, blobToken: 'blob-token' },
   ]);
   assert.deepEqual(JSON.parse(JSON.stringify(result)), {
     url: 'https://blob.test/file.webp',
@@ -232,33 +261,15 @@ test('face/upload per-capture/blob: a seam futura de blob recebe apenas o buffer
   });
 });
 
-test('face/upload per-capture/blob: o helper com seam futura preserva null para dataUrl invalido sem chamar blob', async () => {
-  const seamCalls = [];
+test('face/upload per-capture/image: o helper com seam futura preserva null quando a unidade de imagem devolver null', async () => {
+  const blobCalls = [];
   const processFaceUploadCaptureCore = loadDelegatedPerCaptureCore({
     async normalizeFaceUploadImageCore() {
       return null;
     },
     async persistFaceUploadBlobCore(args) {
-      seamCalls.push(args);
-      throw new Error('nao deve chamar blob com dataUrl invalido');
-    },
-  });
-
-  const result = await processFaceUploadCaptureCore({ dataUrl: 'invalido', index: 0, blobToken: 'blob-token' });
-
-  assert.equal(result, null);
-  assert.deepEqual(seamCalls, []);
-});
-
-test('face/upload per-capture/blob: o helper com seam futura preserva null quando sharp falha sem chamar blob', async () => {
-  const seamCalls = [];
-  const processFaceUploadCaptureCore = loadDelegatedPerCaptureCore({
-    async normalizeFaceUploadImageCore() {
-      return null;
-    },
-    async persistFaceUploadBlobCore(args) {
-      seamCalls.push(args);
-      throw new Error('nao deve chamar blob quando sharp falha');
+      blobCalls.push(args);
+      throw new Error('nao deve chamar blob sem webpBuf');
     },
   });
 
@@ -269,38 +280,10 @@ test('face/upload per-capture/blob: o helper com seam futura preserva null quand
   });
 
   assert.equal(result, null);
-  assert.deepEqual(seamCalls, []);
+  assert.deepEqual(blobCalls, []);
 });
 
-test('face/upload per-capture/blob: o helper delegado deixa de falar diretamente com uuid, key, putOptions e put', () => {
-  const delegatedSource = stripComments(buildDelegatedPerCaptureSource());
-
-  assert.match(delegatedSource, /const webpBuf = await normalizeFaceUploadImageCore\(\{ dataUrl \}\);/);
-  assert.match(delegatedSource, /if \(!webpBuf\) return null;/);
-  assert.match(delegatedSource, /persistFaceUploadBlobCore\(\{ webpBuf, index, blobToken \}\)/);
-  assert.doesNotMatch(delegatedSource, /const m = .*exec\(dataUrl\);/);
-  assert.doesNotMatch(delegatedSource, /Buffer\.from\(b64, 'base64'\);/);
-  assert.doesNotMatch(delegatedSource, /sharp\(buf\)/);
-  assert.doesNotMatch(delegatedSource, /const id = uuid\(\);/);
-  assert.doesNotMatch(delegatedSource, /const key = /);
-  assert.doesNotMatch(delegatedSource, /const putOptions = /);
-  assert.doesNotMatch(delegatedSource, /await put\(/);
-});
-
-test('face/upload per-capture/blob: o futuro adaptador de blob concentra uuid, key, putOptions, put e montagem final do item salvo', () => {
-  const blobAdapterSource = stripComments(buildBlobAdapterSource());
-
-  assert.match(blobAdapterSource, /async function persistFaceUploadBlobCore\(\{ webpBuf, index, blobToken \}\) \{/);
-  assert.match(blobAdapterSource, /const id = uuid\(\);/);
-  assert.match(blobAdapterSource, /const key = `faces\/\$\{id\}-\$\{index \+ 1\}\.webp`;/);
-  assert.match(blobAdapterSource, /const putOptions = \{/);
-  assert.match(blobAdapterSource, /const \{ url \} = await put\(key, webpBuf, putOptions\);/);
-  assert.match(blobAdapterSource, /return \{ url, file: url, mime: 'image\/webp' \};/);
-  assert.doesNotMatch(blobAdapterSource, /sharp\(/);
-  assert.doesNotMatch(blobAdapterSource, /Buffer\.from\(/);
-});
-
-test('face/upload per-capture/blob: erro de blob continua propagando como excecao e nao vira null silencioso', async () => {
+test('face/upload per-capture/image: o helper com seam futura continua propagando erro do blob', async () => {
   const processFaceUploadCaptureCore = loadDelegatedPerCaptureCore({
     async normalizeFaceUploadImageCore() {
       return 'WEBP_READY';
@@ -318,4 +301,53 @@ test('face/upload per-capture/blob: erro de blob continua propagando como exceca
     }),
     /blob-fail/,
   );
+});
+
+test('face/upload per-capture/image: o helper delegado deixa de falar diretamente com regex, Buffer.from e sharp', () => {
+  const delegatedSource = stripComments(buildDelegatedPerCaptureSource());
+
+  assert.match(delegatedSource, /normalizeFaceUploadImageCore\(\{ dataUrl \}\)/);
+  assert.match(delegatedSource, /persistFaceUploadBlobCore\(\{ webpBuf, index, blobToken \}\)/);
+  assert.doesNotMatch(delegatedSource, /const m = .*exec\(dataUrl\);/);
+  assert.doesNotMatch(delegatedSource, /Buffer\.from\(b64, 'base64'\)/);
+  assert.doesNotMatch(delegatedSource, /sharp\(buf\)/);
+});
+
+test('face/upload per-capture/image: a futura unidade de imagem concentra regex, base64, Buffer.from, sharp e devolve webpBuf ou null', () => {
+  const imageUnitSource = stripComments(buildImageUnitSource());
+
+  assert.match(imageUnitSource, /async function normalizeFaceUploadImageCore\(\{ dataUrl \}\) \{/);
+  assert.match(imageUnitSource, /const m = .*exec\(dataUrl\);/);
+  assert.match(imageUnitSource, /const b64 = m\[3\];/);
+  assert.match(imageUnitSource, /const buf = Buffer\.from\(b64, 'base64'\);/);
+  assert.match(imageUnitSource, /const image = sharp\(buf\);/);
+  assert.match(imageUnitSource, /return webpBuf;/);
+  assert.match(imageUnitSource, /return null;/);
+  assert.doesNotMatch(imageUnitSource, /persistFaceUploadBlobCore\(/);
+  assert.doesNotMatch(imageUnitSource, /await put\(/);
+});
+
+test('face/upload per-capture/image: a futura unidade de imagem devolve webpBuf para dataUrl valida', async () => {
+  const normalizeFaceUploadImageCore = loadImageUnit({
+    sharp: createSharpSuccessStub({ output: 'WEBP_READY' }),
+  });
+
+  const result = await normalizeFaceUploadImageCore({ dataUrl: 'data:image/png;base64,AAAA' });
+
+  assert.equal(result, 'WEBP_READY');
+});
+
+test('face/upload per-capture/image: a futura unidade de imagem devolve null para dataUrl invalida ou falha de sharp', async () => {
+  const normalizeWithSharpFailure = loadImageUnit({
+    sharp: createSharpFailureStub(),
+  });
+  const normalizeWithSharpSuccess = loadImageUnit({
+    sharp: createSharpSuccessStub(),
+  });
+
+  const invalidResult = await normalizeWithSharpSuccess({ dataUrl: 'invalido' });
+  const sharpFailureResult = await normalizeWithSharpFailure({ dataUrl: 'data:image/png;base64,AAAA' });
+
+  assert.equal(invalidResult, null);
+  assert.equal(sharpFailureResult, null);
 });
