@@ -293,28 +293,27 @@ test('face/upload etapa 1: a rota futura deixa de conter a orquestracao inline d
   assert.doesNotMatch(delegatedSource, /Falha interna no upload facial/);
 });
 
-test('face/upload etapa 1: o owner dedicado futuro herdara intactos os gates, parsing, sharp, blob, traducao HTTP e catch final', () => {
+test('face/upload etapa 1: o owner dedicado continua preservando os gates, a iteracao, a traducao HTTP e o catch final', () => {
   const ownerSource = stripComments(buildExtractedOwnerSource());
 
   assert.match(ownerSource, /if \(!capturas\.length\) return res\.status\(400\)\.json\(\{ ok: false, error: 'Nenhuma captura enviada' \}\);/);
   assert.match(ownerSource, /if \(!inVercel && !blobToken\) \{/);
   assert.match(ownerSource, /return res\.status\(503\)\.json\(\{ ok: false, error: 'Blob não configurado/);
-  assert.match(ownerSource, /const m = \^?\/\^data:\(image\\\/\(png\|jpeg\|webp\)\);base64,\(\.\+\)\$\/i\.exec\(dataUrl\);|const m = \/\^data:\(image\\\/\(png\|jpeg\|webp\)\);base64,\(\.\+\)\$\/i\.exec\(dataUrl\);/);
-  assert.match(ownerSource, /const buf = Buffer\.from\(b64, 'base64'\);/);
-  assert.match(ownerSource, /const image = sharp\(buf\);/);
-  assert.match(ownerSource, /const \{ url \} = await put\(key, webpBuf, putOptions\);/);
+  assert.match(ownerSource, /for \(let i = 0; i < capturas\.length; i\+\+\) \{/);
+  assert.match(ownerSource, /processFaceUploadCaptureCore\(/);
   assert.match(ownerSource, /return res\.json\(\{ ok: true, arquivos: saved \}\);/);
   assert.match(ownerSource, /catch \(err\) \{/);
   assert.match(ownerSource, /return res\.status\(500\)\.json\(\{ ok: false, error: 'Falha interna no upload facial' \}\);/);
 });
 
-test('face/upload etapa 1: a rota futura minimizada nao reabsorve gates ou pipeline interno do owner dedicado', () => {
+test('face/upload etapa 1: a rota futura minimizada nao reabsorve gates e o owner dedicado nao voltou a embutir o pipeline por captura', () => {
   const delegatedSource = stripComments(buildDelegatedRouteSource());
   const ownerSource = stripComments(buildExtractedOwnerSource());
 
   assert.match(delegatedSource, /handleFaceBiometriaUpload/);
   assert.match(ownerSource, /capturas\.length/);
-  assert.match(ownerSource, /sharp\(buf\)/);
-  assert.match(ownerSource, /await put\(/);
+  assert.match(ownerSource, /processFaceUploadCaptureCore\(/);
+  assert.doesNotMatch(ownerSource, /sharp\(buf\)/);
+  assert.doesNotMatch(ownerSource, /await put\(/);
   assert.match(ownerSource, /catch \(err\) \{/);
 });
