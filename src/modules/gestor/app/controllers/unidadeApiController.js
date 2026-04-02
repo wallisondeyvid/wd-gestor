@@ -143,77 +143,102 @@ function getScopedUnitId(req) {
   return normalizeUnitId(req?.unitScope?.unidadeId);
 }
 
-async function loadScopedUnitAccessContext(req) {
-  const scopedUnitId = getScopedUnitId(req);
-  if (!scopedUnitId) {
+function createUnidadePolicyContextCore({ req } = {}) {
+  async function loadScopedUnitAccessContext() {
+    const scopedUnitId = getScopedUnitId(req);
+    if (!scopedUnitId) {
+      return {
+        scopedUnitId: '',
+        scopedUnit: null,
+        principalUnitId: '',
+      };
+    }
+
+    const [scopedUnit, scopedUnitBase] = await Promise.all([
+      findUnidadeByIdLean(scopedUnitId),
+      findUnidadeUserBaseLean(scopedUnitId),
+    ]);
+
+    const principalUnitId = normalizeUnitId(
+      scopedUnitBase?.is_principal
+        ? scopedUnitBase?._id
+        : scopedUnitBase?.unidade_principal_id || scopedUnitBase?.matriz_id || scopedUnitId,
+    );
+
     return {
-      scopedUnitId: '',
-      scopedUnit: null,
-      principalUnitId: '',
+      scopedUnitId,
+      scopedUnit,
+      principalUnitId,
     };
   }
 
-  const [scopedUnit, scopedUnitBase] = await Promise.all([
-    findUnidadeByIdLean(scopedUnitId),
-    findUnidadeUserBaseLean(scopedUnitId),
-  ]);
+  async function loadScopedAccessibleUnidades() {
+    const scopedContext = await loadScopedUnitAccessContext();
+    if (!scopedContext.scopedUnitId) {
+      return {
+        ...scopedContext,
+        unidades: [],
+      };
+    }
 
-  const principalUnitId = normalizeUnitId(
-    scopedUnitBase?.is_principal
-      ? scopedUnitBase?._id
-      : scopedUnitBase?.unidade_principal_id || scopedUnitBase?.matriz_id || scopedUnitId,
-  );
+    let unidades = scopedContext.principalUnitId
+      ? await findUnidadesByCondLeanFull({
+        $or: [
+          { _id: scopedContext.principalUnitId },
+          { unidade_principal_id: scopedContext.principalUnitId },
+          { matriz_id: scopedContext.principalUnitId },
+        ],
+      })
+      : [];
 
-  return {
-    scopedUnitId,
-    scopedUnit,
-    principalUnitId,
-  };
-}
+    if ((!unidades || unidades.length === 0) && scopedContext.scopedUnit) {
+      unidades = [scopedContext.scopedUnit];
+    }
 
-async function loadScopedAccessibleUnidades(req) {
-  const scopedContext = await loadScopedUnitAccessContext(req);
-  if (!scopedContext.scopedUnitId) {
     return {
       ...scopedContext,
-      unidades: [],
+      unidades,
     };
   }
 
-  let unidades = scopedContext.principalUnitId
-    ? await findUnidadesByCondLeanFull({
-      $or: [
-        { _id: scopedContext.principalUnitId },
-        { unidade_principal_id: scopedContext.principalUnitId },
-        { matriz_id: scopedContext.principalUnitId },
-      ],
-    })
-    : [];
+  async function resolveRequestedPrincipalUnitId(requestedPrincipalUnitId = '', fallbackPrincipalUnitId = '') {
+    const scopedContext = await loadScopedUnitAccessContext();
+    const requestedPrincipalId = normalizeUnitId(requestedPrincipalUnitId);
+    const fallbackPrincipalId = normalizeUnitId(fallbackPrincipalUnitId);
+    const scopedPrincipalId = normalizeUnitId(scopedContext.principalUnitId);
 
-  if ((!unidades || unidades.length === 0) && scopedContext.scopedUnit) {
-    unidades = [scopedContext.scopedUnit];
+    if (requestedPrincipalId && scopedPrincipalId && requestedPrincipalId !== scopedPrincipalId) {
+      return { ok: false, principalUnitId: '', scopedContext };
+    }
+
+    return {
+      ok: true,
+      principalUnitId: scopedPrincipalId || requestedPrincipalId || fallbackPrincipalId,
+      scopedContext,
+    };
+  }
+
+  async function ensureCanAccessUnidade(unidadeId) {
+    const scopedContext = await loadScopedAccessibleUnidades();
+    if (scopedContext.scopedUnitId) {
+      const permitidoIds = new Set((scopedContext.unidades || []).map((u) => normalizeUnitId(u?._id)).filter(Boolean));
+      if (permitidoIds.size > 0) {
+        return permitidoIds.has(normalizeUnitId(unidadeId));
+      }
+
+      return normalizeUnitId(unidadeId) === scopedContext.scopedUnitId;
+    }
+
+    if (isPrivilegedGestorUser(req?.user)) return true;
+
+    return false;
   }
 
   return {
-    ...scopedContext,
-    unidades,
-  };
-}
-
-async function resolveRequestedPrincipalUnitId(req, requestedPrincipalUnitId = '', fallbackPrincipalUnitId = '') {
-  const scopedContext = await loadScopedUnitAccessContext(req);
-  const requestedPrincipalId = normalizeUnitId(requestedPrincipalUnitId);
-  const fallbackPrincipalId = normalizeUnitId(fallbackPrincipalUnitId);
-  const scopedPrincipalId = normalizeUnitId(scopedContext.principalUnitId);
-
-  if (requestedPrincipalId && scopedPrincipalId && requestedPrincipalId !== scopedPrincipalId) {
-    return { ok: false, principalUnitId: '', scopedContext };
-  }
-
-  return {
-    ok: true,
-    principalUnitId: scopedPrincipalId || requestedPrincipalId || fallbackPrincipalId,
-    scopedContext,
+    loadScopedUnitAccessContext,
+    loadScopedAccessibleUnidades,
+    resolveRequestedPrincipalUnitId,
+    ensureCanAccessUnidade,
   };
 }
 
@@ -225,7 +250,8 @@ export async function listUnidades(req, res) {
       return ok(res, { unidades: [], principalUnits: [] });
     }
     const user = req.user || {};
-    const scopedContext = await loadScopedAccessibleUnidades(req);
+    const policyContext = createUnidadePolicyContextCore({ req });
+    const scopedContext = await policyContext.loadScopedAccessibleUnidades();
     const isMaster = isPrivilegedGestorUser(user);
     let unidades = [];
     if (scopedContext.scopedUnitId) {
@@ -265,22 +291,6 @@ function resolveTipoUnidadeProvisionada(unidade) {
   if (unidade?.is_principal) return 'principal';
   if (unidade?.subunidade) return 'subunidade';
   return 'filial';
-}
-
-async function ensureCanAccessUnidade(req, unidadeId) {
-  const scopedContext = await loadScopedAccessibleUnidades(req);
-  if (scopedContext.scopedUnitId) {
-    const permitidoIds = new Set((scopedContext.unidades || []).map((u) => normalizeUnitId(u?._id)).filter(Boolean));
-    if (permitidoIds.size > 0) {
-      return permitidoIds.has(normalizeUnitId(unidadeId));
-    }
-
-    return normalizeUnitId(unidadeId) === scopedContext.scopedUnitId;
-  }
-
-  if (isPrivilegedGestorUser(req?.user)) return true;
-
-  return false;
 }
 
 function normalizeProvisioningSnapshotResponse(snapshot) {
@@ -422,6 +432,7 @@ function buildProvisioningEventsNextBefore(events = []) {
 export async function createUnidade(req, res) {
   try {
     if (req.user.role === 'user') return badRequest(res, 'Você não tem permissão para criar unidades.');
+    const policyContext = createUnidadePolicyContextCore({ req });
 
     const {
       nomeFantasia,
@@ -460,7 +471,7 @@ export async function createUnidade(req, res) {
     const modulosSelecionados = Array.isArray(modulosAcessiveis)
       ? modulosAcessiveis
       : (modulosAcessiveis ? [modulosAcessiveis] : []);
-    const resolvedPrincipal = await resolveRequestedPrincipalUnitId(req, unidadePrincipal);
+    const resolvedPrincipal = await policyContext.resolveRequestedPrincipalUnitId(unidadePrincipal);
     if (!resolvedPrincipal.ok) return badRequest(res, 'Acesso à unidade não autorizado.');
     const effectivePrincipalUnitId = resolvedPrincipal.principalUnitId;
 
@@ -500,7 +511,7 @@ export async function createUnidade(req, res) {
 
     let finalCnpj = cleanedCnpj;
     if (pessoaTipo === 'pj' && isSubunidade) {
-      const canAccessPrincipal = await ensureCanAccessUnidade(req, effectivePrincipalUnitId);
+      const canAccessPrincipal = await policyContext.ensureCanAccessUnidade(effectivePrincipalUnitId);
       if (!canAccessPrincipal) return badRequest(res, 'Acesso à unidade não autorizado.');
       const unidadePrincipalDoc = await findUnidadeById(effectivePrincipalUnitId);
       if (!unidadePrincipalDoc || !unidadePrincipalDoc.is_principal) return badRequest(res, 'Unidade principal inválida.');
@@ -584,11 +595,12 @@ export async function createUnidade(req, res) {
 export async function updateUnidade(req, res) {
   try {
     if (req.user.role === 'user') return badRequest(res, 'Você não tem permissão para editar unidades.');
+    const policyContext = createUnidadePolicyContextCore({ req });
 
     const { id: unidadeId } = req.params;
     const unidadeExistente = await findUnidadeById(unidadeId);
     if (!unidadeExistente) return notFound(res, 'Unidade não encontrada.');
-    const canAccessUnidade = await ensureCanAccessUnidade(req, unidadeExistente._id);
+    const canAccessUnidade = await policyContext.ensureCanAccessUnidade(unidadeExistente._id);
     if (!canAccessUnidade) return badRequest(res, 'Acesso à unidade não autorizado.');
 
     const {
@@ -628,8 +640,7 @@ export async function updateUnidade(req, res) {
     } = req.body;
 
     const apiBancariaPayload = sanitizeApiBancariaInput(req.body.apiBancaria || {});
-    const resolvedPrincipal = await resolveRequestedPrincipalUnitId(
-      req,
+    const resolvedPrincipal = await policyContext.resolveRequestedPrincipalUnitId(
       unidadePrincipal,
       subunidade === 'true' ? unidadeExistente.unidade_principal_id : '',
     );
@@ -668,7 +679,7 @@ export async function updateUnidade(req, res) {
     }
 
     if (effectivePrincipalUnitId) {
-      const canAccessPrincipal = await ensureCanAccessUnidade(req, effectivePrincipalUnitId);
+      const canAccessPrincipal = await policyContext.ensureCanAccessUnidade(effectivePrincipalUnitId);
       if (!canAccessPrincipal) return badRequest(res, 'Acesso à unidade não autorizado.');
       const unidadePrincipalDoc = await findUnidadeById(effectivePrincipalUnitId);
       if (!unidadePrincipalDoc || !unidadePrincipalDoc.is_principal) return badRequest(res, 'Unidade principal inválida.');
@@ -734,6 +745,7 @@ export async function updateUnidade(req, res) {
 export async function toggleAccessUnidades(req, res) {
   try {
     if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para alterar o acesso de unidades.');
+    const policyContext = createUnidadePolicyContextCore({ req });
 
     const { unitIds, activate } = req.body;
     if (!Array.isArray(unitIds) || typeof activate !== 'boolean') return badRequest(res,'Parâmetros inválidos.');
@@ -745,7 +757,7 @@ export async function toggleAccessUnidades(req, res) {
       unitIds: normalizedUnitIds,
       activate,
       role: req.user.role,
-      canAccessUnitId: (unitId) => ensureCanAccessUnidade(req, unitId),
+      canAccessUnitId: (unitId) => policyContext.ensureCanAccessUnidade(unitId),
       findUnidadesPrincipaisByIds,
       updateManyUnidadesAccessByIds,
     });
@@ -757,12 +769,13 @@ export async function toggleAccessUnidades(req, res) {
     return serverError(res, error);
   }
 }
-export async function getUnidadeById(req, res) { try { const unidadeId = req.params.id; const unidade = await findUnidadeById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await ensureCanAccessUnidade(req, unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado');
+export async function getUnidadeById(req, res) { try { const policyContext = createUnidadePolicyContextCore({ req }); const unidadeId = req.params.id; const unidade = await findUnidadeById(unidadeId); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await policyContext.ensureCanAccessUnidade(unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado');
   const unidadeData = await getUnidadeDetailsPayload({ unidade, findDiretorAtivoByUnidadeSelectId, buildApiBancariaForResponse, warn: console.warn });
   return ok(res, unidadeData); } catch (error) { console.error('[API UNIDADES][getById] Erro:', error); return serverError(res, error); } }
 export async function getUnidadeModulos(req, res) {
   try {
-    const canAccess = await ensureCanAccessUnidade(req, req.params.id);
+    const policyContext = createUnidadePolicyContextCore({ req });
+    const canAccess = await policyContext.ensureCanAccessUnidade(req.params.id);
     if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado');
     const unidade = await findUnidadeByIdWithModulosAcessiveis(req.params.id);
     if (!unidade) return notFound(res,'Unidade não encontrada');
@@ -776,11 +789,12 @@ export async function getUnidadeModulos(req, res) {
 
 export async function getUnidadeProvisioningStatus(req, res) {
   try {
+    const policyContext = createUnidadePolicyContextCore({ req });
     const unidadeId = String(req.params.id || '').trim();
     const result = (typeof getUnidadeProvisioningStatusOwnerService === 'function')
       ? await getUnidadeProvisioningStatusOwnerService({
           unidadeId,
-          canAccessUnidade: (candidateUnidadeId) => ensureCanAccessUnidade(req, candidateUnidadeId),
+          canAccessUnidade: (candidateUnidadeId) => policyContext.ensureCanAccessUnidade(candidateUnidadeId),
         })
       : await (async () => {
           if (!unidadeId) return { kind: 'bad_request', message: 'ID da unidade e obrigatorio.' };
@@ -788,7 +802,7 @@ export async function getUnidadeProvisioningStatus(req, res) {
           const unidade = await findUnidadeById(unidadeId);
           if (!unidade) return { kind: 'not_found', message: 'Unidade nao encontrada' };
 
-          const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+          const canAccess = await policyContext.ensureCanAccessUnidade(unidade._id);
           if (!canAccess) return { kind: 'forbidden', message: 'Acesso a unidade nao autorizado' };
 
           const snapshot = await inspectUnitProvisioning({ unidadeId: unidade._id });
@@ -809,13 +823,14 @@ export async function getUnidadeProvisioningStatus(req, res) {
 
 export async function getUnidadeProvisioningEvents(req, res) {
   try {
+    const policyContext = createUnidadePolicyContextCore({ req });
     const unidadeId = String(req.params.id || '').trim();
     if (!unidadeId) return badRequest(res, 'ID da unidade e obrigatorio.');
 
     const unidade = await findUnidadeById(unidadeId);
     if (!unidade) return notFound(res, 'Unidade nao encontrada');
 
-    const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+    const canAccess = await policyContext.ensureCanAccessUnidade(unidade._id);
     if (!canAccess) return badRequest(res, 'Acesso a unidade nao autorizado');
 
     const limit = normalizeProvisioningEventsLimit(req.query?.limit);
@@ -887,6 +902,7 @@ export async function retryUnidadeProvisioning(req, res) {
     if (req.user.role === 'user') {
       return badRequest(res, 'Voce nao tem permissao para reprocessar provisioning de unidades.');
     }
+    const policyContext = createUnidadePolicyContextCore({ req });
 
     const unidadeId = String(req.params.id || '').trim();
     if (!unidadeId) return badRequest(res, 'ID da unidade e obrigatorio.');
@@ -894,7 +910,7 @@ export async function retryUnidadeProvisioning(req, res) {
     const unidade = await findUnidadeById(unidadeId);
     if (!unidade) return notFound(res, 'Unidade nao encontrada');
 
-    const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+    const canAccess = await policyContext.ensureCanAccessUnidade(unidade._id);
     if (!canAccess) return badRequest(res, 'Acesso a unidade nao autorizado');
 
     const modulosRetry = resolveRetryModulesFromRequest(req);
@@ -934,7 +950,7 @@ export async function getUnidadePublic(req, res) {
     return serverError(res, error);
   }
 }
-export async function deleteUnidade(req, res) { try { const unidadeId = req.params.id; if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para excluir unidades.'); const unidade = await findUnidadeDeleteCandidateService({ unidadeId }); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await ensureCanAccessUnidade(req, unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado.'); if (unidade.is_principal) { if (req.user.role === 'diretor') return badRequest(res,'Diretores não podem excluir unidades principais.'); if (!req.user.isMaster) return badRequest(res,'Apenas Master pode excluir unidades principais'); } await deleteUnidadeExecutionService({ unidadeId }); return ok(res, { deleted:true, id:unidadeId }); } catch (error) { console.error('[API UNIDADES][delete] Erro:', error); return serverError(res, error); } }
+export async function deleteUnidade(req, res) { try { const policyContext = createUnidadePolicyContextCore({ req }); const unidadeId = req.params.id; if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para excluir unidades.'); const unidade = await findUnidadeDeleteCandidateService({ unidadeId }); if (!unidade) return notFound(res,'Unidade não encontrada'); const canAccess = await policyContext.ensureCanAccessUnidade(unidade._id); if (!canAccess) return badRequest(res,'Acesso à unidade não autorizado.'); if (unidade.is_principal) { if (req.user.role === 'diretor') return badRequest(res,'Diretores não podem excluir unidades principais.'); if (!req.user.isMaster) return badRequest(res,'Apenas Master pode excluir unidades principais'); } await deleteUnidadeExecutionService({ unidadeId }); return ok(res, { deleted:true, id:unidadeId }); } catch (error) { console.error('[API UNIDADES][delete] Erro:', error); return serverError(res, error); } }
 
 // ================= Logo da Unidade: leitura (serverless-friendly) =================
 // Converte Data URL em { buffer, contentType }; retorna null se inválido
@@ -952,8 +968,9 @@ function _parseDataUrl(dataUrl){
 // GET binário da logo da unidade; suporta logos salvas como Data URL (preferencial) ou caminho legada em disco
 export async function getUnidadeLogo(req, res) {
   try {
+    const policyContext = createUnidadePolicyContextCore({ req });
     const { id } = req.params;
-    const canAccess = await ensureCanAccessUnidade(req, id);
+    const canAccess = await policyContext.ensureCanAccessUnidade(id);
     if (!canAccess) return badRequest(res, 'Acesso à unidade não autorizado.');
     const unidade = await findUnidadeByIdLean(id);
     if (!unidade) return notFound(res, 'Unidade não encontrada');
@@ -1059,10 +1076,11 @@ export const uploadLogoUnidade = [
   async function(req,res){
     try {
       if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para alterar logos.');
+      const policyContext = createUnidadePolicyContextCore({ req });
       const { id } = req.params;
       const unidade = await findUnidadeById(id);
       if(!unidade) return notFound(res,'Unidade não encontrada');
-      const canAccess = await ensureCanAccessUnidade(req, unidade._id);
+      const canAccess = await policyContext.ensureCanAccessUnidade(unidade._id);
       if (!canAccess) return badRequest(res, 'Acesso à unidade não autorizado.');
 
       // 1) JSON dataUrl (compat serverless ou clientes antigos apontando para /logo com JSON)
@@ -1123,6 +1141,7 @@ export const uploadLogoUnidade = [
 export async function uploadLogoUnidadeInline(req, res) {
   try {
     if (req.user.role === 'user') return badRequest(res,'Você não tem permissão para alterar logos.');
+    const policyContext = createUnidadePolicyContextCore({ req });
     const { id } = req.params;
     const { dataUrl } = req.body || {};
     if (!dataUrl || typeof dataUrl !== 'string') return badRequest(res,'Parâmetro dataUrl obrigatório.');
@@ -1139,8 +1158,8 @@ export async function uploadLogoUnidadeInline(req, res) {
 
     const unidade = await findUnidadeById(id);
     if(!unidade) return notFound(res,'Unidade não encontrada');
-  const canAccess = await ensureCanAccessUnidade(req, unidade._id);
-  if (!canAccess) return badRequest(res, 'Acesso à unidade não autorizado.');
+    const canAccess = await policyContext.ensureCanAccessUnidade(unidade._id);
+    if (!canAccess) return badRequest(res, 'Acesso à unidade não autorizado.');
 
     let uploadedLogo;
     try {
