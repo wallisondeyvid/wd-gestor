@@ -136,175 +136,181 @@ function requestedUnitMatchesContext(req, requestedUnitId) {
 
 // ================= Normalização e movimentação de arquivos =================
 const ROOT_PROJ = path.join(ROOT, '.');
-function ensureDir(dir){ if(!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true}); }
-function normalizeAndMaybeMove(fullPath){
-  try {
-    const normFull = fullPath.replace(/\\/g,'/');
-    // Já em public/uploads ou uploads
-    if(/\/public\/uploads\//.test(normFull) || /\/uploads\//.test(normFull)){
-      let rel = path.relative(ROOT_PROJ, normFull).replace(/\\/g,'/');
-      rel = rel.replace(/^public\//,'')
-      if(!rel.startsWith('uploads/')) rel = 'uploads/' + path.basename(normFull);
-      return { relative: rel, moved:false };
-    }
-    // Arquivo temporário em tmp/uploads -> mover
-    if(/\/tmp\/uploads\//.test(normFull)){
-      const baseName = path.basename(normFull);
-      const destDir = path.join(ROOT_PROJ,'public','uploads'); ensureDir(destDir);
-      let destFull = path.join(destDir, baseName);
-      if(fs.existsSync(destFull)){
-        const nameNoExt = baseName.replace(/\.[^.]+$/,'')
-        const ext = (baseName.match(/\.[^.]+$/)||[''])[0];
-        let c=1; while(fs.existsSync(destFull)){ destFull = path.join(destDir, `${nameNoExt}_${c}${ext}`); c++; }
-      }
-      try { fs.renameSync(normFull, destFull); }
-      catch(err){ console.warn('[UPLOAD][move] rename falhou, tentando copy:', err.message); try { fs.copyFileSync(normFull, destFull); } catch(copyErr){ console.error('[UPLOAD][copy] falhou:', copyErr.message); } }
-      return { relative: 'uploads/'+path.basename(destFull), moved:true };
-    }
-    // Outro local: relativiza e, se não for uploads, copia para lá
-    let rel = path.relative(ROOT_PROJ, normFull).replace(/\\/g,'/');
-    rel = rel.replace(/^public\//,'')
-    if(!rel.startsWith('uploads/')){
-      const destDir = path.join(ROOT_PROJ,'public','uploads'); ensureDir(destDir);
-      const baseName = path.basename(normFull);
-      const destFull = path.join(destDir, baseName);
-      try { if(!fs.existsSync(destFull)) fs.copyFileSync(normFull, destFull); rel = 'uploads/'+baseName; } catch(err){ console.error('[UPLOAD][force-copy] falhou:', err.message); }
-    }
-    return { relative: rel, moved:false };
-  } catch(err){
-    console.error('[UPLOAD][normalize] erro:', err.message);
-		// fallback com extensão jpg para evitar 404 por estáticos que exigem mime
-		return { relative: 'uploads/erro-'+Date.now()+'.jpg', moved:false };
-  }
-}
-// Quando multer usa memoryStorage, req.file não tem 'path'. Precisamos gravar buffer em tmp/uploads.
-function ensureDiskPathFromMemoryFile(file){
-	try {
-		if(!file) return file;
-		if(file.path) return file; // já possui caminho no disco
-		if(!file.buffer) return file; // nada a fazer
-		// Gravamos direto em public/uploads para simplificar (antes: tmp/uploads)
-		const destDir = path.join(ROOT_PROJ,'public','uploads'); ensureDir(destDir);
-		let original = file.originalname || 'arquivo';
-		// Garante extensão coerente se original vier sem
-		if(!/\.[a-zA-Z0-9]{2,6}$/.test(original) && file.mimetype){
-			const extMap = { 'image/jpeg':'.jpg', 'image/pjpeg':'.jpg', 'image/png':'.png', 'image/webp':'.webp', 'image/gif':'.gif' };
-			const guess = extMap[file.mimetype];
-			if(guess) original += guess;
-		}
-		const safeBase = (Date.now()+'-'+ original)
-			.replace(/[^a-zA-Z0-9._-]/g,'_')
-			.slice(0,140);
-		let full = path.join(destDir, safeBase);
-		// Evita colisão (improvável, mas garantimos)
-		let c=1; while(fs.existsSync(full)) { full = path.join(destDir, safeBase.replace(/(\.[^.]+)?$/, `_${c}$1`)); c++; }
-		fs.writeFileSync(full, file.buffer);
-		const size = fs.statSync(full).size;
-		console.log('[UPLOAD][memory->disk] gravado', { full, size, original: file.originalname, mimetype: file.mimetype });
-		file.path = full; // injeta caminho para reutilizar lógica existente
-		return file;
-	} catch(err){
-		console.warn('[UPLOAD][memory->disk] Falha ao persistir buffer:', err.message);
-		return file;
+function createFuncionarioAssetsInfraCore({
+	rootDir = ROOT_PROJ,
+	fileSystem = fs,
+	pathModule = path,
+	putObject = put,
+	deleteObject = del,
+	imageProcessor = sharp,
+	uuidFactory = uuid,
+	env = process.env,
+	BufferCtor = Buffer,
+} = {}) {
+	function ensureDir(dir){ if(!fileSystem.existsSync(dir)) fileSystem.mkdirSync(dir,{recursive:true}); }
+	function normalizeAndMaybeMove(fullPath){
+	  try {
+	    const normFull = String(fullPath || '').replace(/\\/g,'/');
+	    if(/\/public\/uploads\//.test(normFull) || /\/uploads\//.test(normFull)){
+	      let rel = pathModule.relative(rootDir, normFull).replace(/\\/g,'/');
+	      rel = rel.replace(/^public\//,'');
+	      if(!rel.startsWith('uploads/')) rel = 'uploads/' + pathModule.basename(normFull);
+	      return { relative: rel, moved:false };
+	    }
+	    if(/\/tmp\/uploads\//.test(normFull)){
+	      const baseName = pathModule.basename(normFull);
+	      const destDir = pathModule.join(rootDir,'public','uploads'); ensureDir(destDir);
+	      let destFull = pathModule.join(destDir, baseName);
+	      if(fileSystem.existsSync(destFull)){
+	        const nameNoExt = baseName.replace(/\.[^.]+$/,'');
+	        const ext = (baseName.match(/\.[^.]+$/)||[''])[0];
+	        let c=1; while(fileSystem.existsSync(destFull)){ destFull = pathModule.join(destDir, `${nameNoExt}_${c}${ext}`); c++; }
+	      }
+	      try { fileSystem.renameSync(normFull, destFull); }
+	      catch(err){ console.warn('[UPLOAD][move] rename falhou, tentando copy:', err.message); try { fileSystem.copyFileSync(normFull, destFull); } catch(copyErr){ console.error('[UPLOAD][copy] falhou:', copyErr.message); } }
+	      return { relative: 'uploads/'+pathModule.basename(destFull), moved:true };
+	    }
+	    let rel = pathModule.relative(rootDir, normFull).replace(/\\/g,'/');
+	    rel = rel.replace(/^public\//,'');
+	    if(!rel.startsWith('uploads/')){
+	      const destDir = pathModule.join(rootDir,'public','uploads'); ensureDir(destDir);
+	      const baseName = pathModule.basename(normFull);
+	      const destFull = pathModule.join(destDir, baseName);
+	      try { if(!fileSystem.existsSync(destFull)) fileSystem.copyFileSync(normFull, destFull); rel = 'uploads/'+baseName; } catch(err){ console.error('[UPLOAD][force-copy] falhou:', err.message); }
+	    }
+	    return { relative: rel, moved:false };
+	  } catch(err){
+	    console.error('[UPLOAD][normalize] erro:', err.message);
+			return { relative: 'uploads/erro-'+Date.now()+'.jpg', moved:false };
+	  }
 	}
-}
-function mapFiles(list = []) {
-  if (!Array.isArray(list)) return [];
-  return list.map(f => {
-		if (!f) return null;
-		// Garante path em disco se veio de memoryStorage
-		ensureDiskPathFromMemoryFile(f);
-		if (!f.path) return null; // ainda sem path -> ignora
+	function ensureDiskPathFromMemoryFile(file){
 		try {
-			const norm = normalizeAndMaybeMove(f.path);
-			return { nome: f.originalname || 'arquivo_sem_nome', mime: f.mimetype || 'application/octet-stream', tamanho: f.size || 0, caminho: norm.relative, data_upload: new Date() };
+			if(!file) return file;
+			if(file.path) return file;
+			if(!file.buffer) return file;
+			const destDir = pathModule.join(rootDir,'public','uploads'); ensureDir(destDir);
+			let original = file.originalname || 'arquivo';
+			if(!/\.[a-zA-Z0-9]{2,6}$/.test(original) && file.mimetype){
+				const extMap = { 'image/jpeg':'.jpg', 'image/pjpeg':'.jpg', 'image/png':'.png', 'image/webp':'.webp', 'image/gif':'.gif' };
+				const guess = extMap[file.mimetype];
+				if(guess) original += guess;
+			}
+			const safeBase = (Date.now()+'-'+ original)
+				.replace(/[^a-zA-Z0-9._-]/g,'_')
+				.slice(0,140);
+			let full = pathModule.join(destDir, safeBase);
+			let c=1; while(fileSystem.existsSync(full)) { full = pathModule.join(destDir, safeBase.replace(/(\.[^.]+)?$/, `_${c}$1`)); c++; }
+			fileSystem.writeFileSync(full, file.buffer);
+			const size = fileSystem.statSync(full).size;
+			console.log('[UPLOAD][memory->disk] gravado', { full, size, original: file.originalname, mimetype: file.mimetype });
+			file.path = full;
+			return file;
 		} catch(err){
-			console.warn('[UPLOAD][anexo] Falha ao normalizar anexo', f.originalname, err.message);
+			console.warn('[UPLOAD][memory->disk] Falha ao persistir buffer:', err.message);
+			return file;
+		}
+	}
+	function mapFiles(list = []) {
+	  if (!Array.isArray(list)) return [];
+	  return list.map(f => {
+			if (!f) return null;
+			ensureDiskPathFromMemoryFile(f);
+			if (!f.path) return null;
+			try {
+				const norm = normalizeAndMaybeMove(f.path);
+				return { nome: f.originalname || 'arquivo_sem_nome', mime: f.mimetype || 'application/octet-stream', tamanho: f.size || 0, caminho: norm.relative, data_upload: new Date() };
+			} catch(err){
+				console.warn('[UPLOAD][anexo] Falha ao normalizar anexo', f.originalname, err.message);
+				return null;
+			}
+	  }).filter(Boolean);
+	}
+	function getBlobToken(){
+		return env.BLOB_READ_WRITE_TOKEN
+			|| env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN
+			|| env.VERCEL_BLOB_RW_TOKEN
+			|| '';
+	}
+	function isBlobUrl(u){ return typeof u==='string' && /https?:\/\/.*blob\.vercel-storage\.com\//i.test(u); }
+	async function uploadFuncionarioFotoToBlob(buffer, funcionarioId){
+		if(!buffer || !buffer.length) return null;
+		let webp;
+		try {
+			webp = await imageProcessor(buffer).rotate().resize(512,512,{ fit:'cover', position:'center', withoutEnlargement:true }).toFormat('webp',{ quality:90 }).toBuffer();
+		} catch(err){
+			console.warn('[FUNC][FOTO] sharp falhou:', err?.message);
+			throw new Error('Arquivo de imagem inválido');
+		}
+		const key = `funcionarios/${funcionarioId || 'temp'}-${uuidFactory()}.webp`;
+		const token = getBlobToken();
+		const putOptions = {
+			access:'public',
+			contentType:'image/webp',
+			cacheControl:'public, max-age=31536000, immutable',
+			...(token? { token } : {})
+		};
+		const { url } = await putObject(key, webp, putOptions);
+		return url;
+	}
+	async function deleteFromBlobIfNeeded(url){ try { if(isBlobUrl(url)){ const token=getBlobToken(); await deleteObject(url, token?{ token }:undefined); return true; } } catch(_){} return false; }
+	function canUseBlob(){ return !!env.VERCEL || !!getBlobToken(); }
+	function parseDataUrl(dataUrl){
+		try {
+			if(!/^data:/i.test(String(dataUrl))) return null;
+			const [header, base64] = String(dataUrl).split(',');
+			if(!base64) return null;
+			const contentType = header.split(';')[0].split(':')[1] || 'application/octet-stream';
+			const buffer = BufferCtor.from(base64, 'base64');
+			return { contentType, buffer };
+		} catch { return null; }
+	}
+	async function uploadFacePreviewToBlob(buffer, funcionarioId, idx){
+		if(!buffer || !buffer.length) return null;
+		let webp;
+		try {
+			webp = await imageProcessor(buffer).rotate().resize(640, 640, { fit: 'inside', withoutEnlargement: true }).toFormat('webp', { quality: 92 }).toBuffer();
+		} catch(err){
+			console.warn('[BIO FACE] sharp falhou:', err?.message);
 			return null;
 		}
-  }).filter(Boolean);
-}
-// ==========================================================================
-
-// ============================ Blob Helpers ================================
-function getBlobToken(){
-	return process.env.BLOB_READ_WRITE_TOKEN
-		|| process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN
-		|| process.env.VERCEL_BLOB_RW_TOKEN
-		|| '';
-}
-function isBlobUrl(u){ return typeof u==='string' && /https?:\/\/.*blob\.vercel-storage\.com\//i.test(u); }
-async function uploadFuncionarioFotoToBlob(buffer, funcionarioId){
-	if(!buffer || !buffer.length) return null;
-	// Garante WEBP 512x512 cover
-	let webp;
-	try {
-		webp = await sharp(buffer).rotate().resize(512,512,{ fit:'cover', position:'center', withoutEnlargement:true }).toFormat('webp',{ quality:90 }).toBuffer();
-	} catch(err){
-		console.warn('[FUNC][FOTO] sharp falhou:', err?.message);
-		throw new Error('Arquivo de imagem inválido');
+		const key = `faces/${funcionarioId || 'temp'}-${uuidFactory()}-${(idx??0)+1}.webp`;
+		const token = getBlobToken();
+		const putOptions = { access:'public', contentType:'image/webp', cacheControl:'public, max-age=31536000, immutable', ...(token?{ token }: {}) };
+		const { url } = await putObject(key, webp, putOptions);
+		return url;
 	}
-	const key = `funcionarios/${funcionarioId || 'temp'}-${uuid()}.webp`;
-	const token = getBlobToken();
-	const putOptions = {
-		access:'public',
-		contentType:'image/webp',
-		cacheControl:'public, max-age=31536000, immutable',
-		...(token? { token } : {})
-	};
-	const { url } = await put(key, webp, putOptions);
-	return url;
-}
-async function deleteFromBlobIfNeeded(url){ try { if(isBlobUrl(url)){ const token=getBlobToken(); await del(url, token?{ token }:undefined); } } catch(_){} }
-function canUseBlob(){ return !!process.env.VERCEL || !!getBlobToken(); }
-// ==========================================================================
-
-// ============= Blob helpers para prévias faciais (biometrias) =============
-function parseDataUrl(dataUrl){
-	try {
-		if(!/^data:/i.test(String(dataUrl))) return null;
-		const [header, base64] = String(dataUrl).split(',');
-		if(!base64) return null;
-		const contentType = header.split(';')[0].split(':')[1] || 'application/octet-stream';
-		const buffer = Buffer.from(base64, 'base64');
-		return { contentType, buffer };
-	} catch { return null; }
-}
-async function uploadFacePreviewToBlob(buffer, funcionarioId, idx){
-	if(!buffer || !buffer.length) return null;
-	// Normaliza para WEBP com tamanho controlado
-	let webp;
-	try {
-		webp = await sharp(buffer).rotate().resize(640, 640, { fit: 'inside', withoutEnlargement: true }).toFormat('webp', { quality: 92 }).toBuffer();
-	} catch(err){
-		console.warn('[BIO FACE] sharp falhou:', err?.message);
-		return null;
-	}
-	const key = `faces/${funcionarioId || 'temp'}-${uuid()}-${(idx??0)+1}.webp`;
-	const token = getBlobToken();
-	const putOptions = { access:'public', contentType:'image/webp', cacheControl:'public, max-age=31536000, immutable', ...(token?{ token }: {}) };
-	const { url } = await put(key, webp, putOptions);
-	return url;
-}
-async function mapBiometriasFaciaisToBlob(arr, funcionarioId){
-	if(!Array.isArray(arr) || !arr.length) return arr;
-	if(!canUseBlob()) return arr;
-	const out = [];
-	for(let i=0;i<arr.length;i++){
-		const it = arr[i] || {};
-		const obj = { ...it };
-		if(obj.imagem && /^data:/i.test(String(obj.imagem))){
-			const parsed = parseDataUrl(obj.imagem);
-			if(parsed && parsed.buffer){
-				try {
-					const url = await uploadFacePreviewToBlob(parsed.buffer, funcionarioId, i);
-					if(url) obj.imagem = url;
-				} catch(err){ console.warn('[BIO FACE] falha upload Blob:', err?.message); }
+	async function mapBiometriasFaciaisToBlob(arr, funcionarioId){
+		if(!Array.isArray(arr) || !arr.length) return arr;
+		if(!canUseBlob()) return arr;
+		const out = [];
+		for(let i=0;i<arr.length;i++){
+			const it = arr[i] || {};
+			const obj = { ...it };
+			if(obj.imagem && /^data:/i.test(String(obj.imagem))){
+				const parsed = parseDataUrl(obj.imagem);
+				if(parsed && parsed.buffer){
+					try {
+						const url = await uploadFacePreviewToBlob(parsed.buffer, funcionarioId, i);
+						if(url) obj.imagem = url;
+					} catch(err){ console.warn('[BIO FACE] falha upload Blob:', err?.message); }
+				}
 			}
+			out.push(obj);
 		}
-		out.push(obj);
+		return out;
 	}
-	return out;
+	return {
+		normalizeAndMaybeMove,
+		ensureDiskPathFromMemoryFile,
+		mapFiles,
+		canUseBlob,
+		uploadFuncionarioFotoToBlob,
+		deleteFromBlobIfNeeded,
+		parseDataUrl,
+		uploadFacePreviewToBlob,
+		mapBiometriasFaciaisToBlob,
+	};
 }
 // ==========================================================================
 
@@ -510,6 +516,7 @@ const asNumber = v => { const s = asStr(v).replace(/[R$\s]/g,'').replace(/\./g,'
 export async function createFuncionario(req,res){ try {
 	if (typeof req.body.endereco === 'string') delete req.body.endereco;
 	logDateDebug('create.raw-body', req.body);
+	const assetsInfra = createFuncionarioAssetsInfraCore();
 		let { unidade_id, funcao_id, nome, nome_social, nome_mae, nome_pai, rg, rg_orgao, rg_uf, rg_data_expedicao, cpf, pis, data_nascimento, sexo, estado_civil, raca_cor, escolaridade, nacionalidade, pais_nascimento, data_chegada_brasil, naturalidade, endereco, telefone, telefone2, email, tipo_ctps, ctps_numero, ctps_serie, ctps_uf, pcd, tipo_deficiencia, cid, biometrico, biometrico_face, fp_template_b64, fp_template_sha256, fp_imagem, fp_dedo, face_template_b64, face_template_sha256, face_imagem, data_admissao, tipo_admissao, categoria_trabalhador, tipo_contrato, data_termino, objeto_determinante, clausula_assecuratoria, cargo, cbo, departamento, regime_contratacao, regime_jornada, carga_semanal, salario_base, tipo_salario, forma_pagamento, forma_pagamento_desc, banco, agencia_num, agencia_dv, conta_num, conta_dv, tipo_conta, sindicato, fgts_optante, fgts_data, regime_previdenciario, tipo_especial, cert_militar, cert_militar_orgao, cert_militar_uf, cert_militar_data, titulo, titulo_zona, titulo_secao, cnh, cnh_categoria, cnh_validade, cnh_uf, orgao_prof, orgao_prof_uf, orgao_prof_numero } = req.body;
 	const requestUnitId = getRequestUnitId(req);
 	const observacoes = req.body.observacoes ?? req.body.extra_observacoes ?? undefined;
@@ -656,15 +663,14 @@ if(carga_semanal !== undefined && carga_semanal !== null && carga_semanal !== ''
 		orgao_prof_numero,
 		rawBody: req.body,
 		anexosFiles: req.files?.anexos || [],
-		mapFiles,
+		mapFiles: assetsInfra.mapFiles,
 		createFuncionarioDoc,
 	});
 	// Upload da foto (se houver) após ter o _id
 	try {
 		if(fotoBuffer){
-			const inVercel = !!process.env.VERCEL; const token=getBlobToken();
-			if(inVercel || token){
-				const url = await uploadFuncionarioFotoToBlob(fotoBuffer, novo._id);
+			if(assetsInfra.canUseBlob()){
+				const url = await assetsInfra.uploadFuncionarioFotoToBlob(fotoBuffer, novo._id);
 				novo.foto = url; await saveFuncionario(novo);
 			} else {
 				console.warn('[FUNC][FOTO][create] Blob não configurado; ignorando upload');
@@ -673,8 +679,8 @@ if(carga_semanal !== undefined && carga_semanal !== null && carga_semanal !== ''
 	} catch(upErr){ console.warn('[FUNC][FOTO][create] Falha upload foto:', upErr?.message); }
 	// Upload das prévias faciais para Blob (se houver)
 	try {
-		if(Array.isArray(novo.biometrias_facial) && novo.biometrias_facial.length && canUseBlob()){
-			const mapped = await mapBiometriasFaciaisToBlob(novo.biometrias_facial, novo._id);
+		if(Array.isArray(novo.biometrias_facial) && novo.biometrias_facial.length && assetsInfra.canUseBlob()){
+			const mapped = await assetsInfra.mapBiometriasFaciaisToBlob(novo.biometrias_facial, novo._id);
 			novo.biometrias_facial = mapped;
 			if(novo.face_imagem && /^data:/i.test(String(novo.face_imagem)) && mapped[0] && mapped[0].imagem && /^https?:\/\//i.test(mapped[0].imagem)){
 				novo.face_imagem = mapped[0].imagem;
@@ -850,6 +856,7 @@ async function createFuncionarioUpdateSharedCore({ id, body, canonicalUnitId } =
 	};
 }
 export async function updateFuncionarioIncremental(req,res){ try { const { id } = req.params; const canonicalUnitId = getCanonicalContextUnitId(req) || '';
+	const assetsInfra = createFuncionarioAssetsInfraCore();
 	console.log('[UPLOAD][incremental] req.file?', !!req.file, 'req.files?.foto?.length', req.files?.foto?.length);
 	console.log('[UPLOAD][incremental][debug] files keys:', Object.keys(req.files||{}));
 	console.log('[UPLOAD][incremental][debug] anexos bruto length:', req.files?.anexos?.length || 0);
@@ -861,17 +868,17 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 	if(sharedUpdate.kind === 'validation_error') return badRequest(res, sharedUpdate.message, { campo: sharedUpdate.field });
 	logDateDebug('incremental.after-normalize', req.body);
 	let { funcionario, ops, effectiveUnitId } = sharedUpdate;
-	const blobReady = canUseBlob();
+	const blobReady = assetsInfra.canUseBlob();
 	if(req.file && req.file.fieldname === 'foto'){
 		if(!blobReady){ return res.status(503).json({ error:'Blob não configurado (conecte a Store no Vercel ou defina BLOB_READ_WRITE_TOKEN/WDGESTOR_DB_DADOS_READ_WRITE_TOKEN)' }); }
-		try { const url = await uploadFuncionarioFotoToBlob(req.file.buffer, funcionario._id); ops.$set.foto = url; await deleteFromBlobIfNeeded(funcionario.foto); } catch(err){ console.warn('[UPLOAD][incremental] Falha processar foto:', err.message); return res.status(500).json({ error:'Falha ao processar foto' }); }
+		try { const url = await assetsInfra.uploadFuncionarioFotoToBlob(req.file.buffer, funcionario._id); ops.$set.foto = url; await assetsInfra.deleteFromBlobIfNeeded(funcionario.foto); } catch(err){ console.warn('[UPLOAD][incremental] Falha processar foto:', err.message); return res.status(500).json({ error:'Falha ao processar foto' }); }
 	} else if(req.files?.foto?.length){
 		if(!blobReady){ return res.status(503).json({ error:'Blob não configurado (conecte a Store no Vercel ou defina BLOB_READ_WRITE_TOKEN/WDGESTOR_DB_DADOS_READ_WRITE_TOKEN)' }); }
-		try { const f=req.files.foto[0]; const url = await uploadFuncionarioFotoToBlob(f.buffer, funcionario._id); ops.$set.foto = url; await deleteFromBlobIfNeeded(funcionario.foto); } catch(err){ console.warn('[UPLOAD][incremental] Falha processar foto multi:', err.message); return res.status(500).json({ error:'Falha ao processar foto' }); }
+		try { const f=req.files.foto[0]; const url = await assetsInfra.uploadFuncionarioFotoToBlob(f.buffer, funcionario._id); ops.$set.foto = url; await assetsInfra.deleteFromBlobIfNeeded(funcionario.foto); } catch(err){ console.warn('[UPLOAD][incremental] Falha processar foto multi:', err.message); return res.status(500).json({ error:'Falha ao processar foto' }); }
 	} else if(req.body.excluir_foto==='true' && funcionario.foto){
 		// Exclusão explícita
 		ops.$unset.foto = 1;
-		await deleteFromBlobIfNeeded(funcionario.foto);
+		await assetsInfra.deleteFromBlobIfNeeded(funcionario.foto);
 		try { const absFoto = path.join(ROOT, '.', String(funcionario.foto||'').replace(/^public\//,'')); if(fs.existsSync(absFoto)) fs.unlinkSync(absFoto); } catch{}
 	} else {
 		// Nenhum upload novo e não solicitou exclusão -> garantir que não haja unset acidental vindo do form
@@ -885,7 +892,7 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 			anexosExistentes: req.body.anexos_existentes,
 			anexosExcluidos: req.body.anexos_excluidos,
 			novosUploads: req.files?.anexos || [],
-			mapFiles,
+			mapFiles: assetsInfra.mapFiles,
 		});
 		if(anexosReconciliados.length > 0) ops.$set.anexos = anexosReconciliados;
 		else ops.$unset.anexos = 1;
@@ -932,7 +939,7 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 					// Converte imagens base64 -> Blob URLs quando possível
 					if (norm.length) {
 						try {
-							if (canUseBlob()) norm = await mapBiometriasFaciaisToBlob(norm, funcionario._id);
+							if (assetsInfra.canUseBlob()) norm = await assetsInfra.mapBiometriasFaciaisToBlob(norm, funcionario._id);
 						} catch(err){ console.warn('[BIO FACE][incremental] map blob falhou:', err?.message); }
 						ops.$set.biometrias_facial = norm;
 					} else { ops.$unset.biometrias_facial = 1; }
@@ -962,7 +969,7 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 	} catch(parseErr){ console.warn('[BIO JSON][incremental] falha parse:', parseErr.message); }
 	// Converter face_imagem base64 -> Blob URL, se presente em $set
 	if (blobReady && ops.$set && typeof ops.$set.face_imagem === 'string' && /^data:/i.test(ops.$set.face_imagem)){
-		try { const parsed = parseDataUrl(ops.$set.face_imagem); if(parsed){ const url = await uploadFacePreviewToBlob(parsed.buffer, funcionario._id, 0); if(url) ops.$set.face_imagem = url; } } catch(err){ console.warn('[BIO FACE][incremental] face_imagem blob fail:', err?.message); }
+		try { const parsed = assetsInfra.parseDataUrl(ops.$set.face_imagem); if(parsed){ const url = await assetsInfra.uploadFacePreviewToBlob(parsed.buffer, funcionario._id, 0); if(url) ops.$set.face_imagem = url; } } catch(err){ console.warn('[BIO FACE][incremental] face_imagem blob fail:', err?.message); }
 	}
 		try {
 			await updateFuncionarioByIdWithOps(id, ops, effectiveUnitId);
@@ -1003,6 +1010,7 @@ export async function updateFuncionarioIncremental(req,res){ try { const { id } 
 // Reprocessa apenas campos de data em $set que ainda sejam arrays ou strings não convertidas.
 // (Inserido logo após definição da função para garantir execução em chamadas futuras)
 export async function updateFuncionario(req,res){ try { const { id } = req.params; const canonicalUnitId = getCanonicalContextUnitId(req) || '';
+	const assetsInfra = createFuncionarioAssetsInfraCore();
 	console.log('[UPLOAD][update-full] req.file?', !!req.file, 'req.files?.foto?.length', req.files?.foto?.length);
 	console.log('[UPLOAD][update-full][debug] files keys:', Object.keys(req.files||{}));
 	console.log('[UPLOAD][update-full][debug] anexos bruto length:', req.files?.anexos?.length || 0);
@@ -1014,7 +1022,7 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 	if(sharedUpdate.kind === 'validation_error') return badRequest(res, sharedUpdate.message, { campo: sharedUpdate.field });
 	logDateDebug('update.after-normalize', req.body);
 	let { funcionario, ops, effectiveUnitId } = sharedUpdate;
-	const blobReadyUpdate = canUseBlob();
+	const blobReadyUpdate = assetsInfra.canUseBlob();
 	try {
 		const fotoResult = await reconcileUpdateFuncionarioFullFoto({
 			reqFile: req.file,
@@ -1023,8 +1031,8 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 			fotoAtual: funcionario.foto,
 			funcionarioId: funcionario._id,
 			blobReady: blobReadyUpdate,
-			uploadFuncionarioFotoToBlob,
-			deleteFromBlobIfNeeded,
+			uploadFuncionarioFotoToBlob: assetsInfra.uploadFuncionarioFotoToBlob,
+			deleteFromBlobIfNeeded: assetsInfra.deleteFromBlobIfNeeded,
 		});
 
 		if (fotoResult?.mode === 'set') {
@@ -1051,7 +1059,7 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 		anexosExistentes: req.body.anexos_existentes,
 		anexosExcluidos: req.body.anexos_excluidos,
 		novosUploads: req.files?.anexos || [],
-		mapFiles,
+		mapFiles: assetsInfra.mapFiles,
 		fs,
 		path,
 		rootDir: ROOT,
@@ -1064,9 +1072,9 @@ export async function updateFuncionario(req,res){ try { const { id } = req.param
 		faceImagem: ops.$set?.face_imagem,
 		blobReady: blobReadyUpdate,
 		funcionarioId: funcionario._id,
-		mapBiometriasFaciaisToBlob,
-		parseDataUrl,
-		uploadFacePreviewToBlob,
+		mapBiometriasFaciaisToBlob: assetsInfra.mapBiometriasFaciaisToBlob,
+		parseDataUrl: assetsInfra.parseDataUrl,
+		uploadFacePreviewToBlob: assetsInfra.uploadFacePreviewToBlob,
 	});
 	if (biometriaPatch?.set && typeof biometriaPatch.set === 'object') {
 		Object.assign(ops.$set, biometriaPatch.set);
