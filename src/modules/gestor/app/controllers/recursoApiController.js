@@ -16,6 +16,7 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listarRecursosService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
 import { deleteRecursoScopedService } from '#modules/gestor/app/services/recursos/deleteRecursoScoped.service.js';
+import { createRecursoContextPolicyCore } from '#modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js';
 import { getRecursoByIdCore } from './utils/getRecursoByIdCore.js';
 import { processCreateRecursoCore } from './utils/processCreateRecursoCore.js';
 import { processUpdateRecursoCore } from './utils/processUpdateRecursoCore.js';
@@ -24,44 +25,21 @@ function normalizeUnitId(value) {
 	return String(value || '').trim();
 }
 
-function isMasterOrAdmin(req) {
-	return req.user?.isMaster || req.user?.role === 'admin';
-}
+const recursoContextPolicy = createRecursoContextPolicyCore({
+	findUnidadeUserBaseLean,
+	findUnidadesByCondLean,
+});
 
-function getScopedUnitId(req) {
-	return normalizeUnitId(req.unitScope?.unidadeId);
-}
-
-function getLegacyAuthenticatedUnitId(req) {
-	return normalizeUnitId(req.user?.unidade_id || req.session?.user?.unidade_id);
-}
-
-function getCanonicalContextUnitId(req) {
-	return normalizeUnitId(getScopedUnitId(req) || getLegacyAuthenticatedUnitId(req));
-}
-
-function hasCanonicalContextUnitId(req) {
-	return Boolean(getCanonicalContextUnitId(req));
-}
-
-function shouldBlockForMissingContext(req) {
-	return !isMasterOrAdmin(req) && !hasCanonicalContextUnitId(req);
+function getRequestScopeContext(req) {
+	return {
+		currentUser: req.user || null,
+		sessionUser: req.session?.user || null,
+		scopedUnitId: req.unitScope?.unidadeId || null,
+	};
 }
 
 function respondMissingContext(res) {
 	return notFound(res, 'Unidade não encontrada');
-}
-
-function requestedUnitMatchesContext(req, requestedUnitId) {
-	const requested = normalizeUnitId(requestedUnitId);
-	if (!requested) return true;
-	if (isMasterOrAdmin(req)) return true;
-
-	const canonicalContextUnitId = getCanonicalContextUnitId(req);
-	if (!canonicalContextUnitId) return false;
-	if (canonicalContextUnitId) return canonicalContextUnitId === requested;
-
-	return false;
 }
 
 // GET /gestor/api/recursos?placa=ABC1234&unidadeId=<id>
@@ -92,8 +70,9 @@ export async function listarRecursosApi(req, res) {
 export async function getRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
-		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
-		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
+		const context = getRequestScopeContext(req);
+		if (recursoContextPolicy.shouldBlockForMissingContext(context)) return respondMissingContext(res);
+		const unidadeEfetiva = recursoContextPolicy.resolveCanonicalContextUnitId(context) || null;
 
 		const recurso = await getRecursoByIdCore({
 			id: req.params.id,
@@ -112,12 +91,17 @@ export async function createRecurso(req, res) {
 	try {
 		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor } = req.body;
 		const requestedUnitId = normalizeUnitId(unidade_id);
-		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
+		const context = getRequestScopeContext(req);
+		if (recursoContextPolicy.shouldBlockForMissingContext(context)) return respondMissingContext(res);
 		if (!requestedUnitId || !tipo || !placa || !chassi || !renavam || !ano || !mod || !marca || !modelo || !cor) {
 			return badRequest(res, 'Todos os campos são obrigatórios');
 		}
 
-		if (!requestedUnitMatchesContext(req, requestedUnitId)) {
+		const access = recursoContextPolicy.ensureRequestedUnitAccess({
+			...context,
+			requestedUnitId,
+		});
+		if (!access.allowed) {
 			return notFound(res, 'Unidade não encontrada');
 		}
 
@@ -128,7 +112,7 @@ export async function createRecurso(req, res) {
 		}
 
 		const createResult = await processCreateRecursoCore({
-			requestedUnitId,
+			requestedUnitId: access.effectiveUnitId || requestedUnitId,
 			tipo,
 			placa,
 			chassi,
@@ -155,14 +139,19 @@ export async function updateRecurso(req, res) {
 	try {
 		const { unidade_id, tipo, placa, chassi, renavam, ano, mod, marca, modelo, cor, ativo } = req.body;
 		const requestedUnitId = normalizeUnitId(unidade_id);
-		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
+		const context = getRequestScopeContext(req);
+		if (recursoContextPolicy.shouldBlockForMissingContext(context)) return respondMissingContext(res);
 
 		if (!requestedUnitId) return badRequest(res, 'Unidade é obrigatória');
 		if (!/^[0-9a-fA-F]{24}$/.test(String(requestedUnitId))) return badRequest(res, 'Unidade inválida');
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
-		if (!requestedUnitMatchesContext(req, requestedUnitId)) return notFound(res, 'Unidade não encontrada');
+		const access = recursoContextPolicy.ensureRequestedUnitAccess({
+			...context,
+			requestedUnitId,
+		});
+		if (!access.allowed) return notFound(res, 'Unidade não encontrada');
 
-		const unidadeEfetiva = requestedUnitId || null;
+		const unidadeEfetiva = access.effectiveUnitId || requestedUnitId || null;
 
 		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
@@ -208,9 +197,10 @@ export async function updateRecurso(req, res) {
 export async function deleteRecurso(req, res) {
 	try {
 		if (!/^[0-9a-fA-F]{24}$/.test(String(req.params.id))) return badRequest(res, 'ID inválido');
-		if (shouldBlockForMissingContext(req)) return respondMissingContext(res);
+		const context = getRequestScopeContext(req);
+		if (recursoContextPolicy.shouldBlockForMissingContext(context)) return respondMissingContext(res);
 
-		const unidadeEfetiva = getCanonicalContextUnitId(req) || null;
+		const unidadeEfetiva = recursoContextPolicy.resolveCanonicalContextUnitId(context) || null;
 
 		const recurso = await deleteRecursoScopedService({
 			recursoId: req.params.id,

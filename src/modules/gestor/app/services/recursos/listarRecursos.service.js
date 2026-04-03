@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { createUnitScope } from '#shared/unitScope.js';
+import { createRecursoContextPolicyCore } from '#modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js';
 import { findRecursosByFiltroComUnidadeLeanRepo } from '#modules/gestor/app/repositories/RecursoReadRepository.js';
 import {
   findUnidadeUserBaseLeanRepo,
@@ -10,10 +11,6 @@ const GLOBAL_SCOPE = createUnitScope({});
 
 function normalizeUnitId(value) {
   return String(value || '').trim();
-}
-
-function isMasterOrAdmin(user) {
-  return user?.isMaster || user?.role === 'admin';
 }
 
 function scopeFromUnidadeId(unidadeId) {
@@ -39,14 +36,6 @@ function scopeFromRecursoListFiltro(filtro) {
 
   const unidadeId = extractSingleScopedUnitId(filtro?.unidade_id);
   return unidadeId ? scopeFromUnidadeId(unidadeId) : GLOBAL_SCOPE;
-}
-
-function getCanonicalContextUnitId({ user, session, unitScope }) {
-  return normalizeUnitId(unitScope?.unidadeId || user?.unidade_id || session?.user?.unidade_id);
-}
-
-function shouldBlockForMissingContext({ user, session, unitScope }) {
-  return !isMasterOrAdmin(user) && !getCanonicalContextUnitId({ user, session, unitScope });
 }
 
 function extractScopedClusterAnchorFromUnidadesCond(cond) {
@@ -91,6 +80,11 @@ async function findUnidadesByCondLean(cond) {
   });
 }
 
+const recursoContextPolicy = createRecursoContextPolicyCore({
+  findUnidadeUserBaseLean,
+  findUnidadesByCondLean,
+});
+
 export async function findRecursosByFiltroComUnidadeService(filtro) {
   return findRecursosByFiltroComUnidadeLeanRepo({
     unitScope: scopeFromRecursoListFiltro(filtro),
@@ -122,54 +116,29 @@ function mapRecurso(recurso) {
 
 export async function listarRecursosService({ query, user, session, unitScope }) {
   const placa = String(query?.placa || '').trim();
-  const unidadeId = String(query?.unidadeId || '').trim();
-
-  if (shouldBlockForMissingContext({ user, session, unitScope })) {
-    return { blocked: true, data: null };
-  }
-
-  const scopedUnitId = getCanonicalContextUnitId({ user, session, unitScope });
-  const filtro = {};
+  const context = {
+    currentUser: user || null,
+    sessionUser: session?.user || null,
+    scopedUnitId: unitScope?.unidadeId || null,
+  };
   let placaTermNorm = null;
 
   if (placa && placa.length >= 2) {
     placaTermNorm = placa.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
   }
 
-  if (isMasterOrAdmin(user)) {
-    if (unidadeId) {
-      filtro.unidade_id = unidadeId;
-    }
-  } else {
-    let principalId = null;
-    const anchorUnitId = scopedUnitId;
-
-    if (!anchorUnitId) {
-      return { blocked: false, data: [] };
-    }
-
-    const unidadeAnchor = await findUnidadeUserBaseLean(anchorUnitId);
-    if (unidadeAnchor) {
-      principalId = unidadeAnchor.is_principal
-        ? unidadeAnchor._id
-        : (unidadeAnchor.unidade_principal_id || unidadeAnchor.matriz_id || unidadeAnchor._id);
-    }
-
-    const cond = principalId
-      ? { $or: [{ _id: principalId }, { unidade_principal_id: principalId }, { matriz_id: principalId }] }
-      : { _id: anchorUnitId || null };
-    const unidadesAcessiveis = await findUnidadesByCondLean(cond);
-    const ids = unidadesAcessiveis.map((unidade) => String(unidade._id));
-
-    if (unidadeId) {
-      if (!ids.includes(String(unidadeId))) {
-        return { blocked: false, data: [] };
-      }
-      filtro.unidade_id = unidadeId;
-    } else {
-      filtro.unidade_id = { $in: ids };
-    }
+  const scope = await recursoContextPolicy.buildListScope({
+    ...context,
+    requestedUnitId: query?.unidadeId || null,
+  });
+  if (scope.blocked) {
+    return { blocked: true, data: null };
   }
+  if (scope.empty) {
+    return { blocked: false, data: [] };
+  }
+
+  const filtro = scope.filter || {};
 
   let recursos = await findRecursosByFiltroComUnidadeService(filtro);
 
