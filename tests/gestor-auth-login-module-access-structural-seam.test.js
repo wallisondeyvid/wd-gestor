@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { after, beforeEach, mock, test } from 'node:test';
+
+const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/authController.js');
+const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
 
 const featureFlagsState = {
   gestor_auth_context_resolver: true,
@@ -28,6 +33,67 @@ const loginPostAuthContextState = {
   result: null,
   calls: [],
 };
+
+function extractFunctionSource(source, signature) {
+  const start = source.indexOf(signature);
+  assert.ok(start >= 0, `Nao encontrou assinatura: ${signature}`);
+
+  const paramsEnd = source.indexOf(')', start);
+  assert.ok(paramsEnd >= 0, `Nao encontrou fechamento de parametros para: ${signature}`);
+
+  const braceStart = source.indexOf('{', paramsEnd);
+  assert.ok(braceStart >= 0, `Nao encontrou bloco da assinatura: ${signature}`);
+
+  let depth = 0;
+  for (let index = braceStart; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === '{') depth += 1;
+    if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return source.slice(start, index + 1);
+      }
+    }
+  }
+
+  throw new Error(`Nao conseguiu extrair bloco completo de ${signature}`);
+}
+
+test('estado real atual: login preserva o corridor HTTP e a decisao de acesso ao modulo fica isolada no helper sem absorver excludes', () => {
+  const helperSource = extractFunctionSource(CONTROLLER_SOURCE, 'async function verificarAcessoModulo');
+
+  assert.match(CONTROLLER_SOURCE, /const loginPostAuthContextResult = await authContextOrchestration\.resolveLoginAuthContext\(/);
+  assert.match(CONTROLLER_SOURCE, /const checagem = await Promise\.race\(\[/);
+  assert.match(CONTROLLER_SOURCE, /verificarAcessoModulo\(\{ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath, authContext: resolvedLoginAuthContext \}\)/);
+  assert.match(CONTROLLER_SOURCE, /if \(precisaTrocar.*return res\.redirect\(303, basePath \+ '\/primeiroacesso'\);/s);
+  assert.match(CONTROLLER_SOURCE, /await createRememberToken\(/);
+  assert.match(CONTROLLER_SOURCE, /return res\.status\(200\)\.render\('partials\/construcao'/);
+  assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, basePath \+ '\/dashboard'\);/);
+
+  assert.match(helperSource, /async function verificarAcessoModulo\(\{ userDoc, moduloAlvoNome, basePath, authContext = null \}/);
+  assert.match(helperSource, /const modulo = await findModuloByOr\(/);
+  assert.match(helperSource, /const unidadeIdEfetiva = unidadeIdCanonica \|\| userDoc\.unidade_id \|\| null;/);
+  assert.match(helperSource, /const funcionario = await findFuncionarioByIdSelect\(/);
+  assert.match(helperSource, /const funcao = await findFuncaoByIdSelect\(/);
+  assert.doesNotMatch(helperSource, /bcrypt|failed_login_attempts|lock_until|createRememberToken|primeiroAcessoExecutionService/);
+  assert.doesNotMatch(helperSource, /res\.redirect|res\.status\(200\)\.render\('partials\/construcao'|authContextOrchestration\.resolveLoginAuthContext/);
+});
+
+test('futura seam de module access recebe apenas usuario efetivo, modulo alvo, basePath e authContext resolvido', () => {
+  const futureSeamSource = `function createLoginModuleAccessCore({ decideModuleAccess } = {}) {
+    async function evaluateModuleAccess({ userDoc, moduloAlvoNome, basePath, authContext } = {}) {
+      return decideModuleAccess({ userDoc, moduloAlvoNome, basePath, authContext });
+    }
+
+    return { evaluateModuleAccess };
+  }`;
+
+  assert.match(futureSeamSource, /function createLoginModuleAccessCore\(/);
+  assert.match(futureSeamSource, /async function evaluateModuleAccess\(\{ userDoc, moduloAlvoNome, basePath, authContext \} = \{\}\)/);
+  assert.doesNotMatch(futureSeamSource, /req|res|session|resolverEnabled|resolverDeps|maxTimeMS/);
+  assert.doesNotMatch(futureSeamSource, /bcrypt|failed_login_attempts|lock_until|createRememberToken|primeiroAcessoExecutionService/);
+  assert.doesNotMatch(futureSeamSource, /resolveLoginAuthContext|redirect|render\('partials\/construcao'|findModuloLeanByOrSelect/);
+});
 
 mock.module('mongoose', {
   defaultExport: mongooseState,
