@@ -17,9 +17,8 @@ import {
 import { listarRecursosService } from '#modules/gestor/app/services/recursos/listarRecursos.service.js';
 import { deleteRecursoScopedService } from '#modules/gestor/app/services/recursos/deleteRecursoScoped.service.js';
 import { createRecursoContextPolicyCore } from '#modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js';
+import { createRecursoWriteValidationCore } from '#modules/gestor/app/services/recursos/createRecursoWriteValidationCore.js';
 import { getRecursoByIdCore } from './utils/getRecursoByIdCore.js';
-import { processCreateRecursoCore } from './utils/processCreateRecursoCore.js';
-import { processUpdateRecursoCore } from './utils/processUpdateRecursoCore.js';
 
 function normalizeUnitId(value) {
 	return String(value || '').trim();
@@ -28,6 +27,13 @@ function normalizeUnitId(value) {
 const recursoContextPolicy = createRecursoContextPolicyCore({
 	findUnidadeUserBaseLean,
 	findUnidadesByCondLean,
+});
+
+const recursoWriteValidation = createRecursoWriteValidationCore({
+	findRecursosByFiltroComUnidadeLean,
+	findOutroRecursoByPlacaUpper,
+	findOutroRecursoByChassiUpper,
+	findOutroRecursoByRenavam,
 });
 
 function getRequestScopeContext(req) {
@@ -105,13 +111,7 @@ export async function createRecurso(req, res) {
 			return notFound(res, 'Unidade não encontrada');
 		}
 
-		const placaRegexAntiga = /^[A-Z]{3}-[0-9]{4}$/;
-		const placaRegexMercosul = /^[A-Z]{3}-[0-9][A-Z][0-9]{2}$/;
-		if (!placaRegexAntiga.test(placa.toUpperCase()) && !placaRegexMercosul.test(placa.toUpperCase())) {
-			return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
-		}
-
-		const createResult = await processCreateRecursoCore({
+		const createValidation = await recursoWriteValidation.validateCreate({
 			requestedUnitId: access.effectiveUnitId || requestedUnitId,
 			tipo,
 			placa,
@@ -122,12 +122,13 @@ export async function createRecurso(req, res) {
 			marca,
 			modelo,
 			cor,
-			findRecursosByFiltroComUnidadeLean,
-			createRecursoDb,
 		});
-		if (createResult?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada');
-		if (createResult?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado');
-		if (createResult?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado');
+		if (createValidation?.error === 'invalid_placa_format') return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
+		if (createValidation?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada');
+		if (createValidation?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado');
+		if (createValidation?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado');
+
+		const createResult = await createRecursoDb(createValidation.data);
 
 		return created(res, createResult._id, { data: createResult });
 	} catch (error) {
@@ -156,15 +157,7 @@ export async function updateRecurso(req, res) {
 		const recurso = await findRecursoByIdComUnidadeNome(req.params.id, unidadeEfetiva || null);
 		if (!recurso) return notFound(res, 'Recurso não encontrado');
 
-		if (placa) {
-			const placaRegexAntiga = /^[A-Z]{3}-[0-9]{4}$/;
-			const placaRegexMercosul = /^[A-Z]{3}-[0-9][A-Z][0-9]{2}$/;
-			if (!placaRegexAntiga.test(placa.toUpperCase()) && !placaRegexMercosul.test(placa.toUpperCase())) {
-				return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
-			}
-		}
-
-		const updateResult = await processUpdateRecursoCore({
+		const updateValidation = await recursoWriteValidation.validateUpdate({
 			id: req.params.id,
 			unidadeEfetiva,
 			recurso,
@@ -178,14 +171,17 @@ export async function updateRecurso(req, res) {
 			modelo,
 			cor,
 			ativo,
-			findOutroRecursoByPlacaUpper,
-			findOutroRecursoByChassiUpper,
-			findOutroRecursoByRenavam,
-			updateRecursoByIdComUnidadeNome,
 		});
-		if (updateResult?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada para outro recurso');
-		if (updateResult?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado para outro recurso');
-		if (updateResult?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado para outro recurso');
+		if (updateValidation?.error === 'invalid_placa_format') return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');
+		if (updateValidation?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada para outro recurso');
+		if (updateValidation?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado para outro recurso');
+		if (updateValidation?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado para outro recurso');
+
+		const updateResult = await updateRecursoByIdComUnidadeNome(
+			req.params.id,
+			updateValidation.data,
+			unidadeEfetiva || null,
+		);
 		if (!updateResult) return notFound(res, 'Recurso não encontrado');
 
 		return ok(res, updateResult);

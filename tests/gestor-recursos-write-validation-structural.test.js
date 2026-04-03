@@ -7,6 +7,7 @@ import vm from 'node:vm';
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/recursoApiController.js');
 const CREATE_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/utils/processCreateRecursoCore.js');
 const UPDATE_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/utils/processUpdateRecursoCore.js');
+const WRITE_VALIDATION_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/recursos/createRecursoWriteValidationCore.js');
 const POLICY_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js');
 const LIST_SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/recursos/listarRecursos.service.js');
 const DELETE_SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/recursos/deleteRecursoScoped.service.js');
@@ -15,6 +16,7 @@ const GET_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controlle
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
 const CREATE_CORE_SOURCE = fs.readFileSync(CREATE_CORE_PATH, 'utf8');
 const UPDATE_CORE_SOURCE = fs.readFileSync(UPDATE_CORE_PATH, 'utf8');
+const WRITE_VALIDATION_CORE_SOURCE = fs.readFileSync(WRITE_VALIDATION_CORE_PATH, 'utf8');
 const POLICY_CORE_SOURCE = fs.readFileSync(POLICY_CORE_PATH, 'utf8');
 const LIST_SERVICE_SOURCE = fs.readFileSync(LIST_SERVICE_PATH, 'utf8');
 const DELETE_SERVICE_SOURCE = fs.readFileSync(DELETE_SERVICE_PATH, 'utf8');
@@ -194,11 +196,13 @@ function buildDelegatedOwnersSource() {
   })`;
 }
 
-test('estado real atual: escrita semantica de create-update ainda esta repartida entre controller e cores locais', () => {
-  assert.match(CONTROLLER_SOURCE, /const placaRegexAntiga = \/\^\[A-Z\]\{3\}-\[0-9\]\{4\}\$\//);
-  assert.match(CONTROLLER_SOURCE, /const placaRegexMercosul = \/\^\[A-Z\]\{3\}-\[0-9\]\[A-Z\]\[0-9\]\{2\}\$\//);
-  assert.match(CONTROLLER_SOURCE, /processCreateRecursoCore\(/);
-  assert.match(CONTROLLER_SOURCE, /processUpdateRecursoCore\(/);
+test('estado real atual: create e update delegam o miolo de escrita-identidade para a seam unica', () => {
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /export function createRecursoWriteValidationCore\(\{/);
+  assert.match(CONTROLLER_SOURCE, /const recursoWriteValidation = createRecursoWriteValidationCore\(\{/);
+  assert.match(CONTROLLER_SOURCE, /const createValidation = await recursoWriteValidation\.validateCreate\(\{/);
+  assert.match(CONTROLLER_SOURCE, /const updateValidation = await recursoWriteValidation\.validateUpdate\(\{/);
+  assert.match(CONTROLLER_SOURCE, /const createResult = await createRecursoDb\(createValidation\.data\);/);
+  assert.match(CONTROLLER_SOURCE, /const updateResult = await updateRecursoByIdComUnidadeNome\(/);
   assert.match(CREATE_CORE_SOURCE, /const normalizedPlaca = placa\.toUpperCase\(\);/);
   assert.match(CREATE_CORE_SOURCE, /const normalizedChassi = chassi\.toUpperCase\(\);/);
   assert.match(CREATE_CORE_SOURCE, /return \{ error: 'duplicate_placa' \};/);
@@ -210,14 +214,13 @@ test('estado real atual: escrita semantica de create-update ainda esta repartida
   assert.match(UPDATE_CORE_SOURCE, /placa: placa \? placa\.toUpperCase\(\) : recurso\.placa/);
   assert.match(UPDATE_CORE_SOURCE, /chassi: chassi \? chassi\.toUpperCase\(\) : recurso\.chassi/);
 
-  assert.equal(countOccurrences(CONTROLLER_SOURCE, 'placaRegexAntiga'), 4);
-  assert.equal(countOccurrences(CONTROLLER_SOURCE, 'placaRegexMercosul'), 4);
-  assert.equal(countOccurrences(CREATE_CORE_SOURCE, "duplicate_placa"), 1);
-  assert.equal(countOccurrences(UPDATE_CORE_SOURCE, "duplicate_placa"), 1);
+  assert.equal(countOccurrences(CONTROLLER_SOURCE, 'recursoWriteValidation.validateCreate'), 1);
+  assert.equal(countOccurrences(CONTROLLER_SOURCE, 'recursoWriteValidation.validateUpdate'), 1);
 
-  assert.doesNotMatch(CONTROLLER_SOURCE, /createRecursoWriteValidationCore\(/);
-  assert.doesNotMatch(CREATE_CORE_SOURCE, /createRecursoWriteValidationCore\(/);
-  assert.doesNotMatch(UPDATE_CORE_SOURCE, /createRecursoWriteValidationCore\(/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /const placaRegexAntiga = \/\^\[A-Z\]\{3\}-\[0-9\]\{4\}\$\//);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /const placaRegexMercosul = \/\^\[A-Z\]\{3\}-\[0-9\]\[A-Z\]\[0-9\]\{2\}\$\//);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /processCreateRecursoCore\(/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /processUpdateRecursoCore\(/);
 });
 
 test('futura seam unica recebe apenas dados minimos de escrita e dependencias de verificacao', async () => {
