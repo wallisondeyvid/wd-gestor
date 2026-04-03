@@ -5,6 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/funcaoApiController.js');
+const WRITE_VALIDATION_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/funcoes/createFuncaoWriteValidationCore.js');
 const CREATE_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/utils/processCreateFuncaoCore.js');
 const UPDATE_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/utils/executeUpdateFuncaoCore.js');
 const POLICY_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/funcoes/createFuncaoContextPolicyCore.js');
@@ -15,6 +16,7 @@ const GET_BY_UNIT_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/c
 const BULK_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/utils/processBulkUpdateFuncoes.js');
 
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
+const WRITE_VALIDATION_CORE_SOURCE = fs.readFileSync(WRITE_VALIDATION_CORE_PATH, 'utf8');
 const CREATE_CORE_SOURCE = fs.readFileSync(CREATE_CORE_PATH, 'utf8');
 const UPDATE_CORE_SOURCE = fs.readFileSync(UPDATE_CORE_PATH, 'utf8');
 const POLICY_CORE_SOURCE = fs.readFileSync(POLICY_CORE_PATH, 'utf8');
@@ -171,10 +173,27 @@ function buildDelegatedOwnersSource() {
   })`;
 }
 
-test('estado real atual: create e update ainda concentram o miolo de escrita semantica compartilhada', () => {
+test('estado real atual: controller delega a nova seam e o miolo compartilhado ficou concentrado fora dos owners', () => {
   assert.match(POLICY_CORE_SOURCE, /export function createFuncaoContextPolicyCore\(/);
-  assert.match(CONTROLLER_SOURCE, /processCreateFuncaoCore\(/);
-  assert.match(CONTROLLER_SOURCE, /executeUpdateFuncaoCore\(/);
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /export function createFuncaoWriteValidationCore\(/);
+  assert.match(CONTROLLER_SOURCE, /createFuncaoWriteValidationCore/);
+  assert.match(CONTROLLER_SOURCE, /funcaoWriteValidation\.validateCreate\(/);
+  assert.match(CONTROLLER_SOURCE, /funcaoWriteValidation\.validateUpdate\(/);
+  assert.match(CONTROLLER_SOURCE, /const createResult = await createFuncaoDb\(createValidation\.data\);/);
+  assert.match(CONTROLLER_SOURCE, /await updateFuncaoById\(id, updateValidation\.data, updateValidation\.targetPrincipalUnitId\);/);
+  assert.match(CONTROLLER_SOURCE, /const updated = await findFuncaoByIdLean\(id, updateValidation\.targetPrincipalUnitId\);/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /processCreateFuncaoCore\(/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /executeUpdateFuncaoCore\(/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /function normalizarListaModulos/);
+
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /const dup = await findFuncaoByNome\(nome, canonicalPrincipalUnitId \|\| null\);/);
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /const unidade = await findUnidadeByIdWithModulosAcessiveis\(canonicalPrincipalUnitId \|\| null\);/);
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /const lista = normalizeModuloList\(modulosHabilitados\);/);
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /const dup = await findOutraFuncaoByNomeExcludingId\(/);
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /if \(dup\) return \{ error: 'Já existe uma função com este nome' \};/);
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /if \(!unidade\) return \{ error: 'Unidade inválida' \};/);
+  assert.match(WRITE_VALIDATION_CORE_SOURCE, /updates\.modulos_habilitados = lista\.filter\(\(moduloId\) => permitidos\.has\(String\(moduloId\)\)\);/);
+
   assert.match(CREATE_CORE_SOURCE, /const dup = await findFuncaoByNome\(nome, canonicalPrincipalUnitId\);/);
   assert.match(CREATE_CORE_SOURCE, /const unidade = await findUnidadeByIdWithModulosAcessiveis\(canonicalPrincipalUnitId\);/);
   assert.match(CREATE_CORE_SOURCE, /const lista = normalizarListaModulos\(modulosHabilitados\);/);
@@ -189,14 +208,13 @@ test('estado real atual: create e update ainda concentram o miolo de escrita sem
   assert.match(UPDATE_CORE_SOURCE, /const lista = normalizarListaModulos\(modulos_habilitados\);/);
   assert.match(UPDATE_CORE_SOURCE, /updates\.modulos_habilitados = lista\.filter\(moduloId => permitidos\.has\(String\(moduloId\)\)\);/);
 
-  assert.match(CONTROLLER_SOURCE, /if \(funcao\?\.error === 'Função já cadastrada'\) return badRequest\(res,'Função já cadastrada'\);/);
-  assert.match(CONTROLLER_SOURCE, /if \(funcao\?\.error === 'Unidade inválida'\) return badRequest\(res,'Unidade inválida'\);/);
-  assert.match(CONTROLLER_SOURCE, /if \(updated\?\.error === 'Já existe uma função com este nome'\) return badRequest\(res,'Já existe uma função com este nome'\);/);
-  assert.match(CONTROLLER_SOURCE, /if \(updated\?\.error === 'Unidade inválida'\) return badRequest\(res,'Unidade inválida'\);/);
+  assert.match(CONTROLLER_SOURCE, /if \(createValidation\?\.error === 'Função já cadastrada'\) return badRequest\(res,'Função já cadastrada'\);/);
+  assert.match(CONTROLLER_SOURCE, /if \(createValidation\?\.error === 'Unidade inválida'\) return badRequest\(res,'Unidade inválida'\);/);
+  assert.match(CONTROLLER_SOURCE, /if \(updateValidation\?\.error === 'Já existe uma função com este nome'\) return badRequest\(res,'Já existe uma função com este nome'\);/);
+  assert.match(CONTROLLER_SOURCE, /if \(updateValidation\?\.error === 'Unidade inválida'\) return badRequest\(res,'Unidade inválida'\);/);
 
-  assert.doesNotMatch(CONTROLLER_SOURCE, /createFuncaoWriteValidationCore/);
-  assert.doesNotMatch(CREATE_CORE_SOURCE, /createFuncaoContextPolicyCore/);
-  assert.doesNotMatch(UPDATE_CORE_SOURCE, /createFuncaoContextPolicyCore/);
+  assert.doesNotMatch(WRITE_VALIDATION_CORE_SOURCE, /createFuncaoContextPolicyCore|resolveCanonicalContextPrincipalUnitId|ensureRequestedUnitWithinContextCluster|buildListScope/);
+  assert.doesNotMatch(WRITE_VALIDATION_CORE_SOURCE, /createFuncaoDb|updateFuncaoById|findFuncaoByIdLean|badRequest|created\(|ok\(|notFound|serverError/);
   assert.doesNotMatch(BULK_CORE_SOURCE, /modulos_habilitados|findOutraFuncaoByNomeExcludingId|findUnidadeByIdWithModulosAcessiveis/);
   assert.doesNotMatch(GET_BY_ID_CORE_SOURCE, /findFuncaoByNome|findOutraFuncaoByNomeExcludingId|modulosAcessiveis/);
   assert.doesNotMatch(GET_BY_UNIT_CORE_SOURCE, /findFuncaoByNome|findOutraFuncaoByNomeExcludingId|modulosAcessiveis/);

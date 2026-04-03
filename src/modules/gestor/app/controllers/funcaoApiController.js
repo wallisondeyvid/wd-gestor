@@ -16,12 +16,11 @@ import {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listarFuncoesService } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
 import { createFuncaoContextPolicyCore } from '#modules/gestor/app/services/funcoes/createFuncaoContextPolicyCore.js';
+import { createFuncaoWriteValidationCore } from '#modules/gestor/app/services/funcoes/createFuncaoWriteValidationCore.js';
 import { deleteFuncaoScopedService } from '#modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js';
-import { processCreateFuncaoCore } from './utils/processCreateFuncaoCore.js';
 import { getFuncaoByIdCore } from './utils/getFuncaoByIdCore.js';
 import { getFuncoesByUnitCore } from './utils/getFuncoesByUnitCore.js';
 import { processBulkUpdateFuncoesItems } from './utils/processBulkUpdateFuncoes.js';
-import { executeUpdateFuncaoCore } from './utils/executeUpdateFuncaoCore.js';
 
 function normalizeUnitId(value){
   return String(value || '').trim();
@@ -31,23 +30,16 @@ const funcaoContextPolicy = createFuncaoContextPolicyCore({
   findUnidadeUserBaseLean,
 });
 
+const funcaoWriteValidation = createFuncaoWriteValidationCore({
+  findFuncaoByNome,
+  findOutraFuncaoByNomeExcludingId,
+  findUnidadeByIdWithModulosAcessiveis,
+});
+
 function getRequestScopeContext(req) {
   return {
     scopedUnitId: req.unitScope?.unidadeId || null,
   };
-}
-
-function normalizarListaModulos(input){
-  if (input === undefined || input === null) return [];
-  if (Array.isArray(input)) return input.filter(Boolean);
-  if (typeof input === 'string') {
-    const trimmed = input.trim();
-    if (!trimmed) return [];
-    if (trimmed.startsWith('[')) { try { return JSON.parse(trimmed); } catch { return [trimmed]; } }
-    if (trimmed.includes(',')) return trimmed.split(',').map(s=>s.trim()).filter(Boolean);
-    return [trimmed];
-  }
-  return [];
 }
 
 export async function createFuncao(req,res){
@@ -63,19 +55,18 @@ export async function createFuncao(req,res){
       requestedUnitId: unidade_principal_id || canonicalPrincipalUnitId,
     });
     if (!access.allowed) return notFound(res,'Unidade principal não encontrada');
-    const funcao = await processCreateFuncaoCore({
+
+    const createValidation = await funcaoWriteValidation.validateCreate({
       nome,
       descricao,
       canonicalPrincipalUnitId,
       modulosHabilitados: modulos_habilitados,
-      findFuncaoByNome,
-      findUnidadeByIdWithModulosAcessiveis,
-      normalizarListaModulos,
-      createFuncaoDb,
     });
-    if (funcao?.error === 'Função já cadastrada') return badRequest(res,'Função já cadastrada');
-    if (funcao?.error === 'Unidade inválida') return badRequest(res,'Unidade inválida');
-    return created(res, funcao._id, { data:{ _id: funcao._id } });
+    if (createValidation?.error === 'Função já cadastrada') return badRequest(res,'Função já cadastrada');
+    if (createValidation?.error === 'Unidade inválida') return badRequest(res,'Unidade inválida');
+
+    const createResult = await createFuncaoDb(createValidation.data);
+    return created(res, createResult._id, { data:{ _id: createResult._id } });
   } catch(e){ console.error('[API FUNCOES][create] Erro:', e); return serverError(res,e); }
 }
 
@@ -100,7 +91,16 @@ export async function updateFuncao(req,res){
     const contextPrincipalUnitId = await funcaoContextPolicy.resolveCanonicalContextPrincipalUnitId(context);
     const existente = await findFuncaoById(id, contextPrincipalUnitId || null);
     if (!existente) return notFound(res,'Função não encontrada');
-    const updated = await executeUpdateFuncaoCore({
+
+    if (unidade_principal_id) {
+      const access = await funcaoContextPolicy.ensureRequestedUnitWithinContextCluster({
+        ...context,
+        requestedUnitId: unidade_principal_id,
+      });
+      if (!access.allowed) return notFound(res,'Unidade principal não encontrada');
+    }
+
+    const updateValidation = await funcaoWriteValidation.validateUpdate({
       id,
       nome,
       descricao,
@@ -109,23 +109,28 @@ export async function updateFuncao(req,res){
       contextPrincipalUnitId,
       existente,
       normalizeUnitId,
-      requestedUnitWithinContextCluster: async (unitId) => {
-        const access = await funcaoContextPolicy.ensureRequestedUnitWithinContextCluster({
-          ...context,
-          requestedUnitId: unitId,
-        });
-        return access.allowed;
-      },
-      findOutraFuncaoByNomeExcludingId,
-      findUnidadeByIdWithModulosAcessiveis,
-      normalizarListaModulos,
-      updateFuncaoById,
-      findFuncaoByIdLean,
     });
-    if (updated?.error === 'Unidade principal não encontrada') return notFound(res,'Unidade principal não encontrada');
-    if (updated?.error === 'Já existe uma função com este nome') return badRequest(res,'Já existe uma função com este nome');
-    if (updated?.error === 'Unidade inválida') return badRequest(res,'Unidade inválida');
-    return ok(res,{ updated:true, funcao: updated });
+    if (updateValidation?.error === 'Já existe uma função com este nome') return badRequest(res,'Já existe uma função com este nome');
+    if (updateValidation?.error === 'Unidade inválida') return badRequest(res,'Unidade inválida');
+
+    await updateFuncaoById(id, updateValidation.data, updateValidation.targetPrincipalUnitId);
+    const updated = await findFuncaoByIdLean(id, updateValidation.targetPrincipalUnitId);
+    const nomeFinal = updated?.nome || '';
+    const rawDesc = (updated?.descricao && updated.descricao.trim()) ? updated.descricao.trim() : '';
+    const codigo = updated?.codigo || '';
+    const descricaoDisplay = rawDesc || (nomeFinal && nomeFinal !== codigo ? nomeFinal : '');
+
+    return ok(res,{
+      updated:true,
+      funcao: {
+        _id: updated._id,
+        codigo,
+        nome: nomeFinal,
+        descricao: rawDesc,
+        descricao_display: descricaoDisplay,
+        hasDescricaoReal: !!rawDesc,
+      },
+    });
   } catch(e){ console.error('[API FUNCOES][update] Erro:', e); return serverError(res,e); }
 }
 

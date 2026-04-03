@@ -27,7 +27,7 @@ function extractUpdateOwnerSnippet(source) {
 
 function buildDelegatedUpdateSnippet() {
   const original = extractUpdateOwnerSnippet(CONTROLLER_SOURCE);
-  if (original.includes('executeUpdateFuncaoCore({')) {
+  if (original.includes('funcaoWriteValidation.validateUpdate({') || original.includes('executeUpdateFuncaoCore({')) {
     return original;
   }
 
@@ -173,6 +173,7 @@ function loadUpdateOwnerHarness(runtimeOverrides = {}) {
       callLog.findFuncaoByIdCalls.push([id, principalUnitId]);
       return null;
     }),
+    findFuncaoByNome: runtimeOverrides.findFuncaoByNome ?? (async () => null),
     findOutraFuncaoByNomeExcludingId: runtimeOverrides.findOutraFuncaoByNomeExcludingId ?? (async (id, nome, principalUnitId) => {
       callLog.findOutraFuncaoByNomeExcludingIdCalls.push([id, nome, principalUnitId]);
       return null;
@@ -200,17 +201,69 @@ function loadUpdateOwnerHarness(runtimeOverrides = {}) {
         descricao: 'Coordena equipe ampliada',
       };
     }),
-    executeUpdateFuncaoCore: runtimeOverrides.executeUpdateFuncaoCore ?? (async (input) => {
-      callLog.seamCalls.push(input);
-      return {
-        _id: input.id,
-        codigo: 'SUP',
-        nome: input.nome || '',
-        descricao: input.descricao || '',
-        descricao_display: input.descricao || input.nome || '',
-        hasDescricaoReal: !!input.descricao,
-      };
-    }),
+    createFuncaoContextPolicyCore: runtimeOverrides.createFuncaoContextPolicyCore ?? (({ findUnidadeUserBaseLean }) => ({
+      async resolvePrincipalUnitId(unidadeId) {
+        const unidadeIdNorm = String(unidadeId || '').trim();
+        if (!unidadeIdNorm) return '';
+        const unidade = await findUnidadeUserBaseLean(unidadeIdNorm);
+        if (!unidade) return unidadeIdNorm;
+        return String(unidade.is_principal ? unidade._id : (unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeIdNorm)).trim();
+      },
+      async resolveCanonicalContextPrincipalUnitId({ scopedUnitId } = {}) {
+        const scopedUnitIdNorm = String(scopedUnitId || '').trim();
+        if (!scopedUnitIdNorm) return '';
+        return this.resolvePrincipalUnitId(scopedUnitIdNorm);
+      },
+      async ensureRequestedUnitWithinContextCluster({ scopedUnitId, requestedUnitId } = {}) {
+        const requestedUnitIdNorm = String(requestedUnitId || '').trim();
+        if (!requestedUnitIdNorm) return { allowed: true };
+        const contextPrincipalUnitId = await this.resolveCanonicalContextPrincipalUnitId({ scopedUnitId });
+        if (!contextPrincipalUnitId) return { allowed: true };
+        const requestedPrincipalUnitId = await this.resolvePrincipalUnitId(requestedUnitIdNorm);
+        return { allowed: !!requestedPrincipalUnitId && requestedPrincipalUnitId === contextPrincipalUnitId };
+      },
+    })),
+    createFuncaoWriteValidationCore: runtimeOverrides.createFuncaoWriteValidationCore ?? (({
+      findOutraFuncaoByNomeExcludingId,
+      findUnidadeByIdWithModulosAcessiveis,
+    }) => ({
+      async validateUpdate(input) {
+        callLog.seamCalls.push(input);
+
+        const unidadePrincipalExistenteId = input.normalizeUnitId(input.existente?.unidade_principal_id);
+        const targetPrincipalUnitId = input.contextPrincipalUnitId || input.normalizeUnitId(input.unidade_principal_id || unidadePrincipalExistenteId);
+
+        if (input.nome && input.nome !== input.existente?.nome) {
+          const dup = await findOutraFuncaoByNomeExcludingId(
+            input.id,
+            input.nome,
+            targetPrincipalUnitId || unidadePrincipalExistenteId || null,
+          );
+          if (dup) return { error: 'Já existe uma função com este nome' };
+        }
+
+        const updates = {};
+        if (input.nome) updates.nome = input.nome;
+        if (input.descricao !== undefined) updates.descricao = input.descricao;
+
+        if (targetPrincipalUnitId) {
+          const unidade = await findUnidadeByIdWithModulosAcessiveis(targetPrincipalUnitId);
+          if (!unidade) return { error: 'Unidade inválida' };
+
+          updates.unidade_principal_id = targetPrincipalUnitId;
+          if (input.modulos_habilitados !== undefined) {
+            const lista = Array.isArray(input.modulos_habilitados) ? input.modulos_habilitados.filter(Boolean) : [];
+            const permitidos = new Set((unidade.modulosAcessiveis || []).map((modulo) => String(modulo._id)));
+            updates.modulos_habilitados = lista.filter((moduloId) => permitidos.has(String(moduloId)));
+          }
+        }
+
+        return {
+          data: updates,
+          targetPrincipalUnitId: targetPrincipalUnitId || unidadePrincipalExistenteId || null,
+        };
+      },
+    })),
     console: runtimeOverrides.console ?? {
       error(...args) {
         callLog.consoleErrors.push(args);
@@ -227,11 +280,13 @@ const notFound = __deps.notFound;
 const serverError = __deps.serverError;
 const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
 const findFuncaoById = __deps.findFuncaoById;
+const findFuncaoByNome = __deps.findFuncaoByNome;
 const findOutraFuncaoByNomeExcludingId = __deps.findOutraFuncaoByNomeExcludingId;
 const updateFuncaoById = __deps.updateFuncaoById;
 const findFuncaoByIdLean = __deps.findFuncaoByIdLean;
 const findUnidadeByIdWithModulosAcessiveis = __deps.findUnidadeByIdWithModulosAcessiveis;
-const executeUpdateFuncaoCore = __deps.executeUpdateFuncaoCore;
+const createFuncaoContextPolicyCore = __deps.createFuncaoContextPolicyCore;
+const createFuncaoWriteValidationCore = __deps.createFuncaoWriteValidationCore;
 const console = __deps.console;
 ${snippet}
 return { updateFuncao };
@@ -272,9 +327,11 @@ test('updateFuncao: owner resolve contexto e lookup inicial antes da seam candid
       callOrder.push('lookup');
       return null;
     },
-    executeUpdateFuncaoCore: async () => {
-      throw new Error('nao deve delegar quando o lookup inicial nao encontra a funcao');
-    },
+    createFuncaoWriteValidationCore: () => ({
+      async validateUpdate() {
+        throw new Error('nao deve delegar quando o lookup inicial nao encontra a funcao');
+      },
+    }),
   });
 
   const req = buildReq({
@@ -298,7 +355,6 @@ test('updateFuncao: owner resolve contexto e lookup inicial antes da seam candid
 });
 
 test('updateFuncao: owner preserva 404 estrutural quando a seam candidata sinaliza unidade fora do cluster', async () => {
-  let seamArgs = null;
   const { updateFuncao, callLog } = loadUpdateOwnerHarness({
     findFuncaoById: async (id, principalUnitId) => {
       callLog.findFuncaoByIdCalls.push([id, principalUnitId]);
@@ -309,13 +365,11 @@ test('updateFuncao: owner preserva 404 estrutural quando a seam candidata sinali
         unidade_principal_id: CONTEXT_PRINCIPAL_ID,
       };
     },
-    executeUpdateFuncaoCore: async (input) => {
-      callLog.seamCalls.push(input);
-      seamArgs = input;
-      const isAllowed = await input.requestedUnitWithinContextCluster(input.unidade_principal_id);
-      assert.equal(isAllowed, false);
-      return { error: 'Unidade principal não encontrada' };
-    },
+    createFuncaoWriteValidationCore: () => ({
+      async validateUpdate() {
+        throw new Error('nao deve delegar update fora do cluster contextual');
+      },
+    }),
   });
 
   const req = buildReq({
@@ -329,29 +383,7 @@ test('updateFuncao: owner preserva 404 estrutural quando a seam candidata sinali
 
   await updateFuncao(req, res);
 
-  assert.ok(seamArgs, 'A seam candidata deve ser chamada depois do lookup inicial.');
-  assert.equal(JSON.stringify(Array.from(Object.keys(seamArgs)).sort()), JSON.stringify([
-    'contextPrincipalUnitId',
-    'descricao',
-    'existente',
-    'findFuncaoByIdLean',
-    'findOutraFuncaoByNomeExcludingId',
-    'findUnidadeByIdWithModulosAcessiveis',
-    'id',
-    'modulos_habilitados',
-    'nome',
-    'normalizarListaModulos',
-    'normalizeUnitId',
-    'requestedUnitWithinContextCluster',
-    'unidade_principal_id',
-    'updateFuncaoById',
-  ].sort()));
-  assert.equal('req' in seamArgs, false);
-  assert.equal('res' in seamArgs, false);
-  assert.equal('ok' in seamArgs, false);
-  assert.equal('badRequest' in seamArgs, false);
-  assert.equal('notFound' in seamArgs, false);
-  assert.equal('serverError' in seamArgs, false);
+  assert.equal(callLog.seamCalls.length, 0);
   assert.equal(res.statusCode, 404);
   assert.equal(JSON.stringify(res.body), JSON.stringify({
     success: false,
@@ -419,7 +451,8 @@ test('updateFuncao: owner delega o miolo coeso para a seam candidata e preserva 
         descricao: 'Coordena equipe ampliada',
       };
     },
-    executeUpdateFuncaoCore: async (input) => {
+    createFuncaoWriteValidationCore: ({ findOutraFuncaoByNomeExcludingId, findUnidadeByIdWithModulosAcessiveis }) => ({
+      async validateUpdate(input) {
       callOrder.push('seam');
       callLog.seamCalls.push(input);
       seamArgs = input;
@@ -428,7 +461,7 @@ test('updateFuncao: owner delega o miolo coeso para a seam candidata e preserva 
       const targetPrincipalUnitId = input.contextPrincipalUnitId || input.normalizeUnitId(input.unidade_principal_id || unidadePrincipalExistenteId);
 
       if (input.nome && input.nome !== input.existente.nome) {
-        const dup = await input.findOutraFuncaoByNomeExcludingId(
+        const dup = await findOutraFuncaoByNomeExcludingId(
           input.id,
           input.nome,
           targetPrincipalUnitId || unidadePrincipalExistenteId || null,
@@ -440,43 +473,24 @@ test('updateFuncao: owner delega o miolo coeso para a seam candidata e preserva 
       if (input.nome) updates.nome = input.nome;
       if (input.descricao !== undefined) updates.descricao = input.descricao;
 
-      if (input.unidade_principal_id && !(await input.requestedUnitWithinContextCluster(input.unidade_principal_id))) {
-        return { error: 'Unidade principal não encontrada' };
-      }
-
       if (targetPrincipalUnitId) {
-        const unidade = await input.findUnidadeByIdWithModulosAcessiveis(targetPrincipalUnitId);
+        const unidade = await findUnidadeByIdWithModulosAcessiveis(targetPrincipalUnitId);
         if (!unidade) return { error: 'Unidade inválida' };
 
         updates.unidade_principal_id = targetPrincipalUnitId;
         if (input.modulos_habilitados !== undefined) {
-          const lista = input.normalizarListaModulos(input.modulos_habilitados);
+          const lista = Array.isArray(input.modulos_habilitados) ? input.modulos_habilitados.filter(Boolean) : [];
           const permitidos = new Set((unidade.modulosAcessiveis || []).map((modulo) => String(modulo._id)));
           updates.modulos_habilitados = lista.filter((moduloId) => permitidos.has(String(moduloId)));
         }
-      } else if (input.modulos_habilitados !== undefined) {
-        const unidade = await input.findUnidadeByIdWithModulosAcessiveis(unidadePrincipalExistenteId);
-        const lista = input.normalizarListaModulos(input.modulos_habilitados);
-        const permitidos = new Set((unidade.modulosAcessiveis || []).map((modulo) => String(modulo._id)));
-        updates.modulos_habilitados = lista.filter((moduloId) => permitidos.has(String(moduloId)));
       }
 
-      await input.updateFuncaoById(input.id, updates, targetPrincipalUnitId || unidadePrincipalExistenteId || null);
-      const updated = await input.findFuncaoByIdLean(input.id, targetPrincipalUnitId || unidadePrincipalExistenteId || null);
-      const nomeFinal = updated?.nome || '';
-      const descricaoFinal = (updated?.descricao && updated.descricao.trim()) ? updated.descricao.trim() : '';
-      const codigoFinal = updated?.codigo || '';
-      const descricaoDisplay = descricaoFinal || (nomeFinal && nomeFinal !== codigoFinal ? nomeFinal : '');
-
       return {
-        _id: updated._id,
-        codigo: codigoFinal,
-        nome: nomeFinal,
-        descricao: descricaoFinal,
-        descricao_display: descricaoDisplay,
-        hasDescricaoReal: !!descricaoFinal,
+        data: updates,
+        targetPrincipalUnitId: targetPrincipalUnitId || unidadePrincipalExistenteId || null,
       };
     },
+    }),
   });
 
   const req = buildReq({
@@ -495,11 +509,16 @@ test('updateFuncao: owner delega o miolo coeso para a seam candidata e preserva 
   assert.ok(seamArgs, 'A seam candidata deve receber o miolo apos o lookup inicial.');
   assert.deepEqual(callOrder, ['lookup', 'seam']);
   assert.equal(seamArgs.contextPrincipalUnitId, CONTEXT_PRINCIPAL_ID);
-  assert.equal(typeof seamArgs.requestedUnitWithinContextCluster, 'function');
-  assert.equal(typeof seamArgs.findOutraFuncaoByNomeExcludingId, 'function');
-  assert.equal(typeof seamArgs.findUnidadeByIdWithModulosAcessiveis, 'function');
-  assert.equal(typeof seamArgs.updateFuncaoById, 'function');
-  assert.equal(typeof seamArgs.findFuncaoByIdLean, 'function');
+  assert.equal(JSON.stringify(Array.from(Object.keys(seamArgs)).sort()), JSON.stringify([
+    'contextPrincipalUnitId',
+    'descricao',
+    'existente',
+    'id',
+    'modulos_habilitados',
+    'nome',
+    'normalizeUnitId',
+    'unidade_principal_id',
+  ].sort()));
   assert.deepEqual(callLog.findFuncaoByIdCalls, [[FUNCAO_ID, CONTEXT_PRINCIPAL_ID]]);
   assert.deepEqual(callLog.findOutraFuncaoByNomeExcludingIdCalls, [[FUNCAO_ID, 'Supervisor Senior', CONTEXT_PRINCIPAL_ID]]);
   assert.deepEqual(callLog.findUnidadeByIdWithModulosAcessiveisCalls, [[CONTEXT_PRINCIPAL_ID]]);
@@ -542,10 +561,12 @@ test('updateFuncao: owner preserva tratamento de erro externo quando a seam cand
         unidade_principal_id: CONTEXT_PRINCIPAL_ID,
       };
     },
-    executeUpdateFuncaoCore: async (input) => {
-      callLog.seamCalls.push(input);
-      throw new Error('forced-update-owner-structural-seam-failure');
-    },
+    createFuncaoWriteValidationCore: () => ({
+      async validateUpdate(input) {
+        callLog.seamCalls.push(input);
+        throw new Error('forced-update-owner-structural-seam-failure');
+      },
+    }),
   });
 
   const req = buildReq({

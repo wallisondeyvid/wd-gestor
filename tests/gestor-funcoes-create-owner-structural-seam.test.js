@@ -26,7 +26,7 @@ function extractCreateOwnerSnippet(source) {
 
 function buildDelegatedCreateSnippet() {
   const original = extractCreateOwnerSnippet(CONTROLLER_SOURCE);
-  if (original.includes('processCreateFuncaoCore({')) {
+  if (original.includes('funcaoWriteValidation.validateCreate({') || original.includes('processCreateFuncaoCore({')) {
     return original;
   }
 
@@ -139,6 +139,7 @@ function loadCreateOwnerHarness(runtimeOverrides = {}) {
       callLog.findFuncaoByNomeCalls.push([nome, unidadePrincipalId]);
       return null;
     }),
+    findOutraFuncaoByNomeExcludingId: runtimeOverrides.findOutraFuncaoByNomeExcludingId ?? (async () => null),
     findUnidadeByIdWithModulosAcessiveis: runtimeOverrides.findUnidadeByIdWithModulosAcessiveis ?? (async (unidadePrincipalId) => {
       callLog.findUnidadeByIdWithModulosAcessiveisCalls.push([unidadePrincipalId]);
       return {
@@ -152,10 +153,6 @@ function loadCreateOwnerHarness(runtimeOverrides = {}) {
     createFuncaoDb: runtimeOverrides.createFuncaoDb ?? (async (payload) => {
       callLog.createFuncaoDbCalls.push([payload]);
       return { _id: CREATED_FUNCAO_ID, ...payload };
-    }),
-    processCreateFuncaoCore: runtimeOverrides.processCreateFuncaoCore ?? (async (input) => {
-      callLog.seamCalls.push(input);
-      return { _id: CREATED_FUNCAO_ID };
     }),
     createFuncaoContextPolicyCore: runtimeOverrides.createFuncaoContextPolicyCore ?? (({ findUnidadeUserBaseLean }) => ({
       async resolvePrincipalUnitId(unidadeId) {
@@ -179,6 +176,35 @@ function loadCreateOwnerHarness(runtimeOverrides = {}) {
         return { allowed: !!requestedPrincipalUnitId && requestedPrincipalUnitId === contextPrincipalUnitId };
       },
     })),
+    createFuncaoWriteValidationCore: runtimeOverrides.createFuncaoWriteValidationCore ?? (({
+      findFuncaoByNome,
+      findUnidadeByIdWithModulosAcessiveis,
+    }) => ({
+      async validateCreate(input) {
+        callLog.seamCalls.push(input);
+
+        const dup = await findFuncaoByNome(input.nome, input.canonicalPrincipalUnitId || null);
+        if (dup) return { error: 'Função já cadastrada' };
+
+        const unidade = await findUnidadeByIdWithModulosAcessiveis(input.canonicalPrincipalUnitId || null);
+        if (!unidade) return { error: 'Unidade inválida' };
+
+        const lista = Array.isArray(input.modulosHabilitados)
+          ? input.modulosHabilitados.filter(Boolean)
+          : [];
+        const permitidos = new Set((unidade.modulosAcessiveis || []).map((modulo) => String(modulo._id)));
+        const modsFiltrados = lista.filter((moduloId) => permitidos.has(String(moduloId)));
+
+        return {
+          data: {
+            nome: input.nome,
+            descricao: input.descricao,
+            unidade_principal_id: input.canonicalPrincipalUnitId,
+            modulos_habilitados: modsFiltrados,
+          },
+        };
+      },
+    })),
     console: runtimeOverrides.console ?? {
       error(...args) {
         callLog.consoleErrors.push(args);
@@ -195,10 +221,11 @@ const notFound = __deps.notFound;
 const serverError = __deps.serverError;
 const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
 const findFuncaoByNome = __deps.findFuncaoByNome;
+const findOutraFuncaoByNomeExcludingId = __deps.findOutraFuncaoByNomeExcludingId;
 const findUnidadeByIdWithModulosAcessiveis = __deps.findUnidadeByIdWithModulosAcessiveis;
 const createFuncaoDb = __deps.createFuncaoDb;
-const processCreateFuncaoCore = __deps.processCreateFuncaoCore;
 const createFuncaoContextPolicyCore = __deps.createFuncaoContextPolicyCore;
+const createFuncaoWriteValidationCore = __deps.createFuncaoWriteValidationCore;
 const console = __deps.console;
 ${snippet}
 return { createFuncao };
@@ -214,9 +241,11 @@ return { createFuncao };
 
 test('createFuncao: owner preserva gate de nome obrigatorio antes da seam', async () => {
   const { createFuncao, callLog } = loadCreateOwnerHarness({
-    processCreateFuncaoCore: async () => {
-      throw new Error('nao deve delegar create sem nome');
-    },
+    createFuncaoWriteValidationCore: () => ({
+      async validateCreate() {
+        throw new Error('nao deve delegar create sem nome');
+      },
+    }),
   });
 
   const req = buildReq({ unidade_principal_id: CONTEXT_PRINCIPAL_ID });
@@ -233,9 +262,11 @@ test('createFuncao: owner preserva gate de nome obrigatorio antes da seam', asyn
 
 test('createFuncao: owner preserva gate de unidade principal obrigatoria antes da seam', async () => {
   const { createFuncao, callLog } = loadCreateOwnerHarness({
-    processCreateFuncaoCore: async () => {
-      throw new Error('nao deve delegar create sem principal canonica');
-    },
+    createFuncaoWriteValidationCore: () => ({
+      async validateCreate() {
+        throw new Error('nao deve delegar create sem principal canonica');
+      },
+    }),
   });
 
   const req = buildReq({ nome: 'Supervisor' });
@@ -272,9 +303,11 @@ test('createFuncao: owner preserva rejeicao de unidade fora do cluster antes da 
 
       return null;
     },
-    processCreateFuncaoCore: async () => {
-      throw new Error('nao deve delegar create fora do cluster contextual');
-    },
+    createFuncaoWriteValidationCore: () => ({
+      async validateCreate() {
+        throw new Error('nao deve delegar create fora do cluster contextual');
+      },
+    }),
   });
 
   const req = buildReq(
@@ -329,27 +362,30 @@ test('createFuncao: owner resolve contexto antes da seam e preserva contrato fin
       callLog.createFuncaoDbCalls.push([payload]);
       return { _id: CREATED_FUNCAO_ID, ...payload };
     },
-    processCreateFuncaoCore: async (input) => {
-      callOrder.push('seam');
-      callLog.seamCalls.push(input);
-      seamArgs = input;
+    createFuncaoWriteValidationCore: ({ findFuncaoByNome, findUnidadeByIdWithModulosAcessiveis }) => ({
+      async validateCreate(input) {
+        callOrder.push('seam');
+        callLog.seamCalls.push(input);
+        seamArgs = input;
 
-      const dup = await input.findFuncaoByNome(input.nome, input.canonicalPrincipalUnitId);
-      assert.equal(dup, null);
+        const dup = await findFuncaoByNome(input.nome, input.canonicalPrincipalUnitId);
+        assert.equal(dup, null);
 
-      const unidade = await input.findUnidadeByIdWithModulosAcessiveis(input.canonicalPrincipalUnitId);
-      const lista = input.normalizarListaModulos(input.modulosHabilitados);
-      const permitidos = new Set((unidade.modulosAcessiveis || []).map((modulo) => String(modulo._id)));
-      const modsFiltrados = lista.filter((id) => permitidos.has(String(id)));
-      const createdFuncao = await input.createFuncaoDb({
-        nome: input.nome,
-        descricao: input.descricao,
-        unidade_principal_id: input.canonicalPrincipalUnitId,
-        modulos_habilitados: modsFiltrados,
-      });
+        const unidade = await findUnidadeByIdWithModulosAcessiveis(input.canonicalPrincipalUnitId);
+        const lista = Array.isArray(input.modulosHabilitados) ? input.modulosHabilitados.filter(Boolean) : [];
+        const permitidos = new Set((unidade.modulosAcessiveis || []).map((modulo) => String(modulo._id)));
+        const modsFiltrados = lista.filter((id) => permitidos.has(String(id)));
 
-      return { _id: createdFuncao._id };
-    },
+        return {
+          data: {
+            nome: input.nome,
+            descricao: input.descricao,
+            unidade_principal_id: input.canonicalPrincipalUnitId,
+            modulos_habilitados: modsFiltrados,
+          },
+        };
+      },
+    }),
     created: (res, id, payload = {}) => {
       callOrder.push('created');
       res.status(201);
@@ -374,16 +410,12 @@ test('createFuncao: owner resolve contexto antes da seam e preserva contrato fin
   assert.ok(seamArgs, 'A seam de create deve ser chamada pelo owner real.');
   assert.deepEqual(
     Object.keys(seamArgs).sort(),
-    ['canonicalPrincipalUnitId', 'createFuncaoDb', 'descricao', 'findFuncaoByNome', 'findUnidadeByIdWithModulosAcessiveis', 'modulosHabilitados', 'nome', 'normalizarListaModulos'].sort()
+    ['canonicalPrincipalUnitId', 'descricao', 'modulosHabilitados', 'nome'].sort()
   );
   assert.equal(seamArgs.nome, 'Supervisor');
   assert.equal(seamArgs.descricao, 'Coordena equipe');
   assert.equal(seamArgs.canonicalPrincipalUnitId, CONTEXT_PRINCIPAL_ID);
   assert.deepEqual(seamArgs.modulosHabilitados, ['mod-1', 'mod-x', 'mod-2']);
-  assert.equal(typeof seamArgs.findFuncaoByNome, 'function');
-  assert.equal(typeof seamArgs.findUnidadeByIdWithModulosAcessiveis, 'function');
-  assert.equal(typeof seamArgs.normalizarListaModulos, 'function');
-  assert.equal(typeof seamArgs.createFuncaoDb, 'function');
   assert.equal('req' in seamArgs, false);
   assert.equal('res' in seamArgs, false);
   assert.equal('created' in seamArgs, false);
@@ -416,10 +448,12 @@ test('createFuncao: owner resolve contexto antes da seam e preserva contrato fin
 
 test('createFuncao: owner preserva tratamento de erro externo quando a seam falha', async () => {
   const { createFuncao, callLog } = loadCreateOwnerHarness({
-    processCreateFuncaoCore: async (input) => {
-      callLog.seamCalls.push(input);
-      throw new Error('forced create seam failure');
-    },
+    createFuncaoWriteValidationCore: () => ({
+      async validateCreate(input) {
+        callLog.seamCalls.push(input);
+        throw new Error('forced create seam failure');
+      },
+    }),
   });
 
   const req = buildReq({
