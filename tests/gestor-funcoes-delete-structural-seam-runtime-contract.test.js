@@ -44,6 +44,7 @@ registerHooks({
           "export const findFuncaoByNome = notUsed;",
           "export const createFuncao = notUsed;",
           "export const findFuncaoByIdPopulated = notUsed;",
+          "export const findFuncaoById = notUsed;",
           "export const findOutraFuncaoByNomeExcludingId = notUsed;",
           "export const updateFuncaoById = notUsed;",
           "export const findFuncaoByIdLean = notUsed;",

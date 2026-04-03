@@ -5,6 +5,7 @@ import {
   findFuncoesByFiltroSelectLeanRepo,
 } from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
 import { findUnidadeUserBaseLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
+import { createFuncaoContextPolicyCore } from '#modules/gestor/app/services/funcoes/createFuncaoContextPolicyCore.js';
 
 const GLOBAL_SCOPE = createUnitScope({});
 
@@ -38,39 +39,15 @@ function scopeFromFuncaoFiltro(filtro) {
 }
 
 async function resolvePrincipalUnitId(unidadeId) {
-  const unidadeIdNorm = normalizeUnitId(unidadeId);
-  if (!unidadeIdNorm) return '';
-
-  const unidade = await findUnidadeUserBaseLeanRepo({
-    unitScope: scopeFromUnidadeId(unidadeIdNorm),
-    id: unidadeIdNorm,
-  });
-  if (!unidade) return unidadeIdNorm;
-
-  return normalizeUnitId(
-    unidade.is_principal
-      ? unidade._id
-      : unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeIdNorm,
-  );
+  return funcaoContextPolicy.resolvePrincipalUnitId(unidadeId);
 }
 
-async function getCanonicalContextPrincipalUnitId(unitScope) {
-  const scopedUnitId = normalizeUnitId(unitScope?.unidadeId);
-  if (scopedUnitId) return resolvePrincipalUnitId(scopedUnitId);
-
-  return '';
-}
-
-async function requestedUnitWithinContextCluster(unitScope, requestedUnitId) {
-  const requestedUnitIdNorm = normalizeUnitId(requestedUnitId);
-  if (!requestedUnitIdNorm) return true;
-
-  const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(unitScope);
-  if (!contextPrincipalUnitId) return true;
-
-  const requestedPrincipalUnitId = await resolvePrincipalUnitId(requestedUnitIdNorm);
-  return !!requestedPrincipalUnitId && requestedPrincipalUnitId === contextPrincipalUnitId;
-}
+const funcaoContextPolicy = createFuncaoContextPolicyCore({
+  findUnidadeUserBaseLean: async (unidadeId) => findUnidadeUserBaseLeanRepo({
+    unitScope: scopeFromUnidadeId(unidadeId),
+    id: unidadeId,
+  }),
+});
 
 function mapClusterFuncao(funcao) {
   return {
@@ -108,15 +85,18 @@ export async function findFuncoesByFiltroSelectService(filtro) {
 }
 
 export async function listarFuncoesService({ query, unitScope }) {
-  const unidadeCluster = normalizeUnitId(query?.unidade_cluster);
-  const unidadeIdRaw = normalizeUnitId(query?.unidade_id);
   const queryTerm = String(query?.q || '').trim();
 
-  if (unidadeCluster) {
-    if (!(await requestedUnitWithinContextCluster(unitScope, unidadeCluster))) return [];
+  const scope = await funcaoContextPolicy.buildListScope({
+    scopedUnitId: unitScope?.unidadeId || null,
+    unidadeCluster: query?.unidade_cluster || null,
+    unidadeIdRaw: query?.unidade_id || null,
+  });
 
-    const principalUnitId = await resolvePrincipalUnitId(unidadeCluster);
-    const filtro = { unidade_principal_id: principalUnitId };
+  if (scope.mode === 'cluster') {
+    if (scope.empty) return [];
+
+    const filtro = scope.filter;
     let funcoes = await findFuncoesByFiltroService(filtro);
 
     if (queryTerm) {
@@ -132,24 +112,10 @@ export async function listarFuncoesService({ query, unitScope }) {
     return funcoes.map(mapClusterFuncao);
   }
 
-  if (unidadeIdRaw) {
-    const resolvedIds = [];
+  if (scope.mode === 'unit-list') {
+    if (scope.empty) return [];
 
-    for (const candidateId of unidadeIdRaw.split(',').map((value) => value.trim()).filter(Boolean)) {
-      if (!(await requestedUnitWithinContextCluster(unitScope, candidateId))) continue;
-
-      const principalUnitId = await resolvePrincipalUnitId(candidateId);
-      if (principalUnitId) resolvedIds.push(principalUnitId);
-    }
-
-    const ids = [...new Set(resolvedIds)];
-    if (ids.length === 0) return [];
-
-    const filtro = ids.length === 1
-      ? { unidade_principal_id: ids[0] }
-      : { unidade_principal_id: { $in: ids } };
-
-    const funcoes = await findFuncoesByFiltroSelectService(filtro);
+    const funcoes = await findFuncoesByFiltroSelectService(scope.filter);
     return funcoes.map(mapUnidadeFuncao);
   }
 

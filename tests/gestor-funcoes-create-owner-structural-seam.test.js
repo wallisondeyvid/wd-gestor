@@ -157,6 +157,28 @@ function loadCreateOwnerHarness(runtimeOverrides = {}) {
       callLog.seamCalls.push(input);
       return { _id: CREATED_FUNCAO_ID };
     }),
+    createFuncaoContextPolicyCore: runtimeOverrides.createFuncaoContextPolicyCore ?? (({ findUnidadeUserBaseLean }) => ({
+      async resolvePrincipalUnitId(unidadeId) {
+        const unidadeIdNorm = String(unidadeId || '').trim();
+        if (!unidadeIdNorm) return '';
+        const unidade = await findUnidadeUserBaseLean(unidadeIdNorm);
+        if (!unidade) return unidadeIdNorm;
+        return String(unidade.is_principal ? unidade._id : (unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeIdNorm)).trim();
+      },
+      async resolveCanonicalContextPrincipalUnitId({ scopedUnitId } = {}) {
+        const scopedUnitIdNorm = String(scopedUnitId || '').trim();
+        if (!scopedUnitIdNorm) return '';
+        return this.resolvePrincipalUnitId(scopedUnitIdNorm);
+      },
+      async ensureRequestedUnitWithinContextCluster({ scopedUnitId, requestedUnitId } = {}) {
+        const requestedUnitIdNorm = String(requestedUnitId || '').trim();
+        if (!requestedUnitIdNorm) return { allowed: true };
+        const contextPrincipalUnitId = await this.resolveCanonicalContextPrincipalUnitId({ scopedUnitId });
+        if (!contextPrincipalUnitId) return { allowed: true };
+        const requestedPrincipalUnitId = await this.resolvePrincipalUnitId(requestedUnitIdNorm);
+        return { allowed: !!requestedPrincipalUnitId && requestedPrincipalUnitId === contextPrincipalUnitId };
+      },
+    })),
     console: runtimeOverrides.console ?? {
       error(...args) {
         callLog.consoleErrors.push(args);
@@ -176,6 +198,7 @@ const findFuncaoByNome = __deps.findFuncaoByNome;
 const findUnidadeByIdWithModulosAcessiveis = __deps.findUnidadeByIdWithModulosAcessiveis;
 const createFuncaoDb = __deps.createFuncaoDb;
 const processCreateFuncaoCore = __deps.processCreateFuncaoCore;
+const createFuncaoContextPolicyCore = __deps.createFuncaoContextPolicyCore;
 const console = __deps.console;
 ${snippet}
 return { createFuncao };

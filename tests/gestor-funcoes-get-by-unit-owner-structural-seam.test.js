@@ -135,6 +135,28 @@ function loadGetByUnitOwnerHarness(runtimeOverrides = {}) {
       callLog.seamCalls.push(input);
       return [];
     }),
+    createFuncaoContextPolicyCore: runtimeOverrides.createFuncaoContextPolicyCore ?? (({ findUnidadeUserBaseLean }) => ({
+      async resolvePrincipalUnitId(unidadeId) {
+        const unidadeIdNorm = String(unidadeId || '').trim();
+        if (!unidadeIdNorm) return '';
+        const unidade = await findUnidadeUserBaseLean(unidadeIdNorm);
+        if (!unidade) return unidadeIdNorm;
+        return String(unidade.is_principal ? unidade._id : (unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeIdNorm)).trim();
+      },
+      async resolveCanonicalContextPrincipalUnitId({ scopedUnitId } = {}) {
+        const scopedUnitIdNorm = String(scopedUnitId || '').trim();
+        if (!scopedUnitIdNorm) return '';
+        return this.resolvePrincipalUnitId(scopedUnitIdNorm);
+      },
+      async ensureRequestedUnitWithinContextCluster({ scopedUnitId, requestedUnitId } = {}) {
+        const requestedUnitIdNorm = String(requestedUnitId || '').trim();
+        if (!requestedUnitIdNorm) return { allowed: true };
+        const contextPrincipalUnitId = await this.resolveCanonicalContextPrincipalUnitId({ scopedUnitId });
+        if (!contextPrincipalUnitId) return { allowed: true };
+        const requestedPrincipalUnitId = await this.resolvePrincipalUnitId(requestedUnitIdNorm);
+        return { allowed: !!requestedPrincipalUnitId && requestedPrincipalUnitId === contextPrincipalUnitId };
+      },
+    })),
     console: runtimeOverrides.console ?? {
       error(...args) {
         callLog.consoleErrors.push(args);
@@ -150,6 +172,7 @@ const serverError = __deps.serverError;
 const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
 const findFuncoesByPrincipalUnitIdLean = __deps.findFuncoesByPrincipalUnitIdLean;
 const getFuncoesByUnitCore = __deps.getFuncoesByUnitCore;
+const createFuncaoContextPolicyCore = __deps.createFuncaoContextPolicyCore;
 const console = __deps.console;
 ${snippet}
 return { getFuncoesPorUnidade };

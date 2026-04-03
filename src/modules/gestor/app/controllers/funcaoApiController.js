@@ -15,6 +15,7 @@ import {
   findUnidadeUserBaseLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listarFuncoesService } from '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
+import { createFuncaoContextPolicyCore } from '#modules/gestor/app/services/funcoes/createFuncaoContextPolicyCore.js';
 import { deleteFuncaoScopedService } from '#modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js';
 import { processCreateFuncaoCore } from './utils/processCreateFuncaoCore.js';
 import { getFuncaoByIdCore } from './utils/getFuncaoByIdCore.js';
@@ -26,40 +27,14 @@ function normalizeUnitId(value){
   return String(value || '').trim();
 }
 
-function getScopedUnitId(req) {
-  return normalizeUnitId(req.unitScope?.unidadeId);
-}
+const funcaoContextPolicy = createFuncaoContextPolicyCore({
+  findUnidadeUserBaseLean,
+});
 
-async function resolvePrincipalUnitId(unidadeId) {
-  const unidadeIdNorm = normalizeUnitId(unidadeId);
-  if (!unidadeIdNorm) return '';
-
-  const unidade = await findUnidadeUserBaseLean(unidadeIdNorm);
-  if (!unidade) return unidadeIdNorm;
-
-  return normalizeUnitId(
-    unidade.is_principal
-      ? unidade._id
-      : unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeIdNorm,
-  );
-}
-
-async function getCanonicalContextPrincipalUnitId(req) {
-  const scopedUnitId = getScopedUnitId(req);
-  if (scopedUnitId) return resolvePrincipalUnitId(scopedUnitId);
-
-  return '';
-}
-
-async function requestedUnitWithinContextCluster(req, requestedUnitId) {
-  const requestedUnitIdNorm = normalizeUnitId(requestedUnitId);
-  if (!requestedUnitIdNorm) return true;
-
-  const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
-  if (!contextPrincipalUnitId) return true;
-
-  const requestedPrincipalUnitId = await resolvePrincipalUnitId(requestedUnitIdNorm);
-  return !!requestedPrincipalUnitId && requestedPrincipalUnitId === contextPrincipalUnitId;
+function getRequestScopeContext(req) {
+  return {
+    scopedUnitId: req.unitScope?.unidadeId || null,
+  };
 }
 
 function normalizarListaModulos(input){
@@ -78,11 +53,16 @@ function normalizarListaModulos(input){
 export async function createFuncao(req,res){
   try {
     const { nome, descricao, unidade_principal_id, modulos_habilitados } = req.body;
-    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const context = getRequestScopeContext(req);
+    const contextPrincipalUnitId = await funcaoContextPolicy.resolveCanonicalContextPrincipalUnitId(context);
     const canonicalPrincipalUnitId = contextPrincipalUnitId || normalizeUnitId(unidade_principal_id);
     if (!nome) return badRequest(res,'Nome é obrigatório');
     if (!canonicalPrincipalUnitId) return badRequest(res,'Unidade principal é obrigatória');
-    if (!(await requestedUnitWithinContextCluster(req, unidade_principal_id || canonicalPrincipalUnitId))) return notFound(res,'Unidade principal não encontrada');
+    const access = await funcaoContextPolicy.ensureRequestedUnitWithinContextCluster({
+      ...context,
+      requestedUnitId: unidade_principal_id || canonicalPrincipalUnitId,
+    });
+    if (!access.allowed) return notFound(res,'Unidade principal não encontrada');
     const funcao = await processCreateFuncaoCore({
       nome,
       descricao,
@@ -101,7 +81,7 @@ export async function createFuncao(req,res){
 
 export async function getFuncao(req,res){
   try {
-    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const contextPrincipalUnitId = await funcaoContextPolicy.resolveCanonicalContextPrincipalUnitId(getRequestScopeContext(req));
     const funcao = await getFuncaoByIdCore({
       id: req.params.id,
       contextPrincipalUnitId,
@@ -116,7 +96,8 @@ export async function updateFuncao(req,res){
   try {
     const { id } = req.params;
     const { nome, descricao, unidade_principal_id, modulos_habilitados } = req.body;
-    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const context = getRequestScopeContext(req);
+    const contextPrincipalUnitId = await funcaoContextPolicy.resolveCanonicalContextPrincipalUnitId(context);
     const existente = await findFuncaoById(id, contextPrincipalUnitId || null);
     if (!existente) return notFound(res,'Função não encontrada');
     const updated = await executeUpdateFuncaoCore({
@@ -128,7 +109,13 @@ export async function updateFuncao(req,res){
       contextPrincipalUnitId,
       existente,
       normalizeUnitId,
-      requestedUnitWithinContextCluster: async (unitId) => requestedUnitWithinContextCluster(req, unitId),
+      requestedUnitWithinContextCluster: async (unitId) => {
+        const access = await funcaoContextPolicy.ensureRequestedUnitWithinContextCluster({
+          ...context,
+          requestedUnitId: unitId,
+        });
+        return access.allowed;
+      },
       findOutraFuncaoByNomeExcludingId,
       findUnidadeByIdWithModulosAcessiveis,
       normalizarListaModulos,
@@ -144,10 +131,15 @@ export async function updateFuncao(req,res){
 
 export async function getFuncoesPorUnidade(req,res){
   try {
+    const context = getRequestScopeContext(req);
     const unidadeId = normalizeUnitId(req.params.unidadeId);
     if (!unidadeId || unidadeId==='null') return ok(res,[]);
-    if (!(await requestedUnitWithinContextCluster(req, unidadeId))) return ok(res,[]);
-    const principalUnitId = await resolvePrincipalUnitId(unidadeId);
+    const access = await funcaoContextPolicy.ensureRequestedUnitWithinContextCluster({
+      ...context,
+      requestedUnitId: unidadeId,
+    });
+    if (!access.allowed) return ok(res,[]);
+    const principalUnitId = await funcaoContextPolicy.resolvePrincipalUnitId(unidadeId);
     const funcoes = await getFuncoesByUnitCore({
       effectiveUnitId: principalUnitId || unidadeId,
       findFuncoesByPrincipalUnitIdLean,
@@ -165,7 +157,7 @@ export async function listarFuncoesApi(req,res){
 
 export async function deleteFuncao(req,res){
   try {
-    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const contextPrincipalUnitId = await funcaoContextPolicy.resolveCanonicalContextPrincipalUnitId(getRequestScopeContext(req));
     const funcao = await deleteFuncaoScopedService({
       funcaoId: req.params.id,
       canonicalPrincipalUnitId: contextPrincipalUnitId || null,
@@ -180,7 +172,7 @@ export async function bulkUpdateFuncoes(req,res){
   try {
     const itens = Array.isArray(req.body?.itens)?req.body.itens:[];
     if(!itens.length) return badRequest(res,'Lista vazia');
-    const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId(req);
+    const contextPrincipalUnitId = await funcaoContextPolicy.resolveCanonicalContextPrincipalUnitId(getRequestScopeContext(req));
     const bulkResult = await processBulkUpdateFuncoesItems({
       itens,
       contextPrincipalUnitId,

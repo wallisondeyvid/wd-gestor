@@ -261,31 +261,25 @@ function buildDelegatedFuncoesOwnersSource() {
   })`;
 }
 
-test('estado real atual: controller e service ainda concentram diretamente o miolo de contexto e cluster', () => {
-  assert.match(CONTROLLER_SOURCE, /async function resolvePrincipalUnitId\(unidadeId\)/);
-  assert.match(CONTROLLER_SOURCE, /async function getCanonicalContextPrincipalUnitId\(req\)/);
-  assert.match(CONTROLLER_SOURCE, /async function requestedUnitWithinContextCluster\(req, requestedUnitId\)/);
-  assert.match(LIST_SERVICE_SOURCE, /async function resolvePrincipalUnitId\(unidadeId\)/);
-  assert.match(LIST_SERVICE_SOURCE, /async function getCanonicalContextPrincipalUnitId\(unitScope\)/);
-  assert.match(LIST_SERVICE_SOURCE, /async function requestedUnitWithinContextCluster\(unitScope, requestedUnitId\)/);
+test('estado real atual: controller e service delegam o miolo de contexto-policy para a seam unica', () => {
+  assert.match(CONTROLLER_SOURCE, /const funcaoContextPolicy = createFuncaoContextPolicyCore\(\{/);
+  assert.match(CONTROLLER_SOURCE, /const context = getRequestScopeContext\(req\);/);
+  assert.match(CONTROLLER_SOURCE, /funcaoContextPolicy\.resolveCanonicalContextPrincipalUnitId\(context\)/);
+  assert.match(CONTROLLER_SOURCE, /funcaoContextPolicy\.ensureRequestedUnitWithinContextCluster\(\{/);
+  assert.match(CONTROLLER_SOURCE, /funcaoContextPolicy\.resolvePrincipalUnitId\(unidadeId\)/);
 
-  assert.match(CONTROLLER_SOURCE, /const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId\(req\);/);
-  assert.match(CONTROLLER_SOURCE, /if \(!\(await requestedUnitWithinContextCluster\(req, unidade_principal_id \|\| canonicalPrincipalUnitId\)\)\) return notFound\(res,'Unidade principal não encontrada'\);/);
-  assert.match(CONTROLLER_SOURCE, /if \(!\(await requestedUnitWithinContextCluster\(req, unidadeId\)\)\) return ok\(res,\[]\);/);
-  assert.match(CONTROLLER_SOURCE, /const principalUnitId = await resolvePrincipalUnitId\(unidadeId\);/);
-  assert.match(CONTROLLER_SOURCE, /const contextPrincipalUnitId = await getCanonicalContextPrincipalUnitId\(req\);/);
+  assert.match(LIST_SERVICE_SOURCE, /const funcaoContextPolicy = createFuncaoContextPolicyCore\(\{/);
+  assert.match(LIST_SERVICE_SOURCE, /const scope = await funcaoContextPolicy\.buildListScope\(\{/);
 
-  assert.match(LIST_SERVICE_SOURCE, /if \(!\(await requestedUnitWithinContextCluster\(unitScope, unidadeCluster\)\)\) return \[];/);
-  assert.match(LIST_SERVICE_SOURCE, /const principalUnitId = await resolvePrincipalUnitId\(unidadeCluster\);/);
-  assert.match(LIST_SERVICE_SOURCE, /if \(!\(await requestedUnitWithinContextCluster\(unitScope, candidateId\)\)\) continue;/);
+  assert.equal(countOccurrences(CONTROLLER_SOURCE, 'funcaoContextPolicy.resolveCanonicalContextPrincipalUnitId('), 5);
+  assert.equal(countOccurrences(CONTROLLER_SOURCE, 'funcaoContextPolicy.ensureRequestedUnitWithinContextCluster({'), 3);
+  assert.equal(countOccurrences(LIST_SERVICE_SOURCE, 'funcaoContextPolicy.buildListScope({'), 1);
 
-  assert.equal(countOccurrences(CONTROLLER_SOURCE, 'async function resolvePrincipalUnitId(unidadeId)'), 1);
-  assert.equal(countOccurrences(LIST_SERVICE_SOURCE, 'async function resolvePrincipalUnitId(unidadeId)'), 1);
-  assert.equal(countOccurrences(CONTROLLER_SOURCE, 'getCanonicalContextPrincipalUnitId(req)'), 7);
-  assert.equal(countOccurrences(LIST_SERVICE_SOURCE, 'requestedUnitWithinContextCluster(unitScope, '), 3);
-
-  assert.doesNotMatch(CONTROLLER_SOURCE, /createFuncaoContextPolicyCore/);
-  assert.doesNotMatch(LIST_SERVICE_SOURCE, /createFuncaoContextPolicyCore/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /async function resolvePrincipalUnitId\(unidadeId\)/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /async function getCanonicalContextPrincipalUnitId\(req\)/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /async function requestedUnitWithinContextCluster\(req, requestedUnitId\)/);
+  assert.doesNotMatch(LIST_SERVICE_SOURCE, /async function getCanonicalContextPrincipalUnitId\(unitScope\)/);
+  assert.doesNotMatch(LIST_SERVICE_SOURCE, /async function requestedUnitWithinContextCluster\(unitScope, requestedUnitId\)/);
 });
 
 test('futura seam unica recebe apenas contexto minimo para decidir unidade principal, cluster e escopo de listagem', async () => {

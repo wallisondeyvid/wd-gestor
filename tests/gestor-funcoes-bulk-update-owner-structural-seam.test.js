@@ -140,6 +140,20 @@ function loadBulkOwnerHarness(runtimeOverrides = {}) {
       callLog.seamCalls.push(input);
       return { updated: 0, results: [] };
     }),
+    createFuncaoContextPolicyCore: runtimeOverrides.createFuncaoContextPolicyCore ?? (({ findUnidadeUserBaseLean }) => ({
+      async resolvePrincipalUnitId(unidadeId) {
+        const unidadeIdNorm = String(unidadeId || '').trim();
+        if (!unidadeIdNorm) return '';
+        const unidade = await findUnidadeUserBaseLean(unidadeIdNorm);
+        if (!unidade) return unidadeIdNorm;
+        return String(unidade.is_principal ? unidade._id : (unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeIdNorm)).trim();
+      },
+      async resolveCanonicalContextPrincipalUnitId({ scopedUnitId } = {}) {
+        const scopedUnitIdNorm = String(scopedUnitId || '').trim();
+        if (!scopedUnitIdNorm) return '';
+        return this.resolvePrincipalUnitId(scopedUnitIdNorm);
+      },
+    })),
     console: runtimeOverrides.console ?? {
       error(...args) {
         callLog.consoleErrors.push(args);
@@ -157,6 +171,7 @@ const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
 const findFuncaoById = __deps.findFuncaoById;
 const saveFuncao = __deps.saveFuncao;
 const processBulkUpdateFuncoesItems = __deps.processBulkUpdateFuncoesItems;
+const createFuncaoContextPolicyCore = __deps.createFuncaoContextPolicyCore;
 const console = __deps.console;
 ${snippet}
 return { bulkUpdateFuncoes };
