@@ -5,11 +5,13 @@ import path from 'node:path';
 import vm from 'node:vm';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/authController.js');
+const AUTH_CONTEXT_ORCHESTRATION_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/auth/createAuthContextOrchestrationCore.js');
 const LOGIN_POST_AUTH_CONTEXT_SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js');
 const MUTATE_AUTH_UNIT_CONTEXT_SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/auth/mutateAuthUnitContext.service.js');
 const AUTH_CONTEXT_RESOLVER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/authContextResolver.js');
 
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
+const AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE = fs.readFileSync(AUTH_CONTEXT_ORCHESTRATION_CORE_PATH, 'utf8');
 const LOGIN_POST_AUTH_CONTEXT_SERVICE_SOURCE = fs.readFileSync(LOGIN_POST_AUTH_CONTEXT_SERVICE_PATH, 'utf8');
 const MUTATE_AUTH_UNIT_CONTEXT_SERVICE_SOURCE = fs.readFileSync(MUTATE_AUTH_UNIT_CONTEXT_SERVICE_PATH, 'utf8');
 const AUTH_CONTEXT_RESOLVER_SOURCE = fs.readFileSync(AUTH_CONTEXT_RESOLVER_PATH, 'utf8');
@@ -135,9 +137,12 @@ function buildDelegatedOwnersSource() {
   })`;
 }
 
-test('estado real atual: AuthContext orchestration atravessa login e endpoints contextuais, sem absorver recovery nem lockout', () => {
-  assert.match(CONTROLLER_SOURCE, /const loginPostAuthContextResult = await resolveLoginPostAuthContext\(/);
-  assert.match(CONTROLLER_SOURCE, /const authContext = await resolveGestorAuthContext\(buildAuthContextResolverOptions\(req\)\);/);
+test('estado real atual: AuthContext orchestration delega para a seam unica sem absorver recovery nem lockout', () => {
+  assert.match(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /export function createAuthContextOrchestrationCore\(/);
+  assert.match(CONTROLLER_SOURCE, /createAuthContextOrchestrationCore/);
+  assert.match(CONTROLLER_SOURCE, /authContextOrchestration\.resolveLoginAuthContext\(/);
+  assert.match(CONTROLLER_SOURCE, /authContextOrchestration\.resolveCurrentAuthContext\(/);
+  assert.match(CONTROLLER_SOURCE, /authContextOrchestration\.mutateActiveUnitContext\(/);
   assert.match(CONTROLLER_SOURCE, /const result = await mutateAuthUnitContext\(req, \{/);
   assert.match(CONTROLLER_SOURCE, /requirePendingSelection: true,/);
   assert.match(CONTROLLER_SOURCE, /requirePendingSelection: false,/);
@@ -145,6 +150,8 @@ test('estado real atual: AuthContext orchestration atravessa login e endpoints c
   assert.match(CONTROLLER_SOURCE, /function buildAuthContextResolverOptions\(/);
   assert.match(CONTROLLER_SOURCE, /function buildAuthContextMutationErrorPayload\(/);
   assert.match(CONTROLLER_SOURCE, /async function mutateAuthUnitContext\(req,/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /const loginPostAuthContextResult = await resolveLoginPostAuthContext\(/);
+  assert.doesNotMatch(CONTROLLER_SOURCE, /const authContext = await resolveGestorAuthContext\(buildAuthContextResolverOptions\(req\)\);/);
 
   assert.match(CONTROLLER_SOURCE, /createRememberToken\(/);
   assert.match(CONTROLLER_SOURCE, /user\.failed_login_attempts = \(user\.failed_login_attempts \|\| 0\) \+ 1;/);
@@ -155,6 +162,11 @@ test('estado real atual: AuthContext orchestration atravessa login e endpoints c
   assert.match(CONTROLLER_SOURCE, /export async function postResetPassword\(/);
   assert.match(CONTROLLER_SOURCE, /export async function postEsqueciSenha\(/);
   assert.match(CONTROLLER_SOURCE, /export async function listarEmailsPorCPF\(/);
+
+  assert.match(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /return resolveLoginPostAuthContext\(/);
+  assert.match(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /return resolveAuthContext\(resolverOptions\);/);
+  assert.match(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /return mutateAuthUnitContextService\(/);
+  assert.doesNotMatch(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /redirect|createRememberToken|failed_login_attempts|verificarAcessoModulo|findPasswordResetByToken/);
 
   assert.match(LOGIN_POST_AUTH_CONTEXT_SERVICE_SOURCE, /projectLegacySessionUserFromAuthContext/);
   assert.match(LOGIN_POST_AUTH_CONTEXT_SERVICE_SOURCE, /session\.gestorAuthContext = storedAuthContext;/);

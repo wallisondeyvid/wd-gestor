@@ -28,9 +28,16 @@ import {
   GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
   resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
+import { createAuthContextOrchestrationCore } from '#modules/gestor/app/services/auth/createAuthContextOrchestrationCore.js';
 import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js';
 import { mutateAuthUnitContextService } from '#modules/gestor/app/services/auth/mutateAuthUnitContext.service.js';
 import { resolveLoginPostAuthContext } from '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js';
+
+const authContextOrchestration = createAuthContextOrchestrationCore({
+  resolveLoginPostAuthContext,
+  resolveAuthContext: resolveGestorAuthContext,
+  mutateAuthUnitContextService,
+});
 
 // -----------------------------------------------------------------------------
 // Helper de Autorização de Módulo
@@ -327,12 +334,12 @@ export async function login(req, res) {
     let effectiveLoginUser = user;
     let resolvedLoginAuthContext = null;
 
-    const loginPostAuthContextResult = await resolveLoginPostAuthContext({
+    const loginPostAuthContextResult = await authContextOrchestration.resolveLoginAuthContext({
       authenticatedUser: user,
       session: req.session,
       resolverEnabled: isAuthContextResolverEnabledForRequest(req),
       featureFlags: req.app?.locals?.gestorAuthContextFeatureFlags || null,
-      deps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
+      resolverDeps: req.app?.locals?.gestorAuthContextResolverDeps || undefined,
       maxTimeMS: req.app?.locals?.gestorAuthContextMaxTimeMS,
     });
 
@@ -597,13 +604,13 @@ async function mutateAuthUnitContext(req, {
 } = {}) {
   const requestIdentity = buildRequestIdentity(req);
   const lightweightPayload = buildLightweightAuthContextPayload(req);
-  const semanticResult = await mutateAuthUnitContextService({
+  const semanticResult = await authContextOrchestration.mutateActiveUnitContext({
     authenticated: requestIdentity.authenticated,
     unidadeId: String(req.body?.unidade_id || '').trim(),
     session: req.session,
     resolverOptions: buildAuthContextResolverOptions(req),
     requirePendingSelection,
-    deps: {
+    mutationDeps: {
       resolveAuthContext: resolveGestorAuthContext,
       isValidObjectId: (value) => mongoose.isValidObjectId(value),
       findMembershipByUnidadeId,
@@ -664,7 +671,9 @@ async function saveSessionSafe(req) {
 
 export async function getAuthContext(req, res) {
   try {
-    const authContext = await resolveGestorAuthContext(buildAuthContextResolverOptions(req));
+    const authContext = await authContextOrchestration.resolveCurrentAuthContext({
+      resolverOptions: buildAuthContextResolverOptions(req),
+    });
 
     const payload = buildAuthContextHttpPayload(authContext);
     if (!authContext?.authenticated) {

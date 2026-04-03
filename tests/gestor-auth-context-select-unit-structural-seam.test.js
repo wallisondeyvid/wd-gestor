@@ -59,6 +59,25 @@ test('selectAuthUnit preserva o owner HTTP e admite uma unidade minima extraivel
   const buildAuthContextHttpPayload = buildFunction(CONTROLLER_SOURCE, 'function buildAuthContextHttpPayload');
   const findMembershipByUnidadeId = buildFunction(CONTROLLER_SOURCE, 'function findMembershipByUnidadeId');
   const persistActiveMembershipInSession = buildFunction(CONTROLLER_SOURCE, 'function persistActiveMembershipInSession');
+  const extractCreateAuthContextOrchestrationCore = (() => {
+    const signature = 'createAuthContextOrchestrationCore({';
+    const start = CONTROLLER_SOURCE.indexOf(signature);
+    if (start < 0) return null;
+    const openParenIndex = CONTROLLER_SOURCE.lastIndexOf('(', start);
+    const braceStart = CONTROLLER_SOURCE.indexOf('{', openParenIndex);
+    let depth = 0;
+    for (let index = braceStart; index < CONTROLLER_SOURCE.length; index += 1) {
+      const char = CONTROLLER_SOURCE[index];
+      if (char === '{') depth += 1;
+      if (char === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          return CONTROLLER_SOURCE.slice(openParenIndex, index + 1);
+        }
+      }
+    }
+    return null;
+  })();
 
   const selectedUnitId = '507f191e810c19729de860eb';
   const firstUnitId = '507f191e810c19729de860ea';
@@ -187,44 +206,68 @@ test('selectAuthUnit preserva o owner HTTP e admite uma unidade minima extraivel
     return { kind: 'success', authContext: resolvedAfterMutation };
   };
 
-  const mutateAuthUnitContext = async (req, options) => {
-    ownerCalls.push({ req, options });
-
-    const semanticResult = await mutationSemanticUnit({
-      authenticated: buildRequestIdentity(req).authenticated,
-      unidadeId: String(req.body?.unidade_id || '').trim(),
-      session: req.session,
-      resolverOptions: buildAuthContextResolverOptions(req),
-      requirePendingSelection: options.requirePendingSelection === true,
-      deps: {
-        resolveAuthContext: resolveGestorAuthContext,
-        findMembershipByUnidadeId,
-        persistActiveMembershipInSession: (session, selectedMembership) => {
-          const reqLike = { session };
-          persistActiveMembershipInSession(reqLike, selectedMembership);
+  const authContextOrchestration = {
+    async mutateActiveUnitContext(input) {
+      return mutationSemanticUnit({
+        authenticated: input.authenticated,
+        unidadeId: input.unidadeId,
+        session: input.session,
+        resolverOptions: input.resolverOptions,
+        requirePendingSelection: input.requirePendingSelection === true,
+        deps: {
+          resolveAuthContext: resolveGestorAuthContext,
+          findMembershipByUnidadeId,
+          persistActiveMembershipInSession: (session, selectedMembership) => {
+            const reqLike = { session };
+            persistActiveMembershipInSession(reqLike, selectedMembership);
+          },
+          saveSession: async (session) => {
+            saveCalls += 1;
+            if (typeof session?.save === 'function') {
+              await new Promise((resolve) => session.save(() => resolve()));
+            }
+          },
         },
-        saveSession: async (session) => {
-          saveCalls += 1;
-          if (typeof session?.save === 'function') {
-            await new Promise((resolve) => session.save(() => resolve()));
-          }
-        },
-      },
-    });
-
-    assert.equal(semanticResult.kind, 'success');
-
-    return {
-      status: 200,
-      body: {
-        ok: true,
-        ...buildAuthContextHttpPayload(semanticResult.authContext),
-      },
-    };
+      });
+    },
   };
 
   const selectAuthUnit = buildFunction(CONTROLLER_SOURCE, 'export async function selectAuthUnit', {
-    mutateAuthUnitContext,
+    mutateAuthUnitContext: async (req, options) => {
+      ownerCalls.push({ req, options });
+
+      const semanticResult = await authContextOrchestration.mutateActiveUnitContext({
+        authenticated: buildRequestIdentity(req).authenticated,
+        unidadeId: String(req.body?.unidade_id || '').trim(),
+        session: req.session,
+        resolverOptions: buildAuthContextResolverOptions(req),
+        requirePendingSelection: options.requirePendingSelection === true,
+        mutationDeps: {
+          resolveAuthContext: resolveGestorAuthContext,
+          findMembershipByUnidadeId,
+          persistActiveMembershipInSession: (session, selectedMembership) => {
+            const reqLike = { session };
+            persistActiveMembershipInSession(reqLike, selectedMembership);
+          },
+          saveSession: async (session) => {
+            saveCalls += 1;
+            if (typeof session?.save === 'function') {
+              await new Promise((resolve) => session.save(() => resolve()));
+            }
+          },
+        },
+      });
+
+      assert.equal(semanticResult.kind, 'success');
+
+      return {
+        status: 200,
+        body: {
+          ok: true,
+          ...buildAuthContextHttpPayload(semanticResult.authContext),
+        },
+      };
+    },
     buildAuthContextMutationErrorPayload: (code) => ({ ok: false, code }),
     console,
   });
