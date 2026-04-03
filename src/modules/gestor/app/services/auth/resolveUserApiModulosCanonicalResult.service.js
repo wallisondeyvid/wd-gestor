@@ -1,4 +1,9 @@
 import { resolveGestorAuthContext } from '#modules/gestor/app/services/authContextResolver.js';
+import {
+  findFuncaoCanonicalByIdRepo,
+  findFuncionarioCanonicalByIdRepo,
+  loadAllModulosBaseRepo,
+} from '#modules/gestor/app/repositories/UserApiModulosCanonicalRepository.js';
 
 function normalizeRole(value) {
   return String(value || '').trim().toLowerCase();
@@ -87,25 +92,6 @@ function buildDebugPayload({ wantDebug = false, source, authContext = null, unid
   };
 }
 
-async function defaultLoadAllModulos() {
-  const Modulo = (await import('#models/modulo.js')).default;
-  return Modulo.find({}).select('_id nome descricao status url_base').lean();
-}
-
-async function defaultFindFuncionarioById(funcionarioId) {
-  const Funcionario = (await import('#models/Funcionario.js')).default;
-  return Funcionario.findById(funcionarioId)
-    .select('_id funcao_id unidade_id usuario_id cpf email')
-    .lean();
-}
-
-async function defaultFindFuncaoById(funcaoId) {
-  const Funcao = (await import('#models/funcao.js')).default;
-  return Funcao.findById(funcaoId)
-    .populate('modulos_habilitados')
-    .lean();
-}
-
 export async function resolveUserApiModulosCanonicalResult({
   authenticatedUser = null,
   sessionUser = null,
@@ -118,9 +104,9 @@ export async function resolveUserApiModulosCanonicalResult({
 } = {}) {
   const resolveAuthContext = deps.resolveAuthContext || resolveGestorAuthContext;
   const tryLoadUnidadeComModulos = deps.tryLoadUnidadeComModulos;
-  const loadAllModulos = deps.loadAllModulos || defaultLoadAllModulos;
-  const findFuncionarioById = deps.findFuncionarioById || defaultFindFuncionarioById;
-  const findFuncaoById = deps.findFuncaoById || defaultFindFuncaoById;
+  const loadAllModulos = deps.loadAllModulos || loadAllModulosBaseRepo;
+  const findFuncionarioById = deps.findFuncionarioById || findFuncionarioCanonicalByIdRepo;
+  const findFuncaoById = deps.findFuncaoById || findFuncaoCanonicalByIdRepo;
 
   if (typeof tryLoadUnidadeComModulos !== 'function') {
     throw new TypeError('resolveUserApiModulosCanonicalResult requer deps.tryLoadUnidadeComModulos');
