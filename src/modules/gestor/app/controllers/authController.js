@@ -29,6 +29,7 @@ import {
   resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
 import { createAuthContextOrchestrationCore } from '#modules/gestor/app/services/auth/createAuthContextOrchestrationCore.js';
+import { createLoginModuleAccessCore } from '#modules/gestor/app/services/auth/createLoginModuleAccessCore.js';
 import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js';
 import { mutateAuthUnitContextService } from '#modules/gestor/app/services/auth/mutateAuthUnitContext.service.js';
 import { resolveLoginPostAuthContext } from '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js';
@@ -39,119 +40,15 @@ const authContextOrchestration = createAuthContextOrchestrationCore({
   mutateAuthUnitContextService,
 });
 
-// -----------------------------------------------------------------------------
-// Helper de Autorização de Módulo
-// Regras solicitadas:
-//  - master: acesso irrestrito
-//  - admin: acesso irrestrito
-//  - diretor: acesso liberado se o módulo alvo estiver em modulosAcessiveis da unidade do usuário
-//  - user: precisa ter uma função associada (funcao_id via funcionario?) e a função conter o módulo em modulos_habilitados
-//          além disso, módulo também deve estar habilitado na unidade (defesa em profundidade)
-//  - user sem função: nenhum acesso
-// Parametros:
-//   userDoc  -> documento de usuário já carregado
-//   moduloAlvoNome -> string (ex: 'gestor')
-// Retorno: { permitido: boolean, motivo?: string }
-// -----------------------------------------------------------------------------
+const loginModuleAccess = createLoginModuleAccessCore({
+  findModuloByOr,
+  findUnidadeByIdSelect,
+  findFuncionarioByIdSelect,
+  findFuncaoByIdSelect,
+});
+
 function escapeRegex(s) {
   return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-async function verificarAcessoModulo({ userDoc, moduloAlvoNome, basePath, authContext = null }) {
-  try {
-    if (!userDoc) return { permitido: false, motivo: 'usuario_invalido' };
-    if (!moduloAlvoNome) return { permitido: false, motivo: 'modulo_nao_informado' };
-
-    const role = userDoc.role;
-    if (role === 'master' || role === 'admin') {
-      return { permitido: true };
-    }
-
-    // Localiza módulo alvo de forma resiliente:
-    // - nome (normalmente um "slug" como gestor/condominios)
-    // - ou url_base (ex.: /condominios) para bases onde "nome" é descritivo (ex.: "Gestão de Condomínios")
-    const nomeRx = new RegExp('^' + escapeRegex(moduloAlvoNome) + '$', 'i');
-    const or = [{ nome: nomeRx }];
-    const bp = String(basePath || '').trim();
-    if (bp) or.push({ url_base: bp });
-    // fallback comum: url_base derivado do nome
-    if (moduloAlvoNome && !String(moduloAlvoNome).startsWith('/')) {
-      or.push({ url_base: '/' + String(moduloAlvoNome).trim() });
-    }
-    // compat: portal_morador vs portal-morador
-    if (String(moduloAlvoNome).toLowerCase() === 'portal_morador') {
-      or.push({ nome: /^portal-morador$/i });
-      or.push({ url_base: '/portal-morador' });
-    }
-    // compat: bases antigas usam nome descritivo para Condomínios
-    const alvoLower = String(moduloAlvoNome || '').trim().toLowerCase();
-    if (alvoLower === 'condominios' || alvoLower === 'condominio') {
-      or.push({ nome: /^condom[ií]nios$/i });
-      or.push({ nome: /^gest[aã]o de condom[ií]nios$/i });
-      or.push({ nome: /^m[oó]dulo condom[ií]nios$/i });
-    }
-    const modulo = await findModuloByOr({
-      or,
-      maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
-    });
-    if (!modulo) return { permitido: false, motivo: 'modulo_inexistente' };
-
-    // Diretor: checa se unidade do usuário possui esse módulo em modulosAcessiveis
-    if (role === 'diretor') {
-      const unidadeIdCanonica = authContext?.source === 'auth-context-v1'
-        ? (authContext.activeContext?.unidadeId || authContext.active_unidade_id || null)
-        : null;
-      const unidadeIdEfetiva = unidadeIdCanonica || userDoc.unidade_id || null;
-      if (!unidadeIdEfetiva) return { permitido: false, motivo: 'diretor_sem_unidade' };
-      const unidade = await findUnidadeByIdSelect({
-        id: unidadeIdEfetiva,
-        select: 'modulosAcessiveis',
-        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
-      });
-      if (!unidade) return { permitido: false, motivo: 'unidade_inexistente' };
-      const possui = unidade.modulosAcessiveis?.some(m => m.toString() === modulo._id.toString());
-      return possui ? { permitido: true } : { permitido: false, motivo: 'modulo_nao_habilitado_unidade' };
-    }
-
-    if (role === 'user') {
-      // Recupera funcionário para obter função (assumindo relacionamento via funcionario_id)
-      if (!userDoc.funcionario_id) return { permitido: false, motivo: 'user_sem_funcionario' };
-      const funcionario = await findFuncionarioByIdSelect({
-        id: userDoc.funcionario_id,
-        select: 'funcao_id unidade_id',
-        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
-      });
-      if (!funcionario) return { permitido: false, motivo: 'funcionario_inexistente' };
-      if (!funcionario.funcao_id) return { permitido: false, motivo: 'user_sem_funcao' };
-      const funcao = await findFuncaoByIdSelect({
-        id: funcionario.funcao_id,
-        select: 'modulos_habilitados ativa',
-        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
-      });
-      if (!funcao || funcao.ativa === false) return { permitido: false, motivo: 'funcao_inativa' };
-      const moduloNaFuncao = funcao.modulos_habilitados?.some(m => m.toString() === modulo._id.toString());
-      if (!moduloNaFuncao) return { permitido: false, motivo: 'modulo_nao_habilitado_funcao' };
-
-      // (Defesa adicional) Confere unidade vinculada ao funcionário, se existir, também possuir módulo
-      if (funcionario.unidade_id) {
-        const unidade = await findUnidadeByIdSelect({
-          id: funcionario.unidade_id,
-          select: 'modulosAcessiveis',
-          maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
-        });
-        if (unidade) {
-          const moduloUnidade = unidade.modulosAcessiveis?.some(m => m.toString() === modulo._id.toString());
-          if (!moduloUnidade) return { permitido: false, motivo: 'modulo_nao_habilitado_unidade' };
-        }
-      }
-      return { permitido: true };
-    }
-
-    return { permitido: false, motivo: 'role_desconhecida' };
-  } catch (e) {
-    console.error('[verificarAcessoModulo] erro:', e.message);
-    return { permitido: false, motivo: 'erro_interno' };
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -408,7 +305,7 @@ export async function login(req, res) {
     // -----------------------------------------------------------------------
     // Checagem de módulo com timeout defensivo
     const checagem = await Promise.race([
-      verificarAcessoModulo({ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath, authContext: resolvedLoginAuthContext }),
+      loginModuleAccess.evaluateModuleAccess({ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath, authContext: resolvedLoginAuthContext }),
       new Promise(resolve=> setTimeout(()=> resolve({ permitido:false, motivo:'timeout_modulo' }), Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000)))
     ]);
     if (!checagem.permitido) {
