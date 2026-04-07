@@ -125,6 +125,11 @@ function loadDetailOwnerHarness(runtimeOverrides = {}) {
 
 	const deps = {
 		isAdminLike: runtimeOverrides.isAdminLike ?? ((user) => !!(user && (user.isMaster || user.role === 'admin' || user.role === 'master'))),
+		feedbackPolicy: runtimeOverrides.feedbackPolicy ?? {
+			ensureAdminAccess: ({ currentUser } = {}) => ({
+				allowed: deps.isAdminLike(currentUser),
+			}),
+		},
 		apiOk: runtimeOverrides.apiOk ?? ((res, data = null, extra = {}) => {
 			callLog.apiOkCalls.push([data, extra]);
 			return responseHelpers.apiOk(res, data, extra);
@@ -167,6 +172,7 @@ function loadDetailOwnerHarness(runtimeOverrides = {}) {
 
 	const factoryScript = new vm.Script(`(function (__deps) {
 const isAdminLike = __deps.isAdminLike;
+const feedbackPolicy = __deps.feedbackPolicy;
 const apiOk = __deps.apiOk;
 const apiFail = __deps.apiFail;
 const findFeedbackByIdLean = __deps.findFeedbackByIdLean;
@@ -179,6 +185,7 @@ return {
 		isAdminLike,
 		apiOk,
 		apiFail,
+			feedbackPolicy,
 		findFeedbackByIdLean,
 		sanitizeFeedback,
 	}),
@@ -194,17 +201,20 @@ return {
 
 test('feedback detail admin: ordem estrutural mantem owner antes da seam e resposta apos seam', () => {
 	const snippet = buildDelegatedDetailSnippet();
-	const adminGateIndex = snippet.indexOf("if (!isAdminLike(req.user)) return apiFail(res, 403, 'Acesso negado.');");
+	const adminPolicyIndex = snippet.indexOf('const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });');
+	const adminGateIndex = snippet.indexOf("if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');");
 	const idValidationIndex = snippet.indexOf("if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');");
 	const notFoundIndex = snippet.indexOf("if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');");
 	const seamIndex = snippet.indexOf('processAdminFeedbackDetailCore({');
 	const responseIndex = snippet.indexOf('return apiOk(res,');
 
+	assert.ok(adminPolicyIndex >= 0, 'Owner precisa preservar o gate admin via feedbackPolicy.');
 	assert.ok(adminGateIndex >= 0, 'Owner precisa preservar o gate admin.');
 	assert.ok(idValidationIndex >= 0, 'Owner precisa preservar a validacao de id.');
 	assert.ok(notFoundIndex >= 0, 'Owner precisa preservar a traducao de feedback nao encontrado.');
 	assert.ok(seamIndex >= 0, 'Seam de detail admin precisa existir no meio do fluxo em memoria.');
 	assert.ok(responseIndex >= 0, 'Owner precisa preservar a resposta HTTP final.');
+	assert.ok(adminPolicyIndex < adminGateIndex, 'Resolucao de acesso deve ocorrer antes do gate admin.');
 	assert.ok(adminGateIndex < seamIndex, 'Gate admin deve ocorrer antes da seam.');
 	assert.ok(idValidationIndex < seamIndex, 'Validacao de id deve ocorrer antes da seam.');
 	assert.ok(notFoundIndex < seamIndex, 'Traducao 404 deve ocorrer antes da seam.');

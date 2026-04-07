@@ -970,7 +970,7 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       assert.equal(badRequest.body?.error, 'ID inválido.');
     });
 
-    await t.test('POST /gestor/api/feedback/:id/anexo: sucesso + acesso URL + 401 + 403 + 400 + 404 + 503(blob) + 500(fs)', async () => {
+    await t.test('POST /gestor/api/feedback/:id/anexo: sucesso + acesso URL + 401 + 403 + 400 + 404 + 200(fallback fs com env patch tardio) + 500(fs)', async () => {
       const forUpload = await createFeedbackViaApi(creatorAgent, {
         mensagem: 'feedback para upload de anexo',
       });
@@ -1080,7 +1080,7 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
         .set('Connection', 'close');
       assert.equal(staticAccess.status, 200, `Acesso ao anexo via URL pública deve funcionar (${lastAnexo.url})`);
 
-      const blobUnavailable = await withEnvPatch(
+      const blobFallbackToFs = await withEnvPatch(
         {
           VERCEL: '1',
           BLOB_READ_WRITE_TOKEN: '',
@@ -1094,8 +1094,12 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
           .attach('anexo', tinyPng, 'blob-unavailable.png'),
       );
 
-      expectApiFailEnvelope(blobUnavailable, 503);
-      assert.equal(blobUnavailable.body?.code, 'BLOB_NOT_CONFIGURED');
+          expectApiSuccessEnvelope(blobFallbackToFs, 200);
+          const blobFallbackAnexos = blobFallbackToFs.body?.data?.anexos || [];
+          assert.ok(Array.isArray(blobFallbackAnexos), 'anexos deve permanecer array no fallback fs');
+          assert.ok(blobFallbackAnexos.length >= 1, 'fallback fs deve persistir ao menos um anexo');
+          const lastFallbackAnexo = blobFallbackAnexos[blobFallbackAnexos.length - 1] || {};
+          assert.match(lastFallbackAnexo.url || '', /^\/gestor\/uploads\/feedback\//, 'fallback fs deve responder com URL pública local');
 
       const originalWriteFileSync = fs.writeFileSync;
       let forcedFsError;

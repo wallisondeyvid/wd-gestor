@@ -14,33 +14,22 @@ function extractMyListOwnerSnippet(source) {
 
 	return source
 		.slice(start)
-		.replace("import { processMyFeedbackListFilterCore } from './utils/processMyFeedbackListFilterCore.js';\r\n", '')
-		.replace("import { processMyFeedbackListFilterCore } from './utils/processMyFeedbackListFilterCore.js';\n", '')
 		.replace('export function createMyFeedbackListHandler(', 'function createMyFeedbackListHandler(');
 }
 
 function buildDelegatedMyListSnippet() {
 	const original = extractMyListOwnerSnippet(CONTROLLER_SOURCE);
-	if (original.includes('processMyFeedbackListFilterCore({')) {
-		return original;
-	}
-
-	const coreBlockStart = original.indexOf('const me = req.user?._id || req.user?.id || null;');
-	const coreBlockEndMarker = "const items = await findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter);";
-	const coreBlockEnd = original.indexOf(coreBlockEndMarker, coreBlockStart);
-	assert.ok(coreBlockStart >= 0 && coreBlockEnd >= 0, 'Nao foi possivel localizar o bloco atual de my list inline.');
-	const coreBlock = original.slice(coreBlockStart, coreBlockEnd);
-
-	const delegatedBlock = [
-		'const filterResult = await processMyFeedbackListFilterCore({',
-		'  currentUser: req.user || null,',
-		'});',
-		'const filter = filterResult?.filter || {};',
-	].join('\n      ');
-
-	const replaced = original.replace(coreBlock, delegatedBlock);
-	assert.notEqual(replaced, original, 'Nao foi possivel instalar a seam estrutural de my list em memoria.');
-	return replaced;
+	assert.match(
+		original,
+		/feedbackPolicy\.buildMyFeedbackFilter\(\{[\s\S]*currentUser: req\.user \|\| null,[\s\S]*\}\)/,
+		'Owner de my list deve delegar o filtro para feedbackPolicy.buildMyFeedbackFilter no shape atual.',
+	);
+	assert.doesNotMatch(
+		original,
+		/processMyFeedbackListFilterCore\(/,
+		'Owner de my list nao deve mais chamar processMyFeedbackListFilterCore diretamente.',
+	);
+	return original;
 }
 
 function makeResponseHelpers() {
@@ -127,18 +116,19 @@ function loadMyListOwnerHarness(runtimeOverrides = {}) {
 				callLog.repositoryCalls.push([filter]);
 				return listItems();
 			}),
-		processMyFeedbackListFilterCore:
-			runtimeOverrides.processMyFeedbackListFilterCore ??
-			(async (input) => {
-				callLog.seamCalls.push(input);
-				const currentUser = input.currentUser || null;
-				const currentId = currentUser?._id || currentUser?.id || null;
-				return {
-					filter: currentId
-						? { 'criadoPor.userId': currentId }
-						: { 'criadoPor.email': currentUser?.email || '' },
-				};
-			}),
+		feedbackPolicy:
+			runtimeOverrides.feedbackPolicy ?? {
+				buildMyFeedbackFilter(input) {
+					callLog.seamCalls.push(input);
+					const currentUser = input.currentUser || null;
+					const currentId = currentUser?._id || currentUser?.id || null;
+					return {
+						filter: currentId
+							? { 'criadoPor.userId': currentId }
+							: { 'criadoPor.email': currentUser?.email || '' },
+					};
+				},
+			},
 		console: runtimeOverrides.console ?? {
 			error(...args) {
 				callLog.logErrorCalls.push(args);
@@ -152,13 +142,14 @@ function loadMyListOwnerHarness(runtimeOverrides = {}) {
 const apiOk = __deps.apiOk;
 const apiFail = __deps.apiFail;
 const findFeedbackByFilterSortCreatedAtDescLimit200Lean = __deps.findFeedbackByFilterSortCreatedAtDescLimit200Lean;
-const processMyFeedbackListFilterCore = __deps.processMyFeedbackListFilterCore;
+	const feedbackPolicy = __deps.feedbackPolicy;
 const console = __deps.console;
 ${snippet}
 return {
 	listMyFeedback: createMyFeedbackListHandler({
 		apiOk,
 		apiFail,
+			feedbackPolicy,
 		findFeedbackByFilterSortCreatedAtDescLimit200Lean,
 	}),
 };
@@ -173,7 +164,7 @@ return {
 
 test('feedback my list: seam estrutural fica entre owner, repositorio e resposta HTTP final', async () => {
 	const snippet = buildDelegatedMyListSnippet();
-	const seamIndex = snippet.indexOf('processMyFeedbackListFilterCore({');
+	const seamIndex = snippet.indexOf('feedbackPolicy.buildMyFeedbackFilter({');
 	const repoIndex = snippet.indexOf('findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter)');
 	const responseIndex = snippet.indexOf('return apiOk(res, items);');
 
@@ -185,10 +176,12 @@ test('feedback my list: seam estrutural fica entre owner, repositorio e resposta
 
 	const callOrder = [];
 	const { listMyFeedback, callLog } = loadMyListOwnerHarness({
-		processMyFeedbackListFilterCore: async (input) => {
-			callOrder.push('seam');
-			callLog.seamCalls.push(input);
-			return { filter: { 'criadoPor.userId': '507f191e810c19729de860ea' } };
+		feedbackPolicy: {
+			buildMyFeedbackFilter(input) {
+				callOrder.push('seam');
+				callLog.seamCalls.push(input);
+				return { filter: { 'criadoPor.userId': '507f191e810c19729de860ea' } };
+			},
 		},
 		findFeedbackByFilterSortCreatedAtDescLimit200Lean: async (filter) => {
 			callOrder.push('repo');
@@ -217,9 +210,11 @@ test('feedback my list: a seam futura recebe apenas o usuario atual e owner cont
 	const res = makeRes();
 
 	const { listMyFeedback, callLog } = loadMyListOwnerHarness({
-		processMyFeedbackListFilterCore: async (input) => {
-			callLog.seamCalls.push(input);
-			return { filter: { 'criadoPor.userId': req.user._id } };
+		feedbackPolicy: {
+			buildMyFeedbackFilter(input) {
+				callLog.seamCalls.push(input);
+				return { filter: { 'criadoPor.userId': req.user._id } };
+			},
 		},
 	});
 
@@ -267,9 +262,11 @@ test('feedback my list: owner trata erro externo com apiFail 500', async () => {
 	const res = makeRes();
 
 	const { listMyFeedback, callLog } = loadMyListOwnerHarness({
-		processMyFeedbackListFilterCore: async (input) => {
-			callLog.seamCalls.push(input);
-			throw new Error('forced-feedback-my-list-structural-failure');
+		feedbackPolicy: {
+			buildMyFeedbackFilter(input) {
+				callLog.seamCalls.push(input);
+				throw new Error('forced-feedback-my-list-structural-failure');
+			},
 		},
 	});
 

@@ -25,28 +25,12 @@ function extractMyDetailOwnerSnippet(source) {
 
 function buildDelegatedMyDetailSnippet() {
 	const original = extractMyDetailOwnerSnippet(CONTROLLER_SOURCE);
-	if (original.includes('processMyFeedbackDetailOwnershipCore({')) {
-		return original;
-	}
-
-	const coreBlockStart = original.indexOf("const creator = fb?.criadoPor?.userId ? String(fb.criadoPor.userId) : '';");
-	const coreBlockEndMarker = 'return apiOk(res, fb);';
-	const coreBlockEnd = original.indexOf(coreBlockEndMarker, coreBlockStart);
-	assert.ok(coreBlockStart >= 0 && coreBlockEnd >= 0, 'Nao foi possivel localizar o bloco atual de ownership de meu detalhe.');
-	const coreBlock = original.slice(coreBlockStart, coreBlockEnd + coreBlockEndMarker.length);
-
-	const delegatedBlock = [
-		'const ownershipResult = await processMyFeedbackDetailOwnershipCore({',
-		'  feedback: fb,',
-		'  currentUser: req.user || null,',
-		'});',
-		"if (ownershipResult?.error === 'forbidden') return apiFail(res, 403, 'Acesso negado.');",
-		'return apiOk(res, ownershipResult?.feedback || fb);',
-	].join('\n      ');
-
-	const replaced = original.replace(coreBlock, delegatedBlock);
-	assert.notEqual(replaced, original, 'Nao foi possivel instalar a seam estrutural de meu detalhe em memoria.');
-	return replaced;
+	assert.match(
+		original,
+		/const ownershipResult = feedbackPolicy\.ensureCreatorOwnership\(\{[\s\S]*?currentUser: req\.user \|\| null,[\s\S]*?\}\);/,
+		'Nao foi possivel localizar o bloco atual de ownership de meu detalhe.'
+	);
+	return original;
 }
 
 function makeResponseHelpers() {
@@ -146,15 +130,17 @@ function loadMyDetailOwnerHarness(runtimeOverrides = {}) {
 			}
 			return feedbackFixture();
 		}),
-		processMyFeedbackDetailOwnershipCore:
-			runtimeOverrides.processMyFeedbackDetailOwnershipCore ??
-			(async (input) => {
-				callLog.seamCalls.push(input);
-				if (Object.prototype.hasOwnProperty.call(runtimeOverrides, 'seamResult')) {
-					return runtimeOverrides.seamResult;
-				}
-				return { feedback: input.feedback };
-			}),
+		feedbackPolicy:
+			runtimeOverrides.feedbackPolicy ??
+			{
+				ensureCreatorOwnership(input) {
+					callLog.seamCalls.push(input);
+					if (Object.prototype.hasOwnProperty.call(runtimeOverrides, 'seamResult')) {
+						return runtimeOverrides.seamResult;
+					}
+					return { allowed: true };
+				},
+			},
 		console: runtimeOverrides.console ?? {
 			error(...args) {
 				callLog.logErrorCalls.push(args);
@@ -168,13 +154,14 @@ function loadMyDetailOwnerHarness(runtimeOverrides = {}) {
 const apiOk = __deps.apiOk;
 const apiFail = __deps.apiFail;
 const findFeedbackByIdLean = __deps.findFeedbackByIdLean;
-const processMyFeedbackDetailOwnershipCore = __deps.processMyFeedbackDetailOwnershipCore;
+const feedbackPolicy = __deps.feedbackPolicy;
 const console = __deps.console;
 ${snippet}
 return {
 	detailMyFeedback: createMyFeedbackDetailHandler({
 		apiOk,
 		apiFail,
+		feedbackPolicy,
 		findFeedbackByIdLean,
 	}),
 };
@@ -191,7 +178,7 @@ test('feedback my detail: ordem estrutural mantem owner antes da seam e resposta
 	const snippet = buildDelegatedMyDetailSnippet();
 	const idValidationIndex = snippet.indexOf("if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');");
 	const notFoundIndex = snippet.indexOf("if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');");
-	const seamIndex = snippet.indexOf('processMyFeedbackDetailOwnershipCore({');
+	const seamIndex = snippet.indexOf('feedbackPolicy.ensureCreatorOwnership({');
 	const responseIndex = snippet.indexOf('return apiOk(res,');
 
 	assert.ok(idValidationIndex >= 0, 'Owner precisa preservar a validacao de id.');
@@ -205,8 +192,10 @@ test('feedback my detail: ordem estrutural mantem owner antes da seam e resposta
 
 test('feedback my detail: owner preserva validacao de id antes da seam', async () => {
 	const { detailMyFeedback, callLog } = loadMyDetailOwnerHarness({
-		processMyFeedbackDetailOwnershipCore: async () => {
-			throw new Error('nao deve delegar ownership com id invalido');
+		feedbackPolicy: {
+			ensureCreatorOwnership() {
+				throw new Error('nao deve delegar ownership com id invalido');
+			},
 		},
 	});
 
@@ -230,8 +219,10 @@ test('feedback my detail: owner preserva validacao de id antes da seam', async (
 test('feedback my detail: owner traduz feedback nao encontrado antes da seam', async () => {
 	const { detailMyFeedback, callLog } = loadMyDetailOwnerHarness({
 		findFeedbackResult: null,
-		processMyFeedbackDetailOwnershipCore: async () => {
-			throw new Error('nao deve delegar ownership sem feedback carregado');
+		feedbackPolicy: {
+			ensureCreatorOwnership() {
+				throw new Error('nao deve delegar ownership sem feedback carregado');
+			},
 		},
 	});
 
@@ -264,7 +255,7 @@ test('feedback my detail: seam recebe apenas o nucleo canonizado e owner traduz 
 
 	const { detailMyFeedback, callLog } = loadMyDetailOwnerHarness({
 		findFeedbackResult: feedback,
-		seamResult: { error: 'forbidden' },
+		seamResult: { allowed: false },
 	});
 
 	await detailMyFeedback(req, res);
@@ -287,16 +278,12 @@ test('feedback my detail: seam recebe apenas o nucleo canonizado e owner traduz 
 
 test('feedback my detail: owner preserva a resposta HTTP final apos seam autorizada', async () => {
 	const feedback = feedbackFixture();
-	const authorizedFeedback = feedbackFixture({
-		mensagem: 'Feedback autorizado pela seam',
-		status: 'em_andamento',
-	});
 	const req = buildReq();
 	const res = makeRes();
 
 	const { detailMyFeedback, callLog } = loadMyDetailOwnerHarness({
 		findFeedbackResult: feedback,
-		seamResult: { feedback: authorizedFeedback },
+		seamResult: { allowed: true },
 	});
 
 	await detailMyFeedback(req, res);
@@ -305,7 +292,7 @@ test('feedback my detail: owner preserva a resposta HTTP final apos seam autoriz
 	assert.deepEqual(toPlainJson(res.body), {
 		ok: true,
 		success: true,
-		data: toPlainJson(authorizedFeedback),
+		data: toPlainJson(feedback),
 	});
 	assert.equal(callLog.seamCalls.length, 1);
 	assert.equal(callLog.apiFailCalls.length, 0);
@@ -319,9 +306,11 @@ test('feedback my detail: owner trata erro externo com apiFail 500', async () =>
 
 	const { detailMyFeedback, callLog } = loadMyDetailOwnerHarness({
 		findFeedbackResult: feedback,
-		processMyFeedbackDetailOwnershipCore: async (input) => {
-			callLog.seamCalls.push(input);
-			throw new Error('falha externa de ownership');
+		feedbackPolicy: {
+			ensureCreatorOwnership(input) {
+				callLog.seamCalls.push(input);
+				throw new Error('falha externa de ownership');
+			},
 		},
 	});
 

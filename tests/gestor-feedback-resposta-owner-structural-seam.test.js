@@ -128,6 +128,11 @@ function loadRespostaOwnerHarness(runtimeOverrides = {}) {
 
 	const deps = {
 		isAdminLike: runtimeOverrides.isAdminLike ?? ((user) => !!(user && (user.isMaster || user.role === 'admin' || user.role === 'master'))),
+		feedbackPolicy: runtimeOverrides.feedbackPolicy ?? {
+			ensureAdminAccess: ({ currentUser } = {}) => ({
+				allowed: deps.isAdminLike(currentUser),
+			}),
+		},
 		apiOk: runtimeOverrides.apiOk ?? ((res, data = null, extra = {}) => {
 			callLog.apiOkCalls.push([data, extra]);
 			return responseHelpers.apiOk(res, data, extra);
@@ -155,6 +160,7 @@ function loadRespostaOwnerHarness(runtimeOverrides = {}) {
 
 	const factoryScript = new vm.Script(`(function (__deps) {
 const isAdminLike = __deps.isAdminLike;
+const feedbackPolicy = __deps.feedbackPolicy;
 const apiOk = __deps.apiOk;
 const apiFail = __deps.apiFail;
 const findFeedbackByIdAndUpdateSetNewLean = __deps.findFeedbackByIdAndUpdateSetNewLean;
@@ -166,6 +172,7 @@ return {
 		isAdminLike,
 		apiOk,
 		apiFail,
+		feedbackPolicy,
 		findFeedbackByIdAndUpdateSetNewLean,
 	}),
 };

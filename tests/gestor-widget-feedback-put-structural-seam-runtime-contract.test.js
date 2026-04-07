@@ -1,4 +1,4 @@
-import test, { after, mock } from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -9,21 +9,41 @@ const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/ge
 const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/widgetSettings/updateFeedbackWidgetVisibility.service.js')).href;
 
 const serviceMockModuleUrl = 'mock:gestor-widget-feedback-put-service';
-const repositoryMockModuleUrl = 'mock:gestor-widget-feedback-put-repository';
+const bridgeMockModuleUrl = 'mock:gestor-widget-feedback-put-bridge';
+const widgetSettingsMockModuleUrl = 'mock:gestor-widget-feedback-put-widget-settings';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
+    if (specifier === '#core/utils/widgetSettings.js') {
+      return { url: widgetSettingsMockModuleUrl, shortCircuit: true };
+    }
+
     if (specifier === '#modules/gestor/app/services/widgetSettings/updateFeedbackWidgetVisibility.service.js') {
       return { url: serviceMockModuleUrl, shortCircuit: true };
     }
 
-    if (specifier === '#modules/gestor/app/repositories/WidgetSettingWriteRepository.js') {
-      return { url: repositoryMockModuleUrl, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
+      return { url: bridgeMockModuleUrl, shortCircuit: true };
     }
 
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
+    if (url === widgetSettingsMockModuleUrl) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMocks = () => globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_WIDGET_SETTINGS_MOCKS__ || {};",
+          "export function bustWidgetEnabledCache(...args) {",
+          "  const fn = getMocks().bustWidgetEnabledCache;",
+          "  if (typeof fn !== 'function') return undefined;",
+          "  return fn(...args);",
+          "}",
+        ].join('\n'),
+      };
+    }
+
     if (url === serviceMockModuleUrl) {
       return {
         format: 'module',
@@ -39,20 +59,20 @@ registerHooks({
       };
     }
 
-    if (url === repositoryMockModuleUrl) {
+    if (url === bridgeMockModuleUrl) {
       return {
         format: 'module',
         shortCircuit: true,
         source: [
-          "const getMocks = () => globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_REPOSITORY_MOCKS__ || {};",
-          "export async function findWidgetSettingsFeedbackLeanRepo(...args) {",
-          "  const fn = getMocks().findWidgetSettingsFeedbackLeanRepo;",
-          "  if (typeof fn !== 'function') throw new Error('findWidgetSettingsFeedbackLeanRepo mock ausente');",
+          "const getMocks = () => globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_BRIDGE_MOCKS__ || {};",
+          "export async function findWidgetSettingsFeedbackLean(...args) {",
+          "  const fn = getMocks().findWidgetSettingsFeedbackLean;",
+          "  if (typeof fn !== 'function') throw new Error('findWidgetSettingsFeedbackLean mock ausente');",
           "  return await fn(...args);",
           "}",
-          "export async function updateWidgetSettingsFeedbackModuleEnabledUpsertRepo(...args) {",
-          "  const fn = getMocks().updateWidgetSettingsFeedbackModuleEnabledUpsertRepo;",
-          "  if (typeof fn !== 'function') throw new Error('updateWidgetSettingsFeedbackModuleEnabledUpsertRepo mock ausente');",
+          "export async function updateWidgetSettingsFeedbackModuleEnabledUpsert(...args) {",
+          "  const fn = getMocks().updateWidgetSettingsFeedbackModuleEnabledUpsert;",
+          "  if (typeof fn !== 'function') throw new Error('updateWidgetSettingsFeedbackModuleEnabledUpsert mock ausente');",
           "  return await fn(...args);",
           "}",
         ].join('\n'),
@@ -72,28 +92,16 @@ const serviceState = {
   repositoryCalls: [],
 };
 
-mock.module('#core/utils/widgetSettings.js', {
-  namedExports: {
-    bustWidgetEnabledCache() {
-      ownerState.bustCalls += 1;
-    },
-  },
-});
-
-mock.module('#modules/gestor/app/services/apiDbBridgeService.js', {
-  namedExports: {
-    async findWidgetSettingsFeedbackLean() {
-      throw new Error('findWidgetSettingsFeedbackLean nao deveria ser chamado no caminho principal do PUT');
-    },
-  },
-});
+function setWidgetSettingsMocks(overrides = {}) {
+  globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_WIDGET_SETTINGS_MOCKS__ = { ...overrides };
+}
 
 function setServiceMocks(overrides = {}) {
   globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_SERVICE_MOCKS__ = { ...overrides };
 }
 
-function setRepositoryMocks(overrides = {}) {
-  globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_REPOSITORY_MOCKS__ = { ...overrides };
+function setBridgeMocks(overrides = {}) {
+  globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_BRIDGE_MOCKS__ = { ...overrides };
 }
 
 function resetState() {
@@ -101,6 +109,12 @@ function resetState() {
   ownerState.bustCalls = 0;
   serviceState.repositoryCalls.length = 0;
 }
+
+setWidgetSettingsMocks({
+  bustWidgetEnabledCache() {
+    ownerState.bustCalls += 1;
+  },
+});
 
 function createResCapture() {
   return {
@@ -126,9 +140,9 @@ async function importUpdateFeedbackWidgetVisibilityService(tag) {
 }
 
 after(() => {
-  mock.restoreAll();
+  delete globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_WIDGET_SETTINGS_MOCKS__;
   delete globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_SERVICE_MOCKS__;
-  delete globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_REPOSITORY_MOCKS__;
+  delete globalThis.__GESTOR_WIDGET_FEEDBACK_PUT_BRIDGE_MOCKS__;
 });
 
 test('updateFeedbackWidgetVisibility usa o service fino como caminho principal do PUT e preserva alias, coercao, bust de cache e shape HTTP', async () => {
@@ -173,16 +187,16 @@ test('updateFeedbackWidgetVisibility usa o service fino como caminho principal d
   });
 });
 
-test('updateFeedbackWidgetVisibilityService faz upsert e readback direto via repository global para montar o mapa final', async () => {
+test('updateFeedbackWidgetVisibilityService faz upsert e readback via bridge global para montar o mapa final', async () => {
   resetState();
 
-  setRepositoryMocks({
-    updateWidgetSettingsFeedbackModuleEnabledUpsertRepo: async (args) => {
-      serviceState.repositoryCalls.push({ op: 'updateWidgetSettingsFeedbackModuleEnabledUpsertRepo', args });
+  setBridgeMocks({
+    updateWidgetSettingsFeedbackModuleEnabledUpsert: async (moduleId, enabled) => {
+      serviceState.repositoryCalls.push({ op: 'updateWidgetSettingsFeedbackModuleEnabledUpsert', moduleId, enabled });
       return { acknowledged: true };
     },
-    findWidgetSettingsFeedbackLeanRepo: async (args) => {
-      serviceState.repositoryCalls.push({ op: 'findWidgetSettingsFeedbackLeanRepo', args });
+    findWidgetSettingsFeedbackLean: async () => {
+      serviceState.repositoryCalls.push({ op: 'findWidgetSettingsFeedbackLean' });
       return [
         { widget: 'feedback', module: 'gestor', enabled: false },
         { widget: 'feedback', module: 'portal-morador', enabled: true },
@@ -202,15 +216,13 @@ test('updateFeedbackWidgetVisibilityService faz upsert e readback direto via rep
   });
 
   assert.equal(serviceState.repositoryCalls.length, 2);
-  assert.equal(serviceState.repositoryCalls[0].op, 'updateWidgetSettingsFeedbackModuleEnabledUpsertRepo');
-  assert.equal(serviceState.repositoryCalls[1].op, 'findWidgetSettingsFeedbackLeanRepo');
-  assert.deepEqual(serviceState.repositoryCalls[0].args, {
-    unitScope: { type: 'global', unidadeId: null },
+  assert.deepEqual(serviceState.repositoryCalls[0], {
+    op: 'updateWidgetSettingsFeedbackModuleEnabledUpsert',
     moduleId: 'gestor',
     enabled: false,
   });
-  assert.deepEqual(serviceState.repositoryCalls[1].args, {
-    unitScope: { type: 'global', unidadeId: null },
+  assert.deepEqual(serviceState.repositoryCalls[1], {
+    op: 'findWidgetSettingsFeedbackLean',
   });
   assert.deepEqual(result, {
     gestor: false,

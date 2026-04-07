@@ -1,14 +1,7 @@
-import { createUnitScope } from '#shared/unitScope.js';
-import { findFeedbackByIdAndUpdateSetNewLeanRepo } from '#modules/gestor/app/repositories/FeedbackReadRepository.js';
-
-const GLOBAL_SCOPE = createUnitScope({});
+import { findFeedbackByIdAndUpdateSetNewLean } from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function updateFeedbackStatusService(id, setData) {
-	return findFeedbackByIdAndUpdateSetNewLeanRepo({
-		unitScope: GLOBAL_SCOPE,
-		id,
-		setData,
-	});
+	return findFeedbackByIdAndUpdateSetNewLean(id, setData);
 }
 
 export default updateFeedbackStatusService;

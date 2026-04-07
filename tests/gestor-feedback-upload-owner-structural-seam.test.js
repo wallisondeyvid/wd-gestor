@@ -19,7 +19,7 @@ function extractUploadOwnerSnippet(source) {
 
 function buildDelegatedUploadSnippet() {
 	const original = extractUploadOwnerSnippet(ROUTE_SOURCE);
-	if (original.includes('processFeedbackUploadStorageCore({')) {
+	if (original.includes('const uploadStorageInfra = createFeedbackUploadStorageInfraCore();')) {
 		return original;
 	}
 
@@ -159,12 +159,13 @@ function loadUploadOwnerHarness(runtimeOverrides = {}) {
 		createUploadFeedbackAnexoHandler: runtimeOverrides.createUploadFeedbackAnexoHandler ?? ((factoryDeps) => {
 			callLog.createUploadHandlerCalls.push(factoryDeps);
 			return async function uploadHandler(req, res) {
-				const stored = await factoryDeps.storeFeedbackAnexo({
-					req,
-					feedbackId: String(req.params.feedbackId || ''),
+				const uploadResult = await factoryDeps.uploadStorageInfra.processUpload({
 					file: req.file,
+					files: req.files,
+					baseUrl: req.baseUrl || '',
+					feedbackId: String(req.params.feedbackId || ''),
 				});
-				return factoryDeps.apiOk(res, { stored }, { id: req.params.feedbackId });
+				return factoryDeps.apiOk(res, { uploadResult }, { id: req.params.feedbackId });
 			};
 		}),
 		processFeedbackUploadStorageCore: runtimeOverrides.processFeedbackUploadStorageCore ?? (async (input) => {
@@ -192,13 +193,12 @@ ${snippet}
 return {
   registrations,
   uploadFeedbackAnexoMiddleware,
-  pickFile,
   safeFileName,
   getBlobToken,
   shouldUseBlobStorage,
   isBlobNotConfiguredError,
   safeExtFromFile,
-  storeFeedbackAnexo,
+	uploadStorageInfra,
 };
 })`);
 
@@ -231,10 +231,10 @@ test('feedback upload: route owner preserva wiring canonico da rota de anexo', (
 	assert.deepEqual(Object.keys(callLog.createUploadHandlerCalls[0]).sort(), [
 		'apiFail',
 		'apiOk',
+		'feedbackPolicy',
 		'findFeedbackById',
-		'pickFile',
 		'saveFeedbackDoc',
-		'storeFeedbackAnexo',
+		'uploadStorageInfra',
 	].sort());
 });
 
@@ -285,8 +285,8 @@ test('feedback upload: owner delega apenas o nucleo de storage local para a futu
 	});
 
 	const factoryDeps = callLog.createUploadHandlerCalls[0];
-	const result = await factoryDeps.storeFeedbackAnexo({
-		req: { baseUrl: '/gestor' },
+	const result = await factoryDeps.uploadStorageInfra.processUpload({
+		baseUrl: '/gestor',
 		feedbackId: '507f1f77bcf86cd799439011',
 		file: {
 			originalname: 'foto 1.png',
@@ -328,10 +328,18 @@ test('feedback upload: owner delega apenas o nucleo de storage local para a futu
 	assert.equal('apiOk' in seamArgs, false);
 	assert.equal('apiFail' in seamArgs, false);
 	assert.deepEqual(toPlainJson(result), {
-		url: '/gestor/uploads/feedback/507f/foto.png',
-		storedIn: 'fs',
-		originalName: 'foto 1.png',
-		stampedName: 'stamp.png',
+		kind: 'stored',
+		file: {
+			originalname: 'foto 1.png',
+			mimetype: 'image/png',
+			buffer: { type: 'Buffer', data: [112, 110, 103] },
+		},
+		stored: {
+			url: '/gestor/uploads/feedback/507f/foto.png',
+			storedIn: 'fs',
+			originalName: 'foto 1.png',
+			stampedName: 'stamp.png',
+		},
 	});
 });
 
@@ -344,13 +352,14 @@ test('feedback upload: ordem estrutural real permanece owner -> seam de storage 
 			createUploadHandlerCalls.push(factoryDeps);
 			return async function uploadHandler(req, res) {
 				callOrder.push('handler-start');
-				const stored = await factoryDeps.storeFeedbackAnexo({
-					req,
-					feedbackId: String(req.params.feedbackId || ''),
+				const uploadResult = await factoryDeps.uploadStorageInfra.processUpload({
 					file: req.file,
+					files: req.files,
+					baseUrl: req.baseUrl || '',
+					feedbackId: String(req.params.feedbackId || ''),
 				});
 				callOrder.push('handler-response');
-				return factoryDeps.apiOk(res, { stored }, { id: req.params.feedbackId });
+				return factoryDeps.apiOk(res, { uploadResult }, { id: req.params.feedbackId });
 			};
 		},
 		processFeedbackUploadStorageCore: async (input) => {
@@ -384,11 +393,19 @@ test('feedback upload: ordem estrutural real permanece owner -> seam de storage 
 		ok: true,
 		success: true,
 		data: {
-			stored: {
-				url: '/gestor/uploads/feedback/507f/foto.png',
-				storedIn: 'fs',
-				originalName: 'foto.png',
-				stampedName: 'stamp.png',
+			uploadResult: {
+				kind: 'stored',
+				file: {
+					originalname: 'foto.png',
+					mimetype: 'image/png',
+					buffer: { type: 'Buffer', data: [112, 110, 103] },
+				},
+				stored: {
+					url: '/gestor/uploads/feedback/507f/foto.png',
+					storedIn: 'fs',
+					originalName: 'foto.png',
+					stampedName: 'stamp.png',
+				},
 			},
 		},
 		id: '507f1f77bcf86cd799439011',
