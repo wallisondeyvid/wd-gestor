@@ -9,8 +9,23 @@ const uploadLimiter = rateLimit({ windowMs: 15*60*1000, max: 300 });
 const router = express.Router();
 router.use(requireLogin);
 
+function isPrivilegedGestorUser(user) {
+	return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+}
+
+function getLegacyAuthenticatedUnitId(req) {
+	return String(req.user?.unidade_id || req.session?.user?.unidade_id || '').trim();
+}
+
 function withRequiredUnitScope(handler) {
-	return (req, res, next) => requireUnitScope(req, res, () => handler(req, res, next));
+	return (req, res, next) => requireUnitScope(req, res, () => {
+		const scopedUnitId = String(req.unitScope?.unidadeId || '').trim();
+		const legacyAuthenticatedUnitId = getLegacyAuthenticatedUnitId(req);
+		if (!isPrivilegedGestorUser(req.user) && (!scopedUnitId || req.unitScope?.type !== 'unit') && !legacyAuthenticatedUnitId) {
+			return res.status(400).json({ success: false, error: 'UNIDADE_ID_REQUIRED' });
+		}
+		return handler(req, res, next);
+	});
 }
 
 // As rotas abaixo são relativas ao prefixo '/api/funcionarios' configurado no gestor-app
