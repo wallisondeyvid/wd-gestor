@@ -14,7 +14,7 @@ const dbBridgeMockModuleUrl = 'mock:gestor-recursos-list-api-db-bridge';
 const DB_BRIDGE_EXPORTS = [
   'findUnidadeUserBaseLean',
   'findUnidadesByCondLean',
-  'findRecursosByFiltroComUnidadeLean',
+  'findRecursosByFiltroComUnidadeLeanFromDb',
 ];
 
 registerHooks({
@@ -90,7 +90,8 @@ async function importListarRecursosApi(tag) {
 }
 
 async function requestGestorApp(pathname) {
-  const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app-${Date.now()}`);
+  const { default: buildGestorApp } = await import(`${gestorAppModuleUrl}?case=app-${Date.now()}`);
+  const gestorApp = buildGestorApp();
   const rootApp = express();
   rootApp.use('/gestor', gestorApp);
 
@@ -161,7 +162,7 @@ test('listarRecursosApi sem contexto canonico para usuario nao privilegiado resp
 test('listarRecursosApi para admin sem filtros retorna envelope com data e shape compativel com Gestor e Escalas', async () => {
   const filtros = [];
   setDbMocks({
-    findRecursosByFiltroComUnidadeLean: async (filtro) => {
+    findRecursosByFiltroComUnidadeLeanFromDb: async (filtro) => {
       filtros.push(JSON.parse(JSON.stringify(filtro)));
       return [
         {
@@ -215,7 +216,7 @@ test('listarRecursosApi para admin sem filtros retorna envelope com data e shape
 
 test('listarRecursosApi aplica filtro parcial de placa com normalizacao case-insensitive', async () => {
   setDbMocks({
-    findRecursosByFiltroComUnidadeLean: async () => ([
+    findRecursosByFiltroComUnidadeLeanFromDb: async () => ([
       {
         _id: 'r-hit',
         placa: 'ABC-1D34',
@@ -268,7 +269,7 @@ test('listarRecursosApi restringe usuario contextual ao cluster acessivel e reto
         { _id: 'u-filial-1' },
       ];
     },
-    findRecursosByFiltroComUnidadeLean: async (filtro) => {
+    findRecursosByFiltroComUnidadeLeanFromDb: async (filtro) => {
       filtros.push(JSON.parse(JSON.stringify(filtro)));
       return [];
     },
@@ -298,7 +299,7 @@ test('listarRecursosApi restringe usuario contextual ao cluster acessivel e apli
       { _id: 'u-principal' },
       { _id: 'u-filial-1' },
     ]),
-    findRecursosByFiltroComUnidadeLean: async (filtro) => {
+    findRecursosByFiltroComUnidadeLeanFromDb: async (filtro) => {
       filtros.push(JSON.parse(JSON.stringify(filtro)));
       return [
         {
@@ -350,7 +351,7 @@ test('listarRecursosApi restringe usuario contextual ao cluster acessivel e apli
 
 test('listarRecursosApi retorna 500 com mensagem original quando ocorre erro interno', async () => {
   setDbMocks({
-    findRecursosByFiltroComUnidadeLean: async () => {
+    findRecursosByFiltroComUnidadeLeanFromDb: async () => {
       throw new Error('forced-recursos-list-failure');
     },
   });

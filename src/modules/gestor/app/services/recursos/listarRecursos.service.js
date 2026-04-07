@@ -1,84 +1,9 @@
-import mongoose from 'mongoose';
-import { createUnitScope } from '#shared/unitScope.js';
 import { createRecursoContextPolicyCore } from '#modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js';
-import { findRecursosByFiltroComUnidadeLeanRepo } from '#modules/gestor/app/repositories/RecursoReadRepository.js';
 import {
-  findUnidadeUserBaseLeanRepo,
-  findUnidadesByCondLeanRepo,
-} from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
-
-const GLOBAL_SCOPE = createUnitScope({});
-
-function normalizeUnitId(value) {
-  return String(value || '').trim();
-}
-
-function scopeFromUnidadeId(unidadeId) {
-  const unidadeIdNorm = normalizeUnitId(unidadeId);
-  return unidadeIdNorm && mongoose.isValidObjectId(unidadeIdNorm)
-    ? createUnitScope({ unidadeId: unidadeIdNorm })
-    : GLOBAL_SCOPE;
-}
-
-function extractSingleScopedUnitId(value) {
-  if (typeof value === 'string') return value;
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return '';
-
-  const inValues = Array.isArray(value.$in)
-    ? [...new Set(value.$in.map((item) => String(item || '').trim()).filter(Boolean))]
-    : [];
-
-  return inValues.length === 1 ? inValues[0] : '';
-}
-
-function scopeFromRecursoListFiltro(filtro) {
-  if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
-
-  const unidadeId = extractSingleScopedUnitId(filtro?.unidade_id);
-  return unidadeId ? scopeFromUnidadeId(unidadeId) : GLOBAL_SCOPE;
-}
-
-function extractScopedClusterAnchorFromUnidadesCond(cond) {
-  if (!cond || typeof cond !== 'object' || Array.isArray(cond)) return '';
-
-  const clauses = Array.isArray(cond.$or) ? cond.$or : null;
-  if (!clauses || clauses.length !== 3) return '';
-
-  const allowedKeys = new Set(['_id', 'unidade_principal_id', 'matriz_id']);
-  const matchedKeys = new Set();
-  const anchors = new Set();
-
-  for (const clause of clauses) {
-    if (!clause || typeof clause !== 'object' || Array.isArray(clause)) return '';
-
-    const entries = Object.entries(clause)
-      .map(([key, value]) => [key, String(value || '').trim()])
-      .filter(([, value]) => value);
-
-    if (entries.length !== 1) return '';
-
-    const [key, value] = entries[0];
-    if (!allowedKeys.has(key)) return '';
-
-    matchedKeys.add(key);
-    anchors.add(value);
-  }
-
-  if (matchedKeys.size !== 3 || anchors.size !== 1) return '';
-  return [...anchors][0];
-}
-
-async function findUnidadeUserBaseLean(id) {
-  return findUnidadeUserBaseLeanRepo({ unitScope: scopeFromUnidadeId(id), id });
-}
-
-async function findUnidadesByCondLean(cond) {
-  const anchor = extractScopedClusterAnchorFromUnidadesCond(cond);
-  return findUnidadesByCondLeanRepo({
-    unitScope: anchor ? scopeFromUnidadeId(anchor) : GLOBAL_SCOPE,
-    cond,
-  });
-}
+  findRecursosByFiltroComUnidadeLeanFromDb,
+  findUnidadeUserBaseLean,
+  findUnidadesByCondLean,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 const recursoContextPolicy = createRecursoContextPolicyCore({
   findUnidadeUserBaseLean,
@@ -86,10 +11,7 @@ const recursoContextPolicy = createRecursoContextPolicyCore({
 });
 
 export async function findRecursosByFiltroComUnidadeService(filtro) {
-  return findRecursosByFiltroComUnidadeLeanRepo({
-    unitScope: scopeFromRecursoListFiltro(filtro),
-    filtro,
-  });
+  return findRecursosByFiltroComUnidadeLeanFromDb(filtro);
 }
 
 function mapRecurso(recurso) {

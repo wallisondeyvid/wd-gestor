@@ -11,7 +11,6 @@ const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gesto
 const bridgeMockModuleUrl = 'mock:gestor-recursos-bridge';
 const serviceMockModuleUrl = 'mock:gestor-recursos-delete-service';
 const listarRecursosServiceMockModuleUrl = 'mock:gestor-recursos-list-service';
-const repositoryMockModuleUrl = 'mock:gestor-recursos-delete-repository';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -27,10 +26,6 @@ registerHooks({
       return { url: listarRecursosServiceMockModuleUrl, shortCircuit: true };
     }
 
-    if (specifier === '#modules/gestor/app/repositories/RecursoReadRepository.js') {
-      return { url: repositoryMockModuleUrl, shortCircuit: true };
-    }
-
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
@@ -42,6 +37,7 @@ registerHooks({
           'export async function findUnidadeUserBaseLean() { return null; }',
           'export async function findUnidadesByCondLean() { return []; }',
           'export async function findRecursoByIdComUnidadeNome() { return null; }',
+          'export async function findRecursosByFiltroComUnidadeLean() { return []; }',
           'export async function findRecursoByPlacaUpper() { return null; }',
           'export async function findRecursoByChassiUpper() { return null; }',
           'export async function findRecursoByRenavam() { return null; }',
@@ -52,7 +48,9 @@ registerHooks({
           'export async function findOutroRecursoByRenavam() { return null; }',
           'export async function updateRecursoByIdComUnidadeNome() { return null; }',
           'export async function deleteRecursoById() {',
-          '  throw new Error(\'deleteRecursoById da bridge nao deveria ser chamado nesta suite\');',
+          '  const fn = (globalThis.__GESTOR_RECURSOS_DELETE_BRIDGE_MOCKS__ || {}).deleteRecursoById;',
+          '  if (typeof fn !== "function") throw new Error(\'deleteRecursoById da bridge nao deveria ser chamado nesta suite\');',
+          '  return await fn(...arguments);',
           '}',
         ].join('\n'),
       };
@@ -84,22 +82,6 @@ registerHooks({
         ].join('\n'),
       };
     }
-
-    if (url === repositoryMockModuleUrl) {
-      return {
-        format: 'module',
-        shortCircuit: true,
-        source: [
-          "const getMocks = () => globalThis.__GESTOR_RECURSOS_DELETE_REPOSITORY_MOCKS__ || {};",
-          "export async function deleteRecursoByIdRepo(...args) {",
-          "  const fn = getMocks().deleteRecursoByIdRepo;",
-          "  if (typeof fn !== 'function') throw new Error('deleteRecursoByIdRepo mock ausente');",
-          "  return await fn(...args);",
-          "}",
-        ].join('\n'),
-      };
-    }
-
     return nextLoad(url, context);
   },
 });
@@ -108,8 +90,8 @@ function setServiceMocks(overrides = {}) {
   globalThis.__GESTOR_RECURSOS_DELETE_SERVICE_MOCKS__ = { ...overrides };
 }
 
-function setRepositoryMocks(overrides = {}) {
-  globalThis.__GESTOR_RECURSOS_DELETE_REPOSITORY_MOCKS__ = { ...overrides };
+function setBridgeMocks(overrides = {}) {
+  globalThis.__GESTOR_RECURSOS_DELETE_BRIDGE_MOCKS__ = { ...overrides };
 }
 
 function createResCapture() {
@@ -141,7 +123,7 @@ async function importDeleteRecursoService(tag) {
 
 after(() => {
   delete globalThis.__GESTOR_RECURSOS_DELETE_SERVICE_MOCKS__;
-  delete globalThis.__GESTOR_RECURSOS_DELETE_REPOSITORY_MOCKS__;
+  delete globalThis.__GESTOR_RECURSOS_DELETE_BRIDGE_MOCKS__;
 });
 
 test('deleteRecurso usa o service fino como caminho principal e preserva 404 no escopo efetivo', async () => {
@@ -178,11 +160,11 @@ test('deleteRecurso usa o service fino como caminho principal e preserva 404 no 
 
 test('deleteRecursoScopedService delega a exclusao escopada direto ao repository em escopo unitario e global', async () => {
   const calls = [];
-  setRepositoryMocks({
-    deleteRecursoByIdRepo: async (args) => {
-      calls.push(JSON.parse(JSON.stringify(args)));
-      return { _id: args.id };
-    },
+  setBridgeMocks({
+  deleteRecursoById: async (...args) => {
+    calls.push(JSON.parse(JSON.stringify(args)));
+    return { _id: args[0] };
+  },
   });
 
   const { deleteRecursoScopedService } = await importDeleteRecursoService('service-scope');
@@ -198,15 +180,7 @@ test('deleteRecursoScopedService delega a exclusao escopada direto ao repository
   });
 
   assert.deepEqual(calls, [
-    {
-      unitScope: { type: 'unit', unidadeId: '507f191e810c19729de860ea' },
-      id: '507f191e810c19729de860eb',
-      unidadeId: '507f191e810c19729de860ea',
-    },
-    {
-      unitScope: { type: 'global', unidadeId: null },
-      id: '507f191e810c19729de860ec',
-      unidadeId: null,
-    },
+    ['507f191e810c19729de860eb', '507f191e810c19729de860ea'],
+    ['507f191e810c19729de860ec', null],
   ]);
 });

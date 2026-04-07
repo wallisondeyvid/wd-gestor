@@ -29,12 +29,16 @@ function buildDelegatedCreateSnippet() {
     return original;
   }
 
-  const coreBlockPattern = /if \(\(await findRecursosByFiltroComUnidadeLean\(\{ unidade_id: requestedUnitId, placa: placa\.toUpperCase\(\) \}\)\)\.length > 0\) \{\s*return badRequest\(res, 'Placa já cadastrada'\);\s*\}\s*if \(\(await findRecursosByFiltroComUnidadeLean\(\{ unidade_id: requestedUnitId, chassi: chassi\.toUpperCase\(\) \}\)\)\.length > 0\) \{\s*return badRequest\(res, 'Chassi já cadastrado'\);\s*\}\s*if \(\(await findRecursosByFiltroComUnidadeLean\(\{ unidade_id: requestedUnitId, renavam \}\)\)\.length > 0\) \{\s*return badRequest\(res, 'RENAVAM já cadastrado'\);\s*\}\s*const novoRecurso = await createRecursoDb\(\{\s*unidade_id: requestedUnitId,\s*tipo,\s*placa: placa\.toUpperCase\(\),\s*chassi: chassi\.toUpperCase\(\),\s*renavam,\s*ano: parseInt\(ano\),\s*mod: parseInt\(mod\),\s*marca,\s*modelo,\s*cor,\s*ativo: true,\s*\}\);\s*return created\(res, novoRecurso\._id, \{ data: novoRecurso \}\);/s;
-  assert.match(original, coreBlockPattern, 'Nao foi possivel localizar o bloco atual de createRecurso.');
+  const blockStart = original.indexOf('const createValidation = await recursoWriteValidation.validateCreate({');
+  const blockEndToken = 'return created(res, createResult._id, { data: createResult });';
+  const blockEnd = original.indexOf(blockEndToken, blockStart);
+
+  assert.ok(blockStart >= 0, 'Nao foi possivel localizar o bloco atual de createRecurso.');
+  assert.ok(blockEnd > blockStart, 'Nao foi possivel localizar o fim do bloco atual de createRecurso.');
 
   const delegatedBlock = [
     'const createResult = await processCreateRecursoCore({',
-    '  requestedUnitId,',
+    '  requestedUnitId: access.effectiveUnitId || requestedUnitId,',
     '  tipo,',
     '  placa,',
     '  chassi,',
@@ -44,16 +48,17 @@ function buildDelegatedCreateSnippet() {
     '  marca,',
     '  modelo,',
     '  cor,',
-    '  findRecursosByFiltroComUnidadeLean,',
+    '  recursoWriteValidation,',
     '  createRecursoDb,',
     '});',
+    "if (createResult?.error === 'invalid_placa_format') return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');",
     "if (createResult?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada');",
     "if (createResult?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado');",
     "if (createResult?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado');",
     'return created(res, createResult._id, { data: createResult });',
   ].join('\n\t\t');
 
-  const replaced = original.replace(coreBlockPattern, delegatedBlock);
+  const replaced = `${original.slice(0, blockStart)}${delegatedBlock}${original.slice(blockEnd + blockEndToken.length)}`;
   assert.notEqual(replaced, original, 'Nao foi possivel instalar a seam estrutural de createRecurso em memoria.');
   return replaced;
 }
@@ -148,6 +153,45 @@ function loadCreateOwnerHarness(runtimeOverrides = {}) {
     consoleErrors: [],
   };
 
+  const findRecursosByFiltroComUnidadeLean = runtimeOverrides.findRecursosByFiltroComUnidadeLean ?? (async (filtro) => {
+    callLog.findRecursosByFiltroComUnidadeLeanCalls.push([filtro]);
+    return [];
+  });
+
+  const validateCreate = runtimeOverrides.validateCreate ?? (async (input) => {
+    const placaUpper = String(input?.placa || '').trim().toUpperCase();
+    const chassiUpper = String(input?.chassi || '').trim().toUpperCase();
+    const renavam = String(input?.renavam || '').trim();
+    const placaValida = /^[A-Z]{3}-\d{4}$|^[A-Z]{3}-\d[A-Z]\d{2}$/.test(placaUpper);
+
+    if (!placaValida) return { error: 'invalid_placa_format' };
+    if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: input.requestedUnitId, placa: placaUpper })).length > 0) {
+      return { error: 'duplicate_placa' };
+    }
+    if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: input.requestedUnitId, chassi: chassiUpper })).length > 0) {
+      return { error: 'duplicate_chassi' };
+    }
+    if ((await findRecursosByFiltroComUnidadeLean({ unidade_id: input.requestedUnitId, renavam })).length > 0) {
+      return { error: 'duplicate_renavam' };
+    }
+
+    return {
+      data: {
+        unidade_id: input.requestedUnitId,
+        tipo: input.tipo,
+        placa: placaUpper,
+        chassi: chassiUpper,
+        renavam,
+        ano: parseInt(input.ano),
+        mod: parseInt(input.mod),
+        marca: input.marca,
+        modelo: input.modelo,
+        cor: input.cor,
+        ativo: true,
+      },
+    };
+  });
+
   const deps = {
     created: runtimeOverrides.created ?? ((res, id, payload = {}) => {
       callLog.createdCalls.push([id, payload]);
@@ -156,14 +200,46 @@ function loadCreateOwnerHarness(runtimeOverrides = {}) {
     badRequest: runtimeOverrides.badRequest ?? responseHelpers.badRequest,
     notFound: runtimeOverrides.notFound ?? responseHelpers.notFound,
     serverError: runtimeOverrides.serverError ?? responseHelpers.serverError,
-    findRecursosByFiltroComUnidadeLean: runtimeOverrides.findRecursosByFiltroComUnidadeLean ?? (async (filtro) => {
-      callLog.findRecursosByFiltroComUnidadeLeanCalls.push([filtro]);
-      return [];
-    }),
+    findUnidadeUserBaseLean: runtimeOverrides.findUnidadeUserBaseLean ?? (async () => null),
+    findUnidadesByCondLean: runtimeOverrides.findUnidadesByCondLean ?? (async () => []),
+    findRecursosByFiltroComUnidadeLean,
+    findOutroRecursoByPlacaUpper: runtimeOverrides.findOutroRecursoByPlacaUpper ?? (async () => null),
+    findOutroRecursoByChassiUpper: runtimeOverrides.findOutroRecursoByChassiUpper ?? (async () => null),
+    findOutroRecursoByRenavam: runtimeOverrides.findOutroRecursoByRenavam ?? (async () => null),
     createRecursoDb: runtimeOverrides.createRecursoDb ?? (async (payload) => {
       callLog.createRecursoDbCalls.push([payload]);
       return { _id: CREATED_RESOURCE_ID, ...payload };
     }),
+    createRecursoContextPolicyCore: runtimeOverrides.createRecursoContextPolicyCore ?? (() => ({
+      shouldBlockForMissingContext({ currentUser, scopedUnitId } = {}) {
+        const role = String(currentUser?.role || '').trim().toLowerCase();
+        const isPrivileged = role === 'admin' || role === 'master';
+        return !isPrivileged && !String(scopedUnitId || '').trim();
+      },
+      resolveCanonicalContextUnitId({ scopedUnitId } = {}) {
+        return String(scopedUnitId || '').trim();
+      },
+      ensureRequestedUnitAccess({ currentUser, scopedUnitId, requestedUnitId } = {}) {
+        const role = String(currentUser?.role || '').trim().toLowerCase();
+        const isPrivileged = role === 'admin' || role === 'master';
+        const scopedUnitIdNorm = String(scopedUnitId || '').trim();
+        const requestedUnitIdNorm = String(requestedUnitId || '').trim();
+
+        if (!requestedUnitIdNorm) return { allowed: false, effectiveUnitId: '' };
+        if (isPrivileged && !scopedUnitIdNorm) return { allowed: true, effectiveUnitId: requestedUnitIdNorm };
+        if (scopedUnitIdNorm && requestedUnitIdNorm === scopedUnitIdNorm) return { allowed: true, effectiveUnitId: scopedUnitIdNorm };
+
+        return { allowed: false, effectiveUnitId: '' };
+      },
+    })),
+    createRecursoWriteValidationCore: runtimeOverrides.createRecursoWriteValidationCore ?? (() => ({
+      async validateCreate(input) {
+        return validateCreate(input);
+      },
+      async validateUpdate() {
+        return { data: null };
+      },
+    })),
     processCreateRecursoCore: runtimeOverrides.processCreateRecursoCore ?? (async (input) => {
       callLog.seamCalls.push(input);
       return { _id: CREATED_RESOURCE_ID };
@@ -182,8 +258,15 @@ const created = __deps.created;
 const badRequest = __deps.badRequest;
 const notFound = __deps.notFound;
 const serverError = __deps.serverError;
+const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
+const findUnidadesByCondLean = __deps.findUnidadesByCondLean;
 const findRecursosByFiltroComUnidadeLean = __deps.findRecursosByFiltroComUnidadeLean;
+const findOutroRecursoByPlacaUpper = __deps.findOutroRecursoByPlacaUpper;
+const findOutroRecursoByChassiUpper = __deps.findOutroRecursoByChassiUpper;
+const findOutroRecursoByRenavam = __deps.findOutroRecursoByRenavam;
 const createRecursoDb = __deps.createRecursoDb;
+const createRecursoContextPolicyCore = __deps.createRecursoContextPolicyCore;
+const createRecursoWriteValidationCore = __deps.createRecursoWriteValidationCore;
 const processCreateRecursoCore = __deps.processCreateRecursoCore;
 const console = __deps.console;
 ${snippet}
@@ -276,9 +359,12 @@ test('createRecurso: owner preserva gate contextual da unidade antes da seam', a
 });
 
 test('createRecurso: owner preserva validacao de formato da placa antes da seam', async () => {
+  let seamArgs = null;
   const { createRecurso, callLog } = loadCreateOwnerHarness({
-    processCreateRecursoCore: async () => {
-      throw new Error('nao deve delegar create com placa invalida');
+    processCreateRecursoCore: async (input) => {
+      callLog.seamCalls.push(input);
+      seamArgs = input;
+      return { error: 'invalid_placa_format' };
     },
   });
 
@@ -297,7 +383,11 @@ test('createRecurso: owner preserva validacao de formato da placa antes da seam'
     code: 'BAD_REQUEST',
     message: 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34',
   });
-  assert.equal(callLog.seamCalls.length, 0);
+  assert.ok(seamArgs, 'A validacao de formato atual deve ocorrer dentro da seam de createRecurso.');
+  assert.equal(seamArgs.requestedUnitId, CONTEXTUAL_UNIT_ID);
+  assert.equal(seamArgs.placa, 'ABC1234');
+  assert.equal(typeof seamArgs.recursoWriteValidation?.validateCreate, 'function');
+  assert.equal(callLog.seamCalls.length, 1);
   assert.equal(callLog.createdCalls.length, 0);
 });
 
@@ -332,11 +422,11 @@ test('createRecurso: owner traduz conflitos de duplicidade vindos da seam sem de
       'chassi',
       'cor',
       'createRecursoDb',
-      'findRecursosByFiltroComUnidadeLean',
       'marca',
       'mod',
       'modelo',
       'placa',
+      'recursoWriteValidation',
       'renavam',
       'requestedUnitId',
       'tipo',
@@ -351,7 +441,7 @@ test('createRecurso: owner traduz conflitos de duplicidade vindos da seam sem de
     assert.equal(seamArgs.marca, 'Fiat');
     assert.equal(seamArgs.modelo, 'Argo');
     assert.equal(seamArgs.cor, 'Branco');
-    assert.equal(typeof seamArgs.findRecursosByFiltroComUnidadeLean, 'function');
+    assert.equal(typeof seamArgs.recursoWriteValidation?.validateCreate, 'function');
     assert.equal(typeof seamArgs.createRecursoDb, 'function');
     assert.equal('req' in seamArgs, false);
     assert.equal('res' in seamArgs, false);
@@ -398,29 +488,21 @@ test('createRecurso: owner preserva ordem estrutural owner -> seam -> response f
       callLog.seamCalls.push(input);
       seamArgs = input;
 
-      if ((await input.findRecursosByFiltroComUnidadeLean({ unidade_id: input.requestedUnitId, placa: input.placa.toUpperCase() })).length > 0) {
-        return { error: 'duplicate_placa' };
-      }
-      if ((await input.findRecursosByFiltroComUnidadeLean({ unidade_id: input.requestedUnitId, chassi: input.chassi.toUpperCase() })).length > 0) {
-        return { error: 'duplicate_chassi' };
-      }
-      if ((await input.findRecursosByFiltroComUnidadeLean({ unidade_id: input.requestedUnitId, renavam: input.renavam })).length > 0) {
-        return { error: 'duplicate_renavam' };
-      }
-
-      return await input.createRecursoDb({
-        unidade_id: input.requestedUnitId,
+      const createValidation = await input.recursoWriteValidation.validateCreate({
+        requestedUnitId: input.requestedUnitId,
         tipo: input.tipo,
-        placa: input.placa.toUpperCase(),
-        chassi: input.chassi.toUpperCase(),
+        placa: input.placa,
+        chassi: input.chassi,
         renavam: input.renavam,
-        ano: parseInt(input.ano),
-        mod: parseInt(input.mod),
+        ano: input.ano,
+        mod: input.mod,
         marca: input.marca,
         modelo: input.modelo,
         cor: input.cor,
-        ativo: true,
       });
+      if (createValidation?.error) return createValidation;
+
+      return await input.createRecursoDb(createValidation.data);
     },
     createRecursoDb: async (payload) => {
       callLog.createRecursoDbCalls.push([payload]);

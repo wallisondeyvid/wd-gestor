@@ -123,10 +123,34 @@ function loadGetByIdOwnerHarness(runtimeOverrides = {}) {
     badRequest: runtimeOverrides.badRequest ?? responseHelpers.badRequest,
     notFound: runtimeOverrides.notFound ?? responseHelpers.notFound,
     serverError: runtimeOverrides.serverError ?? responseHelpers.serverError,
+    findUnidadeUserBaseLean: runtimeOverrides.findUnidadeUserBaseLean ?? (async () => null),
+    findUnidadesByCondLean: runtimeOverrides.findUnidadesByCondLean ?? (async () => []),
     findRecursoByIdComUnidadeNome: runtimeOverrides.findRecursoByIdComUnidadeNome ?? (async (id, unidadeEfetiva) => {
       callLog.findRecursoByIdComUnidadeNomeCalls.push([id, unidadeEfetiva]);
       return null;
     }),
+    findRecursosByFiltroComUnidadeLean: runtimeOverrides.findRecursosByFiltroComUnidadeLean ?? (async () => []),
+    findOutroRecursoByPlacaUpper: runtimeOverrides.findOutroRecursoByPlacaUpper ?? (async () => null),
+    findOutroRecursoByChassiUpper: runtimeOverrides.findOutroRecursoByChassiUpper ?? (async () => null),
+    findOutroRecursoByRenavam: runtimeOverrides.findOutroRecursoByRenavam ?? (async () => null),
+    createRecursoContextPolicyCore: runtimeOverrides.createRecursoContextPolicyCore ?? (() => ({
+      shouldBlockForMissingContext({ currentUser, scopedUnitId } = {}) {
+        const role = String(currentUser?.role || '').trim().toLowerCase();
+        const isPrivileged = role === 'admin' || role === 'master';
+        return !isPrivileged && !String(scopedUnitId || '').trim();
+      },
+      resolveCanonicalContextUnitId({ scopedUnitId } = {}) {
+        return String(scopedUnitId || '').trim();
+      },
+    })),
+    createRecursoWriteValidationCore: runtimeOverrides.createRecursoWriteValidationCore ?? (() => ({
+      async validateCreate() {
+        return { data: null };
+      },
+      async validateUpdate() {
+        return { data: null };
+      },
+    })),
     getRecursoByIdCore: runtimeOverrides.getRecursoByIdCore ?? (async (input) => {
       callLog.seamCalls.push(input);
       return null;
@@ -145,7 +169,15 @@ const ok = __deps.ok;
 const badRequest = __deps.badRequest;
 const notFound = __deps.notFound;
 const serverError = __deps.serverError;
+const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
+const findUnidadesByCondLean = __deps.findUnidadesByCondLean;
 const findRecursoByIdComUnidadeNome = __deps.findRecursoByIdComUnidadeNome;
+const findRecursosByFiltroComUnidadeLean = __deps.findRecursosByFiltroComUnidadeLean;
+const findOutroRecursoByPlacaUpper = __deps.findOutroRecursoByPlacaUpper;
+const findOutroRecursoByChassiUpper = __deps.findOutroRecursoByChassiUpper;
+const findOutroRecursoByRenavam = __deps.findOutroRecursoByRenavam;
+const createRecursoContextPolicyCore = __deps.createRecursoContextPolicyCore;
+const createRecursoWriteValidationCore = __deps.createRecursoWriteValidationCore;
 const getRecursoByIdCore = __deps.getRecursoByIdCore;
 const console = __deps.console;
 ${snippet}

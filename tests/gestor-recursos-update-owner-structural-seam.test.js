@@ -25,15 +25,15 @@ function extractUpdateOwnerSnippet(source) {
 
 function buildDelegatedUpdateSnippet() {
 	const original = extractUpdateOwnerSnippet(CONTROLLER_SOURCE);
-	if (original.includes('processUpdateRecursoCore({')) {
+	if (original.includes('const updateValidation = await processUpdateRecursoCore({')) {
 		return original;
 	}
 
-	const coreBlockPattern = /if \(placa && placa\.toUpperCase\(\) !== recurso\.placa && await findOutroRecursoByPlacaUpper\(req\.params\.id, placa\.toUpperCase\(\), unidadeEfetiva\)\) \{\s*return badRequest\(res, 'Placa já cadastrada para outro recurso'\);\s*\}\s*if \(chassi && chassi\.toUpperCase\(\) !== recurso\.chassi && await findOutroRecursoByChassiUpper\(req\.params\.id, chassi\.toUpperCase\(\), unidadeEfetiva\)\) \{\s*return badRequest\(res, 'Chassi já cadastrado para outro recurso'\);\s*\}\s*if \(renavam && renavam !== recurso\.renavam && await findOutroRecursoByRenavam\(req\.params\.id, renavam, unidadeEfetiva\)\) \{\s*return badRequest\(res, 'RENAVAM já cadastrado para outro recurso'\);\s*\}\s*const atualizado = await updateRecursoByIdComUnidadeNome\(\s*req\.params\.id,\s*\{\s*unidade_id: requestedUnitId,\s*tipo,\s*placa: placa \? placa\.toUpperCase\(\) : recurso\.placa,\s*chassi: chassi \? chassi\.toUpperCase\(\) : recurso\.chassi,\s*renavam,\s*ano: ano \? parseInt\(ano\) : recurso\.ano,\s*mod: mod \? parseInt\(mod\) : recurso\.mod,\s*marca,\s*modelo,\s*cor,\s*ativo: ativo !== undefined \? ativo : recurso\.ativo,\s*\},\s*unidadeEfetiva \|\| null,\s*\);\s*if \(!atualizado\) return notFound\(res, 'Recurso não encontrado'\);\s*return ok\(res, atualizado\);/s;
+	const coreBlockPattern = /const updateValidation = await recursoWriteValidation\.validateUpdate\(\{\s*id: req\.params\.id,\s*unidadeEfetiva,\s*recurso,\s*tipo,\s*placa,\s*chassi,\s*renavam,\s*ano,\s*mod,\s*marca,\s*modelo,\s*cor,\s*ativo,\s*\}\);\s*if \(updateValidation\?\.error === 'invalid_placa_format'\) return badRequest\(res, 'Formato de placa inválido\. Use ABC-1234 ou ABC-1D34'\);\s*if \(updateValidation\?\.error === 'duplicate_placa'\) return badRequest\(res, 'Placa já cadastrada para outro recurso'\);\s*if \(updateValidation\?\.error === 'duplicate_chassi'\) return badRequest\(res, 'Chassi já cadastrado para outro recurso'\);\s*if \(updateValidation\?\.error === 'duplicate_renavam'\) return badRequest\(res, 'RENAVAM já cadastrado para outro recurso'\);\s*const updateResult = await updateRecursoByIdComUnidadeNome\(\s*req\.params\.id,\s*updateValidation\.data,\s*unidadeEfetiva \|\| null,\s*\);\s*if \(!updateResult\) return notFound\(res, 'Recurso não encontrado'\);\s*return ok\(res, updateResult\);/s;
 	assert.match(original, coreBlockPattern, 'Nao foi possivel localizar o bloco atual de updateRecurso.');
 
 	const delegatedBlock = [
-		'const updateResult = await processUpdateRecursoCore({',
+		'const updateValidation = await processUpdateRecursoCore({',
 		'  id: req.params.id,',
 		'  unidadeEfetiva,',
 		'  recurso,',
@@ -47,14 +47,16 @@ function buildDelegatedUpdateSnippet() {
 		'  modelo,',
 		'  cor,',
 		'  ativo,',
-		'  findOutroRecursoByPlacaUpper,',
-		'  findOutroRecursoByChassiUpper,',
-		'  findOutroRecursoByRenavam,',
-		'  updateRecursoByIdComUnidadeNome,',
 		'});',
-		"if (updateResult?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada para outro recurso');",
-		"if (updateResult?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado para outro recurso');",
-		"if (updateResult?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado para outro recurso');",
+		"if (updateValidation?.error === 'invalid_placa_format') return badRequest(res, 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34');",
+		"if (updateValidation?.error === 'duplicate_placa') return badRequest(res, 'Placa já cadastrada para outro recurso');",
+		"if (updateValidation?.error === 'duplicate_chassi') return badRequest(res, 'Chassi já cadastrado para outro recurso');",
+		"if (updateValidation?.error === 'duplicate_renavam') return badRequest(res, 'RENAVAM já cadastrado para outro recurso');",
+		'const updateResult = await updateRecursoByIdComUnidadeNome(',
+		'  req.params.id,',
+		'  updateValidation.data,',
+		'  unidadeEfetiva || null,',
+		');',
 		"if (!updateResult) return notFound(res, 'Recurso não encontrado');",
 		'return ok(res, updateResult);',
 	].join('\n\t\t');
@@ -181,6 +183,9 @@ function loadUpdateOwnerHarness(runtimeOverrides = {}) {
 	};
 
 	const deps = {
+		findUnidadeUserBaseLean: runtimeOverrides.findUnidadeUserBaseLean ?? (async () => null),
+		findUnidadesByCondLean: runtimeOverrides.findUnidadesByCondLean ?? (async () => []),
+		findRecursosByFiltroComUnidadeLean: runtimeOverrides.findRecursosByFiltroComUnidadeLean ?? (async () => []),
 		ok: runtimeOverrides.ok ?? ((res, payload = {}) => {
 			callLog.okCalls.push([payload]);
 			return responseHelpers.ok(res, payload);
@@ -210,8 +215,35 @@ function loadUpdateOwnerHarness(runtimeOverrides = {}) {
 		}),
 		processUpdateRecursoCore: runtimeOverrides.processUpdateRecursoCore ?? (async (input) => {
 			callLog.seamCalls.push(input);
-			return existingResource();
+			return { data: input };
 		}),
+		createRecursoContextPolicyCore: runtimeOverrides.createRecursoContextPolicyCore ?? (() => ({
+			shouldBlockForMissingContext(context) {
+				const role = context?.currentUser?.role || context?.sessionUser?.role || null;
+				const isPrivileged = role === 'admin' || role === 'master' || context?.currentUser?.isMaster === true;
+				return !isPrivileged && !context?.scopedUnitId;
+			},
+			resolveCanonicalContextUnitId(context) {
+				return context?.scopedUnitId || null;
+			},
+			ensureRequestedUnitAccess(context) {
+				const role = context?.currentUser?.role || context?.sessionUser?.role || null;
+				const isPrivileged = role === 'admin' || role === 'master' || context?.currentUser?.isMaster === true;
+				if (isPrivileged) {
+					return { allowed: true, effectiveUnitId: context?.requestedUnitId || null };
+				}
+				if (context?.scopedUnitId && context?.requestedUnitId === context.scopedUnitId) {
+					return { allowed: true, effectiveUnitId: context.scopedUnitId };
+				}
+				return { allowed: false, effectiveUnitId: null };
+			},
+		})),
+		createRecursoWriteValidationCore: runtimeOverrides.createRecursoWriteValidationCore ?? (() => ({
+			validateCreate: async () => ({ data: {} }),
+			validateUpdate: async (input) => runtimeOverrides.processUpdateRecursoCore
+				? runtimeOverrides.processUpdateRecursoCore(input)
+				: deps.processUpdateRecursoCore(input),
+		})),
 		console: runtimeOverrides.console ?? {
 			error(...args) {
 				callLog.consoleErrors.push(args);
@@ -226,11 +258,16 @@ const ok = __deps.ok;
 const badRequest = __deps.badRequest;
 const notFound = __deps.notFound;
 const serverError = __deps.serverError;
+const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
+const findUnidadesByCondLean = __deps.findUnidadesByCondLean;
+const findRecursosByFiltroComUnidadeLean = __deps.findRecursosByFiltroComUnidadeLean;
 const findRecursoByIdComUnidadeNome = __deps.findRecursoByIdComUnidadeNome;
 const findOutroRecursoByPlacaUpper = __deps.findOutroRecursoByPlacaUpper;
 const findOutroRecursoByChassiUpper = __deps.findOutroRecursoByChassiUpper;
 const findOutroRecursoByRenavam = __deps.findOutroRecursoByRenavam;
 const updateRecursoByIdComUnidadeNome = __deps.updateRecursoByIdComUnidadeNome;
+const createRecursoContextPolicyCore = __deps.createRecursoContextPolicyCore;
+const createRecursoWriteValidationCore = __deps.createRecursoWriteValidationCore;
 const processUpdateRecursoCore = __deps.processUpdateRecursoCore;
 const console = __deps.console;
 ${snippet}
@@ -382,10 +419,11 @@ test('updateRecurso: owner preserva lookup escopado do recurso existente antes d
 	assert.equal(callLog.okCalls.length, 0);
 });
 
-test('updateRecurso: owner preserva validacao de formato da placa antes da seam', async () => {
+test('updateRecurso: owner traduz invalid_placa_format vindo da seam baseada em validateUpdate', async () => {
 	const { updateRecurso, callLog } = loadUpdateOwnerHarness({
-		processUpdateRecursoCore: async () => {
-			throw new Error('nao deve delegar update com placa invalida');
+		processUpdateRecursoCore: async (input) => {
+			callLog.seamCalls.push(input);
+			return { error: 'invalid_placa_format' };
 		},
 	});
 
@@ -404,7 +442,8 @@ test('updateRecurso: owner preserva validacao de formato da placa antes da seam'
 		code: 'BAD_REQUEST',
 		message: 'Formato de placa inválido. Use ABC-1234 ou ABC-1D34',
 	});
-	assert.equal(callLog.seamCalls.length, 0);
+	assert.equal(callLog.seamCalls.length, 1);
+	assert.equal(callLog.updateRecursoByIdComUnidadeNomeCalls.length, 0);
 	assert.equal(callLog.okCalls.length, 0);
 });
 
@@ -450,9 +489,6 @@ test('updateRecurso: owner traduz conflitos vindos da seam sem delegar HTTP', as
 			'ativo',
 			'chassi',
 			'cor',
-			'findOutroRecursoByChassiUpper',
-			'findOutroRecursoByPlacaUpper',
-			'findOutroRecursoByRenavam',
 			'id',
 			'marca',
 			'mod',
@@ -462,7 +498,6 @@ test('updateRecurso: owner traduz conflitos vindos da seam sem delegar HTTP', as
 			'renavam',
 			'tipo',
 			'unidadeEfetiva',
-			'updateRecursoByIdComUnidadeNome',
 		].sort());
 		assert.equal(seamArgs.id, RESOURCE_ID);
 		assert.equal(seamArgs.unidadeEfetiva, CONTEXTUAL_UNIT_ID);
@@ -477,10 +512,6 @@ test('updateRecurso: owner traduz conflitos vindos da seam sem delegar HTTP', as
 		assert.equal(seamArgs.modelo, 'Corolla');
 		assert.equal(seamArgs.cor, 'Preto');
 		assert.equal(seamArgs.ativo, false);
-		assert.equal(typeof seamArgs.findOutroRecursoByPlacaUpper, 'function');
-		assert.equal(typeof seamArgs.findOutroRecursoByChassiUpper, 'function');
-		assert.equal(typeof seamArgs.findOutroRecursoByRenavam, 'function');
-		assert.equal(typeof seamArgs.updateRecursoByIdComUnidadeNome, 'function');
 		assert.equal('req' in seamArgs, false);
 		assert.equal('res' in seamArgs, false);
 		assert.equal('ok' in seamArgs, false);
@@ -526,35 +557,21 @@ test('updateRecurso: owner preserva ordem estrutural owner -> seam -> response f
 			callLog.seamCalls.push(input);
 			seamArgs = input;
 
-			if (input.placa && input.placa.toUpperCase() !== input.recurso.placa && await input.findOutroRecursoByPlacaUpper(input.id, input.placa.toUpperCase(), input.unidadeEfetiva)) {
-				return { error: 'duplicate_placa' };
-			}
-
-			if (input.chassi && input.chassi.toUpperCase() !== input.recurso.chassi && await input.findOutroRecursoByChassiUpper(input.id, input.chassi.toUpperCase(), input.unidadeEfetiva)) {
-				return { error: 'duplicate_chassi' };
-			}
-
-			if (input.renavam && input.renavam !== input.recurso.renavam && await input.findOutroRecursoByRenavam(input.id, input.renavam, input.unidadeEfetiva)) {
-				return { error: 'duplicate_renavam' };
-			}
-
-			return await input.updateRecursoByIdComUnidadeNome(
-				input.id,
-				{
+			return {
+				data: {
 					unidade_id: input.unidadeEfetiva,
 					tipo: input.tipo,
-					placa: input.placa ? input.placa.toUpperCase() : input.recurso.placa,
-					chassi: input.chassi ? input.chassi.toUpperCase() : input.recurso.chassi,
+					placa: input.placa,
+					chassi: input.chassi,
 					renavam: input.renavam,
-					ano: input.ano ? parseInt(input.ano) : input.recurso.ano,
-					mod: input.mod ? parseInt(input.mod) : input.recurso.mod,
+					ano: parseInt(input.ano),
+					mod: parseInt(input.mod),
 					marca: input.marca,
 					modelo: input.modelo,
 					cor: input.cor,
-					ativo: input.ativo !== undefined ? input.ativo : input.recurso.ativo,
+					ativo: input.ativo,
 				},
-				input.unidadeEfetiva || null,
-			);
+			};
 		},
 		updateRecursoByIdComUnidadeNome: async (...args) => {
 			callLog.updateRecursoByIdComUnidadeNomeCalls.push(args);
@@ -583,9 +600,6 @@ test('updateRecurso: owner preserva ordem estrutural owner -> seam -> response f
 
 	assert.ok(seamArgs, 'A seam futura deve ser chamada no caminho de sucesso.');
 	assert.deepEqual(callOrder, ['seam', 'ok']);
-	assert.deepEqual(toPlainJson(callLog.findOutroRecursoByPlacaUpperCalls), [[RESOURCE_ID, 'ZZZ-9Z99', CONTEXTUAL_UNIT_ID]]);
-	assert.deepEqual(toPlainJson(callLog.findOutroRecursoByChassiUpperCalls), [[RESOURCE_ID, '9BWZZZ377VT004252', CONTEXTUAL_UNIT_ID]]);
-	assert.deepEqual(toPlainJson(callLog.findOutroRecursoByRenavamCalls), [[RESOURCE_ID, '10987654321', CONTEXTUAL_UNIT_ID]]);
 	assert.deepEqual(toPlainJson(callLog.updateRecursoByIdComUnidadeNomeCalls), [[
 		RESOURCE_ID,
 		{
@@ -603,6 +617,21 @@ test('updateRecurso: owner preserva ordem estrutural owner -> seam -> response f
 		},
 		CONTEXTUAL_UNIT_ID,
 	]]);
+	assert.deepEqual(Object.keys(seamArgs).sort(), [
+		'ano',
+		'ativo',
+		'chassi',
+		'cor',
+		'id',
+		'marca',
+		'mod',
+		'modelo',
+		'placa',
+		'recurso',
+		'renavam',
+		'tipo',
+		'unidadeEfetiva',
+	].sort());
 	assert.equal(res.statusCode, 200);
 	assert.deepEqual(toPlainJson(res.body), {
 		success: true,

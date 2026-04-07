@@ -164,7 +164,8 @@ async function invokeOwner({ reqOverrides = {}, bridgeOverrides = {} } = {}) {
 }
 
 async function requestGestorApp(pathname, body) {
-	const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app-${encodeURIComponent(uniqueSuffix())}`);
+	const { default: buildGestorApp } = await import(`${gestorAppModuleUrl}?case=app-${encodeURIComponent(uniqueSuffix())}`);
+	const gestorApp = buildGestorApp();
 	const rootApp = express();
 	rootApp.use('/gestor', gestorApp);
 
