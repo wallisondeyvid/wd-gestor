@@ -1,0 +1,1 @@
+export { executeCreateFuncionarioCoreService } from '#modules/gestor/app/services/legacy/funcionarioCreateCoreService.js';
