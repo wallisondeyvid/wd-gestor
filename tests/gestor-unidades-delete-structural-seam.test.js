@@ -1,5 +1,82 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { registerHooks } from 'node:module';
+
+const DELETE_EXECUTION_SERVICE_MOCK_MODULE_URL = 'mock:gestor-unidades-delete-structural-delete-service';
+const API_DB_BRIDGE_SERVICE_MOCK_MODULE_URL = 'mock:gestor-unidades-delete-structural-api-db-bridge';
+
+function nextMockToken() {
+	return `${Date.now()}-${Math.random()}`;
+}
+
+function getDeleteStructuralDeleteServiceMocks() {
+	if (!globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DELETE_SERVICE_MOCKS__) {
+		globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DELETE_SERVICE_MOCKS__ = new Map();
+	}
+	return globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DELETE_SERVICE_MOCKS__;
+}
+
+function getDeleteStructuralApiDbBridgeMocks() {
+	if (!globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_API_DB_BRIDGE_MOCKS__) {
+		globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_API_DB_BRIDGE_MOCKS__ = new Map();
+	}
+	return globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_API_DB_BRIDGE_MOCKS__;
+}
+
+registerHooks({
+	resolve(specifier, context, nextResolve) {
+		if (
+			specifier === '#modules/gestor/app/services/unidades/deleteUnidadeExecution.service.js' &&
+			globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DELETE_SERVICE_TOKEN__
+		) {
+			return {
+				url: `${DELETE_EXECUTION_SERVICE_MOCK_MODULE_URL}?token=${globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DELETE_SERVICE_TOKEN__}`,
+				shortCircuit: true,
+			};
+		}
+		if (
+			specifier === '#modules/gestor/app/services/apiDbBridgeService.js' &&
+			globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_INTERCEPT_API_DB_BRIDGE__ &&
+			globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_API_DB_BRIDGE_TOKEN__
+		) {
+			return {
+				url: `${API_DB_BRIDGE_SERVICE_MOCK_MODULE_URL}?token=${globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_API_DB_BRIDGE_TOKEN__}`,
+				shortCircuit: true,
+			};
+		}
+		return nextResolve(specifier, context);
+	},
+	load(url, context, nextLoad) {
+		if (url.startsWith(DELETE_EXECUTION_SERVICE_MOCK_MODULE_URL)) {
+			return {
+				format: 'module',
+				shortCircuit: true,
+				source: [
+					`const token = ${JSON.stringify(url.split('?token=')[1] || '')};`,
+					"const mock = globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DELETE_SERVICE_MOCKS__?.get(token) || {};",
+					"export const findUnidadeDeleteCandidateService = mock.findUnidadeDeleteCandidateService;",
+					"export const deleteUnidadeExecutionService = mock.deleteUnidadeExecutionService;",
+				].join('\n'),
+			};
+		}
+
+		if (url.startsWith(API_DB_BRIDGE_SERVICE_MOCK_MODULE_URL)) {
+			return {
+				format: 'module',
+				shortCircuit: true,
+				source: [
+					`const token = ${JSON.stringify(url.split('?token=')[1] || '')};`,
+					"const mock = globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_API_DB_BRIDGE_MOCKS__?.get(token) || {};",
+					"export const findUnidadeById = mock.findUnidadeById;",
+					"export const findUnidadeByIdLean = mock.findUnidadeByIdLean;",
+					"export const deleteUnidadeById = mock.deleteUnidadeById;",
+				].join('\n'),
+			};
+		}
+
+		return nextLoad(url, context);
+	},
+});
 
 function createMockRes() {
 	return {
@@ -25,6 +102,34 @@ function nextModuleUrl(relativePath) {
 	return new URL(`${relativePath}?case=${Date.now()}-${Math.random()}`, import.meta.url).href;
 }
 
+function setDeleteStructuralDeleteServiceMocks(mocks) {
+	const token = nextMockToken();
+	getDeleteStructuralDeleteServiceMocks().set(token, mocks);
+	globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DELETE_SERVICE_TOKEN__ = token;
+	return token;
+}
+
+function clearDeleteStructuralDeleteServiceMocks(token) {
+	getDeleteStructuralDeleteServiceMocks().delete(token);
+	delete globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DELETE_SERVICE_TOKEN__;
+}
+
+function setDeleteStructuralApiDbBridgeMocks(mocks) {
+	const token = nextMockToken();
+	getDeleteStructuralApiDbBridgeMocks().set(token, mocks);
+	globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_API_DB_BRIDGE_TOKEN__ = token;
+	return token;
+}
+
+function clearDeleteStructuralApiDbBridgeMocks(token) {
+	getDeleteStructuralApiDbBridgeMocks().delete(token);
+	delete globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_API_DB_BRIDGE_TOKEN__;
+}
+
+function setDeleteStructuralApiDbBridgeInterception(enabled) {
+	globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_INTERCEPT_API_DB_BRIDGE__ = enabled;
+}
+
 async function importControllerWithDeleteServiceMock(t, implementation = {}) {
 	const findCalls = [];
 	const deleteCalls = [];
@@ -41,43 +146,38 @@ async function importControllerWithDeleteServiceMock(t, implementation = {}) {
 		return implementation.deleteResult;
 	});
 
-	t.mock.module('#modules/gestor/app/services/unidades/deleteUnidadeExecution.service.js', {
-		namedExports: {
-			findUnidadeDeleteCandidateService,
-			deleteUnidadeExecutionService,
-		},
+	const mockToken = setDeleteStructuralDeleteServiceMocks({
+		findUnidadeDeleteCandidateService,
+		deleteUnidadeExecutionService,
 	});
 
-	const controllerModule = await import(nextModuleUrl('../src/modules/gestor/app/controllers/unidadeApiController.js'));
-	return {
-		deleteUnidade: controllerModule.deleteUnidade,
-		findCalls,
-		deleteCalls,
-	};
+	try {
+		const controllerModule = await import(nextModuleUrl('../src/modules/gestor/app/controllers/unidadeApiController.js'));
+		return {
+			deleteUnidade: controllerModule.deleteUnidade,
+			findCalls,
+			deleteCalls,
+		};
+	} finally {
+		clearDeleteStructuralDeleteServiceMocks(mockToken);
+	}
 }
 
 async function importDeleteUnidadeServiceWithMocks(t, implementation = {}) {
-	const readRepoCalls = [];
-	const writeRepoCalls = [];
 	const bridgeFindCalls = [];
+	const bridgeFindLeanCalls = [];
 	const bridgeDeleteCalls = [];
-
-	const findUnidadeByIdLeanRepo = t.mock.fn(async (args) => {
-		readRepoCalls.push(args);
-		if (implementation.readRepoError) throw implementation.readRepoError;
-		return implementation.readRepoResult;
-	});
-
-	const deleteUnidadeByIdRepo = t.mock.fn(async (args) => {
-		writeRepoCalls.push(args);
-		if (implementation.writeRepoError) throw implementation.writeRepoError;
-		return implementation.writeRepoResult;
-	});
 
 	const findUnidadeById = t.mock.fn(async (unidadeId) => {
 		bridgeFindCalls.push(unidadeId);
 		if (implementation.bridgeFindError) throw implementation.bridgeFindError;
 		return implementation.bridgeFindResult;
+	});
+
+	const findUnidadeByIdLean = t.mock.fn(async (unidadeId) => {
+		bridgeFindLeanCalls.push(unidadeId);
+		if (implementation.bridgeFindLeanError) throw implementation.bridgeFindLeanError;
+		return implementation.bridgeFindLeanResult;
 	});
 
 	const deleteUnidadeById = t.mock.fn(async (unidadeId) => {
@@ -86,34 +186,26 @@ async function importDeleteUnidadeServiceWithMocks(t, implementation = {}) {
 		return implementation.bridgeDeleteResult;
 	});
 
-	t.mock.module('#modules/gestor/app/repositories/UnidadeReadRepository.js', {
-		namedExports: {
-			findUnidadeByIdLeanRepo,
-		},
+	const mockToken = setDeleteStructuralApiDbBridgeMocks({
+		findUnidadeById,
+		findUnidadeByIdLean,
+		deleteUnidadeById,
 	});
+	setDeleteStructuralApiDbBridgeInterception(true);
 
-	t.mock.module('#modules/gestor/app/repositories/UnidadeWriteRepository.js', {
-		namedExports: {
-			deleteUnidadeByIdRepo,
-		},
-	});
-
-	t.mock.module('#modules/gestor/app/services/apiDbBridgeService.js', {
-		namedExports: {
-			findUnidadeById,
-			deleteUnidadeById,
-		},
-	});
-
-	const serviceModule = await import(nextModuleUrl('../src/modules/gestor/app/services/unidades/deleteUnidadeExecution.service.js'));
-	return {
-		findUnidadeDeleteCandidateService: serviceModule.findUnidadeDeleteCandidateService,
-		deleteUnidadeExecutionService: serviceModule.deleteUnidadeExecutionService,
-		readRepoCalls,
-		writeRepoCalls,
-		bridgeFindCalls,
-		bridgeDeleteCalls,
-	};
+	try {
+		const serviceModule = await import(nextModuleUrl('../src/modules/gestor/app/services/unidades/deleteUnidadeExecution.service.js'));
+		return {
+			findUnidadeDeleteCandidateService: serviceModule.findUnidadeDeleteCandidateService,
+			deleteUnidadeExecutionService: serviceModule.deleteUnidadeExecutionService,
+			bridgeFindCalls,
+			bridgeFindLeanCalls,
+			bridgeDeleteCalls,
+		};
+	} finally {
+		setDeleteStructuralApiDbBridgeInterception(false);
+		clearDeleteStructuralApiDbBridgeMocks(mockToken);
+	}
 }
 
 test('deleteUnidade preserva o gate de role user sem chamar o service fino', async (t) => {
@@ -209,26 +301,24 @@ test('findUnidadeDeleteCandidateService usa repository real para id valido', asy
 	const unidadeId = '507f1f77bcf86cd799439011';
 	const {
 		findUnidadeDeleteCandidateService,
-		readRepoCalls,
 		bridgeFindCalls,
+		bridgeFindLeanCalls,
 	} = await importDeleteUnidadeServiceWithMocks(t, {
-		readRepoResult: { _id: unidadeId, nome: 'Unidade valida' },
+		bridgeFindLeanResult: { _id: unidadeId, nome: 'Unidade valida' },
 	});
 
 	const result = await findUnidadeDeleteCandidateService({ unidadeId });
 
 	assert.deepEqual(result, { _id: unidadeId, nome: 'Unidade valida' });
-	assert.equal(readRepoCalls.length, 1);
-	assert.equal(readRepoCalls[0].unidadeId, unidadeId);
-	assert.equal(readRepoCalls[0].unitScope?.unidadeId, unidadeId);
+	assert.deepEqual(bridgeFindLeanCalls, [unidadeId]);
 	assert.equal(bridgeFindCalls.length, 0);
 });
 
 test('findUnidadeDeleteCandidateService faz fallback para bridge compat quando o id e invalido', async (t) => {
 	const {
 		findUnidadeDeleteCandidateService,
-		readRepoCalls,
 		bridgeFindCalls,
+		bridgeFindLeanCalls,
 	} = await importDeleteUnidadeServiceWithMocks(t, {
 		bridgeFindResult: null,
 	});
@@ -236,32 +326,27 @@ test('findUnidadeDeleteCandidateService faz fallback para bridge compat quando o
 	const result = await findUnidadeDeleteCandidateService({ unidadeId: 'u-invalida' });
 
 	assert.equal(result, null);
-	assert.equal(readRepoCalls.length, 0);
+	assert.equal(bridgeFindLeanCalls.length, 0);
 	assert.deepEqual(bridgeFindCalls, ['u-invalida']);
 });
 
-test('deleteUnidadeExecutionService usa repository real para id valido', async (t) => {
+test('deleteUnidadeExecutionService usa o bridge permitido para id valido', async (t) => {
 	const unidadeId = '507f1f77bcf86cd799439012';
 	const {
 		deleteUnidadeExecutionService,
-		writeRepoCalls,
 		bridgeDeleteCalls,
 	} = await importDeleteUnidadeServiceWithMocks(t, {
-		writeRepoResult: { _id: unidadeId },
+		bridgeDeleteResult: { _id: unidadeId },
 	});
 
 	await deleteUnidadeExecutionService({ unidadeId });
 
-	assert.equal(writeRepoCalls.length, 1);
-	assert.equal(writeRepoCalls[0].unidadeId, unidadeId);
-	assert.equal(writeRepoCalls[0].unitScope?.unidadeId, unidadeId);
-	assert.equal(bridgeDeleteCalls.length, 0);
+	assert.deepEqual(bridgeDeleteCalls, [unidadeId]);
 });
 
 test('deleteUnidadeExecutionService faz fallback para bridge compat quando o id e invalido', async (t) => {
 	const {
 		deleteUnidadeExecutionService,
-		writeRepoCalls,
 		bridgeDeleteCalls,
 	} = await importDeleteUnidadeServiceWithMocks(t, {
 		bridgeDeleteResult: undefined,
@@ -269,6 +354,5 @@ test('deleteUnidadeExecutionService faz fallback para bridge compat quando o id 
 
 	await deleteUnidadeExecutionService({ unidadeId: 'u-invalida' });
 
-	assert.equal(writeRepoCalls.length, 0);
 	assert.deepEqual(bridgeDeleteCalls, ['u-invalida']);
 });

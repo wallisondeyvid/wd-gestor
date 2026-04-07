@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { after, before, beforeEach, describe, it, mock } from 'node:test';
+import { after, before, beforeEach, describe, it } from 'node:test';
+import { registerHooks } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import http from 'node:http';
@@ -9,11 +10,53 @@ import session from 'express-session';
 const ROOT = process.cwd();
 const GESTOR_APP_URL = pathToFileURL(path.join(ROOT, 'src/modules/gestor/app/gestor-app.js')).href;
 
-function createEmptyRouter() {
-  const router = express.Router();
-  router.use((req, res, next) => next());
-  return router;
-}
+const ROUTE_STUB_URLS = new Set([
+  'src/modules/gestor/app/routes/auth.js',
+  'src/modules/gestor/app/routes/usuario.js',
+  'src/modules/gestor/app/routes/unidade.js',
+  'src/modules/gestor/app/routes/funcionario.js',
+  'src/modules/gestor/app/routes/funcao.js',
+  'src/modules/gestor/app/routes/setor.js',
+  'src/modules/gestor/app/routes/recurso.js',
+  'src/modules/gestor/app/routes/modulo.js',
+  'src/modules/gestor/app/routes/dashboard.js',
+  'src/modules/gestor/app/routes/pagesRouter.js',
+  'src/modules/gestor/app/routes/userApi.js',
+  'src/modules/gestor/app/routes/unidadeApi.js',
+  'src/modules/gestor/app/routes/funcaoApi.js',
+  'src/modules/gestor/app/routes/setorApi.js',
+  'src/modules/gestor/app/routes/recursoApi.js',
+  'src/modules/gestor/app/routes/biometriaApi.js',
+  'src/modules/gestor/app/routes/funcionarioApi.js',
+  'src/modules/gestor/app/routes/cnaeApi.js',
+  'src/modules/gestor/app/routes/moduloApi.js',
+  'src/modules/gestor/app/routes/debugApi.js',
+  'src/modules/gestor/app/routes/userAdminApi.js',
+  'src/modules/gestor/app/routes/miscApi.js',
+  'src/modules/gestor/app/routes/bancoApi.js',
+  'src/modules/gestor/app/routes/faceBiometriaUploadApi.js',
+  'src/modules/gestor/app/routes/feedbackApi.js',
+  'src/modules/gestor/app/routes/widgetSettingsApi.js',
+].map((file) => pathToFileURL(path.join(ROOT, file)).href));
+
+const MODEL_STUB_URLS = new Set([
+  'src/core/models/user.js',
+  'src/core/models/passwordReset.js',
+].map((file) => pathToFileURL(path.join(ROOT, file)).href));
+
+const ROUTE_STUB_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-route-stub';
+const MODEL_STUB_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-model-stub';
+const MONGOOSE_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-mongoose';
+const BCRYPT_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-bcryptjs';
+const NODEMAILER_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-nodemailer';
+const FEATURE_FLAGS_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-feature-flags';
+const API_DB_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-api-db';
+const AUTH_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-auth-db-bridge';
+const AUTH_CONTEXT_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-auth-context-db-bridge';
+const API_CONTROLLER_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-api-controller';
+const AUTH_CONTROLLER_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-auth-controller';
+const REQUIRE_LOGIN_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-require-login';
+const REQUIRE_UNIT_SCOPE_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-runtime-require-unit-scope';
 
 class SchemaMock {
   constructor(definition = {}, options = {}) {
@@ -72,6 +115,32 @@ const state = {
   routeObservations: [],
 };
 
+const AUTH_DB_BRIDGE_EXPORTS = [
+  'createPasswordReset',
+  'createRememberToken',
+  'deletePasswordResetById',
+  'findFuncaoByIdSelect',
+  'findFuncionarioByIdSelect',
+  'findFuncionariosByCpfSelect',
+  'findModuloByOr',
+  'findModuloLeanByOrSelect',
+  'findPasswordResetByToken',
+  'findUnidadeByIdSelect',
+  'findUserByEmail',
+  'findUserByEmailForLogin',
+  'findUserByIdSelect',
+  'findUserByIdWithMaxTime',
+  'findUsersByCpf',
+  'findUsersByFuncionarioIds',
+  'revokeRememberTokenByHash',
+  'saveUserDocument',
+];
+
+const AUTH_CONTEXT_DB_BRIDGE_EXPORTS = [
+  'loadActiveMembershipsByUserId',
+  'loadUnidadeById',
+];
+
 const mongooseMock = {
   connection: { readyState: 1 },
   models: {},
@@ -124,6 +193,215 @@ const authContextBridgeMock = {
   async loadUnidadeById() { return null; },
 };
 
+globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_STATE__ = state;
+globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_MONGOOSE_STATE__ = mongooseMock;
+globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_API_DB_MOCK__ = apiDbMock;
+globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_AUTH_DB_BRIDGE_MOCK__ = authDbBridgeMock;
+globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_AUTH_CONTEXT_BRIDGE_MOCK__ = authContextBridgeMock;
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === 'mongoose') return { url: MONGOOSE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === 'bcryptjs') return { url: BCRYPT_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === 'nodemailer') return { url: NODEMAILER_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#core/config/featureFlags.js') return { url: FEATURE_FLAGS_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/db/api.db.js') return { url: API_DB_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/authDbBridgeService.js') return { url: AUTH_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/authContextDbBridgeService.js') return { url: AUTH_CONTEXT_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/controllers/apiController.js') return { url: API_CONTROLLER_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/controllers/authController.js') return { url: AUTH_CONTROLLER_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/middlewares/requireLogin.js') return { url: REQUIRE_LOGIN_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/middlewares/requireUnitScope.js') return { url: REQUIRE_UNIT_SCOPE_MOCK_MODULE_URL, shortCircuit: true };
+
+    const resolved = nextResolve(specifier, context);
+    if (ROUTE_STUB_URLS.has(resolved.url)) return { url: ROUTE_STUB_MODULE_URL, shortCircuit: true };
+    if (MODEL_STUB_URLS.has(resolved.url)) return { url: MODEL_STUB_MODULE_URL, shortCircuit: true };
+    return resolved;
+  },
+  load(url, context, nextLoad) {
+    if (url === ROUTE_STUB_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export default function routeStub(_req, _res, next) {',
+          '  return next();',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === MODEL_STUB_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: 'export default {};',
+      };
+    }
+
+    if (url === MONGOOSE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: 'const state = globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_MONGOOSE_STATE__; export default state;',
+      };
+    }
+
+    if (url === BCRYPT_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export default {',
+          '  async compare() { return false; },',
+          '  async hash(value) { return `hashed:${value}`; },',
+          '};',
+        ].join('\n'),
+      };
+    }
+
+    if (url === NODEMAILER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export default {',
+          '  createTransport() {',
+          '    return { async sendMail() { return { messageId: \"mock-mail\" }; } };',
+          '  },',
+          '};',
+        ].join('\n'),
+      };
+    }
+
+    if (url === FEATURE_FLAGS_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export function isFeatureEnabled(featureFlags, flagName, fallback = false) {',
+          '  if (!featureFlags || typeof featureFlags !== \"object\") return fallback;',
+          '  if (Object.prototype.hasOwnProperty.call(featureFlags, flagName)) {',
+          '    return featureFlags[flagName] === true;',
+          '  }',
+          '  return fallback;',
+          '}',
+          'export function isFlagEnabled() { return false; }',
+        ].join('\n'),
+      };
+    }
+
+    if (url === API_DB_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_API_DB_MOCK__;',
+          'export async function findUserByEmailCondLeanMaxTimeMs(...args) {',
+          '  return await state.findUserByEmailCondLeanMaxTimeMs(...args);',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_DB_BRIDGE_MOCK_MODULE_URL) {
+      const lines = ['const state = globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_AUTH_DB_BRIDGE_MOCK__;'];
+      for (const exportName of AUTH_DB_BRIDGE_EXPORTS) {
+        lines.push(`export async function ${exportName}(...args) { return await state[${JSON.stringify(exportName)}](...args); }`);
+      }
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: lines.join('\n'),
+      };
+    }
+
+    if (url === AUTH_CONTEXT_DB_BRIDGE_MOCK_MODULE_URL) {
+      const lines = ['const state = globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_AUTH_CONTEXT_BRIDGE_MOCK__;'];
+      for (const exportName of AUTH_CONTEXT_DB_BRIDGE_EXPORTS) {
+        lines.push(`export async function ${exportName}(...args) { return await state[${JSON.stringify(exportName)}](...args); }`);
+      }
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: lines.join('\n'),
+      };
+    }
+
+    if (url === API_CONTROLLER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_API_CONTROLLER_MOCK__;',
+          'export async function unidadesCluster(...args) { return await state.unidadesCluster(...args); }',
+          'export async function debugSession(...args) { return await state.debugSession(...args); }',
+          'export async function debugWhoami(...args) { return await state.debugWhoami(...args); }',
+          'export async function ibge(...args) { return await state.ibge(...args); }',
+          'export async function favicon(...args) { return await state.favicon(...args); }',
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_CONTROLLER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export async function getAuthContext(req, res) { return res.status(501).json({ ok: false }); }',
+          'export async function login(req, res) { return res.redirect(303, (req.baseUrl || \"\") + \"/login?erro=usuario\"); }',
+          'export async function logout(req, res) { return res.redirect((req.baseUrl || \"\") + \"/login\"); }',
+          'export async function renderResetPassword(req, res) { return res.status(501).end(); }',
+          'export async function postResetPassword(req, res) { return res.status(501).end(); }',
+          'export async function postEsqueciSenha(req, res) { return res.status(501).end(); }',
+          'export async function primeiroAcessoPost(req, res) { return res.status(501).end(); }',
+          'export async function listarEmailsPorCPF(req, res) { return res.status(501).end(); }',
+          'export async function selectAuthUnit(req, res) { return res.status(501).end(); }',
+          'export async function switchAuthUnit(req, res) { return res.status(501).end(); }',
+        ].join('\n'),
+      };
+    }
+
+    if (url === REQUIRE_LOGIN_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export default function requireLogin(req, res, next) {',
+          '  if (req.user || req.session?.user) return next();',
+          '  return res.status(401).json({ ok: false, code: \"GESTOR_UNAUTHORIZED\" });',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === REQUIRE_UNIT_SCOPE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export function requireUnitScope(req, res, next) {',
+          '  const unidadeId = req.session?.gestorAuthContext?.active_unidade_id',
+          '    || req.user?.unidade_id',
+          '    || req.session?.user?.unidade_id',
+          '    || null;',
+          '  if (!unidadeId) {',
+          '    return res.status(401).json({ ok: false, code: \"GESTOR_UNIT_SCOPE_REQUIRED\" });',
+          '  }',
+          '  req.unitScope = {',
+          '    type: \"unit\",',
+          '    unidadeId: String(unidadeId),',
+          '  };',
+          '  return next();',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    return nextLoad(url, context);
+  },
+});
+
 const apiControllerMock = {
   async unidadesCluster(req, res) {
     const payload = {
@@ -150,129 +428,7 @@ const apiControllerMock = {
   },
 };
 
-function installRouteStubs() {
-  const routeFiles = [
-    'src/modules/gestor/app/routes/auth.js',
-    'src/modules/gestor/app/routes/usuario.js',
-    'src/modules/gestor/app/routes/unidade.js',
-    'src/modules/gestor/app/routes/funcionario.js',
-    'src/modules/gestor/app/routes/funcao.js',
-    'src/modules/gestor/app/routes/setor.js',
-    'src/modules/gestor/app/routes/recurso.js',
-    'src/modules/gestor/app/routes/modulo.js',
-    'src/modules/gestor/app/routes/dashboard.js',
-    'src/modules/gestor/app/routes/pagesRouter.js',
-    'src/modules/gestor/app/routes/userApi.js',
-    'src/modules/gestor/app/routes/unidadeApi.js',
-    'src/modules/gestor/app/routes/funcaoApi.js',
-    'src/modules/gestor/app/routes/setorApi.js',
-    'src/modules/gestor/app/routes/recursoApi.js',
-    'src/modules/gestor/app/routes/biometriaApi.js',
-    'src/modules/gestor/app/routes/funcionarioApi.js',
-    'src/modules/gestor/app/routes/cnaeApi.js',
-    'src/modules/gestor/app/routes/moduloApi.js',
-    'src/modules/gestor/app/routes/debugApi.js',
-    'src/modules/gestor/app/routes/userAdminApi.js',
-    'src/modules/gestor/app/routes/miscApi.js',
-    'src/modules/gestor/app/routes/bancoApi.js',
-    'src/modules/gestor/app/routes/faceBiometriaUploadApi.js',
-    'src/modules/gestor/app/routes/feedbackApi.js',
-    'src/modules/gestor/app/routes/widgetSettingsApi.js',
-  ];
-
-  for (const file of routeFiles) {
-    mock.module(pathToFileURL(path.join(ROOT, file)).href, {
-      defaultExport: createEmptyRouter(),
-    });
-  }
-}
-
-function installModelStubs() {
-  const modelFiles = [
-    'src/core/models/user.js',
-    'src/core/models/passwordReset.js',
-  ];
-
-  for (const file of modelFiles) {
-    mock.module(pathToFileURL(path.join(ROOT, file)).href, {
-      defaultExport: {},
-    });
-  }
-}
-
-mock.module('mongoose', { defaultExport: mongooseMock });
-mock.module('bcryptjs', {
-  defaultExport: {
-    async compare() { return false; },
-    async hash(value) { return `hashed:${value}`; },
-  },
-});
-mock.module('nodemailer', {
-  defaultExport: {
-    createTransport() {
-      return { async sendMail() { return { messageId: 'mock-mail' }; } };
-    },
-  },
-});
-mock.module('#core/config/featureFlags.js', {
-  namedExports: {
-    isFeatureEnabled(featureFlags, flagName, fallback = false) {
-      if (!featureFlags || typeof featureFlags !== 'object') return fallback;
-      if (Object.prototype.hasOwnProperty.call(featureFlags, flagName)) {
-        return featureFlags[flagName] === true;
-      }
-      return fallback;
-    },
-    isFlagEnabled() { return false; },
-  },
-});
-mock.module('#modules/gestor/app/db/api.db.js', { namedExports: apiDbMock });
-mock.module('#modules/gestor/app/services/authDbBridgeService.js', { namedExports: authDbBridgeMock });
-mock.module('#modules/gestor/app/services/authContextDbBridgeService.js', { namedExports: authContextBridgeMock });
-mock.module('#modules/gestor/app/controllers/apiController.js', { namedExports: apiControllerMock });
-mock.module('#modules/gestor/app/controllers/authController.js', {
-  namedExports: {
-    async getAuthContext(req, res) { return res.status(501).json({ ok: false }); },
-    async login(req, res) { return res.redirect(303, (req.baseUrl || '') + '/login?erro=usuario'); },
-    async logout(req, res) { return res.redirect((req.baseUrl || '') + '/login'); },
-    async renderResetPassword(req, res) { return res.status(501).end(); },
-    async postResetPassword(req, res) { return res.status(501).end(); },
-    async postEsqueciSenha(req, res) { return res.status(501).end(); },
-    async primeiroAcessoPost(req, res) { return res.status(501).end(); },
-    async listarEmailsPorCPF(req, res) { return res.status(501).end(); },
-    async selectAuthUnit(req, res) { return res.status(501).end(); },
-    async switchAuthUnit(req, res) { return res.status(501).end(); },
-  },
-});
-mock.module('#modules/gestor/app/middlewares/requireLogin.js', {
-  defaultExport(req, res, next) {
-    if (req.user || req.session?.user) return next();
-    return res.status(401).json({ ok: false, code: 'GESTOR_UNAUTHORIZED' });
-  },
-});
-mock.module('#modules/gestor/app/middlewares/requireUnitScope.js', {
-  namedExports: {
-    requireUnitScope(req, res, next) {
-      const unidadeId = req.session?.gestorAuthContext?.active_unidade_id
-        || req.user?.unidade_id
-        || req.session?.user?.unidade_id
-        || null;
-
-      if (!unidadeId) {
-        return res.status(401).json({ ok: false, code: 'GESTOR_UNIT_SCOPE_REQUIRED' });
-      }
-
-      req.unitScope = {
-        type: 'unit',
-        unidadeId: String(unidadeId),
-      };
-      return next();
-    },
-  },
-});
-
-installRouteStubs();
-installModelStubs();
+globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_API_CONTROLLER_MOCK__ = apiControllerMock;
 
 let gestorApp;
 
@@ -281,7 +437,7 @@ function resetState() {
   state.populateUserError = null;
   state.routeObservations = [];
   mongooseMock.connection.readyState = 1;
-  if (gestorApp) gestorApp.locals.skipDb = false;
+  if (gestorApp?.locals) gestorApp.locals.skipDb = false;
 }
 
 function buildHarness() {
@@ -344,7 +500,8 @@ async function request(baseUrl, jar, url, options = {}) {
 }
 
 before(async () => {
-  ({ default: gestorApp } = await import(GESTOR_APP_URL));
+  const { default: buildGestorApp } = await import(GESTOR_APP_URL);
+  gestorApp = buildGestorApp();
   resetState();
 });
 
@@ -353,7 +510,12 @@ beforeEach(() => {
 });
 
 after(() => {
-  mock.reset();
+  delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_STATE__;
+  delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_MONGOOSE_STATE__;
+  delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_API_DB_MOCK__;
+  delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_AUTH_DB_BRIDGE_MOCK__;
+  delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_AUTH_CONTEXT_BRIDGE_MOCK__;
+  delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_RUNTIME_API_CONTROLLER_MOCK__;
 });
 
 describe('gestor api unidades cluster runtime contract', () => {

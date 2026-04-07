@@ -61,7 +61,14 @@ function buildProvisioningEventsFunctionWithOwnerSeam(context = {}) {
 
   const transformed = functionSource.slice(0, startIndex) + replacement + functionSource.slice(endIndex);
 
-  return buildFunction(transformed, context);
+  const runtimeContext = {
+    ...context,
+    createUnidadePolicyContextCore: context.createUnidadePolicyContextCore || (() => ({
+      ensureCanAccessUnidade: context.ensureCanAccessUnidade,
+    })),
+  };
+
+  return buildFunction(transformed, runtimeContext);
 }
 
 function createApiRes() {

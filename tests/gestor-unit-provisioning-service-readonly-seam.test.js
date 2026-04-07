@@ -38,21 +38,21 @@ test('fachada read-only delega inspect e list diretamente ao use case canonico',
   const inspectCalls = [];
   const listCalls = [];
 
-  const inspectUnitProvisioningUseCase = async (input) => {
+  const inspectUnitProvisioningBridge = async (input) => {
     inspectCalls.push(input);
     return { kind: 'inspect-result', input };
   };
 
-  const listUnitProvisioningAuditEventsUseCase = async (input) => {
+  const listUnitProvisioningEventsService = async (input) => {
     listCalls.push(input);
     return [{ kind: 'event-result', input }];
   };
 
   const inspectUnitProvisioning = buildFunction('inspectUnitProvisioning', {
-    inspectUnitProvisioningUseCase,
+    inspectUnitProvisioningBridge,
   });
   const listUnitProvisioningAuditEvents = buildFunction('listUnitProvisioningAuditEvents', {
-    listUnitProvisioningAuditEventsUseCase,
+    listUnitProvisioningEventsService,
   });
 
   const inspectInput = { unidadeId: 'u-1' };
@@ -61,17 +61,17 @@ test('fachada read-only delega inspect e list diretamente ao use case canonico',
   const inspectResult = await inspectUnitProvisioning(inspectInput);
   const listResult = await listUnitProvisioningAuditEvents(listInput);
 
-  assert.deepEqual(inspectCalls, [inspectInput], 'inspectUnitProvisioning deve delegar integralmente ao use case canonico');
-  assert.deepEqual(listCalls, [listInput], 'listUnitProvisioningAuditEvents deve delegar integralmente ao use case canonico');
-  assert.deepEqual(inspectResult, { kind: 'inspect-result', input: inspectInput }, 'inspectUnitProvisioning deve repassar o retorno do use case');
-  assert.deepEqual(listResult, [{ kind: 'event-result', input: listInput }], 'listUnitProvisioningAuditEvents deve repassar o retorno do use case');
+  assert.deepEqual(inspectCalls, [inspectInput], 'inspectUnitProvisioning deve delegar integralmente a bridge canonica');
+  assert.deepEqual(listCalls, [listInput], 'listUnitProvisioningAuditEvents deve delegar integralmente ao service local de eventos');
+  assert.deepEqual(inspectResult, { kind: 'inspect-result', input: inspectInput }, 'inspectUnitProvisioning deve repassar o retorno da bridge');
+  assert.deepEqual(listResult, [{ kind: 'event-result', input: listInput }], 'listUnitProvisioningAuditEvents deve repassar o retorno do service local');
 });
 
 test('fachada hibrida preserva exports read-only locais e exports com efeito externo vindos da bridge', () => {
   assert.match(
     SOURCE,
-    /import\s*\{[\s\S]*inspectUnitProvisioning as inspectUnitProvisioningUseCase,[\s\S]*listUnitProvisioningAuditEvents as listUnitProvisioningAuditEventsUseCase,[\s\S]*\}\s*from\s*'#modules\/gestor\/app\/usecases\/unit-provisioning\/UnitProvisioningService\.js';/,
-    'a fachada deve importar as leituras diretamente do use case canonico',
+    /import\s*\{[\s\S]*inspectUnitProvisioning as inspectUnitProvisioningBridge,[\s\S]*\}\s*from\s*'#modules\/gestor\/app\/services\/apiDbBridgeService\.js';/,
+    'a fachada deve importar inspect pela bridge canonica',
   );
 
   assert.match(
@@ -82,13 +82,13 @@ test('fachada hibrida preserva exports read-only locais e exports com efeito ext
 
   assert.match(
     SOURCE,
-    /export async function inspectUnitProvisioning\(input\)\s*\{[\s\S]*return inspectUnitProvisioningUseCase\(input\);[\s\S]*\}/,
-    'inspectUnitProvisioning deve permanecer exportado pela fachada local e delegar ao use case',
+    /export async function inspectUnitProvisioning\(input\)\s*\{[\s\S]*return inspectUnitProvisioningBridge\(input\);[\s\S]*\}/,
+    'inspectUnitProvisioning deve permanecer exportado pela fachada local e delegar a bridge',
   );
 
   assert.match(
     SOURCE,
-    /export async function listUnitProvisioningAuditEvents\(input\)\s*\{[\s\S]*return listUnitProvisioningAuditEventsUseCase\(input\);[\s\S]*\}/,
-    'listUnitProvisioningAuditEvents deve permanecer exportado pela fachada local e delegar ao use case',
+    /export async function listUnitProvisioningAuditEvents\(input\)\s*\{[\s\S]*return listUnitProvisioningEventsService\(input\);[\s\S]*\}/,
+    'listUnitProvisioningAuditEvents deve permanecer exportado pela fachada local e delegar ao service local',
   );
 });

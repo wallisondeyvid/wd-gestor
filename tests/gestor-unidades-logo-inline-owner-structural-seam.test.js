@@ -131,11 +131,13 @@ test('uploadLogoUnidadeInline: owner real preserva validacao, lookup, autorizaca
           logo: 'https://blob.vercel-storage.com/unidades/u-filial/logo-antiga.webp',
         };
       },
-      ensureCanAccessUnidade: async (_req, unidadeId) => {
-        callOrder.push('authorize');
-        authorizeId = unidadeId;
-        return true;
-      },
+      createUnidadePolicyContextCore: () => ({
+        ensureCanAccessUnidade: async (unidadeId) => {
+          callOrder.push('authorize');
+          authorizeId = unidadeId;
+          return true;
+        },
+      }),
       uploadLogoUnidadeInlineWrite: async (input) => {
         callOrder.push('seam');
         seamArgs = input;
@@ -230,10 +232,12 @@ test('uploadLogoUnidadeInline: owner real mantem mapeamento de BLOB_NOT_CONFIGUR
         callOrder.push('lookup');
         return { _id: id, logo: '' };
       },
-      ensureCanAccessUnidade: async () => {
-        callOrder.push('authorize');
-        return true;
-      },
+      createUnidadePolicyContextCore: () => ({
+        ensureCanAccessUnidade: async () => {
+          callOrder.push('authorize');
+          return true;
+        },
+      }),
       uploadLogoUnidadeInlineWrite: async () => {
         callOrder.push('seam');
         const error = new Error('Blob não configurado (conecte a Store no Vercel OU defina BLOB_READ_WRITE_TOKEN/WDGESTOR_DB_DADOS_READ_WRITE_TOKEN)');

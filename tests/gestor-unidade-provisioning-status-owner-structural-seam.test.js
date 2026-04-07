@@ -36,7 +36,13 @@ function extractExportedAsyncFunction(source, functionName) {
 function buildFunction(source, functionName, context = {}) {
   const functionSource = extractExportedAsyncFunction(source, functionName);
   const script = new vm.Script(`(${functionSource})`);
-  return script.runInNewContext(context);
+  const runtimeContext = {
+    ...context,
+    createUnidadePolicyContextCore: context.createUnidadePolicyContextCore || (() => ({
+      ensureCanAccessUnidade: context.ensureCanAccessUnidade,
+    })),
+  };
+  return script.runInNewContext(runtimeContext);
 }
 
 function createApiRes() {

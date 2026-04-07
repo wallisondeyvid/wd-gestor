@@ -4,7 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import request from 'supertest';
-import app from '../src/modules/gestor/app/gestor-app.js';
+import { buildGestorApp } from '../src/modules/gestor/app/gestor-app.js';
+
+const app = buildGestorApp();
 
 const ROOT = process.cwd();
 const CONTROLLER_PATH = path.join(ROOT, 'src/modules/gestor/app/controllers/unidadeController.js');

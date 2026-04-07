@@ -33,7 +33,13 @@ function extractExportedAsyncFunction(source, functionName) {
 
 function buildFunction(functionSource, context = {}) {
   const script = new vm.Script(`(${functionSource})`);
-  return script.runInNewContext(context);
+  const runtimeContext = {
+    ...context,
+    createUnidadePolicyContextCore: context.createUnidadePolicyContextCore || (() => ({
+      ensureCanAccessUnidade: (unidadeId) => context.ensureCanAccessUnidade?.(context.__currentReqForPolicyContext, unidadeId),
+    })),
+  };
+  return script.runInNewContext(runtimeContext);
 }
 
 function createApiRes() {
@@ -89,13 +95,22 @@ function buildToggleAccessWithSeam() {
   return replaced;
 }
 
+function buildToggleAccess(context = {}) {
+  const functionSource = buildToggleAccessWithSeam();
+  return async function toggleAccessWithRuntimeReq(req, res) {
+    const executable = buildFunction(functionSource, {
+      ...context,
+      __currentReqForPolicyContext: req,
+    });
+    return executable(req, res);
+  };
+}
+
 test('toggleAccessUnidades: owner real preserva gate, shape, normalizacao e ok final ao delegar o nucleo pos-normalizacao via seam', async () => {
   const callOrder = [];
   let seamArgs = null;
 
-  const toggleAccessUnidades = buildFunction(
-    buildToggleAccessWithSeam(),
-    {
+  const toggleAccessUnidades = buildToggleAccess({
       normalizeUnitId: defaultNormalizeUnitId,
       ensureCanAccessUnidade: async () => {
         throw new Error('nao deve usar ensureCanAccessUnidade fora da seam');
@@ -118,8 +133,7 @@ test('toggleAccessUnidades: owner real preserva gate, shape, normalizacao e ok f
       badRequest: (res, message) => res.status(400).json({ success: false, code: 'BAD_REQUEST', message }),
       serverError: (res, error) => res.status(500).json({ success: false, code: 'SERVER_ERROR', message: error?.message }),
       console,
-    }
-  );
+    });
 
   const res = createApiRes();
   await toggleAccessUnidades({
@@ -148,9 +162,7 @@ test('toggleAccessUnidades: owner real preserva gate, shape, normalizacao e ok f
 test('toggleAccessUnidades: owner real preserva gate inicial de papel sem chamar a seam', async () => {
   let seamCalled = false;
 
-  const toggleAccessUnidades = buildFunction(
-    buildToggleAccessWithSeam(),
-    {
+  const toggleAccessUnidades = buildToggleAccess({
       normalizeUnitId: defaultNormalizeUnitId,
       ensureCanAccessUnidade: async () => true,
       findUnidadesPrincipaisByIds: async () => [],
@@ -163,8 +175,7 @@ test('toggleAccessUnidades: owner real preserva gate inicial de papel sem chamar
       badRequest: (res, message) => res.status(400).json({ success: false, code: 'BAD_REQUEST', message }),
       serverError: (res, error) => res.status(500).json({ success: false, code: 'SERVER_ERROR', message: error?.message }),
       console,
-    }
-  );
+    });
 
   const res = createApiRes();
   await toggleAccessUnidades({
@@ -184,9 +195,7 @@ test('toggleAccessUnidades: owner real preserva gate inicial de papel sem chamar
 test('toggleAccessUnidades: owner real preserva validacao bruta do payload sem chamar a seam', async () => {
   let seamCalled = false;
 
-  const toggleAccessUnidades = buildFunction(
-    buildToggleAccessWithSeam(),
-    {
+  const toggleAccessUnidades = buildToggleAccess({
       normalizeUnitId: defaultNormalizeUnitId,
       ensureCanAccessUnidade: async () => true,
       findUnidadesPrincipaisByIds: async () => [],
@@ -199,8 +208,7 @@ test('toggleAccessUnidades: owner real preserva validacao bruta do payload sem c
       badRequest: (res, message) => res.status(400).json({ success: false, code: 'BAD_REQUEST', message }),
       serverError: (res, error) => res.status(500).json({ success: false, code: 'SERVER_ERROR', message: error?.message }),
       console,
-    }
-  );
+    });
 
   const res = createApiRes();
   await toggleAccessUnidades({
@@ -220,9 +228,7 @@ test('toggleAccessUnidades: owner real preserva validacao bruta do payload sem c
 test('toggleAccessUnidades: owner real preserva normalizacao e aborta antes da seam quando nenhum id valido sobra', async () => {
   let seamCalled = false;
 
-  const toggleAccessUnidades = buildFunction(
-    buildToggleAccessWithSeam(),
-    {
+  const toggleAccessUnidades = buildToggleAccess({
       normalizeUnitId: defaultNormalizeUnitId,
       ensureCanAccessUnidade: async () => true,
       findUnidadesPrincipaisByIds: async () => [],
@@ -235,8 +241,7 @@ test('toggleAccessUnidades: owner real preserva normalizacao e aborta antes da s
       badRequest: (res, message) => res.status(400).json({ success: false, code: 'BAD_REQUEST', message }),
       serverError: (res, error) => res.status(500).json({ success: false, code: 'SERVER_ERROR', message: error?.message }),
       console,
-    }
-  );
+    });
 
   const res = createApiRes();
   await toggleAccessUnidades({
@@ -257,9 +262,7 @@ test('toggleAccessUnidades: owner real preserva o mapeamento de badRequest do nu
   let seamArgs = null;
   let okCalled = false;
 
-  const toggleAccessUnidades = buildFunction(
-    buildToggleAccessWithSeam(),
-    {
+  const toggleAccessUnidades = buildToggleAccess({
       normalizeUnitId: defaultNormalizeUnitId,
       ensureCanAccessUnidade: async () => true,
       findUnidadesPrincipaisByIds: async () => [],
@@ -275,8 +278,7 @@ test('toggleAccessUnidades: owner real preserva o mapeamento de badRequest do nu
       badRequest: (res, message) => res.status(400).json({ success: false, code: 'BAD_REQUEST', message }),
       serverError: (res, error) => res.status(500).json({ success: false, code: 'SERVER_ERROR', message: error?.message }),
       console,
-    }
-  );
+    });
 
   const res = createApiRes();
   await toggleAccessUnidades({
@@ -295,9 +297,7 @@ test('toggleAccessUnidades: owner real preserva o mapeamento de badRequest do nu
 });
 
 test('toggleAccessUnidades: owner real preserva tratamento de erro externo quando a seam falha', async () => {
-  const toggleAccessUnidades = buildFunction(
-    buildToggleAccessWithSeam(),
-    {
+  const toggleAccessUnidades = buildToggleAccess({
       normalizeUnitId: defaultNormalizeUnitId,
       ensureCanAccessUnidade: async () => true,
       findUnidadesPrincipaisByIds: async () => [],
@@ -309,8 +309,7 @@ test('toggleAccessUnidades: owner real preserva tratamento de erro externo quand
       badRequest: (res, message) => res.status(400).json({ success: false, code: 'BAD_REQUEST', message }),
       serverError: (res, error) => res.status(500).json({ success: false, code: 'SERVER_ERROR', message: error?.message }),
       console,
-    }
-  );
+    });
 
   const res = createApiRes();
   await toggleAccessUnidades({

@@ -158,14 +158,85 @@ function createReq(overrides = {}) {
   };
 }
 
+function instrumentExpressStack(target, label, state = new WeakSet()) {
+  if (!target || state.has(target)) return;
+  state.add(target);
+
+  if (typeof target.handle === 'function' && !target.handle.__createRuntimeInstrumented) {
+    const originalHandle = target.handle.bind(target);
+    const wrappedHandle = function instrumentedHandle(req, res, next) {
+      console.log(`[DIAG][create-runtime] ${label}:handle-enter`, req.method, req.url, {
+        originalUrl: req.originalUrl,
+        headersSent: res.headersSent,
+      });
+      return originalHandle(req, res, next);
+    };
+    wrappedHandle.__createRuntimeInstrumented = true;
+    target.handle = wrappedHandle;
+  }
+
+  const stack = target.stack || target._router?.stack;
+  if (!Array.isArray(stack)) return;
+
+  stack.forEach((layer, index) => {
+    if (!layer || typeof layer.handle !== 'function' || layer.handle.__createRuntimeInstrumented) return;
+    const layerName = layer.name || layer.handle.name || '<anonymous>';
+    const routePath = layer.route?.path || layer.path || layer.regexp?.toString?.() || '<no-path>';
+    const originalLayerHandle = layer.handle;
+    const wrappedLayerHandle = function instrumentedLayer(req, res, next) {
+      console.log(`[DIAG][create-runtime] ${label}:layer-enter`, {
+        index,
+        layerName,
+        routePath,
+        method: req.method,
+        url: req.url,
+        originalUrl: req.originalUrl,
+        headersSent: res.headersSent,
+      });
+      return originalLayerHandle.call(this, req, res, next);
+    };
+    wrappedLayerHandle.__createRuntimeInstrumented = true;
+    if (originalLayerHandle.stack || originalLayerHandle._router?.stack) {
+      instrumentExpressStack(originalLayerHandle, `${label}:${layerName}`, state);
+    }
+    layer.handle = wrappedLayerHandle;
+  });
+}
+
+function installFirstInternalProbe(app, label) {
+  if (!app || app.__createRuntimeFirstProbeInstalled) return;
+  app.__createRuntimeFirstProbeInstalled = true;
+  console.log(`[DIAG][create-runtime] ${label}:shape`, {
+    type: typeof app,
+    hasUse: typeof app.use === 'function',
+    hasHandle: typeof app.handle === 'function',
+    hasStack: Array.isArray(app.stack),
+    hasRouterStack: Array.isArray(app._router?.stack),
+    keys: Object.keys(app).slice(0, 12),
+  });
+  if (typeof app.use !== 'function') return;
+  app.use((req, res, next) => {
+    console.log(`[DIAG][create-runtime] ${label}:first-internal`, req.method, req.url, {
+      originalUrl: req.originalUrl,
+      headersSent: res.headersSent,
+    });
+    next();
+  });
+  const stack = app._router?.stack;
+  if (Array.isArray(stack) && stack.length > 0) {
+    const probeLayer = stack.pop();
+    stack.unshift(probeLayer);
+  }
+}
+
 async function importCreateUnidade(tag) {
   // Remove Date.now() para evitar múltiplos contextos de módulos
   return import(`${controllerModuleUrl}?case=${encodeURIComponent(tag)}`);
 }
 
 async function requestGestorApp(pathname) {
-  // Remove Date.now() para evitar múltiplos contextos de módulos
-  const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app`);
+  const { default: buildGestorApp } = await import(`${gestorAppModuleUrl}?case=app`);
+  const gestorApp = buildGestorApp();
   const rootApp = express();
   rootApp.use('/gestor', gestorApp);
 
@@ -193,7 +264,6 @@ async function requestGestorApp(pathname) {
         redirect: 'manual',
         signal: controller.signal,
       });
-      // Consome o corpo inteiro para garantir fechamento do stream
       text = await response.text();
       try {
         body = text ? JSON.parse(text) : null;
@@ -201,24 +271,18 @@ async function requestGestorApp(pathname) {
         body = null;
       }
     } finally {
-      // Garante fechamento do body (caso stream não lido)
       if (response && response.body && typeof response.body.cancel === 'function') {
         try { await response.body.cancel(); } catch {}
       }
     }
     return { status: response.status, body, text };
   } finally {
-    controller.abort(); // Garante abort do fetch se ainda pendente
+    controller.abort();
     if (serverStarted && server) {
-      // Diagnóstico: log antes do close
-      console.log('[DIAG] Antes de server.close()');
       await Promise.race([
         new Promise((resolve, reject) => {
           server.close((error) => {
-            // Diagnóstico: log dentro do callback
-            console.log('[DIAG] Callback de server.close()', error ? 'com erro' : 'ok');
             if (error) {
-              // Loga erro mas não trava
               console.error('Erro ao fechar servidor Express:', error);
               resolve();
             } else {
@@ -228,12 +292,8 @@ async function requestGestorApp(pathname) {
         }),
         new Promise((resolve) => setTimeout(resolve, 2000)),
       ]);
-      // Diagnóstico: log após o await do fechamento
-      console.log('[DIAG] Após await server.close()');
-      // Diagnóstico: testar server.unref() após close
       if (typeof server.unref === 'function') {
         server.unref();
-        console.log('[DIAG] server.unref() chamado');
       }
     }
   }
@@ -427,69 +487,6 @@ test('createUnidade cria unidade principal com apiBancaria, modulosAcessiveis, v
       pessoaTipo: 'pf',
       principal: 'true',
       subunidade: 'false',
-      let server;
-      let serverStarted = false;
-      let controller = new AbortController();
-      try {
-        const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app`);
-        const rootApp = express();
-        rootApp.use('/gestor', gestorApp);
-        server = await new Promise((resolve, reject) => {
-          const instance = rootApp.listen(0, '127.0.0.1', () => {
-            serverStarted = true;
-            resolve(instance);
-          });
-          instance.on('error', reject);
-        });
-
-        const { port } = server.address();
-        let response;
-        let text = '';
-        let body = null;
-        try {
-          response = await fetch(`http://127.0.0.1:${port}${pathname}`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ nomeFantasia: 'Teste' }),
-            redirect: 'manual',
-            signal: controller.signal,
-          });
-          // Consome o corpo inteiro para garantir fechamento do stream
-          text = await response.text();
-          try {
-            body = text ? JSON.parse(text) : null;
-          } catch {
-            body = null;
-          }
-        } finally {
-          // Garante fechamento do body (caso stream não lido)
-          if (response && response.body && typeof response.body.cancel === 'function') {
-            try { await response.body.cancel(); } catch {}
-          }
-        }
-        return { status: response.status, body, text };
-      } finally {
-        controller.abort(); // Garante abort do fetch se ainda pendente
-        if (serverStarted && server) {
-          await Promise.race([
-            new Promise((resolve, reject) => {
-              server.close((error) => {
-                if (error) {
-                  // Loga erro mas não trava
-                  console.error('Erro ao fechar servidor Express:', error);
-                  resolve();
-                } else {
-                  resolve();
-                }
-              });
-            }),
-            new Promise((resolve) => setTimeout(resolve, 2000)),
-          ]);
-          if (typeof server.unref === 'function') {
-            server.unref();
-          }
-        }
-      }
       telefoneFixo: null,
       telefoneCelular: null,
       emailPrincipal: 'principal@test.com',

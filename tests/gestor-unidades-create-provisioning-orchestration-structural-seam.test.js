@@ -32,7 +32,14 @@ function extractExportedAsyncFunction(source, functionName) {
 
 function buildFunction(functionSource, context = {}) {
   const script = new vm.Script(`(${functionSource})`);
-  return script.runInNewContext(context);
+  const runtimeContext = {
+    ...context,
+    createUnidadePolicyContextCore: context.createUnidadePolicyContextCore || (() => ({
+      resolveRequestedPrincipalUnitId: context.resolveRequestedPrincipalUnitId,
+      ensureCanAccessUnidade: context.ensureCanAccessUnidade,
+    })),
+  };
+  return script.runInNewContext(runtimeContext);
 }
 
 function createApiRes() {

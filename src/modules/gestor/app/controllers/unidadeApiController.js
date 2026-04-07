@@ -31,14 +31,16 @@ import {
   isUnitProvisioningValidationError,
   retryUnitProvisioning,
 } from '#modules/gestor/app/services/UnitProvisioningService.js';
-import { orchestrateUnitProvisioning } from '#modules/gestor/app/usecases/unit-provisioning/orchestrateUnitProvisioning.js';
-import { createUnidadeWrite } from '#modules/gestor/app/usecases/unidades/createUnidadeWrite.js';
-import { buildUnidadePublicPayload } from '#modules/gestor/app/usecases/unidades/buildUnidadePublicPayload.js';
-import { executeToggleAccessCore } from '#modules/gestor/app/usecases/unidades/executeToggleAccessCore.js';
-import { getUnidadeDetailsPayload } from '#modules/gestor/app/usecases/unidades/getUnidadeDetailsPayload.js';
-import { resolveUnidadeLogoResource } from '#modules/gestor/app/usecases/unidades/resolveUnidadeLogoResource.js';
-import { uploadLogoUnidadeInlineWrite } from '#modules/gestor/app/usecases/unidades/uploadLogoUnidadeInlineWrite.js';
-import { updateUnidadeWrite } from '#modules/gestor/app/usecases/unidades/updateUnidadeWrite.js';
+import {
+  orchestrateUnitProvisioning,
+  createUnidadeWrite,
+  buildUnidadePublicPayload,
+  executeToggleAccessCore,
+  getUnidadeDetailsPayload,
+  resolveUnidadeLogoResource,
+  uploadLogoUnidadeInlineWrite,
+  updateUnidadeWrite,
+} from '#modules/gestor/app/services/unidadeControllerUsecaseService.js';
 import { getUnidadeProvisioningStatusOwnerService } from '#modules/gestor/app/services/unidades/getUnidadeProvisioningStatusOwner.service.js';
 import {
   findUnidadeDeleteCandidateService,

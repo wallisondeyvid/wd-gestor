@@ -4,7 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import request from 'supertest';
-import app from '../src/modules/gestor/app/gestor-app.js';
+import { buildGestorApp } from '../src/modules/gestor/app/gestor-app.js';
+
+const app = buildGestorApp();
 
 const ROOT = process.cwd();
 const CONTROLLER_PATH = path.join(ROOT, 'src/modules/gestor/app/controllers/unidadeApiController.js');
@@ -68,6 +70,23 @@ function loadUnidadeLogoHarness(overrides = {}) {
     findUnidadesByCondLeanFull: async () => [],
     findUnidadeById: async () => null,
     saveUnidadeDoc: async () => {},
+    resolveUnidadeLogoResource: async ({ unidade }) => {
+      const logo = String(unidade?.logo || '').trim();
+      if (/^https?:\/\//i.test(logo)) {
+        return {
+          kind: 'redirect',
+          url: logo,
+          cacheControl: 'public, max-age=60',
+        };
+      }
+      return { kind: 'empty' };
+    },
+    uploadLogoUnidadeInlineWrite: async ({ unidade, buffer, processarEEnviarParaBlob, saveUnidade }) => {
+      const uploaded = await processarEEnviarParaBlob(buffer, { keyPrefix: `unidades/${unidade._id}` });
+      unidade.logo = uploaded.url;
+      await saveUnidade(unidade);
+      return { logo: unidade.logo };
+    },
     ok: (res, data = {}, extra = {}) => res.status(200).json({ success: true, ...extra, data }),
     badRequest: (res, message = 'Bad request', extra = {}) => res.status(400).json({ success: false, code: 'BAD_REQUEST', message, ...extra }),
     notFound: (res, message = 'Not found', extra = {}) => res.status(404).json({ success: false, code: 'NOT_FOUND', message, ...extra }),
@@ -115,6 +134,8 @@ function loadUnidadeLogoHarness(overrides = {}) {
     'findUnidadesByCondLeanFull',
     'findUnidadeById',
     'saveUnidadeDoc',
+    'resolveUnidadeLogoResource',
+    'uploadLogoUnidadeInlineWrite',
     'ok',
     'badRequest',
     'notFound',
@@ -129,7 +150,7 @@ function loadUnidadeLogoHarness(overrides = {}) {
     'Buffer',
     'process',
     'console',
-    `${snippet}\nreturn { getUnidadeLogo, uploadLogoUnidade, uploadLogoUnidadeInline, ensureCanAccessUnidade };`,
+    `${snippet}\nreturn { getUnidadeLogo, uploadLogoUnidade, uploadLogoUnidadeInline };`,
   );
 
   return {
@@ -139,6 +160,8 @@ function loadUnidadeLogoHarness(overrides = {}) {
       deps.findUnidadesByCondLeanFull,
       deps.findUnidadeById,
       deps.saveUnidadeDoc,
+      deps.resolveUnidadeLogoResource,
+      deps.uploadLogoUnidadeInlineWrite,
       deps.ok,
       deps.badRequest,
       deps.notFound,

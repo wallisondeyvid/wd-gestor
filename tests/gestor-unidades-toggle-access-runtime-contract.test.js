@@ -4,8 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import request from 'supertest';
-import app from '../src/modules/gestor/app/gestor-app.js';
+import { buildGestorApp } from '../src/modules/gestor/app/gestor-app.js';
 import { executeToggleAccessCore } from '../src/modules/gestor/app/usecases/unidades/executeToggleAccessCore.js';
+
+const app = buildGestorApp();
 
 const ROOT = process.cwd();
 const CONTROLLER_PATH = path.join(ROOT, 'src/modules/gestor/app/controllers/unidadeApiController.js');
@@ -71,7 +73,7 @@ function loadToggleAccessHarness(overrides = {}) {
     'badRequest',
     'serverError',
     'console',
-    `${snippet}\nreturn { toggleAccessUnidades, ensureCanAccessUnidade };`,
+    `${snippet}\nreturn { toggleAccessUnidades };`,
   );
 
   return {

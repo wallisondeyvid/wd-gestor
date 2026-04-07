@@ -1,7 +1,7 @@
 
 import {
-  inspectUnitProvisioning as inspectUnitProvisioningUseCase,
-} from '#modules/gestor/app/usecases/unit-provisioning/UnitProvisioningService.js';
+	inspectUnitProvisioning as inspectUnitProvisioningBridge,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 import { listUnitProvisioningEventsService } from './listUnitProvisioningEventsService.js';
 
@@ -12,7 +12,7 @@ export {
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function inspectUnitProvisioning(input) {
-	return inspectUnitProvisioningUseCase(input);
+	return inspectUnitProvisioningBridge(input);
 }
 
 // Redefine a função para delegar ao novo service

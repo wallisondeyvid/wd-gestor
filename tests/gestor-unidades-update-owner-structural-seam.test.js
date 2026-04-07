@@ -33,7 +33,18 @@ function extractExportedAsyncFunction(source, functionName) {
 
 function buildFunction(functionSource, context = {}) {
   const script = new vm.Script(`(${functionSource})`);
-  return script.runInNewContext(context);
+  const runtimeContext = {
+    ...context,
+    createUnidadePolicyContextCore: context.createUnidadePolicyContextCore || (() => ({
+      ensureCanAccessUnidade: (unidadeId) => context.ensureCanAccessUnidade?.(context.__currentReqForPolicyContext, unidadeId),
+      resolveRequestedPrincipalUnitId: (requestedPrincipalUnitId, fallbackPrincipalUnitId) => context.resolveRequestedPrincipalUnitId?.(
+        context.__currentReqForPolicyContext,
+        requestedPrincipalUnitId,
+        fallbackPrincipalUnitId,
+      ),
+    })),
+  };
+  return script.runInNewContext(runtimeContext);
 }
 
 function createApiRes() {
@@ -51,15 +62,24 @@ function createApiRes() {
   };
 }
 
+function buildUpdateUnidade(context = {}) {
+  const functionSource = extractExportedAsyncFunction(CONTROLLER_SOURCE, 'updateUnidade');
+  return async function updateUnidadeWithRuntimeReq(req, res) {
+    const executable = buildFunction(functionSource, {
+      ...context,
+      __currentReqForPolicyContext: req,
+    });
+    return executable(req, res);
+  };
+}
+
 test('updateUnidade: owner real persiste updated, serializa e responde por ok', async () => {
   const callOrder = [];
   let capturedUpdate = null;
   let persistedApiBancaria = null;
   let updateUnidadeWriteArg = null;
 
-  const updateUnidade = buildFunction(
-    extractExportedAsyncFunction(CONTROLLER_SOURCE, 'updateUnidade'),
-    {
+  const updateUnidade = buildUpdateUnidade({
       findUnidadeById: async (id) => ({
         _id: id,
         diretor_usuario_id: 'dir-existente',
@@ -149,8 +169,7 @@ test('updateUnidade: owner real persiste updated, serializa e responde por ok', 
       notFound: (res, message) => res.status(404).json({ success: false, message }),
       serverError: (res, error) => res.status(500).json({ success: false, message: error?.message }),
       console,
-    }
-  );
+    });
 
   const req = {
     user: { role: 'admin', isMaster: false },

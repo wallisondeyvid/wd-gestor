@@ -33,7 +33,13 @@ function extractExportedAsyncFunction(source, functionName) {
 
 function buildFunction(functionSource, context = {}) {
   const script = new vm.Script(`(${functionSource})`);
-  return script.runInNewContext(context);
+  const runtimeContext = {
+    ...context,
+    createUnidadePolicyContextCore: context.createUnidadePolicyContextCore || (() => ({
+      ensureCanAccessUnidade: (unidadeId) => context.ensureCanAccessUnidade?.(context.__currentReqForPolicyContext, unidadeId),
+    })),
+  };
+  return script.runInNewContext(runtimeContext);
 }
 
 function createApiRes() {
@@ -53,7 +59,13 @@ function createApiRes() {
 
 function buildDeleteUnidade(context = {}) {
   const functionSource = extractExportedAsyncFunction(CONTROLLER_SOURCE, 'deleteUnidade');
-  return buildFunction(functionSource, context);
+  return async function deleteUnidadeWithRuntimeReq(req, res) {
+    const executable = buildFunction(functionSource, {
+      ...context,
+      __currentReqForPolicyContext: req,
+    });
+    return executable(req, res);
+  };
 }
 
 test('deleteUnidade: owner real preserva gate, lookup, autorizacao, politica inline e delega a execucao final apenas depois disso', async () => {

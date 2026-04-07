@@ -115,7 +115,8 @@ async function importGetUnidadeById(tag) {
 }
 
 async function requestGestorApp(pathname) {
-  const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app-${Date.now()}`);
+  const { default: buildGestorApp } = await import(`${gestorAppModuleUrl}?case=app-${Date.now()}`);
+  const gestorApp = buildGestorApp();
   const rootApp = express();
   rootApp.use('/gestor', gestorApp);
 

@@ -167,11 +167,13 @@ test('getUnidadeLogo: preserva autorizacao/lookup, delega resolucao via seam e e
   const getUnidadeLogo = buildFunction(
     buildGetUnidadeLogoWithSeam(),
     {
-      ensureCanAccessUnidade: async (_req, id) => {
-        callOrder.push('authorize');
-        authorizeId = id;
-        return true;
-      },
+      createUnidadePolicyContextCore: () => ({
+        ensureCanAccessUnidade: async (id) => {
+          callOrder.push('authorize');
+          authorizeId = id;
+          return true;
+        },
+      }),
       findUnidadeByIdLean: async (id) => {
         callOrder.push('lookup');
         lookupId = id;
@@ -219,7 +221,9 @@ test('getUnidadeLogo: preserva 400 fora do escopo contextual sem chamar a seam d
   const getUnidadeLogo = buildFunction(
     buildGetUnidadeLogoWithSeam(),
     {
-      ensureCanAccessUnidade: async () => false,
+      createUnidadePolicyContextCore: () => ({
+        ensureCanAccessUnidade: async () => false,
+      }),
       findUnidadeByIdLean: async () => {
         throw new Error('nao deve fazer lookup quando nao tem acesso');
       },
@@ -257,10 +261,12 @@ test('getUnidadeLogo: preserva emissao de buffer no owner a partir da resolucao 
   const getUnidadeLogo = buildFunction(
     buildGetUnidadeLogoWithSeam(),
     {
-      ensureCanAccessUnidade: async () => {
-        callOrder.push('authorize');
-        return true;
-      },
+      createUnidadePolicyContextCore: () => ({
+        ensureCanAccessUnidade: async () => {
+          callOrder.push('authorize');
+          return true;
+        },
+      }),
       findUnidadeByIdLean: async (id) => {
         callOrder.push('lookup');
         return { _id: id, logo: 'data:image/png;base64,AAAA' };
@@ -300,10 +306,12 @@ test('getUnidadeLogo: preserva emissao de arquivo no owner e fallback 204 para p
   const getUnidadeLogo = buildFunction(
     buildGetUnidadeLogoWithSeam(),
     {
-      ensureCanAccessUnidade: async () => {
-        callOrder.push('authorize');
-        return true;
-      },
+      createUnidadePolicyContextCore: () => ({
+        ensureCanAccessUnidade: async () => {
+          callOrder.push('authorize');
+          return true;
+        },
+      }),
       findUnidadeByIdLean: async (id) => {
         callOrder.push('lookup');
         return { _id: id, logo: '' };

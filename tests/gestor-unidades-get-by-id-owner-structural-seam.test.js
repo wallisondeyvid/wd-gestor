@@ -102,11 +102,13 @@ test('getUnidadeById: owner real preserva lookup/autorizacao, admite seam no blo
           logo: null,
         };
       },
-      ensureCanAccessUnidade: async (_req, unidadeId) => {
-        callOrder.push('authorize');
-        authorizeId = unidadeId;
-        return true;
-      },
+      createUnidadePolicyContextCore: () => ({
+        ensureCanAccessUnidade: async (unidadeId) => {
+          callOrder.push('authorize');
+          authorizeId = unidadeId;
+          return true;
+        },
+      }),
       findDiretorAtivoByUnidadeSelectId: async (unidadeId) => ({ _id: `dir:${unidadeId}` }),
       buildApiBancariaForResponse: (value) => ({ normalized: true, value }),
       getUnidadeDetailsPayload: async (input) => {
