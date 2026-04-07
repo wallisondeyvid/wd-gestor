@@ -10,12 +10,14 @@ import express from 'express';
 const BRIDGE_ALIAS = '#modules/gestor/app/services/apiDbBridgeService.js';
 const BRIDGE_FILE_URL = pathToFileURL(resolve(process.cwd(), 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 const BRIDGE_MOCK_URL = 'mock:gestor-funcoes-create-bridge';
+const OWNER_CONTROLLER_IMPORT = '../src/modules/gestor/app/controllers/funcaoApiController.js?gestor-funcoes-create-runtime-owner';
 
 globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_MOCKS__ = {};
+globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__ = false;
 
 registerHooks({
 	resolve(specifier, context, nextResolve) {
-		if (specifier === BRIDGE_ALIAS) {
+		if (specifier === BRIDGE_ALIAS && globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__) {
 			return {
 				shortCircuit: true,
 				url: BRIDGE_MOCK_URL,
@@ -30,13 +32,12 @@ registerHooks({
 				format: 'module',
 				shortCircuit: true,
 				source: `
-import * as actual from ${JSON.stringify(BRIDGE_FILE_URL)};
 const getState = () => globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_MOCKS__;
 export * from ${JSON.stringify(BRIDGE_FILE_URL)};
-export const findFuncaoByNome = (...args) => getState().findFuncaoByNome(...args);
-export const createFuncao = (...args) => getState().createFuncao(...args);
-export const findUnidadeByIdWithModulosAcessiveis = (...args) => getState().findUnidadeByIdWithModulosAcessiveis(...args);
-export const findUnidadeUserBaseLean = (...args) => getState().findUnidadeUserBaseLean(...args);
+export function findFuncaoByNome(...args) { return getState().findFuncaoByNome(...args); }
+export function createFuncao(...args) { return getState().createFuncao(...args); }
+export function findUnidadeByIdWithModulosAcessiveis(...args) { return getState().findUnidadeByIdWithModulosAcessiveis(...args); }
+export function findUnidadeUserBaseLean(...args) { return getState().findUnidadeUserBaseLean(...args); }
 `,
 			};
 		}
@@ -145,7 +146,9 @@ function createMockResponse() {
 }
 
 async function requestGestorApp({ method = 'POST', pathname = '/api/funcoes', body } = {}) {
-	const { default: gestorApp } = await import('../src/modules/gestor/app/gestor-app.js');
+	globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__ = false;
+	const { default: buildGestorApp } = await import('../src/modules/gestor/app/gestor-app.js');
+	const gestorApp = buildGestorApp();
 	const parentApp = express();
 	parentApp.use('/gestor', gestorApp);
 
@@ -173,7 +176,8 @@ async function requestGestorApp({ method = 'POST', pathname = '/api/funcoes', bo
 }
 
 async function invokeOwner({ body = {}, unitScope } = {}) {
-	const { createFuncao } = await import('../src/modules/gestor/app/controllers/funcaoApiController.js');
+	globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__ = true;
+	const { createFuncao } = await import(OWNER_CONTROLLER_IMPORT);
 	const req = {
 		body,
 		unitScope,

@@ -1,21 +1,11 @@
 import mongoose from 'mongoose';
-import { createUnitScope } from '#shared/unitScope.js';
 import {
-  findFuncaoByIdRepo,
-  deleteFuncaoByIdRepo,
-} from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
-
-const GLOBAL_SCOPE = createUnitScope({});
+  deleteFuncaoById,
+  findFuncaoById,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 function normalizeUnitId(value) {
   return String(value || '').trim();
-}
-
-function scopeFromUnidadeId(unidadeId) {
-  const unidadeIdNorm = normalizeUnitId(unidadeId);
-  return unidadeIdNorm && mongoose.isValidObjectId(unidadeIdNorm)
-    ? createUnitScope({ unidadeId: unidadeIdNorm })
-    : GLOBAL_SCOPE;
 }
 
 export async function deleteFuncaoScopedService({ funcaoId, canonicalPrincipalUnitId = null }) {
@@ -24,18 +14,12 @@ export async function deleteFuncaoScopedService({ funcaoId, canonicalPrincipalUn
     return null;
   }
 
-  const funcao = await findFuncaoByIdRepo({
-    unitScope: scopeFromUnidadeId(lookupPrincipalUnitId),
-    id: funcaoId,
-  });
+  const funcao = await findFuncaoById(funcaoId, lookupPrincipalUnitId);
 
   if (!funcao) return null;
 
   const effectivePrincipalUnitId = lookupPrincipalUnitId || normalizeUnitId(funcao.unidade_principal_id) || null;
-  await deleteFuncaoByIdRepo({
-    unitScope: scopeFromUnidadeId(effectivePrincipalUnitId),
-    id: funcaoId,
-  });
+  await deleteFuncaoById(funcaoId, effectivePrincipalUnitId);
 
   return funcao;
 }

@@ -10,15 +10,26 @@ import express from 'express';
 const BRIDGE_ALIAS = '#modules/gestor/app/services/apiDbBridgeService.js';
 const BRIDGE_FILE_URL = pathToFileURL(resolve(process.cwd(), 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 const BRIDGE_MOCK_URL = 'mock:gestor-funcoes-delete-bridge';
+const DELETE_SERVICE_ALIAS = '#modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js';
+const DELETE_SERVICE_MOCK_URL = 'mock:gestor-funcoes-delete-scoped-service';
+const OWNER_CONTROLLER_IMPORT = '../src/modules/gestor/app/controllers/funcaoApiController.js?gestor-funcoes-delete-runtime-owner';
 
 globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_MOCKS__ = {};
+globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_USE_BRIDGE_MOCK__ = false;
 
 registerHooks({
 	resolve(specifier, context, nextResolve) {
-		if (specifier === BRIDGE_ALIAS) {
+		if (specifier === BRIDGE_ALIAS && globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_USE_BRIDGE_MOCK__) {
 			return {
 				shortCircuit: true,
 				url: BRIDGE_MOCK_URL,
+			};
+		}
+
+		if (specifier === DELETE_SERVICE_ALIAS && globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_USE_BRIDGE_MOCK__) {
+			return {
+				shortCircuit: true,
+				url: DELETE_SERVICE_MOCK_URL,
 			};
 		}
 
@@ -30,12 +41,22 @@ registerHooks({
 				format: 'module',
 				shortCircuit: true,
 				source: `
-import * as actual from ${JSON.stringify(BRIDGE_FILE_URL)};
 const getState = () => globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_MOCKS__;
 export * from ${JSON.stringify(BRIDGE_FILE_URL)};
-export const findFuncaoById = (...args) => getState().findFuncaoById(...args);
-export const deleteFuncaoById = (...args) => getState().deleteFuncaoById(...args);
-export const findUnidadeUserBaseLean = (...args) => getState().findUnidadeUserBaseLean(...args);
+export function findFuncaoById(...args) { return getState().findFuncaoById(...args); }
+export function deleteFuncaoById(...args) { return getState().deleteFuncaoById(...args); }
+export function findUnidadeUserBaseLean(...args) { return getState().findUnidadeUserBaseLean(...args); }
+`,
+			};
+		}
+
+		if (url === DELETE_SERVICE_MOCK_URL) {
+			return {
+				format: 'module',
+				shortCircuit: true,
+				source: `
+const getState = () => globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_MOCKS__;
+export function deleteFuncaoScopedService(...args) { return getState().deleteFuncaoScopedService(...args); }
 `,
 			};
 		}
@@ -53,6 +74,7 @@ function resetBridgeMocks() {
 	const calls = {
 		findFuncaoById: [],
 		deleteFuncaoById: [],
+		deleteFuncaoScopedService: [],
 		findUnidadeUserBaseLean: [],
 	};
 
@@ -69,6 +91,15 @@ function resetBridgeMocks() {
 		},
 		async deleteFuncaoById(id, unidadePrincipalId) {
 			calls.deleteFuncaoById.push([id, unidadePrincipalId]);
+		},
+		async deleteFuncaoScopedService({ funcaoId, canonicalPrincipalUnitId }) {
+			calls.deleteFuncaoScopedService.push([{ funcaoId, canonicalPrincipalUnitId }]);
+			if (funcaoId !== FUNCAO_ID) return null;
+			return {
+				_id: FUNCAO_ID,
+				nome: 'Supervisor',
+				unidade_principal_id: canonicalPrincipalUnitId || OTHER_PRINCIPAL_ID,
+			};
 		},
 		async findUnidadeUserBaseLean(unidadeId) {
 			calls.findUnidadeUserBaseLean.push([unidadeId]);
@@ -127,7 +158,9 @@ function createMockResponse() {
 }
 
 async function requestGestorApp({ pathname = `/api/funcoes/${FUNCAO_ID}` } = {}) {
-	const { default: gestorApp } = await import('../src/modules/gestor/app/gestor-app.js');
+	globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_USE_BRIDGE_MOCK__ = false;
+	const { default: buildGestorApp } = await import('../src/modules/gestor/app/gestor-app.js');
+	const gestorApp = buildGestorApp();
 	const parentApp = express();
 	parentApp.use('/gestor', gestorApp);
 
@@ -153,7 +186,8 @@ async function requestGestorApp({ pathname = `/api/funcoes/${FUNCAO_ID}` } = {})
 }
 
 async function invokeOwner({ id = FUNCAO_ID, unitScope } = {}) {
-	const { deleteFuncao } = await import('../src/modules/gestor/app/controllers/funcaoApiController.js');
+	globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_USE_BRIDGE_MOCK__ = true;
+	const { deleteFuncao } = await import(OWNER_CONTROLLER_IMPORT);
 	const req = {
 		params: { id },
 		unitScope,
@@ -198,8 +232,9 @@ test('owner real retorna 404 quando a funcao nao existe sem contexto canonico', 
 		code: 'NOT_FOUND',
 		message: 'Função não encontrada',
 	});
-	assert.deepStrictEqual(calls.findFuncaoById, [['missing-id', null]]);
+	assert.deepStrictEqual(calls.deleteFuncaoScopedService, [[{ funcaoId: 'missing-id', canonicalPrincipalUnitId: null }]]);
 	assert.equal(calls.deleteFuncaoById.length, 0);
+	assert.equal(calls.findFuncaoById.length, 0);
 });
 
 test('owner real retorna 404 quando a funcao nao existe no contexto canonico', async () => {
@@ -215,24 +250,26 @@ test('owner real retorna 404 quando a funcao nao existe no contexto canonico', a
 		message: 'Função não encontrada',
 	});
 	assert.deepStrictEqual(calls.findUnidadeUserBaseLean, [[CONTEXT_FILIAL_ID]]);
-	assert.deepStrictEqual(calls.findFuncaoById, [['missing-id', CONTEXT_PRINCIPAL_ID]]);
+	assert.deepStrictEqual(calls.deleteFuncaoScopedService, [[{ funcaoId: 'missing-id', canonicalPrincipalUnitId: CONTEXT_PRINCIPAL_ID }]]);
 	assert.equal(calls.deleteFuncaoById.length, 0);
+	assert.equal(calls.findFuncaoById.length, 0);
 });
 
-test('owner real sem contexto usa a unidade da propria funcao na exclusao', async () => {
+test('owner real sem contexto delega delete com contexto canonico nulo', async () => {
 	const response = await invokeOwner();
 
 	assert.equal(response.statusCode, 200);
 	assert.equal(response.body.success, true);
-	assert.deepStrictEqual(calls.findFuncaoById, [[FUNCAO_ID, null]]);
-	assert.deepStrictEqual(calls.deleteFuncaoById, [[FUNCAO_ID, OTHER_PRINCIPAL_ID]]);
+	assert.deepStrictEqual(calls.deleteFuncaoScopedService, [[{ funcaoId: FUNCAO_ID, canonicalPrincipalUnitId: null }]]);
+	assert.equal(calls.findFuncaoById.length, 0);
+	assert.equal(calls.deleteFuncaoById.length, 0);
 	assert.deepStrictEqual(response.body.data, {
 		deleted: true,
 		id: FUNCAO_ID,
 	});
 });
 
-test('owner real com contexto usa a principal contextual na exclusao', async () => {
+test('owner real com contexto delega delete com a principal contextual', async () => {
 	const response = await invokeOwner({
 		unitScope: { unidadeId: CONTEXT_FILIAL_ID },
 	});
@@ -240,8 +277,9 @@ test('owner real com contexto usa a principal contextual na exclusao', async () 
 	assert.equal(response.statusCode, 200);
 	assert.equal(response.body.success, true);
 	assert.deepStrictEqual(calls.findUnidadeUserBaseLean, [[CONTEXT_FILIAL_ID]]);
-	assert.deepStrictEqual(calls.findFuncaoById, [[FUNCAO_ID, CONTEXT_PRINCIPAL_ID]]);
-	assert.deepStrictEqual(calls.deleteFuncaoById, [[FUNCAO_ID, CONTEXT_PRINCIPAL_ID]]);
+	assert.deepStrictEqual(calls.deleteFuncaoScopedService, [[{ funcaoId: FUNCAO_ID, canonicalPrincipalUnitId: CONTEXT_PRINCIPAL_ID }]]);
+	assert.equal(calls.findFuncaoById.length, 0);
+	assert.equal(calls.deleteFuncaoById.length, 0);
 	assert.deepStrictEqual(response.body.data, {
 		deleted: true,
 		id: FUNCAO_ID,
@@ -249,8 +287,8 @@ test('owner real com contexto usa a principal contextual na exclusao', async () 
 });
 
 test('owner real propaga erro interno como 500', async () => {
-	globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_MOCKS__.deleteFuncaoById = async (id, unidadePrincipalId) => {
-		calls.deleteFuncaoById.push([id, unidadePrincipalId]);
+	globalThis.__GESTOR_FUNCOES_DELETE_RUNTIME_MOCKS__.deleteFuncaoScopedService = async ({ funcaoId, canonicalPrincipalUnitId }) => {
+		calls.deleteFuncaoScopedService.push([{ funcaoId, canonicalPrincipalUnitId }]);
 		throw new Error('forced-funcoes-delete-failure');
 	};
 

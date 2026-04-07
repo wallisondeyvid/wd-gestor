@@ -124,6 +124,9 @@ function loadBulkOwnerHarness(runtimeOverrides = {}) {
     ok: runtimeOverrides.ok ?? responseHelpers.ok,
     badRequest: runtimeOverrides.badRequest ?? responseHelpers.badRequest,
     serverError: runtimeOverrides.serverError ?? responseHelpers.serverError,
+    findFuncaoByNome: runtimeOverrides.findFuncaoByNome ?? (async () => null),
+    findOutraFuncaoByNomeExcludingId: runtimeOverrides.findOutraFuncaoByNomeExcludingId ?? (async () => null),
+    findUnidadeByIdWithModulosAcessiveis: runtimeOverrides.findUnidadeByIdWithModulosAcessiveis ?? (async () => null),
     findUnidadeUserBaseLean: runtimeOverrides.findUnidadeUserBaseLean ?? (async (unidadeId) => {
       callLog.findUnidadeUserBaseLeanCalls.push(unidadeId);
       return null;
@@ -154,6 +157,14 @@ function loadBulkOwnerHarness(runtimeOverrides = {}) {
         return this.resolvePrincipalUnitId(scopedUnitIdNorm);
       },
     })),
+    createFuncaoWriteValidationCore: runtimeOverrides.createFuncaoWriteValidationCore ?? (() => ({
+      async validateCreate() {
+        return { data: null };
+      },
+      async validateUpdate() {
+        return { data: null, targetPrincipalUnitId: null };
+      },
+    })),
     console: runtimeOverrides.console ?? {
       error(...args) {
         callLog.consoleErrors.push(args);
@@ -167,11 +178,15 @@ function loadBulkOwnerHarness(runtimeOverrides = {}) {
 const ok = __deps.ok;
 const badRequest = __deps.badRequest;
 const serverError = __deps.serverError;
+const findFuncaoByNome = __deps.findFuncaoByNome;
+const findOutraFuncaoByNomeExcludingId = __deps.findOutraFuncaoByNomeExcludingId;
+const findUnidadeByIdWithModulosAcessiveis = __deps.findUnidadeByIdWithModulosAcessiveis;
 const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
 const findFuncaoById = __deps.findFuncaoById;
 const saveFuncao = __deps.saveFuncao;
 const processBulkUpdateFuncoesItems = __deps.processBulkUpdateFuncoesItems;
 const createFuncaoContextPolicyCore = __deps.createFuncaoContextPolicyCore;
+const createFuncaoWriteValidationCore = __deps.createFuncaoWriteValidationCore;
 const console = __deps.console;
 ${snippet}
 return { bulkUpdateFuncoes };

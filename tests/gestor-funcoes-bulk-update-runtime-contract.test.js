@@ -10,12 +10,14 @@ import express from 'express';
 const BRIDGE_ALIAS = '#modules/gestor/app/services/apiDbBridgeService.js';
 const BRIDGE_FILE_URL = pathToFileURL(resolve(process.cwd(), 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 const BRIDGE_MOCK_URL = 'mock:gestor-funcoes-bulk-update-bridge';
+const OWNER_CONTROLLER_IMPORT = '../src/modules/gestor/app/controllers/funcaoApiController.js?gestor-funcoes-bulk-update-runtime-owner';
 
 globalThis.__GESTOR_FUNCOES_BULK_UPDATE_RUNTIME_MOCKS__ = {};
+globalThis.__GESTOR_FUNCOES_BULK_UPDATE_RUNTIME_USE_BRIDGE_MOCK__ = false;
 
 registerHooks({
 	resolve(specifier, context, nextResolve) {
-		if (specifier === BRIDGE_ALIAS) {
+		if (specifier === BRIDGE_ALIAS && globalThis.__GESTOR_FUNCOES_BULK_UPDATE_RUNTIME_USE_BRIDGE_MOCK__) {
 			return {
 				shortCircuit: true,
 				url: BRIDGE_MOCK_URL,
@@ -30,12 +32,11 @@ registerHooks({
 				format: 'module',
 				shortCircuit: true,
 				source: `
-import * as actual from ${JSON.stringify(BRIDGE_FILE_URL)};
 const getState = () => globalThis.__GESTOR_FUNCOES_BULK_UPDATE_RUNTIME_MOCKS__;
 export * from ${JSON.stringify(BRIDGE_FILE_URL)};
-export const findFuncaoById = (...args) => getState().findFuncaoById(...args);
-export const saveFuncao = (...args) => getState().saveFuncao(...args);
-export const findUnidadeUserBaseLean = (...args) => getState().findUnidadeUserBaseLean(...args);
+export function findFuncaoById(...args) { return getState().findFuncaoById(...args); }
+export function saveFuncao(...args) { return getState().saveFuncao(...args); }
+export function findUnidadeUserBaseLean(...args) { return getState().findUnidadeUserBaseLean(...args); }
 `,
 			};
 		}
@@ -132,7 +133,9 @@ function createMockResponse() {
 }
 
 async function requestGestorApp({ body } = {}) {
-	const { default: gestorApp } = await import('../src/modules/gestor/app/gestor-app.js');
+	globalThis.__GESTOR_FUNCOES_BULK_UPDATE_RUNTIME_USE_BRIDGE_MOCK__ = false;
+	const { default: buildGestorApp } = await import('../src/modules/gestor/app/gestor-app.js');
+	const gestorApp = buildGestorApp();
 	const parentApp = express();
 	parentApp.use('/gestor', gestorApp);
 
@@ -160,7 +163,8 @@ async function requestGestorApp({ body } = {}) {
 }
 
 async function invokeOwner({ body = {}, unitScope } = {}) {
-	const { bulkUpdateFuncoes } = await import('../src/modules/gestor/app/controllers/funcaoApiController.js');
+	globalThis.__GESTOR_FUNCOES_BULK_UPDATE_RUNTIME_USE_BRIDGE_MOCK__ = true;
+	const { bulkUpdateFuncoes } = await import(OWNER_CONTROLLER_IMPORT);
 	const req = {
 		body,
 		unitScope,

@@ -1,52 +1,12 @@
-import mongoose from 'mongoose';
-import { createUnitScope } from '#shared/unitScope.js';
 import {
-  findFuncoesByFiltroLeanRepo,
-  findFuncoesByFiltroSelectLeanRepo,
-} from '#modules/gestor/app/repositories/FuncaoReadRepository.js';
-import { findUnidadeUserBaseLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
+  findFuncoesByFiltroLeanFromDb,
+  findFuncoesByFiltroSelectLeanFromDb,
+  findUnidadeUserBaseLean,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { createFuncaoContextPolicyCore } from '#modules/gestor/app/services/funcoes/createFuncaoContextPolicyCore.js';
 
-const GLOBAL_SCOPE = createUnitScope({});
-
-function normalizeUnitId(value) {
-  return String(value || '').trim();
-}
-
-function scopeFromUnidadeId(unidadeId) {
-  const unidadeIdNorm = normalizeUnitId(unidadeId);
-  return unidadeIdNorm && mongoose.isValidObjectId(unidadeIdNorm)
-    ? createUnitScope({ unidadeId: unidadeIdNorm })
-    : GLOBAL_SCOPE;
-}
-
-function extractSingleScopedUnitId(value) {
-  if (typeof value === 'string') return value;
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return '';
-
-  const inValues = Array.isArray(value.$in)
-    ? [...new Set(value.$in.map((item) => String(item || '').trim()).filter(Boolean))]
-    : [];
-
-  return inValues.length === 1 ? inValues[0] : '';
-}
-
-function scopeFromFuncaoFiltro(filtro) {
-  if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
-
-  const unidadePrincipalId = extractSingleScopedUnitId(filtro.unidade_principal_id);
-  return unidadePrincipalId ? scopeFromUnidadeId(unidadePrincipalId) : GLOBAL_SCOPE;
-}
-
-async function resolvePrincipalUnitId(unidadeId) {
-  return funcaoContextPolicy.resolvePrincipalUnitId(unidadeId);
-}
-
 const funcaoContextPolicy = createFuncaoContextPolicyCore({
-  findUnidadeUserBaseLean: async (unidadeId) => findUnidadeUserBaseLeanRepo({
-    unitScope: scopeFromUnidadeId(unidadeId),
-    id: unidadeId,
-  }),
+  findUnidadeUserBaseLean,
 });
 
 function mapClusterFuncao(funcao) {
@@ -77,11 +37,11 @@ function mapUnidadeFuncao(funcao) {
 }
 
 export async function findFuncoesByFiltroService(filtro) {
-  return findFuncoesByFiltroLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
+  return findFuncoesByFiltroLeanFromDb(filtro);
 }
 
 export async function findFuncoesByFiltroSelectService(filtro) {
-  return findFuncoesByFiltroSelectLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
+  return findFuncoesByFiltroSelectLeanFromDb(filtro);
 }
 
 export async function listarFuncoesService({ query, unitScope }) {

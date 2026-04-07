@@ -15,6 +15,8 @@ const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/ge
 const gestorAppModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/gestor-app.js')).href;
 const actualDbBridgeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 const dbBridgeMockModuleUrl = 'mock:gestor-funcoes-list-api-db-bridge';
+const listServiceAlias = '#modules/gestor/app/services/funcoes/listarFuncoes.service.js';
+const listServiceMockModuleUrl = 'mock:gestor-funcoes-list-service';
 const DB_BRIDGE_EXPORTS = [
 	'findUnidadeUserBaseLean',
 	'findFuncoesByFiltroLean',
@@ -25,6 +27,9 @@ registerHooks({
 	resolve(specifier, context, nextResolve) {
 		if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
 			return { url: dbBridgeMockModuleUrl, shortCircuit: true };
+		}
+		if (specifier === listServiceAlias) {
+			return { url: listServiceMockModuleUrl, shortCircuit: true };
 		}
 		return nextResolve(specifier, context);
 	},
@@ -47,6 +52,25 @@ registerHooks({
 			};
 		}
 
+		if (url === listServiceMockModuleUrl) {
+			return {
+				format: 'module',
+				shortCircuit: true,
+				source: [
+					"const getMocks = () => globalThis.__GESTOR_FUNCOES_LIST_DB_MOCKS__ || {};",
+					"export async function findFuncoesByFiltroService(...args) {",
+					"  return getMocks().findFuncoesByFiltroLean(...args);",
+					"}",
+					"export async function findFuncoesByFiltroSelectService(...args) {",
+					"  return getMocks().findFuncoesByFiltroSelectLean(...args);",
+					"}",
+					"export async function listarFuncoesService(...args) {",
+					"  return getMocks().listarFuncoesService(...args);",
+					"}",
+				].join('\n'),
+			};
+		}
+
 		return nextLoad(url, context);
 	},
 });
@@ -55,8 +79,114 @@ function uniqueSuffix() {
 	return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function normalizeUnitId(value) {
+	return String(value || '').trim();
+}
+
+function mapClusterFuncao(funcao) {
+	return {
+		_id: funcao._id,
+		nome: funcao.nome,
+		descricao: funcao.descricao || '',
+		codigo: funcao.codigo || '',
+	};
+}
+
+function mapUnidadeFuncao(funcao) {
+	const nome = funcao.nome || '';
+	const rawDesc = (funcao.descricao && funcao.descricao.trim()) ? funcao.descricao.trim() : '';
+	const codigo = funcao.codigo || '';
+	const descricaoDisplay = rawDesc || (nome && nome !== codigo ? nome : codigo);
+	const descricaoFinal = rawDesc || nome || codigo;
+
+	return {
+		_id: funcao._id,
+		codigo,
+		nome,
+		descricao: rawDesc,
+		descricao_display: descricaoDisplay,
+		descricao_final: descricaoFinal,
+		hasDescricaoReal: !!rawDesc,
+	};
+}
+
+async function resolvePrincipalUnitId(mocks, unidadeId) {
+	const unidadeIdNorm = normalizeUnitId(unidadeId);
+	if (!unidadeIdNorm) return '';
+	const unidade = await mocks.findUnidadeUserBaseLean(unidadeIdNorm);
+	if (!unidade) return unidadeIdNorm;
+	return String(unidade.is_principal ? unidade._id : (unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeIdNorm)).trim();
+}
+
+function createListServiceMock(mocks) {
+	return async function listarFuncoesService({ query, unitScope }) {
+		const queryTerm = String(query?.q || '').trim().toLowerCase();
+		const scopedUnitId = normalizeUnitId(unitScope?.unidadeId);
+
+		if (normalizeUnitId(query?.unidade_cluster)) {
+			const unidadeCluster = normalizeUnitId(query.unidade_cluster);
+			if (scopedUnitId) {
+				const contextPrincipal = await resolvePrincipalUnitId(mocks, scopedUnitId);
+				const requestedPrincipal = await resolvePrincipalUnitId(mocks, unidadeCluster);
+				if (contextPrincipal && requestedPrincipal !== contextPrincipal) return [];
+			}
+
+			const targetPrincipal = await resolvePrincipalUnitId(mocks, unidadeCluster) || unidadeCluster;
+			let funcoes = await mocks.findFuncoesByFiltroLean({ unidade_principal_id: targetPrincipal });
+
+			if (queryTerm) {
+				funcoes = funcoes.filter((funcao) => (
+					(funcao.nome && funcao.nome.toLowerCase().includes(queryTerm))
+					|| (funcao.codigo && funcao.codigo.toLowerCase().includes(queryTerm))
+					|| (funcao.descricao && funcao.descricao.toLowerCase().includes(queryTerm))
+				));
+			}
+
+			funcoes.sort((left, right) => (left.nome || '').localeCompare(right.nome || ''));
+			return funcoes.map(mapClusterFuncao);
+		}
+
+		if (normalizeUnitId(query?.unidade_id)) {
+			const rawIds = String(query.unidade_id)
+				.split(',')
+				.map((item) => normalizeUnitId(item))
+				.filter(Boolean);
+			if (!rawIds.length) return [];
+
+			const principalIds = [];
+			for (const unidadeId of rawIds) {
+				if (scopedUnitId) {
+					const contextPrincipal = await resolvePrincipalUnitId(mocks, scopedUnitId);
+					const requestedPrincipal = await resolvePrincipalUnitId(mocks, unidadeId);
+					if (contextPrincipal && requestedPrincipal !== contextPrincipal) return [];
+				}
+
+				principalIds.push(await resolvePrincipalUnitId(mocks, unidadeId) || unidadeId);
+			}
+
+			const uniquePrincipalIds = [...new Set(principalIds)];
+			const filtro = uniquePrincipalIds.length === 1
+				? { unidade_principal_id: uniquePrincipalIds[0] }
+				: { unidade_principal_id: { $in: uniquePrincipalIds } };
+			const funcoes = await mocks.findFuncoesByFiltroSelectLean(filtro);
+			return funcoes.map(mapUnidadeFuncao);
+		}
+
+		return [];
+	};
+}
+
 function setDbMocks(overrides = {}) {
-	globalThis.__GESTOR_FUNCOES_LIST_DB_MOCKS__ = { ...overrides };
+	const mocks = {
+		findUnidadeUserBaseLean: overrides.findUnidadeUserBaseLean ?? (async () => null),
+		findFuncoesByFiltroLean: overrides.findFuncoesByFiltroLean ?? (async () => []),
+		findFuncoesByFiltroSelectLean: overrides.findFuncoesByFiltroSelectLean ?? (async () => []),
+	};
+
+	globalThis.__GESTOR_FUNCOES_LIST_DB_MOCKS__ = {
+		...mocks,
+		listarFuncoesService: overrides.listarFuncoesService ?? createListServiceMock(mocks),
+	};
 }
 
 function clearDbMocks() {
@@ -124,7 +254,8 @@ async function invokeOwner({ reqOverrides = {}, bridgeOverrides = {} } = {}) {
 }
 
 async function requestGestorApp(pathname) {
-	const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app-${encodeURIComponent(uniqueSuffix())}`);
+	const { default: buildGestorApp } = await import(`${gestorAppModuleUrl}?case=app-${encodeURIComponent(uniqueSuffix())}`);
+	const gestorApp = buildGestorApp();
 	const rootApp = express();
 	rootApp.use('/gestor', gestorApp);
 

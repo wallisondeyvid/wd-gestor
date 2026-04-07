@@ -1,8 +1,57 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
+import { registerHooks } from 'node:module';
 import request from 'supertest';
 import funcaoApiRouter from '../src/modules/gestor/app/routes/funcaoApi.js';
+
+const API_DB_BRIDGE_SPECIFIER = '#modules/gestor/app/services/apiDbBridgeService.js';
+const UPDATE_RUNTIME_MOCKS_KEY = Symbol.for('gestor.funcoes.update-runtime.mocks');
+const UPDATE_RUNTIME_HOOK_INSTALLED_KEY = Symbol.for('gestor.funcoes.update-runtime.mock-hook-installed');
+
+function installApiDbBridgeMockHook() {
+  if (globalThis[UPDATE_RUNTIME_HOOK_INSTALLED_KEY]) {
+    return;
+  }
+
+  const mockModuleSource = `
+const getMocks = () => globalThis[Symbol.for('gestor.funcoes.update-runtime.mocks')];
+
+export const findFuncaoByNome = (...args) => getMocks().findFuncaoByNome(...args);
+export const createFuncao = (...args) => getMocks().createFuncao(...args);
+export const findFuncaoByIdPopulated = (...args) => getMocks().findFuncaoByIdPopulated(...args);
+export const findFuncaoById = (...args) => getMocks().findFuncaoById(...args);
+export const findOutraFuncaoByNomeExcludingId = (...args) => getMocks().findOutraFuncaoByNomeExcludingId(...args);
+export const updateFuncaoById = (...args) => getMocks().updateFuncaoById(...args);
+export const findFuncaoByIdLean = (...args) => getMocks().findFuncaoByIdLean(...args);
+export const findFuncoesByPrincipalUnitIdLean = (...args) => getMocks().findFuncoesByPrincipalUnitIdLean(...args);
+export const findFuncoesByFiltroLean = (...args) => getMocks().findFuncoesByFiltroLean(...args);
+export const findFuncoesByFiltroSelectLean = (...args) => getMocks().findFuncoesByFiltroSelectLean(...args);
+export const deleteFuncaoById = (...args) => getMocks().deleteFuncaoById(...args);
+export const saveFuncao = (...args) => getMocks().saveFuncao(...args);
+export const findUnidadeByIdWithModulosAcessiveis = (...args) => getMocks().findUnidadeByIdWithModulosAcessiveis(...args);
+export const findUnidadeUserBaseLean = (...args) => getMocks().findUnidadeUserBaseLean(...args);
+`;
+  const mockModuleUrl = `data:text/javascript,${encodeURIComponent(mockModuleSource)}`;
+
+  registerHooks({
+    resolve(specifier, context, nextResolve) {
+      if (specifier === API_DB_BRIDGE_SPECIFIER) {
+        return {
+          shortCircuit: true,
+          url: mockModuleUrl,
+          format: 'module',
+        };
+      }
+
+      return nextResolve(specifier, context);
+    },
+  });
+
+  globalThis[UPDATE_RUNTIME_HOOK_INSTALLED_KEY] = true;
+}
+
+installApiDbBridgeMockHook();
 
 function createJsonResponseRecorder() {
   const response = {
@@ -133,12 +182,10 @@ async function importUpdateFuncaoWithMocks(t, overrides = {}) {
     },
   };
 
-  t.mock.module('#modules/gestor/app/services/apiDbBridgeService.js', {
-    namedExports: {
-      ...defaults,
-      ...overrides,
-    },
-  });
+  globalThis[UPDATE_RUNTIME_MOCKS_KEY] = {
+    ...defaults,
+    ...overrides,
+  };
 
   const module = await import(`../src/modules/gestor/app/controllers/funcaoApiController.js?case=${Date.now()}-${Math.random()}`);
   return { updateFuncao: module.updateFuncao, calls };

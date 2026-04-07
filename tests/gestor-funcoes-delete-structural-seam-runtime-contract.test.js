@@ -11,7 +11,6 @@ const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gesto
 const bridgeMockModuleUrl = 'mock:gestor-funcoes-delete-bridge';
 const listarServiceMockModuleUrl = 'mock:gestor-funcoes-listar-service';
 const serviceMockModuleUrl = 'mock:gestor-funcoes-delete-service';
-const repositoryMockModuleUrl = 'mock:gestor-funcoes-delete-repository';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -27,10 +26,6 @@ registerHooks({
       return { url: serviceMockModuleUrl, shortCircuit: true };
     }
 
-    if (specifier === '#modules/gestor/app/repositories/FuncaoReadRepository.js') {
-      return { url: repositoryMockModuleUrl, shortCircuit: true };
-    }
-
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
@@ -44,12 +39,17 @@ registerHooks({
           "export const findFuncaoByNome = notUsed;",
           "export const createFuncao = notUsed;",
           "export const findFuncaoByIdPopulated = notUsed;",
-          "export const findFuncaoById = notUsed;",
+          "export async function findFuncaoById(...args) {",
+          "  return await (getBridgeMocks().findFuncaoById || notUsed)(...args);",
+          "}",
           "export const findOutraFuncaoByNomeExcludingId = notUsed;",
           "export const updateFuncaoById = notUsed;",
           "export const findFuncaoByIdLean = notUsed;",
           "export const findFuncoesByPrincipalUnitIdLean = notUsed;",
           "export const saveFuncao = notUsed;",
+          "export async function deleteFuncaoById(...args) {",
+          "  return await (getBridgeMocks().deleteFuncaoById || notUsed)(...args);",
+          "}",
           "export const findUnidadeByIdWithModulosAcessiveis = notUsed;",
           "export async function findUnidadeUserBaseLean(...args) {",
           "  return await (getBridgeMocks().findUnidadeUserBaseLean || notUsed)(...args);",
@@ -83,24 +83,6 @@ registerHooks({
         ].join('\n'),
       };
     }
-
-    if (url === repositoryMockModuleUrl) {
-      return {
-        format: 'module',
-        shortCircuit: true,
-        source: [
-          "const getRepositoryMocks = () => globalThis.__GESTOR_FUNCOES_DELETE_REPOSITORY_MOCKS__ || {};",
-          "const notUsed = async () => { throw new Error('repository nao configurado nesta suite'); };",
-          "export async function findFuncaoByIdRepo(...args) {",
-          "  return await (getRepositoryMocks().findFuncaoByIdRepo || notUsed)(...args);",
-          "}",
-          "export async function deleteFuncaoByIdRepo(...args) {",
-          "  return await (getRepositoryMocks().deleteFuncaoByIdRepo || notUsed)(...args);",
-          "}",
-        ].join('\n'),
-      };
-    }
-
     return nextLoad(url, context);
   },
 });
@@ -111,10 +93,6 @@ function setBridgeMocks(overrides = {}) {
 
 function setServiceMocks(overrides = {}) {
   globalThis.__GESTOR_FUNCOES_DELETE_SERVICE_MOCKS__ = { ...overrides };
-}
-
-function setRepositoryMocks(overrides = {}) {
-  globalThis.__GESTOR_FUNCOES_DELETE_REPOSITORY_MOCKS__ = { ...overrides };
 }
 
 function createReq(overrides = {}) {
@@ -201,16 +179,16 @@ test('deleteFuncao usa o service fino com a principal contextual resolvida e pre
 test('deleteFuncaoScopedService usa a principal da propria funcao quando nao ha contexto canonico', async () => {
   const calls = [];
 
-  setRepositoryMocks({
-    findFuncaoByIdRepo: async (args) => {
-      calls.push({ op: 'findFuncaoByIdRepo', args });
+  setBridgeMocks({
+    findFuncaoById: async (...args) => {
+      calls.push({ op: 'findFuncaoById', args });
       return {
         _id: '507f1f77bcf86cd799439011',
         unidade_principal_id: '507f191e810c19729de860ff',
       };
     },
-    deleteFuncaoByIdRepo: async (args) => {
-      calls.push({ op: 'deleteFuncaoByIdRepo', args });
+    deleteFuncaoById: async (...args) => {
+      calls.push({ op: 'deleteFuncaoById', args });
       return { _id: '507f1f77bcf86cd799439011' };
     },
   });
@@ -226,31 +204,25 @@ test('deleteFuncaoScopedService usa a principal da propria funcao quando nao ha 
     unidade_principal_id: '507f191e810c19729de860ff',
   });
   assert.equal(calls.length, 2);
-  assert.equal(calls[0].op, 'findFuncaoByIdRepo');
-  assert.equal(calls[1].op, 'deleteFuncaoByIdRepo');
-  assert.deepEqual(calls[0].args, {
-    unitScope: { type: 'global', unidadeId: null },
-    id: '507f1f77bcf86cd799439011',
-  });
-  assert.deepEqual(calls[1].args, {
-    unitScope: { type: 'unit', unidadeId: '507f191e810c19729de860ff' },
-    id: '507f1f77bcf86cd799439011',
-  });
+  assert.equal(calls[0].op, 'findFuncaoById');
+  assert.equal(calls[1].op, 'deleteFuncaoById');
+  assert.deepEqual(calls[0].args, ['507f1f77bcf86cd799439011', null]);
+  assert.deepEqual(calls[1].args, ['507f1f77bcf86cd799439011', '507f191e810c19729de860ff']);
 });
 
 test('deleteFuncaoScopedService usa a principal contextual no lookup e no delete quando ela existe', async () => {
   const calls = [];
 
-  setRepositoryMocks({
-    findFuncaoByIdRepo: async (args) => {
-      calls.push({ op: 'findFuncaoByIdRepo', args });
+  setBridgeMocks({
+    findFuncaoById: async (...args) => {
+      calls.push({ op: 'findFuncaoById', args });
       return {
         _id: '507f1f77bcf86cd799439011',
         unidade_principal_id: '507f191e810c19729de860ff',
       };
     },
-    deleteFuncaoByIdRepo: async (args) => {
-      calls.push({ op: 'deleteFuncaoByIdRepo', args });
+    deleteFuncaoById: async (...args) => {
+      calls.push({ op: 'deleteFuncaoById', args });
       return { _id: '507f1f77bcf86cd799439011' };
     },
   });
@@ -262,26 +234,20 @@ test('deleteFuncaoScopedService usa a principal contextual no lookup e no delete
   });
 
   assert.equal(calls.length, 2);
-  assert.deepEqual(calls[0].args, {
-    unitScope: { type: 'unit', unidadeId: '507f191e810c19729de860ea' },
-    id: '507f1f77bcf86cd799439011',
-  });
-  assert.deepEqual(calls[1].args, {
-    unitScope: { type: 'unit', unidadeId: '507f191e810c19729de860ea' },
-    id: '507f1f77bcf86cd799439011',
-  });
+  assert.deepEqual(calls[0].args, ['507f1f77bcf86cd799439011', '507f191e810c19729de860ea']);
+  assert.deepEqual(calls[1].args, ['507f1f77bcf86cd799439011', '507f191e810c19729de860ea']);
 });
 
 test('deleteFuncaoScopedService nao tenta excluir quando o lookup por id invalido ou alvo ausente nao encontra funcao', async () => {
   const calls = [];
 
-  setRepositoryMocks({
-    findFuncaoByIdRepo: async (args) => {
-      calls.push({ op: 'findFuncaoByIdRepo', args });
+  setBridgeMocks({
+    findFuncaoById: async (...args) => {
+      calls.push({ op: 'findFuncaoById', args });
       return null;
     },
-    deleteFuncaoByIdRepo: async (args) => {
-      calls.push({ op: 'deleteFuncaoByIdRepo', args });
+    deleteFuncaoById: async (...args) => {
+      calls.push({ op: 'deleteFuncaoById', args });
       throw new Error('delete nao deveria ser chamado');
     },
   });
@@ -299,8 +265,5 @@ test('deleteFuncaoScopedService nao tenta excluir quando o lookup por id invalid
   assert.equal(invalidIdResult, null);
   assert.equal(missingResult, null);
   assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0].args, {
-    unitScope: { type: 'unit', unidadeId: '507f191e810c19729de860ea' },
-    id: '507f1f77bcf86cd799439011',
-  });
+  assert.deepEqual(calls[0].args, ['507f1f77bcf86cd799439011', '507f191e810c19729de860ea']);
 });

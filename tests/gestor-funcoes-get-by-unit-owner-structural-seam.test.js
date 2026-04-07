@@ -123,6 +123,9 @@ function loadGetByUnitOwnerHarness(runtimeOverrides = {}) {
   const deps = {
     ok: runtimeOverrides.ok ?? responseHelpers.ok,
     serverError: runtimeOverrides.serverError ?? responseHelpers.serverError,
+    findFuncaoByNome: runtimeOverrides.findFuncaoByNome ?? (async () => null),
+    findOutraFuncaoByNomeExcludingId: runtimeOverrides.findOutraFuncaoByNomeExcludingId ?? (async () => null),
+    findUnidadeByIdWithModulosAcessiveis: runtimeOverrides.findUnidadeByIdWithModulosAcessiveis ?? (async () => null),
     findUnidadeUserBaseLean: runtimeOverrides.findUnidadeUserBaseLean ?? (async (unidadeId) => {
       callLog.findUnidadeUserBaseLeanCalls.push(unidadeId);
       return null;
@@ -157,6 +160,14 @@ function loadGetByUnitOwnerHarness(runtimeOverrides = {}) {
         return { allowed: !!requestedPrincipalUnitId && requestedPrincipalUnitId === contextPrincipalUnitId };
       },
     })),
+    createFuncaoWriteValidationCore: runtimeOverrides.createFuncaoWriteValidationCore ?? (() => ({
+      async validateCreate() {
+        return { data: null };
+      },
+      async validateUpdate() {
+        return { data: null, targetPrincipalUnitId: null };
+      },
+    })),
     console: runtimeOverrides.console ?? {
       error(...args) {
         callLog.consoleErrors.push(args);
@@ -169,10 +180,14 @@ function loadGetByUnitOwnerHarness(runtimeOverrides = {}) {
   const factoryScript = new vm.Script(`(function (__deps) {
 const ok = __deps.ok;
 const serverError = __deps.serverError;
+const findFuncaoByNome = __deps.findFuncaoByNome;
+const findOutraFuncaoByNomeExcludingId = __deps.findOutraFuncaoByNomeExcludingId;
+const findUnidadeByIdWithModulosAcessiveis = __deps.findUnidadeByIdWithModulosAcessiveis;
 const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
 const findFuncoesByPrincipalUnitIdLean = __deps.findFuncoesByPrincipalUnitIdLean;
 const getFuncoesByUnitCore = __deps.getFuncoesByUnitCore;
 const createFuncaoContextPolicyCore = __deps.createFuncaoContextPolicyCore;
+const createFuncaoWriteValidationCore = __deps.createFuncaoWriteValidationCore;
 const console = __deps.console;
 ${snippet}
 return { getFuncoesPorUnidade };

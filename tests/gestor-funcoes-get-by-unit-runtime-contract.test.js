@@ -127,7 +127,8 @@ async function invokeOwner({ reqOverrides = {}, bridgeOverrides = {} } = {}) {
 }
 
 async function requestGestorApp(pathname) {
-	const { default: gestorApp } = await import(`${gestorAppModuleUrl}?case=app-${encodeURIComponent(uniqueSuffix())}`);
+	const { default: buildGestorApp } = await import(`${gestorAppModuleUrl}?case=app-${encodeURIComponent(uniqueSuffix())}`);
+	const gestorApp = buildGestorApp();
 	const rootApp = express();
 	rootApp.use('/gestor', gestorApp);
 
@@ -311,7 +312,7 @@ test('getFuncoesPorUnidade sem contexto canonico usa a propria unidade como chav
 		},
 	});
 
-	assert.deepEqual(unidadeCalls, [OUT_OF_SCOPE_UNIT_ID]);
+	assert.deepEqual(unidadeCalls, [OUT_OF_SCOPE_UNIT_ID, OUT_OF_SCOPE_UNIT_ID]);
 	assert.deepEqual(funcoesCalls, [OUT_OF_SCOPE_UNIT_ID]);
 	assert.equal(res.statusCode, 200);
 	assert.deepEqual(res.body, {

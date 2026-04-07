@@ -120,6 +120,9 @@ function loadGetByIdOwnerHarness(runtimeOverrides = {}) {
     ok: runtimeOverrides.ok ?? responseHelpers.ok,
     notFound: runtimeOverrides.notFound ?? responseHelpers.notFound,
     serverError: runtimeOverrides.serverError ?? responseHelpers.serverError,
+    findFuncaoByNome: runtimeOverrides.findFuncaoByNome ?? (async () => null),
+    findOutraFuncaoByNomeExcludingId: runtimeOverrides.findOutraFuncaoByNomeExcludingId ?? (async () => null),
+    findUnidadeByIdWithModulosAcessiveis: runtimeOverrides.findUnidadeByIdWithModulosAcessiveis ?? (async () => null),
     findUnidadeUserBaseLean: runtimeOverrides.findUnidadeUserBaseLean ?? (async (unidadeId) => {
       callLog.findUnidadeUserBaseLeanCalls.push(unidadeId);
       return null;
@@ -128,6 +131,23 @@ function loadGetByIdOwnerHarness(runtimeOverrides = {}) {
       callLog.findFuncaoByIdPopulatedCalls.push([id, unidadePrincipalId]);
       return null;
     }),
+    createFuncaoContextPolicyCore: runtimeOverrides.createFuncaoContextPolicyCore ?? (({ findUnidadeUserBaseLean }) => ({
+      async resolveCanonicalContextPrincipalUnitId({ scopedUnitId } = {}) {
+        const unidadeId = String(scopedUnitId || '').trim();
+        if (!unidadeId) return '';
+        const unidade = await findUnidadeUserBaseLean(unidadeId);
+        if (!unidade) return unidadeId;
+        return String(unidade.is_principal ? unidade._id : (unidade.unidade_principal_id || unidade.matriz_id || unidade._id || unidadeId)).trim();
+      },
+    })),
+    createFuncaoWriteValidationCore: runtimeOverrides.createFuncaoWriteValidationCore ?? (() => ({
+      async validateCreate() {
+        return { data: null };
+      },
+      async validateUpdate() {
+        return { data: null, targetPrincipalUnitId: null };
+      },
+    })),
     getFuncaoByIdCore: runtimeOverrides.getFuncaoByIdCore ?? (async (input) => {
       callLog.seamCalls.push(input);
       return null;
@@ -145,8 +165,13 @@ function loadGetByIdOwnerHarness(runtimeOverrides = {}) {
 const ok = __deps.ok;
 const notFound = __deps.notFound;
 const serverError = __deps.serverError;
+const findFuncaoByNome = __deps.findFuncaoByNome;
+const findOutraFuncaoByNomeExcludingId = __deps.findOutraFuncaoByNomeExcludingId;
+const findUnidadeByIdWithModulosAcessiveis = __deps.findUnidadeByIdWithModulosAcessiveis;
 const findUnidadeUserBaseLean = __deps.findUnidadeUserBaseLean;
 const findFuncaoByIdPopulated = __deps.findFuncaoByIdPopulated;
+const createFuncaoContextPolicyCore = __deps.createFuncaoContextPolicyCore;
+const createFuncaoWriteValidationCore = __deps.createFuncaoWriteValidationCore;
 const getFuncaoByIdCore = __deps.getFuncaoByIdCore;
 const console = __deps.console;
 ${snippet}
