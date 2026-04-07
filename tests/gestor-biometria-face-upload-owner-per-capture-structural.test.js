@@ -252,15 +252,18 @@ test('face/upload per-capture: o owner dedicado real ainda preserva os gates, a 
   assert.doesNotMatch(ownerSource, /serverError\s*\(/);
 });
 
-test('face/upload per-capture: a unidade real por captura concentra parsing, bufferizacao, sharp, put e montagem do item salvo', () => {
+test('face/upload per-capture: a unidade real por captura delega normalizacao e persistencia blob e retorna o item salvo', () => {
   const helperSource = stripComments(extractFunction(CONTROLLER_SOURCE, 'processFaceUploadCaptureCore'));
 
-  assert.match(helperSource, /const m = .*exec\(dataUrl\);/);
-  assert.match(helperSource, /const buf = Buffer\.from\(b64, 'base64'\);/);
-  assert.match(helperSource, /const id = uuid\(\);/);
-  assert.match(helperSource, /const image = sharp\(buf\);/);
-  assert.match(helperSource, /const \{ url \} = await put\(key, webpBuf, putOptions\);/);
-  assert.match(helperSource, /return \{ url, file: url, mime: 'image\/webp' \};/);
+  assert.match(helperSource, /const webpBuf = await normalizeFaceUploadImageCore\(\{ dataUrl \}\);/);
+  assert.match(helperSource, /if \(!webpBuf\) return null;/);
+  assert.match(helperSource, /const savedItem = await persistFaceUploadBlobCore\(\{ webpBuf, index, blobToken \}\);/);
+  assert.match(helperSource, /return savedItem;/);
+  assert.doesNotMatch(helperSource, /const m = .*exec\(dataUrl\);/);
+  assert.doesNotMatch(helperSource, /Buffer\.from\(b64, 'base64'\);/);
+  assert.doesNotMatch(helperSource, /sharp\(buf\)/);
+  assert.doesNotMatch(helperSource, /const id = uuid\(\);/);
+  assert.doesNotMatch(helperSource, /await put\(/);
 });
 
 test('face/upload per-capture: a seam estrutural futura recebe apenas uma captura individual e o contexto minimo necessario', async () => {
