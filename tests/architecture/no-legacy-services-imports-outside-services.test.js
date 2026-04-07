@@ -20,6 +20,8 @@ const FIXED_ALLOWED_FILES = [
   'src/modules/gestor/app/services/apiDbBridgeService.js',
   'src/modules/gestor/app/services/authDbBridgeService.js',
   'src/modules/gestor/app/services/authContextDbBridgeService.js',
+  'src/modules/gestor/app/services/funcionarioCreateCoreService.js',
+  'src/modules/gestor/app/services/unidadeControllerUsecaseService.js',
   'src/modules/gestor/app/services/userService.js',
 ];
 
