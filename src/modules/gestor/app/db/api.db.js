@@ -301,12 +301,32 @@ export async function findClusterUnidadesByAnchorLean(anchorRaw) {
   return findClusterUnidadesByAnchorService(anchorRaw);
 }
 
+export async function findClusterUnidadesByAnchorLeanFromDb(anchorRaw) {
+  const { Types } = mongoose;
+  const anchor = String(anchorRaw || '').trim();
+  if (!anchor) return [];
+
+  const conds = [];
+
+  if (Types.ObjectId.isValid(anchor)) {
+    const anchorOid = new Types.ObjectId(anchor);
+    conds.push({ _id: anchorOid }, { matriz_id: anchorOid }, { unidade_principal_id: anchorOid });
+  }
+
+  conds.push({ _id: anchorRaw }, { matriz_id: anchorRaw }, { unidade_principal_id: anchorRaw });
+  return findClusterUnidadesByAnchorLeanRepo({ unitScope: scopeFromUnidadeId(anchor), conds });
+}
+
 export async function findUserByEmailCondLean(cond) {
   return findUserByEmailCondLeanRepo({ unitScope: GLOBAL_SCOPE, cond });
 }
 
 export async function findUsersLockedAfterSelectLean(agora) {
   return listLockedUsersService(agora);
+}
+
+export async function findUsersLockedAfterSelectLeanFromDb(agora) {
+  return findUsersLockedAfterSelectLeanRepo({ unitScope: GLOBAL_SCOPE, agora });
 }
 
 export async function findUserByCpfCondLean(cond) {
@@ -413,6 +433,10 @@ export async function findModuloByIdLean(id) {
   return findModuloByIdLeanService(id);
 }
 
+export async function findModuloByIdLeanFromDb(id) {
+  return findModuloByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+}
+
 export async function findModuloByNome(nome) {
   return findModuloByNomeRepo({ unitScope: GLOBAL_SCOPE, nome });
 }
@@ -435,6 +459,10 @@ export async function deleteModuloById(id) {
 
 export async function findRecursosByFiltroComUnidadeLean(filtro) {
   return findRecursosByFiltroComUnidadeService(filtro);
+}
+
+export async function findRecursosByFiltroComUnidadeLeanFromDb(filtro) {
+  return findRecursosByFiltroComUnidadeLeanRepo({ unitScope: scopeFromRecursoListFiltro(filtro), filtro });
 }
 
 export async function findRecursoByIdComUnidadeNome(id, unidadeId = null) {
@@ -652,8 +680,16 @@ export async function findFuncoesByFiltroLean(filtro) {
   return findFuncoesByFiltroService(filtro);
 }
 
+export async function findFuncoesByFiltroLeanFromDb(filtro) {
+  return findFuncoesByFiltroLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
+}
+
 export async function findFuncoesByFiltroSelectLean(filtro) {
   return findFuncoesByFiltroSelectService(filtro);
+}
+
+export async function findFuncoesByFiltroSelectLeanFromDb(filtro) {
+  return findFuncoesByFiltroSelectLeanRepo({ unitScope: scopeFromFuncaoFiltro(filtro), filtro });
 }
 
 export async function deleteFuncaoById(id, unidadePrincipalId = null) {
