@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { registerHooks } from 'node:module';
 import express from 'express';
+import request from 'supertest';
 
 const CONTEXTUAL_UNIT_ID = '507f191e810c19729de860ea';
 const OUT_OF_SCOPE_UNIT_ID = '507f191e810c19729de860eb';
@@ -175,6 +176,26 @@ async function requestGestorApp(pathname, body) {
 	}
 }
 
+async function requestRecursoRouterWithSession({ pathname = '/gestor/api/recursos', body, sessionUser } = {}) {
+	const app = express();
+	app.use(express.json());
+	app.use((req, res, next) => {
+		req.session = sessionUser ? { user: { ...sessionUser } } : {};
+		next();
+	});
+	app.use('/gestor', (await import('../src/modules/gestor/app/routes/recursoApi.js')).default);
+
+	const req = request(app)
+		.post(pathname)
+		.set('Accept', 'application/json');
+
+	if (body !== undefined) {
+		req.send(body);
+	}
+
+	return req;
+}
+
 test.afterEach(() => {
 	clearDbMocks();
 });
@@ -187,6 +208,26 @@ test('POST /gestor/api/recursos sem sessao no app real responde 401 JSON', async
 		success: false,
 		error: 'Não autenticado',
 		code: 'UNAUTHORIZED',
+	});
+});
+
+test('POST /gestor/api/recursos com diretor sem contexto canonico ativo retorna 404 na borda real', async () => {
+	const response = await requestRecursoRouterWithSession({
+		pathname: '/gestor/api/recursos',
+		body: validBody(),
+		sessionUser: {
+			id: 'session-diretor-sem-contexto',
+			email: 'diretor.recurso.sem.contexto@example.com',
+			role: 'diretor',
+			nome: 'Diretor sem contexto',
+		},
+	});
+
+	assert.equal(response.status, 404);
+	assert.deepEqual(response.body, {
+		success: false,
+		code: 'NOT_FOUND',
+		message: 'Unidade não encontrada',
 	});
 });
 

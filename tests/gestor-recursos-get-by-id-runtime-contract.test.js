@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { registerHooks } from 'node:module';
 import express from 'express';
+import request from 'supertest';
 
 const VALID_RESOURCE_ID = '507f1f77bcf86cd799439011';
 const CONTEXTUAL_UNIT_ID = '507f191e810c19729de860ea';
@@ -171,6 +172,21 @@ async function requestGestorApp(pathname) {
 	}
 }
 
+async function requestRecursoRouterWithSession({ pathname, sessionUser, bridgeOverrides = {} } = {}) {
+	setDbMocks(bridgeOverrides);
+	const app = express();
+	app.use(express.json());
+	app.use((req, res, next) => {
+		req.session = sessionUser ? { user: { ...sessionUser } } : {};
+		next();
+	});
+	app.use('/gestor', (await import('../src/modules/gestor/app/routes/recursoApi.js')).default);
+
+	return request(app)
+		.get(pathname)
+		.set('Accept', 'application/json');
+}
+
 test.afterEach(() => {
 	clearDbMocks();
 });
@@ -183,6 +199,30 @@ test('GET /gestor/api/recursos/:id sem sessao retorna 401 JSON no app real', asy
 		success: false,
 		error: 'Não autenticado',
 		code: 'UNAUTHORIZED'
+	});
+});
+
+test('GET /gestor/api/recursos/:id com diretor sem contexto canonico ativo retorna 404 na borda real', async () => {
+	const response = await requestRecursoRouterWithSession({
+		pathname: `/gestor/api/recursos/${VALID_RESOURCE_ID}`,
+		sessionUser: {
+			id: 'session-diretor-sem-contexto',
+			email: 'diretor.recurso.sem.contexto@example.com',
+			role: 'diretor',
+			nome: 'Diretor sem contexto',
+		},
+		bridgeOverrides: {
+			findRecursoByIdComUnidadeNome: async () => {
+				throw new Error('controller-should-not-run-without-canonical-context');
+			},
+		},
+	});
+
+	assert.equal(response.status, 404);
+	assert.deepEqual(response.body, {
+		success: false,
+		code: 'NOT_FOUND',
+		message: 'Unidade não encontrada',
 	});
 });
 
