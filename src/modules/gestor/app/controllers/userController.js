@@ -99,8 +99,8 @@ function buildUnidadeSummaryLabel(unidade) {
 const CHECK_USUARIO_EMAIL_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
 const CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
 
-async function findCriarUsuarioFuncionarioById(funcionarioId) {
-	return findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionarioId);
+async function findCriarUsuarioFuncionarioById(funcionarioId, unidadeId = null) {
+	return findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionarioId, unidadeId);
 }
 
 async function findCriarUsuarioFuncionarioByCpfUnidade(cleanCpf, unidadeId) {
@@ -131,7 +131,10 @@ async function resolveCriarUsuarioProvidedFuncionario({ funcionarioId, unidadeId
 	}
 
 	try {
-		const funcionarioDoc = await findCriarUsuarioFuncionarioById(funcionarioId);
+		let funcionarioDoc = await findCriarUsuarioFuncionarioById(funcionarioId, unidadeId);
+		if (!funcionarioDoc && unidadeId) {
+			funcionarioDoc = await findCriarUsuarioFuncionarioById(funcionarioId);
+		}
 		if (!funcionarioDoc) {
 			return {
 				error: {

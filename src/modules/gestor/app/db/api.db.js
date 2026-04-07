@@ -717,7 +717,11 @@ export async function findAllFuncionariosSelectIdNomeCpfLean() {
 }
 
 export async function findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionarioId) {
-  return findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo({ unitScope: GLOBAL_SCOPE, funcionarioId });
+  return findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo({
+    unitScope: scopeFromUnidadeId(arguments[1]),
+    funcionarioId,
+    unidadeId: arguments[1] ?? null,
+  });
 }
 
 export async function findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, unidadeId) {

@@ -28,6 +28,13 @@ export async function findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo({ unitSc
     unitScope,
   });
 
+  const unidadeId = String(arguments[0]?.unidadeId || '').trim();
+  if (unidadeId) {
+    return FuncionarioModel.findOne({ _id: funcionarioId, unidade_id: unidadeId })
+      .select('_id unidade_id usuario_id')
+      .lean();
+  }
+
   return FuncionarioModel.findById(funcionarioId).select('_id unidade_id usuario_id').lean();
 }
 
