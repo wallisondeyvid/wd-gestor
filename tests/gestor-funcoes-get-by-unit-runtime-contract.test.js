@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { registerHooks } from 'node:module';
 import express from 'express';
+import request from 'supertest';
 
 const SCOPED_UNIT_ID = '507f191e810c19729de860ea';
 const IN_SCOPE_FILIAL_ID = '507f191e810c19729de860eb';
@@ -161,6 +162,22 @@ async function requestGestorApp(pathname) {
 	}
 }
 
+async function requestGestorRouterWithSession({ pathname, sessionUser, bridgeOverrides = {} } = {}) {
+	setDbMocks(bridgeOverrides);
+	const app = express();
+	app.use(express.json());
+	app.use((req, res, next) => {
+		req.session = sessionUser ? { user: { ...sessionUser } } : {};
+		next();
+	});
+	const { default: funcaoApiRouter } = await import('../src/modules/gestor/app/routes/funcaoApi.js');
+	app.use('/gestor', funcaoApiRouter);
+
+	return request(app)
+		.get(pathname)
+		.set('Accept', 'application/json');
+}
+
 test.afterEach(() => {
 	clearDbMocks();
 });
@@ -174,6 +191,30 @@ test('GET /gestor/api/funcoes/unidade/:unidadeId sem sessao responde 401 JSON no
 		error: 'Não autenticado',
 		code: 'UNAUTHORIZED',
 	});
+});
+
+test('GET /gestor/api/funcoes/unidade/:unidadeId com diretor sem contexto canonico ativo retorna 400 na borda real', async () => {
+	const response = await requestGestorRouterWithSession({
+		pathname: `/gestor/api/funcoes/unidade/${IN_SCOPE_FILIAL_ID}`,
+		sessionUser: {
+			id: 'session-diretor-sem-contexto',
+			email: 'diretor.sem.contexto@example.com',
+			role: 'diretor',
+			nome: 'Diretor sem contexto',
+		},
+		bridgeOverrides: {
+			findUnidadeUserBaseLean: async () => {
+				throw new Error('controller-should-not-run-without-canonical-context');
+			},
+			findFuncoesByPrincipalUnitIdLean: async () => {
+				throw new Error('controller-should-not-run-without-canonical-context');
+			},
+		},
+	});
+
+	assert.equal(response.status, 400);
+	assert.equal(response.body?.success, false);
+	assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
 });
 
 test('getFuncoesPorUnidade retorna lista vazia quando unidadeId e null e nao consulta lookup nem listagem', async () => {

@@ -5,8 +5,18 @@ import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitSco
 import { createFuncao, getFuncao, updateFuncao, getFuncoesPorUnidade, listarFuncoesApi, deleteFuncao, bulkUpdateFuncoes } from '#modules/gestor/app/controllers/funcaoApiController.js';
 const router = express.Router();
 
+function isPrivilegedGestorUser(user) {
+	return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+}
+
 function withLoginAndRequiredUnitScope(handler) {
-	return (req, res, next) => requireLogin(req, res, () => requireUnitScope(req, res, () => handler(req, res, next)));
+	return (req, res, next) => requireLogin(req, res, () => requireUnitScope(req, res, () => {
+		const scopedUnitId = String(req.unitScope?.unidadeId || '').trim();
+		if (!isPrivilegedGestorUser(req.user) && (!scopedUnitId || req.unitScope?.type !== 'unit')) {
+			return res.status(400).json({ success: false, error: 'UNIDADE_ID_REQUIRED' });
+		}
+		return handler(req, res, next);
+	}));
 }
 
 router.post('/api/funcoes', withLoginAndRequiredUnitScope(createFuncao));

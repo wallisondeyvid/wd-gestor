@@ -6,6 +6,7 @@ import { once } from 'node:events';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import express from 'express';
+import request from 'supertest';
 
 const BRIDGE_ALIAS = '#modules/gestor/app/services/apiDbBridgeService.js';
 const BRIDGE_FILE_URL = pathToFileURL(resolve(process.cwd(), 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
@@ -175,6 +176,32 @@ async function requestGestorApp({ method = 'POST', pathname = '/api/funcoes', bo
 	}
 }
 
+async function requestGestorAppWithSession({
+	method = 'POST',
+	pathname = '/api/funcoes',
+	body,
+	sessionUser,
+} = {}) {
+	globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__ = false;
+	const app = express();
+	app.use(express.json());
+	app.use((req, res, next) => {
+		req.session = sessionUser ? { user: { ...sessionUser } } : {};
+		next();
+	});
+	app.use('/gestor', (await import('../src/modules/gestor/app/routes/funcaoApi.js')).default);
+
+	const req = request(app)
+		[method.toLowerCase()]("/gestor" + pathname)
+		.set('Accept', 'application/json');
+
+	if (body !== undefined) {
+		req.send(body);
+	}
+
+	return req;
+}
+
 async function invokeOwner({ body = {}, unitScope } = {}) {
 	globalThis.__GESTOR_FUNCOES_CREATE_RUNTIME_USE_BRIDGE_MOCK__ = true;
 	const { createFuncao } = await import(OWNER_CONTROLLER_IMPORT);
@@ -216,6 +243,26 @@ test('POST /gestor/api/funcoes sem sessao responde 401 no app real', async () =>
 		error: 'Não autenticado',
 		code: 'UNAUTHORIZED',
 	});
+});
+
+test('POST /gestor/api/funcoes com diretor sem contexto canonico ativo retorna 400 na borda real', async () => {
+	const response = await requestGestorAppWithSession({
+		pathname: '/api/funcoes',
+		body: {
+			nome: 'Supervisor sem contexto',
+			unidade_principal_id: CONTEXT_PRINCIPAL_ID,
+		},
+		sessionUser: {
+			id: 'session-diretor-sem-contexto',
+			email: 'diretor.sem.contexto@example.com',
+			role: 'diretor',
+			nome: 'Diretor sem contexto',
+		},
+	});
+
+	assert.equal(response.status, 400);
+	assert.equal(response.body?.success, false);
+	assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
 });
 
 test('owner real exige nome', async () => {
