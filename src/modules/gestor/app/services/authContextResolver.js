@@ -87,6 +87,32 @@ function normalizeLegacyRole(value) {
   return null;
 }
 
+export function resolveAuthContextUnidadeId(authContext) {
+  if (!authContext || typeof authContext !== 'object') return null;
+
+  return normalizeId(
+    authContext.active_unidade_id ||
+    authContext.activeUnidadeId ||
+    authContext.activeContext?.unidadeId
+  );
+}
+
+export function hasPendingAuthUnitSelection(authContext) {
+  if (!authContext || typeof authContext !== 'object') return false;
+
+  const needsSelection = authContext.needs_selection === true || authContext.needsSelection === true;
+  const hasActiveContext = Boolean(
+    authContext.active_membership_id ||
+    authContext.activeMembershipId ||
+    authContext.active_unidade_id ||
+    authContext.activeUnidadeId ||
+    authContext.activeContext
+  );
+  const hasGlobalRole = Boolean(authContext.global_role || authContext.globalRole);
+
+  return needsSelection && !hasActiveContext && !hasGlobalRole;
+}
+
 export function mapPapelContextualToLegacyRole(papelContextual) {
   const normalized = String(papelContextual || '').trim().toLowerCase();
   if (normalized === 'gestor') return 'diretor';

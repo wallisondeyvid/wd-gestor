@@ -9,6 +9,7 @@ import {
 } from '#modules/gestor/app/db/auth.db.js';
 import {
   GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
+  hasPendingAuthUnitSelection,
 } from '#modules/gestor/app/services/authContextResolver.js';
 import {
   classifyRequireLoginEntry,
@@ -65,23 +66,6 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     }
     return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
   };
-  const hasPendingAuthUnitSelection = () => {
-    if (!isAuthContextSelectionGuardEnabled()) return false;
-    const authContext = req.session?.gestorAuthContext;
-    if (!authContext || typeof authContext !== 'object') return false;
-
-    const needsSelection = authContext.needs_selection === true || authContext.needsSelection === true;
-    const hasActiveContext = Boolean(
-      authContext.active_membership_id ||
-      authContext.activeMembershipId ||
-      authContext.active_unidade_id ||
-      authContext.activeUnidadeId ||
-      authContext.activeContext
-    );
-    const hasGlobalRole = Boolean(authContext.global_role || authContext.globalRole);
-
-    return needsSelection && !hasActiveContext && !hasGlobalRole;
-  };
   const shouldBypassPendingSelectionGuard = () => {
     const isApiUsuarioPath = resolvedPath === '/api/usuario' || resolvedPath.startsWith('/api/usuario/');
     const isApiModulosPath = resolvedPath === '/api/modulos' || resolvedPath.startsWith('/api/modulos/');
@@ -105,7 +89,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     const decision = classifyRequireLoginEntry({
       stage: 'pending-selection',
       hasSessionUser: Boolean(req.session?.user),
-      hasPendingSelection: hasPendingAuthUnitSelection(),
+      hasPendingSelection: isAuthContextSelectionGuardEnabled() && hasPendingAuthUnitSelection(req.session?.gestorAuthContext),
       shouldBypassPendingSelectionGuard: shouldBypassPendingSelectionGuard(),
     });
 

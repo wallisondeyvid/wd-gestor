@@ -80,6 +80,7 @@ registerHooks({
         source: [
           "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_RESOLVED_USER_AUTH_CONTEXT_RESOLVER__ || {};",
           "export const GESTOR_AUTH_CONTEXT_RESOLVER_FLAG = getMock().GESTOR_AUTH_CONTEXT_RESOLVER_FLAG;",
+          "export function hasPendingAuthUnitSelection(...args) { const fn = getMock().hasPendingAuthUnitSelection; return typeof fn === 'function' ? fn(...args) : false; }",
         ].join('\n'),
       };
     }

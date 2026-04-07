@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
-import { GESTOR_AUTH_CONTEXT_RESOLVER_FLAG } from '#modules/gestor/app/services/authContextResolver.js';
+import {
+  GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
+  hasPendingAuthUnitSelection,
+  resolveAuthContextUnidadeId,
+} from '#modules/gestor/app/services/authContextResolver.js';
 import { createUnitScope } from '#shared/unitScope.js';
 
 function normalizeObjectIdString(value) {
@@ -64,32 +68,6 @@ function isAuthContextResolverEnabledForRequest(req) {
 function getStoredAuthContext(req) {
   const authContext = req.session?.gestorAuthContext;
   return authContext && typeof authContext === 'object' ? authContext : null;
-}
-
-function resolveAuthContextUnidadeId(authContext) {
-  if (!authContext || typeof authContext !== 'object') return '';
-
-  return firstNonEmpty(
-    authContext.active_unidade_id,
-    authContext.activeUnidadeId,
-    authContext.activeContext?.unidadeId
-  );
-}
-
-function hasPendingAuthUnitSelection(authContext) {
-  if (!authContext || typeof authContext !== 'object') return false;
-
-  const needsSelection = authContext.needs_selection === true || authContext.needsUnitSelection === true;
-  const hasActiveContext = Boolean(
-    authContext.active_membership_id ||
-    authContext.activeMembershipId ||
-    authContext.active_unidade_id ||
-    authContext.activeUnidadeId ||
-    authContext.activeContext
-  );
-  const hasGlobalRole = Boolean(authContext.global_role || authContext.globalRole);
-
-  return needsSelection && !hasActiveContext && !hasGlobalRole;
 }
 
 function getRequestTransport(req) {
