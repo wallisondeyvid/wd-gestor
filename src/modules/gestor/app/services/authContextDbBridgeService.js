@@ -1,1 +1,1 @@
-export * from '#modules/gestor/app/services/legacy/authContextDbBridgeService.js';
+export * from '#modules/gestor/app/db/auth-context.db.js';

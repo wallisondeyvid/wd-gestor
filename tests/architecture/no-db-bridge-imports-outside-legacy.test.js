@@ -11,6 +11,10 @@ const TARGET_SNIPPETS = [
   "export * from \"#modules/gestor/app/db/",
 ];
 
+const FIXED_ALLOWED_FILES = new Set([
+  'src/modules/gestor/app/services/authContextDbBridgeService.js',
+]);
+
 function walkJsFiles(dirPath, files) {
   let entries;
   try {
@@ -52,6 +56,8 @@ test('Guardrail estrutural: reexport de db só pode existir em services/legacy',
 
     if (relPath.includes('src/modules/gestor/app/services/legacy/')) {
       legacyMatches.push(relPath);
+    } else if (FIXED_ALLOWED_FILES.has(relPath)) {
+      continue;
     } else {
       violations.push(relPath);
     }

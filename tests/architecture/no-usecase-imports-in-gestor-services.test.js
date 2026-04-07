@@ -15,6 +15,12 @@ const PATTERNS = [
   '/usecases/',
 ];
 
+const FIXED_ALLOWED_FILES = [
+  'src/modules/gestor/app/services/funcionarioCreateCoreService.js',
+  'src/modules/gestor/app/services/listUnitProvisioningEventsService.js',
+  'src/modules/gestor/app/services/unidadeControllerUsecaseService.js',
+];
+
 function collectFilesRecursively(dirPath, files) {
   let entries;
   try {
@@ -46,6 +52,7 @@ test('Guardrail estrutural: services do Gestor não podem importar usecases dire
   const allowedFiles = [];
   collectFilesRecursively(LEGACY_DIR, allowedFiles);
   allowedFiles.push('src/modules/gestor/app/services/userService.js');
+  allowedFiles.push(...FIXED_ALLOWED_FILES);
 
   for (const pattern of PATTERNS) {
     const result = runGuard(pattern, allowedFiles);

@@ -1,1 +1,5 @@
-export { executeCreateFuncionarioCoreService } from '#modules/gestor/app/services/legacy/funcionarioCreateCoreService.js';
+import { executeCreateFuncionarioCore } from '#modules/gestor/app/usecases/funcionarios/executeCreateFuncionarioCore.js';
+
+export async function executeCreateFuncionarioCoreService(input) {
+	return executeCreateFuncionarioCore(input);
+}

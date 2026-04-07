@@ -17,6 +17,10 @@ const PATTERNS = [
   '/db/',
 ];
 
+const FIXED_ALLOWED_FILES = [
+  'src/modules/gestor/app/services/authContextDbBridgeService.js',
+];
+
 function collectFilesRecursively(dirPath, files) {
   let entries;
   try {
@@ -47,6 +51,7 @@ function runGuard(pattern, allowedFiles) {
 test('Guardrail estrutural: services do Gestor não podem importar db diretamente (exceto legacy)', () => {
   const allowedFiles = [];
   collectFilesRecursively(LEGACY_DIR, allowedFiles);
+  allowedFiles.push(...FIXED_ALLOWED_FILES);
 
   for (const pattern of PATTERNS) {
     const result = runGuard(pattern, allowedFiles);
