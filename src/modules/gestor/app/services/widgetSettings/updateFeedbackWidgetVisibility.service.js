@@ -1,9 +1,7 @@
 import {
-  findWidgetSettingsFeedbackLeanRepo,
-  updateWidgetSettingsFeedbackModuleEnabledUpsertRepo,
-} from '#modules/gestor/app/repositories/WidgetSettingWriteRepository.js';
-
-const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+  findWidgetSettingsFeedbackLean,
+  updateWidgetSettingsFeedbackModuleEnabledUpsert,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 function buildEnabledByModule({ knownModules, rows }) {
   const enabledByModule = {};
@@ -22,13 +20,9 @@ function buildEnabledByModule({ knownModules, rows }) {
 }
 
 export async function updateFeedbackWidgetVisibilityService({ moduleId, enabled, knownModules }) {
-  await updateWidgetSettingsFeedbackModuleEnabledUpsertRepo({
-    unitScope: GLOBAL_SCOPE,
-    moduleId,
-    enabled,
-  });
+  await updateWidgetSettingsFeedbackModuleEnabledUpsert(moduleId, enabled);
 
-  const rows = await findWidgetSettingsFeedbackLeanRepo({ unitScope: GLOBAL_SCOPE });
+  const rows = await findWidgetSettingsFeedbackLean();
 
   return buildEnabledByModule({
     knownModules: Array.isArray(knownModules) ? knownModules : [],
