@@ -157,7 +157,6 @@ function loadIncrementalOwnerHarness(runtimeOverrides = {}) {
     notFound: runtimeOverrides.notFound ?? responseHelpers.notFound,
     badRequest: runtimeOverrides.badRequest ?? responseHelpers.badRequest,
     getCanonicalContextUnitId: runtimeOverrides.getCanonicalContextUnitId ?? (() => 'unit-ctx-001'),
-    requestedUnitMatchesContext: runtimeOverrides.requestedUnitMatchesContext ?? ((req, requestedUnitId) => String(requestedUnitId || '').trim() === 'unit-ctx-001'),
     findFuncionarioById: runtimeOverrides.findFuncionarioById ?? (async () => createExistingFuncionario()),
     asISODate: runtimeOverrides.asISODate ?? ((value) => value),
     logDateDebug: runtimeOverrides.logDateDebug ?? (() => undefined),
@@ -188,10 +187,19 @@ function loadIncrementalOwnerHarness(runtimeOverrides = {}) {
       callLog.updateCalls.push({ id, ops: JSON.parse(JSON.stringify(ops)), unitId });
       return { acknowledged: true };
     }),
-    reconcileUpdateFuncionarioIncrementalAnexos: runtimeOverrides.reconcileUpdateFuncionarioIncrementalAnexos ?? (async (input) => {
+    reconcileUpdateFuncionarioIncrementalAnexos: runtimeOverrides.reconcileUpdateFuncionarioIncrementalAnexos ?? ((input) => {
       callLog.seamCalls.push(input);
       return Array.isArray(input.funcionarioAtual?.anexos) ? input.funcionarioAtual.anexos.slice() : [];
     }),
+    createFuncionarioAssetsInfraCore: runtimeOverrides.createFuncionarioAssetsInfraCore ?? (() => ({
+      canUseBlob: deps.canUseBlob,
+      uploadFuncionarioFotoToBlob: deps.uploadFuncionarioFotoToBlob,
+      deleteFromBlobIfNeeded: deps.deleteFromBlobIfNeeded,
+      mapFiles: deps.mapFiles,
+      parseDataUrl: deps.parseDataUrl,
+      uploadFacePreviewToBlob: deps.uploadFacePreviewToBlob,
+      mapBiometriasFaciaisToBlob: deps.mapBiometriasFaciaisToBlob,
+    })),
     console: runtimeOverrides.console ?? {
       log() {},
       warn() {},
@@ -210,7 +218,6 @@ const ok = __deps.ok;
 const notFound = __deps.notFound;
 const badRequest = __deps.badRequest;
 const getCanonicalContextUnitId = __deps.getCanonicalContextUnitId;
-const requestedUnitMatchesContext = __deps.requestedUnitMatchesContext;
 const findFuncionarioById = __deps.findFuncionarioById;
 const asISODate = __deps.asISODate;
 const logDateDebug = __deps.logDateDebug;
@@ -226,6 +233,7 @@ const uploadFacePreviewToBlob = __deps.uploadFacePreviewToBlob;
 const mapBiometriasFaciaisToBlob = __deps.mapBiometriasFaciaisToBlob;
 const updateFuncionarioByIdWithOps = __deps.updateFuncionarioByIdWithOps;
 const reconcileUpdateFuncionarioIncrementalAnexos = __deps.reconcileUpdateFuncionarioIncrementalAnexos;
+const createFuncionarioAssetsInfraCore = __deps.createFuncionarioAssetsInfraCore;
 const console = __deps.console;
 ${snippet}
 return { updateFuncionarioIncremental };
@@ -241,7 +249,6 @@ return { updateFuncionarioIncremental };
 
 test('updateFuncionarioIncremental: owner preserva gate de contexto antes da seam de anexos', async () => {
   const { updateFuncionarioIncremental, callLog } = loadIncrementalOwnerHarness({
-    requestedUnitMatchesContext: () => false,
     reconcileUpdateFuncionarioIncrementalAnexos: async () => {
       throw new Error('nao deve delegar anexos fora do contexto');
     },

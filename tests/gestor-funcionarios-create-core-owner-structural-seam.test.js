@@ -105,7 +105,7 @@ function buildReq(bodyOverrides = {}, reqOverrides = {}) {
 
 function buildCreateDelegatedSource() {
   const original = extractExportedAsyncFunction(CONTROLLER_SOURCE, 'createFuncionario');
-  if (original.includes('await executeCreateFuncionarioCore({')) {
+  if (original.includes('await executeCreateFuncionarioCoreService({')) {
     return original;
   }
 
@@ -117,7 +117,7 @@ function buildCreateDelegatedSource() {
   assert.ok(blockStart >= 0, 'Nao encontrou o inicio do create core minimo atual');
   assert.ok(blockEnd > blockStart, 'Nao encontrou o fim do create core minimo atual');
 
-  const seamBlock = `const coreResult = await executeCreateFuncionarioCore({
+  const seamBlock = `const coreResult = await executeCreateFuncionarioCoreService({
 \t\tunidade_id,
 \t\tfuncao_id,
 \t\tnome,
@@ -263,7 +263,7 @@ function buildHarness(overrides = {}) {
       createFuncionarioDocCalledDirectly = true;
       throw new Error('o owner nao deve persistir diretamente fora da seam');
     },
-    executeCreateFuncionarioCore: async (input) => {
+    executeCreateFuncionarioCoreService: async (input) => {
       callOrder.push('core');
       seamArgs = input;
       return {
@@ -321,6 +321,14 @@ function buildHarness(overrides = {}) {
     ...overrides,
   };
 
+  context.createFuncionarioAssetsInfraCore = () => ({
+    mapFiles: context.mapFiles,
+    getBlobToken: context.getBlobToken,
+    uploadFuncionarioFotoToBlob: context.uploadFuncionarioFotoToBlob,
+    canUseBlob: context.canUseBlob,
+    mapBiometriasFaciaisToBlob: context.mapBiometriasFaciaisToBlob,
+  });
+
   return {
     createFuncionario: buildFunction(buildCreateDelegatedSource(), context),
     callOrder,
@@ -340,7 +348,7 @@ test('createFuncionario: owner real preserva gate de contexto antes da seam do c
 
   const { createFuncionario } = buildHarness({
     requestedUnitMatchesContext: () => false,
-    executeCreateFuncionarioCore: async () => {
+    executeCreateFuncionarioCoreService: async () => {
       seamCalled = true;
       throw new Error('nao deve delegar o core fora do contexto');
     },
@@ -364,7 +372,7 @@ test('createFuncionario: owner real preserva abortos de validacao anteriores a s
 
   const { createFuncionario } = buildHarness({
     isValidPIS: () => false,
-    executeCreateFuncionarioCore: async () => {
+    executeCreateFuncionarioCoreService: async () => {
       seamCalled = true;
       throw new Error('nao deve delegar o core quando a validacao falha');
     },
@@ -468,7 +476,7 @@ test('createFuncionario: owner real preserva tratamento de erro externo quando a
   let autoUserCalled = false;
 
   const { createFuncionario, getServerErrorArg, getDuplicateArgs } = buildHarness({
-    executeCreateFuncionarioCore: async () => {
+    executeCreateFuncionarioCoreService: async () => {
       throw new Error('falha-core-induzida');
     },
     uploadFuncionarioFotoToBlob: async () => {

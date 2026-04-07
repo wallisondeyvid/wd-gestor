@@ -34,7 +34,7 @@ import {
 import { reconcileUpdateFuncionarioFullBiometria } from './utils/reconcileFuncionarioBiometria.js';
 import { reconcileUpdateFuncionarioFullFoto } from './utils/reconcileFuncionarioFoto.js';
 import { deleteFuncionarioPostExecutionService } from '#modules/gestor/app/services/funcionarios/deleteFuncionarioPostExecution.service.js';
-import { executeCreateFuncionarioCore } from '#modules/gestor/app/usecases/funcionarios/executeCreateFuncionarioCore.js';
+import { executeCreateFuncionarioCoreService } from '#modules/gestor/app/services/funcionarioCreateCoreService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -687,7 +687,7 @@ if(carga_semanal !== undefined && carga_semanal !== null && carga_semanal !== ''
 	} else if(req.files?.foto?.length){
 		const f=req.files.foto[0]; fotoBuffer = f?.buffer || null;
 	}
-	const { novo } = await executeCreateFuncionarioCore({
+	const { novo } = await executeCreateFuncionarioCoreService({
 		unidade_id,
 		funcao_id,
 		nome,

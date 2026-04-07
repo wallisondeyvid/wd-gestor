@@ -15,6 +15,20 @@ import { createUnitScope } from '../src/shared/unitScope.js';
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 
 let uniqueCounter = 0;
+const sharedHarness = {
+  promise: null,
+  app: null,
+  close: null,
+  teardownGuard: null,
+  prevMongoMemory: undefined,
+  prevAuthContextFlag: undefined,
+  unidadeA: null,
+  unidadeB: null,
+  unidadeC: null,
+  contextualAgent: null,
+  createdEmails: [],
+  cleanupPaths: new Set(),
+};
 
 function nextCounter() {
   uniqueCounter += 1;
@@ -43,7 +57,9 @@ function installTeardownSuppression() {
 
   const shouldIgnore = (err) => {
     if (!shuttingDown) return false;
-    return String(err?.message || err).includes('Connection was force closed');
+    const message = String(err?.message || err);
+    return message.includes('Connection was force closed')
+      || message.includes('Unable to deserialize cloned data due to invalid or unsupported version.');
   };
 
   const onUnhandledRejection = (err) => {
@@ -171,63 +187,104 @@ async function authenticateContextualAgent(app, { unidadeId, prefix, papelContex
 }
 
 async function withHarness(run) {
-  const prevMongoMemory = process.env.MONGO_MEMORY;
-  const prevAuthContextFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
-  process.env.MONGO_MEMORY = '1';
-  process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
+  const harness = await getSharedHarness();
 
-  const { app, close } = await createServer({ skipDb: false });
-  app.locals.gestorAuthContextFeatureFlags = {
-    gestor_auth_context_resolver: true,
-  };
-  delete app.locals.gestorAuthContextResolverDeps;
-  delete app.locals.gestorAuthContextMaxTimeMS;
+  await run({
+    app: harness.app,
+    unidadeA: harness.unidadeA,
+    unidadeB: harness.unidadeB,
+    unidadeC: harness.unidadeC,
+    contextualAgent: harness.contextualAgent,
+    registerCreatedPath(filePath) {
+      if (filePath) harness.cleanupPaths.add(filePath);
+    },
+  });
+}
 
-  const teardownGuard = installTeardownSuppression();
-  const createdEmails = [];
-  const cleanupPaths = new Set();
+async function getSharedHarness() {
+  if (!sharedHarness.promise) {
+    sharedHarness.promise = (async () => {
+      sharedHarness.prevMongoMemory = process.env.MONGO_MEMORY;
+      sharedHarness.prevAuthContextFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      process.env.MONGO_MEMORY = '1';
+      process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
+
+      const { app, close } = await createServer({ skipDb: false });
+      app.locals.gestorAuthContextFeatureFlags = {
+        gestor_auth_context_resolver: true,
+      };
+      delete app.locals.gestorAuthContextResolverDeps;
+      delete app.locals.gestorAuthContextMaxTimeMS;
+
+      const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
+      const contextualAuth = await authenticateContextualAgent(app, {
+        unidadeId: unidadeB._id,
+        prefix: 'funcionario-create-anexo-context',
+        papelContextual: 'gestor',
+      });
+
+      sharedHarness.app = app;
+      sharedHarness.close = close;
+      sharedHarness.teardownGuard = installTeardownSuppression();
+      sharedHarness.unidadeA = unidadeA;
+      sharedHarness.unidadeB = unidadeB;
+      sharedHarness.unidadeC = unidadeC;
+      sharedHarness.contextualAgent = contextualAuth.agent;
+      sharedHarness.createdEmails = [contextualAuth.email];
+      sharedHarness.cleanupPaths = new Set();
+      return sharedHarness;
+    })();
+  }
+
+  return sharedHarness.promise;
+}
+
+async function disposeSharedHarness() {
+  if (!sharedHarness.promise) return;
 
   try {
-    const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
-    const contextualAuth = await authenticateContextualAgent(app, {
-      unidadeId: unidadeB._id,
-      prefix: 'funcionario-create-anexo-context',
-      papelContextual: 'gestor',
-    });
-    createdEmails.push(contextualAuth.email);
-
-    await run({
-      app,
-      unidadeA,
-      unidadeB,
-      unidadeC,
-      contextualAgent: contextualAuth.agent,
-      registerCreatedPath(filePath) {
-        if (filePath) cleanupPaths.add(filePath);
-      },
-    });
+    await sharedHarness.promise;
+    for (const filePath of sharedHarness.cleanupPaths) {
+      try {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } catch {}
+    }
+    if (sharedHarness.createdEmails.length > 0) {
+      try {
+        await User.deleteMany({ email: { $in: sharedHarness.createdEmails } });
+      } catch {}
+    }
+    await closeWithTeardownGuard(sharedHarness.close, sharedHarness.teardownGuard);
   } finally {
     try {
-      for (const filePath of cleanupPaths) {
-        try {
-          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        } catch {}
+      if (sharedHarness.teardownGuard) {
+        await sharedHarness.teardownGuard.remove();
       }
-      if (createdEmails.length > 0) {
-        try {
-          await User.deleteMany({ email: { $in: createdEmails } });
-        } catch {}
-      }
-      await closeWithTeardownGuard(close, teardownGuard);
     } finally {
-      await teardownGuard.remove();
-      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
-      else process.env.MONGO_MEMORY = prevMongoMemory;
-      if (prevAuthContextFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
-      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = prevAuthContextFlag;
+      if (sharedHarness.prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = sharedHarness.prevMongoMemory;
+      if (sharedHarness.prevAuthContextFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = sharedHarness.prevAuthContextFlag;
+
+      sharedHarness.promise = null;
+      sharedHarness.app = null;
+      sharedHarness.close = null;
+      sharedHarness.teardownGuard = null;
+      sharedHarness.prevMongoMemory = undefined;
+      sharedHarness.prevAuthContextFlag = undefined;
+      sharedHarness.unidadeA = null;
+      sharedHarness.unidadeB = null;
+      sharedHarness.unidadeC = null;
+      sharedHarness.contextualAgent = null;
+      sharedHarness.createdEmails = [];
+      sharedHarness.cleanupPaths = new Set();
     }
   }
 }
+
+test.after(async () => {
+  await disposeSharedHarness();
+});
 
 function buildBaseCreatePayload(unidadeId, overrides = {}) {
   return {

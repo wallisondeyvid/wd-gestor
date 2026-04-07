@@ -706,7 +706,7 @@ test('POST /gestor/api/usuarios cria usuário novo com funcionario_id válido e 
   assert.equal(memberships[0].origem, 'gestor-user-admin');
 });
 
-test('POST /gestor/api/usuarios retorna CPF_REQUIRED no ramo automático após criar o User e antes de criar Funcionario', async () => {
+test('POST /gestor/api/usuarios retorna CPF_REQUIRED no ramo automático antes de criar efeitos persistidos', async () => {
   const unidade = await createEnabledUnit(`Unidade CPF Required Automático ${nextSequence()}`);
   const { agent } = await createAdminAgent();
   const email = buildUniqueEmail('auto-funcionario-cpf-required');
@@ -731,15 +731,10 @@ test('POST /gestor/api/usuarios retorna CPF_REQUIRED no ramo automático após c
   assert.equal(res.body.data, undefined);
 
   const users = await User.find({ email }).lean();
-  assert.equal(users.length, 1);
-
-  const user = users[0];
-  assert.equal(user.role, 'diretor');
-  assert.equal(String(user.unidade_id), String(unidade._id));
-  assert.equal(user.funcionario_id ?? null, null);
+  assert.equal(users.length, 0);
 
   const usersAfter = await User.countDocuments();
-  assert.equal(usersAfter, usersBefore + 1);
+  assert.equal(usersAfter, usersBefore);
 
   const funcionariosCriados = await Funcionario.find({
     email,
@@ -749,12 +744,9 @@ test('POST /gestor/api/usuarios retorna CPF_REQUIRED no ramo automático após c
 
   const membershipsAfter = await UserMembership.countDocuments();
   assert.equal(membershipsAfter, membershipsBefore);
-
-  const memberships = await UserMembership.find({ user_id: user._id }).lean();
-  assert.equal(memberships.length, 0);
 });
 
-test('POST /gestor/api/usuarios retorna UNIT_REQUIRED no ramo automático após criar o User e antes de criar Funcionario', async () => {
+test('POST /gestor/api/usuarios retorna UNIT_REQUIRED no ramo automático antes de criar efeitos persistidos', async () => {
   const { agent } = await createAdminAgent();
   const email = buildUniqueEmail('auto-funcionario-unit-required');
   const cpf = buildUniqueCpf();
@@ -779,24 +771,16 @@ test('POST /gestor/api/usuarios retorna UNIT_REQUIRED no ramo automático após 
   assert.equal(res.body.data, undefined);
 
   const users = await User.find({ email }).lean();
-  assert.equal(users.length, 1);
-
-  const user = users[0];
-  assert.equal(user.role, 'admin');
-  assert.equal(user.unidade_id ?? null, null);
-  assert.equal(user.funcionario_id ?? null, null);
+  assert.equal(users.length, 0);
 
   const usersAfter = await User.countDocuments();
-  assert.equal(usersAfter, usersBefore + 1);
+  assert.equal(usersAfter, usersBefore);
 
   const funcionariosCriados = await Funcionario.find({ email }).lean();
   assert.equal(funcionariosCriados.length, 0);
 
   const membershipsAfter = await UserMembership.countDocuments();
   assert.equal(membershipsAfter, membershipsBefore);
-
-  const memberships = await UserMembership.find({ user_id: user._id }).lean();
-  assert.equal(memberships.length, 0);
 });
 
 test('POST /gestor/api/usuarios reaproveita Funcionario existente por cpf e unidade no ramo automático', async () => {
