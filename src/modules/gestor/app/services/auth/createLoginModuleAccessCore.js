@@ -61,9 +61,14 @@ export function createLoginModuleAccessCore({
 
       if (role === 'user') {
         if (!userDoc.funcionario_id) return { permitido: false, motivo: 'user_sem_funcionario' };
+        const unidadeIdCanonica = authContext?.source === 'auth-context-v1'
+          ? (authContext.activeContext?.unidadeId || authContext.active_unidade_id || null)
+          : null;
+        const unidadeIdEfetiva = unidadeIdCanonica || userDoc.unidade_id || null;
         const funcionario = await findFuncionarioByIdSelect({
           id: userDoc.funcionario_id,
           select: 'funcao_id unidade_id',
+          unidadeId: unidadeIdEfetiva,
           maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
         });
         if (!funcionario) return { permitido: false, motivo: 'funcionario_inexistente' };
@@ -71,6 +76,7 @@ export function createLoginModuleAccessCore({
         const funcao = await findFuncaoByIdSelect({
           id: funcionario.funcao_id,
           select: 'modulos_habilitados ativa',
+          unidadeId: funcionario.unidade_id || unidadeIdEfetiva,
           maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
         });
         if (!funcao || funcao.ativa === false) return { permitido: false, motivo: 'funcao_inativa' };

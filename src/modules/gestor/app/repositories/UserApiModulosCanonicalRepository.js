@@ -2,8 +2,16 @@ import Modulo from '#models/modulo.js';
 import Funcionario from '#models/Funcionario.js';
 import Funcao from '#models/funcao.js';
 import { resolveModel } from '#shared/db/resolveModel.js';
+import { createUnitScope } from '#shared/unitScope.js';
 
 const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+
+function scopeFromUnidadeId(unidadeId) {
+  const unidadeIdNorm = String(unidadeId || '').trim();
+  return unidadeIdNorm && /^[a-fA-F0-9]{24}$/.test(unidadeIdNorm)
+    ? createUnitScope({ unidadeId: unidadeIdNorm })
+    : GLOBAL_SCOPE;
+}
 
 export async function loadAllModulosBaseRepo() {
   const ModuloModel = resolveModel({
@@ -15,11 +23,11 @@ export async function loadAllModulosBaseRepo() {
   return ModuloModel.find({}).select('_id nome descricao status url_base').lean();
 }
 
-export async function findFuncionarioCanonicalByIdRepo(funcionarioId) {
+export async function findFuncionarioCanonicalByIdRepo({ funcionarioId, unidadeId = null }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',
     schema: Funcionario.schema,
-    unitScope: GLOBAL_SCOPE,
+    unitScope: scopeFromUnidadeId(unidadeId),
   });
 
   return FuncionarioModel.findById(funcionarioId)
@@ -27,11 +35,11 @@ export async function findFuncionarioCanonicalByIdRepo(funcionarioId) {
     .lean();
 }
 
-export async function findFuncaoCanonicalByIdRepo(funcaoId) {
+export async function findFuncaoCanonicalByIdRepo({ funcaoId, unidadeId = null }) {
   const FuncaoModel = resolveModel({
     name: Funcao.modelName || 'Funcao',
     schema: Funcao.schema,
-    unitScope: GLOBAL_SCOPE,
+    unitScope: scopeFromUnidadeId(unidadeId),
   });
 
   return FuncaoModel.findById(funcaoId)

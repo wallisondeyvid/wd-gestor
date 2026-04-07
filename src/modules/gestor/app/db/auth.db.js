@@ -44,6 +44,10 @@ function withOptionalMaxTime(query, maxTimeMS) {
   return query;
 }
 
+function scopeFromAuthorizedUnidadeId(unidadeId) {
+  return scopeFromUnidadeId(unidadeId);
+}
+
 export async function findModuloByOr({ or, maxTimeMS }) {
   let query = findModuloByOrRepo({ unitScope: GLOBAL_SCOPE, or });
   query = withOptionalMaxTime(query, maxTimeMS);
@@ -74,8 +78,13 @@ export async function findUnidadePrincipalLean({ maxTimeMS }) {
   return query;
 }
 
-export async function findFuncionarioByIdSelect({ id, select, maxTimeMS }) {
-  let query = findFuncionarioByIdSelectRepo({ unitScope: GLOBAL_SCOPE, id, select });
+export async function findFuncionarioByIdSelect({ id, select, unidadeId = null, maxTimeMS }) {
+  let query = findFuncionarioByIdSelectRepo({
+    unitScope: scopeFromAuthorizedUnidadeId(unidadeId),
+    id,
+    select,
+    unidadeId,
+  });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
@@ -96,8 +105,13 @@ export async function findFuncionariosByCpfSelect({ cpf, select }) {
   return findFuncionariosByCpfSelectRepo({ unitScope: GLOBAL_SCOPE, cpf, select });
 }
 
-export async function findFuncaoByIdSelect({ id, select, maxTimeMS }) {
-  let query = findFuncaoByIdSelectRepo({ unitScope: GLOBAL_SCOPE, id, select });
+export async function findFuncaoByIdSelect({ id, select, unidadeId = null, maxTimeMS }) {
+  let query = findFuncaoByIdSelectRepo({
+    unitScope: scopeFromAuthorizedUnidadeId(unidadeId),
+    id,
+    select,
+    unidadeId,
+  });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
 }
@@ -106,12 +120,12 @@ export async function loadAllModulosBase() {
   return loadAllModulosBaseUserApiRepo();
 }
 
-export async function findFuncionarioCanonicalById({ funcionarioId }) {
-  return findFuncionarioCanonicalByIdUserApiRepo(funcionarioId);
+export async function findFuncionarioCanonicalById({ funcionarioId, unidadeId = null }) {
+  return findFuncionarioCanonicalByIdUserApiRepo({ funcionarioId, unidadeId });
 }
 
-export async function findFuncaoCanonicalById({ funcaoId }) {
-  return findFuncaoCanonicalByIdUserApiRepo(funcaoId);
+export async function findFuncaoCanonicalById({ funcaoId, unidadeId = null }) {
+  return findFuncaoCanonicalByIdUserApiRepo({ funcaoId, unidadeId });
 }
 
 export async function findUserByEmail({ email }) {

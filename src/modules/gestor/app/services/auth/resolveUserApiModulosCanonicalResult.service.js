@@ -164,14 +164,14 @@ export async function resolveUserApiModulosCanonicalResult({
 
         let funcionario = null;
         if (activeFuncionarioId) {
-          funcionario = await findFuncionarioById({ funcionarioId: activeFuncionarioId });
+          funcionario = await findFuncionarioById({ funcionarioId: activeFuncionarioId, unidadeId: activeUnitId });
         }
 
         let funcao = null;
         let modsFuncao = [];
         const funcionarioUnidadeId = funcionario?.unidade_id ? String(funcionario.unidade_id) : null;
         if (funcionario?.funcao_id && activeUnitId && funcionarioUnidadeId === String(activeUnitId)) {
-          funcao = await findFuncaoById({ funcaoId: funcionario.funcao_id });
+          funcao = await findFuncaoById({ funcaoId: funcionario.funcao_id, unidadeId: activeUnitId });
           modsFuncao = (funcao?.modulos_habilitados || []).filter(Boolean);
         }
 
