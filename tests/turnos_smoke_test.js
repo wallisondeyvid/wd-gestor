@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 // __dirname compatível com ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -16,13 +16,19 @@ const code = fs.readFileSync(scriptPath, 'utf8');
 
 // DOM mínimo fake
 global.window = global;
+const fakeElements = {
+  tabelaGruposTurnos: { __bound: false, addEventListener: ()=>{} },
+  btnNovoGrupoTurnos: { __bound: false, addEventListener: ()=>{} },
+  modalSelecionarTurnos: { __turnosTmp: { turnos: [] }, __editGid: null },
+};
 window.document = {
   readyState: 'complete',
+  body: { getAttribute: ()=>'/escalas' },
   addEventListener: ()=>{},
   dispatchEvent: ()=>{},
   querySelector: ()=>null,
   querySelectorAll: ()=>[],
-  getElementById: ()=>null
+  getElementById: (id)=> fakeElements[id] || null
 };
 window.CustomEvent = function(name, opts){ return { name, detail: (opts&&opts.detail)||null }; };
 window.bootstrap = { Tooltip: function(){}, Modal: function(){}, Modal: { getOrCreateInstance: ()=>({ show:()=>{}, hide:()=>{} }) } };
@@ -37,6 +43,24 @@ function renderMatrizesPorGrupo(){}
 function avaliarProgressaoAbas(){}
 function __isInitStub(){ return false; }
 function basePath(){ return ''; }
+function getEscalaId(){ return 'test-esc'; }
+function detectTipoEarly(){ return 'ORDINÁRIA'; }
+async function carregarEscalaExistente(){ return { ok:true }; }
+function updateClassificationUI(){}
+function iniciarLoopResolucaoUnidade(){}
+function fetchAndPopulateUnidades(){}
+function iniciarObserverUnidade(){}
+function instalarObserverUnidade(){}
+function garantirUnidadeApos(){}
+function detectarTipoSeAusente(){}
+window.location = { href:'http://localhost/escala?id=test-esc', pathname:'/escala/ordinaria/' };
+window.history = { replaceState: ()=>{} };
+if(typeof window.renderGruposTurnos !== 'function'){
+  window.renderGruposTurnos = function(reason){ /* placeholder */ };
+}
+if(typeof window.refreshTurnosDebounced !== 'function'){
+  window.refreshTurnosDebounced = function(){ /* placeholder debounce */ };
+}
 // Inserir no contexto de VM
 const sandbox = global;
 vm.createContext(sandbox);
