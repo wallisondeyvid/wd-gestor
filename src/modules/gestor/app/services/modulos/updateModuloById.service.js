@@ -1,12 +1,11 @@
 import {
-  findModuloByIdRepo,
-  findModuloByNomeRepo,
-} from '#modules/gestor/app/repositories/ModuloReadRepository.js';
-
-const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+  findModuloById,
+  findModuloByNome,
+  saveModulo,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function updateModuloByIdService({ moduloId, changes }) {
-  const modulo = await findModuloByIdRepo({ unitScope: GLOBAL_SCOPE, id: moduloId });
+  const modulo = await findModuloById(moduloId);
   if (!modulo) {
     return { kind: 'not_found' };
   }
@@ -14,7 +13,7 @@ export async function updateModuloByIdService({ moduloId, changes }) {
   const { nome, descricao, status, url_base } = changes || {};
 
   if (nome && nome !== modulo.nome) {
-    const duplicado = await findModuloByNomeRepo({ unitScope: GLOBAL_SCOPE, nome });
+    const duplicado = await findModuloByNome(nome);
     if (duplicado) {
       return { kind: 'duplicate_name' };
     }
@@ -25,7 +24,7 @@ export async function updateModuloByIdService({ moduloId, changes }) {
   if (status !== undefined) modulo.status = status;
   if (url_base !== undefined) modulo.url_base = url_base;
 
-  await modulo.save();
+  await saveModulo(modulo);
   return { kind: 'updated' };
 }
 

@@ -96,21 +96,15 @@ test('listarModulos delega ao service owner e preserva o caminho feliz com ok(re
 test('listModulosOwnerService preserva os ramos master/global, contextual e fallback vazio', async () => {
   const globalCalls = [];
   const unidadeCalls = [];
-  const scopeCalls = [];
   const normalizeModuloList = buildFunction(SERVICE_SOURCE, 'function normalizeModuloList', {});
 
   const listModulosOwnerService = buildFunction(SERVICE_SOURCE, 'export async function listModulosOwnerService', {
-    GLOBAL_SCOPE: { type: 'global', unidadeId: null },
-    createUnitScope: (input) => {
-      scopeCalls.push(input);
-      return { type: input?.unidadeId ? 'unit' : 'global', unidadeId: input?.unidadeId || null };
-    },
-    findAllModulosBaseLeanRepo: async (input) => {
-      globalCalls.push(input);
+    findAllModulosBaseLean: async (...args) => {
+      globalCalls.push(args);
       return [{ _id: 'm-global', nome: 'Modulo Global', descricao: 'd', status: 'ativo', url_base: '/gestor' }];
     },
-    findUnidadeByIdWithModulosAcessiveisLeanRepo: async (input) => {
-      unidadeCalls.push(input);
+    findUnidadeByIdWithModulosAcessiveisLean: async (...args) => {
+      unidadeCalls.push(args);
       return {
         modulosAcessiveis: [
           { _id: 'm-unit', nome: 'Modulo Unidade', descricao: 'du', status: 'ativo', url_base: '/unidade' },
@@ -125,7 +119,7 @@ test('listModulosOwnerService preserva os ramos master/global, contextual e fall
   assert.equal(result.modulos.length, 1);
   assert.equal(result.modulos[0]._id, 'm-global');
   assert.equal(globalCalls.length, 1);
-  assert.equal(globalCalls[0].unitScope.type, 'global');
+  assert.equal(globalCalls[0].length, 0);
   assert.equal(unidadeCalls.length, 0);
 
   result = await listModulosOwnerService({ userRole: 'gestor', activeUnitId: '' });
@@ -140,9 +134,6 @@ test('listModulosOwnerService preserva os ramos master/global, contextual e fall
   assert.equal(result.modulos[0]._id, 'm-unit');
   assert.equal(result.modulos[0].nome, 'Modulo Unidade');
   assert.equal(unidadeCalls.length, 1);
-  assert.equal(unidadeCalls[0].unidadeId, 'u-123');
-  assert.equal(unidadeCalls[0].unitScope.type, 'unit');
-  assert.equal(unidadeCalls[0].unitScope.unidadeId, 'u-123');
-  assert.equal(scopeCalls.length, 1);
-  assert.equal(scopeCalls[0].unidadeId, 'u-123');
+  assert.equal(unidadeCalls[0].length, 1);
+  assert.equal(unidadeCalls[0][0], 'u-123');
 });

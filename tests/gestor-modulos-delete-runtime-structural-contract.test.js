@@ -7,10 +7,10 @@ import { registerHooks } from 'node:module';
 const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/moduloApiController.js')).href;
 const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/modulos/deleteModuloById.service.js')).href;
-const actualRepositoryModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/repositories/ModuloReadRepository.js')).href;
+const actualBridgeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 
 const serviceMockModuleUrl = 'mock:gestor-modulos-delete-service';
-const repositoryMockModuleUrl = 'mock:gestor-modulos-delete-repositories';
+const bridgeMockModuleUrl = 'mock:gestor-modulos-delete-api-bridge';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -18,8 +18,8 @@ registerHooks({
       return { url: serviceMockModuleUrl, shortCircuit: true };
     }
 
-    if (specifier === '#modules/gestor/app/repositories/ModuloReadRepository.js') {
-      return { url: repositoryMockModuleUrl, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
+      return { url: bridgeMockModuleUrl, shortCircuit: true };
     }
 
     return nextResolve(specifier, context);
@@ -40,24 +40,24 @@ registerHooks({
       };
     }
 
-    if (url === repositoryMockModuleUrl) {
+    if (url === bridgeMockModuleUrl) {
       return {
         format: 'module',
         shortCircuit: true,
         source: [
-          `export * from '${actualRepositoryModuleUrl}';`,
-          `import * as actual from '${actualRepositoryModuleUrl}';`,
-          "const getMocks = () => globalThis.__GESTOR_MODULOS_DELETE_REPOSITORY_MOCKS__ || {};",
+          `export * from '${actualBridgeModuleUrl}';`,
+          `import * as actual from '${actualBridgeModuleUrl}';`,
+          "const getMocks = () => globalThis.__GESTOR_MODULOS_DELETE_BRIDGE_MOCKS__ || {};",
           "const resolveImpl = (name) => {",
           "  const fn = getMocks()[name];",
           "  if (typeof fn === 'function') return fn;",
           "  return actual[name];",
           "};",
-          "export async function findModuloByIdRepo(...args) {",
-          "  return await resolveImpl('findModuloByIdRepo')(...args);",
+          "export async function findModuloById(...args) {",
+          "  return await resolveImpl('findModuloById')(...args);",
           "}",
-          "export async function deleteModuloByIdRepo(...args) {",
-          "  return await resolveImpl('deleteModuloByIdRepo')(...args);",
+          "export async function deleteModuloById(...args) {",
+          "  return await resolveImpl('deleteModuloById')(...args);",
           "}",
         ].join('\n'),
       };
@@ -71,8 +71,8 @@ function setServiceMocks(overrides = {}) {
   globalThis.__GESTOR_MODULOS_DELETE_SERVICE_MOCKS__ = { ...overrides };
 }
 
-function setRepositoryMocks(overrides = {}) {
-  globalThis.__GESTOR_MODULOS_DELETE_REPOSITORY_MOCKS__ = { ...overrides };
+function setBridgeMocks(overrides = {}) {
+  globalThis.__GESTOR_MODULOS_DELETE_BRIDGE_MOCKS__ = { ...overrides };
 }
 
 function createReq(overrides = {}) {
@@ -197,15 +197,15 @@ test('excluirModulo responde 200 com envelope minimo de sucesso quando o service
   });
 });
 
-test('deleteModuloByIdService consulta e exclui pelo mesmo id no repository global', async () => {
+test('deleteModuloByIdService consulta e exclui pelo mesmo id via apiDbBridgeService', async () => {
   const calls = [];
-  setRepositoryMocks({
-    findModuloByIdRepo: async (args) => {
-      calls.push({ op: 'findModuloByIdRepo', args });
-      return { _id: args.id, nome: 'Financeiro' };
+  setBridgeMocks({
+    findModuloById: async (id) => {
+      calls.push({ op: 'findModuloById', id });
+      return { _id: id, nome: 'Financeiro' };
     },
-    deleteModuloByIdRepo: async (args) => {
-      calls.push({ op: 'deleteModuloByIdRepo', args });
+    deleteModuloById: async (id) => {
+      calls.push({ op: 'deleteModuloById', id });
       return { acknowledged: true, deletedCount: 1 };
     },
   });
@@ -215,23 +215,21 @@ test('deleteModuloByIdService consulta e exclui pelo mesmo id no repository glob
 
   assert.deepEqual(result, { _id: 'm-ok', nome: 'Financeiro' });
   assert.equal(calls.length, 2);
-  assert.equal(calls[0].op, 'findModuloByIdRepo');
-  assert.equal(calls[1].op, 'deleteModuloByIdRepo');
-  assert.equal(calls[0].args.id, 'm-ok');
-  assert.equal(calls[1].args.id, 'm-ok');
-  assert.deepEqual(calls[0].args.unitScope, { type: 'global', unidadeId: null });
-  assert.deepEqual(calls[1].args.unitScope, { type: 'global', unidadeId: null });
+  assert.equal(calls[0].op, 'findModuloById');
+  assert.equal(calls[1].op, 'deleteModuloById');
+  assert.equal(calls[0].id, 'm-ok');
+  assert.equal(calls[1].id, 'm-ok');
 });
 
 test('deleteModuloByIdService nao tenta excluir quando o lookup nao encontra alvo', async () => {
   const calls = [];
-  setRepositoryMocks({
-    findModuloByIdRepo: async (args) => {
-      calls.push({ op: 'findModuloByIdRepo', args });
+  setBridgeMocks({
+    findModuloById: async (id) => {
+      calls.push({ op: 'findModuloById', id });
       return null;
     },
-    deleteModuloByIdRepo: async (args) => {
-      calls.push({ op: 'deleteModuloByIdRepo', args });
+    deleteModuloById: async (id) => {
+      calls.push({ op: 'deleteModuloById', id });
       return { acknowledged: true, deletedCount: 1 };
     },
   });
@@ -241,7 +239,6 @@ test('deleteModuloByIdService nao tenta excluir quando o lookup nao encontra alv
 
   assert.equal(result, null);
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].op, 'findModuloByIdRepo');
-  assert.equal(calls[0].args.id, 'm-ausente');
-  assert.deepEqual(calls[0].args.unitScope, { type: 'global', unidadeId: null });
+  assert.equal(calls[0].op, 'findModuloById');
+  assert.equal(calls[0].id, 'm-ausente');
 });

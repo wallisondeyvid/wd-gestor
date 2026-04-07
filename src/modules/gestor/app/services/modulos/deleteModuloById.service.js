@@ -1,15 +1,13 @@
 import {
-  findModuloByIdRepo,
-  deleteModuloByIdRepo,
-} from '#modules/gestor/app/repositories/ModuloReadRepository.js';
-
-const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+  findModuloById,
+  deleteModuloById,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function deleteModuloByIdService({ moduloId }) {
-  const modulo = await findModuloByIdRepo({ unitScope: GLOBAL_SCOPE, id: moduloId });
+  const modulo = await findModuloById(moduloId);
   if (!modulo) return null;
 
-  await deleteModuloByIdRepo({ unitScope: GLOBAL_SCOPE, id: moduloId });
+  await deleteModuloById(moduloId);
   return modulo;
 }
 

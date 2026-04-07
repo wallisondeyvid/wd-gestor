@@ -7,10 +7,10 @@ import { registerHooks } from 'node:module';
 const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/moduloApiController.js')).href;
 const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/modulos/updateModuloById.service.js')).href;
-const actualRepositoryModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/repositories/ModuloReadRepository.js')).href;
+const actualBridgeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 
 const serviceMockModuleUrl = 'mock:gestor-modulos-update-service';
-const repositoryMockModuleUrl = 'mock:gestor-modulos-update-repositories';
+const bridgeMockModuleUrl = 'mock:gestor-modulos-update-bridge';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -18,8 +18,8 @@ registerHooks({
       return { url: serviceMockModuleUrl, shortCircuit: true };
     }
 
-    if (specifier === '#modules/gestor/app/repositories/ModuloReadRepository.js') {
-      return { url: repositoryMockModuleUrl, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
+      return { url: bridgeMockModuleUrl, shortCircuit: true };
     }
 
     return nextResolve(specifier, context);
@@ -40,24 +40,27 @@ registerHooks({
       };
     }
 
-    if (url === repositoryMockModuleUrl) {
+    if (url === bridgeMockModuleUrl) {
       return {
         format: 'module',
         shortCircuit: true,
         source: [
-          `export * from '${actualRepositoryModuleUrl}';`,
-          `import * as actual from '${actualRepositoryModuleUrl}';`,
-          "const getMocks = () => globalThis.__GESTOR_MODULOS_UPDATE_REPOSITORY_MOCKS__ || {};",
+          `export * from '${actualBridgeModuleUrl}';`,
+          `import * as actual from '${actualBridgeModuleUrl}';`,
+          "const getMocks = () => globalThis.__GESTOR_MODULOS_UPDATE_BRIDGE_MOCKS__ || {};",
           "const resolveImpl = (name) => {",
           "  const fn = getMocks()[name];",
           "  if (typeof fn === 'function') return fn;",
           "  return actual[name];",
           "};",
-          "export async function findModuloByIdRepo(...args) {",
-          "  return await resolveImpl('findModuloByIdRepo')(...args);",
+          "export async function findModuloById(...args) {",
+          "  return await resolveImpl('findModuloById')(...args);",
           "}",
-          "export async function findModuloByNomeRepo(...args) {",
-          "  return await resolveImpl('findModuloByNomeRepo')(...args);",
+          "export async function findModuloByNome(...args) {",
+          "  return await resolveImpl('findModuloByNome')(...args);",
+          "}",
+          "export async function saveModulo(...args) {",
+          "  return await resolveImpl('saveModulo')(...args);",
           "}",
         ].join('\n'),
       };
@@ -71,8 +74,8 @@ function setServiceMocks(overrides = {}) {
   globalThis.__GESTOR_MODULOS_UPDATE_SERVICE_MOCKS__ = { ...overrides };
 }
 
-function setRepositoryMocks(overrides = {}) {
-  globalThis.__GESTOR_MODULOS_UPDATE_REPOSITORY_MOCKS__ = { ...overrides };
+function setBridgeMocks(overrides = {}) {
+  globalThis.__GESTOR_MODULOS_UPDATE_BRIDGE_MOCKS__ = { ...overrides };
 }
 
 function createReq(overrides = {}) {
@@ -163,15 +166,16 @@ test('updateModuloByIdService consulta duplicidade apenas quando o nome muda e p
     },
   };
 
-  setRepositoryMocks({
-    findModuloByIdRepo: async (args) => {
+  setBridgeMocks({
+    findModuloById: async (args) => {
       calls.push({ op: 'findModuloByIdRepo', args });
       return moduloDoc;
     },
-    findModuloByNomeRepo: async (args) => {
+    findModuloByNome: async (args) => {
       calls.push({ op: 'findModuloByNomeRepo', args });
       return null;
     },
+    saveModulo: async (doc) => doc.save(),
   });
 
   const { updateModuloByIdService } = await importUpdateModuloService('service-success');
@@ -189,10 +193,8 @@ test('updateModuloByIdService consulta duplicidade apenas quando o nome muda e p
   assert.equal(calls.length, 2);
   assert.equal(calls[0].op, 'findModuloByIdRepo');
   assert.equal(calls[1].op, 'findModuloByNomeRepo');
-  assert.equal(calls[0].args.id, 'm-ok');
-  assert.equal(calls[1].args.nome, 'Modulo Renovado');
-  assert.deepEqual(calls[0].args.unitScope, { type: 'global', unidadeId: null });
-  assert.deepEqual(calls[1].args.unitScope, { type: 'global', unidadeId: null });
+  assert.equal(calls[0].args, 'm-ok');
+  assert.equal(calls[1].args, 'Modulo Renovado');
   assert.deepEqual(savedSnapshot, {
     _id: 'm-ok',
     nome: 'Modulo Renovado',
@@ -215,12 +217,12 @@ test('updateModuloByIdService retorna duplicate_name quando o nome novo ja exist
     },
   };
 
-  setRepositoryMocks({
-    findModuloByIdRepo: async (args) => {
+  setBridgeMocks({
+    findModuloById: async (args) => {
       calls.push({ op: 'findModuloByIdRepo', args });
       return moduloDoc;
     },
-    findModuloByNomeRepo: async (args) => {
+    findModuloByNome: async (args) => {
       calls.push({ op: 'findModuloByNomeRepo', args });
       return { _id: 'm-existente' };
     },

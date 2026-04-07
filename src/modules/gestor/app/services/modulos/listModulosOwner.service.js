@@ -1,8 +1,7 @@
-import { createUnitScope } from '#shared/unitScope.js';
-import { findAllModulosBaseLeanRepo } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
-import { findUnidadeByIdWithModulosAcessiveisLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
-
-const GLOBAL_SCOPE = createUnitScope({});
+import {
+  findAllModulosBaseLean,
+  findUnidadeByIdWithModulosAcessiveisLean,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 function normalizeModuloList(modulos = []) {
   return modulos.map((modulo) => ({
@@ -16,7 +15,7 @@ function normalizeModuloList(modulos = []) {
 
 export async function listModulosOwnerService({ userRole, activeUnitId } = {}) {
   if (userRole === 'master') {
-    const modulos = await findAllModulosBaseLeanRepo({ unitScope: GLOBAL_SCOPE });
+    const modulos = await findAllModulosBaseLean();
     return { kind: 'ok', modulos };
   }
 
@@ -25,10 +24,7 @@ export async function listModulosOwnerService({ userRole, activeUnitId } = {}) {
     return { kind: 'ok', modulos: [] };
   }
 
-  const unidade = await findUnidadeByIdWithModulosAcessiveisLeanRepo({
-    unitScope: createUnitScope({ unidadeId: normalizedActiveUnitId }),
-    unidadeId: normalizedActiveUnitId,
-  });
+  const unidade = await findUnidadeByIdWithModulosAcessiveisLean(normalizedActiveUnitId);
 
   return {
     kind: 'ok',

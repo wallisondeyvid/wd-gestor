@@ -1,10 +1,7 @@
-import { createUnitScope } from '#shared/unitScope.js';
-import { findModuloByIdLeanRepo } from '#modules/gestor/app/repositories/ModuloReadRepository.js';
-
-const GLOBAL_SCOPE = createUnitScope({});
+import { findModuloByIdLeanFromDb } from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function findModuloByIdLeanService(id) {
-  return findModuloByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+  return findModuloByIdLeanFromDb(id);
 }
 
 export default findModuloByIdLeanService;
