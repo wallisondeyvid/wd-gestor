@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { registerHooks } from 'node:module';
+import express from 'express';
+import request from 'supertest';
 
 const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/setorApiController.js')).href;
@@ -103,6 +105,51 @@ function createReq(overrides = {}) {
 async function importCreateSetor(tag) {
   return import(`${controllerModuleUrl}?case=${encodeURIComponent(tag)}-${Date.now()}`);
 }
+
+async function requestSetorRouterWithSession({
+  pathname = '/gestor/api/setores',
+  method = 'post',
+  body,
+  sessionUser,
+} = {}) {
+  const app = express();
+  app.use(express.json());
+  app.use((req, res, next) => {
+    req.session = sessionUser ? { user: { ...sessionUser } } : {};
+    next();
+  });
+  app.use('/gestor', (await import('../src/modules/gestor/app/routes/setorApi.js')).default);
+
+  const req = request(app)
+    [method.toLowerCase()](pathname)
+    .set('Accept', 'application/json');
+
+  if (body !== undefined) {
+    req.send(body);
+  }
+
+  return req;
+}
+
+test('POST /gestor/api/setores com diretor sem contexto canonico ativo retorna 400 na borda real', async () => {
+  const response = await requestSetorRouterWithSession({
+    pathname: '/gestor/api/setores',
+    body: {
+      nome: 'Setor sem contexto',
+      unidade_id: 'u-param',
+    },
+    sessionUser: {
+      id: 'session-diretor-sem-contexto',
+      email: 'diretor.setor.sem.contexto@example.com',
+      role: 'diretor',
+      nome: 'Diretor sem contexto',
+    },
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body?.success, false);
+  assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
+});
 
 test('createSetor rejeita nome ausente com 400', async () => {
   setDbMocks({});
