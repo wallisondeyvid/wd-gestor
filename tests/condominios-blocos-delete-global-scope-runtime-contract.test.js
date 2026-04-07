@@ -1,38 +1,67 @@
 import assert from 'node:assert/strict';
-import test, { after, mock } from 'node:test';
+import test, { after } from 'node:test';
+import { registerHooks } from 'node:module';
 
 import { requireUnitScope } from '../src/modules/condominios/app/middlewares/requireUnitScope.js';
+
+const BLOCOS_REPOSITORY_MOCK_MODULE_URL = 'mock:condominios-blocos-delete-runtime-blocos-repository';
+const ANDARES_REPOSITORY_MOCK_MODULE_URL = 'mock:condominios-blocos-delete-runtime-andares-repository';
 
 const repoState = {
   constructorCalls: [],
   deleteCalls: [],
 };
 
-mock.module('#modules/condominios/app/repositories/BlocosRepository.js', {
-  namedExports: {
-    BlocosRepository: class BlocosRepositoryMock {
-      constructor({ unitScope } = {}) {
-        repoState.constructorCalls.push({ unitScope });
-      }
+globalThis.__CONDOMINIOS_BLOCOS_DELETE_GLOBAL_SCOPE_RUNTIME_REPO_STATE__ = repoState;
 
-      async deleteById({ id }) {
-        repoState.deleteCalls.push({ id });
-        return { _id: id };
-      }
-    },
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === '#modules/condominios/app/repositories/BlocosRepository.js') {
+      return { url: BLOCOS_REPOSITORY_MOCK_MODULE_URL, shortCircuit: true };
+    }
+
+    if (specifier === '#modules/condominios/app/repositories/AndaresRepository.js') {
+      return { url: ANDARES_REPOSITORY_MOCK_MODULE_URL, shortCircuit: true };
+    }
+
+    return nextResolve(specifier, context);
   },
-});
+  load(url, context, nextLoad) {
+    if (url === BLOCOS_REPOSITORY_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const getState = () => globalThis.__CONDOMINIOS_BLOCOS_DELETE_GLOBAL_SCOPE_RUNTIME_REPO_STATE__ || { constructorCalls: [], deleteCalls: [] };',
+          'export class BlocosRepository {',
+          '  constructor({ unitScope } = {}) {',
+          '    getState().constructorCalls.push({ unitScope });',
+          '  }',
+          '  async deleteById({ id }) {',
+          '    getState().deleteCalls.push({ id });',
+          '    return { _id: id };',
+          '  }',
+          '}',
+        ].join('\n'),
+      };
+    }
 
-mock.module('#modules/condominios/app/repositories/AndaresRepository.js', {
-  namedExports: {
-    AndaresRepository: class AndaresRepositoryMock {},
+    if (url === ANDARES_REPOSITORY_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: 'export class AndaresRepository {}',
+      };
+    }
+
+    return nextLoad(url, context);
   },
 });
 
 const { handleDeleteBlocosV2, setHandleGetBlocosV2Context } = await import('#modules/condominios/app/v2/routes/blocos.routes.js');
 
 after(() => {
-  mock.restoreAll();
+  delete globalThis.__CONDOMINIOS_BLOCOS_DELETE_GLOBAL_SCOPE_RUNTIME_REPO_STATE__;
 });
 
 function withEnv(overrides, fn) {

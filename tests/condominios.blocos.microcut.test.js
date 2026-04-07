@@ -203,8 +203,9 @@ test('PUT /condominios/api/blocos/:id com V2 desligado preserva o fluxo V1 m√≠ni
       multiTenant: '1',
     });
 
-    assert.equal(res.status, 500);
-    assert.equal(res.body?.error, 'Falha ao atualizar bloco');
+    assert.equal(res.status, 400);
+    assert.equal(res.body?.success, false);
+    assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED');
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);
@@ -226,8 +227,9 @@ test('DELETE /condominios/api/blocos/:id com V2 desligado preserva o fluxo V1 m√
       multiTenant: '1',
     });
 
-    assert.equal(res.status, 500);
-    assert.equal(res.body?.error, 'Falha ao excluir bloco');
+    assert.equal(res.status, 400);
+    assert.equal(res.body?.success, false);
+    assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED');
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);

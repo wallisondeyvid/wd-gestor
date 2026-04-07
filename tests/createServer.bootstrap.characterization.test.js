@@ -261,7 +261,7 @@ test('condominios: getEffectiveSkipDb nao considera parent.locals.skipDb no requ
     `,
   );
 
-  assert.equal(result.status, 503, 'o cenario continua em indisponibilidade de DB, sem herdar parent no effective');
+    assert.equal(result.status, 503, 'o cenario continua em indisponibilidade de DB, sem herdar parent no effective');
   assert.notEqual(
     result.effective,
     'true',
