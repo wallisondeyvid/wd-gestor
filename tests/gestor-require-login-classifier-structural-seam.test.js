@@ -1,7 +1,8 @@
-import test, { mock } from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { registerHooks } from 'node:module';
 import {
   classifyRequireLoginEntry,
   REQUIRE_LOGIN_ENTRY_DECISION,
@@ -9,9 +10,44 @@ import {
 } from '../src/modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js';
 
 const REQUIRE_LOGIN_FILE = path.resolve(process.cwd(), 'src/modules/gestor/app/middlewares/requireLogin.js');
+const CLASSIFIER_MODULE_URL = pathToFileURL(path.resolve(process.cwd(), 'src/modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js')).href;
+const CLASSIFIER_MOCK_MODULE_URL = 'mock:gestor-require-login-classifier-service';
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === '#modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js') {
+      return { url: CLASSIFIER_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    return nextResolve(specifier, context);
+  },
+  load(url, context, nextLoad) {
+    if (url === CLASSIFIER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          `export * from '${CLASSIFIER_MODULE_URL}';`,
+          `import * as actual from '${CLASSIFIER_MODULE_URL}';`,
+          "const getImpl = () => globalThis.__GESTOR_REQUIRE_LOGIN_CLASSIFIER_MOCK__;",
+          "export function classifyRequireLoginEntry(input) { const impl = getImpl(); return typeof impl === 'function' ? impl(input) : actual.classifyRequireLoginEntry(input); }",
+          "export const REQUIRE_LOGIN_ENTRY_REASON = actual.REQUIRE_LOGIN_ENTRY_REASON;",
+        ].join('\n'),
+      };
+    }
+    return nextLoad(url, context);
+  },
+});
 
 function importFreshRequireLogin(token) {
   return import(`${pathToFileURL(REQUIRE_LOGIN_FILE).href}?case=${token}`);
+}
+
+function setClassifierMock(impl) {
+  globalThis.__GESTOR_REQUIRE_LOGIN_CLASSIFIER_MOCK__ = impl;
+}
+
+function clearClassifierMock() {
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_CLASSIFIER_MOCK__;
 }
 
 function createRes() {
@@ -30,15 +66,6 @@ function createRes() {
     json(payload) {
       this.jsonPayload = payload;
       return this;
-    },
-  };
-}
-
-function buildClassifierModule(classifyRequireLoginEntryImpl) {
-  return {
-    namedExports: {
-      classifyRequireLoginEntry: classifyRequireLoginEntryImpl,
-      REQUIRE_LOGIN_ENTRY_REASON,
     },
   };
 }
@@ -147,26 +174,23 @@ test('classificador preserva o retorno estruturado minimo por estagio', () => {
 });
 
 test('requireLogin delega selecao pendente ao classificador e preserva a resposta JSON atual da API', async () => {
-  mock.reset();
+  clearClassifierMock();
 
   const calls = [];
-  await mock.module(
-    '#modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js',
-    buildClassifierModule((input) => {
-      calls.push(input);
-      if (input.stage === 'pending-selection') {
-        return {
-          decision: REQUIRE_LOGIN_ENTRY_DECISION.DENY,
-          reason: REQUIRE_LOGIN_ENTRY_REASON.SELECTION_REQUIRED,
-        };
-      }
-
+  setClassifierMock((input) => {
+    calls.push(input);
+    if (input.stage === 'pending-selection') {
       return {
-        decision: REQUIRE_LOGIN_ENTRY_DECISION.CONTINUE,
-        reason: REQUIRE_LOGIN_ENTRY_REASON.NONE,
+        decision: REQUIRE_LOGIN_ENTRY_DECISION.DENY,
+        reason: REQUIRE_LOGIN_ENTRY_REASON.SELECTION_REQUIRED,
       };
-    })
-  );
+    }
+
+    return {
+      decision: REQUIRE_LOGIN_ENTRY_DECISION.CONTINUE,
+      reason: REQUIRE_LOGIN_ENTRY_REASON.NONE,
+    };
+  });
 
   const { requireLogin } = await importFreshRequireLogin('pending-selection-api');
 
@@ -214,36 +238,34 @@ test('requireLogin delega selecao pendente ao classificador e preserva a respost
     hasPendingSelection: true,
     shouldBypassPendingSelectionGuard: false,
   }]);
+  clearClassifierMock();
 });
 
 test('requireLogin delega a classificacao de rota protegida e preserva o redirect atual sem sessao', async () => {
-  mock.reset();
+  clearClassifierMock();
 
   const calls = [];
-  await mock.module(
-    '#modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js',
-    buildClassifierModule((input) => {
-      calls.push(input);
-      if (input.stage === 'pending-selection') {
-        return {
-          decision: REQUIRE_LOGIN_ENTRY_DECISION.CONTINUE,
-          reason: REQUIRE_LOGIN_ENTRY_REASON.NONE,
-        };
-      }
-
-      if (input.stage === 'route-access') {
-        return {
-          decision: REQUIRE_LOGIN_ENTRY_DECISION.DENY,
-          reason: REQUIRE_LOGIN_ENTRY_REASON.UNAUTHENTICATED,
-        };
-      }
-
+  setClassifierMock((input) => {
+    calls.push(input);
+    if (input.stage === 'pending-selection') {
       return {
         decision: REQUIRE_LOGIN_ENTRY_DECISION.CONTINUE,
         reason: REQUIRE_LOGIN_ENTRY_REASON.NONE,
       };
-    })
-  );
+    }
+
+    if (input.stage === 'route-access') {
+      return {
+        decision: REQUIRE_LOGIN_ENTRY_DECISION.DENY,
+        reason: REQUIRE_LOGIN_ENTRY_REASON.UNAUTHENTICATED,
+      };
+    }
+
+    return {
+      decision: REQUIRE_LOGIN_ENTRY_DECISION.CONTINUE,
+      reason: REQUIRE_LOGIN_ENTRY_REASON.NONE,
+    };
+  });
 
   const { requireLogin } = await importFreshRequireLogin('route-access-redirect');
 
@@ -286,22 +308,20 @@ test('requireLogin delega a classificacao de rota protegida e preserva o redirec
       isEscalasPath: false,
     },
   ]);
+  clearClassifierMock();
 });
 
 test('requireLogin delega a classificacao e preserva next mais projecao final de req.user no fallback sem banco', async () => {
-  mock.reset();
+  clearClassifierMock();
 
   const calls = [];
-  await mock.module(
-    '#modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js',
-    buildClassifierModule((input) => {
-      calls.push(input);
-      return {
-        decision: REQUIRE_LOGIN_ENTRY_DECISION.CONTINUE,
-        reason: REQUIRE_LOGIN_ENTRY_REASON.NONE,
-      };
-    })
-  );
+  setClassifierMock((input) => {
+    calls.push(input);
+    return {
+      decision: REQUIRE_LOGIN_ENTRY_DECISION.CONTINUE,
+      reason: REQUIRE_LOGIN_ENTRY_REASON.NONE,
+    };
+  });
 
   const { requireLogin } = await importFreshRequireLogin('route-access-next');
 
@@ -365,4 +385,5 @@ test('requireLogin delega a classificacao e preserva next mais projecao final de
       isEscalasPath: false,
     },
   ]);
+  clearClassifierMock();
 });

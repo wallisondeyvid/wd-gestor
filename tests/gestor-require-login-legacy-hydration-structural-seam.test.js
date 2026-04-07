@@ -1,12 +1,135 @@
-import test, { mock } from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { registerHooks } from 'node:module';
 
 const REQUIRE_LOGIN_FILE = path.resolve(process.cwd(), 'src/modules/gestor/app/middlewares/requireLogin.js');
+const MONGOOSE_MOCK_MODULE_URL = 'mock:gestor-require-login-legacy-hydration-mongoose';
+const FEATURE_FLAGS_MOCK_MODULE_URL = 'mock:gestor-require-login-legacy-hydration-feature-flags';
+const AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL = 'mock:gestor-require-login-legacy-hydration-auth-context-resolver';
+const AUTH_DB_MOCK_MODULE_URL = 'mock:gestor-require-login-legacy-hydration-auth-db';
+const CANONICAL_RESOLVER_MOCK_MODULE_URL = 'mock:gestor-require-login-legacy-hydration-canonical-resolver';
+const LEGACY_HYDRATION_MOCK_MODULE_URL = 'mock:gestor-require-login-legacy-hydration-legacy-hydration';
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === 'mongoose') {
+      return { url: MONGOOSE_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#core/config/featureFlags.js') {
+      return { url: FEATURE_FLAGS_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/services/authContextResolver.js') {
+      return { url: AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/db/auth.db.js') {
+      return { url: AUTH_DB_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/services/auth/resolveRequireLoginCanonicalResolvedUser.service.js') {
+      return { url: CANONICAL_RESOLVER_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/services/auth/resolveRequireLoginLegacyHydration.service.js') {
+      return { url: LEGACY_HYDRATION_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    return nextResolve(specifier, context);
+  },
+  load(url, context, nextLoad) {
+    if (url === MONGOOSE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_MONGOOSE__ || {};",
+          "const mock = getMock();",
+          "export default mock.defaultExport || { connection: { readyState: 1 } };",
+        ].join('\n'),
+      };
+    }
+
+    if (url === FEATURE_FLAGS_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_FEATURE_FLAGS__ || {};",
+          "export function isFeatureEnabled(...args) { return getMock().isFeatureEnabled(...args); }",
+          "export function isFlagEnabled(...args) { return getMock().isFlagEnabled(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_AUTH_CONTEXT_RESOLVER__ || {};",
+          "export const GESTOR_AUTH_CONTEXT_RESOLVER_FLAG = getMock().GESTOR_AUTH_CONTEXT_RESOLVER_FLAG;",
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_DB_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_AUTH_DB__ || {};",
+          "export async function findUserLeanByEmail(...args) { return await getMock().findUserLeanByEmail(...args); }",
+          "export async function findFuncionarioByIdPopulate(...args) { return await getMock().findFuncionarioByIdPopulate(...args); }",
+          "export async function findUnidadeLeanById(...args) { return await getMock().findUnidadeLeanById(...args); }",
+          "export async function findUnidadePrincipalLean(...args) { return await getMock().findUnidadePrincipalLean(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    if (url === CANONICAL_RESOLVER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_CANONICAL_RESOLVER__ || {};",
+          "export async function resolveRequireLoginCanonicalResolvedUser(...args) { return await getMock().resolveRequireLoginCanonicalResolvedUser(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    if (url === LEGACY_HYDRATION_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_LEGACY_HYDRATION__ || {};",
+          "export async function resolveRequireLoginLegacyHydration(...args) { return await getMock().resolveRequireLoginLegacyHydration(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    return nextLoad(url, context);
+  },
+});
 
 function importFreshRequireLogin(token) {
   return import(`${pathToFileURL(REQUIRE_LOGIN_FILE).href}?case=${token}`);
+}
+
+function setRequireLoginLegacyHydrationMocks(mocks) {
+  globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_MONGOOSE__ = mocks.mongoose;
+  globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_FEATURE_FLAGS__ = mocks.featureFlags;
+  globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_AUTH_CONTEXT_RESOLVER__ = mocks.authContextResolver;
+  globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_AUTH_DB__ = mocks.authDb;
+  globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_CANONICAL_RESOLVER__ = mocks.canonicalResolver;
+  globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_LEGACY_HYDRATION__ = mocks.legacyHydration;
+}
+
+function clearRequireLoginLegacyHydrationMocks() {
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_MONGOOSE__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_FEATURE_FLAGS__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_AUTH_CONTEXT_RESOLVER__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_AUTH_DB__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_CANONICAL_RESOLVER__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_LEGACY_HYDRATION_LEGACY_HYDRATION__;
 }
 
 function createRes() {
@@ -30,23 +153,22 @@ function createRes() {
 }
 
 test('requireLogin preserva o contrato externo enquanto percorre o caminho de hidratacao legada apos o caminho canonico nao autenticar', async () => {
-  mock.reset();
+  clearRequireLoginLegacyHydrationMocks();
 
   const findUserCalls = [];
   const canonicalResolvedUserCalls = [];
   const legacyHydrationCalls = [];
 
-  await mock.module('mongoose', {
-    defaultExport: {
-      connection: { readyState: 1 },
-      isValidObjectId(value) {
-        return /^[a-f\d]{24}$/i.test(String(value || '').trim());
+  setRequireLoginLegacyHydrationMocks({
+    mongoose: {
+      defaultExport: {
+        connection: { readyState: 1 },
+        isValidObjectId(value) {
+          return /^[a-f\d]{24}$/i.test(String(value || '').trim());
+        },
       },
     },
-  });
-
-  await mock.module('#core/config/featureFlags.js', {
-    namedExports: {
+    featureFlags: {
       isFeatureEnabled(featureFlags, flagName, defaultValue) {
         if (!featureFlags || typeof featureFlags !== 'object') return defaultValue;
         return featureFlags[flagName] ?? defaultValue;
@@ -55,25 +177,16 @@ test('requireLogin preserva o contrato externo enquanto percorre o caminho de hi
         return defaultValue;
       },
     },
-  });
-
-  await mock.module('#modules/gestor/app/services/authContextResolver.js', {
-    namedExports: {
+    authContextResolver: {
       GESTOR_AUTH_CONTEXT_RESOLVER_FLAG: 'gestor_auth_context_resolver',
     },
-  });
-
-  await mock.module('#modules/gestor/app/services/auth/resolveRequireLoginCanonicalResolvedUser.service.js', {
-    namedExports: {
+    canonicalResolver: {
       async resolveRequireLoginCanonicalResolvedUser(input) {
         canonicalResolvedUserCalls.push(input);
         return { kind: 'continue' };
       },
     },
-  });
-
-  await mock.module('#modules/gestor/app/db/auth.db.js', {
-    namedExports: {
+    authDb: {
       async findUserLeanByEmail(input) {
         findUserCalls.push(input);
         return {
@@ -96,10 +209,7 @@ test('requireLogin preserva o contrato externo enquanto percorre o caminho de hi
         throw new Error('fallback por funcionario nao deve ser usado neste caso');
       },
     },
-  });
-
-  await mock.module('#modules/gestor/app/services/auth/resolveRequireLoginLegacyHydration.service.js', {
-    namedExports: {
+    legacyHydration: {
       async resolveRequireLoginLegacyHydration(input) {
         legacyHydrationCalls.push(input);
         return {

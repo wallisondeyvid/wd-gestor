@@ -1,12 +1,153 @@
-import test, { mock } from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { registerHooks } from 'node:module';
 
 const REQUIRE_LOGIN_FILE = path.resolve(process.cwd(), 'src/modules/gestor/app/middlewares/requireLogin.js');
+const MONGOOSE_MOCK_MODULE_URL = 'mock:gestor-require-login-first-access-mongoose';
+const FEATURE_FLAGS_MOCK_MODULE_URL = 'mock:gestor-require-login-first-access-feature-flags';
+const AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL = 'mock:gestor-require-login-first-access-auth-context-resolver';
+const CLASSIFIER_MOCK_MODULE_URL = 'mock:gestor-require-login-first-access-classifier';
+const AUTH_DB_MOCK_MODULE_URL = 'mock:gestor-require-login-first-access-auth-db';
+const CANONICAL_RESOLVER_MOCK_MODULE_URL = 'mock:gestor-require-login-first-access-canonical-resolver';
+const LEGACY_HYDRATION_MOCK_MODULE_URL = 'mock:gestor-require-login-first-access-legacy-hydration';
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === 'mongoose') {
+      return { url: MONGOOSE_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#core/config/featureFlags.js') {
+      return { url: FEATURE_FLAGS_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/services/authContextResolver.js') {
+      return { url: AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js') {
+      return { url: CLASSIFIER_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/db/auth.db.js') {
+      return { url: AUTH_DB_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/services/auth/resolveRequireLoginCanonicalResolvedUser.service.js') {
+      return { url: CANONICAL_RESOLVER_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/services/auth/resolveRequireLoginLegacyHydration.service.js') {
+      return { url: LEGACY_HYDRATION_MOCK_MODULE_URL, shortCircuit: true };
+    }
+    return nextResolve(specifier, context);
+  },
+  load(url, context, nextLoad) {
+    if (url === MONGOOSE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_MONGOOSE__ || {};",
+          "const mock = getMock();",
+          "export default mock.defaultExport || { connection: { readyState: 1 } };",
+        ].join('\n'),
+      };
+    }
+
+    if (url === FEATURE_FLAGS_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_FEATURE_FLAGS__ || {};",
+          "export function isFeatureEnabled(...args) { return getMock().isFeatureEnabled(...args); }",
+          "export function isFlagEnabled(...args) { return getMock().isFlagEnabled(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_AUTH_CONTEXT_RESOLVER__ || {};",
+          "export const GESTOR_AUTH_CONTEXT_RESOLVER_FLAG = getMock().GESTOR_AUTH_CONTEXT_RESOLVER_FLAG;",
+        ].join('\n'),
+      };
+    }
+
+    if (url === CLASSIFIER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_CLASSIFIER__ || {};",
+          "export const REQUIRE_LOGIN_ENTRY_REASON = getMock().REQUIRE_LOGIN_ENTRY_REASON;",
+          "export function classifyRequireLoginEntry(...args) { return getMock().classifyRequireLoginEntry(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_DB_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_AUTH_DB__ || {};",
+          "export async function findUserLeanByEmail(...args) { return await getMock().findUserLeanByEmail(...args); }",
+          "export async function findFuncionarioByIdPopulate(...args) { return await getMock().findFuncionarioByIdPopulate(...args); }",
+          "export async function findUnidadeLeanById(...args) { return await getMock().findUnidadeLeanById(...args); }",
+          "export async function findUnidadePrincipalLean(...args) { return await getMock().findUnidadePrincipalLean(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    if (url === CANONICAL_RESOLVER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_CANONICAL_RESOLVER__ || {};",
+          "export async function resolveRequireLoginCanonicalResolvedUser(...args) { return await getMock().resolveRequireLoginCanonicalResolvedUser(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    if (url === LEGACY_HYDRATION_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getMock = () => globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_LEGACY_HYDRATION__ || {};",
+          "export async function resolveRequireLoginLegacyHydration(...args) { return await getMock().resolveRequireLoginLegacyHydration(...args); }",
+        ].join('\n'),
+      };
+    }
+
+    return nextLoad(url, context);
+  },
+});
 
 function importFreshRequireLogin(token) {
   return import(`${pathToFileURL(REQUIRE_LOGIN_FILE).href}?case=${token}`);
+}
+
+function setRequireLoginFirstAccessMocks(mocks) {
+  globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_MONGOOSE__ = mocks.mongoose;
+  globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_FEATURE_FLAGS__ = mocks.featureFlags;
+  globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_AUTH_CONTEXT_RESOLVER__ = mocks.authContextResolver;
+  globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_CLASSIFIER__ = mocks.classifier;
+  globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_AUTH_DB__ = mocks.authDb;
+  globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_CANONICAL_RESOLVER__ = mocks.canonicalResolver;
+  globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_LEGACY_HYDRATION__ = mocks.legacyHydration;
+}
+
+function clearRequireLoginFirstAccessMocks() {
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_MONGOOSE__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_FEATURE_FLAGS__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_AUTH_CONTEXT_RESOLVER__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_CLASSIFIER__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_AUTH_DB__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_CANONICAL_RESOLVER__;
+  delete globalThis.__GESTOR_REQUIRE_LOGIN_FIRST_ACCESS_LEGACY_HYDRATION__;
 }
 
 function createRes() {
@@ -30,22 +171,21 @@ function createRes() {
 }
 
 test('requireLogin delega a classificacao de first-access e preserva 403 FIRST_LOGIN em API sem seguir para os ramos posteriores', async () => {
-  mock.reset();
+  clearRequireLoginFirstAccessMocks();
 
   const classifierCalls = [];
   const findUserCalls = [];
 
-  await mock.module('mongoose', {
-    defaultExport: {
+  setRequireLoginFirstAccessMocks({
+    mongoose: {
+      defaultExport: {
       connection: { readyState: 1 },
       isValidObjectId(value) {
         return /^[a-f\d]{24}$/i.test(String(value || '').trim());
       },
+      },
     },
-  });
-
-  await mock.module('#core/config/featureFlags.js', {
-    namedExports: {
+    featureFlags: {
       isFeatureEnabled(featureFlags, flagName, defaultValue) {
         if (!featureFlags || typeof featureFlags !== 'object') return defaultValue;
         return featureFlags[flagName] ?? defaultValue;
@@ -54,16 +194,10 @@ test('requireLogin delega a classificacao de first-access e preserva 403 FIRST_L
         return defaultValue;
       },
     },
-  });
-
-  await mock.module('#modules/gestor/app/services/authContextResolver.js', {
-    namedExports: {
+    authContextResolver: {
       GESTOR_AUTH_CONTEXT_RESOLVER_FLAG: 'gestor_auth_context_resolver',
     },
-  });
-
-  await mock.module('#modules/gestor/app/services/auth/classifyRequireLoginEntry.service.js', {
-    namedExports: {
+    classifier: {
       REQUIRE_LOGIN_ENTRY_REASON: {
         NONE: 'none',
         AUTHENTICATED_USER: 'authenticated-user',
@@ -91,10 +225,7 @@ test('requireLogin delega a classificacao de first-access e preserva 403 FIRST_L
         return { decision: 'continue', reason: 'none' };
       },
     },
-  });
-
-  await mock.module('#modules/gestor/app/db/auth.db.js', {
-    namedExports: {
+    authDb: {
       async findUserLeanByEmail(input) {
         findUserCalls.push(input);
         return {
@@ -119,18 +250,12 @@ test('requireLogin delega a classificacao de first-access e preserva 403 FIRST_L
         throw new Error('fallback de master nao deve ser usado no first-access');
       },
     },
-  });
-
-  await mock.module('#modules/gestor/app/services/auth/resolveRequireLoginCanonicalResolvedUser.service.js', {
-    namedExports: {
+    canonicalResolver: {
       async resolveRequireLoginCanonicalResolvedUser() {
         throw new Error('caminho canonico nao deve ser alcancado no first-access');
       },
     },
-  });
-
-  await mock.module('#modules/gestor/app/services/auth/resolveRequireLoginLegacyHydration.service.js', {
-    namedExports: {
+    legacyHydration: {
       async resolveRequireLoginLegacyHydration() {
         throw new Error('caminho legado nao deve ser alcancado no first-access');
       },
@@ -203,4 +328,6 @@ test('requireLogin delega a classificacao de first-access e preserva 403 FIRST_L
       requiresFirstAccess: true,
     },
   ]);
+
+  clearRequireLoginFirstAccessMocks();
 });
