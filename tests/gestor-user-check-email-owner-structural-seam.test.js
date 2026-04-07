@@ -107,11 +107,10 @@ test('checkUsuarioEmailOwnerService preserva os ramos semanticos exists=false e 
   const buildUnidadeSummaryLabel = buildFunction(SERVICE_SOURCE, 'function buildUnidadeSummaryLabel', {});
 
   const checkUsuarioEmailOwnerService = buildFunction(SERVICE_SOURCE, 'export async function checkUsuarioEmailOwnerService', {
-    GLOBAL_SCOPE: { type: 'global', unidadeId: null },
     normalizeEntityId,
     buildUnidadeSummaryLabel,
-    findUserByEmailRepo: async (input) => {
-      userCalls.push(input);
+    findUserByEmail: async (email) => {
+      userCalls.push(email);
       return userCalls.length === 1 ? null : {
         _id: 'u-1',
         nome: 'Admin',
@@ -123,12 +122,12 @@ test('checkUsuarioEmailOwnerService preserva os ramos semanticos exists=false e 
         ativo: true,
       };
     },
-    findUserMembershipsByUserIdsLeanRepo: async (input) => {
-      membershipCalls.push(input);
+    findUserMembershipsByUserIdsLean: async (userIds) => {
+      membershipCalls.push(userIds);
       return [{ unidade_id: 'un-1', papel_contextual: 'gestor', status: 'active', funcionario_id: 'f-1' }];
     },
-    findUnidadesByIdsNomeCodigoLeanRepo: async (input) => {
-      unidadeCalls.push(input);
+    findUnidadesByIdsNomeCodigoLean: async (unidadeIds) => {
+      unidadeCalls.push(unidadeIds);
       return [{ _id: 'un-1', codigo: '001', nome: 'Unidade A' }];
     },
   });
@@ -161,12 +160,10 @@ test('checkUsuarioEmailOwnerService preserva os ramos semanticos exists=false e 
   assert.equal(result.blockedUnidadeIds.length, 1);
   assert.equal(result.blockedUnidadeIds[0], 'un-1');
   assert.equal(userCalls.length, 2);
-  assert.equal(userCalls[0].unitScope.type, 'global');
-  assert.equal(userCalls[1].unitScope.type, 'global');
+  assert.equal(userCalls[0], 'none@example.com');
+  assert.equal(userCalls[1], 'admin@example.com');
   assert.equal(membershipCalls.length, 1);
-  assert.equal(membershipCalls[0].unitScope.type, 'global');
-  assert.equal(membershipCalls[0].userIds[0], 'u-1');
+  assert.equal(membershipCalls[0][0], 'u-1');
   assert.equal(unidadeCalls.length, 1);
-  assert.equal(unidadeCalls[0].unitScope.type, 'global');
-  assert.equal(unidadeCalls[0].unidadeIds[0], 'un-1');
+  assert.equal(unidadeCalls[0][0], 'un-1');
 });

@@ -109,18 +109,17 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
   const funcionariosCalls = [];
 
   const listUsuariosOwnerService = buildFunction(SERVICE_SOURCE, 'export async function listUsuariosOwnerService', {
-    GLOBAL_SCOPE: { type: 'global', unidadeId: null },
     Promise,
-    findUsersByQueryLeanRepo: async (input) => {
-      queryCalls.push(input);
+    findUsersByQueryLean: async (query) => {
+      queryCalls.push(query);
       return [{ _id: 'u-master', nome: 'Master' }];
     },
-    findAllUnidadesSelectIdCodigoNomeLeanRepo: async (input) => {
-      unidadesCalls.push(input);
+    findAllUnidadesSelectIdCodigoNomeLean: async () => {
+      unidadesCalls.push(true);
       return [{ _id: 'un-1', codigo: '001', nome: 'Unidade A' }];
     },
-    findAllFuncionariosSelectIdNomeCpfLeanRepo: async (input) => {
-      funcionariosCalls.push(input);
+    findAllFuncionariosSelectIdNomeCpfLean: async () => {
+      funcionariosCalls.push(true);
       return [{ _id: 'f-1', nome: 'Funcionario A', cpf: '123' }];
     },
   });
@@ -128,8 +127,7 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
   let result = await listUsuariosOwnerService({ isMaster: true });
   assert.equal(result.kind, 'ok');
   assert.equal(queryCalls.length, 1);
-  assert.equal(Object.keys(queryCalls[0].query).length, 0);
-  assert.equal(queryCalls[0].unitScope.type, 'global');
+  assert.equal(Object.keys(queryCalls[0]).length, 0);
   assert.equal(result.usuarios.length, 1);
   assert.equal(result.unidadesFiltradas.length, 1);
   assert.equal(result.funcionarios.length, 1);
@@ -137,9 +135,7 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
   result = await listUsuariosOwnerService({ isMaster: false });
   assert.equal(result.kind, 'ok');
   assert.equal(queryCalls.length, 2);
-  assert.equal(queryCalls[1].query.role.$ne, 'master');
+  assert.equal(queryCalls[1].role.$ne, 'master');
   assert.equal(unidadesCalls.length, 2);
   assert.equal(funcionariosCalls.length, 2);
-  assert.equal(unidadesCalls[1].unitScope.type, 'global');
-  assert.equal(funcionariosCalls[1].unitScope.type, 'global');
 });

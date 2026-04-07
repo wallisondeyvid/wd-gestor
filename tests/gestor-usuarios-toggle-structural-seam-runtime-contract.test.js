@@ -52,7 +52,7 @@ registerHooks({
           "export const findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean = notUsed;",
           "export const findFuncionarioByIdSelectIdUnidadeUsuarioLean = notUsed;",
           "export async function findUserById(...args) { return await (getBridgeMocks().findUserById || notUsed)(...args); }",
-          "export const saveUserDoc = notUsed;",
+          "export async function saveUserDoc(...args) { return await (getBridgeMocks().saveUserDoc || notUsed)(...args); }",
           "export const findUserDuplicadoByCpfUnidadeExcludingId = notUsed;",
           "export const createFuncionarioDoc = notUsed;",
           "export const createUserMembership = notUsed;",
@@ -60,6 +60,8 @@ registerHooks({
           "export const setFuncionarioUsuarioIdById = notUsed;",
           "export const setFuncionarioUsuarioIdIfEmpty = notUsed;",
           "export async function countUsersMasters(...args) { return await (getBridgeMocks().countUsersMasters || notUsed)(...args); }",
+          "export async function deleteUserById(...args) { return await (getBridgeMocks().deleteUserById || notUsed)(...args); }",
+          "export async function unsetFuncionarioUsuarioIdIfMatchesUser(...args) { return await (getBridgeMocks().unsetFuncionarioUsuarioIdIfMatchesUser || notUsed)(...args); }",
           "export const findUserByEmail = notUsed;",
           "export const findUserMembershipsByUserIdsLean = notUsed;",
           "export const findUnidadesByIdsNomeCodigoLean = notUsed;",
@@ -270,20 +272,23 @@ test('toggleUsuario preserva redirect no caminho nao XHR depois de delegar ao se
 });
 
 test('toggleUsuarioExecutionService inverte user.ativo e persiste o proprio documento', async () => {
-  let saveCalls = 0;
+  const bridgeCalls = [];
   const user = {
     _id: '507f1f77bcf86cd799439011',
     ativo: false,
-    async save() {
-      saveCalls += 1;
-      return this;
-    },
   };
+
+  setBridgeMocks({
+    saveUserDoc: async (userDoc) => {
+      bridgeCalls.push(userDoc);
+      return userDoc;
+    },
+  });
 
   const { toggleUsuarioExecutionService } = await importToggleUsuarioExecutionService('service-toggle-save');
   const result = await toggleUsuarioExecutionService({ user });
 
-  assert.equal(saveCalls, 1);
+  assert.deepEqual(bridgeCalls, [user]);
   assert.equal(user.ativo, true);
   assert.equal(result, user);
 });

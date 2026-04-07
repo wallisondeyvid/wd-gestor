@@ -1,9 +1,8 @@
-import { createUnitScope } from '#shared/unitScope.js';
-import { findUserByEmailRepo } from '#modules/gestor/app/repositories/UserRepository.js';
-import { findUserMembershipsByUserIdsLeanRepo } from '#modules/gestor/app/repositories/UserMembershipRepository.js';
-import { findUnidadesByIdsNomeCodigoLeanRepo } from '#modules/gestor/app/repositories/UnidadeReadRepository.js';
-
-const GLOBAL_SCOPE = createUnitScope({});
+import {
+  findUserByEmail,
+  findUserMembershipsByUserIdsLean,
+  findUnidadesByIdsNomeCodigoLean,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 function normalizeEntityId(value) {
   return String(value || '').trim();
@@ -17,7 +16,7 @@ function buildUnidadeSummaryLabel(unidade) {
 }
 
 export async function checkUsuarioEmailOwnerService({ email } = {}) {
-  const user = await findUserByEmailRepo({ unitScope: GLOBAL_SCOPE, email });
+  const user = await findUserByEmail(email);
   if (!user) {
     return {
       kind: 'ok',
@@ -32,10 +31,10 @@ export async function checkUsuarioEmailOwnerService({ email } = {}) {
   }
 
   const normalizedUserId = normalizeEntityId(user._id);
-  const memberships = await findUserMembershipsByUserIdsLeanRepo({ unitScope: GLOBAL_SCOPE, userIds: [normalizedUserId] });
+  const memberships = await findUserMembershipsByUserIdsLean([normalizedUserId]);
   const unidadeIds = [...new Set((Array.isArray(memberships) ? memberships : []).map((membership) => normalizeEntityId(membership?.unidade_id)).filter(Boolean))];
   const unidades = unidadeIds.length > 0
-    ? await findUnidadesByIdsNomeCodigoLeanRepo({ unitScope: GLOBAL_SCOPE, unidadeIds })
+    ? await findUnidadesByIdsNomeCodigoLean(unidadeIds)
     : [];
   const unidadesById = new Map(
     (Array.isArray(unidades) ? unidades : []).map((unidade) => [normalizeEntityId(unidade?._id), unidade])

@@ -70,8 +70,8 @@ registerHooks({
           "export const setFuncionarioUsuarioIdById = notUsed;",
           "export const setFuncionarioUsuarioIdIfEmpty = notUsed;",
           "export async function countUsersMasters(...args) { return await (getBridgeMocks().countUsersMasters || notUsed)(...args); }",
-          "export const deleteUserById = notUsed;",
-          "export const unsetFuncionarioUsuarioIdIfMatchesUser = notUsed;",
+          "export async function deleteUserById(...args) { return await (getBridgeMocks().deleteUserById || notUsed)(...args); }",
+          "export async function unsetFuncionarioUsuarioIdIfMatchesUser(...args) { return await (getBridgeMocks().unsetFuncionarioUsuarioIdIfMatchesUser || notUsed)(...args); }",
           "export const findUserByEmail = notUsed;",
           "export const findUserMembershipsByUserIdsLean = notUsed;",
           "export const findUnidadesByIdsNomeCodigoLean = notUsed;",
@@ -327,18 +327,16 @@ test('excluirUsuario preserva bloqueio de exclusao de master no owner e nao cham
   assert.equal(res.sentText, 'Usuário master não pode ser excluído.');
 });
 
-test('deleteUsuarioExecutionService executa delete e cleanup opcional pelos repositories reais', async () => {
+test('deleteUsuarioExecutionService executa delete e cleanup opcional pelo bridge permitido', async () => {
   const calls = [];
 
-  setUserRepositoryMocks({
-    deleteUserByIdRepo: async (args) => {
-      calls.push({ op: 'deleteUserByIdRepo', args });
+  setBridgeMocks({
+    deleteUserById: async (userId) => {
+      calls.push({ op: 'deleteUserById', userId });
       return { acknowledged: true, deletedCount: 1 };
     },
-  });
-  setFuncionarioRepositoryMocks({
-    unsetFuncionarioUsuarioIdIfMatchesUserRepo: async (args) => {
-      calls.push({ op: 'unsetFuncionarioUsuarioIdIfMatchesUserRepo', args });
+    unsetFuncionarioUsuarioIdIfMatchesUser: async (funcionarioId, userId) => {
+      calls.push({ op: 'unsetFuncionarioUsuarioIdIfMatchesUser', funcionarioId, userId });
       return { acknowledged: true, modifiedCount: 1 };
     },
   });
@@ -351,19 +349,13 @@ test('deleteUsuarioExecutionService executa delete e cleanup opcional pelos repo
 
   assert.deepEqual(calls, [
     {
-      op: 'deleteUserByIdRepo',
-      args: {
-        unitScope: { type: 'global', unidadeId: null },
-        userId: '507f1f77bcf86cd799439011',
-      },
+      op: 'deleteUserById',
+      userId: '507f1f77bcf86cd799439011',
     },
     {
-      op: 'unsetFuncionarioUsuarioIdIfMatchesUserRepo',
-      args: {
-        unitScope: { type: 'global', unidadeId: null },
-        funcionarioId: '507f191e810c19729de860aa',
-        userId: '507f1f77bcf86cd799439011',
-      },
+      op: 'unsetFuncionarioUsuarioIdIfMatchesUser',
+      funcionarioId: '507f191e810c19729de860aa',
+      userId: '507f1f77bcf86cd799439011',
     },
   ]);
 });
@@ -371,15 +363,13 @@ test('deleteUsuarioExecutionService executa delete e cleanup opcional pelos repo
 test('deleteUsuarioExecutionService nao tenta cleanup quando nao ha vinculoFuncionarioId', async () => {
   const calls = [];
 
-  setUserRepositoryMocks({
-    deleteUserByIdRepo: async (args) => {
-      calls.push({ op: 'deleteUserByIdRepo', args });
+  setBridgeMocks({
+    deleteUserById: async (userId) => {
+      calls.push({ op: 'deleteUserById', userId });
       return { acknowledged: true, deletedCount: 1 };
     },
-  });
-  setFuncionarioRepositoryMocks({
-    unsetFuncionarioUsuarioIdIfMatchesUserRepo: async (args) => {
-      calls.push({ op: 'unsetFuncionarioUsuarioIdIfMatchesUserRepo', args });
+    unsetFuncionarioUsuarioIdIfMatchesUser: async (funcionarioId, userId) => {
+      calls.push({ op: 'unsetFuncionarioUsuarioIdIfMatchesUser', funcionarioId, userId });
       throw new Error('cleanup nao deveria ser chamado');
     },
   });
@@ -391,10 +381,7 @@ test('deleteUsuarioExecutionService nao tenta cleanup quando nao ha vinculoFunci
   });
 
   assert.deepEqual(calls, [{
-    op: 'deleteUserByIdRepo',
-    args: {
-      unitScope: { type: 'global', unidadeId: null },
-      userId: '507f1f77bcf86cd799439011',
-    },
+    op: 'deleteUserById',
+    userId: '507f1f77bcf86cd799439011',
   }]);
 });
