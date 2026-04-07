@@ -7,29 +7,16 @@ import multer from 'multer';
 import sharp from 'sharp';
 import { randomUUID as uuid } from 'crypto';
 import { put, del } from '@vercel/blob';
-import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
-import {
-	GESTOR_AUTH_CONTEXT_RESOLVER_FLAG,
-} from '#modules/gestor/app/services/authContextResolver.js';
-import { resolveUserApiModulosCanonicalResult } from '#modules/gestor/app/services/auth/resolveUserApiModulosCanonicalResult.service.js';
 import User from '#models/user.js';
 
-function isAuthContextResolverEnabledForRequest(req) {
-	const featureFlags = req.app?.locals?.gestorAuthContextFeatureFlags || null;
-	if (featureFlags && typeof featureFlags === 'object') {
-		return isFeatureEnabled(featureFlags, GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
-	}
-	return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
-}
-
-function buildPendingSelectionRequiredPayload(req) {
+function buildDefaultPendingSelectionRequiredPayload(req) {
 	return {
 		success: false,
 		authenticated: true,
 		error: 'Seleção de unidade pendente',
 		code: 'GESTOR_SELECTION_REQUIRED',
 		needsUnitSelection: true,
-		redirect: '/gestor/login?step=select',
+		redirect: '/login?step=select',
 	};
 }
 
@@ -44,8 +31,28 @@ export function createUserApiRouter({
 	requireRole,
 	requireApiAuth,
 	requireLogin,
+	shouldResolveCanonicalModulos,
+	resolveCanonicalModulos,
+	buildSelectionRequiredPayload,
 } = {}) {
 const router = express.Router();
+	const defaultBuildSelectionRequiredPayload = (req) => ({
+		success: false,
+		authenticated: true,
+		error: 'Seleção de unidade pendente',
+		code: 'GESTOR_SELECTION_REQUIRED',
+		needsUnitSelection: true,
+		redirect: '/login?step=select',
+	});
+	const shouldResolveCanonicalModulosForRequest = typeof shouldResolveCanonicalModulos === 'function'
+		? shouldResolveCanonicalModulos
+		: (typeof isAuthContextResolverEnabledForRequest === 'function' ? isAuthContextResolverEnabledForRequest : (() => false));
+	const resolveCanonicalModulosForRequest = typeof resolveCanonicalModulos === 'function'
+		? resolveCanonicalModulos
+		: (typeof resolveUserApiModulosCanonicalResult === 'function' ? resolveUserApiModulosCanonicalResult : null);
+	const buildSelectionRequiredPayloadForRequest = typeof buildSelectionRequiredPayload === 'function'
+		? buildSelectionRequiredPayload
+		: (typeof buildPendingSelectionRequiredPayload === 'function' ? buildPendingSelectionRequiredPayload : defaultBuildSelectionRequiredPayload);
 	const handleApiModulos = async (req, res) => {
 		try {
 			const role = String(req.user?.role || 'user').toLowerCase();
@@ -92,8 +99,8 @@ const router = express.Router();
 				return out;
 			};
 
-			if (isAuthContextResolverEnabledForRequest(req)) {
-				const canonicalResult = await resolveUserApiModulosCanonicalResult({
+			if (shouldResolveCanonicalModulosForRequest(req) && typeof resolveCanonicalModulosForRequest === 'function') {
+				const canonicalResult = await resolveCanonicalModulosForRequest({
 					authenticatedUser: req.user || null,
 					sessionUser: req.session?.user || null,
 					existingAuthContext: req.session?.gestorAuthContext || null,
@@ -107,7 +114,7 @@ const router = express.Router();
 				});
 
 				if (canonicalResult.kind === 'selection-required') {
-					return res.status(409).json(buildPendingSelectionRequiredPayload(req));
+					return res.status(409).json(buildSelectionRequiredPayloadForRequest(req));
 				}
 
 				if (canonicalResult.kind === 'resolved') {

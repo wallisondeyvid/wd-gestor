@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { after, before, beforeEach, describe, it, mock } from 'node:test';
+import { after, before, beforeEach, describe, it } from 'node:test';
+import { registerHooks } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import http from 'node:http';
@@ -9,11 +10,240 @@ import session from 'express-session';
 const ROOT = process.cwd();
 const GESTOR_APP_URL = pathToFileURL(path.join(ROOT, 'src/modules/gestor/app/gestor-app.js')).href;
 
-function createEmptyRouter() {
-  const router = express.Router();
-  router.use((req, res, next) => next());
-  return router;
-}
+const ROUTE_STUB_SPECIFIERS = new Set([
+  './routes/usuario.js',
+  './routes/unidade.js',
+  './routes/funcionario.js',
+  './routes/funcao.js',
+  './routes/setor.js',
+  './routes/recurso.js',
+  './routes/modulo.js',
+  './routes/dashboard.js',
+  './routes/pagesRouter.js',
+  './routes/userApi.js',
+  './routes/unidadeApi.js',
+  './routes/funcaoApi.js',
+  './routes/setorApi.js',
+  './routes/recursoApi.js',
+  './routes/biometriaApi.js',
+  './routes/funcionarioApi.js',
+  './routes/cnaeApi.js',
+  './routes/moduloApi.js',
+  './routes/debugApi.js',
+  './routes/userAdminApi.js',
+  './routes/miscApi.js',
+  './routes/bancoApi.js',
+  './routes/faceBiometriaUploadApi.js',
+  './routes/feedbackApi.js',
+  './routes/widgetSettingsApi.js',
+]);
+
+const ROUTE_STUB_MODULE_PREFIX = 'mock:gestor-auth-login-first-authenticated-request-runtime-route:';
+const MONGOOSE_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-mongoose';
+const BCRYPT_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-bcryptjs';
+const NODEMAILER_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-nodemailer';
+const FEATURE_FLAGS_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-feature-flags';
+const AUTH_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-auth-db-bridge';
+const AUTH_CONTEXT_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-auth-context-db-bridge';
+const API_DB_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-api-db';
+const API_CONTROLLER_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-api-controller';
+const REQUIRE_LOGIN_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-require-login';
+const REQUIRE_UNIT_SCOPE_MOCK_MODULE_URL = 'mock:gestor-auth-login-first-authenticated-request-runtime-require-unit-scope';
+
+const AUTH_DB_BRIDGE_EXPORTS = [
+  'createPasswordReset',
+  'createRememberToken',
+  'deletePasswordResetById',
+  'findFuncaoByIdSelect',
+  'findFuncionarioByIdSelect',
+  'findFuncionariosByCpfSelect',
+  'findModuloByOr',
+  'findModuloLeanByOrSelect',
+  'findPasswordResetByToken',
+  'findUnidadeByIdSelect',
+  'findUserByEmail',
+  'findUserByEmailForLogin',
+  'findUserByIdSelect',
+  'findUserByIdWithMaxTime',
+  'findUsersByCpf',
+  'findUsersByFuncionarioIds',
+  'revokeRememberTokenByHash',
+  'saveUserDocument',
+];
+
+const AUTH_CONTEXT_DB_BRIDGE_EXPORTS = [
+  'loadActiveMembershipsByUserId',
+  'loadUnidadeById',
+];
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (ROUTE_STUB_SPECIFIERS.has(specifier)) {
+      return { url: `${ROUTE_STUB_MODULE_PREFIX}${encodeURIComponent(specifier)}`, shortCircuit: true };
+    }
+    if (specifier === 'mongoose') return { url: MONGOOSE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === 'bcryptjs') return { url: BCRYPT_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === 'nodemailer') return { url: NODEMAILER_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#core/config/featureFlags.js') return { url: FEATURE_FLAGS_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/authDbBridgeService.js') return { url: AUTH_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/authContextDbBridgeService.js') return { url: AUTH_CONTEXT_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/db/api.db.js') return { url: API_DB_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/controllers/apiController.js') return { url: API_CONTROLLER_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/middlewares/requireLogin.js') return { url: REQUIRE_LOGIN_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/middlewares/requireUnitScope.js') return { url: REQUIRE_UNIT_SCOPE_MOCK_MODULE_URL, shortCircuit: true };
+    return nextResolve(specifier, context);
+  },
+  load(url, context, nextLoad) {
+    if (url.startsWith(ROUTE_STUB_MODULE_PREFIX)) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export default function routeStub(_req, _res, next) {',
+          '  return next();',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === MONGOOSE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: "const state = globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_MONGOOSE_STATE__; export default state;",
+      };
+    }
+
+    if (url === BCRYPT_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_STATE__;',
+          'export default {',
+          '  async compare() { return state.bcryptCompareResult; },',
+          "  async hash(value) { return `hashed:${value}`; }",
+          '};',
+        ].join('\n'),
+      };
+    }
+
+    if (url === NODEMAILER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export default {',
+          '  createTransport() {',
+          '    return {',
+          "      async sendMail() { return { messageId: 'mock-mail' }; },",
+          '    };',
+          '  },',
+          '};',
+        ].join('\n'),
+      };
+    }
+
+    if (url === FEATURE_FLAGS_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export function isFeatureEnabled(featureFlags, flagName, fallback = false) {',
+          '  if (!featureFlags || typeof featureFlags !== "object") return fallback;',
+          '  if (Object.prototype.hasOwnProperty.call(featureFlags, flagName)) return featureFlags[flagName] === true;',
+          '  return fallback;',
+          '}',
+          'export function isFlagEnabled() {',
+          '  return false;',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_DB_BRIDGE_MOCK_MODULE_URL) {
+      const lines = ['const state = globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_AUTH_DB_BRIDGE_MOCK__;'];
+      for (const exportName of AUTH_DB_BRIDGE_EXPORTS) {
+        lines.push(`export async function ${exportName}(...args) { return await state['${exportName}'](...args); }`);
+      }
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: lines.join('\n'),
+      };
+    }
+
+    if (url === AUTH_CONTEXT_DB_BRIDGE_MOCK_MODULE_URL) {
+      const lines = ['const state = globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_AUTH_CONTEXT_BRIDGE_MOCK__;'];
+      for (const exportName of AUTH_CONTEXT_DB_BRIDGE_EXPORTS) {
+        lines.push(`export async function ${exportName}(...args) { return await state['${exportName}'](...args); }`);
+      }
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: lines.join('\n'),
+      };
+    }
+
+    if (url === API_DB_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_API_DB_MOCK__;',
+          'export async function findUserByEmailCondLeanMaxTimeMs(...args) {',
+          '  return await state.findUserByEmailCondLeanMaxTimeMs(...args);',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === API_CONTROLLER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_API_CONTROLLER_MOCK__;',
+          'export async function unidadesCluster(...args) { return await state.unidadesCluster(...args); }',
+          'export async function debugSession(...args) { return await state.debugSession(...args); }',
+          'export async function debugWhoami(...args) { return await state.debugWhoami(...args); }',
+          'export async function ibge(...args) { return await state.ibge(...args); }',
+          'export async function favicon(...args) { return await state.favicon(...args); }',
+        ].join('\n'),
+      };
+    }
+
+    if (url === REQUIRE_LOGIN_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export default function requireLogin(req, res, next) {',
+          '  if (req.user || req.session?.user) return next();',
+          '  return res.redirect((req.baseUrl || "") + "/login");',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === REQUIRE_UNIT_SCOPE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export function requireUnitScope(req, res, next) {',
+          '  const unidadeId = req.session?.gestorAuthContext?.active_unidade_id || req.user?.unidade_id || req.session?.user?.unidade_id || null;',
+          '  if (!unidadeId) return res.redirect((req.baseUrl || "") + "/login");',
+          '  req.unitScope = { type: "unit", unidadeId: String(unidadeId) };',
+          '  return next();',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    return nextLoad(url, context);
+  },
+});
 
 const state = {
   bcryptCompareResult: true,
@@ -145,129 +375,12 @@ const apiControllerMock = {
   },
 };
 
-function installRouteStubs() {
-  const routeFiles = [
-    'src/modules/gestor/app/routes/usuario.js',
-    'src/modules/gestor/app/routes/unidade.js',
-    'src/modules/gestor/app/routes/funcionario.js',
-    'src/modules/gestor/app/routes/funcao.js',
-    'src/modules/gestor/app/routes/setor.js',
-    'src/modules/gestor/app/routes/recurso.js',
-    'src/modules/gestor/app/routes/modulo.js',
-    'src/modules/gestor/app/routes/dashboard.js',
-    'src/modules/gestor/app/routes/pagesRouter.js',
-    'src/modules/gestor/app/routes/userApi.js',
-    'src/modules/gestor/app/routes/unidadeApi.js',
-    'src/modules/gestor/app/routes/funcaoApi.js',
-    'src/modules/gestor/app/routes/setorApi.js',
-    'src/modules/gestor/app/routes/recursoApi.js',
-    'src/modules/gestor/app/routes/biometriaApi.js',
-    'src/modules/gestor/app/routes/funcionarioApi.js',
-    'src/modules/gestor/app/routes/cnaeApi.js',
-    'src/modules/gestor/app/routes/moduloApi.js',
-    'src/modules/gestor/app/routes/debugApi.js',
-    'src/modules/gestor/app/routes/userAdminApi.js',
-    'src/modules/gestor/app/routes/miscApi.js',
-    'src/modules/gestor/app/routes/bancoApi.js',
-    'src/modules/gestor/app/routes/faceBiometriaUploadApi.js',
-    'src/modules/gestor/app/routes/feedbackApi.js',
-    'src/modules/gestor/app/routes/widgetSettingsApi.js',
-  ];
-
-  for (const file of routeFiles) {
-    mock.module(pathToFileURL(path.join(ROOT, file)).href, {
-      defaultExport: createEmptyRouter(),
-    });
-  }
-}
-
-mock.module('mongoose', {
-  defaultExport: mongooseMock,
-});
-
-mock.module('bcryptjs', {
-  defaultExport: {
-    async compare() {
-      return state.bcryptCompareResult;
-    },
-    async hash(value) {
-      return `hashed:${value}`;
-    },
-  },
-});
-
-mock.module('nodemailer', {
-  defaultExport: {
-    createTransport() {
-      return {
-        async sendMail() {
-          return { messageId: 'mock-mail' };
-        },
-      };
-    },
-  },
-});
-
-mock.module('#core/config/featureFlags.js', {
-  namedExports: {
-    isFeatureEnabled(featureFlags, flagName, fallback = false) {
-      if (!featureFlags || typeof featureFlags !== 'object') return fallback;
-      if (Object.prototype.hasOwnProperty.call(featureFlags, flagName)) {
-        return featureFlags[flagName] === true;
-      }
-      return fallback;
-    },
-    isFlagEnabled() {
-      return false;
-    },
-  },
-});
-
-mock.module('#modules/gestor/app/services/authDbBridgeService.js', {
-  namedExports: authDbBridgeMock,
-});
-
-mock.module('#modules/gestor/app/services/authContextDbBridgeService.js', {
-  namedExports: authContextBridgeMock,
-});
-
-mock.module('#modules/gestor/app/db/api.db.js', {
-  namedExports: apiDbMock,
-});
-
-mock.module('#modules/gestor/app/controllers/apiController.js', {
-  namedExports: apiControllerMock,
-});
-
-mock.module('#modules/gestor/app/middlewares/requireLogin.js', {
-  defaultExport(req, res, next) {
-    if (req.user || req.session?.user) return next();
-    return res.redirect((req.baseUrl || '') + '/login');
-  },
-});
-
-mock.module('#modules/gestor/app/middlewares/requireUnitScope.js', {
-  namedExports: {
-    requireUnitScope(req, res, next) {
-      const unidadeId = req.session?.gestorAuthContext?.active_unidade_id
-        || req.user?.unidade_id
-        || req.session?.user?.unidade_id
-        || null;
-
-      if (!unidadeId) {
-        return res.redirect((req.baseUrl || '') + '/login');
-      }
-
-      req.unitScope = {
-        type: 'unit',
-        unidadeId: String(unidadeId),
-      };
-      return next();
-    },
-  },
-});
-
-installRouteStubs();
+globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_STATE__ = state;
+globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_MONGOOSE_STATE__ = mongooseMock;
+globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_AUTH_DB_BRIDGE_MOCK__ = authDbBridgeMock;
+globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_AUTH_CONTEXT_BRIDGE_MOCK__ = authContextBridgeMock;
+globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_API_DB_MOCK__ = apiDbMock;
+globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_API_CONTROLLER_MOCK__ = apiControllerMock;
 
 let gestorApp;
 
@@ -354,7 +467,8 @@ async function request(baseUrl, jar, url, options = {}) {
 }
 
 before(async () => {
-  ({ default: gestorApp } = await import(GESTOR_APP_URL));
+  const { default: buildGestorApp } = await import(GESTOR_APP_URL);
+  gestorApp = buildGestorApp();
   resetState();
 });
 
@@ -363,7 +477,12 @@ beforeEach(() => {
 });
 
 after(() => {
-  mock.reset();
+  delete globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_STATE__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_MONGOOSE_STATE__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_AUTH_DB_BRIDGE_MOCK__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_AUTH_CONTEXT_BRIDGE_MOCK__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_API_DB_MOCK__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_FIRST_AUTHENTICATED_REQUEST_RUNTIME_API_CONTROLLER_MOCK__;
 });
 
 describe('gestor auth login first authenticated request runtime contract', () => {

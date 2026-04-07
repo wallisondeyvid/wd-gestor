@@ -155,7 +155,8 @@ test('estado real atual: AuthContext orchestration delega para a seam unica sem 
 
   assert.match(CONTROLLER_SOURCE, /createRememberToken\(/);
   assert.match(CONTROLLER_SOURCE, /user\.failed_login_attempts = \(user\.failed_login_attempts \|\| 0\) \+ 1;/);
-  assert.match(CONTROLLER_SOURCE, /verificarAcessoModulo\(/);
+  assert.match(CONTROLLER_SOURCE, /const loginModuleAccess = createLoginModuleAccessCore\(\{/);
+  assert.match(CONTROLLER_SOURCE, /loginModuleAccess\.evaluateModuleAccess\(\{ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath, authContext: resolvedLoginAuthContext \}\)/);
   assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, basePath \+ '\/dashboard'\);/);
   assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, basePath \+ '\/primeiroacesso'\);/);
 
@@ -166,7 +167,7 @@ test('estado real atual: AuthContext orchestration delega para a seam unica sem 
   assert.match(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /return resolveLoginPostAuthContext\(/);
   assert.match(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /return resolveAuthContext\(resolverOptions\);/);
   assert.match(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /return mutateAuthUnitContextService\(/);
-  assert.doesNotMatch(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /redirect|createRememberToken|failed_login_attempts|verificarAcessoModulo|findPasswordResetByToken/);
+  assert.doesNotMatch(AUTH_CONTEXT_ORCHESTRATION_CORE_SOURCE, /redirect|createRememberToken|failed_login_attempts|evaluateModuleAccess|findPasswordResetByToken/);
 
   assert.match(LOGIN_POST_AUTH_CONTEXT_SERVICE_SOURCE, /projectLegacySessionUserFromAuthContext/);
   assert.match(LOGIN_POST_AUTH_CONTEXT_SERVICE_SOURCE, /session\.gestorAuthContext = storedAuthContext;/);
@@ -180,7 +181,7 @@ test('futura seam unica recebe apenas identidade, sessao, resolver options e dep
   const functionSource = buildAuthContextOrchestrationCoreSource();
   assert.match(functionSource, /function createAuthContextOrchestrationCore\(\{/);
   assert.doesNotMatch(functionSource, /\breq\b|\bres\b|redirect|createRememberToken|revokeRememberTokenByHash|postEsqueciSenha|postResetPassword|listarEmailsPorCPF/);
-  assert.doesNotMatch(functionSource, /failed_login_attempts|lock_until|bcrypt|verificarAcessoModulo|findModuloByOr|findPasswordResetByToken/);
+  assert.doesNotMatch(functionSource, /failed_login_attempts|lock_until|bcrypt|evaluateModuleAccess|findModuloByOr|findPasswordResetByToken/);
   assert.doesNotMatch(functionSource, /renderResetPassword|primeiroAcessoExecutionService|cookie|Retry-After|X-Account-Lock/);
 
   const calls = [];

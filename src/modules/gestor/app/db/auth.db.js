@@ -21,6 +21,11 @@ import {
   findUsersByFuncionarioIdsRepo,
   revokeRememberTokenByHashRepo,
 } from '#modules/gestor/app/repositories/AuthRepository.js';
+import {
+  findFuncaoCanonicalByIdRepo as findFuncaoCanonicalByIdUserApiRepo,
+  findFuncionarioCanonicalByIdRepo as findFuncionarioCanonicalByIdUserApiRepo,
+  loadAllModulosBaseRepo as loadAllModulosBaseUserApiRepo,
+} from '#modules/gestor/app/repositories/UserApiModulosCanonicalRepository.js';
 import { createUnitScope } from '#shared/unitScope.js';
 
 const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
@@ -95,6 +100,18 @@ export async function findFuncaoByIdSelect({ id, select, maxTimeMS }) {
   let query = findFuncaoByIdSelectRepo({ unitScope: GLOBAL_SCOPE, id, select });
   query = withOptionalMaxTime(query, maxTimeMS);
   return query;
+}
+
+export async function loadAllModulosBase() {
+  return loadAllModulosBaseUserApiRepo();
+}
+
+export async function findFuncionarioCanonicalById({ funcionarioId }) {
+  return findFuncionarioCanonicalByIdUserApiRepo(funcionarioId);
+}
+
+export async function findFuncaoCanonicalById({ funcaoId }) {
+  return findFuncaoCanonicalByIdUserApiRepo(funcaoId);
 }
 
 export async function findUserByEmail({ email }) {

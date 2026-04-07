@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { after, beforeEach, mock, test } from 'node:test';
+import { after, beforeEach, test } from 'node:test';
+import { registerHooks } from 'node:module';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/authController.js');
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
@@ -33,6 +34,136 @@ const loginPostAuthContextState = {
   result: null,
   calls: [],
 };
+
+const MONGOOSE_MOCK_MODULE_URL = 'mock:gestor-auth-login-module-access-mongoose';
+const BCRYPT_MOCK_MODULE_URL = 'mock:gestor-auth-login-module-access-bcryptjs';
+const FEATURE_FLAGS_MOCK_MODULE_URL = 'mock:gestor-auth-login-module-access-feature-flags';
+const AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL = 'mock:gestor-auth-login-module-access-auth-context-resolver';
+const PRIMEIRO_ACESSO_EXECUTION_MOCK_MODULE_URL = 'mock:gestor-auth-login-module-access-primeiro-acesso-execution';
+const LOGIN_POST_AUTH_CONTEXT_MOCK_MODULE_URL = 'mock:gestor-auth-login-module-access-login-post-auth-context';
+const AUTH_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-auth-login-module-access-auth-db-bridge';
+
+const AUTH_DB_BRIDGE_EXPORTS = [
+  'createPasswordReset',
+  'createRememberToken',
+  'deletePasswordResetById',
+  'findFuncaoByIdSelect',
+  'findFuncionarioByIdSelect',
+  'findFuncionariosByCpfSelect',
+  'findModuloByOr',
+  'findModuloLeanByOrSelect',
+  'findPasswordResetByToken',
+  'findUnidadeByIdSelect',
+  'findUserByEmail',
+  'findUserByEmailForLogin',
+  'findUserByIdSelect',
+  'findUserByIdWithMaxTime',
+  'findUsersByCpf',
+  'findUsersByFuncionarioIds',
+  'revokeRememberTokenByHash',
+  'saveUserDocument',
+];
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === 'mongoose') return { url: MONGOOSE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === 'bcryptjs') return { url: BCRYPT_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#core/config/featureFlags.js') return { url: FEATURE_FLAGS_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/authContextResolver.js') return { url: AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js') return { url: PRIMEIRO_ACESSO_EXECUTION_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js') return { url: LOGIN_POST_AUTH_CONTEXT_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/authDbBridgeService.js') return { url: AUTH_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    return nextResolve(specifier, context);
+  },
+  load(url, context, nextLoad) {
+    if (url === MONGOOSE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: "const state = globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_MONGOOSE_STATE__; export default state;",
+      };
+    }
+
+    if (url === BCRYPT_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_BCRYPT_STATE__;',
+          'export default {',
+          '  async compare() { return state.compareResult; },',
+          "  async hash() { return '$2b$12$rehashrehashrehashrehashrehashrehashrehashrehash'; },",
+          '};',
+        ].join('\n'),
+      };
+    }
+
+    if (url === FEATURE_FLAGS_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_FEATURE_FLAGS_STATE__;',
+          'export function isFeatureEnabled(flags, flagName, fallback = false) {',
+          '  if (flags && Object.prototype.hasOwnProperty.call(flags, flagName)) return flags[flagName] === true;',
+          '  return fallback;',
+          '}',
+          'export function isFlagEnabled(flagName, fallback = false) {',
+          '  if (Object.prototype.hasOwnProperty.call(state, flagName)) return state[flagName] === true;',
+          '  return fallback;',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_CONTEXT_RESOLVER_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "export const GESTOR_AUTH_CONTEXT_RESOLVER_FLAG = 'gestor_auth_context_resolver';",
+          'export async function resolveGestorAuthContext() { return null; }',
+        ].join('\n'),
+      };
+    }
+
+    if (url === PRIMEIRO_ACESSO_EXECUTION_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: "export async function primeiroAcessoExecutionService() { return { kind: 'not_used' }; }",
+      };
+    }
+
+    if (url === LOGIN_POST_AUTH_CONTEXT_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_LOGIN_POST_AUTH_CONTEXT_STATE__;',
+          'export async function resolveLoginPostAuthContext(input) {',
+          '  state.calls.push(input);',
+          '  return state.result;',
+          '}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === AUTH_DB_BRIDGE_MOCK_MODULE_URL) {
+      const lines = ['const state = globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_AUTH_DB_STATE__;'];
+      for (const exportName of AUTH_DB_BRIDGE_EXPORTS) {
+        lines.push(`export async function ${exportName}(...args) { return await state['${exportName}'](...args); }`);
+      }
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: lines.join('\n'),
+      };
+    }
+
+    return nextLoad(url, context);
+  },
+});
 
 test('estado real atual: login preserva o corridor HTTP e a decisao de acesso ao modulo fica isolada no helper sem absorver excludes', () => {
   const seamPath = path.join(process.cwd(), 'src/modules/gestor/app/services/auth/createLoginModuleAccessCore.js');
@@ -74,129 +205,79 @@ test('futura seam de module access recebe apenas usuario efetivo, modulo alvo, b
   assert.doesNotMatch(futureSeamSource, /resolveLoginAuthContext|redirect|render\('partials\/construcao'|findModuloLeanByOrSelect/);
 });
 
-mock.module('mongoose', {
-  defaultExport: mongooseState,
-});
-
-mock.module('bcryptjs', {
-  defaultExport: {
-    async compare() {
-      return bcryptState.compareResult;
-    },
-    async hash() {
-      return '$2b$12$rehashrehashrehashrehashrehashrehashrehashrehash';
-    },
+const authDbBridgeMock = {
+  async createPasswordReset() {
+    return null;
   },
-});
-
-mock.module('#core/config/featureFlags.js', {
-  namedExports: {
-    isFeatureEnabled(flags, flagName, fallback = false) {
-      if (flags && Object.prototype.hasOwnProperty.call(flags, flagName)) {
-        return flags[flagName] === true;
-      }
-      return fallback;
-    },
-    isFlagEnabled(flagName, fallback = false) {
-      if (Object.prototype.hasOwnProperty.call(featureFlagsState, flagName)) {
-        return featureFlagsState[flagName] === true;
-      }
-      return fallback;
-    },
+  async createRememberToken() {
+    return null;
   },
-});
-
-mock.module('#modules/gestor/app/services/authContextResolver.js', {
-  namedExports: {
-    GESTOR_AUTH_CONTEXT_RESOLVER_FLAG: 'gestor_auth_context_resolver',
-    async resolveGestorAuthContext() {
-      return null;
-    },
+  async deletePasswordResetById() {
+    return null;
   },
-});
-
-mock.module('#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js', {
-  namedExports: {
-    async primeiroAcessoExecutionService() {
-      return { kind: 'not_used' };
-    },
+  async findFuncaoByIdSelect() {
+    return null;
   },
-});
-
-mock.module('#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js', {
-  namedExports: {
-    async resolveLoginPostAuthContext(input) {
-      loginPostAuthContextState.calls.push(input);
-      return loginPostAuthContextState.result;
-    },
+  async findFuncionarioByIdSelect() {
+    return null;
   },
-});
-
-mock.module('#modules/gestor/app/services/authDbBridgeService.js', {
-  namedExports: {
-    async createPasswordReset() {
-      return null;
-    },
-    async createRememberToken() {
-      return null;
-    },
-    async deletePasswordResetById() {
-      return null;
-    },
-    async findFuncaoByIdSelect() {
-      return null;
-    },
-    async findFuncionarioByIdSelect() {
-      return null;
-    },
-    async findFuncionariosByCpfSelect() {
-      return [];
-    },
-    async findModuloByOr(input) {
-      authDbState.findModuloByOrCalls.push(input);
-      return authDbState.modulo;
-    },
-    async findModuloLeanByOrSelect() {
-      return null;
-    },
-    async findPasswordResetByToken() {
-      return null;
-    },
-    async findUnidadeByIdSelect(input) {
-      authDbState.findUnidadeByIdSelectCalls.push(input);
-      return authDbState.unidade;
-    },
-    async findUserByEmail() {
-      return authDbState.user;
-    },
-    async findUserByEmailForLogin() {
-      return authDbState.user;
-    },
-    async findUserByIdSelect() {
-      return null;
-    },
-    async findUserByIdWithMaxTime() {
-      return null;
-    },
-    async findUsersByCpf() {
-      return [];
-    },
-    async findUsersByFuncionarioIds() {
-      return [];
-    },
-    async revokeRememberTokenByHash() {
-      return null;
-    },
-    async saveUserDocument(user) {
-      return user;
-    },
+  async findFuncionariosByCpfSelect() {
+    return [];
   },
-});
+  async findModuloByOr(input) {
+    authDbState.findModuloByOrCalls.push(input);
+    return authDbState.modulo;
+  },
+  async findModuloLeanByOrSelect() {
+    return null;
+  },
+  async findPasswordResetByToken() {
+    return null;
+  },
+  async findUnidadeByIdSelect(input) {
+    authDbState.findUnidadeByIdSelectCalls.push(input);
+    return authDbState.unidade;
+  },
+  async findUserByEmail() {
+    return authDbState.user;
+  },
+  async findUserByEmailForLogin() {
+    return authDbState.user;
+  },
+  async findUserByIdSelect() {
+    return null;
+  },
+  async findUserByIdWithMaxTime() {
+    return null;
+  },
+  async findUsersByCpf() {
+    return [];
+  },
+  async findUsersByFuncionarioIds() {
+    return [];
+  },
+  async revokeRememberTokenByHash() {
+    return null;
+  },
+  async saveUserDocument(user) {
+    return user;
+  },
+};
+
+globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_MONGOOSE_STATE__ = mongooseState;
+globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_BCRYPT_STATE__ = bcryptState;
+globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_FEATURE_FLAGS_STATE__ = featureFlagsState;
+globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_LOGIN_POST_AUTH_CONTEXT_STATE__ = loginPostAuthContextState;
+globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_AUTH_DB_STATE__ = authDbBridgeMock;
 
 const { login } = await import('#modules/gestor/app/controllers/authController.js');
 
 after(() => {
-  mock.restoreAll();
+  delete globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_MONGOOSE_STATE__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_BCRYPT_STATE__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_FEATURE_FLAGS_STATE__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_LOGIN_POST_AUTH_CONTEXT_STATE__;
+  delete globalThis.__GESTOR_AUTH_LOGIN_MODULE_ACCESS_AUTH_DB_STATE__;
 });
 
 beforeEach(() => {

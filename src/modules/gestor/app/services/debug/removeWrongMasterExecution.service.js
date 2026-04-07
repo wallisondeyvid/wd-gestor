@@ -1,24 +1,16 @@
 import {
-  findUserByEmailCondRepo,
-  deleteUserByIdRepo,
-} from '#modules/gestor/app/repositories/UserRepository.js';
-
-const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+  findUserByEmailCond,
+  deleteUserById,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 export async function removeWrongMasterExecutionService({ email }) {
-  const user = await findUserByEmailCondRepo({
-    unitScope: GLOBAL_SCOPE,
-    cond: { email },
-  });
+  const user = await findUserByEmailCond({ email });
 
   if (!user) {
     return { kind: 'not_found' };
   }
 
-  await deleteUserByIdRepo({
-    unitScope: GLOBAL_SCOPE,
-    userId: user._id,
-  });
+  await deleteUserById(user._id);
 
   return { kind: 'removed' };
 }

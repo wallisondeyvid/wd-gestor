@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { once } from 'node:events';
 import express from 'express';
 
-import app from '#modules/gestor/app/gestor-app.js';
+import buildGestorApp from '#modules/gestor/app/gestor-app.js';
 import { selectAuthUnit } from '#modules/gestor/app/controllers/authController.js';
 
 function createReq({
@@ -83,6 +83,7 @@ async function invokeOwner(options = {}) {
 }
 
 async function requestGestorApp(pathname, { method = 'POST', body, configureApp } = {}) {
+  const app = buildGestorApp();
   const previousFlags = app.locals.gestorAuthContextFeatureFlags;
   const previousDeps = app.locals.gestorAuthContextResolverDeps;
   const previousMaxTimeMS = app.locals.gestorAuthContextMaxTimeMS;

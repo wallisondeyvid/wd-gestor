@@ -1,9 +1,9 @@
 import { resolveGestorAuthContext } from '#modules/gestor/app/services/authContextResolver.js';
 import {
-  findFuncaoCanonicalByIdRepo,
-  findFuncionarioCanonicalByIdRepo,
-  loadAllModulosBaseRepo,
-} from '#modules/gestor/app/repositories/UserApiModulosCanonicalRepository.js';
+  findFuncaoCanonicalById,
+  findFuncionarioCanonicalById,
+  loadAllModulosBase,
+} from '#modules/gestor/app/services/authDbBridgeService.js';
 
 function normalizeRole(value) {
   return String(value || '').trim().toLowerCase();
@@ -104,9 +104,9 @@ export async function resolveUserApiModulosCanonicalResult({
 } = {}) {
   const resolveAuthContext = deps.resolveAuthContext || resolveGestorAuthContext;
   const tryLoadUnidadeComModulos = deps.tryLoadUnidadeComModulos;
-  const loadAllModulos = deps.loadAllModulos || loadAllModulosBaseRepo;
-  const findFuncionarioById = deps.findFuncionarioById || findFuncionarioCanonicalByIdRepo;
-  const findFuncaoById = deps.findFuncaoById || findFuncaoCanonicalByIdRepo;
+  const loadAllModulos = deps.loadAllModulos || loadAllModulosBase;
+  const findFuncionarioById = deps.findFuncionarioById || findFuncionarioCanonicalById;
+  const findFuncaoById = deps.findFuncaoById || findFuncaoCanonicalById;
 
   if (typeof tryLoadUnidadeComModulos !== 'function') {
     throw new TypeError('resolveUserApiModulosCanonicalResult requer deps.tryLoadUnidadeComModulos');
@@ -164,14 +164,14 @@ export async function resolveUserApiModulosCanonicalResult({
 
         let funcionario = null;
         if (activeFuncionarioId) {
-          funcionario = await findFuncionarioById(activeFuncionarioId);
+          funcionario = await findFuncionarioById({ funcionarioId: activeFuncionarioId });
         }
 
         let funcao = null;
         let modsFuncao = [];
         const funcionarioUnidadeId = funcionario?.unidade_id ? String(funcionario.unidade_id) : null;
         if (funcionario?.funcao_id && activeUnitId && funcionarioUnidadeId === String(activeUnitId)) {
-          funcao = await findFuncaoById(funcionario.funcao_id);
+          funcao = await findFuncaoById({ funcaoId: funcionario.funcao_id });
           modsFuncao = (funcao?.modulos_habilitados || []).filter(Boolean);
         }
 
