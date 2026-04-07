@@ -861,14 +861,14 @@ export async function findUserByFuncionarioId(funcionarioId) {
 
 export async function findUserMembershipByUserAndUnidade(userId, unidadeId) {
   return findUserMembershipByUserAndUnidadeLeanRepo({
-    unitScope: GLOBAL_SCOPE,
+    unitScope: scopeFromUnidadeId(unidadeId),
     userId,
     unidadeId,
   });
 }
 
 export async function createUserMembership(data) {
-  return createUserMembershipRepo({ unitScope: GLOBAL_SCOPE, data });
+  return createUserMembershipRepo({ unitScope: scopeFromUnidadeId(data?.unidade_id), data });
 }
 
 export async function setUserMembershipFuncionarioIdIfEmpty(membershipId, funcionarioId) {
