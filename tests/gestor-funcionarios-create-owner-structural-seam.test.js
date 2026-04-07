@@ -141,7 +141,7 @@ function buildCreateFuncionarioHarness(overrides = {}) {
       persistedDoc = JSON.parse(JSON.stringify(doc));
       return { _id: 'func-001', ...doc };
     },
-    executeCreateFuncionarioCore: async (input) => {
+    executeCreateFuncionarioCoreService: async (input) => {
       callOrder.push('core');
       const novo = await context.createFuncionarioDoc({
         unidade_id: input.unidade_id,
@@ -217,6 +217,14 @@ function buildCreateFuncionarioHarness(overrides = {}) {
     process: { env: {} },
     ...overrides,
   };
+
+  context.createFuncionarioAssetsInfraCore = () => ({
+    mapFiles: context.mapFiles,
+    getBlobToken: context.getBlobToken,
+    uploadFuncionarioFotoToBlob: context.uploadFuncionarioFotoToBlob,
+    canUseBlob: context.canUseBlob,
+    mapBiometriasFaciaisToBlob: context.mapBiometriasFaciaisToBlob,
+  });
 
   return {
     createFuncionario: buildFunction(extractExportedAsyncFunction(CONTROLLER_SOURCE, 'createFuncionario'), context),

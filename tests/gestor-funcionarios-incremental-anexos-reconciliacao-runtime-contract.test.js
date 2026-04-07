@@ -176,6 +176,15 @@ function loadIncrementalHarness(runtimeOverrides = {}) {
       callLog.updateCalls.push({ id, ops: JSON.parse(JSON.stringify(ops)), unitId });
       return { acknowledged: true };
     }),
+    createFuncionarioAssetsInfraCore: runtimeOverrides.createFuncionarioAssetsInfraCore ?? (() => ({
+      canUseBlob: deps.canUseBlob,
+      uploadFuncionarioFotoToBlob: deps.uploadFuncionarioFotoToBlob,
+      deleteFromBlobIfNeeded: deps.deleteFromBlobIfNeeded,
+      mapFiles: deps.mapFiles,
+      parseDataUrl: deps.parseDataUrl,
+      uploadFacePreviewToBlob: deps.uploadFacePreviewToBlob,
+      mapBiometriasFaciaisToBlob: deps.mapBiometriasFaciaisToBlob,
+    })),
   };
 
   const factory = new Function(
@@ -205,6 +214,7 @@ const uploadFacePreviewToBlob = __deps.uploadFacePreviewToBlob;
 const mapBiometriasFaciaisToBlob = __deps.mapBiometriasFaciaisToBlob;
 const reconcileUpdateFuncionarioIncrementalAnexos = __deps.reconcileUpdateFuncionarioIncrementalAnexos;
 const updateFuncionarioByIdWithOps = __deps.updateFuncionarioByIdWithOps;
+const createFuncionarioAssetsInfraCore = __deps.createFuncionarioAssetsInfraCore;
 ${snippet}
 return { buildUpdateOpsFromBody, updateFuncionarioIncremental };
 `

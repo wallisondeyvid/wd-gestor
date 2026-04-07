@@ -201,6 +201,15 @@ function loadFullOwnerHarness(runtimeOverrides = {}) {
       callLog.biometriaSeamCalls.push(input);
       return { set: {}, unset: [] };
     }),
+    createFuncionarioAssetsInfraCore: runtimeOverrides.createFuncionarioAssetsInfraCore ?? (() => ({
+      canUseBlob: deps.canUseBlob,
+      uploadFuncionarioFotoToBlob: deps.uploadFuncionarioFotoToBlob,
+      deleteFromBlobIfNeeded: deps.deleteFromBlobIfNeeded,
+      mapFiles: deps.mapFiles,
+      parseDataUrl: deps.parseDataUrl,
+      uploadFacePreviewToBlob: deps.uploadFacePreviewToBlob,
+      mapBiometriasFaciaisToBlob: deps.mapBiometriasFaciaisToBlob,
+    })),
     updateFuncionarioByIdWithOps: runtimeOverrides.updateFuncionarioByIdWithOps ?? (async (id, ops, unitId) => {
       callLog.updateCalls.push({ id, ops: JSON.parse(JSON.stringify(ops)), unitId });
       return { acknowledged: true };
@@ -242,6 +251,7 @@ const reconcileUpdateFuncionarioIncrementalAnexos = __deps.reconcileUpdateFuncio
 const reconcileUpdateFuncionarioFullAnexos = __deps.reconcileUpdateFuncionarioFullAnexos;
 const reconcileUpdateFuncionarioFullFoto = __deps.reconcileUpdateFuncionarioFullFoto;
 const reconcileUpdateFuncionarioFullBiometria = __deps.reconcileUpdateFuncionarioFullBiometria;
+const createFuncionarioAssetsInfraCore = __deps.createFuncionarioAssetsInfraCore;
 const updateFuncionarioByIdWithOps = __deps.updateFuncionarioByIdWithOps;
 const console = __deps.console;
 ${snippet}
