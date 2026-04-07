@@ -7,19 +7,12 @@ import { registerHooks } from 'node:module';
 const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/setorApiController.js')).href;
 const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/setores/updateSetorScoped.service.js')).href;
-const actualRepositoryModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/repositories/SetorReadRepository.js')).href;
 const bridgeMockModuleUrl = 'mock:gestor-setores-update-bridge';
-
-const repositoryMockModuleUrl = 'mock:gestor-setores-update-repositories';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
       return { url: bridgeMockModuleUrl, shortCircuit: true };
-    }
-
-    if (specifier === '#modules/gestor/app/repositories/SetorReadRepository.js') {
-      return { url: repositoryMockModuleUrl, shortCircuit: true };
     }
 
     return nextResolve(specifier, context);
@@ -30,42 +23,22 @@ registerHooks({
         format: 'module',
         shortCircuit: true,
         source: [
+          "const getMocks = () => globalThis.__GESTOR_SETORES_UPDATE_BRIDGE_MOCKS__ || {};",
           "const notUsed = async () => { throw new Error('bridge compat nao deveria ser chamada nesta suite'); };",
           'export const findUnidadeById = notUsed;',
           'export const findSetorByUnidadeAndNomeNormalizadoLean = notUsed;',
           'export const createSetor = notUsed;',
           'export const findSetoresByUnidadeIdPopulateLean = notUsed;',
           'export const findSetorByIdPopulateUnidade = notUsed;',
-          'export const findSetorDupByNomeNormalizadoExcludingId = notUsed;',
-          'export const saveSetor = notUsed;',
+          'export async function findSetorById(...args) { return await (getMocks().findSetorById || notUsed)(...args); }',
+          'export async function findSetorDupByNomeNormalizadoExcludingId(...args) { return await (getMocks().findSetorDupByNomeNormalizadoExcludingId || notUsed)(...args); }',
+          'export async function saveSetor(...args) { return await (getMocks().saveSetor || notUsed)(...args); }',
           'export const findSetoresByFiltroPopulateUnidadeLean = notUsed;',
           'export const findUnidadesByIdsNomeCodigoLean = notUsed;',
+          'export const findSetorByIdAndDelete = notUsed;',
           'export const findCounterSetorCodigoLean = notUsed;',
           'export const findMaxSetorCodigoLean = notUsed;',
           'export const findOneAndUpdateCounterSetorCodigo = notUsed;',
-        ].join('\n'),
-      };
-    }
-
-    if (url === repositoryMockModuleUrl) {
-      return {
-        format: 'module',
-        shortCircuit: true,
-        source: [
-          `export * from '${actualRepositoryModuleUrl}';`,
-          `import * as actual from '${actualRepositoryModuleUrl}';`,
-          "const getMocks = () => globalThis.__GESTOR_SETORES_UPDATE_REPOSITORY_MOCKS__ || {};",
-          "const resolveImpl = (name) => {",
-          "  const fn = getMocks()[name];",
-          "  if (typeof fn === 'function') return fn;",
-          "  return actual[name];",
-          "};",
-          "export async function findSetorByIdRepo(...args) {",
-          "  return await resolveImpl('findSetorByIdRepo')(...args);",
-          "}",
-          "export async function findSetorDupByNomeNormalizadoExcludingIdRepo(...args) {",
-          "  return await resolveImpl('findSetorDupByNomeNormalizadoExcludingIdRepo')(...args);",
-          "}",
         ].join('\n'),
       };
     }
@@ -74,8 +47,8 @@ registerHooks({
   },
 });
 
-function setRepositoryMocks(overrides = {}) {
-  globalThis.__GESTOR_SETORES_UPDATE_REPOSITORY_MOCKS__ = { ...overrides };
+function setBridgeMocks(overrides = {}) {
+  globalThis.__GESTOR_SETORES_UPDATE_BRIDGE_MOCKS__ = { ...overrides };
 }
 
 function createReq(overrides = {}) {
@@ -119,13 +92,13 @@ async function importUpdateSetorService(tag) {
 
 test('updateSetor usa o service fino como caminho principal e preserva 404 quando o service nao encontra alvo', async () => {
   const calls = [];
-  setRepositoryMocks({
-    findSetorByIdRepo: async (args) => {
-      calls.push({ op: 'findSetorByIdRepo', args });
+  setBridgeMocks({
+    findSetorById: async (...args) => {
+      calls.push({ op: 'findSetorById', args });
       return null;
     },
-    findSetorDupByNomeNormalizadoExcludingIdRepo: async (args) => {
-      calls.push({ op: 'findSetorDupByNomeNormalizadoExcludingIdRepo', args });
+    findSetorDupByNomeNormalizadoExcludingId: async (...args) => {
+      calls.push({ op: 'findSetorDupByNomeNormalizadoExcludingId', args });
       return { kind: 'not_found' };
     },
   });
@@ -142,10 +115,8 @@ test('updateSetor usa o service fino como caminho principal e preserva 404 quand
   await updateSetor(req, res);
 
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].op, 'findSetorByIdRepo');
-  assert.equal(calls[0].args.id, 's-ausente');
-  assert.equal(calls[0].args.unidadeId, 'u-contexto');
-  assert.deepEqual(calls[0].args.unitScope, { type: 'unit', unidadeId: 'u-contexto' });
+  assert.equal(calls[0].op, 'findSetorById');
+  assert.deepEqual(calls[0].args, ['s-ausente', 'u-contexto']);
   assert.equal(res.statusCode, 404);
   assert.deepEqual(res.body, {
     success: false,
@@ -175,15 +146,16 @@ test('updateSetorScopedService consulta duplicidade por nome normalizado e persi
     },
   };
 
-  setRepositoryMocks({
-    findSetorByIdRepo: async (args) => {
-      calls.push({ op: 'findSetorByIdRepo', args });
+  setBridgeMocks({
+    findSetorById: async (...args) => {
+      calls.push({ op: 'findSetorById', args });
       return setorDoc;
     },
-    findSetorDupByNomeNormalizadoExcludingIdRepo: async (args) => {
-      calls.push({ op: 'findSetorDupByNomeNormalizadoExcludingIdRepo', args });
+    findSetorDupByNomeNormalizadoExcludingId: async (...args) => {
+      calls.push({ op: 'findSetorDupByNomeNormalizadoExcludingId', args });
       return null;
     },
+    saveSetor: async (setor) => setor.save(),
   });
 
   const { updateSetorScopedService } = await importUpdateSetorService('service-success');
@@ -195,14 +167,10 @@ test('updateSetorScopedService consulta duplicidade por nome normalizado e persi
 
   assert.deepEqual(result, { kind: 'updated' });
   assert.equal(calls.length, 2);
-  assert.equal(calls[0].op, 'findSetorByIdRepo');
-  assert.equal(calls[1].op, 'findSetorDupByNomeNormalizadoExcludingIdRepo');
-  assert.equal(calls[0].args.id, 's-ok');
-  assert.equal(calls[0].args.unidadeId, '507f1f77bcf86cd799439011');
-  assert.deepEqual(calls[0].args.unitScope, { type: 'unit', unidadeId: '507f1f77bcf86cd799439011' });
-  assert.equal(calls[1].args.setorId, 's-ok');
-  assert.equal(calls[1].args.unidadeId, '507f1f77bcf86cd799439011');
-  assert.equal(calls[1].args.nomeNormalizado, 'setor novo');
+  assert.equal(calls[0].op, 'findSetorById');
+  assert.equal(calls[1].op, 'findSetorDupByNomeNormalizadoExcludingId');
+  assert.deepEqual(calls[0].args, ['s-ok', '507f1f77bcf86cd799439011']);
+  assert.deepEqual(calls[1].args, ['s-ok', '507f1f77bcf86cd799439011', 'setor novo']);
   assert.deepEqual(savedSnapshot, {
     _id: 's-ok',
     unidade_id: '507f1f77bcf86cd799439011',
@@ -225,13 +193,13 @@ test('updateSetorScopedService retorna duplicate_name quando encontra outro seto
     },
   };
 
-  setRepositoryMocks({
-    findSetorByIdRepo: async (args) => {
-      calls.push({ op: 'findSetorByIdRepo', args });
+  setBridgeMocks({
+    findSetorById: async (...args) => {
+      calls.push({ op: 'findSetorById', args });
       return setorDoc;
     },
-    findSetorDupByNomeNormalizadoExcludingIdRepo: async (args) => {
-      calls.push({ op: 'findSetorDupByNomeNormalizadoExcludingIdRepo', args });
+    findSetorDupByNomeNormalizadoExcludingId: async (...args) => {
+      calls.push({ op: 'findSetorDupByNomeNormalizadoExcludingId', args });
       return { _id: 's-existente' };
     },
   });
@@ -245,7 +213,7 @@ test('updateSetorScopedService retorna duplicate_name quando encontra outro seto
 
   assert.deepEqual(result, { kind: 'duplicate_name' });
   assert.equal(calls.length, 2);
-  assert.equal(calls[0].op, 'findSetorByIdRepo');
-  assert.equal(calls[1].op, 'findSetorDupByNomeNormalizadoExcludingIdRepo');
-  assert.equal(calls[1].args.nomeNormalizado, 'financeiro central');
+  assert.equal(calls[0].op, 'findSetorById');
+  assert.equal(calls[1].op, 'findSetorDupByNomeNormalizadoExcludingId');
+  assert.deepEqual(calls[1].args, ['s-dup', '507f1f77bcf86cd799439011', 'financeiro central']);
 });

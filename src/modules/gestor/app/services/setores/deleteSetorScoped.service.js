@@ -1,8 +1,7 @@
-import { createUnitScope } from '#shared/unitScope.js';
 import {
-  findSetorByIdRepo,
-  findSetorByIdAndDeleteRepo,
-} from '#modules/gestor/app/repositories/SetorReadRepository.js';
+  findSetorById,
+  findSetorByIdAndDelete,
+} from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 function normalizeUnitId(value) {
   return String(value || '').trim();
@@ -11,23 +10,12 @@ function normalizeUnitId(value) {
 export async function deleteSetorScopedService({ setorId, unidadeId = null }) {
   const normalizedUnitId = normalizeUnitId(unidadeId);
   const scopedUnitId = normalizedUnitId || null;
-  const unitScope = scopedUnitId
-    ? createUnitScope({ unidadeId: scopedUnitId })
-    : { type: 'global', unidadeId: null };
 
-  const setor = await findSetorByIdRepo({
-    unitScope,
-    id: setorId,
-    unidadeId: scopedUnitId,
-  });
+  const setor = await findSetorById(setorId, scopedUnitId);
 
   if (!setor) return null;
 
-  await findSetorByIdAndDeleteRepo({
-    unitScope,
-    id: setorId,
-    unidadeId: scopedUnitId,
-  });
+  await findSetorByIdAndDelete(setorId, scopedUnitId);
 
   return setor;
 }

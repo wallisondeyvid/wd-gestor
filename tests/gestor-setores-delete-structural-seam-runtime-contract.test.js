@@ -7,10 +7,10 @@ import { registerHooks } from 'node:module';
 const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/setorApiController.js')).href;
 const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/setores/deleteSetorScoped.service.js')).href;
-const actualRepositoryModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/repositories/SetorReadRepository.js')).href;
+const actualBridgeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 
 const serviceMockModuleUrl = 'mock:gestor-setores-delete-service';
-const repositoryMockModuleUrl = 'mock:gestor-setores-delete-repositories';
+const bridgeMockModuleUrl = 'mock:gestor-setores-delete-bridge';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -18,8 +18,8 @@ registerHooks({
       return { url: serviceMockModuleUrl, shortCircuit: true };
     }
 
-    if (specifier === '#modules/gestor/app/repositories/SetorReadRepository.js') {
-      return { url: repositoryMockModuleUrl, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
+      return { url: bridgeMockModuleUrl, shortCircuit: true };
     }
 
     return nextResolve(specifier, context);
@@ -40,24 +40,24 @@ registerHooks({
       };
     }
 
-    if (url === repositoryMockModuleUrl) {
+    if (url === bridgeMockModuleUrl) {
       return {
         format: 'module',
         shortCircuit: true,
         source: [
-          `export * from '${actualRepositoryModuleUrl}';`,
-          `import * as actual from '${actualRepositoryModuleUrl}';`,
-          "const getMocks = () => globalThis.__GESTOR_SETORES_DELETE_REPOSITORY_MOCKS__ || {};",
+          `export * from '${actualBridgeModuleUrl}';`,
+          `import * as actual from '${actualBridgeModuleUrl}';`,
+          "const getMocks = () => globalThis.__GESTOR_SETORES_DELETE_BRIDGE_MOCKS__ || {};",
           "const resolveImpl = (name) => {",
           "  const fn = getMocks()[name];",
           "  if (typeof fn === 'function') return fn;",
           "  return actual[name];",
           "};",
-          "export async function findSetorByIdRepo(...args) {",
-          "  return await resolveImpl('findSetorByIdRepo')(...args);",
+          "export async function findSetorById(...args) {",
+          "  return await resolveImpl('findSetorById')(...args);",
           "}",
-          "export async function findSetorByIdAndDeleteRepo(...args) {",
-          "  return await resolveImpl('findSetorByIdAndDeleteRepo')(...args);",
+          "export async function findSetorByIdAndDelete(...args) {",
+          "  return await resolveImpl('findSetorByIdAndDelete')(...args);",
           "}",
         ].join('\n'),
       };
@@ -71,8 +71,8 @@ function setServiceMocks(overrides = {}) {
   globalThis.__GESTOR_SETORES_DELETE_SERVICE_MOCKS__ = { ...overrides };
 }
 
-function setRepositoryMocks(overrides = {}) {
-  globalThis.__GESTOR_SETORES_DELETE_REPOSITORY_MOCKS__ = { ...overrides };
+function setBridgeMocks(overrides = {}) {
+  globalThis.__GESTOR_SETORES_DELETE_BRIDGE_MOCKS__ = { ...overrides };
 }
 
 function createReq(overrides = {}) {
@@ -144,14 +144,14 @@ test('deleteSetor usa o service fino como caminho principal e preserva 404 quand
 
 test('deleteSetorScopedService consulta e exclui no repository com o mesmo alvo escopado', async () => {
   const calls = [];
-  setRepositoryMocks({
-    findSetorByIdRepo: async (args) => {
-      calls.push({ op: 'findSetorByIdRepo', args });
-      return { _id: args.id, unidade_id: args.unidadeId };
+  setBridgeMocks({
+    findSetorById: async (...args) => {
+      calls.push({ op: 'findSetorById', args });
+      return { _id: args[0], unidade_id: args[1] };
     },
-    findSetorByIdAndDeleteRepo: async (args) => {
-      calls.push({ op: 'findSetorByIdAndDeleteRepo', args });
-      return { _id: args.id };
+    findSetorByIdAndDelete: async (...args) => {
+      calls.push({ op: 'findSetorByIdAndDelete', args });
+      return { _id: args[0] };
     },
   });
 
@@ -160,25 +160,22 @@ test('deleteSetorScopedService consulta e exclui no repository com o mesmo alvo 
 
   assert.deepEqual(result, { _id: 's-ok', unidade_id: '507f1f77bcf86cd799439011' });
   assert.equal(calls.length, 2);
-  assert.equal(calls[0].op, 'findSetorByIdRepo');
-  assert.equal(calls[1].op, 'findSetorByIdAndDeleteRepo');
-  assert.equal(calls[0].args.id, 's-ok');
-  assert.equal(calls[0].args.unidadeId, '507f1f77bcf86cd799439011');
-  assert.equal(calls[1].args.id, 's-ok');
-  assert.equal(calls[1].args.unidadeId, '507f1f77bcf86cd799439011');
-  assert.deepEqual(calls[0].args.unitScope, calls[1].args.unitScope);
+  assert.equal(calls[0].op, 'findSetorById');
+  assert.equal(calls[1].op, 'findSetorByIdAndDelete');
+  assert.deepEqual(calls[0].args, ['s-ok', '507f1f77bcf86cd799439011']);
+  assert.deepEqual(calls[1].args, ['s-ok', '507f1f77bcf86cd799439011']);
 });
 
 test('deleteSetorScopedService nao tenta excluir quando o lookup escopado nao encontra alvo', async () => {
   const calls = [];
-  setRepositoryMocks({
-    findSetorByIdRepo: async (args) => {
-      calls.push({ op: 'findSetorByIdRepo', args });
+  setBridgeMocks({
+    findSetorById: async (...args) => {
+      calls.push({ op: 'findSetorById', args });
       return null;
     },
-    findSetorByIdAndDeleteRepo: async (args) => {
-      calls.push({ op: 'findSetorByIdAndDeleteRepo', args });
-      return { _id: args.id };
+    findSetorByIdAndDelete: async (...args) => {
+      calls.push({ op: 'findSetorByIdAndDelete', args });
+      return { _id: args[0] };
     },
   });
 
@@ -188,10 +185,9 @@ test('deleteSetorScopedService nao tenta excluir quando o lookup escopado nao en
   assert.equal(result, null);
   assert.deepEqual(calls, [
     {
-      op: 'findSetorByIdRepo',
+      op: 'findSetorById',
       args: calls[0].args,
     },
   ]);
-  assert.equal(calls[0].args.id, 's-ausente');
-  assert.equal(calls[0].args.unidadeId, '507f1f77bcf86cd799439011');
+  assert.deepEqual(calls[0].args, ['s-ausente', '507f1f77bcf86cd799439011']);
 });
