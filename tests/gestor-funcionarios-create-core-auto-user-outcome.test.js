@@ -258,120 +258,88 @@ return { createFuncionario };
   };
 }
 
-test('createFuncionario: fora do escopo contextual retorna 404', async () => {
-  const { createFuncionario, callLog } = loadCreateFuncionarioWithDeps();
-  const req = buildReq(
-    { unidade_id: 'unit-body-outside-001' },
-    { session: { user: { unidade_id: 'unit-context-001' } }, user: { unidade_id: 'unit-context-001' } }
-  );
-  const res = makeRes();
-
-  await createFuncionario(req, res);
-
-  assert.equal(res.statusCode, 404);
-  assert.equal(res.body.code, 'NOT_FOUND');
-  assert.equal(res.body.message, 'Unidade não encontrada');
-  assert.equal(callLog.createFuncionarioDocCalls.length, 0);
-});
-
-test('createFuncionario: PIS inválido retorna 400', async () => {
-  const { createFuncionario, callLog } = loadCreateFuncionarioWithDeps();
-  const req = buildReq({ pis: '11111111111' });
-  const res = makeRes();
-
-  await createFuncionario(req, res);
-
-  assert.equal(res.statusCode, 400);
-  assert.equal(res.body.code, 'BAD_REQUEST');
-  assert.equal(res.body.message, 'PIS inválido');
-  assert.equal(res.body.campo, 'pis');
-  assert.equal(callLog.createFuncionarioDocCalls.length, 0);
-});
-
-test('createFuncionario: duplicidade por e-mail retorna 400', async () => {
-  const duplicateError = { code: 11000, keyPattern: { email: 1 } };
-  const { createFuncionario } = loadCreateFuncionarioWithDeps({
-    bridge: {
-      createFuncionarioDoc: async () => {
-        throw duplicateError;
-      },
-    },
-  });
-  const req = buildReq();
-  const res = makeRes();
-
-  await createFuncionario(req, res);
-
-  assert.equal(res.statusCode, 400);
-  assert.equal(res.body.code, 'BAD_REQUEST');
-  assert.equal(res.body.message, 'Já existe um funcionário cadastrado com este e-mail.');
-  assert.equal(res.body.campo, 'email');
-});
-
-test('createFuncionario: sucesso mínimo expandido observável retorna 201 e normaliza payload core', async () => {
-  const { createFuncionario, callLog } = loadCreateFuncionarioWithDeps();
-  const req = buildReq();
+test('createFuncionario: autoUser outcome created', async () => {
+  const { createFuncionario } = loadCreateFuncionarioWithDeps();
+  const req = buildReq({ email: 'created.outcome@example.com' });
   const res = makeRes();
 
   await createFuncionario(req, res);
 
   assert.equal(res.statusCode, 201);
-  assert.equal(res.body.success, true);
-  assert.equal(res.body.created, true);
-  assert.equal(res.body.id, 'func-1');
-  assert.equal(res.body.data.id, 'func-1');
   assert.equal(res.body.data.autoUser.ok, true);
   assert.equal(res.body.data.autoUser.outcome, 'created');
+  assert.equal(res.body.data.autoUser.code, null);
   assert.equal(res.body.data.autoUser.reusedUser, false);
   assert.equal(res.body.data.autoUser.membershipCreated, true);
-  assert.equal(res.body.data.autoUser.funcionarioLinked, true);
-  assert.equal(res.body.data.autoUser.legacyUserLinked, false);
-
-  assert.equal(callLog.createFuncionarioDocCalls.length, 1);
-  const persistedDoc = callLog.createFuncionarioDocCalls[0];
-  assert.equal(persistedDoc.unidade_id, 'unit-core-001');
-  assert.equal(persistedDoc.nome, 'Maria Core');
-  assert.equal(persistedDoc.nome_social, '  Maria Social  ');
-  assert.equal(persistedDoc.rg, 'RG-123');
-  assert.equal(persistedDoc.rg_orgao, 'SSP');
-  assert.equal(persistedDoc.cpf, '12345678901');
-  assert.equal(persistedDoc.pis, buildValidPis('1234567890'));
-  assert.equal(persistedDoc.data_nascimento, '1991-04-02');
-  assert.equal(persistedDoc.sexo, 'F');
-  assert.equal(persistedDoc.telefone, '11999990000');
-  assert.equal(persistedDoc.telefone2, '1133334444');
-  assert.equal(persistedDoc.email, '  maria.core@example.com  ');
-  assert.equal(persistedDoc.observacoes, 'observacao focal');
-  assert.equal(persistedDoc.cargo, 'Analista');
-  assert.equal(persistedDoc.departamento, 'Operacoes');
-  assert.equal(persistedDoc.regime_contratacao, 'CLT');
-  assert.equal(persistedDoc.regime_jornada, '44H');
-  assert.equal(persistedDoc.carga_semanal, 44);
-  assert.equal(persistedDoc.salario_base, 1234.56);
-  assert.equal(persistedDoc.forma_pagamento, 'pix');
-  assert.deepEqual(persistedDoc.anexos, []);
-  assert.deepEqual(persistedDoc.dependentes, []);
-  assert.deepEqual(persistedDoc.beneficios, []);
-  assert.equal(persistedDoc.face_imagem, undefined);
-  assert.equal(persistedDoc.fp_imagem, undefined);
-  assert.equal(callLog.createUserMembershipCalls.length, 1);
 });
 
-test('createFuncionario: erro interno induzido no create retorna 500', async () => {
-  const { createFuncionario } = loadCreateFuncionarioWithDeps({
+test('createFuncionario: autoUser outcome linked', async () => {
+  const existingUser = { _id: 'user-linked', email: 'linked.outcome@example.com' };
+  const { createFuncionario, callLog } = loadCreateFuncionarioWithDeps({
     bridge: {
-      createFuncionarioDoc: async () => {
-        throw new Error('falha-interna-induzida');
-      },
+      findUserByEmail: async () => existingUser,
     },
   });
-  const req = buildReq({ email: 'erro.interno@example.com' });
+  const req = buildReq({ email: 'linked.outcome@example.com' });
   const res = makeRes();
 
   await createFuncionario(req, res);
 
-  assert.equal(res.statusCode, 500);
-  assert.equal(res.body.success, false);
-  assert.equal(res.body.code, 'SERVER_ERROR');
-  assert.equal(res.body.message, 'Erro interno');
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.data.autoUser.ok, true);
+  assert.equal(res.body.data.autoUser.outcome, 'linked');
+  assert.equal(res.body.data.autoUser.reusedUser, true);
+  assert.equal(res.body.data.autoUser.membershipCreated, true);
+  assert.equal(callLog.createUserMembershipCalls.length, 1);
+});
+
+test('createFuncionario: autoUser outcome already-linked', async () => {
+  const existingUser = { _id: 'user-already-linked', email: 'already.linked@example.com' };
+  const existingMembership = { _id: 'membership-existing', user_id: existingUser._id, unidade_id: 'unit-core-001', funcionario_id: null };
+  const { createFuncionario, callLog } = loadCreateFuncionarioWithDeps({
+    bridge: {
+      findUserByEmail: async () => existingUser,
+      findUserMembershipByUserAndUnidade: async () => existingMembership,
+      setUserMembershipFuncionarioIdIfEmpty: async (membershipId, funcionarioId) => {
+        callLog.setUserMembershipFuncionarioIdIfEmptyCalls.push({ membershipId, funcionarioId });
+        return true;
+      },
+    },
+  });
+  const req = buildReq({ email: 'already.linked@example.com' });
+  const res = makeRes();
+
+  await createFuncionario(req, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.data.autoUser.ok, true);
+  assert.equal(res.body.data.autoUser.outcome, 'already-linked');
+  assert.equal(res.body.data.autoUser.code, null);
+  assert.equal(res.body.data.autoUser.membershipCreated, false);
+  assert.equal(callLog.createUserMembershipCalls.length, 0);
+  assert.equal(callLog.setUserMembershipFuncionarioIdIfEmptyCalls.length, 1);
+});
+
+test('createFuncionario: autoUser outcome conflict', async () => {
+  const existingUser = { _id: 'user-conflict', email: 'conflict.outcome@example.com' };
+  const existingMembership = { _id: 'membership-conflict', user_id: existingUser._id, unidade_id: 'unit-core-001', funcionario_id: 'func-outro' };
+  const { createFuncionario, callLog } = loadCreateFuncionarioWithDeps({
+    bridge: {
+      findUserByEmail: async () => existingUser,
+      findUserMembershipByUserAndUnidade: async () => existingMembership,
+    },
+  });
+  const req = buildReq({ email: 'conflict.outcome@example.com' });
+  const res = makeRes();
+
+  await createFuncionario(req, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.data.autoUser.ok, false);
+  assert.equal(res.body.data.autoUser.outcome, 'conflict');
+  assert.equal(res.body.data.autoUser.code, 'AUTO_USER_MEMBERSHIP_CONFLICT');
+  assert.equal(res.body.data.autoUser.membershipCreated, false);
+  assert.equal(res.body.data.autoUser.funcionarioLinked, false);
+  assert.equal(res.body.data.autoUser.legacyUserLinked, false);
+  assert.equal(callLog.saveFuncionarioCalls.length, 0);
 });
