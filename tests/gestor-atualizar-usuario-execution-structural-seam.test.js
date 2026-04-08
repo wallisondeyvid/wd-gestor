@@ -170,8 +170,8 @@ test('updateUsuarioExecutionService preserva a ordem semantica entre desvincular
   const calls = [];
 
   const updateUsuarioExecutionService = buildFunction(SERVICE_SOURCE, 'export async function updateUsuarioExecutionService', {
-    unsetFuncionarioUsuarioIdById: async (funcionarioId) => {
-      calls.push({ op: 'unset', funcionarioId });
+    unsetFuncionarioUsuarioIdById: async (funcionarioId, unidadeId) => {
+      calls.push({ op: 'unset', funcionarioId, unidadeId });
     },
     setFuncionarioUsuarioIdById: async (funcionarioId, userId, unidadeId) => {
       calls.push({ op: 'set', funcionarioId, userId, unidadeId });
@@ -218,6 +218,7 @@ test('updateUsuarioExecutionService preserva a ordem semantica entre desvincular
   assert.equal(calls.length, 3);
   assert.equal(calls[0].op, 'unset');
   assert.equal(calls[0].funcionarioId, 'f-antigo');
+  assert.equal(calls[0].unidadeId, 'un-antiga');
   assert.equal(calls[1].op, 'set');
   assert.equal(calls[1].funcionarioId, 'f-novo');
   assert.equal(calls[1].userId, 'u-99');

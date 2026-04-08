@@ -75,6 +75,11 @@ export async function unsetFuncionarioUsuarioIdByIdRepo({ unitScope, funcionario
     unitScope,
   });
 
+  const unidadeId = String(arguments[0]?.unidadeId || '').trim();
+  if (unidadeId) {
+    return FuncionarioModel.updateOne({ _id: funcionarioId, unidade_id: unidadeId }, { $unset: { usuario_id: '' } });
+  }
+
   return FuncionarioModel.updateOne({ _id: funcionarioId }, { $unset: { usuario_id: '' } });
 }
 

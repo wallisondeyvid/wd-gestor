@@ -746,7 +746,11 @@ export async function findFuncionarioByCpfOrEmailLean(cleanCpf, unidadeId, email
 }
 
 export async function unsetFuncionarioUsuarioIdById(funcionarioId) {
-  return unsetFuncionarioUsuarioIdByIdRepo({ unitScope: GLOBAL_SCOPE, funcionarioId });
+  return unsetFuncionarioUsuarioIdByIdRepo({
+    unitScope: scopeFromUnidadeId(arguments[1]),
+    funcionarioId,
+    unidadeId: arguments[1] ?? null,
+  });
 }
 
 export async function setFuncionarioUsuarioIdById(funcionarioId, userId, unidadeId = null) {

@@ -25,6 +25,7 @@ export async function updateUsuarioExecutionService({
 
 	if (!isTargetMaster) {
 		if (role && role !== 'master') user.role = role;
+		const prevUnidadeId = user.unidade_id ? String(user.unidade_id) : null;
 		user.unidade_id = unidadeId || null;
 
 		const prevFuncionarioId = user.funcionario_id ? String(user.funcionario_id) : null;
@@ -34,7 +35,7 @@ export async function updateUsuarioExecutionService({
 		if (prevFuncionarioId !== nextFuncionarioId) {
 			try {
 				if (prevFuncionarioId) {
-					await unsetFuncionarioUsuarioIdById(prevFuncionarioId);
+					await unsetFuncionarioUsuarioIdById(prevFuncionarioId, prevUnidadeId);
 				}
 				if (nextFuncionarioId) {
 					await setFuncionarioUsuarioIdById(nextFuncionarioId, user._id, unidadeId || null);
