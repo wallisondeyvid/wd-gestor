@@ -2,9 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import {
-  listUsuariosEnrichedService,
-  listUsuariosFuncionariosFiltradosService,
-  listUsuariosUnidadesFiltradasService,
+  listUsuariosOwnerService,
 } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import {
   findUsuariosDiretorAtivosPopulatedLean,
@@ -281,9 +279,7 @@ export async function paginaUsuarios(req, res, next) {
       return res.status(200).render('usuarios', stubCtx(req));
     }
     if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-    const usuarios = await listUsuariosEnrichedService({ isMaster: req.user.isMaster });
-    const unidadesFiltradas = await listUsuariosUnidadesFiltradasService();
-    const funcionarios = await listUsuariosFuncionariosFiltradosService();
+    const { usuarios, unidadesFiltradas, funcionarios } = await listUsuariosOwnerService({ isMaster: req.user.isMaster });
     return res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });
   } catch (e) { console.error('[pagesController] /usuarios erro:', e); next(e); }
 }
