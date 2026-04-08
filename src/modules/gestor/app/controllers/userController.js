@@ -20,10 +20,6 @@ import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/li
 import { checkUsuarioEmailOwnerService } from '#modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js';
 import { createUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/createUsuarioExecution.service.js';
 import { getUsuarioAtualProfileOwnerService } from '#modules/gestor/app/services/usuarios/getUsuarioAtualProfileOwner.service.js';
-import {
-	buildUsuariosViewRenderPayload,
-	listUsuariosOwnerService,
-} from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
 import { statusUsuarioLockStateOwnerService } from '#modules/gestor/app/services/usuarios/statusUsuarioLockStateOwner.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
@@ -101,6 +97,11 @@ function buildUnidadeSummaryLabel(unidade) {
 
 const CHECK_USUARIO_EMAIL_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
 const CRIAR_USUARIO_PREFLIGHT_GLOBAL_SCOPE = { type: 'global', unidadeId: null };
+
+async function loadPaginaUsuariosOwner() {
+	const module = await import('#modules/gestor/app/controllers/views/pagesController.js');
+	return module.paginaUsuarios;
+}
 
 async function findCriarUsuarioFuncionarioById(funcionarioId, unidadeId = null) {
 	return findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionarioId, unidadeId);
@@ -220,15 +221,8 @@ export async function listLockedUsers(req, res) {
 }
 
 export async function listarUsuarios(req, res, next) {
-    try {
-		if (!req.user) return res.status(401).send('Não autenticado');
-		if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-		const result = await listUsuariosOwnerService({ isMaster: req.user.isMaster });
-		res.render('usuarios', buildUsuariosViewRenderPayload({ user: req.user, result }));
-	} catch (e) {
-		console.error('Erro na rota /usuarios:', e);
-		next(e);
-	}
+	const paginaUsuarios = await loadPaginaUsuariosOwner();
+	return paginaUsuarios(req, res, next);
 }
 
 export async function toggleUsuario(req, res) {

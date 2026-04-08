@@ -64,29 +64,17 @@ function createRenderRes() {
 
 test('listarUsuarios delega ao service owner e preserva o render do caminho feliz', async () => {
   const calls = [];
-  const payloadCalls = [];
-  const listUsuariosOwnerService = async (input) => {
-    calls.push(input);
-    return {
-      kind: 'ok',
-      usuarios: [{ _id: 'u-1', nome: 'Usuario A' }],
-      unidadesFiltradas: [{ _id: 'un-1', nome: 'Unidade A' }],
-      funcionarios: [{ _id: 'f-1', nome: 'Funcionario A' }],
-    };
-  };
 
   const listarUsuarios = buildFunction(CONTROLLER_SOURCE, 'export async function listarUsuarios', {
-    listUsuariosOwnerService,
-    buildUsuariosViewRenderPayload: ({ user, result }) => {
-      payloadCalls.push({ user, result });
-      return {
-        usuarios: result.usuarios,
-        user,
-        unidadesFiltradas: result.unidadesFiltradas,
-        funcionarios: result.funcionarios,
-      };
+    loadPaginaUsuariosOwner: async () => async (req, res, next) => {
+      calls.push({ req, res, next });
+      return res.render('usuarios', {
+        usuarios: [{ _id: 'u-1', nome: 'Usuario A' }],
+        user: req.user,
+        unidadesFiltradas: [{ _id: 'un-1', nome: 'Unidade A' }],
+        funcionarios: [{ _id: 'f-1', nome: 'Funcionario A' }],
+      });
     },
-    console,
   });
 
   const req = {
@@ -100,9 +88,8 @@ test('listarUsuarios delega ao service owner e preserva o render do caminho feli
   });
 
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].isMaster, false);
-  assert.equal(payloadCalls.length, 1);
-  assert.equal(payloadCalls[0].user, req.user);
+  assert.equal(calls[0].req, req);
+  assert.equal(calls[0].res, res);
   assert.equal(nextError, null);
   assert.equal(res.statusCode, 200);
   assert.equal(res.view, 'usuarios');
