@@ -56,8 +56,8 @@ async function setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioId, userId,
 	return setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId, unidadeId);
 }
 
-async function setCriarUsuarioFuncionarioUsuarioIdById(funcionarioId, userId) {
-	return setFuncionarioUsuarioIdById(funcionarioId, userId);
+async function setCriarUsuarioFuncionarioUsuarioIdById(funcionarioId, userId, unidadeId = null) {
+	return setFuncionarioUsuarioIdById(funcionarioId, userId, unidadeId);
 }
 
 async function createCriarUsuarioFuncionarioDoc(doc) {
@@ -107,7 +107,7 @@ async function materializeCriarUsuarioFuncionarioLinkCore({
 					if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidadeId;
 					await saveUserDoc(user);
 				}
-				try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch (_up) {}
+				try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id, existente.unidade_id || unidadeId || null); } catch (_up) {}
 				console.log('[criarUsuario] Vinculado a funcionário existente', { funcionario_id: existente._id.toString(), user_id: user._id.toString() });
 			} else {
 				const placeholderRG = 'RG' + Date.now();

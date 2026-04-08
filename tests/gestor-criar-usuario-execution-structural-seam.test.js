@@ -178,8 +178,8 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
     },
   });
   const setCriarUsuarioFuncionarioUsuarioIdById = buildFunction(SERVICE_SOURCE, 'async function setCriarUsuarioFuncionarioUsuarioIdById', {
-    setFuncionarioUsuarioIdById: async (funcionarioId, userId) => {
-      setByIdCalls.push({ funcionarioId, userId });
+    setFuncionarioUsuarioIdById: async (funcionarioId, userId, unidadeId) => {
+      setByIdCalls.push({ funcionarioId, userId, unidadeId });
     },
   });
   const createCriarUsuarioFuncionarioDoc = buildFunction(SERVICE_SOURCE, 'async function createCriarUsuarioFuncionarioDoc', {
@@ -307,6 +307,7 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
   assert.equal(setByIdCalls.length, 1);
   assert.equal(setByIdCalls[0].funcionarioId, 'f-existing');
   assert.equal(setByIdCalls[0].userId, 'u-existing');
+  assert.equal(setByIdCalls[0].unidadeId, 'un-2');
   assert.equal(membershipCalls.length, 2);
   assert.equal(membershipCalls[1].user_id, 'u-existing');
   assert.equal(membershipCalls[1].funcionario_id, 'f-existing');

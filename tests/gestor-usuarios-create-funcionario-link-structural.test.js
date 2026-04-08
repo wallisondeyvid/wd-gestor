@@ -122,7 +122,7 @@ function buildFuncionarioLinkCoreSource() {
     '          if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidadeId;',
     '          await saveUserDoc(user);',
     '        }',
-    '        try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch (_up) {}',
+    '        try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id, existente.unidade_id || unidadeId || null); } catch (_up) {}',
     "        console.log('[criarUsuario] Vinculado a funcionário existente', { funcionario_id: existente._id.toString(), user_id: user._id.toString() });",
     '      } else {',
     "        const placeholderRG = 'RG' + Date.now();",
@@ -335,8 +335,8 @@ test('a futura seam de funcionario preserva os ramos de vinculo existente, criac
     setCriarUsuarioFuncionarioUsuarioIdIfEmpty: async (funcionarioId, userId, unidadeId) => {
       calls.push({ op: 'setIfEmpty', funcionarioId, userId, unidadeId });
     },
-    setCriarUsuarioFuncionarioUsuarioIdById: async (funcionarioId, userId) => {
-      calls.push({ op: 'setById', funcionarioId, userId });
+    setCriarUsuarioFuncionarioUsuarioIdById: async (funcionarioId, userId, unidadeId) => {
+      calls.push({ op: 'setById', funcionarioId, userId, unidadeId });
     },
     createCriarUsuarioFuncionarioDoc: async (doc) => {
       calls.push({ op: 'createFuncionarioDoc', doc: { unidade_id: doc.unidade_id, cpf: doc.cpf, email: doc.email, usuario_id: doc.usuario_id } });
@@ -368,6 +368,21 @@ test('a futura seam de funcionario preserva os ramos de vinculo existente, criac
   result = await materializeCriarUsuarioFuncionarioLinkCore({
     user,
     isExistingUser: false,
+    nome: 'Existente Encontrado',
+    email: 'existente.encontrado@example.com',
+    cleanCpf: '111',
+    unidadeId: 'un-2',
+    funcionarioId: null,
+    funcionarioDoc: null,
+    wantsNewFuncionario: true,
+  });
+  assert.equal(result.kind, 'ok');
+  assert.equal(result.linkedFuncionarioId, 'f-existing');
+
+  user = { _id: 'u-3', nome: 'Novo', unidade_id: null, funcionario_id: null };
+  result = await materializeCriarUsuarioFuncionarioLinkCore({
+    user,
+    isExistingUser: false,
     nome: 'Novo',
     email: 'novo@example.com',
     cleanCpf: '222',
@@ -380,7 +395,7 @@ test('a futura seam de funcionario preserva os ramos de vinculo existente, criac
   assert.equal(result.linkedFuncionarioId, 'f-new');
   assert.equal(result.funcionarioNovo._id, 'f-new');
 
-  user = { _id: 'u-3', nome: 'Erro', unidade_id: null, funcionario_id: null };
+  user = { _id: 'u-4', nome: 'Erro', unidade_id: null, funcionario_id: null };
   result = await materializeCriarUsuarioFuncionarioLinkCore({
     user,
     isExistingUser: false,
@@ -401,5 +416,13 @@ test('a futura seam de funcionario preserva os ramos de vinculo existente, criac
     funcionarioId: 'f-doc',
     userId: 'u-1',
     unidadeId: 'un-doc',
+  });
+
+  const setByIdCall = calls.find((entry) => entry.op === 'setById');
+  assert.deepEqual(setByIdCall, {
+    op: 'setById',
+    funcionarioId: 'f-existing',
+    userId: 'u-2',
+    unidadeId: 'un-existing',
   });
 });
