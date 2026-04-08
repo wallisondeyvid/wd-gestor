@@ -7,6 +7,28 @@ import {
   findUnidadesPrincipaisSelectIdLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 
+async function loadPrivilegedPaginaFuncoesBundle(req, privilegedUser) {
+  let funcoesFiltradas = await findAllFuncoesPopuladas();
+  if ((!funcoesFiltradas || funcoesFiltradas.length === 0) && privilegedUser) {
+    const matrizes = await findUnidadesPrincipaisSelectIdLean();
+    const ids = matrizes.map((matriz) => matriz._id);
+    funcoesFiltradas = await findFuncoesByUnidadePrincipalIdsPopuladas(ids);
+  }
+
+  const modulosFiltrados = await findAllModulos();
+  const unidadesPrincipaisFiltradas = await findUnidadesPrincipais();
+
+  return {
+    statusCode: 200,
+    locals: {
+      funcoesFiltradas,
+      modulosFiltrados,
+      unidadesPrincipaisFiltradas,
+      user: req.user,
+    },
+  };
+}
+
 export async function loadPaginaFuncoesOwnerBundle({
   req,
   privilegedUser,
@@ -56,23 +78,5 @@ export async function loadPaginaFuncoesOwnerBundle({
     };
   }
 
-  let funcoesFiltradas = await findAllFuncoesPopuladas();
-  if ((!funcoesFiltradas || funcoesFiltradas.length === 0) && privilegedUser) {
-    const matrizes = await findUnidadesPrincipaisSelectIdLean();
-    const ids = matrizes.map((matriz) => matriz._id);
-    funcoesFiltradas = await findFuncoesByUnidadePrincipalIdsPopuladas(ids);
-  }
-
-  const modulosFiltrados = await findAllModulos();
-  const unidadesPrincipaisFiltradas = await findUnidadesPrincipais();
-
-  return {
-    statusCode: 200,
-    locals: {
-      funcoesFiltradas,
-      modulosFiltrados,
-      unidadesPrincipaisFiltradas,
-      user: req.user,
-    },
-  };
+  return loadPrivilegedPaginaFuncoesBundle(req, privilegedUser);
 }
