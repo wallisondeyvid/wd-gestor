@@ -104,14 +104,14 @@ test('listarUsuarios delega ao service owner e preserva o render do caminho feli
 });
 
 test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devolve o bundle semantico', async () => {
-  const queryCalls = [];
+  const usuariosCalls = [];
   const unidadesCalls = [];
   const funcionariosCalls = [];
 
   const listUsuariosOwnerService = buildFunction(SERVICE_SOURCE, 'export async function listUsuariosOwnerService', {
     Promise,
-    findUsersByQueryLean: async (query) => {
-      queryCalls.push(query);
+    listUsuariosEnrichedService: async (input) => {
+      usuariosCalls.push(input);
       return [{ _id: 'u-master', nome: 'Master' }];
     },
     findAllUnidadesSelectIdCodigoNomeLean: async () => {
@@ -126,18 +126,50 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
 
   let result = await listUsuariosOwnerService({ isMaster: true });
   assert.equal(result.kind, 'ok');
-  assert.equal(queryCalls.length, 1);
-  assert.equal(Object.keys(queryCalls[0]).length, 0);
+  assert.equal(usuariosCalls.length, 1);
+  assert.equal(usuariosCalls[0].isMaster, true);
   assert.equal(result.usuarios.length, 1);
   assert.equal(result.unidadesFiltradas.length, 1);
   assert.equal(result.funcionarios.length, 1);
 
   result = await listUsuariosOwnerService({ isMaster: false });
   assert.equal(result.kind, 'ok');
-  assert.equal(queryCalls.length, 2);
-  assert.equal(queryCalls[1].role.$ne, 'master');
+  assert.equal(usuariosCalls.length, 2);
+  assert.equal(usuariosCalls[1].isMaster, false);
   assert.equal(unidadesCalls.length, 2);
   assert.equal(funcionariosCalls.length, 2);
+});
+
+test('listUsuariosEnrichedService preserva a derivacao da query e aplica o enriquecimento no bundle de usuarios', async () => {
+  const queryCalls = [];
+  const enrichCalls = [];
+
+  const listUsuariosEnrichedService = buildFunction(
+    SERVICE_SOURCE,
+    'export async function listUsuariosEnrichedService',
+    {
+      findUsersByQueryLean: async (query) => {
+        queryCalls.push(query);
+        return [{ _id: 'u-1', nome: 'Usuario A' }];
+      },
+      enrichUsuariosMembershipsSummary: async (usuarios) => {
+        enrichCalls.push(usuarios);
+        return [{ _id: 'u-1', nome: 'Usuario A', membershipsCount: 1, membershipsSummary: [{ unidade_id: 'un-1' }] }];
+      },
+    },
+  );
+
+  let result = await listUsuariosEnrichedService({ isMaster: true });
+  assert.equal(queryCalls.length, 1);
+  assert.equal(Object.keys(queryCalls[0]).length, 0);
+  assert.equal(enrichCalls.length, 1);
+  assert.equal(result[0].membershipsCount, 1);
+
+  result = await listUsuariosEnrichedService({ isMaster: false });
+  assert.equal(queryCalls.length, 2);
+  assert.equal(queryCalls[1].role.$ne, 'master');
+  assert.equal(enrichCalls.length, 2);
+  assert.equal(result[0].membershipsSummary[0].unidade_id, 'un-1');
 });
 
 test('enrichUsuariosMembershipsSummary preserva o resumo de memberships e os defaults vazios', async () => {

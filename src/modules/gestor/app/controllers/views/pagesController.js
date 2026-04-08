@@ -1,11 +1,10 @@
 // pagesController.js - migrado para módulo Gestor (views)
 import fs from 'fs';
 import path from 'path';
-import { enrichUsuariosMembershipsSummary } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
+import { listUsuariosEnrichedService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import {
   findUsuariosDiretorAtivosPopulatedLean,
   findFuncionariosByEmailsSelectEmailNomeLean,
-  findUsersByQueryLean,
   findAllUnidadesSelectIdCodigoNomeLean,
   findAllFuncionariosSelectIdNomeCpfLean,
   findAllUnidades,
@@ -280,8 +279,7 @@ export async function paginaUsuarios(req, res, next) {
       return res.status(200).render('usuarios', stubCtx(req));
     }
     if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-    const query = req.user.isMaster ? {} : { role: { $ne: 'master' } };
-    const usuarios = await enrichUsuariosMembershipsSummary(await findUsersByQueryLean(query));
+    const usuarios = await listUsuariosEnrichedService({ isMaster: req.user.isMaster });
     const unidadesFiltradas = await findAllUnidadesSelectIdCodigoNomeLean();
     const funcionarios = await findAllFuncionariosSelectIdNomeCpfLean();
     return res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });

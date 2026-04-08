@@ -66,11 +66,15 @@ export async function enrichUsuariosMembershipsSummary(usuarios) {
   });
 }
 
-export async function listUsuariosOwnerService({ isMaster } = {}) {
+export async function listUsuariosEnrichedService({ isMaster } = {}) {
   const query = isMaster ? {} : { role: { $ne: 'master' } };
+  const usuarios = await findUsersByQueryLean(query);
+  return enrichUsuariosMembershipsSummary(usuarios);
+}
 
+export async function listUsuariosOwnerService({ isMaster } = {}) {
   const [usuarios, unidadesFiltradas, funcionarios] = await Promise.all([
-    findUsersByQueryLean(query),
+    listUsuariosEnrichedService({ isMaster }),
     findAllUnidadesSelectIdCodigoNomeLean(),
     findAllFuncionariosSelectIdNomeCpfLean(),
   ]);
