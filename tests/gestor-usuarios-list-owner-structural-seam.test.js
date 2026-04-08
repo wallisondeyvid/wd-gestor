@@ -114,11 +114,11 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
       usuariosCalls.push(input);
       return [{ _id: 'u-master', nome: 'Master' }];
     },
-    findAllUnidadesSelectIdCodigoNomeLean: async () => {
+    listUsuariosUnidadesFiltradasService: async () => {
       unidadesCalls.push(true);
       return [{ _id: 'un-1', codigo: '001', nome: 'Unidade A' }];
     },
-    findAllFuncionariosSelectIdNomeCpfLean: async () => {
+    listUsuariosFuncionariosFiltradosService: async () => {
       funcionariosCalls.push(true);
       return [{ _id: 'f-1', nome: 'Funcionario A', cpf: '123' }];
     },
@@ -138,6 +138,46 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
   assert.equal(usuariosCalls[1].isMaster, false);
   assert.equal(unidadesCalls.length, 2);
   assert.equal(funcionariosCalls.length, 2);
+});
+
+test('listUsuariosUnidadesFiltradasService delega o bundle auxiliar de unidades ao bridge comum', async () => {
+  const unidadesCalls = [];
+
+  const listUsuariosUnidadesFiltradasService = buildFunction(
+    SERVICE_SOURCE,
+    'export async function listUsuariosUnidadesFiltradasService',
+    {
+      findAllUnidadesSelectIdCodigoNomeLean: async () => {
+        unidadesCalls.push(true);
+        return [{ _id: 'un-1', codigo: '001', nome: 'Unidade A' }];
+      },
+    },
+  );
+
+  const result = await listUsuariosUnidadesFiltradasService();
+  assert.equal(unidadesCalls.length, 1);
+  assert.equal(result.length, 1);
+  assert.equal(result[0]._id, 'un-1');
+});
+
+test('listUsuariosFuncionariosFiltradosService delega o bundle auxiliar de funcionarios ao bridge comum', async () => {
+  const funcionariosCalls = [];
+
+  const listUsuariosFuncionariosFiltradosService = buildFunction(
+    SERVICE_SOURCE,
+    'export async function listUsuariosFuncionariosFiltradosService',
+    {
+      findAllFuncionariosSelectIdNomeCpfLean: async () => {
+        funcionariosCalls.push(true);
+        return [{ _id: 'f-1', nome: 'Funcionario A', cpf: '123' }];
+      },
+    },
+  );
+
+  const result = await listUsuariosFuncionariosFiltradosService();
+  assert.equal(funcionariosCalls.length, 1);
+  assert.equal(result.length, 1);
+  assert.equal(result[0]._id, 'f-1');
 });
 
 test('listUsuariosEnrichedService preserva a derivacao da query e aplica o enriquecimento no bundle de usuarios', async () => {

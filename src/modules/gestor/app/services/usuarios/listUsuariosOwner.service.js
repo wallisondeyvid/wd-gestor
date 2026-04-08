@@ -72,11 +72,19 @@ export async function listUsuariosEnrichedService({ isMaster } = {}) {
   return enrichUsuariosMembershipsSummary(usuarios);
 }
 
+export async function listUsuariosUnidadesFiltradasService() {
+  return findAllUnidadesSelectIdCodigoNomeLean();
+}
+
+export async function listUsuariosFuncionariosFiltradosService() {
+  return findAllFuncionariosSelectIdNomeCpfLean();
+}
+
 export async function listUsuariosOwnerService({ isMaster } = {}) {
   const [usuarios, unidadesFiltradas, funcionarios] = await Promise.all([
     listUsuariosEnrichedService({ isMaster }),
-    findAllUnidadesSelectIdCodigoNomeLean(),
-    findAllFuncionariosSelectIdNomeCpfLean(),
+    listUsuariosUnidadesFiltradasService(),
+    listUsuariosFuncionariosFiltradosService(),
   ]);
 
   return {

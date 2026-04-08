@@ -1,12 +1,14 @@
 // pagesController.js - migrado para módulo Gestor (views)
 import fs from 'fs';
 import path from 'path';
-import { listUsuariosEnrichedService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
+import {
+  listUsuariosEnrichedService,
+  listUsuariosFuncionariosFiltradosService,
+  listUsuariosUnidadesFiltradasService,
+} from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import {
   findUsuariosDiretorAtivosPopulatedLean,
   findFuncionariosByEmailsSelectEmailNomeLean,
-  findAllUnidadesSelectIdCodigoNomeLean,
-  findAllFuncionariosSelectIdNomeCpfLean,
   findAllUnidades,
   findUnidadesByMatrizOuPrincipal,
   findUnidadesById,
@@ -280,8 +282,8 @@ export async function paginaUsuarios(req, res, next) {
     }
     if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
     const usuarios = await listUsuariosEnrichedService({ isMaster: req.user.isMaster });
-    const unidadesFiltradas = await findAllUnidadesSelectIdCodigoNomeLean();
-    const funcionarios = await findAllFuncionariosSelectIdNomeCpfLean();
+    const unidadesFiltradas = await listUsuariosUnidadesFiltradasService();
+    const funcionarios = await listUsuariosFuncionariosFiltradosService();
     return res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });
   } catch (e) { console.error('[pagesController] /usuarios erro:', e); next(e); }
 }
