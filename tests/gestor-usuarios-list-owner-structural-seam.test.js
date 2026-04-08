@@ -139,3 +139,65 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
   assert.equal(unidadesCalls.length, 2);
   assert.equal(funcionariosCalls.length, 2);
 });
+
+test('enrichUsuariosMembershipsSummary preserva o resumo de memberships e os defaults vazios', async () => {
+  const membershipCalls = [];
+  const unidadeCalls = [];
+
+  const enrichUsuariosMembershipsSummary = buildFunction(
+    SERVICE_SOURCE,
+    'export async function enrichUsuariosMembershipsSummary',
+    {
+      Promise,
+      Set,
+      Map,
+      normalizeId: (value) => String(value || '').trim(),
+      buildUnidadeMembershipLabel: (unidade) => {
+        const codigo = String(unidade?.codigo || '').trim();
+        const nome = String(unidade?.nome || '').trim();
+        if (codigo && nome) return `${codigo} - ${nome}`;
+        return nome || codigo || null;
+      },
+      findUserMembershipsByUserIdsLean: async (userIds) => {
+        membershipCalls.push(userIds);
+        return [
+          {
+            user_id: 'u-1',
+            unidade_id: 'un-1',
+            papel_contextual: 'gestor',
+            status: 'inactive',
+            funcionario_id: 'f-1',
+          },
+        ];
+      },
+      findUnidadesByIdsNomeCodigoLean: async (unidadeIds) => {
+        unidadeCalls.push(unidadeIds);
+        return [{ _id: 'un-1', codigo: '001', nome: 'Unidade A' }];
+      },
+    },
+  );
+
+  let result = await enrichUsuariosMembershipsSummary([]);
+  assert.deepEqual(result, []);
+  assert.equal(membershipCalls.length, 0);
+  assert.equal(unidadeCalls.length, 0);
+
+  result = await enrichUsuariosMembershipsSummary([
+    { _id: 'u-1', email: 'user-1@example.com' },
+    { _id: 'u-2', email: 'user-2@example.com' },
+  ]);
+
+  assert.equal(membershipCalls.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(membershipCalls[0])), ['u-1', 'u-2']);
+  assert.equal(unidadeCalls.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(unidadeCalls[0])), ['un-1']);
+  assert.equal(result[0].membershipsCount, 1);
+  assert.equal(Array.isArray(result[0].membershipsSummary), true);
+  assert.equal(result[0].membershipsSummary[0].unidade_nome, '001 - Unidade A');
+  assert.equal(result[0].membershipsSummary[0].papel_contextual, 'gestor');
+  assert.equal(result[0].membershipsSummary[0].status, 'inactive');
+  assert.equal(result[0].membershipsSummary[0].funcionario_id, 'f-1');
+  assert.equal(result[1].membershipsCount, 0);
+  assert.equal(Array.isArray(result[1].membershipsSummary), true);
+  assert.equal(result[1].membershipsSummary.length, 0);
+});
