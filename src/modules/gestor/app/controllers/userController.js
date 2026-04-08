@@ -299,7 +299,11 @@ export async function excluirUsuario(req, res) {
 		}
 		// Se estiver vinculado a um funcionário, remover vínculo no documento do funcionário
 		const vinculoFuncionarioId = user.funcionario_id ? String(user.funcionario_id) : null;
-		await deleteUsuarioExecutionService({ userId: user._id, vinculoFuncionarioId });
+		await deleteUsuarioExecutionService({
+			userId: user._id,
+			vinculoFuncionarioId,
+			unidadeId: user?.unidade_id || null,
+		});
 		if (req.xhr || req.get('X-Requested-With') === 'XMLHttpRequest') {
 			return res.json({ success:true, deleted:true, id: user._id });
 		}

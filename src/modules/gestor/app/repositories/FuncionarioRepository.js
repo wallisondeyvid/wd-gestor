@@ -95,6 +95,14 @@ export async function unsetFuncionarioUsuarioIdIfMatchesUserRepo({ unitScope, fu
     unitScope,
   });
 
+  const unidadeId = String(arguments[0]?.unidadeId || '').trim();
+  if (unidadeId) {
+    return FuncionarioModel.updateOne(
+      { _id: funcionarioId, usuario_id: userId, unidade_id: unidadeId },
+      { $unset: { usuario_id: '' } }
+    );
+  }
+
   return FuncionarioModel.updateOne({ _id: funcionarioId, usuario_id: userId }, { $unset: { usuario_id: '' } });
 }
 

@@ -232,6 +232,7 @@ test('excluirUsuario usa o service fino no caminho feliz XHR com userId e vincul
         _id: '507f1f77bcf86cd799439011',
         role: 'user',
         funcionario_id: '507f191e810c19729de860aa',
+        unidade_id: '507f191e810c19729de860ab',
       };
     },
     countUsersMasters: async () => {
@@ -259,6 +260,7 @@ test('excluirUsuario usa o service fino no caminho feliz XHR com userId e vincul
   assert.deepEqual(serviceCalls, [{
     userId: '507f1f77bcf86cd799439011',
     vinculoFuncionarioId: '507f191e810c19729de860aa',
+    unidadeId: '507f191e810c19729de860ab',
   }]);
   assert.equal(res.statusCode, 200);
   assert.deepEqual(res.body, {
@@ -335,8 +337,8 @@ test('deleteUsuarioExecutionService executa delete e cleanup opcional pelo bridg
       calls.push({ op: 'deleteUserById', userId });
       return { acknowledged: true, deletedCount: 1 };
     },
-    unsetFuncionarioUsuarioIdIfMatchesUser: async (funcionarioId, userId) => {
-      calls.push({ op: 'unsetFuncionarioUsuarioIdIfMatchesUser', funcionarioId, userId });
+    unsetFuncionarioUsuarioIdIfMatchesUser: async (funcionarioId, userId, unidadeId) => {
+      calls.push({ op: 'unsetFuncionarioUsuarioIdIfMatchesUser', funcionarioId, userId, unidadeId });
       return { acknowledged: true, modifiedCount: 1 };
     },
   });
@@ -345,6 +347,7 @@ test('deleteUsuarioExecutionService executa delete e cleanup opcional pelo bridg
   await deleteUsuarioExecutionService({
     userId: '507f1f77bcf86cd799439011',
     vinculoFuncionarioId: '507f191e810c19729de860aa',
+    unidadeId: '507f191e810c19729de860ab',
   });
 
   assert.deepEqual(calls, [
@@ -356,6 +359,7 @@ test('deleteUsuarioExecutionService executa delete e cleanup opcional pelo bridg
       op: 'unsetFuncionarioUsuarioIdIfMatchesUser',
       funcionarioId: '507f191e810c19729de860aa',
       userId: '507f1f77bcf86cd799439011',
+      unidadeId: '507f191e810c19729de860ab',
     },
   ]);
 });

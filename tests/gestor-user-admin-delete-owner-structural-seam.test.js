@@ -40,6 +40,7 @@ function buildDelegatedDeleteSnippet() {
 		'await deleteUsuarioExecutionService({',
 		'  userId: id,',
 		'  vinculoFuncionarioId: user?.funcionario_id || null,',
+		'  unidadeId: user?.unidade_id || null,',
 		'});',
 		'return ok(res,{ id, deleted:true });',
 	].join('\n ');
@@ -117,6 +118,7 @@ function userFixture(overrides = {}) {
 		_id: TARGET_USER_ID,
 		role: 'user',
 		funcionario_id: FUNCIONARIO_ID,
+		unidade_id: '507f191e810c19729de860ab',
 		...overrides,
 	};
 }
@@ -332,8 +334,9 @@ test('user admin delete: a seam futura recebe apenas o nucleo de execucao do del
 	await deleteUsuario(req, res);
 
 	assert.equal(callLog.seamCalls.length, 1);
-	assert.deepEqual(Object.keys(callLog.seamCalls[0]).sort(), ['userId', 'vinculoFuncionarioId']);
+	assert.deepEqual(Object.keys(callLog.seamCalls[0]).sort(), ['unidadeId', 'userId', 'vinculoFuncionarioId']);
 	assert.deepEqual(toPlainJson(callLog.seamCalls[0]), {
+		unidadeId: '507f191e810c19729de860ab',
 		userId: TARGET_USER_ID,
 		vinculoFuncionarioId: FUNCIONARIO_ID,
 	});
