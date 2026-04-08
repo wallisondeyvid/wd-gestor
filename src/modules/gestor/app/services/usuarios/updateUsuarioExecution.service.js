@@ -37,7 +37,7 @@ export async function updateUsuarioExecutionService({
 					await unsetFuncionarioUsuarioIdById(prevFuncionarioId);
 				}
 				if (nextFuncionarioId) {
-					await setFuncionarioUsuarioIdById(nextFuncionarioId, user._id);
+					await setFuncionarioUsuarioIdById(nextFuncionarioId, user._id, unidadeId || null);
 				}
 			} catch (linkErr) {
 				console.warn('[atualizarUsuario] aviso ao sincronizar vínculo de funcionário:', linkErr?.message || linkErr);

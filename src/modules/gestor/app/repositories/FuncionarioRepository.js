@@ -85,6 +85,11 @@ export async function setFuncionarioUsuarioIdByIdRepo({ unitScope, funcionarioId
     unitScope,
   });
 
+  const unidadeId = String(arguments[0]?.unidadeId || '').trim();
+  if (unidadeId) {
+    return FuncionarioModel.updateOne({ _id: funcionarioId, unidade_id: unidadeId }, { $set: { usuario_id: userId } });
+  }
+
   return FuncionarioModel.updateOne({ _id: funcionarioId }, { $set: { usuario_id: userId } });
 }
 

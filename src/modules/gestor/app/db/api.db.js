@@ -749,8 +749,13 @@ export async function unsetFuncionarioUsuarioIdById(funcionarioId) {
   return unsetFuncionarioUsuarioIdByIdRepo({ unitScope: GLOBAL_SCOPE, funcionarioId });
 }
 
-export async function setFuncionarioUsuarioIdById(funcionarioId, userId) {
-  return setFuncionarioUsuarioIdByIdRepo({ unitScope: GLOBAL_SCOPE, funcionarioId, userId });
+export async function setFuncionarioUsuarioIdById(funcionarioId, userId, unidadeId = null) {
+  return setFuncionarioUsuarioIdByIdRepo({
+    unitScope: scopeFromUnidadeId(unidadeId),
+    funcionarioId,
+    userId,
+    unidadeId,
+  });
 }
 
 export async function unsetFuncionarioUsuarioIdIfMatchesUser(funcionarioId, userId, unidadeId = null) {

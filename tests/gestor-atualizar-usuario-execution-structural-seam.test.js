@@ -173,8 +173,8 @@ test('updateUsuarioExecutionService preserva a ordem semantica entre desvincular
     unsetFuncionarioUsuarioIdById: async (funcionarioId) => {
       calls.push({ op: 'unset', funcionarioId });
     },
-    setFuncionarioUsuarioIdById: async (funcionarioId, userId) => {
-      calls.push({ op: 'set', funcionarioId, userId });
+    setFuncionarioUsuarioIdById: async (funcionarioId, userId, unidadeId) => {
+      calls.push({ op: 'set', funcionarioId, userId, unidadeId });
     },
     saveUserDoc: async (user) => {
       calls.push({
@@ -221,6 +221,7 @@ test('updateUsuarioExecutionService preserva a ordem semantica entre desvincular
   assert.equal(calls[1].op, 'set');
   assert.equal(calls[1].funcionarioId, 'f-novo');
   assert.equal(calls[1].userId, 'u-99');
+  assert.equal(calls[1].unidadeId, 'un-nova');
   assert.equal(calls[2].op, 'save');
   assert.equal(calls[2].userSnapshot.cpf, '12345678900');
   assert.equal(calls[2].userSnapshot.nome, 'Nome Novo');
