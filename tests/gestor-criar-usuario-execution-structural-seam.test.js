@@ -173,8 +173,8 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
     },
   });
   const setCriarUsuarioFuncionarioUsuarioIdIfEmpty = buildFunction(SERVICE_SOURCE, 'async function setCriarUsuarioFuncionarioUsuarioIdIfEmpty', {
-    setFuncionarioUsuarioIdIfEmpty: async (funcionarioId, userId) => {
-      setIfEmptyCalls.push({ funcionarioId, userId });
+    setFuncionarioUsuarioIdIfEmpty: async (funcionarioId, userId, unidadeId) => {
+      setIfEmptyCalls.push({ funcionarioId, userId, unidadeId });
     },
   });
   const setCriarUsuarioFuncionarioUsuarioIdById = buildFunction(SERVICE_SOURCE, 'async function setCriarUsuarioFuncionarioUsuarioIdById', {
@@ -272,6 +272,7 @@ test('createUsuarioExecutionService preserva os ramos semanticos relevantes da e
   assert.equal(setIfEmptyCalls.length, 1);
   assert.equal(setIfEmptyCalls[0].funcionarioId, 'func-provided');
   assert.equal(setIfEmptyCalls[0].userId, 'u-created');
+  assert.equal(setIfEmptyCalls[0].unidadeId, 'un-1');
   assert.equal(membershipCalls.length, 1);
   assert.equal(membershipCalls[0].user_id, 'u-created');
   assert.equal(membershipCalls[0].unidade_id, 'un-1');

@@ -762,8 +762,13 @@ export async function unsetFuncionarioUsuarioIdIfMatchesUser(funcionarioId, user
   });
 }
 
-export async function setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId) {
-  return setFuncionarioUsuarioIdIfEmptyRepo({ unitScope: GLOBAL_SCOPE, funcionarioId, userId });
+export async function setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId, unidadeId = null) {
+  return setFuncionarioUsuarioIdIfEmptyRepo({
+    unitScope: scopeFromUnidadeId(unidadeId),
+    funcionarioId,
+    userId,
+    unidadeId,
+  });
 }
 
 export async function findUnidadesAtivasCodigoNomeOrdenadasSelectLean() {

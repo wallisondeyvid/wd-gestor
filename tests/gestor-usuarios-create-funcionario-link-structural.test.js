@@ -105,7 +105,7 @@ function buildFuncionarioLinkCoreSource() {
     '        if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id;',
     '        await saveUserDoc(user);',
     '      }',
-    '      await setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id);',
+    '      await setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id, funcionarioDoc.unidade_id || unidadeId || null);',
     '    } catch (linkErr) {',
     "      console.warn('[criarUsuario] falha ao vincular funcionario_id informado:', linkErr?.message || linkErr);",
     '    }',
@@ -332,8 +332,8 @@ test('a futura seam de funcionario preserva os ramos de vinculo existente, criac
       if (cleanCpf === '333') throw new Error('falha inesperada');
       return null;
     },
-    setCriarUsuarioFuncionarioUsuarioIdIfEmpty: async (funcionarioId, userId) => {
-      calls.push({ op: 'setIfEmpty', funcionarioId, userId });
+    setCriarUsuarioFuncionarioUsuarioIdIfEmpty: async (funcionarioId, userId, unidadeId) => {
+      calls.push({ op: 'setIfEmpty', funcionarioId, userId, unidadeId });
     },
     setCriarUsuarioFuncionarioUsuarioIdById: async (funcionarioId, userId) => {
       calls.push({ op: 'setById', funcionarioId, userId });
@@ -358,11 +358,11 @@ test('a futura seam de funcionario preserva os ramos de vinculo existente, criac
     email: 'existente@example.com',
     cleanCpf: '111',
     unidadeId: 'un-1',
-    funcionarioId: null,
-    funcionarioDoc: null,
-    wantsNewFuncionario: true,
+    funcionarioId: 'f-doc',
+    funcionarioDoc: { _id: 'f-doc', unidade_id: 'un-doc' },
+    wantsNewFuncionario: false,
   });
-  assert.deepEqual(toPlainJson(result), { kind: 'ok', linkedFuncionarioId: 'f-existing', funcionarioNovo: null });
+  assert.deepEqual(toPlainJson(result), { kind: 'ok', linkedFuncionarioId: 'f-doc', funcionarioNovo: null });
 
   user = { _id: 'u-2', nome: 'Novo', unidade_id: null, funcionario_id: null };
   result = await materializeCriarUsuarioFuncionarioLinkCore({
@@ -394,4 +394,12 @@ test('a futura seam de funcionario preserva os ramos de vinculo existente, criac
   });
   assert.equal(result.kind, 'funcionario_create_error');
   assert.match(result.message, /Falha ao criar funcionário automático:/);
+
+  const setIfEmptyCall = calls.find((entry) => entry.op === 'setIfEmpty');
+  assert.deepEqual(setIfEmptyCall, {
+    op: 'setIfEmpty',
+    funcionarioId: 'f-doc',
+    userId: 'u-1',
+    unidadeId: 'un-doc',
+  });
 });

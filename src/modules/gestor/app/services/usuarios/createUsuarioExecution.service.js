@@ -52,8 +52,8 @@ async function findCriarUsuarioFuncionarioByCpfUnidade(cleanCpf, unidadeId) {
 	return findFuncionarioByCpfUnidadeSelectIdUnidadeEmailLean(cleanCpf, normalizedUnidadeId);
 }
 
-async function setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioId, userId) {
-	return setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId);
+async function setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioId, userId, unidadeId = null) {
+	return setFuncionarioUsuarioIdIfEmpty(funcionarioId, userId, unidadeId);
 }
 
 async function setCriarUsuarioFuncionarioUsuarioIdById(funcionarioId, userId) {
@@ -86,7 +86,11 @@ async function materializeCriarUsuarioFuncionarioLinkCore({
 				if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id;
 				await saveUserDoc(user);
 			}
-			await setCriarUsuarioFuncionarioUsuarioIdIfEmpty(funcionarioDoc._id, user._id);
+			await setCriarUsuarioFuncionarioUsuarioIdIfEmpty(
+				funcionarioDoc._id,
+				user._id,
+				funcionarioDoc.unidade_id || unidadeId || null,
+			);
 		} catch (linkErr) {
 			console.warn('[criarUsuario] falha ao vincular funcionario_id informado:', linkErr?.message || linkErr);
 		}
