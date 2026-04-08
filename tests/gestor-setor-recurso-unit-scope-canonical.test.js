@@ -8,6 +8,7 @@ import { clearResolveConnectionCache } from '../src/shared/db/resolveConnection.
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 import { createUnitScope } from '../src/shared/unitScope.js';
 import { findUnidadesByIdsNomeCodigoLean } from '../src/modules/gestor/app/db/api.db.js';
+import { findUnidadesForSetorPageByIdsSelectLean } from '../src/modules/gestor/app/db/api.db.js';
 import { paginaRecursos, paginaSetores } from '../src/modules/gestor/app/controllers/views/pagesController.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
@@ -437,6 +438,48 @@ test('Setores bridge: findUnidadesByIdsNomeCodigoLean usa tenant quando a lista 
       await Unidade.deleteMany({ _id: unidadeA._id });
 
       const unidades = await findUnidadesByIdsNomeCodigoLean([normalizeId(unidadeA._id)]);
+
+      assert.equal(unidades.length, 1);
+      assert.equal(normalizeId(unidades[0]?._id), normalizeId(unidadeA._id));
+      assert.equal(unidades[0]?.nome, tenantName);
+    } finally {
+      clearResolveConnectionCache();
+
+      if (previousMultiDb === undefined) delete process.env.WD_MULTI_DB;
+      else process.env.WD_MULTI_DB = previousMultiDb;
+
+      if (previousAllowlist === undefined) delete process.env.WD_MULTI_DB_ALLOWLIST;
+      else process.env.WD_MULTI_DB_ALLOWLIST = previousAllowlist;
+
+      if (previousHandshake === undefined) delete process.env.WD_USERDB_HANDSHAKE;
+      else process.env.WD_USERDB_HANDSHAKE = previousHandshake;
+
+      clearResolveConnectionCache();
+    }
+  });
+});
+
+test('Setores bridge: findUnidadesForSetorPageByIdsSelectLean usa tenant quando a lista carrega uma unidade única em multi-db', async () => {
+  await withHarness(async ({ unidadeA }) => {
+    const previousMultiDb = process.env.WD_MULTI_DB;
+    const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+    const previousHandshake = process.env.WD_USERDB_HANDSHAKE;
+
+    try {
+      process.env.WD_MULTI_DB = '1';
+      process.env.WD_MULTI_DB_ALLOWLIST = normalizeId(unidadeA._id);
+      process.env.WD_USERDB_HANDSHAKE = '0';
+      clearResolveConnectionCache();
+
+      const tenantName = `${unidadeA.nome} TENANT PAGE`;
+
+      await seedTenantUnits(unidadeA._id, [
+        buildTenantUnitDoc(unidadeA, { nome: tenantName }),
+      ]);
+
+      await Unidade.deleteMany({ _id: unidadeA._id });
+
+      const unidades = await findUnidadesForSetorPageByIdsSelectLean([normalizeId(unidadeA._id)]);
 
       assert.equal(unidades.length, 1);
       assert.equal(normalizeId(unidades[0]?._id), normalizeId(unidadeA._id));

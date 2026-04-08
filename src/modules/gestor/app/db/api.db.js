@@ -603,7 +603,11 @@ export async function findUnidadesForSetorPageByCondSelectLean(cond) {
 }
 
 export async function findUnidadesForSetorPageByIdsSelectLean(unidadeIds) {
-  return findUnidadesForSetorPageByIdsSelectLeanRepo({ unitScope: GLOBAL_SCOPE, unidadeIds });
+  const singleUnitId = extractSingleScopedUnitId({ $in: unidadeIds });
+  return findUnidadesForSetorPageByIdsSelectLeanRepo({
+    unitScope: singleUnitId ? scopeFromUnidadeId(singleUnitId) : GLOBAL_SCOPE,
+    unidadeIds,
+  });
 }
 
 export async function findSetorByIdAndDelete(id, unidadeId = null) {
