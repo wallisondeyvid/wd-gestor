@@ -95,4 +95,13 @@ export async function listUsuariosOwnerService({ isMaster } = {}) {
   };
 }
 
+export function buildUsuariosViewRenderPayload({ user, result } = {}) {
+  return {
+    usuarios: result?.usuarios || [],
+    user: user ?? null,
+    unidadesFiltradas: result?.unidadesFiltradas || [],
+    funcionarios: result?.funcionarios || [],
+  };
+}
+
 export default listUsuariosOwnerService;

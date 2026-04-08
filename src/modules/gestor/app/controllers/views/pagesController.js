@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import {
+  buildUsuariosViewRenderPayload,
   listUsuariosOwnerService,
 } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import {
@@ -279,8 +280,8 @@ export async function paginaUsuarios(req, res, next) {
       return res.status(200).render('usuarios', stubCtx(req));
     }
     if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-    const { usuarios, unidadesFiltradas, funcionarios } = await listUsuariosOwnerService({ isMaster: req.user.isMaster });
-    return res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });
+    const result = await listUsuariosOwnerService({ isMaster: req.user.isMaster });
+    return res.render('usuarios', buildUsuariosViewRenderPayload({ user: req.user, result }));
   } catch (e) { console.error('[pagesController] /usuarios erro:', e); next(e); }
 }
 

@@ -20,7 +20,10 @@ import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/li
 import { checkUsuarioEmailOwnerService } from '#modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js';
 import { createUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/createUsuarioExecution.service.js';
 import { getUsuarioAtualProfileOwnerService } from '#modules/gestor/app/services/usuarios/getUsuarioAtualProfileOwner.service.js';
-import { listUsuariosOwnerService } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
+import {
+	buildUsuariosViewRenderPayload,
+	listUsuariosOwnerService,
+} from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { deleteUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js';
 import { statusUsuarioLockStateOwnerService } from '#modules/gestor/app/services/usuarios/statusUsuarioLockStateOwner.service.js';
 import { toggleUsuarioExecutionService } from '#modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js';
@@ -221,8 +224,7 @@ export async function listarUsuarios(req, res, next) {
 		if (!req.user) return res.status(401).send('Não autenticado');
 		if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
 		const result = await listUsuariosOwnerService({ isMaster: req.user.isMaster });
-		const { usuarios, unidadesFiltradas, funcionarios } = result;
-		res.render('usuarios', { usuarios, user: req.user, unidadesFiltradas, funcionarios });
+		res.render('usuarios', buildUsuariosViewRenderPayload({ user: req.user, result }));
 	} catch (e) {
 		console.error('Erro na rota /usuarios:', e);
 		next(e);

@@ -64,6 +64,7 @@ function createRenderRes() {
 
 test('listarUsuarios delega ao service owner e preserva o render do caminho feliz', async () => {
   const calls = [];
+  const payloadCalls = [];
   const listUsuariosOwnerService = async (input) => {
     calls.push(input);
     return {
@@ -76,6 +77,15 @@ test('listarUsuarios delega ao service owner e preserva o render do caminho feli
 
   const listarUsuarios = buildFunction(CONTROLLER_SOURCE, 'export async function listarUsuarios', {
     listUsuariosOwnerService,
+    buildUsuariosViewRenderPayload: ({ user, result }) => {
+      payloadCalls.push({ user, result });
+      return {
+        usuarios: result.usuarios,
+        user,
+        unidadesFiltradas: result.unidadesFiltradas,
+        funcionarios: result.funcionarios,
+      };
+    },
     console,
   });
 
@@ -91,6 +101,8 @@ test('listarUsuarios delega ao service owner e preserva o render do caminho feli
 
   assert.equal(calls.length, 1);
   assert.equal(calls[0].isMaster, false);
+  assert.equal(payloadCalls.length, 1);
+  assert.equal(payloadCalls[0].user, req.user);
   assert.equal(nextError, null);
   assert.equal(res.statusCode, 200);
   assert.equal(res.view, 'usuarios');
@@ -101,6 +113,26 @@ test('listarUsuarios delega ao service owner e preserva o render do caminho feli
   assert.equal(res.locals.unidadesFiltradas[0]._id, 'un-1');
   assert.equal(res.locals.funcionarios.length, 1);
   assert.equal(res.locals.funcionarios[0]._id, 'f-1');
+});
+
+test('buildUsuariosViewRenderPayload preserva o envelope final da view usuarios', () => {
+  const buildUsuariosViewRenderPayload = buildFunction(
+    SERVICE_SOURCE,
+    'export function buildUsuariosViewRenderPayload',
+  );
+
+  const user = { email: 'admin@example.com', role: 'admin' };
+  const result = {
+    usuarios: [{ _id: 'u-1' }],
+    unidadesFiltradas: [{ _id: 'un-1' }],
+    funcionarios: [{ _id: 'f-1' }],
+  };
+
+  const payload = buildUsuariosViewRenderPayload({ user, result });
+  assert.equal(payload.user, user);
+  assert.equal(payload.usuarios[0]._id, 'u-1');
+  assert.equal(payload.unidadesFiltradas[0]._id, 'un-1');
+  assert.equal(payload.funcionarios[0]._id, 'f-1');
 });
 
 test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devolve o bundle semantico', async () => {
