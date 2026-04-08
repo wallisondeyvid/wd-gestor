@@ -5,6 +5,7 @@ import {
   buildUsuariosViewRenderPayload,
   listUsuariosOwnerService,
 } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
+import { loadPaginaFuncoesOwnerBundle } from '#modules/gestor/app/services/funcoes/listPaginaFuncoesOwner.service.js';
 import {
   findUsuariosDiretorAtivosPopulatedLean,
   findFuncionariosByEmailsSelectEmailNomeLean,
@@ -380,46 +381,14 @@ export async function paginaModulos(req, res) {
 export async function paginaFuncoes(req, res) {
   try {
     const privilegedUser = isPrivilegedGestorUser(req.user);
-    if (isDbOff(req)) {
-      return res.status(200).render('funcoes', stubCtx(req, { funcoesFiltradas: [], modulosFiltrados: [], unidadesPrincipaisFiltradas: [] }));
-    }
-
-    const { principalUnitId, principalUnit } = await loadScopedUnitContextForPage(req);
-    if (principalUnitId) {
-      const [funcoesFiltradas, modulosFiltrados] = await Promise.all([
-        findFuncoesByUnidadePrincipalPopuladas(principalUnitId),
-        findAllModulos(),
-      ]);
-
-      return res.render('funcoes', {
-        funcoesFiltradas,
-        modulosFiltrados,
-        unidadesPrincipaisFiltradas: principalUnit ? [principalUnit] : [],
-        user: req.user,
-      });
-    }
-
-    let funcoesFiltradas;
-    if (!privilegedUser) {
-      const modulosFiltrados = await findAllModulos();
-      return res.render('funcoes', {
-        funcoesFiltradas: [],
-        modulosFiltrados,
-        unidadesPrincipaisFiltradas: [],
-        user: req.user,
-      });
-    }
-
-    funcoesFiltradas = await findAllFuncoesPopuladas();
-    if ((!funcoesFiltradas || funcoesFiltradas.length === 0) && privilegedUser) {
-      // fallback: tentar ao menos por matrizes
-      const matrizes = await findUnidadesPrincipaisSelectIdLean();
-      const ids = matrizes.map(m => m._id);
-      funcoesFiltradas = await findFuncoesByUnidadePrincipalIdsPopuladas(ids);
-    }
-    const modulosFiltrados = await findAllModulos();
-    const unidadesPrincipaisFiltradas = await findUnidadesPrincipais();
-    return res.render('funcoes', { funcoesFiltradas, modulosFiltrados, unidadesPrincipaisFiltradas, user: req.user });
+    const result = await loadPaginaFuncoesOwnerBundle({
+      req,
+      privilegedUser,
+      isDbOff: isDbOff(req),
+      buildStubCtx: stubCtx,
+      loadScopedUnitContext: loadScopedUnitContextForPage,
+    });
+    return res.status(result.statusCode).render('funcoes', result.locals);
   } catch (e) {
     console.error('[pagesController] /funcoes erro:', e.message);
     return res.status(500).send('Erro ao carregar funções');
