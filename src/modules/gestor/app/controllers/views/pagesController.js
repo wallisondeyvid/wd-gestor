@@ -6,6 +6,7 @@ import {
   listUsuariosOwnerService,
 } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { loadPaginaFuncoesOwnerBundle } from '#modules/gestor/app/services/funcoes/listPaginaFuncoesOwner.service.js';
+import { listModulosOwnerService } from '#modules/gestor/app/services/modulos/listModulosOwner.service.js';
 import { loadPaginaUnidadesDiretores } from '#modules/gestor/app/services/unidades/loadPaginaUnidadesDiretores.service.js';
 import {
   findAllUnidades,
@@ -16,7 +17,6 @@ import {
   findModulosAtivosStatusLean,
   findUnidadesPrincipaisLean,
   findUnidadeById,
-  findAllModulos,
   findAllFuncoesPopuladas,
   findFuncoesByUnidadePrincipalPopuladas,
   findUnidadesPrincipaisSelectIdLean,
@@ -358,7 +358,8 @@ export async function paginaModulos(req, res) {
     return res.status(200).render('slots-modulos', stubCtx(req, { modulos: [] }));
   }
   if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-  const modulos = await findAllModulos();
+  const result = await listModulosOwnerService({ userRole: 'master', activeUnitId: null });
+  const modulos = Array.isArray(result?.modulos) ? result.modulos : [];
   return res.render('slots-modulos', { modulos, user: req.user });
 }
 

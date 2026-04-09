@@ -5,8 +5,10 @@ import path from 'node:path';
 import vm from 'node:vm';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/moduloApiController.js');
+const PAGES_CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/views/pagesController.js');
 const SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/modulos/listModulosOwner.service.js');
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
+const PAGES_CONTROLLER_SOURCE = fs.readFileSync(PAGES_CONTROLLER_PATH, 'utf8');
 const SERVICE_SOURCE = fs.readFileSync(SERVICE_PATH, 'utf8');
 
 function extractFunction(source, signature) {
@@ -50,6 +52,28 @@ function createApiRes() {
     },
     json(payload) {
       this.body = payload;
+      return this;
+    },
+  };
+}
+
+function createPageRes() {
+  return {
+    statusCode: 200,
+    view: undefined,
+    locals: undefined,
+    sent: undefined,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    render(view, locals) {
+      this.view = view;
+      this.locals = locals;
+      return this;
+    },
+    send(payload) {
+      this.sent = payload;
       return this;
     },
   };
@@ -136,4 +160,33 @@ test('listModulosOwnerService preserva os ramos master/global, contextual e fall
   assert.equal(unidadeCalls.length, 1);
   assert.equal(unidadeCalls[0].length, 1);
   assert.equal(unidadeCalls[0][0], 'u-123');
+});
+
+test('paginaModulos delega ao owner service e preserva a borda HTML atual para usuario privilegiado', async () => {
+  const calls = [];
+  const paginaModulos = buildFunction(PAGES_CONTROLLER_SOURCE, 'export async function paginaModulos', {
+    isDbOff: () => false,
+    stubCtx: () => ({ modulos: [] }),
+    listModulosOwnerService: async (input) => {
+      calls.push(input);
+      return { kind: 'ok', modulos: [{ _id: 'm-html-1', nome: 'HTML Gestor' }] };
+    },
+  });
+
+  const req = {
+    user: { isMaster: false, role: 'admin', email: 'admin@example.com' },
+  };
+  const res = createPageRes();
+
+  await paginaModulos(req, res);
+
+  assert.equal(calls.length, 1);
+  assert.equal(JSON.stringify(calls[0]), JSON.stringify({ userRole: 'master', activeUnitId: null }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.view, 'slots-modulos');
+  assert.equal(Array.isArray(res.locals?.modulos), true);
+  assert.equal(res.locals.modulos.length, 1);
+  assert.equal(res.locals.modulos[0]._id, 'm-html-1');
+  assert.equal(res.locals.modulos[0].nome, 'HTML Gestor');
+  assert.equal(res.locals.user, req.user);
 });
