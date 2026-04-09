@@ -6,6 +6,7 @@ import {
   listUsuariosOwnerService,
 } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { loadPaginaFuncoesOwnerBundle } from '#modules/gestor/app/services/funcoes/listPaginaFuncoesOwner.service.js';
+import { loadPaginaFuncionariosBundle } from '#modules/gestor/app/services/funcionarios/loadPaginaFuncionariosBundle.service.js';
 import { listModulosOwnerService } from '#modules/gestor/app/services/modulos/listModulosOwner.service.js';
 import { loadPaginaUnidadesDiretores } from '#modules/gestor/app/services/unidades/loadPaginaUnidadesDiretores.service.js';
 import {
@@ -27,7 +28,6 @@ import {
   findFuncoesAtivasNomeOrdenadasSelectLean,
   findSetoresByCondNomeOrdenadosSelectLean,
   findSetoresByUnidadeIdPopulateLean,
-  findFuncionariosParaListagemComRefsSelectLean,
   findAllUnidadesLean,
   findUnidadesByCondLeanFull,
   findUnidadesForSetorPageSelectLean,
@@ -387,56 +387,12 @@ export async function paginaFuncionarios(req, res) {
       return res.status(200).render('funcionarios/funcionarios_index', stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [], unidadeContextualId: getScopedUnitId(req) }));
     }
 
-    const { operationalUnitId, operationalUnit, principalUnitId } = await loadScopedOperationalUnitContextForFuncionariosPage(req);
-    if (operationalUnitId) {
-      const [funcoesContextuais, setoresContextuais, funcionarios] = await Promise.all([
-        principalUnitId ? findFuncoesByUnidadePrincipalPopuladas(principalUnitId) : [],
-        findSetoresByUnidadeIdPopulateLean(operationalUnitId),
-        findFuncionariosParaListagemComRefsSelectLean({ unidade_id: operationalUnitId }),
-      ]);
-
-      const funcoesFiltradas = (funcoesContextuais || []).map((funcao) => ({
-        _id: funcao._id,
-        codigo: funcao.codigo,
-        nome: funcao.nome,
-        descricao: funcao.descricao || '',
-      }));
-
-      const setoresFiltrados = (setoresContextuais || []).map((setor) => ({
-        _id: setor._id,
-        nome: setor.nome,
-        descricao: setor.descricao || '',
-      }));
-
-      return res.render('funcionarios/funcionarios_index', {
-        user: req.user,
-        unidadesFiltradas: operationalUnit ? [operationalUnit] : [],
-        funcoesFiltradas,
-        setoresFiltrados,
-        funcionarios,
-        unidadeContextualId: operationalUnitId,
-      });
-    }
-
-    const privilegedUser = isPrivilegedGestorUser(req.user);
-    if (!privilegedUser) {
-      return res.render('funcionarios/funcionarios_index', {
-        user: req.user,
-        unidadesFiltradas: [],
-        funcoesFiltradas: [],
-        setoresFiltrados: [],
-        funcionarios: [],
-        unidadeContextualId: operationalUnitId || '',
-      });
-    }
-
-    const [unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios] = await Promise.all([
-      findUnidadesByCondSelectCodigoNomeOrdenadasLean({ ativa: true }),
-      findFuncoesAtivasNomeOrdenadasSelectLean(),
-      findSetoresByCondNomeOrdenadosSelectLean({ ativo: true }),
-      findFuncionariosParaListagemComRefsSelectLean({}),
-    ]);
-    return res.render('funcionarios/funcionarios_index', { user: req.user, unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios, unidadeContextualId: operationalUnitId || '' });
+    const locals = await loadPaginaFuncionariosBundle({
+      req,
+      privilegedUser: isPrivilegedGestorUser(req.user),
+      loadScopedOperationalUnitContext: loadScopedOperationalUnitContextForFuncionariosPage,
+    });
+    return res.render('funcionarios/funcionarios_index', locals);
   } catch (e) {
     console.error('[pagesController] /funcionarios erro:', e && (e.stack || e.message || e));
     // Fallback: renderizar página vazia para evitar 500 e permitir diagnóstico no front
