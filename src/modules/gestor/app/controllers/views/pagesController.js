@@ -6,9 +6,8 @@ import {
   listUsuariosOwnerService,
 } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { loadPaginaFuncoesOwnerBundle } from '#modules/gestor/app/services/funcoes/listPaginaFuncoesOwner.service.js';
+import { loadPaginaUnidadesDiretores } from '#modules/gestor/app/services/unidades/loadPaginaUnidadesDiretores.service.js';
 import {
-  findUsuariosDiretorAtivosPopulatedLean,
-  findFuncionariosByEmailsSelectEmailNomeLean,
   findAllUnidades,
   findUnidadesByMatrizOuPrincipal,
   findUnidadesById,
@@ -216,21 +215,6 @@ async function loadScopedUnidadesClusterForPage(req) {
   };
 }
 
-async function carregarUsuariosDiretor(req) {
-  if (!(req.user?.isMaster || req.user?.role === 'admin')) return [];
-  let usuariosDiretor = await findUsuariosDiretorAtivosPopulatedLean();
-  const faltando = usuariosDiretor.filter(u => !((u.nome && u.nome.trim()) || (u.funcionario_id && u.funcionario_id.nome)) && u.email);
-  if (faltando.length) {
-    const emails = [...new Set(faltando.map(f => f.email.toLowerCase()))];
-    try {
-      const funcs = await findFuncionariosByEmailsSelectEmailNomeLean(emails);
-      const mapa = {}; funcs.forEach(f => { if (f.email) mapa[f.email.toLowerCase()] = f.nome; });
-      usuariosDiretor = usuariosDiretor.map(u => { if (!u.nome && u.email) { const via = mapa[u.email.toLowerCase()]; if (via) u.nome = via; } return u; });
-    } catch (e) { console.warn('[pagesController] Falha fallback nome diretor:', e.message); }
-  }
-  return usuariosDiretor;
-}
-
 export async function paginaDashboard(req, res) { return res.render('dashboard-gestor', { user: req.user }); }
 
 export async function paginaFeedback(req, res) {
@@ -331,7 +315,7 @@ export async function paginaUnidades(req, res) {
         if (matrizes?.length) unidadesFiltradas = matrizes;
       } catch(_e){}
     }
-    const usuariosDiretor = await carregarUsuariosDiretor(req);
+    const usuariosDiretor = await loadPaginaUnidadesDiretores({ user: req.user });
     console.log('[paginaUnidades] Renderizando com unidadesFiltradas:', unidadesFiltradas.length, 'principalUnits:', principalUnits.length);
     return res.render('unidades', { unidadesFiltradas, principalUnits, isMaster, user: req.user, estados, modulos, usuariosDiretor });
   } catch (e) {
