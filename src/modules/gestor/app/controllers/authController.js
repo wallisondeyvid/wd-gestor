@@ -1,16 +1,12 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
-import { resetPasswordTemplate } from '#core/mail/templates/resetPassword.js';
 import {
-  createPasswordReset,
   createRememberToken,
   deletePasswordResetById,
   findFuncaoByIdSelect,
   findFuncionarioByIdSelect,
-  findFuncionariosByCpfSelect,
   findModuloByOr,
   findModuloLeanByOrSelect,
   findPasswordResetByToken,
@@ -19,8 +15,6 @@ import {
   findUserByEmailForLogin,
   findUserByIdSelect,
   findUserByIdWithMaxTime,
-  findUsersByCpf,
-  findUsersByFuncionarioIds,
   revokeRememberTokenByHash,
   saveUserDocument,
 } from '#modules/gestor/app/services/authDbBridgeService.js';
@@ -30,6 +24,10 @@ import {
 } from '#modules/gestor/app/services/authContextResolver.js';
 import { createAuthContextOrchestrationCore } from '#modules/gestor/app/services/auth/createAuthContextOrchestrationCore.js';
 import { createLoginModuleAccessCore } from '#modules/gestor/app/services/auth/createLoginModuleAccessCore.js';
+import {
+  listRecoveryEmailsByCpfService,
+  requestPasswordRecoveryService,
+} from '#modules/gestor/app/services/auth/passwordRecovery.service.js';
 import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js';
 import { mutateAuthUnitContextService } from '#modules/gestor/app/services/auth/mutateAuthUnitContext.service.js';
 import { resolveLoginPostAuthContext } from '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js';
@@ -68,20 +66,6 @@ function escapeRegex(s) {
 //   - Em sucesso: zera failed_login_attempts e limpa lock_until
 //   - Se lock_until > agora: rejeita login com erro=bloqueado
 // -----------------------------------------------------------------------------
-
-function resolveAppUrl() {
-  const vercelDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL || '';
-  const isVercel = !!process.env.VERCEL || !!vercelDomain;
-  let raw = process.env.APP_URL || process.env.APP_BASE_URL || '';
-  if (isVercel && /localhost/i.test(raw)) raw = '';
-  if (!raw && vercelDomain) raw = vercelDomain;
-  if (raw) {
-    if (!/^https?:\/\//i.test(raw)) raw = `https://${raw}`;
-    return raw.replace(/\/$/, '');
-  }
-  const port = process.env.PORT || 3000;
-  return `http://localhost:${port}`;
-}
 
 export async function checkUserStatus(req, res, next) {
   try {
@@ -670,134 +654,12 @@ export async function postResetPassword(req, res) {
 
 export async function postEsqueciSenha(req, res) {
   try {
-    // 1. Entrada / validações básicas
-    const { cpf, email, emailConfirm } = req.body;
-    if (!cpf) return res.status(400).json({ success: false, message: 'CPF não informado.' });
-    const cpfDigits = String(cpf).replace(/\D/g, '');
-    if (cpfDigits.length !== 11) return res.status(400).json({ success: false, message: 'CPF inválido.' });
-
-    // 2. Localiza usuários pelo CPF (direto) ou via Funcionario
-    let usuarios = await findUsersByCpf({ cpf: cpfDigits });
-    if (!usuarios.length) {
-      const funcionarios = await findFuncionariosByCpfSelect({ cpf: cpfDigits, select: '_id' });
-      if (funcionarios.length) {
-        const ids = funcionarios.map(f => f._id);
-        usuarios = await findUsersByFuncionarioIds({ ids });
-      }
-    }
-    if (!usuarios.length) return res.status(404).json({ success: false, message: 'Nenhum usuário com este CPF.' });
-
-    // 3. Se múltiplos e-mail ainda não informado -> pedir seleção
-    if (usuarios.length > 1 && !email) {
-      return res.status(200).json({ success: false, reason: 'multiple-users', maskedEmails: usuarios.map(u => maskEmail(u.email)) });
-    }
-
-    // 4. Define e valida e-mail escolhido
-    const chosenEmail = email || (usuarios.length === 1 ? usuarios[0].email : null);
-    if (!chosenEmail) return res.status(400).json({ success: false, message: 'E-mail requerido.' });
-    if (emailConfirm && chosenEmail.toLowerCase() !== emailConfirm.toLowerCase()) {
-      return res.status(400).json({ success: false, message: 'Confirmação de e-mail não confere.' });
-    }
-    const user = usuarios.find(u => u.email.toLowerCase() === chosenEmail.toLowerCase());
-    if (!user) return res.status(404).json({ success: false, message: 'E-mail não associado a este CPF.' });
-
-    // 5. Cria token
-    const token = crypto.randomBytes(32).toString('hex');
-    const expira = new Date(Date.now() + 30 * 60 * 1000); // 30 minutos
-    await createPasswordReset({ user_id: user._id, token, expiresAt: expira });
-
-  // Link externo deve respeitar o prefixo de montagem do módulo Gestor (/gestor)
-  const appBase = resolveAppUrl();
-  const link = `${appBase.replace(/\/$/,'')}/gestor/reset-password/${token}`;
-
-    // 6. Monta template (compatível com string ou objeto)
-    let html = '';
-    let text = '';
-    try {
-      const tplResult = resetPasswordTemplate(user.nome || 'Usuário', link);
-      if (typeof tplResult === 'string') {
-        html = tplResult;
-      } else if (tplResult && typeof tplResult === 'object') {
-        html = tplResult.html || tplResult.HTML || tplResult.body || '';
-        text = tplResult.text || tplResult.TEXT || '';
-        // Fallback se nada veio
-        if (!html) html = `<p>Redefina sua senha: <a href="${link}">${link}</a></p>`;
-      } else {
-        html = `<p>Redefina sua senha: <a href="${link}">${link}</a></p>`;
-      }
-    } catch (tplErr) {
-      console.warn('[postEsqueciSenha] falha ao montar template, usando fallback:', tplErr.message);
-      html = `<p>Redefina sua senha: <a href="${link}">${link}</a></p>`;
-    }
-
-    console.info('[postEsqueciSenha] template montado', { hasHtml: !!html, htmlLength: html.length, hasText: !!text });
-
-    // 7. Configuração SMTP
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const smtpPort = Number(process.env.SMTP_PORT) || 587;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-    const haveCreds = !!(smtpUser && smtpPass);
-    if (!haveCreds) {
-      console.warn('[postEsqueciSenha] SMTP_USER/SMTP_PASS ausentes. Envio real será pulado.');
-    }
-    const smtpSecure = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true';
-    const ignoreTLS = String(process.env.SMTP_IGNORE_TLS || '').toLowerCase() === 'true';
-    const requireTLS = String(process.env.SMTP_REQUIRE_TLS || '').toLowerCase() === 'true';
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: haveCreds ? { user: smtpUser, pass: smtpPass } : undefined,
-      tls: (ignoreTLS || requireTLS) ? { rejectUnauthorized: false } : undefined,
-      ignoreTLS,
-      requireTLS
+    const result = await requestPasswordRecoveryService({
+      cpf: req.body?.cpf,
+      email: req.body?.email,
+      emailConfirm: req.body?.emailConfirm,
     });
-
-    let debugError = null;
-    let debugLink = link;
-    if (haveCreds) {
-      try {
-        try {
-          await transporter.verify();
-          console.info('[postEsqueciSenha] SMTP verificado', { host: smtpHost, port: smtpPort, secure: smtpSecure, user: smtpUser });
-        } catch (verErr) {
-          console.warn('[postEsqueciSenha] Falha verify SMTP (prosseguindo):', verErr.message);
-        }
-        const mailOptions = {
-          from: process.env.MAIL_FROM || smtpUser || 'no-reply@wdgestor.local',
-          to: user.email,
-          subject: 'Redefinição de Senha',
-          html
-        };
-        if (text) mailOptions.text = text;
-        const sendResult = await transporter.sendMail(mailOptions);
-        console.info('[postEsqueciSenha] email enviado', {
-          messageId: sendResult.messageId,
-          accepted: sendResult.accepted,
-          rejected: sendResult.rejected
-        });
-      } catch (sendErr) {
-        debugError = sendErr.message;
-        console.warn('[postEsqueciSenha] Falha ao enviar email:', sendErr.message);
-        console.info('[postEsqueciSenha] Link de redefinição:', link);
-        console.info('[postEsqueciSenha] HTML (fallback log)\n---INICIO---\n' + html + '\n---FIM---');
-      }
-    } else {
-      // Sem credenciais: apenas loga o link
-      console.info('[postEsqueciSenha] (modo sem credenciais) Link de redefinição:', link);
-    }
-
-    // 8. Resposta (sempre 200 para não revelar existência do e-mail)
-    const payload = {
-      success: true,
-      message: 'Se o e-mail existir e estiver ativo, você receberá instruções em alguns instantes.'
-    };
-    if (process.env.NODE_ENV !== 'production') {
-      payload.debugLink = debugLink;
-      if (debugError) payload.debugError = debugError;
-    }
-    return res.status(200).json(payload);
+    return res.status(result.status).json(result.body);
   } catch (e) {
     console.error('[postEsqueciSenha] erro:', e.message);
     return res.status(500).json({ success: false, message: 'Erro interno.' });
@@ -807,35 +669,14 @@ export async function postEsqueciSenha(req, res) {
 // Endpoint auxiliar para listar e-mails por CPF antes do POST final
 export async function listarEmailsPorCPF(req, res) {
   try {
-    const { cpf } = req.query;
-    if (!cpf) return res.status(400).json({ success: false, message: 'CPF não informado.' });
-    const cpfDigits = String(cpf).replace(/\D/g,'');
-    if (cpfDigits.length !== 11) return res.status(400).json({ success: false, message: 'CPF inválido.' });
-    let usuarios = await findUsersByCpf({ cpf: cpfDigits });
-    if (!usuarios.length) {
-      const funcionarios = await findFuncionariosByCpfSelect({ cpf: cpfDigits, select: '_id' });
-      if (funcionarios.length) {
-        const ids = funcionarios.map(f=>f._id);
-        usuarios = await findUsersByFuncionarioIds({ ids });
-      }
-    }
-    if (!usuarios.length) return res.status(404).json({ success: false, message: 'Nenhum usuário com este CPF.' });
-    const masked = usuarios.map(u => ({ email: maskEmail(u.email), original: u.email }));
-    return res.json({ success: true, quantidade: usuarios.length, emails: masked });
+    const result = await listRecoveryEmailsByCpfService({
+      cpf: req.query?.cpf,
+    });
+    return res.status(result.status).json(result.body);
   } catch (e) {
     console.error('[listarEmailsPorCPF] erro:', e.message);
     return res.status(500).json({ success: false, message: 'Erro interno.' });
   }
-}
-
-// Util para mascarar email (primeiro e último char antes do @ visíveis, resto *)
-function maskEmail(email) {
-  if (!email || !email.includes('@')) return '***';
-  const [local, domain] = email.split('@');
-  if (local.length <= 2) return local[0] + '***@' + domain;
-  const first = local[0];
-  const last = local[local.length - 1];
-  return first + '*'.repeat(local.length - 2) + last + '@' + domain;
 }
 
 // Implementação robusta de primeiro acesso (troca de senha obrigatória)
