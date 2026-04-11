@@ -31,6 +31,24 @@ export async function loadPaginaFuncionariosBundle({
 }) {
   const { operationalUnitId, operationalUnit, principalUnitId } = await loadScopedOperationalUnitContext(req);
 
+  async function loadPrivilegedPaginaFuncionariosBranch() {
+    const [unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios] = await Promise.all([
+      findUnidadesByCondSelectCodigoNomeOrdenadasLean({ ativa: true }),
+      findFuncoesAtivasNomeOrdenadasSelectLean(),
+      findSetoresByCondNomeOrdenadosSelectLean({ ativo: true }),
+      findFuncionariosParaListagemComRefsSelectLean({}),
+    ]);
+
+    return {
+      user: req.user,
+      unidadesFiltradas,
+      funcoesFiltradas,
+      setoresFiltrados,
+      funcionarios,
+      unidadeContextualId: operationalUnitId || '',
+    };
+  }
+
   if (operationalUnitId) {
     const [funcoesContextuais, setoresContextuais, funcionarios] = await Promise.all([
       principalUnitId ? findFuncoesByUnidadePrincipalPopuladas(principalUnitId) : [],
@@ -59,19 +77,5 @@ export async function loadPaginaFuncionariosBundle({
     };
   }
 
-  const [unidadesFiltradas, funcoesFiltradas, setoresFiltrados, funcionarios] = await Promise.all([
-    findUnidadesByCondSelectCodigoNomeOrdenadasLean({ ativa: true }),
-    findFuncoesAtivasNomeOrdenadasSelectLean(),
-    findSetoresByCondNomeOrdenadosSelectLean({ ativo: true }),
-    findFuncionariosParaListagemComRefsSelectLean({}),
-  ]);
-
-  return {
-    user: req.user,
-    unidadesFiltradas,
-    funcoesFiltradas,
-    setoresFiltrados,
-    funcionarios,
-    unidadeContextualId: operationalUnitId || '',
-  };
+  return loadPrivilegedPaginaFuncionariosBranch();
 }
