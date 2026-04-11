@@ -7,6 +7,7 @@ import {
 } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { loadPaginaFuncoesOwnerBundle } from '#modules/gestor/app/services/funcoes/listPaginaFuncoesOwner.service.js';
 import { loadPaginaFuncionariosBundle } from '#modules/gestor/app/services/funcionarios/loadPaginaFuncionariosBundle.service.js';
+import { loadPaginaRecursosBundle } from '#modules/gestor/app/services/recursos/loadPaginaRecursosBundle.service.js';
 import { loadPaginaSetoresBundle } from '#modules/gestor/app/services/setores/loadPaginaSetoresBundle.service.js';
 import { listModulosOwnerService } from '#modules/gestor/app/services/modulos/listModulosOwner.service.js';
 import { loadPaginaUnidadesDiretores } from '#modules/gestor/app/services/unidades/loadPaginaUnidadesDiretores.service.js';
@@ -412,20 +413,14 @@ export async function paginaRecursos(req, res) {
     if (isDbOff(req)) {
       return res.status(200).render('recursos', stubCtx(req, { unidadesFiltradas: [] }));
     }
-    const unidadeContextual = await loadScopedUnidadeForPage(req);
-    let unidadesFiltradas = unidadeContextual ? [unidadeContextual] : [];
 
-    if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && privilegedUser) {
-      // Fallback legado isolado: sessão privilegiada ainda sem unitScope contextual ativo.
-      unidadesFiltradas = await findAllUnidadesLean();
-    }
+    const locals = await loadPaginaRecursosBundle({
+      req,
+      privilegedUser,
+      loadScopedUnidadeForPage,
+    });
 
-    if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && privilegedUser) {
-      const matrizes = await findUnidadesPrincipaisLean();
-      if (matrizes?.length) unidadesFiltradas = matrizes;
-    }
-
-    return res.render('recursos', { unidadesFiltradas, user: req.user || { nome: 'Usuário Desconhecido', id: null } });
+    return res.render('recursos', locals);
   } catch (e) { console.error('[pagesController] /recursos erro:', e); return res.status(500).render('erro', { errorMessage: 'Erro ao carregar recursos: ' + e.message }); }
 }
 
