@@ -10,7 +10,6 @@ import {
   findModuloLeanByOrSelect,
   findUnidadeByIdSelect,
   findUserByEmail,
-  findUserByEmailForLogin,
   revokeRememberTokenByHash,
   saveUserDocument,
 } from '#modules/gestor/app/services/authDbBridgeService.js';
@@ -19,6 +18,7 @@ import {
   resolveGestorAuthContext,
 } from '#modules/gestor/app/services/authContextResolver.js';
 import { createAuthContextOrchestrationCore } from '#modules/gestor/app/services/auth/createAuthContextOrchestrationCore.js';
+import { evaluateLoginPreAuthGateService } from '#modules/gestor/app/services/auth/evaluateLoginPreAuthGate.service.js';
 import { createLoginModuleAccessCore } from '#modules/gestor/app/services/auth/createLoginModuleAccessCore.js';
 import {
   loadResetPasswordRenderModelService,
@@ -102,90 +102,22 @@ export async function login(req, res) {
     if (req?.app?.locals?.skipDb || mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
   return res.redirect(303, basePath + '/login?erro=servidor');
     }
-    // Consulta com tempo máximo limitado para não estourar o tempo da função serverless
-    let user = null;
-    try {
-      user = await findUserByEmailForLogin({
-        email: email.toLowerCase(),
-        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
-      });
-    } catch(qe){
-      console.warn('[login] timeout/erro find user:', qe.message);
-      return res.redirect(303, basePath + '/login?erro=servidor');
-    }
-  if (!user) return res.redirect(303, basePath + '/login?erro=usuario');
-  if (!user.ativo) return res.redirect(303, basePath + '/login?erro=suspenso');
-
-    // --- BLOQUEIO POR TENTATIVAS ---
-  const maxTentativas = Number(process.env.LOGIN_MAX_ATTEMPTS || 5);
-  const lockMinutos = Number(process.env.LOGIN_LOCK_MINUTES || 15);
-    const agora = new Date();
-  const isMasterRole = user.role === 'master' || user.global_role === 'master';
-  const masterBypassLockout = (process.env.MASTER_BYPASS_LOCKOUT || 'true').toLowerCase() !== 'false';
-  if (user.lock_until && user.lock_until > agora && !(isMasterRole && masterBypassLockout)) {
-      // Usuário ainda bloqueado
-      const minutosRestantes = Math.ceil((user.lock_until.getTime() - agora.getTime()) / 60000);
-      console.warn('[login] tentativa durante bloqueio', { email: user.email, ate: user.lock_until });
-      const retrySeconds = Math.max(1, Math.ceil((user.lock_until.getTime() - agora.getTime()) / 1000));
-      res.setHeader('Retry-After', retrySeconds);
-      res.setHeader('X-Account-Lock-Until', user.lock_until.toISOString());
-      res.setHeader('X-Account-Lock-Seconds', String(retrySeconds));
-    res.setHeader('X-Account-Lock-Minutes', String(minutosRestantes));
-  return res.redirect(303, basePath + '/login?erro=bloqueado&min=' + minutosRestantes);
-    } else if (user.lock_until && user.lock_until <= agora) {
-      // Expirou bloqueio -> reset
-      user.lock_until = null;
-      user.failed_login_attempts = 0;
-      try { await saveUserDocument(user); } catch(e) { console.warn('[login] falha ao resetar bloqueio expirado:', e.message); }
-    }
-
-  let ok = false;
-  try {
-    ok = await bcrypt.compare(senha, user.senha || '');
-  } catch (cmpErr) {
-    console.warn('[login] falha ao comparar senha (bcrypt):', cmpErr.message);
-    ok = false; // trata como senha incorreta
-  }
-    if (!ok) {
-      // Log leve para diagnóstico (sem vazar senha): e-mail e contagem de tentativa atual
-      try { console.warn('[login] senha incorreta', { email: user.email, attempts_next: (user.failed_login_attempts||0) + 1 }); } catch {}
-      user.failed_login_attempts = (user.failed_login_attempts || 0) + 1;
-      const baseDelay = Number(process.env.LOGIN_FAILED_DELAY_BASE_MS || 150);
-      const maxDelay = Number(process.env.LOGIN_FAILED_DELAY_MAX_MS || 3000);
-      // Atraso exponencial leve: baseDelay * tentativas (limitado)
-      const delay = Math.min(baseDelay * user.failed_login_attempts, maxDelay);
-      if (user.failed_login_attempts >= maxTentativas && !(isMasterRole && masterBypassLockout)) {
-        user.lock_until = new Date(Date.now() + lockMinutos * 60000);
-        try { await saveUserDocument(user); } catch(e) { console.warn('[login] falha ao salvar bloqueio:', e.message); }
-        console.warn('[login] usuario bloqueado por tentativas', { email: user.email, lock_until: user.lock_until, attempts: user.failed_login_attempts });
-        // Pequeno atraso também antes de responder bloqueado para uniformizar timing
-        if (delay) await new Promise(r => setTimeout(r, delay));
-        const lockMinutes = Math.ceil((user.lock_until.getTime() - Date.now()) / 60000);
-        const lockSeconds = Math.ceil((user.lock_until.getTime() - Date.now()) / 1000);
-        res.setHeader('Retry-After', lockSeconds);
-        res.setHeader('X-Account-Lock-Until', user.lock_until.toISOString());
-        res.setHeader('X-Account-Lock-Seconds', String(lockSeconds));
-        res.setHeader('X-Account-Lock-Minutes', String(lockMinutes));
-  return res.redirect(303, basePath + '/login?erro=bloqueado&min=' + lockMinutes);
-      } else {
-        try { await saveUserDocument(user); } catch(e) { console.warn('[login] falha ao salvar tentativa falhada:', e.message); }
-        if (delay) await new Promise(r => setTimeout(r, delay));
+    const preAuthResult = await evaluateLoginPreAuthGateService({ email, senha });
+    if (!preAuthResult.ok) {
+      for (const [name, value] of Object.entries(preAuthResult.headers || {})) {
+        res.setHeader(name, value);
       }
-      // Headers de tentativas restantes antes do bloqueio
-      const restantes = (isMasterRole && masterBypassLockout)
-        ? maxTentativas
-        : Math.max(0, maxTentativas - user.failed_login_attempts);
-      res.setHeader('X-Account-Attempts-Used', String(user.failed_login_attempts));
-      res.setHeader('X-Account-Attempts-Remaining', String(restantes));
-      res.setHeader('X-Account-Attempts-Limit', String(maxTentativas));
-  return res.redirect(303, basePath + '/login?erro=senha&restantes=' + restantes);
+      if (preAuthResult.code === 'bloqueado') {
+        return res.redirect(303, basePath + '/login?erro=bloqueado&min=' + preAuthResult.min);
+      }
+      if (preAuthResult.code === 'senha') {
+        return res.redirect(303, basePath + '/login?erro=senha&restantes=' + preAuthResult.restantes);
+      }
+      return res.redirect(303, basePath + '/login?erro=' + preAuthResult.code);
     }
-    // Sucesso: reset contadores se necessário
-    if (user.failed_login_attempts || user.lock_until) {
-      user.failed_login_attempts = 0;
-      user.lock_until = null;
-      try { await saveUserDocument(user); } catch(e) { console.warn('[login] falha ao resetar lockout:', e.message); }
-    }
+
+    let user = preAuthResult.user;
+    const isMasterRole = user.role === 'master' || user.global_role === 'master';
 
     // Mitigação de fixation: regenerar sessão antes de atribuir dados
     try {

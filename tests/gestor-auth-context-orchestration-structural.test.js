@@ -152,9 +152,9 @@ test('estado real atual: AuthContext orchestration delega para a seam unica sem 
   assert.match(CONTROLLER_SOURCE, /async function mutateAuthUnitContext\(req,/);
   assert.doesNotMatch(CONTROLLER_SOURCE, /const loginPostAuthContextResult = await resolveLoginPostAuthContext\(/);
   assert.doesNotMatch(CONTROLLER_SOURCE, /const authContext = await resolveGestorAuthContext\(buildAuthContextResolverOptions\(req\)\);/);
+  assert.match(CONTROLLER_SOURCE, /evaluateLoginPreAuthGateService\(\{ email, senha \}\)/);
 
   assert.match(CONTROLLER_SOURCE, /createRememberToken\(/);
-  assert.match(CONTROLLER_SOURCE, /user\.failed_login_attempts = \(user\.failed_login_attempts \|\| 0\) \+ 1;/);
   assert.match(CONTROLLER_SOURCE, /const loginModuleAccess = createLoginModuleAccessCore\(\{/);
   assert.match(CONTROLLER_SOURCE, /loginModuleAccess\.evaluateModuleAccess\(\{ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath, authContext: resolvedLoginAuthContext \}\)/);
   assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, basePath \+ '\/dashboard'\);/);
