@@ -7,6 +7,7 @@ import {
 } from '#modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 import { loadPaginaFuncoesOwnerBundle } from '#modules/gestor/app/services/funcoes/listPaginaFuncoesOwner.service.js';
 import { loadPaginaFuncionariosBundle } from '#modules/gestor/app/services/funcionarios/loadPaginaFuncionariosBundle.service.js';
+import { loadPaginaSetoresBundle } from '#modules/gestor/app/services/setores/loadPaginaSetoresBundle.service.js';
 import { listModulosOwnerService } from '#modules/gestor/app/services/modulos/listModulosOwner.service.js';
 import { loadPaginaUnidadesDiretores } from '#modules/gestor/app/services/unidades/loadPaginaUnidadesDiretores.service.js';
 import {
@@ -479,40 +480,15 @@ export async function paginaSetores(req, res) {
     if (isDbOff(req)) {
       return res.status(200).render('setor', stubCtx(req, { setoresFiltrados: [], unidadesFiltradas: [] }));
     }
-    const scopedUnitId = getScopedUnitId(req);
 
-    if (scopedUnitId) {
-      const [unidadeContextual, setoresFiltrados] = await Promise.all([
-        loadScopedUnidadeForPage(req),
-        findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean({ ativo: true, unidade_id: scopedUnitId }),
-      ]);
+    const locals = await loadPaginaSetoresBundle({
+      req,
+      scopedUnitId: getScopedUnitId(req),
+      privilegedUser,
+      loadScopedUnidadeForPage,
+    });
 
-      return res.render('setor', {
-        setoresFiltrados,
-        unidadesFiltradas: unidadeContextual ? [unidadeContextual] : [],
-        user: req.user,
-      });
-    }
-
-    let unidadesFiltradas = [];
-    let setoresFiltrados = [];
-
-    if (privilegedUser) {
-      // Fallback legado isolado: sessão privilegiada ainda sem unitScope contextual ativo.
-      unidadesFiltradas = await findUnidadesForSetorPageSelectLean();
-      setoresFiltrados = await findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean({ ativo: true });
-    }
-
-    if ((!setoresFiltrados || setoresFiltrados.length === 0) && privilegedUser) {
-      // fallback: tenta todos setores
-      setoresFiltrados = await findSetoresByCondDescricaoPopulateUnidadeOrdenadosLean({});
-      if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && setoresFiltrados?.length) {
-        const uids = [...new Set(setoresFiltrados.map(s => String(s.unidade_id?._id || s.unidade_id)).filter(Boolean))];
-        unidadesFiltradas = await findUnidadesForSetorPageByIdsSelectLean(uids);
-      }
-    }
-
-    return res.render('setor', { setoresFiltrados, unidadesFiltradas, user: req.user });
+    return res.render('setor', locals);
   } catch (e) {
     console.error('[pagesController] /setores erro:', e.message);
     return res.status(500).send('Erro ao carregar setores');
