@@ -1,11 +1,17 @@
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { resetPasswordTemplate } from '#core/mail/templates/resetPassword.js';
 import {
   createPasswordReset,
+  deletePasswordResetById,
   findFuncionariosByCpfSelect,
+  findPasswordResetByToken,
+  findUserByIdSelect,
+  findUserByIdWithMaxTime,
   findUsersByCpf,
   findUsersByFuncionarioIds,
+  saveUserDocument,
 } from '#modules/gestor/app/services/authDbBridgeService.js';
 
 function resolveAppUrl() {
@@ -41,6 +47,95 @@ async function loadRecoveryUsersByCpf(cpfDigits) {
     }
   }
   return usuarios;
+}
+
+function resolvePasswordResetUserId(passwordReset) {
+  return passwordReset?.user_id || passwordReset?.userId || null;
+}
+
+function buildResetPasswordErrorResult({ title, message, showRetry }) {
+  return {
+    ok: false,
+    view: 'reset-password-error',
+    locals: { title, message, showRetry },
+  };
+}
+
+function isPasswordResetInvalidOrExpired(passwordReset) {
+  return !passwordReset || passwordReset.expiresAt < new Date();
+}
+
+export async function loadResetPasswordRenderModelService({ token } = {}) {
+  const passwordReset = await findPasswordResetByToken({ token });
+  if (isPasswordResetInvalidOrExpired(passwordReset)) {
+    return buildResetPasswordErrorResult({
+      title: 'Link inválido',
+      message: 'Token inválido ou expirado',
+      showRetry: true,
+    });
+  }
+
+  let userName = 'Usuário';
+
+  try {
+    const userIdRef = resolvePasswordResetUserId(passwordReset);
+    if (userIdRef) {
+      const user = await findUserByIdSelect({ id: userIdRef, select: 'nome email' });
+      if (user?.nome) userName = user.nome.split(' ')[0];
+    }
+  } catch {}
+
+  return {
+    ok: true,
+    view: 'reset-password',
+    locals: {
+      title: 'Redefinir Senha',
+      token,
+      userName,
+    },
+  };
+}
+
+export async function resetPasswordByTokenService({ token, senha } = {}) {
+  if (!token || !senha) {
+    return buildResetPasswordErrorResult({
+      title: 'Dados incompletos',
+      message: 'Dados incompletos',
+      showRetry: true,
+    });
+  }
+
+  const passwordReset = await findPasswordResetByToken({ token });
+  if (isPasswordResetInvalidOrExpired(passwordReset)) {
+    return buildResetPasswordErrorResult({
+      title: 'Link inválido',
+      message: 'Token inválido ou expirado',
+      showRetry: true,
+    });
+  }
+
+  const userIdRef = resolvePasswordResetUserId(passwordReset);
+  const user = await findUserByIdWithMaxTime({ id: userIdRef });
+  if (!user) {
+    return buildResetPasswordErrorResult({
+      title: 'Usuário não encontrado',
+      message: 'Usuário não encontrado',
+      showRetry: false,
+    });
+  }
+
+  user.senha = await bcrypt.hash(senha, 10);
+  await saveUserDocument(user);
+  await deletePasswordResetById({ id: passwordReset._id });
+
+  return {
+    ok: true,
+    view: 'reset-password-success',
+    locals: {
+      title: 'Senha Redefinida',
+      message: 'Sua senha foi redefinida com sucesso.',
+    },
+  };
 }
 
 export async function listRecoveryEmailsByCpfService({ cpf } = {}) {
@@ -192,6 +287,8 @@ export async function requestPasswordRecoveryService({ cpf, email, emailConfirm 
 }
 
 export default {
+  loadResetPasswordRenderModelService,
+  resetPasswordByTokenService,
   requestPasswordRecoveryService,
   listRecoveryEmailsByCpfService,
 };

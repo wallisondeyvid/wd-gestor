@@ -4,17 +4,13 @@ import crypto from 'crypto';
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 import {
   createRememberToken,
-  deletePasswordResetById,
   findFuncaoByIdSelect,
   findFuncionarioByIdSelect,
   findModuloByOr,
   findModuloLeanByOrSelect,
-  findPasswordResetByToken,
   findUnidadeByIdSelect,
   findUserByEmail,
   findUserByEmailForLogin,
-  findUserByIdSelect,
-  findUserByIdWithMaxTime,
   revokeRememberTokenByHash,
   saveUserDocument,
 } from '#modules/gestor/app/services/authDbBridgeService.js';
@@ -25,7 +21,9 @@ import {
 import { createAuthContextOrchestrationCore } from '#modules/gestor/app/services/auth/createAuthContextOrchestrationCore.js';
 import { createLoginModuleAccessCore } from '#modules/gestor/app/services/auth/createLoginModuleAccessCore.js';
 import {
+  loadResetPasswordRenderModelService,
   listRecoveryEmailsByCpfService,
+  resetPasswordByTokenService,
   requestPasswordRecoveryService,
 } from '#modules/gestor/app/services/auth/passwordRecovery.service.js';
 import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js';
@@ -614,41 +612,29 @@ export async function switchAuthUnit(req, res) {
 export async function renderResetPassword(req, res) {
   const { token } = req.params;
   try {
-    const pr = await findPasswordResetByToken({ token });
-    if (!pr || pr.expiresAt < new Date()) return res.render('reset-password-error', { title: 'Link inválido', message: 'Token inválido ou expirado', showRetry: true });
-    // Opcional: tentar obter nome do usuário para saudação
-    let userName = 'Usuário';
-    try {
-      const userIdRef = pr.user_id || pr.userId;
-      if (userIdRef) {
-        const u = await findUserByIdSelect({ id: userIdRef, select: 'nome email' });
-        if (u?.nome) userName = u.nome.split(' ')[0];
-      }
-    } catch {}
-    res.render('reset-password', { title: 'Redefinir Senha', token, userName });
+    const result = await loadResetPasswordRenderModelService({ token });
+    return res.render(result.view, result.locals);
   } catch (e) {
     console.error('[renderResetPassword] erro:', e.message);
-    res.render('reset-password-error', { title: 'Erro', message: 'Erro ao validar token', showRetry: true });
+    return res.render('reset-password-error', { title: 'Erro', message: 'Erro ao validar token', showRetry: true });
   }
 }
 
 export async function postResetPassword(req, res) {
   try {
-    const { token, senha } = req.body;
-    if (!token || !senha) return res.render('reset-password-error', { title: 'Dados incompletos', message: 'Dados incompletos', showRetry: true });
-    const pr = await findPasswordResetByToken({ token });
-    if (!pr || pr.expiresAt < new Date()) return res.render('reset-password-error', { title: 'Link inválido', message: 'Token inválido ou expirado', showRetry: true });
-    const userIdRef = pr.user_id || pr.userId; // compatibilidade
-    const user = await findUserByIdWithMaxTime({ id: userIdRef });
-    if (!user) return res.render('reset-password-error', { title: 'Usuário não encontrado', message: 'Usuário não encontrado', showRetry: false });
-    user.senha = await bcrypt.hash(senha, 10);
-    await saveUserDocument(user);
-    await deletePasswordResetById({ id: pr._id });
-  const basePath = req.baseUrl || '';
-  res.render('reset-password-success', { title: 'Senha Redefinida', message: 'Sua senha foi redefinida com sucesso.', loginLink: basePath + '/login' });
+    const result = await resetPasswordByTokenService({
+      token: req.body?.token,
+      senha: req.body?.senha,
+    });
+    if (result.ok) {
+      const basePath = req.baseUrl || '';
+      return res.render(result.view, { ...result.locals, loginLink: basePath + '/login' });
+    }
+
+    return res.render(result.view, result.locals);
   } catch (e) {
     console.error('[postResetPassword] erro:', e.message);
-    res.render('reset-password-error', { title: 'Erro', message: 'Erro ao redefinir senha', showRetry: false });
+    return res.render('reset-password-error', { title: 'Erro', message: 'Erro ao redefinir senha', showRetry: false });
   }
 }
 
