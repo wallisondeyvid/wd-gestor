@@ -157,8 +157,10 @@ test('estado real atual: AuthContext orchestration delega para a seam unica sem 
   assert.match(CONTROLLER_SOURCE, /createRememberToken\(/);
   assert.match(CONTROLLER_SOURCE, /const loginModuleAccess = createLoginModuleAccessCore\(\{/);
   assert.match(CONTROLLER_SOURCE, /loginModuleAccess\.evaluateModuleAccess\(\{ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath, authContext: resolvedLoginAuthContext \}\)/);
-  assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, basePath \+ '\/dashboard'\);/);
-  assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, basePath \+ '\/primeiroacesso'\);/);
+  assert.match(CONTROLLER_SOURCE, /resolveLoginSuccessOutcome\.service\.js/);
+  assert.match(CONTROLLER_SOURCE, /const earlyLoginSuccessOutcome = await resolveLoginSuccessOutcome\(\{/);
+  assert.match(CONTROLLER_SOURCE, /const finalLoginSuccessOutcome = await resolveLoginSuccessOutcome\(\{/);
+  assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, finalLoginSuccessOutcome\.location\);/);
 
   assert.match(CONTROLLER_SOURCE, /export async function postResetPassword\(/);
   assert.match(CONTROLLER_SOURCE, /export async function postEsqueciSenha\(/);

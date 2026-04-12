@@ -168,16 +168,20 @@ registerHooks({
 test('estado real atual: login preserva o corridor HTTP e a decisao de acesso ao modulo fica isolada no helper sem absorver excludes', () => {
   const seamPath = path.join(process.cwd(), 'src/modules/gestor/app/services/auth/createLoginModuleAccessCore.js');
   const seamSource = fs.readFileSync(seamPath, 'utf8');
+  const outcomePath = path.join(process.cwd(), 'src/modules/gestor/app/services/auth/resolveLoginSuccessOutcome.service.js');
+  const outcomeSource = fs.readFileSync(outcomePath, 'utf8');
 
   assert.match(CONTROLLER_SOURCE, /import \{ createLoginModuleAccessCore \} from '#modules\/gestor\/app\/services\/auth\/createLoginModuleAccessCore\.js';/);
+  assert.match(CONTROLLER_SOURCE, /import \{ resolveLoginSuccessOutcome \} from '#modules\/gestor\/app\/services\/auth\/resolveLoginSuccessOutcome\.service\.js';/);
   assert.match(CONTROLLER_SOURCE, /const loginModuleAccess = createLoginModuleAccessCore\(\{/);
   assert.match(CONTROLLER_SOURCE, /const loginPostAuthContextResult = await authContextOrchestration\.resolveLoginAuthContext\(/);
+  assert.match(CONTROLLER_SOURCE, /const earlyLoginSuccessOutcome = await resolveLoginSuccessOutcome\(\{/);
   assert.match(CONTROLLER_SOURCE, /const checagem = await Promise\.race\(\[/);
   assert.match(CONTROLLER_SOURCE, /loginModuleAccess\.evaluateModuleAccess\(\{ userDoc: effectiveLoginUser, moduloAlvoNome: moduloAlvo, basePath, authContext: resolvedLoginAuthContext \}\)/);
-  assert.match(CONTROLLER_SOURCE, /if \(precisaTrocar.*return res\.redirect\(303, basePath \+ '\/primeiroacesso'\);/s);
+  assert.match(CONTROLLER_SOURCE, /const finalLoginSuccessOutcome = await resolveLoginSuccessOutcome\(\{/);
   assert.match(CONTROLLER_SOURCE, /await createRememberToken\(/);
-  assert.match(CONTROLLER_SOURCE, /return res\.status\(200\)\.render\('partials\/construcao'/);
-  assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, basePath \+ '\/dashboard'\);/);
+  assert.match(CONTROLLER_SOURCE, /return res\.status\(finalLoginSuccessOutcome\.statusCode\)\.render\(finalLoginSuccessOutcome\.view, finalLoginSuccessOutcome\.payload\);/);
+  assert.match(CONTROLLER_SOURCE, /return res\.redirect\(303, finalLoginSuccessOutcome\.location\);/);
 
   assert.match(seamSource, /export function createLoginModuleAccessCore\(/);
   assert.match(seamSource, /async function evaluateModuleAccess\(\{ userDoc, moduloAlvoNome, basePath, authContext = null \} = \{\}\)/);
@@ -187,6 +191,13 @@ test('estado real atual: login preserva o corridor HTTP e a decisao de acesso ao
   assert.match(seamSource, /const funcao = await findFuncaoByIdSelect\(/);
   assert.doesNotMatch(seamSource, /bcrypt|failed_login_attempts|lock_until|createRememberToken|primeiroAcessoExecutionService/);
   assert.doesNotMatch(seamSource, /res\.redirect|res\.status\(200\)\.render\('partials\/construcao'|authContextOrchestration\.resolveLoginAuthContext/);
+
+  assert.match(outcomeSource, /export async function resolveLoginSuccessOutcome\(/);
+  assert.match(outcomeSource, /location: basePath \+ '\/primeiroacesso'/);
+  assert.match(outcomeSource, /location: `\$\{basePath\}\/login\?erro=modulo&motivo=\$\{motivo\}`/);
+  assert.match(outcomeSource, /view: 'partials\/construcao'/);
+  assert.match(outcomeSource, /location: basePath \+ '\/dashboard'/);
+  assert.doesNotMatch(outcomeSource, /createRememberToken|resolveLoginAuthContext|failed_login_attempts|lock_until|bcrypt/);
 });
 
 test('futura seam de module access recebe apenas usuario efetivo, modulo alvo, basePath e authContext resolvido', () => {

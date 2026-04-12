@@ -29,6 +29,7 @@ import {
 import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js';
 import { mutateAuthUnitContextService } from '#modules/gestor/app/services/auth/mutateAuthUnitContext.service.js';
 import { openLocalPostAuthSession } from '#modules/gestor/app/services/auth/openLocalPostAuthSession.service.js';
+import { resolveLoginSuccessOutcome } from '#modules/gestor/app/services/auth/resolveLoginSuccessOutcome.service.js';
 import { resolveLoginPostAuthContext } from '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js';
 
 const authContextOrchestration = createAuthContextOrchestrationCore({
@@ -151,13 +152,15 @@ export async function login(req, res) {
 
     effectiveLoginUser = loginPostAuthContextResult.effectiveLoginUser;
 
-    // Se precisa trocar senha (primeiro acesso ou provisória), direciona ANTES da checagem de módulo
-    const precisaTrocar = (user.senha_provisoria === true || user.primeiro_acesso === true || user.primeiro_acesso === undefined);
-    const enforceMaster = String(process.env.ENFORCE_MASTER_FIRST_LOGIN || '').toLowerCase() === 'true';
-    if (precisaTrocar && (!isMasterRole || (isMasterRole && enforceMaster))) {
-      console.log('[login] redirecionando (senha_provisoria/primeiro_acesso)', { isMasterRole, enforceMaster });
+    const earlyLoginSuccessOutcome = await resolveLoginSuccessOutcome({
+      user,
+      isMasterRole,
+      moduloAlvo,
+      basePath,
+    });
+    if (earlyLoginSuccessOutcome.kind === 'redirect') {
       await saveSessionSafe(req);
-  return res.redirect(303, basePath + '/primeiroacesso');
+      return res.redirect(303, earlyLoginSuccessOutcome.location);
     }
 
     // Rehash se custo for inferior ao mínimo configurado (mitiga hashes antigos mais fracos)
@@ -197,42 +200,28 @@ export async function login(req, res) {
     ]);
     if (!checagem.permitido) {
       console.warn('[login] acesso negado ao modulo', { email: user.email, moduloAlvo, motivo: checagem.motivo });
-      const motivo = encodeURIComponent(checagem.motivo || 'acesso_negado');
-      return res.redirect(303, `${basePath}/login?erro=modulo&motivo=${motivo}`);
     }
-    
-    // Se o módulo estiver com status "planejado" e o usuário não for master → renderiza construcao
-    try {
-      const nomeRx = new RegExp('^' + escapeRegex(moduloAlvo) + '$', 'i');
-      const or = [{ nome: nomeRx }];
-      if (basePath) or.push({ url_base: basePath });
-      if (moduloAlvo && !String(moduloAlvo).startsWith('/')) or.push({ url_base: '/' + String(moduloAlvo).trim() });
-      if (String(moduloAlvo).toLowerCase() === 'portal_morador') {
-        or.push({ nome: /^portal-morador$/i });
-        or.push({ url_base: '/portal-morador' });
-      }
-      const alvoLower = String(moduloAlvo || '').trim().toLowerCase();
-      if (alvoLower === 'condominios' || alvoLower === 'condominio') {
-        or.push({ nome: /^condom[ií]nios$/i });
-        or.push({ nome: /^gest[aã]o de condom[ií]nios$/i });
-        or.push({ nome: /^m[oó]dulo condom[ií]nios$/i });
-      }
-      const modulo = await findModuloLeanByOrSelect({
-        or,
-        select: 'nome status url_base',
-        maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000),
-      });
-      if (modulo && String(modulo.status||'').toLowerCase() === 'planejado' && !isMasterRole) {
-        console.info('[login] módulo planejado detectado para não-master → renderizando construcao');
-        try { res.setHeader('Cache-Control','no-store'); } catch(_){}
-        const moduleName = (modulo.nome || moduloAlvo).toUpperCase();
-        const moduleBasePath = modulo.url_base || basePath;
-        return res.status(200).render('partials/construcao', { moduleName, basePath: moduleBasePath });
-      }
-    } catch (eCheck) { console.warn('[login] falha checando status planejado:', eCheck.message); }
-    
-    await saveSessionSafe(req);
-  return res.redirect(303, basePath + '/dashboard');
+
+    const finalLoginSuccessOutcome = await resolveLoginSuccessOutcome({
+      user,
+      isMasterRole,
+      moduloAlvo,
+      basePath,
+      moduleAccessResult: checagem,
+      deps: {
+        findModuloLeanByOrSelect,
+      },
+      logger: console,
+    });
+    if (finalLoginSuccessOutcome.kind === 'render') {
+      try { res.setHeader('Cache-Control','no-store'); } catch(_){ }
+      return res.status(finalLoginSuccessOutcome.statusCode).render(finalLoginSuccessOutcome.view, finalLoginSuccessOutcome.payload);
+    }
+
+    if (finalLoginSuccessOutcome.saveSession) {
+      await saveSessionSafe(req);
+    }
+    return res.redirect(303, finalLoginSuccessOutcome.location);
   } catch (e) {
     console.error('[login] erro:', e);
   const safeBase = req.baseUrl || '';
