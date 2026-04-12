@@ -13,6 +13,7 @@ const ADMIN_DETAIL_CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gesto
 const STATUS_CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/feedbackStatusApiController.js');
 const RESPOSTA_CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/feedbackRespostaApiController.js');
 const DELETE_CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/feedbackDeleteApiController.js');
+const POLICY_SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js');
 const MY_DETAIL_OWNERSHIP_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/utils/processMyFeedbackDetailOwnershipCore.js');
 const MY_LIST_FILTER_CORE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/utils/processMyFeedbackListFilterCore.js');
 
@@ -25,6 +26,7 @@ const ADMIN_DETAIL_CONTROLLER_SOURCE = fs.readFileSync(ADMIN_DETAIL_CONTROLLER_P
 const STATUS_CONTROLLER_SOURCE = fs.readFileSync(STATUS_CONTROLLER_PATH, 'utf8');
 const RESPOSTA_CONTROLLER_SOURCE = fs.readFileSync(RESPOSTA_CONTROLLER_PATH, 'utf8');
 const DELETE_CONTROLLER_SOURCE = fs.readFileSync(DELETE_CONTROLLER_PATH, 'utf8');
+const POLICY_SERVICE_SOURCE = fs.readFileSync(POLICY_SERVICE_PATH, 'utf8');
 const MY_DETAIL_OWNERSHIP_CORE_SOURCE = fs.readFileSync(MY_DETAIL_OWNERSHIP_CORE_PATH, 'utf8');
 const MY_LIST_FILTER_CORE_SOURCE = fs.readFileSync(MY_LIST_FILTER_CORE_PATH, 'utf8');
 
@@ -179,8 +181,12 @@ function buildDelegatedOwnersSource() {
 
 test('estado real atual: policy e ownership ainda estao espalhados entre rota, owners e cores locais', () => {
   assert.match(ROUTE_SOURCE, /function isAdminLike\(user\)/);
-  assert.match(ROUTE_SOURCE, /function createFeedbackPolicyOwnershipCore\(\{/);
+  assert.match(ROUTE_SOURCE, /import \{ createFeedbackPolicyOwnershipCore \} from '#modules\/gestor\/app\/services\/feedback\/createFeedbackPolicyOwnershipCore\.service\.js';/);
   assert.match(ROUTE_SOURCE, /const feedbackPolicy = createFeedbackPolicyOwnershipCore\(\{ isAdminLike \}\);/);
+  assert.match(POLICY_SERVICE_SOURCE, /export function createFeedbackPolicyOwnershipCore\(\{/);
+  assert.match(POLICY_SERVICE_SOURCE, /function ensureAdminAccess\(\{ currentUser \} = \{\}\)/);
+  assert.match(POLICY_SERVICE_SOURCE, /function ensureCreatorOwnership\(\{ currentUser, feedback \} = \{\}\)/);
+  assert.match(POLICY_SERVICE_SOURCE, /function buildMyFeedbackFilter\(\{ currentUser \} = \{\}\)/);
 
   assert.match(UPLOAD_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureCreatorOwnership\(\{/);
 
@@ -213,8 +219,10 @@ test('estado real atual: policy e ownership ainda estao espalhados entre rota, o
 });
 
 test('futura seam unica recebe apenas contexto minimo de user e feedback carregado ou ids normalizados', () => {
-  const functionSource = buildFeedbackPolicyOwnershipCoreSource();
-  assert.match(functionSource, /function createFeedbackPolicyOwnershipCore\(\{ isAdminLike \} = \{\}\)/);
+  const functionSource = POLICY_SERVICE_SOURCE
+    .replace(/export default createFeedbackPolicyOwnershipCore;\s*/g, '')
+    .replace('export function createFeedbackPolicyOwnershipCore(', 'function createFeedbackPolicyOwnershipCore(');
+  assert.match(functionSource, /function createFeedbackPolicyOwnershipCore\([\s\S]*isAdminLike[\s\S]*\} = \{\}\)/);
   assert.doesNotMatch(functionSource, /findFeedback|saveFeedback|processUpload|status|resposta|apiOk|apiFail/);
   assert.doesNotMatch(functionSource, /\breq\b|\bres\b/);
 

@@ -5,7 +5,15 @@ import path from 'node:path';
 import vm from 'node:vm';
 
 const ROUTE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/routes/feedbackApi.js');
+const POLICY_SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js');
 const ROUTE_SOURCE = fs.readFileSync(ROUTE_PATH, 'utf8');
+const POLICY_SERVICE_SOURCE = fs.readFileSync(POLICY_SERVICE_PATH, 'utf8');
+
+function buildPolicyServiceSnippet() {
+	return POLICY_SERVICE_SOURCE
+		.replace(/export default createFeedbackPolicyOwnershipCore;\s*/g, '')
+		.replace('export function createFeedbackPolicyOwnershipCore(', 'function createFeedbackPolicyOwnershipCore(');
+}
 
 function extractUploadOwnerSnippet(source) {
 	const start = source.indexOf('function isAdminLike(');
@@ -99,6 +107,7 @@ function toPlainJson(value) {
 
 function loadUploadOwnerHarness(runtimeOverrides = {}) {
 	const snippet = buildDelegatedUploadSnippet();
+	const policyServiceSnippet = buildPolicyServiceSnippet();
 	const registrations = [];
 	const router = createFakeRouter(registrations);
 	const callLog = {
@@ -189,6 +198,7 @@ const createFeedback = __deps.createFeedback;
 const findFeedbackById = __deps.findFeedbackById;
 const saveFeedbackDoc = __deps.saveFeedbackDoc;
 const processFeedbackUploadStorageCore = __deps.processFeedbackUploadStorageCore;
+${policyServiceSnippet}
 ${snippet}
 return {
   registrations,

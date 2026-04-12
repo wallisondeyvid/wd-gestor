@@ -13,6 +13,7 @@ import { createMyFeedbackListHandler } from '#modules/gestor/app/controllers/fee
 import { createDeleteFeedbackHandler } from '#modules/gestor/app/controllers/feedbackDeleteApiController.js';
 import { createUpdateFeedbackRespostaHandler } from '#modules/gestor/app/controllers/feedbackRespostaApiController.js';
 import { createUpdateFeedbackStatusHandler } from '#modules/gestor/app/controllers/feedbackStatusApiController.js';
+import { createFeedbackPolicyOwnershipCore } from '#modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js';
 import { updateFeedbackStatusService } from '#modules/gestor/app/services/feedback/updateFeedbackStatus.service.js';
 import { processFeedbackUploadStorageCore } from '#modules/gestor/app/routes/utils/processFeedbackUploadStorageCore.js';
 import {
@@ -175,50 +176,6 @@ function createFeedbackUploadStorageInfraCore({
 
   return {
     processUpload,
-  };
-}
-
-function createFeedbackPolicyOwnershipCore({
-  isAdminLike: isAdminLikeFn = isAdminLike,
-} = {}) {
-  function resolveActor(currentUser) {
-    const actorId = currentUser?._id || currentUser?.id || null;
-
-    return {
-      id: actorId ? String(actorId) : null,
-      email: String(currentUser?.email || '').trim(),
-      isAdmin: !!isAdminLikeFn(currentUser || null),
-    };
-  }
-
-  function ensureAdminAccess({ currentUser } = {}) {
-    const actor = resolveActor(currentUser);
-    if (!actor.isAdmin) return { allowed: false, error: 'forbidden' };
-    return { allowed: true, actor };
-  }
-
-  function ensureCreatorOwnership({ currentUser, feedback } = {}) {
-    const actor = resolveActor(currentUser);
-    const creatorId = feedback?.criadoPor?.userId ? String(feedback.criadoPor.userId) : '';
-
-    if (creatorId && actor.id && actor.id !== creatorId) {
-      return { allowed: false, error: 'forbidden', actor };
-    }
-
-    return { allowed: true, actor };
-  }
-
-  function buildMyFeedbackFilter({ currentUser } = {}) {
-    const actor = resolveActor(currentUser);
-    const filter = actor.id ? { 'criadoPor.userId': actor.id } : { 'criadoPor.email': actor.email };
-
-    return { filter, actor };
-  }
-
-  return {
-    ensureAdminAccess,
-    ensureCreatorOwnership,
-    buildMyFeedbackFilter,
   };
 }
 
