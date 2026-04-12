@@ -28,6 +28,7 @@ import {
 } from '#modules/gestor/app/services/auth/passwordRecovery.service.js';
 import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js';
 import { mutateAuthUnitContextService } from '#modules/gestor/app/services/auth/mutateAuthUnitContext.service.js';
+import { openLocalPostAuthSession } from '#modules/gestor/app/services/auth/openLocalPostAuthSession.service.js';
 import { resolveLoginPostAuthContext } from '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js';
 
 const authContextOrchestration = createAuthContextOrchestrationCore({
@@ -119,29 +120,12 @@ export async function login(req, res) {
     let user = preAuthResult.user;
     const isMasterRole = user.role === 'master' || user.global_role === 'master';
 
-    // Mitigação de fixation: regenerar sessão antes de atribuir dados
-    try {
-      await new Promise((resolve, reject) => {
-        req.session.regenerate(err => {
-          if (err) {
-            console.warn('[login] session regenerate error:', err.message);
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
-    } catch (e) {
-      console.warn('[login] session regenerate failed, continuing without:', e.message);
-      // Continue without regenerating, as it's not critical for provisional users
-    }
-
     console.log('[login] autenticado', { id: user._id.toString(), primeiro_acesso: user.primeiro_acesso, senha_provisoria: user.senha_provisoria, role: user.role });
-    clearGestorAuthContextSession(req);
-    req.session.user = {
-      id: user._id.toString(),
-      email: user.email
-    };
+    await openLocalPostAuthSession({
+      req,
+      authenticatedUser: user,
+      logger: console,
+    });
     let effectiveLoginUser = user;
     let resolvedLoginAuthContext = null;
 
@@ -167,23 +151,12 @@ export async function login(req, res) {
 
     effectiveLoginUser = loginPostAuthContextResult.effectiveLoginUser;
 
-    // Importante: garantir persistência da sessão antes de redirecionar.
-    // Em alguns cenários (principalmente com session store remoto + redirect), a gravação pode atrasar.
-    const saveSessionAfterLogin = async () => {
-      try {
-        if (!req.session || typeof req.session.save !== 'function') return;
-        await new Promise((resolve) => req.session.save(() => resolve()));
-      } catch (e) {
-        try { console.warn('[login] session.save falhou:', e?.message || e); } catch {}
-      }
-    };
-
     // Se precisa trocar senha (primeiro acesso ou provisória), direciona ANTES da checagem de módulo
     const precisaTrocar = (user.senha_provisoria === true || user.primeiro_acesso === true || user.primeiro_acesso === undefined);
     const enforceMaster = String(process.env.ENFORCE_MASTER_FIRST_LOGIN || '').toLowerCase() === 'true';
     if (precisaTrocar && (!isMasterRole || (isMasterRole && enforceMaster))) {
       console.log('[login] redirecionando (senha_provisoria/primeiro_acesso)', { isMasterRole, enforceMaster });
-      await saveSessionAfterLogin();
+      await saveSessionSafe(req);
   return res.redirect(303, basePath + '/primeiroacesso');
     }
 
@@ -258,7 +231,7 @@ export async function login(req, res) {
       }
     } catch (eCheck) { console.warn('[login] falha checando status planejado:', eCheck.message); }
     
-    await saveSessionAfterLogin();
+    await saveSessionSafe(req);
   return res.redirect(303, basePath + '/dashboard');
   } catch (e) {
     console.error('[login] erro:', e);
@@ -342,13 +315,6 @@ function isAuthContextResolverEnabledForRequest(req) {
     return isFeatureEnabled(featureFlags, GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
   }
   return isFlagEnabled(GESTOR_AUTH_CONTEXT_RESOLVER_FLAG, false);
-}
-
-function clearGestorAuthContextSession(req) {
-  if (!req?.session || !Object.prototype.hasOwnProperty.call(req.session, 'gestorAuthContext')) {
-    return;
-  }
-  delete req.session.gestorAuthContext;
 }
 
 function buildLightweightAuthContextPayload(req) {

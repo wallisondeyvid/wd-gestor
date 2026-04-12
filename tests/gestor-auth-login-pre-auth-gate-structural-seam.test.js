@@ -174,12 +174,13 @@ function importFresh(filePath, token) {
 
 test('login: owner real delega o gate pre-auth para services/auth/evaluateLoginPreAuthGate.service.js', () => {
   assert.match(CONTROLLER_SOURCE, /evaluateLoginPreAuthGate\.service\.js/);
+  assert.match(CONTROLLER_SOURCE, /openLocalPostAuthSession\.service\.js/);
   assert.match(CONTROLLER_SOURCE, /const preAuthResult = await evaluateLoginPreAuthGateService\(\{ email, senha \}\);/);
 
   const loginSource = stripComments(extractExportedAsyncFunction(CONTROLLER_SOURCE, 'login'));
   assert.doesNotMatch(loginSource, /findUserByEmailForLogin|bcrypt\.compare/);
   assert.doesNotMatch(loginSource, /failed_login_attempts|lock_until|Retry-After|X-Account-Lock/);
-  assert.match(loginSource, /session\.regenerate/);
+  assert.match(loginSource, /await openLocalPostAuthSession\(\{/);
   assert.match(loginSource, /createRememberToken\(/);
   assert.match(loginSource, /authContextOrchestration\.resolveLoginAuthContext/);
 });
