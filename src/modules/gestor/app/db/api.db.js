@@ -174,15 +174,12 @@ import {
   findWidgetSettingsFeedbackLeanRepo,
   updateWidgetSettingsFeedbackModuleEnabledUpsertRepo,
 } from '#modules/gestor/app/repositories/WidgetSettingWriteRepository.js';
-
-const GLOBAL_SCOPE = { type: 'global', unidadeId: null };
-
-function scopeFromUnidadeId(unidadeId) {
-  const unidadeIdNorm = String(unidadeId || '').trim();
-  return unidadeIdNorm && mongoose.isValidObjectId(unidadeIdNorm)
-    ? createUnitScope({ unidadeId: unidadeIdNorm })
-    : GLOBAL_SCOPE;
-}
+import {
+  GLOBAL_SCOPE,
+  extractSingleScopedUnitId,
+  scopeFromFuncaoFiltro,
+  scopeFromUnidadeId,
+} from '#modules/gestor/app/data/funcoes/funcoesScope.js';
 
 function scopeFromRecursoListFiltro(filtro) {
   if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
@@ -196,24 +193,6 @@ function scopeFromSetorFiltro(filtro) {
 
   const unidadeId = extractSingleScopedUnitId(filtro?.unidade_id);
   return unidadeId ? scopeFromUnidadeId(unidadeId) : GLOBAL_SCOPE;
-}
-
-function extractSingleScopedUnitId(value) {
-  if (typeof value === 'string') return value;
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return '';
-
-  const inValues = Array.isArray(value.$in)
-    ? [...new Set(value.$in.map((item) => String(item || '').trim()).filter(Boolean))]
-    : [];
-
-  return inValues.length === 1 ? inValues[0] : '';
-}
-
-function scopeFromFuncaoFiltro(filtro) {
-  if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
-
-  const unidadePrincipalId = extractSingleScopedUnitId(filtro.unidade_principal_id);
-  return unidadePrincipalId ? scopeFromUnidadeId(unidadePrincipalId) : GLOBAL_SCOPE;
 }
 
 function scopeFromFuncionarioFiltro(filtro) {

@@ -8,17 +8,26 @@ const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/funcaoApiController.js')).href;
 const apiDbModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/db/api.db.js')).href;
 const actualServiceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/funcoes/listarFuncoes.service.js')).href;
+const actualDataFacadeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/data/funcoes/funcoesReadDataFacade.js')).href;
 const serviceMockModuleUrl = 'mock:gestor-funcoes-list-structural-seam-service';
+const dataFacadeMockModuleUrl = 'mock:gestor-funcoes-list-structural-seam-data-facade';
 const SERVICE_EXPORTS = [
   'listarFuncoesService',
   'findFuncoesByFiltroService',
   'findFuncoesByFiltroSelectService',
+];
+const DATA_FACADE_EXPORTS = [
+  'findFuncoesByFiltroLeanData',
+  'findFuncoesByFiltroSelectLeanData',
 ];
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === '#modules/gestor/app/services/funcoes/listarFuncoes.service.js') {
       return { url: serviceMockModuleUrl, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/data/funcoes/funcoesReadDataFacade.js') {
+      return { url: dataFacadeMockModuleUrl, shortCircuit: true };
     }
     return nextResolve(specifier, context);
   },
@@ -31,6 +40,24 @@ registerHooks({
       ];
 
       for (const exportName of SERVICE_EXPORTS) {
+        lines.push(`export async function ${exportName}(...args) { const fn = getMocks()['${exportName}']; if (typeof fn === 'function') return await fn(...args); return await actual['${exportName}'](...args); }`);
+      }
+
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: lines.join('\n'),
+      };
+    }
+
+    if (url === dataFacadeMockModuleUrl) {
+      const lines = [
+        `export * from '${actualDataFacadeModuleUrl}';`,
+        `import * as actual from '${actualDataFacadeModuleUrl}';`,
+        "const getMocks = () => globalThis.__GESTOR_FUNCOES_LIST_STRUCTURAL_DATA_FACADE_MOCKS__ || {};",
+      ];
+
+      for (const exportName of DATA_FACADE_EXPORTS) {
         lines.push(`export async function ${exportName}(...args) { const fn = getMocks()['${exportName}']; if (typeof fn === 'function') return await fn(...args); return await actual['${exportName}'](...args); }`);
       }
 
@@ -55,6 +82,14 @@ function setServiceMocks(overrides = {}) {
 
 function clearServiceMocks() {
   globalThis.__GESTOR_FUNCOES_LIST_STRUCTURAL_SERVICE_MOCKS__ = {};
+}
+
+function setDataFacadeMocks(overrides = {}) {
+  globalThis.__GESTOR_FUNCOES_LIST_STRUCTURAL_DATA_FACADE_MOCKS__ = { ...overrides };
+}
+
+function clearDataFacadeMocks() {
+  globalThis.__GESTOR_FUNCOES_LIST_STRUCTURAL_DATA_FACADE_MOCKS__ = {};
 }
 
 function createResponseCapture() {
@@ -85,6 +120,7 @@ function createResponseCapture() {
 
 test.afterEach(() => {
   clearServiceMocks();
+  clearDataFacadeMocks();
 });
 
 test('listarFuncoesApi usa o service fino como caminho principal da listagem', async () => {
@@ -114,6 +150,38 @@ test('listarFuncoesApi usa o service fino como caminho principal da listagem', a
     success: true,
     data: [{ _id: 'f-1', nome: 'Analista', descricao: '', codigo: 'ANA' }],
   });
+});
+
+test('findFuncoesByFiltroService usa a fachada canonica de dados como caminho principal', async () => {
+  const dataFacadeCalls = [];
+  setDataFacadeMocks({
+    findFuncoesByFiltroLeanData: async (filtro) => {
+      dataFacadeCalls.push(JSON.parse(JSON.stringify(filtro)));
+      return [{ _id: 'f-30' }];
+    },
+  });
+
+  const { findFuncoesByFiltroService } = await import(`${actualServiceModuleUrl}?case=${encodeURIComponent(uniqueSuffix())}`);
+  const result = await findFuncoesByFiltroService({ unidade_principal_id: '507f191e810c19729de860ea' });
+
+  assert.deepEqual(dataFacadeCalls, [{ unidade_principal_id: '507f191e810c19729de860ea' }]);
+  assert.deepEqual(result, [{ _id: 'f-30' }]);
+});
+
+test('findFuncoesByFiltroSelectService usa a fachada canonica de dados como caminho principal', async () => {
+  const dataFacadeCalls = [];
+  setDataFacadeMocks({
+    findFuncoesByFiltroSelectLeanData: async (filtro) => {
+      dataFacadeCalls.push(JSON.parse(JSON.stringify(filtro)));
+      return [{ _id: 'f-40' }];
+    },
+  });
+
+  const { findFuncoesByFiltroSelectService } = await import(`${actualServiceModuleUrl}?case=${encodeURIComponent(uniqueSuffix())}`);
+  const result = await findFuncoesByFiltroSelectService({ unidade_principal_id: { $in: ['507f191e810c19729de860ea'] } });
+
+  assert.deepEqual(dataFacadeCalls, [{ unidade_principal_id: { $in: ['507f191e810c19729de860ea'] } }]);
+  assert.deepEqual(result, [{ _id: 'f-40' }]);
 });
 
 test('findFuncoesByFiltroLean em api.db.js delega por compatibilidade ao service fino', async () => {

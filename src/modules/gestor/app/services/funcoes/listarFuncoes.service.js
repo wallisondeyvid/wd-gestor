@@ -1,8 +1,8 @@
+import { findUnidadeUserBaseLean } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import {
-  findFuncoesByFiltroLeanFromDb,
-  findFuncoesByFiltroSelectLeanFromDb,
-  findUnidadeUserBaseLean,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+  findFuncoesByFiltroLeanData,
+  findFuncoesByFiltroSelectLeanData,
+} from '#modules/gestor/app/data/funcoes/funcoesReadDataFacade.js';
 import { createFuncaoContextPolicyCore } from '#modules/gestor/app/services/funcoes/createFuncaoContextPolicyCore.js';
 
 const funcaoContextPolicy = createFuncaoContextPolicyCore({
@@ -37,11 +37,11 @@ function mapUnidadeFuncao(funcao) {
 }
 
 export async function findFuncoesByFiltroService(filtro) {
-  return findFuncoesByFiltroLeanFromDb(filtro);
+  return findFuncoesByFiltroLeanData(filtro);
 }
 
 export async function findFuncoesByFiltroSelectService(filtro) {
-  return findFuncoesByFiltroSelectLeanFromDb(filtro);
+  return findFuncoesByFiltroSelectLeanData(filtro);
 }
 
 export async function listarFuncoesService({ query, unitScope }) {
