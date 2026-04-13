@@ -6,8 +6,10 @@ import vm from 'node:vm';
 
 const ROUTE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/routes/feedbackApi.js');
 const UPLOAD_CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/feedbackUploadApiController.js');
+const UPLOAD_INFRA_PATH = path.join(process.cwd(), 'src/modules/gestor/app/routes/utils/createFeedbackUploadStorageInfra.js');
 const ROUTE_SOURCE = fs.readFileSync(ROUTE_PATH, 'utf8');
 const UPLOAD_CONTROLLER_SOURCE = fs.readFileSync(UPLOAD_CONTROLLER_PATH, 'utf8');
+const UPLOAD_INFRA_SOURCE = fs.readFileSync(UPLOAD_INFRA_PATH, 'utf8');
 
 function buildFunctionFromSource(functionSource, context = {}) {
   const script = new vm.Script(`(${functionSource})`);
@@ -28,64 +30,18 @@ function countOccurrences(source, fragment) {
 }
 
 function buildUploadStorageInfraCoreSource() {
-  return `function createFeedbackUploadStorageInfraCore({
-    safeFileName,
-    safeExtFromFile,
-    shouldUseBlobStorage,
-    getBlobToken,
-    putBlob,
-    fsModule,
-    pathModule,
-    cwdProvider,
-    isBlobNotConfiguredError,
-    isVercel,
-    processStorageCore,
-  } = {}) {
-    function pickFileFromRequest({ file, files }) {
-      if (file) return file;
-      const list = Array.isArray(files) ? files : [];
-      if (!list.length) return null;
-      const preferred = ['anexo', 'file', 'attachment'];
-      for (const fieldName of preferred) {
-        const current = list.find((item) => item && item.fieldname === fieldName);
-        if (current) return current;
-      }
-      return list[0] || null;
-    }
-
-    async function processUpload({ file, files, baseUrl, feedbackId }) {
-      const selectedFile = pickFileFromRequest({ file, files });
-      if (!selectedFile || !selectedFile.buffer) {
-        return { kind: 'missing_file' };
-      }
-
-      const stored = await processStorageCore({
-        baseUrl,
-        feedbackId,
-        file: selectedFile,
-        safeFileName,
-        safeExtFromFile,
-        shouldUseBlobStorage,
-        getBlobToken,
-        putBlob,
-        fsModule,
-        pathModule,
-        cwdProvider,
-        isBlobNotConfiguredError,
-        isVercel,
-      });
-
-      return {
-        kind: 'stored',
-        file: selectedFile,
-        stored,
-      };
-    }
-
-    return {
-      processUpload,
-    };
-  }`;
+  return UPLOAD_INFRA_SOURCE
+    .replace(/import fs from 'fs';\r?\n/g, '')
+    .replace(/import path from 'path';\r?\n/g, '')
+    .replace(/import \{ put \} from '@vercel\/blob';\r?\n/g, '')
+    .replace(/import \{ processFeedbackUploadStorageCore \} from '\.\/processFeedbackUploadStorageCore\.js';\r?\n\r?\n/g, '')
+    .replace(/export default createFeedbackUploadStorageInfraCore;\s*/g, '')
+    .replace('export function safeFileName(', 'function safeFileName(')
+    .replace('export function getBlobToken(', 'function getBlobToken(')
+    .replace('export function shouldUseBlobStorage(', 'function shouldUseBlobStorage(')
+    .replace('export function isBlobNotConfiguredError(', 'function isBlobNotConfiguredError(')
+    .replace('export function safeExtFromFile(', 'function safeExtFromFile(')
+    .replace('export function createFeedbackUploadStorageInfraCore(', 'function createFeedbackUploadStorageInfraCore(');
 }
 
 function buildDelegatedUploadOwnerSource() {
@@ -128,26 +84,31 @@ function buildDelegatedUploadOwnerSource() {
 
 test('estado real atual: a rota delega o miolo tecnico de upload-storage para a seam unica', () => {
   assert.match(ROUTE_SOURCE, /function uploadFeedbackAnexoMiddleware\(req, res, next\)/);
-  assert.match(ROUTE_SOURCE, /function createFeedbackUploadStorageInfraCore\(\{/);
-  assert.match(ROUTE_SOURCE, /function safeFileName\(name\)/);
-  assert.match(ROUTE_SOURCE, /function getBlobToken\(\)/);
-  assert.match(ROUTE_SOURCE, /function shouldUseBlobStorage\(\)/);
-  assert.match(ROUTE_SOURCE, /function isBlobNotConfiguredError\(err\)/);
-  assert.match(ROUTE_SOURCE, /function safeExtFromFile\(\{ originalName, mimeType \}\)/);
-  assert.match(ROUTE_SOURCE, /function pickFileFromRequest\(\{ file, files \}\)/);
-  assert.match(ROUTE_SOURCE, /async function processUpload\(\{ file, files, baseUrl, feedbackId \}\)/);
-  assert.match(ROUTE_SOURCE, /processStorageCore = processFeedbackUploadStorageCore,/);
+  assert.match(
+    ROUTE_SOURCE,
+    /import\s*\{[\s\S]*\bcreateFeedbackUploadStorageInfraCore\b[\s\S]*\}\s*from '#modules\/gestor\/app\/routes\/utils\/createFeedbackUploadStorageInfra\.js';/,
+  );
   assert.match(ROUTE_SOURCE, /const uploadStorageInfra = createFeedbackUploadStorageInfraCore\(\);/);
   assert.match(ROUTE_SOURCE, /const uploadFeedbackAnexoHandler = createUploadFeedbackAnexoHandler\(\{/);
   assert.match(ROUTE_SOURCE, /uploadStorageInfra,/);
 
+  assert.match(UPLOAD_INFRA_SOURCE, /export function createFeedbackUploadStorageInfraCore\(\{/);
+  assert.match(UPLOAD_INFRA_SOURCE, /export function safeFileName\(name\) \{/);
+  assert.match(UPLOAD_INFRA_SOURCE, /export function getBlobToken\(\) \{/);
+  assert.match(UPLOAD_INFRA_SOURCE, /export function shouldUseBlobStorage\(\) \{/);
+  assert.match(UPLOAD_INFRA_SOURCE, /export function isBlobNotConfiguredError\(err\) \{/);
+  assert.match(UPLOAD_INFRA_SOURCE, /export function safeExtFromFile\(\{ originalName, mimeType \}\) \{/);
+  assert.match(UPLOAD_INFRA_SOURCE, /function pickFileFromRequest\(\{ file, files \}\)/);
+  assert.match(UPLOAD_INFRA_SOURCE, /async function processUpload\(\{ file, files, baseUrl, feedbackId \}\)/);
+  assert.match(UPLOAD_INFRA_SOURCE, /processStorageCore = processFeedbackUploadStorageCore,/);
+
   assert.match(UPLOAD_CONTROLLER_SOURCE, /const uploadResult = await uploadStorageInfra\.processUpload\(\{/);
   assert.match(UPLOAD_CONTROLLER_SOURCE, /if \(uploadResult.kind === 'missing_file'\) return apiFail\(res, 400, 'Arquivo ausente\.'\);/);
 
-  assert.equal(countOccurrences(ROUTE_SOURCE, 'function createFeedbackUploadStorageInfraCore({'), 1);
-  assert.equal(countOccurrences(ROUTE_SOURCE, 'function safeFileName(name)'), 1);
-  assert.equal(countOccurrences(ROUTE_SOURCE, 'function getBlobToken()'), 1);
-  assert.equal(countOccurrences(ROUTE_SOURCE, 'async function processUpload({ file, files, baseUrl, feedbackId })'), 1);
+  assert.equal(countOccurrences(UPLOAD_INFRA_SOURCE, 'export function createFeedbackUploadStorageInfraCore({'), 1);
+  assert.equal(countOccurrences(UPLOAD_INFRA_SOURCE, 'export function safeFileName(name) {'), 1);
+  assert.equal(countOccurrences(UPLOAD_INFRA_SOURCE, 'export function getBlobToken() {'), 1);
+  assert.equal(countOccurrences(UPLOAD_INFRA_SOURCE, 'async function processUpload({ file, files, baseUrl, feedbackId })'), 1);
   assert.equal(countOccurrences(UPLOAD_CONTROLLER_SOURCE, 'uploadStorageInfra.processUpload({'), 1);
 });
 
@@ -158,7 +119,9 @@ test('futura seam unica recebe apenas contexto tecnico minimo de arquivo-feedbac
   assert.doesNotMatch(functionSource, /\bres\b/);
 
   const calls = [];
-  const createFeedbackUploadStorageInfraCore = buildFunctionFromSource(functionSource);
+  const { createFeedbackUploadStorageInfraCore } = buildObjectFromSource(
+    `${functionSource}\n({ createFeedbackUploadStorageInfraCore })`,
+  );
   const uploadStorageInfra = createFeedbackUploadStorageInfraCore({
     safeFileName: (name) => {
       calls.push(['safeFileName', name]);

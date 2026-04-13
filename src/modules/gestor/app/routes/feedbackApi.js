@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
-import { put, del } from '@vercel/blob';
+import { del } from '@vercel/blob';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 import { createAdminFeedbackDetailHandler } from '#modules/gestor/app/controllers/feedbackDetailApiController.js';
 import { createCreateFeedbackHandler } from '#modules/gestor/app/controllers/feedbackCreateApiController.js';
@@ -15,7 +15,10 @@ import { createUpdateFeedbackRespostaHandler } from '#modules/gestor/app/control
 import { createUpdateFeedbackStatusHandler } from '#modules/gestor/app/controllers/feedbackStatusApiController.js';
 import { createFeedbackPolicyOwnershipCore } from '#modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js';
 import { updateFeedbackStatusService } from '#modules/gestor/app/services/feedback/updateFeedbackStatus.service.js';
-import { processFeedbackUploadStorageCore } from '#modules/gestor/app/routes/utils/processFeedbackUploadStorageCore.js';
+import {
+  createFeedbackUploadStorageInfraCore,
+  getBlobToken,
+} from '#modules/gestor/app/routes/utils/createFeedbackUploadStorageInfra.js';
 import {
   createFeedback,
   findFeedbackById,
@@ -77,106 +80,6 @@ function uploadFeedbackAnexoMiddleware(req, res, next) {
     }
     return next(err);
   });
-}
-
-function safeFileName(name){
-  const base = String(name || '').trim() || 'anexo';
-  return base.replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 80);
-}
-
-function getBlobToken() {
-  return (
-    process.env.BLOB_READ_WRITE_TOKEN
-    || process.env.WDGESTOR_DB_DADOS_READ_WRITE_TOKEN
-    || process.env.VERCEL_BLOB_RW_TOKEN
-    || ''
-  );
-}
-
-function shouldUseBlobStorage() {
-  // Em produção (Vercel), filesystem é efêmero/readonly. Preferir Blob sempre que possível.
-  return !!(process.env.VERCEL || getBlobToken());
-}
-
-function isBlobNotConfiguredError(err) {
-  try {
-    const msg = String(err?.message || '').toLowerCase();
-    // Mensagens comuns do SDK quando não há token nem store conectada
-    if (msg.includes('no token found')) return true;
-    if (msg.includes('blob_read_write_token')) return true;
-    if (msg.includes('vercel blob') && msg.includes('token')) return true;
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-function safeExtFromFile({ originalName, mimeType }) {
-  const original = safeFileName(originalName);
-  const m = original.match(/\.[A-Za-z0-9]+$/);
-  if (m) return m[0].toLowerCase();
-  if (mimeType === 'image/png') return '.png';
-  if (mimeType === 'image/webp') return '.webp';
-  return '.jpg';
-}
-
-function createFeedbackUploadStorageInfraCore({
-  safeFileName: safeFileNameFn = safeFileName,
-  safeExtFromFile: safeExtFromFileFn = safeExtFromFile,
-  shouldUseBlobStorage: shouldUseBlobStorageFn = shouldUseBlobStorage,
-  getBlobToken: getBlobTokenFn = getBlobToken,
-  putBlob = put,
-  fsModule = fs,
-  pathModule = path,
-  cwdProvider = () => process.cwd(),
-  isBlobNotConfiguredError: isBlobNotConfiguredErrorFn = isBlobNotConfiguredError,
-  isVercel = Boolean(process.env.VERCEL),
-  processStorageCore = processFeedbackUploadStorageCore,
-} = {}) {
-  function pickFileFromRequest({ file, files }) {
-    if (file) return file;
-    const list = Array.isArray(files) ? files : [];
-    if (!list.length) return null;
-    const preferred = ['anexo', 'file', 'attachment'];
-    for (const fieldName of preferred) {
-      const current = list.find((item) => item && item.fieldname === fieldName);
-      if (current) return current;
-    }
-    return list[0] || null;
-  }
-
-  async function processUpload({ file, files, baseUrl, feedbackId }) {
-    const selectedFile = pickFileFromRequest({ file, files });
-    if (!selectedFile || !selectedFile.buffer) {
-      return { kind: 'missing_file' };
-    }
-
-    const stored = await processStorageCore({
-      baseUrl,
-      feedbackId,
-      file: selectedFile,
-      safeFileName: safeFileNameFn,
-      safeExtFromFile: safeExtFromFileFn,
-      shouldUseBlobStorage: shouldUseBlobStorageFn,
-      getBlobToken: getBlobTokenFn,
-      putBlob,
-      fsModule,
-      pathModule,
-      cwdProvider,
-      isBlobNotConfiguredError: isBlobNotConfiguredErrorFn,
-      isVercel,
-    });
-
-    return {
-      kind: 'stored',
-      file: selectedFile,
-      stored,
-    };
-  }
-
-  return {
-    processUpload,
-  };
 }
 
 function inferModuloFromUrl(url){

@@ -6,13 +6,30 @@ import vm from 'node:vm';
 
 const ROUTE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/routes/feedbackApi.js');
 const POLICY_SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js');
+const UPLOAD_INFRA_PATH = path.join(process.cwd(), 'src/modules/gestor/app/routes/utils/createFeedbackUploadStorageInfra.js');
 const ROUTE_SOURCE = fs.readFileSync(ROUTE_PATH, 'utf8');
 const POLICY_SERVICE_SOURCE = fs.readFileSync(POLICY_SERVICE_PATH, 'utf8');
+const UPLOAD_INFRA_SOURCE = fs.readFileSync(UPLOAD_INFRA_PATH, 'utf8');
 
 function buildPolicyServiceSnippet() {
 	return POLICY_SERVICE_SOURCE
 		.replace(/export default createFeedbackPolicyOwnershipCore;\s*/g, '')
 		.replace('export function createFeedbackPolicyOwnershipCore(', 'function createFeedbackPolicyOwnershipCore(');
+}
+
+function buildUploadInfraSnippet() {
+	return UPLOAD_INFRA_SOURCE
+		.replace(/import fs from 'fs';\r?\n/g, '')
+		.replace(/import path from 'path';\r?\n/g, '')
+		.replace(/import \{ put \} from '@vercel\/blob';\r?\n/g, '')
+		.replace(/import \{ processFeedbackUploadStorageCore \} from '\.\/processFeedbackUploadStorageCore\.js';\r?\n\r?\n/g, '')
+		.replace(/export default createFeedbackUploadStorageInfraCore;\s*/g, '')
+		.replace('export function safeFileName(', 'function safeFileName(')
+		.replace('export function getBlobToken(', 'function getBlobToken(')
+		.replace('export function shouldUseBlobStorage(', 'function shouldUseBlobStorage(')
+		.replace('export function isBlobNotConfiguredError(', 'function isBlobNotConfiguredError(')
+		.replace('export function safeExtFromFile(', 'function safeExtFromFile(')
+		.replace('export function createFeedbackUploadStorageInfraCore(', 'function createFeedbackUploadStorageInfraCore(');
 }
 
 function extractUploadOwnerSnippet(source) {
@@ -27,36 +44,8 @@ function extractUploadOwnerSnippet(source) {
 
 function buildDelegatedUploadSnippet() {
 	const original = extractUploadOwnerSnippet(ROUTE_SOURCE);
-	if (original.includes('const uploadStorageInfra = createFeedbackUploadStorageInfraCore();')) {
-		return original;
-	}
-
-	const storeBlockPattern = /async function storeFeedbackAnexo\(\{ req, feedbackId, file \}\) \{\s*const original = safeFileName\(file\?\.originalname\);\s*const ext = safeExtFromFile\(\{ originalName: original, mimeType: file\?\.mimetype \}\);\s*const stamped = `\$\{Date\.now\(\)\}-\$\{Math\.random\(\)\.toString\(16\)\.slice\(2, 8\)\}\$\{ext\}`;\s*\/\/ Produção \(Vercel\): salva no Blob quando possível\s*if \(shouldUseBlobStorage\(\)\) \{[\s\S]*?\}\s*\/\/ Fallback local \(dev\): salva em disco e serve via \/uploads\s*const ROOT = path\.join\(process\.cwd\(\)\);\s*const relDir = path\.join\('public', 'uploads', 'feedback', String\(feedbackId\)\);\s*const absDir = path\.join\(ROOT, relDir\);\s*fs\.mkdirSync\(absDir, \{ recursive: true \}\);\s*const absFile = path\.join\(absDir, stamped\);\s*fs\.writeFileSync\(absFile, file\.buffer\);\s*\/\/ URL pública \(lembre que o app está montado em \/gestor\)\s*const bp = req\.baseUrl \|\| '';\s*const url = `\$\{bp\}\/uploads\/feedback\/\$\{encodeURIComponent\(String\(feedbackId\)\)\}\/\$\{encodeURIComponent\(stamped\)\}`;\s*return \{ url: String\(url\), storedIn: 'fs', originalName: original, stampedName: stamped \};\s*\}/s;
-	assert.match(original, storeBlockPattern, 'Nao foi possivel localizar o bloco atual de storeFeedbackAnexo.');
-
-	const delegatedBlock = [
-		'async function storeFeedbackAnexo({ req, feedbackId, file }) {',
-		'  return processFeedbackUploadStorageCore({',
-		"    baseUrl: req.baseUrl || '',",
-		'    feedbackId,',
-		'    file,',
-		'    safeFileName,',
-		'    safeExtFromFile,',
-		'    shouldUseBlobStorage,',
-		'    getBlobToken,',
-		'    putBlob: put,',
-		'    fsModule: fs,',
-		'    pathModule: path,',
-		'    cwdProvider: () => process.cwd(),',
-		'    isBlobNotConfiguredError,',
-		'    isVercel: Boolean(process.env.VERCEL),',
-		'  });',
-		'}',
-	].join('\n');
-
-	const replaced = original.replace(storeBlockPattern, delegatedBlock);
-	assert.notEqual(replaced, original, 'Nao foi possivel instalar a seam estrutural de upload/anexo em memoria.');
-	return replaced;
+	assert.match(original, /const uploadStorageInfra = createFeedbackUploadStorageInfraCore\(\);/);
+	return original;
 }
 
 function createFakeRouter(registrations) {
@@ -108,6 +97,7 @@ function toPlainJson(value) {
 function loadUploadOwnerHarness(runtimeOverrides = {}) {
 	const snippet = buildDelegatedUploadSnippet();
 	const policyServiceSnippet = buildPolicyServiceSnippet();
+	const uploadInfraSnippet = buildUploadInfraSnippet();
 	const registrations = [];
 	const router = createFakeRouter(registrations);
 	const callLog = {
@@ -199,6 +189,7 @@ const findFeedbackById = __deps.findFeedbackById;
 const saveFeedbackDoc = __deps.saveFeedbackDoc;
 const processFeedbackUploadStorageCore = __deps.processFeedbackUploadStorageCore;
 ${policyServiceSnippet}
+${uploadInfraSnippet}
 ${snippet}
 return {
   registrations,
