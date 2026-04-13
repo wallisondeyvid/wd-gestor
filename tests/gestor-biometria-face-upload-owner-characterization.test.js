@@ -124,6 +124,7 @@ function loadFaceUploadOwner(dependencies = {}) {
   const sandbox = {
     module: { exports: {} },
     exports: {},
+    processFaceUploadCaptureCore: dependencies.processFaceUploadCaptureCore,
     uuid: dependencies.uuid || (() => 'uuid-fixed'),
     sharp: dependencies.sharp,
     put: dependencies.put,
@@ -243,17 +244,12 @@ test('face/upload: o handler dedicado real preserva o gate sem capturas', async 
 });
 
 test('face/upload: o handler dedicado real preserva o gate de blob não configurado antes do pipeline de imagem', async () => {
-  let sharpCalls = 0;
-  let putCalls = 0;
+  let seamCalls = 0;
 
   const route = loadFaceUploadRoute({
-    sharp() {
-      sharpCalls += 1;
-      throw new Error('sharp nao deve ser executado sem blob configurado');
-    },
-    async put() {
-      putCalls += 1;
-      throw new Error('put nao deve ser executado sem blob configurado');
+    async processFaceUploadCaptureCore() {
+      seamCalls += 1;
+      throw new Error('seam nao deve ser executada sem blob configurado');
     },
     requireLogin() {},
     requireApiAuth() {},
@@ -268,43 +264,19 @@ test('face/upload: o handler dedicado real preserva o gate de blob não configur
     ok: false,
     error: 'Blob não configurado (conecte a Store no Vercel ou defina BLOB_READ_WRITE_TOKEN/WDGESTOR_DB_DADOS_READ_WRITE_TOKEN)',
   });
-  assert.equal(sharpCalls, 0);
-  assert.equal(putCalls, 0);
+  assert.equal(seamCalls, 0);
 });
 
-test('face/upload: o handler dedicado real continua dono do parsing base64, normalizacao com sharp, put no blob e resposta final de sucesso', async () => {
-  const sharpCalls = [];
-  const putCalls = [];
+test('face/upload: o handler dedicado real delega o processamento por captura e preserva a resposta final de sucesso', async () => {
+  const seamCalls = [];
 
   const route = loadFaceUploadRoute({
-    sharp(buffer) {
-      sharpCalls.push(buffer.toString('hex'));
-      return {
-        async metadata() {
-          return { width: 400, height: 300 };
-        },
-        resize(width, height, options) {
-          sharpCalls.push({ width, height, options });
-          return this;
-        },
-        toFormat(format, options) {
-          sharpCalls.push({ format, options });
-          return this;
-        },
-        async toBuffer() {
-          return Buffer.from('webp-buffer');
-        },
-      };
-    },
-    async put(key, buffer, options) {
-      putCalls.push({ key, buffer: buffer.toString(), options });
-      return { url: 'https://blob.test/faces/uuid-fixed-1.webp' };
+    async processFaceUploadCaptureCore(args) {
+      seamCalls.push(JSON.parse(JSON.stringify(args)));
+      return { url: 'https://blob.test/faces/uuid-fixed-1.webp', file: 'https://blob.test/faces/uuid-fixed-1.webp', mime: 'image/webp' };
     },
     requireLogin() {},
     requireApiAuth() {},
-    uuid() {
-      return 'uuid-fixed';
-    },
     env: { BLOB_READ_WRITE_TOKEN: 'blob-token' },
   });
 
@@ -320,40 +292,14 @@ test('face/upload: o handler dedicado real continua dono do parsing base64, norm
       mime: 'image/webp',
     }],
   });
-  assert.deepEqual(JSON.parse(JSON.stringify(putCalls)), [{
-    key: 'faces/uuid-fixed-1.webp',
-    buffer: 'webp-buffer',
-    options: {
-      access: 'public',
-      contentType: 'image/webp',
-      cacheControl: 'public, max-age=31536000, immutable',
-      token: 'blob-token',
-    },
-  }]);
-  assert.match(String(sharpCalls[0]), /41424344/);
+  assert.deepEqual(seamCalls, [{ dataUrl: 'data:image/png;base64,QUJDRA==', index: 0, blobToken: 'blob-token' }]);
 });
 
 test('face/upload: o catch final continua no owner dedicado', async () => {
   const logs = [];
   const route = loadFaceUploadRoute({
-    sharp() {
-      return {
-        async metadata() {
-          return { width: 400, height: 300 };
-        },
-        resize() {
-          return this;
-        },
-        toFormat() {
-          return this;
-        },
-        async toBuffer() {
-          return Buffer.from('webp-buffer');
-        },
-      };
-    },
-    async put() {
-      throw new Error('blob exploded');
+    async processFaceUploadCaptureCore() {
+      throw new Error('capture exploded');
     },
     requireLogin() {},
     requireApiAuth() {},
@@ -372,5 +318,5 @@ test('face/upload: o catch final continua no owner dedicado', async () => {
   assert.deepEqual(JSON.parse(JSON.stringify(res.body)), { ok: false, error: 'Falha interna no upload facial' });
   assert.equal(logs.length, 1);
   assert.match(logs[0], /\[face-upload\] erro:/);
-  assert.match(logs[0], /Error: blob exploded/);
+  assert.match(logs[0], /Error: capture exploded/);
 });

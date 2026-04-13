@@ -6,9 +6,11 @@ import vm from 'node:vm';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/faceBiometriaUploadApiController.js');
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
+const SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/biometria/processFaceUploadCaptureCore.js');
+const SERVICE_SOURCE = fs.readFileSync(SERVICE_PATH, 'utf8');
 
 function extractFunction(source, functionName) {
-  const signatures = [`async function ${functionName}`, `function ${functionName}`];
+  const signatures = [`export async function ${functionName}`, `async function ${functionName}`, `function ${functionName}`];
   const signature = signatures.find((candidate) => source.includes(candidate));
   assert.ok(signature, `Funcao ${functionName} nao encontrada`);
 
@@ -103,7 +105,7 @@ function stripComments(source) {
 }
 
 function buildDelegatedPerCaptureSource() {
-  const original = extractFunction(CONTROLLER_SOURCE, 'processFaceUploadCaptureCore');
+  const original = extractFunction(SERVICE_SOURCE, 'processFaceUploadCaptureCore');
   if (original.includes('persistFaceUploadBlobCore(')) {
     return original;
   }
@@ -116,25 +118,8 @@ function buildDelegatedPerCaptureSource() {
   return replaced;
 }
 
-function buildBlobAdapterSource() {
-  return [
-    'async function persistFaceUploadBlobCore({ webpBuf, index, blobToken }) {',
-    '  const id = uuid();',
-    '  const key = `faces/${id}-${index + 1}.webp`;',
-    '  const putOptions = {',
-    "    access: 'public',",
-    "    contentType: 'image/webp',",
-    "    cacheControl: 'public, max-age=31536000, immutable',",
-    '    ...(blobToken ? { token: blobToken } : {}),',
-    '  };',
-    '  const { url } = await put(key, webpBuf, putOptions);',
-    "  return { url, file: url, mime: 'image/webp' };",
-    '}',
-  ].join('\n');
-}
-
 function loadDelegatedPerCaptureCore(dependencies = {}) {
-  const functionSource = buildDelegatedPerCaptureSource();
+  const functionSource = buildDelegatedPerCaptureSource().replace('export async function', 'async function');
   const executableSource = `${functionSource}\nmodule.exports = { processFaceUploadCaptureCore };`;
   const sandbox = {
     module: { exports: {} },
@@ -146,8 +131,12 @@ function loadDelegatedPerCaptureCore(dependencies = {}) {
     Math,
   };
 
-  vm.runInNewContext(executableSource, sandbox, { filename: CONTROLLER_PATH });
+  vm.runInNewContext(executableSource, sandbox, { filename: SERVICE_PATH });
   return sandbox.module.exports.processFaceUploadCaptureCore;
+}
+
+function buildBlobAdapterSource() {
+  return extractFunction(SERVICE_SOURCE, 'persistFaceUploadBlobCore').replace('export async function', 'async function');
 }
 
 function createSharpSuccessStub({ metadata = { width: 320, height: 240 }, output = 'WEBP_BUFFER' } = {}) {
@@ -189,7 +178,7 @@ function createSharpFailureStub() {
 }
 
 test('face/upload per-capture/blob: o helper real atual delega imagem e preserva a delegacao ao blob', () => {
-  const helperSource = stripComments(extractFunction(CONTROLLER_SOURCE, 'processFaceUploadCaptureCore'));
+  const helperSource = stripComments(extractFunction(SERVICE_SOURCE, 'processFaceUploadCaptureCore'));
 
   assert.match(helperSource, /const webpBuf = await normalizeFaceUploadImageCore\(\{ dataUrl \}\);/);
   assert.match(helperSource, /if \(!webpBuf\) return null;/);

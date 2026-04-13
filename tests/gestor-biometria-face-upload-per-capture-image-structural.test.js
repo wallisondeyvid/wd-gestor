@@ -6,9 +6,11 @@ import vm from 'node:vm';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/faceBiometriaUploadApiController.js');
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
+const SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/biometria/processFaceUploadCaptureCore.js');
+const SERVICE_SOURCE = fs.readFileSync(SERVICE_PATH, 'utf8');
 
 function extractFunction(source, functionName) {
-  const signatures = [`async function ${functionName}`, `function ${functionName}`];
+  const signatures = [`export async function ${functionName}`, `async function ${functionName}`, `function ${functionName}`];
   const signature = signatures.find((candidate) => source.includes(candidate));
   assert.ok(signature, `Funcao ${functionName} nao encontrada`);
 
@@ -103,7 +105,7 @@ function stripComments(source) {
 }
 
 function buildDelegatedPerCaptureSource() {
-  const original = extractFunction(CONTROLLER_SOURCE, 'processFaceUploadCaptureCore');
+  const original = extractFunction(SERVICE_SOURCE, 'processFaceUploadCaptureCore');
   if (original.includes('normalizeFaceUploadImageCore(')) {
     return original;
   }
@@ -124,34 +126,8 @@ function buildDelegatedPerCaptureSource() {
   return `${original.slice(0, imageStart)}${delegatedBlock}${original.slice(blobStart)}`;
 }
 
-function buildImageUnitSource() {
-  return [
-    'async function normalizeFaceUploadImageCore({ dataUrl }) {',
-    '  const m = /^data:(image\\/(png|jpeg|webp));base64,(.+)$/i.exec(dataUrl);',
-    '  if (!m) return null;',
-    '',
-    '  const b64 = m[3];',
-    "  const buf = Buffer.from(b64, 'base64');",
-    '',
-    '  try {',
-    '    const image = sharp(buf);',
-    '    const metadata = await image.metadata();',
-    '    const width = Math.min(metadata.width || 640, 1024);',
-    '    const height = Math.min(metadata.height || 640, 1024);',
-    '    const webpBuf = await image',
-    "      .resize(width, height, { fit: 'inside', withoutEnlargement: true })",
-    "      .toFormat('webp', { quality: 92 })",
-    '      .toBuffer();',
-    '    return webpBuf;',
-    '  } catch {',
-    '    return null;',
-    '  }',
-    '}',
-  ].join('\n');
-}
-
 function loadDelegatedPerCaptureCore(dependencies = {}) {
-  const functionSource = buildDelegatedPerCaptureSource();
+  const functionSource = buildDelegatedPerCaptureSource().replace('export async function', 'async function');
   const executableSource = `${functionSource}\nmodule.exports = { processFaceUploadCaptureCore };`;
   const sandbox = {
     module: { exports: {} },
@@ -160,8 +136,12 @@ function loadDelegatedPerCaptureCore(dependencies = {}) {
     persistFaceUploadBlobCore: dependencies.persistFaceUploadBlobCore,
   };
 
-  vm.runInNewContext(executableSource, sandbox, { filename: CONTROLLER_PATH });
+  vm.runInNewContext(executableSource, sandbox, { filename: SERVICE_PATH });
   return sandbox.module.exports.processFaceUploadCaptureCore;
+}
+
+function buildImageUnitSource() {
+  return extractFunction(SERVICE_SOURCE, 'normalizeFaceUploadImageCore').replace('export async function', 'async function');
 }
 
 function loadImageUnit(dependencies = {}) {
@@ -175,7 +155,7 @@ function loadImageUnit(dependencies = {}) {
     Math,
   };
 
-  vm.runInNewContext(executableSource, sandbox, { filename: CONTROLLER_PATH });
+  vm.runInNewContext(executableSource, sandbox, { filename: SERVICE_PATH });
   return sandbox.module.exports.normalizeFaceUploadImageCore;
 }
 
@@ -218,7 +198,7 @@ function createSharpFailureStub() {
 }
 
 test('face/upload per-capture/image: o helper real atual delega imagem e blob, sem reter regex, Buffer.from ou sharp inline', () => {
-  const helperSource = stripComments(extractFunction(CONTROLLER_SOURCE, 'processFaceUploadCaptureCore'));
+  const helperSource = stripComments(extractFunction(SERVICE_SOURCE, 'processFaceUploadCaptureCore'));
 
   assert.match(helperSource, /const webpBuf = await normalizeFaceUploadImageCore\(\{ dataUrl \}\);/);
   assert.match(helperSource, /if \(!webpBuf\) return null;/);

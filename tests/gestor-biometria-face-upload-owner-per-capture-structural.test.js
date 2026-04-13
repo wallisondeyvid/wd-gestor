@@ -6,6 +6,8 @@ import vm from 'node:vm';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/faceBiometriaUploadApiController.js');
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
+const SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/biometria/processFaceUploadCaptureCore.js');
+const SERVICE_SOURCE = fs.readFileSync(SERVICE_PATH, 'utf8');
 
 function extractExportedAsyncFunction(source, functionName) {
   const signature = `export async function ${functionName}`;
@@ -120,7 +122,10 @@ function buildDelegatedOwnerSource() {
 }
 
 function extractFunction(source, functionName) {
-  const signature = `function ${functionName}`;
+  const signatures = [`export async function ${functionName}`, `async function ${functionName}`, `function ${functionName}`];
+  const signature = signatures.find((candidate) => source.includes(candidate));
+  assert.ok(signature, `Funcao ${functionName} nao encontrada`);
+
   const start = source.indexOf(signature);
   assert.notEqual(start, -1, `Funcao ${functionName} nao encontrada`);
 
@@ -253,7 +258,7 @@ test('face/upload per-capture: o owner dedicado real ainda preserva os gates, a 
 });
 
 test('face/upload per-capture: a unidade real por captura delega normalizacao e persistencia blob e retorna o item salvo', () => {
-  const helperSource = stripComments(extractFunction(CONTROLLER_SOURCE, 'processFaceUploadCaptureCore'));
+  const helperSource = stripComments(extractFunction(SERVICE_SOURCE, 'processFaceUploadCaptureCore'));
 
   assert.match(helperSource, /const webpBuf = await normalizeFaceUploadImageCore\(\{ dataUrl \}\);/);
   assert.match(helperSource, /if \(!webpBuf\) return null;/);
