@@ -10,6 +10,9 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import nodeFetch from 'node-fetch';
+import { composeBootstrapRegistry, mountBootstrapRegistry } from './bootstrapRegistry.js';
+import { resolveLoginPrimeiroAcessoState } from './loginPrimeiroAcessoState.js';
+import { registerCompatibleStaticAliases } from './staticAliases.js';
 import { getPorts } from '#shared/container/ports.js';
 import { BankPort } from '#shared/ports/bank.port.js';
 import { DocumentosPort } from '#shared/ports/documentos.port.js';
@@ -33,6 +36,26 @@ import { portalLoginPost, portalPrimeiroAcessoGet, portalPrimeiroAcessoPost } fr
 // Módulos registrados: por padrão, NÃO montar Escalas (fora do escopo atual).
 // Para habilitar Escalas no futuro, use ENABLE_ESCALAS=1.
 const BASE_REGISTRY = Object.freeze([clinicaModule, condominiosModule, portalMoradorModule]);
+const BOOTSTRAP_ALIAS_BY_MODULE = Object.freeze({
+  condominios: ['/condominio'],
+  'portal-morador': ['/portal_morador'],
+});
+const ISOLATED_BOOTSTRAP_REGISTRY_ENTRIES = Object.freeze([
+  {
+    name: 'condominios',
+    moduleDefinition: condominiosModule,
+    moduleAppPath: '../modules/condominios/app/condominios-app.js',
+    warningLabel: 'condominios',
+    warningMessage: 'condominios isolado indisponivel; usando modulo padrao:',
+  },
+  {
+    name: 'portal-morador',
+    moduleDefinition: portalMoradorModule,
+    moduleAppPath: '../modules/portal-morador/app/portal-morador-app.js',
+    warningLabel: 'portal-morador',
+    warningMessage: 'portal-morador isolado indisponível; usando módulo padrão:',
+  },
+]);
 
 function resolveGestorRegistryModule() {
   const wrapperEnabled = String(process.env.ENABLE_GESTOR_WRAPPER || '').trim() === '1';
@@ -45,36 +68,6 @@ function resolveGestorRegistryModule() {
 
 let __portsBound = false;
 const SERVER_CLOSE_STATE_KEY = '__wdgestorCreateServerCloseState__';
-
-async function buildIsolatedPortalMoradorModule() {
-  // Garante uma instância nova do sub-app por boot para evitar vazamento de `parent`
-  // entre chamadas de createServer no mesmo processo.
-  const portalAppUrl = new URL('../modules/portal-morador/app/portal-morador-app.js', import.meta.url);
-  portalAppUrl.searchParams.set('instance', `${Date.now()}-${randomUUID()}`);
-  const isolatedPortalApp = (await import(portalAppUrl.href)).default;
-
-  return {
-    ...portalMoradorModule,
-    buildModule() {
-      return isolatedPortalApp;
-    },
-  };
-}
-
-async function buildIsolatedCondominiosModule() {
-  // Garante uma instância nova do sub-app por boot para evitar vazamento de `parent`
-  // entre chamadas de createServer no mesmo processo.
-  const condominiosAppUrl = new URL('../modules/condominios/app/condominios-app.js', import.meta.url);
-  condominiosAppUrl.searchParams.set('instance', `${Date.now()}-${randomUUID()}`);
-  const isolatedCondominiosApp = (await import(condominiosAppUrl.href)).default;
-
-  return {
-    ...condominiosModule,
-    buildModule() {
-      return isolatedCondominiosApp;
-    },
-  };
-}
 
 function isNodeTestRuntime() {
   const args = [...(process.execArgv || []), ...(process.argv || [])];
@@ -115,22 +108,32 @@ export async function createServer(options = {}) {
   let closeCalled = false;
   // Cada inicialização usa uma cópia local da lista-base para evitar acúmulo entre boots.
   const registry = [resolveGestorRegistryModule(), ...BASE_REGISTRY];
-  try {
-    const condominiosIdx = registry.findIndex((mod) => mod?.meta?.name === 'condominios');
-    if (condominiosIdx >= 0) {
-      registry[condominiosIdx] = await buildIsolatedCondominiosModule();
-    }
-  } catch (err) {
-    console.warn('[server] condominios isolado indisponivel; usando modulo padrao:', err?.message || err);
-  }
-  try {
-    const portalIdx = registry.findIndex((mod) => mod?.meta?.name === 'portal-morador');
-    if (portalIdx >= 0) {
-      registry[portalIdx] = await buildIsolatedPortalMoradorModule();
-    }
-  } catch (err) {
-    console.warn('[server] portal-morador isolado indisponível; usando módulo padrão:', err?.message || err);
-  }
+  await composeBootstrapRegistry({
+    registry,
+    isolatedRegistryEntries: ISOLATED_BOOTSTRAP_REGISTRY_ENTRIES,
+    enableEscalas: process.env.ENABLE_ESCALAS === '1',
+    loadEscalasModule: async () => await import('#modules/escalas/index.js'),
+    onIsolationFailure(entry, err) {
+      console.warn(`[server] ${entry.warningMessage}`, err?.message || err);
+    },
+    onEscalasLoadFailure(err) {
+      console.warn('[server] Escalas desabilitado por erro de carga:', err.message);
+      try {
+        console.error('[server][escalas][stack]', err.stack);
+        if (/Unexpected reserved word/i.test(err.message)) {
+          console.warn('[server][escalas] Possíveis causas para "Unexpected reserved word":');
+          console.warn(' - Versão do Node muito antiga para os import maps (campo "imports" em package.json).');
+          console.warn(' - Execução em ambiente que transpila/parcialmente converte ESM e perdeu "type":"module".');
+          console.warn(' - Algum arquivo com sintaxe moderna (optional chaining, import assertions) não suportada.');
+          console.warn('Sugestões:');
+          console.warn('  1) Verifique versão: node -v (recomendado >= 18, ideal >= 20).');
+          console.warn('  2) Confirme se package.json (type: module) está sendo o mesmo no runtime.');
+          console.warn('  3) Rode com NODE_OPTIONS="--trace-uncaught" para stack completa.');
+          console.warn('  4) Teste resolução manual de alias: import "./src/core/models/user.js" em vez de "#core/...".');
+        }
+      } catch (_l) { /* ignore logging issues */ }
+    },
+  });
 
   bindPortsOnce();
 
@@ -296,6 +299,27 @@ export async function createServer(options = {}) {
   try {
     const ROOTi = path.join(ROOT, '.');
     function resolvePublicRedirectInterceptionDecision(req, statusOrUrl, maybeUrl) {
+      const resolveState = typeof resolveLoginPrimeiroAcessoState === 'function'
+        ? resolveLoginPrimeiroAcessoState
+        : (inputUrl, { isLogin = false, isPA = false, includeRaw = false } = {}) => {
+            const sourceUrl = String(inputUrl || '');
+            const queryIndex = sourceUrl.indexOf('?');
+            const queryStr = queryIndex >= 0 ? sourceUrl.slice(queryIndex + 1) : '';
+            const params = new URLSearchParams(queryStr);
+            const erro = params.get('erro') || null;
+            const raw = includeRaw ? (params.get('raw') || null) : null;
+            let mensagem = null;
+            if (!isLogin && isPA && erro) {
+              switch (erro) {
+                case 'campos': mensagem = 'Preencha todos os campos.'; break;
+                case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
+                case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
+                case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
+                case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
+              }
+            }
+            return { queryStr, raw, erro, mensagem };
+          };
       const method = String(req.method || 'GET').toUpperCase();
       let status = 302;
       let url = '';
@@ -315,18 +339,7 @@ export async function createServer(options = {}) {
 
       const qIndex = target.indexOf('?');
       const qs = qIndex >= 0 ? target.slice(qIndex + 1) : (url.includes('?') ? url.slice(url.indexOf('?') + 1) : '');
-      const params = new URLSearchParams(qs);
-      const erro = params.get('erro') || null;
-      let mensagem = null;
-      if (isPA && erro) {
-        switch (erro) {
-          case 'campos': mensagem = 'Preencha todos os campos.'; break;
-          case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
-          case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
-          case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
-          case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
-        }
-      }
+      const { erro, mensagem } = resolveState(qs ? ('?' + qs) : target, { isLogin, isPA });
 
       let seg = null;
       const mm = target.match(/^\/([^\/?#]+)\/(login|primeiroacesso)(?:[?#].*)?$/i);
@@ -423,6 +436,27 @@ export async function createServer(options = {}) {
   try {
     const ROOT2 = path.join(ROOT, '.');
     function resolveUltraEarlyGuardDecision(req) {
+      const resolveState = typeof resolveLoginPrimeiroAcessoState === 'function'
+        ? resolveLoginPrimeiroAcessoState
+        : (inputUrl, { isLogin = false, isPA = false, includeRaw = false } = {}) => {
+            const sourceUrl = String(inputUrl || '');
+            const queryIndex = sourceUrl.indexOf('?');
+            const queryStr = queryIndex >= 0 ? sourceUrl.slice(queryIndex + 1) : '';
+            const params = new URLSearchParams(queryStr);
+            const erro = params.get('erro') || null;
+            const raw = includeRaw ? (params.get('raw') || null) : null;
+            let mensagem = null;
+            if (!isLogin && isPA && erro) {
+              switch (erro) {
+                case 'campos': mensagem = 'Preencha todos os campos.'; break;
+                case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
+                case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
+                case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
+                case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
+              }
+            }
+            return { queryStr, raw, erro, mensagem };
+          };
       const method = String(req.method || 'GET').toUpperCase();
       if (method !== 'GET' && method !== 'HEAD') return null;
 
@@ -431,20 +465,7 @@ export async function createServer(options = {}) {
       const isPA = /^\/gestor\/primeiroacesso(?:[?#].*)?$/.test(url) || /^\/primeiroacesso(?:[?#].*)?$/.test(url);
       if (!isPA) return null;
 
-      const queryStr = (url.includes('?')) ? url.slice(url.indexOf('?') + 1) : '';
-      const params = new URLSearchParams(queryStr);
-      const raw = params.get('raw');
-      const erro = params.get('erro') || null;
-      let mensagem = null;
-      if (isPA && erro) {
-        switch (erro) {
-          case 'campos': mensagem = 'Preencha todos os campos.'; break;
-          case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
-          case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
-          case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
-          case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
-        }
-      }
+      const { queryStr, raw, erro, mensagem } = resolveState(url, { isLogin, isPA, includeRaw: true });
 
       return {
         url,
@@ -483,257 +504,7 @@ export async function createServer(options = {}) {
 
   // Sirva estáticos e aliases o mais cedo possível (antes de sessão/middlewares)
   // para evitar overhead e potenciais 500 causados por stores de sessão em assets
-  try {
-    app.use('/images', express.static(path.join(ROOT, 'images')));             // imagens globais
-    app.use(express.static(path.join(ROOT, 'public')));                        // /css, /js, etc. na raiz
-    // Aliases sob /gestor para quando assets forem referenciados com base do módulo
-    app.use('/gestor/js/gestor', express.static(path.join(ROOT, 'public/gestor/js')));
-  app.use('/gestor/js', express.static(path.join(ROOT, 'public/gestor/js')));
-  // Também servir scripts compartilhados (public/js) sob /gestor/js (ex.: /gestor/js/validators.js)
-  app.use('/gestor/js', express.static(path.join(ROOT, 'public/js')));
-    app.use('/gestor/js/pages', express.static(path.join(ROOT, 'public/gestor/js/pages')));
-    app.use('/gestor/css', express.static(path.join(ROOT, 'public/css')));
-    app.use('/gestor/images', express.static(path.join(ROOT, 'images')));
-    app.use('/gestor/img', express.static(path.join(ROOT, 'public/img')));
-  // Alias direto para dados estáticos sob o prefixo do módulo Gestor
-  // Evita 500/404 caso o sub-app não capture /gestor/data em alguns ambientes
-  app.use('/gestor/data', express.static(path.join(ROOT, 'public/data')));
-
-    // Favicon genérico para qualquer módulo de primeiro nível (ex.: /clinica/favicon.ico, /condominios/favicon.ico)
-    // e também para a raiz (/favicon.ico). Usa public/favicon.ico se existir; caso contrário, fallback para images/logoWDGestor.png
-    const serveFavicon = (req, res) => {
-      try {
-        const ico = path.join(ROOT, 'public', 'favicon.ico');
-        const png = path.join(ROOT, 'images', 'logoWDGestor.png');
-        let target = null;
-        if (fs.existsSync(ico)) { target = ico; res.type('image/x-icon'); }
-        else if (fs.existsSync(png)) { target = png; res.type('image/png'); }
-        if (!target) return res.status(204).end();
-        res.set('Cache-Control', 'public, max-age=86400');
-        return res.sendFile(target, err => {
-          if (!err) return;
-          try {
-            if (res.headersSent) return res.end();
-            return res.status(204).end();
-          } catch { return; }
-        });
-      } catch {
-        return res.status(204).end();
-      }
-    };
-    app.get('/favicon.ico', serveFavicon);
-    app.get('/:seg/favicon.ico', serveFavicon);
-
-    // Handlers explícitos para assets do módulo Escalas ANTES de qualquer outro middleware
-    // Evita que falhas de sessão/DB ou erros do express.static virem 500 em assets
-    app.get('/escalas/css/*', (req, res) => {
-      try {
-        const rel = String(req.path || '').replace(/^\/escalas\/css\//, '');
-        const p = path.join(ROOT, 'public/css', rel);
-        if (!fs.existsSync(p)) return res.status(404).set('X-Served-By','escalas-css-miss').type('text/plain').send('Not found');
-        res.set('X-Served-By','escalas-css');
-        res.type('text/css');
-        res.set('Cache-Control', 'public, max-age=300');
-        return res.sendFile(p);
-      } catch {
-        return res.status(404).set('X-Served-By','escalas-css-error').type('text/plain').send('Not found');
-      }
-    });
-    app.get('/escalas/images/*', (req, res) => {
-      try {
-        const rel = String(req.path || '').replace(/^\/escalas\/images\//, '');
-        const p = path.join(ROOT, 'images', rel);
-        if (!fs.existsSync(p)) return res.status(404).set('X-Served-By','escalas-images-miss').end();
-        res.set('X-Served-By','escalas-images');
-        res.set('Cache-Control', 'public, max-age=300');
-        return res.sendFile(p);
-      } catch {
-        return res.status(404).set('X-Served-By','escalas-images-error').end();
-      }
-    });
-    app.get('/escalas/img/*', (req, res) => {
-      try {
-        const rel = String(req.path || '').replace(/^\/escalas\/img\//, '');
-        const p = path.join(ROOT, 'public/img', rel);
-        if (!fs.existsSync(p)) return res.status(404).set('X-Served-By','escalas-img-miss').end();
-        res.set('X-Served-By','escalas-img');
-        res.set('Cache-Control', 'public, max-age=300');
-        return res.sendFile(p);
-      } catch {
-        return res.status(404).set('X-Served-By','escalas-img-error').end();
-      }
-    });
-    // Compat: muitos templates antigos referenciam /escalas/js/pages/login.js
-    // No módulo Escalas, o script equivalente mora em public/js/escalas/login.js
-    // Colocar ESTE handler ANTES do genérico /escalas/js/* para não retornar 404
-    app.get('/escalas/js/pages/login.js', (req, res) => {
-      try {
-        const primary = path.join(ROOT, 'public/js/escalas/login.js');
-        const fallback = path.join(ROOT, 'public/gestor/js/pages/login.js');
-        const target = fs.existsSync(primary) ? primary : (fs.existsSync(fallback) ? fallback : null);
-        if (!target) return res.status(404).set('X-Served-By','escalas-js-login-miss').type('text/plain').send('Not found');
-        res.set('X-Served-By','escalas-js-login');
-        res.type('application/javascript');
-        res.set('Cache-Control', 'public, max-age=300');
-        return res.sendFile(target);
-      } catch {
-        return res.status(404).set('X-Served-By','escalas-js-login-error').type('text/plain').send('Not found');
-      }
-    });
-    app.get('/escalas/js/*', (req, res) => {
-      try {
-        const rel = String(req.path || '').replace(/^\/escalas\/js\//, '');
-        const p1 = path.join(ROOT, 'public/escalas/js', rel);
-        const p2 = path.join(ROOT, 'public/js', rel);
-        const target = fs.existsSync(p1) ? p1 : (fs.existsSync(p2) ? p2 : null);
-        if (!target) return res.status(404).set('X-Served-By','escalas-js-miss').type('text/plain').send('Not found');
-        res.set('X-Served-By', target === p1 ? 'escalas-js' : 'escalas-js-shared');
-        res.type('application/javascript');
-        res.set('Cache-Control', 'public, max-age=300');
-        return res.sendFile(target);
-      } catch {
-        return res.status(404).set('X-Served-By','escalas-js-error').type('text/plain').send('Not found');
-      }
-    });
-    // Aliases GENÉRICOS para quaisquer módulos de primeiro nível (ex.: /clinica/css/*, /clinica/images/*, /clinica/js/*)
-    // Isso permite que a mesma tela de login funcione para qualquer módulo novo, usando os assets compartilhados.
-    app.use('/:seg/css', (req, res, next) => {
-      const seg = String(req.params.seg||''); if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-      return express.static(path.join(ROOT, 'public/css'))(req, res, next);
-    });
-    app.use('/:seg/images', (req, res, next) => {
-      const seg = String(req.params.seg||''); if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-      return express.static(path.join(ROOT, 'images'))(req, res, next);
-    });
-    app.use('/:seg/img', (req, res, next) => {
-      const seg = String(req.params.seg||''); if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-      return express.static(path.join(ROOT, 'public/img'))(req, res, next);
-    });
-    app.use('/:seg/js', (req, res, next) => {
-      const seg = String(req.params.seg||''); if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-      return express.static(path.join(ROOT, 'public/js'))(req, res, next);
-    });
-
-    // Uploads compartilhados (ex.: fotos) para módulos genéricos (inclui /condominios/uploads/*)
-    app.use('/:seg/uploads', (req, res, next) => {
-      const seg = String(req.params.seg||''); if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-      // Prioriza uploads persistidos em /uploads; fallback para /public/uploads (ambientes legados)
-      const st1 = express.static(path.join(ROOT, 'uploads'));
-      const st2 = express.static(path.join(ROOT, 'public/uploads'));
-      return st1(req, res, () => st2(req, res, next));
-    });
-
-    // Uploads na raiz (casos onde a URL vem como /uploads/*)
-    app.use('/uploads', express.static(path.join(ROOT, 'uploads')));
-    app.use('/uploads', express.static(path.join(ROOT, 'public/uploads')));
-    // Script de página de login compartilhado para módulos genéricos
-    app.get('/:seg/js/pages/login.js', (req, res, next) => {
-      try {
-        const seg = String(req.params.seg||''); if (!seg || seg === 'gestor' || seg === 'escalas') return next();
-        const p = path.join(ROOT, 'public/gestor/js/pages/login.js');
-        res.type('application/javascript');
-        res.set('Cache-Control', 'public, max-age=300');
-        return res.sendFile(p, err => err ? next() : undefined);
-      } catch { return next(); }
-    });
-    // Uploads do módulo Escalas: se o arquivo não existir (Vercel é efêmero), servir placeholder
-    app.get('/escalas/uploads/*', (req, res) => {
-      try {
-        const rel = String((req.path || '').replace(/^\/escalas\/uploads\//, ''));
-        const cand = [
-          path.join(ROOT, 'public/uploads', rel),
-          path.join(ROOT, 'uploads', rel)
-        ];
-        for (const p of cand) {
-          try {
-            if (fs.existsSync(p)) {
-              res.set('X-Served-By','escalas-uploads-hit');
-              res.set('Cache-Control', 'public, max-age=300');
-              return res.sendFile(p);
-            }
-          } catch {}
-        }
-        // Fallbacks: SVG placeholder (preferível) ou PNG de usuário
-        const phSvg = path.join(ROOT, 'public', 'img', 'user-placeholder.svg');
-        const phPng = path.join(ROOT, 'images', 'usuario.png');
-        const target = (fs.existsSync(phSvg) ? phSvg : (fs.existsSync(phPng) ? phPng : null));
-        if (!target) {
-          console.warn('[uploads] placeholder inexistente', { rel, phSvg, phPng });
-          return res.status(404).set('X-Served-By','escalas-uploads-no-placeholder').end();
-        }
-        const ext = path.extname(target).toLowerCase();
-        if (ext === '.svg') res.type('image/svg+xml');
-        else if (ext === '.png') res.type('image/png');
-        res.set('Cache-Control', 'public, max-age=300');
-        res.set('X-Served-By','escalas-uploads-fallback');
-        console.info('[uploads] fallback placeholder', { rel, target: path.basename(target) });
-        return res.sendFile(target);
-      } catch (e) {
-        console.warn('[uploads] erro ao servir upload', e?.message);
-        return res.status(404).set('X-Served-By','escalas-uploads-error').end();
-      }
-    });
-  // Aliases sob /escalas para servir assets ANTES da sessão/middlewares
-  // Isso evita 500 em assets caso a sessão/DB falhe, e reduz overhead
-  app.use('/escalas/images', express.static(path.join(ROOT, 'images')));
-  app.use('/escalas/css', express.static(path.join(ROOT, 'public/css')));
-  app.use('/escalas/js/escalas', express.static(path.join(ROOT, 'public/escalas/js/escalas')));
-  app.use('/escalas/js', express.static(path.join(ROOT, 'public/escalas/js')));
-  app.use('/escalas/js', express.static(path.join(ROOT, 'public/js')));
-  app.use('/escalas/img', express.static(path.join(ROOT, 'public/img')));
-  app.use('/escalas/uploads', express.static(path.join(ROOT, 'public/uploads')));
-    // Fallback explícito para CSS do módulo Escalas (alguns ambientes podem não resolver o static)
-    app.get('/escalas/css/*', (req, res, next) => {
-      try {
-        const rel = String(req.path || '').replace(/^\/escalas\/css\//, '');
-        const p = path.join(ROOT, 'public/css', rel);
-        res.set('X-Served-By','escalas-css-fallback');
-        res.type('text/css');
-        return res.sendFile(p, err => err ? next() : undefined);
-      } catch { return next(); }
-    });
-    // Fallback explícito para IMAGES do módulo Escalas
-    app.get('/escalas/images/*', (req, res, next) => {
-      try {
-        const rel = String(req.path || '').replace(/^\/escalas\/images\//, '');
-        const p = path.join(ROOT, 'images', rel);
-        res.set('X-Served-By','escalas-images-fallback');
-        return res.sendFile(p, err => err ? next() : undefined);
-      } catch { return next(); }
-    });
-    // Fallback explícito para IMG do módulo Escalas
-    app.get('/escalas/img/*', (req, res, next) => {
-      try {
-        const rel = String(req.path || '').replace(/^\/escalas\/img\//, '');
-        const p = path.join(ROOT, 'public/img', rel);
-        res.set('X-Served-By','escalas-img-fallback');
-        return res.sendFile(p, err => err ? next() : undefined);
-      } catch { return next(); }
-    });
-    // Fallback explícito para JS do módulo Escalas (tenta primeiro pasta específica, depois compartilhada)
-    app.get('/escalas/js/*', (req, res, next) => {
-      try {
-        const rel = String(req.path || '').replace(/^\/escalas\/js\//, '');
-        const p1 = path.join(ROOT, 'public/escalas/js', rel);
-        res.set('X-Served-By','escalas-js-fallback-1');
-        return res.sendFile(p1, err1 => {
-          if (!err1) return; // enviado
-          try {
-            const p2 = path.join(ROOT, 'public/js', rel);
-            res.set('X-Served-By','escalas-js-fallback-2');
-            return res.sendFile(p2, err2 => err2 ? next() : undefined);
-          } catch { return next(); }
-        });
-      } catch { return next(); }
-    });
-    // Fallback explícito para o login.js
-    app.get('/gestor/js/pages/login.js', (req, res, next) => {
-      try {
-        const p = path.join(ROOT, 'public/gestor/js/pages/login.js');
-        return res.sendFile(p, err => err ? next() : undefined);
-      } catch { return next(); }
-    });
-  } catch(_e) { /* noop */ }
+  registerCompatibleStaticAliases({ app, ROOT });
 
   
 
@@ -743,18 +514,30 @@ export async function createServer(options = {}) {
   try {
     const ROOT = process.cwd();
     function parseErroMensagem(isLogin, qs) {
+      const resolveState = typeof resolveLoginPrimeiroAcessoState === 'function'
+        ? resolveLoginPrimeiroAcessoState
+        : (inputUrl, { isLogin = false, isPA = false, includeRaw = false } = {}) => {
+            const sourceUrl = String(inputUrl || '');
+            const queryIndex = sourceUrl.indexOf('?');
+            const queryStr = queryIndex >= 0 ? sourceUrl.slice(queryIndex + 1) : '';
+            const params = new URLSearchParams(queryStr);
+            const erro = params.get('erro') || null;
+            const raw = includeRaw ? (params.get('raw') || null) : null;
+            let mensagem = null;
+            if (!isLogin && isPA && erro) {
+              switch (erro) {
+                case 'campos': mensagem = 'Preencha todos os campos.'; break;
+                case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
+                case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
+                case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
+                case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
+              }
+            }
+            return { queryStr, raw, erro, mensagem };
+          };
       try {
-        const params = new URLSearchParams(qs || '');
-        const erro = params.get('erro') || null;
-        if (isLogin) return { erro, mensagem: null };
-        let mensagem = null;
-        switch (erro) {
-          case 'campos': mensagem = 'Preencha todos os campos.'; break;
-          case 'confirmacao': mensagem = 'Confirmação de senha não confere.'; break;
-          case 'tamanho': mensagem = 'A nova senha deve ter pelo menos 8 caracteres.'; break;
-          case 'forca': mensagem = 'A senha precisa conter maiúscula, minúscula e número.'; break;
-          case 'servidor': mensagem = 'Falha ao atualizar senha. Tente novamente.'; break;
-        }
+        const sourceUrl = String(qs || '').startsWith('?') ? String(qs || '') : `?${String(qs || '')}`;
+        const { erro, mensagem } = resolveState(sourceUrl, { isLogin, isPA: !isLogin });
         return { erro, mensagem };
       } catch { return { erro:null, mensagem:null }; }
     }
@@ -1274,31 +1057,6 @@ export async function createServer(options = {}) {
     app.use('/escalas/js/escalas', express.static(path.join(ROOT, 'public/escalas/js/escalas')));
   } catch(_e) { /* noop */ }
 
-  // Habilitar módulo Escalas somente sob flag explícita
-  if (process.env.ENABLE_ESCALAS === '1') {
-    try {
-      const escalasModule = await import('#modules/escalas/index.js');
-      registry.push(escalasModule);
-    } catch (err) {
-      console.warn('[server] Escalas desabilitado por erro de carga:', err.message);
-      try {
-        console.error('[server][escalas][stack]', err.stack);
-        // Heurística para ajudar a diagnosticar causas comuns
-        if(/Unexpected reserved word/i.test(err.message)){
-          console.warn('[server][escalas] Possíveis causas para "Unexpected reserved word":');
-          console.warn(' - Versão do Node muito antiga para os import maps (campo "imports" em package.json).');
-          console.warn(' - Execução em ambiente que transpila/parcialmente converte ESM e perdeu "type":"module".');
-          console.warn(' - Algum arquivo com sintaxe moderna (optional chaining, import assertions) não suportada.');
-          console.warn('Sugestões:');
-          console.warn('  1) Verifique versão: node -v (recomendado >= 18, ideal >= 20).');
-          console.warn('  2) Confirme se package.json (type: module) está sendo o mesmo no runtime.');
-          console.warn('  3) Rode com NODE_OPTIONS="--trace-uncaught" para stack completa.');
-          console.warn('  4) Teste resolução manual de alias: import "./src/core/models/user.js" em vez de "#core/...".');
-        }
-      } catch(_l){ /* ignore logging issues */ }
-    }
-  }
-
   // Inicializações (hooks) antes de montar rotas
   for (const mod of registry) {
     if (typeof mod.meta?.init === 'function') {
@@ -1316,37 +1074,21 @@ export async function createServer(options = {}) {
   // Mantemos as rotas do módulo Escalas responsáveis por /escalas/api/usuario
   // para garantir que os dados venham da sessão correta (escalasUser)
 
-  // Monta módulos
-  for (const mod of registry) {
-    const meta = mod.meta || { name: 'unknown', basePath: '/' };
-    const built = mod.buildModule({ config });
-    // Propagar flag de DB para o sub-app (req.app dentro do módulo aponta para o sub-app)
-    try {
-      if (built && built.locals) {
-        built.locals.skipDb = getEffectiveSkipDb();
+  mountBootstrapRegistry({
+    app,
+    registry,
+    config,
+    getEffectiveSkipDb,
+    aliasByModuleName: BOOTSTRAP_ALIAS_BY_MODULE,
+    onMounted({ meta, basePath, aliasPath }) {
+      if (!aliasPath) {
+        console.log(`[server] módulo montado: ${meta.name} em ${basePath}`);
+        return;
       }
-    } catch {}
-    app.use(meta.basePath || '/', built);
-    console.log(`[server] módulo montado: ${meta.name} em ${meta.basePath || '/'}`);
 
-    // Alias: algumas instalações/links usam /condominio (singular).
-    // Monta o mesmo sub-app para evitar 404 e manter compatibilidade.
-    try {
-      if (meta?.name === 'condominios' && (meta.basePath || '/condominios') === '/condominios') {
-        app.use('/condominio', built);
-        console.log('[server] módulo montado (alias): condominios em /condominio');
-      }
-    } catch { /* noop */ }
-
-    // Compat: algumas instalações antigas usam /portal_morador (underscore).
-    // Monta o mesmo sub-app também nesse path para evitar 404 em deploy.
-    try {
-      if (meta?.name === 'portal-morador' && (meta.basePath || '/portal-morador') === '/portal-morador') {
-        app.use('/portal_morador', built);
-        console.log('[server] módulo montado (alias): portal-morador em /portal_morador');
-      }
-    } catch { /* noop */ }
-  }
+      console.log(`[server] módulo montado (alias): ${meta.name} em ${aliasPath}`);
+    },
+  });
 
   // Compat: permitir chamadas sem o prefixo /escalas para rotas do módulo Escalas
   // Ex.: GET /api/escalas/:id -> redireciona para /escalas/api/escalas/:id mantendo método/corpo (307)
