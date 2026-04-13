@@ -6,6 +6,8 @@ import vm from 'node:vm';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/widgetSettingsApiController.js');
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
+const SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/widgetSettings/readFeedbackWidgetVisibility.service.js');
+const SERVICE_SOURCE = fs.readFileSync(SERVICE_PATH, 'utf8');
 
 function extractExportedAsyncFunction(source, functionName) {
   const signature = `export async function ${functionName}`;
@@ -209,6 +211,7 @@ async function loadOwner(dependencies = {}) {
     module: { exports: {} },
     exports: {},
     console: dependencies.console ?? { error() {} },
+    KNOWN_MODULES: dependencies.KNOWN_MODULES ?? [],
     normalizeModuleIdFromInput: dependencies.normalizeModuleIdFromInput,
     readFeedbackWidgetVisibilityPayload: dependencies.readFeedbackWidgetVisibilityPayload,
   };
@@ -220,12 +223,13 @@ async function loadOwner(dependencies = {}) {
 test('getFeedbackWidgetVisibility: owner real preserva alias de module query e resposta HTTP final', async () => {
   const callOrder = [];
   const getFeedbackWidgetVisibility = await loadOwner({
+    KNOWN_MODULES: [{ id: 'gestor' }, { id: 'portal-morador' }],
     normalizeModuleIdFromInput(value) {
       callOrder.push(`normalize:${value}`);
       return 'portal_morador';
     },
-    async readFeedbackWidgetVisibilityPayload(moduleId) {
-      callOrder.push(`read-seam:${moduleId}`);
+    async readFeedbackWidgetVisibilityPayload(moduleId, options) {
+      callOrder.push(`read-seam:${moduleId}:${options?.knownModules?.map((moduleDef) => moduleDef.id).join(',')}`);
       return {
         module: moduleId,
         enabled: false,
@@ -238,7 +242,7 @@ test('getFeedbackWidgetVisibility: owner real preserva alias de module query e r
 
   assert.deepEqual(callOrder, [
     'normalize:/portal_morador',
-    'read-seam:portal-morador',
+    'read-seam:portal-morador:gestor,portal-morador',
     'json',
   ]);
   assert.equal(record.statusCode, 200);
@@ -253,6 +257,7 @@ test('getFeedbackWidgetVisibility: owner real preserva tratamento de erro 500', 
   const logged = [];
   const boom = new Error('cache exploded');
   const getFeedbackWidgetVisibility = await loadOwner({
+    KNOWN_MODULES: [{ id: 'gestor' }],
     async readFeedbackWidgetVisibilityPayload() {
       throw boom;
     },
@@ -286,7 +291,7 @@ test('getFeedbackWidgetVisibility: owner deve largar defaults e resolucao final 
 
   assert.match(ownerSource, /normalizeModuleIdFromInput\s*\(\s*req\.query\?\.module\s*\)/);
   assert.match(ownerSource, /moduleQ\s*===\s*'portal_morador'\s*\?\s*'portal-morador'\s*:\s*moduleQ/);
-  assert.match(ownerSource, /readFeedbackWidgetVisibilityPayload\s*\(\s*moduleId\s*\)/);
+  assert.match(ownerSource, /readFeedbackWidgetVisibilityPayload\s*\(\s*moduleId\s*,\s*\{\s*knownModules\s*:\s*KNOWN_MODULES\s*\}\s*\)/);
   assert.match(ownerSource, /res\.status\s*\(\s*500\s*\)\.json\s*\(/);
 
   assert.doesNotMatch(ownerSource, /getVisibilityMapCached\s*\(/);
@@ -303,10 +308,10 @@ test('getFeedbackWidgetVisibility: owner deve largar defaults e resolucao final 
 
 test('readFeedbackWidgetVisibilityPayload: seam minima concentra cache defaults e resolucao final', async () => {
   const callOrder = [];
-  const functionSource = extractAsyncFunction(CONTROLLER_SOURCE, 'readFeedbackWidgetVisibilityPayload');
+  const functionSource = extractAsyncFunction(SERVICE_SOURCE, 'readFeedbackWidgetVisibilityPayload');
   const helper = vm.runInNewContext(`(${functionSource})`, {
-    getVisibilityMapCached: async () => {
-      callOrder.push('cache');
+    getVisibilityMapCached: async ({ knownModules }) => {
+      callOrder.push(`cache:${knownModules.map((moduleDef) => moduleDef.id).join(',')}`);
       return {
         gestor: true,
         'portal-morador': false,
@@ -314,10 +319,12 @@ test('readFeedbackWidgetVisibilityPayload: seam minima concentra cache defaults 
     },
   });
 
-  const single = await helper('portal-morador');
-  const full = await helper('');
+  const knownModules = [{ id: 'gestor' }, { id: 'portal-morador' }];
 
-  assert.deepEqual(callOrder, ['cache', 'cache']);
+  const single = await helper('portal-morador', { knownModules });
+  const full = await helper('', { knownModules });
+
+  assert.deepEqual(callOrder, ['cache:gestor,portal-morador', 'cache:gestor,portal-morador']);
   assert.deepEqual(JSON.parse(JSON.stringify(single)), {
     module: 'portal-morador',
     enabled: false,

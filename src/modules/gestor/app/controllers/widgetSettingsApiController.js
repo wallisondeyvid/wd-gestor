@@ -1,7 +1,8 @@
 import { bustWidgetEnabledCache } from '#core/utils/widgetSettings.js';
 import {
-  findWidgetSettingsFeedbackLean,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+  bustFeedbackWidgetVisibilityReadCache,
+  readFeedbackWidgetVisibilityPayload,
+} from '#modules/gestor/app/services/widgetSettings/readFeedbackWidgetVisibility.service.js';
 import { updateFeedbackWidgetVisibilityService } from '#modules/gestor/app/services/widgetSettings/updateFeedbackWidgetVisibility.service.js';
 
 const KNOWN_MODULES = [
@@ -19,40 +20,8 @@ function normalizeModuleIdFromInput(v) {
   return s;
 }
 
-// Cache simples para reduzir queries repetidas em paginas com muitos acessos.
-let cache = { at: 0, map: null };
-const CACHE_TTL_MS = 30_000;
-
-async function getVisibilityMapFresh() {
-  const rows = await findWidgetSettingsFeedbackLean();
-  const enabledByModule = {};
-  for (const m of KNOWN_MODULES) enabledByModule[m.id] = true;
-  for (const r of rows) {
-    const mid = String(r?.module || '').trim();
-    if (!mid) continue;
-    enabledByModule[mid] = (r?.enabled !== false);
-  }
-  return enabledByModule;
-}
-
-async function getVisibilityMapCached() {
-  const now = Date.now();
-  if (cache.map && (now - cache.at) < CACHE_TTL_MS) return cache.map;
-  const fresh = await getVisibilityMapFresh();
-  cache = { at: now, map: fresh };
-  return fresh;
-}
-
-async function readFeedbackWidgetVisibilityPayload(moduleId = '') {
-  const enabledByModule = await getVisibilityMapCached();
-  if (moduleId) {
-    return { module: moduleId, enabled: enabledByModule[moduleId] !== false };
-  }
-  return { enabledByModule };
-}
-
 function bustCache() {
-  cache = { at: 0, map: null };
+  bustFeedbackWidgetVisibilityReadCache();
 }
 
 export function listWidgetModules(_req, res) {
@@ -63,7 +32,7 @@ export async function getFeedbackWidgetVisibility(req, res) {
   try {
     const moduleQ = normalizeModuleIdFromInput(req.query?.module);
     const moduleId = moduleQ === 'portal_morador' ? 'portal-morador' : moduleQ;
-    const payload = await readFeedbackWidgetVisibilityPayload(moduleId);
+    const payload = await readFeedbackWidgetVisibilityPayload(moduleId, { knownModules: KNOWN_MODULES });
     return res.json({ ok: true, ...payload });
   } catch (e) {
     console.error('[widgetSettingsApi] GET feedback visibility erro:', e);
