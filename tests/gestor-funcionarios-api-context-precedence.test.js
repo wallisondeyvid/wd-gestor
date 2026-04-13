@@ -13,6 +13,32 @@ import { createUnitScope } from '../src/shared/unitScope.js';
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 
 let uniqueCounter = 0;
+const authContextHarness = {
+  promise: null,
+  app: null,
+  close: null,
+  teardownGuard: null,
+  prevMongoMemory: undefined,
+  prevAuthContextFlag: undefined,
+  unidadeA: null,
+  unidadeB: null,
+  unidadeC: null,
+  contextualAgent: null,
+  createdEmails: [],
+};
+const legacyFallbackHarness = {
+  promise: null,
+  app: null,
+  close: null,
+  teardownGuard: null,
+  prevMongoMemory: undefined,
+  prevAuthContextFlag: undefined,
+  unidadeA: null,
+  unidadeB: null,
+  unidadeC: null,
+  legacyAgent: null,
+  createdEmails: [],
+};
 
 function nextCounter() {
   uniqueCounter += 1;
@@ -41,7 +67,9 @@ function installTeardownSuppression() {
 
   const shouldIgnore = (err) => {
     if (!shuttingDown) return false;
-    return String(err?.message || err).includes('Connection was force closed');
+    const message = String(err?.message || err);
+    return message.includes('Connection was force closed')
+      || message.includes('Unable to deserialize cloned data due to invalid or unsupported version.');
   };
 
   const onUnhandledRejection = (err) => {
@@ -130,6 +158,13 @@ function getTenantModel(modelClass, unidadeId) {
     schema: modelClass.schema,
     unitScope: createUnitScope({ unidadeId: normalizeId(unidadeId) }),
   });
+}
+
+async function clearFuncionariosInUnits(...unidadeIds) {
+  for (const unidadeId of unidadeIds) {
+    const FuncionarioModel = getTenantModel(Funcionario, unidadeId);
+    await FuncionarioModel.deleteMany({});
+  }
 }
 
 async function createFuncionarioInTenant(unidadeId, { nome, email, cpf, sexo = 'M' }) {
@@ -246,109 +281,153 @@ function extractArrayPayload(res) {
   return [];
 }
 
+async function getAuthContextHarness({ legacyUnidadeId = null } = {}) {
+  if (!authContextHarness.promise) {
+    authContextHarness.promise = (async () => {
+      authContextHarness.prevMongoMemory = process.env.MONGO_MEMORY;
+      authContextHarness.prevAuthContextFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      process.env.MONGO_MEMORY = '1';
+      process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
+
+      const { app, close } = await createServer({ skipDb: false });
+      app.locals.gestorAuthContextFeatureFlags = {
+        gestor_auth_context_resolver: true,
+      };
+      delete app.locals.gestorAuthContextResolverDeps;
+      delete app.locals.gestorAuthContextMaxTimeMS;
+
+      const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
+      const resolvedLegacyUnidadeId = legacyUnidadeId === 'unidadeA'
+        ? unidadeA._id
+        : legacyUnidadeId === 'unidadeB'
+          ? unidadeB._id
+          : legacyUnidadeId === 'unidadeC'
+            ? unidadeC._id
+            : null;
+      const contextualAuth = await authenticateContextualAgent(app, {
+        activeUnidadeId: unidadeB._id,
+        legacyUnidadeId: resolvedLegacyUnidadeId,
+      });
+
+      authContextHarness.app = app;
+      authContextHarness.close = close;
+      authContextHarness.teardownGuard = installTeardownSuppression();
+      authContextHarness.unidadeA = unidadeA;
+      authContextHarness.unidadeB = unidadeB;
+      authContextHarness.unidadeC = unidadeC;
+      authContextHarness.contextualAgent = contextualAuth.agent;
+      authContextHarness.createdEmails = [contextualAuth.email];
+      return authContextHarness;
+    })();
+  }
+
+  return authContextHarness.promise;
+}
+
 async function withAuthContextHarness(run, { legacyUnidadeId = null } = {}) {
-  const prevMongoMemory = process.env.MONGO_MEMORY;
-  const prevAuthContextFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
-  process.env.MONGO_MEMORY = '1';
-  process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
+  const harness = await getAuthContextHarness({ legacyUnidadeId });
+  await clearFuncionariosInUnits(harness.unidadeA._id, harness.unidadeB._id, harness.unidadeC._id);
 
-  const { app, close } = await createServer({ skipDb: false });
-  app.locals.gestorAuthContextFeatureFlags = {
-    gestor_auth_context_resolver: true,
-  };
-  delete app.locals.gestorAuthContextResolverDeps;
-  delete app.locals.gestorAuthContextMaxTimeMS;
+  await run({
+    app: harness.app,
+    unidadeA: harness.unidadeA,
+    unidadeB: harness.unidadeB,
+    unidadeC: harness.unidadeC,
+    contextualAgent: harness.contextualAgent,
+  });
+}
 
-  const teardownGuard = installTeardownSuppression();
-  const createdEmails = [];
+async function disposeHarness(target) {
+  if (!target.promise) return;
 
   try {
-    const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
-    const resolvedLegacyUnidadeId = legacyUnidadeId === 'unidadeA'
-      ? unidadeA._id
-      : legacyUnidadeId === 'unidadeB'
-        ? unidadeB._id
-        : legacyUnidadeId === 'unidadeC'
-          ? unidadeC._id
-          : null;
-    const contextualAuth = await authenticateContextualAgent(app, {
-      activeUnidadeId: unidadeB._id,
-      legacyUnidadeId: resolvedLegacyUnidadeId,
-    });
-    createdEmails.push(contextualAuth.email);
-
-    await run({
-      app,
-      unidadeA,
-      unidadeB,
-      unidadeC,
-      contextualAgent: contextualAuth.agent,
-    });
+    await target.promise;
+    if (target.createdEmails.length > 0) {
+      try {
+        await User.deleteMany({ email: { $in: target.createdEmails } });
+      } catch {}
+    }
+    await closeWithTeardownGuard(target.close, target.teardownGuard);
   } finally {
     try {
-      if (createdEmails.length > 0) {
-        try {
-          await User.deleteMany({ email: { $in: createdEmails } });
-        } catch {}
+      if (target.teardownGuard) {
+        await target.teardownGuard.remove();
       }
-      await closeWithTeardownGuard(close, teardownGuard);
     } finally {
-      await teardownGuard.remove();
-      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
-      else process.env.MONGO_MEMORY = prevMongoMemory;
-      if (prevAuthContextFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
-      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = prevAuthContextFlag;
+      if (target.prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = target.prevMongoMemory;
+      if (target.prevAuthContextFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = target.prevAuthContextFlag;
+
+      target.promise = null;
+      target.app = null;
+      target.close = null;
+      target.teardownGuard = null;
+      target.prevMongoMemory = undefined;
+      target.prevAuthContextFlag = undefined;
+      target.unidadeA = null;
+      target.unidadeB = null;
+      target.unidadeC = null;
+      target.contextualAgent = null;
+      target.legacyAgent = null;
+      target.createdEmails = [];
     }
   }
+}
+
+async function getLegacyFallbackHarness() {
+  if (!legacyFallbackHarness.promise) {
+    legacyFallbackHarness.promise = (async () => {
+      legacyFallbackHarness.prevMongoMemory = process.env.MONGO_MEMORY;
+      legacyFallbackHarness.prevAuthContextFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      process.env.MONGO_MEMORY = '1';
+      process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '0';
+
+      const { app, close } = await createServer({ skipDb: false });
+      app.locals.gestorAuthContextFeatureFlags = {
+        gestor_auth_context_resolver: false,
+      };
+      delete app.locals.gestorAuthContextResolverDeps;
+      delete app.locals.gestorAuthContextMaxTimeMS;
+
+      const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
+      const legacyAuth = await authenticateLegacyAgent(app, {
+        legacyUnidadeId: unidadeB._id,
+      });
+
+      legacyFallbackHarness.app = app;
+      legacyFallbackHarness.close = close;
+      legacyFallbackHarness.teardownGuard = installTeardownSuppression();
+      legacyFallbackHarness.unidadeA = unidadeA;
+      legacyFallbackHarness.unidadeB = unidadeB;
+      legacyFallbackHarness.unidadeC = unidadeC;
+      legacyFallbackHarness.legacyAgent = legacyAuth.agent;
+      legacyFallbackHarness.createdEmails = [legacyAuth.email];
+      return legacyFallbackHarness;
+    })();
+  }
+
+  return legacyFallbackHarness.promise;
 }
 
 async function withLegacyFallbackHarness(run) {
-  const prevMongoMemory = process.env.MONGO_MEMORY;
-  const prevAuthContextFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
-  process.env.MONGO_MEMORY = '1';
-  process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '0';
+  await disposeHarness(authContextHarness);
+  const harness = await getLegacyFallbackHarness();
+  await clearFuncionariosInUnits(harness.unidadeA._id, harness.unidadeB._id, harness.unidadeC._id);
 
-  const { app, close } = await createServer({ skipDb: false });
-  app.locals.gestorAuthContextFeatureFlags = {
-    gestor_auth_context_resolver: false,
-  };
-  delete app.locals.gestorAuthContextResolverDeps;
-  delete app.locals.gestorAuthContextMaxTimeMS;
-
-  const teardownGuard = installTeardownSuppression();
-  const createdEmails = [];
-
-  try {
-    const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
-    const legacyAuth = await authenticateLegacyAgent(app, {
-      legacyUnidadeId: unidadeB._id,
-    });
-    createdEmails.push(legacyAuth.email);
-
-    await run({
-      app,
-      unidadeA,
-      unidadeB,
-      unidadeC,
-      legacyAgent: legacyAuth.agent,
-    });
-  } finally {
-    try {
-      if (createdEmails.length > 0) {
-        try {
-          await User.deleteMany({ email: { $in: createdEmails } });
-        } catch {}
-      }
-      await closeWithTeardownGuard(close, teardownGuard);
-    } finally {
-      await teardownGuard.remove();
-      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
-      else process.env.MONGO_MEMORY = prevMongoMemory;
-      if (prevAuthContextFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
-      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = prevAuthContextFlag;
-    }
-  }
+  await run({
+    app: harness.app,
+    unidadeA: harness.unidadeA,
+    unidadeB: harness.unidadeB,
+    unidadeC: harness.unidadeC,
+    legacyAgent: harness.legacyAgent,
+  });
 }
+
+test.after(async () => {
+  await disposeHarness(authContextHarness);
+  await disposeHarness(legacyFallbackHarness);
+});
 
 test('Funcionarios API contexto: GET por id prioriza authContext ativo sobre legado divergente', async () => {
   await withAuthContextHarness(async ({ unidadeB, unidadeC, contextualAgent }) => {

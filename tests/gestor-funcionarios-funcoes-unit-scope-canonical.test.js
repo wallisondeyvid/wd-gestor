@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 
 import { createServer } from '../src/server/createServer.js';
 import Modulo from '../src/core/models/modulo.js';
@@ -16,6 +17,19 @@ import { createUnitScope } from '../src/shared/unitScope.js';
 import { resolveModel } from '../src/shared/db/resolveModel.js';
 
 let uniqueCounter = 0;
+const sharedHarness = {
+  promise: null,
+  app: null,
+  close: null,
+  teardownGuard: null,
+  prevMongoMemory: undefined,
+  prevAuthContextResolverFlag: undefined,
+  unidadeA: null,
+  unidadeB: null,
+  unidadeC: null,
+  diretorFilialAgent: null,
+  createdEmails: [],
+};
 
 function nextCounter() {
   uniqueCounter += 1;
@@ -44,7 +58,9 @@ function installTeardownSuppression() {
 
   const shouldIgnore = (err) => {
     if (!shuttingDown) return false;
-    return String(err?.message || err).includes('Connection was force closed');
+    const message = String(err?.message || err);
+    return message.includes('Connection was force closed')
+      || message.includes('Unable to deserialize cloned data due to invalid or unsupported version.');
   };
 
   const onUnhandledRejection = (err) => {
@@ -181,6 +197,39 @@ function getTenantModel(modelClass, unidadeId) {
   });
 }
 
+function getGlobalModel(modelClass) {
+  return resolveModel({
+    name: modelClass.modelName,
+    schema: modelClass.schema,
+    unitScope: createUnitScope({ unidadeId: null }),
+  });
+}
+
+async function ensureGlobalModelsReady() {
+  await getGlobalModel(Funcao).init();
+  await getGlobalModel(Funcionario).init();
+  await getGlobalModel(Setor).init();
+}
+
+async function ensureTenantModelsReady(...unidadeIds) {
+  for (const unidadeId of unidadeIds) {
+    await getTenantModel(Funcao, unidadeId).init();
+    await getTenantModel(Funcionario, unidadeId).init();
+    await getTenantModel(Setor, unidadeId).init();
+  }
+}
+
+async function clearTenantCollectionsInUnits(...unidadeIds) {
+  await ensureGlobalModelsReady();
+  await ensureTenantModelsReady(...unidadeIds);
+
+  for (const unidadeId of unidadeIds) {
+    await getTenantModel(Funcao, unidadeId).deleteMany({});
+    await getTenantModel(Funcionario, unidadeId).deleteMany({});
+    await getTenantModel(Setor, unidadeId).deleteMany({});
+  }
+}
+
 async function createFuncaoInTenant(unidadePrincipalId, { nome, descricao }) {
   const FuncaoModel = getTenantModel(Funcao, unidadePrincipalId);
   return FuncaoModel.create({
@@ -208,54 +257,100 @@ async function createFuncionarioInTenant(unidadeId, { nome, email, cpf, funcaoId
   });
 }
 
-async function withHarness(run) {
-  const prevMongoMemory = process.env.MONGO_MEMORY;
-  const prevAuthContextResolverFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
-  process.env.MONGO_MEMORY = '1';
-  process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
+async function getSharedHarness() {
+  if (!sharedHarness.promise) {
+    sharedHarness.promise = (async () => {
+      sharedHarness.prevMongoMemory = process.env.MONGO_MEMORY;
+      sharedHarness.prevAuthContextResolverFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      process.env.MONGO_MEMORY = '1';
+      process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
 
-  const { app, close } = await createServer({ skipDb: false });
-  app.locals.gestorAuthContextFeatureFlags = {
-    gestor_auth_context_resolver: true,
-  };
-  delete app.locals.gestorAuthContextResolverDeps;
-  delete app.locals.gestorAuthContextMaxTimeMS;
-  const teardownGuard = installTeardownSuppression();
-  const createdEmails = [];
+      const { app, close } = await createServer({ skipDb: false });
+      app.locals.gestorAuthContextFeatureFlags = {
+        gestor_auth_context_resolver: true,
+      };
+      delete app.locals.gestorAuthContextResolverDeps;
+      delete app.locals.gestorAuthContextMaxTimeMS;
+
+      const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
+      const diretorFilialAuth = await authenticateAgent(app, {
+        role: 'diretor',
+        unidadeId: unidadeB._id,
+        nomeBase: 'Diretor Filial Contextual',
+      });
+
+      sharedHarness.app = app;
+      sharedHarness.close = close;
+      sharedHarness.teardownGuard = installTeardownSuppression();
+      sharedHarness.unidadeA = unidadeA;
+      sharedHarness.unidadeB = unidadeB;
+      sharedHarness.unidadeC = unidadeC;
+      sharedHarness.diretorFilialAgent = diretorFilialAuth.agent;
+      sharedHarness.createdEmails = [diretorFilialAuth.email];
+      return sharedHarness;
+    })();
+  }
+
+  return sharedHarness.promise;
+}
+
+async function withHarness(run) {
+  const harness = await getSharedHarness();
+  await clearTenantCollectionsInUnits(harness.unidadeA._id, harness.unidadeB._id, harness.unidadeC._id);
+
+  await run({
+    app: harness.app,
+    unidadeA: harness.unidadeA,
+    unidadeB: harness.unidadeB,
+    unidadeC: harness.unidadeC,
+    diretorFilialAgent: harness.diretorFilialAgent,
+  });
+}
+
+async function disposeSharedHarness() {
+  if (!sharedHarness.promise) return;
 
   try {
-    const { unidadeA, unidadeB, unidadeC } = await createModuloAndUnits();
-    const diretorFilialAuth = await authenticateAgent(app, {
-      role: 'diretor',
-      unidadeId: unidadeB._id,
-      nomeBase: 'Diretor Filial Contextual',
-    });
-    createdEmails.push(diretorFilialAuth.email);
-
-    await run({
-      app,
-      unidadeA,
-      unidadeB,
-      unidadeC,
-      diretorFilialAgent: diretorFilialAuth.agent,
-    });
+    await sharedHarness.promise;
+    await Promise.all(
+      mongoose.connections.flatMap((connection) => Object.values(connection.models || {}))
+        .map((model) => model.init().catch(() => null)),
+    );
+    if (sharedHarness.createdEmails.length > 0) {
+      try {
+        await User.deleteMany({ email: { $in: sharedHarness.createdEmails } });
+      } catch {}
+    }
+    await closeWithTeardownGuard(sharedHarness.close, sharedHarness.teardownGuard);
   } finally {
     try {
-      if (createdEmails.length > 0) {
-        try {
-          await User.deleteMany({ email: { $in: createdEmails } });
-        } catch {}
+      if (sharedHarness.teardownGuard) {
+        await sharedHarness.teardownGuard.remove();
       }
-      await closeWithTeardownGuard(close, teardownGuard);
     } finally {
-      await teardownGuard.remove();
-      if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
-      else process.env.MONGO_MEMORY = prevMongoMemory;
-      if (prevAuthContextResolverFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
-      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = prevAuthContextResolverFlag;
+      if (sharedHarness.prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
+      else process.env.MONGO_MEMORY = sharedHarness.prevMongoMemory;
+      if (sharedHarness.prevAuthContextResolverFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = sharedHarness.prevAuthContextResolverFlag;
+
+      sharedHarness.promise = null;
+      sharedHarness.app = null;
+      sharedHarness.close = null;
+      sharedHarness.teardownGuard = null;
+      sharedHarness.prevMongoMemory = undefined;
+      sharedHarness.prevAuthContextResolverFlag = undefined;
+      sharedHarness.unidadeA = null;
+      sharedHarness.unidadeB = null;
+      sharedHarness.unidadeC = null;
+      sharedHarness.diretorFilialAgent = null;
+      sharedHarness.createdEmails = [];
     }
   }
 }
+
+test.after(async () => {
+  await disposeSharedHarness();
+});
 
 test('Funções HTML: filial contextual renderiza apenas a principal canônica do contexto atual', async () => {
   await withHarness(async ({ unidadeA, unidadeB, unidadeC, diretorFilialAgent }) => {
