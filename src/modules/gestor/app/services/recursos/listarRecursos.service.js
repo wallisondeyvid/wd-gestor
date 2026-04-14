@@ -1,9 +1,9 @@
 import { createRecursoContextPolicyCore } from '#modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js';
 import {
-  findRecursosByFiltroComUnidadeLeanFromDb,
   findUnidadeUserBaseLean,
   findUnidadesByCondLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { findRecursosByFiltroComUnidadeLeanData } from '#modules/gestor/app/data/recursos/recursosReadDataFacade.js';
 
 const recursoContextPolicy = createRecursoContextPolicyCore({
   findUnidadeUserBaseLean,
@@ -11,7 +11,7 @@ const recursoContextPolicy = createRecursoContextPolicyCore({
 });
 
 export async function findRecursosByFiltroComUnidadeService(filtro) {
-  return findRecursosByFiltroComUnidadeLeanFromDb(filtro);
+  return findRecursosByFiltroComUnidadeLeanData(filtro);
 }
 
 function mapRecurso(recurso) {

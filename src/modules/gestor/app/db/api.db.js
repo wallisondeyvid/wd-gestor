@@ -174,19 +174,13 @@ import {
   findWidgetSettingsFeedbackLeanRepo,
   updateWidgetSettingsFeedbackModuleEnabledUpsertRepo,
 } from '#modules/gestor/app/repositories/WidgetSettingWriteRepository.js';
+import { scopeFromRecursoListFiltro } from '#modules/gestor/app/data/recursos/recursosScope.js';
 import {
   GLOBAL_SCOPE,
   extractSingleScopedUnitId,
   scopeFromFuncaoFiltro,
   scopeFromUnidadeId,
 } from '#modules/gestor/app/data/funcoes/funcoesScope.js';
-
-function scopeFromRecursoListFiltro(filtro) {
-  if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
-
-  const unidadeId = extractSingleScopedUnitId(filtro?.unidade_id);
-  return unidadeId ? scopeFromUnidadeId(unidadeId) : GLOBAL_SCOPE;
-}
 
 function scopeFromSetorFiltro(filtro) {
   if (!filtro || typeof filtro !== 'object' || Array.isArray(filtro)) return GLOBAL_SCOPE;
