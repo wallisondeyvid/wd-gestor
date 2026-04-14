@@ -1,7 +1,7 @@
 import {
-  findAllUnidadesLean,
-  findUnidadesPrincipaisLean,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+  findAllUnidadesLeanForRecursosPageData,
+  findUnidadesPrincipaisLeanForRecursosPageData,
+} from '#modules/gestor/app/data/recursos/recursosPageBundleDataFacade.js';
 
 export async function loadPaginaRecursosBundle({
   req,
@@ -13,11 +13,11 @@ export async function loadPaginaRecursosBundle({
 
   if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && privilegedUser) {
     // Fallback legado isolado: sessão privilegiada ainda sem unitScope contextual ativo.
-    unidadesFiltradas = await findAllUnidadesLean();
+    unidadesFiltradas = await findAllUnidadesLeanForRecursosPageData();
   }
 
   if ((!unidadesFiltradas || unidadesFiltradas.length === 0) && privilegedUser) {
-    const matrizes = await findUnidadesPrincipaisLean();
+    const matrizes = await findUnidadesPrincipaisLeanForRecursosPageData();
     if (matrizes?.length) unidadesFiltradas = matrizes;
   }
 
