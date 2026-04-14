@@ -3,7 +3,7 @@ import {
   findAllModulosLean,
   findModulosAtivosStatusLean,
   findUnidadesPrincipaisLean,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+} from '#modules/gestor/app/data/unidades/unidadesPageBundleDataFacade.js';
 import { loadPaginaUnidadesDiretores } from '#modules/gestor/app/services/unidades/loadPaginaUnidadesDiretores.service.js';
 
 export async function loadPaginaUnidadesBundle({
