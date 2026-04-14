@@ -3,7 +3,7 @@ import test from 'node:test';
 import { registerHooks } from 'node:module';
 
 const DELETE_EXECUTION_SERVICE_MOCK_MODULE_URL = 'mock:gestor-unidades-delete-structural-delete-service';
-const API_DB_BRIDGE_SERVICE_MOCK_MODULE_URL = 'mock:gestor-unidades-delete-structural-api-db-bridge';
+const UNIDADES_DELETE_DATA_FACADE_MOCK_MODULE_URL = 'mock:gestor-unidades-delete-structural-data-facade';
 
 function nextMockToken() {
 	return `${Date.now()}-${Math.random()}`;
@@ -16,11 +16,11 @@ function getDeleteStructuralDeleteServiceMocks() {
 	return globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DELETE_SERVICE_MOCKS__;
 }
 
-function getDeleteStructuralApiDbBridgeMocks() {
-	if (!globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_API_DB_BRIDGE_MOCKS__) {
-		globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_API_DB_BRIDGE_MOCKS__ = new Map();
+function getDeleteStructuralDataFacadeMocks() {
+	if (!globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DATA_FACADE_MOCKS__) {
+		globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DATA_FACADE_MOCKS__ = new Map();
 	}
-	return globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_API_DB_BRIDGE_MOCKS__;
+	return globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DATA_FACADE_MOCKS__;
 }
 
 registerHooks({
@@ -35,12 +35,12 @@ registerHooks({
 			};
 		}
 		if (
-			specifier === '#modules/gestor/app/services/apiDbBridgeService.js' &&
-			globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_INTERCEPT_API_DB_BRIDGE__ &&
-			globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_API_DB_BRIDGE_TOKEN__
+			specifier === '#modules/gestor/app/data/unidades/unidadesDeleteDataFacade.js' &&
+			globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_INTERCEPT_DATA_FACADE__ &&
+			globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DATA_FACADE_TOKEN__
 		) {
 			return {
-				url: `${API_DB_BRIDGE_SERVICE_MOCK_MODULE_URL}?token=${globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_API_DB_BRIDGE_TOKEN__}`,
+				url: `${UNIDADES_DELETE_DATA_FACADE_MOCK_MODULE_URL}?token=${globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DATA_FACADE_TOKEN__}`,
 				shortCircuit: true,
 			};
 		}
@@ -60,13 +60,13 @@ registerHooks({
 			};
 		}
 
-		if (url.startsWith(API_DB_BRIDGE_SERVICE_MOCK_MODULE_URL)) {
+		if (url.startsWith(UNIDADES_DELETE_DATA_FACADE_MOCK_MODULE_URL)) {
 			return {
 				format: 'module',
 				shortCircuit: true,
 				source: [
 					`const token = ${JSON.stringify(url.split('?token=')[1] || '')};`,
-					"const mock = globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_API_DB_BRIDGE_MOCKS__?.get(token) || {};",
+					"const mock = globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_DATA_FACADE_MOCKS__?.get(token) || {};",
 					"export const findUnidadeById = mock.findUnidadeById;",
 					"export const findUnidadeByIdLean = mock.findUnidadeByIdLean;",
 					"export const deleteUnidadeById = mock.deleteUnidadeById;",
@@ -114,20 +114,20 @@ function clearDeleteStructuralDeleteServiceMocks(token) {
 	delete globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DELETE_SERVICE_TOKEN__;
 }
 
-function setDeleteStructuralApiDbBridgeMocks(mocks) {
+function setDeleteStructuralDataFacadeMocks(mocks) {
 	const token = nextMockToken();
-	getDeleteStructuralApiDbBridgeMocks().set(token, mocks);
-	globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_API_DB_BRIDGE_TOKEN__ = token;
+	getDeleteStructuralDataFacadeMocks().set(token, mocks);
+	globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DATA_FACADE_TOKEN__ = token;
 	return token;
 }
 
-function clearDeleteStructuralApiDbBridgeMocks(token) {
-	getDeleteStructuralApiDbBridgeMocks().delete(token);
-	delete globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_API_DB_BRIDGE_TOKEN__;
+function clearDeleteStructuralDataFacadeMocks(token) {
+	getDeleteStructuralDataFacadeMocks().delete(token);
+	delete globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_CURRENT_DATA_FACADE_TOKEN__;
 }
 
-function setDeleteStructuralApiDbBridgeInterception(enabled) {
-	globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_INTERCEPT_API_DB_BRIDGE__ = enabled;
+function setDeleteStructuralDataFacadeInterception(enabled) {
+	globalThis.__GESTOR_UNIDADES_DELETE_STRUCTURAL_INTERCEPT_DATA_FACADE__ = enabled;
 }
 
 async function importControllerWithDeleteServiceMock(t, implementation = {}) {
@@ -186,12 +186,12 @@ async function importDeleteUnidadeServiceWithMocks(t, implementation = {}) {
 		return implementation.bridgeDeleteResult;
 	});
 
-	const mockToken = setDeleteStructuralApiDbBridgeMocks({
+	const mockToken = setDeleteStructuralDataFacadeMocks({
 		findUnidadeById,
 		findUnidadeByIdLean,
 		deleteUnidadeById,
 	});
-	setDeleteStructuralApiDbBridgeInterception(true);
+	setDeleteStructuralDataFacadeInterception(true);
 
 	try {
 		const serviceModule = await import(nextModuleUrl('../src/modules/gestor/app/services/unidades/deleteUnidadeExecution.service.js'));
@@ -203,8 +203,8 @@ async function importDeleteUnidadeServiceWithMocks(t, implementation = {}) {
 			bridgeDeleteCalls,
 		};
 	} finally {
-		setDeleteStructuralApiDbBridgeInterception(false);
-		clearDeleteStructuralApiDbBridgeMocks(mockToken);
+		setDeleteStructuralDataFacadeInterception(false);
+		clearDeleteStructuralDataFacadeMocks(mockToken);
 	}
 }
 
@@ -297,7 +297,7 @@ test('deleteUnidade preserva o 500 quando o service fino falha no lookup', async
 	assert.equal(res.body?.message, 'forced-delete-unidade-structural-failure');
 });
 
-test('findUnidadeDeleteCandidateService usa repository real para id valido', async (t) => {
+test('findUnidadeDeleteCandidateService usa a data facade para id valido', async (t) => {
 	const unidadeId = '507f1f77bcf86cd799439011';
 	const {
 		findUnidadeDeleteCandidateService,
@@ -314,7 +314,7 @@ test('findUnidadeDeleteCandidateService usa repository real para id valido', asy
 	assert.equal(bridgeFindCalls.length, 0);
 });
 
-test('findUnidadeDeleteCandidateService faz fallback para bridge compat quando o id e invalido', async (t) => {
+test('findUnidadeDeleteCandidateService preserva o fallback compativel quando o id e invalido', async (t) => {
 	const {
 		findUnidadeDeleteCandidateService,
 		bridgeFindCalls,
@@ -330,7 +330,7 @@ test('findUnidadeDeleteCandidateService faz fallback para bridge compat quando o
 	assert.deepEqual(bridgeFindCalls, ['u-invalida']);
 });
 
-test('deleteUnidadeExecutionService usa o bridge permitido para id valido', async (t) => {
+test('deleteUnidadeExecutionService usa a data facade para id valido', async (t) => {
 	const unidadeId = '507f1f77bcf86cd799439012';
 	const {
 		deleteUnidadeExecutionService,
@@ -344,7 +344,7 @@ test('deleteUnidadeExecutionService usa o bridge permitido para id valido', asyn
 	assert.deepEqual(bridgeDeleteCalls, [unidadeId]);
 });
 
-test('deleteUnidadeExecutionService faz fallback para bridge compat quando o id e invalido', async (t) => {
+test('deleteUnidadeExecutionService preserva o fallback compativel quando o id e invalido', async (t) => {
 	const {
 		deleteUnidadeExecutionService,
 		bridgeDeleteCalls,

@@ -1,20 +1,20 @@
 import mongoose from 'mongoose';
 import {
-	findUnidadeById as findUnidadeByIdBridge,
+	findUnidadeById,
 	findUnidadeByIdLean,
-	deleteUnidadeById as deleteUnidadeByIdBridge,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+	deleteUnidadeById,
+} from '#modules/gestor/app/data/unidades/unidadesDeleteDataFacade.js';
 
 export async function findUnidadeDeleteCandidateService({ unidadeId }) {
 	if (!mongoose.isValidObjectId(unidadeId)) {
-		return findUnidadeByIdBridge(unidadeId);
+		return findUnidadeById(unidadeId);
 	}
 
 	return findUnidadeByIdLean(unidadeId);
 }
 
 export async function deleteUnidadeExecutionService({ unidadeId }) {
-	return deleteUnidadeByIdBridge(unidadeId);
+	return deleteUnidadeById(unidadeId);
 }
 
 export default {
