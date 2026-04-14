@@ -21,6 +21,7 @@ const FEEDBACK_DELETE_CONTROLLER_MOCK_MODULE_URL = 'mock:gestor-feedback-status-
 const FEEDBACK_RESPOSTA_CONTROLLER_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-feedback-resposta-controller';
 const FEEDBACK_STATUS_CONTROLLER_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-feedback-status-controller';
 const FEEDBACK_STATUS_SERVICE_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-feedback-status-service';
+const FEEDBACK_STATUS_DATA_FACADE_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-feedback-status-data-facade';
 const API_DB_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-api-db';
 const API_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-api-db-bridge';
 
@@ -36,7 +37,7 @@ const ROUTE_HARNESS_STATE = {
 
 const SERVICE_HARNESS_STATE = {
   repositoryResult: null,
-  bridgeCalls: [],
+  dataFacadeCalls: [],
 };
 
 globalThis.__GESTOR_FEEDBACK_STATUS_PATCH_STRUCTURAL_ROUTE_STATE__ = ROUTE_HARNESS_STATE;
@@ -58,6 +59,7 @@ registerHooks({
     if (specifier === '#modules/gestor/app/controllers/feedbackRespostaApiController.js') return { url: FEEDBACK_RESPOSTA_CONTROLLER_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/controllers/feedbackStatusApiController.js') return { url: FEEDBACK_STATUS_CONTROLLER_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/services/feedback/updateFeedbackStatus.service.js') return { url: FEEDBACK_STATUS_SERVICE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/data/feedback/feedbackStatusDataFacade.js') return { url: FEEDBACK_STATUS_DATA_FACADE_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/db/api.db.js') return { url: API_DB_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') return { url: API_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
     return nextResolve(specifier, context);
@@ -185,6 +187,20 @@ registerHooks({
       };
     }
 
+    if (url === FEEDBACK_STATUS_DATA_FACADE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const state = globalThis.__GESTOR_FEEDBACK_STATUS_PATCH_STRUCTURAL_SERVICE_STATE__;',
+          'export async function updateFeedbackStatusLeanData(...args) {',
+          '  state.dataFacadeCalls.push(args);',
+          '  return state.repositoryResult;',
+          '}',
+        ].join('\n'),
+      };
+    }
+
     if (url === API_DB_MOCK_MODULE_URL) {
       return {
         format: 'module',
@@ -303,14 +319,14 @@ test('PATCH canonico usa a nova service e POST alias permanece no mutador legado
   );
 });
 
-test('service de status delega a apiDbBridgeService com payload intacto', async () => {
+test('service de status delega a data facade com payload intacto', async () => {
   SERVICE_HARNESS_STATE.repositoryResult = { _id: '507f1f77bcf86cd799439011', status: 'resolvido' };
-  SERVICE_HARNESS_STATE.bridgeCalls.length = 0;
+  SERVICE_HARNESS_STATE.dataFacadeCalls.length = 0;
 
   const { updateFeedbackStatusService } = await importFresh(SERVICE_FILE, 'service-structural-seam');
   const result = await updateFeedbackStatusService('507f1f77bcf86cd799439011', { status: 'resolvido' });
 
-  assert.deepEqual(SERVICE_HARNESS_STATE.bridgeCalls, [[
+  assert.deepEqual(SERVICE_HARNESS_STATE.dataFacadeCalls, [[
     '507f1f77bcf86cd799439011',
     { status: 'resolvido' },
   ]]);
