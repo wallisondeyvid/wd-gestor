@@ -9,6 +9,7 @@ const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/ge
 const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/funcoes/deleteFuncaoScoped.service.js')).href;
 
 const bridgeMockModuleUrl = 'mock:gestor-funcoes-delete-bridge';
+const dataFacadeMockModuleUrl = 'mock:gestor-funcoes-delete-data-facade';
 const listarServiceMockModuleUrl = 'mock:gestor-funcoes-listar-service';
 const serviceMockModuleUrl = 'mock:gestor-funcoes-delete-service';
 
@@ -16,6 +17,10 @@ registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
       return { url: bridgeMockModuleUrl, shortCircuit: true };
+    }
+
+    if (specifier === '#modules/gestor/app/data/funcoes/funcoesDeleteDataFacade.js') {
+      return { url: dataFacadeMockModuleUrl, shortCircuit: true };
     }
 
     if (specifier === '#modules/gestor/app/services/funcoes/listarFuncoes.service.js') {
@@ -58,6 +63,23 @@ registerHooks({
       };
     }
 
+    if (url === dataFacadeMockModuleUrl) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          "const getDataFacadeMocks = () => globalThis.__GESTOR_FUNCOES_DELETE_DATA_FACADE_MOCKS__ || {};",
+          "const notUsed = async () => { throw new Error('data facade nao deveria ser chamada sem mock nesta suite'); };",
+          "export async function findFuncaoById(...args) {",
+          "  return await (getDataFacadeMocks().findFuncaoById || notUsed)(...args);",
+          "}",
+          "export async function deleteFuncaoById(...args) {",
+          "  return await (getDataFacadeMocks().deleteFuncaoById || notUsed)(...args);",
+          "}",
+        ].join('\n'),
+      };
+    }
+
     if (url === serviceMockModuleUrl) {
       return {
         format: 'module',
@@ -89,6 +111,10 @@ registerHooks({
 
 function setBridgeMocks(overrides = {}) {
   globalThis.__GESTOR_FUNCOES_DELETE_BRIDGE_MOCKS__ = { ...overrides };
+}
+
+function setDataFacadeMocks(overrides = {}) {
+  globalThis.__GESTOR_FUNCOES_DELETE_DATA_FACADE_MOCKS__ = { ...overrides };
 }
 
 function setServiceMocks(overrides = {}) {
@@ -179,7 +205,7 @@ test('deleteFuncao usa o service fino com a principal contextual resolvida e pre
 test('deleteFuncaoScopedService usa a principal da propria funcao quando nao ha contexto canonico', async () => {
   const calls = [];
 
-  setBridgeMocks({
+  setDataFacadeMocks({
     findFuncaoById: async (...args) => {
       calls.push({ op: 'findFuncaoById', args });
       return {
@@ -213,7 +239,7 @@ test('deleteFuncaoScopedService usa a principal da propria funcao quando nao ha 
 test('deleteFuncaoScopedService usa a principal contextual no lookup e no delete quando ela existe', async () => {
   const calls = [];
 
-  setBridgeMocks({
+  setDataFacadeMocks({
     findFuncaoById: async (...args) => {
       calls.push({ op: 'findFuncaoById', args });
       return {
@@ -241,7 +267,7 @@ test('deleteFuncaoScopedService usa a principal contextual no lookup e no delete
 test('deleteFuncaoScopedService nao tenta excluir quando o lookup por id invalido ou alvo ausente nao encontra funcao', async () => {
   const calls = [];
 
-  setBridgeMocks({
+  setDataFacadeMocks({
     findFuncaoById: async (...args) => {
       calls.push({ op: 'findFuncaoById', args });
       return null;

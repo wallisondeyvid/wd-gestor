@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import {
   deleteFuncaoById,
   findFuncaoById,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+} from '#modules/gestor/app/data/funcoes/funcoesDeleteDataFacade.js';
 
 function normalizeUnitId(value) {
   return String(value || '').trim();
