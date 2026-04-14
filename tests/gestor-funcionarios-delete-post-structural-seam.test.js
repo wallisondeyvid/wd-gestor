@@ -3,7 +3,7 @@ import test from 'node:test';
 import { registerHooks } from 'node:module';
 
 const DELETE_POST_SERVICE_MOCK_MODULE_URL = 'mock:gestor-funcionarios-delete-post-service';
-const API_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-funcionarios-delete-post-api-db-bridge';
+const DELETE_POST_DATA_FACADE_MOCK_MODULE_URL = 'mock:gestor-funcionarios-delete-post-data-facade';
 
 function nextMockToken() {
 	return `${Date.now()}-${Math.random()}`;
@@ -18,11 +18,11 @@ function getDeletePostServiceMocks() {
 }
 
 function getDeletePostBridgeMocks() {
-	if (!globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_BRIDGE_MOCKS__) {
-		globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_BRIDGE_MOCKS__ = new Map();
+	if (!globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_DATA_FACADE_MOCKS__) {
+		globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_DATA_FACADE_MOCKS__ = new Map();
 	}
 
-	return globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_BRIDGE_MOCKS__;
+	return globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_DATA_FACADE_MOCKS__;
 }
 
 registerHooks({
@@ -38,11 +38,11 @@ registerHooks({
 		}
 
 		if (
-			specifier === '#modules/gestor/app/services/apiDbBridgeService.js'
+			specifier === '#modules/gestor/app/data/funcionarios/funcionarioDeletePostDataFacade.js'
 			&& globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_CURRENT_BRIDGE_TOKEN__
 		) {
 			return {
-				url: `${API_DB_BRIDGE_MOCK_MODULE_URL}?token=${globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_CURRENT_BRIDGE_TOKEN__}`,
+				url: `${DELETE_POST_DATA_FACADE_MOCK_MODULE_URL}?token=${globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_CURRENT_BRIDGE_TOKEN__}`,
 				shortCircuit: true,
 			};
 		}
@@ -65,16 +65,16 @@ registerHooks({
 			};
 		}
 
-		if (url.startsWith(API_DB_BRIDGE_MOCK_MODULE_URL)) {
+		if (url.startsWith(DELETE_POST_DATA_FACADE_MOCK_MODULE_URL)) {
 			return {
 				format: 'module',
 				shortCircuit: true,
 				source: [
 					`const token = ${JSON.stringify(url.split('?token=')[1] || '')};`,
-					"const mocks = globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_BRIDGE_MOCKS__?.get(token) || {};",
-					"export async function findFuncionarioById(...args) { return await mocks.findFuncionarioById(...args); }",
-					"export async function findUserByFuncionarioId(...args) { return await mocks.findUserByFuncionarioId(...args); }",
-					"export async function deleteFuncionarioById(...args) { return await mocks.deleteFuncionarioById(...args); }",
+					"const mocks = globalThis.__GESTOR_FUNCIONARIOS_DELETE_POST_DATA_FACADE_MOCKS__?.get(token) || {};",
+					"export async function findFuncionarioForDeletePostData(...args) { return await mocks.findFuncionarioForDeletePostData(...args); }",
+					"export async function findLinkedUserForDeletePostData(...args) { return await mocks.findLinkedUserForDeletePostData(...args); }",
+					"export async function deleteFuncionarioForDeletePostData(...args) { return await mocks.deleteFuncionarioForDeletePostData(...args); }",
 				].join('\n'),
 			};
 		}
@@ -172,9 +172,9 @@ async function importDeletePostServiceWithRepoMocks(t, implementation = {}) {
 	};
 
 	const token = setDeletePostBridgeMocks({
-		findFuncionarioById,
-		findUserByFuncionarioId,
-		deleteFuncionarioById,
+		findFuncionarioForDeletePostData: findFuncionarioById,
+		findLinkedUserForDeletePostData: findUserByFuncionarioId,
+		deleteFuncionarioForDeletePostData: deleteFuncionarioById,
 	});
 
 	try {
@@ -282,7 +282,7 @@ test('deleteFuncionarioPostExecutionService retorna already_removed e nao tenta 
 
 	assert.deepEqual(result, { kind: 'already_removed' });
 	assert.equal(findFuncionarioCalls.length, 1);
-	assert.deepEqual(findFuncionarioCalls[0], ['func-10', 'unit-ctx-10']);
+	assert.deepEqual(findFuncionarioCalls[0], [{ funcionarioId: 'func-10', unidadeId: 'unit-ctx-10' }]);
 	assert.equal(findUserCalls.length, 0);
 	assert.equal(deleteFuncionarioCalls.length, 0);
 });
@@ -307,7 +307,7 @@ test('deleteFuncionarioPostExecutionService faz lookup global do usuario vincula
 	assert.deepEqual(result, { kind: 'forbidden_master_link' });
 	assert.equal(findFuncionarioCalls.length, 1);
 	assert.equal(findUserCalls.length, 1);
-	assert.deepEqual(findUserCalls[0], ['func-11']);
+	assert.deepEqual(findUserCalls[0], [{ funcionarioId: 'func-11' }]);
 	assert.equal(deleteFuncionarioCalls.length, 0);
 });
 
@@ -330,10 +330,10 @@ test('deleteFuncionarioPostExecutionService exclui com unidade do proprio funcio
 
 	assert.deepEqual(result, { kind: 'deleted', funcionarioNome: 'Funcionario 12' });
 	assert.equal(findFuncionarioCalls.length, 1);
-	assert.deepEqual(findFuncionarioCalls[0], ['func-12', null]);
+	assert.deepEqual(findFuncionarioCalls[0], [{ funcionarioId: 'func-12', unidadeId: null }]);
 	assert.equal(findUserCalls.length, 1);
 	assert.equal(deleteFuncionarioCalls.length, 1);
-	assert.deepEqual(deleteFuncionarioCalls[0], ['func-12', 'unit-db-12']);
+	assert.deepEqual(deleteFuncionarioCalls[0], [{ funcionarioId: 'func-12', unidadeId: 'unit-db-12' }]);
 });
 
 test('deleteFuncionarioPostExecutionService mantem a unidade canonica no lookup e no delete quando ela existe', async (t) => {
@@ -355,8 +355,8 @@ test('deleteFuncionarioPostExecutionService mantem a unidade canonica no lookup 
 
 	assert.deepEqual(result, { kind: 'deleted', funcionarioNome: 'Funcionario 13' });
 	assert.equal(findFuncionarioCalls.length, 1);
-	assert.deepEqual(findFuncionarioCalls[0], ['func-13', 'unit-ctx-13']);
+	assert.deepEqual(findFuncionarioCalls[0], [{ funcionarioId: 'func-13', unidadeId: 'unit-ctx-13' }]);
 	assert.equal(findUserCalls.length, 1);
 	assert.equal(deleteFuncionarioCalls.length, 1);
-	assert.deepEqual(deleteFuncionarioCalls[0], ['func-13', 'unit-ctx-13']);
+	assert.deepEqual(deleteFuncionarioCalls[0], [{ funcionarioId: 'func-13', unidadeId: 'unit-ctx-13' }]);
 });
