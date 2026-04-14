@@ -1,7 +1,7 @@
-import { findClusterUnidadesByAnchorLeanFromDb } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { findClusterUnidadesByAnchorLeanData } from '#modules/gestor/app/data/unidades/unidadesClusterDataFacade.js';
 
 export async function findClusterUnidadesByAnchorService(anchorRaw) {
-  return findClusterUnidadesByAnchorLeanFromDb(anchorRaw);
+  return findClusterUnidadesByAnchorLeanData(anchorRaw);
 }
 
 export default findClusterUnidadesByAnchorService;

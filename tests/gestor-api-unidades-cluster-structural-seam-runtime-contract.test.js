@@ -12,17 +12,28 @@ const compatState = {
   delegationCalls: [],
 };
 
+const serviceState = {
+  facadeCalls: [],
+};
+
 const API_DB_BRIDGE_MODULE_URL = pathToFileURL(path.join(process.cwd(), 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 const API_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-structural-api-db-bridge';
 const CLUSTER_SERVICE_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-structural-cluster-service';
+const CLUSTER_DATA_FACADE_MOCK_MODULE_URL = 'mock:gestor-api-unidades-cluster-structural-cluster-data-facade';
+const ACTUAL_CLUSTER_SERVICE_MODULE_URL = pathToFileURL(path.join(process.cwd(), 'src/modules/gestor/app/services/unidades/findClusterUnidadesByAnchor.service.js')).href;
 
 globalThis.__GESTOR_API_UNIDADES_CLUSTER_STRUCTURAL_CONTROLLER_STATE__ = controllerState;
 globalThis.__GESTOR_API_UNIDADES_CLUSTER_STRUCTURAL_COMPAT_STATE__ = compatState;
+globalThis.__GESTOR_API_UNIDADES_CLUSTER_STRUCTURAL_SERVICE_STATE__ = serviceState;
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
       return { url: API_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    }
+
+    if (specifier === '#modules/gestor/app/data/unidades/unidadesClusterDataFacade.js') {
+      return { url: CLUSTER_DATA_FACADE_MOCK_MODULE_URL, shortCircuit: true };
     }
 
     if (specifier === '#modules/gestor/app/services/unidades/findClusterUnidadesByAnchor.service.js') {
@@ -77,6 +88,20 @@ registerHooks({
       };
     }
 
+    if (url === CLUSTER_DATA_FACADE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const serviceState = globalThis.__GESTOR_API_UNIDADES_CLUSTER_STRUCTURAL_SERVICE_STATE__ || { facadeCalls: [] };',
+          'export async function findClusterUnidadesByAnchorLeanData(anchor) {',
+          '  serviceState.facadeCalls.push(anchor);',
+          '  return [{ _id: "507f191e810c19729de860ea" }];',
+          '}',
+        ].join('\n'),
+      };
+    }
+
     return nextLoad(url, context);
   },
 });
@@ -87,11 +112,13 @@ const { findClusterUnidadesByAnchorLean } = await import('#modules/gestor/app/db
 after(() => {
   delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_STRUCTURAL_CONTROLLER_STATE__;
   delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_STRUCTURAL_COMPAT_STATE__;
+  delete globalThis.__GESTOR_API_UNIDADES_CLUSTER_STRUCTURAL_SERVICE_STATE__;
 });
 
 function resetState() {
   controllerState.clusterCalls.length = 0;
   compatState.delegationCalls.length = 0;
+  serviceState.facadeCalls.length = 0;
 }
 
 function createResCapture() {
@@ -159,4 +186,14 @@ test('findClusterUnidadesByAnchorLean em api.db.js delega por compatibilidade ao
       estado: 'SP',
     },
   ]);
+});
+
+test('findClusterUnidadesByAnchorService delega a leitura para a data facade', async () => {
+  resetState();
+
+  const serviceModule = await import(`${ACTUAL_CLUSTER_SERVICE_MODULE_URL}?case=service-${Date.now()}`);
+  const result = await serviceModule.findClusterUnidadesByAnchorService('anchor-service-001');
+
+  assert.deepEqual(serviceState.facadeCalls, ['anchor-service-001']);
+  assert.deepEqual(result, [{ _id: '507f191e810c19729de860ea' }]);
 });
