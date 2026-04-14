@@ -39,42 +39,27 @@ function buildFunction(source, signature, context = {}) {
 }
 
 test('loadPaginaFuncionariosBundle preserva os ramos contextual, vazio e privilegiado global', async () => {
-  const funcoesCalls = [];
-  const setoresCalls = [];
-  const funcionariosCalls = [];
-  const unidadesCalls = [];
-  const funcoesGlobaisCalls = [];
-  const setoresGlobaisCalls = [];
+  const scopedBundleCalls = [];
+  const privilegedBundleCalls = [];
 
-  const mapFuncoesFiltradas = buildFunction(SERVICE_SOURCE, 'function mapFuncoesFiltradas', {});
-  const mapSetoresFiltrados = buildFunction(SERVICE_SOURCE, 'function mapSetoresFiltrados', {});
   const loadPaginaFuncionariosBundle = buildFunction(SERVICE_SOURCE, 'export async function loadPaginaFuncionariosBundle', {
-    findFuncoesByUnidadePrincipalPopuladas: async (principalUnitId) => {
-      funcoesCalls.push(principalUnitId);
-      return [{ _id: 'f-1', codigo: '001', nome: 'Recepcao', descricao: '' }];
+    loadScopedPaginaFuncionariosBundleData: async (context) => {
+      scopedBundleCalls.push(context);
+      return {
+        funcoesFiltradas: [{ _id: 'f-1', codigo: '001', nome: 'Recepcao', descricao: '' }],
+        setoresFiltrados: [{ _id: 's-1', nome: 'Administrativo', descricao: 'Setor A' }],
+        funcionarios: [{ _id: 'func-1', nome: 'Maria' }],
+      };
     },
-    findSetoresByUnidadeIdPopulateLean: async (operationalUnitId) => {
-      setoresCalls.push(operationalUnitId);
-      return [{ _id: 's-1', nome: 'Administrativo', descricao: 'Setor A' }];
+    loadPrivilegedPaginaFuncionariosBundleData: async () => {
+      privilegedBundleCalls.push(true);
+      return {
+        unidadesFiltradas: [{ _id: 'u-1', codigo: 'A', nome: 'Matriz A' }],
+        funcoesFiltradas: [{ _id: 'fg-1', nome: 'Operador' }],
+        setoresFiltrados: [{ _id: 'sg-1', nome: 'Financeiro' }],
+        funcionarios: [{ _id: 'func-1', nome: 'Maria' }],
+      };
     },
-    findFuncionariosParaListagemComRefsSelectLean: async (filtro) => {
-      funcionariosCalls.push(filtro);
-      return [{ _id: 'func-1', nome: 'Maria' }];
-    },
-    findUnidadesByCondSelectCodigoNomeOrdenadasLean: async (filtro) => {
-      unidadesCalls.push(filtro);
-      return [{ _id: 'u-1', codigo: 'A', nome: 'Matriz A' }];
-    },
-    findFuncoesAtivasNomeOrdenadasSelectLean: async () => {
-      funcoesGlobaisCalls.push(true);
-      return [{ _id: 'fg-1', nome: 'Operador' }];
-    },
-    findSetoresByCondNomeOrdenadosSelectLean: async (filtro) => {
-      setoresGlobaisCalls.push(filtro);
-      return [{ _id: 'sg-1', nome: 'Financeiro' }];
-    },
-    mapFuncoesFiltradas,
-    mapSetoresFiltrados,
   });
 
   let result = await loadPaginaFuncionariosBundle({
@@ -95,11 +80,11 @@ test('loadPaginaFuncionariosBundle preserva os ramos contextual, vazio e privile
   assert.equal(result.setoresFiltrados.length, 1);
   assert.equal(result.setoresFiltrados[0].nome, 'Administrativo');
   assert.equal(result.funcionarios.length, 1);
-  assert.equal(funcoesCalls.length, 1);
-  assert.equal(funcoesCalls[0], 'u-principal');
-  assert.equal(setoresCalls.length, 1);
-  assert.equal(setoresCalls[0], 'u-operacional');
-  assert.equal(JSON.stringify(funcionariosCalls[0]), JSON.stringify({ unidade_id: 'u-operacional' }));
+  assert.equal(scopedBundleCalls.length, 1);
+  assert.equal(JSON.stringify(scopedBundleCalls[0]), JSON.stringify({
+    operationalUnitId: 'u-operacional',
+    principalUnitId: 'u-principal',
+  }));
 
   result = await loadPaginaFuncionariosBundle({
     req: { user: { id: 'user-2' } },
@@ -135,8 +120,5 @@ test('loadPaginaFuncionariosBundle preserva os ramos contextual, vazio e privile
   assert.equal(result.setoresFiltrados.length, 1);
   assert.equal(result.setoresFiltrados[0]._id, 'sg-1');
   assert.equal(result.funcionarios.length, 1);
-  assert.equal(JSON.stringify(unidadesCalls[0]), JSON.stringify({ ativa: true }));
-  assert.equal(funcoesGlobaisCalls.length, 1);
-  assert.equal(JSON.stringify(setoresGlobaisCalls[0]), JSON.stringify({ ativo: true }));
-  assert.equal(JSON.stringify(funcionariosCalls[1]), JSON.stringify({}));
+  assert.equal(privilegedBundleCalls.length, 1);
 });
