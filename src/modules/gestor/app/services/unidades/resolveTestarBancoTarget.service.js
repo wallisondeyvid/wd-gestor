@@ -3,7 +3,7 @@ import {
   findUnidadeByIdLean,
   findUnidadesByMatrizOuPrincipal,
   findUnidadesById,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+} from '#modules/gestor/app/data/unidades/unidadesTestarBancoTargetDataFacade.js';
 
 function normalizeUnitId(value) {
   return String(value || '').trim();
