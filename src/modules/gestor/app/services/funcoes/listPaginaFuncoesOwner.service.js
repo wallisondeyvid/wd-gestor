@@ -5,7 +5,7 @@ import {
   findFuncoesByUnidadePrincipalPopuladas,
   findUnidadesPrincipais,
   findUnidadesPrincipaisSelectIdLean,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+} from '#modules/gestor/app/data/funcoes/funcoesPageBundleOwnerDataFacade.js';
 
 async function loadPrivilegedPaginaFuncoesBundle(req, privilegedUser) {
   let funcoesFiltradas = await findAllFuncoesPopuladas();
