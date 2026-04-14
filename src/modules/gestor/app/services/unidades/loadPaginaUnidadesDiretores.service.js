@@ -1,7 +1,7 @@
 import {
-  findFuncionariosByEmailsSelectEmailNomeLean,
-  findUsuariosDiretorAtivosPopulatedLean,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+  findFuncionariosByEmailsForPaginaUnidadesData,
+  findUsuariosDiretorAtivosForPaginaUnidadesData,
+} from '#modules/gestor/app/data/unidades/unidadesDiretoresPageDataFacade.js';
 
 async function applyDiretoresEmailFallback(usuariosDiretor) {
   const faltando = usuariosDiretor.filter((usuario) => (
@@ -14,7 +14,7 @@ async function applyDiretoresEmailFallback(usuariosDiretor) {
   const emails = [...new Set(faltando.map((usuario) => usuario.email.toLowerCase()))];
 
   try {
-    const funcs = await findFuncionariosByEmailsSelectEmailNomeLean(emails);
+    const funcs = await findFuncionariosByEmailsForPaginaUnidadesData(emails);
     const mapa = {};
     funcs.forEach((funcionario) => {
       if (funcionario.email) mapa[funcionario.email.toLowerCase()] = funcionario.nome;
@@ -35,7 +35,7 @@ async function applyDiretoresEmailFallback(usuariosDiretor) {
 export async function loadPaginaUnidadesDiretores({ user } = {}) {
   if (!(user?.isMaster || user?.role === 'admin')) return [];
 
-  let usuariosDiretor = await findUsuariosDiretorAtivosPopulatedLean();
+  let usuariosDiretor = await findUsuariosDiretorAtivosForPaginaUnidadesData();
   usuariosDiretor = await applyDiretoresEmailFallback(usuariosDiretor);
 
   return usuariosDiretor;
