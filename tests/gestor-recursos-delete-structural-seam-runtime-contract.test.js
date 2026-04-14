@@ -7,19 +7,20 @@ import { registerHooks } from 'node:module';
 const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/recursoApiController.js')).href;
 const serviceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/recursos/deleteRecursoScoped.service.js')).href;
+const dataFacadeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/data/recursos/recursoDeleteDataFacade.js')).href;
 
-const bridgeMockModuleUrl = 'mock:gestor-recursos-bridge';
 const serviceMockModuleUrl = 'mock:gestor-recursos-delete-service';
 const listarRecursosServiceMockModuleUrl = 'mock:gestor-recursos-list-service';
+const dataFacadeMockModuleUrl = 'mock:gestor-recursos-delete-data-facade';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
-      return { url: bridgeMockModuleUrl, shortCircuit: true };
-    }
-
     if (specifier === '#modules/gestor/app/services/recursos/deleteRecursoScoped.service.js') {
       return { url: serviceMockModuleUrl, shortCircuit: true };
+    }
+
+    if (specifier === '#modules/gestor/app/data/recursos/recursoDeleteDataFacade.js') {
+      return { url: dataFacadeMockModuleUrl, shortCircuit: true };
     }
 
     if (specifier === '#modules/gestor/app/services/recursos/listarRecursos.service.js') {
@@ -29,27 +30,15 @@ registerHooks({
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
-    if (url === bridgeMockModuleUrl) {
+    if (url === dataFacadeMockModuleUrl) {
       return {
         format: 'module',
         shortCircuit: true,
         source: [
-          'export async function findUnidadeUserBaseLean() { return null; }',
-          'export async function findUnidadesByCondLean() { return []; }',
-          'export async function findRecursoByIdComUnidadeNome() { return null; }',
-          'export async function findRecursosByFiltroComUnidadeLean() { return []; }',
-          'export async function findRecursoByPlacaUpper() { return null; }',
-          'export async function findRecursoByChassiUpper() { return null; }',
-          'export async function findRecursoByRenavam() { return null; }',
-          'export async function createRecurso() { return null; }',
-          'export async function findRecursoById() { return null; }',
-          'export async function findOutroRecursoByPlacaUpper() { return null; }',
-          'export async function findOutroRecursoByChassiUpper() { return null; }',
-          'export async function findOutroRecursoByRenavam() { return null; }',
-          'export async function updateRecursoByIdComUnidadeNome() { return null; }',
-          'export async function deleteRecursoById() {',
-          '  const fn = (globalThis.__GESTOR_RECURSOS_DELETE_BRIDGE_MOCKS__ || {}).deleteRecursoById;',
-          '  if (typeof fn !== "function") throw new Error(\'deleteRecursoById da bridge nao deveria ser chamado nesta suite\');',
+          `export * from ${JSON.stringify(dataFacadeModuleUrl)};`,
+          'export async function deleteRecursoByIdLeanData() {',
+          '  const fn = (globalThis.__GESTOR_RECURSOS_DELETE_DATA_FACADE_MOCKS__ || {}).deleteRecursoByIdLeanData;',
+          '  if (typeof fn !== "function") throw new Error(\'deleteRecursoByIdLeanData da facade nao deveria ser chamado sem mock nesta suite\');',
           '  return await fn(...arguments);',
           '}',
         ].join('\n'),
@@ -76,6 +65,9 @@ registerHooks({
         format: 'module',
         shortCircuit: true,
         source: [
+          'export async function findRecursosByFiltroComUnidadeService() {',
+          '  throw new Error(\'findRecursosByFiltroComUnidadeService nao deveria ser chamado nesta suite\');',
+          '}',
           'export async function listarRecursosService() {',
           '  throw new Error(\'listarRecursosService nao deveria ser chamado nesta suite\');',
           '}',
@@ -90,8 +82,8 @@ function setServiceMocks(overrides = {}) {
   globalThis.__GESTOR_RECURSOS_DELETE_SERVICE_MOCKS__ = { ...overrides };
 }
 
-function setBridgeMocks(overrides = {}) {
-  globalThis.__GESTOR_RECURSOS_DELETE_BRIDGE_MOCKS__ = { ...overrides };
+function setDataFacadeMocks(overrides = {}) {
+  globalThis.__GESTOR_RECURSOS_DELETE_DATA_FACADE_MOCKS__ = { ...overrides };
 }
 
 function createResCapture() {
@@ -123,7 +115,7 @@ async function importDeleteRecursoService(tag) {
 
 after(() => {
   delete globalThis.__GESTOR_RECURSOS_DELETE_SERVICE_MOCKS__;
-  delete globalThis.__GESTOR_RECURSOS_DELETE_BRIDGE_MOCKS__;
+  delete globalThis.__GESTOR_RECURSOS_DELETE_DATA_FACADE_MOCKS__;
 });
 
 test('deleteRecurso usa o service fino como caminho principal e preserva 404 no escopo efetivo', async () => {
@@ -158,13 +150,13 @@ test('deleteRecurso usa o service fino como caminho principal e preserva 404 no 
   });
 });
 
-test('deleteRecursoScopedService delega a exclusao escopada direto ao repository em escopo unitario e global', async () => {
+test('deleteRecursoScopedService delega a exclusao escopada para a data facade em escopo unitario e global', async () => {
   const calls = [];
-  setBridgeMocks({
-  deleteRecursoById: async (...args) => {
-    calls.push(JSON.parse(JSON.stringify(args)));
-    return { _id: args[0] };
-  },
+  setDataFacadeMocks({
+    deleteRecursoByIdLeanData: async (...args) => {
+      calls.push(JSON.parse(JSON.stringify(args)));
+      return { _id: args[0]?.id };
+    },
   });
 
   const { deleteRecursoScopedService } = await importDeleteRecursoService('service-scope');
@@ -180,7 +172,7 @@ test('deleteRecursoScopedService delega a exclusao escopada direto ao repository
   });
 
   assert.deepEqual(calls, [
-    ['507f191e810c19729de860eb', '507f191e810c19729de860ea'],
-    ['507f191e810c19729de860ec', null],
+    [{ id: '507f191e810c19729de860eb', unidadeId: '507f191e810c19729de860ea' }],
+    [{ id: '507f191e810c19729de860ec', unidadeId: null }],
   ]);
 });
