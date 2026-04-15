@@ -7,14 +7,13 @@ import {
   loadRecoveryUsersByCpfData,
 } from '#modules/gestor/app/data/auth/passwordRecoveryRequestDataFacade.js';
 import {
+  completePasswordResetData,
+  loadPasswordResetExecutionData,
+} from '#modules/gestor/app/data/auth/resetPasswordExecutionDataFacade.js';
+import {
   loadPasswordResetTokenData,
   loadPasswordResetUserNameData,
 } from '#modules/gestor/app/data/auth/resetPasswordRenderDataFacade.js';
-import {
-  deletePasswordResetById,
-  findUserByIdWithMaxTime,
-  saveUserDocument,
-} from '#modules/gestor/app/services/authDbBridgeService.js';
 
 function resolveAppUrl() {
   const vercelDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL || '';
@@ -99,7 +98,7 @@ export async function resetPasswordByTokenService({ token, senha } = {}) {
     });
   }
 
-  const passwordReset = await findPasswordResetByToken({ token });
+  const { passwordReset, user } = await loadPasswordResetExecutionData({ token });
   if (isPasswordResetInvalidOrExpired(passwordReset)) {
     return buildResetPasswordErrorResult({
       title: 'Link inválido',
@@ -108,8 +107,6 @@ export async function resetPasswordByTokenService({ token, senha } = {}) {
     });
   }
 
-  const userIdRef = resolvePasswordResetUserId(passwordReset);
-  const user = await findUserByIdWithMaxTime({ id: userIdRef });
   if (!user) {
     return buildResetPasswordErrorResult({
       title: 'Usuário não encontrado',
@@ -118,9 +115,12 @@ export async function resetPasswordByTokenService({ token, senha } = {}) {
     });
   }
 
-  user.senha = await bcrypt.hash(senha, 10);
-  await saveUserDocument(user);
-  await deletePasswordResetById({ id: passwordReset._id });
+  const senhaHash = await bcrypt.hash(senha, 10);
+  await completePasswordResetData({
+    userId: user._id,
+    passwordHash: senhaHash,
+    passwordResetId: passwordReset._id,
+  });
 
   return {
     ok: true,
