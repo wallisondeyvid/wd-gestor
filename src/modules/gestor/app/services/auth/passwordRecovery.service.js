@@ -3,16 +3,16 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { resetPasswordTemplate } from '#core/mail/templates/resetPassword.js';
 import {
+  createPasswordRecoveryTokenData,
+  loadRecoveryUsersByCpfData,
+} from '#modules/gestor/app/data/auth/passwordRecoveryRequestDataFacade.js';
+import {
   loadPasswordResetTokenData,
   loadPasswordResetUserNameData,
 } from '#modules/gestor/app/data/auth/resetPasswordRenderDataFacade.js';
 import {
-  createPasswordReset,
   deletePasswordResetById,
-  findFuncionariosByCpfSelect,
   findUserByIdWithMaxTime,
-  findUsersByCpf,
-  findUsersByFuncionarioIds,
   saveUserDocument,
 } from '#modules/gestor/app/services/authDbBridgeService.js';
 
@@ -40,15 +40,7 @@ function maskEmail(email) {
 }
 
 async function loadRecoveryUsersByCpf(cpfDigits) {
-  let usuarios = await findUsersByCpf({ cpf: cpfDigits });
-  if (!usuarios.length) {
-    const funcionarios = await findFuncionariosByCpfSelect({ cpf: cpfDigits, select: '_id' });
-    if (funcionarios.length) {
-      const ids = funcionarios.map((funcionario) => funcionario._id);
-      usuarios = await findUsersByFuncionarioIds({ ids });
-    }
-  }
-  return usuarios;
+  return loadRecoveryUsersByCpfData({ cpfDigits });
 }
 
 function resolvePasswordResetUserId(passwordReset) {
@@ -197,7 +189,7 @@ export async function requestPasswordRecoveryService({ cpf, email, emailConfirm 
 
   const token = crypto.randomBytes(32).toString('hex');
   const expira = new Date(Date.now() + 30 * 60 * 1000);
-  await createPasswordReset({ user_id: user._id, token, expiresAt: expira });
+  await createPasswordRecoveryTokenData({ userId: user._id, token, expiresAt: expira });
 
   const appBase = resolveAppUrl();
   const link = `${appBase.replace(/\/$/, '')}/gestor/reset-password/${token}`;
