@@ -1,13 +1,13 @@
 import { createRecursoContextPolicyCore } from '#modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js';
 import {
-  findUnidadeUserBaseLean,
-  findUnidadesByCondLean,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+  findUnidadeUserBaseLeanData,
+  findUnidadesByCondLeanData,
+} from '#modules/gestor/app/data/recursos/recursosContextDataFacade.js';
 import { findRecursosByFiltroComUnidadeLeanData } from '#modules/gestor/app/data/recursos/recursosReadDataFacade.js';
 
 const recursoContextPolicy = createRecursoContextPolicyCore({
-  findUnidadeUserBaseLean,
-  findUnidadesByCondLean,
+  findUnidadeUserBaseLean: findUnidadeUserBaseLeanData,
+  findUnidadesByCondLean: findUnidadesByCondLeanData,
 });
 
 export async function findRecursosByFiltroComUnidadeService(filtro) {
