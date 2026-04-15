@@ -3,11 +3,13 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { resetPasswordTemplate } from '#core/mail/templates/resetPassword.js';
 import {
+  loadPasswordResetTokenData,
+  loadPasswordResetUserNameData,
+} from '#modules/gestor/app/data/auth/resetPasswordRenderDataFacade.js';
+import {
   createPasswordReset,
   deletePasswordResetById,
   findFuncionariosByCpfSelect,
-  findPasswordResetByToken,
-  findUserByIdSelect,
   findUserByIdWithMaxTime,
   findUsersByCpf,
   findUsersByFuncionarioIds,
@@ -66,7 +68,7 @@ function isPasswordResetInvalidOrExpired(passwordReset) {
 }
 
 export async function loadResetPasswordRenderModelService({ token } = {}) {
-  const passwordReset = await findPasswordResetByToken({ token });
+  const passwordReset = await loadPasswordResetTokenData({ token });
   if (isPasswordResetInvalidOrExpired(passwordReset)) {
     return buildResetPasswordErrorResult({
       title: 'Link inválido',
@@ -80,7 +82,7 @@ export async function loadResetPasswordRenderModelService({ token } = {}) {
   try {
     const userIdRef = resolvePasswordResetUserId(passwordReset);
     if (userIdRef) {
-      const user = await findUserByIdSelect({ id: userIdRef, select: 'nome email' });
+      const user = await loadPasswordResetUserNameData({ userId: userIdRef });
       if (user?.nome) userName = user.nome.split(' ')[0];
     }
   } catch {}
