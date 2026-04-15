@@ -1,16 +1,16 @@
 import {
-  findUserByEmailCond,
-  deleteUserById,
-} from '#modules/gestor/app/services/apiDbBridgeService.js';
+  deleteWrongMasterUserByIdData,
+  findWrongMasterUserByEmailData,
+} from '#modules/gestor/app/data/debug/removeWrongMasterExecutionDataFacade.js';
 
 export async function removeWrongMasterExecutionService({ email }) {
-  const user = await findUserByEmailCond({ email });
+  const user = await findWrongMasterUserByEmailData({ email });
 
   if (!user) {
     return { kind: 'not_found' };
   }
 
-  await deleteUserById(user._id);
+  await deleteWrongMasterUserByIdData({ userId: user._id });
 
   return { kind: 'removed' };
 }
