@@ -1,19 +1,15 @@
 import {
-  findUserByIdWithMaxTime,
-  saveUserDocument,
-} from '#modules/gestor/app/services/authDbBridgeService.js';
+  completePrimeiroAcessoData,
+  loadPrimeiroAcessoUserData,
+} from '#modules/gestor/app/data/auth/primeiroAcessoExecutionDataFacade.js';
 
 export async function primeiroAcessoExecutionService({ userId, senhaHash, maxTimeMS }) {
-  const user = await findUserByIdWithMaxTime({ id: userId, maxTimeMS });
+  const user = await loadPrimeiroAcessoUserData({ userId, maxTimeMS });
   if (!user) return { kind: 'not_found' };
   if (!user.primeiro_acesso) return { kind: 'already_completed' };
 
-  user.senha = senhaHash;
-  user.primeiro_acesso = false;
-  user.senha_provisoria = false;
-
   try {
-    await saveUserDocument(user);
+    await completePrimeiroAcessoData({ userId, senhaHash });
   } catch (error) {
     return { kind: 'save_failed', error };
   }

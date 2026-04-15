@@ -8,27 +8,11 @@ const CONTROLLER_FILE = path.resolve(process.cwd(), 'src/modules/gestor/app/cont
 const SERVICE_FILE = path.resolve(process.cwd(), 'src/modules/gestor/app/services/auth/primeiroAcessoExecution.service.js');
 const BCRYPT_MOCK_MODULE_URL = 'mock:gestor-auth-primeiro-acesso-bcryptjs';
 const EXECUTION_SERVICE_MOCK_MODULE_URL = 'mock:gestor-auth-primeiro-acesso-execution-service';
-const AUTH_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-auth-primeiro-acesso-auth-db-bridge';
+const DATA_FACADE_MOCK_MODULE_URL = 'mock:gestor-auth-primeiro-acesso-data-facade';
 
-const AUTH_DB_BRIDGE_EXPORTS = [
-  'createPasswordReset',
-  'createRememberToken',
-  'deletePasswordResetById',
-  'findFuncaoByIdSelect',
-  'findFuncionarioByIdSelect',
-  'findFuncionariosByCpfSelect',
-  'findModuloByOr',
-  'findModuloLeanByOrSelect',
-  'findPasswordResetByToken',
-  'findUnidadeByIdSelect',
-  'findUserByEmail',
-  'findUserByEmailForLogin',
-  'findUserByIdSelect',
-  'findUserByIdWithMaxTime',
-  'findUsersByCpf',
-  'findUsersByFuncionarioIds',
-  'revokeRememberTokenByHash',
-  'saveUserDocument',
+const DATA_FACADE_EXPORTS = [
+  'loadPrimeiroAcessoUserData',
+  'completePrimeiroAcessoData',
 ];
 
 registerHooks({
@@ -39,8 +23,8 @@ registerHooks({
     if (specifier === '#modules/gestor/app/services/auth/primeiroAcessoExecution.service.js') {
       return { url: EXECUTION_SERVICE_MOCK_MODULE_URL, shortCircuit: true };
     }
-    if (specifier === '#modules/gestor/app/services/authDbBridgeService.js') {
-      return { url: AUTH_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/data/auth/primeiroAcessoExecutionDataFacade.js') {
+      return { url: DATA_FACADE_MOCK_MODULE_URL, shortCircuit: true };
     }
     return nextResolve(specifier, context);
   },
@@ -84,9 +68,9 @@ registerHooks({
       };
     }
 
-    if (url === AUTH_DB_BRIDGE_MOCK_MODULE_URL) {
+    if (url === DATA_FACADE_MOCK_MODULE_URL) {
       const lines = [
-        'const getMocks = () => globalThis.__GESTOR_AUTH_PRIMEIRO_ACESSO_AUTH_DB_MOCKS__ || {};',
+        'const getMocks = () => globalThis.__GESTOR_AUTH_PRIMEIRO_ACESSO_DATA_FACADE_MOCKS__ || {};',
         'const resolveImpl = (name) => {',
         '  const fn = getMocks()[name];',
         "  if (typeof fn === 'function') return fn;",
@@ -94,7 +78,7 @@ registerHooks({
         '};',
       ];
 
-      for (const exportName of AUTH_DB_BRIDGE_EXPORTS) {
+      for (const exportName of DATA_FACADE_EXPORTS) {
         lines.push(`export async function ${exportName}(...args) { return await resolveImpl('${exportName}')(...args); }`);
       }
 
@@ -117,14 +101,14 @@ function setExecutionServiceMocks(overrides = {}) {
   globalThis.__GESTOR_AUTH_PRIMEIRO_ACESSO_EXECUTION_SERVICE_MOCKS__ = { ...overrides };
 }
 
-function setAuthDbBridgeMocks(overrides = {}) {
-  globalThis.__GESTOR_AUTH_PRIMEIRO_ACESSO_AUTH_DB_MOCKS__ = { ...overrides };
+function setDataFacadeMocks(overrides = {}) {
+  globalThis.__GESTOR_AUTH_PRIMEIRO_ACESSO_DATA_FACADE_MOCKS__ = { ...overrides };
 }
 
 function resetHarnessMocks() {
   setBcryptMocks({});
   setExecutionServiceMocks({});
-  setAuthDbBridgeMocks({});
+  setDataFacadeMocks({});
 }
 
 test.afterEach(() => {
@@ -248,28 +232,23 @@ test('owner preserva o mapeamento de save_failed para erro de servidor com redir
   assert.equal(res.location, '/gestor/primeiroacesso?erro=servidor');
 });
 
-test('service consulta authDbBridgeService, aplica a mutacao e salva o documento', async () => {
+test('service consulta a data facade, aplica a mutacao e conclui o primeiro acesso', async () => {
   resetHarnessMocks();
 
   const findCalls = [];
-  const saveCalls = [];
-  const fakeUser = {
-    primeiro_acesso: true,
-    senha_provisoria: true,
-    senha: 'anterior',
-  };
+  const completeCalls = [];
 
-  setAuthDbBridgeMocks({
-    findUserByIdWithMaxTime: async (input) => {
+  setDataFacadeMocks({
+    loadPrimeiroAcessoUserData: async (input) => {
       findCalls.push(input);
-      return fakeUser;
+      return {
+        _id: '507f1f77bcf86cd799439021',
+        primeiro_acesso: true,
+        senha_provisoria: true,
+      };
     },
-    saveUserDocument: async (user) => {
-      saveCalls.push({
-        senha: user.senha,
-        primeiro_acesso: user.primeiro_acesso,
-        senha_provisoria: user.senha_provisoria,
-      });
+    completePrimeiroAcessoData: async (input) => {
+      completeCalls.push(input);
     },
   });
 
@@ -281,29 +260,29 @@ test('service consulta authDbBridgeService, aplica a mutacao e salva o documento
   });
 
   assert.deepEqual(findCalls, [{
-    id: '507f1f77bcf86cd799439021',
+    userId: '507f1f77bcf86cd799439021',
     maxTimeMS: 4321,
   }]);
-  assert.deepEqual(saveCalls, [{
-    senha: 'hash-gerado',
-    primeiro_acesso: false,
-    senha_provisoria: false,
+  assert.deepEqual(completeCalls, [{
+    userId: '507f1f77bcf86cd799439021',
+    senhaHash: 'hash-gerado',
   }]);
   assert.deepEqual(result, { kind: 'updated' });
 });
 
-test('service retorna already_completed sem salvar quando o usuario ja concluiu primeiro acesso', async () => {
+test('service retorna already_completed sem concluir quando o usuario ja concluiu primeiro acesso', async () => {
   resetHarnessMocks();
 
-  let saveCalled = false;
+  let completeCalled = false;
 
-  setAuthDbBridgeMocks({
-    findUserByIdWithMaxTime: async () => ({
+  setDataFacadeMocks({
+    loadPrimeiroAcessoUserData: async () => ({
+      _id: '507f1f77bcf86cd799439022',
       primeiro_acesso: false,
       senha_provisoria: false,
     }),
-    saveUserDocument: async () => {
-      saveCalled = true;
+    completePrimeiroAcessoData: async () => {
+      completeCalled = true;
     },
   });
 
@@ -315,18 +294,19 @@ test('service retorna already_completed sem salvar quando o usuario ja concluiu 
   });
 
   assert.deepEqual(result, { kind: 'already_completed' });
-  assert.equal(saveCalled, false);
+  assert.equal(completeCalled, false);
 });
 
-test('service retorna save_failed quando o save do documento falha', async () => {
+test('service retorna save_failed quando a conclusao do primeiro acesso falha', async () => {
   resetHarnessMocks();
 
-  setAuthDbBridgeMocks({
-    findUserByIdWithMaxTime: async () => ({
-      primeiro_acesso: true,
-      senha_provisoria: true,
+  setDataFacadeMocks({
+    loadPrimeiroAcessoUserData: async () => ({
+      _id: '507f1f77bcf86cd799439023',
+    primeiro_acesso: true,
+    senha_provisoria: true,
     }),
-    saveUserDocument: async () => {
+    completePrimeiroAcessoData: async () => {
       throw new Error('falha-save');
     },
   });
