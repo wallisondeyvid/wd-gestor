@@ -1,8 +1,8 @@
 import { isFeatureEnabled, isFlagEnabled } from '#core/config/featureFlags.js';
 import {
-  loadActiveMembershipsByUserId as loadActiveMembershipsByUserIdFromDb,
-  loadUnidadeById as loadUnidadeByIdFromDb,
-} from '#modules/gestor/app/services/authContextDbBridgeService.js';
+  loadActiveMembershipsByUserIdData,
+  loadUnidadeByIdData,
+} from '#modules/gestor/app/data/auth/authContextReadDataFacade.js';
 
 export const GESTOR_AUTH_CONTEXT_RESOLVER_FLAG = 'gestor_auth_context_resolver';
 export const AUTH_CONTEXT_SOURCE_LEGACY = 'legacy';
@@ -234,12 +234,12 @@ function isResolverEnabled(featureFlags = null) {
 
 async function defaultLoadActiveMembershipsByUserId({ userId, maxTimeMS }) {
   if (!normalizeId(userId)) return [];
-  return loadActiveMembershipsByUserIdFromDb({ userId, maxTimeMS });
+  return loadActiveMembershipsByUserIdData({ userId, maxTimeMS });
 }
 
 async function defaultLoadUnidadeById({ unidadeId, maxTimeMS }) {
   if (!normalizeId(unidadeId)) return null;
-  return loadUnidadeByIdFromDb({ unidadeId, maxTimeMS });
+  return loadUnidadeByIdData({ unidadeId, maxTimeMS });
 }
 
 async function normalizeMembership(rawMembership, { loadUnidadeById, maxTimeMS }) {
