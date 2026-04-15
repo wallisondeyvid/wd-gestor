@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import {
-  findUserByEmailForLogin,
-  saveUserDocument,
-} from '#modules/gestor/app/services/authDbBridgeService.js';
+  loadLoginPreAuthUserData,
+  saveLoginPreAuthUserStateData,
+} from '#modules/gestor/app/data/auth/loginPreAuthGateDataFacade.js';
 
 function buildErrorResult(code, extras = {}) {
   return {
@@ -32,7 +32,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
   let user = null;
 
   try {
-    user = await findUserByEmailForLogin({
+    user = await loadLoginPreAuthUserData({
       email: String(email || '').trim().toLowerCase(),
       maxTimeMS: Number(process.env.MONGO_QUERY_TIMEOUT_MS || 5000),
     });
@@ -66,7 +66,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
     user.lock_until = null;
     user.failed_login_attempts = 0;
     try {
-      await saveUserDocument(user);
+      await saveLoginPreAuthUserStateData({ user });
     } catch (error) {
       console.warn('[login] falha ao resetar bloqueio expirado:', error.message);
     }
@@ -93,7 +93,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
     if (user.failed_login_attempts >= maxTentativas && !(isMasterRole && masterBypassLockout)) {
       user.lock_until = new Date(Date.now() + lockMinutos * 60000);
       try {
-        await saveUserDocument(user);
+        await saveLoginPreAuthUserStateData({ user });
       } catch (error) {
         console.warn('[login] falha ao salvar bloqueio:', error.message);
       }
@@ -115,7 +115,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
     }
 
     try {
-      await saveUserDocument(user);
+      await saveLoginPreAuthUserStateData({ user });
     } catch (error) {
       console.warn('[login] falha ao salvar tentativa falhada:', error.message);
     }
@@ -137,7 +137,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
     user.failed_login_attempts = 0;
     user.lock_until = null;
     try {
-      await saveUserDocument(user);
+      await saveLoginPreAuthUserStateData({ user });
     } catch (error) {
       console.warn('[login] falha ao resetar lockout:', error.message);
     }

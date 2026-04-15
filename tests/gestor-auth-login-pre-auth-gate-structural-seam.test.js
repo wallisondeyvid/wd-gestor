@@ -10,33 +10,17 @@ const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
 const SERVICE_FILE = path.resolve(process.cwd(), 'src/modules/gestor/app/services/auth/evaluateLoginPreAuthGate.service.js');
 
 const BCRYPT_MOCK_MODULE_URL = 'mock:gestor-auth-login-pre-auth-bcryptjs';
-const AUTH_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-auth-login-pre-auth-auth-db-bridge';
+const LOGIN_PRE_AUTH_FACADE_MOCK_MODULE_URL = 'mock:gestor-auth-login-pre-auth-data-facade';
 
-const AUTH_DB_BRIDGE_EXPORTS = [
-  'createPasswordReset',
-  'createRememberToken',
-  'deletePasswordResetById',
-  'findFuncaoByIdSelect',
-  'findFuncionarioByIdSelect',
-  'findFuncionariosByCpfSelect',
-  'findModuloByOr',
-  'findModuloLeanByOrSelect',
-  'findPasswordResetByToken',
-  'findUnidadeByIdSelect',
-  'findUserByEmail',
-  'findUserByEmailForLogin',
-  'findUserByIdSelect',
-  'findUserByIdWithMaxTime',
-  'findUsersByCpf',
-  'findUsersByFuncionarioIds',
-  'revokeRememberTokenByHash',
-  'saveUserDocument',
+const LOGIN_PRE_AUTH_FACADE_EXPORTS = [
+  'loadLoginPreAuthUserData',
+  'saveLoginPreAuthUserStateData',
 ];
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === 'bcryptjs') return { url: BCRYPT_MOCK_MODULE_URL, shortCircuit: true };
-    if (specifier === '#modules/gestor/app/services/authDbBridgeService.js') return { url: AUTH_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/data/auth/loginPreAuthGateDataFacade.js') return { url: LOGIN_PRE_AUTH_FACADE_MOCK_MODULE_URL, shortCircuit: true };
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
@@ -57,9 +41,9 @@ registerHooks({
       };
     }
 
-    if (url === AUTH_DB_BRIDGE_MOCK_MODULE_URL) {
+    if (url === LOGIN_PRE_AUTH_FACADE_MOCK_MODULE_URL) {
       const lines = [
-        'const getState = () => globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_AUTH_DB_STATE__ || {};',
+        'const getState = () => globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_DATA_FACADE_STATE__ || {};',
         'const resolveImpl = (name) => {',
         '  const state = getState();',
         '  const fn = state[name];',
@@ -67,7 +51,7 @@ registerHooks({
         '  return async () => null;',
         '};',
       ];
-      for (const exportName of AUTH_DB_BRIDGE_EXPORTS) {
+      for (const exportName of LOGIN_PRE_AUTH_FACADE_EXPORTS) {
         lines.push(`export async function ${exportName}(...args) { return await resolveImpl('${exportName}')(...args); }`);
       }
       return {
@@ -196,8 +180,8 @@ test('login pre-auth service preserva semantica de bloqueio, senha incorreta e s
   globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_BCRYPT_STATE__ = {
     compare: async () => false,
   };
-  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_AUTH_DB_STATE__ = {
-    async findUserByEmailForLogin() {
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_DATA_FACADE_STATE__ = {
+    async loadLoginPreAuthUserData() {
       return {
         _id: '507f1f77bcf86cd799439911',
         email: 'login@gestor.test',
@@ -209,8 +193,8 @@ test('login pre-auth service preserva semantica de bloqueio, senha incorreta e s
         lock_until: null,
       };
     },
-    async saveUserDocument(user) {
-      callLog.push(['saveUserDocument', { failed_login_attempts: user.failed_login_attempts, hasLockUntil: !!user.lock_until }]);
+    async saveLoginPreAuthUserStateData({ user }) {
+      callLog.push(['saveLoginPreAuthUserStateData', { failed_login_attempts: user.failed_login_attempts, hasLockUntil: !!user.lock_until }]);
       return user;
     },
   };
@@ -223,8 +207,8 @@ test('login pre-auth service preserva semantica de bloqueio, senha incorreta e s
   assert.equal(blockedResult.headers['X-Account-Lock-Seconds'], String(blockedResult.headers['Retry-After']));
   assert.equal(blockedResult.headers['X-Account-Lock-Minutes'], String(blockedResult.min));
 
-  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_AUTH_DB_STATE__ = {
-    async findUserByEmailForLogin() {
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_DATA_FACADE_STATE__ = {
+    async loadLoginPreAuthUserData() {
       return {
         _id: '507f1f77bcf86cd799439912',
         email: 'login@gestor.test',
@@ -236,8 +220,8 @@ test('login pre-auth service preserva semantica de bloqueio, senha incorreta e s
         lock_until: null,
       };
     },
-    async saveUserDocument(user) {
-      callLog.push(['saveUserDocument', { failed_login_attempts: user.failed_login_attempts, hasLockUntil: !!user.lock_until }]);
+    async saveLoginPreAuthUserStateData({ user }) {
+      callLog.push(['saveLoginPreAuthUserStateData', { failed_login_attempts: user.failed_login_attempts, hasLockUntil: !!user.lock_until }]);
       return user;
     },
   };
@@ -255,8 +239,8 @@ test('login pre-auth service preserva semantica de bloqueio, senha incorreta e s
   globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_BCRYPT_STATE__ = {
     compare: async () => true,
   };
-  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_AUTH_DB_STATE__ = {
-    async findUserByEmailForLogin() {
+  globalThis.__GESTOR_AUTH_LOGIN_PRE_AUTH_DATA_FACADE_STATE__ = {
+    async loadLoginPreAuthUserData() {
       return {
         _id: '507f1f77bcf86cd799439913',
         email: 'login@gestor.test',
@@ -268,8 +252,8 @@ test('login pre-auth service preserva semantica de bloqueio, senha incorreta e s
         lock_until: new Date(Date.now() - 60_000),
       };
     },
-    async saveUserDocument(user) {
-      callLog.push(['saveUserDocument', { failed_login_attempts: user.failed_login_attempts, hasLockUntil: !!user.lock_until }]);
+    async saveLoginPreAuthUserStateData({ user }) {
+      callLog.push(['saveLoginPreAuthUserStateData', { failed_login_attempts: user.failed_login_attempts, hasLockUntil: !!user.lock_until }]);
       return user;
     },
   };
@@ -278,8 +262,8 @@ test('login pre-auth service preserva semantica de bloqueio, senha incorreta e s
   assert.equal(successResult.ok, true);
   assert.equal(successResult.user.email, 'login@gestor.test');
   assert.deepEqual(callLog, [
-    ['saveUserDocument', { failed_login_attempts: 3, hasLockUntil: true }],
-    ['saveUserDocument', { failed_login_attempts: 2, hasLockUntil: false }],
-    ['saveUserDocument', { failed_login_attempts: 0, hasLockUntil: false }],
+    ['saveLoginPreAuthUserStateData', { failed_login_attempts: 3, hasLockUntil: true }],
+    ['saveLoginPreAuthUserStateData', { failed_login_attempts: 2, hasLockUntil: false }],
+    ['saveLoginPreAuthUserStateData', { failed_login_attempts: 0, hasLockUntil: false }],
   ]);
 });
