@@ -1,9 +1,9 @@
 import { resolveGestorAuthContext } from '#modules/gestor/app/services/authContextResolver.js';
 import {
-  findFuncaoCanonicalById,
-  findFuncionarioCanonicalById,
-  loadAllModulosBase,
-} from '#modules/gestor/app/services/authDbBridgeService.js';
+  findFuncaoCanonicalByIdData,
+  findFuncionarioCanonicalByIdData,
+  loadAllModulosBaseData,
+} from '#modules/gestor/app/data/auth/userApiModulosCanonicalDataFacade.js';
 
 function normalizeRole(value) {
   return String(value || '').trim().toLowerCase();
@@ -104,9 +104,9 @@ export async function resolveUserApiModulosCanonicalResult({
 } = {}) {
   const resolveAuthContext = deps.resolveAuthContext || resolveGestorAuthContext;
   const tryLoadUnidadeComModulos = deps.tryLoadUnidadeComModulos;
-  const loadAllModulos = deps.loadAllModulos || loadAllModulosBase;
-  const findFuncionarioById = deps.findFuncionarioById || findFuncionarioCanonicalById;
-  const findFuncaoById = deps.findFuncaoById || findFuncaoCanonicalById;
+  const loadAllModulos = deps.loadAllModulos || loadAllModulosBaseData;
+  const findFuncionarioById = deps.findFuncionarioById || findFuncionarioCanonicalByIdData;
+  const findFuncaoById = deps.findFuncaoById || findFuncaoCanonicalByIdData;
 
   if (typeof tryLoadUnidadeComModulos !== 'function') {
     throw new TypeError('resolveUserApiModulosCanonicalResult requer deps.tryLoadUnidadeComModulos');
