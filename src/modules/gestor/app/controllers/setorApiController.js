@@ -26,7 +26,7 @@ function normalizeUnitId(value) {
 }
 
 function isMasterOrAdmin(req) {
-	return req.user?.isMaster || req.user?.role === 'admin';
+  return req.user?.isMaster || req.user?.role === 'master' || req.user?.role === 'admin';
 }
 
 function getScopedUnitId(req) {
@@ -44,7 +44,7 @@ function requestedUnitMatchesContext(req, requestedUnitId) {
   const canonicalContextUnitId = getCanonicalContextUnitId(req);
   if (canonicalContextUnitId) return canonicalContextUnitId === requested;
 
-	return true;
+  return isMasterOrAdmin(req);
 }
 
 // Helper para resposta 409
@@ -55,7 +55,7 @@ function conflict(res, message, extra={}) {
 export async function createSetor(req,res){
   try {
     let { nome, descricao, unidade_id } = req.body;
-    const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
+    const canonicalUnitId = getCanonicalContextUnitId(req) || (isMasterOrAdmin(req) ? normalizeUnitId(unidade_id) : '');
     if (!nome) return badRequest(res,'Nome é obrigatório');
     if (!canonicalUnitId) return badRequest(res,'Unidade é obrigatória');
     if (!requestedUnitMatchesContext(req, unidade_id || canonicalUnitId)) return notFound(res,'Unidade não encontrada');
@@ -113,8 +113,9 @@ export async function getSetor(req,res){
 export async function updateSetor(req,res){
   try {
     let { nome, descricao, unidade_id } = req.body;
-    const canonicalUnitId = getCanonicalContextUnitId(req) || normalizeUnitId(unidade_id);
+    const canonicalUnitId = getCanonicalContextUnitId(req) || (isMasterOrAdmin(req) ? normalizeUnitId(unidade_id) : '');
     if (unidade_id && !requestedUnitMatchesContext(req, unidade_id)) return notFound(res,'Unidade não encontrada');
+    if (!canonicalUnitId && !isMasterOrAdmin(req)) return notFound(res,'Setor não encontrado');
     const result = await updateSetorScopedService({
       setorId: req.params.id,
       canonicalUnitId: canonicalUnitId || null,
