@@ -193,6 +193,14 @@ async function loadScopedUnidadesClusterForPage(req) {
   };
 }
 
+function buildAllowedScopedUnitIds(scopedContext) {
+  return new Set(
+    (scopedContext?.unidadesFiltradas || [])
+      .map((unidade) => normalizeId(unidade?._id))
+      .filter(Boolean),
+  );
+}
+
 export async function paginaDashboard(req, res) { return res.render('dashboard-gestor', { user: req.user }); }
 
 export async function paginaFeedback(req, res) {
@@ -281,21 +289,24 @@ export async function paginaUnidades(req, res) {
 export async function paginaEditarUnidade(req, res) {
   try {
     const unidadeId = req.params.id;
-    const unidade = await findUnidadeById(unidadeId);
-    if (!unidade) return res.status(404).send('Unidade não encontrada.');
     const privilegedUser = isPrivilegedGestorUser(req.user);
     let unidadesFiltradas;
     const scopedContext = await loadScopedUnidadesClusterForPage(req);
+
     if (scopedContext.scopedUnitId) {
       unidadesFiltradas = scopedContext.unidadesFiltradas;
-      const permitidoIds = new Set(unidadesFiltradas.map(u => String(u._id)));
-      if (!permitidoIds.has(String(unidade._id))) return res.status(403).send('Acesso à unidade não autorizado');
-    } else if (privilegedUser) { unidadesFiltradas = await findAllUnidades(); }
-    else {
+      const permitidoIds = buildAllowedScopedUnitIds(scopedContext);
+      if (!permitidoIds.has(normalizeId(unidadeId))) return res.status(403).send('Acesso à unidade não autorizado');
+    } else if (privilegedUser) {
+      unidadesFiltradas = await findAllUnidades();
+    } else {
       unidadesFiltradas = [];
-      const permitidoIds = new Set(unidadesFiltradas.map(u => String(u._id)));
-      if (!permitidoIds.has(String(unidade._id))) return res.status(403).send('Acesso à unidade não autorizado');
+      return res.status(403).send('Acesso à unidade não autorizado');
     }
+
+    const unidade = await findUnidadeById(unidadeId);
+    if (!unidade) return res.status(404).send('Unidade não encontrada.');
+
     return res.render('editar-unidades', { unidade, unidadesFiltradas, user: req.user, estados });
   } catch (e) { console.error('[pagesController] /editar-unidades erro:', e.message); return res.status(500).render('erro', { errorMessage: 'Erro ao carregar unidade: ' + e.message }); }
 }
