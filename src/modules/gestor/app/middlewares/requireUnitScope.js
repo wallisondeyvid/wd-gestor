@@ -105,8 +105,8 @@ function respondPendingSelection(res, transport) {
   return res.redirect(redirect);
 }
 
-function isMultiTenantEnforced() {
-  return String(process.env.WDG_MULTI_TENANT || '').trim() === '1';
+function respondMissingUnitScope(res) {
+  return res.status(400).json({ success: false, error: 'UNIDADE_ID_REQUIRED' });
 }
 
 export function requireUnitScope(req, res, next) {
@@ -123,12 +123,7 @@ export function requireUnitScope(req, res, next) {
   );
 
   if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
-    if (isMultiTenantEnforced()) {
-      return res.status(400).json({ success: false, error: 'UNIDADE_ID_REQUIRED' });
-    }
-
-    req.unitScope = createUnitScope({ unidadeId: null });
-    return next();
+    return respondMissingUnitScope(res);
   }
 
   req.unitScope = createUnitScope({ unidadeId });

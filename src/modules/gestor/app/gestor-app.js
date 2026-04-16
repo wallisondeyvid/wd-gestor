@@ -148,9 +148,16 @@ app.use((req, res, next) => {
 // (evita ficar preso em usuário sintético de middlewares anteriores ou skipAuth)
 app.use(async (req, res, next) => {
 	try {
+		const sessionUser = req.session && req.session.user;
+		const sessionAuthContext = req.session && req.session.gestorAuthContext;
+		const resolveCanonicalSessionUnidadeId = () => (
+			sessionAuthContext?.active_unidade_id || sessionUser?.unidade_id || null
+		);
+		const resolveCanonicalSessionFuncionarioId = () => (
+			sessionAuthContext?.active_funcionario_id || sessionUser?.funcionario_id || null
+		);
 		// Em modo sem DB ou sem conexão ativa, não tentar consultar o Mongo; apenas espelhar dados mínimos da sessão
 		if (req.app?.locals?.skipDb || mongoose.connection.readyState !== 1) {
-			const sessionUser = req.session && req.session.user;
 			if (sessionUser) {
 				req.user = {
 					id: sessionUser.id || null,
@@ -159,27 +166,25 @@ app.use(async (req, res, next) => {
 					email: sessionUser.email,
 					role: sessionUser.role || 'user',
 					isMaster: (sessionUser.role === 'master'),
-					unidade_id: sessionUser.unidade_id || null,
-					funcionario_id: sessionUser.funcionario_id || null,
+					unidade_id: resolveCanonicalSessionUnidadeId(),
+					funcionario_id: resolveCanonicalSessionFuncionarioId(),
 					foto: sessionUser.foto || null
 				};
 			}
 			return next();
 		}
 		if (req.skipAuth) return next();
-		const sessionUser = req.session && req.session.user;
 		if (!sessionUser || !sessionUser.email) return next();
-		const sessionAuthContext = req.session && req.session.gestorAuthContext;
 		const hasProjectedAuthContext = Boolean(
 			sessionUser.auth_version === 'phase3'
 			|| sessionAuthContext?.active_unidade_id
 			|| sessionAuthContext?.active_funcionario_id
 		);
 		const contextualUnidadeId = hasProjectedAuthContext
-			? (sessionUser.unidade_id || sessionAuthContext?.active_unidade_id || null)
+			? resolveCanonicalSessionUnidadeId()
 			: null;
 		const contextualFuncionarioId = hasProjectedAuthContext
-			? (sessionUser.funcionario_id || sessionAuthContext?.active_funcionario_id || null)
+			? resolveCanonicalSessionFuncionarioId()
 			: null;
 		const email = (sessionUser.email || '').toLowerCase();
 		const userDoc = await findUserByEmailCondLeanMaxTimeMs({ email }, Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000));
@@ -204,8 +209,8 @@ app.use(async (req, res, next) => {
 				email: sessionUser.email,
 				role: sessionUser.role || 'user',
 				isMaster: (sessionUser.role === 'master'),
-				unidade_id: sessionUser.unidade_id || null,
-				funcionario_id: sessionUser.funcionario_id || null,
+				unidade_id: resolveCanonicalSessionUnidadeId(),
+				funcionario_id: resolveCanonicalSessionFuncionarioId(),
 				foto: sessionUser.foto || null
 			};
 		}

@@ -41,6 +41,13 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       /timed out|timeout|server selection/i.test(msg)
     );
   };
+  const sessionAuthContext = req.session?.gestorAuthContext;
+  const resolveCanonicalSessionUnidadeId = (sessionUser) => (
+    sessionAuthContext?.active_unidade_id || sessionUser?.unidade_id || null
+  );
+  const resolveCanonicalSessionFuncionarioId = (sessionUser) => (
+    sessionAuthContext?.active_funcionario_id || sessionUser?.funcionario_id || null
+  );
   const buildUserFromSession = (s) => {
     const fallbackRole = isNodeTest ? 'master' : 'user';
     const role = s.role || fallbackRole;
@@ -53,8 +60,8 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     global_role: s.global_role || null,
     isMaster: role === 'master',
     foto: s.foto || null,
-    funcionario_id: s.funcionario_id || null,
-    unidade_id: s.unidade_id || null,
+    funcionario_id: resolveCanonicalSessionFuncionarioId(s),
+    unidade_id: resolveCanonicalSessionUnidadeId(s),
     unidade_principal_id: s.unidade_principal_id || null,
     funcao: s.funcao || null
   });
