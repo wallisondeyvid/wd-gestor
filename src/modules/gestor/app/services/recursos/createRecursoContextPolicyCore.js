@@ -8,7 +8,7 @@ export function createRecursoContextPolicyCore({ findUnidadeUserBaseLean, findUn
   }
 
   function resolveCanonicalContextUnitId({ currentUser, sessionUser, scopedUnitId } = {}) {
-    return normalizeUnitId(scopedUnitId || currentUser?.unidade_id || sessionUser?.unidade_id);
+      return normalizeUnitId(scopedUnitId);
   }
 
   function shouldBlockForMissingContext({ currentUser, sessionUser, scopedUnitId } = {}) {

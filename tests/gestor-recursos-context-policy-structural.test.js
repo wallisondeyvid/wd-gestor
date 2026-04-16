@@ -41,7 +41,7 @@ function buildRecursoContextPolicyCoreSource() {
     }
 
     function resolveCanonicalContextUnitId({ currentUser, sessionUser, scopedUnitId } = {}) {
-      return normalizeUnitId(scopedUnitId || currentUser?.unidade_id || sessionUser?.unidade_id);
+      return normalizeUnitId(scopedUnitId);
     }
 
     function shouldBlockForMissingContext({ currentUser, sessionUser, scopedUnitId } = {}) {
@@ -328,8 +328,10 @@ test('futura seam unica recebe apenas contexto minimo para decidir escopo e unid
   });
 
   assert.equal(policy.resolveCanonicalContextUnitId({ scopedUnitId: 'unit-1' }), 'unit-1');
-  assert.equal(policy.resolveCanonicalContextUnitId({ currentUser: { unidade_id: 'unit-2' } }), 'unit-2');
+  assert.equal(policy.resolveCanonicalContextUnitId({ currentUser: { unidade_id: 'unit-2' } }), '');
+  assert.equal(policy.resolveCanonicalContextUnitId({ sessionUser: { unidade_id: 'unit-3' } }), '');
   assert.equal(policy.shouldBlockForMissingContext({ currentUser: { role: 'user' } }), true);
+  assert.equal(policy.shouldBlockForMissingContext({ currentUser: { role: 'user', unidade_id: 'unit-ctx' } }), true);
   assert.equal(policy.shouldBlockForMissingContext({ currentUser: { role: 'admin' } }), false);
 
   assert.deepEqual(toPlain(policy.ensureRequestedUnitAccess({
@@ -343,6 +345,17 @@ test('futura seam unica recebe apenas contexto minimo para decidir escopo e unid
 
   assert.deepEqual(toPlain(policy.ensureRequestedUnitAccess({
     currentUser: { role: 'user', unidade_id: 'unit-ctx' },
+    requestedUnitId: 'unit-ctx',
+  })), {
+    allowed: false,
+    blocked: true,
+    error: 'missing_context',
+    canonicalContextUnitId: null,
+  });
+
+  assert.deepEqual(toPlain(policy.ensureRequestedUnitAccess({
+    currentUser: { role: 'user', unidade_id: 'unit-ctx' },
+    scopedUnitId: 'unit-ctx',
     requestedUnitId: 'unit-ctx',
   })), {
     allowed: true,
@@ -362,6 +375,7 @@ test('futura seam unica recebe apenas contexto minimo para decidir escopo e unid
 
   assert.deepEqual(toPlain(policy.ensureRequestedUnitAccess({
     currentUser: { role: 'user', unidade_id: 'unit-ctx' },
+    scopedUnitId: 'unit-ctx',
     requestedUnitId: 'unit-other',
   })), {
     allowed: false,
@@ -380,6 +394,7 @@ test('futura seam unica recebe apenas contexto minimo para decidir escopo e unid
 
   assert.deepEqual(toPlain(await policy.buildListScope({
     currentUser: { role: 'user', unidade_id: 'unit-child' },
+    scopedUnitId: 'unit-child',
   })), {
     blocked: false,
     filter: { unidade_id: { $in: ['unit-principal', 'unit-child'] } },
@@ -389,6 +404,7 @@ test('futura seam unica recebe apenas contexto minimo para decidir escopo e unid
 
   assert.deepEqual(toPlain(await policy.buildListScope({
     currentUser: { role: 'user', unidade_id: 'unit-child' },
+    scopedUnitId: 'unit-child',
     requestedUnitId: 'unit-outside',
   })), {
     blocked: false,

@@ -10,28 +10,28 @@ const CONTEXTUAL_UNIT_ID = '507f191e810c19729de860ea';
 const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/recursoApiController.js')).href;
 const gestorAppModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/gestor-app.js')).href;
-const actualDbBridgeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
-const dbBridgeMockModuleUrl = 'mock:gestor-recursos-delete-api-db-bridge';
-const DB_BRIDGE_EXPORTS = [
-	'deleteRecursoById',
+const actualDeleteScopedServiceModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/recursos/deleteRecursoScoped.service.js')).href;
+const deleteScopedServiceMockModuleUrl = 'mock:gestor-recursos-delete-scoped-service';
+const DELETE_SERVICE_EXPORTS = [
+	'deleteRecursoScopedService',
 ];
 
 registerHooks({
 	resolve(specifier, context, nextResolve) {
-		if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
-			return { url: dbBridgeMockModuleUrl, shortCircuit: true };
+		if (specifier === '#modules/gestor/app/services/recursos/deleteRecursoScoped.service.js') {
+			return { url: deleteScopedServiceMockModuleUrl, shortCircuit: true };
 		}
 		return nextResolve(specifier, context);
 	},
 	load(url, context, nextLoad) {
-		if (url === dbBridgeMockModuleUrl) {
+		if (url === deleteScopedServiceMockModuleUrl) {
 			const lines = [
-				`export * from '${actualDbBridgeModuleUrl}';`,
-				`import * as actual from '${actualDbBridgeModuleUrl}';`,
-				"const getMocks = () => globalThis.__GESTOR_RECURSOS_DELETE_DB_MOCKS__ || {};",
+				`export * from '${actualDeleteScopedServiceModuleUrl}';`,
+				`import * as actual from '${actualDeleteScopedServiceModuleUrl}';`,
+				"const getMocks = () => globalThis.__GESTOR_RECURSOS_DELETE_SERVICE_MOCKS__ || {};",
 			];
 
-			for (const exportName of DB_BRIDGE_EXPORTS) {
+			for (const exportName of DELETE_SERVICE_EXPORTS) {
 				lines.push(`export async function ${exportName}(...args) { const fn = getMocks()['${exportName}']; if (typeof fn === 'function') return await fn(...args); return await actual['${exportName}'](...args); }`);
 			}
 
@@ -51,11 +51,11 @@ function uniqueSuffix() {
 }
 
 function setDbMocks(overrides = {}) {
-	globalThis.__GESTOR_RECURSOS_DELETE_DB_MOCKS__ = { ...overrides };
+	globalThis.__GESTOR_RECURSOS_DELETE_SERVICE_MOCKS__ = { ...overrides };
 }
 
 function clearDbMocks() {
-	globalThis.__GESTOR_RECURSOS_DELETE_DB_MOCKS__ = {};
+	globalThis.__GESTOR_RECURSOS_DELETE_SERVICE_MOCKS__ = {};
 }
 
 function createResponseCapture() {
@@ -177,7 +177,7 @@ test('deleteRecurso retorna 400 para id invalido antes da exclusao', async () =>
 			params: { id: 'invalido' },
 		},
 		bridgeOverrides: {
-			deleteRecursoById: async (...args) => {
+			deleteRecursoScopedService: async (...args) => {
 				calls.push(args);
 				return null;
 			},
@@ -201,7 +201,7 @@ test('deleteRecurso retorna 404 quando falta contexto canonico para usuario nao 
 			session: { user: {} },
 		},
 		bridgeOverrides: {
-			deleteRecursoById: async (...args) => {
+			deleteRecursoScopedService: async (...args) => {
 				calls.push(args);
 				return null;
 			},
@@ -225,14 +225,17 @@ test('deleteRecurso retorna 404 para recurso inexistente fora do escopo contextu
 			unitScope: { unidadeId: CONTEXTUAL_UNIT_ID },
 		},
 		bridgeOverrides: {
-			deleteRecursoById: async (...args) => {
+			deleteRecursoScopedService: async (...args) => {
 				calls.push(args);
 				return null;
 			},
 		},
 	});
 
-	assert.deepEqual(calls, [[RESOURCE_ID, CONTEXTUAL_UNIT_ID]]);
+	assert.deepEqual(calls, [[{
+		recursoId: RESOURCE_ID,
+		unidadeEfetiva: CONTEXTUAL_UNIT_ID,
+	}]]);
 	assert.equal(res.statusCode, 404);
 	assert.deepEqual(res.body, {
 		success: false,
@@ -248,14 +251,17 @@ test('deleteRecurso chama a exclusao no escopo efetivo de admin com unidade nula
 			user: { role: 'admin' },
 		},
 		bridgeOverrides: {
-			deleteRecursoById: async (...args) => {
+			deleteRecursoScopedService: async (...args) => {
 				calls.push(args);
 				return null;
 			},
 		},
 	});
 
-	assert.deepEqual(calls, [[RESOURCE_ID, null]]);
+	assert.deepEqual(calls, [[{
+		recursoId: RESOURCE_ID,
+		unidadeEfetiva: null,
+	}]]);
 	assert.equal(res.statusCode, 404);
 	assert.deepEqual(res.body, {
 		success: false,
@@ -277,14 +283,17 @@ test('deleteRecurso retorna sucesso com shape exato e exclusao chamada no escopo
 			unitScope: { unidadeId: CONTEXTUAL_UNIT_ID },
 		},
 		bridgeOverrides: {
-			deleteRecursoById: async (...args) => {
+			deleteRecursoScopedService: async (...args) => {
 				calls.push(args);
 				return recursoExcluido;
 			},
 		},
 	});
 
-	assert.deepEqual(calls, [[RESOURCE_ID, CONTEXTUAL_UNIT_ID]]);
+	assert.deepEqual(calls, [[{
+		recursoId: RESOURCE_ID,
+		unidadeEfetiva: CONTEXTUAL_UNIT_ID,
+	}]]);
 	assert.equal(res.statusCode, 200);
 	assert.deepEqual(res.body, {
 		success: true,
@@ -301,7 +310,7 @@ test('deleteRecurso retorna 500 quando a exclusao lanca erro interno', async () 
 			user: { role: 'admin' },
 		},
 		bridgeOverrides: {
-			deleteRecursoById: async () => {
+			deleteRecursoScopedService: async () => {
 				throw new Error('forced-recursos-delete-failure');
 			},
 		},
