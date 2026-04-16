@@ -460,7 +460,7 @@ test('Funcionarios API contexto: GET por id prioriza authContext ativo sobre leg
   }, { legacyUnidadeId: 'unidadeC' });
 });
 
-test('Funcionarios API contexto: POST com query e body divergentes retorna 404 no fallback legado atual', async () => {
+test('Funcionarios API contexto: POST com query e body divergentes falha cedo sem fallback legado', async () => {
   await withLegacyFallbackHarness(async ({ unidadeB, unidadeC, legacyAgent }) => {
     const nome = `Funcionario Query Scope ${Date.now()}-${nextCounter()}`;
     const email = uniqueEmail('func-query-scope');
@@ -478,9 +478,9 @@ test('Funcionarios API contexto: POST com query e body divergentes retorna 404 n
         cpf,
       }));
 
-    assert.equal(res.status, 404, JSON.stringify(res.body));
-    assert.equal(res.body?.code, 'NOT_FOUND', JSON.stringify(res.body));
-    assert.equal(res.body?.message, 'Unidade não encontrada', JSON.stringify(res.body));
+    assert.equal(res.status, 400, JSON.stringify(res.body));
+    assert.equal(res.body?.success, false, JSON.stringify(res.body));
+    assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(res.body));
 
     const createdInB = await getTenantModel(Funcionario, unidadeB._id).findOne({ email }).lean();
     const createdInC = await getTenantModel(Funcionario, unidadeC._id).findOne({ email }).lean();
@@ -490,7 +490,7 @@ test('Funcionarios API contexto: POST com query e body divergentes retorna 404 n
   });
 });
 
-test('Funcionarios API contexto: initial no fallback legado com body na filial autenticada', async () => {
+test('Funcionarios API contexto: initial sem escopo canônico falha cedo sem fallback legado', async () => {
   await withLegacyFallbackHarness(async ({ unidadeA, unidadeB, legacyAgent }) => {
     const nome = `Funcionario Initial Legacy ${Date.now()}-${nextCounter()}`;
     const email = uniqueEmail('func-initial-legacy');
@@ -510,9 +510,9 @@ test('Funcionarios API contexto: initial no fallback legado com body na filial a
         cpf,
       }));
 
-    assert.equal(res.status, 201, JSON.stringify(res.body));
-    assert.equal(res.body?.success, true, JSON.stringify(res.body));
-    assert.equal(res.body?.data?.autoUser?.ok, true, JSON.stringify(res.body));
+    assert.equal(res.status, 400, JSON.stringify(res.body));
+    assert.equal(res.body?.success, false, JSON.stringify(res.body));
+    assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(res.body));
 
     const createdInB = await getTenantModel(Funcionario, unidadeB._id).findOne({ email }).lean();
     const createdUser = await User.findOne({ email }).lean();
@@ -522,23 +522,22 @@ test('Funcionarios API contexto: initial no fallback legado com body na filial a
     const userCountAfter = await User.countDocuments();
     const membershipCountAfter = await UserMembership.countDocuments();
 
-    assert.ok(createdInB);
-    assert.equal(String(createdInB.unidade_id || ''), normalizeId(unidadeB._id));
-    assert.ok(createdUser);
-    assert.ok(createdMembership);
-    assert.equal(userCountAfter, userCountBefore + 1);
-    assert.equal(membershipCountAfter, membershipCountBefore + 1);
+    assert.equal(createdInB, null);
+    assert.equal(createdUser, null);
+    assert.equal(createdMembership, null);
+    assert.equal(userCountAfter, userCountBefore);
+    assert.equal(membershipCountAfter, membershipCountBefore);
   });
 });
 
-test('Funcionarios API contexto: disponiveis no fallback legado converge para a unidade concreta da filial autenticada', async () => {
+test('Funcionarios API contexto: disponiveis sem escopo canônico falha cedo sem fallback legado', async () => {
   await withLegacyFallbackHarness(async ({ unidadeA, unidadeB, legacyAgent }) => {
-    const funcionarioA = await createFuncionarioInTenant(unidadeA._id, {
+    await createFuncionarioInTenant(unidadeA._id, {
       nome: `Funcionario Principal A ${Date.now()}-${nextCounter()}`,
       email: uniqueEmail('func-disp-legacy-a'),
       cpf: uniqueCpf(),
     });
-    const funcionarioB = await createFuncionarioInTenant(unidadeB._id, {
+    await createFuncionarioInTenant(unidadeB._id, {
       nome: `Funcionario Filial B ${Date.now()}-${nextCounter()}`,
       email: uniqueEmail('func-disp-legacy-b'),
       cpf: uniqueCpf(),
@@ -549,30 +548,29 @@ test('Funcionarios API contexto: disponiveis no fallback legado converge para a 
       .set('Accept', 'application/json')
       .set('Connection', 'close');
 
-    assert.equal(principalRes.status, 200, JSON.stringify(principalRes.body));
-    const principalData = extractArrayPayload(principalRes);
-    assert.equal(principalData.length, 0, JSON.stringify(principalData));
+    assert.equal(principalRes.status, 400, JSON.stringify(principalRes.body));
+    assert.equal(principalRes.body?.success, false, JSON.stringify(principalRes.body));
+    assert.equal(principalRes.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(principalRes.body));
 
     const filialRes = await legacyAgent
       .get(`/gestor/api/funcionarios/disponiveis/${normalizeId(unidadeB._id)}`)
       .set('Accept', 'application/json')
       .set('Connection', 'close');
 
-    assert.equal(filialRes.status, 200, JSON.stringify(filialRes.body));
-    const filialData = extractArrayPayload(filialRes);
-    assert.ok(filialData.some((item) => String(item?._id || '') === normalizeId(funcionarioB._id)));
-    assert.equal(filialData.some((item) => String(item?._id || '') === normalizeId(funcionarioA._id)), false);
+    assert.equal(filialRes.status, 400, JSON.stringify(filialRes.body));
+    assert.equal(filialRes.body?.success, false, JSON.stringify(filialRes.body));
+    assert.equal(filialRes.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(filialRes.body));
   });
 });
 
-test('Funcionarios API contexto: disponiveis com query divergente preserva a unidade concreta do legado autenticado', async () => {
+test('Funcionarios API contexto: disponiveis com query divergente falha cedo sem fallback legado', async () => {
   await withLegacyFallbackHarness(async ({ unidadeB, unidadeC, legacyAgent }) => {
-    const funcionarioB = await createFuncionarioInTenant(unidadeB._id, {
+    await createFuncionarioInTenant(unidadeB._id, {
       nome: `Funcionario Disponivel B ${Date.now()}-${nextCounter()}`,
       email: uniqueEmail('func-disp-scope-b'),
       cpf: uniqueCpf(),
     });
-    const funcionarioC = await createFuncionarioInTenant(unidadeC._id, {
+    await createFuncionarioInTenant(unidadeC._id, {
       nome: `Funcionario Disponivel C ${Date.now()}-${nextCounter()}`,
       email: uniqueEmail('func-disp-scope-c'),
       cpf: uniqueCpf(),
@@ -584,14 +582,13 @@ test('Funcionarios API contexto: disponiveis com query divergente preserva a uni
       .set('Accept', 'application/json')
       .set('Connection', 'close');
 
-    assert.equal(res.status, 200, JSON.stringify(res.body));
-    const data = extractArrayPayload(res);
-    assert.ok(data.some((item) => String(item?._id || '') === normalizeId(funcionarioB._id)));
-    assert.equal(data.some((item) => String(item?._id || '') === normalizeId(funcionarioC._id)), false);
+    assert.equal(res.status, 400, JSON.stringify(res.body));
+    assert.equal(res.body?.success, false, JSON.stringify(res.body));
+    assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(res.body));
   });
 });
 
-test('Funcionarios API contexto: match no fallback legado converge para a unidade concreta da filial autenticada', async () => {
+test('Funcionarios API contexto: match sem escopo canônico falha cedo sem fallback legado', async () => {
   await withLegacyFallbackHarness(async ({ unidadeA, unidadeB, legacyAgent }) => {
     const funcionarioA = await createFuncionarioInTenant(unidadeA._id, {
       nome: `Funcionario Match Principal A ${Date.now()}-${nextCounter()}`,
@@ -610,10 +607,9 @@ test('Funcionarios API contexto: match no fallback legado converge para a unidad
       .set('Accept', 'application/json')
       .set('Connection', 'close');
 
-    assert.equal(matchFilialRes.status, 200, JSON.stringify(matchFilialRes.body));
-    const matchFilial = matchFilialRes.body?.data || matchFilialRes.body;
-    assert.equal(matchFilial.exists, true, JSON.stringify(matchFilial));
-    assert.equal(String(matchFilial.funcionario?._id || ''), normalizeId(funcionarioB._id));
+    assert.equal(matchFilialRes.status, 400, JSON.stringify(matchFilialRes.body));
+    assert.equal(matchFilialRes.body?.success, false, JSON.stringify(matchFilialRes.body));
+    assert.equal(matchFilialRes.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(matchFilialRes.body));
 
     const matchPrincipalRes = await legacyAgent
       .get('/gestor/api/funcionarios/match')
@@ -621,8 +617,8 @@ test('Funcionarios API contexto: match no fallback legado converge para a unidad
       .set('Accept', 'application/json')
       .set('Connection', 'close');
 
-    assert.equal(matchPrincipalRes.status, 200, JSON.stringify(matchPrincipalRes.body));
-    const matchPrincipal = matchPrincipalRes.body?.data || matchPrincipalRes.body;
-    assert.equal(matchPrincipal.exists, false, JSON.stringify(matchPrincipal));
+    assert.equal(matchPrincipalRes.status, 400, JSON.stringify(matchPrincipalRes.body));
+    assert.equal(matchPrincipalRes.body?.success, false, JSON.stringify(matchPrincipalRes.body));
+    assert.equal(matchPrincipalRes.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(matchPrincipalRes.body));
   });
 });
