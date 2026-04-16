@@ -154,7 +154,6 @@ async function loadScopedUnitContextForPage(req) {
 
 async function loadScopedOperationalUnitContextForFuncionariosPage(req) {
   const scopedContext = await loadScopedUnitContextForPage(req);
-  const requestUserUnitId = normalizeId(req?.user?.unidade_id || req?.session?.user?.unidade_id);
 
   if (!scopedContext.scopedUnitId) {
     return {
@@ -164,33 +163,10 @@ async function loadScopedOperationalUnitContextForFuncionariosPage(req) {
     };
   }
 
-  if (!requestUserUnitId || requestUserUnitId === scopedContext.scopedUnitId) {
-    return {
-      ...scopedContext,
-      operationalUnitId: scopedContext.scopedUnitId,
-      operationalUnit: scopedContext.scopedUnit,
-    };
-  }
-
-  const requestUserUnitBase = await findUnidadeUserBaseLean(requestUserUnitId);
-  const requestUserPrincipalUnitId = normalizeId(
-    requestUserUnitBase?.is_principal
-      ? requestUserUnitBase?._id
-      : requestUserUnitBase?.unidade_principal_id || requestUserUnitBase?.matriz_id || requestUserUnitId,
-  );
-
-  if (!requestUserPrincipalUnitId || requestUserPrincipalUnitId !== scopedContext.principalUnitId) {
-    return {
-      ...scopedContext,
-      operationalUnitId: scopedContext.scopedUnitId,
-      operationalUnit: scopedContext.scopedUnit,
-    };
-  }
-
   return {
     ...scopedContext,
-    operationalUnitId: requestUserUnitId,
-    operationalUnit: await findUnidadeByIdLean(requestUserUnitId),
+    operationalUnitId: scopedContext.scopedUnitId,
+    operationalUnit: scopedContext.scopedUnit,
   };
 }
 

@@ -591,6 +591,90 @@ test('Funcionários HTML: filial contextual renderiza apenas a unidade canônica
   });
 });
 
+test('Funcionários com unitScope canônico ignoram unidade legada divergente do request', async () => {
+  await withHarness(async ({ app, unidadeA, unidadeB, unidadeC }) => {
+    const funcionarioBName = `Funcionario Canonico B ${Date.now()}-${nextCounter()}`;
+    const funcionarioCName = `Funcionario Divergente C ${Date.now()}-${nextCounter()}`;
+    const email = uniqueEmail('pagina-funcionarios-canonico');
+
+    await createFuncionarioInTenant(unidadeB._id, {
+      nome: funcionarioBName,
+      email,
+      cpf: uniqueCpf(),
+      sexo: 'M',
+    });
+
+    await createFuncionarioInTenant(unidadeC._id, {
+      nome: funcionarioCName,
+      email: uniqueEmail('pagina-funcionarios-divergente'),
+      cpf: uniqueCpf(),
+      sexo: 'F',
+    });
+
+    const req = {
+      app,
+      path: '/funcionarios',
+      originalUrl: '/gestor/funcionarios',
+      baseUrl: '/gestor',
+      headers: { accept: 'text/html' },
+      unitScope: createUnitScope({ unidadeId: normalizeId(unidadeB._id) }),
+      user: {
+        id: 'context-user-canonico',
+        _id: 'context-user-canonico',
+        email,
+        role: 'diretor',
+        isMaster: false,
+        unidade_id: unidadeC._id,
+        unidade_principal_id: unidadeC._id,
+      },
+      session: {
+        user: {
+          id: 'context-user-canonico',
+          email,
+          role: 'diretor',
+          unidade_id: unidadeC._id,
+          unidade_principal_id: unidadeC._id,
+        },
+      },
+    };
+
+    const renderState = {
+      statusCode: 200,
+      view: null,
+      locals: null,
+    };
+    const res = {
+      status(code) {
+        renderState.statusCode = code;
+        return this;
+      },
+      render(view, locals) {
+        renderState.view = view;
+        renderState.locals = locals;
+        return this;
+      },
+      send(payload) {
+        renderState.sendPayload = payload;
+        return this;
+      },
+    };
+
+    await paginaFuncionarios(req, res);
+
+    assert.equal(renderState.statusCode, 200);
+    assert.equal(renderState.view, 'funcionarios/funcionarios_index');
+    assert.equal(renderState.locals?.unidadeContextualId, normalizeId(unidadeB._id));
+    assert.deepEqual(
+      (renderState.locals?.unidadesFiltradas || []).map((unidade) => normalizeId(unidade?._id)),
+      [normalizeId(unidadeB._id)],
+    );
+
+    const nomesFuncionarios = (renderState.locals?.funcionarios || []).map((funcionario) => String(funcionario?.nome || ''));
+    assert.equal(nomesFuncionarios.includes(funcionarioBName), true);
+    assert.equal(nomesFuncionarios.includes(funcionarioCName), false);
+  });
+});
+
 test('Funcionários sem unitScope não voltam ao fallback legado do request', async () => {
   await withHarness(async ({ app, unidadeA, unidadeB, unidadeC }) => {
     const funcionarioAName = `Funcionario Principal A ${Date.now()}-${nextCounter()}`;
