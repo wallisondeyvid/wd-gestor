@@ -10,6 +10,7 @@ const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/ge
 const gestorAppModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/gestor-app.js')).href;
 const actualDbBridgeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
 const dbBridgeMockModuleUrl = 'mock:gestor-unidades-delete-api-db-bridge';
+const deleteServiceMockModuleUrl = 'mock:gestor-unidades-delete-service';
 
 const DB_BRIDGE_EXPORTS = [
   'findAllUnidadesLean',
@@ -41,6 +42,9 @@ registerHooks({
     if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
       return { url: dbBridgeMockModuleUrl, shortCircuit: true };
     }
+    if (specifier === '#modules/gestor/app/services/unidades/deleteUnidadeExecution.service.js') {
+      return { url: deleteServiceMockModuleUrl, shortCircuit: true };
+    }
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
@@ -66,12 +70,29 @@ registerHooks({
         source: lines.join('\n'),
       };
     }
+
+    if (url === deleteServiceMockModuleUrl) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const getMocks = () => globalThis.__GESTOR_UNIDADES_DELETE_SERVICE_MOCKS__ || {};',
+          "export async function findUnidadeDeleteCandidateService(...args) { return await (getMocks().findUnidadeDeleteCandidateService || (async () => null))(...args); }",
+          "export async function deleteUnidadeExecutionService(...args) { return await (getMocks().deleteUnidadeExecutionService || (async () => null))(...args); }",
+        ].join('\n'),
+      };
+    }
+
     return nextLoad(url, context);
   },
 });
 
 function setDbMocks(overrides = {}) {
   globalThis.__GESTOR_UNIDADES_DELETE_DB_MOCKS__ = { ...overrides };
+}
+
+function setServiceMocks(overrides = {}) {
+  globalThis.__GESTOR_UNIDADES_DELETE_SERVICE_MOCKS__ = { ...overrides };
 }
 
 function createResCapture() {
@@ -161,9 +182,10 @@ test('DELETE /gestor/api/unidades/:id sem sessao no app real responde 401 JSON',
 
 test('deleteUnidade com id vazio cai no lookup real e responde 404', async () => {
   let receivedId = null;
-  setDbMocks({
-    findUnidadeById: async (id) => {
-      receivedId = id;
+  setDbMocks({});
+  setServiceMocks({
+    findUnidadeDeleteCandidateService: async ({ unidadeId }) => {
+      receivedId = unidadeId;
       return null;
     },
   });
@@ -187,8 +209,9 @@ test('deleteUnidade com id vazio cai no lookup real e responde 404', async () =>
 });
 
 test('deleteUnidade responde 404 quando a unidade nao existe', async () => {
-  setDbMocks({
-    findUnidadeById: async () => null,
+  setDbMocks({});
+  setServiceMocks({
+    findUnidadeDeleteCandidateService: async () => null,
   });
 
   const { deleteUnidade } = await importDeleteUnidade('missing-unit');
@@ -210,13 +233,15 @@ test('deleteUnidade responde 404 quando a unidade nao existe', async () => {
 
 test('deleteUnidade responde 400 quando a unidade esta fora do escopo contextual', async () => {
   setDbMocks({
-    findUnidadeById: async (id) => ({ _id: id, is_principal: false }),
     findUnidadeByIdLean: async (id) => ({ _id: id, nome: 'Scope atual' }),
     findUnidadeUserBaseLean: async () => ({ _id: 'u-principal', is_principal: true }),
     findUnidadesByCondLeanFull: async () => ([
       { _id: 'u-principal' },
       { _id: 'u-filial-permitida' },
     ]),
+  });
+  setServiceMocks({
+    findUnidadeDeleteCandidateService: async ({ unidadeId }) => ({ _id: unidadeId, is_principal: false }),
   });
 
   const { deleteUnidade } = await importDeleteUnidade('out-of-scope');
@@ -239,10 +264,11 @@ test('deleteUnidade responde 400 quando a unidade esta fora do escopo contextual
 
 test('deleteUnidade retorna sucesso com unidade encontrada e envelope exato', async () => {
   let deletedId = null;
-  setDbMocks({
-    findUnidadeById: async (id) => ({ _id: id, is_principal: false }),
-    deleteUnidadeById: async (id) => {
-      deletedId = id;
+  setDbMocks({});
+  setServiceMocks({
+    findUnidadeDeleteCandidateService: async ({ unidadeId }) => ({ _id: unidadeId, is_principal: false }),
+    deleteUnidadeExecutionService: async ({ unidadeId }) => {
+      deletedId = unidadeId;
     },
   });
 
@@ -268,10 +294,12 @@ test('deleteUnidade retorna sucesso com unidade encontrada e envelope exato', as
 
 test('deleteUnidade aplica regra especifica para diretor em unidade principal', async () => {
   setDbMocks({
-    findUnidadeById: async (id) => ({ _id: id, is_principal: true }),
     findUnidadeByIdLean: async (id) => ({ _id: id }),
     findUnidadeUserBaseLean: async () => ({ _id: 'u-principal', is_principal: true }),
     findUnidadesByCondLeanFull: async () => ([{ _id: 'u-principal', is_principal: true }]),
+  });
+  setServiceMocks({
+    findUnidadeDeleteCandidateService: async ({ unidadeId }) => ({ _id: unidadeId, is_principal: true }),
   });
 
   const { deleteUnidade } = await importDeleteUnidade('principal-diretor');
@@ -293,8 +321,9 @@ test('deleteUnidade aplica regra especifica para diretor em unidade principal', 
 });
 
 test('deleteUnidade aplica regra especifica de master para unidade principal', async () => {
-  setDbMocks({
-    findUnidadeById: async (id) => ({ _id: id, is_principal: true }),
+  setDbMocks({});
+  setServiceMocks({
+    findUnidadeDeleteCandidateService: async ({ unidadeId }) => ({ _id: unidadeId, is_principal: true }),
   });
 
   const { deleteUnidade } = await importDeleteUnidade('principal-admin');
@@ -315,8 +344,9 @@ test('deleteUnidade aplica regra especifica de master para unidade principal', a
 });
 
 test('deleteUnidade trata erro interno induzido com 500 e mensagem original', async () => {
-  setDbMocks({
-    findUnidadeById: async () => {
+  setDbMocks({});
+  setServiceMocks({
+    findUnidadeDeleteCandidateService: async () => {
       throw new Error('forced-delete-failure');
     },
   });

@@ -85,9 +85,25 @@ function buildPolicyContextCoreSource() {
         return { ok: false, principalUnitId: '', scopedContext };
       }
 
+      if (scopedPrincipalId) {
+        return {
+          ok: true,
+          principalUnitId: scopedPrincipalId,
+          scopedContext,
+        };
+      }
+
+      if (!isPrivilegedGestorUser(req?.user)) {
+        return {
+          ok: false,
+          principalUnitId: '',
+          scopedContext,
+        };
+      }
+
       return {
         ok: true,
-        principalUnitId: scopedPrincipalId || requestedPrincipalId || fallbackPrincipalId,
+        principalUnitId: requestedPrincipalId || fallbackPrincipalId,
         scopedContext,
       };
     }
@@ -255,6 +271,67 @@ test('futura seam unica recebe apenas req e concentra as quatro operacoes de pol
       scopedUnitId: 'u-principal',
       scopedUnit: { _id: 'u-principal', nome: 'Scoped' },
       principalUnitId: 'u-principal',
+    },
+  });
+});
+
+test('futura seam unica bloqueia fallback tardio para nao privilegiado sem principal canonica e preserva fallback privilegiado sem escopo', async () => {
+  const createUnidadePolicyContextCore = buildFunctionFromSource(buildPolicyContextCoreSource(), {
+    normalizeUnitId: (value) => String(value || '').trim(),
+    getScopedUnitId: (req) => String(req?.unitScope?.unidadeId || '').trim(),
+    isPrivilegedGestorUser: (user) => user?.role === 'admin' || user?.isMaster === true,
+    findUnidadeByIdLean: async (id) => ({ _id: id, nome: 'Scoped' }),
+    findUnidadeUserBaseLean: async () => null,
+    findUnidadesByCondLeanFull: async () => ([]),
+    Promise,
+    Set,
+  });
+
+  const nonPrivilegedPolicy = createUnidadePolicyContextCore({
+    req: {
+      unitScope: null,
+      user: { role: 'diretor' },
+    },
+  });
+
+  const blockedFallback = await nonPrivilegedPolicy.resolveRequestedPrincipalUnitId('u-principal-externa', 'u-fallback');
+
+  assert.deepEqual(toPlain(blockedFallback), {
+    ok: false,
+    principalUnitId: '',
+    scopedContext: {
+      scopedUnitId: '',
+      scopedUnit: null,
+      principalUnitId: '',
+    },
+  });
+
+  const privilegedPolicy = createUnidadePolicyContextCore({
+    req: {
+      unitScope: null,
+      user: { role: 'admin' },
+    },
+  });
+
+  const privilegedRequested = await privilegedPolicy.resolveRequestedPrincipalUnitId('u-principal-admin', 'u-fallback-admin');
+  const privilegedFallback = await privilegedPolicy.resolveRequestedPrincipalUnitId('', 'u-fallback-admin');
+
+  assert.deepEqual(toPlain(privilegedRequested), {
+    ok: true,
+    principalUnitId: 'u-principal-admin',
+    scopedContext: {
+      scopedUnitId: '',
+      scopedUnit: null,
+      principalUnitId: '',
+    },
+  });
+  assert.deepEqual(toPlain(privilegedFallback), {
+    ok: true,
+    principalUnitId: 'u-fallback-admin',
+    scopedContext: {
+      scopedUnitId: '',
+      scopedUnit: null,
+      principalUnitId: '',
     },
   });
 });

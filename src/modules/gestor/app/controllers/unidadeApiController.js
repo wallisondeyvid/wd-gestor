@@ -213,9 +213,25 @@ function createUnidadePolicyContextCore({ req } = {}) {
       return { ok: false, principalUnitId: '', scopedContext };
     }
 
+    if (scopedPrincipalId) {
+      return {
+        ok: true,
+        principalUnitId: scopedPrincipalId,
+        scopedContext,
+      };
+    }
+
+    if (!isPrivilegedGestorUser(req?.user)) {
+      return {
+        ok: false,
+        principalUnitId: '',
+        scopedContext,
+      };
+    }
+
     return {
       ok: true,
-      principalUnitId: scopedPrincipalId || requestedPrincipalId || fallbackPrincipalId,
+      principalUnitId: requestedPrincipalId || fallbackPrincipalId,
       scopedContext,
     };
   }
