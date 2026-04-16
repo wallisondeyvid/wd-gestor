@@ -55,7 +55,7 @@ function buildFuncaoContextPolicyCoreSource() {
       return resolvePrincipalUnitId(scopedUnitIdNorm);
     }
 
-    async function ensureRequestedUnitWithinContextCluster({ scopedUnitId, requestedUnitId } = {}) {
+    async function ensureRequestedUnitWithinContextCluster({ scopedUnitId, requestedUnitId, isPrivileged = false } = {}) {
       const requestedUnitIdNorm = normalizeUnitId(requestedUnitId);
       const contextPrincipalUnitId = await resolveCanonicalContextPrincipalUnitId({ scopedUnitId });
 
@@ -68,10 +68,11 @@ function buildFuncaoContextPolicyCoreSource() {
       }
 
       if (!contextPrincipalUnitId) {
+        const requestedPrincipalUnitId = await resolvePrincipalUnitId(requestedUnitIdNorm);
         return {
-          allowed: true,
+          allowed: !!isPrivileged,
           contextPrincipalUnitId: '',
-          requestedPrincipalUnitId: await resolvePrincipalUnitId(requestedUnitIdNorm),
+          requestedPrincipalUnitId,
         };
       }
 
@@ -83,7 +84,7 @@ function buildFuncaoContextPolicyCoreSource() {
       };
     }
 
-    async function buildListScope({ scopedUnitId, unidadeCluster, unidadeIdRaw } = {}) {
+    async function buildListScope({ scopedUnitId, unidadeCluster, unidadeIdRaw, isPrivileged = false } = {}) {
       const unidadeClusterNorm = normalizeUnitId(unidadeCluster);
       const unidadeIdRawNorm = normalizeUnitId(unidadeIdRaw);
 
@@ -91,6 +92,7 @@ function buildFuncaoContextPolicyCoreSource() {
         const access = await ensureRequestedUnitWithinContextCluster({
           scopedUnitId,
           requestedUnitId: unidadeClusterNorm,
+          isPrivileged,
         });
         if (!access.allowed) {
           return { empty: true, filter: null, mode: 'cluster', resolvedPrincipalIds: [] };
@@ -111,6 +113,7 @@ function buildFuncaoContextPolicyCoreSource() {
           const access = await ensureRequestedUnitWithinContextCluster({
             scopedUnitId,
             requestedUnitId: candidateId,
+            isPrivileged,
           });
           if (!access.allowed) continue;
 
@@ -149,7 +152,7 @@ function buildDelegatedFuncoesOwnersSource() {
   return `({
     async createOwner(req, res, deps) {
       const { nome, descricao, unidade_principal_id, modulos_habilitados } = req.body;
-      const context = { scopedUnitId: req.unitScope?.unidadeId || null };
+      const context = { scopedUnitId: req.unitScope?.unidadeId || null, isPrivileged: !!req.user?.isMaster || req.user?.role === 'master' || req.user?.role === 'admin' };
       const contextPrincipalUnitId = await deps.policy.resolveCanonicalContextPrincipalUnitId(context);
       const canonicalPrincipalUnitId = contextPrincipalUnitId || deps.normalizeUnitId(unidade_principal_id);
 
@@ -176,7 +179,7 @@ function buildDelegatedFuncoesOwnersSource() {
     async updateOwner(req, res, deps) {
       const { id } = req.params;
       const { nome, descricao, unidade_principal_id, modulos_habilitados } = req.body;
-      const context = { scopedUnitId: req.unitScope?.unidadeId || null };
+      const context = { scopedUnitId: req.unitScope?.unidadeId || null, isPrivileged: !!req.user?.isMaster || req.user?.role === 'master' || req.user?.role === 'admin' };
       const contextPrincipalUnitId = await deps.policy.resolveCanonicalContextPrincipalUnitId(context);
       const existente = await deps.findFuncaoById(id, contextPrincipalUnitId || null);
       if (!existente) return deps.notFound(res, 'Função não encontrada');
@@ -204,7 +207,7 @@ function buildDelegatedFuncoesOwnersSource() {
     },
 
     async getByUnitOwner(req, res, deps) {
-      const context = { scopedUnitId: req.unitScope?.unidadeId || null };
+      const context = { scopedUnitId: req.unitScope?.unidadeId || null, isPrivileged: !!req.user?.isMaster || req.user?.role === 'master' || req.user?.role === 'admin' };
       const unidadeId = deps.normalizeUnitId(req.params.unidadeId);
       if (!unidadeId || unidadeId === 'null') return deps.ok(res, []);
 
@@ -220,7 +223,7 @@ function buildDelegatedFuncoesOwnersSource() {
     },
 
     async deleteOwner(req, res, deps) {
-      const context = { scopedUnitId: req.unitScope?.unidadeId || null };
+      const context = { scopedUnitId: req.unitScope?.unidadeId || null, isPrivileged: !!req.user?.isMaster || req.user?.role === 'master' || req.user?.role === 'admin' };
       const contextPrincipalUnitId = await deps.policy.resolveCanonicalContextPrincipalUnitId(context);
       const funcao = await deps.processDelete({
         funcaoId: req.params.id,
@@ -234,7 +237,7 @@ function buildDelegatedFuncoesOwnersSource() {
       const itens = Array.isArray(req.body?.itens) ? req.body.itens : [];
       if (!itens.length) return deps.badRequest(res, 'Lista vazia');
 
-      const context = { scopedUnitId: req.unitScope?.unidadeId || null };
+      const context = { scopedUnitId: req.unitScope?.unidadeId || null, isPrivileged: !!req.user?.isMaster || req.user?.role === 'master' || req.user?.role === 'admin' };
       const contextPrincipalUnitId = await deps.policy.resolveCanonicalContextPrincipalUnitId(context);
       const bulkResult = await deps.processBulk({
         itens,
@@ -246,6 +249,7 @@ function buildDelegatedFuncoesOwnersSource() {
     async listService(input, deps) {
       const scope = await deps.policy.buildListScope({
         scopedUnitId: input.unitScope?.unidadeId || null,
+        isPrivileged: !!input.user?.isMaster || input.user?.role === 'master' || input.user?.role === 'admin',
         unidadeCluster: input.query?.unidade_cluster || null,
         unidadeIdRaw: input.query?.unidade_id || null,
       });
@@ -329,6 +333,7 @@ test('futura seam unica recebe apenas contexto minimo para decidir unidade princ
   assert.deepEqual(toPlain(await policy.ensureRequestedUnitWithinContextCluster({
     scopedUnitId: 'filial-a',
     requestedUnitId: 'filial-b',
+    isPrivileged: false,
   })), {
     allowed: true,
     contextPrincipalUnitId: 'principal-a',
@@ -337,14 +342,32 @@ test('futura seam unica recebe apenas contexto minimo para decidir unidade princ
   assert.deepEqual(toPlain(await policy.ensureRequestedUnitWithinContextCluster({
     scopedUnitId: 'filial-a',
     requestedUnitId: 'outside-x',
+    isPrivileged: false,
   })), {
     allowed: false,
     contextPrincipalUnitId: 'principal-a',
     requestedPrincipalUnitId: 'outside-x',
   });
+  assert.deepEqual(toPlain(await policy.ensureRequestedUnitWithinContextCluster({
+    requestedUnitId: 'outside-x',
+    isPrivileged: false,
+  })), {
+    allowed: false,
+    contextPrincipalUnitId: '',
+    requestedPrincipalUnitId: 'outside-x',
+  });
+  assert.deepEqual(toPlain(await policy.ensureRequestedUnitWithinContextCluster({
+    requestedUnitId: 'outside-x',
+    isPrivileged: true,
+  })), {
+    allowed: true,
+    contextPrincipalUnitId: '',
+    requestedPrincipalUnitId: 'outside-x',
+  });
   assert.deepEqual(toPlain(await policy.buildListScope({
     scopedUnitId: 'filial-a',
     unidadeCluster: 'filial-b',
+    isPrivileged: false,
   })), {
     empty: false,
     filter: { unidade_principal_id: 'principal-a' },
@@ -354,6 +377,7 @@ test('futura seam unica recebe apenas contexto minimo para decidir unidade princ
   assert.deepEqual(toPlain(await policy.buildListScope({
     scopedUnitId: 'filial-a',
     unidadeIdRaw: 'filial-a,filial-b,outside-x',
+    isPrivileged: false,
   })), {
     empty: false,
     filter: { unidade_principal_id: 'principal-a' },
@@ -363,6 +387,16 @@ test('futura seam unica recebe apenas contexto minimo para decidir unidade princ
   assert.deepEqual(toPlain(await policy.buildListScope({
     scopedUnitId: 'filial-a',
     unidadeCluster: 'outside-x',
+    isPrivileged: false,
+  })), {
+    empty: true,
+    filter: null,
+    mode: 'cluster',
+    resolvedPrincipalIds: [],
+  });
+  assert.deepEqual(toPlain(await policy.buildListScope({
+    unidadeCluster: 'outside-x',
+    isPrivileged: false,
   })), {
     empty: true,
     filter: null,
@@ -490,23 +524,27 @@ test('apos extracao, endpoints seguem owners HTTP e service delega somente o mio
       modulos_habilitados: ['mod-1'],
     },
     unitScope: { unidadeId: 'filial-a' },
+    user: { role: 'diretor' },
   }, createRes, deps);
 
   const getByUnitRes = {};
   await owners.getByUnitOwner({
     params: { unidadeId: 'filial-a' },
     unitScope: { unidadeId: 'filial-a' },
+    user: { role: 'diretor' },
   }, getByUnitRes, deps);
 
   const bulkRes = {};
   await owners.bulkOwner({
     body: { itens: [{ _id: 'func-3', nome: 'Supervisor' }] },
     unitScope: { unidadeId: 'filial-a' },
+    user: { role: 'diretor' },
   }, bulkRes, deps);
 
   const listed = await owners.listService({
     query: { unidade_cluster: 'filial-a', q: 'sup' },
     unitScope: { unidadeId: 'filial-a' },
+    user: { role: 'diretor' },
   }, deps);
 
   assert.equal(createRes.statusCode, 201);
@@ -518,8 +556,8 @@ test('apos extracao, endpoints seguem owners HTTP e service delega somente o mio
   assert.deepEqual(toPlain(listed), [{ _id: 'func-4' }]);
 
   assert.deepEqual(calls, [
-    ['resolveCanonicalContextPrincipalUnitId', { scopedUnitId: 'filial-a' }],
-    ['ensureRequestedUnitWithinContextCluster', { scopedUnitId: 'filial-a', requestedUnitId: 'filial-a' }],
+    ['resolveCanonicalContextPrincipalUnitId', { scopedUnitId: 'filial-a', isPrivileged: false }],
+    ['ensureRequestedUnitWithinContextCluster', { scopedUnitId: 'filial-a', isPrivileged: false, requestedUnitId: 'filial-a' }],
     ['processCreate', {
       nome: 'Supervisor',
       descricao: 'Descricao',
@@ -527,14 +565,14 @@ test('apos extracao, endpoints seguem owners HTTP e service delega somente o mio
       modulosHabilitados: ['mod-1'],
     }],
     ['created', 'func-1', { data: { _id: 'func-1' } }],
-    ['ensureRequestedUnitWithinContextCluster', { scopedUnitId: 'filial-a', requestedUnitId: 'filial-a' }],
+    ['ensureRequestedUnitWithinContextCluster', { scopedUnitId: 'filial-a', isPrivileged: false, requestedUnitId: 'filial-a' }],
     ['resolvePrincipalUnitId', 'filial-a'],
     ['getByUnit', { effectiveUnitId: 'principal-a' }],
     ['ok', [{ _id: 'func-2' }]],
-    ['resolveCanonicalContextPrincipalUnitId', { scopedUnitId: 'filial-a' }],
+    ['resolveCanonicalContextPrincipalUnitId', { scopedUnitId: 'filial-a', isPrivileged: false }],
     ['processBulk', { itens: [{ _id: 'func-3', nome: 'Supervisor' }], contextPrincipalUnitId: 'principal-a' }],
     ['ok', { updated: 1, results: [{ _id: 'func-3', ok: true }] }],
-    ['buildListScope', { scopedUnitId: 'filial-a', unidadeCluster: 'filial-a', unidadeIdRaw: null }],
+    ['buildListScope', { scopedUnitId: 'filial-a', isPrivileged: false, unidadeCluster: 'filial-a', unidadeIdRaw: null }],
     ['findFuncoes', { unidade_principal_id: 'principal-a' }],
     ['mapOutput', [{ _id: 'func-4' }], 'cluster', 'sup'],
   ]);

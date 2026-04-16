@@ -24,7 +24,7 @@ export function createFuncaoContextPolicyCore({ findUnidadeUserBaseLean } = {}) 
     return resolvePrincipalUnitId(scopedUnitIdNorm);
   }
 
-  async function ensureRequestedUnitWithinContextCluster({ scopedUnitId, requestedUnitId } = {}) {
+  async function ensureRequestedUnitWithinContextCluster({ scopedUnitId, requestedUnitId, isPrivileged = false } = {}) {
     const requestedUnitIdNorm = normalizeUnitId(requestedUnitId);
     if (!requestedUnitIdNorm) {
       return { allowed: true, contextPrincipalUnitId: await resolveCanonicalContextPrincipalUnitId({ scopedUnitId }) };
@@ -32,10 +32,11 @@ export function createFuncaoContextPolicyCore({ findUnidadeUserBaseLean } = {}) 
 
     const contextPrincipalUnitId = await resolveCanonicalContextPrincipalUnitId({ scopedUnitId });
     if (!contextPrincipalUnitId) {
+      const requestedPrincipalUnitId = await resolvePrincipalUnitId(requestedUnitIdNorm);
       return {
-        allowed: true,
+        allowed: Boolean(isPrivileged),
         contextPrincipalUnitId: '',
-        requestedPrincipalUnitId: await resolvePrincipalUnitId(requestedUnitIdNorm),
+        requestedPrincipalUnitId,
       };
     }
 
@@ -47,7 +48,7 @@ export function createFuncaoContextPolicyCore({ findUnidadeUserBaseLean } = {}) 
     };
   }
 
-  async function buildListScope({ scopedUnitId, unidadeCluster, unidadeIdRaw } = {}) {
+  async function buildListScope({ scopedUnitId, unidadeCluster, unidadeIdRaw, isPrivileged = false } = {}) {
     const unidadeClusterNorm = normalizeUnitId(unidadeCluster);
     const unidadeIdRawNorm = normalizeUnitId(unidadeIdRaw);
 
@@ -55,6 +56,7 @@ export function createFuncaoContextPolicyCore({ findUnidadeUserBaseLean } = {}) 
       const access = await ensureRequestedUnitWithinContextCluster({
         scopedUnitId,
         requestedUnitId: unidadeClusterNorm,
+        isPrivileged,
       });
       if (!access.allowed) {
         return { empty: true, filter: null, mode: 'cluster' };
@@ -75,6 +77,7 @@ export function createFuncaoContextPolicyCore({ findUnidadeUserBaseLean } = {}) 
         const access = await ensureRequestedUnitWithinContextCluster({
           scopedUnitId,
           requestedUnitId: candidateId,
+          isPrivileged,
         });
         if (!access.allowed) continue;
 

@@ -26,6 +26,10 @@ function normalizeUnitId(value){
   return String(value || '').trim();
 }
 
+function isPrivilegedGestorUser(user) {
+  return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+}
+
 const funcaoContextPolicy = createFuncaoContextPolicyCore({
   findUnidadeUserBaseLean,
 });
@@ -39,6 +43,7 @@ const funcaoWriteValidation = createFuncaoWriteValidationCore({
 function getRequestScopeContext(req) {
   return {
     scopedUnitId: req.unitScope?.unidadeId || null,
+    isPrivileged: isPrivilegedGestorUser(req.user),
   };
 }
 
