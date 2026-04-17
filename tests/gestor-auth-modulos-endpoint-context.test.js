@@ -311,9 +311,32 @@ test('GET /gestor/api/unidades/:id/modulos retorna os modulos acessiveis da unid
   assert.deepEqual(actual, expected);
 });
 
-test('GET /gestor/api/unidades/:id/modulos retorna lista vazia quando a unidade acessivel nao tem modulosAcessiveis', async () => {
+test('GET /gestor/api/unidades/:id/modulos retorna UNIDADE_ID_REQUIRED quando a requisicao nao monta req.unitScope canonico', async () => {
   const unidade = await createEnabledUnit({
     nome: `Unidade Sem Modulos ${nextSequence()}`,
+    moduloIds: [],
+  });
+  const user = await createUser({
+    email: buildUniqueEmail('gestor-unidade-sem-req-unit-scope'),
+    nome: 'Admin Endpoint Modulos Sem Req UnitScope',
+    role: 'user',
+    globalRole: 'admin',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+
+  const res = await agent.get(`/gestor/api/unidades/${unidade._id}/modulos`);
+
+  assert.equal(res.status, 400, JSON.stringify(res.body));
+  assert.equal(res.body?.success, false, JSON.stringify(res.body));
+  assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(res.body));
+});
+
+test('GET /gestor/api/unidades/:id/modulos retorna lista vazia quando a unidade acessivel nao tem modulosAcessiveis e req.unitScope canonico esta montado', async () => {
+  const unidade = await createEnabledUnit({
+    nome: `Unidade Sem Modulos Handler ${nextSequence()}`,
     moduloIds: [],
   });
   const user = await createUser({
@@ -323,19 +346,13 @@ test('GET /gestor/api/unidades/:id/modulos retorna lista vazia quando a unidade 
     globalRole: 'admin',
   });
 
-  await UserMembership.create({
-    user_id: user._id,
-    unidade_id: unidade._id,
-    papel_contextual: 'gestor',
-    status: 'active',
-    origem: 'gestor-auth-modulos-endpoint-context-test',
-  });
-
   const agent = request.agent(app);
   const loginRes = await login(agent, { email: user.email });
   assert.equal(loginRes.status, 303);
 
-  const res = await agent.get(`/gestor/api/unidades/${unidade._id}/modulos`);
+  const res = await agent
+    .get(`/gestor/api/unidades/${unidade._id}/modulos`)
+    .query({ unidadeId: String(unidade._id) });
 
   assert.equal(res.status, 200, JSON.stringify(res.body));
   assert.equal(res.body?.success, true, JSON.stringify(res.body));
