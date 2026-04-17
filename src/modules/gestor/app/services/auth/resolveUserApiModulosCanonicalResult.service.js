@@ -92,6 +92,52 @@ function buildDebugPayload({ wantDebug = false, source, authContext = null, unid
   };
 }
 
+function buildResolvedPayload({ data = [], wantDebug = false, source, authContext = null, unidade = null, funcionario = null, funcao = null } = {}) {
+  const payload = { data };
+  const debug = buildDebugPayload({ wantDebug, source, authContext, unidade, funcionario, funcao });
+  if (debug) payload.debug = debug;
+  return payload;
+}
+
+function hasGlobalPrivilegedRole(authenticatedUser, sessionUser) {
+  const globalRole = normalizeRole(authenticatedUser?.global_role || sessionUser?.global_role);
+  const effectiveRole = normalizeRole(authenticatedUser?.role || sessionUser?.role);
+
+  return (
+    globalRole === 'master'
+    || globalRole === 'admin'
+    || effectiveRole === 'master'
+    || effectiveRole === 'admin'
+  );
+}
+
+async function resolveClosedCanonicalFallback({ authenticatedUser, sessionUser, loadAllModulos, wantDebug = false, source } = {}) {
+  if (hasGlobalPrivilegedRole(authenticatedUser, sessionUser)) {
+    try {
+      const todos = await loadAllModulos();
+      return {
+        kind: 'resolved',
+        payload: buildResolvedPayload({
+          data: todos,
+          wantDebug,
+          source,
+        }),
+      };
+    } catch (error) {
+      console.warn('[gestor][api/modulos] fallback global fechado:', error?.message || error);
+    }
+  }
+
+  return {
+    kind: 'resolved',
+    payload: buildResolvedPayload({
+      data: [],
+      wantDebug,
+      source,
+    }),
+  };
+}
+
 export async function resolveUserApiModulosCanonicalResult({
   authenticatedUser = null,
   sessionUser = null,
@@ -123,7 +169,13 @@ export async function resolveUserApiModulosCanonicalResult({
     });
 
     if (authContext?.source !== 'auth-context-v1') {
-      return { kind: 'not-applicable' };
+      return resolveClosedCanonicalFallback({
+        authenticatedUser,
+        sessionUser,
+        loadAllModulos,
+        wantDebug,
+        source: 'auth-context-v1-unresolved',
+      });
     }
 
     if (authContext.needsUnitSelection) {
@@ -136,21 +188,23 @@ export async function resolveUserApiModulosCanonicalResult({
     if (globalRole === 'master' || globalRole === 'admin' || effectiveRole === 'master' || effectiveRole === 'admin') {
       try {
         const todos = await loadAllModulos();
-        const payload = { data: todos };
-        const debug = buildDebugPayload({ wantDebug, source: 'auth-context-v1-global', authContext });
-        if (debug) payload.debug = debug;
+        const payload = buildResolvedPayload({ data: todos, wantDebug, source: 'auth-context-v1-global', authContext });
         return { kind: 'resolved', payload };
       } catch (error) {
         console.warn('[gestor][api/modulos] fallback master/admin auth-context:', error?.message || error);
-        return { kind: 'not-applicable' };
+        return resolveClosedCanonicalFallback({
+          authenticatedUser,
+          sessionUser,
+          loadAllModulos,
+          wantDebug,
+          source: 'auth-context-v1-global-error',
+        });
       }
     }
 
     if (effectiveRole === 'diretor') {
       const unidade = await tryLoadUnidadeComModulos(authContext.activeContext?.unidadeId || null);
-      const payload = { data: mapMods(unidade?.modulosAcessiveis || []) };
-      const debug = buildDebugPayload({ wantDebug, source: 'auth-context-v1-gestor', authContext, unidade });
-      if (debug) payload.debug = debug;
+      const payload = buildResolvedPayload({ data: mapMods(unidade?.modulosAcessiveis || []), wantDebug, source: 'auth-context-v1-gestor', authContext, unidade });
       return { kind: 'resolved', payload };
     }
 
@@ -176,26 +230,26 @@ export async function resolveUserApiModulosCanonicalResult({
         }
 
         const intersection = uniqById(intersectById(modsUnidade, modsFuncao));
-        const payload = { data: mapMods(intersection) };
-        const debug = buildDebugPayload({ wantDebug, source: 'auth-context-v1-user', authContext, unidade, funcionario, funcao });
-        if (debug) payload.debug = debug;
+        const payload = buildResolvedPayload({ data: mapMods(intersection), wantDebug, source: 'auth-context-v1-user', authContext, unidade, funcionario, funcao });
         return { kind: 'resolved', payload };
       } catch (error) {
         console.warn('[gestor][api/modulos] auth-context user:', error?.message || error);
-        const payload = { data: [] };
-        const debug = buildDebugPayload({ wantDebug, source: 'auth-context-v1-user-error', authContext });
-        if (debug) payload.debug = debug;
+        const payload = buildResolvedPayload({ data: [], wantDebug, source: 'auth-context-v1-user-error', authContext });
         return { kind: 'resolved', payload };
       }
     }
 
-    const payload = { data: [] };
-    const debug = buildDebugPayload({ wantDebug, source: 'auth-context-v1-empty', authContext });
-    if (debug) payload.debug = debug;
+    const payload = buildResolvedPayload({ data: [], wantDebug, source: 'auth-context-v1-empty', authContext });
     return { kind: 'resolved', payload };
   } catch (error) {
     console.warn('[gestor][api/modulos] auth-context fallback:', error?.message || error);
-    return { kind: 'not-applicable' };
+    return resolveClosedCanonicalFallback({
+      authenticatedUser,
+      sessionUser,
+      loadAllModulos,
+      wantDebug,
+      source: 'auth-context-v1-error',
+    });
   }
 }
 
