@@ -31,6 +31,7 @@ export function createUserApiRouter({
 	requireRole,
 	requireApiAuth,
 	requireLogin,
+	requireLegacyAdminMutationAccess,
 	shouldResolveCanonicalModulos,
 	resolveCanonicalModulos,
 	buildSelectionRequiredPayload,
@@ -53,6 +54,9 @@ const router = express.Router();
 	const buildSelectionRequiredPayloadForRequest = typeof buildSelectionRequiredPayload === 'function'
 		? buildSelectionRequiredPayload
 		: (typeof buildPendingSelectionRequiredPayload === 'function' ? buildPendingSelectionRequiredPayload : defaultBuildSelectionRequiredPayload);
+	const requireLegacyAdminMutationAccessForRequest = typeof requireLegacyAdminMutationAccess === 'function'
+		? requireLegacyAdminMutationAccess
+		: ((req, res, next) => requireLogin(req, res, () => requireRole(['admin'])(req, res, next)));
 	const handleApiModulos = async (req, res) => {
 		try {
 			const role = String(req.user?.role || 'user').toLowerCase();
@@ -295,10 +299,10 @@ router.get('/api/modulos', requireLogin, handleApiModulos);
 router.use('/api', requireLogin);
 router.post('/api/usuarios', criarUsuario);
 // Suporta edição via endpoint canônico /api (usado pelo modal). Mantém semântica de redirect pós-sucesso.
-router.post('/api/usuarios/:id/update', atualizarUsuario);
+	router.post('/api/usuarios/:id/update', requireLegacyAdminMutationAccessForRequest, atualizarUsuario);
 // Endpoints de administração também disponíveis sob /api para compatibilidade com o front
-router.post('/api/usuarios/:id/toggle', requireLogin, requireRole(['admin']), toggleUsuario);
-router.post('/api/usuarios/:id/delete', requireApiAuth, requireRole(['admin']), deleteUsuario);
+	router.post('/api/usuarios/:id/toggle', requireLegacyAdminMutationAccessForRequest, toggleUsuario);
+	router.post('/api/usuarios/:id/delete', requireLegacyAdminMutationAccessForRequest, deleteUsuario);
 router.put('/api/usuario/senha', atualizarSenhaUsuario);
 
 // POST /api/usuario/foto — upload e atualização via Vercel Blob

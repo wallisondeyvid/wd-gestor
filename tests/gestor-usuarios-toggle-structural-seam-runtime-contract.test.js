@@ -67,6 +67,8 @@ registerHooks({
           "export const findUnidadesByIdsNomeCodigoLean = notUsed;",
           "export const findUserMembershipByUserAndUnidade = notUsed;",
           "export const findUserByIdSelectAuthLockInfo = notUsed;",
+          "export const findUnidadeByIdLean = notUsed;",
+          "export const findUnidadesByMatrizOuPrincipal = notUsed;",
         ].join('\n'),
       };
     }
