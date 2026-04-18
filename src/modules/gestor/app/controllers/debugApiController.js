@@ -7,8 +7,55 @@ import {
 	findUserByCpfCondLean,
 	findAllUnidadesLean,
 	findUnidadePrincipalLean,
+	findUnidadeUserBaseLean,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import { findClusterUnidadesByAnchorService } from '#modules/gestor/app/services/unidades/findClusterUnidadesByAnchor.service.js';
 import { removeWrongMasterExecutionService } from '#modules/gestor/app/services/debug/removeWrongMasterExecution.service.js';
+
+function normalizeId(value) {
+	if (value && typeof value === 'object') {
+		return String(value._id || value.id || '').trim();
+	}
+	return String(value || '').trim();
+}
+
+function isPrivilegedGestorUser(user) {
+	return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+}
+
+function getDebugScopedUnitId(req) {
+	return normalizeId(req?.unitScope?.unidadeId || req?.session?.gestorAuthContext?.active_unidade_id);
+}
+
+function resolveClusterAnchorFromUnit(unidade) {
+	if (!unidade) return '';
+	return normalizeId(unidade.matriz_id || unidade.unidade_principal_id || unidade._id);
+}
+
+async function loadScopedDebugUnidades(scopedUnitId) {
+	const scopedUnitIdNorm = normalizeId(scopedUnitId);
+	if (!scopedUnitIdNorm) return [];
+
+	const scopedUnit = await findUnidadeUserBaseLean(scopedUnitIdNorm);
+	const clusterAnchor = resolveClusterAnchorFromUnit(scopedUnit);
+	if (!clusterAnchor) return [];
+
+	const unidades = await findClusterUnidadesByAnchorService(clusterAnchor);
+	return Array.isArray(unidades) ? unidades : [];
+}
+
+async function ensureDebugUserLookupAllowed({ req, user } = {}) {
+	if (isPrivilegedGestorUser(req?.user)) return true;
+
+	const scopedUnitId = getDebugScopedUnitId(req);
+	const targetUnitId = normalizeId(user?.unidade_id);
+	if (!scopedUnitId || !targetUnitId) return false;
+
+	const allowedUnits = await loadScopedDebugUnidades(scopedUnitId);
+	const allowedIds = new Set(allowedUnits.map((unidade) => normalizeId(unidade?._id || unidade?.id)).filter(Boolean));
+	return allowedIds.has(targetUnitId);
+}
+
 async function readUserByEmail(email) {
 	return findUserByEmailCondLean({ email });
 }
@@ -21,9 +68,9 @@ export function whoAmI(req,res){
 	const skip = Boolean(req.skipAuth);
 	return ok(res, { user: req.user, skipAuth: skip });
 }
-export async function userByEmail(req,res){ try { const { email } = req.params; if(!email) return badRequest(res,'Email obrigatório'); const user = await readUserByEmail(email.toLowerCase()); if(!user) return notFound(res,'Usuário não encontrado'); return ok(res, { _id:user._id, email:user.email, role:user.role, ativo:user.ativo, unidade_id:user.unidade_id }); } catch(e){ return serverError(res,e); } }
-export async function userByCpf(req,res){ try { const { cpf } = req.params; if(!cpf) return badRequest(res,'CPF obrigatório'); const clean = cpf.replace(/\D/g,''); const user = await readUserByCpf(clean); if(!user) return notFound(res,'Usuário não encontrado'); return ok(res, { _id:user._id, email:user.email, role:user.role, ativo:user.ativo, unidade_id:user.unidade_id }); } catch(e){ return serverError(res,e); } }
-export async function testUnidades(req,res){ try { const unidades = await findAllUnidadesLean(); const unidadePrincipal = await findUnidadePrincipalLean(); return ok(res, { total_unidades: unidades.length, unidade_principal: unidadePrincipal ? { id:unidadePrincipal._id, nome:unidadePrincipal.nome, is_principal:unidadePrincipal.is_principal } : null, unidades: unidades.map(u=>({ id:u._id, nome:u.nome, is_principal:u.is_principal })) }); } catch(e){ return serverError(res,e); } }
+export async function userByEmail(req,res){ try { const { email } = req.params; if(!email) return badRequest(res,'Email obrigatório'); const user = await readUserByEmail(email.toLowerCase()); if(!user) return notFound(res,'Usuário não encontrado'); if(!(await ensureDebugUserLookupAllowed({ req, user }))) return notFound(res,'Usuário não encontrado'); return ok(res, { _id:user._id, email:user.email, role:user.role, ativo:user.ativo, unidade_id:user.unidade_id }); } catch(e){ return serverError(res,e); } }
+export async function userByCpf(req,res){ try { const { cpf } = req.params; if(!cpf) return badRequest(res,'CPF obrigatório'); const clean = cpf.replace(/\D/g,''); const user = await readUserByCpf(clean); if(!user) return notFound(res,'Usuário não encontrado'); if(!(await ensureDebugUserLookupAllowed({ req, user }))) return notFound(res,'Usuário não encontrado'); return ok(res, { _id:user._id, email:user.email, role:user.role, ativo:user.ativo, unidade_id:user.unidade_id }); } catch(e){ return serverError(res,e); } }
+export async function testUnidades(req,res){ try { let unidades = []; let unidadePrincipal = null; if (isPrivilegedGestorUser(req?.user)) { unidades = await findAllUnidadesLean(); unidadePrincipal = await findUnidadePrincipalLean(); } else { unidades = await loadScopedDebugUnidades(getDebugScopedUnitId(req)); unidadePrincipal = unidades.find((unidade) => unidade?.is_principal) || null; } return ok(res, { total_unidades: unidades.length, unidade_principal: unidadePrincipal ? { id:unidadePrincipal._id, nome:unidadePrincipal.nome, is_principal:unidadePrincipal.is_principal } : null, unidades: unidades.map(u=>({ id:u._id, nome:u.nome, is_principal:u.is_principal })) }); } catch(e){ return serverError(res,e); } }
 export async function removeWrongMaster(req,res){ try { if(!req.user?.isMaster) return badRequest(res,'Acesso negado'); const wrongEmail = 'wallisondeyvdi13@gmail.com'; const result = await removeWrongMasterExecutionService({ email: wrongEmail }); if(result.kind === 'not_found') return ok(res, { removed:false, message:'Usuário incorreto não encontrado' }); return ok(res, { removed:true, message:'Usuário incorreto removido' }); } catch(e){ return serverError(res,e); } }
 
 // Retorna informações de versão/build para diagnosticar bundle em produção

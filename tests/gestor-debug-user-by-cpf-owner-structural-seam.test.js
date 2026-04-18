@@ -106,6 +106,7 @@ async function loadOwner(dependencies = {}) {
     module: { exports: {} },
     exports: {},
     readUserByCpf: dependencies.readUserByCpf,
+    ensureDebugUserLookupAllowed: dependencies.ensureDebugUserLookupAllowed || (async () => true),
     ok: dependencies.ok,
     badRequest: dependencies.badRequest,
     notFound: dependencies.notFound,
@@ -161,6 +162,10 @@ test('userByCpf: owner real normaliza cpf, delega lookup e projeta payload HTTP 
         ignored: 'nao deve vazar',
       };
     },
+    async ensureDebugUserLookupAllowed() {
+      callOrder.push('allow');
+      return true;
+    },
     ok(_res, payload) {
       callOrder.push('ok');
       return { kind: 'ok', payload };
@@ -179,7 +184,7 @@ test('userByCpf: owner real normaliza cpf, delega lookup e projeta payload HTTP 
   const result = await userByCpf({ params: { cpf: '123.456.789-01' } }, {});
 
   assert.equal(capturedLookupArg, '12345678901');
-  assert.deepEqual(callOrder, ['lookup', 'ok']);
+  assert.deepEqual(callOrder, ['lookup', 'allow', 'ok']);
   assert.deepEqual(JSON.parse(JSON.stringify(result)), {
     kind: 'ok',
     payload: {
@@ -220,6 +225,44 @@ test('userByCpf: owner real traduz lookup vazio para 404', async () => {
   assert.deepEqual(result, { kind: 'notFound', message: 'Usuário não encontrado' });
 });
 
+test('userByCpf: owner real converte alvo fora do contexto permitido em 404 opaco', async () => {
+  const callOrder = [];
+  const userByCpf = await loadOwner({
+    async readUserByCpf() {
+      callOrder.push('lookup');
+      return {
+        _id: 'user-998',
+        email: 'blocked-cpf@example.com',
+        role: 'user',
+        ativo: true,
+        unidade_id: 'u-blocked',
+      };
+    },
+    async ensureDebugUserLookupAllowed() {
+      callOrder.push('allow');
+      return false;
+    },
+    ok() {
+      callOrder.push('ok');
+    },
+    badRequest() {
+      callOrder.push('badRequest');
+    },
+    notFound(_res, message) {
+      callOrder.push(`notFound:${message}`);
+      return { kind: 'notFound', message };
+    },
+    serverError() {
+      callOrder.push('serverError');
+    },
+  });
+
+  const result = await userByCpf({ params: { cpf: '12345678901' }, user: { role: 'diretor' } }, {});
+
+  assert.deepEqual(callOrder, ['lookup', 'allow', 'notFound:Usuário não encontrado']);
+  assert.deepEqual(result, { kind: 'notFound', message: 'Usuário não encontrado' });
+});
+
 test('userByCpf: owner real traduz erro externo para 500', async () => {
   const callOrder = [];
   const boom = new Error('lookup exploded');
@@ -256,6 +299,7 @@ test('userByCpf: owner deve largar o lookup direto para uma seam minima dedicada
   assert.match(ownerSource, /const\s*\{\s*cpf\s*\}\s*=\s*req\.params/);
   assert.match(ownerSource, /if\s*\(!cpf\)\s*return\s+badRequest\s*\(\s*res\s*,\s*'CPF obrigatório'\s*\)/);
   assert.match(ownerSource, /cpf\.replace\s*\(\s*\/\\D\/g\s*,\s*''\s*\)/);
+  assert.match(ownerSource, /ensureDebugUserLookupAllowed\s*\(\s*\{\s*req\s*,\s*user\s*\}\s*\)/);
   assert.match(ownerSource, /if\s*\(!user\)\s*return\s+notFound\s*\(\s*res\s*,\s*'Usuário não encontrado'\s*\)/);
   assert.match(ownerSource, /return\s+ok\s*\(\s*res\s*,\s*\{/);
   assert.match(ownerSource, /return\s+serverError\s*\(\s*res\s*,\s*e\s*\)/);

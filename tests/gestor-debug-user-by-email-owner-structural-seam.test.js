@@ -106,6 +106,7 @@ async function loadOwner(dependencies = {}) {
     module: { exports: {} },
     exports: {},
     readUserByEmail: dependencies.readUserByEmail,
+    ensureDebugUserLookupAllowed: dependencies.ensureDebugUserLookupAllowed || (async () => true),
     ok: dependencies.ok,
     badRequest: dependencies.badRequest,
     notFound: dependencies.notFound,
@@ -161,6 +162,10 @@ test('userByEmail: owner real normaliza para lowercase, delega lookup e projeta 
         ignored: 'nao deve vazar',
       };
     },
+    async ensureDebugUserLookupAllowed() {
+      callOrder.push('allow');
+      return true;
+    },
     ok(_res, payload) {
       callOrder.push('ok');
       return { kind: 'ok', payload };
@@ -179,7 +184,7 @@ test('userByEmail: owner real normaliza para lowercase, delega lookup e projeta 
   const result = await userByEmail({ params: { email: 'Mixed@Example.COM' } }, {});
 
   assert.equal(capturedLookupArg, 'mixed@example.com');
-  assert.deepEqual(callOrder, ['lookup', 'ok']);
+  assert.deepEqual(callOrder, ['lookup', 'allow', 'ok']);
   assert.deepEqual(JSON.parse(JSON.stringify(result)), {
     kind: 'ok',
     payload: {
@@ -220,6 +225,44 @@ test('userByEmail: owner real traduz lookup vazio para 404', async () => {
   assert.deepEqual(result, { kind: 'notFound', message: 'Usuário não encontrado' });
 });
 
+test('userByEmail: owner real converte alvo fora do contexto permitido em 404 opaco', async () => {
+  const callOrder = [];
+  const userByEmail = await loadOwner({
+    async readUserByEmail() {
+      callOrder.push('lookup');
+      return {
+        _id: 'user-999',
+        email: 'blocked@example.com',
+        role: 'user',
+        ativo: true,
+        unidade_id: 'u-blocked',
+      };
+    },
+    async ensureDebugUserLookupAllowed() {
+      callOrder.push('allow');
+      return false;
+    },
+    ok() {
+      callOrder.push('ok');
+    },
+    badRequest() {
+      callOrder.push('badRequest');
+    },
+    notFound(_res, message) {
+      callOrder.push(`notFound:${message}`);
+      return { kind: 'notFound', message };
+    },
+    serverError() {
+      callOrder.push('serverError');
+    },
+  });
+
+  const result = await userByEmail({ params: { email: 'blocked@example.com' }, user: { role: 'diretor' } }, {});
+
+  assert.deepEqual(callOrder, ['lookup', 'allow', 'notFound:Usuário não encontrado']);
+  assert.deepEqual(result, { kind: 'notFound', message: 'Usuário não encontrado' });
+});
+
 test('userByEmail: owner real traduz erro externo para 500', async () => {
   const callOrder = [];
   const boom = new Error('lookup exploded');
@@ -257,6 +300,7 @@ test('userByEmail: owner deve largar o lookup direto para uma seam minima dedica
   assert.match(ownerSource, /if\s*\(!email\)\s*return\s+badRequest\s*\(\s*res\s*,\s*'Email obrigatório'\s*\)/);
   assert.match(ownerSource, /email\.toLowerCase\s*\(\s*\)/);
   assert.match(ownerSource, /readUserByEmail\s*\(\s*email\.toLowerCase\s*\(\s*\)\s*\)/);
+  assert.match(ownerSource, /ensureDebugUserLookupAllowed\s*\(\s*\{\s*req\s*,\s*user\s*\}\s*\)/);
   assert.match(ownerSource, /if\s*\(!user\)\s*return\s+notFound\s*\(\s*res\s*,\s*'Usuário não encontrado'\s*\)/);
   assert.match(ownerSource, /return\s+ok\s*\(\s*res\s*,\s*\{/);
   assert.match(ownerSource, /return\s+serverError\s*\(\s*res\s*,\s*e\s*\)/);
