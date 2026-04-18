@@ -20,32 +20,56 @@ function resolveClusterAnchorFromUnit(unidade) {
 	if (!unidade) return '';
 	return normalizeUnitId(unidade.matriz_id || unidade.unidade_principal_id || unidade._id);
 }
+function matchesRequestedUnit({ requestedUnit, requestedUnitRaw, clusterUnit } = {}) {
+	const requestedRaw = normalizeUnitId(requestedUnitRaw).toLowerCase();
+	const requestedId = normalizeUnitId(requestedUnit?._id).toLowerCase();
+	const requestedCodigo = normalizeUnitId(requestedUnit?.codigo).toLowerCase();
+	const clusterId = normalizeUnitId(clusterUnit?._id || clusterUnit?.id).toLowerCase();
+	const clusterCodigo = normalizeUnitId(clusterUnit?.codigo).toLowerCase();
+
+	if (!clusterId && !clusterCodigo) return false;
+
+	return (
+		(requestedId && requestedId === clusterId)
+		|| (requestedCodigo && requestedCodigo === clusterCodigo)
+		|| (requestedRaw && (requestedRaw === clusterId || requestedRaw === clusterCodigo))
+	);
+}
 export async function unidadesCluster(req, res) {
 	try {
 		const { unidade_id } = req.query;
 		if (!unidade_id) return res.status(400).json({ ok: false, error: 'Parametro unidade_id ausente' });
-
-		let unidadeBase = null;
-		if (/^[0-9a-fA-F]{24}$/.test(unidade_id)) unidadeBase = await findUnidadeByIdOrRawLean(unidade_id);
-		if (!unidadeBase) unidadeBase = await findUnidadeByCodigoLean(unidade_id);
-		if (!unidadeBase) return res.status(404).json({ ok: false, error: 'Unidade base nao encontrada' });
-		const requestedAnchor = resolveClusterAnchorFromUnit(unidadeBase);
-		if (!requestedAnchor) return res.json({ ok: true, total: 0, unidades: [] });
-
+		const requestedUnitRaw = normalizeUnitId(unidade_id);
 		const isPrivileged = isPrivilegedGestorUser(req.user);
-		let clusterAnchor = requestedAnchor;
+		let clusterAnchor = '';
+
 		if (!isPrivileged) {
 			const scopedUnitId = getScopedUnitId(req);
 			if (!scopedUnitId) return res.json({ ok: true, total: 0, unidades: [] });
 			const scopedUnit = await findUnidadeUserBaseLean(scopedUnitId);
-			const scopedAnchor = resolveClusterAnchorFromUnit(scopedUnit);
-			if (!scopedAnchor || scopedAnchor !== requestedAnchor) {
-				return res.json({ ok: true, total: 0, unidades: [] });
-			}
-			clusterAnchor = scopedAnchor;
+			clusterAnchor = resolveClusterAnchorFromUnit(scopedUnit);
+			if (!clusterAnchor) return res.json({ ok: true, total: 0, unidades: [] });
+		}
+
+		let unidadeBase = null;
+		if (/^[0-9a-fA-F]{24}$/.test(requestedUnitRaw)) unidadeBase = await findUnidadeByIdOrRawLean(requestedUnitRaw);
+		if (!unidadeBase) unidadeBase = await findUnidadeByCodigoLean(requestedUnitRaw);
+		if (!unidadeBase) return res.status(404).json({ ok: false, error: 'Unidade base nao encontrada' });
+
+		if (isPrivileged) {
+			clusterAnchor = resolveClusterAnchorFromUnit(unidadeBase);
+			if (!clusterAnchor) return res.json({ ok: true, total: 0, unidades: [] });
 		}
 
 		const todas = await findClusterUnidadesByAnchorService(clusterAnchor);
+		if (!isPrivileged) {
+			const requestedUnitAllowed = (todas || []).some((clusterUnit) => matchesRequestedUnit({
+				requestedUnit: unidadeBase,
+				requestedUnitRaw,
+				clusterUnit,
+			}));
+			if (!requestedUnitAllowed) return res.json({ ok: true, total: 0, unidades: [] });
+		}
 		return res.json({ ok: true, total: todas.length, unidades: todas.map(u => ({ id: u._id, codigo: u.codigo, nome: u.nome, is_principal: u.is_principal, subunidade: u.subunidade, unidade_principal_id: u.unidade_principal_id, cidade: u.cidade, estado: u.estado })) });
 	} catch (err) {
 		console.error('[unidadesCluster] Erro:', err);
