@@ -315,6 +315,10 @@ test('switchAuthUnit permite trocar unidade mesmo sem selecao pendente e respond
       id: userId,
       email: 'switch@gestor.test',
       nome: 'Usuario Switch',
+      role: 'diretor',
+      unidade_id: firstUnitId,
+      unidade_principal_id: '507f191e810c19729de860ff',
+      funcionario_id: 'func-702',
     },
     storedAuthContext: {
       active_unidade_id: firstUnitId,
@@ -420,6 +424,16 @@ test('switchAuthUnit permite trocar unidade mesmo sem selecao pendente e respond
     active_funcionario_id: 'func-703',
     legacy_role: 'user',
     needs_selection: false,
+  });
+  assert.deepEqual(response.session.user, {
+    id: userId,
+    email: 'switch@gestor.test',
+    nome: 'Usuario Switch',
+    role: 'user',
+    unidade_id: selectedUnitId,
+    unidade_principal_id: selectedUnitId,
+    funcionario_id: 'func-703',
+    auth_version: 'phase3',
   });
 });
 

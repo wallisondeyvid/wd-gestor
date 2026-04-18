@@ -98,6 +98,12 @@ before(async () => {
   const built = await createServer({ skipDb: false, deferErrorHandlers: true });
   app = built.app;
   closeServer = built.close;
+  app.get('/__tests__/session-state', (req, res) => {
+    return res.status(200).json({
+      sessionUser: req.session?.user || null,
+      gestorAuthContext: req.session?.gestorAuthContext || null,
+    });
+  });
   if (typeof built.registerErrorHandlers === 'function') {
     await Promise.resolve(built.registerErrorHandlers());
   }
@@ -215,6 +221,8 @@ test('POST /gestor/login mantém sessão autenticada sem contexto falso para mú
     email: buildUniqueEmail('multi-membership'),
     nome: 'Usuário Multi Unidade',
     role: 'user',
+    unidadeId: unidadeA._id,
+    funcionarioId: '507f191e810c19729de860dd',
   });
 
   await UserMembership.insertMany([
@@ -249,6 +257,15 @@ test('POST /gestor/login mantém sessão autenticada sem contexto falso para mú
   assert.equal(contextRes.body.needsUnitSelection, true);
   assert.equal(contextRes.body.activeContext, null);
   assert.equal(contextRes.body.effectiveRole, null);
+
+  const sessionStateRes = await agent.get('/__tests__/session-state');
+  assert.equal(sessionStateRes.status, 200);
+  assert.equal(sessionStateRes.body.sessionUser.auth_version, 'phase3');
+  assert.equal('unidade_id' in sessionStateRes.body.sessionUser, false);
+  assert.equal('unidade_principal_id' in sessionStateRes.body.sessionUser, false);
+  assert.equal('funcionario_id' in sessionStateRes.body.sessionUser, false);
+  assert.equal(sessionStateRes.body.gestorAuthContext.needs_selection, true);
+  assert.equal(sessionStateRes.body.gestorAuthContext.active_unidade_id ?? null, null);
 });
 
 test('POST /gestor/login falha com erro explícito quando não há global_role nem membership ativo', async () => {

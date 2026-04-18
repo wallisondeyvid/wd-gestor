@@ -380,6 +380,10 @@ test('selectAuthUnit persiste a unidade escolhida e responde 200 com activeConte
       id: userId,
       email: 'selecionar@gestor.test',
       nome: 'Usuario Selecionar',
+      role: 'diretor',
+      unidade_id: firstUnitId,
+      unidade_principal_id: '507f191e810c19729de860ff',
+      funcionario_id: 'func-302',
     },
     featureFlags: {
       gestor_auth_context_resolver: true,
@@ -482,6 +486,16 @@ test('selectAuthUnit persiste a unidade escolhida e responde 200 com activeConte
     active_funcionario_id: 'func-303',
     legacy_role: 'user',
     needs_selection: false,
+  });
+  assert.deepEqual(response.session.user, {
+    id: userId,
+    email: 'selecionar@gestor.test',
+    nome: 'Usuario Selecionar',
+    role: 'user',
+    unidade_id: selectedUnitId,
+    unidade_principal_id: selectedUnitId,
+    funcionario_id: 'func-303',
+    auth_version: 'phase3',
   });
 });
 

@@ -141,11 +141,13 @@ export async function login(req, res) {
 
     resolvedLoginAuthContext = loginPostAuthContextResult.resolvedAuthContext;
     if (loginPostAuthContextResult.kind === 'no-context') {
+      clearContextualLegacyProjection(req);
       await saveSessionSafe(req);
       return res.redirect(303, basePath + '/login?erro=contexto');
     }
 
     if (loginPostAuthContextResult.kind === 'needs-selection') {
+      clearContextualLegacyProjection(req);
       await saveSessionSafe(req);
       return res.redirect(303, basePath + '/login?step=select');
     }
@@ -361,6 +363,33 @@ function persistActiveMembershipInSession(req, selectedMembership) {
     legacy_role: selectedMembership.legacyRole,
     needs_selection: false,
   };
+
+  if (req.session.user && typeof req.session.user === 'object') {
+    req.session.user.unidade_id = selectedMembership.unidadeId || null;
+    req.session.user.unidade_principal_id = selectedMembership.unidadePrincipalId || selectedMembership.unidadeId || null;
+    req.session.user.funcionario_id = selectedMembership.funcionarioId || null;
+    if (selectedMembership.legacyRole) {
+      req.session.user.role = selectedMembership.legacyRole;
+    } else {
+      delete req.session.user.role;
+    }
+    req.session.user.auth_version = 'phase3';
+  }
+}
+
+function clearContextualLegacyProjection(req) {
+  if (!req?.session?.user || typeof req.session.user !== 'object') return;
+
+  const nextSessionUser = {
+    ...req.session.user,
+    auth_version: 'phase3',
+  };
+
+  delete nextSessionUser.unidade_id;
+  delete nextSessionUser.unidade_principal_id;
+  delete nextSessionUser.funcionario_id;
+
+  req.session.user = nextSessionUser;
 }
 
 async function mutateAuthUnitContext(req, {
