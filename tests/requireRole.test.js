@@ -194,6 +194,52 @@ test('requireRole prioriza o contexto canônico ativo ao sincronizar o shape leg
   assert.equal(req.session.user.auth_version, 'phase3');
 });
 
+test('requireRole limpa unidade legacy residual quando o auth-context v1 global ja e autoritativo', async () => {
+  const middleware = requireRole(['admin']);
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'admin@example.com',
+      role: 'user',
+      isMaster: false,
+      unidade_id: 'req-legacy-unit',
+      unidade_principal_id: 'req-legacy-principal',
+      funcionario_id: 'req-legacy-funcionario',
+    },
+    sessionUser: {
+      id: 'u1',
+      email: 'admin@example.com',
+      role: 'user',
+      unidade_id: 'session-legacy-unit',
+      unidade_principal_id: 'session-legacy-principal',
+      funcionario_id: 'session-legacy-funcionario',
+    },
+    authContext: {
+      source: 'auth-context-v1',
+      needs_selection: false,
+      global_role: 'admin',
+      active_membership_id: null,
+      active_unidade_id: null,
+      active_unidade_principal_id: null,
+      active_funcionario_id: null,
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await runMw(middleware, req, res);
+
+  assert.equal(nextCalled, true);
+  assert.equal(req.user.role, 'admin');
+  assert.equal(req.user.global_role, 'admin');
+  assert.equal(req.user.unidade_id, null);
+  assert.equal(req.user.unidade_principal_id, null);
+  assert.equal(req.user.funcionario_id, null);
+  assert.equal(req.session.user.unidade_id, null);
+  assert.equal(req.session.user.unidade_principal_id, null);
+  assert.equal(req.session.user.funcionario_id, null);
+});
+
 test('requireRole com a flag ligada continua aceitando o shape legado quando não há AuthContext salvo', async () => {
   const middleware = requireRole(['admin']);
   const req = createReq({

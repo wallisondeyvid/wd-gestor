@@ -262,6 +262,8 @@ class SchemaMock {
   constructor(definition = {}, options = {}) {
     this.definition = definition;
     this.options = options;
+    this.methods = {};
+    this.statics = {};
   }
 
   index() { return this; }
@@ -272,6 +274,14 @@ class SchemaMock {
   plugin() { return this; }
   method() { return this; }
   static() { return this; }
+  path() {
+    return {
+      options: {},
+      validate() { return this; },
+      get() { return this; },
+      set() { return this; },
+    };
+  }
   virtual() {
     return {
       get() { return this; },
@@ -284,12 +294,68 @@ SchemaMock.Types = {
   ObjectId: class ObjectIdSchemaTypeMock {},
 };
 
+function createQuery(value) {
+  const resolveValue = () => (typeof value === 'function' ? value() : value);
+  return {
+    select() { return this; },
+    lean() { return Promise.resolve(resolveValue()); },
+    maxTimeMS() { return this; },
+    populate() { return this; },
+    sort() { return this; },
+    exec() { return Promise.resolve(resolveValue()); },
+    then(onFulfilled, onRejected) {
+      return Promise.resolve(resolveValue()).then(onFulfilled, onRejected);
+    },
+    catch(onRejected) {
+      return Promise.resolve(resolveValue()).catch(onRejected);
+    },
+  };
+}
+
+function buildModelMock(name) {
+  const lowered = String(name || '').toLowerCase();
+  if (lowered.includes('membership')) {
+    return {
+      find() { return createQuery(state.activeMemberships); },
+      findOne() { return createQuery(state.activeMemberships[0] || null); },
+    };
+  }
+  if (lowered.includes('user')) {
+    return {
+      findOne() { return createQuery(state.loginUser); },
+      findById() { return createQuery(state.loginUser); },
+    };
+  }
+  if (lowered.includes('unidade')) {
+    return {
+      findOne(query = {}) {
+        const id = query._id || query.id || query.unidade_id || null;
+        return createQuery(id ? state.unidadeMap.get(String(id)) || null : null);
+      },
+      findById(id) { return createQuery(state.unidadeMap.get(String(id)) || null); },
+    };
+  }
+  return {
+    findOne() { return createQuery(null); },
+    findById() { return createQuery(null); },
+    find() { return createQuery([]); },
+  };
+}
+
 const mongooseMock = {
-  connection: { readyState: 1 },
+  connection: {
+    readyState: 1,
+    useDb() {
+      return this;
+    },
+    model(name) {
+      return mongooseMock.model(name);
+    },
+  },
   models: {},
   Schema: SchemaMock,
   model(name) {
-    if (!this.models[name]) this.models[name] = {};
+    if (!this.models[name]) this.models[name] = buildModelMock(name);
     return this.models[name];
   },
   isValidObjectId(value) {

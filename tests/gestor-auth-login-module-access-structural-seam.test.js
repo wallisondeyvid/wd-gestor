@@ -11,10 +11,116 @@ const featureFlagsState = {
   gestor_auth_context_resolver: true,
 };
 
+class SchemaMock {
+  constructor(definition = {}, options = {}) {
+    this.definition = definition;
+    this.options = options;
+    this.methods = {};
+    this.statics = {};
+  }
+
+  index() { return this; }
+  pre() { return this; }
+  post() { return this; }
+  add() { return this; }
+  set() { return this; }
+  plugin() { return this; }
+  method() { return this; }
+  static() { return this; }
+  path() {
+    return {
+      options: {},
+      validate() { return this; },
+      get() { return this; },
+      set() { return this; },
+    };
+  }
+  virtual() {
+    return {
+      get() { return this; },
+      set() { return this; },
+    };
+  }
+}
+
+SchemaMock.Types = {
+  ObjectId: class ObjectIdSchemaTypeMock {},
+};
+
+function createQuery(value) {
+  const resolveValue = () => (typeof value === 'function' ? value() : value);
+  return {
+    select() { return this; },
+    lean() { return Promise.resolve(resolveValue()); },
+    maxTimeMS() { return this; },
+    populate() { return this; },
+    sort() { return this; },
+    exec() { return Promise.resolve(resolveValue()); },
+    then(onFulfilled, onRejected) {
+      return Promise.resolve(resolveValue()).then(onFulfilled, onRejected);
+    },
+    catch(onRejected) {
+      return Promise.resolve(resolveValue()).catch(onRejected);
+    },
+  };
+}
+
+function buildModelMock(name) {
+  const lowered = String(name || '').toLowerCase();
+  if (lowered.includes('membership')) {
+    return {
+      find() { return createQuery([]); },
+      findOne() { return createQuery(null); },
+    };
+  }
+  if (lowered.includes('user')) {
+    return {
+      findOne() { return createQuery(authDbState.user); },
+      findById() { return createQuery(authDbState.user); },
+    };
+  }
+  if (lowered.includes('unidade')) {
+    return {
+      findOne() { return createQuery(authDbState.unidade); },
+      findById() { return createQuery(authDbState.unidade); },
+    };
+  }
+  return {
+    findOne() { return createQuery(null); },
+    findById() { return createQuery(null); },
+    find() { return createQuery([]); },
+  };
+}
+
 const mongooseState = {
-  connection: { readyState: 1 },
+  connection: {
+    readyState: 1,
+    useDb() {
+      return this;
+    },
+    model(name) {
+      return mongooseState.model(name);
+    },
+  },
+  models: {},
+  Schema: SchemaMock,
+  model(name) {
+    if (!this.models[name]) this.models[name] = buildModelMock(name);
+    return this.models[name];
+  },
   isValidObjectId(value) {
     return /^[a-fA-F0-9]{24}$/.test(String(value || '').trim());
+  },
+  Types: {
+    ObjectId: class ObjectIdMock {
+      constructor(value) {
+        this.value = String(value || '');
+      }
+
+      toString() {
+        return this.value;
+      }
+    },
   },
 };
 
@@ -185,8 +291,10 @@ test('estado real atual: login preserva o corridor HTTP e a decisao de acesso ao
 
   assert.match(seamSource, /export function createLoginModuleAccessCore\(/);
   assert.match(seamSource, /async function evaluateModuleAccess\(\{ userDoc, moduloAlvoNome, basePath, authContext = null \} = \{\}\)/);
+  assert.match(seamSource, /function resolveCanonicalActiveUnitId\(authContext\)/);
+  assert.match(seamSource, /function resolveTenantSensitiveUnitId\(\{ authContext, legacyUnitId \}\)/);
   assert.match(seamSource, /const modulo = await findModuloByOr\(/);
-  assert.match(seamSource, /const unidadeIdEfetiva = unidadeIdCanonica \|\| userDoc\.unidade_id \|\| null;/);
+  assert.match(seamSource, /const unidadeIdEfetiva = resolveTenantSensitiveUnitId\(\{/);
   assert.match(seamSource, /const funcionario = await findFuncionarioByIdSelect\(/);
   assert.match(seamSource, /const funcao = await findFuncaoByIdSelect\(/);
   assert.doesNotMatch(seamSource, /bcrypt|failed_login_attempts|lock_until|createRememberToken|primeiroAcessoExecutionService/);
@@ -436,4 +544,31 @@ test('owner preserva o redirect final de modulo negado e a decisao semantica usa
   assert.equal(response.renderedView, null);
   assert.equal(response.cookieCalls, 0);
   assert.equal(session.saveCalls, 0);
+});
+
+test('owner nao recai para userDoc.unidade_id quando o auth-context v1 existe sem unidade canonica ativa', async () => {
+  const user = createUser();
+  loginPostAuthContextState.result = {
+    kind: 'continue',
+    effectiveLoginUser: {
+      ...user,
+      unidade_id: '507f191e810c19729de860ff',
+      role: 'diretor',
+    },
+    resolvedAuthContext: {
+      source: 'auth-context-v1',
+      activeContext: null,
+      effectiveRole: 'diretor',
+      globalRole: null,
+    },
+  };
+
+  const { request, response } = createReqRes({ user, modulo: 'gestor' });
+
+  await login(request, response);
+
+  assert.equal(authDbState.findModuloByOrCalls.length, 1);
+  assert.equal(authDbState.findUnidadeByIdSelectCalls.length, 0);
+  assert.equal(response.redirectStatus, 303);
+  assert.equal(response.redirectLocation, '/gestor/login?erro=modulo&motivo=diretor_sem_unidade');
 });

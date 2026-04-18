@@ -6,10 +6,131 @@ const featureFlagsState = {
   gestor_auth_context_resolver: true,
 };
 
+class SchemaMock {
+  constructor(definition = {}, options = {}) {
+    this.definition = definition;
+    this.options = options;
+    this.methods = {};
+    this.statics = {};
+  }
+
+  index() { return this; }
+  pre() { return this; }
+  post() { return this; }
+  add() { return this; }
+  set() { return this; }
+  plugin() { return this; }
+  method() { return this; }
+  static() { return this; }
+  path() {
+    return {
+      options: {},
+      validate() { return this; },
+      get() { return this; },
+      set() { return this; },
+    };
+  }
+  virtual() {
+    return {
+      get() { return this; },
+      set() { return this; },
+    };
+  }
+}
+
+SchemaMock.Types = {
+  ObjectId: class ObjectIdSchemaTypeMock {},
+};
+
+function createQuery(value) {
+  const resolveValue = () => (typeof value === 'function' ? value() : value);
+  return {
+    select() { return this; },
+    lean() { return Promise.resolve(resolveValue()); },
+    maxTimeMS() { return this; },
+    populate() { return this; },
+    sort() { return this; },
+    exec() { return Promise.resolve(resolveValue()); },
+    then(onFulfilled, onRejected) {
+      return Promise.resolve(resolveValue()).then(onFulfilled, onRejected);
+    },
+    catch(onRejected) {
+      return Promise.resolve(resolveValue()).catch(onRejected);
+    },
+  };
+}
+
+function buildModelMock(name) {
+  const lowered = String(name || '').toLowerCase();
+  if (lowered.includes('membership')) {
+    return {
+      find() { return createQuery(authContextState.memberships); },
+      findOne() { return createQuery(authContextState.memberships[0] || null); },
+    };
+  }
+  if (lowered.includes('user')) {
+    return {
+      findOne() { return createQuery(authDbState.user); },
+      findById() { return createQuery(authDbState.user); },
+    };
+  }
+  if (lowered.includes('unidade')) {
+    return {
+      findOne(query = {}) {
+        const id = query._id || query.id || query.unidade_id || null;
+        return createQuery(id ? (authContextState.unidades[id] || authDbState.unidade || null) : (authDbState.unidade || null));
+      },
+      findById(id) { return createQuery(authContextState.unidades[id] || authDbState.unidade || null); },
+    };
+  }
+  if (lowered.includes('funcionario')) {
+    return {
+      findOne() { return createQuery(authDbState.funcionario); },
+      findById() { return createQuery(authDbState.funcionario); },
+    };
+  }
+  if (lowered.includes('funcao')) {
+    return {
+      findOne() { return createQuery(authDbState.funcao); },
+      findById() { return createQuery(authDbState.funcao); },
+    };
+  }
+  return {
+    findOne() { return createQuery(null); },
+    findById() { return createQuery(null); },
+    find() { return createQuery([]); },
+  };
+}
+
 const mongooseState = {
-  connection: { readyState: 1 },
+  connection: {
+    readyState: 1,
+    useDb() {
+      return this;
+    },
+    model(name) {
+      return mongooseState.model(name);
+    },
+  },
+  models: {},
+  Schema: SchemaMock,
+  model(name) {
+    if (!this.models[name]) this.models[name] = buildModelMock(name);
+    return this.models[name];
+  },
   isValidObjectId(value) {
     return /^[a-fA-F0-9]{24}$/.test(String(value || '').trim());
+  },
+  Types: {
+    ObjectId: class ObjectIdMock {
+      constructor(value) {
+        this.value = String(value || '');
+      }
+
+      toString() {
+        return this.value;
+      }
+    },
   },
 };
 

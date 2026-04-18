@@ -8,6 +8,10 @@ function normalizeRole(value) {
   return normalized || null;
 }
 
+function hasAuthoritativeAuthContext(authContext) {
+  return authContext?.source === AUTH_CONTEXT_SOURCE_V1;
+}
+
 function resolveEffectiveRole({ authContext, requestUser, sessionUser }) {
   const globalRole = normalizeRole(
     authContext?.global_role ||
@@ -99,11 +103,18 @@ export function resolveRequireRoleLegacyUser({ authContext, requestUser = null, 
     effectiveRole,
     globalRole,
   });
+  const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
   const resolvedRole = effectiveRole || normalizeRole(canonicalProjection?.role || requestUser?.role || sessionUser?.role) || '';
   const resolvedGlobalRole = globalRole || normalizeRole(canonicalProjection?.global_role || requestUser?.global_role || sessionUser?.global_role);
-  const resolvedUnidadeId = canonicalProjection?.unidade_id ?? requestUser?.unidade_id ?? sessionUser?.unidade_id ?? null;
-  const resolvedUnidadePrincipalId = canonicalProjection?.unidade_principal_id ?? requestUser?.unidade_principal_id ?? sessionUser?.unidade_principal_id ?? null;
-  const resolvedFuncionarioId = canonicalProjection?.funcionario_id ?? requestUser?.funcionario_id ?? sessionUser?.funcionario_id ?? null;
+  const resolvedUnidadeId = authContextIsAuthoritative
+    ? (canonicalProjection?.unidade_id ?? null)
+    : (canonicalProjection?.unidade_id ?? requestUser?.unidade_id ?? sessionUser?.unidade_id ?? null);
+  const resolvedUnidadePrincipalId = authContextIsAuthoritative
+    ? (canonicalProjection?.unidade_principal_id ?? null)
+    : (canonicalProjection?.unidade_principal_id ?? requestUser?.unidade_principal_id ?? sessionUser?.unidade_principal_id ?? null);
+  const resolvedFuncionarioId = authContextIsAuthoritative
+    ? (canonicalProjection?.funcionario_id ?? null)
+    : (canonicalProjection?.funcionario_id ?? requestUser?.funcionario_id ?? sessionUser?.funcionario_id ?? null);
   const isMaster = resolvedRole === 'master' || resolvedGlobalRole === 'master';
 
   return {

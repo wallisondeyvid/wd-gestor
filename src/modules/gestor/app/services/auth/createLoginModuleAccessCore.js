@@ -2,6 +2,19 @@ function escapeRegex(value) {
   return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function resolveCanonicalActiveUnitId(authContext) {
+  if (authContext?.source !== 'auth-context-v1') return null;
+  return authContext.activeContext?.unidadeId || authContext.active_unidade_id || null;
+}
+
+function resolveTenantSensitiveUnitId({ authContext, legacyUnitId }) {
+  const unidadeIdCanonica = resolveCanonicalActiveUnitId(authContext);
+  if (authContext?.source === 'auth-context-v1') {
+    return unidadeIdCanonica || null;
+  }
+  return unidadeIdCanonica || legacyUnitId || null;
+}
+
 export function createLoginModuleAccessCore({
   findModuloByOr,
   findUnidadeByIdSelect,
@@ -44,10 +57,10 @@ export function createLoginModuleAccessCore({
       if (!modulo) return { permitido: false, motivo: 'modulo_inexistente' };
 
       if (role === 'diretor') {
-        const unidadeIdCanonica = authContext?.source === 'auth-context-v1'
-          ? (authContext.activeContext?.unidadeId || authContext.active_unidade_id || null)
-          : null;
-        const unidadeIdEfetiva = unidadeIdCanonica || userDoc.unidade_id || null;
+        const unidadeIdEfetiva = resolveTenantSensitiveUnitId({
+          authContext,
+          legacyUnitId: userDoc.unidade_id,
+        });
         if (!unidadeIdEfetiva) return { permitido: false, motivo: 'diretor_sem_unidade' };
         const unidade = await findUnidadeByIdSelect({
           id: unidadeIdEfetiva,
@@ -61,10 +74,11 @@ export function createLoginModuleAccessCore({
 
       if (role === 'user') {
         if (!userDoc.funcionario_id) return { permitido: false, motivo: 'user_sem_funcionario' };
-        const unidadeIdCanonica = authContext?.source === 'auth-context-v1'
-          ? (authContext.activeContext?.unidadeId || authContext.active_unidade_id || null)
-          : null;
-        const unidadeIdEfetiva = unidadeIdCanonica || userDoc.unidade_id || null;
+        const unidadeIdEfetiva = resolveTenantSensitiveUnitId({
+          authContext,
+          legacyUnitId: userDoc.unidade_id,
+        });
+        if (!unidadeIdEfetiva) return { permitido: false, motivo: 'user_sem_unidade' };
         const funcionario = await findFuncionarioByIdSelect({
           id: userDoc.funcionario_id,
           select: 'funcao_id unidade_id',
