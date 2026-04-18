@@ -2,6 +2,8 @@ import {
   findUserByEmail,
   findUserMembershipsByUserIdsLean,
   findUnidadesByIdsNomeCodigoLean,
+  findUnidadeByIdLean,
+  findUnidadesByMatrizOuPrincipal,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 
 function normalizeEntityId(value) {
@@ -15,7 +17,7 @@ function buildUnidadeSummaryLabel(unidade) {
   return nome || codigo || null;
 }
 
-export async function checkUsuarioEmailOwnerService({ email } = {}) {
+export async function checkUsuarioEmailOwnerService({ email, scope = null } = {}) {
   const user = await findUserByEmail(email);
   if (!user) {
     return {
@@ -32,14 +34,44 @@ export async function checkUsuarioEmailOwnerService({ email } = {}) {
 
   const normalizedUserId = normalizeEntityId(user._id);
   const memberships = await findUserMembershipsByUserIdsLean([normalizedUserId]);
-  const unidadeIds = [...new Set((Array.isArray(memberships) ? memberships : []).map((membership) => normalizeEntityId(membership?.unidade_id)).filter(Boolean))];
+  let visibleMemberships = Array.isArray(memberships) ? memberships : [];
+
+  if (scope?.isGlobalScope === false && scope?.hasAuthoritativeAuthContext === true) {
+    const scopedUnitId = normalizeEntityId(scope?.scopedUnitId);
+    let allowedUnitIds = [];
+
+    if (scopedUnitId) {
+      const scopedUnit = await findUnidadeByIdLean(scopedUnitId);
+      if (scopedUnit) {
+        const principalUnitId = normalizeEntityId(
+          scopedUnit?.is_principal
+            ? scopedUnit?._id
+            : scopedUnit?.unidade_principal_id || scopedUnit?.matriz_id || scopedUnit?._id,
+        );
+        let allowedUnits = principalUnitId
+          ? await findUnidadesByMatrizOuPrincipal(principalUnitId)
+          : [];
+
+        if ((!allowedUnits || allowedUnits.length === 0) && scopedUnitId) {
+          allowedUnits = [{ _id: scopedUnitId }];
+        }
+
+        allowedUnitIds = [...new Set((allowedUnits || []).map((unidade) => normalizeEntityId(unidade?._id)).filter(Boolean))];
+      }
+    }
+
+    const allowedUnitIdsSet = new Set(allowedUnitIds);
+    visibleMemberships = visibleMemberships.filter((membership) => allowedUnitIdsSet.has(normalizeEntityId(membership?.unidade_id)));
+  }
+
+  const unidadeIds = [...new Set(visibleMemberships.map((membership) => normalizeEntityId(membership?.unidade_id)).filter(Boolean))];
   const unidades = unidadeIds.length > 0
     ? await findUnidadesByIdsNomeCodigoLean(unidadeIds)
     : [];
   const unidadesById = new Map(
     (Array.isArray(unidades) ? unidades : []).map((unidade) => [normalizeEntityId(unidade?._id), unidade])
   );
-  const membershipsSummary = (Array.isArray(memberships) ? memberships : []).map((membership) => {
+  const membershipsSummary = visibleMemberships.map((membership) => {
     const unidadeId = normalizeEntityId(membership?.unidade_id);
     const unidade = unidadesById.get(unidadeId) || null;
     return {

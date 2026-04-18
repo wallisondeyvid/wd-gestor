@@ -15,6 +15,8 @@ import {
 	findUnidadesByIdsNomeCodigoLean,
 	findUserMembershipByUserAndUnidade,
 	findUserByIdSelectAuthLockInfo,
+	findUnidadeByIdLean,
+	findUnidadesByMatrizOuPrincipal,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
 import { listLockedUsersService } from '#modules/gestor/app/services/usuarios/listLockedUsers.service.js';
 import { checkUsuarioEmailOwnerService } from '#modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js';
@@ -168,7 +170,7 @@ async function resolveCriarUsuarioProvidedFuncionario({ funcionarioId, unidadeId
 
 		return {
 			funcionarioDoc,
-			unidadeId: unidadeId || String(funcionarioDoc.unidade_id),
+			unidadeId: unidadeId || null,
 		};
 	} catch (_error) {
 		return {
@@ -347,9 +349,44 @@ export async function criarUsuario(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 		const emailNorm = String(email).toLowerCase();
+		const normalizeScopedEntityId = (value) => String(value || '').trim();
+		const isGlobalScope = !!(req.user?.isMaster || req.user?.role === 'admin');
+		const hasAuthoritativeAuthContext = req.session?.gestorAuthContext?.source === 'auth-context-v1';
+		const scopedUnitId = normalizeScopedEntityId(req.unitScope?.unidadeId);
+		const resolveAllowedUnitIds = async () => {
+			if (isGlobalScope || !hasAuthoritativeAuthContext || !scopedUnitId) return [];
+
+			const scopedUnit = await findUnidadeByIdLean(scopedUnitId);
+			if (!scopedUnit) return [];
+
+			const principalUnitId = normalizeScopedEntityId(
+				scopedUnit?.is_principal
+					? scopedUnit?._id
+					: scopedUnit?.unidade_principal_id || scopedUnit?.matriz_id || scopedUnit?._id,
+			);
+			let allowedUnits = principalUnitId
+				? await findUnidadesByMatrizOuPrincipal(principalUnitId)
+				: [];
+			if ((!allowedUnits || allowedUnits.length === 0) && scopedUnitId) {
+				allowedUnits = [{ _id: scopedUnitId }];
+			}
+
+			return [...new Set((allowedUnits || []).map((unidade) => normalizeScopedEntityId(unidade?._id)).filter(Boolean))];
+		};
 		const existingUser = await findUserByEmail(emailNorm);
 		const requestedUserRole = resolveRequestedUserRole(role);
 		const normalizedRole = normalizeRoleValue(role);
+		if (!isGlobalScope && hasAuthoritativeAuthContext) {
+			const allowedUnitIds = await resolveAllowedUnitIds();
+			if ((normalizedRole === 'user' || normalizedRole === 'diretor') && !unidade_id) {
+				unidade_id = scopedUnitId || '';
+			}
+
+			const requestedUnitId = normalizeScopedEntityId(unidade_id);
+			if (requestedUnitId && allowedUnitIds.length > 0 && !allowedUnitIds.includes(requestedUnitId)) {
+				return notFound(res, 'Unidade não encontrada');
+			}
+		}
 		const canLinkExistingUser = !!buildUserMembershipPayload({
 			userId: existingUser?._id || null,
 			role: requestedUserRole,
@@ -431,7 +468,14 @@ export async function checkUsuarioEmail(req, res) {
 			return badRequest(res, 'E-mail obrigatório', { code: 'EMAIL_REQUIRED' });
 		}
 
-		const result = await checkUsuarioEmailOwnerService({ email });
+		const result = await checkUsuarioEmailOwnerService({
+			email,
+			scope: {
+				isGlobalScope: !!(req.user?.isMaster || req.user?.role === 'admin'),
+				hasAuthoritativeAuthContext: req.session?.gestorAuthContext?.source === 'auth-context-v1',
+				scopedUnitId: String(req.unitScope?.unidadeId || '').trim(),
+			},
+		});
 		return ok(res, {
 			email: result.email,
 			exists: result.exists,

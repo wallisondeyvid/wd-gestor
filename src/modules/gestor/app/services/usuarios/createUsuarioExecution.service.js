@@ -83,7 +83,7 @@ async function materializeCriarUsuarioFuncionarioLinkCore({
 			const shouldSyncUserFuncionarioId = !user.funcionario_id;
 			if (!isExistingUser || shouldSyncUserFuncionarioId) {
 				user.funcionario_id = funcionarioDoc._id;
-				if (!user.unidade_id) user.unidade_id = funcionarioDoc.unidade_id;
+				if (!user.unidade_id && unidadeId) user.unidade_id = unidadeId;
 				await saveUserDoc(user);
 			}
 			await setCriarUsuarioFuncionarioUsuarioIdIfEmpty(
@@ -104,7 +104,7 @@ async function materializeCriarUsuarioFuncionarioLinkCore({
 				const shouldSyncUserFuncionarioId = !user.funcionario_id;
 				if (!isExistingUser || shouldSyncUserFuncionarioId) {
 					user.funcionario_id = existente._id;
-					if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidadeId;
+					if (!user.unidade_id && unidadeId) user.unidade_id = unidadeId;
 					await saveUserDoc(user);
 				}
 				try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id, existente.unidade_id || unidadeId || null); } catch (_up) {}
@@ -145,7 +145,7 @@ async function materializeCriarUsuarioFuncionarioLinkCore({
 						linkedFuncionarioId = existente._id;
 						if (!isExistingUser) {
 							user.funcionario_id = existente._id;
-							if (!user.unidade_id) user.unidade_id = existente.unidade_id || unidadeId;
+							if (!user.unidade_id && unidadeId) user.unidade_id = unidadeId;
 							await saveUserDoc(user);
 						}
 						try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch (_up2) {}
