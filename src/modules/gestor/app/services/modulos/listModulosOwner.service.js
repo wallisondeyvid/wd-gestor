@@ -13,13 +13,24 @@ function normalizeModuloList(modulos = []) {
   }));
 }
 
-export async function listModulosOwnerService({ userRole, activeUnitId } = {}) {
-  if (userRole === 'master') {
+export async function listModulosOwnerService({ userRole, activeUnitId, authContext, requestUser } = {}) {
+  if (userRole === 'master' || userRole === 'admin') {
     const modulos = await findAllModulosBaseLean();
     return { kind: 'ok', modulos };
   }
 
-  const normalizedActiveUnitId = String(activeUnitId || '').trim();
+  const resolveEffectiveActiveUnitId = () => {
+    const canonicalUnitId = String(
+      authContext?.activeContext?.unidadeId || authContext?.active_unidade_id || ''
+    ).trim();
+    if (authContext?.source === 'auth-context-v1') {
+      return canonicalUnitId;
+    }
+
+    return String(activeUnitId || requestUser?.unidade_id || '').trim();
+  };
+
+  const normalizedActiveUnitId = resolveEffectiveActiveUnitId();
   if (!normalizedActiveUnitId) {
     return { kind: 'ok', modulos: [] };
   }

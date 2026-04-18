@@ -100,7 +100,7 @@ test('listarModulos delega ao service owner e preserva o caminho feliz com ok(re
 
   const req = {
     user: { role: 'gestor', unidade_id: 'u-user' },
-    session: { gestorAuthContext: { active_unidade_id: 'u-session' } },
+    session: { gestorAuthContext: { source: 'auth-context-v1', active_unidade_id: 'u-session' } },
   };
   const res = createApiRes();
 
@@ -115,6 +115,17 @@ test('listarModulos delega ao service owner e preserva o caminho feliz com ok(re
   assert.equal(res.body.data.length, 1);
   assert.equal(res.body.data[0]._id, 'm-1');
   assert.equal(res.body.data[0].nome, 'Gestor');
+});
+
+test('resolveActiveUnitId nao recai para req.user.unidade_id quando o auth-context v1 existe sem unidade ativa canonica', () => {
+  const resolveActiveUnitId = buildFunction(CONTROLLER_SOURCE, 'function resolveActiveUnitId', {});
+
+  const req = {
+    user: { role: 'gestor', unidade_id: 'u-legado-stale' },
+    session: { gestorAuthContext: { source: 'auth-context-v1', active_unidade_id: '' } },
+  };
+
+  assert.equal(resolveActiveUnitId(req), '');
 });
 
 test('listModulosOwnerService preserva os ramos master/global, contextual e fallback vazio', async () => {
@@ -160,6 +171,32 @@ test('listModulosOwnerService preserva os ramos master/global, contextual e fall
   assert.equal(unidadeCalls.length, 1);
   assert.equal(unidadeCalls[0].length, 1);
   assert.equal(unidadeCalls[0][0], 'u-123');
+});
+
+test('listModulosOwnerService nao aceita unidade legada concorrente quando o auth-context v1 esta ativo', async () => {
+  const unidadeCalls = [];
+  const normalizeModuloList = buildFunction(SERVICE_SOURCE, 'function normalizeModuloList', {});
+
+  const listModulosOwnerService = buildFunction(SERVICE_SOURCE, 'export async function listModulosOwnerService', {
+    findAllModulosBaseLean: async () => [],
+    findUnidadeByIdWithModulosAcessiveisLean: async (...args) => {
+      unidadeCalls.push(args);
+      return { modulosAcessiveis: [] };
+    },
+    normalizeModuloList,
+  });
+
+  const result = await listModulosOwnerService({
+    userRole: 'gestor',
+    activeUnitId: 'u-legado-stale',
+    authContext: { source: 'auth-context-v1', active_unidade_id: '' },
+    requestUser: { unidade_id: 'u-request-legado' },
+  });
+
+  assert.equal(result.kind, 'ok');
+  assert.equal(Array.isArray(result.modulos), true);
+  assert.equal(result.modulos.length, 0);
+  assert.equal(unidadeCalls.length, 0);
 });
 
 test('paginaModulos delega ao owner service e preserva a borda HTML atual para usuario privilegiado', async () => {
