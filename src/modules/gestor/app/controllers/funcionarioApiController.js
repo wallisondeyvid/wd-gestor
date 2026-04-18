@@ -1360,6 +1360,7 @@ export async function listarFuncionariosDisponiveis(req,res){
 			return ok(res, []);
 		}
 		const operationalUnitId = await resolveAuxiliaryOperationalUnitId(req);
+		// Master/Admin globais podem operar sem unitScope aqui; sem contexto resolvido, o alvo explicito da rota permanece valido.
 		const resolvedUnitId = operationalUnitId || normalizeUnitId(unidadeId);
 		if (!requestedUnitMatchesResolvedContext(unidadeId, resolvedUnitId)) {
 			return ok(res, []);

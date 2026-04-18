@@ -207,6 +207,37 @@ async function authenticateContextualAgent(app, { unidadeId, papelContextual = '
   return { agent, email };
 }
 
+async function authenticateGlobalAdminAgent(app, { emailPrefix = 'funcionario-disponiveis-runtime-global-admin' } = {}) {
+  const email = uniqueEmail(emailPrefix);
+  const senha = 'Senha@123456';
+  const senhaHash = await bcrypt.hash(senha, 10);
+
+  await User.create({
+    email,
+    senha: senhaHash,
+    cpf: uniqueCpf(),
+    role: 'user',
+    global_role: 'admin',
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: `Disponiveis Runtime Global Admin ${nextCounter()}`,
+  });
+
+  sharedHarness.createdEmails.push(email);
+
+  const agent = request.agent(app);
+  const loginRes = await agent
+    .post('/gestor/login')
+    .type('form')
+    .send({ email, senha, modulo: 'gestor' });
+
+  assert.equal(loginRes.status, 303, JSON.stringify(loginRes.body));
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  return { agent, email };
+}
+
 async function withHarness(run) {
   const harness = await getSharedHarness();
   await clearFuncionariosInUnits(harness.unidadeA._id, harness.unidadeB._id, harness.unidadeC._id);
@@ -336,6 +367,31 @@ test('GET /gestor/api/funcionarios/disponiveis/:unidadeId fora do escopo context
     assert.equal(res.status, 200, JSON.stringify(res.body));
     assert.equal(res.body?.success, true, JSON.stringify(res.body));
     assert.deepEqual(extractFuncionariosArray(res.body), [], JSON.stringify(res.body));
+  });
+});
+
+test('GET /gestor/api/funcionarios/disponiveis/:unidadeId permite admin global sem unitScope no alvo explicito da rota', async () => {
+  await withHarness(async ({ app, unidadeB }) => {
+    const { agent } = await authenticateGlobalAdminAgent(app);
+    const funcionario = await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Admin Global ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-disponiveis-global-admin'),
+      cpf: uniqueCpf(),
+    });
+
+    const res = await agent
+      .get(`/gestor/api/funcionarios/disponiveis/${normalizeId(unidadeB._id)}`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body?.success, true, JSON.stringify(res.body));
+
+    const funcionarios = extractFuncionariosArray(res.body);
+    assert.ok(
+      funcionarios.some((item) => normalizeId(item?._id) === normalizeId(funcionario._id)),
+      JSON.stringify(res.body),
+    );
   });
 });
 
