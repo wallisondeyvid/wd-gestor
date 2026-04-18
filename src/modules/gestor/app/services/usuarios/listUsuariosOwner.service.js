@@ -4,7 +4,12 @@ import {
   findAllFuncionariosSelectIdNomeCpfLean,
   findUserMembershipsByUserIdsLean,
   findUnidadesByIdsNomeCodigoLean,
+  findUnidadeByIdLean,
+  findUnidadesByMatrizOuPrincipal,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
+import Funcionario from '#core/models/Funcionario.js';
+import User from '#core/models/user.js';
+import UserMembership from '#core/models/userMembership.js';
 
 function normalizeId(value) {
   return String(value || '').trim();
@@ -15,6 +20,55 @@ function buildUnidadeMembershipLabel(unidade) {
   const nome = String(unidade?.nome || '').trim();
   if (codigo && nome) return `${codigo} - ${nome}`;
   return nome || codigo || null;
+}
+
+function isGlobalGestorUser(user) {
+  return !!(user?.isMaster || user?.role === 'master' || user?.role === 'admin');
+}
+
+function getScopedUnitId(req) {
+  return normalizeId(req?.unitScope?.unidadeId);
+}
+
+async function resolveAllowedUnitIds(req) {
+  const scopedUnitId = getScopedUnitId(req);
+  if (!scopedUnitId) return [];
+
+  const scopedUnit = await findUnidadeByIdLean(scopedUnitId);
+  if (!scopedUnit) return [];
+
+  const principalUnitId = normalizeId(
+    scopedUnit?.is_principal
+      ? scopedUnit?._id
+      : scopedUnit?.unidade_principal_id || scopedUnit?.matriz_id || scopedUnit?._id,
+  );
+
+  let allowedUnits = principalUnitId
+    ? await findUnidadesByMatrizOuPrincipal(principalUnitId)
+    : [];
+
+  if ((!allowedUnits || allowedUnits.length === 0) && scopedUnitId) {
+    allowedUnits = [scopedUnit];
+  }
+
+  return [...new Set((allowedUnits || []).map((unidade) => normalizeId(unidade?._id)).filter(Boolean))];
+}
+
+async function listUsuariosContextuaisService({ allowedUnitIds }) {
+  const normalizedUnitIds = [...new Set((allowedUnitIds || []).map((unitId) => normalizeId(unitId)).filter(Boolean))];
+  if (normalizedUnitIds.length === 0) return [];
+
+  const [legacyUsers, memberships] = await Promise.all([
+    User.find({ role: { $ne: 'master' }, unidade_id: { $in: normalizedUnitIds } }).lean(),
+    UserMembership.find({ unidade_id: { $in: normalizedUnitIds } }).select('user_id').lean(),
+  ]);
+
+  const membershipUserIds = [...new Set((memberships || []).map((membership) => normalizeId(membership?.user_id)).filter(Boolean))];
+  const legacyUserIds = [...new Set((legacyUsers || []).map((user) => normalizeId(user?._id)).filter(Boolean))];
+  const userIds = [...new Set([...legacyUserIds, ...membershipUserIds])];
+
+  if (userIds.length === 0) return [];
+  return User.find({ _id: { $in: userIds }, role: { $ne: 'master' } }).lean();
 }
 
 export async function enrichUsuariosMembershipsSummary(usuarios) {
@@ -72,19 +126,38 @@ export async function listUsuariosEnrichedService({ isMaster } = {}) {
   return enrichUsuariosMembershipsSummary(usuarios);
 }
 
-export async function listUsuariosUnidadesFiltradasService() {
+export async function listUsuariosUnidadesFiltradasService({ isGlobalScope = true, allowedUnitIds = [] } = {}) {
+  if (!isGlobalScope) {
+    const normalizedUnitIds = [...new Set((allowedUnitIds || []).map((unitId) => normalizeId(unitId)).filter(Boolean))];
+    if (normalizedUnitIds.length === 0) return [];
+    return findUnidadesByIdsNomeCodigoLean(normalizedUnitIds);
+  }
+
   return findAllUnidadesSelectIdCodigoNomeLean();
 }
 
-export async function listUsuariosFuncionariosFiltradosService() {
+export async function listUsuariosFuncionariosFiltradosService({ isGlobalScope = true, allowedUnitIds = [] } = {}) {
+  if (!isGlobalScope) {
+    const normalizedUnitIds = [...new Set((allowedUnitIds || []).map((unitId) => normalizeId(unitId)).filter(Boolean))];
+    if (normalizedUnitIds.length === 0) return [];
+    return Funcionario.find({ unidade_id: { $in: normalizedUnitIds } }).select('_id nome cpf').lean();
+  }
+
   return findAllFuncionariosSelectIdNomeCpfLean();
 }
 
-export async function listUsuariosOwnerService({ isMaster } = {}) {
+export async function listUsuariosOwnerService({ req = null, isMaster = false, isGlobalScope } = {}) {
+  const globalScope = typeof isGlobalScope === 'boolean'
+    ? isGlobalScope
+    : isGlobalGestorUser(req?.user);
+  const allowedUnitIds = globalScope ? [] : await resolveAllowedUnitIds(req);
+  const usuariosPromise = globalScope
+    ? listUsuariosEnrichedService({ isMaster })
+    : listUsuariosContextuaisService({ allowedUnitIds }).then(enrichUsuariosMembershipsSummary);
   const [usuarios, unidadesFiltradas, funcionarios] = await Promise.all([
-    listUsuariosEnrichedService({ isMaster }),
-    listUsuariosUnidadesFiltradasService(),
-    listUsuariosFuncionariosFiltradosService(),
+    usuariosPromise,
+    listUsuariosUnidadesFiltradasService({ isGlobalScope: globalScope, allowedUnitIds }),
+    listUsuariosFuncionariosFiltradosService({ isGlobalScope: globalScope, allowedUnitIds }),
   ]);
 
   return {

@@ -250,8 +250,13 @@ export async function paginaUsuarios(req, res, next) {
     if (isDbOff(req)) {
       return res.status(200).render('usuarios', stubCtx(req));
     }
-    if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-    const result = await listUsuariosOwnerService({ isMaster: req.user.isMaster });
+    const isGlobalScope = !!(req.user?.isMaster || req.user?.role === 'admin');
+    if (!isGlobalScope) return res.status(403).send('Acesso negado');
+    const result = await listUsuariosOwnerService({
+      req,
+      isMaster: req.user.isMaster,
+      isGlobalScope,
+    });
     return res.render('usuarios', buildUsuariosViewRenderPayload({ user: req.user, result }));
   } catch (e) { console.error('[pagesController] /usuarios erro:', e); next(e); }
 }

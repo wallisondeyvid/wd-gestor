@@ -6,10 +6,12 @@ import request from 'supertest';
 
 import { createServer } from '../src/server/createServer.js';
 import { disconnectMongo } from '../src/core/db/connect.js';
+import Funcionario from '../src/core/models/Funcionario.js';
 import Modulo from '../src/core/models/modulo.js';
 import Unidade from '../src/core/models/unidade.js';
 import User from '../src/core/models/user.js';
 import UserMembership from '../src/core/models/userMembership.js';
+import { listUsuariosOwnerService } from '../src/modules/gestor/app/services/usuarios/listUsuariosOwner.service.js';
 
 process.env.NODE_ENV = 'test';
 process.env.MONGO_MEMORY = '1';
@@ -204,4 +206,96 @@ test('GET /gestor/usuarios diferencia legado sem sync de acesso global sem mostr
   assert.match(res.text, /Acesso global/);
   assert.match(res.text, /Sem vínculo contextual necessário\./);
   assert.doesNotMatch(res.text, /0 unidades vinculadas/);
+});
+
+test('listUsuariosOwnerService ancora o branch contextual em req.unitScope para usuarios, unidades e funcionarios', async () => {
+  const unidadeEscopo = await createEnabledUnit(`Unidade Escopo ${nextSequence()}`);
+  const unidadeFora = await createEnabledUnit(`Unidade Fora ${nextSequence()}`);
+
+  const usuarioComLegadoNoEscopo = await createUser({
+    email: buildUniqueEmail('usuario-escopo-legado'),
+    nome: 'Usuário Escopo Legado',
+    role: 'user',
+    unidadeId: unidadeEscopo._id,
+  });
+
+  const usuarioComMembershipNoEscopo = await createUser({
+    email: buildUniqueEmail('usuario-escopo-membership'),
+    nome: 'Usuário Escopo Membership',
+    role: 'user',
+    unidadeId: null,
+  });
+
+  const usuarioForaDoEscopo = await createUser({
+    email: buildUniqueEmail('usuario-fora-escopo'),
+    nome: 'Usuário Fora do Escopo',
+    role: 'user',
+    unidadeId: unidadeFora._id,
+  });
+
+  await UserMembership.create([
+    {
+      user_id: usuarioComMembershipNoEscopo._id,
+      unidade_id: unidadeEscopo._id,
+      papel_contextual: 'gestor',
+      status: 'active',
+      origem: 'gestor-users-memberships-page-test',
+    },
+    {
+      user_id: usuarioForaDoEscopo._id,
+      unidade_id: unidadeFora._id,
+      papel_contextual: 'gestor',
+      status: 'active',
+      origem: 'gestor-users-memberships-page-test',
+    },
+  ]);
+
+  const funcionarioEscopo = await Funcionario.create({
+    unidade_id: unidadeEscopo._id,
+    nome: 'Funcionário do Escopo',
+    rg: `RGESCOPO${Date.now()}${nextSequence()}`,
+    cpf: buildUniqueCpf(),
+    data_nascimento: new Date('2000-01-01T00:00:00.000Z'),
+    sexo: 'N',
+    email: buildUniqueEmail('funcionario-escopo'),
+    telefone: '(11) 99999-1111',
+  });
+
+  await Funcionario.create({
+    unidade_id: unidadeFora._id,
+    nome: 'Funcionário Fora do Escopo',
+    rg: `RGFORA${Date.now()}${nextSequence()}`,
+    cpf: buildUniqueCpf(),
+    data_nascimento: new Date('2000-01-01T00:00:00.000Z'),
+    sexo: 'N',
+    email: buildUniqueEmail('funcionario-fora'),
+    telefone: '(11) 99999-2222',
+  });
+
+  const result = await listUsuariosOwnerService({
+    req: {
+      user: { role: 'diretor', isMaster: false },
+      unitScope: { unidadeId: String(unidadeEscopo._id) },
+      session: {
+        gestorAuthContext: {
+          source: 'auth-context-v1',
+          active_unidade_id: String(unidadeFora._id),
+        },
+        user: {
+          unidade_id: String(unidadeFora._id),
+        },
+      },
+    },
+    isGlobalScope: false,
+  });
+
+  const usuarioIds = new Set((result.usuarios || []).map((usuario) => String(usuario._id)));
+  const unidadeIds = new Set((result.unidadesFiltradas || []).map((unidade) => String(unidade._id)));
+  const funcionarioIds = new Set((result.funcionarios || []).map((funcionario) => String(funcionario._id)));
+
+  assert.equal(usuarioIds.has(String(usuarioComLegadoNoEscopo._id)), true);
+  assert.equal(usuarioIds.has(String(usuarioComMembershipNoEscopo._id)), true);
+  assert.equal(usuarioIds.has(String(usuarioForaDoEscopo._id)), false);
+  assert.deepEqual([...unidadeIds], [String(unidadeEscopo._id)]);
+  assert.deepEqual([...funcionarioIds], [String(funcionarioEscopo._id)]);
 });
