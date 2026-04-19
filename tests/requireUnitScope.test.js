@@ -298,7 +298,7 @@ test('requireUnitScope sem usuário não aceita unidadeId explícito quando mult
   });
 });
 
-test('requireUnitScope sem usuário segue com unitScope nulo quando enforcement está desligado', async () => {
+test('requireUnitScope sem usuário continua rejeitando unidadeId explícito mesmo com enforcement desligado', async () => {
   const req = createReq({
     featureFlags: { gestor_auth_context_resolver: true },
     query: {
@@ -309,10 +309,11 @@ test('requireUnitScope sem usuário segue com unitScope nulo quando enforcement 
 
   const nextCalled = await runMw(requireUnitScope, req, res);
 
-  assert.equal(nextCalled, true);
-  assert.deepEqual(req.unitScope, {
-    type: 'global',
-    unidadeId: null,
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.jsonPayload, {
+    success: false,
+    error: 'UNIDADE_ID_REQUIRED',
   });
 });
 

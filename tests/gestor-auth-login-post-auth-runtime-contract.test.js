@@ -114,7 +114,13 @@ function createMockModel(name) {
 }
 
 const mongooseState = {
-  connection: { readyState: 1 },
+  connection: {
+    readyState: 1,
+    models: {},
+    model(name) {
+      return mongooseState.model(name);
+    },
+  },
   Schema: MockSchema,
   models: {},
   model(name) {
@@ -153,6 +159,7 @@ const BCRYPT_MOCK_MODULE_URL = 'mock:gestor-auth-login-post-auth-runtime-bcryptj
 const FEATURE_FLAGS_MOCK_MODULE_URL = 'mock:gestor-auth-login-post-auth-runtime-feature-flags';
 const AUTH_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-auth-login-post-auth-runtime-auth-db-bridge';
 const AUTH_CONTEXT_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-auth-login-post-auth-runtime-auth-context-db-bridge';
+const LOGIN_PRE_AUTH_DATA_FACADE_MOCK_MODULE_URL = 'mock:gestor-auth-login-post-auth-runtime-login-pre-auth-data-facade';
 
 const AUTH_DB_BRIDGE_EXPORTS = [
   'createPasswordReset',
@@ -187,6 +194,7 @@ registerHooks({
     if (specifier === '#core/config/featureFlags.js') return { url: FEATURE_FLAGS_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/services/authDbBridgeService.js') return { url: AUTH_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/services/authContextDbBridgeService.js') return { url: AUTH_CONTEXT_DB_BRIDGE_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#modules/gestor/app/data/auth/loginPreAuthGateDataFacade.js') return { url: LOGIN_PRE_AUTH_DATA_FACADE_MOCK_MODULE_URL, shortCircuit: true };
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
@@ -254,6 +262,22 @@ registerHooks({
         format: 'module',
         shortCircuit: true,
         source: lines.join('\n'),
+      };
+    }
+
+    if (url === LOGIN_PRE_AUTH_DATA_FACADE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'const authDbState = globalThis.__GESTOR_AUTH_LOGIN_POST_AUTH_RUNTIME_AUTH_DB_STATE__;',
+          'export async function loadLoginPreAuthUserData() {',
+          "  return await authDbState.findUserByEmailForLogin();",
+          '}',
+          'export async function saveLoginPreAuthUserStateData({ user }) {',
+          '  return await authDbState.saveUserDocument(user);',
+          '}',
+        ].join('\n'),
       };
     }
 
