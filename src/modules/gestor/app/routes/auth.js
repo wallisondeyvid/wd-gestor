@@ -22,22 +22,8 @@ router.post('/auth/select-unit', selectAuthUnit);
 router.post('/auth/switch-unit', switchAuthUnit);
 router.post('/login', login);
 router.get('/logout', logout);
-// Reset password (root e alias prefixado)
-if (!disableRoot) {
-	if (preferPrefix) {
-		router.get('/reset-password/:token', (req,res)=> res.redirect(302, '/gestor/reset-password/' + req.params.token));
-	} else {
-		router.get('/reset-password/:token', renderResetPassword);
-	}
-}
+// Reset password no sub-app Gestor: o redirect sem prefixo pertence ao app raiz.
 router.get('/reset-password/:token', renderResetPassword);
-if (!disableRoot) {
-	if (preferPrefix) {
-		router.post('/reset-password', (req,res)=> res.redirect(308, '/gestor/reset-password'));
-	} else {
-		router.post('/reset-password', postResetPassword);
-	}
-}
 router.post('/reset-password', postResetPassword);
 // Esqueci senha (API JSON - rotas raiz podem ser redirecionadas ou desativadas)
 if (!disableRoot) {
