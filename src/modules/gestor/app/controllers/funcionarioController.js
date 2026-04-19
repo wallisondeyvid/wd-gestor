@@ -33,4 +33,8 @@ export async function funcionariosDisponiveis(req, res) {
     return res.status(500).json({ success: false, error: 'Erro interno do servidor', funcionarios: [] });
   }
 }
-export default { listarFuncionarios, funcionariosDisponiveis };
+
+export const funcionarioControllerLive = {};
+export const funcionarioControllerOrphan = { listarFuncionarios, funcionariosDisponiveis };
+
+export default funcionarioControllerOrphan;
