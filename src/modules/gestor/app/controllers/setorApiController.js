@@ -37,6 +37,32 @@ function getCanonicalContextUnitId(req) {
   return getScopedUnitId(req);
 }
 
+function resolveListSetoresScope(req) {
+  const canonicalUnitId = getCanonicalContextUnitId(req);
+  if (canonicalUnitId) {
+    return {
+      blocked: false,
+      filtro: { unidade_id: canonicalUnitId },
+      source: 'unit-scope',
+    };
+  }
+
+  if (!isMasterOrAdmin(req)) {
+    return {
+      blocked: true,
+      filtro: null,
+      source: 'blocked-without-canonical-unit',
+    };
+  }
+
+  const requestedUnitId = normalizeUnitId(req.query?.unidade_id);
+  return {
+    blocked: false,
+    filtro: requestedUnitId ? { unidade_id: requestedUnitId } : {},
+    source: requestedUnitId ? 'privileged-query-unit' : 'privileged-global',
+  };
+}
+
 function requestedUnitMatchesContext(req, requestedUnitId) {
 	const requested = normalizeUnitId(requestedUnitId);
 	if (!requested) return true;
@@ -135,21 +161,12 @@ export async function updateSetor(req,res){
 
 export async function listarSetores(req,res){
   try {
-    const { unidade_id } = req.query;
-    let filtro = {};
-    const canonicalUnitId = getScopedUnitId(req);
-
-    if (canonicalUnitId) {
-      filtro.unidade_id = canonicalUnitId;
-    } else if (unidade_id) {
-      filtro.unidade_id = unidade_id;
-    }
-
-    if (!canonicalUnitId && !isMasterOrAdmin(req)) {
+    const scope = resolveListSetoresScope(req);
+    if (scope.blocked) {
       return ok(res, []);
     }
     const mapped = await listSetoresCore({
-      filtro,
+      filtro: scope.filtro,
       findSetoresByFiltroPopulateUnidadeLean,
       findUnidadesByIdsNomeCodigoLean,
     });

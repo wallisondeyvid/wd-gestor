@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { registerHooks } from 'node:module';
+import express from 'express';
+import request from 'supertest';
 
 const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/setorApiController.js')).href;
@@ -108,8 +110,44 @@ async function importListarSetores(tag) {
   return import(`${controllerModuleUrl}?case=${encodeURIComponent(tag)}-${Date.now()}`);
 }
 
+async function requestSetorRouterWithSession({ pathname = '/gestor/api/setores', sessionUser, bridgeOverrides = {} } = {}) {
+  setDbMocks(bridgeOverrides);
+  const app = express();
+  app.use(express.json());
+  app.use((req, res, next) => {
+    req.session = sessionUser ? { user: { ...sessionUser } } : {};
+    next();
+  });
+  app.use('/gestor', (await import('../src/modules/gestor/app/routes/setorApi.js')).default);
+
+  return request(app)
+    .get(pathname)
+    .set('Accept', 'application/json');
+}
+
 test.afterEach(() => {
   clearDbMocks();
+});
+
+test('GET /gestor/api/setores com diretor sem contexto canonico ativo retorna 400 na borda real', async () => {
+  const response = await requestSetorRouterWithSession({
+    pathname: '/gestor/api/setores?unidade_id=u-query',
+    sessionUser: {
+      id: 'session-diretor-sem-contexto',
+      email: 'diretor.setor.lista.sem.contexto@example.com',
+      role: 'diretor',
+      nome: 'Diretor sem contexto',
+    },
+    bridgeOverrides: {
+      findSetoresByFiltroPopulateUnidadeLean: async () => {
+        throw new Error('controller-should-not-run-without-canonical-context');
+      },
+    },
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body?.success, false);
+  assert.equal(response.body?.error, 'UNIDADE_ID_REQUIRED');
 });
 
 test('listarSetores retorna 200 com lista vazia para usuario nao privilegiado sem unidade canonica', async () => {
