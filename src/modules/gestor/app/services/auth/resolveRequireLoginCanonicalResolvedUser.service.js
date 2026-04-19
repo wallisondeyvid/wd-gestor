@@ -42,7 +42,7 @@ export async function resolveRequireLoginCanonicalResolvedUser({
 
   const hasCanonicalProjection = (
     resolvedAuthContext?.source === AUTH_CONTEXT_SOURCE_V1 &&
-    Boolean(resolvedAuthContext.globalRole || resolvedAuthContext.activeContext)
+    resolvedAuthContext?.authenticated === true
   );
 
   if (!hasCanonicalProjection) {
