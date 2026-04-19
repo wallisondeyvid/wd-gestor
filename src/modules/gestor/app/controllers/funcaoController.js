@@ -22,4 +22,7 @@ export async function listarFuncoes(req, res) {
   }
 }
 
-export default { listarFuncoes };
+export const funcaoControllerLive = {};
+export const funcaoControllerOrphan = { listarFuncoes };
+
+export default funcaoControllerOrphan;
