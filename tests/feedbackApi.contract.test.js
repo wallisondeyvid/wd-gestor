@@ -23,6 +23,9 @@ const CANONICAL_ADMIN_DELETE_ENDPOINT = '/gestor/api/gestor/feedback/:feedbackId
 
 const ROOT_COMPAT_ADMIN_LIST_ENDPOINT = '/api/gestor/feedback';
 
+const FEEDBACK_UNIT_A = '507f191e810c19729de860aa';
+const FEEDBACK_UNIT_B = '507f191e810c19729de860ab';
+
 const FEEDBACK_ROUTE_FILE = 'src/modules/gestor/app/routes/feedbackApi.js';
 const PROJECT_SRC_ROOT = 'src';
 
@@ -87,6 +90,7 @@ function installSessionSeedRoute(app) {
       const email = String(req.query?.email || '').trim().toLowerCase();
       const role = String(req.query?.role || '').trim().toLowerCase();
       const foto = String(req.query?.foto || '').trim();
+      const unidadeId = String(req.query?.unidadeId || '').trim();
 
       if (!email) {
         return res.status(400).json({ success: false, error: 'EMAIL_REQUIRED' });
@@ -102,7 +106,17 @@ function installSessionSeedRoute(app) {
         email: user.email,
         role: role || user.role || 'user',
         nome: user.nome || 'Feedback Contract User',
+        ...(unidadeId ? { unidade_id: unidadeId } : {}),
       };
+
+      if (unidadeId) {
+        req.session.gestorAuthContext = {
+          source: 'auth-context-v1',
+          active_unidade_id: unidadeId,
+        };
+      } else {
+        delete req.session.gestorAuthContext;
+      }
 
       if (foto) req.session.user.foto = foto;
 
@@ -120,17 +134,22 @@ function installSessionSeedRoute(app) {
 
 async function seedAuthenticatedAgent(app, user, extras = {}) {
   const agent = request.agent(app);
-  const seed = await agent
+  const seed = await reseedAuthenticatedAgent(agent, user, extras);
+
+  assert.equal(seed.status, 204, `Falha ao seedar sessao para ${user.email}`);
+  return agent;
+}
+
+async function reseedAuthenticatedAgent(agent, user, extras = {}) {
+  return agent
     .get(TEST_SESSION_SEED_ENDPOINT)
     .query({
       email: user.email,
       role: user.role,
       ...(extras.foto ? { foto: extras.foto } : {}),
+      ...(extras.unidadeId ? { unidadeId: extras.unidadeId } : {}),
     })
     .set('Connection', 'close');
-
-  assert.equal(seed.status, 204, `Falha ao seedar sessao para ${user.email}`);
-  return agent;
 }
 
 async function createTestUser({ role, marker }) {
@@ -308,10 +327,16 @@ async function createFeedbackViaApi(agent, payload = {}) {
 
 test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async (t) => {
   const prevMongoMemory = process.env.MONGO_MEMORY;
+  const prevAuthContextFlag = process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
   process.env.MONGO_MEMORY = '1';
+  process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
 
   const teardownGuard = installTeardownSuppression();
   const { app, close, registerErrorHandlers } = await createServer({ skipDb: false, deferErrorHandlers: true });
+  app.locals.gestorAuthContextFeatureFlags = {
+    ...(app.locals.gestorAuthContextFeatureFlags || {}),
+    gestor_auth_context_resolver: true,
+  };
 
   installSessionSeedRoute(app);
   registerErrorHandlers();
@@ -325,8 +350,8 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
   createdUserIds.push(adminUser._id, creatorUser._id, otherUser._id);
 
   const adminAgent = await seedAuthenticatedAgent(app, adminUser);
-  const creatorAgent = await seedAuthenticatedAgent(app, creatorUser);
-  const otherAgent = await seedAuthenticatedAgent(app, otherUser);
+  const creatorAgent = await seedAuthenticatedAgent(app, creatorUser, { unidadeId: FEEDBACK_UNIT_A });
+  const otherAgent = await seedAuthenticatedAgent(app, otherUser, { unidadeId: FEEDBACK_UNIT_B });
   const anonymous = request(app);
 
   const createdFeedbackIds = new Set();
@@ -369,6 +394,7 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       assert.equal(okRes.body?.created, true);
       assert.equal(typeof okRes.body?.id, 'string');
       assert.ok(okRes.body?.id, 'id criado deve existir');
+      assert.equal(String(okRes.body?.data?.unidade_id || ''), FEEDBACK_UNIT_A);
       createdFeedbackIds.add(String(okRes.body.id));
 
       const unauthorized = await anonymous
@@ -427,6 +453,7 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       createdFeedbackIds.add(withModuleId);
       assert.equal(withModule.body?.data?.tipo, 'elogio');
       assert.equal(withModule.body?.data?.origem?.modulo, 'modulo_explicito');
+      assert.equal(String(withModule.body?.data?.unidade_id || ''), FEEDBACK_UNIT_A);
 
       const withContextUrl = await creatorAgent
         .post(CANONICAL_CREATE_ENDPOINT)
@@ -447,6 +474,7 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       assert.equal(withContextUrl.body?.data?.tipo, 'outro');
       assert.equal(withContextUrl.body?.data?.origem?.modulo, 'ouvidoria');
       assert.equal(withContextUrl.body?.data?.origem?.path, '/ouvidoria/painel');
+      assert.equal(String(withContextUrl.body?.data?.unidade_id || ''), FEEDBACK_UNIT_A);
 
       const withReferer = await creatorAgent
         .post(CANONICAL_CREATE_ENDPOINT)
@@ -464,6 +492,119 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       createdFeedbackIds.add(withRefererId);
       assert.equal(withReferer.body?.data?.origem?.modulo, 'atendimento');
       assert.equal(withReferer.body?.data?.origem?.path, '');
+      assert.equal(String(withReferer.body?.data?.unidade_id || ''), FEEDBACK_UNIT_A);
+    });
+
+    await t.test('corredor contextual do widget isola create/list/detail/upload por unitScope', async () => {
+      const scopedAgent = await seedAuthenticatedAgent(app, creatorUser, { unidadeId: FEEDBACK_UNIT_A });
+      const scopedFeedbackId = await createFeedbackViaApi(scopedAgent, {
+        mensagem: 'feedback isolado por unitScope',
+      });
+      createdFeedbackIds.add(scopedFeedbackId);
+
+      const reseed = await reseedAuthenticatedAgent(scopedAgent, creatorUser, { unidadeId: FEEDBACK_UNIT_B });
+      assert.equal(reseed.status, 204);
+
+      const myListOtherUnit = await scopedAgent
+        .get(CANONICAL_MY_LIST_ENDPOINT)
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiSuccessEnvelope(myListOtherUnit, 200);
+      const otherUnitIds = new Set((myListOtherUnit.body?.data || []).map((item) => String(item?._id || item?.id || '')));
+      assert.equal(otherUnitIds.has(scopedFeedbackId), false, 'GET meus nao deve expor feedback de outra unidade ativa');
+
+      const myDetailOtherUnit = await scopedAgent
+        .get(withRouteParam(CANONICAL_MY_DETAIL_ENDPOINT, scopedFeedbackId))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiFailEnvelope(myDetailOtherUnit, 404);
+      assert.equal(myDetailOtherUnit.body?.error, 'Feedback não encontrado.');
+
+      const uploadOtherUnit = await scopedAgent
+        .post(withRouteParam(CANONICAL_UPLOAD_ENDPOINT, scopedFeedbackId))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .attach('anexo', createTinyPngBuffer(), 'fora-do-escopo.png');
+
+      expectApiFailEnvelope(uploadOtherUnit, 404);
+      assert.equal(uploadOtherUnit.body?.error, 'Feedback não encontrado.');
+    });
+
+    await t.test('corredor admin contextual isola list/detail/status/delete por auth-context ativo', async () => {
+      const scopedAdminAgent = await seedAuthenticatedAgent(app, adminUser, { unidadeId: FEEDBACK_UNIT_A });
+      const unitAFeedbackId = await createFeedbackViaApi(creatorAgent, {
+        mensagem: 'feedback da unidade A para admin contextual',
+      });
+      const unitBFeedbackId = await createFeedbackViaApi(otherAgent, {
+        mensagem: 'feedback da unidade B para admin contextual',
+      });
+
+      createdFeedbackIds.add(unitAFeedbackId);
+      createdFeedbackIds.add(unitBFeedbackId);
+
+      const adminList = await scopedAdminAgent
+        .get(CANONICAL_ADMIN_LIST_ENDPOINT)
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiSuccessEnvelope(adminList, 200);
+      const returnedIds = new Set((adminList.body?.data || []).map((item) => String(item?._id || item?.id || '')));
+      assert.equal(returnedIds.has(unitAFeedbackId), true, 'admin contextual deve listar feedback da unidade ativa');
+      assert.equal(returnedIds.has(unitBFeedbackId), false, 'admin contextual nao deve listar feedback fora da unidade ativa');
+
+      const globalAdminList = await adminAgent
+        .get(CANONICAL_ADMIN_LIST_ENDPOINT)
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiSuccessEnvelope(globalAdminList, 200);
+      const globalReturnedIds = new Set((globalAdminList.body?.data || []).map((item) => String(item?._id || item?.id || '')));
+      assert.equal(globalReturnedIds.has(unitAFeedbackId), true, 'admin global deve listar feedback da unidade A');
+      assert.equal(globalReturnedIds.has(unitBFeedbackId), true, 'admin global deve listar feedback da unidade B');
+
+      const detailOtherUnit = await scopedAdminAgent
+        .get(withRouteParam(CANONICAL_ADMIN_DETAIL_ENDPOINT, unitBFeedbackId))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiFailEnvelope(detailOtherUnit, 404);
+      assert.equal(detailOtherUnit.body?.error, 'Feedback não encontrado.');
+
+      const globalDetailOtherUnit = await adminAgent
+        .get(withRouteParam(CANONICAL_ADMIN_DETAIL_ENDPOINT, unitBFeedbackId))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiSuccessEnvelope(globalDetailOtherUnit, 200);
+      assert.equal(String(globalDetailOtherUnit.body?.data?._id || globalDetailOtherUnit.body?.data?.id || ''), unitBFeedbackId);
+
+      const patchOtherUnit = await scopedAdminAgent
+        .patch(withRouteParam(CANONICAL_ADMIN_STATUS_ENDPOINT, unitBFeedbackId))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({ status: 'resolvido' });
+
+      expectApiFailEnvelope(patchOtherUnit, 404);
+      assert.equal(patchOtherUnit.body?.error, 'Feedback não encontrado.');
+
+      const replyOtherUnit = await scopedAdminAgent
+        .patch(withRouteParam(CANONICAL_ADMIN_REPLY_ENDPOINT, unitBFeedbackId))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close')
+        .send({ resposta: 'fora do escopo' });
+
+      expectApiFailEnvelope(replyOtherUnit, 404);
+      assert.equal(replyOtherUnit.body?.error, 'Feedback não encontrado.');
+
+      const deleteOtherUnit = await scopedAdminAgent
+        .delete(withRouteParam(CANONICAL_ADMIN_DELETE_ENDPOINT, unitBFeedbackId))
+        .set('Accept', 'application/json')
+        .set('Connection', 'close');
+
+      expectApiFailEnvelope(deleteOtherUnit, 404);
+      assert.equal(deleteOtherUnit.body?.error, 'Feedback não encontrado.');
     });
 
     let creatorFeedbackId = '';
@@ -511,8 +652,8 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
         .set('Accept', 'application/json')
         .set('Connection', 'close');
 
-      expectApiFailEnvelope(myDetailForbidden, 403);
-      assert.equal(myDetailForbidden.body?.error, 'Acesso negado.');
+      expectApiFailEnvelope(myDetailForbidden, 404);
+      assert.equal(myDetailForbidden.body?.error, 'Feedback não encontrado.');
 
       const myDetailNotFound = await creatorAgent
         .get(withRouteParam(CANONICAL_MY_DETAIL_ENDPOINT, 'ffffffffffffffffffffffff'))
@@ -1050,8 +1191,8 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
         .set('Accept', 'application/json')
         .set('Connection', 'close')
         .attach('anexo', tinyPng, 'forbidden.png');
-      expectApiFailEnvelope(forbidden, 403);
-      assert.equal(forbidden.body?.error, 'Acesso negado.');
+      expectApiFailEnvelope(forbidden, 404);
+      assert.equal(forbidden.body?.error, 'Feedback não encontrado.');
 
       const success = await withEnvPatch(
         {
@@ -1188,6 +1329,8 @@ test('feedbackApi contrato efetivo + ownership (sem alterar produção)', async 
       await teardownGuard.remove();
       if (prevMongoMemory === undefined) delete process.env.MONGO_MEMORY;
       else process.env.MONGO_MEMORY = prevMongoMemory;
+      if (prevAuthContextFlag === undefined) delete process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER;
+      else process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = prevAuthContextFlag;
     }
   }
 });
