@@ -26,6 +26,7 @@ registerHooks({
         source: [
           'const state = globalThis.__GESTOR_USER_MEMBERSHIP_PAIR_UNIT_SCOPE_STATE__ || { findCalls: [], createCalls: [] };',
           'export async function findActiveMembershipsByUserIdLeanRepo() { return []; }',
+          'export async function findUserMembershipUserIdsByUnidadeIdsLeanRepo() { return []; }',
           'export async function findUserMembershipsByUserIdsLeanRepo() { return []; }',
           'export async function setUserMembershipFuncionarioIdIfEmptyRepo() { return null; }',
           'export async function findUserMembershipByUserAndUnidadeLeanRepo(args) {',

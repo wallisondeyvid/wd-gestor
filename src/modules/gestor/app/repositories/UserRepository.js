@@ -64,6 +64,38 @@ export async function findUsersByQueryLeanRepo({ unitScope, query }) {
   return UserModel.find(query).lean();
 }
 
+export async function findUsersByUnidadeIdsExcludingMasterLeanRepo({ unitScope, unidadeIds }) {
+  const normalizedUnitIds = Array.isArray(unidadeIds)
+    ? unidadeIds.map((unidadeId) => String(unidadeId || '').trim()).filter(Boolean)
+    : [];
+
+  if (normalizedUnitIds.length === 0) return [];
+
+  const UserModel = resolveModel({
+    name: User.modelName || 'User',
+    schema: User.schema,
+    unitScope,
+  });
+
+  return UserModel.find({ role: { $ne: 'master' }, unidade_id: { $in: normalizedUnitIds } }).lean();
+}
+
+export async function findUsersByIdsExcludingMasterLeanRepo({ unitScope, userIds }) {
+  const normalizedUserIds = Array.isArray(userIds)
+    ? userIds.map((userId) => String(userId || '').trim()).filter(Boolean)
+    : [];
+
+  if (normalizedUserIds.length === 0) return [];
+
+  const UserModel = resolveModel({
+    name: User.modelName || 'User',
+    schema: User.schema,
+    unitScope,
+  });
+
+  return UserModel.find({ _id: { $in: normalizedUserIds }, role: { $ne: 'master' } }).lean();
+}
+
 export async function findUserDuplicadoByCpfUnidadeExcludingIdRepo({ unitScope, userId, cleanCpf, unidadeId }) {
   const UserModel = resolveModel({
     name: User.modelName || 'User',

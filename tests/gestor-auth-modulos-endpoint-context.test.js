@@ -311,7 +311,7 @@ test('GET /gestor/api/unidades/:id/modulos retorna os modulos acessiveis da unid
   assert.deepEqual(actual, expected);
 });
 
-test('GET /gestor/api/unidades/:id/modulos retorna UNIDADE_ID_REQUIRED quando a requisicao nao monta req.unitScope canonico', async () => {
+test('GET /gestor/api/unidades/:id/modulos monta req.unitScope canonico a partir do path e retorna lista vazia quando a unidade nao tem modulos', async () => {
   const unidade = await createEnabledUnit({
     nome: `Unidade Sem Modulos ${nextSequence()}`,
     moduloIds: [],
@@ -329,9 +329,9 @@ test('GET /gestor/api/unidades/:id/modulos retorna UNIDADE_ID_REQUIRED quando a 
 
   const res = await agent.get(`/gestor/api/unidades/${unidade._id}/modulos`);
 
-  assert.equal(res.status, 400, JSON.stringify(res.body));
-  assert.equal(res.body?.success, false, JSON.stringify(res.body));
-  assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(res.body));
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  assert.equal(res.body?.success, true, JSON.stringify(res.body));
+  assert.deepEqual(res.body?.data, []);
 });
 
 test('GET /gestor/api/unidades/:id/modulos retorna lista vazia quando a unidade acessivel nao tem modulosAcessiveis e req.unitScope canonico esta montado', async () => {

@@ -21,6 +21,22 @@ export async function findAllFuncionariosSelectIdNomeCpfLeanRepo({ unitScope }) 
   return FuncionarioModel.find().select('_id nome cpf').lean();
 }
 
+export async function findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo({ unitScope, unidadeIds }) {
+  const normalizedUnitIds = Array.isArray(unidadeIds)
+    ? unidadeIds.map((unidadeId) => String(unidadeId || '').trim()).filter(Boolean)
+    : [];
+
+  if (normalizedUnitIds.length === 0) return [];
+
+  const FuncionarioModel = resolveModel({
+    name: Funcionario.modelName || 'Funcionario',
+    schema: Funcionario.schema,
+    unitScope,
+  });
+
+  return FuncionarioModel.find({ unidade_id: { $in: normalizedUnitIds } }).select('_id nome cpf').lean();
+}
+
 export async function findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo({ unitScope, funcionarioId }) {
   const FuncionarioModel = resolveModel({
     name: Funcionario.modelName || 'Funcionario',

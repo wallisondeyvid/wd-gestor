@@ -202,7 +202,7 @@ test('GET /gestor/api/recursos/:id sem sessao retorna 401 JSON no app real', asy
 	});
 });
 
-test('GET /gestor/api/recursos/:id com diretor sem contexto canonico ativo retorna 404 na borda real', async () => {
+test('GET /gestor/api/recursos/:id com diretor sem contexto canonico ativo retorna 400 na borda real', async () => {
 	const response = await requestRecursoRouterWithSession({
 		pathname: `/gestor/api/recursos/${VALID_RESOURCE_ID}`,
 		sessionUser: {
@@ -218,11 +218,10 @@ test('GET /gestor/api/recursos/:id com diretor sem contexto canonico ativo retor
 		},
 	});
 
-	assert.equal(response.status, 404);
+	assert.equal(response.status, 400);
 	assert.deepEqual(response.body, {
 		success: false,
-		code: 'NOT_FOUND',
-		message: 'Unidade não encontrada',
+		error: 'UNIDADE_ID_REQUIRED',
 	});
 });
 

@@ -2,14 +2,15 @@ import {
   findUsersByQueryLean,
   findAllUnidadesSelectIdCodigoNomeLean,
   findAllFuncionariosSelectIdNomeCpfLean,
+  findFuncionariosByUnidadeIdsSelectIdNomeCpfLean,
   findUserMembershipsByUserIdsLean,
+  findUserMembershipUserIdsByUnidadeIdsLean,
+  findUsersByIdsExcludingMasterLean,
+  findUsersByUnidadeIdsExcludingMasterLean,
   findUnidadesByIdsNomeCodigoLean,
   findUnidadeByIdLean,
   findUnidadesByMatrizOuPrincipal,
 } from '#modules/gestor/app/services/apiDbBridgeService.js';
-import Funcionario from '#core/models/Funcionario.js';
-import User from '#core/models/user.js';
-import UserMembership from '#core/models/userMembership.js';
 
 function normalizeId(value) {
   return String(value || '').trim();
@@ -59,8 +60,8 @@ async function listUsuariosContextuaisService({ allowedUnitIds }) {
   if (normalizedUnitIds.length === 0) return [];
 
   const [legacyUsers, memberships] = await Promise.all([
-    User.find({ role: { $ne: 'master' }, unidade_id: { $in: normalizedUnitIds } }).lean(),
-    UserMembership.find({ unidade_id: { $in: normalizedUnitIds } }).select('user_id').lean(),
+    findUsersByUnidadeIdsExcludingMasterLean(normalizedUnitIds),
+    findUserMembershipUserIdsByUnidadeIdsLean(normalizedUnitIds),
   ]);
 
   const membershipUserIds = [...new Set((memberships || []).map((membership) => normalizeId(membership?.user_id)).filter(Boolean))];
@@ -68,7 +69,7 @@ async function listUsuariosContextuaisService({ allowedUnitIds }) {
   const userIds = [...new Set([...legacyUserIds, ...membershipUserIds])];
 
   if (userIds.length === 0) return [];
-  return User.find({ _id: { $in: userIds }, role: { $ne: 'master' } }).lean();
+  return findUsersByIdsExcludingMasterLean(userIds);
 }
 
 export async function enrichUsuariosMembershipsSummary(usuarios) {
@@ -140,7 +141,7 @@ export async function listUsuariosFuncionariosFiltradosService({ isGlobalScope =
   if (!isGlobalScope) {
     const normalizedUnitIds = [...new Set((allowedUnitIds || []).map((unitId) => normalizeId(unitId)).filter(Boolean))];
     if (normalizedUnitIds.length === 0) return [];
-    return Funcionario.find({ unidade_id: { $in: normalizedUnitIds } }).select('_id nome cpf').lean();
+    return findFuncionariosByUnidadeIdsSelectIdNomeCpfLean(normalizedUnitIds);
   }
 
   return findAllFuncionariosSelectIdNomeCpfLean();

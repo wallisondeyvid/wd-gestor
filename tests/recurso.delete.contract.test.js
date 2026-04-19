@@ -139,6 +139,7 @@ test('DELETE /gestor/api/recursos/:id com req.params.id valido porem inexistente
   try {
     const deleteRes = await agent
       .delete('/gestor/api/recursos/ffffffffffffffffffffffff')
+      .query({ unidade_id: '507f1f77bcf86cd799439011' })
       .set('Accept', 'application/json')
       .set('Connection', 'close');
 
@@ -211,6 +212,7 @@ test('DELETE /gestor/api/recursos/:id com req.params.id existente retorna 200 e 
 
     const deleteRes = await agent
       .delete(`/gestor/api/recursos/${recursoId}`)
+      .query({ unidade_id: '507f1f77bcf86cd799439011' })
       .set('Accept', 'application/json')
       .set('Connection', 'close');
 

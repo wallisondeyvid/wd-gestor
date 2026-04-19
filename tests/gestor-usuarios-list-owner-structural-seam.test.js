@@ -143,7 +143,7 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
     },
   });
 
-  let result = await listUsuariosOwnerService({ isMaster: true });
+  let result = await listUsuariosOwnerService({ isMaster: true, isGlobalScope: true });
   assert.equal(result.kind, 'ok');
   assert.equal(usuariosCalls.length, 1);
   assert.equal(usuariosCalls[0].isMaster, true);
@@ -151,7 +151,7 @@ test('listUsuariosOwnerService preserva a derivacao da query por isMaster e devo
   assert.equal(result.unidadesFiltradas.length, 1);
   assert.equal(result.funcionarios.length, 1);
 
-  result = await listUsuariosOwnerService({ isMaster: false });
+  result = await listUsuariosOwnerService({ isMaster: false, isGlobalScope: true });
   assert.equal(result.kind, 'ok');
   assert.equal(usuariosCalls.length, 2);
   assert.equal(usuariosCalls[1].isMaster, false);

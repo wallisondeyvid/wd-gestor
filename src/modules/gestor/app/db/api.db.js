@@ -109,14 +109,17 @@ import {
   findUserByFuncionarioIdRepo,
   findUserByIdRepo,
   findUserByIdSelectAuthLockInfoRepo,
+  findUsersByIdsExcludingMasterLeanRepo,
   findUserDuplicadoByCpfUnidadeExcludingIdRepo,
   findUsersByQueryLeanRepo,
+  findUsersByUnidadeIdsExcludingMasterLeanRepo,
   findUsersLockedAfterSelectLeanRepo,
   findUsuariosDiretorAtivosPopulatedLeanRepo,
   updateUserUnidadeByIdRepo,
 } from '#modules/gestor/app/repositories/UserRepository.js';
 import {
   createUserMembershipRepo,
+  findUserMembershipUserIdsByUnidadeIdsLeanRepo,
   findUserMembershipsByUserIdsLeanRepo,
   findUserMembershipByUserAndUnidadeLeanRepo,
   setUserMembershipFuncionarioIdIfEmptyRepo,
@@ -132,6 +135,7 @@ import {
   findFuncionarioByEmailRepo,
   findFuncionarioByEmailSelectIdUnidadeEmailLeanRepo,
   findFuncionarioByEmailSelectLeanRepo,
+  findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo,
   findFuncionarioByIdLeanRepo,
   findFuncionarioByIdPopulateRefsRepo,
   findFuncionarioByIdRepo,
@@ -393,6 +397,10 @@ export async function findUserMembershipsByUserIdsLean(userIds) {
   return findUserMembershipsByUserIdsLeanRepo({ unitScope: GLOBAL_SCOPE, userIds });
 }
 
+export async function findUserMembershipUserIdsByUnidadeIdsLean(unidadeIds) {
+  return findUserMembershipUserIdsByUnidadeIdsLeanRepo({ unitScope: GLOBAL_SCOPE, unidadeIds });
+}
+
 export async function findUserDuplicadoByCpfUnidadeExcludingId(userId, cleanCpf, unidadeId) {
   return findUserDuplicadoByCpfUnidadeExcludingIdRepo({
     unitScope: createUnitScope({ unidadeId }),
@@ -408,6 +416,14 @@ export async function countUsersMasters() {
 
 export async function findUserByIdSelectAuthLockInfo(id) {
   return findUserByIdSelectAuthLockInfoRepo({ unitScope: GLOBAL_SCOPE, id });
+}
+
+export async function findUsersByUnidadeIdsExcludingMasterLean(unidadeIds) {
+  return findUsersByUnidadeIdsExcludingMasterLeanRepo({ unitScope: GLOBAL_SCOPE, unidadeIds });
+}
+
+export async function findUsersByIdsExcludingMasterLean(userIds) {
+  return findUsersByIdsExcludingMasterLeanRepo({ unitScope: GLOBAL_SCOPE, userIds });
 }
 
 export async function findUsuariosDiretorAtivosPopulatedLean() {
@@ -738,6 +754,10 @@ export async function findFuncionarioByCpfAndUnidade(cpf, unidadeId) {
 
 export async function findAllFuncionariosSelectIdNomeCpfLean() {
   return findAllFuncionariosSelectIdNomeCpfLeanRepo({ unitScope: GLOBAL_SCOPE });
+}
+
+export async function findFuncionariosByUnidadeIdsSelectIdNomeCpfLean(unidadeIds) {
+  return findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo({ unitScope: GLOBAL_SCOPE, unidadeIds });
 }
 
 export async function findFuncionarioByIdSelectIdUnidadeUsuarioLean(funcionarioId) {

@@ -33,6 +33,24 @@ export async function findUserMembershipsByUserIdsLeanRepo({ unitScope, userIds 
     .lean();
 }
 
+export async function findUserMembershipUserIdsByUnidadeIdsLeanRepo({ unitScope, unidadeIds }) {
+  const normalizedUnitIds = Array.isArray(unidadeIds)
+    ? unidadeIds.map((unidadeId) => String(unidadeId || '').trim()).filter(Boolean)
+    : [];
+
+  if (normalizedUnitIds.length === 0) return [];
+
+  const UserMembershipModel = resolveModel({
+    name: UserMembership.modelName || 'UserMembership',
+    schema: UserMembership.schema,
+    unitScope,
+  });
+
+  return UserMembershipModel.find({ unidade_id: { $in: normalizedUnitIds } })
+    .select('user_id')
+    .lean();
+}
+
 export async function findUserMembershipByUserAndUnidadeLeanRepo({ unitScope, userId, unidadeId }) {
   const UserMembershipModel = resolveModel({
     name: UserMembership.modelName || 'UserMembership',

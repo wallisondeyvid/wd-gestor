@@ -21,7 +21,13 @@ import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitSco
 const router = express.Router();
 
 function withLoginAndRequiredUnitScope(handler) {
-	return (req, res, next) => requireLogin(req, res, () => requireUnitScope(req, res, () => handler(req, res, next)));
+	return (req, res, next) => requireLogin(req, res, () => {
+		if (!req.params?.unidadeId && req.params?.id) {
+			req.params.unidadeId = req.params.id;
+		}
+
+		return requireUnitScope(req, res, () => handler(req, res, next));
+	});
 }
 
 router.post('/api/unidades', withLoginAndRequiredUnitScope(createUnidade));

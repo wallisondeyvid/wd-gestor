@@ -74,6 +74,7 @@ registerHooks({
           'export async function findFuncionariosDisponiveisSemUsuarioPorUnidadeSelectLeanRepo() { return []; }',
           'export async function findFuncionarioByEmailRepo() { return null; }',
           'export async function findFuncionarioByEmailSelectLeanRepo() { return null; }',
+          'export async function findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo() { return []; }',
           'export async function findFuncionariosByEmailsSelectEmailNomeLeanRepo() { return []; }',
           'export async function createFuncionarioDocRepo() { return null; }',
           'export async function findFuncionarioByIdRepo() { return null; }',

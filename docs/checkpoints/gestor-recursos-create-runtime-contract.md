@@ -50,15 +50,15 @@ Resultado: 9 testes passando
 
 ### Bloqueio por contexto ausente
 
-- Usuario nao privilegiado sem contexto canonico de unidade recebe `404`
-- O owner nao consulta duplicidades nem tenta persistir
+- Na borda real, a rota de Recursos passa por `requireUnitScope` antes do owner
+- Usuario nao privilegiado sem contexto canonico de unidade recebe `400`
+- O owner nao consulta duplicidades nem tenta persistir porque o middleware aborta antes
 - Envelope observado:
 
 ```json
 {
   "success": false,
-  "code": "NOT_FOUND",
-  "message": "Unidade não encontrada"
+  "error": "UNIDADE_ID_REQUIRED"
 }
 ```
 
