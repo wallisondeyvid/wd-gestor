@@ -25,6 +25,8 @@ Classificacao: MICRO_PASSO_SEGURO consumido
 - O endpoint acrescenta campos de AuthContext no payload quando a flag esta ligada e existe contexto completo resolvido.
 - Durante selecao pendente, o endpoint continua acessivel e expoe o estado pendente no proprio payload, sem fingir activeContext.
 - Quando a sessao nao possui id valido, o endpoint retorna 401.
+- O fallback id -> e-mail existente no owner interno nao aparece materializado como comportamento publico observado nas suites do caminho montado real deste endpoint.
+- O caminho montado real passa a tratar `req.session.user.id` + escopo efetivo como fonte autoritativa do perfil atual.
 - Nao houve patch de producao.
 
 ## Contrato minimo agora congelado
@@ -49,6 +51,8 @@ Classificacao: MICRO_PASSO_SEGURO consumido
 ## Conclusao
 
 - GET /gestor/api/usuario ja tem contrato funcional minimo suficientemente congelado por testes existentes no caminho montado real.
+- O contrato publico congelado do endpoint nao depende de prova observavel do fallback id -> e-mail; esse ramo permanece apenas como compatibilidade controlada interna.
+- O winner runtime do endpoint montado real fica endurecido para nascer de `req.session.user.id` e `unitScope`, sem alterar o payload publico observado.
 - O endpoint entrou em retorno decrescente para novos testes ou patches nesta rodada.
 - Este corte fica encerrado apenas com checkpoint documental.
 - Nao houve alteracao em producao.

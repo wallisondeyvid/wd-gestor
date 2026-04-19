@@ -215,7 +215,7 @@ test('obterUsuarioAtual responde 401 quando a sessão autenticada é inválida',
   });
 });
 
-test('obterUsuarioAtual responde 404 quando não resolve o usuário nem por id nem por e-mail', async () => {
+test('obterUsuarioAtual usa session user id como fonte autoritativa antes de responder 404', async () => {
   const calls = [];
   setApiDbMocks({});
   setUserServiceMocks({
@@ -246,10 +246,6 @@ test('obterUsuarioAtual responde 404 quando não resolve o usuário nem por id n
     {
       op: 'findUserByIdForProfile',
       args: { unitScope: { unidadeId: 'u-contexto' }, userId: sessionId },
-    },
-    {
-      op: 'findUserByEmailForProfile',
-      args: { unitScope: { unidadeId: 'u-contexto' }, email: 'desconhecido@gestor.test' },
     },
   ]);
   assert.equal(res.statusCode, 404);

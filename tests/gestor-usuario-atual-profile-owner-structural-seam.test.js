@@ -148,7 +148,7 @@ test('obterUsuarioAtual delega ao owner service e preserva o enriquecimento fina
   assert.equal(res.body.data.activeContext.unidadeId, 'un-1');
 });
 
-test('getUsuarioAtualProfileOwnerService preserva fallback id para e-mail, ramo not_found e payload base', async () => {
+test('getUsuarioAtualProfileOwnerService trata session user id como fonte autoritativa e deixa o fallback por e-mail apenas para chamadas sem id autoritativo', async () => {
   const idCalls = [];
   const emailCalls = [];
   const getUsuarioAtualProfileOwnerService = buildFunction(SERVICE_SOURCE, 'export async function getUsuarioAtualProfileOwnerService', {
@@ -192,10 +192,23 @@ test('getUsuarioAtualProfileOwnerService preserva fallback id para e-mail, ramo 
   assert.equal(idCalls.length, 1);
   assert.equal(idCalls[0].unitScope.unidadeId, 'ctx-2');
   assert.equal(idCalls[0].userId, firstSessionUserId);
+  assert.equal(emailCalls.length, 0);
+  assert.equal(result.kind, 'not_found');
+  assert.equal(result.targetId, firstSessionUserId);
+  assert.equal(result.email, 'Fallback@Example.com');
+
+  result = await getUsuarioAtualProfileOwnerService({
+    unitScope: { unidadeId: 'ctx-2' },
+    sessionUserId: null,
+    fallbackEmail: ' Fallback@Example.com ',
+  });
+
+  assert.equal(idCalls.length, 1);
   assert.equal(emailCalls.length, 1);
   assert.equal(emailCalls[0].unitScope.unidadeId, 'ctx-2');
   assert.equal(emailCalls[0].email, 'fallback@example.com');
   assert.equal(result.kind, 'ok');
+  assert.equal(result.resolutionSource, 'compat-email-fallback');
   assert.equal(result.baseUser._id, 'u-2');
   assert.equal(result.payload.id, 'u-2');
   assert.equal(result.payload.nome, 'Funcionario Fallback');
@@ -220,9 +233,7 @@ test('getUsuarioAtualProfileOwnerService preserva fallback id para e-mail, ramo 
   assert.equal(idCalls.length, 2);
   assert.equal(idCalls[1].unitScope.unidadeId, 'ctx-3');
   assert.equal(idCalls[1].userId, secondSessionUserId);
-  assert.equal(emailCalls.length, 2);
-  assert.equal(emailCalls[1].unitScope.unidadeId, 'ctx-3');
-  assert.equal(emailCalls[1].email, 'missing@example.com');
+  assert.equal(emailCalls.length, 1);
   assert.equal(result.kind, 'not_found');
   assert.equal(result.targetId, secondSessionUserId);
   assert.equal(result.email, 'missing@example.com');

@@ -6,17 +6,22 @@ import {
 export async function getUsuarioAtualProfileOwnerService({ unitScope, sessionUserId, fallbackEmail } = {}) {
 	let targetId = sessionUserId || null;
 	let baseUser = null;
+	let resolutionSource = null;
 
 	if (targetId) {
 		baseUser = await findUserByIdForProfile({ unitScope, userId: targetId });
+		if (baseUser) {
+			resolutionSource = 'session-user-id';
+		}
 	}
 
 	const fallbackEmailRaw = String(fallbackEmail || '').trim() || null;
 	const fallbackEmailNormalized = fallbackEmailRaw ? fallbackEmailRaw.toLowerCase() : null;
-	if (!baseUser && fallbackEmailNormalized) {
+	if (!baseUser && !targetId && fallbackEmailNormalized) {
 		baseUser = await findUserByEmailForProfile({ unitScope, email: fallbackEmailNormalized });
 		if (baseUser) {
 			targetId = baseUser._id;
+			resolutionSource = 'compat-email-fallback';
 		}
 	}
 
@@ -44,6 +49,7 @@ export async function getUsuarioAtualProfileOwnerService({ unitScope, sessionUse
 	return {
 		kind: 'ok',
 		baseUser,
+		resolutionSource,
 		payload: {
 			id: _id,
 			nome: resolvedNome,
