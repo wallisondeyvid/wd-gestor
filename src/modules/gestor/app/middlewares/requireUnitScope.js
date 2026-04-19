@@ -28,6 +28,20 @@ function isPrivilegedGestorUser(user) {
   return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
 }
 
+function normalizeGlobalRole(authContext) {
+  const role = String(authContext?.globalRole || authContext?.global_role || '').trim().toLowerCase();
+  return role || null;
+}
+
+function isCanonicalAuthContext(authContext) {
+  return authContext?.source === 'auth-context-v1';
+}
+
+function isCanonicalGlobalPrivilegedAuthContext(authContext) {
+  const globalRole = normalizeGlobalRole(authContext);
+  return globalRole === 'master' || globalRole === 'admin';
+}
+
 function resolveRequestUnidadeId(req) {
   return firstNonEmpty(
     req?.query?.unidadeId,
@@ -39,22 +53,25 @@ function resolveRequestUnidadeId(req) {
   );
 }
 
-function resolveLegacyUserUnidadeId(req) {
-  return '';
-}
-
-function resolveLegacyUnidadeId(req) {
-  const user = resolveUser(req);
+function resolveLegacyUnidadeId(req, { authContextEnabled = false, authContext = null } = {}) {
   const requestUnidadeId = resolveRequestUnidadeId(req);
-  const legacyUserUnidadeId = resolveLegacyUserUnidadeId(req);
 
+  if (authContextEnabled && isCanonicalAuthContext(authContext)) {
+    if (isCanonicalGlobalPrivilegedAuthContext(authContext)) {
+      return requestUnidadeId;
+    }
+
+    return '';
+  }
+
+  const user = resolveUser(req);
   if (!user) return '';
 
   if (isPrivilegedGestorUser(user)) {
-    return firstNonEmpty(requestUnidadeId, legacyUserUnidadeId);
+    return requestUnidadeId;
   }
 
-  return legacyUserUnidadeId;
+  return '';
 }
 
 function isAuthContextResolverEnabledForRequest(req) {
@@ -119,7 +136,7 @@ export function requireUnitScope(req, res, next) {
 
   const unidadeId = firstNonEmpty(
     authContextEnabled ? resolveAuthContextUnidadeId(authContext) : '',
-    resolveLegacyUnidadeId(req)
+    resolveLegacyUnidadeId(req, { authContextEnabled, authContext })
   );
 
   if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
