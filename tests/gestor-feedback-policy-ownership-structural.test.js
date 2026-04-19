@@ -184,19 +184,19 @@ test('estado real atual: policy e ownership ainda estao espalhados entre rota, o
   assert.match(ROUTE_SOURCE, /import \{ createFeedbackPolicyOwnershipCore \} from '#modules\/gestor\/app\/services\/feedback\/createFeedbackPolicyOwnershipCore\.service\.js';/);
   assert.match(ROUTE_SOURCE, /const feedbackPolicy = createFeedbackPolicyOwnershipCore\(\{ isAdminLike \}\);/);
   assert.match(POLICY_SERVICE_SOURCE, /export function createFeedbackPolicyOwnershipCore\(\{/);
-  assert.match(POLICY_SERVICE_SOURCE, /function ensureAdminAccess\(\{ currentUser \} = \{\}\)/);
-  assert.match(POLICY_SERVICE_SOURCE, /function ensureCreatorOwnership\(\{ currentUser, feedback \} = \{\}\)/);
-  assert.match(POLICY_SERVICE_SOURCE, /function buildMyFeedbackFilter\(\{ currentUser \} = \{\}\)/);
+  assert.match(POLICY_SERVICE_SOURCE, /function ensureAdminAccess\(options = \{\}\)/);
+  assert.match(POLICY_SERVICE_SOURCE, /function ensureCreatorOwnership\(\{ currentUser, feedback, scopedUnitId \} = \{\}\)/);
+  assert.match(POLICY_SERVICE_SOURCE, /function buildMyFeedbackFilter\(\{ currentUser, scopedUnitId \} = \{\}\)/);
 
   assert.match(UPLOAD_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureCreatorOwnership\(\{/);
 
   assert.match(MY_DETAIL_CONTROLLER_SOURCE, /const ownershipResult = feedbackPolicy\.ensureCreatorOwnership\(\{/);
   assert.match(MY_LIST_CONTROLLER_SOURCE, /const filterResult = feedbackPolicy\.buildMyFeedbackFilter\(\{/);
-  assert.match(ADMIN_LIST_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{ currentUser: req\.user \|\| null \}\);/);
-  assert.match(ADMIN_DETAIL_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{ currentUser: req\.user \|\| null \}\);/);
-  assert.match(STATUS_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{ currentUser: req\.user \|\| null \}\);/);
-  assert.match(RESPOSTA_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{ currentUser: req\.user \|\| null \}\);/);
-  assert.match(DELETE_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{ currentUser: req\.user \|\| null \}\);/);
+  assert.match(ADMIN_LIST_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{\s*currentUser: req\.user \|\| null,\s*scopedUnitId: String\(req\.unitScope\?\.unidadeId \|\| ''\)\.trim\(\),\s*\}\);/);
+  assert.match(ADMIN_DETAIL_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{\s*currentUser: req\.user \|\| null,\s*scopedUnitId: String\(req\.unitScope\?\.unidadeId \|\| ''\)\.trim\(\),\s*\}\);/);
+  assert.match(STATUS_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{\s*currentUser: req\.user \|\| null,\s*scopedUnitId: String\(req\.unitScope\?\.unidadeId \|\| ''\)\.trim\(\),\s*\}\);/);
+  assert.match(RESPOSTA_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{\s*currentUser: req\.user \|\| null,\s*scopedUnitId: String\(req\.unitScope\?\.unidadeId \|\| ''\)\.trim\(\),\s*\}\);/);
+  assert.match(DELETE_CONTROLLER_SOURCE, /const access = feedbackPolicy\.ensureAdminAccess\(\{\s*currentUser: req\.user \|\| null,\s*scopedUnitId: String\(req\.unitScope\?\.unidadeId \|\| ''\)\.trim\(\),\s*\}\);/);
   assert.match(MY_DETAIL_OWNERSHIP_CORE_SOURCE, /return \{ error: 'forbidden' \};|return \{ error: 'forbidden' \}/);
   assert.match(MY_LIST_FILTER_CORE_SOURCE, /const filter = me \? \{ 'criadoPor\.userId': me \} : \{ 'criadoPor\.email': currentUser\?\.email \|\| '' \};/);
 
@@ -238,6 +238,10 @@ test('futura seam unica recebe apenas contexto minimo de user e feedback carrega
   assert.deepEqual(toPlain(policy.ensureAdminAccess({ currentUser: { role: 'admin' } })), {
     allowed: true,
     actor: { id: null, email: '', isAdmin: true },
+    canonicalContextUnitId: '',
+    branch: 'global',
+    feedbackQueryOptions: {},
+    feedbackMutationOptions: {},
   });
   assert.deepEqual(toPlain(policy.ensureAdminAccess({ currentUser: { role: 'user' } })), {
     allowed: false,
@@ -249,6 +253,7 @@ test('futura seam unica recebe apenas contexto minimo de user e feedback carrega
   })), {
     allowed: true,
     actor: { id: 'user-1', email: 'dono@exemplo.com', isAdmin: false },
+    canonicalContextUnitId: '',
   });
   assert.deepEqual(toPlain(policy.ensureCreatorOwnership({
     currentUser: { _id: 'user-2', email: 'outro@exemplo.com' },
@@ -257,14 +262,17 @@ test('futura seam unica recebe apenas contexto minimo de user e feedback carrega
     allowed: false,
     error: 'forbidden',
     actor: { id: 'user-2', email: 'outro@exemplo.com', isAdmin: false },
+    canonicalContextUnitId: '',
   });
   assert.deepEqual(toPlain(policy.buildMyFeedbackFilter({ currentUser: { _id: 'user-7', email: 'u7@exemplo.com' } })), {
     filter: { 'criadoPor.userId': 'user-7' },
     actor: { id: 'user-7', email: 'u7@exemplo.com', isAdmin: false },
+    canonicalContextUnitId: '',
   });
   assert.deepEqual(toPlain(policy.buildMyFeedbackFilter({ currentUser: { email: 'fallback@exemplo.com' } })), {
     filter: { 'criadoPor.email': 'fallback@exemplo.com' },
     actor: { id: null, email: 'fallback@exemplo.com', isAdmin: false },
+    canonicalContextUnitId: '',
   });
 
   assert.deepEqual(calls, [

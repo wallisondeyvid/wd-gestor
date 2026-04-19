@@ -9,13 +9,20 @@ const projectRoot = process.cwd();
 const controllerModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/controllers/recursoApiController.js')).href;
 const gestorAppModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/gestor-app.js')).href;
 const actualDbBridgeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/services/apiDbBridgeService.js')).href;
+const actualContextDataFacadeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/data/recursos/recursosContextDataFacade.js')).href;
 const actualDataFacadeModuleUrl = pathToFileURL(path.join(projectRoot, 'src/modules/gestor/app/data/recursos/recursosReadDataFacade.js')).href;
 const dbBridgeMockModuleUrl = 'mock:gestor-recursos-list-api-db-bridge';
+const contextDataFacadeMockModuleUrl = 'mock:gestor-recursos-list-context-data-facade';
 const dataFacadeMockModuleUrl = 'mock:gestor-recursos-list-data-facade';
 
 const DB_BRIDGE_EXPORTS = [
   'findUnidadeUserBaseLean',
   'findUnidadesByCondLean',
+];
+
+const CONTEXT_DATA_FACADE_EXPORT_MAPPINGS = [
+  ['findUnidadeUserBaseLeanData', 'findUnidadeUserBaseLean'],
+  ['findUnidadesByCondLeanData', 'findUnidadesByCondLean'],
 ];
 
 const DATA_FACADE_EXPORTS = [
@@ -26,6 +33,9 @@ registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === '#modules/gestor/app/services/apiDbBridgeService.js') {
       return { url: dbBridgeMockModuleUrl, shortCircuit: true };
+    }
+    if (specifier === '#modules/gestor/app/data/recursos/recursosContextDataFacade.js') {
+      return { url: contextDataFacadeMockModuleUrl, shortCircuit: true };
     }
     if (specifier === '#modules/gestor/app/data/recursos/recursosReadDataFacade.js') {
       return { url: dataFacadeMockModuleUrl, shortCircuit: true };
@@ -42,6 +52,24 @@ registerHooks({
 
       for (const exportName of DB_BRIDGE_EXPORTS) {
         lines.push(`export async function ${exportName}(...args) { const fn = getMocks()['${exportName}']; if (typeof fn === 'function') return await fn(...args); return await actual['${exportName}'](...args); }`);
+      }
+
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: lines.join('\n'),
+      };
+    }
+
+    if (url === contextDataFacadeMockModuleUrl) {
+      const lines = [
+        `export * from '${actualContextDataFacadeModuleUrl}';`,
+        `import * as actual from '${actualContextDataFacadeModuleUrl}';`,
+        'const getMocks = () => globalThis.__GESTOR_RECURSOS_LIST_DB_MOCKS__ || {};',
+      ];
+
+      for (const [exportName, mockName] of CONTEXT_DATA_FACADE_EXPORT_MAPPINGS) {
+        lines.push(`export async function ${exportName}(...args) { const fn = getMocks()['${mockName}']; if (typeof fn === 'function') return await fn(...args); return await actual['${exportName}'](...args); }`);
       }
 
       return {
@@ -304,7 +332,9 @@ test('listarRecursosApi restringe usuario contextual ao cluster acessivel e reto
         { _id: 'u-filial-1' },
       ];
     },
-    findRecursosByFiltroComUnidadeLeanFromDb: async (filtro) => {
+  });
+  setDataFacadeMocks({
+    findRecursosByFiltroComUnidadeLeanData: async (filtro) => {
       filtros.push(JSON.parse(JSON.stringify(filtro)));
       return [];
     },

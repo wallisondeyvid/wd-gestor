@@ -262,7 +262,11 @@ test('createFuncionario: fora do escopo contextual retorna 404', async () => {
   const { createFuncionario, callLog } = loadCreateFuncionarioWithDeps();
   const req = buildReq(
     { unidade_id: 'unit-body-outside-001' },
-    { session: { user: { unidade_id: 'unit-context-001' } }, user: { unidade_id: 'unit-context-001' } }
+    {
+      session: { user: { unidade_id: 'unit-context-001' } },
+      user: { unidade_id: 'unit-context-001' },
+      unitScope: { unidadeId: 'unit-context-001' },
+    }
   );
   const res = makeRes();
 
