@@ -803,4 +803,55 @@ describe('gestor auth login first authenticated request runtime contract', () =>
       await new Promise((resolve) => server.close(resolve));
     }
   });
+
+  it('quando a reidratacao por email falha com contexto autoritativo, o bootstrap ainda projeta req.user a partir da sessao canonica', async () => {
+    state.populateUserError = new Error('populate-user-authoritative-boom');
+
+    const app = buildHarness();
+    const { server, baseUrl } = await startServer(app);
+    const jar = createCookieJar();
+
+    try {
+      await request(baseUrl, jar, '/__seed-session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          user: {
+            id: '507f1f77bcf86cd799439952',
+            email: 'erro-contexto@gestor.test',
+            nome: 'Usuario Erro Contextual',
+            role: 'diretor',
+            unidade_id: '507f191e810c19729de860ea',
+            unidade_principal_id: '507f191e810c19729de860ea',
+            funcionario_id: 'func-952',
+            auth_version: 'phase3',
+          },
+          gestorAuthContext: {
+            user_id: '507f1f77bcf86cd799439952',
+            user_email: 'erro-contexto@gestor.test',
+            global_role: null,
+            active_membership_id: '507f1f77bcf86cd799439953',
+            active_unidade_id: '507f191e810c19729de860ea',
+            active_unidade_principal_id: '507f191e810c19729de860ea',
+            active_papel_contextual: 'gestor',
+            active_funcionario_id: 'func-952',
+            legacy_role: 'diretor',
+            needs_selection: false,
+          },
+        }),
+      });
+
+      const response = await request(baseUrl, jar, '/gestor/api/unidades/cluster');
+      assert.equal(response.status, 200);
+      const payload = await response.json();
+      assert.equal(payload.sessionUser.email, 'erro-contexto@gestor.test');
+      assert.equal(payload.sessionUser.unidade_id, '507f191e810c19729de860ea');
+      assert.equal(payload.user.email, 'erro-contexto@gestor.test');
+      assert.equal(payload.user.role, 'diretor');
+      assert.equal(payload.user.unidade_id, '507f191e810c19729de860ea');
+      assert.equal(payload.user.funcionario_id, 'func-952');
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
 });

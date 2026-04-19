@@ -117,7 +117,7 @@ Resultado: 5 testes passando
 ### Erro interno relevante neste recorte
 
 - Quando a consulta de reidratacao por email em [src/modules/gestor/app/gestor-app.js](src/modules/gestor/app/gestor-app.js) lanca excecao, o middleware global captura o erro e nao derruba a requisicao
-- No runtime observado:
+- No runtime observado para sessao legacy sem marcador autoritativo:
 	- req.user chega nulo ao consumidor
 	- req.session.user permanece intacto
 	- a borda focal ainda segue apoiada na sessao e alcanca o handler com 200
@@ -138,12 +138,37 @@ Resultado: 5 testes passando
 }
 ```
 
+### Erro interno com contexto autoritativo persistido
+
+- Quando a reidratacao por email falha, mas a sessao ja traz projecao canonica marcada por `auth_version=phase3` e `gestorAuthContext` ativo, o bootstrap recompõe `req.user` a partir da sessao canonica antes do primeiro consumidor autenticado
+- No runtime observado:
+	- `req.session.user` permanece intacto
+	- `req.user` nao chega mais nulo ao consumidor nesse caminho autoritativo degradado
+	- unidade_id e funcionario_id continuam coerentes com `gestorAuthContext`
+
+- Payload observado:
+
+```json
+{
+	"sessionUser": {
+		"email": "erro-contexto@gestor.test",
+		"unidade_id": "507f191e810c19729de860ea"
+	},
+	"user": {
+		"email": "erro-contexto@gestor.test",
+		"role": "diretor",
+		"unidade_id": "507f191e810c19729de860ea",
+		"funcionario_id": "func-952"
+	}
+}
+```
+
 ## Observacoes importantes do runtime
 
 - O middleware de reidratacao em [src/modules/gestor/app/gestor-app.js](src/modules/gestor/app/gestor-app.js) continua consultando o userDoc por email
 - Com o patch focal deste recorte, quando a sessao ja traz projecao canonica marcada por auth_version ou gestorAuthContext ativo, req.user preserva unidade_id e funcionario_id contextuais em vez de apaga-los
 - O comportamento observado no fluxo login -> primeiro request autenticado deixa de ser assimetrico para esses dois campos: sessao contextual integra e req.user coerente em unidade e funcionario
-- No recorte focal desta rodada, erro interno na reidratacao nao invalida automaticamente a sessao; o consumidor ainda consegue seguir apoiado nos dados persistidos em sessao
+- No recorte focal desta rodada, erro interno na reidratacao nao invalida automaticamente a sessao; para sessao legacy o consumidor ainda consegue seguir apoiado nos dados persistidos em sessao, mas para sessao autoritativa o bootstrap volta a entregar req.user coerente sem depender desse fallback como fonte principal
 
 ## Decisao final
 

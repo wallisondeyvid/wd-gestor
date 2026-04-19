@@ -148,15 +148,19 @@ app.use((req, res, next) => {
 // Middleware global: popula/atualiza req.user a partir da sessão SEMPRE que houver sessão válida
 // (evita ficar preso em usuário sintético de middlewares anteriores ou skipAuth)
 app.use(async (req, res, next) => {
+	let sessionUser = null;
+	let projection = null;
+	let contextualUnidadeId = null;
+	let contextualFuncionarioId = null;
 	try {
-		const sessionUser = req.session && req.session.user;
+		sessionUser = req.session && req.session.user;
 		const sessionAuthContext = req.session && req.session.gestorAuthContext;
-		const projection = resolveContextualUserProjection({
+		projection = resolveContextualUserProjection({
 			sessionUser,
 			sessionAuthContext,
 		});
-		const contextualUnidadeId = projection.contextualUnidadeId;
-		const contextualFuncionarioId = projection.contextualFuncionarioId;
+		contextualUnidadeId = projection.contextualUnidadeId;
+		contextualFuncionarioId = projection.contextualFuncionarioId;
 		// Em modo sem DB ou sem conexão ativa, não tentar consultar o Mongo; apenas espelhar dados mínimos da sessão
 		if (req.app?.locals?.skipDb || mongoose.connection.readyState !== 1) {
 			if (sessionUser) {
@@ -207,6 +211,19 @@ app.use(async (req, res, next) => {
 	} catch (e) {
 		// Log leve; não falhar a requisição por erro não crítico
 		console.warn('[populateUserFromSession] falha:', e.message);
+		if (sessionUser && projection?.isAuthoritative) {
+			req.user = {
+				id: sessionUser.id || null,
+				_id: sessionUser.id || null,
+				nome: sessionUser.nome || 'Usuário',
+				email: sessionUser.email,
+				role: sessionUser.role || 'user',
+				isMaster: (sessionUser.role === 'master'),
+				unidade_id: contextualUnidadeId,
+				funcionario_id: contextualFuncionarioId,
+				foto: sessionUser.foto || null
+			};
+		}
 	}
 	return next();
 });
