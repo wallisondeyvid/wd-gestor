@@ -37,14 +37,7 @@ if (!disableRoot) {
 }
 router.post('/esqueci-senha', postEsqueciSenha);
 router.post('/esquecisenha', postEsqueciSenha);
-// Listagem de emails por CPF (advanced recovery)
-if (!disableRoot) {
-	if (preferPrefix) {
-		router.get('/api/recover/emails', (req,res)=> res.redirect(302, '/gestor/api/recover/emails'+(req.url.includes('?')?req.url.slice(req.url.indexOf('?')):'')));
-	} else {
-		router.get('/api/recover/emails', listarEmailsPorCPF);
-	}
-}
+// Listagem de emails por CPF no sub-app Gestor: o redirecionamento sem prefixo pertence ao app raiz.
 router.get('/api/recover/emails', listarEmailsPorCPF);
 router.post('/primeiroacesso', primeiroAcessoPost);
 export default router;
