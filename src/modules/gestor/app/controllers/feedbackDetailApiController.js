@@ -10,11 +10,14 @@ export function createAdminFeedbackDetailHandler({
 }) {
   return async function detailFeedbackAdmin(req, res) {
     try {
-      const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });
+      const access = feedbackPolicy.ensureAdminAccess({
+        currentUser: req.user || null,
+        scopedUnitId: String(req.unitScope?.unidadeId || '').trim(),
+      });
       if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');
       const id = String(req.params.feedbackId || '').trim();
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
-      const fb = await findFeedbackByIdLean(id);
+      const fb = await findFeedbackByIdLean(id, access.feedbackQueryOptions);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
       const detailResult = await processAdminFeedbackDetailCore({
         feedback: fb,

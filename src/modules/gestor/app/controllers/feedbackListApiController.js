@@ -28,7 +28,10 @@ export function createAdminFeedbackListHandler({
 }) {
   return async function listFeedbackAdmin(req, res) {
     try {
-      const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });
+      const access = feedbackPolicy.ensureAdminAccess({
+        currentUser: req.user || null,
+        scopedUnitId: String(req.unitScope?.unidadeId || '').trim(),
+      });
       if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');
 
       const filterResult = await processAdminFeedbackListFilterCore({
@@ -43,7 +46,10 @@ export function createAdminFeedbackListHandler({
 
       const filter = filterResult?.filter || {};
 
-      const items = await findFeedbackByFilterSortCreatedAtDescLimit500Lean(filter);
+      const items = await findFeedbackByFilterSortCreatedAtDescLimit500Lean(
+        filter,
+        access.feedbackQueryOptions,
+      );
       return apiOk(res, items.map(sanitizeFeedback));
     } catch (e) {
       logError('[feedbackApi] GET /api/gestor/feedback erro:', e);

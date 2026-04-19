@@ -90,6 +90,9 @@ function buildReq(overrides = {}) {
 			tipo: ' ELOGIO ',
 			...queryOverrides,
 		},
+		unitScope: {
+			unidadeId: '507f191e810c19729de860ff',
+		},
 		user: {
 			role: 'admin',
 			isMaster: false,
@@ -125,8 +128,11 @@ function loadListOwnerHarness(runtimeOverrides = {}) {
 	const deps = {
 		isAdminLike: runtimeOverrides.isAdminLike ?? ((user) => !!(user && (user.isMaster || user.role === 'admin' || user.role === 'master'))),
 		feedbackPolicy: runtimeOverrides.feedbackPolicy ?? {
-			ensureAdminAccess: ({ currentUser } = {}) => ({
+			ensureAdminAccess: ({ currentUser, scopedUnitId } = {}) => ({
 				allowed: deps.isAdminLike(currentUser),
+				feedbackQueryOptions: scopedUnitId
+					? { scopedUnitId, allowLegacyUnscoped: true, preferScopedRepoRead: true }
+					: {},
 			}),
 		},
 		apiOk: runtimeOverrides.apiOk ?? ((res, data = null, extra = {}) => {
@@ -139,8 +145,8 @@ function loadListOwnerHarness(runtimeOverrides = {}) {
 		}),
 		normalizeStatus: runtimeOverrides.normalizeStatus ?? ((value) => String(value || '').trim().toLowerCase().replaceAll(' ', '_') || 'novo'),
 		normalizeTipo: runtimeOverrides.normalizeTipo ?? ((value) => String(value || '').trim().toLowerCase() || 'outro'),
-		findFeedbackByFilterSortCreatedAtDescLimit500Lean: runtimeOverrides.findFeedbackByFilterSortCreatedAtDescLimit500Lean ?? (async (filter) => {
-			callLog.repositoryCalls.push([filter]);
+		findFeedbackByFilterSortCreatedAtDescLimit500Lean: runtimeOverrides.findFeedbackByFilterSortCreatedAtDescLimit500Lean ?? (async (filter, options) => {
+			callLog.repositoryCalls.push([filter, options]);
 			return listItems();
 		}),
 		sanitizeFeedback: runtimeOverrides.sanitizeFeedback ?? ((item) => {
@@ -303,6 +309,11 @@ test('feedbackList admin: owner delega apenas o nucleo canonizado do filtro admi
 	assert.ok(callLog.repositoryCalls[0][0].$or[0].mensagem instanceof RegExp);
 	assert.equal(callLog.repositoryCalls[0][0].$or[0].mensagem.source, 'feedback termo');
 	assert.equal(callLog.repositoryCalls[0][0].$or[0].mensagem.flags, 'i');
+	assert.deepEqual(toPlainJson(callLog.repositoryCalls[0][1]), {
+		scopedUnitId: '507f191e810c19729de860ff',
+		allowLegacyUnscoped: true,
+		preferScopedRepoRead: true,
+	});
 	assert.equal(callLog.sanitizeCalls.length, 2);
 	assert.equal(res.statusCode, 200);
 	assert.deepEqual(toPlainJson(res.body), {

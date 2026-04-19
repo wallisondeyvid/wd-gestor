@@ -9,7 +9,10 @@ export function createUpdateFeedbackRespostaHandler({
 }) {
   return async function updateResposta(req, res) {
     try {
-      const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });
+      const access = feedbackPolicy.ensureAdminAccess({
+        currentUser: req.user || null,
+        scopedUnitId: String(req.unitScope?.unidadeId || '').trim(),
+      });
       if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');
       const id = String(req.params.feedbackId || '').trim();
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
@@ -18,7 +21,8 @@ export function createUpdateFeedbackRespostaHandler({
       const fb = await processUpdateFeedbackRespostaCore({
         id,
         resposta,
-        findFeedbackByIdAndUpdateSetNewLean,
+        findFeedbackByIdAndUpdateSetNewLean: (feedbackId, setData) =>
+          findFeedbackByIdAndUpdateSetNewLean(feedbackId, setData, access.feedbackMutationOptions),
       });
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
       return apiOk(res, fb);

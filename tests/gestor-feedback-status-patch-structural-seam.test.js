@@ -24,6 +24,7 @@ const FEEDBACK_STATUS_SERVICE_MOCK_MODULE_URL = 'mock:gestor-feedback-status-pat
 const FEEDBACK_STATUS_DATA_FACADE_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-feedback-status-data-facade';
 const API_DB_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-api-db';
 const API_DB_BRIDGE_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-api-db-bridge';
+const UNIT_SCOPE_MOCK_MODULE_URL = 'mock:gestor-feedback-status-patch-structural-unit-scope';
 
 const ROUTE_HARNESS_STATE = {
   registrations: [],
@@ -48,6 +49,7 @@ registerHooks({
     if (specifier === 'express') return { url: EXPRESS_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === 'multer') return { url: MULTER_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '@vercel/blob') return { url: BLOB_MOCK_MODULE_URL, shortCircuit: true };
+    if (specifier === '#shared/unitScope.js') return { url: UNIT_SCOPE_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/middlewares/requireLogin.js') return { url: REQUIRE_LOGIN_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/controllers/feedbackDetailApiController.js') return { url: FEEDBACK_DETAIL_CONTROLLER_MOCK_MODULE_URL, shortCircuit: true };
     if (specifier === '#modules/gestor/app/controllers/feedbackCreateApiController.js') return { url: FEEDBACK_CREATE_CONTROLLER_MOCK_MODULE_URL, shortCircuit: true };
@@ -113,6 +115,18 @@ registerHooks({
         source: [
           'export async function put() {}',
           'export async function del() {}',
+        ].join('\n'),
+      };
+    }
+
+    if (url === UNIT_SCOPE_MOCK_MODULE_URL) {
+      return {
+        format: 'module',
+        shortCircuit: true,
+        source: [
+          'export function createUnitScope({ unidadeId }) {',
+          '  return { type: "unit", unidadeId };',
+          '}',
         ].join('\n'),
       };
     }
@@ -308,13 +322,15 @@ test('PATCH canonico usa a nova service e POST alias permanece no mutador legado
   assert.ok(postRegistration, 'POST alias de status deve permanecer registrado');
   assert.equal(patchRegistration.handlers[0], requireLogin);
   assert.equal(postRegistration.handlers[0], requireLogin);
+  assert.equal(typeof patchRegistration.handlers[1], 'function');
+  assert.equal(typeof postRegistration.handlers[1], 'function');
   assert.equal(ROUTE_HARNESS_STATE.createStatusHandlerCalls.length, 2);
   assert.equal(
-    patchRegistration.handlers[1].deps.findFeedbackByIdAndUpdateSetNewLean,
+    patchRegistration.handlers[2].deps.findFeedbackByIdAndUpdateSetNewLean,
     updateFeedbackStatusService,
   );
   assert.equal(
-    postRegistration.handlers[1].deps.findFeedbackByIdAndUpdateSetNewLean,
+    postRegistration.handlers[2].deps.findFeedbackByIdAndUpdateSetNewLean,
     legacyFindFeedbackByIdAndUpdateSetNewLean,
   );
 });
@@ -329,6 +345,26 @@ test('service de status delega a data facade com payload intacto', async () => {
   assert.deepEqual(SERVICE_HARNESS_STATE.dataFacadeCalls, [[
     '507f1f77bcf86cd799439011',
     { status: 'resolvido' },
+    undefined,
+  ]]);
+  assert.equal(result, SERVICE_HARNESS_STATE.repositoryResult);
+});
+
+test('service de status repassa opcoes contextuais sem alterar o contrato legado', async () => {
+  SERVICE_HARNESS_STATE.repositoryResult = { _id: '507f1f77bcf86cd799439011', status: 'resolvido' };
+  SERVICE_HARNESS_STATE.dataFacadeCalls.length = 0;
+
+  const { updateFeedbackStatusService } = await importFresh(SERVICE_FILE, 'service-structural-seam-options');
+  const result = await updateFeedbackStatusService(
+    '507f1f77bcf86cd799439011',
+    { status: 'resolvido' },
+    { scopedUnitId: '507f191e810c19729de860aa', allowLegacyUnscoped: true },
+  );
+
+  assert.deepEqual(SERVICE_HARNESS_STATE.dataFacadeCalls, [[
+    '507f1f77bcf86cd799439011',
+    { status: 'resolvido' },
+    { scopedUnitId: '507f191e810c19729de860aa', allowLegacyUnscoped: true },
   ]]);
   assert.equal(result, SERVICE_HARNESS_STATE.repositoryResult);
 });

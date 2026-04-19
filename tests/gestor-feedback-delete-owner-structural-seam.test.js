@@ -83,6 +83,7 @@ function buildReq(overrides = {}) {
 		body: {},
 		query: {},
 		user: { role: 'admin', isMaster: false },
+		unitScope: { unidadeId: '507f191e810c19729de860ff' },
 		...overrides,
 		params: {
 			feedbackId: FEEDBACK_ID,
@@ -121,8 +122,9 @@ function loadDeleteOwnerHarness(runtimeOverrides = {}) {
 	const deps = {
 		isAdminLike: runtimeOverrides.isAdminLike ?? ((user) => !!(user && (user.isMaster || user.role === 'admin' || user.role === 'master'))),
 		feedbackPolicy: runtimeOverrides.feedbackPolicy ?? {
-			ensureAdminAccess: ({ currentUser } = {}) => ({
+			ensureAdminAccess: ({ currentUser, scopedUnitId } = {}) => ({
 				allowed: deps.isAdminLike(currentUser),
+				feedbackMutationOptions: scopedUnitId ? { scopedUnitId, allowLegacyUnscoped: true } : {},
 			}),
 		},
 		apiOk: runtimeOverrides.apiOk ?? ((res, data = null, extra = {}) => {
@@ -261,7 +263,7 @@ test('deleteFeedback: owner preserva delete principal antes da seam', async () =
 
 	await deleteFeedback(req, res);
 
-	assert.deepEqual(toPlainJson(callLog.deleteCalls), [[FEEDBACK_ID]]);
+	assert.deepEqual(toPlainJson(callLog.deleteCalls), [[FEEDBACK_ID, { scopedUnitId: '507f191e810c19729de860ff', allowLegacyUnscoped: true }]]);
 	assert.equal(res.statusCode, 404);
 	assert.deepEqual(toPlainJson(res.body), {
 		ok: false,

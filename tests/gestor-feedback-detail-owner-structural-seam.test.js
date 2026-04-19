@@ -98,6 +98,9 @@ function buildReq(overrides = {}) {
 			feedbackId: FEEDBACK_ID,
 			...paramsOverrides,
 		},
+		unitScope: {
+			unidadeId: '507f191e810c19729de860ff',
+		},
 		user: {
 			role: 'admin',
 			isMaster: false,
@@ -126,8 +129,11 @@ function loadDetailOwnerHarness(runtimeOverrides = {}) {
 	const deps = {
 		isAdminLike: runtimeOverrides.isAdminLike ?? ((user) => !!(user && (user.isMaster || user.role === 'admin' || user.role === 'master'))),
 		feedbackPolicy: runtimeOverrides.feedbackPolicy ?? {
-			ensureAdminAccess: ({ currentUser } = {}) => ({
+			ensureAdminAccess: ({ currentUser, scopedUnitId } = {}) => ({
 				allowed: deps.isAdminLike(currentUser),
+				feedbackQueryOptions: scopedUnitId
+					? { scopedUnitId, allowLegacyUnscoped: true, preferScopedRepoRead: true }
+					: {},
 			}),
 		},
 		apiOk: runtimeOverrides.apiOk ?? ((res, data = null, extra = {}) => {
@@ -138,8 +144,8 @@ function loadDetailOwnerHarness(runtimeOverrides = {}) {
 			callLog.apiFailCalls.push([status, message, extra]);
 			return responseHelpers.apiFail(res, status, message, extra);
 		}),
-		findFeedbackByIdLean: runtimeOverrides.findFeedbackByIdLean ?? (async (id) => {
-			callLog.repositoryCalls.push([id]);
+		findFeedbackByIdLean: runtimeOverrides.findFeedbackByIdLean ?? (async (id, options) => {
+			callLog.repositoryCalls.push([id, options]);
 			if (Object.prototype.hasOwnProperty.call(runtimeOverrides, 'findFeedbackResult')) {
 				return runtimeOverrides.findFeedbackResult;
 			}
@@ -201,7 +207,8 @@ return {
 
 test('feedback detail admin: ordem estrutural mantem owner antes da seam e resposta apos seam', () => {
 	const snippet = buildDelegatedDetailSnippet();
-	const adminPolicyIndex = snippet.indexOf('const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });');
+	const adminPolicyIndex = snippet.indexOf('const access = feedbackPolicy.ensureAdminAccess({');
+	const scopedUnitIndex = snippet.indexOf("scopedUnitId: String(req.unitScope?.unidadeId || '').trim(),");
 	const adminGateIndex = snippet.indexOf("if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');");
 	const idValidationIndex = snippet.indexOf("if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');");
 	const notFoundIndex = snippet.indexOf("if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');");
@@ -209,6 +216,7 @@ test('feedback detail admin: ordem estrutural mantem owner antes da seam e respo
 	const responseIndex = snippet.indexOf('return apiOk(res,');
 
 	assert.ok(adminPolicyIndex >= 0, 'Owner precisa preservar o gate admin via feedbackPolicy.');
+	assert.ok(scopedUnitIndex >= 0, 'Owner precisa propagar scopedUnitId para o gate admin.');
 	assert.ok(adminGateIndex >= 0, 'Owner precisa preservar o gate admin.');
 	assert.ok(idValidationIndex >= 0, 'Owner precisa preservar a validacao de id.');
 	assert.ok(notFoundIndex >= 0, 'Owner precisa preservar a traducao de feedback nao encontrado.');
@@ -289,7 +297,11 @@ test('feedback detail admin: owner traduz feedback nao encontrado antes da seam'
 		error: 'Feedback não encontrado.',
 		message: 'Feedback não encontrado.',
 	});
-	assert.deepEqual(callLog.repositoryCalls, [[FEEDBACK_ID]]);
+	assert.deepEqual(toPlainJson(callLog.repositoryCalls), [[FEEDBACK_ID, {
+		scopedUnitId: '507f191e810c19729de860ff',
+		allowLegacyUnscoped: true,
+		preferScopedRepoRead: true,
+	}]]);
 	assert.equal(callLog.seamCalls.length, 0);
 	assert.equal(callLog.apiOkCalls.length, 0);
 });

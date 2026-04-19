@@ -15,13 +15,16 @@ export function createDeleteFeedbackHandler({
 }) {
   return async function deleteFeedback(req, res) {
     try {
-      const access = feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null });
+      const access = feedbackPolicy.ensureAdminAccess({
+        currentUser: req.user || null,
+        scopedUnitId: String(req.unitScope?.unidadeId || '').trim(),
+      });
       if (!access.allowed) return apiFail(res, 403, 'Acesso negado.');
       const id = String(req.params.feedbackId || '').trim();
       if (!id) return apiFail(res, 400, 'ID inválido.');
       if (!/^[0-9a-fA-F]{24}$/.test(id)) return apiFail(res, 400, 'ID inválido.');
 
-      const fb = await findFeedbackByIdAndDeleteLean(id);
+      const fb = await findFeedbackByIdAndDeleteLean(id, access.feedbackMutationOptions);
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 
       await processFeedbackDeleteCleanupCore({
