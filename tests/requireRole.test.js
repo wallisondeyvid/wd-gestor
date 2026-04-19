@@ -240,6 +240,61 @@ test('requireRole limpa unidade legacy residual quando o auth-context v1 global 
   assert.equal(req.session.user.funcionario_id, null);
 });
 
+test('requireRole nao herda papel legado residual quando o auth-context v1 neutro ja e autoritativo', async () => {
+  const middleware = requireRole(['admin']);
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'stale-admin@example.com',
+      role: 'admin',
+      isMaster: false,
+      unidade_id: 'req-legacy-unit',
+      unidade_principal_id: 'req-legacy-principal',
+      funcionario_id: 'req-legacy-funcionario',
+    },
+    sessionUser: {
+      id: 'u1',
+      email: 'stale-admin@example.com',
+      role: 'admin',
+      unidade_id: 'session-legacy-unit',
+      unidade_principal_id: 'session-legacy-principal',
+      funcionario_id: 'session-legacy-funcionario',
+    },
+    authContext: {
+      source: 'auth-context-v1',
+      authenticated: true,
+      needs_selection: false,
+      global_role: null,
+      globalRole: null,
+      effectiveRole: null,
+      active_membership_id: null,
+      active_unidade_id: null,
+      active_unidade_principal_id: null,
+      active_funcionario_id: null,
+      activeContext: null,
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await runMw(middleware, req, res);
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 403);
+  assert.deepEqual(res.jsonPayload, { success: false, error: 'Acesso negado', code: 'FORBIDDEN' });
+  assert.equal(req.user.role, null);
+  assert.equal(req.user.global_role, null);
+  assert.equal(req.user.unidade_id, null);
+  assert.equal(req.user.unidade_principal_id, null);
+  assert.equal(req.user.funcionario_id, null);
+  assert.equal(req.session.user.role, null);
+  assert.equal(req.session.user.global_role, null);
+  assert.equal(req.session.user.unidade_id, null);
+  assert.equal(req.session.user.unidade_principal_id, null);
+  assert.equal(req.session.user.funcionario_id, null);
+  assert.equal(req.session.user.auth_version, 'phase3');
+});
+
 test('requireRole com a flag ligada continua aceitando o shape legado quando não há AuthContext salvo', async () => {
   const middleware = requireRole(['admin']);
   const req = createReq({

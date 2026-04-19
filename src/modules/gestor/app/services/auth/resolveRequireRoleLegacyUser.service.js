@@ -13,11 +13,12 @@ function hasAuthoritativeAuthContext(authContext) {
 }
 
 function resolveEffectiveRole({ authContext, requestUser, sessionUser }) {
+  const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
   const globalRole = normalizeRole(
     authContext?.global_role ||
     authContext?.globalRole ||
-    requestUser?.global_role ||
-    sessionUser?.global_role
+    (!authContextIsAuthoritative ? requestUser?.global_role : null) ||
+    (!authContextIsAuthoritative ? sessionUser?.global_role : null)
   );
 
   if (globalRole === 'master' || globalRole === 'admin') {
@@ -34,8 +35,8 @@ function resolveEffectiveRole({ authContext, requestUser, sessionUser }) {
       authContext?.legacy_role ||
       authContext?.legacyRole ||
       authContext?.activeContext?.legacyRole ||
-      requestUser?.role ||
-      sessionUser?.role
+      (!authContextIsAuthoritative ? requestUser?.role : null) ||
+      (!authContextIsAuthoritative ? sessionUser?.role : null)
     ),
   };
 }
@@ -59,8 +60,9 @@ function buildCanonicalLegacyProjection({ authContext, requestUser, sessionUser,
   const unidadePrincipalId = activeContext?.unidadePrincipalId ?? authContext.active_unidade_principal_id ?? authContext.activeUnidadePrincipalId ?? null;
   const funcionarioId = activeContext?.funcionarioId ?? authContext.active_funcionario_id ?? authContext.activeFuncionarioId ?? null;
   const hasCanonicalContext = Boolean(resolvedGlobalRole || resolvedRole || unidadeId || unidadePrincipalId || funcionarioId);
+  const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
 
-  if (!hasCanonicalContext) return null;
+  if (!hasCanonicalContext && !authContextIsAuthoritative) return null;
 
   return projectLegacySessionUserFromAuthContext({
     authContext: {
@@ -104,8 +106,12 @@ export function resolveRequireRoleLegacyUser({ authContext, requestUser = null, 
     globalRole,
   });
   const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
-  const resolvedRole = effectiveRole || normalizeRole(canonicalProjection?.role || requestUser?.role || sessionUser?.role) || '';
-  const resolvedGlobalRole = globalRole || normalizeRole(canonicalProjection?.global_role || requestUser?.global_role || sessionUser?.global_role);
+  const resolvedRole = authContextIsAuthoritative
+    ? (effectiveRole || normalizeRole(canonicalProjection?.role) || null)
+    : (effectiveRole || normalizeRole(canonicalProjection?.role || requestUser?.role || sessionUser?.role) || null);
+  const resolvedGlobalRole = authContextIsAuthoritative
+    ? (globalRole || normalizeRole(canonicalProjection?.global_role) || null)
+    : (globalRole || normalizeRole(canonicalProjection?.global_role || requestUser?.global_role || sessionUser?.global_role) || null);
   const resolvedUnidadeId = authContextIsAuthoritative
     ? (canonicalProjection?.unidade_id ?? null)
     : (canonicalProjection?.unidade_id ?? requestUser?.unidade_id ?? sessionUser?.unidade_id ?? null);
