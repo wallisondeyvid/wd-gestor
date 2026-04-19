@@ -217,6 +217,7 @@ function withRequiredUnitScope(handler) {
   return (req, res, next) => requireUnitScope(req, res, () => handler(req, res, next));
 }
 
+const handlePostBlocosV1Scoped = withRequiredUnitScope(handlePostBlocosV1);
 const handleGetUnidadeByIdV2 = withRequiredUnitScope(handleGetUnidadeByIdV2Raw);
 const handleGetBlocosV2 = withRequiredUnitScope(handleGetBlocosV2Raw);
 const handleGetBlocoByIdV2Scoped = withRequiredUnitScope(handleGetBlocoByIdV2);
@@ -12704,6 +12705,7 @@ app.get('/api/blocos/relacionados', (req, res, next) => {
 async function handlePostBlocosV1(req, res, _next) {
   try {
     const result = await criarBlocoService({
+      unitScope: req?.unitScope,
       body: req.body,
       mongoose,
       skipDb: req?.app?.locals?.skipDb,
@@ -12734,7 +12736,7 @@ async function handlePostBlocosV1(req, res, _next) {
 app.post('/api/blocos', express.json(), (req, res, next) => {
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
   if (isV2On) return handlePostBlocosV2(req, res, next);
-  return handlePostBlocosV1(req, res, next);
+  return handlePostBlocosV1Scoped(req, res, next);
 });
 
 async function handlePutBlocosV1(req, res, _next) {
