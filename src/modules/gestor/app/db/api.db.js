@@ -196,6 +196,53 @@ function scopeFromFuncionarioFiltro(filtro) {
   return unidadeId ? scopeFromUnidadeId(unidadeId) : GLOBAL_SCOPE;
 }
 
+function normalizeFeedbackScopedUnitId(options = {}) {
+  const scopedUnitId = options?.scopedUnitId || options?.unitScope?.unidadeId || '';
+  return String(scopedUnitId || '').trim();
+}
+
+function resolveFeedbackReadUnitScope(options = {}) {
+  const scopedUnitId = normalizeFeedbackScopedUnitId(options);
+  if (!scopedUnitId || options?.preferScopedRepoRead !== true) return GLOBAL_SCOPE;
+  return scopeFromUnidadeId(scopedUnitId);
+}
+
+function buildFeedbackScopedFilter(filter, options = {}) {
+  const scopedUnitId = normalizeFeedbackScopedUnitId(options);
+  if (!scopedUnitId) return filter;
+
+  const baseFilter = filter && typeof filter === 'object' ? filter : {};
+  const scopeFilter = options?.allowLegacyUnscoped
+    ? {
+        $or: [
+          { unidade_id: scopedUnitId },
+          { unidade_id: { $exists: false } },
+          { unidade_id: null },
+        ],
+      }
+    : { unidade_id: scopedUnitId };
+
+  if (Object.keys(baseFilter).length === 0) return scopeFilter;
+  return { $and: [baseFilter, scopeFilter] };
+}
+
+function feedbackMatchesScopedUnit(feedback, options = {}) {
+  const scopedUnitId = normalizeFeedbackScopedUnitId(options);
+  if (!scopedUnitId) return true;
+
+  const feedbackUnitId = String(feedback?.unidade_id || '').trim();
+  if (!feedbackUnitId) return options?.allowLegacyUnscoped === true;
+  return feedbackUnitId === scopedUnitId;
+}
+
+async function findFeedbackByIdWithinScope(id, options = {}) {
+  const feedback = await findFeedbackByIdLeanRepo({
+    unitScope: resolveFeedbackReadUnitScope(options),
+    id,
+  });
+  return feedbackMatchesScopedUnit(feedback, options) ? feedback : null;
+}
+
 function extractScopedClusterAnchorFromUnidadesCond(cond) {
   if (!cond || typeof cond !== 'object' || Array.isArray(cond)) return '';
 
@@ -993,35 +1040,51 @@ export async function deleteUnidadeById(unidadeId) {
   });
 }
 
-export async function createFeedback(data) {
-  return createFeedbackRepo({ unitScope: GLOBAL_SCOPE, data });
+export async function createFeedback(data, options = {}) {
+  const scopedUnitId = normalizeFeedbackScopedUnitId(options);
+  const payload = scopedUnitId
+    ? { ...data, unidade_id: scopedUnitId }
+    : data;
+
+  return createFeedbackRepo({ unitScope: GLOBAL_SCOPE, data: payload });
 }
 
-export async function findFeedbackById(id) {
-  return findFeedbackByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFeedbackById(id, options = {}) {
+  const feedback = await findFeedbackByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+  return feedbackMatchesScopedUnit(feedback, options) ? feedback : null;
 }
 
 export async function saveFeedbackDoc(feedbackDoc) {
   return feedbackDoc.save();
 }
 
-export async function findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter) {
-  return findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo({ unitScope: GLOBAL_SCOPE, filter });
+export async function findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter, options = {}) {
+  return findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo({
+    unitScope: GLOBAL_SCOPE,
+    filter: buildFeedbackScopedFilter(filter, options),
+  });
 }
 
-export async function findFeedbackByIdLean(id) {
-  return findFeedbackByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+export async function findFeedbackByIdLean(id, options = {}) {
+  return findFeedbackByIdWithinScope(id, options);
 }
 
-export async function findFeedbackByFilterSortCreatedAtDescLimit500Lean(filter) {
-  return findFeedbackByFilterSortCreatedAtDescLimit500LeanRepo({ unitScope: GLOBAL_SCOPE, filter });
+export async function findFeedbackByFilterSortCreatedAtDescLimit500Lean(filter, options = {}) {
+  return findFeedbackByFilterSortCreatedAtDescLimit500LeanRepo({
+    unitScope: resolveFeedbackReadUnitScope(options),
+    filter: buildFeedbackScopedFilter(filter, options),
+  });
 }
 
-export async function findFeedbackByIdAndUpdateSetNewLean(id, setData) {
+export async function findFeedbackByIdAndUpdateSetNewLean(id, setData, options = {}) {
+  const existing = await findFeedbackByIdWithinScope(id, options);
+  if (!existing) return null;
   return findFeedbackByIdAndUpdateSetNewLeanRepo({ unitScope: GLOBAL_SCOPE, id, setData });
 }
 
-export async function findFeedbackByIdAndDeleteLean(id) {
+export async function findFeedbackByIdAndDeleteLean(id, options = {}) {
+  const existing = await findFeedbackByIdWithinScope(id, options);
+  if (!existing) return null;
   return findFeedbackByIdAndDeleteLeanRepo({ unitScope: GLOBAL_SCOPE, id });
 }
 

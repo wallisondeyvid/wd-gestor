@@ -14,6 +14,8 @@ const feedbackSchema = new mongoose.Schema({
   mensagem: { type: String, trim: true, required: true, maxlength: 4000 },
   resposta: { type: String, trim: true, default: '', maxlength: 4000 },
 
+  unidade_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Unidade', default: null, index: true },
+
   criadoPor: {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     email: { type: String, trim: true, default: '', index: true },
