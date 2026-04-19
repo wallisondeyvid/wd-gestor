@@ -53,6 +53,7 @@ import faceBiometriaUploadApiRouter from './routes/faceBiometriaUploadApi.js';
 import feedbackApiRouter from './routes/feedbackApi.js';
 import widgetSettingsApiRouter from './routes/widgetSettingsApi.js';
 import { findUserByEmailCondLeanMaxTimeMs } from '#modules/gestor/app/db/api.db.js';
+import { resolveContextualUserProjection } from '#modules/gestor/app/services/authContextResolver.js';
 
 export function buildGestorApp() {
 const app = express();
@@ -150,12 +151,12 @@ app.use(async (req, res, next) => {
 	try {
 		const sessionUser = req.session && req.session.user;
 		const sessionAuthContext = req.session && req.session.gestorAuthContext;
-		const resolveCanonicalSessionUnidadeId = () => (
-			sessionAuthContext?.active_unidade_id || sessionUser?.unidade_id || null
-		);
-		const resolveCanonicalSessionFuncionarioId = () => (
-			sessionAuthContext?.active_funcionario_id || sessionUser?.funcionario_id || null
-		);
+		const projection = resolveContextualUserProjection({
+			sessionUser,
+			sessionAuthContext,
+		});
+		const contextualUnidadeId = projection.contextualUnidadeId;
+		const contextualFuncionarioId = projection.contextualFuncionarioId;
 		// Em modo sem DB ou sem conexão ativa, não tentar consultar o Mongo; apenas espelhar dados mínimos da sessão
 		if (req.app?.locals?.skipDb || mongoose.connection.readyState !== 1) {
 			if (sessionUser) {
@@ -166,8 +167,8 @@ app.use(async (req, res, next) => {
 					email: sessionUser.email,
 					role: sessionUser.role || 'user',
 					isMaster: (sessionUser.role === 'master'),
-					unidade_id: resolveCanonicalSessionUnidadeId(),
-					funcionario_id: resolveCanonicalSessionFuncionarioId(),
+					unidade_id: contextualUnidadeId,
+					funcionario_id: contextualFuncionarioId,
 					foto: sessionUser.foto || null
 				};
 			}
@@ -175,17 +176,6 @@ app.use(async (req, res, next) => {
 		}
 		if (req.skipAuth) return next();
 		if (!sessionUser || !sessionUser.email) return next();
-		const hasProjectedAuthContext = Boolean(
-			sessionUser.auth_version === 'phase3'
-			|| sessionAuthContext?.active_unidade_id
-			|| sessionAuthContext?.active_funcionario_id
-		);
-		const contextualUnidadeId = hasProjectedAuthContext
-			? resolveCanonicalSessionUnidadeId()
-			: null;
-		const contextualFuncionarioId = hasProjectedAuthContext
-			? resolveCanonicalSessionFuncionarioId()
-			: null;
 		const email = (sessionUser.email || '').toLowerCase();
 		const userDoc = await findUserByEmailCondLeanMaxTimeMs({ email }, Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000));
 		if (userDoc) {
@@ -196,8 +186,8 @@ app.use(async (req, res, next) => {
 				email: userDoc.email,
 				role: userDoc.role,
 				isMaster: (userDoc.role === 'master'),
-				unidade_id: contextualUnidadeId || userDoc.unidade_id || null,
-				funcionario_id: contextualFuncionarioId || userDoc.funcionario_id || null,
+					unidade_id: projection.isAuthoritative ? contextualUnidadeId : (contextualUnidadeId || userDoc.unidade_id || null),
+					funcionario_id: projection.isAuthoritative ? contextualFuncionarioId : (contextualFuncionarioId || userDoc.funcionario_id || null),
 				foto: userDoc.foto || null
 			};
 		} else {
@@ -209,8 +199,8 @@ app.use(async (req, res, next) => {
 				email: sessionUser.email,
 				role: sessionUser.role || 'user',
 				isMaster: (sessionUser.role === 'master'),
-				unidade_id: resolveCanonicalSessionUnidadeId(),
-				funcionario_id: resolveCanonicalSessionFuncionarioId(),
+					unidade_id: contextualUnidadeId,
+					funcionario_id: contextualFuncionarioId,
 				foto: sessionUser.foto || null
 			};
 		}

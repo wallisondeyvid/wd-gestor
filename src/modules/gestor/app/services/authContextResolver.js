@@ -388,4 +388,32 @@ export function projectLegacySessionUserFromAuthContext({ authContext = null, se
   return projected;
 }
 
+export function resolveContextualUserProjection({ sessionUser = null, sessionAuthContext = null } = {}) {
+  const contextualUnidadeId = normalizeId(
+    sessionAuthContext?.active_unidade_id ||
+    sessionAuthContext?.activeUnidadeId ||
+    sessionAuthContext?.activeContext?.unidadeId
+  );
+  const contextualFuncionarioId = normalizeId(
+    sessionAuthContext?.active_funcionario_id ||
+    sessionAuthContext?.activeFuncionarioId ||
+    sessionAuthContext?.activeContext?.funcionarioId
+  );
+  const isAuthoritative = sessionAuthContext?.source === AUTH_CONTEXT_SOURCE_V1 || sessionUser?.auth_version === 'phase3';
+
+  if (isAuthoritative) {
+    return {
+      isAuthoritative: true,
+      contextualUnidadeId,
+      contextualFuncionarioId,
+    };
+  }
+
+  return {
+    isAuthoritative: false,
+    contextualUnidadeId: contextualUnidadeId || normalizeId(sessionUser?.unidade_id),
+    contextualFuncionarioId: contextualFuncionarioId || normalizeId(sessionUser?.funcionario_id),
+  };
+}
+
 export default resolveGestorAuthContext;

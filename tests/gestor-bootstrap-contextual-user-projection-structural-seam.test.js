@@ -47,6 +47,10 @@ function createCharacterizedPopulateUserMiddleware(context = {}) {
     '// Middleware global: popula/atualiza req.user a partir da sessão SEMPRE que houver sessão válida'
   );
 
+  if (original.includes('resolveContextualUserProjection({')) {
+    return buildFunction(original, context);
+  }
+
   const replaced = original.replace(
     /const sessionAuthContext = req\.session && req\.session\.gestorAuthContext;[\s\S]*?const contextualFuncionarioId = hasProjectedAuthContext\s*[\r\n\t ]*\? resolveCanonicalSessionFuncionarioId\(\)\s*[\r\n\t ]*:\s*null;/,
     `const sessionAuthContext = req.session && req.session.gestorAuthContext;
@@ -79,6 +83,7 @@ test('bootstrap do Gestor preserva o wiring do middleware e usa apenas sessionUs
     resolveContextualUserProjection(input) {
       projectionCalls.push(JSON.parse(JSON.stringify(input)));
       return {
+        isAuthoritative: true,
         contextualUnidadeId: input.sessionAuthContext.active_unidade_id,
         contextualFuncionarioId: input.sessionAuthContext.active_funcionario_id,
       };
@@ -157,7 +162,7 @@ test('bootstrap do Gestor preserva o wiring do middleware e usa apenas sessionUs
   });
 });
 
-test('bootstrap do Gestor continua decidindo o fallback residual no owner quando o userDoc nao existe', async () => {
+test('bootstrap do Gestor nao reidrata tenant legado residual quando a projecao canonical phase3 esta neutra', async () => {
   const projectionCalls = [];
 
   const middleware = createCharacterizedPopulateUserMiddleware({
@@ -166,8 +171,9 @@ test('bootstrap do Gestor continua decidindo o fallback residual no owner quando
     resolveContextualUserProjection(input) {
       projectionCalls.push(JSON.parse(JSON.stringify(input)));
       return {
-        contextualUnidadeId: input.sessionAuthContext.active_unidade_id,
-        contextualFuncionarioId: input.sessionAuthContext.active_funcionario_id,
+        isAuthoritative: true,
+        contextualUnidadeId: null,
+        contextualFuncionarioId: null,
       };
     },
     async findUserByEmailCondLeanMaxTimeMs() {
@@ -190,8 +196,9 @@ test('bootstrap do Gestor continua decidindo o fallback residual no owner quando
         auth_version: 'phase3',
       },
       gestorAuthContext: {
-        active_unidade_id: '507f191e810c19729de860eb',
-        active_funcionario_id: 'func-ctx-902',
+        source: 'auth-context-v1',
+        active_unidade_id: null,
+        active_funcionario_id: null,
       },
     },
   };
@@ -210,8 +217,8 @@ test('bootstrap do Gestor continua decidindo o fallback residual no owner quando
     email: 'fallback@gestor.test',
     role: 'diretor',
     isMaster: false,
-    unidade_id: 'legacy-unit-fallback',
-    funcionario_id: 'legacy-func-fallback',
+    unidade_id: null,
+    funcionario_id: null,
     foto: null,
   });
 });
