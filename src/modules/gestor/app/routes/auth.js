@@ -25,16 +25,7 @@ router.get('/logout', logout);
 // Reset password no sub-app Gestor: o redirect sem prefixo pertence ao app raiz.
 router.get('/reset-password/:token', renderResetPassword);
 router.post('/reset-password', postResetPassword);
-// Esqueci senha (API JSON - rotas raiz podem ser redirecionadas ou desativadas)
-if (!disableRoot) {
-	if (preferPrefix) {
-		router.post('/esqueci-senha', (req,res)=> res.redirect(308, '/gestor/esqueci-senha'));
-		router.post('/esquecisenha', (req,res)=> res.redirect(308, '/gestor/esquecisenha'));
-	} else {
-		router.post('/esqueci-senha', postEsqueciSenha);
-		router.post('/esquecisenha', postEsqueciSenha); // alias sem hífen (para formularios html)
-	}
-}
+// Recovery request no sub-app Gestor: o redirecionamento sem prefixo pertence ao app raiz.
 router.post('/esqueci-senha', postEsqueciSenha);
 router.post('/esquecisenha', postEsqueciSenha);
 // Listagem de emails por CPF no sub-app Gestor: o redirecionamento sem prefixo pertence ao app raiz.
