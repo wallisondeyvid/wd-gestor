@@ -48,11 +48,18 @@ function createCharacterizedPopulateUserMiddleware(context = {}) {
   );
 
   const replaced = original.replace(
-    /const sessionAuthContext = req\.session && req\.session\.gestorAuthContext;[\s\S]*?const contextualFuncionarioId = hasProjectedAuthContext\s*\? \(sessionUser\.funcionario_id \|\| sessionAuthContext\?\.active_funcionario_id \|\| null\)\s*:\s*null;/,
-    `const projection = resolveContextualUserProjection({
+    /const sessionAuthContext = req\.session && req\.session\.gestorAuthContext;[\s\S]*?const contextualFuncionarioId = hasProjectedAuthContext\s*[\r\n\t ]*\? resolveCanonicalSessionFuncionarioId\(\)\s*[\r\n\t ]*:\s*null;/,
+    `const sessionAuthContext = req.session && req.session.gestorAuthContext;
+    const projection = resolveContextualUserProjection({
       sessionUser,
-      sessionAuthContext: req.session && req.session.gestorAuthContext,
+      sessionAuthContext,
     });
+    const resolveCanonicalSessionUnidadeId = () => (
+      sessionUser?.unidade_id || null
+    );
+    const resolveCanonicalSessionFuncionarioId = () => (
+      sessionUser?.funcionario_id || null
+    );
     const contextualUnidadeId = projection.contextualUnidadeId;
     const contextualFuncionarioId = projection.contextualFuncionarioId;`
   );

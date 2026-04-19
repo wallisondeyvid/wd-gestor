@@ -32,6 +32,8 @@ const API_DB_EXPORTS = [
   'findUserByEmail',
   'findUserMembershipsByUserIdsLean',
   'findUnidadesByIdsNomeCodigoLean',
+  'findUnidadeByIdLean',
+  'findUnidadesByMatrizOuPrincipal',
   'findUserMembershipByUserAndUnidade',
   'findUserByIdSelectAuthLockInfo',
 ];
