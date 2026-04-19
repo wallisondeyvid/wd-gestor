@@ -321,7 +321,12 @@ export async function paginaModulos(req, res) {
     return res.status(200).render('slots-modulos', stubCtx(req, { modulos: [] }));
   }
   if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
-  const result = await listModulosOwnerService({ userRole: 'master', activeUnitId: null });
+  const result = await listModulosOwnerService({
+    userRole: req.user?.role || null,
+    activeUnitId: req.unitScope?.unidadeId || null,
+    authContext: req.session?.gestorAuthContext || null,
+    requestUser: req.user || null,
+  });
   const modulos = Array.isArray(result?.modulos) ? result.modulos : [];
   return res.render('slots-modulos', { modulos, user: req.user });
 }

@@ -212,13 +212,20 @@ test('paginaModulos delega ao owner service e preserva a borda HTML atual para u
 
   const req = {
     user: { isMaster: false, role: 'admin', email: 'admin@example.com' },
+    unitScope: { unidadeId: 'u-html-context' },
+    session: { gestorAuthContext: { source: 'auth-context-v1', active_unidade_id: 'u-html-context' } },
   };
   const res = createPageRes();
 
   await paginaModulos(req, res);
 
   assert.equal(calls.length, 1);
-  assert.equal(JSON.stringify(calls[0]), JSON.stringify({ userRole: 'master', activeUnitId: null }));
+  assert.equal(JSON.stringify(calls[0]), JSON.stringify({
+    userRole: 'admin',
+    activeUnitId: 'u-html-context',
+    authContext: { source: 'auth-context-v1', active_unidade_id: 'u-html-context' },
+    requestUser: req.user,
+  }));
   assert.equal(res.statusCode, 200);
   assert.equal(res.view, 'slots-modulos');
   assert.equal(Array.isArray(res.locals?.modulos), true);
