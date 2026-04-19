@@ -72,8 +72,12 @@ function listItems() {
 }
 
 function buildReq(overrides = {}) {
-	const { user: userOverrides = {}, ...restOverrides } = overrides;
+	const { user: userOverrides = {}, unitScope: unitScopeOverrides = {}, ...restOverrides } = overrides;
 	return {
+		unitScope: {
+			unidadeId: '507f191e810c19729de860ff',
+			...unitScopeOverrides,
+		},
 		user: {
 			_id: '507f191e810c19729de860ea',
 			id: '507f191e810c19729de860ea',
@@ -122,10 +126,22 @@ function loadMyListOwnerHarness(runtimeOverrides = {}) {
 					callLog.seamCalls.push(input);
 					const currentUser = input.currentUser || null;
 					const currentId = currentUser?._id || currentUser?.id || null;
+					const scopedUnitId = input.scopedUnitId || '';
 					return {
-						filter: currentId
-							? { 'criadoPor.userId': currentId }
-							: { 'criadoPor.email': currentUser?.email || '' },
+						filter: {
+							$and: [
+								currentId
+									? { 'criadoPor.userId': currentId }
+									: { 'criadoPor.email': currentUser?.email || '' },
+								{
+									$or: [
+										{ unidade_id: scopedUnitId },
+										{ unidade_id: { $exists: false } },
+										{ unidade_id: null },
+									],
+								},
+							],
+						},
 					};
 				},
 			},
@@ -180,7 +196,14 @@ test('feedback my list: seam estrutural fica entre owner, repositorio e resposta
 			buildMyFeedbackFilter(input) {
 				callOrder.push('seam');
 				callLog.seamCalls.push(input);
-				return { filter: { 'criadoPor.userId': '507f191e810c19729de860ea' } };
+				return {
+					filter: {
+						$and: [
+							{ 'criadoPor.userId': '507f191e810c19729de860ea' },
+							{ $or: [{ unidade_id: '507f191e810c19729de860ff' }, { unidade_id: { $exists: false } }, { unidade_id: null }] },
+						],
+					},
+				};
 			},
 		},
 		findFeedbackByFilterSortCreatedAtDescLimit200Lean: async (filter) => {
@@ -221,9 +244,10 @@ test('feedback my list: a seam futura recebe apenas o usuario atual e owner cont
 	await listMyFeedback(req, res);
 
 	assert.equal(callLog.seamCalls.length, 1);
-	assert.deepEqual(Object.keys(callLog.seamCalls[0]).sort(), ['currentUser']);
+	assert.deepEqual(Object.keys(callLog.seamCalls[0]).sort(), ['currentUser', 'scopedUnitId']);
 	assert.deepEqual(toPlainJson(callLog.seamCalls[0]), {
 		currentUser: toPlainJson(req.user),
+		scopedUnitId: '507f191e810c19729de860ff',
 	});
 	assert.deepEqual(callLog.repositoryCalls, [[{ 'criadoPor.userId': req.user._id }]]);
 	assert.equal(callLog.apiOkCalls.length, 1);
@@ -251,8 +275,14 @@ test('feedback my list: a seam futura concentra o fallback para email quando nao
 	assert.equal(callLog.seamCalls.length, 1);
 	assert.deepEqual(toPlainJson(callLog.seamCalls[0]), {
 		currentUser: toPlainJson(req.user),
+		scopedUnitId: '507f191e810c19729de860ff',
 	});
-	assert.deepEqual(callLog.repositoryCalls, [[{ 'criadoPor.email': 'fallback.feedback@test.local' }]]);
+	assert.deepEqual(callLog.repositoryCalls, [[{
+		$and: [
+			{ 'criadoPor.email': 'fallback.feedback@test.local' },
+			{ $or: [{ unidade_id: '507f191e810c19729de860ff' }, { unidade_id: { $exists: false } }, { unidade_id: null }] },
+		],
+	}]]);
 	assert.equal(callLog.apiOkCalls.length, 1);
 	assert.equal(res.statusCode, 200);
 });

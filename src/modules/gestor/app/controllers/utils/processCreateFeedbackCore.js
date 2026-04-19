@@ -8,6 +8,7 @@ export async function processCreateFeedbackCore({
 	bodyUserAgent,
 	referer,
 	headerUserAgent,
+	scopedUnitId,
 	user,
 	inferModuloFromUrl,
 	createFeedback,
@@ -34,5 +35,7 @@ export async function processCreateFeedbackCore({
 			userAgent: String(ctxUa || headerUserAgent || '').trim(),
 			timezone: String(ctxTz || '').trim(),
 		},
+	}, {
+		scopedUnitId,
 	});
 }

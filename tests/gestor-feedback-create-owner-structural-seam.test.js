@@ -135,6 +135,7 @@ function buildReq(overrides = {}) {
 
 	return {
 		body: { ...defaultBody, ...bodyOverrides },
+		unitScope: { unidadeId: '507f191e810c19729de860ff' },
 		user: {
 			_id: '507f191e810c19729de860ea',
 			id: '507f191e810c19729de860ea',
@@ -320,6 +321,7 @@ test('createFeedback: owner delega apenas o nucleo canonizado de criacao', async
 		'mensagem',
 		'rawModulo',
 		'referer',
+		'scopedUnitId',
 		'tipo',
 		'user',
 	].sort());
@@ -336,6 +338,7 @@ test('createFeedback: owner delega apenas o nucleo canonizado de criacao', async
 	assert.equal(seamArgs.bodyUserAgent, '');
 	assert.equal(seamArgs.referer, 'https://app.local/referer/ignorado');
 	assert.equal(seamArgs.headerUserAgent, 'header-agent');
+	assert.equal(seamArgs.scopedUnitId, '507f191e810c19729de860ff');
 	assert.deepEqual(toPlainJson(seamArgs.user), {
 		_id: '507f191e810c19729de860ea',
 		id: '507f191e810c19729de860ea',

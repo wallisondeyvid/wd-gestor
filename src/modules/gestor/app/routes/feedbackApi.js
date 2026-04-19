@@ -3,7 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
 import { del } from '@vercel/blob';
+import { createUnitScope } from '#shared/unitScope.js';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
+import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 import { createAdminFeedbackDetailHandler } from '#modules/gestor/app/controllers/feedbackDetailApiController.js';
 import { createCreateFeedbackHandler } from '#modules/gestor/app/controllers/feedbackCreateApiController.js';
 import { createUploadFeedbackAnexoHandler } from '#modules/gestor/app/controllers/feedbackUploadApiController.js';
@@ -41,6 +43,18 @@ function apiOk(res, data = null, extra = {}){
 }
 function apiFail(res, status, message, extra = {}){
   return res.status(status).json({ ok: false, success: false, error: message, message, ...extra });
+}
+
+function seedFeedbackAdminUnitScopeFromAuthContext(req, _res, next) {
+  const scopedUnitId = String(
+    req.unitScope?.unidadeId || req.session?.gestorAuthContext?.active_unidade_id || '',
+  ).trim();
+
+  if (scopedUnitId) {
+    req.unitScope = createUnitScope({ unidadeId: scopedUnitId });
+  }
+
+  return next();
 }
 
 function normalizeTipo(v){
@@ -124,7 +138,7 @@ const createFeedbackHandler = createCreateFeedbackHandler({
   inferModuloFromUrl,
   createFeedback,
 });
-router.post('/api/feedback', requireLogin, createFeedbackHandler);
+router.post('/api/feedback', requireLogin, requireUnitScope, createFeedbackHandler);
 
 // Upload de anexo para um feedback
 const uploadStorageInfra = createFeedbackUploadStorageInfraCore();
@@ -137,7 +151,7 @@ const uploadFeedbackAnexoHandler = createUploadFeedbackAnexoHandler({
   feedbackPolicy,
   uploadStorageInfra,
 });
-router.post('/api/feedback/:feedbackId/anexo', requireLogin, uploadFeedbackAnexoMiddleware, uploadFeedbackAnexoHandler);
+router.post('/api/feedback/:feedbackId/anexo', requireLogin, requireUnitScope, uploadFeedbackAnexoMiddleware, uploadFeedbackAnexoHandler);
 
 // Meus feedbacks
 const listMyFeedback = createMyFeedbackListHandler({
@@ -146,7 +160,7 @@ const listMyFeedback = createMyFeedbackListHandler({
   feedbackPolicy,
   findFeedbackByFilterSortCreatedAtDescLimit200Lean,
 });
-router.get('/api/feedback/meus', requireLogin, listMyFeedback);
+router.get('/api/feedback/meus', requireLogin, requireUnitScope, listMyFeedback);
 
 // Detalhar meu feedback
 const detailMyFeedback = createMyFeedbackDetailHandler({
@@ -155,7 +169,7 @@ const detailMyFeedback = createMyFeedbackDetailHandler({
   feedbackPolicy,
   findFeedbackByIdLean,
 });
-router.get('/api/feedback/meus/:feedbackId', requireLogin, detailMyFeedback);
+router.get('/api/feedback/meus/:feedbackId', requireLogin, requireUnitScope, detailMyFeedback);
 
 // =============== Admin (Gestor) ===============
 
@@ -169,7 +183,7 @@ const listFeedbackAdmin = createAdminFeedbackListHandler({
   findFeedbackByFilterSortCreatedAtDescLimit500Lean,
   sanitizeFeedback,
 });
-router.get('/api/gestor/feedback', requireLogin, listFeedbackAdmin);
+router.get('/api/gestor/feedback', requireLogin, seedFeedbackAdminUnitScopeFromAuthContext, listFeedbackAdmin);
 
 // Detalhar (admin)
 const detailFeedbackAdmin = createAdminFeedbackDetailHandler({
@@ -179,7 +193,7 @@ const detailFeedbackAdmin = createAdminFeedbackDetailHandler({
   findFeedbackByIdLean,
   sanitizeFeedback,
 });
-router.get('/api/gestor/feedback/:feedbackId', requireLogin, detailFeedbackAdmin);
+router.get('/api/gestor/feedback/:feedbackId', requireLogin, seedFeedbackAdminUnitScopeFromAuthContext, detailFeedbackAdmin);
 
 // Atualizar status (admin)
 const updateStatusPatch = createUpdateFeedbackStatusHandler({
@@ -196,8 +210,8 @@ const updateStatus = createUpdateFeedbackStatusHandler({
   normalizeStatus,
   findFeedbackByIdAndUpdateSetNewLean,
 });
-router.patch('/api/gestor/feedback/:feedbackId/status', requireLogin, updateStatusPatch);
-router.post('/api/gestor/feedback/:feedbackId/status', requireLogin, updateStatus);
+router.patch('/api/gestor/feedback/:feedbackId/status', requireLogin, seedFeedbackAdminUnitScopeFromAuthContext, updateStatusPatch);
+router.post('/api/gestor/feedback/:feedbackId/status', requireLogin, seedFeedbackAdminUnitScopeFromAuthContext, updateStatus);
 
 // Atualizar resposta (admin)
 const updateResposta = createUpdateFeedbackRespostaHandler({
@@ -206,8 +220,8 @@ const updateResposta = createUpdateFeedbackRespostaHandler({
   feedbackPolicy,
   findFeedbackByIdAndUpdateSetNewLean,
 });
-router.patch('/api/gestor/feedback/:feedbackId/resposta', requireLogin, updateResposta);
-router.post('/api/gestor/feedback/:feedbackId/resposta', requireLogin, updateResposta);
+router.patch('/api/gestor/feedback/:feedbackId/resposta', requireLogin, seedFeedbackAdminUnitScopeFromAuthContext, updateResposta);
+router.post('/api/gestor/feedback/:feedbackId/resposta', requireLogin, seedFeedbackAdminUnitScopeFromAuthContext, updateResposta);
 
 // Excluir feedback (admin)
 const deleteFeedback = createDeleteFeedbackHandler({
@@ -220,7 +234,7 @@ const deleteFeedback = createDeleteFeedbackHandler({
   fsModule: fs,
   pathModule: path,
 });
-router.delete('/api/gestor/feedback/:feedbackId', requireLogin, deleteFeedback);
-router.post('/api/gestor/feedback/:feedbackId', requireLogin, deleteFeedback);
+router.delete('/api/gestor/feedback/:feedbackId', requireLogin, seedFeedbackAdminUnitScopeFromAuthContext, deleteFeedback);
+router.post('/api/gestor/feedback/:feedbackId', requireLogin, seedFeedbackAdminUnitScopeFromAuthContext, deleteFeedback);
 
 export default router;

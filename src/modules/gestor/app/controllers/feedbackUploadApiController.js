@@ -9,16 +9,21 @@ export function createUploadFeedbackAnexoHandler({
 }) {
   return async function uploadFeedbackAnexoHandler(req, res) {
     try {
+      const scopedUnitId = String(req.unitScope?.unidadeId || '').trim();
       const feedbackId = String(req.params.feedbackId || '').trim();
       if (!feedbackId) return apiFail(res, 400, 'ID inválido.');
       if (!/^[0-9a-fA-F]{24}$/.test(feedbackId)) return apiFail(res, 400, 'ID inválido.');
 
-      const fb = await findFeedbackById(feedbackId);
+      const fb = await findFeedbackById(feedbackId, {
+        scopedUnitId,
+        allowLegacyUnscoped: true,
+      });
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 
       const access = feedbackPolicy.ensureCreatorOwnership({
         currentUser: req.user || null,
         feedback: fb,
+        scopedUnitId,
       });
       if (!access.allowed) {
         return apiFail(res, 403, 'Acesso negado.');

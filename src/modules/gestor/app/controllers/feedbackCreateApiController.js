@@ -35,6 +35,7 @@ export function createCreateFeedbackHandler({
         bodyUserAgent: String(req.body?.userAgent || '').trim(),
         referer: String(req.get('referer') || '').trim(),
         headerUserAgent: String(req.get('user-agent') || '').trim(),
+        scopedUnitId: String(req.unitScope?.unidadeId || '').trim(),
         user: req.user || null,
         inferModuloFromUrl,
         createFeedback,

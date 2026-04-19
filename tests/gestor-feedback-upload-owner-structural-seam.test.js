@@ -132,6 +132,10 @@ function loadUploadOwnerHarness(runtimeOverrides = {}) {
 		requireLogin: runtimeOverrides.requireLogin ?? function requireLogin(_req, _res, next) {
 			if (typeof next === 'function') next();
 		},
+		requireUnitScope: runtimeOverrides.requireUnitScope ?? function requireUnitScope(req, _res, next) {
+			req.unitScope = req.unitScope || { unidadeId: '507f191e810c19729de860ff' };
+			if (typeof next === 'function') next();
+		},
 		multer,
 		put: runtimeOverrides.put ?? (async () => ({ url: 'https://blob.example/anexo.png' })),
 		fs: runtimeOverrides.fs ?? {
@@ -176,6 +180,7 @@ function loadUploadOwnerHarness(runtimeOverrides = {}) {
 	const factoryScript = new vm.Script(`(function (__deps) {
 const router = __deps.router;
 const requireLogin = __deps.requireLogin;
+const requireUnitScope = __deps.requireUnitScope;
 const multer = __deps.multer;
 const put = __deps.put;
 const fs = __deps.fs;
@@ -224,10 +229,11 @@ test('feedback upload: route owner preserva wiring canonico da rota de anexo', (
 	);
 
 	assert.ok(registration, 'A rota canonica de upload de anexo deve permanecer registrada no route owner.');
-	assert.equal(registration.handlers.length, 3);
+	assert.equal(registration.handlers.length, 4);
 	assert.equal(registration.handlers[0], deps.requireLogin);
-	assert.equal(typeof registration.handlers[1], 'function');
+	assert.equal(registration.handlers[1], deps.requireUnitScope);
 	assert.equal(typeof registration.handlers[2], 'function');
+	assert.equal(typeof registration.handlers[3], 'function');
 	assert.equal(callLog.createUploadHandlerCalls.length, 1);
 	assert.deepEqual(Object.keys(callLog.createUploadHandlerCalls[0]).sort(), [
 		'apiFail',
@@ -373,11 +379,12 @@ test('feedback upload: ordem estrutural real permanece owner -> seam de storage 
 	const registration = registrations.find(
 		(entry) => entry.method === 'post' && entry.path === '/api/feedback/:feedbackId/anexo',
 	);
-	const handler = registration.handlers[2];
+	const handler = registration.handlers[3];
 	const res = createResponseCapture();
 
 	await handler({
 		params: { feedbackId: '507f1f77bcf86cd799439011' },
+		unitScope: { unidadeId: '507f191e810c19729de860ff' },
 		baseUrl: '/gestor',
 		file: {
 			originalname: 'foto.png',

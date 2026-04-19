@@ -7,8 +7,10 @@ export function createMyFeedbackListHandler({
 }) {
   return async function listMyFeedback(req, res) {
     try {
+      const scopedUnitId = String(req.unitScope?.unidadeId || '').trim();
       const filterResult = feedbackPolicy.buildMyFeedbackFilter({
         currentUser: req.user || null,
+        scopedUnitId,
       });
       const filter = filterResult?.filter || {};
 

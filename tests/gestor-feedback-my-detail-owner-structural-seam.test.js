@@ -81,11 +81,15 @@ function feedbackFixture(overrides = {}) {
 }
 
 function buildReq(overrides = {}) {
-	const { params: paramsOverrides = {}, user: userOverrides = {}, ...restOverrides } = overrides;
+	const { params: paramsOverrides = {}, user: userOverrides = {}, unitScope: unitScopeOverrides = {}, ...restOverrides } = overrides;
 	return {
 		params: {
 			feedbackId: FEEDBACK_ID,
 			...paramsOverrides,
+		},
+		unitScope: {
+			unidadeId: '507f191e810c19729de860ff',
+			...unitScopeOverrides,
 		},
 		user: {
 			_id: CREATOR_ID,
@@ -268,10 +272,11 @@ test('feedback my detail: seam recebe apenas o nucleo canonizado e owner traduz 
 		message: 'Acesso negado.',
 	});
 	assert.equal(callLog.seamCalls.length, 1);
-	assert.deepEqual(Object.keys(callLog.seamCalls[0]).sort(), ['currentUser', 'feedback']);
+	assert.deepEqual(Object.keys(callLog.seamCalls[0]).sort(), ['currentUser', 'feedback', 'scopedUnitId']);
 	assert.deepEqual(toPlainJson(callLog.seamCalls[0]), {
 		feedback: toPlainJson(feedback),
 		currentUser: toPlainJson(req.user),
+		scopedUnitId: '507f191e810c19729de860ff',
 	});
 	assert.equal(callLog.apiOkCalls.length, 0);
 });
