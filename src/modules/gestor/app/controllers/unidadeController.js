@@ -217,4 +217,7 @@ export async function testarBanco(req, res) {
   }
 }
 
-export default { listarUnidades, testarBanco };
+export const unidadeControllerOrphan = { listarUnidades };
+export const unidadeControllerLive = { testarBanco };
+
+export default unidadeControllerLive;

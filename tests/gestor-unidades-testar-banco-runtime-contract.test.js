@@ -37,10 +37,12 @@ function extractBetween(source, startMarker, endMarker) {
 
 function loadUnidadeTestarBancoHarness(overrides = {}) {
   const source = fs.readFileSync(CONTROLLER_PATH, 'utf8');
+  assert.match(source, /export const unidadeControllerOrphan = \{ listarUnidades \};/);
+  assert.match(source, /export const unidadeControllerLive = \{ testarBanco \};/);
   const snippet = extractBetween(
     source,
     'function normalizeUnitId(value) {',
-    'export default { listarUnidades, testarBanco };',
+    'export const unidadeControllerOrphan = { listarUnidades };',
   )
     .replace('export async function listarUnidades(req, res) {', 'async function listarUnidades(req, res) {')
     .replace('export async function testarBanco(req, res) {', 'async function testarBanco(req, res) {');
