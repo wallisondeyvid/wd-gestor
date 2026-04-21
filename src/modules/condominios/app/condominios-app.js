@@ -3466,7 +3466,7 @@ async function resolvePortalPersonalReadCtxUser(ctxUser, req) {
   return { ...(nextCtxUser || {}), email, userEmail: email };
 }
 
-function buildMsgPersonalReadOwnerCandidates({ scope, ctxUser, req, fromPortal, admin, portalEmailCandidatesLower }) {
+function buildMsgPersonalReadOwnerCandidates({ scope, ctxUser, req, fromPortal, admin, portalEmailCandidatesLower, includePortalEmailCandidates = false }) {
   if (scope.mailboxId !== 'pessoal') return [];
 
   const out = [];
@@ -3497,7 +3497,7 @@ function buildMsgPersonalReadOwnerCandidates({ scope, ctxUser, req, fromPortal, 
     add(`${baseEmail}::colab`);
   }
 
-  if (!(fromPortal && !admin)) {
+  if (includePortalEmailCandidates || !(fromPortal && !admin)) {
     (Array.isArray(portalEmailCandidatesLower) ? portalEmailCandidatesLower : []).forEach(add);
   }
 
@@ -3533,6 +3533,7 @@ async function preparePortalPersonalReadSideContext({
   mailboxId,
   allowRefererPortal = false,
   allowNameFallbackWhenEmailResolved = false,
+  includePortalEmailCandidatesInOwnerCandidates = false,
 }) {
   const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
   const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
@@ -3556,6 +3557,7 @@ async function preparePortalPersonalReadSideContext({
     fromPortal,
     admin,
     portalEmailCandidatesLower,
+    includePortalEmailCandidates: includePortalEmailCandidatesInOwnerCandidates,
   });
   const nameFallback = buildMsgPersonalReadNameFallback({
     scope,
@@ -6928,26 +6930,15 @@ app.post('/api/msg/messages/:id/read', async (req, res) => {
     })();
 
     const mailboxId = String(bodyObj?.mailboxId || bodyObj?.mailbox_id || req.query?.mailboxId || req.query?.mailbox_id || '').trim() || 'pessoal';
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-
-    // Portal: para a caixa pessoal, precisamos de email consistente antes de resolver o scope.
-    try {
-      const adminTmp = userCanScopeAll(ctxUser);
-      if (fromPortal && !adminTmp && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    let portalEmailCandidatesLower = [];
-    try {
-      const adminTmp = userCanScopeAll(ctxUser);
-      if (fromPortal && !adminTmp && mailboxId === 'pessoal') {
-        portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    const scope = resolveMailboxScope(ctxUser, mailboxId, req);
-    const admin = userCanScopeAll(ctxUser);
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      allowNameFallbackWhenEmailResolved: true,
+      includePortalEmailCandidatesInOwnerCandidates: true,
+    });
+    ctxUser = readSideContext.ctxUser;
+    const { fromPortal, admin, scope, ownerCandidatesLower, nameFallback } = readSideContext;
 
     // Compat de leitura: no Portal, a identidade pode alternar entre
     // `email::portal::hab:<id>`, `email::portal` e, em dados legados, `email::colab`/`email`.
@@ -6976,50 +6967,6 @@ app.post('/api/msg/messages/:id/read', async (req, res) => {
         else portalHabIds = [];
       }
     } catch { /* noop */ }
-
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const isGoodOwnerKey = (s) => {
-        const v = String(s || '').trim();
-        if (!v) return false;
-        if (isEmailish(v)) return true;
-        // OwnerKey composto (ex.: email::portal, email::portal::hab:<id>, email::colab)
-        if (ownerKeyBaseEmailLower(v)) return true;
-        if (mongoose.isValidObjectId(v)) return true;
-        return false;
-      };
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!isGoodOwnerKey(s)) return;
-        if (!out.includes(s)) out.push(s);
-      };
-      add(scope.owner);
-      add(ctxUser?.email);
-      add(ctxUser?.userEmail);
-      add(ctxUser?.contato_email);
-      add(ctxUser?.contatoEmail);
-      add(ctxUser?.cond_usuario_id);
-      add(ctxUser?.condUsuarioId);
-      add(ctxUser?._id);
-      add(ctxUser?.id);
-      add(req?.__wdgPortalCookieUserId);
-      (portalEmailCandidatesLower || []).forEach(add);
-      return out;
-    })();
-
-    const nameFallback = (() => {
-      if (!fromPortal) return null;
-      if (scope.mailboxId !== 'pessoal') return null;
-      const rawName = String(ctxUser?.nome || ctxUser?.name || ctxUser?.username || '').trim();
-      const normalizedName = rawName.replace(/\s+/g, ' ').trim();
-      if (!normalizedName) return null;
-      const unidadeIdRaw = getUserUnidadeId(ctxUser);
-      if (!unidadeIdRaw || !mongoose.isValidObjectId(unidadeIdRaw)) return null;
-      const nameRx = new RegExp('^\\s*' + escapeRegExp(normalizedName) + '\\s*$', 'i');
-      return { unidadeId: String(unidadeIdRaw), nameRx };
-    })();
 
     if (scope.mailboxId !== 'pessoal') {
       const mailbox = await loadMailboxOrThrow(scope.mailboxId);
