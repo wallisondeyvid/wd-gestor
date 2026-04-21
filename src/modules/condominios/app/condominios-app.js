@@ -3317,6 +3317,263 @@ function resolveMailboxScope(ctxUser, mailboxId, req) {
   return { mailboxId: mb, owner: '' };
 }
 
+function isGoodPersonalMailboxOwnerKey(value) {
+  const normalized = String(value || '').trim();
+  if (!normalized) return false;
+  if (isEmailish(normalized)) return true;
+  if (ownerKeyBaseEmailLower(normalized)) return true;
+  if (mongoose.isValidObjectId(normalized)) return true;
+  return false;
+}
+
+async function resolvePortalPersonalReadCtxUser(ctxUser, req) {
+  let nextCtxUser = ctxUser;
+
+  try {
+    nextCtxUser = await ensurePortalEmailInCtxUser(nextCtxUser, req);
+  } catch {
+    nextCtxUser = ctxUser;
+  }
+
+  let email = String(
+    nextCtxUser?.email ||
+    nextCtxUser?.userEmail ||
+    nextCtxUser?.contato_email ||
+    nextCtxUser?.contatoEmail ||
+    ''
+  ).trim().toLowerCase();
+  if (isEmailish(email)) return nextCtxUser;
+
+  const userIdRaw = String(
+    req?.__wdgPortalCookieUserId ||
+    nextCtxUser?.cond_usuario_id ||
+    nextCtxUser?.condUsuarioId ||
+    nextCtxUser?.id ||
+    ''
+  ).trim();
+  const habIdRaw = String(nextCtxUser?.habitacao_id || nextCtxUser?.habitacaoId || '').trim();
+
+  if (isEmailish(userIdRaw)) {
+    email = String(userIdRaw).trim().toLowerCase();
+  }
+
+  if (!isEmailish(email) && userIdRaw && mongoose.isValidObjectId(userIdRaw)) {
+    try {
+      const condUser = await CondUsuario.findById(userIdRaw).select('email').lean().catch(() => null);
+      const candidate = String(condUser?.email || '').trim().toLowerCase();
+      if (isEmailish(candidate)) email = candidate;
+    } catch { /* noop */ }
+
+    if (!isEmailish(email)) {
+      try {
+        if (User) {
+          const gestorUser = await User.findById(userIdRaw).select('email').lean().catch(() => null);
+          const candidate = String(gestorUser?.email || '').trim().toLowerCase();
+          if (isEmailish(candidate)) email = candidate;
+        }
+      } catch { /* noop */ }
+    }
+
+    if (!isEmailish(email)) {
+      try {
+        const morador = await CondMorador.findOne({ cond_usuario_id: userIdRaw, ativo: { $ne: false } })
+          .select('email responsavel_email')
+          .lean()
+          .catch(() => null);
+        const candidateEmail = String(morador?.email || '').trim().toLowerCase();
+        const candidateResponsavel = String(morador?.responsavel_email || '').trim().toLowerCase();
+        if (isEmailish(candidateEmail)) email = candidateEmail;
+        else if (isEmailish(candidateResponsavel)) email = candidateResponsavel;
+      } catch { /* noop */ }
+    }
+
+    if (!isEmailish(email)) {
+      try {
+        const proprietario = await CondProprietario.findOne({ cond_usuario_id: userIdRaw, ativo: { $ne: false } })
+          .select('contato_email')
+          .lean()
+          .catch(() => null);
+        const candidate = String(proprietario?.contato_email || '').trim().toLowerCase();
+        if (isEmailish(candidate)) email = candidate;
+      } catch { /* noop */ }
+    }
+
+    if (!isEmailish(email)) {
+      try {
+        const moradorById = await CondMorador.findById(userIdRaw).select('email responsavel_email').lean().catch(() => null);
+        const candidateEmail = String(moradorById?.email || '').trim().toLowerCase();
+        const candidateResponsavel = String(moradorById?.responsavel_email || '').trim().toLowerCase();
+        if (isEmailish(candidateEmail)) email = candidateEmail;
+        else if (isEmailish(candidateResponsavel)) email = candidateResponsavel;
+      } catch { /* noop */ }
+    }
+
+    if (!isEmailish(email)) {
+      try {
+        const proprietarioById = await CondProprietario.findById(userIdRaw).select('contato_email').lean().catch(() => null);
+        const candidate = String(proprietarioById?.contato_email || '').trim().toLowerCase();
+        if (isEmailish(candidate)) email = candidate;
+      } catch { /* noop */ }
+    }
+  }
+
+  if (!isEmailish(email) && habIdRaw && mongoose.isValidObjectId(habIdRaw)) {
+    try {
+      const hab = await CondHabitacao.findById(habIdRaw)
+        .select('proprietario_id contrato_locacao.responsavel_morador_id')
+        .lean()
+        .catch(() => null);
+
+      const respMoradorId = hab?.contrato_locacao?.responsavel_morador_id
+        ? String(hab.contrato_locacao.responsavel_morador_id)
+        : '';
+      if (respMoradorId && mongoose.isValidObjectId(respMoradorId)) {
+        const morador = await CondMorador.findById(respMoradorId).select('email responsavel_email').lean().catch(() => null);
+        const candidateEmail = String(morador?.email || '').trim().toLowerCase();
+        const candidateResponsavel = String(morador?.responsavel_email || '').trim().toLowerCase();
+        if (isEmailish(candidateEmail)) email = candidateEmail;
+        else if (isEmailish(candidateResponsavel)) email = candidateResponsavel;
+      }
+
+      if (!isEmailish(email)) {
+        const moradorDaHabitacao = await CondMorador.findOne({ habitacao_id: habIdRaw, ativo: { $ne: false }, email: { $ne: '' } })
+          .select('email')
+          .lean()
+          .catch(() => null);
+        const candidate = String(moradorDaHabitacao?.email || '').trim().toLowerCase();
+        if (isEmailish(candidate)) email = candidate;
+      }
+
+      if (!isEmailish(email)) {
+        const moradorResponsavel = await CondMorador.findOne({ habitacao_id: habIdRaw, ativo: { $ne: false }, responsavel_email: { $ne: '' } })
+          .select('responsavel_email')
+          .lean()
+          .catch(() => null);
+        const candidate = String(moradorResponsavel?.responsavel_email || '').trim().toLowerCase();
+        if (isEmailish(candidate)) email = candidate;
+      }
+
+      const proprietarioId = hab?.proprietario_id ? String(hab.proprietario_id) : '';
+      if (!isEmailish(email) && proprietarioId && mongoose.isValidObjectId(proprietarioId)) {
+        const proprietario = await CondProprietario.findById(proprietarioId).select('contato_email').lean().catch(() => null);
+        const candidate = String(proprietario?.contato_email || '').trim().toLowerCase();
+        if (isEmailish(candidate)) email = candidate;
+      }
+    } catch { /* noop */ }
+  }
+
+  if (!isEmailish(email)) return nextCtxUser;
+  return { ...(nextCtxUser || {}), email, userEmail: email };
+}
+
+function buildMsgPersonalReadOwnerCandidates({ scope, ctxUser, req, fromPortal, admin, portalEmailCandidatesLower }) {
+  if (scope.mailboxId !== 'pessoal') return [];
+
+  const out = [];
+  const add = (value) => {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (!normalized) return;
+    if (!isGoodPersonalMailboxOwnerKey(normalized)) return;
+    if (!out.includes(normalized)) out.push(normalized);
+  };
+
+  const ownerExact = String(scope.owner || '').trim().toLowerCase();
+  const baseEmail = ownerKeyBaseEmailLower(ownerExact) || '';
+
+  add(ownerExact);
+  add(ctxUser?.email);
+  add(ctxUser?.userEmail);
+  add(ctxUser?.contato_email);
+  add(ctxUser?.contatoEmail);
+  add(ctxUser?.cond_usuario_id);
+  add(ctxUser?.condUsuarioId);
+  add(ctxUser?._id);
+  add(ctxUser?.id);
+  add(req?.__wdgPortalCookieUserId);
+
+  if (baseEmail) {
+    add(baseEmail);
+    add(`${baseEmail}::portal`);
+    add(`${baseEmail}::colab`);
+  }
+
+  if (!(fromPortal && !admin)) {
+    (Array.isArray(portalEmailCandidatesLower) ? portalEmailCandidatesLower : []).forEach(add);
+  }
+
+  return out;
+}
+
+function buildMsgPersonalReadNameFallback({ scope, ctxUser, fromPortal, allowNameFallbackWhenEmailResolved = false }) {
+  if (!fromPortal) return null;
+  if (scope.mailboxId !== 'pessoal') return null;
+
+  const ownerExact = String(scope.owner || '').trim().toLowerCase();
+  const ownerBase = ownerKeyBaseEmailLower(ownerExact) || '';
+  if (!allowNameFallbackWhenEmailResolved && (isEmailish(ownerExact) || isEmailish(ownerBase))) {
+    return null;
+  }
+
+  const rawName = String(ctxUser?.nome || ctxUser?.name || ctxUser?.username || '').trim();
+  const normalizedName = rawName.replace(/\s+/g, ' ').trim();
+  if (!normalizedName) return null;
+
+  const unidadeIdRaw = getUserUnidadeId(ctxUser);
+  if (!unidadeIdRaw || !mongoose.isValidObjectId(unidadeIdRaw)) return null;
+
+  return {
+    unidadeId: String(unidadeIdRaw),
+    nameRx: new RegExp('^\\s*' + escapeRegExp(normalizedName) + '\\s*$', 'i')
+  };
+}
+
+async function preparePortalPersonalReadSideContext({
+  ctxUser,
+  req,
+  mailboxId,
+  allowRefererPortal = false,
+  allowNameFallbackWhenEmailResolved = false,
+}) {
+  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+    || (allowRefererPortal && refLower.includes('/portal-morador'));
+  const admin = userCanScopeAll(ctxUser);
+
+  let nextCtxUser = ctxUser;
+  let portalEmailCandidatesLower = [];
+  if (fromPortal && !admin && String(mailboxId || '').trim() === 'pessoal') {
+    try {
+      nextCtxUser = await resolvePortalPersonalReadCtxUser(nextCtxUser, req);
+      portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(nextCtxUser, req);
+    } catch { /* noop */ }
+  }
+
+  const scope = resolveMailboxScope(nextCtxUser, mailboxId, req);
+  const ownerCandidatesLower = buildMsgPersonalReadOwnerCandidates({
+    scope,
+    ctxUser: nextCtxUser,
+    req,
+    fromPortal,
+    admin,
+    portalEmailCandidatesLower,
+  });
+  const nameFallback = buildMsgPersonalReadNameFallback({
+    scope,
+    ctxUser: nextCtxUser,
+    fromPortal,
+    allowNameFallbackWhenEmailResolved,
+  });
+
+  return {
+    ctxUser: nextCtxUser,
+    fromPortal,
+    admin,
+    scope,
+    ownerCandidatesLower,
+    nameFallback,
+  };
+}
+
 function ensureMessageState(doc, scope) {
   if (!doc) return null;
   const states = Array.isArray(doc.states) ? doc.states : [];
@@ -4161,27 +4418,14 @@ app.get('/api/msg/messages/:id', async (req, res) => {
     if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'id inválido' });
 
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
-
-    // Portal: para a caixa pessoal, precisamos de email consistente antes de resolver o scope.
-    try {
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-      const admin = userCanScopeAll(ctxUser);
-      if (fromPortal && !admin && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    let portalEmailCandidatesLower = [];
-    try {
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-      const adminTmp = userCanScopeAll(ctxUser);
-      if (fromPortal && !adminTmp && mailboxId === 'pessoal') {
-        portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    const scope = resolveMailboxScope(ctxUser, mailboxId, req);
-    const admin = userCanScopeAll(ctxUser);
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      allowNameFallbackWhenEmailResolved: true,
+    });
+    ctxUser = readSideContext.ctxUser;
+    const { fromPortal, admin, scope, ownerCandidatesLower, nameFallback } = readSideContext;
 
     // Regras por unidade (Configurações > Geral): bloqueia uso da caixa quando suspensa.
     try {
@@ -4221,50 +4465,6 @@ app.get('/api/msg/messages/:id', async (req, res) => {
         }
       }
     } catch { /* noop */ }
-
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const isGoodOwnerKey = (s) => {
-        const v = String(s || '').trim();
-        if (!v) return false;
-        if (isEmailish(v)) return true;
-        if (ownerKeyBaseEmailLower(v)) return true;
-        if (mongoose.isValidObjectId(v)) return true;
-        return false;
-      };
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!isGoodOwnerKey(s)) return;
-        if (!out.includes(s)) out.push(s);
-      };
-      add(scope.owner);
-      add(ctxUser?.email);
-      add(ctxUser?.userEmail);
-      add(ctxUser?.contato_email);
-      add(ctxUser?.contatoEmail);
-      add(ctxUser?.cond_usuario_id);
-      add(ctxUser?.condUsuarioId);
-      add(ctxUser?._id);
-      add(ctxUser?.id);
-      add(req?.__wdgPortalCookieUserId);
-      (portalEmailCandidatesLower || []).forEach(add);
-      return out;
-    })();
-
-    const nameFallback = (() => {
-      if (!fromPortal) return null;
-      if (scope.mailboxId !== 'pessoal') return null;
-      const rawName = String(ctxUser?.nome || ctxUser?.name || ctxUser?.username || '').trim();
-      const normalizedName = rawName.replace(/\s+/g, ' ').trim();
-      if (!normalizedName) return null;
-      const unidadeIdRaw = getUserUnidadeId(ctxUser);
-      if (!unidadeIdRaw || !mongoose.isValidObjectId(unidadeIdRaw)) return null;
-      const nameRx = new RegExp('^\\s*' + escapeRegExp(normalizedName) + '\\s*$', 'i');
-      return { unidadeId: String(unidadeIdRaw), nameRx };
-    })();
 
     if (scope.mailboxId !== 'pessoal') {
       const mailbox = await loadMailboxOrThrow(scope.mailboxId);
@@ -10317,21 +10517,15 @@ app.get('/api/msg/messages', async (req, res) => {
 
     const folder = String(req.query.folder || req.query.view || 'entrada').trim().toLowerCase();
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
-
-    const refLower = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || refLower.includes('/portal-morador');
-
-    const admin = userCanScopeAll(ctxUser);
-    let portalEmailCandidatesLower = [];
-
-    // Portal: para a caixa pessoal, a identidade precisa ser um email (to/cc são por email).
-    // Se cair em `nome` por sessão reduzida, a inbox fica vazia.
-    try {
-      if (fromPortal && !admin && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-        portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(ctxUser, req);
-      }
-    } catch { /* noop */ }
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      allowRefererPortal: true,
+    });
+    ctxUser = readSideContext.ctxUser;
+    const { fromPortal, admin, scope, ownerCandidatesLower, nameFallback } = readSideContext;
+    const ctxUserForScope = ctxUser;
 
     // API sempre deve ser rede (nuvem). Evita respostas cacheadas mascararem problema de DB/filtro.
     try {
@@ -10343,228 +10537,6 @@ app.get('/api/msg/messages', async (req, res) => {
       res.set('X-WDG-Api-Version', String(process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_BUILD_ID || 'dev'));
     } catch { /* noop */ }
 
-    // Portal: em alguns ambientes (MemoryStore/serverless) o request do proxy pode
-    // chegar aqui sem req.session.portalUser; caímos no cookie wdg_portal com snapshot
-    // reduzido que pode não conter email. Para a caixa pessoal, precisamos do email
-    // para filtrar to.email/cc.email corretamente.
-    try {
-      const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-      if (fromPortal && mailboxId === 'pessoal') {
-        // 0) se já tiver email no snapshot, usa.
-        let em = String(ctxUser?.email || ctxUser?.userEmail || ctxUser?.contato_email || ctxUser?.contatoEmail || '').trim().toLowerCase();
-
-        // Se o snapshot do cookie vier reduzido (sem email/nome), precisamos resolver o email.
-        if (!isEmailish(em)) {
-          const userIdRaw = String(req?.__wdgPortalCookieUserId || ctxUser?.cond_usuario_id || ctxUser?.condUsuarioId || ctxUser?.id || '').trim();
-          const habIdRaw = String(ctxUser?.habitacao_id || ctxUser?.habitacaoId || '').trim();
-
-          // 1) Se já veio como email, usa direto.
-          if (isEmailish(userIdRaw)) {
-            em = String(userIdRaw || '').trim().toLowerCase();
-          }
-
-          // 2) Se veio como ObjectId: tenta várias coleções possíveis.
-          if (!isEmailish(em) && userIdRaw && mongoose.isValidObjectId(userIdRaw)) {
-            // 2.1) CondUsuario
-            try {
-              const u = await CondUsuario.findById(userIdRaw).select('email').lean().catch(() => null);
-              const cand = String(u?.email || '').trim().toLowerCase();
-              if (isEmailish(cand)) em = cand;
-            } catch { /* noop */ }
-
-            // 2.2) User (Gestor)
-            if (!isEmailish(em)) {
-              try {
-                if (User) {
-                  const u2 = await User.findById(userIdRaw).select('email').lean().catch(() => null);
-                  const cand = String(u2?.email || '').trim().toLowerCase();
-                  if (isEmailish(cand)) em = cand;
-                }
-              } catch { /* noop */ }
-            }
-
-            // 2.3) CondMorador (vínculo por cond_usuario_id)
-            if (!isEmailish(em)) {
-              try {
-                const m = await CondMorador.findOne({ cond_usuario_id: userIdRaw, ativo: { $ne: false } })
-                  .select('email responsavel_email')
-                  .lean()
-                  .catch(() => null);
-                const cand1 = String(m?.email || '').trim().toLowerCase();
-                const cand2 = String(m?.responsavel_email || '').trim().toLowerCase();
-                if (isEmailish(cand1)) em = cand1;
-                else if (isEmailish(cand2)) em = cand2;
-              } catch { /* noop */ }
-            }
-
-            // 2.4) CondProprietario (vínculo por cond_usuario_id)
-            if (!isEmailish(em)) {
-              try {
-                const p = await CondProprietario.findOne({ cond_usuario_id: userIdRaw, ativo: { $ne: false } })
-                  .select('contato_email')
-                  .lean()
-                  .catch(() => null);
-                const cand = String(p?.contato_email || '').trim().toLowerCase();
-                if (isEmailish(cand)) em = cand;
-              } catch { /* noop */ }
-            }
-
-            // 2.5) Alguns legados podem guardar userIdRaw como _id direto de morador/proprietário
-            if (!isEmailish(em)) {
-              try {
-                const m = await CondMorador.findById(userIdRaw).select('email responsavel_email').lean().catch(() => null);
-                const cand1 = String(m?.email || '').trim().toLowerCase();
-                const cand2 = String(m?.responsavel_email || '').trim().toLowerCase();
-                if (isEmailish(cand1)) em = cand1;
-                else if (isEmailish(cand2)) em = cand2;
-              } catch { /* noop */ }
-            }
-            if (!isEmailish(em)) {
-              try {
-                const p = await CondProprietario.findById(userIdRaw).select('contato_email').lean().catch(() => null);
-                const cand = String(p?.contato_email || '').trim().toLowerCase();
-                if (isEmailish(cand)) em = cand;
-              } catch { /* noop */ }
-            }
-          }
-
-          // 3) Fallback por habitação (Portal costuma ter habitacao_id no snapshot)
-          if (!isEmailish(em) && habIdRaw && mongoose.isValidObjectId(habIdRaw)) {
-            try {
-              const hab = await CondHabitacao.findById(habIdRaw)
-                .select('contrato_locacao.responsavel_morador_id proprietario_id moradores_ids')
-                .lean()
-                .catch(() => null);
-
-              const respMoradorId = hab?.contrato_locacao?.responsavel_morador_id ? String(hab.contrato_locacao.responsavel_morador_id) : '';
-              if (respMoradorId && mongoose.isValidObjectId(respMoradorId)) {
-                const m = await CondMorador.findById(respMoradorId).select('email responsavel_email').lean().catch(() => null);
-                const cand1 = String(m?.email || '').trim().toLowerCase();
-                const cand2 = String(m?.responsavel_email || '').trim().toLowerCase();
-                if (isEmailish(cand1)) em = cand1;
-                else if (isEmailish(cand2)) em = cand2;
-              }
-
-              // tenta algum morador da habitação com email
-              if (!isEmailish(em)) {
-                const m = await CondMorador.findOne({ habitacao_id: habIdRaw, ativo: { $ne: false }, email: { $ne: '' } })
-                  .select('email')
-                  .lean()
-                  .catch(() => null);
-                const cand = String(m?.email || '').trim().toLowerCase();
-                if (isEmailish(cand)) em = cand;
-              }
-              if (!isEmailish(em)) {
-                const m = await CondMorador.findOne({ habitacao_id: habIdRaw, ativo: { $ne: false }, responsavel_email: { $ne: '' } })
-                  .select('responsavel_email')
-                  .lean()
-                  .catch(() => null);
-                const cand = String(m?.responsavel_email || '').trim().toLowerCase();
-                if (isEmailish(cand)) em = cand;
-              }
-
-              // tenta proprietário da habitação
-              const propId = hab?.proprietario_id ? String(hab.proprietario_id) : '';
-              if (!isEmailish(em) && propId && mongoose.isValidObjectId(propId)) {
-                const p = await CondProprietario.findById(propId).select('contato_email').lean().catch(() => null);
-                const cand = String(p?.contato_email || '').trim().toLowerCase();
-                if (isEmailish(cand)) em = cand;
-              }
-            } catch { /* noop */ }
-          }
-        }
-
-        if (isEmailish(em)) {
-          ctxUser = { ...(ctxUser || {}), email: em, userEmail: em };
-        }
-      }
-    } catch {
-      /* noop */
-    }
-
-    const scope = resolveMailboxScope(ctxUser, mailboxId, req);
-
-    // Portal/compat: a caixa pessoal historicamente usa e-mail como chave, mas há dados legados
-    // que podem ter salvo `owner` como cond_usuario_id/id. Para evitar inbox vazio, usamos um
-    // conjunto de candidatos e aceitamos match por qualquer um deles.
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const isGoodOwnerKey = (s) => {
-        const v = String(s || '').trim();
-        if (!v) return false;
-        if (isEmailish(v)) return true;
-        // OwnerKey composto (ex.: email::portal, email::portal::hab:<id>, email::colab)
-        if (ownerKeyBaseEmailLower(v)) return true;
-        // ids legados do Portal (CondUsuario/_id) são ObjectId
-        if (mongoose.isValidObjectId(v)) return true;
-        // não usar nome como chave (colisão/falha silenciosa)
-        return false;
-      };
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!isGoodOwnerKey(s)) return;
-        if (!out.includes(s)) out.push(s);
-      };
-
-      const ownerExact = String(scope.owner || '').trim().toLowerCase();
-      const base = ownerKeyBaseEmailLower(ownerExact) || '';
-      const isPortalPersonal = !!(fromPortal && !admin);
-
-      if (isPortalPersonal) {
-        // Portal: evitar candidatos amplos (vínculos da habitação) para não misturar moradores.
-        add(ownerExact);
-        if (base) {
-          add(base);
-          add(`${base}::portal`);
-          add(`${base}::colab`);
-        }
-        return out;
-      }
-
-      // scope.owner pode vir como nome em sessões reduzidas; não usar.
-      add(ownerExact);
-      add(ctxUser?.email);
-      add(ctxUser?.userEmail);
-      add(ctxUser?.contato_email);
-      add(ctxUser?.contatoEmail);
-      add(ctxUser?.cond_usuario_id);
-      add(ctxUser?.condUsuarioId);
-      add(ctxUser?._id);
-      add(ctxUser?.id);
-      add(req?.__wdgPortalCookieUserId);
-      (portalEmailCandidatesLower || []).forEach(add);
-      return out;
-    })();
-
-    // Fallback (somente Portal): alguns legados permitem destinatário com nome mas sem email.
-    // Para evitar colisões, só habilita quando a unidade é conhecida.
-    const nameFallback = (() => {
-      try {
-        const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-        if (!fromPortal) return null;
-        if (scope.mailboxId !== 'pessoal') return null;
-
-        // Se já há e-mail resolvido, não usar fallback por nome (evita colisões).
-        const ownerExact = String(scope.owner || '').trim().toLowerCase();
-        const ownerBase = ownerKeyBaseEmailLower(ownerExact) || '';
-        if (isEmailish(ownerExact) || isEmailish(ownerBase)) return null;
-
-        const rawName = String(ctxUser?.nome || ctxUser?.name || ctxUser?.username || '').trim();
-        const normalizedName = rawName.replace(/\s+/g, ' ').trim();
-        if (!normalizedName) return null;
-
-        const unidadeIdRaw = getUserUnidadeId(ctxUser);
-        if (!unidadeIdRaw || !mongoose.isValidObjectId(unidadeIdRaw)) return null;
-
-        const nameRx = new RegExp('^\\s*' + escapeRegExp(normalizedName) + '\\s*$', 'i');
-        return { unidadeId: new mongoose.Types.ObjectId(unidadeIdRaw), nameRx };
-      } catch {
-        return null;
-      }
-    })();
     const ownerSet = new Set(ownerCandidatesLower);
 
     const baseEmailForOwnerMatch = (() => {
