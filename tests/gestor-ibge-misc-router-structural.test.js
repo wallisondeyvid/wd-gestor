@@ -12,10 +12,11 @@ function stripComments(source) {
     .replace(/(^|\s)\/\/.*$/gm, '$1');
 }
 
-test('miscApi deixa de registrar a rota sombreada /ibge e preserva apenas o corredor de cluster', () => {
+test('miscApi deixa de registrar os corredores sombreado de /ibge e legado de /unidades/cluster e permanece router vazio', () => {
   const source = stripComments(ROUTE_SOURCE);
 
   assert.doesNotMatch(source, /router\.get\(\s*['"]\/ibge['"]/);
-  assert.match(source, /router\.get\(\s*['"]\/unidades\/cluster['"]/);
-  assert.match(source, /withLoginAndRequiredUnitScope\(obterClusterUnidades\)/);
+  assert.doesNotMatch(source, /router\.get\(\s*['"]\/unidades\/cluster['"]/);
+  assert.match(source, /const router = express\.Router\(\);/);
+  assert.match(source, /export default router;/);
 });
