@@ -75,6 +75,7 @@ export async function handleGetBlocosRelacionadosV2(req, res, _next) {
 export async function handlePostBlocosV2(req, res, _next) {
   try {
     const result = await criarBlocoService({
+      unitScope: req?.unitScope,
       body: req.body,
       mongoose: handleGetBlocosV2Context?.mongoose,
       skipDb: req?.app?.locals?.skipDb,

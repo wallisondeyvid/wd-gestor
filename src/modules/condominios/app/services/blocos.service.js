@@ -6,6 +6,12 @@ function unitScopeFromUnidadeId(unidadeId) {
   return unidadeId ? createUnitScope({ unidadeId }) : { type: 'global', unidadeId: null };
 }
 
+function normalizeObjectIdString(mongoose, value) {
+  const normalized = String(value || '').trim();
+  if (!normalized) return '';
+  return mongoose?.isValidObjectId(normalized) ? normalized : '';
+}
+
 export async function listarBlocosService({
   req,
   mongoose,
@@ -65,13 +71,25 @@ function assertDbAvailable({ mongoose, skipDb }) {
 }
 
 export async function criarBlocoService({
+  unitScope,
   body,
   mongoose,
   skipDb,
   CondBloco
 }) {
   const { unidade_id, nome, ordem } = body || {};
-  const unidadeIdDerivado = (unidade_id && mongoose.isValidObjectId(String(unidade_id))) ? String(unidade_id) : '';
+  const unidadeIdDerivado = normalizeObjectIdString(mongoose, unidade_id);
+
+  if (unitScope?.type === 'unit' && unidade_id !== undefined) {
+    const scopedUnidadeId = normalizeObjectIdString(mongoose, unitScope?.unidadeId);
+    if (scopedUnidadeId && unidadeIdDerivado && scopedUnidadeId !== unidadeIdDerivado) {
+      const err = new Error('unidade_id divergente do escopo');
+      err.__httpStatus = 400;
+      err.__httpPayload = { error: 'UNIDADE_ID_MISMATCH' };
+      throw err;
+    }
+  }
+
   const repo = new BlocosRepository({ unitScope: unitScopeFromUnidadeId(unidadeIdDerivado) });
   assertDbAvailable({ mongoose, skipDb });
 
