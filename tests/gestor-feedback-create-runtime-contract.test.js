@@ -107,11 +107,17 @@ function installSessionSeedRoute(app) {
         return res.status(404).json({ success: false, error: 'USER_NOT_FOUND' });
       }
 
+      const effectiveRole = role || user.role || 'user';
+      const globalRole = effectiveRole === 'admin' || effectiveRole === 'master'
+        ? effectiveRole
+        : null;
+
       req.session.user = {
         id: String(user._id),
         email: user.email,
-        role: role || user.role || 'user',
+        role: effectiveRole,
         nome: user.nome || 'Feedback Create Contract User',
+        ...(globalRole ? { global_role: globalRole } : {}),
         ...(unidadeId ? { unidade_id: unidadeId } : {}),
       };
 
@@ -119,6 +125,7 @@ function installSessionSeedRoute(app) {
         req.session.gestorAuthContext = {
           source: 'auth-context-v1',
           active_unidade_id: unidadeId,
+          ...(globalRole ? { global_role: globalRole } : {}),
         };
       } else {
         delete req.session.gestorAuthContext;
