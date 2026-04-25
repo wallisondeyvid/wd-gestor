@@ -22848,27 +22848,16 @@ app.post('/assembleias/nova/publicar', ...ASSEMBLEIA_BODY_PARSERS, async (req, r
 
       // Estados por destinatário (Caixa Pessoal)
       const scopes = new Map();
-      const pushScope = (mailboxId, owner) => {
-        const mb = String(mailboxId || '').trim();
-        const ow = String(owner || '').trim().toLowerCase();
-        if (!mb || !ow) return;
-        scopes.set(`${mb}::${ow}`, { mailboxId: mb, owner: ow });
-      };
-      pushScope(fromMailboxId, fromOwner);
-      to.forEach(m => pushScope('pessoal', String(m?.email || '').trim().toLowerCase()));
-
-      const initialStates = Array.from(scopes.values()).map(s => {
-        const isSender = (String(s.mailboxId) === String(fromMailboxId)) && (String(s.owner || '').toLowerCase() === String(fromOwner).toLowerCase());
-        return {
-          mailbox_id: s.mailboxId,
-          owner: s.owner,
-          lida_em: isSender ? new Date() : null,
-          arquivada_em: null,
-          lixeira_em: null,
-          fixada_em: null,
-          marcadores: []
-        };
+      pushMsgStateScope(scopes, { mailboxId: fromMailboxId, owner: fromOwner }, { requireOwner: true });
+      to.forEach(m => {
+        pushMsgStateScope(
+          scopes,
+          { mailboxId: 'pessoal', owner: String(m?.email || '').trim().toLowerCase() },
+          { requireOwner: true }
+        );
       });
+
+      const initialStates = buildMsgInitialStates({ scopes, fromMailboxId, fromOwner });
 
       // Idempotência (anti duplo clique)
       try {
