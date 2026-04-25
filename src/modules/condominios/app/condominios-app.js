@@ -14081,6 +14081,221 @@ app.post('/api/visitas/:id/chegada/visitantes', express.json(), async (req, res)
   }
 });
 
+async function resolveServiceRequestDetailRead({ req, id }) {
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+  const doc = await CondSolicitacaoServico.findById(id).lean();
+
+  if(!doc) return { error: { status: 404, body: { error: 'Solicitação não encontrada' } } };
+
+  if(!isAdmin){
+    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+    const allowed = new Set((unidadesOptions || []).map(u => String(u._id)));
+    const unidadeIdStr = doc.unidade_id ? String(doc.unidade_id) : '';
+    if(allowed.size && unidadeIdStr && !allowed.has(unidadeIdStr)){
+      return { error: { status: 403, body: { error: 'Solicitação fora do escopo do usuário' } } };
+    }
+  }
+
+  return { doc };
+}
+
+async function markServiceRequestDetailAsSeen({ id, doc }) {
+  if(!doc || doc.nova === false) return doc;
+
+  const updatedDoc = await CondSolicitacaoServico.findByIdAndUpdate(
+    id,
+    { $set: { nova: false } },
+    { new: true }
+  ).lean();
+
+  return updatedDoc || { ...doc, nova: false };
+}
+
+async function buildServiceRequestDetailResponsePayload({ doc }) {
+  return { data: doc };
+}
+
+async function resolveServiceRequestAcceptanceRead({ req, id }) {
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+  const doc = await CondSolicitacaoServico.findById(id).lean();
+
+  if(!doc){
+    return { error: { status: 404, body: { error: 'Solicitação não encontrada' } } };
+  }
+
+  if(!isAdmin){
+    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+    const allowed = new Set((unidadesOptions || []).map(u => String(u._id)));
+    const unidadeIdStr = doc.unidade_id ? String(doc.unidade_id) : '';
+    if(allowed.size && unidadeIdStr && !allowed.has(unidadeIdStr)){
+      return { error: { status: 403, body: { error: 'Solicitação fora do escopo do usuário' } } };
+    }
+  }
+
+  return { doc, ctxUser };
+}
+
+async function applyServiceRequestAcceptance({ id, doc, ctxUser }) {
+  const userId = ctxUser && (ctxUser._id || ctxUser.id);
+
+  await CondSolicitacaoServico.updateOne(
+    { _id: id },
+    {
+      $set: {
+        status: 'aceita',
+        nova: false,
+        aceita_em: new Date(),
+        aceita_por: userId ? String(userId) : null,
+        aceita_por_nome: ctxUser && ctxUser.nome ? ctxUser.nome : null,
+        rejeitada_em: null,
+        rejeitada_por: null,
+        rejeitada_por_nome: null,
+        rejeicao_motivo: null
+      }
+    }
+  );
+
+  return doc;
+}
+
+async function emitServiceRequestAcceptedPush({ id, doc }) {
+  try {
+    const pushResult = await notifyServicoStatusPush({
+      email: doc?.morador_email || '',
+      protocolo: doc?.protocolo || doc?._id || id,
+      status: 'aceita',
+      assunto: doc?.titulo || null,
+      unidadeId: doc?.unidade_id || null,
+      servicoId: doc?._id ? String(doc._id) : id
+    });
+    if (!pushResult?.ok) {
+      console.warn('[api/solicitacoes-servico/:id/aceitar] push não enviado', pushResult?.reason || pushResult);
+    }
+  } catch (pushErr) {
+    console.error('[api/solicitacoes-servico/:id/aceitar] push erro', pushErr?.message || pushErr);
+  }
+}
+
+function buildServiceRequestAcceptanceResponsePayload() {
+  return { ok: true };
+}
+
+async function resolveServiceRequestRejectionRead({ req, id }) {
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+  const doc = await CondSolicitacaoServico.findById(id).lean();
+
+  if(!doc){
+    return { error: { status: 404, body: { error: 'Solicitação não encontrada' } } };
+  }
+
+  if(!isAdmin){
+    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+    const allowed = new Set((unidadesOptions || []).map(u => String(u._id)));
+    const unidadeIdStr = doc.unidade_id ? String(doc.unidade_id) : '';
+    if(allowed.size && unidadeIdStr && !allowed.has(unidadeIdStr)){
+      return { error: { status: 403, body: { error: 'Solicitação fora do escopo do usuário' } } };
+    }
+  }
+
+  return { doc, ctxUser };
+}
+
+async function applyServiceRequestRejection({ id, doc, ctxUser, motivo }) {
+  const userId = ctxUser && (ctxUser._id || ctxUser.id);
+
+  await CondSolicitacaoServico.updateOne(
+    { _id: id },
+    {
+      $set: {
+        status: 'rejeitada',
+        nova: false,
+        rejeitada_em: new Date(),
+        rejeitada_por: userId ? String(userId) : null,
+        rejeitada_por_nome: ctxUser && ctxUser.nome ? ctxUser.nome : null,
+        rejeicao_motivo: motivo,
+        aceita_em: null,
+        aceita_por: null,
+        aceita_por_nome: null
+      }
+    }
+  );
+
+  return doc;
+}
+
+async function emitServiceRequestRejectedPush({ id, doc, motivo }) {
+  try {
+    const pushResult = await notifyServicoStatusPush({
+      email: doc?.morador_email || '',
+      protocolo: doc?.protocolo || doc?._id || id,
+      status: 'rejeitada',
+      motivo,
+      assunto: doc?.titulo || null,
+      unidadeId: doc?.unidade_id || null,
+      servicoId: doc?._id ? String(doc._id) : id
+    });
+    if (!pushResult?.ok) {
+      console.warn('[api/solicitacoes-servico/:id/rejeitar] push não enviado', pushResult?.reason || pushResult);
+    }
+  } catch (pushErr) {
+    console.error('[api/solicitacoes-servico/:id/rejeitar] push erro', pushErr?.message || pushErr);
+  }
+}
+
+function buildServiceRequestRejectionResponsePayload() {
+  return { ok: true };
+}
+
+async function resolveServiceRequestListReadScope({ req, unidadeParam }) {
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+
+  if (isAdmin) {
+    return { unidadeFilter: unidadeParam || null };
+  }
+
+  const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+  const allowed = (unidadesOptions || []).map(u => String(u._id));
+  if (!allowed.length) {
+    return { empty: true };
+  }
+
+  if (unidadeParam) {
+    if (!allowed.includes(unidadeParam)) {
+      return { error: { status: 403, body: { error: 'Unidade fora do escopo do usuário' } } };
+    }
+    return { unidadeFilter: unidadeParam };
+  }
+
+  return { unidadeFilter: { $in: allowed } };
+}
+
+function buildServiceRequestListQueryFilter({ statusParam, unidadeFilter }) {
+  const statusArray = statusParam ? statusParam.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const filter = {
+    status: statusArray.length ? { $in: statusArray } : { $in: ['aberto', 'aceita'] }
+  };
+
+  if (unidadeFilter) {
+    filter.unidade_id = unidadeFilter;
+  }
+
+  return filter;
+}
+
+async function buildServiceRequestListResponsePayload({ filter }) {
+  const docs = await CondSolicitacaoServico.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(120)
+    .select('_id protocolo titulo descricao habitacao_label habitacao_id unidade_id morador_email status nova createdAt aceita_em aceita_por rejeitada_em rejeicao_motivo')
+    .lean();
+
+  return { data: docs || [] };
+}
+
 app.get('/api/solicitacoes-servico/:id', async (req, res) => {
   const id = String(req.params?.id || '').trim();
   if(!id) return res.status(400).json({ error: 'ID inválido' });
@@ -14091,27 +14306,17 @@ app.get('/api/solicitacoes-servico/:id', async (req, res) => {
       return res.status(503).json({ error: 'Banco indisponível, tente novamente' });
     }
 
-    const ctxUser = req.user || (req.session && req.session.user) || null;
-    const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-
-    const doc = await CondSolicitacaoServico.findByIdAndUpdate(
-      id,
-      { $set: { nova: false } },
-      { new: true }
-    ).lean();
-
-    if(!doc) return res.status(404).json({ error: 'Solicitação não encontrada' });
-
-    if(!isAdmin){
-      const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-      const allowed = new Set((unidadesOptions || []).map(u => String(u._id)));
-      const unidadeIdStr = doc.unidade_id ? String(doc.unidade_id) : '';
-      if(allowed.size && unidadeIdStr && !allowed.has(unidadeIdStr)){
-        return res.status(403).json({ error: 'Solicitação fora do escopo do usuário' });
-      }
+    const detailRead = await resolveServiceRequestDetailRead({ req, id });
+    if(detailRead.error){
+      return res.status(detailRead.error.status).json(detailRead.error.body);
     }
 
-    return res.json({ data: doc });
+    const detailDoc = await markServiceRequestDetailAsSeen({
+      id,
+      doc: detailRead.doc
+    });
+
+    return res.json(await buildServiceRequestDetailResponsePayload({ doc: detailDoc }));
   }catch(err){
     console.error('[api/solicitacoes-servico/:id] erro GET', err);
     return res.status(500).json({ error: 'Falha ao consultar solicitação', detail: err.message });
@@ -14127,56 +14332,22 @@ app.post('/api/solicitacoes-servico/:id/aceitar', express.json(), async (req, re
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const ctxUser = req.user || (req.session && req.session.user) || null;
-    const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-    const userId = ctxUser && (ctxUser._id || ctxUser.id); 
-
-    const doc = await CondSolicitacaoServico.findById(id).lean();
-    if(!doc) return res.status(404).json({ error: 'Solicitação não encontrada' });
-
-    if(!isAdmin){
-      const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-      const allowed = new Set((unidadesOptions || []).map(u => String(u._id)));
-      const unidadeIdStr = doc.unidade_id ? String(doc.unidade_id) : '';
-      if(allowed.size && unidadeIdStr && !allowed.has(unidadeIdStr)){
-        return res.status(403).json({ error: 'Solicitação fora do escopo do usuário' });
-      }
+    const acceptanceRead = await resolveServiceRequestAcceptanceRead({ req, id });
+    if(acceptanceRead.error){
+      return res.status(acceptanceRead.error.status).json(acceptanceRead.error.body);
     }
 
-    await CondSolicitacaoServico.updateOne(
-      { _id: id },
-      {
-        $set: {
-          status: 'aceita',
-          nova: false,
-          aceita_em: new Date(),
-          aceita_por: userId ? String(userId) : null,
-          aceita_por_nome: ctxUser && ctxUser.nome ? ctxUser.nome : null,
-          rejeitada_em: null,
-          rejeitada_por: null,
-          rejeitada_por_nome: null,
-          rejeicao_motivo: null
-        }
-      }
-    );
+    await applyServiceRequestAcceptance({
+      id,
+      doc: acceptanceRead.doc,
+      ctxUser: acceptanceRead.ctxUser
+    });
+    await emitServiceRequestAcceptedPush({
+      id,
+      doc: acceptanceRead.doc
+    });
 
-    try {
-      const pushResult = await notifyServicoStatusPush({
-        email: doc?.morador_email || '',
-        protocolo: doc?.protocolo || doc?._id || id,
-        status: 'aceita',
-        assunto: doc?.titulo || null,
-        unidadeId: doc?.unidade_id || null,
-        servicoId: doc?._id ? String(doc._id) : id
-      });
-      if (!pushResult?.ok) {
-        console.warn('[api/solicitacoes-servico/:id/aceitar] push não enviado', pushResult?.reason || pushResult);
-      }
-    } catch (pushErr) {
-      console.error('[api/solicitacoes-servico/:id/aceitar] push erro', pushErr?.message || pushErr);
-    }
-
-    return res.json({ ok: true });
+    return res.json(buildServiceRequestAcceptanceResponsePayload());
   }catch(err){
     console.error('[api/solicitacoes-servico/:id/aceitar] erro POST', err);
     return res.status(500).json({ error: 'Falha ao aceitar solicitação', detail: err?.message });
@@ -14195,57 +14366,24 @@ app.post('/api/solicitacoes-servico/:id/rejeitar', express.json(), async (req, r
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const ctxUser = req.user || (req.session && req.session.user) || null;
-    const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-    const userId = ctxUser && (ctxUser._id || ctxUser.id);
-
-    const doc = await CondSolicitacaoServico.findById(id).lean();
-    if(!doc) return res.status(404).json({ error: 'Solicitação não encontrada' });
-
-    if(!isAdmin){
-      const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-      const allowed = new Set((unidadesOptions || []).map(u => String(u._id)));
-      const unidadeIdStr = doc.unidade_id ? String(doc.unidade_id) : '';
-      if(allowed.size && unidadeIdStr && !allowed.has(unidadeIdStr)){
-        return res.status(403).json({ error: 'Solicitação fora do escopo do usuário' });
-      }
+    const rejectionRead = await resolveServiceRequestRejectionRead({ req, id });
+    if(rejectionRead.error){
+      return res.status(rejectionRead.error.status).json(rejectionRead.error.body);
     }
 
-    await CondSolicitacaoServico.updateOne(
-      { _id: id },
-      {
-        $set: {
-          status: 'rejeitada',
-          nova: false,
-          rejeitada_em: new Date(),
-          rejeitada_por: userId ? String(userId) : null,
-          rejeitada_por_nome: ctxUser && ctxUser.nome ? ctxUser.nome : null,
-          rejeicao_motivo: motivoRaw,
-          aceita_em: null,
-          aceita_por: null,
-          aceita_por_nome: null
-        }
-      }
-    );
+    await applyServiceRequestRejection({
+      id,
+      doc: rejectionRead.doc,
+      ctxUser: rejectionRead.ctxUser,
+      motivo: motivoRaw
+    });
+    await emitServiceRequestRejectedPush({
+      id,
+      doc: rejectionRead.doc,
+      motivo: motivoRaw
+    });
 
-    try {
-      const pushResult = await notifyServicoStatusPush({
-        email: doc?.morador_email || '',
-        protocolo: doc?.protocolo || doc?._id || id,
-        status: 'rejeitada',
-        motivo: motivoRaw,
-        assunto: doc?.titulo || null,
-        unidadeId: doc?.unidade_id || null,
-        servicoId: doc?._id ? String(doc._id) : id
-      });
-      if (!pushResult?.ok) {
-        console.warn('[api/solicitacoes-servico/:id/rejeitar] push não enviado', pushResult?.reason || pushResult);
-      }
-    } catch (pushErr) {
-      console.error('[api/solicitacoes-servico/:id/rejeitar] push erro', pushErr?.message || pushErr);
-    }
-
-    return res.json({ ok: true });
+    return res.json(buildServiceRequestRejectionResponsePayload());
   }catch(err){
     console.error('[api/solicitacoes-servico/:id/rejeitar] erro POST', err);
     return res.status(500).json({ error: 'Falha ao rejeitar solicitação', detail: err?.message });
@@ -14255,40 +14393,28 @@ app.post('/api/solicitacoes-servico/:id/rejeitar', express.json(), async (req, r
 // API: solicitações abertas (Portal do Morador) visíveis no módulo gestor
 app.get('/api/servicos/solicitacoes', async (req, res) => {
   try {
-    const ctxUser = req.user || (req.session && req.session.user) || null;
-    const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-
-    // Filtro básico: somente solicitações não finalizadas, originadas do portal
     const statusParam = String(req.query?.status || '').trim();
     const unidadeParam = String(req.query?.unidade || '').trim();
-    const statusArray = statusParam ? statusParam.split(',').map(s => s.trim()).filter(Boolean) : [];
-    const filter = {
-      status: statusArray.length ? { $in: statusArray } : { $in: ['aberto', 'aceita'] }
-    };
-
-    if (unidadeParam) {
-      filter.unidade_id = unidadeParam;
-    }
-
-    if (!isAdmin) {
-      const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-      const allowed = (unidadesOptions || []).map(u => String(u._id));
-      if (!allowed.length) return res.json({ data: [] });
-      filter.unidade_id = unidadeParam ? unidadeParam : { $in: allowed };
-    }
 
     if (mongoose.connection.readyState !== 1) {
       try { res.set('Retry-After', '5'); } catch {}
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const docs = await CondSolicitacaoServico.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(120)
-      .select('_id protocolo titulo descricao habitacao_label habitacao_id unidade_id morador_email status nova createdAt aceita_em aceita_por rejeitada_em rejeicao_motivo')
-      .lean();
+    const listScope = await resolveServiceRequestListReadScope({ req, unidadeParam });
+    if (listScope.error) {
+      return res.status(listScope.error.status).json(listScope.error.body);
+    }
+    if (listScope.empty) {
+      return res.json({ data: [] });
+    }
 
-    return res.json({ data: docs || [] });
+    const filter = buildServiceRequestListQueryFilter({
+      statusParam,
+      unidadeFilter: listScope.unidadeFilter
+    });
+
+    return res.json(await buildServiceRequestListResponsePayload({ filter }));
   } catch (err) {
     console.error('[api/servicos/solicitacoes] erro GET', err);
     return res.status(500).json({ error: 'Falha ao listar solicitações', detail: err?.message });
