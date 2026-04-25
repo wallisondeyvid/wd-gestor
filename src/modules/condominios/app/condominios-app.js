@@ -17710,6 +17710,196 @@ app.get('/api/areas-comuns/lista', async (req, res) => {
   }
 });
 
+async function resolveAreaMaterialContextRead({ req, areaId }) {
+  const areaDoc = await CondAreaComum.findById(areaId).lean();
+  if (!areaDoc) return { status: 404, error: 'Área comum não encontrada' };
+
+  const unidadeDoc = areaDoc.unidade_id ? await unidadesReadRepoFromReq(req).findById(areaDoc.unidade_id) : null;
+  const unidadePayload = unidadeDoc ? buildUnidadePayload(unidadeDoc) : null;
+  const areaPayload = buildAreaContextPayload(areaDoc, unidadePayload);
+
+  const materiaisOrigemDocs = await CondBemMaterial.find({ 'vinculo_area.area_id': areaDoc._id, ativa: { $ne: false } })
+    .select('_id unidade_id natureza_id serie tipo descricao vinculo_area createdAt updatedAt')
+    .lean();
+  const materialMap = new Map();
+  materiaisOrigemDocs.forEach(doc => {
+    if(doc && doc._id){
+      materialMap.set(String(doc._id), doc);
+    }
+  });
+
+  const destinosDocs = await CondAreaComum.find({ unidade_id: areaDoc.unidade_id, _id: { $ne: areaDoc._id } })
+    .select('_id nome unidade_id codigo')
+    .lean();
+
+  const areaMap = new Map();
+  if (areaPayload) areaMap.set(areaPayload._id, areaPayload);
+
+  const destinos = [];
+  destinosDocs.forEach(doc => {
+    const destinoPayload = buildDestinoPayload(doc, unidadePayload);
+    if(destinoPayload) destinos.push(destinoPayload);
+    const ctxPayload = buildAreaContextPayload(doc, unidadePayload);
+    if(ctxPayload) areaMap.set(ctxPayload._id, ctxPayload);
+  });
+
+  return {
+    areaDoc,
+    areaPayload,
+    unidadePayload,
+    materiaisOrigemDocs,
+    materialMap,
+    areaMap,
+    destinos,
+  };
+}
+
+async function resolveAreaMaterialPendingTransferRead({ areaDoc, unidadePayload, materialMap, areaMap }) {
+  const transferDocs = await CondMaterialTransferencia.find({
+    status: 'pendente',
+    $or: [
+      { origem_area_id: areaDoc._id },
+      { destino_area_id: areaDoc._id }
+    ]
+  }).lean();
+
+  const transferMaterialIds = new Set();
+  transferDocs.forEach(tr => {
+    if(tr && tr.material_id){
+      transferMaterialIds.add(String(tr.material_id));
+    }
+  });
+  const missingMaterialIds = [...transferMaterialIds].filter(id => !materialMap.has(id));
+  if(missingMaterialIds.length){
+    const extraMaterials = await CondBemMaterial.find({ _id: { $in: missingMaterialIds } })
+      .select('_id unidade_id natureza_id serie tipo descricao vinculo_area createdAt updatedAt')
+      .lean();
+    extraMaterials.forEach(doc => {
+      if(doc && doc._id){
+        materialMap.set(String(doc._id), doc);
+      }
+    });
+  }
+
+  const transferAreaIds = new Set();
+  transferDocs.forEach(tr => {
+    if(tr && tr.origem_area_id){
+      const origemId = String(tr.origem_area_id);
+      if(!areaMap.has(origemId)) transferAreaIds.add(origemId);
+    }
+    if(tr && tr.destino_area_id){
+      const destinoId = String(tr.destino_area_id);
+      if(!areaMap.has(destinoId)) transferAreaIds.add(destinoId);
+    }
+  });
+  if(transferAreaIds.size){
+    const extraAreas = await CondAreaComum.find({ _id: { $in: Array.from(transferAreaIds) } })
+      .select('_id nome unidade_id codigo')
+      .lean();
+    extraAreas.forEach(doc => {
+      if(!doc || !doc._id) return;
+      const ctxPayload = buildAreaContextPayload(doc, unidadePayload);
+      if(ctxPayload) areaMap.set(ctxPayload._id, ctxPayload);
+    });
+  }
+
+  return { transferDocs, materialMap, areaMap };
+}
+
+async function buildAreaMaterialContextResponsePayload({ areaIdParam, areaPayload, unidadePayload, materiaisOrigemDocs, materialMap, areaMap, destinos, transferDocs }) {
+  const allMaterialDocs = Array.from(materialMap.values());
+  const naturezaIds = [...new Set(allMaterialDocs.map(doc => doc && doc.natureza_id ? String(doc.natureza_id) : null).filter(Boolean))];
+  const naturezas = naturezaIds.length ? await CondNatMaterial.find({ _id: { $in: naturezaIds } }).select('_id nome tipo').lean() : [];
+  const naturezaMap = new Map(naturezas.map(n => [String(n._id), { _id: String(n._id), nome: n && n.nome ? n.nome : '', tipo: n && n.tipo ? n.tipo : '' }]));
+  const unidadeMap = new Map();
+  if(unidadePayload) unidadeMap.set(String(unidadePayload._id), unidadePayload);
+
+  const areaId = areaPayload ? String(areaPayload._id) : areaIdParam;
+  const pendentesOrigemIds = new Set(
+    transferDocs
+      .filter(tr => tr && tr.origem_area_id && String(tr.origem_area_id) === areaId)
+      .map(tr => String(tr.material_id))
+  );
+
+  const materiaisArea = materiaisOrigemDocs
+    .filter(doc => {
+      const idStr = doc && doc._id ? String(doc._id) : '';
+      if(!idStr) return true;
+      return !pendentesOrigemIds.has(idStr);
+    })
+    .map(doc => buildMaterialSnapshot(doc, { naturezaMap, unidadeMap, areaMap }))
+    .filter(Boolean);
+
+  const compareByNome = (a, b) => {
+    const nomeA = (a && a.nome) ? String(a.nome) : '';
+    const nomeB = (b && b.nome) ? String(b.nome) : '';
+    return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base' });
+  };
+
+  materiaisArea.sort((a, b) => {
+    const nomeCmp = compareByNome(a, b);
+    if(nomeCmp !== 0) return nomeCmp;
+    const patA = (a && a.patrimonio) ? String(a.patrimonio) : '';
+    const patB = (b && b.patrimonio) ? String(b.patrimonio) : '';
+    return patA.localeCompare(patB, 'pt-BR', { sensitivity: 'base' });
+  });
+
+  destinos.sort((a, b) => compareByNome(a, b));
+
+  const materiaisReceber = [];
+  const materiaisTransferidos = [];
+  transferDocs.forEach(tr => {
+    if(!tr || !tr.material_id) return;
+    const materialDoc = materialMap.get(String(tr.material_id));
+    if(!materialDoc) return;
+    const destinoId = tr.destino_area_id ? String(tr.destino_area_id) : '';
+    const origemId = tr.origem_area_id ? String(tr.origem_area_id) : '';
+    let role = '';
+    if(destinoId && destinoId === areaId) role = 'destino';
+    else if(origemId && origemId === areaId) role = 'origem';
+    if(!role) return;
+    const payload = buildTransferMaterialSnapshot(materialDoc, tr, {
+      naturezaMap,
+      unidadeMap,
+      areaMap,
+      role
+    });
+    if(!payload) return;
+    if(role === 'destino') materiaisReceber.push(payload);
+    else materiaisTransferidos.push(payload);
+  });
+
+  const sortByTransferChrono = list => {
+    list.sort((a, b) => {
+      const getTime = item => {
+        const source = (item && item.transferencia && item.transferencia.atualizadoEm)
+          || item.transferenciaAtualizadaEm
+          || item.atualizadoEm;
+        const parsed = source ? Date.parse(source) : 0;
+        if(Number.isNaN(parsed)) return 0;
+        return parsed;
+      };
+      const diff = getTime(b) - getTime(a);
+      if(diff !== 0) return diff;
+      return compareByNome(a, b);
+    });
+  };
+
+  sortByTransferChrono(materiaisReceber);
+  sortByTransferChrono(materiaisTransferidos);
+
+  return {
+    area: areaPayload,
+    unidade: unidadePayload,
+    areaId: areaPayload ? areaPayload._id : null,
+    unidadeId: unidadePayload ? unidadePayload._id : null,
+    materiaisArea,
+    materiaisReceber,
+    materiaisTransferidos,
+    destinos
+  };
+}
+
 app.get('/api/areas-comuns/:id/materiais/contexto', async (req, res) => {
   const areaIdParam = req.params && req.params.id ? String(req.params.id) : '';
   const secaoRaw = req.query && req.query.secao ? String(req.query.secao) : '';
@@ -17717,186 +17907,96 @@ app.get('/api/areas-comuns/:id/materiais/contexto', async (req, res) => {
   const secao = secaoRaw ? secaoRaw.toLowerCase() : '';
   try{
     if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error: 'Banco indisponível, tente novamente' }); }
-    const areaDoc = await CondAreaComum.findById(areaIdParam).lean();
-    if(!areaDoc) return res.status(404).json({ error: 'Área comum não encontrada' });
+    const areaResolution = await resolveAreaMaterialContextRead({ req, areaId: areaIdParam });
+    if(areaResolution.error) return res.status(areaResolution.status).json({ error: areaResolution.error });
+    const { areaDoc, areaPayload, unidadePayload, materiaisOrigemDocs, materialMap, areaMap, destinos } = areaResolution;
     if(secao === 'logs'){
       const logs = await buildMaterialLogsForArea(areaDoc, unidadesReadRepoFromReq(req));
       return res.json({ logs });
     }
-    const unidadeDoc = areaDoc.unidade_id ? await unidadesReadRepoFromReq(req).findById(areaDoc.unidade_id) : null;
-    const unidadePayload = unidadeDoc ? buildUnidadePayload(unidadeDoc) : null;
-    const areaPayload = buildAreaContextPayload(areaDoc, unidadePayload);
-
-    const materiaisOrigemDocs = await CondBemMaterial.find({ 'vinculo_area.area_id': areaDoc._id, ativa: { $ne: false } })
-      .select('_id unidade_id natureza_id serie tipo descricao vinculo_area createdAt updatedAt')
-      .lean();
-    const materialMap = new Map();
-    materiaisOrigemDocs.forEach(doc => {
-      if(doc && doc._id){
-        materialMap.set(String(doc._id), doc);
-      }
+    const pendingTransferRead = await resolveAreaMaterialPendingTransferRead({
+      areaDoc,
+      unidadePayload,
+      materialMap,
+      areaMap,
     });
+    const { transferDocs } = pendingTransferRead;
 
-    const destinosDocs = await CondAreaComum.find({ unidade_id: areaDoc.unidade_id, _id: { $ne: areaDoc._id } })
-      .select('_id nome unidade_id codigo')
-      .lean();
-
-    const transferDocs = await CondMaterialTransferencia.find({
-      status: 'pendente',
-      $or: [
-        { origem_area_id: areaDoc._id },
-        { destino_area_id: areaDoc._id }
-      ]
-    }).lean();
-
-    const transferMaterialIds = new Set();
-    transferDocs.forEach(tr => {
-      if(tr && tr.material_id){
-        transferMaterialIds.add(String(tr.material_id));
-      }
-    });
-    const missingMaterialIds = [...transferMaterialIds].filter(id => !materialMap.has(id));
-    if(missingMaterialIds.length){
-      const extraMaterials = await CondBemMaterial.find({ _id: { $in: missingMaterialIds } })
-        .select('_id unidade_id natureza_id serie tipo descricao vinculo_area createdAt updatedAt')
-        .lean();
-      extraMaterials.forEach(doc => {
-        if(doc && doc._id){
-          materialMap.set(String(doc._id), doc);
-        }
-      });
-    }
-
-    const allMaterialDocs = Array.from(materialMap.values());
-    const naturezaIds = [...new Set(allMaterialDocs.map(doc => doc && doc.natureza_id ? String(doc.natureza_id) : null).filter(Boolean))];
-    const naturezas = naturezaIds.length ? await CondNatMaterial.find({ _id: { $in: naturezaIds } }).select('_id nome tipo').lean() : [];
-    const naturezaMap = new Map(naturezas.map(n => [String(n._id), { _id: String(n._id), nome: n && n.nome ? n.nome : '', tipo: n && n.tipo ? n.tipo : '' }]));
-    const unidadeMap = new Map();
-    if(unidadePayload) unidadeMap.set(String(unidadePayload._id), unidadePayload);
-    const areaMap = new Map();
-    if(areaPayload) areaMap.set(areaPayload._id, areaPayload);
-
-    const destinos = [];
-    destinosDocs.forEach(doc => {
-      const destinoPayload = buildDestinoPayload(doc, unidadePayload);
-      if(destinoPayload) destinos.push(destinoPayload);
-      const ctxPayload = buildAreaContextPayload(doc, unidadePayload);
-      if(ctxPayload) areaMap.set(ctxPayload._id, ctxPayload);
-    });
-
-    const transferAreaIds = new Set();
-    transferDocs.forEach(tr => {
-      if(tr && tr.origem_area_id){
-        const origemId = String(tr.origem_area_id);
-        if(!areaMap.has(origemId)) transferAreaIds.add(origemId);
-      }
-      if(tr && tr.destino_area_id){
-        const destinoId = String(tr.destino_area_id);
-        if(!areaMap.has(destinoId)) transferAreaIds.add(destinoId);
-      }
-    });
-    if(transferAreaIds.size){
-      const extraAreas = await CondAreaComum.find({ _id: { $in: Array.from(transferAreaIds) } })
-        .select('_id nome unidade_id codigo')
-        .lean();
-      extraAreas.forEach(doc => {
-        if(!doc || !doc._id) return;
-        const ctxPayload = buildAreaContextPayload(doc, unidadePayload);
-        if(ctxPayload) areaMap.set(ctxPayload._id, ctxPayload);
-      });
-    }
-
-    const areaId = areaPayload ? String(areaPayload._id) : areaIdParam;
-    const pendentesOrigemIds = new Set(
-      transferDocs
-        .filter(tr => tr && tr.origem_area_id && String(tr.origem_area_id) === areaId)
-        .map(tr => String(tr.material_id))
-    );
-
-    const materiaisArea = materiaisOrigemDocs
-      .filter(doc => {
-        const idStr = doc && doc._id ? String(doc._id) : '';
-        if(!idStr) return true;
-        return !pendentesOrigemIds.has(idStr);
-      })
-      .map(doc => buildMaterialSnapshot(doc, { naturezaMap, unidadeMap, areaMap }))
-      .filter(Boolean);
-
-    const compareByNome = (a, b) => {
-      const nomeA = (a && a.nome) ? String(a.nome) : '';
-      const nomeB = (b && b.nome) ? String(b.nome) : '';
-      return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base' });
-    };
-
-    materiaisArea.sort((a, b) => {
-      const nomeCmp = compareByNome(a, b);
-      if(nomeCmp !== 0) return nomeCmp;
-      const patA = (a && a.patrimonio) ? String(a.patrimonio) : '';
-      const patB = (b && b.patrimonio) ? String(b.patrimonio) : '';
-      return patA.localeCompare(patB, 'pt-BR', { sensitivity: 'base' });
-    });
-
-    destinos.sort((a, b) => compareByNome(a, b));
-
-    const materiaisReceber = [];
-    const materiaisTransferidos = [];
-
-    transferDocs.forEach(tr => {
-      if(!tr || !tr.material_id) return;
-      const materialDoc = materialMap.get(String(tr.material_id));
-      if(!materialDoc) return;
-      const destinoId = tr.destino_area_id ? String(tr.destino_area_id) : '';
-      const origemId = tr.origem_area_id ? String(tr.origem_area_id) : '';
-      let role = '';
-      if(destinoId && destinoId === areaId) role = 'destino';
-      else if(origemId && origemId === areaId) role = 'origem';
-      if(!role) return;
-      const payload = buildTransferMaterialSnapshot(materialDoc, tr, {
-        naturezaMap,
-        unidadeMap,
-        areaMap,
-        role
-      });
-      if(!payload) return;
-      if(role === 'destino') materiaisReceber.push(payload);
-      else materiaisTransferidos.push(payload);
-    });
-
-    const sortByTransferChrono = list => {
-      list.sort((a, b) => {
-        const getTime = item => {
-          const source = (item && item.transferencia && item.transferencia.atualizadoEm)
-            || item.transferenciaAtualizadaEm
-            || item.atualizadoEm;
-          const parsed = source ? Date.parse(source) : 0;
-          if(Number.isNaN(parsed)) return 0;
-          return parsed;
-        };
-        const diff = getTime(b) - getTime(a);
-        if(diff !== 0) return diff;
-        return compareByNome(a, b);
-      });
-    };
-
-    sortByTransferChrono(materiaisReceber);
-    sortByTransferChrono(materiaisTransferidos);
-
-    return res.json({
-      area: areaPayload,
-      unidade: unidadePayload,
-      areaId: areaPayload ? areaPayload._id : null,
-      unidadeId: unidadePayload ? unidadePayload._id : null,
-      materiaisArea,
-      materiaisReceber,
-      materiaisTransferidos,
-      destinos
-    });
+    return res.json(await buildAreaMaterialContextResponsePayload({
+      areaIdParam,
+      areaPayload,
+      unidadePayload,
+      materiaisOrigemDocs,
+      materialMap,
+      areaMap,
+      destinos,
+      transferDocs,
+    }));
   }catch(e){
     console.error('[api/areas-comuns/:id/materiais/contexto] GET erro', e);
     const message = e && e.message ? e.message : 'Falha ao carregar contexto de materiais';
     return res.status(500).json({ error: message });
   }
 });
+
+async function resolvePendingMaterialTransferRequest({ areaId, materialId, destinoId }) {
+  const [areaDoc, destinoDoc, materialDoc] = await Promise.all([
+    CondAreaComum.findById(areaId).lean(),
+    CondAreaComum.findById(destinoId).lean(),
+    CondBemMaterial.findById(materialId).lean()
+  ]);
+
+  if (!areaDoc) return { status: 404, error: 'Área de origem não encontrada' };
+  if (!materialDoc) return { status: 404, error: 'Material não encontrado' };
+  if (!destinoDoc) return { status: 404, error: 'Área de destino não encontrada' };
+
+  if (String(destinoDoc._id) === String(areaDoc._id)) {
+    return { status: 400, error: 'Área de destino deve ser diferente da área de origem' };
+  }
+
+  const origemAreaId = materialDoc.vinculo_area && materialDoc.vinculo_area.area_id ? String(materialDoc.vinculo_area.area_id) : null;
+  if (origemAreaId && origemAreaId !== areaId) {
+    return { status: 409, error: 'Material não está vinculado à área informada' };
+  }
+
+  const origemUnidadeId = areaDoc.unidade_id ? String(areaDoc.unidade_id) : null;
+  const destinoUnidadeId = destinoDoc.unidade_id ? String(destinoDoc.unidade_id) : null;
+  if (origemUnidadeId && destinoUnidadeId && origemUnidadeId !== destinoUnidadeId) {
+    return { status: 400, error: 'Área de destino pertence a outro condomínio' };
+  }
+  if (materialDoc.unidade_id && origemUnidadeId && String(materialDoc.unidade_id) !== origemUnidadeId) {
+    return { status: 409, error: 'Material pertence a outro condomínio' };
+  }
+
+  const existingPending = await CondMaterialTransferencia.findOne({
+    material_id: materialDoc._id,
+    status: 'pendente'
+  }).lean();
+  if (existingPending) {
+    return { status: 409, error: 'Este material já possui uma transferência pendente.' };
+  }
+
+  return {
+    areaDoc,
+    destinoDoc,
+    materialDoc,
+    unidadeId: origemUnidadeId || destinoUnidadeId || (materialDoc.unidade_id ? String(materialDoc.unidade_id) : null)
+  };
+}
+
+function buildPendingMaterialTransferResponse(transferDoc) {
+  return {
+    ok: true,
+    transferencia: {
+      id: String(transferDoc._id),
+      materialId: String(transferDoc.material_id),
+      origemId: String(transferDoc.origem_area_id),
+      destinoId: String(transferDoc.destino_area_id),
+      status: transferDoc.status || 'pendente',
+      criadoEm: toIsoString(transferDoc.createdAt)
+    }
+  };
+}
 
 app.post('/api/areas-comuns/:id/materiais/transferencias', express.json({ limit: '1mb' }), async (req, res) => {
   const areaIdParam = req.params && req.params.id ? String(req.params.id) : '';
@@ -17908,38 +18008,16 @@ app.post('/api/areas-comuns/:id/materiais/transferencias', express.json({ limit:
   }
   try{
     if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error: 'Banco indisponível, tente novamente' }); }
-    const [areaDoc, destinoDoc, materialDoc] = await Promise.all([
-      CondAreaComum.findById(areaIdParam).lean(),
-      CondAreaComum.findById(destinoIdRaw).lean(),
-      CondBemMaterial.findById(materialIdRaw).lean()
-    ]);
-    if(!areaDoc) return res.status(404).json({ error: 'Área de origem não encontrada' });
-    if(!materialDoc) return res.status(404).json({ error: 'Material não encontrado' });
-    if(!destinoDoc) return res.status(404).json({ error: 'Área de destino não encontrada' });
-
-    const origemAreaId = materialDoc.vinculo_area && materialDoc.vinculo_area.area_id ? String(materialDoc.vinculo_area.area_id) : null;
-    if(origemAreaId && origemAreaId !== areaIdParam){
-      return res.status(409).json({ error: 'Material não está vinculado à área informada' });
+    const transferResolution = await resolvePendingMaterialTransferRequest({
+      areaId: areaIdParam,
+      materialId: materialIdRaw,
+      destinoId: destinoIdRaw
+    });
+    if(transferResolution.error){
+      return res.status(transferResolution.status).json({ error: transferResolution.error });
     }
 
-    const origemUnidadeId = areaDoc.unidade_id ? String(areaDoc.unidade_id) : null;
-    const destinoUnidadeId = destinoDoc.unidade_id ? String(destinoDoc.unidade_id) : null;
-    if(origemUnidadeId && destinoUnidadeId && origemUnidadeId !== destinoUnidadeId){
-      return res.status(400).json({ error: 'Área de destino pertence a outro condomínio' });
-    }
-    if(materialDoc.unidade_id && origemUnidadeId && String(materialDoc.unidade_id) !== origemUnidadeId){
-      return res.status(409).json({ error: 'Material pertence a outro condomínio' });
-    }
-
-    const unidadeId = origemUnidadeId || destinoUnidadeId || (materialDoc.unidade_id ? String(materialDoc.unidade_id) : null);
-
-    const existingPending = await CondMaterialTransferencia.findOne({
-      material_id: materialDoc._id,
-      status: 'pendente'
-    }).lean();
-    if(existingPending){
-      return res.status(409).json({ error: 'Este material já possui uma transferência pendente.' });
-    }
+    const { areaDoc, destinoDoc, materialDoc, unidadeId } = transferResolution;
 
     const solicitante = buildActorFromUser(req.user || (req.session && req.session.user) || null);
     const transferDoc = await CondMaterialTransferencia.create({
@@ -17951,23 +18029,133 @@ app.post('/api/areas-comuns/:id/materiais/transferencias', express.json({ limit:
       ...(solicitante ? { solicitante } : {})
     });
 
-    return res.status(201).json({
-      ok: true,
-      transferencia: {
-        id: String(transferDoc._id),
-        materialId: String(transferDoc.material_id),
-        origemId: String(transferDoc.origem_area_id),
-        destinoId: String(transferDoc.destino_area_id),
-        status: transferDoc.status || 'pendente',
-        criadoEm: toIsoString(transferDoc.createdAt)
-      }
-    });
+    return res.status(201).json(buildPendingMaterialTransferResponse(transferDoc));
   }catch(e){
     console.error('[api/areas-comuns/:id/materiais/transferencias] POST erro', e);
     const message = e && e.message ? e.message : 'Falha ao registrar transferência';
     return res.status(500).json({ error: message });
   }
 });
+
+async function resolvePendingMaterialReceiptRequest({ areaId, transferenciaId, materialId }) {
+  const [destinoAreaDoc, transferDoc] = await Promise.all([
+    CondAreaComum.findById(areaId).lean(),
+    CondMaterialTransferencia.findById(transferenciaId)
+  ]);
+  if (!destinoAreaDoc) return { status: 404, error: 'Área de destino não encontrada' };
+  if (!transferDoc) return { status: 404, error: 'Transferência não encontrada' };
+
+  if (String(transferDoc.destino_area_id) !== areaId) {
+    return { status: 409, error: 'A transferência não pertence a esta área' };
+  }
+  if (String(transferDoc.material_id) !== String(materialId)) {
+    return { status: 409, error: 'Material divergente da transferência' };
+  }
+  if (transferDoc.status && transferDoc.status !== 'pendente') {
+    return { status: 409, error: 'Transferência já processada' };
+  }
+
+  const materialDoc = await CondBemMaterial.findById(materialId).lean();
+  if (!materialDoc) return { status: 404, error: 'Material não encontrado' };
+
+  const origemAreaId = transferDoc.origem_area_id ? String(transferDoc.origem_area_id) : '';
+  const unidadeId = transferDoc.unidade_id
+    || (destinoAreaDoc.unidade_id ? String(destinoAreaDoc.unidade_id) : '')
+    || (materialDoc.unidade_id ? String(materialDoc.unidade_id) : '');
+
+  return {
+    destinoAreaDoc,
+    transferDoc,
+    materialDoc,
+    origemAreaId,
+    unidadeId,
+  };
+}
+
+async function applyPendingMaterialReceiptDecision({ isApprove, transferenciaId, materialId, transferDoc, destinoAreaDoc, materialDoc, actor }) {
+  let updatedMaterialDoc = materialDoc;
+  if (isApprove) {
+    const updateSet = {
+      'vinculo_area.area_id': transferDoc.destino_area_id,
+      'vinculo_area.unidade_id': transferDoc.unidade_id || destinoAreaDoc.unidade_id || materialDoc.unidade_id || null
+    };
+    updatedMaterialDoc = await CondBemMaterial.findByIdAndUpdate(
+      materialId,
+      { $set: updateSet },
+      { new: true, runValidators: true, timestamps: true }
+    ).lean();
+    if (!updatedMaterialDoc) return { status: 500, error: 'Falha ao atualizar o material' };
+  }
+
+  const now = new Date();
+  const transferUpdate = {
+    status: isApprove ? 'aceito' : 'recusado'
+  };
+  if (isApprove) {
+    transferUpdate.aceite = actor || null;
+    transferUpdate.aceite_em = now;
+  } else {
+    transferUpdate.cancelado = actor || null;
+    transferUpdate.cancelado_em = now;
+  }
+
+  const updatedTransfer = await CondMaterialTransferencia.findByIdAndUpdate(
+    transferenciaId,
+    { $set: transferUpdate },
+    { new: true }
+  ).lean();
+
+  return {
+    updatedMaterialDoc,
+    updatedTransfer,
+    now,
+  };
+}
+
+async function buildPendingMaterialReceiptResponsePayload({ req, updatedTransfer, updatedMaterialDoc, origemAreaId, destinoAreaDoc, unidadeId, now }) {
+  const origemAreaDocPromise = origemAreaId ? CondAreaComum.findById(origemAreaId).lean() : Promise.resolve(null);
+  const unidadeDocPromise = unidadeId ? unidadesReadRepoFromReq(req).findById(unidadeId) : Promise.resolve(null);
+  const [origemAreaDoc, unidadeDoc] = await Promise.all([origemAreaDocPromise, unidadeDocPromise]);
+
+  const unidadePayload = unidadeDoc ? buildUnidadePayload(unidadeDoc) : null;
+  const areaMap = new Map();
+  if (origemAreaDoc) {
+    const payload = buildAreaContextPayload(origemAreaDoc, unidadePayload);
+    if (payload) areaMap.set(payload._id, payload);
+  }
+  const destinoPayload = buildAreaContextPayload(destinoAreaDoc, unidadePayload);
+  if (destinoPayload) areaMap.set(destinoPayload._id, destinoPayload);
+
+  const naturezaId = updatedMaterialDoc && updatedMaterialDoc.natureza_id ? String(updatedMaterialDoc.natureza_id) : null;
+  const naturezaDoc = naturezaId ? await CondNatMaterial.findById(naturezaId).select('_id nome tipo').lean() : null;
+  const naturezaMap = new Map();
+  if (naturezaDoc) {
+    naturezaMap.set(String(naturezaDoc._id), {
+      _id: String(naturezaDoc._id),
+      nome: naturezaDoc.nome || '',
+      tipo: naturezaDoc.tipo || ''
+    });
+  }
+  const unidadeMap = new Map();
+  if (unidadePayload) unidadeMap.set(String(unidadePayload._id), unidadePayload);
+
+  const materialPayload = buildMaterialSnapshot(updatedMaterialDoc, { naturezaMap, unidadeMap, areaMap });
+
+  return {
+    ok: true,
+    transferencia: {
+      id: String(updatedTransfer._id),
+      status: updatedTransfer.status,
+      materialId: String(updatedTransfer.material_id),
+      origemId: String(updatedTransfer.origem_area_id),
+      destinoId: String(updatedTransfer.destino_area_id),
+      atualizadoEm: toIsoString(updatedTransfer.updatedAt || now),
+      aceiteEm: updatedTransfer.aceite_em ? toIsoString(updatedTransfer.aceite_em) : null,
+      canceladoEm: updatedTransfer.cancelado_em ? toIsoString(updatedTransfer.cancelado_em) : null
+    },
+    material: materialPayload
+  };
+}
 
 app.post('/api/areas-comuns/:id/materiais/recebimentos', express.json({ limit: '1mb' }), async (req, res) => {
   const areaIdParam = req.params && req.params.id ? String(req.params.id) : '';
@@ -17986,107 +18174,40 @@ app.post('/api/areas-comuns/:id/materiais/recebimentos', express.json({ limit: '
   }
   try{
     if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error: 'Banco indisponível, tente novamente' }); }
-
-    const [destinoAreaDoc, transferDoc] = await Promise.all([
-      CondAreaComum.findById(areaIdParam).lean(),
-      CondMaterialTransferencia.findById(transferenciaIdRaw)
-    ]);
-    if(!destinoAreaDoc) return res.status(404).json({ error: 'Área de destino não encontrada' });
-    if(!transferDoc) return res.status(404).json({ error: 'Transferência não encontrada' });
-
-    if(String(transferDoc.destino_area_id) !== areaIdParam){
-      return res.status(409).json({ error: 'A transferência não pertence a esta área' });
-    }
-    if(String(transferDoc.material_id) !== String(materialIdRaw)){
-      return res.status(409).json({ error: 'Material divergente da transferência' });
-    }
-    if(transferDoc.status && transferDoc.status !== 'pendente'){
-      return res.status(409).json({ error: 'Transferência já processada' });
-    }
-
-    const materialDoc = await CondBemMaterial.findById(materialIdRaw).lean();
-    if(!materialDoc) return res.status(404).json({ error: 'Material não encontrado' });
-
-    const origemAreaId = transferDoc.origem_area_id ? String(transferDoc.origem_area_id) : '';
-    const origemAreaDocPromise = origemAreaId ? CondAreaComum.findById(origemAreaId).lean() : Promise.resolve(null);
-    const unidadeId = transferDoc.unidade_id
-      || (destinoAreaDoc.unidade_id ? String(destinoAreaDoc.unidade_id) : '')
-      || (materialDoc.unidade_id ? String(materialDoc.unidade_id) : '');
-    const unidadeDocPromise = unidadeId ? unidadesReadRepoFromReq(req).findById(unidadeId) : Promise.resolve(null);
-
-    let updatedMaterialDoc = materialDoc;
-    if(isApprove){
-      const updateSet = {
-        'vinculo_area.area_id': transferDoc.destino_area_id,
-        'vinculo_area.unidade_id': transferDoc.unidade_id || destinoAreaDoc.unidade_id || materialDoc.unidade_id || null
-      };
-      updatedMaterialDoc = await CondBemMaterial.findByIdAndUpdate(
-        materialIdRaw,
-        { $set: updateSet },
-        { new: true, runValidators: true, timestamps: true }
-      ).lean();
-      if(!updatedMaterialDoc) return res.status(500).json({ error: 'Falha ao atualizar o material' });
-    }
-
-    const actor = buildActorFromUser(req.user || (req.session && req.session.user) || null);
-    const now = new Date();
-    const transferUpdate = {
-      status: isApprove ? 'aceito' : 'recusado'
-    };
-    if(isApprove){
-      transferUpdate.aceite = actor || null;
-      transferUpdate.aceite_em = now;
-    } else {
-      transferUpdate.cancelado = actor || null;
-      transferUpdate.cancelado_em = now;
-    }
-
-    const updatedTransfer = await CondMaterialTransferencia.findByIdAndUpdate(
-      transferenciaIdRaw,
-      { $set: transferUpdate },
-      { new: true }
-    ).lean();
-
-    const [origemAreaDoc, unidadeDoc] = await Promise.all([origemAreaDocPromise, unidadeDocPromise]);
-
-    const unidadePayload = unidadeDoc ? buildUnidadePayload(unidadeDoc) : null;
-    const areaMap = new Map();
-    if(origemAreaDoc){
-      const payload = buildAreaContextPayload(origemAreaDoc, unidadePayload);
-      if(payload) areaMap.set(payload._id, payload);
-    }
-    const destinoPayload = buildAreaContextPayload(destinoAreaDoc, unidadePayload);
-    if(destinoPayload) areaMap.set(destinoPayload._id, destinoPayload);
-
-    const naturezaId = updatedMaterialDoc && updatedMaterialDoc.natureza_id ? String(updatedMaterialDoc.natureza_id) : null;
-    const naturezaDoc = naturezaId ? await CondNatMaterial.findById(naturezaId).select('_id nome tipo').lean() : null;
-    const naturezaMap = new Map();
-    if(naturezaDoc){
-      naturezaMap.set(String(naturezaDoc._id), {
-        _id: String(naturezaDoc._id),
-        nome: naturezaDoc.nome || '',
-        tipo: naturezaDoc.tipo || ''
-      });
-    }
-    const unidadeMap = new Map();
-    if(unidadePayload) unidadeMap.set(String(unidadePayload._id), unidadePayload);
-
-    const materialPayload = buildMaterialSnapshot(updatedMaterialDoc, { naturezaMap, unidadeMap, areaMap });
-
-    return res.json({
-      ok: true,
-      transferencia: {
-        id: String(updatedTransfer._id),
-        status: updatedTransfer.status,
-        materialId: String(updatedTransfer.material_id),
-        origemId: String(updatedTransfer.origem_area_id),
-        destinoId: String(updatedTransfer.destino_area_id),
-        atualizadoEm: toIsoString(updatedTransfer.updatedAt || now),
-        aceiteEm: updatedTransfer.aceite_em ? toIsoString(updatedTransfer.aceite_em) : null,
-        canceladoEm: updatedTransfer.cancelado_em ? toIsoString(updatedTransfer.cancelado_em) : null
-      },
-      material: materialPayload
+    const receiptResolution = await resolvePendingMaterialReceiptRequest({
+      areaId: areaIdParam,
+      transferenciaId: transferenciaIdRaw,
+      materialId: materialIdRaw
     });
+    if(receiptResolution.error){
+      return res.status(receiptResolution.status).json({ error: receiptResolution.error });
+    }
+
+    const { destinoAreaDoc, transferDoc, materialDoc, origemAreaId, unidadeId } = receiptResolution;
+    const actor = buildActorFromUser(req.user || (req.session && req.session.user) || null);
+    const receiptDecision = await applyPendingMaterialReceiptDecision({
+      isApprove,
+      transferenciaId: transferenciaIdRaw,
+      materialId: materialIdRaw,
+      transferDoc,
+      destinoAreaDoc,
+      materialDoc,
+      actor
+    });
+    if(receiptDecision.error){
+      return res.status(receiptDecision.status).json({ error: receiptDecision.error });
+    }
+
+    const { updatedMaterialDoc, updatedTransfer, now } = receiptDecision;
+    return res.json(await buildPendingMaterialReceiptResponsePayload({
+      req,
+      updatedTransfer,
+      updatedMaterialDoc,
+      origemAreaId,
+      destinoAreaDoc,
+      unidadeId,
+      now
+    }));
   }catch(e){
     console.error('[api/areas-comuns/:id/materiais/recebimentos] POST erro', e);
     const message = e && e.message ? e.message : 'Falha ao processar recebimento';
