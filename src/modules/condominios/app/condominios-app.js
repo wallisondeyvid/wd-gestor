@@ -24440,71 +24440,108 @@ app.post('/api/comunicados/upload', express.json({ limit: '10mb' }), async (req,
   }
 });
 
+function resolveComunicadoRestricaoHabitacoesScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { user, unidadeId };
+}
+
+async function readComunicadoRestricaoHabitacoesMainList({ unidadeId }) {
+  return CondHabitacao.find({ unidade_id: unidadeId })
+    .select('_id bloco_id andar_id numero tipo')
+    .sort({ numero: 1 })
+    .limit(5000)
+    .lean();
+}
+
+async function readComunicadoRestricaoHabitacoesSupportData({ req, unidadeId, habs }) {
+  const unidadeDocPromise = unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'nome' });
+  const blocoIds = [...new Set((habs || []).map(h => h?.bloco_id).filter(Boolean))];
+  const andarIds = [...new Set((habs || []).map(h => h?.andar_id).filter(Boolean))];
+
+  const [unidadeDoc, blocos, andares] = await Promise.all([
+    unidadeDocPromise,
+    blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
+    andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
+  ]);
+
+  return {
+    condominioNome: String(unidadeDoc?.nome || '').trim(),
+    blocoMap: new Map((blocos || []).map(b => [String(b._id), String(b.nome || '').trim()])),
+    andarMap: new Map((andares || []).map(a => [String(a._id), String(a.nome || '').trim()]))
+  };
+}
+
+function buildComunicadoRestricaoHabitacoesResponse({ habs, condominioNome, blocoMap, andarMap }) {
+  const formatBloco = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    return /^bloco\b/i.test(s) ? s : `Bloco ${s}`;
+  };
+  const formatTipo = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  const data = (Array.isArray(habs) ? habs : []).map(h => {
+    const blocoNome = h?.bloco_id ? (blocoMap.get(String(h.bloco_id)) || '') : '';
+    const andarNome = h?.andar_id ? (andarMap.get(String(h.andar_id)) || '') : '';
+    const num = String(h?.numero || '').trim();
+    const tipo = formatTipo(h?.tipo);
+    const blocoPart = formatBloco(blocoNome);
+    const tipoNum = (tipo && num) ? `${tipo} ${num}` : (tipo || (num ? `Hab ${num}` : ''));
+    const parts = [blocoPart, andarNome, tipoNum].filter(Boolean);
+    const label = parts.join(' - ') || (num ? `Hab ${num}` : 'Habitação');
+    return {
+      value: String(h._id),
+      label,
+      condominioNome,
+      habitacao: {
+        bloco: blocoPart,
+        andar: andarNome,
+        tipo,
+        numero: num
+      }
+    };
+  });
+
+  return { ok: true, data };
+}
+
 // API: listas para restrições (UI de comunicados)
 app.get('/api/comunicados/restricoes/habitacoes', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveComunicadoRestricaoHabitacoesScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const unidadeDoc = await unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'nome' });
-    const condominioNome = String(unidadeDoc?.nome || '').trim();
-
-    const habs = await CondHabitacao.find({ unidade_id: unidadeId })
-      .select('_id bloco_id andar_id numero tipo')
-      .sort({ numero: 1 })
-      .limit(5000)
-      .lean();
-
-    const blocoIds = [...new Set((habs || []).map(h => h?.bloco_id).filter(Boolean))];
-    const andarIds = [...new Set((habs || []).map(h => h?.andar_id).filter(Boolean))];
-    const [blocos, andares] = await Promise.all([
-      blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
-      andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
-    ]);
-    const blocoMap = new Map((blocos || []).map(b => [String(b._id), String(b.nome || '').trim()]));
-    const andarMap = new Map((andares || []).map(a => [String(a._id), String(a.nome || '').trim()]));
-
-    const formatBloco = (raw) => {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      return /^bloco\b/i.test(s) ? s : `Bloco ${s}`;
-    };
-    const formatTipo = (raw) => {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    };
-
-    const data = (Array.isArray(habs) ? habs : []).map(h => {
-      const blocoNome = h?.bloco_id ? (blocoMap.get(String(h.bloco_id)) || '') : '';
-      const andarNome = h?.andar_id ? (andarMap.get(String(h.andar_id)) || '') : '';
-      const num = String(h?.numero || '').trim();
-      const tipo = formatTipo(h?.tipo);
-      const blocoPart = formatBloco(blocoNome);
-      const tipoNum = (tipo && num) ? `${tipo} ${num}` : (tipo || (num ? `Hab ${num}` : ''));
-      const parts = [blocoPart, andarNome, tipoNum].filter(Boolean);
-      const label = parts.join(' - ') || (num ? `Hab ${num}` : 'Habitação');
-      return {
-        value: String(h._id),
-        label,
-        condominioNome,
-        habitacao: {
-          bloco: blocoPart,
-          andar: andarNome,
-          tipo,
-          numero: num
-        }
-      };
+    const habs = await readComunicadoRestricaoHabitacoesMainList({ unidadeId: scopeResolution.unidadeId });
+    const supportData = await readComunicadoRestricaoHabitacoesSupportData({
+      req,
+      unidadeId: scopeResolution.unidadeId,
+      habs
     });
 
-    return res.json({ ok: true, data });
+    return res.json(buildComunicadoRestricaoHabitacoesResponse({
+      habs,
+      condominioNome: supportData.condominioNome,
+      blocoMap: supportData.blocoMap,
+      andarMap: supportData.andarMap
+    }));
   } catch (err) {
     console.error('[condominios][api/comunicados/restricoes/habitacoes] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
