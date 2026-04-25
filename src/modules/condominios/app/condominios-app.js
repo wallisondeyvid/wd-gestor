@@ -928,7 +928,7 @@ app.get('/api/usuarios/foto', async (req, res) => {
     } catch { /* noop */ }
 
     // 1) Resolve por e-mail (quando houver)
-    if (email) {
+    if (!foto && email) {
       try {
         const userDoc = await User.findOne({ email }).select('_id foto fotoUrl foto_url photo avatar avatarUrl avatar_url').lean();
         if (userDoc && userDoc._id) {
@@ -1274,18 +1274,21 @@ app.get('/api/unidades/:id/logo', async (req, res) => {
         const ctl = new AbortController();
         const t = setTimeout(() => ctl.abort(), 4500);
         if (typeof t?.unref === 'function') t.unref();
-        const r = await fetch(logo, { signal: ctl.signal, redirect: 'follow' });
-        clearTimeout(t);
-        if (!r.ok) throw new Error('fetch externo falhou: ' + r.status);
+        try {
+          const r = await fetch(logo, { signal: ctl.signal, redirect: 'follow' });
+          if (!r.ok) throw new Error('fetch externo falhou: ' + r.status);
 
-        const ct = String(r.headers.get('content-type') || '').trim() || 'image/*';
-        // limite simples para evitar respostas gigantes
-        const buf = Buffer.from(await r.arrayBuffer());
-        if (buf.length > 8 * 1024 * 1024) throw new Error('logo externa muito grande');
+          const ct = String(r.headers.get('content-type') || '').trim() || 'image/*';
+          // limite simples para evitar respostas gigantes
+          const buf = Buffer.from(await r.arrayBuffer());
+          if (buf.length > 8 * 1024 * 1024) throw new Error('logo externa muito grande');
 
-        res.set('Content-Type', ct);
-        res.set('Cache-Control', 'public, max-age=300');
-        return res.send(buf);
+          res.set('Content-Type', ct);
+          res.set('Cache-Control', 'public, max-age=300');
+          return res.send(buf);
+        } finally {
+          clearTimeout(t);
+        }
       } catch (e) {
         console.warn('[condominios][logo] proxy externo falhou:', e?.message || e);
         // cai para placeholder abaixo
@@ -1426,8 +1429,9 @@ app.get('/api/dirigencia/:unidadeId/state', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Unidade inválida' });
     }
 
-    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-    const allowed = userCanScopeAll(ctxUser)
+    const canScopeAll = userCanScopeAll(ctxUser);
+    const unidadesOptions = canScopeAll ? [] : await listarUnidadesParaUsuario(ctxUser);
+    const allowed = canScopeAll
       || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId, unidadesReadRepoFromReq(req)))
       || (unidadesOptions || []).some(u => String(u?._id || '') === String(unidadeId));
     if (!allowed) return res.status(403).json({ success: false, error: 'Acesso negado' });
@@ -1848,8 +1852,9 @@ app.get('/api/dirigencia/:unidadeId/mandatos/ativos', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Unidade inválida' });
     }
 
-    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-    const allowed = userCanScopeAll(ctxUser)
+    const canScopeAll = userCanScopeAll(ctxUser);
+    const unidadesOptions = canScopeAll ? [] : await listarUnidadesParaUsuario(ctxUser);
+    const allowed = canScopeAll
       || (await userCanEditDirigenciaForUnidade(ctxUser, unidadeId, unidadesReadRepoFromReq(req)))
       || (unidadesOptions || []).some(u => String(u?._id || '') === String(unidadeId));
     if (!allowed) return res.status(403).json({ success: false, error: 'Acesso negado' });
@@ -12654,8 +12659,7 @@ async function handleGetAndaresV1(req, res, _next) {
     const payload = await listarAndaresService({
       req,
       mongoose,
-      listarUnidadesParaUsuario,
-      CondAndar
+      listarUnidadesParaUsuario
     });
     return res.json(payload);
   } catch(e){
@@ -15743,6 +15747,7 @@ function buildGarageSearchResponse(list) {
   const unidadeMap = new Map((list.unidades || []).map(u => [String(u._id), u]));
   return (list.vagas || []).map(v => ({
     _id: v._id,
+    unidade_id: v.unidade_id || null,
     unidade: unidadeMap.get(String(v.unidade_id)) || { _id: v.unidade_id },
     nome: v.nome,
     link_type: v.link_type || '',
@@ -19381,6 +19386,7 @@ app.get('/api/materiais/busca', async (req, res) => {
       }
       return {
         _id: doc._id,
+        unidade_id: doc.unidade_id || null,
         unidade: unidadeDoc,
         tipo: doc.tipo,
         natureza: naturezaDoc ? { _id: naturezaDoc._id, nome: naturezaDoc.nome, tipo: naturezaDoc.tipo, unidade_id: naturezaDoc.unidade_id } : null,
@@ -19552,6 +19558,7 @@ app.get('/api/materiais/:id/qrcode', async (req, res) => {
   try{
     if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error:'Banco indisponível' }); }
     const materialId = req.params.id;
+    if(!isValidObjectId(materialId)) return res.status(400).json({ error:'ID do material inválido' });
     const doc = await CondQRCodeMaterial.findOne({ material_id: materialId }).lean();
     if(!doc) return res.status(404).json({ error:'QR Code não encontrado' });
     return res.json({ _id: doc._id, material_id: doc.material_id, unidade_id: doc.unidade_id, url: doc.url||'', payload: doc.payload||{}, img: doc.img||'', formato: doc.formato||'png', createdAt: doc.createdAt, updatedAt: doc.updatedAt });
@@ -24538,86 +24545,118 @@ app.get('/api/comunicados/restricoes/habitacoes', async (req, res) => {
   }
 });
 
+function resolveComunicadoRestricaoMoradoresScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { user, unidadeId };
+}
+
+async function readComunicadoRestricaoMoradoresMainList({ unidadeId }) {
+  return CondMorador.find({ unidade_id: unidadeId, ativo: { $ne: false } })
+    .select('_id nome cpf email habitacao_id usuario_id cond_usuario_id')
+    .sort({ nome: 1 })
+    .limit(5000)
+    .lean();
+}
+
+async function readComunicadoRestricaoMoradoresSupportData({ moradores }) {
+  const habIds = [...new Set((moradores || []).map(m => m?.habitacao_id).filter(Boolean))];
+  const habs = habIds.length
+    ? await CondHabitacao.find({ _id: { $in: habIds } }).select('_id numero tipo bloco_id andar_id').lean()
+    : [];
+
+  const blocoIds = [...new Set((habs || []).map(h => h?.bloco_id).filter(Boolean))];
+  const andarIds = [...new Set((habs || []).map(h => h?.andar_id).filter(Boolean))];
+  const [blocos, andares] = await Promise.all([
+    blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
+    andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
+  ]);
+
+  return {
+    habMap: new Map((habs || []).map(h => [String(h._id), h])),
+    blocoMap: new Map((blocos || []).map(b => [String(b._id), String(b.nome || '').trim()])),
+    andarMap: new Map((andares || []).map(a => [String(a._id), String(a.nome || '').trim()]))
+  };
+}
+
+function buildComunicadoRestricaoMoradoresResponse({ moradores, habMap, blocoMap, andarMap }) {
+  const formatBloco = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    return /^bloco\b/i.test(s) ? s : `Bloco ${s}`;
+  };
+  const formatTipo = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  const data = (Array.isArray(moradores) ? moradores : []).map(m => {
+    const nome = String(m?.nome || '').trim() || 'Morador';
+    const cpf = String(m?.cpf || '').trim();
+    const email = String(m?.email || '').trim();
+    const habDoc = m?.habitacao_id ? (habMap.get(String(m.habitacao_id)) || null) : null;
+    const blocoNome = habDoc?.bloco_id ? (blocoMap.get(String(habDoc.bloco_id)) || '') : '';
+    const andarNome = habDoc?.andar_id ? (andarMap.get(String(habDoc.andar_id)) || '') : '';
+    const num = String(habDoc?.numero || '').trim();
+    const tipo = formatTipo(habDoc?.tipo);
+    const blocoPart = formatBloco(blocoNome);
+    const tipoNum = (tipo && num) ? `${tipo} ${num}` : (tipo || (num ? `Hab ${num}` : ''));
+    const habLbl = [blocoPart, andarNome, tipoNum].filter(Boolean).join(' - ');
+    const label = [nome, habLbl].filter(Boolean).join(' - ');
+
+    let fotoUrl = '';
+    const uid = (m?.usuario_id && String(m.usuario_id).trim()) ? String(m.usuario_id).trim() : '';
+    const cuid = (m?.cond_usuario_id && String(m.cond_usuario_id).trim()) ? String(m.cond_usuario_id).trim() : '';
+    if (email) fotoUrl = `/api/usuarios/foto?email=${encodeURIComponent(String(email).toLowerCase().trim())}`;
+    else if (cuid) fotoUrl = `/api/usuarios/foto?id=${encodeURIComponent(cuid)}`;
+    else if (uid) fotoUrl = `/api/usuarios/foto?id=${encodeURIComponent(uid)}`;
+
+    const value = email ? String(email).toLowerCase().trim() : (cpf ? String(cpf).replace(/\D/g, '') : String(m._id));
+    return {
+      value,
+      label,
+      fotoUrl,
+      habitacao: {
+        bloco: blocoPart,
+        andar: andarNome,
+        tipo,
+        numero: num
+      }
+    };
+  });
+
+  return { ok: true, data };
+}
+
 app.get('/api/comunicados/restricoes/moradores', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveComunicadoRestricaoMoradoresScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
+    const moradores = await readComunicadoRestricaoMoradoresMainList({ unidadeId: scopeResolution.unidadeId });
+    const supportData = await readComunicadoRestricaoMoradoresSupportData({ moradores });
 
-    const moradores = await CondMorador.find({ unidade_id: unidadeId, ativo: { $ne: false } })
-      .select('_id nome cpf email habitacao_id usuario_id cond_usuario_id')
-      .sort({ nome: 1 })
-      .limit(5000)
-      .lean();
-
-    const habIds = [...new Set((moradores || []).map(m => m?.habitacao_id).filter(Boolean))];
-    const habs = habIds.length
-      ? await CondHabitacao.find({ _id: { $in: habIds } }).select('_id numero tipo bloco_id andar_id').lean()
-      : [];
-
-    const blocoIds = [...new Set((habs || []).map(h => h?.bloco_id).filter(Boolean))];
-    const andarIds = [...new Set((habs || []).map(h => h?.andar_id).filter(Boolean))];
-    const [blocos, andares] = await Promise.all([
-      blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
-      andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
-    ]);
-    const blocoMap = new Map((blocos || []).map(b => [String(b._id), String(b.nome || '').trim()]));
-    const andarMap = new Map((andares || []).map(a => [String(a._id), String(a.nome || '').trim()]));
-    const habMap = new Map((habs || []).map(h => [String(h._id), h]));
-
-    const formatBloco = (raw) => {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      return /^bloco\b/i.test(s) ? s : `Bloco ${s}`;
-    };
-    const formatTipo = (raw) => {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    };
-
-    const data = (Array.isArray(moradores) ? moradores : []).map(m => {
-      const nome = String(m?.nome || '').trim() || 'Morador';
-      const cpf = String(m?.cpf || '').trim();
-      const email = String(m?.email || '').trim();
-      const habDoc = m?.habitacao_id ? (habMap.get(String(m.habitacao_id)) || null) : null;
-      const blocoNome = habDoc?.bloco_id ? (blocoMap.get(String(habDoc.bloco_id)) || '') : '';
-      const andarNome = habDoc?.andar_id ? (andarMap.get(String(habDoc.andar_id)) || '') : '';
-      const num = String(habDoc?.numero || '').trim();
-      const tipo = formatTipo(habDoc?.tipo);
-      const blocoPart = formatBloco(blocoNome);
-      const tipoNum = (tipo && num) ? `${tipo} ${num}` : (tipo || (num ? `Hab ${num}` : ''));
-      const habLbl = [blocoPart, andarNome, tipoNum].filter(Boolean).join(' - ');
-      const label = [nome, habLbl].filter(Boolean).join(' - ');
-
-      let fotoUrl = '';
-      const uid = (m?.usuario_id && String(m.usuario_id).trim()) ? String(m.usuario_id).trim() : '';
-      const cuid = (m?.cond_usuario_id && String(m.cond_usuario_id).trim()) ? String(m.cond_usuario_id).trim() : '';
-      if (email) fotoUrl = `/api/usuarios/foto?email=${encodeURIComponent(String(email).toLowerCase().trim())}`;
-      else if (cuid) fotoUrl = `/api/usuarios/foto?id=${encodeURIComponent(cuid)}`;
-      else if (uid) fotoUrl = `/api/usuarios/foto?id=${encodeURIComponent(uid)}`;
-
-      const value = email ? String(email).toLowerCase().trim() : (cpf ? String(cpf).replace(/\D/g, '') : String(m._id));
-      return {
-        value,
-        label,
-        fotoUrl,
-        habitacao: {
-          bloco: blocoPart,
-          andar: andarNome,
-          tipo,
-          numero: num
-        }
-      };
-    });
-
-    return res.json({ ok: true, data });
+    return res.json(buildComunicadoRestricaoMoradoresResponse({
+      moradores,
+      habMap: supportData.habMap,
+      blocoMap: supportData.blocoMap,
+      andarMap: supportData.andarMap
+    }));
   } catch (err) {
     console.error('[condominios][api/comunicados/restricoes/moradores] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -24626,46 +24665,72 @@ app.get('/api/comunicados/restricoes/moradores', async (req, res) => {
 });
 
 // API: listar comunicados
+function resolveComunicadoListScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  const pageRaw = String(req.query?.page || '1').trim();
+  const limitRaw = String(req.query?.limit || req.query?.pageSize || '9').trim();
+  let page = parseInt(pageRaw, 10);
+  let pageSize = parseInt(limitRaw, 10);
+  if (!Number.isFinite(page) || page < 1) page = 1;
+  if (!Number.isFinite(pageSize) || pageSize < 1) pageSize = 9;
+  if (pageSize > 9) pageSize = 9;
+
+  return { unidadeId, page, pageSize };
+}
+
+async function readComunicadoListPage({ unidadeId, page, pageSize }) {
+  const q = { unidade_id: unidadeId };
+  const total = await CondComunicado.countDocuments(q);
+  const totalPages = total ? Math.ceil(total / pageSize) : 0;
+  const resolvedPage = totalPages && page > totalPages ? totalPages : page;
+  const skip = totalPages ? ((resolvedPage - 1) * pageSize) : 0;
+  const data = await CondComunicado.find(q)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(pageSize)
+    .lean();
+
+  return { data, page: resolvedPage, pageSize, total, totalPages };
+}
+
+function buildComunicadoListResponse({ data, page, pageSize, total, totalPages }) {
+  const now = new Date();
+  const out = (Array.isArray(data) ? data : []).map(d => ({
+    ...d,
+    statusCalc: calcComunicadoStatus(d, now)
+  }));
+
+  return { ok: true, data: out, page, pageSize, total, totalPages };
+}
+
 app.get('/api/comunicados', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveComunicadoListScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
+    const listData = await readComunicadoListPage({
+      unidadeId: scopeResolution.unidadeId,
+      page: scopeResolution.page,
+      pageSize: scopeResolution.pageSize
+    });
 
-    const pageRaw = String(req.query?.page || '1').trim();
-    const limitRaw = String(req.query?.limit || req.query?.pageSize || '9').trim();
-    let page = parseInt(pageRaw, 10);
-    let pageSize = parseInt(limitRaw, 10);
-    if (!Number.isFinite(page) || page < 1) page = 1;
-    if (!Number.isFinite(pageSize) || pageSize < 1) pageSize = 9;
-    if (pageSize > 9) pageSize = 9;
-
-    const q = { unidade_id: unidadeId };
-    const total = await CondComunicado.countDocuments(q);
-    const totalPages = total ? Math.ceil(total / pageSize) : 0;
-    if (totalPages && page > totalPages) page = totalPages;
-
-    const skip = totalPages ? ((page - 1) * pageSize) : 0;
-    const data = await CondComunicado.find(q)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(pageSize)
-      .lean();
-
-    const now = new Date();
-    const out = (Array.isArray(data) ? data : []).map(d => ({
-      ...d,
-      statusCalc: calcComunicadoStatus(d, now)
-    }));
-
-    return res.json({ ok: true, data: out, page, pageSize, total, totalPages });
+    return res.json(buildComunicadoListResponse(listData));
   } catch (err) {
     console.error('[condominios][api/comunicados GET] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -24674,25 +24739,51 @@ app.get('/api/comunicados', async (req, res) => {
 });
 
 // API: obter comunicado
+function resolveComunicadoByIdScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    return { error: { status: 400, body: { error: 'ID inválido' } } };
+  }
+
+  const unidadeQ = String(req.query?.unidade_id || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { id, unidadeId };
+}
+
+async function readComunicadoByIdMainDoc({ id, unidadeId }) {
+  return CondComunicado.findOne({ _id: id, unidade_id: unidadeId }).lean();
+}
+
+function buildComunicadoByIdResponse({ doc }) {
+  return { ok: true, data: { ...doc, statusCalc: calcComunicadoStatus(doc) } };
+}
+
 app.get('/api/comunicados/:id([0-9a-fA-F]{24})', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveComunicadoByIdScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const id = String(req.params.id || '').trim();
-    if (!id) return res.status(400).json({ error: 'ID inválido' });
-
-    const unidadeQ = String(req.query?.unidade_id || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const doc = await CondComunicado.findOne({ _id: id, unidade_id: unidadeId }).lean();
+    const doc = await readComunicadoByIdMainDoc({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
     if (!doc) return res.status(404).json({ error: 'Comunicado não encontrado' });
-    return res.json({ ok: true, data: { ...doc, statusCalc: calcComunicadoStatus(doc) } });
+    return res.json(buildComunicadoByIdResponse({ doc }));
   } catch (err) {
     console.error('[condominios][api/comunicados/:id GET] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -24775,50 +24866,101 @@ app.post('/api/comunicados', express.json({ limit: '220kb' }), async (req, res) 
 });
 
 // API: editar comunicado
+function resolveComunicadoUpdateScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    return { error: { status: 400, body: { error: 'ID inválido' } } };
+  }
+
+  const unidadeIdBody = String(req.body?.unidade_id || '').trim();
+  const unidadeId = scopeAll ? (unidadeIdBody || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { id, unidadeId };
+}
+
+async function readComunicadoUpdateMainDoc({ id, unidadeId }) {
+  return CondComunicado.findOne({ _id: id, unidade_id: unidadeId });
+}
+
+function validateAndNormalizeComunicadoUpdatePayload({ body }) {
+  const ini = new Date(String(body?.vigencia_inicio || ''));
+  const fim = new Date(String(body?.vigencia_fim || ''));
+  if (Number.isNaN(ini.getTime()) || Number.isNaN(fim.getTime())) {
+    return { error: { status: 400, body: { error: 'Vigência inválida' } } };
+  }
+  if (fim <= ini) {
+    return { error: { status: 400, body: { error: 'A data final deve ser maior que a inicial' } } };
+  }
+  const maxEnd = new Date(ini.getTime() + (10 * 24 * 60 * 60 * 1000) + (24 * 60 * 60 * 1000 - 1));
+  if (fim.getTime() > maxEnd.getTime()) {
+    return { error: { status: 400, body: { error: 'A vigência máxima do comunicado é de 10 dias' } } };
+  }
+
+  const mensagem = String(body?.mensagem || '').trim();
+  if (!mensagem) {
+    return { error: { status: 400, body: { error: 'Mensagem é obrigatória' } } };
+  }
+
+  const assunto = String(body?.assunto || '').trim();
+  if (assunto && assunto.length > 140) {
+    return { error: { status: 400, body: { error: 'Assunto muito longo' } } };
+  }
+
+  return {
+    ini,
+    fim,
+    expiresAt: new Date(fim.getTime() + (30 * 24 * 60 * 60 * 1000)),
+    assunto,
+    mensagem,
+    foto: normalizeFotoUrl(body?.foto),
+    restricoes: parseRestricoes(body?.restricoes)
+  };
+}
+
+function buildComunicadoUpdateResponse() {
+  return { ok: true };
+}
+
 app.put('/api/comunicados/:id([0-9a-fA-F]{24})', express.json({ limit: '220kb' }), async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveComunicadoUpdateScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const id = String(req.params.id || '').trim();
-    if (!id) return res.status(400).json({ error: 'ID inválido' });
-
-    const unidadeIdBody = String(req.body?.unidade_id || '').trim();
-    const unidadeId = scopeAll ? (unidadeIdBody || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const doc = await CondComunicado.findOne({ _id: id, unidade_id: unidadeId });
+    const doc = await readComunicadoUpdateMainDoc({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
     if (!doc) return res.status(404).json({ error: 'Comunicado não encontrado' });
 
-    const ini = new Date(String(req.body?.vigencia_inicio || ''));
-    const fim = new Date(String(req.body?.vigencia_fim || ''));
-    if (Number.isNaN(ini.getTime()) || Number.isNaN(fim.getTime())) return res.status(400).json({ error: 'Vigência inválida' });
-    if (fim <= ini) return res.status(400).json({ error: 'A data final deve ser maior que a inicial' });
-    const maxEnd = new Date(ini.getTime() + (10 * 24 * 60 * 60 * 1000) + (24 * 60 * 60 * 1000 - 1));
-    if (fim.getTime() > maxEnd.getTime()) return res.status(400).json({ error: 'A vigência máxima do comunicado é de 10 dias' });
+    const payload = validateAndNormalizeComunicadoUpdatePayload({ body: req.body });
+    if (payload.error) {
+      return res.status(payload.error.status).json(payload.error.body);
+    }
 
-    const expiresAt = new Date(fim.getTime() + (30 * 24 * 60 * 60 * 1000));
-
-    const mensagem = String(req.body?.mensagem || '').trim();
-    if (!mensagem) return res.status(400).json({ error: 'Mensagem é obrigatória' });
-
-    const assunto = String(req.body?.assunto || '').trim();
-    if (assunto && assunto.length > 140) return res.status(400).json({ error: 'Assunto muito longo' });
-
-    doc.vigencia_inicio = ini;
-    doc.vigencia_fim = fim;
-    doc.expiresAt = expiresAt;
-    doc.assunto = assunto;
-    doc.mensagem = mensagem;
-    doc.foto = normalizeFotoUrl(req.body?.foto);
-    doc.restricoes = parseRestricoes(req.body?.restricoes);
+    doc.vigencia_inicio = payload.ini;
+    doc.vigencia_fim = payload.fim;
+    doc.expiresAt = payload.expiresAt;
+    doc.assunto = payload.assunto;
+    doc.mensagem = payload.mensagem;
+    doc.foto = payload.foto;
+    doc.restricoes = payload.restricoes;
     await doc.save();
 
-    return res.json({ ok: true });
+    return res.json(buildComunicadoUpdateResponse());
   } catch (err) {
     console.error('[condominios][api/comunicados PUT] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -24827,25 +24969,57 @@ app.put('/api/comunicados/:id([0-9a-fA-F]{24})', express.json({ limit: '220kb' }
 });
 
 // API: excluir comunicado
+function resolveComunicadoDeleteScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    return { error: { status: 400, body: { error: 'ID inválido' } } };
+  }
+
+  const unidadeQ = String(req.query?.unidade_id || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { id, unidadeId };
+}
+
+async function deleteComunicadoMainDoc({ id, unidadeId }) {
+  return CondComunicado.deleteOne({ _id: id, unidade_id: unidadeId });
+}
+
+function buildComunicadoDeleteNotFoundResponse() {
+  return { error: 'Comunicado não encontrado' };
+}
+
+function buildComunicadoDeleteResponse() {
+  return { ok: true };
+}
+
 app.delete('/api/comunicados/:id([0-9a-fA-F]{24})', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveComunicadoDeleteScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const id = String(req.params.id || '').trim();
-    if (!id) return res.status(400).json({ error: 'ID inválido' });
-
-    const unidadeQ = String(req.query?.unidade_id || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const r = await CondComunicado.deleteOne({ _id: id, unidade_id: unidadeId });
-    if (!r?.deletedCount) return res.status(404).json({ error: 'Comunicado não encontrado' });
-    return res.json({ ok: true });
+    const deletionResult = await deleteComunicadoMainDoc({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
+    if (!deletionResult?.deletedCount) {
+      return res.status(404).json(buildComunicadoDeleteNotFoundResponse());
+    }
+    return res.json(buildComunicadoDeleteResponse());
   } catch (err) {
     console.error('[condominios][api/comunicados DELETE] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -24854,70 +25028,107 @@ app.delete('/api/comunicados/:id([0-9a-fA-F]{24})', async (req, res) => {
 });
 
 // API: listas para restrições (UI de enquetes)
+function resolveEnqueteRestricaoHabitacoesScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { user, unidadeId };
+}
+
+async function readEnqueteRestricaoHabitacoesMainList({ unidadeId }) {
+  return CondHabitacao.find({ unidade_id: unidadeId })
+    .select('_id bloco_id andar_id numero tipo')
+    .sort({ numero: 1 })
+    .limit(5000)
+    .lean();
+}
+
+async function readEnqueteRestricaoHabitacoesSupportData({ req, unidadeId, habs }) {
+  const unidadeDocPromise = unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'nome' });
+  const blocoIds = [...new Set((habs || []).map(h => h?.bloco_id).filter(Boolean))];
+  const andarIds = [...new Set((habs || []).map(h => h?.andar_id).filter(Boolean))];
+
+  const [unidadeDoc, blocos, andares] = await Promise.all([
+    unidadeDocPromise,
+    blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
+    andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
+  ]);
+
+  return {
+    condominioNome: String(unidadeDoc?.nome || '').trim(),
+    blocoMap: new Map((blocos || []).map(b => [String(b._id), String(b.nome || '').trim()])),
+    andarMap: new Map((andares || []).map(a => [String(a._id), String(a.nome || '').trim()]))
+  };
+}
+
+function buildEnqueteRestricaoHabitacoesResponse({ habs, condominioNome, blocoMap, andarMap }) {
+  const formatBloco = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    return /^bloco\b/i.test(s) ? s : `Bloco ${s}`;
+  };
+  const formatTipo = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  const data = (Array.isArray(habs) ? habs : []).map(h => {
+    const blocoNome = h?.bloco_id ? (blocoMap.get(String(h.bloco_id)) || '') : '';
+    const andarNome = h?.andar_id ? (andarMap.get(String(h.andar_id)) || '') : '';
+    const num = String(h?.numero || '').trim();
+    const tipo = formatTipo(h?.tipo);
+    const blocoPart = formatBloco(blocoNome);
+    const tipoNum = (tipo && num) ? `${tipo} ${num}` : (tipo || (num ? `Hab ${num}` : ''));
+    const parts = [blocoPart, andarNome, tipoNum].filter(Boolean);
+    const label = parts.join(' - ') || (num ? `Hab ${num}` : 'Habitação');
+    return {
+      value: String(h._id),
+      label,
+      condominioNome,
+      habitacao: {
+        bloco: blocoPart,
+        andar: andarNome,
+        tipo,
+        numero: num
+      }
+    };
+  });
+
+  return { ok: true, data };
+}
+
 app.get('/api/enquetes/restricoes/habitacoes', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveEnqueteRestricaoHabitacoesScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const unidadeDoc = await unidadesReadRepoFromReq(req).findById(unidadeId, { select: 'nome' });
-    const condominioNome = String(unidadeDoc?.nome || '').trim();
-
-    const habs = await CondHabitacao.find({ unidade_id: unidadeId })
-      .select('_id bloco_id andar_id numero tipo')
-      .sort({ numero: 1 })
-      .limit(5000)
-      .lean();
-
-    const blocoIds = [...new Set((habs || []).map(h => h?.bloco_id).filter(Boolean))];
-    const andarIds = [...new Set((habs || []).map(h => h?.andar_id).filter(Boolean))];
-    const [blocos, andares] = await Promise.all([
-      blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
-      andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
-    ]);
-    const blocoMap = new Map((blocos || []).map(b => [String(b._id), String(b.nome || '').trim()]));
-    const andarMap = new Map((andares || []).map(a => [String(a._id), String(a.nome || '').trim()]));
-
-    const formatBloco = (raw) => {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      return /^bloco\b/i.test(s) ? s : `Bloco ${s}`;
-    };
-    const formatTipo = (raw) => {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    };
-
-    const data = (Array.isArray(habs) ? habs : []).map(h => {
-      const blocoNome = h?.bloco_id ? (blocoMap.get(String(h.bloco_id)) || '') : '';
-      const andarNome = h?.andar_id ? (andarMap.get(String(h.andar_id)) || '') : '';
-      const num = String(h?.numero || '').trim();
-      const tipo = formatTipo(h?.tipo);
-      const blocoPart = formatBloco(blocoNome);
-      const tipoNum = (tipo && num) ? `${tipo} ${num}` : (tipo || (num ? `Hab ${num}` : ''));
-      const parts = [blocoPart, andarNome, tipoNum].filter(Boolean);
-      const label = parts.join(' - ') || (num ? `Hab ${num}` : 'Habitação');
-      return {
-        value: String(h._id),
-        label,
-        condominioNome,
-        habitacao: {
-          bloco: blocoPart,
-          andar: andarNome,
-          tipo,
-          numero: num
-        }
-      };
+    const habs = await readEnqueteRestricaoHabitacoesMainList({ unidadeId: scopeResolution.unidadeId });
+    const supportData = await readEnqueteRestricaoHabitacoesSupportData({
+      req,
+      unidadeId: scopeResolution.unidadeId,
+      habs
     });
 
-    return res.json({ ok: true, data });
+    return res.json(buildEnqueteRestricaoHabitacoesResponse({
+      habs,
+      condominioNome: supportData.condominioNome,
+      blocoMap: supportData.blocoMap,
+      andarMap: supportData.andarMap
+    }));
   } catch (err) {
     console.error('[condominios][api/enquetes/restricoes/habitacoes] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -24925,91 +25136,118 @@ app.get('/api/enquetes/restricoes/habitacoes', async (req, res) => {
   }
 });
 
+function resolveEnqueteRestricaoMoradoresScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { user, unidadeId };
+}
+
+async function readEnqueteRestricaoMoradoresMainList({ unidadeId }) {
+  return CondMorador.find({ unidade_id: unidadeId, ativo: { $ne: false } })
+    .select('_id nome cpf email habitacao_id usuario_id cond_usuario_id')
+    .sort({ nome: 1 })
+    .limit(5000)
+    .lean();
+}
+
+async function readEnqueteRestricaoMoradoresSupportData({ moradores }) {
+  const habIds = [...new Set((moradores || []).map(m => m?.habitacao_id).filter(Boolean))];
+  const habs = habIds.length
+    ? await CondHabitacao.find({ _id: { $in: habIds } }).select('_id numero tipo bloco_id andar_id').lean()
+    : [];
+
+  const blocoIds = [...new Set((habs || []).map(h => h?.bloco_id).filter(Boolean))];
+  const andarIds = [...new Set((habs || []).map(h => h?.andar_id).filter(Boolean))];
+  const [blocos, andares] = await Promise.all([
+    blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
+    andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
+  ]);
+
+  return {
+    habMap: new Map((habs || []).map(h => [String(h._id), h])),
+    blocoMap: new Map((blocos || []).map(b => [String(b._id), String(b.nome || '').trim()])),
+    andarMap: new Map((andares || []).map(a => [String(a._id), String(a.nome || '').trim()]))
+  };
+}
+
+function buildEnqueteRestricaoMoradoresResponse({ moradores, habMap, blocoMap, andarMap }) {
+  const formatBloco = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    return /^bloco\b/i.test(s) ? s : `Bloco ${s}`;
+  };
+  const formatTipo = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  const data = (Array.isArray(moradores) ? moradores : []).map(m => {
+    const nome = String(m?.nome || '').trim() || 'Morador';
+    const cpf = String(m?.cpf || '').trim();
+    const email = String(m?.email || '').trim();
+    const habDoc = m?.habitacao_id ? (habMap.get(String(m.habitacao_id)) || null) : null;
+    const blocoNome = habDoc?.bloco_id ? (blocoMap.get(String(habDoc.bloco_id)) || '') : '';
+    const andarNome = habDoc?.andar_id ? (andarMap.get(String(habDoc.andar_id)) || '') : '';
+    const num = String(habDoc?.numero || '').trim();
+    const tipo = formatTipo(habDoc?.tipo);
+    const blocoPart = formatBloco(blocoNome);
+    const tipoNum = (tipo && num) ? `${tipo} ${num}` : (tipo || (num ? `Hab ${num}` : ''));
+    const habLbl = [blocoPart, andarNome, tipoNum].filter(Boolean).join(' - ');
+    const label = [nome, habLbl].filter(Boolean).join(' - ');
+
+    let fotoUrl = '';
+    const uid = (m?.usuario_id && String(m.usuario_id).trim()) ? String(m.usuario_id).trim() : '';
+    const cuid = (m?.cond_usuario_id && String(m.cond_usuario_id).trim()) ? String(m.cond_usuario_id).trim() : '';
+    if (email) fotoUrl = `/api/usuarios/foto?email=${encodeURIComponent(String(email).toLowerCase().trim())}`;
+    else if (cuid) fotoUrl = `/api/usuarios/foto?id=${encodeURIComponent(cuid)}`;
+    else if (uid) fotoUrl = `/api/usuarios/foto?id=${encodeURIComponent(uid)}`;
+
+    const value = email ? String(email).toLowerCase().trim() : (cpf ? String(cpf).replace(/\D/g, '') : String(m._id));
+    return {
+      value,
+      label,
+      fotoUrl,
+      habitacao: {
+        bloco: blocoPart,
+        andar: andarNome,
+        tipo,
+        numero: num
+      }
+    };
+  });
+
+  return { ok: true, data };
+}
+
 app.get('/api/enquetes/restricoes/moradores', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveEnqueteRestricaoMoradoresScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
+    const moradores = await readEnqueteRestricaoMoradoresMainList({ unidadeId: scopeResolution.unidadeId });
+    const supportData = await readEnqueteRestricaoMoradoresSupportData({ moradores });
 
-    const moradores = await CondMorador.find({ unidade_id: unidadeId, ativo: { $ne: false } })
-      .select('_id nome cpf email habitacao_id usuario_id cond_usuario_id')
-      .sort({ nome: 1 })
-      .limit(5000)
-      .lean();
-
-    const habIds = [...new Set((moradores || []).map(m => m?.habitacao_id).filter(Boolean))];
-    const habs = habIds.length
-      ? await CondHabitacao.find({ _id: { $in: habIds } }).select('_id numero tipo bloco_id andar_id').lean()
-      : [];
-
-    const blocoIds = [...new Set((habs || []).map(h => h?.bloco_id).filter(Boolean))];
-    const andarIds = [...new Set((habs || []).map(h => h?.andar_id).filter(Boolean))];
-    const [blocos, andares] = await Promise.all([
-      blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
-      andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
-    ]);
-    const blocoMap = new Map((blocos || []).map(b => [String(b._id), String(b.nome || '').trim()]));
-    const andarMap = new Map((andares || []).map(a => [String(a._id), String(a.nome || '').trim()]));
-    const habMap = new Map((habs || []).map(h => [String(h._id), h]));
-
-    const formatBloco = (raw) => {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      return /^bloco\b/i.test(s) ? s : `Bloco ${s}`;
-    };
-    const formatTipo = (raw) => {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    };
-
-    const data = (Array.isArray(moradores) ? moradores : []).map(m => {
-      const nome = String(m?.nome || '').trim() || 'Morador';
-      const cpf = String(m?.cpf || '').trim();
-      const email = String(m?.email || '').trim();
-      const habDoc = m?.habitacao_id ? (habMap.get(String(m.habitacao_id)) || null) : null;
-      const blocoNome = habDoc?.bloco_id ? (blocoMap.get(String(habDoc.bloco_id)) || '') : '';
-      const andarNome = habDoc?.andar_id ? (andarMap.get(String(habDoc.andar_id)) || '') : '';
-      const num = String(habDoc?.numero || '').trim();
-      const tipo = formatTipo(habDoc?.tipo);
-      const blocoPart = formatBloco(blocoNome);
-      const tipoNum = (tipo && num) ? `${tipo} ${num}` : (tipo || (num ? `Hab ${num}` : ''));
-      const habLbl = [blocoPart, andarNome, tipoNum].filter(Boolean).join(' - ');
-
-      // Label sem CPF (igual Comunicados)
-      const label = [nome, habLbl].filter(Boolean).join(' - ');
-
-      // Foto (igual Comunicados)
-      let fotoUrl = '';
-      const uid = (m?.usuario_id && String(m.usuario_id).trim()) ? String(m.usuario_id).trim() : '';
-      const cuid = (m?.cond_usuario_id && String(m.cond_usuario_id).trim()) ? String(m.cond_usuario_id).trim() : '';
-      if (email) fotoUrl = `/api/usuarios/foto?email=${encodeURIComponent(String(email).toLowerCase().trim())}`;
-      else if (cuid) fotoUrl = `/api/usuarios/foto?id=${encodeURIComponent(cuid)}`;
-      else if (uid) fotoUrl = `/api/usuarios/foto?id=${encodeURIComponent(uid)}`;
-
-      // Para exclusão no Portal, é mais confiável usar email/CPF (pois o login do Portal é por CondUsuario).
-      // Mantém fallback para _id quando não houver identificadores.
-      const value = email ? String(email).toLowerCase().trim() : (cpf ? String(cpf).replace(/\D/g, '') : String(m._id));
-      return {
-        value,
-        label,
-        fotoUrl,
-        habitacao: {
-          bloco: blocoPart,
-          andar: andarNome,
-          tipo,
-          numero: num
-        }
-      };
-    });
-
-    return res.json({ ok: true, data });
+    return res.json(buildEnqueteRestricaoMoradoresResponse({
+      moradores,
+      habMap: supportData.habMap,
+      blocoMap: supportData.blocoMap,
+      andarMap: supportData.andarMap
+    }));
   } catch (err) {
     console.error('[condominios][api/enquetes/restricoes/moradores] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -25018,46 +25256,72 @@ app.get('/api/enquetes/restricoes/moradores', async (req, res) => {
 });
 
 // API: listar enquetes
+function resolveEnqueteListScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  const pageRaw = String(req.query?.page || '1').trim();
+  const limitRaw = String(req.query?.limit || req.query?.pageSize || '9').trim();
+  let page = parseInt(pageRaw, 10);
+  let pageSize = parseInt(limitRaw, 10);
+  if (!Number.isFinite(page) || page < 1) page = 1;
+  if (!Number.isFinite(pageSize) || pageSize < 1) pageSize = 9;
+  if (pageSize > 9) pageSize = 9;
+
+  return { user, unidadeId, page, pageSize };
+}
+
+async function readEnqueteListPage({ unidadeId, page, pageSize }) {
+  const q = { unidade_id: unidadeId };
+  const total = await CondEnquete.countDocuments(q);
+  const totalPages = total ? Math.ceil(total / pageSize) : 0;
+  const safePage = totalPages && page > totalPages ? totalPages : page;
+  const skip = totalPages ? ((safePage - 1) * pageSize) : 0;
+  const data = await CondEnquete.find(q)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(pageSize)
+    .lean();
+
+  return { data, total, totalPages, page: safePage, pageSize };
+}
+
+function buildEnqueteListResponse({ data, page, pageSize, total, totalPages }) {
+  const now = new Date();
+  const out = (Array.isArray(data) ? data : []).map(d => ({
+    ...d,
+    statusCalc: calcStatus(d, now)
+  }));
+
+  return { ok: true, data: out, page, pageSize, total, totalPages };
+}
+
 app.get('/api/enquetes', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveEnqueteListScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const unidadeQ = String(req.query?.unidade_id || req.query?.unidade || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
+    const listData = await readEnqueteListPage({
+      unidadeId: scopeResolution.unidadeId,
+      page: scopeResolution.page,
+      pageSize: scopeResolution.pageSize
+    });
 
-    const pageRaw = String(req.query?.page || '1').trim();
-    const limitRaw = String(req.query?.limit || req.query?.pageSize || '9').trim();
-    let page = parseInt(pageRaw, 10);
-    let pageSize = parseInt(limitRaw, 10);
-    if (!Number.isFinite(page) || page < 1) page = 1;
-    if (!Number.isFinite(pageSize) || pageSize < 1) pageSize = 9;
-    if (pageSize > 9) pageSize = 9;
-
-    const q = { unidade_id: unidadeId };
-    const total = await CondEnquete.countDocuments(q);
-    const totalPages = total ? Math.ceil(total / pageSize) : 0;
-    if (totalPages && page > totalPages) page = totalPages;
-
-    const skip = totalPages ? ((page - 1) * pageSize) : 0;
-    const data = await CondEnquete.find(q)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(pageSize)
-      .lean();
-
-    const now = new Date();
-    const out = (Array.isArray(data) ? data : []).map(d => ({
-      ...d,
-      statusCalc: calcStatus(d, now)
-    }));
-
-    return res.json({ ok: true, data: out, page, pageSize, total, totalPages });
+    return res.json(buildEnqueteListResponse(listData));
   } catch (err) {
     console.error('[condominios][api/enquetes GET] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -25066,25 +25330,51 @@ app.get('/api/enquetes', async (req, res) => {
 });
 
 // API: obter enquete
+function resolveEnqueteByIdScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    return { error: { status: 400, body: { error: 'ID inválido' } } };
+  }
+
+  const unidadeQ = String(req.query?.unidade_id || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { id, unidadeId };
+}
+
+async function readEnqueteByIdMainDoc({ id, unidadeId }) {
+  return CondEnquete.findOne({ _id: id, unidade_id: unidadeId }).lean();
+}
+
+function buildEnqueteByIdResponse({ doc }) {
+  return { ok: true, data: { ...doc, statusCalc: calcStatus(doc) } };
+}
+
 app.get('/api/enquetes/:id([0-9a-fA-F]{24})', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveEnqueteByIdScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const id = String(req.params.id || '').trim();
-    if (!id) return res.status(400).json({ error: 'ID inválido' });
-
-    const unidadeQ = String(req.query?.unidade_id || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const doc = await CondEnquete.findOne({ _id: id, unidade_id: unidadeId }).lean();
+    const doc = await readEnqueteByIdMainDoc({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
     if (!doc) return res.status(404).json({ error: 'Enquete não encontrada' });
-    return res.json({ ok: true, data: { ...doc, statusCalc: calcStatus(doc) } });
+    return res.json(buildEnqueteByIdResponse({ doc }));
   } catch (err) {
     console.error('[condominios][api/enquetes/:id GET] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -25164,23 +25454,80 @@ app.post('/api/enquetes', express.json({ limit: '200kb' }), async (req, res) => 
 });
 
 // API: editar enquete (antes de encerrar/finalizar)
+function resolveEnqueteUpdateScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    return { error: { status: 400, body: { error: 'ID inválido' } } };
+  }
+
+  const unidadeIdBody = String(req.body?.unidade_id || '').trim();
+  const unidadeId = scopeAll ? (unidadeIdBody || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { id, unidadeId };
+}
+
+async function readEnqueteUpdateMainDoc({ id, unidadeId }) {
+  return CondEnquete.findOne({ _id: id, unidade_id: unidadeId });
+}
+
+function validateAndNormalizeEnqueteUpdatePayload({ body }) {
+  const ini = new Date(String(body?.vigencia_inicio || ''));
+  const fim = new Date(String(body?.vigencia_fim || ''));
+  if (Number.isNaN(ini.getTime()) || Number.isNaN(fim.getTime())) {
+    return { error: { status: 400, body: { error: 'Vigência inválida' } } };
+  }
+  if (fim <= ini) {
+    return { error: { status: 400, body: { error: 'A data final deve ser maior que a inicial' } } };
+  }
+
+  const pergunta = String(body?.pergunta || '').trim();
+  if (!pergunta) {
+    return { error: { status: 400, body: { error: 'Pergunta é obrigatória' } } };
+  }
+
+  const opcoesIn = Array.isArray(body?.opcoes) ? body.opcoes : [];
+  const opcoes = parseOpcoes(opcoesIn);
+  if (opcoes.length < 2) {
+    return { error: { status: 400, body: { error: 'Informe pelo menos 2 opções' } } };
+  }
+
+  return {
+    ini,
+    fim,
+    pergunta,
+    foto_pergunta: normalizeFotoUrl(body?.foto_pergunta || body?.fotoPergunta),
+    opcoes,
+    restricoes: parseRestricoes(body?.restricoes)
+  };
+}
+
+function buildEnqueteUpdateResponse() {
+  return { ok: true };
+}
+
 app.put('/api/enquetes/:id([0-9a-fA-F]{24})', express.json({ limit: '200kb' }), async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveEnqueteUpdateScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const id = String(req.params.id || '').trim();
-    if (!id) return res.status(400).json({ error: 'ID inválido' });
-
-    const unidadeIdBody = String(req.body?.unidade_id || '').trim();
-    const unidadeId = scopeAll ? (unidadeIdBody || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const doc = await CondEnquete.findOne({ _id: id, unidade_id: unidadeId });
+    const doc = await readEnqueteUpdateMainDoc({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
     if (!doc) return res.status(404).json({ error: 'Enquete não encontrada' });
     if (doc.finalizadaEm) return res.status(400).json({ error: 'Enquete já finalizada' });
 
@@ -25188,29 +25535,20 @@ app.put('/api/enquetes/:id([0-9a-fA-F]{24})', express.json({ limit: '200kb' }), 
     const st = calcStatus(doc, now);
     if (st === 'encerrada') return res.status(400).json({ error: 'Enquete já encerrada (vigência expirada)' });
 
-    const ini = new Date(String(req.body?.vigencia_inicio || ''));
-    const fim = new Date(String(req.body?.vigencia_fim || ''));
-    if (Number.isNaN(ini.getTime()) || Number.isNaN(fim.getTime())) return res.status(400).json({ error: 'Vigência inválida' });
-    if (fim <= ini) return res.status(400).json({ error: 'A data final deve ser maior que a inicial' });
+    const payload = validateAndNormalizeEnqueteUpdatePayload({ body: req.body });
+    if (payload.error) {
+      return res.status(payload.error.status).json(payload.error.body);
+    }
 
-    const pergunta = String(req.body?.pergunta || '').trim();
-    if (!pergunta) return res.status(400).json({ error: 'Pergunta é obrigatória' });
-
-    const foto_pergunta = normalizeFotoUrl(req.body?.foto_pergunta || req.body?.fotoPergunta);
-
-    const opcoesIn = Array.isArray(req.body?.opcoes) ? req.body.opcoes : [];
-    const opcoes = parseOpcoes(opcoesIn);
-    if (opcoes.length < 2) return res.status(400).json({ error: 'Informe pelo menos 2 opções' });
-
-    doc.vigencia_inicio = ini;
-    doc.vigencia_fim = fim;
-    doc.pergunta = pergunta;
-    doc.foto_pergunta = foto_pergunta;
-    doc.opcoes = opcoes;
-    doc.restricoes = parseRestricoes(req.body?.restricoes);
+    doc.vigencia_inicio = payload.ini;
+    doc.vigencia_fim = payload.fim;
+    doc.pergunta = payload.pergunta;
+    doc.foto_pergunta = payload.foto_pergunta;
+    doc.opcoes = payload.opcoes;
+    doc.restricoes = payload.restricoes;
 
     await doc.save();
-    return res.json({ ok: true });
+    return res.json(buildEnqueteUpdateResponse());
   } catch (err) {
     console.error('[condominios][api/enquetes PUT] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -25219,33 +25557,67 @@ app.put('/api/enquetes/:id([0-9a-fA-F]{24})', express.json({ limit: '200kb' }), 
 });
 
 // API: finalizar enquete antecipadamente
+function resolveEnqueteFinalizeScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    return { error: { status: 400, body: { error: 'ID inválido' } } };
+  }
+
+  const unidadeQ = String(req.query?.unidade_id || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { user, id, unidadeId };
+}
+
+async function readEnqueteFinalizeMainDoc({ id, unidadeId }) {
+  return CondEnquete.findOne({ _id: id, unidade_id: unidadeId });
+}
+
+function applyEnqueteFinalizeMutation({ doc, user }) {
+  if (doc.finalizadaEm) {
+    return;
+  }
+
+  doc.finalizadaEm = new Date();
+  doc.finalizadaPor = {
+    userId: user?.id || user?._id || user?.cond_usuario_id || null,
+    nome: String(user?.nome || '').trim()
+  };
+}
+
+function buildEnqueteFinalizeResponse() {
+  return { ok: true };
+}
+
 app.post('/api/enquetes/:id([0-9a-fA-F]{24})/finalizar', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveEnqueteFinalizeScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const id = String(req.params.id || '').trim();
-    if (!id) return res.status(400).json({ error: 'ID inválido' });
-
-    const unidadeQ = String(req.query?.unidade_id || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const doc = await CondEnquete.findOne({ _id: id, unidade_id: unidadeId });
+    const doc = await readEnqueteFinalizeMainDoc({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
     if (!doc) return res.status(404).json({ error: 'Enquete não encontrada' });
-    if (doc.finalizadaEm) return res.json({ ok: true });
+    if (doc.finalizadaEm) return res.json(buildEnqueteFinalizeResponse());
 
-    doc.finalizadaEm = new Date();
-    doc.finalizadaPor = {
-      userId: user?.id || user?._id || user?.cond_usuario_id || null,
-      nome: String(user?.nome || '').trim()
-    };
+    applyEnqueteFinalizeMutation({ doc, user: scopeResolution.user });
     await doc.save();
-    return res.json({ ok: true });
+    return res.json(buildEnqueteFinalizeResponse());
   } catch (err) {
     console.error('[condominios][api/enquetes finalizar] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -25254,25 +25626,58 @@ app.post('/api/enquetes/:id([0-9a-fA-F]{24})/finalizar', async (req, res) => {
 });
 
 // API: excluir enquete (remove também votos)
+function resolveEnqueteDeleteScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    return { error: { status: 400, body: { error: 'ID inválido' } } };
+  }
+
+  const unidadeQ = String(req.query?.unidade_id || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { id, unidadeId };
+}
+
+async function deleteEnqueteDependentVotes({ id, unidadeId }) {
+  return CondEnqueteVoto.deleteMany({ enquete_id: id, unidade_id: unidadeId });
+}
+
+async function deleteEnqueteMainDoc({ id, unidadeId }) {
+  return CondEnquete.deleteOne({ _id: id, unidade_id: unidadeId });
+}
+
+function buildEnqueteDeleteResponse() {
+  return { ok: true };
+}
+
 app.delete('/api/enquetes/:id([0-9a-fA-F]{24})', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveEnqueteDeleteScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const id = String(req.params.id || '').trim();
-    if (!id) return res.status(400).json({ error: 'ID inválido' });
-
-    const unidadeQ = String(req.query?.unidade_id || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    await CondEnqueteVoto.deleteMany({ enquete_id: id, unidade_id: unidadeId });
-    await CondEnquete.deleteOne({ _id: id, unidade_id: unidadeId });
-    return res.json({ ok: true });
+    await deleteEnqueteDependentVotes({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
+    await deleteEnqueteMainDoc({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
+    return res.json(buildEnqueteDeleteResponse());
   } catch (err) {
     console.error('[condominios][api/enquetes DELETE] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);
@@ -25281,65 +25686,105 @@ app.delete('/api/enquetes/:id([0-9a-fA-F]{24})', async (req, res) => {
 });
 
 // API: detalhes + estatísticas e votantes por alternativa
+function resolveEnqueteDetalhesScope({ req }) {
+  const user = getCtxUser(req);
+  if (!user) {
+    return { error: { status: 401, body: { error: 'Não autenticado' } } };
+  }
+
+  const scopeAll = userCanScopeAll(user);
+  const userUnidadeId = getUserUnidadeId(user);
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    return { error: { status: 400, body: { error: 'ID inválido' } } };
+  }
+
+  const unidadeQ = String(req.query?.unidade_id || '').trim();
+  const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
+  if (!unidadeId) {
+    return { error: { status: 400, body: { error: 'Unidade inválida' } } };
+  }
+
+  return { user, id, unidadeId };
+}
+
+async function readEnqueteDetalhesMainDoc({ id, unidadeId }) {
+  return CondEnquete.findOne({ _id: id, unidade_id: unidadeId }).lean();
+}
+
+async function readEnqueteDetalhesVotes({ id, unidadeId }) {
+  return CondEnqueteVoto.find({ enquete_id: id, unidade_id: unidadeId })
+    .sort({ createdAt: 1 })
+    .lean();
+}
+
+function buildEnqueteDetalhesResponse({ enq, votos }) {
+  const totalVotos = Array.isArray(votos) ? votos.length : 0;
+  const opcoes = Array.isArray(enq?.opcoes) ? enq.opcoes : [];
+
+  const byOpt = new Map();
+  for (const o of opcoes) {
+    byOpt.set(String(o._id), {
+      opcaoId: String(o._id),
+      texto: String(o.texto || ''),
+      foto: normalizeFotoUrl(o.foto),
+      votos: 0,
+      percent: 0,
+      votantes: []
+    });
+  }
+
+  for (const v of (Array.isArray(votos) ? votos : [])) {
+    const oid = String(v.opcao_id || '');
+    if (!oid) continue;
+    if (!byOpt.has(oid)) {
+      byOpt.set(oid, { opcaoId: oid, texto: 'Opção', foto: '', votos: 0, percent: 0, votantes: [] });
+    }
+    const row = byOpt.get(oid);
+    row.votos += 1;
+    row.votantes.push({
+      morador_nome: String(v.morador_nome || '').trim(),
+      morador_email: String(v.morador_email || '').trim(),
+      habitacao_label: String(v.habitacao_label || '').trim(),
+      createdAt: v.createdAt
+    });
+  }
+
+  const out = Array.from(byOpt.values()).map(o => ({
+    ...o,
+    percent: totalVotos ? (o.votos * 100) / totalVotos : 0
+  }));
+
+  return {
+    ok: true,
+    enquete: { ...enq, statusCalc: calcStatus(enq) },
+    statusCalc: calcStatus(enq),
+    totalVotos,
+    opcoes: out
+  };
+}
+
 app.get('/api/enquetes/:id([0-9a-fA-F]{24})/detalhes', async (req, res) => {
   try {
-    const user = getCtxUser(req);
-    if (!user) return res.status(401).json({ error: 'Não autenticado' });
+    const scopeResolution = resolveEnqueteDetalhesScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
 
     if (!(await ensureCondominiosMongoOnline(req, res))) return;
 
-    const scopeAll = userCanScopeAll(user);
-    const userUnidadeId = getUserUnidadeId(user);
-    const id = String(req.params.id || '').trim();
-    if (!id) return res.status(400).json({ error: 'ID inválido' });
-
-    const unidadeQ = String(req.query?.unidade_id || '').trim();
-    const unidadeId = scopeAll ? (unidadeQ || userUnidadeId) : userUnidadeId;
-    if (!unidadeId) return res.status(400).json({ error: 'Unidade inválida' });
-
-    const enq = await CondEnquete.findOne({ _id: id, unidade_id: unidadeId }).lean();
+    const enq = await readEnqueteDetalhesMainDoc({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
+    });
     if (!enq) return res.status(404).json({ error: 'Enquete não encontrada' });
 
-    const votos = await CondEnqueteVoto.find({ enquete_id: id, unidade_id: unidadeId })
-      .sort({ createdAt: 1 })
-      .lean();
-
-    const totalVotos = Array.isArray(votos) ? votos.length : 0;
-    const opcoes = Array.isArray(enq.opcoes) ? enq.opcoes : [];
-
-    const byOpt = new Map();
-    for (const o of opcoes) {
-      byOpt.set(String(o._id), { opcaoId: String(o._id), texto: String(o.texto || ''), foto: normalizeFotoUrl(o.foto), votos: 0, percent: 0, votantes: [] });
-    }
-
-    for (const v of (Array.isArray(votos) ? votos : [])) {
-      const oid = String(v.opcao_id || '');
-      if (!oid) continue;
-      if (!byOpt.has(oid)) {
-        byOpt.set(oid, { opcaoId: oid, texto: 'Opção', foto: '', votos: 0, percent: 0, votantes: [] });
-      }
-      const row = byOpt.get(oid);
-      row.votos += 1;
-      row.votantes.push({
-        morador_nome: String(v.morador_nome || '').trim(),
-        morador_email: String(v.morador_email || '').trim(),
-        habitacao_label: String(v.habitacao_label || '').trim(),
-        createdAt: v.createdAt
-      });
-    }
-
-    const out = Array.from(byOpt.values()).map(o => ({
-      ...o,
-      percent: totalVotos ? (o.votos * 100) / totalVotos : 0
-    }));
-
-    return res.json({
-      ok: true,
-      enquete: { ...enq, statusCalc: calcStatus(enq) },
-      statusCalc: calcStatus(enq),
-      totalVotos,
-      opcoes: out
+    const votos = await readEnqueteDetalhesVotes({
+      id: scopeResolution.id,
+      unidadeId: scopeResolution.unidadeId
     });
+
+    return res.json(buildEnqueteDetalhesResponse({ enq, votos }));
   } catch (err) {
     console.error('[condominios][api/enquetes detalhes] erro:', err);
     if (isMongoOfflineError(err)) return respondDbOffline(res, req);

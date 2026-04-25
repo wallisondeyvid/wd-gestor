@@ -4,8 +4,7 @@ import { BlocosRepository } from '#modules/condominios/app/repositories/BlocosRe
 export async function listarAndaresService({
   req,
   mongoose,
-  listarUnidadesParaUsuario,
-  CondAndar
+  listarUnidadesParaUsuario
 }) {
   const repo = new AndaresRepository({ unitScope: req.unitScope });
   const unidade = req.query.unidade || req.query.unidade_id || '';

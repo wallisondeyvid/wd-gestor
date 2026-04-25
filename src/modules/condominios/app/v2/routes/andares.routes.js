@@ -22,8 +22,7 @@ export async function handleGetAndaresV2(req, res, _next) {
     const payload = await listarAndaresService({
       req,
       mongoose: handleGetAndaresV2Context?.mongoose,
-      listarUnidadesParaUsuario: handleGetAndaresV2Context?.listarUnidadesParaUsuario,
-      CondAndar: handleGetAndaresV2Context?.CondAndar
+      listarUnidadesParaUsuario: handleGetAndaresV2Context?.listarUnidadesParaUsuario
     });
     return res.json(payload);
   } catch (e) {

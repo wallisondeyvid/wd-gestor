@@ -12,19 +12,17 @@ function normalizeObjectIdString(mongoose, value) {
   return mongoose?.isValidObjectId(normalized) ? normalized : '';
 }
 
-export async function listarBlocosService({
-  req,
-  mongoose,
-  listarUnidadesParaUsuario,
-  CondBloco
-}) {
-  const repo = new BlocosRepository({ unitScope: req.unitScope });
+function resolveBlocosListRequestedUnidade({ req, mongoose }) {
   const unidade = req.query.unidade || req.query.unidade_id || '';
 
   if (unidade && !mongoose.isValidObjectId(String(unidade))) {
-    return [];
+    return { shouldReturnEmpty: true, unidade: '' };
   }
 
+  return { shouldReturnEmpty: false, unidade };
+}
+
+function assertBlocosListDbAvailable({ mongoose }) {
   if (mongoose.connection.readyState !== 1) {
     const err = new Error('DB indisponível');
     err.__httpStatus = 503;
@@ -32,31 +30,62 @@ export async function listarBlocosService({
     err.__retryAfter = '5';
     throw err;
   }
+}
 
-  let q = { ativo: { $ne: false } };
+async function buildBlocosListFilter({ req, unidade, listarUnidadesParaUsuario }) {
+  let filter = { ativo: { $ne: false } };
+
   if (unidade) {
-    q.unidade_id = unidade;
-  } else {
-    try {
-      const ctxUser = req.user || (req.session && req.session.user) || null;
-      const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-      const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-      if (!isAdmin) {
-        const unitIds = (unidadesOptions||[]).map(u => u._id);
-        if (!unitIds.length) {
-          q._id = { $exists: false };
-        } else {
-          q.unidade_id = { $in: unitIds };
-        }
-      }
-    } catch(_e){ }
+    filter.unidade_id = unidade;
+    return filter;
   }
 
-  const blocos = await repo.findMany({
-    filter: q,
+  try {
+    const ctxUser = req.user || (req.session && req.session.user) || null;
+    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+    const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+    if (!isAdmin) {
+      const unitIds = (unidadesOptions || []).map(u => u._id);
+      if (!unitIds.length) {
+        filter._id = { $exists: false };
+      } else {
+        filter.unidade_id = { $in: unitIds };
+      }
+    }
+  } catch (_e) { }
+
+  return filter;
+}
+
+async function readBlocosList({ repo, filter }) {
+  return repo.findMany({
+    filter,
     selectFields: '_id nome unidade_id ordem',
     sort: { ordem: 1, nome: 1 },
   });
+}
+
+export async function listarBlocosService({
+  req,
+  mongoose,
+  listarUnidadesParaUsuario,
+  CondBloco
+}) {
+  const repo = new BlocosRepository({ unitScope: req.unitScope });
+  const requestedUnidade = resolveBlocosListRequestedUnidade({ req, mongoose });
+  if (requestedUnidade.shouldReturnEmpty) {
+    return [];
+  }
+
+  assertBlocosListDbAvailable({ mongoose });
+
+  const filter = await buildBlocosListFilter({
+    req,
+    unidade: requestedUnidade.unidade,
+    listarUnidadesParaUsuario
+  });
+
+  const blocos = await readBlocosList({ repo, filter });
   return blocos || [];
 }
 
