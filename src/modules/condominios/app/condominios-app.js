@@ -3466,7 +3466,7 @@ async function resolvePortalPersonalReadCtxUser(ctxUser, req) {
   return { ...(nextCtxUser || {}), email, userEmail: email };
 }
 
-function buildMsgPersonalReadOwnerCandidates({ scope, ctxUser, req, fromPortal, admin, portalEmailCandidatesLower, includePortalEmailCandidates = false }) {
+function buildMsgPersonalReadOwnerCandidates({ scope, ctxUser, req, fromPortal, admin, portalEmailCandidatesLower, includePortalEmailCandidates = false, includePortalHabitacaoOwnerVariants = false }) {
   if (scope.mailboxId !== 'pessoal') return [];
 
   const out = [];
@@ -3495,6 +3495,20 @@ function buildMsgPersonalReadOwnerCandidates({ scope, ctxUser, req, fromPortal, 
     add(baseEmail);
     add(`${baseEmail}::portal`);
     add(`${baseEmail}::colab`);
+  }
+
+  if (includePortalHabitacaoOwnerVariants && fromPortal && !admin) {
+    const habIdRaw = String(ctxUser?.habitacao_id || ctxUser?.habitacaoId || '').trim();
+    const ownerBaseEmail = ownerKeyBaseEmailLower(ownerExact) || normalizeEmailKey(ownerExact)
+      || String(ctxUser?.email || ctxUser?.userEmail || ctxUser?.contato_email || ctxUser?.contatoEmail || '').trim().toLowerCase();
+    if (isEmailish(ownerBaseEmail)) {
+      add(ownerBaseEmail);
+      add(`${ownerBaseEmail}::portal`);
+      add(`${ownerBaseEmail}::colab`);
+      if (habIdRaw && mongoose.isValidObjectId(habIdRaw)) {
+        add(`${ownerBaseEmail}::portal::hab:${habIdRaw}`);
+      }
+    }
   }
 
   if (includePortalEmailCandidates || !(fromPortal && !admin)) {
@@ -3534,6 +3548,7 @@ async function preparePortalPersonalReadSideContext({
   allowRefererPortal = false,
   allowNameFallbackWhenEmailResolved = false,
   includePortalEmailCandidatesInOwnerCandidates = false,
+  includePortalHabitacaoOwnerVariantsInOwnerCandidates = false,
 }) {
   const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
   const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
@@ -3558,6 +3573,7 @@ async function preparePortalPersonalReadSideContext({
     admin,
     portalEmailCandidatesLower,
     includePortalEmailCandidates: includePortalEmailCandidatesInOwnerCandidates,
+    includePortalHabitacaoOwnerVariants: includePortalHabitacaoOwnerVariantsInOwnerCandidates,
   });
   const nameFallback = buildMsgPersonalReadNameFallback({
     scope,
@@ -3573,6 +3589,89 @@ async function preparePortalPersonalReadSideContext({
     scope,
     ownerCandidatesLower,
     nameFallback,
+  };
+}
+
+async function preparePortalMailboxReadSideContext({
+  ctxUser,
+  req,
+  qUnidade = '',
+  includeAllowedUnitIds = false,
+}) {
+  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+    || refLower.includes('/portal-morador');
+  const admin = userCanScopeAll(ctxUser);
+
+  let nextCtxUser = ctxUser;
+  if (fromPortal && !admin) {
+    try {
+      nextCtxUser = await ensurePortalEmailInCtxUser(nextCtxUser, req);
+    } catch { /* noop */ }
+  }
+
+  const unidadeId = admin
+    ? String(qUnidade || '').trim()
+    : getUserUnidadeId(nextCtxUser);
+  let allowedUnitIds = [];
+  if (includeAllowedUnitIds && fromPortal && !admin) {
+    try {
+      const unidadesOptions = await listarUnidadesParaUsuario(nextCtxUser);
+      const unitIds = (unidadesOptions || []).map(u => u?._id).filter(Boolean).map(String);
+      allowedUnitIds = unitIds.filter(mongoose.isValidObjectId);
+    } catch {
+      allowedUnitIds = [];
+    }
+  }
+
+  let portalHabIds = [];
+  if (fromPortal && !admin) {
+    try {
+      portalHabIds = await collectPortalHabitacaoIds(nextCtxUser, req, unidadeId);
+      for (const hid of portalHabIds) {
+        try { await syncHabPublicMailboxForHabitacaoId(hid); } catch { /* noop */ }
+      }
+    } catch {
+      portalHabIds = [];
+    }
+  }
+
+  return {
+    ctxUser: nextCtxUser,
+    admin,
+    fromPortal,
+    unidadeId,
+    allowedUnitIds,
+    portalHabIds,
+  };
+}
+
+async function preparePortalMailboxWriteSideContext({
+  ctxUser,
+  req,
+  qUnidade = '',
+}) {
+  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+    || refLower.includes('/portal-morador');
+  const admin = userCanScopeAll(ctxUser);
+
+  let nextCtxUser = ctxUser;
+  if (fromPortal && !admin) {
+    try {
+      nextCtxUser = await ensurePortalEmailInCtxUser(nextCtxUser, req);
+    } catch { /* noop */ }
+  }
+
+  const unidadeId = admin
+    ? normalizeObjectIdString(qUnidade)
+    : normalizeObjectIdString(getUserUnidadeId(nextCtxUser));
+
+  return {
+    ctxUser: nextCtxUser,
+    admin,
+    fromPortal,
+    unidadeId,
   };
 }
 
@@ -4595,7 +4694,7 @@ app.get('/api/msg/messages/:id', async (req, res) => {
 // API: histórico de acessos em PDF (evita rodapé de URL do navegador na impressão)
 app.get('/api/msg/messages/:id([0-9a-fA-F]{24})/historico-acessos.pdf', async (req, res) => {
   try {
-    const ctxUser = getCtxUser(req);
+    let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).end('Não autenticado');
 
     if (mongoose.connection.readyState !== 1) {
@@ -4610,52 +4709,15 @@ app.get('/api/msg/messages/:id([0-9a-fA-F]{24})/historico-acessos.pdf', async (r
     if (!mongoose.isValidObjectId(id)) return res.status(400).end('id inválido');
 
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
-    const scope = resolveMailboxScope(ctxUser, mailboxId, req);
-    const admin = userCanScopeAll(ctxUser);
-
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1';
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const isGoodOwnerKey = (s) => {
-        const v = String(s || '').trim();
-        if (!v) return false;
-        if (isEmailish(v)) return true;
-        // OwnerKey composto (ex.: email::portal, email::portal::hab:<id>, email::colab)
-        if (ownerKeyBaseEmailLower(v)) return true;
-        if (mongoose.isValidObjectId(v)) return true;
-        return false;
-      };
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!isGoodOwnerKey(s)) return;
-        if (!out.includes(s)) out.push(s);
-      };
-      add(scope.owner);
-      add(ctxUser?.email);
-      add(ctxUser?.userEmail);
-      add(ctxUser?.contato_email);
-      add(ctxUser?.contatoEmail);
-      add(ctxUser?.cond_usuario_id);
-      add(ctxUser?.condUsuarioId);
-      add(ctxUser?._id);
-      add(ctxUser?.id);
-      add(req?.__wdgPortalCookieUserId);
-      return out;
-    })();
-
-    const nameFallback = (() => {
-      if (!fromPortal) return null;
-      if (scope.mailboxId !== 'pessoal') return null;
-      const rawName = String(ctxUser?.nome || ctxUser?.name || ctxUser?.username || '').trim();
-      const normalizedName = rawName.replace(/\s+/g, ' ').trim();
-      if (!normalizedName) return null;
-      const unidadeIdRaw = getUserUnidadeId(ctxUser);
-      if (!unidadeIdRaw || !mongoose.isValidObjectId(unidadeIdRaw)) return null;
-      const nameRx = new RegExp('^\\s*' + escapeRegExp(normalizedName) + '\\s*$', 'i');
-      return { unidadeId: String(unidadeIdRaw), nameRx };
-    })();
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      allowNameFallbackWhenEmailResolved: true,
+      includePortalHabitacaoOwnerVariantsInOwnerCandidates: true,
+    });
+    ctxUser = readSideContext.ctxUser;
+    const { fromPortal, admin, scope, ownerCandidatesLower, nameFallback } = readSideContext;
 
     if (scope.mailboxId !== 'pessoal') {
       const mailbox = await loadMailboxOrThrow(scope.mailboxId);
@@ -5657,68 +5719,15 @@ app.get('/api/msg/messages/:id([0-9a-fA-F]{24})/imprimir.pdf', async (req, res) 
     if (!mongoose.isValidObjectId(id)) return res.status(400).end('id inválido');
 
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
-    const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1';
-
-    // Portal: para a caixa pessoal, precisamos de email consistente antes de resolver o scope.
-    try {
-      const adminTmp = userCanScopeAll(ctxUser);
-      if (fromPortal && !adminTmp && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    let portalEmailCandidatesLower = [];
-    try {
-      const adminTmp = userCanScopeAll(ctxUser);
-      if (fromPortal && !adminTmp && mailboxId === 'pessoal') {
-        portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    const scope = resolveMailboxScope(ctxUser, mailboxId, req);
-    const admin = userCanScopeAll(ctxUser);
-
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const isGoodOwnerKey = (s) => {
-        const v = String(s || '').trim();
-        if (!v) return false;
-        if (isEmailish(v)) return true;
-        if (mongoose.isValidObjectId(v)) return true;
-        return false;
-      };
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!isGoodOwnerKey(s)) return;
-        if (!out.includes(s)) out.push(s);
-      };
-      add(scope.owner);
-      add(ctxUser?.email);
-      add(ctxUser?.userEmail);
-      add(ctxUser?.contato_email);
-      add(ctxUser?.contatoEmail);
-      add(ctxUser?.cond_usuario_id);
-      add(ctxUser?.condUsuarioId);
-      add(ctxUser?._id);
-      add(ctxUser?.id);
-      add(req?.__wdgPortalCookieUserId);
-      (portalEmailCandidatesLower || []).forEach(add);
-      return out;
-    })();
-
-    const nameFallback = (() => {
-      if (!fromPortal) return null;
-      if (scope.mailboxId !== 'pessoal') return null;
-      const rawName = String(ctxUser?.nome || ctxUser?.name || ctxUser?.username || '').trim();
-      const normalizedName = rawName.replace(/\s+/g, ' ').trim();
-      if (!normalizedName) return null;
-      const unidadeIdRaw = getUserUnidadeId(ctxUser);
-      if (!unidadeIdRaw || !mongoose.isValidObjectId(unidadeIdRaw)) return null;
-      const nameRx = new RegExp('^\\s*' + escapeRegExp(normalizedName) + '\\s*$', 'i');
-      return { unidadeId: String(unidadeIdRaw), nameRx };
-    })();
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      allowNameFallbackWhenEmailResolved: true,
+      includePortalHabitacaoOwnerVariantsInOwnerCandidates: true,
+    });
+    ctxUser = readSideContext.ctxUser;
+    const { fromPortal, admin, scope, ownerCandidatesLower, nameFallback } = readSideContext;
 
     if (scope.mailboxId !== 'pessoal') {
       const mailbox = await loadMailboxOrThrow(scope.mailboxId);
@@ -7238,6 +7247,59 @@ function toGroupClient(doc) {
   };
 }
 
+function buildPersonalGroupOwnerCompat(ctxUser, req) {
+  const ownerKey = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
+  const baseEmail = ownerKeyBaseEmailLower(ownerKey);
+  const basePrefixRx = (baseEmail && isEmailish(baseEmail)) ? new RegExp('^' + escapeRegExp(baseEmail) + '::') : null;
+
+  return {
+    ownerKey,
+    baseEmail,
+    basePrefixRx,
+    buildFilter() {
+      return basePrefixRx
+        ? { mailbox_id: 'pessoal', ativo: { $ne: false }, $or: [{ owner: { $in: [ownerKey, baseEmail] } }, { owner: basePrefixRx }] }
+        : { mailbox_id: 'pessoal', owner: (baseEmail ? { $in: [ownerKey, baseEmail] } : ownerKey), ativo: { $ne: false } };
+    },
+    matchesDocOwner(docOwnerRaw) {
+      const docOwner = String(docOwnerRaw || '').trim().toLowerCase();
+      if (!docOwner) return false;
+      if (docOwner === ownerKey) return true;
+      if (baseEmail && docOwner === baseEmail) return true;
+      return !!(basePrefixRx && basePrefixRx.test(docOwner));
+    }
+  };
+}
+
+async function prepareMsgSharedGroupContext({ ctxUser, req, mailboxId, requireManage = false }) {
+  const id = String(mailboxId || '').trim();
+  if (!id || id === 'pessoal') {
+    const err = new Error('mailboxId é obrigatório');
+    err.status = 400;
+    throw err;
+  }
+
+  const admin = userCanScopeAll(ctxUser);
+  const mailbox = await loadMailboxOrThrow(id);
+  if (!(await canAccessMsgMailbox(mailbox, ctxUser, req))) {
+    const err = new Error('Acesso negado');
+    err.status = 403;
+    throw err;
+  }
+  if (!mailboxIsGroup(mailbox)) {
+    const err = new Error('Apenas caixas de grupo suportam grupos.');
+    err.status = 400;
+    throw err;
+  }
+  if (requireManage && !admin && !mailboxCanManageGroups(mailbox, ctxUser)) {
+    const err = new Error('Acesso negado');
+    err.status = 403;
+    throw err;
+  }
+
+  return { mailbox };
+}
+
 async function loadMailboxOrThrow(mailboxId) {
   if (!mailboxId || mailboxId === 'pessoal') return null;
   if (!mongoose.isValidObjectId(mailboxId)) {
@@ -7275,20 +7337,16 @@ app.get('/api/msg/groups', async (req, res) => {
 
     const admin = userCanScopeAll(ctxUser);
     if (mailboxId === 'pessoal') {
-      const ownerKey = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
-      const baseEmail = ownerKeyBaseEmailLower(ownerKey);
-      const basePrefixRx = (baseEmail && isEmailish(baseEmail)) ? new RegExp('^' + escapeRegExp(baseEmail) + '::') : null;
-      const filter = basePrefixRx
-        ? { mailbox_id: 'pessoal', ativo: { $ne: false }, $or: [{ owner: { $in: [ownerKey, baseEmail] } }, { owner: basePrefixRx }] }
-        : { mailbox_id: 'pessoal', owner: (baseEmail ? { $in: [ownerKey, baseEmail] } : ownerKey), ativo: { $ne: false } };
+      const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
+      const filter = compat.buildFilter();
       const docs = await CondMsgGroup.find(filter)
         .sort({ name: 1, createdAt: -1 })
         .lean();
       return res.json((docs || []).map(toGroupClient).filter(Boolean));
     }
 
-    const mailbox = await loadMailboxOrThrow(mailboxId);
-    if (!(await canAccessMsgMailbox(mailbox, ctxUser, req))) return res.status(403).json({ error: 'Acesso negado' });
+    const sharedGroupContext = await prepareMsgSharedGroupContext({ ctxUser, req, mailboxId });
+    const { mailbox } = sharedGroupContext;
 
     // Caixa pública no Portal: leitura/envio podem ser permitidos, mas grupos expõem membros.
     // Portanto, não lista grupos para não-membros.
@@ -7342,10 +7400,8 @@ app.post('/api/msg/groups', express.json({ limit: '2mb' }), async (req, res) => 
       const uid = getUserUnidadeId(ctxUser);
       if (uid && mongoose.isValidObjectId(uid)) unidadeId = uid;
     } else {
-      const mailbox = await loadMailboxOrThrow(mailboxId);
-      if (!(await canAccessMsgMailbox(mailbox, ctxUser, req))) return res.status(403).json({ error: 'Acesso negado' });
-      if (!mailboxIsGroup(mailbox)) return res.status(400).json({ error: 'Apenas caixas de grupo suportam grupos.' });
-      if (!admin && !mailboxCanManageGroups(mailbox, ctxUser)) return res.status(403).json({ error: 'Acesso negado' });
+      const sharedGroupContext = await prepareMsgSharedGroupContext({ ctxUser, req, mailboxId, requireManage: true });
+      const { mailbox } = sharedGroupContext;
       unidadeId = mailbox.unidade_id || null;
     }
 
@@ -7389,18 +7445,13 @@ app.patch('/api/msg/groups/:id', express.json({ limit: '2mb' }), async (req, res
     const admin = userCanScopeAll(ctxUser);
     const mailboxId = String(doc.mailbox_id || '').trim();
     if (mailboxId === 'pessoal') {
-      const ownerKey = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
-      const baseEmail = ownerKeyBaseEmailLower(ownerKey);
-      const docOwner = String(doc.owner || '').toLowerCase();
-      const ok = docOwner && (docOwner === ownerKey || (baseEmail && docOwner === baseEmail));
+      const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
+      const ok = compat.matchesDocOwner(doc.owner);
       if (!admin && !ok) {
         return res.status(403).json({ error: 'Acesso negado' });
       }
     } else {
-      const mailbox = await loadMailboxOrThrow(mailboxId);
-      if (!(await canAccessMsgMailbox(mailbox, ctxUser, req))) return res.status(403).json({ error: 'Acesso negado' });
-      if (!mailboxIsGroup(mailbox)) return res.status(400).json({ error: 'Apenas caixas de grupo suportam grupos.' });
-      if (!admin && !mailboxCanManageGroups(mailbox, ctxUser)) return res.status(403).json({ error: 'Acesso negado' });
+      await prepareMsgSharedGroupContext({ ctxUser, req, mailboxId, requireManage: true });
     }
 
     if (req.body && (req.body.name != null || req.body.nome != null)) {
@@ -7439,18 +7490,13 @@ app.delete('/api/msg/groups/:id', async (req, res) => {
     const admin = userCanScopeAll(ctxUser);
     const mailboxId = String(doc.mailbox_id || '').trim();
     if (mailboxId === 'pessoal') {
-      const ownerKey = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
-      const baseEmail = ownerKeyBaseEmailLower(ownerKey);
-      const docOwner = String(doc.owner || '').toLowerCase();
-      const ok = docOwner && (docOwner === ownerKey || (baseEmail && docOwner === baseEmail));
+      const compat = buildPersonalGroupOwnerCompat(ctxUser, req);
+      const ok = compat.matchesDocOwner(doc.owner);
       if (!admin && !ok) {
         return res.status(403).json({ error: 'Acesso negado' });
       }
     } else {
-      const mailbox = await loadMailboxOrThrow(mailboxId);
-      if (!(await canAccessMsgMailbox(mailbox, ctxUser, req))) return res.status(403).json({ error: 'Acesso negado' });
-      if (!mailboxIsGroup(mailbox)) return res.status(400).json({ error: 'Apenas caixas de grupo suportam grupos.' });
-      if (!admin && !mailboxCanManageGroups(mailbox, ctxUser)) return res.status(403).json({ error: 'Acesso negado' });
+      await prepareMsgSharedGroupContext({ ctxUser, req, mailboxId, requireManage: true });
     }
 
     doc.ativo = false;
@@ -7487,21 +7533,15 @@ app.get('/api/msg/mailboxes/recipients', async (req, res) => {
         return res.status(503).json({ error: 'DB indisponível' });
       }
     }
-
-    const admin = userCanScopeAll(ctxUser);
-    const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-    if (fromPortal && !admin) {
-      ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-    }
     const qUnidade = String(req.query.unidade_id || req.query.unidade || '').trim();
-
-    let unidadeId = '';
-    if (admin) {
-      unidadeId = qUnidade;
-    } else {
-      unidadeId = getUserUnidadeId(ctxUser);
-    }
+    const mailboxReadContext = await preparePortalMailboxReadSideContext({
+      ctxUser,
+      req,
+      qUnidade,
+      includeAllowedUnitIds: true,
+    });
+    ctxUser = mailboxReadContext.ctxUser;
+    const { admin, fromPortal, unidadeId, allowedUnitIds, portalHabIds } = mailboxReadContext;
 
     // Regras por unidade (Configurações > Geral): este endpoint lista apenas caixas.
     // Se caixas de grupo estiverem suspensas, escondemos todas as caixas como destinatário.
@@ -7514,19 +7554,6 @@ app.get('/api/msg/mailboxes/recipients', async (req, res) => {
       }
     } catch { /* noop */ }
 
-    // Para o Portal, o usuário pode ter acesso a mais de uma unidade/subunidade.
-    // Se filtrarmos apenas por `getUserUnidadeId`, algumas caixas do condomínio podem sumir.
-    let allowedUnitIds = [];
-    if (fromPortal && !admin) {
-      try {
-        const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-        const unitIds = (unidadesOptions || []).map(u => u?._id).filter(Boolean).map(String);
-        allowedUnitIds = unitIds.filter(mongoose.isValidObjectId);
-      } catch {
-        allowedUnitIds = [];
-      }
-    }
-
     const filter = { ativo: { $ne: false } };
     if (admin) {
       if (unidadeId) {
@@ -7538,18 +7565,6 @@ app.get('/api/msg/mailboxes/recipients', async (req, res) => {
     } else if (unidadeId) {
       if (!mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
       filter.unidade_id = unidadeId;
-    }
-
-    // Para o Portal: garante que as caixas vinculadas às habitações do usuário existam.
-    // Isso cobre habitações antigas sem backfill manual.
-    let portalHabIds = [];
-    if (!admin && fromPortal) {
-      try {
-        portalHabIds = await collectPortalHabitacaoIds(ctxUser, req, unidadeId);
-        for (const hid of portalHabIds) {
-          try { await syncHabPublicMailboxForHabitacaoId(hid); } catch {}
-        }
-      } catch {}
     }
 
     const docs = await CondMsgMailbox.find(filter)
@@ -7635,6 +7650,86 @@ app.get('/api/msg/mailboxes/recipients', async (req, res) => {
 
 // API: permissões efetivas do usuário para seleção de destinatários (Para/Cópia)
 // Não expõe a lista completa de portal_user_perms; retorna apenas o registro do usuário atual.
+function resolveMsgRecipientPermsFromSettings(settings, emailKey) {
+  const em = String(emailKey || '').trim().toLowerCase();
+  if (!isEmailish(em)) {
+    return {
+      permitir_pessoal_para_pessoal: true,
+      permitir_pessoal_para_habitacao: true,
+      permitir_pessoal_para_colaborador: true
+    };
+  }
+
+  const list = Array.isArray(settings?.portal_user_perms) ? settings.portal_user_perms : [];
+  const found = list.find(p => String(p?.email || '').trim().toLowerCase() === em);
+  if (!found) {
+    return {
+      permitir_pessoal_para_pessoal: true,
+      permitir_pessoal_para_habitacao: true,
+      permitir_pessoal_para_colaborador: true
+    };
+  }
+
+  return {
+    permitir_pessoal_para_pessoal: (found?.permitir_pessoal_para_pessoal !== false),
+    permitir_pessoal_para_habitacao: (found?.permitir_pessoal_para_habitacao !== false),
+    permitir_pessoal_para_colaborador: (found?.permitir_pessoal_para_colaborador !== false)
+  };
+}
+
+async function findExistingMsgByClientNonce({ fromOwnerKey, fromMailboxId, clientNonce }) {
+  if (!clientNonce) return null;
+  return CondMsgMessage.findOne({
+    from_owner: String(fromOwnerKey || '').trim().toLowerCase(),
+    from_mailbox_id: String(fromMailboxId || '').trim(),
+    client_nonce: String(clientNonce || '').trim(),
+  }).select('_id protocolo').lean();
+}
+
+function buildMsgSendDedupedResponse(existing) {
+  return {
+    ok: true,
+    id: String(existing?._id || ''),
+    protocolo: String(existing?.protocolo || ''),
+    deduped: true,
+  };
+}
+
+async function cleanupMsgBlobAttachments(attachments, blobToken) {
+  const anexos = Array.isArray(attachments) ? attachments : [];
+  for (const a of anexos) {
+    const target = String(a?.url || a?.caminho || '').trim();
+    if (!target) continue;
+    try { await del(target, blobToken ? { token: blobToken } : undefined); } catch { /* noop */ }
+  }
+}
+
+function pushMsgStateScope(scopes, scope, options = {}) {
+  const mailboxId = String(scope?.mailboxId || '').trim();
+  const owner = String(scope?.owner || '').trim().toLowerCase();
+  if (!mailboxId) return;
+  if (options?.requireOwner && !owner) return;
+  scopes.set(`${mailboxId}::${owner}`, { mailboxId, owner });
+}
+
+function buildMsgInitialStates({ scopes, fromMailboxId, fromOwner, senderAlsoRecipient = false }) {
+  const senderMailboxId = String(fromMailboxId || '').trim();
+  const senderOwner = String(fromOwner || '').trim().toLowerCase();
+
+  return Array.from(scopes.values()).map(s => {
+    const isSender = (String(s.mailboxId) === senderMailboxId) && (String(s.owner || '').toLowerCase() === senderOwner);
+    return {
+      mailbox_id: s.mailboxId,
+      owner: s.owner,
+      lida_em: (isSender && !senderAlsoRecipient) ? new Date() : null,
+      arquivada_em: null,
+      lixeira_em: null,
+      fixada_em: null,
+      marcadores: []
+    };
+  });
+}
+
 app.get('/api/msg/recipients/perms', async (req, res) => {
   try {
     let ctxUser = getCtxUser(req);
@@ -7654,50 +7749,18 @@ app.get('/api/msg/recipients/perms', async (req, res) => {
       }
     }
 
-    const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-    if (fromPortal && !userCanScopeAll(ctxUser)) {
-      ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-    }
+    const recipientPermsContext = await preparePortalRecipientPermsContext({ ctxUser, req });
+    ctxUser = recipientPermsContext.ctxUser;
+    const { fromPortal, unidadeId, emailLower } = recipientPermsContext;
 
     // Unidade do usuário (no Portal, a unidade pode variar por seleção; aqui usamos a do ctxUser).
-    const unidadeId = String(getUserUnidadeId(ctxUser) || '').trim();
     if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
       return res.status(403).json({ error: 'Não foi possível determinar a unidade do usuário.' });
     }
 
     const settings = await getOrInitMsgSettingsForUnidade(unidadeId);
 
-    const ownerKey = String(getMsgOwnerKey(ctxUser, req) || ctxUser?.email || '').trim().toLowerCase();
-    const baseEmail = ownerKeyBaseEmailLower(ownerKey);
-    const emailLower = String(baseEmail || ownerKey || '').trim().toLowerCase();
-
-    const resolvePerms = (emailKey) => {
-      const em = String(emailKey || '').trim().toLowerCase();
-      if (!isEmailish(em)) {
-        return {
-          permitir_pessoal_para_pessoal: true,
-          permitir_pessoal_para_habitacao: true,
-          permitir_pessoal_para_colaborador: true
-        };
-      }
-      const list = Array.isArray(settings?.portal_user_perms) ? settings.portal_user_perms : [];
-      const found = list.find(p => String(p?.email || '').trim().toLowerCase() === em);
-      if (!found) {
-        return {
-          permitir_pessoal_para_pessoal: true,
-          permitir_pessoal_para_habitacao: true,
-          permitir_pessoal_para_colaborador: true
-        };
-      }
-      return {
-        permitir_pessoal_para_pessoal: (found?.permitir_pessoal_para_pessoal !== false),
-        permitir_pessoal_para_habitacao: (found?.permitir_pessoal_para_habitacao !== false),
-        permitir_pessoal_para_colaborador: (found?.permitir_pessoal_para_colaborador !== false)
-      };
-    };
-
-    const perms = resolvePerms(emailLower);
+    const perms = resolveMsgRecipientPermsFromSettings(settings, emailLower);
     const allowP2PGlobal = !(settings && settings.permitir_pessoal_para_pessoal === false);
     const effectiveAllowP2P = !!(allowP2PGlobal && perms.permitir_pessoal_para_pessoal);
     const restricted = !(perms.permitir_pessoal_para_pessoal && perms.permitir_pessoal_para_habitacao && perms.permitir_pessoal_para_colaborador);
@@ -7718,6 +7781,34 @@ app.get('/api/msg/recipients/perms', async (req, res) => {
   }
 });
 
+async function preparePortalRecipientPermsContext({ ctxUser, req }) {
+  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+    || refLower.includes('/portal-morador');
+  const admin = userCanScopeAll(ctxUser);
+
+  let nextCtxUser = ctxUser;
+  if (fromPortal && !admin) {
+    try {
+      nextCtxUser = await ensurePortalEmailInCtxUser(nextCtxUser, req);
+    } catch { /* noop */ }
+  }
+
+  const unidadeId = String(getUserUnidadeId(nextCtxUser) || '').trim();
+  const ownerKey = String(getMsgOwnerKey(nextCtxUser, req) || nextCtxUser?.email || '').trim().toLowerCase();
+  const baseEmail = ownerKeyBaseEmailLower(ownerKey);
+  const emailLower = String(baseEmail || ownerKey || '').trim().toLowerCase();
+
+  return {
+    ctxUser: nextCtxUser,
+    fromPortal,
+    unidadeId,
+    ownerKey,
+    baseEmail,
+    emailLower,
+  };
+}
+
 app.get('/api/msg/mailboxes', async (req, res) => {
   try {
     let ctxUser = getCtxUser(req);
@@ -7737,36 +7828,19 @@ app.get('/api/msg/mailboxes', async (req, res) => {
         return res.status(503).json({ error: 'DB indisponível' });
       }
     }
-
-    const admin = userCanScopeAll(ctxUser);
-    const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-    if (fromPortal && !admin) {
-      ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-    }
     const qUnidade = String(req.query.unidade_id || req.query.unidade || '').trim();
-
-    let unidadeId = '';
-    if (admin) {
-      unidadeId = qUnidade;
-    } else {
-      unidadeId = getUserUnidadeId(ctxUser);
-    }
+    const mailboxReadContext = await preparePortalMailboxReadSideContext({
+      ctxUser,
+      req,
+      qUnidade,
+    });
+    ctxUser = mailboxReadContext.ctxUser;
+    const { admin, fromPortal, unidadeId, portalHabIds } = mailboxReadContext;
 
     const filter = { ativo: { $ne: false } };
     if (unidadeId) {
       if (!mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
       filter.unidade_id = unidadeId;
-    }
-
-    let portalHabIds = [];
-    if (!admin && fromPortal) {
-      try {
-        portalHabIds = await collectPortalHabitacaoIds(ctxUser, req, unidadeId);
-        for (const hid of portalHabIds) {
-          try { await syncHabPublicMailboxForHabitacaoId(hid); } catch {}
-        }
-      } catch {}
     }
 
     const docs = await CondMsgMailbox.find(filter)
@@ -7931,7 +8005,7 @@ app.get('/api/msg/mailboxes', async (req, res) => {
 
 app.post('/api/msg/mailboxes', express.json(), async (req, res) => {
   try {
-    const ctxUser = getCtxUser(req);
+    let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
     if (mongoose.connection.readyState !== 1) {
       try { res.set('Retry-After', '5'); } catch {}
@@ -7941,10 +8015,13 @@ app.post('/api/msg/mailboxes', express.json(), async (req, res) => {
     const name = String(req.body?.name || req.body?.nome || '').trim();
     if (!name) return res.status(400).json({ error: 'name é obrigatório' });
 
-    const admin = userCanScopeAll(ctxUser);
-    const unidadeId = admin
-      ? String(req.body?.unitId || req.body?.unidade_id || req.body?.unidadeId || '').trim()
-      : getUserUnidadeId(ctxUser);
+    const mailboxWriteContext = await preparePortalMailboxWriteSideContext({
+      ctxUser,
+      req,
+      qUnidade: String(req.body?.unitId || req.body?.unidade_id || req.body?.unidadeId || '').trim(),
+    });
+    ctxUser = mailboxWriteContext.ctxUser;
+    const { unidadeId } = mailboxWriteContext;
 
     if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) {
       return res.status(400).json({ error: 'unidade_id inválido' });
@@ -7990,12 +8067,9 @@ app.patch('/api/msg/mailboxes/:id', express.json(), async (req, res) => {
     const id = String(req.params.id || '').trim();
     if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'id inválido' });
 
-    const admin = userCanScopeAll(ctxUser);
-    const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-    if (fromPortal && !admin) {
-      try { ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req); } catch {}
-    }
+    const mailboxWriteContext = await preparePortalMailboxWriteSideContext({ ctxUser, req });
+    ctxUser = mailboxWriteContext.ctxUser;
+    const { admin } = mailboxWriteContext;
 
     const doc = await CondMsgMailbox.findById(id);
     if (!doc || doc.ativo === false) return res.status(404).json({ error: 'Caixa não encontrada' });
@@ -8064,12 +8138,9 @@ app.delete('/api/msg/mailboxes/:id', async (req, res) => {
     const id = String(req.params.id || '').trim();
     if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'id inválido' });
 
-    const admin = userCanScopeAll(ctxUser);
-    const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-    if (fromPortal && !admin) {
-      try { ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req); } catch {}
-    }
+    const mailboxWriteContext = await preparePortalMailboxWriteSideContext({ ctxUser, req });
+    ctxUser = mailboxWriteContext.ctxUser;
+    const { admin } = mailboxWriteContext;
 
     const doc = await CondMsgMailbox.findById(id);
     if (!doc || doc.ativo === false) return res.status(404).json({ error: 'Caixa não encontrada' });
@@ -8102,17 +8173,17 @@ app.delete('/api/msg/admin/mailboxes/:id', async (req, res) => {
   try {
     const ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
-    if (!userCanScopeAll(ctxUser)) return res.status(403).json({ error: 'Acesso negado' });
     if (mongoose.connection.readyState !== 1) {
       try { res.set('Retry-After', '5'); } catch {}
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const id = String(req.params?.id || '').trim();
-    if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'id inválido' });
-
-    const doc = await CondMsgMailbox.findById(id);
-    if (!doc) return res.status(404).json({ error: 'Caixa não encontrada' });
+    const adminMailboxWriteContext = await prepareMsgAdminMailboxWriteTargetContext({
+      ctxUser,
+      mailboxId: req.params?.id,
+      requireGlobalScope: true,
+    });
+    const { id, doc } = adminMailboxWriteContext;
 
     // Regra solicitada: apenas caixas de grupo criadas manualmente (não habitação / não vinculadas)
     try {
@@ -8131,6 +8202,8 @@ app.delete('/api/msg/admin/mailboxes/:id', async (req, res) => {
     const deleted = await hardDeleteMailboxWithCleanup(id, { logTag: '[condominios][DELETE /api/msg/admin/mailboxes/:id]' });
     return res.json({ ok: true, id, deleted: { mailbox: 1, ...deleted } });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][DELETE /api/msg/admin/mailboxes/:id] erro:', e);
     return res.status(500).json({ error: 'Falha ao excluir caixa' });
   }
@@ -8198,12 +8271,7 @@ async function hardDeleteMailboxWithCleanup(id, opts = {}) {
             .select('anexos')
             .lean();
           for (const m of (doomed || [])) {
-            const anexos = Array.isArray(m?.anexos) ? m.anexos : [];
-            for (const a of anexos) {
-              const target = String(a?.url || a?.caminho || '').trim();
-              if (!target) continue;
-              try { await del(target, blobToken ? { token: blobToken } : undefined); } catch { /* noop */ }
-            }
+            await cleanupMsgBlobAttachments(m?.anexos, blobToken);
           }
         } catch (e) {
           console.warn(tag, 'falha ao limpar anexos blob:', e?.message || e);
@@ -8228,11 +8296,94 @@ async function hardDeleteMailboxWithCleanup(id, opts = {}) {
   };
 }
 
+async function prepareMsgAdminMailboxWriteTargetContext({ ctxUser, mailboxId, requireGlobalScope = false }) {
+  const id = String(mailboxId || '').trim();
+  if (!id || !mongoose.isValidObjectId(id)) {
+    const err = new Error('id inválido');
+    err.status = 400;
+    throw err;
+  }
+
+  const hasGlobalScope = userCanScopeAll(ctxUser);
+  if (requireGlobalScope && !hasGlobalScope) {
+    const err = new Error('Acesso negado');
+    err.status = 403;
+    throw err;
+  }
+
+  const doc = await CondMsgMailbox.findById(id);
+  if (!doc) {
+    const err = new Error('Caixa não encontrada');
+    err.status = 404;
+    throw err;
+  }
+
+  return { id, doc, hasGlobalScope };
+}
+
 function normalizeSignaturePrefText(raw) {
   const text = String(raw || '').trim();
   if (!text) return '';
   // Limite defensivo: UI já limita, mas evita payloads absurdos.
   return text.slice(0, 3000);
+}
+
+async function preparePortalSignatureContext({
+  ctxUser,
+  req,
+  mailboxId = '',
+}) {
+  const normalizedMailboxId = String(mailboxId || '').trim() || 'pessoal';
+  const refLower = String(req?.headers?.referer || req?.headers?.Referer || '').toLowerCase();
+  const fromPortal = String(req?.headers?.['x-wdg-portal'] || '').trim() === '1'
+    || refLower.includes('/portal-morador');
+
+  let nextCtxUser = ctxUser;
+  if (fromPortal && normalizedMailboxId === 'pessoal') {
+    try {
+      nextCtxUser = await ensurePortalEmailInCtxUser(nextCtxUser, req);
+    } catch { /* noop */ }
+  }
+
+  const owner = String(getMsgOwnerKey(nextCtxUser, req) || '').trim().toLowerCase();
+  const baseEmail = ownerKeyBaseEmailLower(owner);
+  const canonicalOwner = (() => {
+    try {
+      return (normalizedMailboxId === 'pessoal' && baseEmail) ? baseEmail : owner;
+    } catch {
+      return owner;
+    }
+  })();
+
+  const cleanupOwnerKeys = [];
+  if (normalizedMailboxId === 'pessoal') {
+    const addCleanupOwnerKey = (value) => {
+      const key = String(value || '').trim().toLowerCase();
+      if (!key || key === canonicalOwner) return;
+      if (cleanupOwnerKeys.includes(key)) return;
+      cleanupOwnerKeys.push(key);
+    };
+    addCleanupOwnerKey(owner);
+    addCleanupOwnerKey(req?.__wdgPortalCookieUserId);
+    addCleanupOwnerKey(ctxUser?.cond_usuario_id);
+    addCleanupOwnerKey(ctxUser?.condUsuarioId);
+    addCleanupOwnerKey(ctxUser?._id);
+    addCleanupOwnerKey(ctxUser?.id);
+    addCleanupOwnerKey(nextCtxUser?.cond_usuario_id);
+    addCleanupOwnerKey(nextCtxUser?.condUsuarioId);
+    addCleanupOwnerKey(nextCtxUser?._id);
+    addCleanupOwnerKey(nextCtxUser?.id);
+  }
+
+  return {
+    ctxUser: nextCtxUser,
+    fromPortal,
+    mailboxId: normalizedMailboxId,
+    owner,
+    baseEmail,
+    canonicalOwner,
+    cleanupOwnerKeys,
+  };
 }
 
 // API: preferência de assinatura por usuário + caixa
@@ -8245,21 +8396,13 @@ app.get('/api/msg/signature', async (req, res) => {
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
-
-    // Portal: para a caixa pessoal, tente garantir e-mail no ctxUser.
-    // Sem isso, a preferência pode ser salva/lida por um id (cookie/legado) e não "grudar"
-    // quando o mesmo usuário usa o Gestor (onde há e-mail).
-    try {
-      const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-      if (fromPortal && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    const owner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
-    const baseEmail = ownerKeyBaseEmailLower(owner);
+    const signatureContext = await preparePortalSignatureContext({
+      ctxUser,
+      req,
+      mailboxId: String(req.query.mailboxId || req.query.mailbox_id || '').trim(),
+    });
+    ctxUser = signatureContext.ctxUser;
+    const { mailboxId, owner, baseEmail } = signatureContext;
     if (!owner) return res.status(400).json({ error: 'Usuário inválido' });
 
     if (mailboxId !== 'pessoal') {
@@ -8292,18 +8435,13 @@ app.put('/api/msg/signature', express.json({ limit: '64kb' }), async (req, res) 
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || req.body?.mailboxId || req.body?.mailbox_id || '').trim() || 'pessoal';
-
-    // Portal: para a caixa pessoal, tente garantir e-mail no ctxUser antes de calcular owner.
-    try {
-      const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-      if (fromPortal && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    const owner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
+    const signatureContext = await preparePortalSignatureContext({
+      ctxUser,
+      req,
+      mailboxId: String(req.query.mailboxId || req.query.mailbox_id || req.body?.mailboxId || req.body?.mailbox_id || '').trim(),
+    });
+    ctxUser = signatureContext.ctxUser;
+    const { mailboxId, owner, canonicalOwner, cleanupOwnerKeys } = signatureContext;
     if (!owner) return res.status(400).json({ error: 'Usuário inválido' });
 
     if (mailboxId !== 'pessoal') {
@@ -8314,27 +8452,25 @@ app.put('/api/msg/signature', express.json({ limit: '64kb' }), async (req, res) 
     const enabled = !!(req.body?.enabled ?? req.body?.assinaturaAtiva ?? req.body?.signatureEnabled);
     const text = normalizeSignaturePrefText(req.body?.text ?? req.body?.assinaturaTexto ?? req.body?.signatureText);
 
-    // Canonicaliza a chave do owner para e-mail base quando possível.
-    // Isso faz a preferência "grudar" entre Portal e Gestor e evita duplicatas.
-    const canonicalOwner = (() => {
-      try {
-        const base = ownerKeyBaseEmailLower(owner);
-        return (mailboxId === 'pessoal' && base) ? base : owner;
-      } catch {
-        return owner;
-      }
-    })();
-
     const updated = await CondMsgSignaturePref.findOneAndUpdate(
       { owner: String(canonicalOwner).toLowerCase(), mailbox_id: mailboxId },
       { $set: { enabled, text } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).lean();
 
-    // Limpa duplicata antiga (best-effort) quando houve mudança de chave.
-    if (canonicalOwner && canonicalOwner !== owner) {
+    // Limpa duplicatas antigas (best-effort) quando a chave canônica mudou
+    // ou quando a sessão ainda carrega ids legados do mesmo usuário.
+    const duplicateOwners = Array.from(new Set([
+      ...(Array.isArray(cleanupOwnerKeys) ? cleanupOwnerKeys : []),
+      ...(canonicalOwner && canonicalOwner !== owner ? [owner] : []),
+    ].filter(Boolean)));
+    if (duplicateOwners.length) {
       try {
-        await CondMsgSignaturePref.deleteMany({ mailbox_id: mailboxId, owner: owner, _id: { $ne: updated?._id } });
+        await CondMsgSignaturePref.deleteMany({
+          mailbox_id: mailboxId,
+          owner: { $in: duplicateOwners },
+          _id: { $ne: updated?._id }
+        });
       } catch { /* noop */ }
     }
 
@@ -8350,7 +8486,7 @@ app.put('/api/msg/signature', express.json({ limit: '64kb' }), async (req, res) 
 // API: envio de mensagens (gera protocolo AAAA-XXXXXXXX)
 app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
   try {
-    const ctxUser = getCtxUser(req);
+    let ctxUser = getCtxUser(req);
     if (!ctxUser) return res.status(401).json({ error: 'Não autenticado' });
     if (mongoose.connection.readyState !== 1) {
       try { res.set('Retry-After', '5'); } catch {}
@@ -8375,13 +8511,19 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
     const to = sanitizeGroupMembers(payload?.to);
     const cc = sanitizeGroupMembers(payload?.cc);
 
+    const mailboxWriteContext = await preparePortalMailboxWriteSideContext({ ctxUser, req });
+    ctxUser = mailboxWriteContext.ctxUser;
+    const fromPortal = mailboxWriteContext.fromPortal;
+    const admin = mailboxWriteContext.admin;
+    const preparedUnidadeId = mailboxWriteContext.unidadeId;
+
     // Regra do Portal do Morador: restringe destinatários à unidade/subunidades do usuário.
     // Isso evita enviar mensagens para usuários de outros condomínios quando há sessão do Gestor no mesmo navegador.
-    const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
     let portalPersonalEmails = new Set();
     if (fromPortal) {
       const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
       const unitIds = (unidadesOptions || []).map(u => u?._id).filter(Boolean);
+      if (!unitIds.length && preparedUnidadeId) unitIds.push(preparedUnidadeId);
       const allowedUnitIds = new Set(unitIds.map(u => String(u).trim()).filter(Boolean));
 
       // Portal: permitir apenas destinatários vinculados à unidade/subunidades.
@@ -8407,6 +8549,7 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
           (condEmails || []).forEach(u => {
             const em = String(u?.email || '').trim().toLowerCase();
             if (em) allowedEmails.add(em);
+            if (em && isEmailish(em)) portalPersonalEmails.add(em);
           });
         }
       } catch { /* noop */ }
@@ -8496,7 +8639,6 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
 
     let unidadeId = null;
     let fromMailboxName = '';
-    const admin = userCanScopeAll(ctxUser);
 
     const fromOwner = String(getMsgOwnerKey(ctxUser, req) || '').trim().toLowerCase();
 
@@ -8506,7 +8648,7 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
     }
 
     if (fromMailboxId === 'pessoal') {
-      const uid = getUserUnidadeId(ctxUser);
+      const uid = preparedUnidadeId || getUserUnidadeId(ctxUser);
       if (uid && mongoose.isValidObjectId(uid)) unidadeId = uid;
       fromMailboxName = String(payload?.fromMailboxName || 'Pessoal').trim();
     } else {
@@ -8533,28 +8675,7 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
       const suspendedOwnersColab = new Set(hasNew ? colabList : legacy);
 
       const resolvePortalPerms = (emailLower) => {
-        const em = String(emailLower || '').trim().toLowerCase();
-        if (!isEmailish(em)) {
-          return {
-            permitir_pessoal_para_pessoal: true,
-            permitir_pessoal_para_habitacao: true,
-            permitir_pessoal_para_colaborador: true
-          };
-        }
-        const list = Array.isArray(settings?.portal_user_perms) ? settings.portal_user_perms : [];
-        const found = list.find(p => String(p?.email || '').trim().toLowerCase() === em);
-        if (!found) {
-          return {
-            permitir_pessoal_para_pessoal: true,
-            permitir_pessoal_para_habitacao: true,
-            permitir_pessoal_para_colaborador: true
-          };
-        }
-        return {
-          permitir_pessoal_para_pessoal: (found?.permitir_pessoal_para_pessoal !== false),
-          permitir_pessoal_para_habitacao: (found?.permitir_pessoal_para_habitacao !== false),
-          permitir_pessoal_para_colaborador: (found?.permitir_pessoal_para_colaborador !== false)
-        };
+        return resolveMsgRecipientPermsFromSettings(settings, emailLower);
       };
 
       const fromOwnerLower = String(fromOwner || '').trim().toLowerCase();
@@ -8861,7 +8982,11 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
         if (suspendedPersonalGlobal) {
           return res.status(400).json({ error: 'Destinatários de caixa pessoal estão suspensos para este condomínio.' });
         }
-        const bad = personalRecipients.find(em => suspendedOwners.has(em));
+        const suspendedRecipientOwners = new Set([
+          ...Array.from(suspendedOwnersPortal || []),
+          ...Array.from(suspendedOwnersColab || []),
+        ]);
+        const bad = personalRecipients.find(em => suspendedRecipientOwners.has(em));
         if (bad) {
           return res.status(400).json({ error: 'Um ou mais destinatários estão com caixa pessoal suspensa.' });
         }
@@ -8883,25 +9008,15 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
 
     // Estados por caixa (para arquivar/lixeira/fixar por destinatário)
     const scopes = new Map();
-    const pushScope = (s) => {
-      const mb = String(s?.mailboxId || '').trim();
-      const ow = String(s?.owner || '').trim().toLowerCase();
-      if (!mb) return;
-      scopes.set(`${mb}::${ow}`, { mailboxId: mb, owner: ow });
-    };
     const fromOwnerKey = String(fromOwner || '').trim().toLowerCase();
-    pushScope({ mailboxId: fromMailboxId, owner: fromOwnerKey });
+    pushMsgStateScope(scopes, { mailboxId: fromMailboxId, owner: fromOwnerKey });
 
     // Idempotência: se o client repetir o POST (duplo clique / retry), devolve a mesma mensagem.
     if (clientNonce) {
       try {
-        const existing = await CondMsgMessage.findOne({
-          from_owner: fromOwnerKey,
-          from_mailbox_id: fromMailboxId,
-          client_nonce: clientNonce
-        }).select('_id protocolo').lean();
+        const existing = await findExistingMsgByClientNonce({ fromOwnerKey, fromMailboxId, clientNonce });
         if (existing && existing._id) {
-          return res.status(200).json({ ok: true, id: String(existing._id), protocolo: String(existing.protocolo || ''), deduped: true });
+          return res.status(200).json(buildMsgSendDedupedResponse(existing));
         }
       } catch {
         // best effort: segue e deixa o índice/erro tratar corrida
@@ -8917,23 +9032,15 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
       if (s) {
         const k = `${String(s.mailboxId || '').trim()}::${String(s.owner || '').trim().toLowerCase()}`;
         recipientKeys.add(k);
-        pushScope(s);
+        pushMsgStateScope(scopes, s);
       }
     });
     const senderAlsoRecipient = recipientKeys.has(senderKey);
-    const initialStates = Array.from(scopes.values()).map(s => {
-      const isSender = (String(s.mailboxId) === String(fromMailboxId)) && (String(s.owner || '').toLowerCase() === fromOwnerKey);
-      return {
-        mailbox_id: s.mailboxId,
-        owner: s.owner,
-        // Se o usuário enviou para si mesmo (mesma chave), a mensagem deve nascer como NÃO LIDA
-        // para poder aparecer destacada na Entrada (e alimentar contador/badge).
-        lida_em: (isSender && !senderAlsoRecipient) ? new Date() : null,
-        arquivada_em: null,
-        lixeira_em: null,
-        fixada_em: null,
-        marcadores: []
-      };
+    const initialStates = buildMsgInitialStates({
+      scopes,
+      fromMailboxId,
+      fromOwner: fromOwnerKey,
+      senderAlsoRecipient,
     });
 
     // tenta gerar protocolo único
@@ -8979,13 +9086,9 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
           // Se o dup for do client_nonce (corrida), tenta retornar o existente.
           if (clientNonce) {
             try {
-              const existing = await CondMsgMessage.findOne({
-                from_owner: fromOwnerKey,
-                from_mailbox_id: fromMailboxId,
-                client_nonce: clientNonce
-              }).select('_id protocolo').lean();
+              const existing = await findExistingMsgByClientNonce({ fromOwnerKey, fromMailboxId, clientNonce });
               if (existing && existing._id) {
-                return res.status(200).json({ ok: true, id: String(existing._id), protocolo: String(existing.protocolo || ''), deduped: true });
+                return res.status(200).json(buildMsgSendDedupedResponse(existing));
               }
             } catch { /* noop */ }
           }
@@ -9037,11 +9140,7 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
       // Best-effort: evita blobs órfãos em caso de falha parcial durante upload.
       if (process.env.ENABLE_DELETE_OLD_BLOB === '1') {
         try {
-          for (const a of saved) {
-            const target = String(a?.url || a?.caminho || '').trim();
-            if (!target) continue;
-            try { await del(target, blobToken ? { token: blobToken } : undefined); } catch { /* noop */ }
-          }
+          await cleanupMsgBlobAttachments(saved, blobToken);
         } catch { /* noop */ }
       }
       throw e;
@@ -9057,11 +9156,7 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
         // Best-effort: se não conseguimos persistir a referência, tente remover blobs recém enviados.
         if (process.env.ENABLE_DELETE_OLD_BLOB === '1') {
           try {
-            for (const a of saved) {
-              const target = String(a?.url || a?.caminho || '').trim();
-              if (!target) continue;
-              try { await del(target, blobToken ? { token: blobToken } : undefined); } catch { /* noop */ }
-            }
+            await cleanupMsgBlobAttachments(saved, blobToken);
           } catch { /* noop */ }
         }
       }
@@ -9220,6 +9315,23 @@ app.post('/api/msg/messages', maybeUploadMsgAttachments, async (req, res) => {
 // =========================
 // Admin: Configurações > Geral (Caixa de Mensagem)
 // =========================
+function prepareMsgAdminSettingsContext({ ctxUser, unidadeId }) {
+  const targetUnidadeId = String(unidadeId || '').trim();
+  if (!targetUnidadeId || !mongoose.isValidObjectId(targetUnidadeId)) {
+    const err = new Error('unidade_id inválido');
+    err.status = 400;
+    throw err;
+  }
+
+  if (!userCanMsgAdminForUnidade(ctxUser, targetUnidadeId)) {
+    const err = new Error('Acesso negado');
+    err.status = 403;
+    throw err;
+  }
+
+  return { unidadeId: targetUnidadeId };
+}
+
 app.get('/api/msg/admin/settings', async (req, res) => {
   try {
     const ctxUser = getCtxUser(req);
@@ -9229,14 +9341,17 @@ app.get('/api/msg/admin/settings', async (req, res) => {
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const unidadeId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim();
-    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
-
-    if (!userCanMsgAdminForUnidade(ctxUser, unidadeId)) return res.status(403).json({ error: 'Acesso negado' });
+    const adminSettingsContext = prepareMsgAdminSettingsContext({
+      ctxUser,
+      unidadeId: String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim(),
+    });
+    const { unidadeId } = adminSettingsContext;
 
     const doc = await getOrInitMsgSettingsForUnidade(unidadeId);
     return res.json({ ok: true, settings: toSettingsClient(doc) });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][GET /api/msg/admin/settings] erro:', e);
     return res.status(500).json({ error: 'Falha ao carregar configurações' });
   }
@@ -9251,10 +9366,11 @@ app.put('/api/msg/admin/settings', express.json({ limit: '200kb' }), async (req,
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const unidadeId = String(req.body?.unidade_id || req.body?.unidadeId || req.query?.unidade_id || '').trim();
-    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
-
-    if (!userCanMsgAdminForUnidade(ctxUser, unidadeId)) return res.status(403).json({ error: 'Acesso negado' });
+    const adminSettingsContext = prepareMsgAdminSettingsContext({
+      ctxUser,
+      unidadeId: String(req.body?.unidade_id || req.body?.unidadeId || req.query?.unidade_id || '').trim(),
+    });
+    const { unidadeId } = adminSettingsContext;
 
     const patch = sanitizeMsgSettingsPayload(req.body);
     const updatedBy = String(getUserIdentityKey(ctxUser) || ctxUser?.email || ctxUser?.nome || ctxUser?.name || '').trim();
@@ -9285,6 +9401,8 @@ app.put('/api/msg/admin/settings', express.json({ limit: '200kb' }), async (req,
 
     return res.json({ ok: true, settings: toSettingsClient(updated) });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][PUT /api/msg/admin/settings] erro:', e);
     return res.status(500).json({ error: 'Falha ao salvar configurações' });
   }
@@ -9300,10 +9418,11 @@ app.get('/api/msg/admin/mailboxes', async (req, res) => {
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const unidadeId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim();
-    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
-
-    if (!userCanMsgAdminForUnidade(ctxUser, unidadeId)) return res.status(403).json({ error: 'Acesso negado' });
+    const adminSettingsContext = prepareMsgAdminSettingsContext({
+      ctxUser,
+      unidadeId: String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim(),
+    });
+    const { unidadeId } = adminSettingsContext;
 
     const docs = await CondMsgMailbox.find({ unidade_id: new mongoose.Types.ObjectId(unidadeId) })
       .sort({ ativo: -1, name: 1, createdAt: -1 })
@@ -9321,6 +9440,8 @@ app.get('/api/msg/admin/mailboxes', async (req, res) => {
 
     return res.json({ ok: true, data: out });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][GET /api/msg/admin/mailboxes] erro:', e);
     return res.status(500).json({ error: 'Falha ao listar caixas' });
   }
@@ -9336,15 +9457,15 @@ app.patch('/api/msg/admin/mailboxes/:id/status', express.json({ limit: '20kb' })
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const id = String(req.params?.id || '').trim();
-    if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'id inválido' });
+    const adminMailboxWriteContext = await prepareMsgAdminMailboxWriteTargetContext({
+      ctxUser,
+      mailboxId: req.params?.id,
+    });
+    const { id, doc, hasGlobalScope } = adminMailboxWriteContext;
     const ativo = !!(req.body?.ativo ?? req.body?.active ?? req.body?.enabled);
 
-    const doc = await CondMsgMailbox.findById(id);
-    if (!doc) return res.status(404).json({ error: 'Caixa não encontrada' });
-
     // Diretor: só pode alterar caixas da própria unidade.
-    if (!userCanScopeAll(ctxUser)) {
+    if (!hasGlobalScope) {
       const docUnidadeId = String(doc?.unidade_id || '').trim();
       if (!userCanMsgAdminForUnidade(ctxUser, docUnidadeId)) return res.status(403).json({ error: 'Acesso negado' });
     }
@@ -9352,6 +9473,8 @@ app.patch('/api/msg/admin/mailboxes/:id/status', express.json({ limit: '20kb' })
     await doc.save();
     return res.json({ ok: true, id: String(doc._id), ativo: doc.ativo !== false });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][PATCH /api/msg/admin/mailboxes/:id/status] erro:', e);
     return res.status(500).json({ error: 'Falha ao atualizar status' });
   }
@@ -9367,10 +9490,11 @@ app.get('/api/msg/admin/users', async (req, res) => {
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const unidadeId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim();
-    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
-
-    if (!userCanMsgAdminForUnidade(ctxUser, unidadeId)) return res.status(403).json({ error: 'Acesso negado' });
+    const adminSettingsContext = prepareMsgAdminSettingsContext({
+      ctxUser,
+      unidadeId: String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim(),
+    });
+    const { unidadeId } = adminSettingsContext;
     const unitObjectId = new mongoose.Types.ObjectId(unidadeId);
 
     const warnings = [];
@@ -9665,6 +9789,8 @@ app.get('/api/msg/admin/users', async (req, res) => {
 
     return res.json({ ok: true, data: out, ...(warnings.length ? { warnings } : {}) });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][GET /api/msg/admin/users] erro:', e);
     return res.status(500).json({ error: 'Falha ao listar usuários' });
   }
@@ -9831,9 +9957,11 @@ app.get('/api/msg/admin/metrics/users', async (req, res) => {
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const unidadeId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim();
-    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
-    if (!userCanMsgAdminForUnidade(ctxUser, unidadeId)) return res.status(403).json({ error: 'Acesso negado' });
+    const adminSettingsContext = prepareMsgAdminSettingsContext({
+      ctxUser,
+      unidadeId: String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim(),
+    });
+    const { unidadeId } = adminSettingsContext;
     const { from, to } = parseDateRange(req.query);
 
     const match = {
@@ -9913,6 +10041,8 @@ app.get('/api/msg/admin/metrics/users', async (req, res) => {
       data
     });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][GET /api/msg/admin/metrics/users] erro:', e);
     return res.status(500).json({ error: 'Falha ao calcular métricas' });
   }
@@ -9928,14 +10058,18 @@ app.get('/api/msg/admin/metrics/timeseries/users', async (req, res) => {
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const unidadeId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim();
-    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
-    if (!userCanMsgAdminForUnidade(ctxUser, unidadeId)) return res.status(403).json({ error: 'Acesso negado' });
+    const adminSettingsContext = prepareMsgAdminSettingsContext({
+      ctxUser,
+      unidadeId: String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim(),
+    });
+    const { unidadeId } = adminSettingsContext;
     const { from, to } = parseDateRange(req.query);
 
     const points = await aggregateMsgSeriesUsers(unidadeId, from, to);
     return res.json({ ok: true, unidade_id: unidadeId, from, to, interval: 'day', points });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][GET /api/msg/admin/metrics/timeseries/users] erro:', e);
     return res.status(500).json({ error: 'Falha ao calcular série temporal' });
   }
@@ -9951,9 +10085,11 @@ app.get('/api/msg/admin/metrics/mailboxes', async (req, res) => {
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const unidadeId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim();
-    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
-    if (!userCanMsgAdminForUnidade(ctxUser, unidadeId)) return res.status(403).json({ error: 'Acesso negado' });
+    const adminSettingsContext = prepareMsgAdminSettingsContext({
+      ctxUser,
+      unidadeId: String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim(),
+    });
+    const { unidadeId } = adminSettingsContext;
     const { from, to } = parseDateRange(req.query);
 
     const match = {
@@ -10064,6 +10200,8 @@ app.get('/api/msg/admin/metrics/mailboxes', async (req, res) => {
       data
     });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][GET /api/msg/admin/metrics/mailboxes] erro:', e);
     return res.status(500).json({ error: 'Falha ao calcular métricas' });
   }
@@ -10079,14 +10217,18 @@ app.get('/api/msg/admin/metrics/timeseries/mailboxes', async (req, res) => {
       return res.status(503).json({ error: 'DB indisponível' });
     }
 
-    const unidadeId = String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim();
-    if (!unidadeId || !mongoose.isValidObjectId(unidadeId)) return res.status(400).json({ error: 'unidade_id inválido' });
-    if (!userCanMsgAdminForUnidade(ctxUser, unidadeId)) return res.status(403).json({ error: 'Acesso negado' });
+    const adminSettingsContext = prepareMsgAdminSettingsContext({
+      ctxUser,
+      unidadeId: String(req.query?.unidade_id || req.query?.unidadeId || req.query?.unidade || '').trim(),
+    });
+    const { unidadeId } = adminSettingsContext;
     const { from, to } = parseDateRange(req.query);
 
     const points = await aggregateMsgSeriesMailboxes(unidadeId, from, to);
     return res.json({ ok: true, unidade_id: unidadeId, from, to, interval: 'day', points });
   } catch (e) {
+    const st = e && e.status ? Number(e.status) : 500;
+    if (st !== 500) return res.status(st).json({ error: String(e.message || 'Erro') });
     console.error('[condominios][GET /api/msg/admin/metrics/timeseries/mailboxes] erro:', e);
     return res.status(500).json({ error: 'Falha ao calcular série temporal' });
   }
@@ -10103,20 +10245,16 @@ app.get('/api/msg/markers', async (req, res) => {
     }
 
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || '').trim() || 'pessoal';
-    const admin = userCanScopeAll(ctxUser);
-
-    // Portal: na caixa pessoal, tente garantir email/candidatos (compat com ownerKey legado).
-    let portalEmailCandidatesLower = [];
-    try {
-      const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-      if (fromPortal && !admin && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-        portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    const scope = resolveMailboxScope(ctxUser, mailboxId, req);
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      allowRefererPortal: true,
+      includePortalEmailCandidatesInOwnerCandidates: true,
+      includePortalHabitacaoOwnerVariantsInOwnerCandidates: true,
+    });
+    ctxUser = readSideContext.ctxUser;
+    const { fromPortal, admin, scope, ownerCandidatesLower } = readSideContext;
 
     let unidadeId = null;
     if (scope.mailboxId !== 'pessoal') {
@@ -10135,40 +10273,6 @@ app.get('/api/msg/markers', async (req, res) => {
 
       unidadeId = mailbox.unidade_id || null;
     }
-
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!out.includes(s)) out.push(s);
-      };
-      add(scope.owner);
-      add(ctxUser?.email);
-      add(ctxUser?.userEmail);
-      add(ctxUser?.contato_email);
-      add(ctxUser?.contatoEmail);
-      add(ctxUser?.cond_usuario_id);
-      add(ctxUser?.condUsuarioId);
-      add(ctxUser?._id);
-      add(ctxUser?.id);
-      add(req?.__wdgPortalCookieUserId);
-      (portalEmailCandidatesLower || []).forEach(add);
-
-      // Compat: incluir variações legadas (ex.: ::portal/::colab) além do e-mail canônico.
-      try {
-        const ownerExact = String(scope.owner || '').trim().toLowerCase();
-        const base = ownerKeyBaseEmailLower(ownerExact) || (isEmailish(ownerExact) ? ownerExact : '');
-        if (base) {
-          add(base);
-          add(`${base}::portal`);
-          add(`${base}::colab`);
-        }
-      } catch { /* noop */ }
-
-      return out;
-    })();
 
     const ownerQuery = (scope.mailboxId === 'pessoal' && ownerCandidatesLower.length)
       ? { $in: ownerCandidatesLower }
@@ -10218,21 +10322,16 @@ app.post('/api/msg/markers', express.json(), async (req, res) => {
     const nome = normalizeMarkerName(req.body?.nome || req.body?.name);
     const cor = normalizeMarkerColorKey(req.body?.cor || req.body?.color);
     if (!nome) return res.status(400).json({ error: 'nome é obrigatório' });
-    const admin = userCanScopeAll(ctxUser);
-
-    // Portal: na caixa pessoal, tente garantir email/candidatos (compat com ownerKey legado).
-    let portalEmailCandidatesLower = [];
-    let fromPortal = false;
-    try {
-      const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-      fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-      if (fromPortal && !admin && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-        portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    const scope = resolveMailboxScope(ctxUser, mailboxId, req);
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      allowRefererPortal: true,
+      includePortalEmailCandidatesInOwnerCandidates: true,
+      includePortalHabitacaoOwnerVariantsInOwnerCandidates: true,
+    });
+    ctxUser = readSideContext.ctxUser;
+    const { admin, scope, ownerCandidatesLower } = readSideContext;
     let unidadeId = null;
 
     if (scope.mailboxId !== 'pessoal') {
@@ -10241,37 +10340,6 @@ app.post('/api/msg/markers', express.json(), async (req, res) => {
       if (!admin && !mailboxCanManageMarker(mailbox, ctxUser)) return res.status(403).json({ error: 'Sem permissão para gerenciar marcador' });
       unidadeId = mailbox.unidade_id || null;
     }
-
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!out.includes(s)) out.push(s);
-      };
-      add(scope.owner);
-      add(ctxUser?.email);
-      add(ctxUser?.userEmail);
-      add(ctxUser?.contato_email);
-      add(ctxUser?.contatoEmail);
-      add(ctxUser?.cond_usuario_id);
-      add(ctxUser?.condUsuarioId);
-      add(ctxUser?._id);
-      add(ctxUser?.id);
-      add(req?.__wdgPortalCookieUserId);
-      (portalEmailCandidatesLower || []).forEach(add);
-      try {
-        const ownerExact = String(scope.owner || '').trim().toLowerCase();
-        const base = ownerKeyBaseEmailLower(ownerExact) || (isEmailish(ownerExact) ? ownerExact : '');
-        if (base) {
-          add(base);
-          add(`${base}::portal`);
-          add(`${base}::colab`);
-        }
-      } catch { /* noop */ }
-      return out;
-    })();
 
     // Se já existir (em algum owner compat), reaproveite.
     try {
@@ -10350,57 +10418,22 @@ app.delete('/api/msg/markers/:id', async (req, res) => {
     if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'id inválido' });
 
     const mailboxId = String(req.query.mailboxId || req.query.mailbox_id || req.body?.mailboxId || req.body?.mailbox_id || '').trim() || 'pessoal';
-    const admin = userCanScopeAll(ctxUser);
-
-    // Portal: na caixa pessoal, tente garantir email/candidatos (compat com ownerKey legado).
-    let portalEmailCandidatesLower = [];
-    try {
-      const ref = String(req.headers?.referer || req.headers?.Referer || '').toLowerCase();
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1' || ref.includes('/portal-morador');
-      if (fromPortal && !admin && mailboxId === 'pessoal') {
-        ctxUser = await ensurePortalEmailInCtxUser(ctxUser, req);
-        portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(ctxUser, req);
-      }
-    } catch { /* noop */ }
-
-    const scope = resolveMailboxScope(ctxUser, mailboxId, req);
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      allowRefererPortal: true,
+      includePortalEmailCandidatesInOwnerCandidates: true,
+      includePortalHabitacaoOwnerVariantsInOwnerCandidates: true,
+    });
+    ctxUser = readSideContext.ctxUser;
+    const { admin, scope, ownerCandidatesLower } = readSideContext;
 
     if (scope.mailboxId !== 'pessoal') {
       const mailbox = await loadMailboxOrThrow(scope.mailboxId);
       if (!(await canAccessMsgMailbox(mailbox, ctxUser, req))) return res.status(403).json({ error: 'Acesso negado' });
       if (!admin && !mailboxCanManageMarker(mailbox, ctxUser)) return res.status(403).json({ error: 'Sem permissão para gerenciar marcador' });
     }
-
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!out.includes(s)) out.push(s);
-      };
-      add(scope.owner);
-      add(ctxUser?.email);
-      add(ctxUser?.userEmail);
-      add(ctxUser?.contato_email);
-      add(ctxUser?.contatoEmail);
-      add(ctxUser?.cond_usuario_id);
-      add(ctxUser?.condUsuarioId);
-      add(ctxUser?._id);
-      add(ctxUser?.id);
-      add(req?.__wdgPortalCookieUserId);
-      (portalEmailCandidatesLower || []).forEach(add);
-      try {
-        const ownerExact = String(scope.owner || '').trim().toLowerCase();
-        const base = ownerKeyBaseEmailLower(ownerExact) || (isEmailish(ownerExact) ? ownerExact : '');
-        if (base) {
-          add(base);
-          add(`${base}::portal`);
-          add(`${base}::colab`);
-        }
-      } catch { /* noop */ }
-      return out;
-    })();
 
     const ownerQuery = (scope.mailboxId === 'pessoal' && ownerCandidatesLower.length)
       ? { $in: ownerCandidatesLower }
@@ -11910,27 +11943,14 @@ app.post('/api/msg/messages/actions', express.json(), async (req, res) => {
     maybeRunCondMsgRetention('POST /api/msg/messages/actions').catch(() => { /* noop */ });
 
     const mailboxId = String(req.body?.mailboxId || req.body?.mailbox_id || '').trim() || 'pessoal';
-
-    // Portal: na caixa pessoal, tenta garantir email/candidatos consistentes.
-    let ctxUserForScope = ctxUser;
-    try {
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-      const adminTmp = userCanScopeAll(ctxUserForScope);
-      if (fromPortal && !adminTmp && mailboxId === 'pessoal') {
-        ctxUserForScope = await ensurePortalEmailInCtxUser(ctxUserForScope, req);
-      }
-    } catch { /* noop */ }
-
-    let portalEmailCandidatesLower = [];
-    try {
-      const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-      const adminTmp = userCanScopeAll(ctxUserForScope);
-      if (fromPortal && !adminTmp && mailboxId === 'pessoal') {
-        portalEmailCandidatesLower = await collectPortalEmailCandidatesLower(ctxUserForScope, req);
-      }
-    } catch { /* noop */ }
-
-    const scope = resolveMailboxScope(ctxUserForScope, mailboxId, req);
+    const readSideContext = await preparePortalPersonalReadSideContext({
+      ctxUser,
+      req,
+      mailboxId,
+      includePortalEmailCandidatesInOwnerCandidates: true,
+      includePortalHabitacaoOwnerVariantsInOwnerCandidates: true,
+    });
+    const { ctxUser: ctxUserForScope, fromPortal, admin, scope, ownerCandidatesLower } = readSideContext;
     const action = String(req.body?.action || '').trim().toLowerCase();
     const ids = Array.isArray(req.body?.ids) ? req.body.ids.map(x => String(x || '').trim()).filter(Boolean) : [];
     const marker = normalizeMarkerName(req.body?.marker || req.body?.marcador);
@@ -11940,7 +11960,6 @@ app.post('/api/msg/messages/actions', express.json(), async (req, res) => {
     if (!action) return res.status(400).json({ error: 'action é obrigatório' });
     if (!ids.length) return res.status(400).json({ error: 'ids é obrigatório' });
 
-    const admin = userCanScopeAll(ctxUser);
     let mailboxDoc = null;
     let allowPublicPortalForMailbox = false;
     let publicPortalOwnerLower = '';
@@ -11950,7 +11969,6 @@ app.post('/api/msg/messages/actions', express.json(), async (req, res) => {
 
       // Permissões só valem para caixas de grupo.
       if (mailboxIsGroup(mailboxDoc)) {
-        const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
         const allowPublicPortal = !!(fromPortal && !admin && mailboxIsPublic(mailboxDoc) && !mailboxIsMember(mailboxDoc, ctxUser));
         allowPublicPortalForMailbox = allowPublicPortal;
         if (allowPublicPortalForMailbox) {
@@ -11978,55 +11996,6 @@ app.post('/api/msg/messages/actions', express.json(), async (req, res) => {
         }
       }
     }
-
-    const ownerCandidatesLower = (() => {
-      if (scope.mailboxId !== 'pessoal') return [];
-      const isGoodOwnerKey = (s) => {
-        const v = String(s || '').trim();
-        if (!v) return false;
-        if (isEmailish(v)) return true;
-        // OwnerKey composto (ex.: email::portal::hab:<id>, email::portal, email::colab)
-        if (ownerKeyBaseEmailLower(v)) return true;
-        if (mongoose.isValidObjectId(v)) return true;
-        return false;
-      };
-      const out = [];
-      const add = (v) => {
-        const s = String(v || '').trim().toLowerCase();
-        if (!s) return;
-        if (!isGoodOwnerKey(s)) return;
-        if (!out.includes(s)) out.push(s);
-      };
-      add(scope.owner);
-      add(ctxUserForScope?.email);
-      add(ctxUserForScope?.userEmail);
-      add(ctxUserForScope?.contato_email);
-      add(ctxUserForScope?.contatoEmail);
-      add(ctxUserForScope?.cond_usuario_id);
-      add(ctxUserForScope?.condUsuarioId);
-      add(ctxUserForScope?._id);
-      add(ctxUserForScope?.id);
-      add(req?.__wdgPortalCookieUserId);
-      (portalEmailCandidatesLower || []).forEach(add);
-
-      // Portal: incluir ownerKey por habitação quando disponível (evita gravar state em owner diferente do lido pelo GET)
-      try {
-        const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-        const adminTmp = userCanScopeAll(ctxUserForScope);
-        if (fromPortal && !adminTmp) {
-          const habIdRaw = String(ctxUserForScope?.habitacao_id || ctxUserForScope?.habitacaoId || '').trim();
-          const ownerExact = String(scope.owner || '').trim().toLowerCase();
-          const baseEmail = ownerKeyBaseEmailLower(ownerExact) || normalizeEmailKey(ownerExact)
-            || String(ctxUserForScope?.email || ctxUserForScope?.userEmail || ctxUserForScope?.contato_email || ctxUserForScope?.contatoEmail || '').trim().toLowerCase();
-          if (isEmailish(baseEmail) && habIdRaw && mongoose.isValidObjectId(habIdRaw)) {
-            add(`${baseEmail}::portal::hab:${habIdRaw}`);
-            add(`${baseEmail}::portal`);
-            add(`${baseEmail}::colab`);
-          }
-        }
-      } catch { /* noop */ }
-      return out;
-    })();
 
     // Caixas de grupo: o state costuma ser por mailbox_id (owner pode variar/ser vazio/legado).
     // Regra geral: para que a listagem reflita imediatamente as ações (lixeira/arquivo/etc),
@@ -12078,21 +12047,6 @@ app.post('/api/msg/messages/actions', express.json(), async (req, res) => {
         addPick(ctxUserForScope?.id);
         addPick(req?.__wdgPortalCookieUserId);
         (ownerCandidatesLower || []).forEach(addPick);
-
-        // Portal: adiciona chave por habitação ao conjunto de picks quando disponível.
-        try {
-          const fromPortal = String(req.headers['x-wdg-portal'] || '').trim() === '1';
-          const adminTmp = userCanScopeAll(ctxUserForScope);
-          if (fromPortal && !adminTmp) {
-            const habIdRaw = String(ctxUserForScope?.habitacao_id || ctxUserForScope?.habitacaoId || '').trim();
-            const ownerExact = String(scope.owner || '').trim().toLowerCase();
-            const baseEmail = ownerKeyBaseEmailLower(ownerExact) || normalizeEmailKey(ownerExact)
-              || String(ctxUserForScope?.email || ctxUserForScope?.userEmail || ctxUserForScope?.contato_email || ctxUserForScope?.contatoEmail || '').trim().toLowerCase();
-            if (isEmailish(baseEmail) && habIdRaw && mongoose.isValidObjectId(habIdRaw)) {
-              addPick(`${baseEmail}::portal::hab:${habIdRaw}`);
-            }
-          }
-        } catch { /* noop */ }
 
         const ownerSet = new Set(picks);
 
@@ -12442,12 +12396,7 @@ app.post('/api/msg/messages/actions', express.json(), async (req, res) => {
     async function maybeDeleteMsgBlobs(messageDoc) {
       if (process.env.ENABLE_DELETE_OLD_BLOB !== '1') return;
       try {
-        const anexos = Array.isArray(messageDoc?.anexos) ? messageDoc.anexos : [];
-        for (const a of anexos) {
-          const target = String(a?.url || a?.caminho || '').trim();
-          if (!target) continue;
-          try { await del(target, blobToken ? { token: blobToken } : undefined); } catch { /* noop */ }
-        }
+        await cleanupMsgBlobAttachments(messageDoc?.anexos, blobToken);
       } catch { /* noop */ }
     }
 
