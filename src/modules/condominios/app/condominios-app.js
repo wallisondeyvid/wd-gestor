@@ -14739,113 +14739,148 @@ app.get('/api/colaboradores', async (req, res) => {
 
 // ======================= Pessoas (Proprietários, Moradores, Usuários) =======================
 // Lista proprietários filtrados por escopo do operador e opcionalmente por unidade
+async function resolveProprietarioSearchScope({ req }) {
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+  const unitIds = (unidadesOptions || []).map(u => u._id);
+
+  return { isAdmin, unitIds };
+}
+
+function buildProprietarioSearchFilter({ scope, unidadeParam }) {
+  const filter = { ativo: { $ne: false } };
+
+  if (unidadeParam) filter.unidade_id = unidadeParam;
+  else if (!scope.isAdmin) {
+    if (!scope.unitIds.length) filter._id = { $exists: false };
+    else filter.unidade_id = { $in: scope.unitIds };
+  }
+
+  return filter;
+}
+
+async function readProprietarioSearchList({ filter }) {
+  const props = await CondProprietario.find(filter).select('_id unidade_id cond_usuario_id usuario_id nome tipo rg cpf cnpj data_nascimento sexo pai mae contato_email contato_telefone whatsapp ativo').lean();
+  if (!props.length) {
+    return { props: [], cUsers: [], habs: [], moradores: [], blocos: [], andares: [] };
+  }
+
+  const cUserIds = props.map(p => p.cond_usuario_id).filter(Boolean);
+  const cUsers = cUserIds.length
+    ? await CondUsuario.find({ _id: { $in: cUserIds } }).select('_id email nome rg cpf data_nascimento sexo pai mae telefone whatsapp').lean()
+    : [];
+
+  const propIds = props.map(p => p._id);
+  const habs = await CondHabitacao.find({ proprietario_id: { $in: propIds } }).select('_id unidade_id proprietario_id bloco_id andar_id numero tipo descricao').lean();
+  const habIds = habs.map(h => h._id).filter(Boolean);
+  const moradores = habIds.length
+    ? await CondMorador.find({ habitacao_id: { $in: habIds }, ativo: { $ne: false } }).select('_id habitacao_id cond_usuario_id email cpf').lean()
+    : [];
+  const blocoIds = [...new Set(habs.map(h => h.bloco_id).filter(Boolean))];
+  const andarIds = [...new Set(habs.map(h => h.andar_id).filter(Boolean))];
+  const [blocos, andares] = await Promise.all([
+    blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
+    andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
+  ]);
+
+  return { props, cUsers, habs, moradores, blocos, andares };
+}
+
+function buildProprietarioSearchResponse(list) {
+  if (!(list.props || []).length) return [];
+
+  const propById = new Map((list.props || []).map(p => [String(p._id), p]));
+  const cUserById = new Map((list.cUsers || []).map(u => [String(u._id), u]));
+  const blocoMap = new Map((list.blocos || []).map(b => [String(b._id), b]));
+  const andarMap = new Map((list.andares || []).map(a => [String(a._id), a]));
+  const morByHab = new Map();
+
+  for (const mor of (list.moradores || [])) {
+    const key = String(mor.habitacao_id);
+    if (!morByHab.has(key)) morByHab.set(key, []);
+    morByHab.get(key).push(mor);
+  }
+
+  const normalizeEmail = value => String(value || '').trim().toLowerCase();
+  const normalizeCpf = value => String(value || '').replace(/\D/g, '');
+  const habsPorProp = new Map();
+
+  for (const h of (list.habs || [])) {
+    const key = String(h.proprietario_id);
+    if (!habsPorProp.has(key)) habsPorProp.set(key, []);
+
+    const blocoNome = h.bloco_id ? (blocoMap.get(String(h.bloco_id))?.nome || '') : '';
+    const andarNome = h.andar_id ? (andarMap.get(String(h.andar_id))?.nome || '') : '';
+    const numero = h.numero || h.identificador || h.label || '';
+    const parts = [blocoNome, andarNome, numero].filter(Boolean);
+    let hab_label = parts.join(' - ');
+
+    if (!hab_label) {
+      const fallback = [h.tipo || '', numero || '', String(h._id || '').slice(-6)];
+      hab_label = fallback.filter(Boolean).join(' - ') || String(h._id || '');
+    }
+
+    const owner = propById.get(key) || null;
+    const ownerUser = owner?.cond_usuario_id ? cUserById.get(String(owner.cond_usuario_id)) || null : null;
+    const ownerEmail = normalizeEmail(ownerUser?.email || owner?.contato_email || '');
+    const ownerCpf = normalizeCpf(ownerUser?.cpf || owner?.cpf || '');
+    const moradoresHab = morByHab.get(String(h._id)) || [];
+    const ownerIsMorador = moradoresHab.some(mor => {
+      if (owner?.cond_usuario_id && mor.cond_usuario_id && String(mor.cond_usuario_id) === String(owner.cond_usuario_id)) return true;
+      const morEmail = normalizeEmail(mor.email);
+      if (ownerEmail && morEmail && morEmail === ownerEmail) return true;
+      const morCpf = normalizeCpf(mor.cpf);
+      return !!(ownerCpf && morCpf && morCpf === ownerCpf);
+    });
+
+    habsPorProp.get(key).push({ unidade_id: h.unidade_id, habitacao_id: h._id, morador: ownerIsMorador, proprietario: true, hab_label });
+  }
+
+  return (list.props || []).map(p => {
+    const u = p.cond_usuario_id ? cUserById.get(String(p.cond_usuario_id)) : null;
+
+    return {
+      _id: p._id,
+      unidade_id: p.unidade_id,
+      usuario_id: p.usuario_id || null,
+      nome: (u?.nome || p.nome || ''),
+      tipo: p.tipo || 'pf',
+      rg: (u?.rg || p.rg || ''),
+      cpf: (u?.cpf || p.cpf || ''),
+      cnpj: p.cnpj || '',
+      data_nascimento: (u?.data_nascimento || p.data_nascimento || null),
+      sexo: (u?.sexo || p.sexo || 'N'),
+      pai: (u?.pai || p.pai || ''),
+      mae: (u?.mae || p.mae || ''),
+      email: (u?.email || p.contato_email || ''),
+      telefone: (u?.telefone || p.contato_telefone || ''),
+      whatsapp: (typeof u?.whatsapp === 'boolean' ? u.whatsapp : !!p.whatsapp),
+      ativo: p.ativo !== false,
+      vinculos: habsPorProp.get(String(p._id)) || []
+    };
+  });
+}
+
 app.get('/api/proprietarios/busca', async (req, res) => {
+  const { unidade } = req.query || {};
   try {
     try { res.set('Cache-Control','no-store, max-age=0, must-revalidate'); res.set('Pragma','no-cache'); res.set('Expires','0'); } catch {}
     if (mongoose.connection.readyState !== 1) {
       try { res.set('Retry-After','5'); } catch {}
       return res.status(503).json([]);
     }
-    const ctxUser = req.user || (req.session && req.session.user) || null;
-    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-    const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-    const unitIds = (unidadesOptions||[]).map(u => u._id);
 
-    const { unidade } = req.query || {};
-    const filtro = { ativo: { $ne: false } };
-    if (unidade) filtro.unidade_id = unidade;
-    else if (!isAdmin) {
-      if (!unitIds.length) filtro._id = { $exists: false };
-      else filtro.unidade_id = { $in: unitIds };
-    }
-
-    const props = await CondProprietario.find(filtro).select('_id unidade_id cond_usuario_id usuario_id nome tipo rg cpf cnpj data_nascimento sexo pai mae contato_email contato_telefone whatsapp ativo').lean();
-    if (!props.length) return res.json([]);
-    const propById = new Map(props.map(p => [String(p._id), p]));
-    // Carrega Users para replicar campos pessoais
-    const cUserIds = props.map(p=>p.cond_usuario_id).filter(Boolean);
-    const cUsers = cUserIds.length ? await CondUsuario.find({ _id: { $in: cUserIds } }).select('_id email nome rg cpf data_nascimento sexo pai mae telefone whatsapp').lean() : [];
-    const cUserById = new Map(cUsers.map(u => [String(u._id), u]));
-
-    const propIds = props.map(p => p._id);
-    const habs = await CondHabitacao.find({ proprietario_id: { $in: propIds } }).select('_id unidade_id proprietario_id bloco_id andar_id numero tipo descricao').lean();
-    const habIds = habs.map(h => h._id).filter(Boolean);
-    const moradores = habIds.length
-      ? await CondMorador.find({ habitacao_id: { $in: habIds }, ativo: { $ne: false } }).select('_id habitacao_id cond_usuario_id email cpf').lean()
-      : [];
-    const blocoIds = [...new Set(habs.map(h => h.bloco_id).filter(Boolean))];
-    const andarIds = [...new Set(habs.map(h => h.andar_id).filter(Boolean))];
-    const [blocos, andares] = await Promise.all([
-      blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
-      andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
-    ]);
-    const blocoMap = new Map(blocos.map(b => [String(b._id), b]));
-    const andarMap = new Map(andares.map(a => [String(a._id), a]));
-    const morByHab = new Map();
-    for (const mor of moradores) {
-      const key = String(mor.habitacao_id);
-      if (!morByHab.has(key)) morByHab.set(key, []);
-      morByHab.get(key).push(mor);
-    }
-    const normalizeEmail = value => String(value || '').trim().toLowerCase();
-    const normalizeCpf = value => String(value || '').replace(/\D/g,'');
-
-    // Enriquecer com unidades (rótulo) opcionalmente no front; aqui retornamos vínculos mínimos
-    const habsPorProp = new Map();
-    for (const h of habs) {
-      const k = String(h.proprietario_id);
-      if (!habsPorProp.has(k)) habsPorProp.set(k, []);
-      const blocoNome = h.bloco_id ? (blocoMap.get(String(h.bloco_id))?.nome || '') : '';
-      const andarNome = h.andar_id ? (andarMap.get(String(h.andar_id))?.nome || '') : '';
-      const numero = h.numero || h.identificador || h.label || '';
-      const parts = [blocoNome, andarNome, numero].filter(Boolean);
-      let hab_label = parts.join(' - ');
-      if (!hab_label) {
-        const fallback = [h.tipo || '', numero || '', String(h._id || '').slice(-6)];
-        hab_label = fallback.filter(Boolean).join(' - ') || String(h._id || '');
-      }
-      const owner = propById.get(k) || null;
-      const ownerUser = owner?.cond_usuario_id ? cUserById.get(String(owner.cond_usuario_id)) || null : null;
-      const ownerEmail = normalizeEmail(ownerUser?.email || owner?.contato_email || '');
-      const ownerCpf = normalizeCpf(ownerUser?.cpf || owner?.cpf || '');
-      const moradoresHab = morByHab.get(String(h._id)) || [];
-      const ownerIsMorador = moradoresHab.some(mor => {
-        if (owner?.cond_usuario_id && mor.cond_usuario_id && String(mor.cond_usuario_id) === String(owner.cond_usuario_id)) return true;
-        const morEmail = normalizeEmail(mor.email);
-        if (ownerEmail && morEmail && morEmail === ownerEmail) return true;
-        const morCpf = normalizeCpf(mor.cpf);
-        return !!(ownerCpf && morCpf && morCpf === ownerCpf);
-      });
-      habsPorProp.get(k).push({ unidade_id: h.unidade_id, habitacao_id: h._id, morador: ownerIsMorador, proprietario: true, hab_label });
-    }
-
-    const result = props.map(p => {
-      const u = p.cond_usuario_id ? cUserById.get(String(p.cond_usuario_id)) : null;
-      return {
-        _id: p._id,
-        unidade_id: p.unidade_id,
-        usuario_id: p.usuario_id || null,
-        nome: (u?.nome || p.nome || ''),
-        tipo: p.tipo || 'pf',
-        rg: (u?.rg || p.rg || ''),
-        cpf: (u?.cpf || p.cpf || ''),
-        cnpj: p.cnpj || '',
-        data_nascimento: (u?.data_nascimento || p.data_nascimento || null),
-        sexo: (u?.sexo || p.sexo || 'N'),
-        pai: (u?.pai || p.pai || ''),
-        mae: (u?.mae || p.mae || ''),
-        email: (u?.email || p.contato_email || ''),
-        telefone: (u?.telefone || p.contato_telefone || ''),
-        whatsapp: (typeof u?.whatsapp==='boolean' ? u.whatsapp : !!p.whatsapp),
-        ativo: p.ativo !== false,
-        vinculos: habsPorProp.get(String(p._id)) || []
-      };
+    const scopeResolution = await resolveProprietarioSearchScope({ req });
+    const filter = buildProprietarioSearchFilter({
+      scope: scopeResolution,
+      unidadeParam: unidade
     });
-    
-    res.json(result);
+    const list = await readProprietarioSearchList({ filter });
+    return res.json(buildProprietarioSearchResponse(list));
   } catch (e) {
     console.error('[api/proprietarios/busca] erro GET', e);
-    res.status(200).json([]);
+    return res.status(200).json([]);
   }
 });
 
@@ -15169,86 +15204,113 @@ app.delete('/api/proprietarios/:id/habitacoes/:habId', async (req, res) => {
 });
 
 // Lista moradores filtrados pelo escopo do operador e opcionalmente por unidade
+async function resolveMoradorSearchScope({ req }) {
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+  const unitIds = (unidadesOptions || []).map(u => u._id);
+
+  return { isAdmin, unitIds };
+}
+
+function buildMoradorSearchHabitacaoFilter({ scope, unidadeParam }) {
+  const filter = {};
+
+  if (unidadeParam) filter.unidade_id = unidadeParam;
+  else if (!scope.isAdmin) {
+    if (!scope.unitIds.length) filter._id = { $exists: false };
+    else filter.unidade_id = { $in: scope.unitIds };
+  }
+
+  return filter;
+}
+
+async function readMoradorSearchList({ filterHab }) {
+  const habs = await CondHabitacao.find(filterHab).select('_id unidade_id bloco_id andar_id numero tipo').lean();
+  const habIds = habs.map(h => h._id);
+  if (!habIds.length) {
+    return { habs: [], blocos: [], andares: [], moradores: [], cUsers: [] };
+  }
+
+  const blocoIds = [...new Set(habs.map(h => h.bloco_id).filter(Boolean))];
+  const andarIds = [...new Set(habs.map(h => h.andar_id).filter(Boolean))];
+  const [blocos, andares, moradores] = await Promise.all([
+    blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
+    andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : [],
+    CondMorador.find({ habitacao_id: { $in: habIds }, ativo: { $ne: false } })
+      .select('_id cond_usuario_id usuario_id nome rg cpf data_nascimento sexo telefone email pai mae whatsapp responsavel_email responsavel_nome inquilino ativo habitacao_id')
+      .lean()
+  ]);
+  const cUserIds = moradores.map(m => m.cond_usuario_id).filter(Boolean);
+  const cUsers = cUserIds.length
+    ? await CondUsuario.find({ _id: { $in: cUserIds } }).select('_id email nome rg cpf data_nascimento sexo telefone pai mae whatsapp').lean()
+    : [];
+
+  return { habs, blocos, andares, moradores, cUsers };
+}
+
+function buildMoradorSearchResponse(list) {
+  const blocoMap = new Map((list.blocos || []).map(b => [String(b._id), b]));
+  const andarMap = new Map((list.andares || []).map(a => [String(a._id), a]));
+  const habById = new Map((list.habs || []).map(h => [String(h._id), h]));
+  const cUserById = new Map((list.cUsers || []).map(u => [String(u._id), u]));
+  const unidadePorHab = new Map((list.habs || []).map(h => [String(h._id), h.unidade_id]));
+
+  return (list.moradores || []).map(m => {
+    const u = m.cond_usuario_id ? cUserById.get(String(m.cond_usuario_id)) : null;
+    const uid = unidadePorHab.get(String(m.habitacao_id)) || null;
+    const h = habById.get(String(m.habitacao_id)) || null;
+    let hab_label = '';
+
+    if (h) {
+      const blocoNome = h.bloco_id ? (blocoMap.get(String(h.bloco_id))?.nome || '') : '';
+      const andarNome = h.andar_id ? (andarMap.get(String(h.andar_id))?.nome || '') : '';
+      const numero = h.numero || '';
+      hab_label = [blocoNome, andarNome, numero].filter(Boolean).join(' - ');
+    }
+
+    return {
+      _id: m._id,
+      unidade_id: m.unidade_id || uid,
+      usuario_id: m.usuario_id || null,
+      nome: (u?.nome || m.nome || ''),
+      rg: (u?.rg || m.rg || ''),
+      cpf: (u?.cpf || m.cpf || ''),
+      data_nascimento: (u?.data_nascimento || m.data_nascimento || null),
+      sexo: (u?.sexo || m.sexo || 'N'),
+      telefone: (u?.telefone || m.telefone || ''),
+      email: (u?.email || m.email || ''),
+      pai: (u?.pai || m.pai || ''),
+      mae: (u?.mae || m.mae || ''),
+      whatsapp: (typeof u?.whatsapp === 'boolean' ? u.whatsapp : !!m.whatsapp),
+      responsavel_email: m.responsavel_email || '',
+      responsavel_nome: m.responsavel_nome || '',
+      inquilino: !!m.inquilino,
+      ativo: m.ativo !== false,
+      vinculos: [{ unidade_id: uid, habitacao_id: m.habitacao_id, morador: true, inquilino: !!m.inquilino, hab_label }]
+    };
+  });
+}
+
 app.get('/api/moradores/busca', async (req, res) => {
+  const { unidade } = req.query || {};
   try {
     try { res.set('Cache-Control','no-store, max-age=0, must-revalidate'); res.set('Pragma','no-cache'); res.set('Expires','0'); } catch {}
     if (mongoose.connection.readyState !== 1) {
       try { res.set('Retry-After','5'); } catch {}
       return res.status(503).json([]);
     }
-    const ctxUser = req.user || (req.session && req.session.user) || null;
-    const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-    const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-    const unitIds = (unidadesOptions||[]).map(u => u._id);
 
-    const { unidade } = req.query || {};
-
-    // Precisamos limitar pelos IDs de habitação pertencentes às unidades visíveis
-    const filtroHab = {};
-    if (unidade) filtroHab.unidade_id = unidade;
-    else if (!isAdmin) {
-      if (!unitIds.length) filtroHab._id = { $exists: false };
-      else filtroHab.unidade_id = { $in: unitIds };
-    }
-
-    const habs = await CondHabitacao.find(filtroHab).select('_id unidade_id bloco_id andar_id numero tipo').lean();
-    const habIds = habs.map(h => h._id);
-    if (!habIds.length) return res.json([]);
-    const blocoIds = [...new Set(habs.map(h => h.bloco_id).filter(Boolean))];
-    const andarIds = [...new Set(habs.map(h => h.andar_id).filter(Boolean))];
-    const [blocos, andares] = await Promise.all([
-      blocoIds.length ? CondBloco.find({ _id: { $in: blocoIds } }).select('_id nome').lean() : [],
-      andarIds.length ? CondAndar.find({ _id: { $in: andarIds } }).select('_id nome').lean() : []
-    ]);
-    const blocoMap = new Map(blocos.map(b => [String(b._id), b]));
-    const andarMap = new Map(andares.map(a => [String(a._id), a]));
-    const habById = new Map(habs.map(h => [String(h._id), h]));
-
-  // Retornar apenas moradores ativos (DELETE faz soft delete marcando ativo:false)
-  const moradores = await CondMorador.find({ habitacao_id: { $in: habIds }, ativo: { $ne: false } }).select('_id cond_usuario_id usuario_id nome rg cpf data_nascimento sexo telefone email pai mae whatsapp responsavel_email responsavel_nome inquilino ativo habitacao_id').lean();
-    const cUserIds = moradores.map(m=>m.cond_usuario_id).filter(Boolean);
-    const cUsers = cUserIds.length ? await CondUsuario.find({ _id: { $in: cUserIds } }).select('_id email nome rg cpf data_nascimento sexo telefone pai mae whatsapp').lean() : [];
-    const cUserById = new Map(cUsers.map(u=>[String(u._id), u]));
-      const unidadePorHab = new Map(habs.map(h => [String(h._id), h.unidade_id]));
-    const result = moradores.map(m => {
-  const u = m.cond_usuario_id ? cUserById.get(String(m.cond_usuario_id)) : null;
-      return {
-        _id: m._id,
-        unidade_id: m.unidade_id || unidadePorHab.get(String(m.habitacao_id)) || null,
-        usuario_id: m.usuario_id || null,
-        nome: (u?.nome || m.nome || ''),
-        rg: (u?.rg || m.rg || ''),
-        cpf: (u?.cpf || m.cpf || ''),
-        data_nascimento: (u?.data_nascimento || m.data_nascimento || null),
-        sexo: (u?.sexo || m.sexo || 'N'),
-        telefone: (u?.telefone || m.telefone || ''),
-        email: (u?.email || m.email || ''),
-        pai: (u?.pai || m.pai || ''),
-        mae: (u?.mae || m.mae || ''),
-        whatsapp: (typeof u?.whatsapp==='boolean' ? u.whatsapp : !!m.whatsapp),
-        responsavel_email: m.responsavel_email || '',
-        responsavel_nome: m.responsavel_nome || '',
-        inquilino: !!m.inquilino,
-        ativo: m.ativo !== false,
-        vinculos: (function(){
-          const uid = unidadePorHab.get(String(m.habitacao_id)) || null;
-          const h = habById.get(String(m.habitacao_id)) || null;
-          let hab_label = '';
-          if (h) {
-            const blocoNome = h.bloco_id ? (blocoMap.get(String(h.bloco_id))?.nome || '') : '';
-            const andarNome = h.andar_id ? (andarMap.get(String(h.andar_id))?.nome || '') : '';
-            const numero = h.numero || '';
-            const parts = [blocoNome, andarNome, numero].filter(Boolean);
-            hab_label = parts.join(' - ');
-          }
-          return [{ unidade_id: uid, habitacao_id: m.habitacao_id, morador: true, inquilino: !!m.inquilino, hab_label }];
-        })()
-      };
+    const scopeResolution = await resolveMoradorSearchScope({ req });
+    const filterHab = buildMoradorSearchHabitacaoFilter({
+      scope: scopeResolution,
+      unidadeParam: unidade
     });
-    res.json(result);
+    const list = await readMoradorSearchList({ filterHab });
+    return res.json(buildMoradorSearchResponse(list));
   } catch (e) {
     console.error('[api/moradores/busca] erro GET', e);
-    res.status(200).json([]);
+    return res.status(200).json([]);
   }
 });
 
@@ -15634,6 +15696,62 @@ app.get('/api/usuarios/busca', async (req, res) => {
 
 // ======================= Vagas de Garagem =======================
 // Listar vagas (busca enriquecida simples)
+async function resolveGarageSearchScope({ req, unidadeParam }) {
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+
+  if (isAdmin) {
+    return { unidadeFilter: unidadeParam || null };
+  }
+
+  const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+  const allowed = (unidadesOptions || []).map(u => String(u._id));
+  if (!allowed.length) {
+    return { empty: true };
+  }
+
+  if (unidadeParam) {
+    if (!allowed.includes(String(unidadeParam))) {
+      return { error: { status: 403, body: { success: false, error: 'Unidade fora do escopo do usuário' } } };
+    }
+    return { unidadeFilter: unidadeParam };
+  }
+
+  return { unidadeFilter: { $in: allowed } };
+}
+
+function buildGarageSearchFilter({ unidadeFilter, nome }) {
+  const filter = {};
+
+  if (unidadeFilter) filter.unidade_id = unidadeFilter;
+  if (nome) filter.nome = { $regex: nome, $options: 'i' };
+
+  return filter;
+}
+
+async function readGarageSearchList({ req, filter }) {
+  const vagas = await CondVagaGaragem.find(filter).lean();
+  const unitIds = [...new Set(vagas.map(v => v.unidade_id).filter(Boolean))];
+  const unidades = unitIds.length
+    ? await unidadesReadRepoFromReq(req).find({ _id: { $in: unitIds } }, { select: '_id codigo nome' })
+    : [];
+
+  return { vagas, unidades };
+}
+
+function buildGarageSearchResponse(list) {
+  const unidadeMap = new Map((list.unidades || []).map(u => [String(u._id), u]));
+  return (list.vagas || []).map(v => ({
+    _id: v._id,
+    unidade: unidadeMap.get(String(v.unidade_id)) || { _id: v.unidade_id },
+    nome: v.nome,
+    link_type: v.link_type || '',
+    link_id: v.link_id || null,
+    obs: v.obs || '',
+    foto: v.foto || ''
+  }));
+}
+
 app.get('/api/garagens/busca', async (req, res) => {
   const { unidade, nome } = req.query || {};
   try {
@@ -15641,38 +15759,22 @@ app.get('/api/garagens/busca', async (req, res) => {
       try { res.set('Retry-After','5'); } catch {}
       return res.status(503).json([]);
     }
-    const filtro = {};
-    if (unidade) filtro.unidade_id = unidade; else {
-      try {
-        const ctxUser = req.user || (req.session && req.session.user) || null;
-        const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-        const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-        if (!isAdmin) {
-          const unitIds = (unidadesOptions||[]).map(u => u._id);
-            if (!unitIds.length) {
-              filtro._id = { $exists: false };
-            } else {
-              filtro.unidade_id = { $in: unitIds };
-            }
-        }
-      } catch {}
+
+    const scopeResolution = await resolveGarageSearchScope({ req, unidadeParam: unidade });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
     }
-    if (nome) filtro.nome = { $regex: nome, $options: 'i' };
-    const vagas = await CondVagaGaragem.find(filtro).lean();
-    const unitIds = [...new Set(vagas.map(v => v.unidade_id).filter(Boolean))];
-    const unidades = unitIds.length ? await unidadesReadRepoFromReq(req).find({ _id: { $in: unitIds } }, { select: '_id codigo nome' }) : [];
-    const unidadeMap = new Map(unidades.map(u => [String(u._id), u]));
-    const result = vagas.map(v => ({
-      _id: v._id,
-      unidade: unidadeMap.get(String(v.unidade_id)) || { _id: v.unidade_id },
-      nome: v.nome,
-      link_type: v.link_type || '',
-      link_id: v.link_id || null,
-      obs: v.obs || '',
-      foto: v.foto || ''
-    }));
-    res.json(result);
-  } catch(e){ console.error('[api/garagens/busca] erro GET', e); res.status(200).json([]); }
+    if (scopeResolution.empty) {
+      return res.json([]);
+    }
+
+    const filter = buildGarageSearchFilter({
+      unidadeFilter: scopeResolution.unidadeFilter,
+      nome
+    });
+    const list = await readGarageSearchList({ req, filter });
+    return res.json(buildGarageSearchResponse(list));
+  } catch(e){ console.error('[api/garagens/busca] erro GET', e); return res.status(200).json([]); }
 });
 
 // Criar vaga
@@ -18590,41 +18692,81 @@ app.delete('/api/areas-comuns/:id', async (req, res) => {
 
 // ======================= Naturezas de Materiais =======================
 // Listagem/busca com escopo por usuário
+async function resolveMaterialNatureSearchScope({ req, unidadeParam }) {
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+
+  if (isAdmin) {
+    return { unidadeFilter: unidadeParam || null };
+  }
+
+  const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+  const allowed = (unidadesOptions || []).map(u => String(u._id));
+  if (!allowed.length) {
+    return { empty: true };
+  }
+
+  if (unidadeParam) {
+    if (!allowed.includes(String(unidadeParam))) {
+      return { error: { status: 403, body: { success: false, error: 'Unidade fora do escopo do usuário' } } };
+    }
+    return { unidadeFilter: unidadeParam };
+  }
+
+  return { unidadeFilter: { $in: allowed } };
+}
+
+function buildMaterialNatureSearchFilter({ unidadeFilter, tipo, nome }) {
+  const filter = {};
+
+  if (unidadeFilter) filter.unidade_id = unidadeFilter;
+  if (tipo) filter.tipo = tipo;
+  if (nome) filter.nome = { $regex: nome, $options: 'i' };
+
+  return filter;
+}
+
+async function readMaterialNatureSearchList({ req, filter }) {
+  const list = await CondNatMaterial.find(filter).lean();
+  const unitIds = [...new Set(list.map(item => item.unidade_id).filter(Boolean))];
+  const unidades = unitIds.length
+    ? await unidadesReadRepoFromReq(req).find({ _id: { $in: unitIds } }, { select: '_id codigo nome' })
+    : [];
+
+  return { list, unidades };
+}
+
+function buildMaterialNatureSearchResponse(list) {
+  const unidadeMap = new Map((list.unidades || []).map(u => [String(u._id), u]));
+  return (list.list || []).map(n => ({
+    _id: n._id,
+    unidade: unidadeMap.get(String(n.unidade_id)) || { _id: n.unidade_id },
+    tipo: n.tipo,
+    nome: n.nome
+  }));
+}
+
 app.get('/api/materiais/naturezas/busca', async (req, res) => {
   const { unidade, tipo, nome } = req.query || {};
   try{
     if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json([]); }
-    const filtro = {};
-    if(unidade){ filtro.unidade_id = unidade; }
-    else {
-      try{
-        const ctxUser = req.user || (req.session && req.session.user) || null;
-        const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-        const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
-        if(!isAdmin){
-          const unitIds = (unidadesOptions||[]).map(u => u._id);
-          if (!unitIds.length) {
-            filtro._id = { $exists: false };
-          } else {
-            filtro.unidade_id = { $in: unitIds };
-          }
-        }
-      }catch{}
+
+    const scopeResolution = await resolveMaterialNatureSearchScope({ req, unidadeParam: unidade });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
     }
-    if(tipo){ filtro.tipo = tipo; }
-    if(nome){ filtro.nome = { $regex: nome, $options: 'i' }; }
-    const list = await CondNatMaterial.find(filtro).lean();
-    const unitIds = [...new Set(list.map(a => a.unidade_id).filter(Boolean))];
-    const unidades = unitIds.length ? await unidadesReadRepoFromReq(req).find({ _id: { $in: unitIds } }, { select: '_id codigo nome' }) : [];
-    const unidadeMap = new Map(unidades.map(u => [String(u._id), u]));
-    const result = list.map(n => ({
-      _id: n._id,
-      unidade: unidadeMap.get(String(n.unidade_id)) || { _id: n.unidade_id },
-      tipo: n.tipo,
-      nome: n.nome
-    }));
-    res.json(result);
-  }catch(e){ console.error('[api/materiais/naturezas/busca] erro GET', e); res.status(200).json([]); }
+    if (scopeResolution.empty) {
+      return res.json([]);
+    }
+
+    const filter = buildMaterialNatureSearchFilter({
+      unidadeFilter: scopeResolution.unidadeFilter,
+      tipo,
+      nome
+    });
+    const list = await readMaterialNatureSearchList({ req, filter });
+    return res.json(buildMaterialNatureSearchResponse(list));
+  }catch(e){ console.error('[api/materiais/naturezas/busca] erro GET', e); return res.status(200).json([]); }
 });
 
 // Criar natureza
