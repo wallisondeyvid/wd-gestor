@@ -31,7 +31,7 @@
 - master e admin continuaram com visibilidade global
 - gestor e user continuaram presos a unidade ativa canonica
 - GET /gestor/api/usuario permaneceu coerente como contrato de apoio
-- a falha em GET /gestor/api/unidades/:id/modulos foi diagnosticada como lateral e fora do corredor principal desta fatia
+- GET /gestor/api/unidades/:id/modulos permaneceu fora do corredor principal desta fatia; no baseline atual, o residual lateral antes registrado ja se encontra materialmente drenado no codigo e validado por testes focais
 
 ## Testes focais que validaram o recorte
 
