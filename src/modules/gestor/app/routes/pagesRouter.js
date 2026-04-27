@@ -40,6 +40,16 @@ function withLoginAndFuncoesScope(handler) {
 	});
 }
 
+function withLoginAndRecursosScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => {
+		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+			return handler(req, res, next);
+		}
+
+		return requireUnitScope(req, res, () => handler(req, res, next));
+	});
+}
+
 const router = express.Router();
 // Métricas de adoção de rotas
 router.use((req,res,next)=> {
@@ -68,7 +78,7 @@ router.get('/editar-unidades/:id', withLoginAndRequiredUnitScope(paginaEditarUni
 router.get('/modulos', requireLogin, paginaModulos);
 router.get('/funcoes', withLoginAndFuncoesScope(paginaFuncoes));
 router.get('/funcionarios', withLoginAndRequiredUnitScope(paginaFuncionarios));
-router.get('/recursos', withLoginAndRequiredUnitScope(paginaRecursos));
+router.get('/recursos', withLoginAndRecursosScope(paginaRecursos));
 router.get('/setores', withLoginAndRequiredUnitScope(paginaSetores));
 router.get('/endereco', partialEndereco);
 router.get('/erro', paginaErro);

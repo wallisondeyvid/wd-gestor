@@ -186,12 +186,37 @@ async function authenticateAgent(app, {
   return { agent, email };
 }
 
+async function createUserOnly({ role, globalRole = null, nomeBase }) {
+  const email = uniqueEmail(`recursos-page-${role}-seed`);
+  const senha = 'Senha@123456';
+  const senhaHash = await bcrypt.hash(senha, 10);
+
+  const payload = {
+    email,
+    senha: senhaHash,
+    cpf: uniqueCpf(),
+    role,
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: `${nomeBase} ${nextCounter()}`,
+  };
+
+  if (globalRole) {
+    payload.global_role = globalRole;
+  }
+
+  const user = await User.create(payload);
+  return { user };
+}
+
 async function seedSession(agent, body) {
   const res = await agent
-    .post('/__seed-session')
-    .send(body);
+    .get('/__seed-session')
+    .query(body)
+    .set('Connection', 'close');
 
-  assert.equal(res.status, 200, JSON.stringify(res.body));
+  assert.equal(res.status, 204, JSON.stringify(res.body));
 }
 
 async function seedOfflineSession(agent) {
@@ -208,12 +233,51 @@ async function withOnlineHarness(run) {
   process.env.MONGO_MEMORY = '1';
   process.env.WDG_FLAG_GESTOR_AUTH_CONTEXT_RESOLVER = '1';
 
-  const { app, close } = await createServer({ skipDb: false });
+  const { app, close, registerErrorHandlers } = await createServer({ skipDb: false, deferErrorHandlers: true });
   app.locals.gestorAuthContextFeatureFlags = {
     gestor_auth_context_resolver: true,
   };
   delete app.locals.gestorAuthContextResolverDeps;
   delete app.locals.gestorAuthContextMaxTimeMS;
+
+  app.get('/__seed-session', (req, res) => {
+    const email = String(req.query?.email || uniqueEmail('recursos-page-seed')).trim().toLowerCase();
+    const role = String(req.query?.role || 'diretor').trim().toLowerCase();
+    const unidadeId = String(req.query?.unidadeId || '').trim();
+    const unidadePrincipalId = String(req.query?.unidadePrincipalId || '').trim();
+    const authContextUnitId = String(req.query?.authContextUnitId || '').trim();
+    const authContextPrincipalId = String(req.query?.authContextPrincipalId || authContextUnitId || '').trim();
+    const funcionarioId = String(req.query?.funcionarioId || '').trim();
+    const globalRole = String(req.query?.globalRole || '').trim().toLowerCase();
+
+    req.session.user = {
+      id: `seed-${role}-${nextCounter()}`,
+      _id: `seed-${role}-${nextCounter()}`,
+      email,
+      role,
+      nome: `Seed ${role} ${nextCounter()}`,
+      ...(funcionarioId ? { funcionario_id: funcionarioId } : {}),
+      ...(unidadeId ? { unidade_id: unidadeId } : {}),
+      ...(unidadePrincipalId ? { unidade_principal_id: unidadePrincipalId } : {}),
+      ...(globalRole ? { global_role: globalRole } : {}),
+    };
+
+    if (authContextUnitId) {
+      req.session.gestorAuthContext = {
+        source: 'auth-context-v1',
+        active_unidade_id: authContextUnitId,
+        active_unidade_principal_id: authContextPrincipalId,
+        needs_selection: false,
+        ...(globalRole ? { global_role: globalRole } : {}),
+      };
+    } else {
+      delete req.session.gestorAuthContext;
+    }
+
+    return req.session.save(() => res.status(204).end());
+  });
+
+  registerErrorHandlers();
 
   const teardownGuard = installTeardownSuppression();
 
@@ -312,12 +376,14 @@ test('GET /gestor/recursos com usuário não privilegiado e unidade contextual a
   });
 });
 
-test('GET /gestor/recursos com usuário privilegiado sem unidade contextual efetiva para na borda com 400 JSON', async () => {
+test('GET /gestor/recursos com usuário comum sem unidade ativa continua bloqueado', async () => {
   await withOnlineHarness(async ({ app }) => {
-    const { agent } = await authenticateAgent(app, {
-      role: 'user',
-      globalRole: 'admin',
-      nomeBase: 'Admin Global Página Recursos',
+    const agent = request.agent(app);
+
+    await seedSession(agent, {
+      email: uniqueEmail('recursos-page-sem-scope'),
+      role: 'diretor',
+      funcionarioId: '65f400000000000000000112',
     });
 
     const res = await agent
@@ -325,12 +391,74 @@ test('GET /gestor/recursos com usuário privilegiado sem unidade contextual efet
       .set('Accept', 'text/html')
       .set('Connection', 'close');
 
-    assert.equal(res.status, 400);
-    assert.match(res.headers['content-type'] || '', /application\/json/i);
-    assert.deepEqual(res.body, {
-      success: false,
-      error: 'UNIDADE_ID_REQUIRED',
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'] || '', /text\/html/i);
+    assert.match(String(res.text || ''), /login/i);
+    assert.doesNotMatch(String(res.text || ''), /<title>Recursos - WDGestor<\/title>/i);
+  });
+});
+
+test('GET /gestor/recursos com usuário privilegiado sem unidade contextual efetiva renderiza o branch global do bundle', async () => {
+  await withOnlineHarness(async ({ app, unidadeContextual, unidadeForaDoContexto }) => {
+    const { user } = await createUserOnly({
+      role: 'admin',
+      globalRole: 'admin',
+      nomeBase: 'Admin Global Página Recursos',
     });
+
+    const agent = request.agent(app);
+
+    await seedSession(agent, {
+      email: user.email,
+      role: 'admin',
+      globalRole: 'admin',
+    });
+
+    const res = await agent
+      .get('/gestor/recursos')
+      .set('Accept', 'text/html')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'] || '', /text\/html/i);
+    assert.match(res.text, /<title>Recursos - WDGestor<\/title>/i);
+    assert.match(res.text, new RegExp(escapeRegExp(normalizeId(unidadeContextual._id))));
+    assert.match(res.text, new RegExp(escapeRegExp(normalizeId(unidadeForaDoContexto._id))));
+    assert.match(res.text, new RegExp(escapeRegExp(unidadeContextual.nome)));
+    assert.match(res.text, new RegExp(escapeRegExp(unidadeForaDoContexto.nome)));
+  });
+});
+
+test('GET /gestor/recursos com usuário privilegiado e unidade contextual efetiva continua priorizando o caminho contextual', async () => {
+  await withOnlineHarness(async ({ app, unidadeContextual, unidadeForaDoContexto }) => {
+    const { user } = await createUserOnly({
+      role: 'admin',
+      globalRole: 'admin',
+      nomeBase: 'Admin Contextual Página Recursos',
+    });
+
+    const agent = request.agent(app);
+
+    await seedSession(agent, {
+      email: user.email,
+      role: 'admin',
+      authContextUnitId: normalizeId(unidadeContextual._id),
+      authContextPrincipalId: normalizeId(unidadeContextual._id),
+      globalRole: 'admin',
+    });
+
+    const res = await agent
+      .get('/gestor/recursos')
+      .set('Accept', 'text/html')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'] || '', /text\/html/i);
+    assert.match(res.text, /<title>Recursos - WDGestor<\/title>/i);
+    assert.match(res.text, new RegExp(escapeRegExp(normalizeId(unidadeContextual._id))));
+    assert.match(res.text, new RegExp(escapeRegExp(unidadeContextual.nome)));
+    assert.doesNotMatch(res.text, new RegExp(escapeRegExp(normalizeId(unidadeForaDoContexto._id))));
+    assert.doesNotMatch(res.text, new RegExp(escapeRegExp(unidadeForaDoContexto.nome)));
   });
 });
 
