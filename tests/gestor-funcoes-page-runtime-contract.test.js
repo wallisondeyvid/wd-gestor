@@ -250,6 +250,25 @@ async function authenticateAgent(app, {
   return { agent, user };
 }
 
+async function createUserOnly({ role, nomeBase }) {
+  const email = uniqueEmail(`funcoes-page-${role}-seed`);
+  const senha = 'Senha@123456';
+  const senhaHash = await bcrypt.hash(senha, 10);
+
+  const user = await User.create({
+    email,
+    senha: senhaHash,
+    cpf: uniqueCpf(),
+    role,
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: `${nomeBase} ${nextCounter()}`,
+  });
+
+  return { user };
+}
+
 async function seedSession(agent, query = {}) {
   const res = await agent
     .get('/__seed-session')
@@ -412,14 +431,31 @@ test('GET /gestor/funcoes sem unitScope efetivo volta para a página de login na
   });
 });
 
-test('GET /gestor/funcoes com usuário privilegiado sem unidade contextual efetiva fica bloqueado pela borda observável antes do owner', async () => {
-  await withOnlineHarness(async ({ app }) => {
+test('GET /gestor/funcoes com usuário privilegiado sem unidade contextual efetiva renderiza o branch global do owner', async () => {
+  await withOnlineHarness(async ({ app, unidadeA, unidadeC }) => {
+    const funcaoAName = `Funcao Global A ${Date.now()}-${nextCounter()}`;
+    const funcaoCName = `Funcao Global C ${Date.now()}-${nextCounter()}`;
+
+    await createFuncaoInTenant(unidadeA._id, {
+      nome: funcaoAName,
+      descricao: 'Função global da unidade A',
+    });
+
+    await createFuncaoInTenant(unidadeC._id, {
+      nome: funcaoCName,
+      descricao: 'Função global da unidade C',
+    });
+
+    const { user } = await createUserOnly({
+      role: 'admin',
+      nomeBase: 'Admin Página Funções Global',
+    });
+
     const agent = request.agent(app);
 
     await seedSession(agent, {
-      email: uniqueEmail('funcoes-page-admin-sem-scope'),
-      role: 'user',
-      funcionarioId: '65f400000000000000000123',
+      email: user.email,
+      role: 'admin',
       globalRole: 'admin',
     });
 
@@ -430,8 +466,56 @@ test('GET /gestor/funcoes com usuário privilegiado sem unidade contextual efeti
 
     assert.equal(res.status, 200);
     assert.match(res.headers['content-type'] || '', /text\/html/i);
-    assert.match(String(res.text || ''), /login/i);
-    assert.doesNotMatch(String(res.text || ''), /WDGestor - Funções · Módulo Gestor/i);
+    assert.match(String(res.text || ''), /WDGestor - Funções · Módulo Gestor/i);
+    assert.match(res.text, new RegExp(escapeRegExp(funcaoAName)));
+    assert.match(res.text, new RegExp(escapeRegExp(funcaoCName)));
+    assert.match(res.text, new RegExp(escapeRegExp(unidadeA.nome)));
+    assert.match(res.text, new RegExp(escapeRegExp(unidadeC.nome)));
+  });
+});
+
+test('GET /gestor/funcoes com usuário privilegiado e unidade contextual efetiva continua priorizando o caminho contextual', async () => {
+  await withOnlineHarness(async ({ app, unidadeA, unidadeB, unidadeC }) => {
+    const funcaoAName = `Funcao Contextual A ${Date.now()}-${nextCounter()}`;
+    const funcaoCName = `Funcao Contextual C ${Date.now()}-${nextCounter()}`;
+
+    await createFuncaoInTenant(unidadeA._id, {
+      nome: funcaoAName,
+      descricao: 'Função contextual visível na unidade ativa',
+    });
+
+    await createFuncaoInTenant(unidadeC._id, {
+      nome: funcaoCName,
+      descricao: 'Função fora do contexto ativo do admin',
+    });
+
+    const { user } = await createUserOnly({
+      role: 'admin',
+      nomeBase: 'Admin Página Funções Contextual',
+    });
+
+    const agent = request.agent(app);
+
+    await seedSession(agent, {
+      email: user.email,
+      role: 'admin',
+      authContextUnitId: normalizeId(unidadeB._id),
+      authContextPrincipalId: normalizeId(unidadeA._id),
+      globalRole: 'admin',
+    });
+
+    const res = await agent
+      .get('/gestor/funcoes')
+      .set('Accept', 'text/html')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'] || '', /text\/html/i);
+    assert.match(String(res.text || ''), /WDGestor - Funções · Módulo Gestor/i);
+    assert.match(res.text, new RegExp(escapeRegExp(funcaoAName)));
+    assert.doesNotMatch(res.text, new RegExp(escapeRegExp(funcaoCName)));
+    assert.match(res.text, new RegExp(escapeRegExp(unidadeA.nome)));
+    assert.doesNotMatch(res.text, new RegExp(escapeRegExp(unidadeC.nome)));
   });
 });
 

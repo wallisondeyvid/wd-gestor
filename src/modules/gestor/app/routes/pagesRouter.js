@@ -9,8 +9,35 @@ function paginaEsqueciSenhaAvancada(req,res){
 	return res.render('gestor/esquecisenha-avancada', { basePath, moduleLabel: 'WDGestor' });
 }
 
+function isPrivilegedGestorUser(user) {
+	return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+}
+
+function hasCanonicalUnitContext(req) {
+	return Boolean(
+		req?.session?.gestorAuthContext?.active_unidade_id
+		|| req?.user?.unidade_id
+		|| req?.query?.unidadeId
+		|| req?.query?.unidade_id
+		|| req?.params?.unidadeId
+		|| req?.params?.unidade_id
+		|| req?.body?.unidadeId
+		|| req?.body?.unidade_id
+	);
+}
+
 function withLoginAndRequiredUnitScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => requireUnitScope(req, res, () => handler(req, res, next)));
+}
+
+function withLoginAndFuncoesScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => {
+		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+			return handler(req, res, next);
+		}
+
+		return requireUnitScope(req, res, () => handler(req, res, next));
+	});
 }
 
 const router = express.Router();
@@ -39,7 +66,7 @@ router.get('/feedback', requireLogin, paginaFeedback);
 router.get('/unidades', withLoginAndRequiredUnitScope(paginaUnidades));
 router.get('/editar-unidades/:id', withLoginAndRequiredUnitScope(paginaEditarUnidade));
 router.get('/modulos', requireLogin, paginaModulos);
-router.get('/funcoes', withLoginAndRequiredUnitScope(paginaFuncoes));
+router.get('/funcoes', withLoginAndFuncoesScope(paginaFuncoes));
 router.get('/funcionarios', withLoginAndRequiredUnitScope(paginaFuncionarios));
 router.get('/recursos', withLoginAndRequiredUnitScope(paginaRecursos));
 router.get('/setores', withLoginAndRequiredUnitScope(paginaSetores));
