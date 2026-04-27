@@ -18007,45 +18007,6 @@ async function buildAreaMaterialContextResponsePayload({ areaIdParam, areaPayloa
   };
 }
 
-app.get('/api/areas-comuns/:id/materiais/contexto', async (req, res) => {
-  const areaIdParam = req.params && req.params.id ? String(req.params.id) : '';
-  const secaoRaw = req.query && req.query.secao ? String(req.query.secao) : '';
-  if(!isValidObjectId(areaIdParam)) return res.status(400).json({ error: 'Identificador de área inválido' });
-  const secao = secaoRaw ? secaoRaw.toLowerCase() : '';
-  try{
-    if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error: 'Banco indisponível, tente novamente' }); }
-    const areaResolution = await resolveAreaMaterialContextRead({ req, areaId: areaIdParam });
-    if(areaResolution.error) return res.status(areaResolution.status).json({ error: areaResolution.error });
-    const { areaDoc, areaPayload, unidadePayload, materiaisOrigemDocs, materialMap, areaMap, destinos } = areaResolution;
-    if(secao === 'logs'){
-      const logs = await buildMaterialLogsForArea(areaDoc, unidadesReadRepoFromReq(req));
-      return res.json({ logs });
-    }
-    const pendingTransferRead = await resolveAreaMaterialPendingTransferRead({
-      areaDoc,
-      unidadePayload,
-      materialMap,
-      areaMap,
-    });
-    const { transferDocs } = pendingTransferRead;
-
-    return res.json(await buildAreaMaterialContextResponsePayload({
-      areaIdParam,
-      areaPayload,
-      unidadePayload,
-      materiaisOrigemDocs,
-      materialMap,
-      areaMap,
-      destinos,
-      transferDocs,
-    }));
-  }catch(e){
-    console.error('[api/areas-comuns/:id/materiais/contexto] GET erro', e);
-    const message = e && e.message ? e.message : 'Falha ao carregar contexto de materiais';
-    return res.status(500).json({ error: message });
-  }
-});
-
 async function resolvePendingMaterialTransferRequest({ areaId, materialId, destinoId }) {
   const [areaDoc, destinoDoc, materialDoc] = await Promise.all([
     CondAreaComum.findById(areaId).lean(),
@@ -18105,41 +18066,41 @@ function buildPendingMaterialTransferResponse(transferDoc) {
   };
 }
 
-app.post('/api/areas-comuns/:id/materiais/transferencias', express.json({ limit: '1mb' }), async (req, res) => {
+app.get('/api/areas-comuns/:id/materiais/contexto', async (req, res) => {
   const areaIdParam = req.params && req.params.id ? String(req.params.id) : '';
+  const secaoRaw = req.query && req.query.secao ? String(req.query.secao) : '';
   if(!isValidObjectId(areaIdParam)) return res.status(400).json({ error: 'Identificador de área inválido' });
-  const materialIdRaw = req.body && req.body.materialId;
-  const destinoIdRaw = req.body && req.body.destinoId;
-  if(!isValidObjectId(materialIdRaw) || !isValidObjectId(destinoIdRaw)){
-    return res.status(400).json({ error: 'Dados da transferência inválidos' });
-  }
+  const secao = secaoRaw ? secaoRaw.toLowerCase() : '';
   try{
     if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error: 'Banco indisponível, tente novamente' }); }
-    const transferResolution = await resolvePendingMaterialTransferRequest({
-      areaId: areaIdParam,
-      materialId: materialIdRaw,
-      destinoId: destinoIdRaw
-    });
-    if(transferResolution.error){
-      return res.status(transferResolution.status).json({ error: transferResolution.error });
+    const areaResolution = await resolveAreaMaterialContextRead({ req, areaId: areaIdParam });
+    if(areaResolution.error) return res.status(areaResolution.status).json({ error: areaResolution.error });
+    const { areaDoc, areaPayload, unidadePayload, materiaisOrigemDocs, materialMap, areaMap, destinos } = areaResolution;
+    if(secao === 'logs'){
+      const logs = await buildMaterialLogsForArea(areaDoc, unidadesReadRepoFromReq(req));
+      return res.json({ logs });
     }
-
-    const { areaDoc, destinoDoc, materialDoc, unidadeId } = transferResolution;
-
-    const solicitante = buildActorFromUser(req.user || (req.session && req.session.user) || null);
-    const transferDoc = await CondMaterialTransferencia.create({
-      unidade_id: unidadeId || areaDoc.unidade_id,
-      material_id: materialDoc._id,
-      origem_area_id: areaDoc._id,
-      destino_area_id: destinoDoc._id,
-      status: 'pendente',
-      ...(solicitante ? { solicitante } : {})
+    const pendingTransferRead = await resolveAreaMaterialPendingTransferRead({
+      areaDoc,
+      unidadePayload,
+      materialMap,
+      areaMap,
     });
+    const { transferDocs } = pendingTransferRead;
 
-    return res.status(201).json(buildPendingMaterialTransferResponse(transferDoc));
+    return res.json(await buildAreaMaterialContextResponsePayload({
+      areaIdParam,
+      areaPayload,
+      unidadePayload,
+      materiaisOrigemDocs,
+      materialMap,
+      areaMap,
+      destinos,
+      transferDocs,
+    }));
   }catch(e){
-    console.error('[api/areas-comuns/:id/materiais/transferencias] POST erro', e);
-    const message = e && e.message ? e.message : 'Falha ao registrar transferência';
+    console.error('[api/areas-comuns/:id/materiais/contexto] GET erro', e);
+    const message = e && e.message ? e.message : 'Falha ao carregar contexto de materiais';
     return res.status(500).json({ error: message });
   }
 });
@@ -18318,6 +18279,45 @@ app.post('/api/areas-comuns/:id/materiais/recebimentos', express.json({ limit: '
   }catch(e){
     console.error('[api/areas-comuns/:id/materiais/recebimentos] POST erro', e);
     const message = e && e.message ? e.message : 'Falha ao processar recebimento';
+    return res.status(500).json({ error: message });
+  }
+});
+
+app.post('/api/areas-comuns/:id/materiais/transferencias', express.json({ limit: '1mb' }), async (req, res) => {
+  const areaIdParam = req.params && req.params.id ? String(req.params.id) : '';
+  if(!isValidObjectId(areaIdParam)) return res.status(400).json({ error: 'Identificador de área inválido' });
+  const materialIdRaw = req.body && req.body.materialId;
+  const destinoIdRaw = req.body && req.body.destinoId;
+  if(!isValidObjectId(materialIdRaw) || !isValidObjectId(destinoIdRaw)){
+    return res.status(400).json({ error: 'Dados da transferência inválidos' });
+  }
+  try{
+    if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error: 'Banco indisponível, tente novamente' }); }
+    const transferResolution = await resolvePendingMaterialTransferRequest({
+      areaId: areaIdParam,
+      materialId: materialIdRaw,
+      destinoId: destinoIdRaw
+    });
+    if(transferResolution.error){
+      return res.status(transferResolution.status).json({ error: transferResolution.error });
+    }
+
+    const { areaDoc, destinoDoc, materialDoc, unidadeId } = transferResolution;
+
+    const solicitante = buildActorFromUser(req.user || (req.session && req.session.user) || null);
+    const transferDoc = await CondMaterialTransferencia.create({
+      unidade_id: unidadeId || areaDoc.unidade_id,
+      material_id: materialDoc._id,
+      origem_area_id: areaDoc._id,
+      destino_area_id: destinoDoc._id,
+      status: 'pendente',
+      ...(solicitante ? { solicitante } : {})
+    });
+
+    return res.status(201).json(buildPendingMaterialTransferResponse(transferDoc));
+  }catch(e){
+    console.error('[api/areas-comuns/:id/materiais/transferencias] POST erro', e);
+    const message = e && e.message ? e.message : 'Falha ao registrar transferência';
     return res.status(500).json({ error: message });
   }
 });
@@ -24516,35 +24516,6 @@ function buildComunicadoRestricaoHabitacoesResponse({ habs, condominioNome, bloc
   return { ok: true, data };
 }
 
-// API: listas para restrições (UI de comunicados)
-app.get('/api/comunicados/restricoes/habitacoes', async (req, res) => {
-  try {
-    const scopeResolution = resolveComunicadoRestricaoHabitacoesScope({ req });
-    if (scopeResolution.error) {
-      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
-    }
-    if (!(await ensureCondominiosMongoOnline(req, res))) return;
-
-    const habs = await readComunicadoRestricaoHabitacoesMainList({ unidadeId: scopeResolution.unidadeId });
-    const supportData = await readComunicadoRestricaoHabitacoesSupportData({
-      req,
-      unidadeId: scopeResolution.unidadeId,
-      habs
-    });
-
-    return res.json(buildComunicadoRestricaoHabitacoesResponse({
-      habs,
-      condominioNome: supportData.condominioNome,
-      blocoMap: supportData.blocoMap,
-      andarMap: supportData.andarMap
-    }));
-  } catch (err) {
-    console.error('[condominios][api/comunicados/restricoes/habitacoes] erro:', err);
-    if (isMongoOfflineError(err)) return respondDbOffline(res, req);
-    return res.status(500).json({ error: 'Falha ao listar habitações' });
-  }
-});
-
 function resolveComunicadoRestricaoMoradoresScope({ req }) {
   const user = getCtxUser(req);
   if (!user) {
@@ -24639,6 +24610,35 @@ function buildComunicadoRestricaoMoradoresResponse({ moradores, habMap, blocoMap
 
   return { ok: true, data };
 }
+
+// API: listas para restrições (UI de comunicados)
+app.get('/api/comunicados/restricoes/habitacoes', async (req, res) => {
+  try {
+    const scopeResolution = resolveComunicadoRestricaoHabitacoesScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
+    if (!(await ensureCondominiosMongoOnline(req, res))) return;
+
+    const habs = await readComunicadoRestricaoHabitacoesMainList({ unidadeId: scopeResolution.unidadeId });
+    const supportData = await readComunicadoRestricaoHabitacoesSupportData({
+      req,
+      unidadeId: scopeResolution.unidadeId,
+      habs
+    });
+
+    return res.json(buildComunicadoRestricaoHabitacoesResponse({
+      habs,
+      condominioNome: supportData.condominioNome,
+      blocoMap: supportData.blocoMap,
+      andarMap: supportData.andarMap
+    }));
+  } catch (err) {
+    console.error('[condominios][api/comunicados/restricoes/habitacoes] erro:', err);
+    if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+    return res.status(500).json({ error: 'Falha ao listar habitações' });
+  }
+});
 
 app.get('/api/comunicados/restricoes/moradores', async (req, res) => {
   try {
@@ -25108,34 +25108,6 @@ function buildEnqueteRestricaoHabitacoesResponse({ habs, condominioNome, blocoMa
   return { ok: true, data };
 }
 
-app.get('/api/enquetes/restricoes/habitacoes', async (req, res) => {
-  try {
-    const scopeResolution = resolveEnqueteRestricaoHabitacoesScope({ req });
-    if (scopeResolution.error) {
-      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
-    }
-    if (!(await ensureCondominiosMongoOnline(req, res))) return;
-
-    const habs = await readEnqueteRestricaoHabitacoesMainList({ unidadeId: scopeResolution.unidadeId });
-    const supportData = await readEnqueteRestricaoHabitacoesSupportData({
-      req,
-      unidadeId: scopeResolution.unidadeId,
-      habs
-    });
-
-    return res.json(buildEnqueteRestricaoHabitacoesResponse({
-      habs,
-      condominioNome: supportData.condominioNome,
-      blocoMap: supportData.blocoMap,
-      andarMap: supportData.andarMap
-    }));
-  } catch (err) {
-    console.error('[condominios][api/enquetes/restricoes/habitacoes] erro:', err);
-    if (isMongoOfflineError(err)) return respondDbOffline(res, req);
-    return res.status(500).json({ error: 'Falha ao listar habitações' });
-  }
-});
-
 function resolveEnqueteRestricaoMoradoresScope({ req }) {
   const user = getCtxUser(req);
   if (!user) {
@@ -25230,6 +25202,34 @@ function buildEnqueteRestricaoMoradoresResponse({ moradores, habMap, blocoMap, a
 
   return { ok: true, data };
 }
+
+app.get('/api/enquetes/restricoes/habitacoes', async (req, res) => {
+  try {
+    const scopeResolution = resolveEnqueteRestricaoHabitacoesScope({ req });
+    if (scopeResolution.error) {
+      return res.status(scopeResolution.error.status).json(scopeResolution.error.body);
+    }
+    if (!(await ensureCondominiosMongoOnline(req, res))) return;
+
+    const habs = await readEnqueteRestricaoHabitacoesMainList({ unidadeId: scopeResolution.unidadeId });
+    const supportData = await readEnqueteRestricaoHabitacoesSupportData({
+      req,
+      unidadeId: scopeResolution.unidadeId,
+      habs
+    });
+
+    return res.json(buildEnqueteRestricaoHabitacoesResponse({
+      habs,
+      condominioNome: supportData.condominioNome,
+      blocoMap: supportData.blocoMap,
+      andarMap: supportData.andarMap
+    }));
+  } catch (err) {
+    console.error('[condominios][api/enquetes/restricoes/habitacoes] erro:', err);
+    if (isMongoOfflineError(err)) return respondDbOffline(res, req);
+    return res.status(500).json({ error: 'Falha ao listar habitações' });
+  }
+});
 
 app.get('/api/enquetes/restricoes/moradores', async (req, res) => {
   try {
