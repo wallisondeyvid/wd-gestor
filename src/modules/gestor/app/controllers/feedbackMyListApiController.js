@@ -14,7 +14,11 @@ export function createMyFeedbackListHandler({
       });
       const filter = filterResult?.filter || {};
 
-      const items = await findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter);
+      const items = await findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter, {
+        scopedUnitId,
+        allowLegacyUnscoped: true,
+        preferScopedRepoRead: true,
+      });
 
       return apiOk(res, items);
     } catch (e) {

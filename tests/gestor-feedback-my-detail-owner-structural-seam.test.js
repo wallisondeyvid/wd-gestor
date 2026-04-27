@@ -127,8 +127,8 @@ function loadMyDetailOwnerHarness(runtimeOverrides = {}) {
 			callLog.apiFailCalls.push([status, message, extra]);
 			return responseHelpers.apiFail(res, status, message, extra);
 		}),
-		findFeedbackByIdLean: runtimeOverrides.findFeedbackByIdLean ?? (async (id) => {
-			callLog.repositoryCalls.push([id]);
+		findFeedbackByIdLean: runtimeOverrides.findFeedbackByIdLean ?? (async (id, options) => {
+			callLog.repositoryCalls.push([id, options]);
 			if (Object.prototype.hasOwnProperty.call(runtimeOverrides, 'findFeedbackResult')) {
 				return runtimeOverrides.findFeedbackResult;
 			}
@@ -242,7 +242,14 @@ test('feedback my detail: owner traduz feedback nao encontrado antes da seam', a
 		error: 'Feedback não encontrado.',
 		message: 'Feedback não encontrado.',
 	});
-	assert.deepEqual(callLog.repositoryCalls, [[FEEDBACK_ID]]);
+	assert.deepEqual(toPlainJson(callLog.repositoryCalls), [[
+		FEEDBACK_ID,
+		{
+			scopedUnitId: '507f191e810c19729de860ff',
+			allowLegacyUnscoped: true,
+			preferScopedRepoRead: true,
+		},
+	]]);
 	assert.equal(callLog.seamCalls.length, 0);
 	assert.equal(callLog.apiOkCalls.length, 0);
 });

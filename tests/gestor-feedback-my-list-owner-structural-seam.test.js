@@ -116,8 +116,8 @@ function loadMyListOwnerHarness(runtimeOverrides = {}) {
 		}),
 		findFeedbackByFilterSortCreatedAtDescLimit200Lean:
 			runtimeOverrides.findFeedbackByFilterSortCreatedAtDescLimit200Lean ??
-			(async (filter) => {
-				callLog.repositoryCalls.push([filter]);
+			(async (filter, options) => {
+				callLog.repositoryCalls.push([filter, options]);
 				return listItems();
 			}),
 		feedbackPolicy:
@@ -181,7 +181,7 @@ return {
 test('feedback my list: seam estrutural fica entre owner, repositorio e resposta HTTP final', async () => {
 	const snippet = buildDelegatedMyListSnippet();
 	const seamIndex = snippet.indexOf('feedbackPolicy.buildMyFeedbackFilter({');
-	const repoIndex = snippet.indexOf('findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter)');
+	const repoIndex = snippet.indexOf('findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter, {');
 	const responseIndex = snippet.indexOf('return apiOk(res, items);');
 
 	assert.ok(seamIndex >= 0, 'Seam de my list precisa existir no meio do fluxo em memoria.');
@@ -206,9 +206,9 @@ test('feedback my list: seam estrutural fica entre owner, repositorio e resposta
 				};
 			},
 		},
-		findFeedbackByFilterSortCreatedAtDescLimit200Lean: async (filter) => {
+		findFeedbackByFilterSortCreatedAtDescLimit200Lean: async (filter, options) => {
 			callOrder.push('repo');
-			callLog.repositoryCalls.push([filter]);
+			callLog.repositoryCalls.push([filter, options]);
 			return listItems();
 		},
 		apiOk: (res, data = null, extra = {}) => {
@@ -249,7 +249,14 @@ test('feedback my list: a seam futura recebe apenas o usuario atual e owner cont
 		currentUser: toPlainJson(req.user),
 		scopedUnitId: '507f191e810c19729de860ff',
 	});
-	assert.deepEqual(callLog.repositoryCalls, [[{ 'criadoPor.userId': req.user._id }]]);
+	assert.deepEqual(toPlainJson(callLog.repositoryCalls), [[
+		{ 'criadoPor.userId': req.user._id },
+		{
+			scopedUnitId: '507f191e810c19729de860ff',
+			allowLegacyUnscoped: true,
+			preferScopedRepoRead: true,
+		},
+	]]);
 	assert.equal(callLog.apiOkCalls.length, 1);
 	assert.deepEqual(toPlainJson(res.body), {
 		ok: true,
@@ -277,12 +284,19 @@ test('feedback my list: a seam futura concentra o fallback para email quando nao
 		currentUser: toPlainJson(req.user),
 		scopedUnitId: '507f191e810c19729de860ff',
 	});
-	assert.deepEqual(callLog.repositoryCalls, [[{
-		$and: [
-			{ 'criadoPor.email': 'fallback.feedback@test.local' },
-			{ $or: [{ unidade_id: '507f191e810c19729de860ff' }, { unidade_id: { $exists: false } }, { unidade_id: null }] },
-		],
-	}]]);
+	assert.deepEqual(toPlainJson(callLog.repositoryCalls), [[
+		{
+			$and: [
+				{ 'criadoPor.email': 'fallback.feedback@test.local' },
+				{ $or: [{ unidade_id: '507f191e810c19729de860ff' }, { unidade_id: { $exists: false } }, { unidade_id: null }] },
+			],
+		},
+		{
+			scopedUnitId: '507f191e810c19729de860ff',
+			allowLegacyUnscoped: true,
+			preferScopedRepoRead: true,
+		},
+	]]);
 	assert.equal(callLog.apiOkCalls.length, 1);
 	assert.equal(res.statusCode, 200);
 });

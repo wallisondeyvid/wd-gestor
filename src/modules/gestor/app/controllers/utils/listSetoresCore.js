@@ -1,5 +1,6 @@
 export async function listSetoresCore({
   filtro,
+  scopedUnitId = '',
   findSetoresByFiltroPopulateUnidadeLean,
   findUnidadesByIdsNomeCodigoLean,
 }) {
@@ -17,7 +18,9 @@ export async function listSetoresCore({
 
   let unidadesMap = {};
   if (unidadeIdsRaw.size) {
-    const unidadesDB = await findUnidadesByIdsNomeCodigoLean(Array.from(unidadeIdsRaw));
+    const unidadesDB = await findUnidadesByIdsNomeCodigoLean(Array.from(unidadeIdsRaw), {
+      scopedUnitId,
+    });
     unidadesDB.forEach((unidade) => {
       unidadesMap[String(unidade._id)] = unidade;
     });

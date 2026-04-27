@@ -167,6 +167,7 @@ export async function listarSetores(req,res){
     }
     const mapped = await listSetoresCore({
       filtro: scope.filtro,
+      scopedUnitId: scope.source === 'unit-scope' ? getCanonicalContextUnitId(req) : '',
       findSetoresByFiltroPopulateUnidadeLean,
       findUnidadesByIdsNomeCodigoLean,
     });

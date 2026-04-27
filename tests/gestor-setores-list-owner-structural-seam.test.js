@@ -76,6 +76,7 @@ function buildDelegatedListSnippet() {
   const delegatedBlock = [
     'const mapped = await listSetoresCore({',
     '  filtro,',
+    "  scopedUnitId: scope.source === 'unit-scope' ? getCanonicalContextUnitId(req) : '',",
     '  findSetoresByFiltroPopulateUnidadeLean,',
     '  findUnidadesByIdsNomeCodigoLean,',
     '});',
@@ -159,8 +160,8 @@ function loadListOwnerHarness(runtimeOverrides = {}) {
       callLog.findSetoresByFiltroPopulateUnidadeLeanCalls.push([filtro]);
       return [];
     }),
-    findUnidadesByIdsNomeCodigoLean: runtimeOverrides.findUnidadesByIdsNomeCodigoLean ?? (async (unidadeIds) => {
-      callLog.findUnidadesByIdsNomeCodigoLeanCalls.push([unidadeIds]);
+    findUnidadesByIdsNomeCodigoLean: runtimeOverrides.findUnidadesByIdsNomeCodigoLean ?? (async (unidadeIds, options) => {
+      callLog.findUnidadesByIdsNomeCodigoLeanCalls.push([unidadeIds, options]);
       return [];
     }),
     listSetoresCore: runtimeOverrides.listSetoresCore ?? (async (input) => {
@@ -238,7 +239,9 @@ test('listarSetores: owner resolve filtro contextual antes da seam, preserva dep
 
       let unidadesMap = {};
       if (unidadeIdsRaw.size) {
-        const unidades = await input.findUnidadesByIdsNomeCodigoLean(Array.from(unidadeIdsRaw));
+        const unidades = await input.findUnidadesByIdsNomeCodigoLean(Array.from(unidadeIdsRaw), {
+          scopedUnitId: input.scopedUnitId,
+        });
         unidades.forEach((unidade) => {
           unidadesMap[String(unidade._id)] = unidade;
         });
@@ -278,8 +281,8 @@ test('listarSetores: owner resolve filtro contextual antes da seam, preserva dep
         { _id: 's-str', nome: 'RH', descricao: '', unidade_id: SCOPED_UNIT_ID },
       ];
     },
-    findUnidadesByIdsNomeCodigoLean: async (unidadeIds) => {
-      callLog.findUnidadesByIdsNomeCodigoLeanCalls.push([unidadeIds]);
+    findUnidadesByIdsNomeCodigoLean: async (unidadeIds, options) => {
+      callLog.findUnidadesByIdsNomeCodigoLeanCalls.push([unidadeIds, options]);
       return [
         { _id: SCOPED_UNIT_ID, codigo: '001', nome: 'Matriz' },
       ];
@@ -298,10 +301,12 @@ test('listarSetores: owner resolve filtro contextual antes da seam, preserva dep
   assert.ok(seamArgs, 'A seam de listagem deve ser chamada pelo owner real.');
   assert.deepEqual(Object.keys(seamArgs).sort(), [
     'filtro',
+    'scopedUnitId',
     'findSetoresByFiltroPopulateUnidadeLean',
     'findUnidadesByIdsNomeCodigoLean',
   ].sort());
   assert.deepEqual(toPlainJson(seamArgs.filtro), { unidade_id: SCOPED_UNIT_ID });
+  assert.equal(seamArgs.scopedUnitId, SCOPED_UNIT_ID);
   assert.equal(typeof seamArgs.findSetoresByFiltroPopulateUnidadeLean, 'function');
   assert.equal(typeof seamArgs.findUnidadesByIdsNomeCodigoLean, 'function');
   assert.equal('req' in seamArgs, false);
@@ -309,7 +314,10 @@ test('listarSetores: owner resolve filtro contextual antes da seam, preserva dep
   assert.equal('ok' in seamArgs, false);
   assert.equal('serverError' in seamArgs, false);
   assert.deepEqual(toPlainJson(callLog.findSetoresByFiltroPopulateUnidadeLeanCalls), [[{ unidade_id: SCOPED_UNIT_ID }]]);
-  assert.deepEqual(toPlainJson(callLog.findUnidadesByIdsNomeCodigoLeanCalls), [[[SCOPED_UNIT_ID]]]);
+  assert.deepEqual(toPlainJson(callLog.findUnidadesByIdsNomeCodigoLeanCalls), [[
+    [SCOPED_UNIT_ID],
+    { scopedUnitId: SCOPED_UNIT_ID },
+  ]]);
   assert.equal(res.statusCode, 200);
   assert.deepEqual(toPlainJson(res.body), {
     success: true,
@@ -356,6 +364,7 @@ test('listarSetores: owner usa o filtro da query quando nao ha unidade canonica 
 
   assert.ok(seamArgs, 'A seam deve receber o filtro vindo da query quando permitido pelo owner.');
   assert.deepEqual(toPlainJson(seamArgs.filtro), { unidade_id: PARAM_UNIT_ID });
+  assert.equal(seamArgs.scopedUnitId, '');
   assert.equal(res.statusCode, 200);
   assert.deepEqual(toPlainJson(res.body), { success: true, data: [] });
   assert.equal(callLog.findSetoresByFiltroPopulateUnidadeLeanCalls.length, 0);

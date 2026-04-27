@@ -13,6 +13,7 @@ export function createMyFeedbackDetailHandler({
       const fb = await findFeedbackByIdLean(id, {
         scopedUnitId,
         allowLegacyUnscoped: true,
+        preferScopedRepoRead: true,
       });
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 

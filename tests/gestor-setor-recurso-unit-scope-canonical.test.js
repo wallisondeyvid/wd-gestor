@@ -459,6 +459,54 @@ test('Setores bridge: findUnidadesByIdsNomeCodigoLean usa tenant quando a lista 
   });
 });
 
+test('Setores bridge: findUnidadesByIdsNomeCodigoLean aceita scopedUnitId explicito para evitar fallback global em lista ambigua', async () => {
+  await withHarness(async ({ unidadeA, unidadeB }) => {
+    const previousMultiDb = process.env.WD_MULTI_DB;
+    const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+    const previousHandshake = process.env.WD_USERDB_HANDSHAKE;
+
+    try {
+      process.env.WD_MULTI_DB = '1';
+      process.env.WD_MULTI_DB_ALLOWLIST = `${normalizeId(unidadeA._id)},${normalizeId(unidadeB._id)}`;
+      process.env.WD_USERDB_HANDSHAKE = '0';
+      clearResolveConnectionCache();
+
+      const tenantName = `${unidadeA.nome} TENANT SCOPED`;
+
+      await seedTenantUnits(unidadeA._id, [
+        buildTenantUnitDoc(unidadeA, { nome: tenantName }),
+      ]);
+      await seedTenantUnits(unidadeB._id, [
+        buildTenantUnitDoc(unidadeB, { nome: `${unidadeB.nome} TENANT OTHER` }),
+      ]);
+
+      await Unidade.deleteMany({ _id: { $in: [unidadeA._id, unidadeB._id] } });
+
+      const unidades = await findUnidadesByIdsNomeCodigoLean(
+        [normalizeId(unidadeA._id), normalizeId(unidadeB._id)],
+        { scopedUnitId: normalizeId(unidadeA._id) },
+      );
+
+      assert.equal(unidades.length, 1);
+      assert.equal(normalizeId(unidades[0]?._id), normalizeId(unidadeA._id));
+      assert.equal(unidades[0]?.nome, tenantName);
+    } finally {
+      clearResolveConnectionCache();
+
+      if (previousMultiDb === undefined) delete process.env.WD_MULTI_DB;
+      else process.env.WD_MULTI_DB = previousMultiDb;
+
+      if (previousAllowlist === undefined) delete process.env.WD_MULTI_DB_ALLOWLIST;
+      else process.env.WD_MULTI_DB_ALLOWLIST = previousAllowlist;
+
+      if (previousHandshake === undefined) delete process.env.WD_USERDB_HANDSHAKE;
+      else process.env.WD_USERDB_HANDSHAKE = previousHandshake;
+
+      clearResolveConnectionCache();
+    }
+  });
+});
+
 test('Setores bridge: findUnidadesForSetorPageByIdsSelectLean usa tenant quando a lista carrega uma unidade única em multi-db', async () => {
   await withHarness(async ({ unidadeA }) => {
     const previousMultiDb = process.env.WD_MULTI_DB;

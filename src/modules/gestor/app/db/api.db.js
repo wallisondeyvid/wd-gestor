@@ -622,8 +622,9 @@ export async function findUnidadesAtivasNomeCodigoOrdenadasLean() {
   return findUnidadesAtivasNomeCodigoOrdenadasLeanRepo({ unitScope: GLOBAL_SCOPE });
 }
 
-export async function findUnidadesByIdsNomeCodigoLean(unidadeIds) {
-  const singleUnitId = extractSingleScopedUnitId({ $in: unidadeIds });
+export async function findUnidadesByIdsNomeCodigoLean(unidadeIds, options = {}) {
+  const scopedUnitId = String(options?.scopedUnitId || '').trim();
+  const singleUnitId = scopedUnitId || extractSingleScopedUnitId({ $in: unidadeIds });
   return findUnidadesByIdsNomeCodigoLeanRepo({
     unitScope: singleUnitId ? scopeFromUnidadeId(singleUnitId) : GLOBAL_SCOPE,
     unidadeIds,
@@ -1070,7 +1071,10 @@ export async function createFeedback(data, options = {}) {
 }
 
 export async function findFeedbackById(id, options = {}) {
-  const feedback = await findFeedbackByIdRepo({ unitScope: GLOBAL_SCOPE, id });
+  const feedback = await findFeedbackByIdRepo({
+    unitScope: resolveFeedbackReadUnitScope(options),
+    id,
+  });
   return feedbackMatchesScopedUnit(feedback, options) ? feedback : null;
 }
 

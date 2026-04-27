@@ -17,6 +17,7 @@ export function createUploadFeedbackAnexoHandler({
       const fb = await findFeedbackById(feedbackId, {
         scopedUnitId,
         allowLegacyUnscoped: true,
+        preferScopedRepoRead: true,
       });
       if (!fb) return apiFail(res, 404, 'Feedback não encontrado.');
 

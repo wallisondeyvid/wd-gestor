@@ -273,8 +273,9 @@ test('listarSetores usa fallback via findUnidadesByIdsNomeCodigoLean quando unid
         },
       ];
     },
-    findUnidadesByIdsNomeCodigoLean: async (unidadeIds) => {
+    findUnidadesByIdsNomeCodigoLean: async (unidadeIds, options) => {
       receivedLookupIds = JSON.parse(JSON.stringify(unidadeIds));
+      assert.deepEqual(JSON.parse(JSON.stringify(options)), { scopedUnitId: 'u-contexto' });
       return [
         { _id: 'u-contexto', codigo: '001', nome: 'Matriz' },
       ];
