@@ -18066,45 +18066,6 @@ function buildPendingMaterialTransferResponse(transferDoc) {
   };
 }
 
-app.get('/api/areas-comuns/:id/materiais/contexto', async (req, res) => {
-  const areaIdParam = req.params && req.params.id ? String(req.params.id) : '';
-  const secaoRaw = req.query && req.query.secao ? String(req.query.secao) : '';
-  if(!isValidObjectId(areaIdParam)) return res.status(400).json({ error: 'Identificador de área inválido' });
-  const secao = secaoRaw ? secaoRaw.toLowerCase() : '';
-  try{
-    if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error: 'Banco indisponível, tente novamente' }); }
-    const areaResolution = await resolveAreaMaterialContextRead({ req, areaId: areaIdParam });
-    if(areaResolution.error) return res.status(areaResolution.status).json({ error: areaResolution.error });
-    const { areaDoc, areaPayload, unidadePayload, materiaisOrigemDocs, materialMap, areaMap, destinos } = areaResolution;
-    if(secao === 'logs'){
-      const logs = await buildMaterialLogsForArea(areaDoc, unidadesReadRepoFromReq(req));
-      return res.json({ logs });
-    }
-    const pendingTransferRead = await resolveAreaMaterialPendingTransferRead({
-      areaDoc,
-      unidadePayload,
-      materialMap,
-      areaMap,
-    });
-    const { transferDocs } = pendingTransferRead;
-
-    return res.json(await buildAreaMaterialContextResponsePayload({
-      areaIdParam,
-      areaPayload,
-      unidadePayload,
-      materiaisOrigemDocs,
-      materialMap,
-      areaMap,
-      destinos,
-      transferDocs,
-    }));
-  }catch(e){
-    console.error('[api/areas-comuns/:id/materiais/contexto] GET erro', e);
-    const message = e && e.message ? e.message : 'Falha ao carregar contexto de materiais';
-    return res.status(500).json({ error: message });
-  }
-});
-
 async function resolvePendingMaterialReceiptRequest({ areaId, transferenciaId, materialId }) {
   const [destinoAreaDoc, transferDoc] = await Promise.all([
     CondAreaComum.findById(areaId).lean(),
@@ -18318,6 +18279,45 @@ app.post('/api/areas-comuns/:id/materiais/transferencias', express.json({ limit:
   }catch(e){
     console.error('[api/areas-comuns/:id/materiais/transferencias] POST erro', e);
     const message = e && e.message ? e.message : 'Falha ao registrar transferência';
+    return res.status(500).json({ error: message });
+  }
+});
+
+app.get('/api/areas-comuns/:id/materiais/contexto', async (req, res) => {
+  const areaIdParam = req.params && req.params.id ? String(req.params.id) : '';
+  const secaoRaw = req.query && req.query.secao ? String(req.query.secao) : '';
+  if(!isValidObjectId(areaIdParam)) return res.status(400).json({ error: 'Identificador de área inválido' });
+  const secao = secaoRaw ? secaoRaw.toLowerCase() : '';
+  try{
+    if(mongoose.connection.readyState !== 1){ try{ res.set('Retry-After','5'); }catch{} return res.status(503).json({ error: 'Banco indisponível, tente novamente' }); }
+    const areaResolution = await resolveAreaMaterialContextRead({ req, areaId: areaIdParam });
+    if(areaResolution.error) return res.status(areaResolution.status).json({ error: areaResolution.error });
+    const { areaDoc, areaPayload, unidadePayload, materiaisOrigemDocs, materialMap, areaMap, destinos } = areaResolution;
+    if(secao === 'logs'){
+      const logs = await buildMaterialLogsForArea(areaDoc, unidadesReadRepoFromReq(req));
+      return res.json({ logs });
+    }
+    const pendingTransferRead = await resolveAreaMaterialPendingTransferRead({
+      areaDoc,
+      unidadePayload,
+      materialMap,
+      areaMap,
+    });
+    const { transferDocs } = pendingTransferRead;
+
+    return res.json(await buildAreaMaterialContextResponsePayload({
+      areaIdParam,
+      areaPayload,
+      unidadePayload,
+      materiaisOrigemDocs,
+      materialMap,
+      areaMap,
+      destinos,
+      transferDocs,
+    }));
+  }catch(e){
+    console.error('[api/areas-comuns/:id/materiais/contexto] GET erro', e);
+    const message = e && e.message ? e.message : 'Falha ao carregar contexto de materiais';
     return res.status(500).json({ error: message });
   }
 });
