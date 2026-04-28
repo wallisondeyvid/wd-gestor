@@ -36,3 +36,15 @@ Checkpoint tenant enforcement atual:
 - Regra funcional consolidada: master/admin sem unidade canonica selecionada opera em visao global legitima; quando houver unidade canonica selecionada, o fluxo deve operar tenant-aware/unit-scoped.
 - Guardrail de matriz: catalogos administrativos globais no ramo privilegiado sem unidade canonica sao aceitaveis e nao devem ser classificados como fallback perigoso ou falso positivo de GLOBAL_SCOPE.
 - Recomendacao operacional: manter a sequencia de micro-patches pausada ate surgir um novo corredor read-only com escopo inequivoco; manter npm run verify:imports e npm test verdes como linha de base do checkpoint atual.
+
+## Escalas
+Status: CHECKPOINTADO E PAUSADO
+Tipo: microcortes read-only locais em routers dedicados
+Risco: medio-baixo
+Testes: baseline verde; npm test com 2003 tests, 2001 pass, 0 fail, 2 skipped
+Notas:
+ Microcortes concluidos neste ciclo: funcionarios por IDs; detalhe de recurso por ID; listagem de recursos; escopo de funcionarios responsaveis; busca de funcionario por codigo.
+ O que foi drenado: os menores corredores read-only em arquivos proprios de Escalas, com validacao por suites dedicadas e baseline final verde, sem alterar contrato HTTP, payload, autenticacao, escopo por unidade ou comportamento funcional.
+ Decisao de checkpoint: pausar expressamente a frente Escalas por enquanto.
+ Motivo da pausa: os proximos corredores naturais empurram a frente para Ausencias, Ferias, disponibilidade, relatorios PDF, paginas/render, writes/delete ou routers amplos, deixando de ser microcortes locais e seguros para esta rodada.
+ Recomendacao operacional: nao abrir nova triagem nem novo micro-patch em Escalas agora; manter este checkpoint como ponto de parada da frente ate surgir um corredor pequeno, read-only e inequivoco fora dessas zonas.
