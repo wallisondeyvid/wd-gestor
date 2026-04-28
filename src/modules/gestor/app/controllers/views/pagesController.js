@@ -351,21 +351,34 @@ export async function paginaFuncoes(req, res) {
 export async function paginaFuncionarios(req, res) {
   try {
     console.log('[paginaFuncionarios] Iniciando carregamento, user:', req.user ? { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster } : 'null');
+    const privilegedUser = isPrivilegedGestorUser(req.user);
     if (isDbOff(req)) {
-      return res.status(200).render('funcionarios/funcionarios_index', stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [], unidadeContextualId: getScopedUnitId(req) }));
+      const unidadeContextualId = getScopedUnitId(req);
+      return res.status(200).render('funcionarios/funcionarios_index', {
+        ...stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [], unidadeContextualId }),
+        isGlobalConsultaMode: privilegedUser && !unidadeContextualId,
+      });
     }
 
     const locals = await loadPaginaFuncionariosBundle({
       req,
-      privilegedUser: isPrivilegedGestorUser(req.user),
+      privilegedUser,
       loadScopedOperationalUnitContext: loadScopedOperationalUnitContextForFuncionariosPage,
     });
-    return res.render('funcionarios/funcionarios_index', locals);
+    return res.render('funcionarios/funcionarios_index', {
+      ...locals,
+      isGlobalConsultaMode: privilegedUser && !normalizeId(locals?.unidadeContextualId),
+    });
   } catch (e) {
     console.error('[pagesController] /funcionarios erro:', e && (e.stack || e.message || e));
     // Fallback: renderizar página vazia para evitar 500 e permitir diagnóstico no front
     try {
-      return res.status(200).render('funcionarios/funcionarios_index', stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [], unidadeContextualId: getScopedUnitId(req) }));
+      const privilegedUser = isPrivilegedGestorUser(req.user);
+      const unidadeContextualId = getScopedUnitId(req);
+      return res.status(200).render('funcionarios/funcionarios_index', {
+        ...stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [], unidadeContextualId }),
+        isGlobalConsultaMode: privilegedUser && !unidadeContextualId,
+      });
     } catch (e2) {
       console.error('[pagesController] /funcionarios fallback render falhou:', e2 && (e2.stack || e2.message || e2));
       return res.status(500).send('Erro ao carregar funcionários');

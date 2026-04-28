@@ -307,6 +307,80 @@ async function withHarness(run) {
   });
 }
 
+function ensureGestorSessionBootstrapRoute(app) {
+  if (app.locals.__gestorSessionBootstrapRouteInstalled) return;
+
+  app.locals.__gestorSessionBootstrapPayload = null;
+
+  app.get('/__test__/gestor-session', (req, res) => {
+    const payload = app.locals.__gestorSessionBootstrapPayload || {};
+    req.session.user = payload.user || null;
+    req.session.gestorAuthContext = payload.authContext || null;
+    req.session.save((err) => {
+      if (err) return res.status(500).json({ ok: false, error: String(err.message || err) });
+      return res.status(200).json({ ok: true });
+    });
+  });
+
+  const stack = app._router?.stack;
+  if (Array.isArray(stack) && stack.length > 1) {
+    const bootstrapLayer = stack.pop();
+    const sessionIndex = stack.findIndex((layer) => {
+      const handle = layer?.handle;
+      const name = String(layer?.name || handle?.name || '').toLowerCase();
+      return name.includes('session') || Boolean(handle?.store) || Boolean(handle?.sessionStore);
+    });
+
+    const insertIndex = sessionIndex >= 0 ? sessionIndex + 1 : 0;
+    stack.splice(insertIndex, 0, bootstrapLayer);
+  }
+
+  app.locals.__gestorSessionBootstrapRouteInstalled = true;
+}
+
+function buildTestSessionUser(userDoc, { role, unidadeId = null } = {}) {
+  const isPrivileged = role === 'master' || role === 'admin';
+  return {
+    id: normalizeId(userDoc?._id),
+    _id: normalizeId(userDoc?._id),
+    email: userDoc?.email,
+    role: unidadeId ? 'user' : null,
+    global_role: isPrivileged ? role : null,
+    isMaster: role === 'master' && !unidadeId,
+    unidade_id: unidadeId ? normalizeId(unidadeId) : null,
+    unidade_principal_id: unidadeId ? normalizeId(unidadeId) : null,
+    funcionario_id: null,
+    auth_version: 'phase3',
+  };
+}
+
+function buildTestGestorAuthContext(userDoc, { role, unidadeId = null } = {}) {
+  const isPrivileged = role === 'master' || role === 'admin';
+  return {
+    source: 'auth-context-v1',
+    user_id: normalizeId(userDoc?._id),
+    user_email: String(userDoc?.email || '').trim().toLowerCase(),
+    global_role: isPrivileged ? role : null,
+    active_membership_id: unidadeId ? `membership-${normalizeId(unidadeId)}` : null,
+    active_unidade_id: unidadeId ? normalizeId(unidadeId) : null,
+    active_unidade_principal_id: unidadeId ? normalizeId(unidadeId) : null,
+    active_papel_contextual: unidadeId ? 'user' : null,
+    active_funcionario_id: null,
+    legacy_role: unidadeId ? 'user' : null,
+    needs_selection: false,
+  };
+}
+
+async function seedGestorSession(agent, app, { user, authContext }) {
+  ensureGestorSessionBootstrapRoute(app);
+  app.locals.__gestorSessionBootstrapPayload = { user, authContext };
+  const res = await agent
+    .get('/__test__/gestor-session')
+    .set('Accept', 'application/json');
+
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+}
+
 async function disposeSharedHarness() {
   if (!sharedHarness.promise) return;
 
@@ -588,6 +662,125 @@ test('Funcionários HTML: filial contextual renderiza apenas a unidade canônica
     assert.equal(res.status, 200);
     assert.match(res.headers['content-type'] || '', /text\/html/i);
     assert.match(res.text, new RegExp(`data-unidade-default="${escapeRegExp(normalizeId(unidadeB._id))}"`));
+    assert.doesNotMatch(res.text, /gestor-funcionarios-global-consulta-marker/);
+  });
+});
+
+test('Funcionários HTML: master sem unidade ativa recebe modo global de consulta explícito', async () => {
+  await withHarness(async ({ app, unidadeA, unidadeB }) => {
+    const masterEmail = uniqueEmail('master-global-consulta-funcionarios');
+    const masterUser = await User.create({
+      email: masterEmail,
+      senha: await bcrypt.hash('Senha@123456', 10),
+      cpf: uniqueCpf(),
+      role: 'master',
+      ativo: true,
+      primeiro_acesso: false,
+      senha_provisoria: false,
+      nome: `Master Global Consulta Funcionarios ${nextCounter()}`,
+    });
+    sharedHarness.createdEmails.push(masterEmail);
+
+    const agent = request.agent(app);
+    await seedGestorSession(agent, app, {
+      user: buildTestSessionUser(masterUser, { role: 'master', unidadeId: null }),
+      authContext: buildTestGestorAuthContext(masterUser, { role: 'master', unidadeId: null }),
+    });
+
+    await createFuncionarioInTenant(unidadeA._id, {
+      nome: `Funcionario Global A ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-global-a'),
+      cpf: uniqueCpf(),
+      sexo: 'M',
+    });
+
+    await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Global B ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-global-b'),
+      cpf: uniqueCpf(),
+      sexo: 'F',
+    });
+
+    const res = await agent
+      .get('/gestor/funcionarios')
+      .set('Accept', 'text/html')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'] || '', /text\/html/i);
+    assert.match(res.text, /gestor-funcionarios-global-consulta-marker/);
+    assert.match(res.text, /Modo global de consulta/);
+    assert.match(res.text, /Selecionar unidade para gerenciar/);
+    assert.match(res.text, /gestor-funcionarios-contextual-fieldset" class="gestor-global-consulta-disabled" disabled/);
+    assert.match(res.text, /data-funcionarios-global-consulta="1"/);
+    assert.match(res.text, /aria-label="Detalhes indisponíveis no modo global" disabled/);
+    assert.match(res.text, /aria-label="Editar indisponível no modo global" disabled/);
+    assert.match(res.text, /aria-label="Excluir indisponível no modo global" disabled/);
+  });
+});
+
+test('Funcionários HTML: usuário comum sem unidade ativa continua bloqueado na borda', async () => {
+  await withHarness(async ({ app }) => {
+    const email = uniqueEmail('usuario-sem-unidade-funcionarios');
+    const userDoc = await User.create({
+      email,
+      senha: await bcrypt.hash('Senha@123456', 10),
+      cpf: uniqueCpf(),
+      role: 'user',
+      ativo: true,
+      primeiro_acesso: false,
+      senha_provisoria: false,
+      nome: `Usuario Sem Unidade Funcionarios ${nextCounter()}`,
+    });
+    sharedHarness.createdEmails.push(email);
+
+    const agent = request.agent(app);
+    await seedGestorSession(agent, app, {
+      user: buildTestSessionUser(userDoc, { role: 'user', unidadeId: null }),
+      authContext: buildTestGestorAuthContext(userDoc, { role: 'user', unidadeId: null }),
+    });
+
+    const res = await agent
+      .get('/gestor/funcionarios')
+      .set('Accept', 'text/html')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.body, { success: false, error: 'UNIDADE_ID_REQUIRED' });
+  });
+});
+
+test('Funcionários HTML: master com unidade ativa continua no modo contextual atual', async () => {
+  await withHarness(async ({ app, unidadeB }) => {
+    const masterEmail = uniqueEmail('master-contextual-funcionarios');
+    const masterUser = await User.create({
+      email: masterEmail,
+      senha: await bcrypt.hash('Senha@123456', 10),
+      cpf: uniqueCpf(),
+      role: 'master',
+      ativo: true,
+      primeiro_acesso: false,
+      senha_provisoria: false,
+      nome: `Master Contextual Funcionarios ${nextCounter()}`,
+    });
+    sharedHarness.createdEmails.push(masterEmail);
+
+    const agent = request.agent(app);
+    await seedGestorSession(agent, app, {
+      user: buildTestSessionUser(masterUser, { role: 'master', unidadeId: unidadeB._id }),
+      authContext: buildTestGestorAuthContext(masterUser, { role: 'master', unidadeId: unidadeB._id }),
+    });
+
+    const res = await agent
+      .get('/gestor/funcionarios')
+      .set('Accept', 'text/html')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'] || '', /text\/html/i);
+    assert.match(res.text, new RegExp(`data-unidade-default="${escapeRegExp(normalizeId(unidadeB._id))}"`));
+    assert.doesNotMatch(res.text, /gestor-funcionarios-global-consulta-marker/);
+    assert.doesNotMatch(res.text, /data-funcionarios-global-consulta="1"/);
   });
 });
 

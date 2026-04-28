@@ -50,22 +50,35 @@
     #fDeleteConfirmModal .modal-header{ background:#ffffff !important; color:#212529 !important; }
     #fDeleteConfirmModal .modal-title{ color:inherit !important; }
     #fDeleteConfirmModal .btn-close{ filter:none !important; }
+    .gestor-global-consulta-disabled { opacity:.58; }
   </style>
 </head>
-  <body class="wdg-layout" data-unidade-default="<%= unidadeContextualId || (user && user.unidade_id ? user.unidade_id.toString() : '') %>" data-base-path="<%= _basePath %>">
+  <body class="wdg-layout" data-unidade-default="<%= unidadeContextualId || (user && user.unidade_id ? user.unidade_id.toString() : '') %>" data-base-path="<%= _basePath %>" data-funcionarios-global-consulta="<%= isGlobalConsultaMode ? '1' : '0' %>">
   <%- include('../../shared/partials/header-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
   <%- include('../../shared/partials/navbar-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user, prefixMenuPaths: false }) %>
   <%- include('../../shared/partials/perfil-shared', { moduleBasePath: _basePath, moduleLabel: 'Gestor', user }) %>
 
   <div class="wdg-page">
+    <% if (isGlobalConsultaMode) { %>
+      <div id="gestor-funcionarios-global-consulta-marker" class="alert alert-info d-flex justify-content-between align-items-start gap-3" role="status">
+        <div>
+          <strong>Modo global de consulta</strong>
+          <div class="small mt-1">
+            A lista global de funcionários está disponível para consulta, mas criar, editar, excluir, abrir detalhes, foto e anexos permanecem indisponíveis até a seleção de uma unidade.
+          </div>
+        </div>
+        <a class="btn btn-outline-primary btn-sm" href="<%= _basePath %>/login?step=select">Selecionar unidade para gerenciar</a>
+      </div>
+    <% } %>
     <!-- Título padronizado -->
-    <h4 class="mb-3 text-center page-main-title" id="tituloFormFuncionario">Cadastrar Funcionário</h4>
+    <h4 class="mb-3 text-center page-main-title" id="tituloFormFuncionario"><%= isGlobalConsultaMode ? 'Funcionários - Consulta Global' : 'Cadastrar Funcionário' %></h4>
     <div class="gestor-divider"></div>
 
     <div class="wdg-card content wdg-card-hover mb-4">
       <div class="wdg-card-body wdg-form wdg-tight">
         <div id="alertArea" class="mb-2" aria-live="polite"></div>
   <form id="formFuncionario" action="<%= _basePath %>/api/funcionarios" method="POST" enctype="multipart/form-data" autocomplete="off" novalidate>
+          <fieldset id="gestor-funcionarios-contextual-fieldset" class="<%= isGlobalConsultaMode ? 'gestor-global-consulta-disabled' : '' %>" <%= isGlobalConsultaMode ? 'disabled aria-disabled="true"' : '' %>>
           <ul class="nav nav-tabs flex-wrap" id="tabsFuncionario" role="tablist" aria-label="Abas do cadastro de funcionário">
             <li class="nav-item" role="presentation">
               <button id="tab-aba1" class="nav-link active" type="button"
@@ -154,6 +167,7 @@
               <button type="submit" id="btnFinalizar" class="btn btn-outline-primary d-none" title="Cadastrar" aria-label="Cadastrar">Cadastrar</button>
             </div>
           </div>
+          </fieldset>
         </form>
       </div>
     </div>
@@ -212,17 +226,29 @@
                   </td>
                   <td class="col-acoes">
                     <div class="d-flex gap-1 justify-content-center flex-nowrap">
-                      <button type="button" class="wdg-icon-btn btn-detalhes-func" data-action="detalhes" data-id="<%= f._id %>" title="Detalhes" aria-label="Detalhes">
-                        <img src="<%= _basePath %>/images/detalhe.png" alt="Detalhes" onerror="this.outerHTML='&lt;i class=\'bi bi-info-circle\'&gt;&lt;/i&gt;'">
-                      </button>
-                      <button type="button" class="wdg-icon-btn btn-edit-func" data-action="editar" data-id="<%= f._id %>" title="Editar" aria-label="Editar">
-                        <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'">
-                      </button>
-                      <form method="POST" action="<%= _basePath %>/api/funcionarios/<%= f._id %>/delete" class="d-inline js-form-delete-func" style="margin:0; padding:0;">
-                        <button type="submit" class="wdg-icon-btn" data-action="excluir" title="Excluir" aria-label="Excluir">
-                          <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'">
+                      <% if (isGlobalConsultaMode) { %>
+                        <button type="button" class="wdg-icon-btn btn-detalhes-func" data-action="detalhes-bloqueado" title="Selecione uma unidade para abrir detalhes" aria-label="Detalhes indisponíveis no modo global" disabled>
+                          <img src="<%= _basePath %>/images/detalhe.png" alt="Detalhes indisponíveis" onerror="this.outerHTML='&lt;i class=\'bi bi-info-circle\'&gt;&lt;/i&gt;'">
                         </button>
-                      </form>
+                        <button type="button" class="wdg-icon-btn btn-edit-func" data-action="editar-bloqueado" title="Selecione uma unidade para editar" aria-label="Editar indisponível no modo global" disabled>
+                          <img src="<%= _basePath %>/images/editar.png" alt="Editar indisponível" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'">
+                        </button>
+                        <button type="button" class="wdg-icon-btn" data-action="excluir-bloqueado" title="Selecione uma unidade para excluir" aria-label="Excluir indisponível no modo global" disabled>
+                          <img src="<%= _basePath %>/images/excluir.png" alt="Excluir indisponível" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'">
+                        </button>
+                      <% } else { %>
+                        <button type="button" class="wdg-icon-btn btn-detalhes-func" data-action="detalhes" data-id="<%= f._id %>" title="Detalhes" aria-label="Detalhes">
+                          <img src="<%= _basePath %>/images/detalhe.png" alt="Detalhes" onerror="this.outerHTML='&lt;i class=\'bi bi-info-circle\'&gt;&lt;/i&gt;'">
+                        </button>
+                        <button type="button" class="wdg-icon-btn btn-edit-func" data-action="editar" data-id="<%= f._id %>" title="Editar" aria-label="Editar">
+                          <img src="<%= _basePath %>/images/editar.png" alt="Editar" onerror="this.outerHTML='&lt;i class=\'bi bi-pencil\'&gt;&lt;/i&gt;'">
+                        </button>
+                        <form method="POST" action="<%= _basePath %>/api/funcionarios/<%= f._id %>/delete" class="d-inline js-form-delete-func" style="margin:0; padding:0;">
+                          <button type="submit" class="wdg-icon-btn" data-action="excluir" title="Excluir" aria-label="Excluir">
+                            <img src="<%= _basePath %>/images/excluir.png" alt="Excluir" onerror="this.outerHTML='&lt;i class=\'bi bi-trash\'&gt;&lt;/i&gt;'">
+                          </button>
+                        </form>
+                      <% } %>
                     </div>
                   </td>
                 </tr>
