@@ -21,11 +21,11 @@ Status: WRAPPER VALIDADO (flip binário por ENABLE_CONDOMINIOS_WRAPPER)
 Risco: baixo
 Testes: verdes (OFF/ON + contrato de rotas idêntico)
 Notas: alias /condominio preservado
- Checkpoint documental atual: a família relacionados V2 fica registrada como decisao funcional aberta, nao como microcorte isolado.
- Estado atual da familia: GET /condominios/api/blocos/relacionados usa requireUnitScope explicito na borda V2; GET /condominios/api/andares/relacionados e GET /condominios/api/unidades/relacionadas permanecem sem wrapper explicito, com semantica relacional e retorno vazio em desencontros.
- Decisao desta rodada: nao patchar a familia relacionados agora.
- Motivo: endurecer apenas andares/relacionados ou unidades/relacionadas criaria uma familia ainda mais mista e introduziria endurecimento funcional arbitrario sem decisao explicita para o grupo inteiro.
- Gatilho futuro: reabrir somente se houver decisao funcional/tecnica explicita para a familia relacionados V2 como um todo, seja para exigir unidadeId/requireUnitScope em todos os endpoints, seja para manter formalmente o modelo relacional com retorno vazio onde aplicavel.
+ Checkpoint documental atual: a decisao funcional da família relacionados V2 foi tomada e consolidada; todos os endpoints relacionados V2 devem exigir unidadeId valido via requireUnitScope.
+ Regra funcional consolidada da familia: sem unidadeId ou unitScope valido, GET /condominios/api/blocos/relacionados, GET /condominios/api/andares/relacionados e GET /condominios/api/unidades/relacionadas devem retornar 400 UNIDADE_ID_REQUIRED; com unidadeId valido, o fluxo deve seguir para o service preservando payload e contrato de sucesso.
+ Estado atual da familia: GET /condominios/api/blocos/relacionados ja esta alinhado com requireUnitScope explicito na borda V2; GET /condominios/api/andares/relacionados e GET /condominios/api/unidades/relacionadas permanecem como proximos microcortes futuros para alinhamento.
+ Diretriz de execucao futura: alinhar andares/relacionados e unidades/relacionadas um microcorte por vez, sem reabrir a familia inteira de uma vez e sem alterar payload de sucesso.
+ Recomendacao operacional: quando a familia for retomada, o proximo patch futuro deve ser um unico microcorte por vez, comecando por andares/relacionados ou unidades/relacionadas.
  Recomendacao operacional: parar o corredor por agora e manter a baseline verde atual como checkpoint de referencia.
 
 ## Clínica
