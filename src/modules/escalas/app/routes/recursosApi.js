@@ -66,6 +66,40 @@ function serializeRecursoDetalhe(rec) {
   };
 }
 
+async function findRecursoDetalheById(id) {
+  return Recurso.findById(id)
+    .populate({ path:'unidade_id', select:'codigo nome _id is_principal unidade_principal_id matriz_id' })
+    .lean();
+}
+
+async function assertRecursoDentroDoEscopo(req, rec) {
+  const { usuario, isPrivileged } = resolveUsuarioBaseEscalas(req);
+  if(isPrivileged) {
+    return true;
+  }
+
+  const uid = rec.unidade_id?._id || rec.unidade_id;
+  return recursoEstaNoEscopoDoUsuario({
+    usuario,
+    Unidade,
+    recursoUnidadeId: uid,
+  });
+}
+
+async function resolveRecursoDetalhePayload(req, id) {
+  const rec = await findRecursoDetalheById(id);
+  if(!rec) {
+    return { status: 404, body: { error:'nao_encontrado' } };
+  }
+
+  const recursoNoEscopo = await assertRecursoDentroDoEscopo(req, rec);
+  if(!recursoNoEscopo) {
+    return { status: 403, body: { error:'fora_do_escopo' } };
+  }
+
+  return { status: 200, body: serializeRecursoDetalhe(rec) };
+}
+
 router.get('/api/recursos', async (req,res)=>{
   console.log('[Escalas][recursosApi] HIT /api/recursos query=', req.query, 'sessionUser?', !!req.session?.escalasUser);
   try {
@@ -131,29 +165,8 @@ router.get('/api/recursos/:id', async (req,res)=>{
     }
     const id = (req.params.id||'').trim();
     if(!id){ return res.status(400).json({ error:'id_invalido' }); }
-
-    const { usuario, isPrivileged } = resolveUsuarioBaseEscalas(req);
-
-    const rec = await Recurso.findById(id)
-      .populate({ path:'unidade_id', select:'codigo nome _id is_principal unidade_principal_id matriz_id' })
-      .lean();
-    if(!rec){ return res.status(404).json({ error:'nao_encontrado' }); }
-
-    // Escopo hierárquico simples baseado na unidade do escalasUser (se não master/admin)
-    if(!isPrivileged){
-      const uid = rec.unidade_id?._id || rec.unidade_id; // pode ser doc ou id
-      const recursoNoEscopo = await recursoEstaNoEscopoDoUsuario({
-        usuario,
-        Unidade,
-        recursoUnidadeId: uid,
-      });
-
-      if(!recursoNoEscopo){
-        return res.status(403).json({ error:'fora_do_escopo' });
-      }
-    }
-
-    return res.json(serializeRecursoDetalhe(rec));
+    const result = await resolveRecursoDetalhePayload(req, id);
+    return res.status(result.status).json(result.body);
   } catch(err){
     console.error('[Escalas][api/recursos/:id] erro:', err);
     return res.status(500).json({ error:'erro_interno' });

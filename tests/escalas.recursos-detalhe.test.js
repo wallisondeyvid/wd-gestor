@@ -129,6 +129,7 @@ async function loginForEscalasSession(app, { email, senha }) {
 function assertObservableRecursoData(data) {
   assert.equal(typeof data, 'object');
   assert.ok(data);
+  assert.deepEqual(Object.keys(data).sort(), ['id', 'marca', 'modelo', 'nome', 'placa', 'unidade']);
   assert.equal(typeof data.id, 'string');
   assert.equal(typeof data.placa, 'string');
   assert.equal(typeof data.marca, 'string');
