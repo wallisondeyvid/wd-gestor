@@ -12,6 +12,9 @@ async function getUnidadeModel(){
 
 const router = Router();
 
+const FUNCIONARIO_BUSCA_SELECT = 'nome cpf codigo unidade_id';
+const UNIDADE_BUSCA_SELECT = 'nome codigo';
+
 function requireEscalasAuth(req,res,next){
   if(!req.session?.escalasUser) return res.status(401).json({ error: 'Não autenticado' });
   next();
@@ -53,31 +56,119 @@ async function resolveClusterPermitidoIds({ usuario, isMaster, Unidade }){
   return relacionadas.map((relacionada) => relacionada._id.toString());
 }
 
+function normalizeBuscaCodigoInput(query = {}){
+  const codigoRaw = query.codigo;
+  const idRaw = query.id;
+  const codigo = codigoRaw == null ? '' : String(codigoRaw);
+  const id = idRaw == null ? '' : String(idRaw);
+
+  return {
+    codigo,
+    id,
+    hasLookupInput: Boolean(codigo || id),
+  };
+}
+
+function normalizeCodigoBusca(codigo){
+  const normalized = String(codigo || '').trim();
+  return {
+    raw: normalized,
+    escaped: normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+  };
+}
+
 async function findFuncionarioByCodigoOuId({ id, codigo, Funcionario }){
   let doc = null;
 
   if(id && mongoose.isValidObjectId(id)){
-    doc = await Funcionario.findOne({ _id:id, ativo:true }).select('nome cpf codigo unidade_id').lean();
+    doc = await Funcionario.findOne({ _id:id, ativo:true }).select(FUNCIONARIO_BUSCA_SELECT).lean();
   }
 
   if(!doc && codigo){
-    const codRaw = String(codigo).trim();
-    const codNorm = codRaw.replace(/^\s+|\s+$/g, '');
-    const codEsc = codNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const match = { ativo:true, codigo: { $regex: '^\\s*' + codEsc + '\\s*$', $options:'i' } };
+    const codNorm = normalizeCodigoBusca(codigo);
+    const match = { ativo:true, codigo: { $regex: '^\\s*' + codNorm.escaped + '\\s*$', $options:'i' } };
 
-    doc = await Funcionario.findOne(match).select('nome cpf codigo unidade_id').lean();
+    doc = await Funcionario.findOne(match).select(FUNCIONARIO_BUSCA_SELECT).lean();
 
-    if(!doc && /^\d{11}$/.test(codNorm)){
-      doc = await Funcionario.findOne({ ativo:true, cpf: codNorm }).select('nome cpf codigo unidade_id').lean();
+    if(!doc && /^\d{11}$/.test(codNorm.raw)){
+      doc = await Funcionario.findOne({ ativo:true, cpf: codNorm.raw }).select(FUNCIONARIO_BUSCA_SELECT).lean();
     }
 
-    if(!doc && mongoose.isValidObjectId(codNorm)){
-      doc = await Funcionario.findOne({ _id: codNorm, ativo:true }).select('nome cpf codigo unidade_id').lean();
+    if(!doc && mongoose.isValidObjectId(codNorm.raw)){
+      doc = await Funcionario.findOne({ _id: codNorm.raw, ativo:true }).select(FUNCIONARIO_BUSCA_SELECT).lean();
     }
   }
 
   return doc;
+}
+
+function funcionarioEstaNoClusterPermitido(doc, clusterPermitidoIds){
+  if(!clusterPermitidoIds){
+    return true;
+  }
+
+  return clusterPermitidoIds.includes(doc.unidade_id?.toString());
+}
+
+async function loadFuncionarioBuscaUnidadeInfo(Unidade, unidadeId){
+  if(!unidadeId){
+    return null;
+  }
+
+  const unidade = await Unidade.findById(unidadeId).select(UNIDADE_BUSCA_SELECT).lean();
+  if(!unidade){
+    return null;
+  }
+
+  return {
+    id: unidade._id,
+    nome: unidade.nome,
+    codigo: unidade.codigo || null,
+  };
+}
+
+function serializeFuncionarioBuscaPayload(doc, unidadeInfo){
+  return {
+    id: doc._id,
+    nome: doc.nome,
+    cpf: doc.cpf,
+    codigo: doc.codigo || null,
+    unidade_id: doc.unidade_id || null,
+    unidade_nome: unidadeInfo?.nome || null,
+    unidade_codigo: unidadeInfo?.codigo || null
+  };
+}
+
+async function resolveFuncionarioBuscaPayload(req){
+  const input = normalizeBuscaCodigoInput(req.query);
+  if(!input.hasLookupInput){
+    return { status: 400, body: { error: 'Parâmetro codigo ou id obrigatório' } };
+  }
+
+  const { usuario, isMaster } = resolveUsuarioBase(req);
+  const Funcionario = await getFuncionarioModel();
+  const Unidade = await getUnidadeModel();
+
+  const clusterPermitidoIds = await resolveClusterPermitidoIds({ usuario, isMaster, Unidade });
+  if(!isMaster && !clusterPermitidoIds){
+    return { status: 404, body: { error: 'Funcionário não encontrado' } };
+  }
+
+  const doc = await findFuncionarioByCodigoOuId({
+    id: input.id,
+    codigo: input.codigo,
+    Funcionario,
+  });
+  if(!doc){
+    return { status: 404, body: { error: 'Funcionário não encontrado' } };
+  }
+
+  if(!funcionarioEstaNoClusterPermitido(doc, clusterPermitidoIds)){
+    return { status: 404, body: { error: 'Funcionário não encontrado' } };
+  }
+
+  const unidadeInfo = await loadFuncionarioBuscaUnidadeInfo(Unidade, doc.unidade_id);
+  return { status: 200, body: { data: serializeFuncionarioBuscaPayload(doc, unidadeInfo) } };
 }
 
 // GET /api/funcionarios/busca-codigo?codigo=XYZ
@@ -87,41 +178,8 @@ async function findFuncionarioByCodigoOuId({ id, codigo, Funcionario }){
 // - Retorna 404 se não encontrado ou fora do cluster permitido.
 router.get('/api/funcionarios/busca-codigo', requireEscalasAuth, async (req,res)=>{
   try {
-    const { codigo, id } = req.query;
-    if(!codigo && !id){
-      return res.status(400).json({ error: 'Parâmetro codigo ou id obrigatório' });
-    }
-
-    const { usuario, isMaster } = resolveUsuarioBase(req);
-    const Funcionario = await getFuncionarioModel();
-    const Unidade = await getUnidadeModel();
-
-    const clusterPermitidoIds = await resolveClusterPermitidoIds({ usuario, isMaster, Unidade });
-    if(!isMaster && !clusterPermitidoIds){
-      return res.status(404).json({ error: 'Funcionário não encontrado' });
-    }
-
-    const doc = await findFuncionarioByCodigoOuId({ id, codigo, Funcionario });
-    if(!doc){
-      return res.status(404).json({ error: 'Funcionário não encontrado' });
-    }
-    if(clusterPermitidoIds && !clusterPermitidoIds.includes(doc.unidade_id?.toString())){
-      return res.status(404).json({ error: 'Funcionário não encontrado' });
-    }
-    let unidadeInfo = null;
-    if(doc.unidade_id){
-      const u = await Unidade.findById(doc.unidade_id).select('nome codigo').lean();
-      if(u) unidadeInfo = { id: u._id, nome: u.nome, codigo: u.codigo || null };
-    }
-    return res.json({ data: {
-      id: doc._id,
-      nome: doc.nome,
-      cpf: doc.cpf,
-      codigo: doc.codigo || null,
-      unidade_id: doc.unidade_id || null,
-      unidade_nome: unidadeInfo?.nome || null,
-      unidade_codigo: unidadeInfo?.codigo || null
-    }});
+    const result = await resolveFuncionarioBuscaPayload(req);
+    return res.status(result.status).json(result.body);
   } catch(e){
     console.error('[escalas][GET /api/funcionarios/busca-codigo] erro:', e);
     return res.status(500).json({ error: 'Falha ao buscar funcionário' });
