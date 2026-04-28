@@ -1,3 +1,15 @@
+## Checkpoint Global
+Status: TRILHA ATIVA PAUSADA
+Escopo: WD Gestor inteiro
+Risco: controlado
+Testes: baseline recente verde
+Notas:
+ A infraestrutura multi-tenant do produto existe e permanece ancorada em unitScope, resolveConnection e resolveModel, mas a adocao por modulo ainda e parcial.
+ Estado operacional atual: Gestor pausado por ausencia de novo microcorte pequeno com ganho real; Escalas pausado com microcortes locais concluidos; Condominios pausado ate decisao funcional clara ou novo corredor inequivoco; Clinica estavel sem frente tenant pequena evidente; Portal do Morador nao deve ser reaberto automaticamente; PostgreSQL permanece fora ate a arquitetura multi-tenant estar suficientemente resolvida.
+ Decisao deste checkpoint: nao ha proximo microcorte seguro dentro da regua atual.
+ Criterios objetivos para retomada: decisao funcional explicita para uma familia hoje bloqueada, como relacionados V2; novo call site read-only, pequeno, vivo, testado e sem acoplamento amplo; ou autorizacao explicita para mudanca arquitetural maior acima do nivel de microcorte.
+ Recomendacao operacional: preservar a baseline verde e parar a trilha ativa por agora.
+
 ## Portal Morador
 Status: MIGRADO
 Tipo: wrapper estrutural
