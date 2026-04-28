@@ -9,6 +9,12 @@ Status: WRAPPER VALIDADO (flip binário por ENABLE_CONDOMINIOS_WRAPPER)
 Risco: baixo
 Testes: verdes (OFF/ON + contrato de rotas idêntico)
 Notas: alias /condominio preservado
+ Checkpoint documental atual: a família relacionados V2 fica registrada como decisao funcional aberta, nao como microcorte isolado.
+ Estado atual da familia: GET /condominios/api/blocos/relacionados usa requireUnitScope explicito na borda V2; GET /condominios/api/andares/relacionados e GET /condominios/api/unidades/relacionadas permanecem sem wrapper explicito, com semantica relacional e retorno vazio em desencontros.
+ Decisao desta rodada: nao patchar a familia relacionados agora.
+ Motivo: endurecer apenas andares/relacionados ou unidades/relacionadas criaria uma familia ainda mais mista e introduziria endurecimento funcional arbitrario sem decisao explicita para o grupo inteiro.
+ Gatilho futuro: reabrir somente se houver decisao funcional/tecnica explicita para a familia relacionados V2 como um todo, seja para exigir unidadeId/requireUnitScope em todos os endpoints, seja para manter formalmente o modelo relacional com retorno vazio onde aplicavel.
+ Recomendacao operacional: parar o corredor por agora e manter a baseline verde atual como checkpoint de referencia.
 
 ## Clínica
 Status: MIGRADO (auditado)
