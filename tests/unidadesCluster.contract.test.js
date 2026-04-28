@@ -135,6 +135,26 @@ async function createUser({ email, nome, role, unidadeId = null }) {
   });
 }
 
+async function createGlobalUser({
+  email,
+  nome,
+  role = 'user',
+  globalRole = 'admin',
+} = {}) {
+  return User.create({
+    email,
+    senha: passwordHash,
+    nome,
+    cpf: buildUniqueCpf(),
+    role,
+    unidade_id: null,
+    global_role: globalRole,
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+  });
+}
+
 async function login(agent, { email, senha = PASSWORD } = {}) {
   return agent
     .post('/gestor/login')
@@ -172,6 +192,66 @@ async function createContextualDiretorAgent() {
     unidadePrincipalA,
     unidadeFilialB,
     unidadePrincipalC,
+  };
+}
+
+async function createGlobalAdminAgent() {
+  const unidadePrincipalA = await createPrincipalUnit(`Principal Cluster Global ${nextSequence()}`);
+  const unidadeFilialB = await createBranchUnit(`Filial Cluster Global ${nextSequence()}`, unidadePrincipalA._id);
+
+  const user = await createGlobalUser({
+    email: buildUniqueEmail('admin-cluster-global'),
+    nome: 'Admin Global Cluster',
+    globalRole: 'admin',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  return {
+    agent,
+    unidadePrincipalA,
+    unidadeFilialB,
+  };
+}
+
+async function createPendingSelectionUserAgent() {
+  const unidadePrincipalA = await createPrincipalUnit(`Principal Pendente A ${nextSequence()}`);
+  const unidadePrincipalB = await createPrincipalUnit(`Principal Pendente B ${nextSequence()}`);
+
+  const user = await createUser({
+    email: buildUniqueEmail('cluster-pending-selection'),
+    nome: 'Usuario Cluster Pendente',
+    role: 'user',
+  });
+
+  await UserMembership.insertMany([
+    {
+      user_id: user._id,
+      unidade_id: unidadePrincipalA._id,
+      papel_contextual: 'gestor',
+      status: 'active',
+      origem: 'unidades-cluster-contract-test',
+    },
+    {
+      user_id: user._id,
+      unidade_id: unidadePrincipalB._id,
+      papel_contextual: 'user',
+      status: 'active',
+      origem: 'unidades-cluster-contract-test',
+    },
+  ]);
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+  assert.equal(loginRes.headers.location, '/gestor/login?step=select');
+
+  return {
+    agent,
+    unidadePrincipalA,
   };
 }
 
@@ -248,6 +328,26 @@ test('GET /gestor/api/unidades/cluster retorna 401 sem sessão', async () => {
   });
 });
 
+test('GET /gestor/api/unidades/cluster mantém bloqueio quando usuário comum está sem unidade ativa', async () => {
+  const { agent, unidadePrincipalA } = await createPendingSelectionUserAgent();
+
+  const res = await agent
+    .get(CLUSTER_ENDPOINT)
+    .query({ unidade_id: String(unidadePrincipalA._id) })
+    .set('Accept', 'application/json')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 409);
+  assert.deepEqual(res.body, {
+    success: false,
+    authenticated: true,
+    error: 'Seleção de unidade pendente',
+    code: 'GESTOR_SELECTION_REQUIRED',
+    needsUnitSelection: true,
+    redirect: '/gestor/login?step=select',
+  });
+});
+
 test('GET /gestor/api/unidades/cluster retorna 400 com unidade_id ausente', async () => {
   const { agent } = await createContextualDiretorAgent();
 
@@ -297,6 +397,86 @@ test('GET /gestor/api/unidades/cluster retorna 200 dentro do contexto ativo com 
     assert.deepEqual(nomes, [tenantFilialName, tenantPrincipalName].sort());
     assert.equal(unidades.every((unidade) => 'id' in unidade), true, JSON.stringify(unidades));
     assert.equal(unidades.some((unidade) => '_id' in unidade), false, JSON.stringify(unidades));
+  });
+});
+
+test('GET /gestor/api/unidades/cluster permite admin global sem unidade ativa e alcança o branch privilegiado global', async () => {
+  const { agent, unidadePrincipalA, unidadeFilialB } = await createGlobalAdminAgent();
+
+  await withTenantClusterEnv([String(unidadePrincipalA._id), String(unidadeFilialB._id)], async () => {
+    const tenantPrincipalName = `${unidadePrincipalA.nome} TENANT`;
+    const tenantFilialName = `${unidadeFilialB.nome} TENANT`;
+
+    await seedTenantUnitCluster(unidadeFilialB._id, [
+      buildTenantUnitDoc(unidadeFilialB, { nome: tenantFilialName }),
+    ]);
+
+    await seedTenantUnitCluster(unidadePrincipalA._id, [
+      buildTenantUnitDoc(unidadePrincipalA, { nome: tenantPrincipalName }),
+      buildTenantUnitDoc(unidadeFilialB, { nome: tenantFilialName }),
+    ]);
+
+    const res = await agent
+      .get(CLUSTER_ENDPOINT)
+      .query({ unidade_id: String(unidadeFilialB._id) })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body?.ok, true, JSON.stringify(res.body));
+    assert.equal(res.body?.total, 2, JSON.stringify(res.body));
+    const nomes = (res.body?.unidades || []).map((unidade) => unidade.nome).sort();
+    assert.deepEqual(nomes, [tenantFilialName, tenantPrincipalName].sort());
+  });
+});
+
+test('GET /gestor/api/unidades/cluster preserva o caminho atual para admin com unidade ativa', async () => {
+  const unidadePrincipalA = await createPrincipalUnit(`Principal Cluster Admin Contextual ${nextSequence()}`);
+  const unidadeFilialB = await createBranchUnit(`Filial Cluster Admin Contextual ${nextSequence()}`, unidadePrincipalA._id);
+
+  const user = await createGlobalUser({
+    email: buildUniqueEmail('admin-cluster-contextual'),
+    nome: 'Admin Contextual Cluster',
+    globalRole: 'admin',
+  });
+
+  await UserMembership.create({
+    user_id: user._id,
+    unidade_id: unidadeFilialB._id,
+    papel_contextual: 'gestor',
+    status: 'active',
+    origem: 'unidades-cluster-contract-test',
+  });
+
+  const agent = request.agent(app);
+  const loginRes = await login(agent, { email: user.email });
+  assert.equal(loginRes.status, 303);
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  await withTenantClusterEnv([String(unidadePrincipalA._id), String(unidadeFilialB._id)], async () => {
+    const tenantPrincipalName = `${unidadePrincipalA.nome} TENANT`;
+    const tenantFilialName = `${unidadeFilialB.nome} TENANT`;
+
+    await seedTenantUnitCluster(unidadeFilialB._id, [
+      buildTenantUnitDoc(unidadeFilialB, { nome: tenantFilialName }),
+    ]);
+
+    await seedTenantUnitCluster(unidadePrincipalA._id, [
+      buildTenantUnitDoc(unidadePrincipalA, { nome: tenantPrincipalName }),
+      buildTenantUnitDoc(unidadeFilialB, { nome: tenantFilialName }),
+    ]);
+
+    const res = await agent
+      .get(CLUSTER_ENDPOINT)
+      .query({ unidade_id: String(unidadeFilialB._id) })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body?.ok, true, JSON.stringify(res.body));
+    assert.equal(res.body?.total, 2, JSON.stringify(res.body));
+    const nomes = (res.body?.unidades || []).map((unidade) => unidade.nome).sort();
+    assert.deepEqual(nomes, [tenantFilialName, tenantPrincipalName].sort());
   });
 });
 
