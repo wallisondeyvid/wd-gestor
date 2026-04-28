@@ -66,6 +66,95 @@ function serializeRecursoDetalhe(rec) {
   };
 }
 
+function parseRecursosListQuery(query = {}) {
+  const placa = String(query.placa || '').trim();
+  const unidadeId = String(query.unidadeId || '').trim();
+  const placaTermNorm = placa && placa.length >= 2
+    ? placa.replace(/[^A-Za-z0-9]/g,'').toUpperCase()
+    : null;
+
+  return {
+    placa,
+    unidadeId,
+    placaTermNorm,
+  };
+}
+
+async function resolveRecursosListFiltroBase(req, unidadeId) {
+  const filtro = {};
+  if(unidadeId) {
+    filtro.unidade_id = unidadeId;
+  }
+
+  const { usuario, isPrivileged } = resolveUsuarioBaseEscalas(req);
+  if(isPrivileged) {
+    return { filtro };
+  }
+
+  let principalId = usuario.unidade_principal_id || usuario.unidadePrincipalId || null;
+  if(!principalId && usuario.unidade_id){
+    const unidadeUsuario = await Unidade.findById(usuario.unidade_id)
+      .select('_id is_principal unidade_principal_id matriz_id')
+      .lean();
+    if(unidadeUsuario) {
+      principalId = unidadeUsuario.is_principal
+        ? unidadeUsuario._id
+        : (unidadeUsuario.unidade_principal_id || unidadeUsuario.matriz_id || unidadeUsuario._id);
+    }
+  }
+
+  const cond = principalId
+    ? { $or:[{ _id:principalId }, { unidade_principal_id:principalId }, { matriz_id:principalId }] }
+    : { _id: usuario.unidade_id || null };
+  const unidadesAcessiveis = await Unidade.find(cond).select('_id').lean();
+  const ids = unidadesAcessiveis.map((unidade) => String(unidade._id));
+
+  if(unidadeId && !ids.includes(String(unidadeId))) {
+    return { empty: true };
+  }
+
+  if(!unidadeId) {
+    filtro.unidade_id = { $in: ids };
+  }
+
+  return { filtro };
+}
+
+function applyRecursosPlacaFilter(recursos, placaTermNorm) {
+  if(!placaTermNorm) {
+    return recursos;
+  }
+
+  return recursos.filter((recurso) => {
+    const normR = String(recurso.placa || '').replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+    return normR.includes(placaTermNorm);
+  });
+}
+
+function serializeRecursoListItem(rec) {
+  return {
+    id: rec._id,
+    placa: rec.placa,
+    descricao: [rec.marca, rec.modelo].filter(Boolean).join(' ') || rec.modelo || rec.marca || '',
+    unidadeFormatada: rec.unidade_id ? ((rec.unidade_id.codigo ? rec.unidade_id.codigo + ' - ' : '') + (rec.unidade_id.nome || '')) : ''
+  };
+}
+
+async function resolveRecursosListPayload(req) {
+  const { unidadeId, placaTermNorm } = parseRecursosListQuery(req.query);
+  const filtroBase = await resolveRecursosListFiltroBase(req, unidadeId);
+  if(filtroBase.empty) {
+    return [];
+  }
+
+  const recursos = await Recurso.find(filtroBase.filtro)
+    .populate({ path:'unidade_id', select:'codigo nome' })
+    .sort({ placa:1 })
+    .limit(100)
+    .lean();
+  return applyRecursosPlacaFilter(recursos, placaTermNorm).map((recurso) => serializeRecursoListItem(recurso));
+}
+
 async function findRecursoDetalheById(id) {
   return Recurso.findById(id)
     .populate({ path:'unidade_id', select:'codigo nome _id is_principal unidade_principal_id matriz_id' })
@@ -106,51 +195,8 @@ router.get('/api/recursos', async (req,res)=>{
     if(!req.session?.escalasUser){
       return res.status(401).json({ error:'Não autenticado' });
     }
-    let { placa, unidadeId } = req.query;
-    placa = (placa||'').trim();
-    unidadeId = (unidadeId||'').trim();
-    const filtro = {};
-    let placaTermNorm = null;
-    if(placa && placa.length>=2){
-      placaTermNorm = placa.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
-    }
-    if(unidadeId){ filtro.unidade_id = unidadeId; }
-
-    // Escopo hierárquico simples baseado na unidade do escalasUser (se não master)
-    const su = req.session.escalasUser || {};
-    const role = su.role || su.perfil || 'user';
-    if(role!=='master' && role!=='admin'){
-      let principalId = su.unidade_principal_id || su.unidadePrincipalId || null;
-      if(!principalId && su.unidade_id){
-        const u = await Unidade.findById(su.unidade_id).select('_id is_principal unidade_principal_id matriz_id').lean();
-        if(u) principalId = u.is_principal? u._id : (u.unidade_principal_id || u.matriz_id || u._id);
-      }
-      const cond = principalId ? { $or:[{ _id:principalId }, { unidade_principal_id:principalId }, { matriz_id:principalId }] } : { _id: su.unidade_id || null };
-      const unidadesAcessiveis = await Unidade.find(cond).select('_id').lean();
-      const ids = unidadesAcessiveis.map(u=>String(u._id));
-      if(unidadeId && !ids.includes(String(unidadeId))){ return res.json([]); }
-      if(!unidadeId){ filtro.unidade_id = { $in: ids }; }
-    }
-
-    let recursos = await Recurso.find(filtro)
-      .populate({ path:'unidade_id', select:'codigo nome' })
-      .sort({ placa:1 })
-      .limit(100)
-      .lean();
-    // Aplicar filtragem hífen/caso/extra insensível em memória se termo informado
-    if(placaTermNorm){
-      recursos = recursos.filter(r=>{
-        const normR = (r.placa||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();
-        return normR.includes(placaTermNorm);
-      });
-    }
-    const mapped = recursos.map(r=>({
-      id: r._id,
-      placa: r.placa,
-      descricao: [r.marca, r.modelo].filter(Boolean).join(' ') || r.modelo || r.marca || '',
-      unidadeFormatada: r.unidade_id ? ((r.unidade_id.codigo? r.unidade_id.codigo+' - ':'') + (r.unidade_id.nome||'')) : ''
-    }));
-    return res.json(mapped);
+    const data = await resolveRecursosListPayload(req);
+    return res.json(data);
   } catch(err){
     console.error('[Escalas][api/recursos] erro:', err);
     return res.status(500).json({ error:'erro_interno' });

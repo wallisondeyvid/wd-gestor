@@ -249,6 +249,7 @@ test('GET /escalas/api/recursos com unidadeId fora do escopo retorna 200 com arr
   const res = await getRecursos(agent, { unidadeId: String(units.matrizBId) });
 
   assert.equal(res.status, 200);
+  assert.ok(Array.isArray(res.body));
   assert.deepEqual(res.body, []);
 });
 
