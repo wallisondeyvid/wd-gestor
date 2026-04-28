@@ -28,6 +28,10 @@ let closeServer;
 let passwordHash = '';
 let sequence = 0;
 
+function normalizeId(value) {
+  return String(value || '');
+}
+
 function nextSequence() {
   sequence += 1;
   return sequence;
@@ -109,8 +113,9 @@ async function createUser({
   nome = 'Usuario Contextual Unidades',
   role = 'user',
   unidadeId = null,
+  globalRole = null,
 } = {}) {
-  return User.create({
+  const payload = {
     email,
     senha: passwordHash,
     nome,
@@ -120,7 +125,13 @@ async function createUser({
     ativo: true,
     primeiro_acesso: false,
     senha_provisoria: false,
-  });
+  };
+
+  if (globalRole) {
+    payload.global_role = globalRole;
+  }
+
+  return User.create(payload);
 }
 
 async function login(agent, { email, senha = PASSWORD } = {}) {
@@ -142,6 +153,42 @@ before(async () => {
   const built = await createServer({ skipDb: false, deferErrorHandlers: true });
   app = built.app;
   closeServer = built.close;
+  app.get('/__seed-session', (req, res) => {
+    const email = String(req.query?.email || buildUniqueEmail('unidades-seed')).trim().toLowerCase();
+    const role = String(req.query?.role || 'diretor').trim().toLowerCase();
+    const unidadeId = String(req.query?.unidadeId || '').trim();
+    const unidadePrincipalId = String(req.query?.unidadePrincipalId || '').trim();
+    const authContextUnitId = String(req.query?.authContextUnitId || '').trim();
+    const authContextPrincipalId = String(req.query?.authContextPrincipalId || authContextUnitId || '').trim();
+    const funcionarioId = String(req.query?.funcionarioId || '').trim();
+    const globalRole = String(req.query?.globalRole || '').trim().toLowerCase();
+
+    req.session.user = {
+      id: `seed-${role}-${nextSequence()}`,
+      _id: `seed-${role}-${nextSequence()}`,
+      email,
+      role,
+      nome: `Seed ${role} ${nextSequence()}`,
+      ...(funcionarioId ? { funcionario_id: funcionarioId } : {}),
+      ...(unidadeId ? { unidade_id: unidadeId } : {}),
+      ...(unidadePrincipalId ? { unidade_principal_id: unidadePrincipalId } : {}),
+      ...(globalRole ? { global_role: globalRole } : {}),
+    };
+
+    if (authContextUnitId) {
+      req.session.gestorAuthContext = {
+        source: 'auth-context-v1',
+        active_unidade_id: authContextUnitId,
+        active_unidade_principal_id: authContextPrincipalId,
+        needs_selection: false,
+        ...(globalRole ? { global_role: globalRole } : {}),
+      };
+    } else {
+      delete req.session.gestorAuthContext;
+    }
+
+    return req.session.save(() => res.status(204).end());
+  });
   if (typeof built.registerErrorHandlers === 'function') {
     await Promise.resolve(built.registerErrorHandlers());
   }
@@ -204,8 +251,109 @@ async function createContextualAgent() {
   };
 }
 
+async function seedSession(agent, body) {
+  const res = await agent
+    .get('/__seed-session')
+    .query(body)
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 204, JSON.stringify(res.body));
+}
+
 test('GET /gestor/unidades usa req.unitScope e ignora unidade legada divergente', async () => {
   const { agent, unidadePrincipalA, unidadeFilialB, unidadePrincipalC } = await createContextualAgent();
+
+  const res = await agent
+    .get('/gestor/unidades')
+    .set('Accept', 'text/html')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'] || '', /text\/html/i);
+  assert.match(res.text, new RegExp(unidadePrincipalA.nome));
+  assert.match(res.text, new RegExp(unidadeFilialB.nome));
+  assert.doesNotMatch(res.text, new RegExp(unidadePrincipalC.nome));
+});
+
+test('GET /gestor/unidades com usuário comum sem unidade ativa continua bloqueado', async () => {
+  const agent = request.agent(app);
+
+  await seedSession(agent, {
+    email: buildUniqueEmail('unidades-page-sem-scope'),
+    role: 'diretor',
+    funcionarioId: '65f400000000000000000120',
+  });
+
+  const res = await agent
+    .get('/gestor/unidades')
+    .set('Accept', 'text/html')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'] || '', /text\/html/i);
+  assert.match(String(res.text || ''), /login/i);
+  assert.doesNotMatch(String(res.text || ''), /<title>Unidades - WDGestor<\/title>/i);
+});
+
+test('GET /gestor/unidades com usuário privilegiado sem unidade ativa renderiza o branch global legítimo', async () => {
+  const unidadePrincipalA = await createUnit({ nome: `Principal Global A ${nextSequence()}` });
+  const unidadeFilialB = await createUnit({
+    nome: `Filial Global B ${nextSequence()}`,
+    principalUnitId: unidadePrincipalA._id,
+  });
+  const unidadePrincipalC = await createUnit({ nome: `Principal Global C ${nextSequence()}` });
+
+  const user = await createUser({
+    email: buildUniqueEmail('unidades-admin-global'),
+    nome: 'Admin Global de Unidades',
+    role: 'admin',
+    globalRole: 'admin',
+  });
+
+  const agent = request.agent(app);
+
+  await seedSession(agent, {
+    email: user.email,
+    role: 'admin',
+    globalRole: 'admin',
+  });
+
+  const res = await agent
+    .get('/gestor/unidades')
+    .set('Accept', 'text/html')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'] || '', /text\/html/i);
+  assert.match(res.text, new RegExp(unidadePrincipalA.nome));
+  assert.match(res.text, new RegExp(unidadeFilialB.nome));
+  assert.match(res.text, new RegExp(unidadePrincipalC.nome));
+});
+
+test('GET /gestor/unidades com usuário privilegiado e unidade ativa continua contextual', async () => {
+  const unidadePrincipalA = await createUnit({ nome: `Principal Contextual A ${nextSequence()}` });
+  const unidadeFilialB = await createUnit({
+    nome: `Filial Contextual B ${nextSequence()}`,
+    principalUnitId: unidadePrincipalA._id,
+  });
+  const unidadePrincipalC = await createUnit({ nome: `Principal Contextual C ${nextSequence()}` });
+
+  const user = await createUser({
+    email: buildUniqueEmail('unidades-admin-contextual'),
+    nome: 'Admin Contextual de Unidades',
+    role: 'admin',
+    globalRole: 'admin',
+  });
+
+  const agent = request.agent(app);
+
+  await seedSession(agent, {
+    email: user.email,
+    role: 'admin',
+    authContextUnitId: normalizeId(unidadeFilialB._id),
+    authContextPrincipalId: normalizeId(unidadePrincipalA._id),
+    globalRole: 'admin',
+  });
 
   const res = await agent
     .get('/gestor/unidades')

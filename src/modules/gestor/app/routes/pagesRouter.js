@@ -30,6 +30,16 @@ function withLoginAndRequiredUnitScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => requireUnitScope(req, res, () => handler(req, res, next)));
 }
 
+function withLoginAndUnidadesScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => {
+		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+			return handler(req, res, next);
+		}
+
+		return requireUnitScope(req, res, () => handler(req, res, next));
+	});
+}
+
 function withLoginAndFuncoesScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => {
 		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
@@ -73,7 +83,7 @@ router.get('/dashboard', requireLogin, paginaDashboard);
 router.get('/esquecisenha-avancada', (req,res)=> paginaEsqueciSenhaAvancada(req,res));
 router.get('/usuarios', requireLogin, paginaUsuarios);
 router.get('/feedback', requireLogin, paginaFeedback);
-router.get('/unidades', withLoginAndRequiredUnitScope(paginaUnidades));
+router.get('/unidades', withLoginAndUnidadesScope(paginaUnidades));
 router.get('/editar-unidades/:id', withLoginAndRequiredUnitScope(paginaEditarUnidade));
 router.get('/modulos', requireLogin, paginaModulos);
 router.get('/funcoes', withLoginAndFuncoesScope(paginaFuncoes));
