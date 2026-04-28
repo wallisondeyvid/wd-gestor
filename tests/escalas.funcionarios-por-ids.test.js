@@ -192,6 +192,7 @@ test('GET /escalas/api/funcionarios/por-ids sem ids retorna 200 com data vazio',
     .get('/escalas/api/funcionarios/por-ids')
     .expect(200);
 
+  assert.ok(Array.isArray(res.body.data));
   assert.deepEqual(res.body, { success: true, data: [] });
 });
 
@@ -218,6 +219,7 @@ test('GET /escalas/api/funcionarios/por-ids com ids invalidos retorna 200 com da
     .query({ ids: 'id-invalido,123,abc' })
     .expect(200);
 
+  assert.ok(Array.isArray(res.body.data));
   assert.deepEqual(res.body, { success: true, data: [] });
 });
 

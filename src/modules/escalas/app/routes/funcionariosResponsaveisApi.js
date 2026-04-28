@@ -94,6 +94,19 @@ function serializeFuncionarioPorIds(doc, unidadesMap){
   };
 }
 
+async function resolveFuncionariosPorIdsPayload(idsRaw){
+  const oids = parseFuncionariosPorIdsQuery(idsRaw);
+  if(!oids.length){
+    return [];
+  }
+
+  const Funcionario = await getFuncionarioModel();
+  const Unidade = await getUnidadeModel();
+  const docs = await Funcionario.find({ _id: { $in: oids } }).select('nome cpf codigo unidade_id').lean();
+  const unidadesMap = await buildUnidadesMapByDocs(Unidade, docs);
+  return docs.map((doc) => serializeFuncionarioPorIds(doc, unidadesMap));
+}
+
 // GET /api/funcionarios-responsaveis?unidade=&cpf=&codigo=&nome=
 // Regras:
 // - Filtra apenas unidades relacionadas ao usuário (mesma lógica de unidades-relacionadas) salvo se master.
@@ -222,14 +235,7 @@ router.get('/api/funcionarios-responsaveis', requireEscalasAuth, async (req,res)
 // Retorna { id, nome, codigo, cpf, unidade_id, unidade_nome, unidade_codigo } para os IDs informados.
 router.get('/api/funcionarios/por-ids', requireEscalasAuth, async (req,res)=>{
   try {
-    const oids = parseFuncionariosPorIdsQuery(req.query?.ids);
-    if(!oids.length) return res.json({ data: [] });
-
-    const Funcionario = await getFuncionarioModel();
-    const Unidade = await getUnidadeModel();
-    const docs = await Funcionario.find({ _id: { $in: oids } }).select('nome cpf codigo unidade_id').lean();
-    const unidadesMap = await buildUnidadesMapByDocs(Unidade, docs);
-    const data = docs.map((doc) => serializeFuncionarioPorIds(doc, unidadesMap));
+    const data = await resolveFuncionariosPorIdsPayload(req.query?.ids);
     return res.json({ data });
   } catch(e){
     console.error('[escalas][GET /api/funcionarios/por-ids] erro:', e);
