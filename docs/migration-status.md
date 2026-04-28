@@ -21,11 +21,10 @@ Status: WRAPPER VALIDADO (flip binário por ENABLE_CONDOMINIOS_WRAPPER)
 Risco: baixo
 Testes: verdes (OFF/ON + contrato de rotas idêntico)
 Notas: alias /condominio preservado
- Checkpoint documental atual: a decisao funcional da família relacionados V2 foi tomada e consolidada; todos os endpoints relacionados V2 devem exigir unidadeId valido via requireUnitScope.
- Regra funcional consolidada da familia: sem unidadeId ou unitScope valido, GET /condominios/api/blocos/relacionados, GET /condominios/api/andares/relacionados e GET /condominios/api/unidades/relacionadas devem retornar 400 UNIDADE_ID_REQUIRED; com unidadeId valido, o fluxo deve seguir para o service preservando payload e contrato de sucesso.
- Estado atual da familia: GET /condominios/api/blocos/relacionados ja esta alinhado com requireUnitScope explicito na borda V2; GET /condominios/api/andares/relacionados e GET /condominios/api/unidades/relacionadas permanecem como proximos microcortes futuros para alinhamento.
- Diretriz de execucao futura: alinhar andares/relacionados e unidades/relacionadas um microcorte por vez, sem reabrir a familia inteira de uma vez e sem alterar payload de sucesso.
- Recomendacao operacional: quando a familia for retomada, o proximo patch futuro deve ser um unico microcorte por vez, comecando por andares/relacionados ou unidades/relacionadas.
+ Checkpoint documental atual: a decisao funcional da família relacionados V2 foi executada e a padronizacao do grupo foi concluida no corredor V2 de Condomínios.
+ Regra funcional consolidada da familia: GET /condominios/api/blocos/relacionados, GET /condominios/api/andares/relacionados e GET /condominios/api/unidades/relacionadas exigem unidadeId valido via requireUnitScope; sem unidadeId ou unitScope valido, retornam 400 UNIDADE_ID_REQUIRED; com unidadeId valido, seguem para o service preservando payload e contrato de sucesso.
+ Estado final da familia: GET /condominios/api/blocos/relacionados esta alinhado; GET /condominios/api/andares/relacionados esta alinhado; GET /condominios/api/unidades/relacionadas esta alinhado.
+ Preservacao de escopo nesta consolidacao: payloads de sucesso foram preservados; nenhum write, PDF ou fluxo de Assembleia foi tocado; Portal do Morador, Gestor, Escalas, Caixa de Mensagens e PostgreSQL permaneceram fora desta rodada.
  Recomendacao operacional: parar o corredor por agora e manter a baseline verde atual como checkpoint de referencia.
 
 ## Clínica
