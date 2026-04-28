@@ -58,6 +58,57 @@ function mapObservableFuncionario(doc, unidadesMap){
   };
 }
 
+async function resolveFuncionariosResponsaveisUnitScope({
+  usuario,
+  isMaster,
+  unidade,
+  incluirFiliais,
+  Unidade,
+}) {
+  let unidadesPermitidasIds = [];
+
+  if(!isMaster) {
+    const unidadeId = usuario.unidade_id || null;
+    if(!unidadeId) {
+      return { empty: true };
+    }
+
+    const clusterIds = await resolveClusterIdsByUnitId(Unidade, unidadeId);
+    if(!clusterIds) {
+      return { empty: true };
+    }
+
+    unidadesPermitidasIds = clusterIds;
+  }
+
+  if(!unidade) {
+    if(isMaster) {
+      return { unidadeFilter: null };
+    }
+
+    return { unidadeFilter: { $in: unidadesPermitidasIds } };
+  }
+
+  if(!mongoose.isValidObjectId(unidade)) {
+    return { empty: true };
+  }
+
+  if(!isMaster && !unidadesPermitidasIds.includes(unidade)) {
+    return { empty: true };
+  }
+
+  if(incluirFiliais === '1' || incluirFiliais === 'true') {
+    try {
+      const clusterIds = await resolveClusterIdsByUnitId(Unidade, unidade);
+      if(clusterIds) {
+        return { unidadeFilter: { $in: clusterIds } };
+      }
+    } catch(_e) {}
+  }
+
+  return { unidadeFilter: unidade };
+}
+
 function parseFuncionariosPorIdsQuery(idsRaw){
   const normalized = String(idsRaw || '').trim();
   if(!normalized) return [];
@@ -120,42 +171,19 @@ router.get('/api/funcionarios-responsaveis', requireEscalasAuth, async (req,res)
     const Funcionario = await getFuncionarioModel();
     const Unidade = await getUnidadeModel();
 
-    let unidadesPermitidasIds = [];
-    if(isMaster){
-      // master: sem restrição
-    } else {
-      const unidadeId = usuario.unidade_id || null;
-      if(!unidadeId){
-        return res.json({ data: [] });
-      }
-      const clusterIds = await resolveClusterIdsByUnitId(Unidade, unidadeId);
-      if(!clusterIds){
-        return res.json({ data: [] });
-      }
-      unidadesPermitidasIds = clusterIds;
-    }
-
     const filtro = { ativo: true };
-    if(unidade){
-      if(!mongoose.isValidObjectId(unidade)) return res.json({ data: [] });
-      if(!isMaster && !unidadesPermitidasIds.includes(unidade)) return res.json({ data: [] });
-
-      if(incluirFiliais==='1' || incluirFiliais==='true'){
-        // Buscar cluster da unidade passada (se for matriz pega filiais; se for filial pega matriz + irmãs)
-        try {
-          const clusterIds = await resolveClusterIdsByUnitId(Unidade, unidade);
-          if(clusterIds){
-            filtro.unidade_id = { $in: clusterIds };
-          } else {
-            filtro.unidade_id = unidade;
-          }
-        } catch(_e){ filtro.unidade_id = unidade; }
-      } else {
-        filtro.unidade_id = unidade;
-      }
-    } else if(!isMaster){
-      // limitar ao cluster permitido
-      filtro.unidade_id = { $in: unidadesPermitidasIds };
+    const unitScope = await resolveFuncionariosResponsaveisUnitScope({
+      usuario,
+      isMaster,
+      unidade,
+      incluirFiliais,
+      Unidade,
+    });
+    if(unitScope.empty) {
+      return res.json({ data: [] });
+    }
+    if(unitScope.unidadeFilter) {
+      filtro.unidade_id = unitScope.unidadeFilter;
     }
     // CPF: aceitar completo (11) para match exato ou parcial >=4 dígitos para prefixo.
     if(cpf){
