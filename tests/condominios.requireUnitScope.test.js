@@ -203,3 +203,46 @@ test('requireUnitScope permite seguir em GET /condominios/api/andares/relacionad
     }
   }
 });
+
+test('requireUnitScope retorna 400 quando unidadeId ausente em GET /condominios/api/unidades/relacionadas V2', async () => {
+  const { app, close } = await createServer({ skipDb: true });
+  const teardownGuard = installTeardownSuppression();
+
+  try {
+    const res = await requestWithV2Flag(app, (agent) => agent
+      .get('/condominios/api/unidades/relacionadas')
+      .set('Accept', 'application/json')
+      .set('Connection', 'close'));
+
+    assert.equal(res.status, 400);
+    assert.equal(res.body?.success, false);
+    assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED');
+  } finally {
+    try {
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+    }
+  }
+});
+
+test('requireUnitScope permite seguir em GET /condominios/api/unidades/relacionadas V2 quando unidadeId valido e informado', async () => {
+  const { app, close } = await createServer({ skipDb: true });
+  const teardownGuard = installTeardownSuppression();
+
+  try {
+    const res = await requestWithV2Flag(app, (agent) => agent
+      .get('/condominios/api/unidades/relacionadas')
+      .query({ unidadeId: '000000000000000000000010' })
+      .set('Accept', 'application/json')
+      .set('Connection', 'close'));
+
+    assert.notEqual(res.status, 400);
+  } finally {
+    try {
+      await closeWithTeardownGuard(close, teardownGuard);
+    } finally {
+      await teardownGuard.remove();
+    }
+  }
+});
