@@ -223,6 +223,7 @@ const handleGetBlocosV2 = withRequiredUnitScope(handleGetBlocosV2Raw);
 const handleGetBlocoByIdV2Scoped = withRequiredUnitScope(handleGetBlocoByIdV2);
 const handleGetBlocosRelacionadosV2Scoped = withRequiredUnitScope(handleGetBlocosRelacionadosV2);
 const handleGetAndarByIdV2Scoped = withRequiredUnitScope(handleGetAndarByIdV2);
+const handleGetAndaresRelacionadosV2Scoped = withRequiredUnitScope(handleGetAndaresRelacionadosV2);
 const handlePostBlocosV2 = withRequiredUnitScope(handlePostBlocosV2Raw);
 const handlePutBlocosV2 = withRequiredUnitScope(handlePutBlocosV2Raw);
 const handleDeleteBlocosV2 = withRequiredUnitScope(handleDeleteBlocosV2Raw);
@@ -12737,7 +12738,7 @@ async function handleGetAndaresRelacionadosV1(req, res, _next) {
 
 app.get('/api/andares/relacionados', (req, res, next) => {
   const isV2On = String(process.env.WDG_FLAG_CONDOMINIOS_APP_V2 ?? '').trim() === '1';
-  if (isV2On) return handleGetAndaresRelacionadosV2(req, res, next);
+  if (isV2On) return handleGetAndaresRelacionadosV2Scoped(req, res, next);
   return handleGetAndaresRelacionadosV1(req, res, next);
 });
 
