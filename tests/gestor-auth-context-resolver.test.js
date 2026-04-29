@@ -5,6 +5,7 @@ import {
   AUTH_CONTEXT_SOURCE_LEGACY,
   AUTH_CONTEXT_SOURCE_V1,
   projectLegacySessionUserFromAuthContext,
+  resolveContextualUserProjection,
   resolveGestorAuthContext,
 } from '../src/modules/gestor/app/services/authContextResolver.js';
 
@@ -270,5 +271,44 @@ test('projectLegacySessionUserFromAuthContext preserva compatibilidade sem inven
     funcionario_id: null,
     global_role: null,
     auth_version: 'phase3',
+  });
+});
+
+test('resolveContextualUserProjection nao trata auth_version phase3 como fonte autoritativa sem sessionAuthContext', () => {
+  const projection = resolveContextualUserProjection({
+    sessionUser: {
+      id: IDS.user,
+      auth_version: 'phase3',
+      unidade_id: IDS.unitA,
+      funcionario_id: IDS.funcA,
+    },
+    sessionAuthContext: null,
+  });
+
+  assert.deepEqual(projection, {
+    isAuthoritative: false,
+    contextualUnidadeId: IDS.unitA,
+    contextualFuncionarioId: IDS.funcA,
+  });
+});
+
+test('resolveContextualUserProjection trata phase3 como projeção autoritativa quando sessionAuthContext existe', () => {
+  const projection = resolveContextualUserProjection({
+    sessionUser: {
+      id: IDS.user,
+      auth_version: 'phase3',
+      unidade_id: IDS.unitA,
+      funcionario_id: IDS.funcA,
+    },
+    sessionAuthContext: {
+      active_unidade_id: IDS.unitB,
+      active_funcionario_id: IDS.funcB,
+    },
+  });
+
+  assert.deepEqual(projection, {
+    isAuthoritative: true,
+    contextualUnidadeId: IDS.unitB,
+    contextualFuncionarioId: IDS.funcB,
   });
 });

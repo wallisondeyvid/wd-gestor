@@ -399,7 +399,11 @@ export function resolveContextualUserProjection({ sessionUser = null, sessionAut
     sessionAuthContext?.activeFuncionarioId ||
     sessionAuthContext?.activeContext?.funcionarioId
   );
-  const isAuthoritative = sessionAuthContext?.source === AUTH_CONTEXT_SOURCE_V1 || sessionUser?.auth_version === 'phase3';
+  const hasSessionAuthContext = sessionAuthContext && typeof sessionAuthContext === 'object';
+  const isAuthoritative = (
+    sessionAuthContext?.source === AUTH_CONTEXT_SOURCE_V1 ||
+    (hasSessionAuthContext && sessionUser?.auth_version === 'phase3')
+  );
 
   if (isAuthoritative) {
     return {
