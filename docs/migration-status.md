@@ -83,6 +83,13 @@ Checkpoint tenant enforcement atual:
 - Escopo da abertura da Fase C neste checkpoint: planejamento e contrato do auth-context canonico, sem patch tecnico, sem alteracao de codigo, sem alteracao de testes e sem ativacao de flags.
 - Baseline executiva preservada para a passagem B -> C: npm test com 2014 testes, 2012 pass, 0 fail e 2 skipped; nenhum payload publico e nenhum contrato HTTP foram alterados nesta rodada documental.
 - Recomendacao operacional: revisar o checkpoint documental da Fase C a partir do eixo auth-context, manter a sequencia de micro-patches encerrada por agora e deixar api.db.js, auth.db.js, user_memberships runtime e PostgreSQL fora da abertura inicial da proxima fase.
+- Primeiro patch funcional pequeno e controlado da Fase C consolidado em f7ff525, com escopo estritamente contido no helper canonico de projecao contextual para reforcar que auth_version phase3, sozinho, nao torna a projecao contextual autoritativa.
+- Objetivo funcional consolidado do patch: phase3 continua sendo projecao compativel derivada; para que a projecao phase3 seja tratada como autoritativa passa a ser necessario existir sessionAuthContext real; sem sessionAuthContext, unidade e funcionario contextuais continuam podendo nascer apenas de ramo legado nao autoritativo.
+- Arquivos alterados no patch: src/modules/gestor/app/services/authContextResolver.js e tests/gestor-auth-context-resolver.test.js.
+- Comportamento consolidado apos o patch: req.session.gestorAuthContext permanece como fonte canonica de sessao; req.session.user permanece como projecao compativel; phase3 deixa de poder atuar isoladamente como segunda fonte de verdade para a projecao contextual do bootstrap do Gestor.
+- Escopo preservado expressamente neste checkpoint da Fase C: nenhum contrato HTTP publico foi alterado; nenhum payload publico foi alterado; gestor-app.js permaneceu sem diff material; api.db.js permaneceu sem diff material; auth.db.js permaneceu sem diff material; user_memberships runtime permaneceu fora; flags permaneceram fora; PostgreSQL permaneceu fora.
+- Validacao consolidada deste checkpoint: node --test em tests/gestor-auth-context-resolver.test.js e tests/gestor-bootstrap-contextual-user-projection-structural-seam.test.js permaneceu verde com 11 pass e 0 fail; npm run verify:imports permaneceu verde; a validacao focal ampla recente permanece verde com 136 testes, 136 pass e 0 fail.
+- Leitura executiva deste marco: esta foi a primeira fatia funcional da Fase C, ainda de baixo blast radius, sem alterar login, requireLogin, requireRole, requireUnitScope, /gestor/api/usuario, /gestor/api/modulos, contratos HTTP, payloads publicos ou qualquer frente ampla de api.db.js/auth.db.js.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
