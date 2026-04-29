@@ -104,7 +104,7 @@ test('requireRole usa globalRole do AuthContext quando a flag está ligada', asy
     featureFlags: { gestor_auth_context_resolver: true },
     user: { role: 'user', isMaster: false },
     sessionUser: { id: 'u1', email: 'admin@example.com', role: 'user' },
-    authContext: { global_role: 'admin', needs_selection: false },
+    authContext: { source: 'auth-context-v1', global_role: 'admin', needs_selection: false },
   });
   const res = mockRes();
 
@@ -122,6 +122,7 @@ test('requireRole usa o effectiveRole do AuthContext ativo quando a flag está l
     featureFlags: { gestor_auth_context_resolver: true },
     sessionUser: { id: 'u1', email: 'gestor@example.com', role: 'user' },
     authContext: {
+      source: 'auth-context-v1',
       active_membership_id: 'mem1',
       active_unidade_id: 'uni1',
       legacy_role: 'diretor',
@@ -159,6 +160,7 @@ test('requireRole prioriza o contexto canônico ativo ao sincronizar o shape leg
       funcionario_id: 'session-legacy-funcionario',
     },
     authContext: {
+      source: 'auth-context-v1',
       needs_selection: false,
       active_membership_id: 'mem1',
       active_unidade_id: 'unit-canonical',
@@ -335,17 +337,14 @@ test('requireRole nao herda unidade legada quando ja existe projecao phase3 com 
 
   const nextCalled = await runMw(middleware, req, res);
 
-  assert.equal(nextCalled, true);
-  assert.equal(req.user.role, 'admin');
-  assert.equal(req.user.global_role, 'admin');
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 403);
+  assert.deepEqual(res.jsonPayload, { success: false, error: 'Acesso negado', code: 'FORBIDDEN' });
+  assert.equal(req.user.role, null);
+  assert.equal(req.user.global_role, null);
   assert.equal(req.user.unidade_id, null);
   assert.equal(req.user.unidade_principal_id, null);
   assert.equal(req.user.funcionario_id, null);
-  assert.equal(req.session.user.role, 'admin');
-  assert.equal(req.session.user.global_role, 'admin');
-  assert.equal(req.session.user.unidade_id, null);
-  assert.equal(req.session.user.unidade_principal_id, null);
-  assert.equal(req.session.user.funcionario_id, null);
   assert.equal(req.session.user.auth_version, 'phase3');
 });
 

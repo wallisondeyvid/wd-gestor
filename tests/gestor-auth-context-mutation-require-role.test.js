@@ -116,7 +116,7 @@ function createMutationDeps({ userId, firstUnitId, selectedUnitId, firstRole = '
   };
 }
 
-test('selectAuthUnit seguido de requireRole aceita hoje o authContext parcial salvo em sessao com auth_version phase3', async () => {
+test('selectAuthUnit seguido de requireRole nao aceita mais authContext parcial salvo em sessao com auth_version phase3', async () => {
   const userId = '507f1f77bcf86cd799439801';
   const firstUnitId = '507f191e810c19729de860ea';
   const selectedUnitId = '507f191e810c19729de860eb';
@@ -177,13 +177,15 @@ test('selectAuthUnit seguido de requireRole aceita hoje o authContext parcial sa
 
   const nextCalled = await runRequireRole(middleware, roleReq, roleRes);
 
-  assert.equal(nextCalled, true);
-  assert.equal(roleReq.user.role, 'user');
-  assert.equal(roleReq.user.unidade_id, selectedUnitId);
-  assert.equal(roleReq.user.funcionario_id, 'func-902');
+  assert.equal(nextCalled, false);
+  assert.equal(roleRes.statusCode, 403);
+  assert.deepEqual(roleRes.jsonPayload, { success: false, error: 'Acesso negado', code: 'FORBIDDEN' });
+  assert.equal(roleReq.user.role, null);
+  assert.equal(roleReq.user.unidade_id, null);
+  assert.equal(roleReq.user.funcionario_id, null);
 });
 
-test('switchAuthUnit seguido de requireRole aceita hoje o authContext parcial salvo em sessao com auth_version phase3', async () => {
+test('switchAuthUnit seguido de requireRole nao aceita mais authContext parcial salvo em sessao com auth_version phase3', async () => {
   const userId = '507f1f77bcf86cd799439811';
   const firstUnitId = '507f191e810c19729de860fa';
   const selectedUnitId = '507f191e810c19729de860fb';
@@ -247,8 +249,10 @@ test('switchAuthUnit seguido de requireRole aceita hoje o authContext parcial sa
 
   const nextCalled = await runRequireRole(middleware, roleReq, roleRes);
 
-  assert.equal(nextCalled, true);
-  assert.equal(roleReq.user.role, 'user');
-  assert.equal(roleReq.user.unidade_id, selectedUnitId);
-  assert.equal(roleReq.user.funcionario_id, 'func-902');
+  assert.equal(nextCalled, false);
+  assert.equal(roleRes.statusCode, 403);
+  assert.deepEqual(roleRes.jsonPayload, { success: false, error: 'Acesso negado', code: 'FORBIDDEN' });
+  assert.equal(roleReq.user.role, null);
+  assert.equal(roleReq.user.unidade_id, null);
+  assert.equal(roleReq.user.funcionario_id, null);
 });

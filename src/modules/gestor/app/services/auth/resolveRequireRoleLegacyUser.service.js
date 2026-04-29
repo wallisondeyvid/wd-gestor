@@ -8,24 +8,26 @@ function normalizeRole(value) {
   return normalized || null;
 }
 
-function hasAuthoritativeAuthContext(authContext) {
-  return authContext?.source === AUTH_CONTEXT_SOURCE_V1;
+function hasTransportAuthContext(authContext) {
+  return Boolean(authContext && typeof authContext === 'object');
 }
 
-function hasAuthoritativeContextualProjection({ authContext, sessionUser }) {
-  return Boolean(
-    hasAuthoritativeAuthContext(authContext) ||
-    (authContext && typeof authContext === 'object' && sessionUser?.auth_version === 'phase3')
-  );
+function hasCanonicalAuthContext(authContext) {
+  return hasTransportAuthContext(authContext) && authContext.source === AUTH_CONTEXT_SOURCE_V1;
+}
+
+function hasAuthoritativeContextualProjection({ authContext }) {
+  return hasCanonicalAuthContext(authContext);
 }
 
 function resolveEffectiveRole({ authContext, requestUser, sessionUser }) {
-  const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
+  const authContextIsAuthoritative = hasCanonicalAuthContext(authContext);
+  const canUseLegacyFallback = !hasTransportAuthContext(authContext);
   const globalRole = normalizeRole(
-    authContext?.global_role ||
-    authContext?.globalRole ||
-    (!authContextIsAuthoritative ? requestUser?.global_role : null) ||
-    (!authContextIsAuthoritative ? sessionUser?.global_role : null)
+    (authContextIsAuthoritative ? authContext?.global_role : null) ||
+    (authContextIsAuthoritative ? authContext?.globalRole : null) ||
+    (canUseLegacyFallback ? requestUser?.global_role : null) ||
+    (canUseLegacyFallback ? sessionUser?.global_role : null)
   );
 
   if (globalRole === 'master' || globalRole === 'admin') {
@@ -38,18 +40,18 @@ function resolveEffectiveRole({ authContext, requestUser, sessionUser }) {
   return {
     globalRole: null,
     effectiveRole: normalizeRole(
-      authContext?.effectiveRole ||
-      authContext?.legacy_role ||
-      authContext?.legacyRole ||
-      authContext?.activeContext?.legacyRole ||
-      (!authContextIsAuthoritative ? requestUser?.role : null) ||
-      (!authContextIsAuthoritative ? sessionUser?.role : null)
+      (authContextIsAuthoritative ? authContext?.effectiveRole : null) ||
+      (authContextIsAuthoritative ? authContext?.legacy_role : null) ||
+      (authContextIsAuthoritative ? authContext?.legacyRole : null) ||
+      (authContextIsAuthoritative ? authContext?.activeContext?.legacyRole : null) ||
+      (canUseLegacyFallback ? requestUser?.role : null) ||
+      (canUseLegacyFallback ? sessionUser?.role : null)
     ),
   };
 }
 
 function buildCanonicalLegacyProjection({ authContext, requestUser, sessionUser, effectiveRole, globalRole }) {
-  if (!authContext || typeof authContext !== 'object') return null;
+  if (!hasCanonicalAuthContext(authContext)) return null;
 
   const activeContext = authContext.activeContext && typeof authContext.activeContext === 'object'
     ? authContext.activeContext
@@ -66,10 +68,6 @@ function buildCanonicalLegacyProjection({ authContext, requestUser, sessionUser,
   const unidadeId = activeContext?.unidadeId ?? authContext.active_unidade_id ?? authContext.activeUnidadeId ?? null;
   const unidadePrincipalId = activeContext?.unidadePrincipalId ?? authContext.active_unidade_principal_id ?? authContext.activeUnidadePrincipalId ?? null;
   const funcionarioId = activeContext?.funcionarioId ?? authContext.active_funcionario_id ?? authContext.activeFuncionarioId ?? null;
-  const hasCanonicalContext = Boolean(resolvedGlobalRole || resolvedRole || unidadeId || unidadePrincipalId || funcionarioId);
-  const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
-
-  if (!hasCanonicalContext && !authContextIsAuthoritative) return null;
 
   return projectLegacySessionUserFromAuthContext({
     authContext: {
@@ -112,23 +110,24 @@ export function resolveRequireRoleLegacyUser({ authContext, requestUser = null, 
     effectiveRole,
     globalRole,
   });
-  const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
+  const authContextIsAuthoritative = hasCanonicalAuthContext(authContext);
+  const canUseLegacyFallback = !hasTransportAuthContext(authContext);
   const contextualProjectionIsAuthoritative = hasAuthoritativeContextualProjection({ authContext, sessionUser });
   const resolvedRole = authContextIsAuthoritative
     ? (effectiveRole || normalizeRole(canonicalProjection?.role) || null)
-    : (effectiveRole || normalizeRole(canonicalProjection?.role || requestUser?.role || sessionUser?.role) || null);
+    : (canUseLegacyFallback ? (effectiveRole || normalizeRole(canonicalProjection?.role) || null) : null);
   const resolvedGlobalRole = authContextIsAuthoritative
     ? (globalRole || normalizeRole(canonicalProjection?.global_role) || null)
-    : (globalRole || normalizeRole(canonicalProjection?.global_role || requestUser?.global_role || sessionUser?.global_role) || null);
+    : (canUseLegacyFallback ? (globalRole || normalizeRole(canonicalProjection?.global_role) || null) : null);
   const resolvedUnidadeId = contextualProjectionIsAuthoritative
     ? (canonicalProjection?.unidade_id ?? null)
-    : (canonicalProjection?.unidade_id ?? requestUser?.unidade_id ?? sessionUser?.unidade_id ?? null);
+    : (canUseLegacyFallback ? (canonicalProjection?.unidade_id ?? requestUser?.unidade_id ?? sessionUser?.unidade_id ?? null) : null);
   const resolvedUnidadePrincipalId = contextualProjectionIsAuthoritative
     ? (canonicalProjection?.unidade_principal_id ?? null)
-    : (canonicalProjection?.unidade_principal_id ?? requestUser?.unidade_principal_id ?? sessionUser?.unidade_principal_id ?? null);
+    : (canUseLegacyFallback ? (canonicalProjection?.unidade_principal_id ?? requestUser?.unidade_principal_id ?? sessionUser?.unidade_principal_id ?? null) : null);
   const resolvedFuncionarioId = contextualProjectionIsAuthoritative
     ? (canonicalProjection?.funcionario_id ?? null)
-    : (canonicalProjection?.funcionario_id ?? requestUser?.funcionario_id ?? sessionUser?.funcionario_id ?? null);
+    : (canUseLegacyFallback ? (canonicalProjection?.funcionario_id ?? requestUser?.funcionario_id ?? sessionUser?.funcionario_id ?? null) : null);
   const isMaster = resolvedRole === 'master' || resolvedGlobalRole === 'master';
 
   return {
@@ -145,7 +144,7 @@ export function resolveRequireRoleLegacyUser({ authContext, requestUser = null, 
       unidade_principal_id: resolvedUnidadePrincipalId,
       funcionario_id: resolvedFuncionarioId,
     },
-    sessionUser: sessionUser && (canonicalProjection || contextualProjectionIsAuthoritative)
+    sessionUser: sessionUser && (canonicalProjection || authContextIsAuthoritative)
       ? {
           ...sessionUser,
           role: resolvedRole,
@@ -153,7 +152,7 @@ export function resolveRequireRoleLegacyUser({ authContext, requestUser = null, 
           unidade_id: resolvedUnidadeId,
           unidade_principal_id: resolvedUnidadePrincipalId,
           funcionario_id: resolvedFuncionarioId,
-          auth_version: canonicalProjection.auth_version || sessionUser.auth_version,
+          auth_version: canonicalProjection?.auth_version || sessionUser.auth_version,
         }
       : sessionUser,
   };
