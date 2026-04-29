@@ -7,8 +7,12 @@ Notas:
  A infraestrutura multi-tenant do produto existe e permanece ancorada em unitScope, resolveConnection e resolveModel, mas a adocao por modulo ainda e parcial.
  Estado operacional atual: Gestor pausado por ausencia de novo microcorte pequeno com ganho real; Escalas pausado com microcortes locais concluidos; Condominios pausado ate decisao funcional clara ou novo corredor inequivoco; Clinica estavel sem frente tenant pequena evidente; Portal do Morador nao deve ser reaberto automaticamente; PostgreSQL permanece fora ate a arquitetura multi-tenant estar suficientemente resolvida.
  Decisao deste checkpoint: nao ha proximo microcorte seguro dentro da regua atual.
+ Decisao macro consolidada apos o encerramento tecnico da Fase B: a proxima frente do Gestor passa a ser a Fase C, mas ainda em modo estritamente documental e de planejamento/contrato, sem patch funcional nesta rodada.
+ Resultado executivo da triagem macro pos-Fase B: authContextResolver.js foi escolhido como eixo unico e seguro para planejamento da Fase C; api.db.js e auth.db.js ficam fora da abertura inicial por exigirem fase macro propria ou investigacao posterior; user_memberships permanece fora do runtime ate o auth-context canonico ficar fechado; PostgreSQL continua explicitamente fora.
+ Baseline de referencia deste checkpoint macro: npm test com 2014 testes, 2012 pass, 0 fail e 2 skipped.
+ Preservacao de escopo neste checkpoint: nenhuma alteracao funcional, nenhum teste alterado, nenhuma flag ativada e nenhum patch tecnico imediato aberto.
  Criterios objetivos para retomada: decisao funcional explicita para uma familia hoje bloqueada, como relacionados V2; novo call site read-only, pequeno, vivo, testado e sem acoplamento amplo; ou autorizacao explicita para mudanca arquitetural maior acima do nivel de microcorte.
- Recomendacao operacional: preservar a baseline verde e parar a trilha ativa por agora.
+ Recomendacao operacional: preservar a baseline verde, manter a implementacao pausada e abrir a Fase C primeiro como checkpoint de planejamento canonico de auth-context.
 
 ## Portal Morador
 Status: MIGRADO
@@ -74,7 +78,11 @@ Checkpoint tenant enforcement atual:
 - Restricoes estrategicas ativas: PostgreSQL so depois de tenant enforcement do Gestor estar suficientemente estabilizado; nao reabrir Portal do Morador nem Caixa de Mensagens; evitar big-bang em api.db.js.
 - Regra funcional consolidada: master/admin sem unidade canonica selecionada opera em visao global legitima; quando houver unidade canonica selecionada, o fluxo deve operar tenant-aware/unit-scoped.
 - Guardrail de matriz: catalogos administrativos globais no ramo privilegiado sem unidade canonica sao aceitaveis e nao devem ser classificados como fallback perigoso ou falso positivo de GLOBAL_SCOPE.
-- Recomendacao operacional: manter a sequencia de micro-patches pausada ate surgir um novo corredor read-only com escopo inequivoco; manter npm run verify:imports e npm test verdes como linha de base do checkpoint atual.
+- Encerramento tecnico consolidado da Fase B: os dois patches controlados permaneceram sendo 170caec no corredor de requireLogin e f7d326b no corredor de requireRole; a triagem do terceiro alvo tecnico confirmou ausencia de novo slice seguro na regua atual.
+- Resultado consolidado da triagem macro pos-Fase B: authContextResolver.js passa a ser o unico candidato pronto para planejamento e o eixo de abertura da Fase C; api.db.js e auth.db.js ficam explicitamente excluidos da abertura inicial por blast radius e difusao de GLOBAL_SCOPE; user_memberships permanece fora como fonte de runtime ate o auth-context canonico estar fechado; PostgreSQL continua fora.
+- Escopo da abertura da Fase C neste checkpoint: planejamento e contrato do auth-context canonico, sem patch tecnico, sem alteracao de codigo, sem alteracao de testes e sem ativacao de flags.
+- Baseline executiva preservada para a passagem B -> C: npm test com 2014 testes, 2012 pass, 0 fail e 2 skipped; nenhum payload publico e nenhum contrato HTTP foram alterados nesta rodada documental.
+- Recomendacao operacional: revisar o checkpoint documental da Fase C a partir do eixo auth-context, manter a sequencia de micro-patches encerrada por agora e deixar api.db.js, auth.db.js, user_memberships runtime e PostgreSQL fora da abertura inicial da proxima fase.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
