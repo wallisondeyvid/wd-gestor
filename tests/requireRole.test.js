@@ -364,6 +364,42 @@ test('requireRole com a flag ligada continua aceitando o shape legado quando nã
   assert.equal(req.user.role, 'admin');
 });
 
+test('requireRole nao trata auth_version phase3 sem authContext real como fonte autoritativa', async () => {
+  const middleware = requireRole(['admin']);
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'phase3-sem-contexto@example.com',
+      role: 'user',
+      isMaster: false,
+      unidade_id: 'req-legacy-unit',
+      unidade_principal_id: 'req-legacy-principal',
+      funcionario_id: 'req-legacy-funcionario',
+    },
+    sessionUser: {
+      id: 'u1',
+      email: 'phase3-sem-contexto@example.com',
+      role: 'user',
+      unidade_id: 'session-legacy-unit',
+      unidade_principal_id: 'session-legacy-principal',
+      funcionario_id: 'session-legacy-funcionario',
+      auth_version: 'phase3',
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await runMw(middleware, req, res);
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 403);
+  assert.deepEqual(res.jsonPayload, { success: false, error: 'Acesso negado', code: 'FORBIDDEN' });
+  assert.equal(req.user.role, 'user');
+  assert.equal(req.user.unidade_id, 'req-legacy-unit');
+  assert.equal(req.user.unidade_principal_id, 'req-legacy-principal');
+  assert.equal(req.user.funcionario_id, 'req-legacy-funcionario');
+});
+
 test('requireRole retorna 409 funcional para API quando a seleção de unidade está pendente', async () => {
   const middleware = requireRole(['admin']);
   const req = createReq({
