@@ -101,13 +101,13 @@ function buildResolvedPayload({ data = [], wantDebug = false, source, authContex
 
 function hasGlobalPrivilegedRole(authenticatedUser, sessionUser) {
   const globalRole = normalizeRole(authenticatedUser?.global_role || sessionUser?.global_role);
-  const effectiveRole = normalizeRole(authenticatedUser?.role || sessionUser?.role);
+  const isMaster = authenticatedUser?.isMaster === true;
 
   return (
+    isMaster
+    ||
     globalRole === 'master'
     || globalRole === 'admin'
-    || effectiveRole === 'master'
-    || effectiveRole === 'admin'
   );
 }
 
