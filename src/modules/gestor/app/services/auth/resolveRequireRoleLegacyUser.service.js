@@ -12,6 +12,13 @@ function hasAuthoritativeAuthContext(authContext) {
   return authContext?.source === AUTH_CONTEXT_SOURCE_V1;
 }
 
+function hasAuthoritativeContextualProjection({ authContext, sessionUser }) {
+  return Boolean(
+    hasAuthoritativeAuthContext(authContext) ||
+    (authContext && typeof authContext === 'object' && sessionUser?.auth_version === 'phase3')
+  );
+}
+
 function resolveEffectiveRole({ authContext, requestUser, sessionUser }) {
   const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
   const globalRole = normalizeRole(
@@ -106,19 +113,20 @@ export function resolveRequireRoleLegacyUser({ authContext, requestUser = null, 
     globalRole,
   });
   const authContextIsAuthoritative = hasAuthoritativeAuthContext(authContext);
+  const contextualProjectionIsAuthoritative = hasAuthoritativeContextualProjection({ authContext, sessionUser });
   const resolvedRole = authContextIsAuthoritative
     ? (effectiveRole || normalizeRole(canonicalProjection?.role) || null)
     : (effectiveRole || normalizeRole(canonicalProjection?.role || requestUser?.role || sessionUser?.role) || null);
   const resolvedGlobalRole = authContextIsAuthoritative
     ? (globalRole || normalizeRole(canonicalProjection?.global_role) || null)
     : (globalRole || normalizeRole(canonicalProjection?.global_role || requestUser?.global_role || sessionUser?.global_role) || null);
-  const resolvedUnidadeId = authContextIsAuthoritative
+  const resolvedUnidadeId = contextualProjectionIsAuthoritative
     ? (canonicalProjection?.unidade_id ?? null)
     : (canonicalProjection?.unidade_id ?? requestUser?.unidade_id ?? sessionUser?.unidade_id ?? null);
-  const resolvedUnidadePrincipalId = authContextIsAuthoritative
+  const resolvedUnidadePrincipalId = contextualProjectionIsAuthoritative
     ? (canonicalProjection?.unidade_principal_id ?? null)
     : (canonicalProjection?.unidade_principal_id ?? requestUser?.unidade_principal_id ?? sessionUser?.unidade_principal_id ?? null);
-  const resolvedFuncionarioId = authContextIsAuthoritative
+  const resolvedFuncionarioId = contextualProjectionIsAuthoritative
     ? (canonicalProjection?.funcionario_id ?? null)
     : (canonicalProjection?.funcionario_id ?? requestUser?.funcionario_id ?? sessionUser?.funcionario_id ?? null);
   const isMaster = resolvedRole === 'master' || resolvedGlobalRole === 'master';
@@ -137,7 +145,7 @@ export function resolveRequireRoleLegacyUser({ authContext, requestUser = null, 
       unidade_principal_id: resolvedUnidadePrincipalId,
       funcionario_id: resolvedFuncionarioId,
     },
-    sessionUser: sessionUser && canonicalProjection
+    sessionUser: sessionUser && (canonicalProjection || contextualProjectionIsAuthoritative)
       ? {
           ...sessionUser,
           role: resolvedRole,
