@@ -42,11 +42,25 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     );
   };
   const sessionAuthContext = req.session?.gestorAuthContext;
+  const hasAuthoritativeSessionProjection = (sessionUser) => (
+    isAuthContextSelectionGuardEnabled() &&
+    sessionAuthContext &&
+    (sessionUser?.auth_version === 'phase3')
+  );
   const resolveCanonicalSessionUnidadeId = (sessionUser) => (
-    sessionAuthContext?.active_unidade_id || sessionUser?.unidade_id || null
+    hasAuthoritativeSessionProjection(sessionUser)
+      ? (sessionAuthContext?.active_unidade_id || null)
+      : (sessionAuthContext?.active_unidade_id || sessionUser?.unidade_id || null)
+  );
+  const resolveCanonicalSessionUnidadePrincipalId = (sessionUser) => (
+    hasAuthoritativeSessionProjection(sessionUser)
+      ? (sessionAuthContext?.active_unidade_principal_id || null)
+      : (sessionAuthContext?.active_unidade_principal_id || sessionUser?.unidade_principal_id || null)
   );
   const resolveCanonicalSessionFuncionarioId = (sessionUser) => (
-    sessionAuthContext?.active_funcionario_id || sessionUser?.funcionario_id || null
+    hasAuthoritativeSessionProjection(sessionUser)
+      ? (sessionAuthContext?.active_funcionario_id || null)
+      : (sessionAuthContext?.active_funcionario_id || sessionUser?.funcionario_id || null)
   );
   const buildUserFromSession = (s) => {
     const fallbackRole = isNodeTest ? 'master' : 'user';
@@ -62,7 +76,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     foto: s.foto || null,
     funcionario_id: resolveCanonicalSessionFuncionarioId(s),
     unidade_id: resolveCanonicalSessionUnidadeId(s),
-    unidade_principal_id: s.unidade_principal_id || null,
+    unidade_principal_id: resolveCanonicalSessionUnidadePrincipalId(s),
     funcao: s.funcao || null
   });
   };
