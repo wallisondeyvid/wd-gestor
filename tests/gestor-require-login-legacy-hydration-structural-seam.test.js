@@ -368,3 +368,170 @@ test('requireLogin preserva o contrato externo enquanto percorre o caminho de hi
 
   assert.equal(req.session.user.foto, 'db.png');
 });
+
+test('requireLogin ainda permite que legacy hydration vença sobre auth-context-v1 autoritativo quando o resolvedor canônico retorna continue', async () => {
+  clearRequireLoginLegacyHydrationMocks();
+
+  const userId = '507f1f77bcf86cd799439021';
+  const findUserCalls = [];
+  const canonicalResolvedUserCalls = [];
+  const legacyHydrationCalls = [];
+
+  setRequireLoginLegacyHydrationMocks({
+    mongoose: {
+      defaultExport: {
+        connection: { readyState: 1 },
+        isValidObjectId(value) {
+          return /^[a-f\d]{24}$/i.test(String(value || '').trim());
+        },
+      },
+    },
+    featureFlags: {
+      isFeatureEnabled(featureFlags, flagName, defaultValue) {
+        if (!featureFlags || typeof featureFlags !== 'object') return defaultValue;
+        return featureFlags[flagName] ?? defaultValue;
+      },
+      isFlagEnabled(_flagName, defaultValue) {
+        return defaultValue;
+      },
+    },
+    authContextResolver: {
+      GESTOR_AUTH_CONTEXT_RESOLVER_FLAG: 'gestor_auth_context_resolver',
+    },
+    canonicalResolver: {
+      async resolveRequireLoginCanonicalResolvedUser(input) {
+        canonicalResolvedUserCalls.push(input);
+        return { kind: 'continue' };
+      },
+    },
+    authDb: {
+      async findUserLeanByEmail(input) {
+        findUserCalls.push(input);
+        return {
+          _id: userId,
+          nome: 'Usuario DB',
+          email: 'phase3@example.com',
+          role: 'diretor',
+          foto: 'db.png',
+          unidade_id: 'legacy-user-unit',
+          funcionario_id: 'legacy-user-funcionario',
+        };
+      },
+      async findUnidadePrincipalLean() {
+        throw new Error('fallback de master nao deve ser usado neste caso');
+      },
+      async findUnidadeLeanById() {
+        throw new Error('a hidratacao legada deve ser delegada ao mock do service neste caso');
+      },
+      async findFuncionarioByIdPopulate() {
+        throw new Error('fallback por funcionario nao deve ser usado neste caso');
+      },
+    },
+    legacyHydration: {
+      async resolveRequireLoginLegacyHydration(input) {
+        legacyHydrationCalls.push(input);
+        return {
+          kind: 'authenticated',
+          reqUser: {
+            _id: userId,
+            id: userId,
+            nome: 'Usuario DB',
+            email: 'phase3@example.com',
+            role: 'diretor',
+            isMaster: false,
+            foto: 'db.png',
+            funcionario_id: 'legacy-user-funcionario',
+            unidade_id: 'legacy-user-unit',
+            unidade_principal_id: 'legacy-user-principal',
+            funcao: 'Analista',
+          },
+          sessionUserPatch: {
+            foto: 'db.png',
+          },
+        };
+      },
+    },
+  });
+
+  const { requireLogin } = await importFreshRequireLogin('legacy-hydration-phase3-authoritative-continue');
+
+  const req = {
+    path: '/dashboard',
+    baseUrl: '/gestor',
+    originalUrl: '/gestor/dashboard',
+    headers: { accept: 'text/html' },
+    app: {
+      locals: {
+        gestorAuthContextFeatureFlags: {
+          gestor_auth_context_resolver: true,
+        },
+        gestorAuthContextResolverDeps: {
+          fake: true,
+        },
+        gestorAuthContextMaxTimeMS: 4321,
+      },
+    },
+    session: {
+      user: {
+        id: userId,
+        email: 'phase3@example.com',
+        nome: 'Sessao Canonica',
+        role: 'diretor',
+        unidade_id: 'legacy-session-unit',
+        unidade_principal_id: 'legacy-session-principal',
+        funcionario_id: 'legacy-session-funcionario',
+        funcao: 'Analista',
+        auth_version: 'phase3',
+      },
+      gestorAuthContext: {
+        source: 'auth-context-v1',
+        active_membership_id: 'membership-canonica',
+        active_unidade_id: 'unit-canonical',
+        active_unidade_principal_id: 'principal-canonical',
+        active_funcionario_id: 'funcionario-canonico',
+        legacy_role: 'diretor',
+        needs_selection: false,
+        global_role: null,
+      },
+    },
+    get() {
+      return '';
+    },
+  };
+  const res = createRes();
+  let nextCalled = false;
+
+  await requireLogin(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, true);
+  assert.equal(res.redirectUrl, null);
+  assert.equal(res.jsonPayload, null);
+  assert.equal(res.statusCode, 200);
+
+  assert.deepEqual(findUserCalls, [{
+    email: 'phase3@example.com',
+    maxTimeMS: 3000,
+  }]);
+
+  assert.equal(canonicalResolvedUserCalls.length, 1);
+  assert.equal(canonicalResolvedUserCalls[0].sessionUser.auth_version, 'phase3');
+  assert.equal(canonicalResolvedUserCalls[0].existingAuthContext.source, 'auth-context-v1');
+  assert.equal(canonicalResolvedUserCalls[0].existingAuthContext.active_unidade_id, 'unit-canonical');
+  assert.equal(canonicalResolvedUserCalls[0].existingAuthContext.active_funcionario_id, 'funcionario-canonico');
+
+  assert.equal(legacyHydrationCalls.length, 1);
+  assert.equal(legacyHydrationCalls[0].user.unidade_id, 'legacy-user-unit');
+  assert.equal(legacyHydrationCalls[0].user.funcionario_id, 'legacy-user-funcionario');
+  assert.equal(legacyHydrationCalls[0].sessionUser.auth_version, 'phase3');
+  assert.equal(legacyHydrationCalls[0].sessionUser.unidade_id, 'legacy-session-unit');
+  assert.equal(legacyHydrationCalls[0].sessionUser.funcionario_id, 'legacy-session-funcionario');
+
+  assert.equal(req.user.unidade_id, 'legacy-user-unit');
+  assert.equal(req.user.unidade_principal_id, 'legacy-user-principal');
+  assert.equal(req.user.funcionario_id, 'legacy-user-funcionario');
+  assert.equal(req.session.user.auth_version, 'phase3');
+  assert.equal(req.session.user.foto, 'db.png');
+  assert.equal(req.session.gestorAuthContext.source, 'auth-context-v1');
+});
