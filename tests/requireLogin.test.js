@@ -549,7 +549,59 @@ test('requireLogin mantém rotas protegidas funcionando quando o contexto já es
   assert.equal(res.statusCode, 200);
 });
 
-test('requireLogin não reidrata unidade legada da sessão quando o auth-context phase3 está autoritativo sem contexto ativo', async () => {
+test('requireLogin não reidrata unidade legada da sessão quando o auth-context v1 está autoritativo sem contexto ativo', async () => {
+  const req = {
+    path: '/dashboard',
+    baseUrl: '/gestor',
+    originalUrl: '/gestor/dashboard',
+    headers: { accept: 'text/html' },
+    app: {
+      locals: {
+        skipDb: true,
+        gestorAuthContextFeatureFlags: {
+          gestor_auth_context_resolver: true,
+        },
+      },
+    },
+    session: {
+      user: {
+        id: 'u1',
+        email: 'admin@example.com',
+        role: 'admin',
+        global_role: 'admin',
+        unidade_id: 'legacy-session-unit',
+        unidade_principal_id: 'legacy-session-principal',
+        funcionario_id: 'legacy-session-funcionario',
+        auth_version: 'phase3',
+      },
+      gestorAuthContext: {
+        source: 'auth-context-v1',
+        needs_selection: false,
+        global_role: 'admin',
+        active_membership_id: null,
+        active_unidade_id: null,
+        active_unidade_principal_id: null,
+        active_funcionario_id: null,
+      },
+    },
+  };
+  const res = mockRes();
+  let nextCalled = false;
+
+  await requireLogin(req, res, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, true);
+  assert.equal(res.redirectUrl, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(req.user.role, 'admin');
+  assert.equal(req.user.global_role, 'admin');
+  assert.equal(req.user.unidade_id, null);
+  assert.equal(req.user.unidade_principal_id, null);
+  assert.equal(req.user.funcionario_id, null);
+}
+);
+
+test('requireLogin não trata sessionAuthContext parcial sem source como projeção autoritativa mesmo com auth_version phase3', async () => {
   const req = {
     path: '/dashboard',
     baseUrl: '/gestor',
@@ -594,8 +646,7 @@ test('requireLogin não reidrata unidade legada da sessão quando o auth-context
   assert.equal(res.statusCode, 200);
   assert.equal(req.user.role, 'admin');
   assert.equal(req.user.global_role, 'admin');
-  assert.equal(req.user.unidade_id, null);
-  assert.equal(req.user.unidade_principal_id, null);
-  assert.equal(req.user.funcionario_id, null);
-}
-);
+  assert.equal(req.user.unidade_id, 'legacy-session-unit');
+  assert.equal(req.user.unidade_principal_id, 'legacy-session-principal');
+  assert.equal(req.user.funcionario_id, 'legacy-session-funcionario');
+});

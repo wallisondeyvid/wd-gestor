@@ -827,6 +827,7 @@ describe('gestor auth login first authenticated request runtime contract', () =>
             auth_version: 'phase3',
           },
           gestorAuthContext: {
+            source: 'auth-context-v1',
             user_id: '507f1f77bcf86cd799439952',
             user_email: 'erro-contexto@gestor.test',
             global_role: null,

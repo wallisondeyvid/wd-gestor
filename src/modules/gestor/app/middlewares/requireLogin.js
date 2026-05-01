@@ -44,23 +44,23 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
   const sessionAuthContext = req.session?.gestorAuthContext;
   const hasAuthoritativeSessionProjection = (sessionUser) => (
     isAuthContextSelectionGuardEnabled() &&
-    sessionAuthContext &&
+    sessionAuthContext?.source === 'auth-context-v1' &&
     (sessionUser?.auth_version === 'phase3')
   );
   const resolveCanonicalSessionUnidadeId = (sessionUser) => (
     hasAuthoritativeSessionProjection(sessionUser)
       ? (sessionAuthContext?.active_unidade_id || null)
-      : (sessionAuthContext?.active_unidade_id || sessionUser?.unidade_id || null)
+      : (sessionUser?.unidade_id || null)
   );
   const resolveCanonicalSessionUnidadePrincipalId = (sessionUser) => (
     hasAuthoritativeSessionProjection(sessionUser)
       ? (sessionAuthContext?.active_unidade_principal_id || null)
-      : (sessionAuthContext?.active_unidade_principal_id || sessionUser?.unidade_principal_id || null)
+      : (sessionUser?.unidade_principal_id || null)
   );
   const resolveCanonicalSessionFuncionarioId = (sessionUser) => (
     hasAuthoritativeSessionProjection(sessionUser)
       ? (sessionAuthContext?.active_funcionario_id || null)
-      : (sessionAuthContext?.active_funcionario_id || sessionUser?.funcionario_id || null)
+      : (sessionUser?.funcionario_id || null)
   );
   const buildUserFromSession = (s) => {
     const fallbackRole = isNodeTest ? 'master' : 'user';

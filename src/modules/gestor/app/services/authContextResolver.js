@@ -399,11 +399,7 @@ export function resolveContextualUserProjection({ sessionUser = null, sessionAut
     sessionAuthContext?.activeFuncionarioId ||
     sessionAuthContext?.activeContext?.funcionarioId
   );
-  const hasSessionAuthContext = sessionAuthContext && typeof sessionAuthContext === 'object';
-  const isAuthoritative = (
-    sessionAuthContext?.source === AUTH_CONTEXT_SOURCE_V1 ||
-    (hasSessionAuthContext && sessionUser?.auth_version === 'phase3')
-  );
+  const isAuthoritative = sessionAuthContext?.source === AUTH_CONTEXT_SOURCE_V1;
 
   if (isAuthoritative) {
     return {
@@ -415,8 +411,8 @@ export function resolveContextualUserProjection({ sessionUser = null, sessionAut
 
   return {
     isAuthoritative: false,
-    contextualUnidadeId: contextualUnidadeId || normalizeId(sessionUser?.unidade_id),
-    contextualFuncionarioId: contextualFuncionarioId || normalizeId(sessionUser?.funcionario_id),
+    contextualUnidadeId: normalizeId(sessionUser?.unidade_id),
+    contextualFuncionarioId: normalizeId(sessionUser?.funcionario_id),
   };
 }
 

@@ -292,7 +292,29 @@ test('resolveContextualUserProjection nao trata auth_version phase3 como fonte a
   });
 });
 
-test('resolveContextualUserProjection trata phase3 como projeção autoritativa quando sessionAuthContext existe', () => {
+test('resolveContextualUserProjection trata phase3 como projeção autoritativa quando sessionAuthContext tem source auth-context-v1', () => {
+  const projection = resolveContextualUserProjection({
+    sessionUser: {
+      id: IDS.user,
+      auth_version: 'phase3',
+      unidade_id: IDS.unitA,
+      funcionario_id: IDS.funcA,
+    },
+    sessionAuthContext: {
+      source: AUTH_CONTEXT_SOURCE_V1,
+      active_unidade_id: IDS.unitB,
+      active_funcionario_id: IDS.funcB,
+    },
+  });
+
+  assert.deepEqual(projection, {
+    isAuthoritative: true,
+    contextualUnidadeId: IDS.unitB,
+    contextualFuncionarioId: IDS.funcB,
+  });
+});
+
+test('resolveContextualUserProjection nao trata sessionAuthContext parcial sem source como projeção autoritativa mesmo com auth_version phase3', () => {
   const projection = resolveContextualUserProjection({
     sessionUser: {
       id: IDS.user,
@@ -307,8 +329,8 @@ test('resolveContextualUserProjection trata phase3 como projeção autoritativa 
   });
 
   assert.deepEqual(projection, {
-    isAuthoritative: true,
-    contextualUnidadeId: IDS.unitB,
-    contextualFuncionarioId: IDS.funcB,
+    isAuthoritative: false,
+    contextualUnidadeId: IDS.unitA,
+    contextualFuncionarioId: IDS.funcA,
   });
 });
