@@ -30,7 +30,10 @@ import { primeiroAcessoExecutionService } from '#modules/gestor/app/services/aut
 import { mutateAuthUnitContextService } from '#modules/gestor/app/services/auth/mutateAuthUnitContext.service.js';
 import { openLocalPostAuthSession } from '#modules/gestor/app/services/auth/openLocalPostAuthSession.service.js';
 import { resolveLoginSuccessOutcome } from '#modules/gestor/app/services/auth/resolveLoginSuccessOutcome.service.js';
-import { resolveLoginPostAuthContext } from '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js';
+import {
+  buildStoredGestorAuthContext,
+  resolveLoginPostAuthContext,
+} from '#modules/gestor/app/services/auth/resolveLoginPostAuthContext.service.js';
 
 const authContextOrchestration = createAuthContextOrchestrationCore({
   resolveLoginPostAuthContext,
@@ -349,9 +352,11 @@ function findMembershipByUnidadeId(authContext, unidadeId) {
     : null;
 }
 
-function persistActiveMembershipInSession(req, selectedMembership) {
+function persistActiveMembershipInSession(req, selectedMembership, resolvedAuthContext = null) {
   req.session = req.session || {};
-  req.session.gestorAuthContext = {
+  const canonicalStoredAuthContext = buildStoredGestorAuthContext(resolvedAuthContext);
+
+  req.session.gestorAuthContext = canonicalStoredAuthContext || {
     ...(req.session.gestorAuthContext && typeof req.session.gestorAuthContext === 'object'
       ? req.session.gestorAuthContext
       : {}),
@@ -409,8 +414,8 @@ async function mutateAuthUnitContext(req, {
       resolveAuthContext: resolveGestorAuthContext,
       isValidObjectId: (value) => mongoose.isValidObjectId(value),
       findMembershipByUnidadeId,
-      persistActiveMembershipInSession: (session, selectedMembership) => {
-        persistActiveMembershipInSession({ session }, selectedMembership);
+      persistActiveMembershipInSession: (session, selectedMembership, resolvedAuthContext) => {
+        persistActiveMembershipInSession({ session }, selectedMembership, resolvedAuthContext);
       },
       saveSession: async (session) => {
         await saveSessionSafe({ session });

@@ -116,7 +116,7 @@ function createMutationDeps({ userId, firstUnitId, selectedUnitId, firstRole = '
   };
 }
 
-test('selectAuthUnit seguido de requireRole nao aceita mais authContext parcial salvo em sessao com auth_version phase3', async () => {
+test('selectAuthUnit seguido de requireRole aceita authContext canonico persistido em sessao', async () => {
   const userId = '507f1f77bcf86cd799439801';
   const firstUnitId = '507f191e810c19729de860ea';
   const selectedUnitId = '507f191e810c19729de860eb';
@@ -149,8 +149,11 @@ test('selectAuthUnit seguido de requireRole nao aceita mais authContext parcial 
   assert.equal(mutationRes.statusCode, 200);
   assert.equal(mutationRes.payload.source, 'auth-context-v1');
   assert.equal(session.user.auth_version, 'phase3');
-  assert.equal(session.gestorAuthContext.source, undefined);
   assert.deepEqual(session.gestorAuthContext, {
+    source: 'auth-context-v1',
+    user_id: userId,
+    user_email: 'selecionar@gestor.test',
+    global_role: null,
     active_membership_id: '507f1f77bcf86cd799439902',
     active_unidade_id: selectedUnitId,
     active_unidade_principal_id: selectedUnitId,
@@ -177,15 +180,15 @@ test('selectAuthUnit seguido de requireRole nao aceita mais authContext parcial 
 
   const nextCalled = await runRequireRole(middleware, roleReq, roleRes);
 
-  assert.equal(nextCalled, false);
-  assert.equal(roleRes.statusCode, 403);
-  assert.deepEqual(roleRes.jsonPayload, { success: false, error: 'Acesso negado', code: 'FORBIDDEN' });
-  assert.equal(roleReq.user.role, null);
-  assert.equal(roleReq.user.unidade_id, null);
-  assert.equal(roleReq.user.funcionario_id, null);
+  assert.equal(nextCalled, true);
+  assert.equal(roleRes.statusCode, 200);
+  assert.equal(roleRes.jsonPayload, undefined);
+  assert.equal(roleReq.user.role, 'user');
+  assert.equal(roleReq.user.unidade_id, selectedUnitId);
+  assert.equal(roleReq.user.funcionario_id, 'func-902');
 });
 
-test('switchAuthUnit seguido de requireRole nao aceita mais authContext parcial salvo em sessao com auth_version phase3', async () => {
+test('switchAuthUnit seguido de requireRole aceita authContext canonico persistido em sessao', async () => {
   const userId = '507f1f77bcf86cd799439811';
   const firstUnitId = '507f191e810c19729de860fa';
   const selectedUnitId = '507f191e810c19729de860fb';
@@ -221,8 +224,11 @@ test('switchAuthUnit seguido de requireRole nao aceita mais authContext parcial 
   assert.equal(mutationRes.statusCode, 200);
   assert.equal(mutationRes.payload.source, 'auth-context-v1');
   assert.equal(session.user.auth_version, 'phase3');
-  assert.equal(session.gestorAuthContext.source, undefined);
   assert.deepEqual(session.gestorAuthContext, {
+    source: 'auth-context-v1',
+    user_id: userId,
+    user_email: 'switch@gestor.test',
+    global_role: null,
     active_unidade_id: selectedUnitId,
     active_membership_id: '507f1f77bcf86cd799439902',
     active_unidade_principal_id: selectedUnitId,
@@ -249,10 +255,10 @@ test('switchAuthUnit seguido de requireRole nao aceita mais authContext parcial 
 
   const nextCalled = await runRequireRole(middleware, roleReq, roleRes);
 
-  assert.equal(nextCalled, false);
-  assert.equal(roleRes.statusCode, 403);
-  assert.deepEqual(roleRes.jsonPayload, { success: false, error: 'Acesso negado', code: 'FORBIDDEN' });
-  assert.equal(roleReq.user.role, null);
-  assert.equal(roleReq.user.unidade_id, null);
-  assert.equal(roleReq.user.funcionario_id, null);
+  assert.equal(nextCalled, true);
+  assert.equal(roleRes.statusCode, 200);
+  assert.equal(roleRes.jsonPayload, undefined);
+  assert.equal(roleReq.user.role, 'user');
+  assert.equal(roleReq.user.unidade_id, selectedUnitId);
+  assert.equal(roleReq.user.funcionario_id, 'func-902');
 });

@@ -39,12 +39,13 @@ export async function mutateAuthUnitContextService({
   }
 
   persistActiveMembershipInSession(session, selectedMembership);
-  await saveSession(session);
-
   const resolvedAfterMutation = await resolveAuthContext({
     ...resolverOptions,
     existingAuthContext: session?.gestorAuthContext || null,
   });
+
+  persistActiveMembershipInSession(session, selectedMembership, resolvedAfterMutation);
+  await saveSession(session);
 
   return { kind: 'success', authContext: resolvedAfterMutation };
 }

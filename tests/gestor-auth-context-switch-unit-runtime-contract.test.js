@@ -417,6 +417,10 @@ test('switchAuthUnit permite trocar unidade mesmo sem selecao pendente e respond
   });
   assert.equal(response.saveCalls, 1);
   assert.deepEqual(response.session.gestorAuthContext, {
+    source: 'auth-context-v1',
+    user_id: userId,
+    user_email: 'switch@gestor.test',
+    global_role: null,
     active_unidade_id: selectedUnitId,
     active_membership_id: '507f1f77bcf86cd799439703',
     active_unidade_principal_id: selectedUnitId,

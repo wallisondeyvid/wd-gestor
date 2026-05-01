@@ -12,12 +12,13 @@ function clearStoredAuthContext(session) {
   delete session.gestorAuthContext;
 }
 
-function buildStoredGestorAuthContext(authContext) {
+export function buildStoredGestorAuthContext(authContext) {
   if (!authContext?.authenticated || authContext?.source !== AUTH_CONTEXT_SOURCE_V1) {
     return null;
   }
 
   return {
+    source: authContext.source,
     user_id: authContext.identity?.id || null,
     user_email: authContext.identity?.email || '',
     global_role: authContext.globalRole || null,

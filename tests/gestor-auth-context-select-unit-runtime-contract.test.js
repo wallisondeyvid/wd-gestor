@@ -479,6 +479,10 @@ test('selectAuthUnit persiste a unidade escolhida e responde 200 com activeConte
   });
   assert.equal(response.saveCalls, 1);
   assert.deepEqual(response.session.gestorAuthContext, {
+    source: 'auth-context-v1',
+    user_id: userId,
+    user_email: 'selecionar@gestor.test',
+    global_role: null,
     active_membership_id: '507f1f77bcf86cd799439303',
     active_unidade_id: selectedUnitId,
     active_unidade_principal_id: selectedUnitId,

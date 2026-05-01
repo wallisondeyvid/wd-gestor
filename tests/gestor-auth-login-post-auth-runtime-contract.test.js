@@ -583,6 +583,7 @@ test('owner real: com contexto pronto o login persiste gestorAuthContext e redir
   assert.equal(response.redirectStatus, 303);
   assert.equal(response.redirectLocation, '/gestor/dashboard');
   assert.deepEqual(session.gestorAuthContext, {
+    source: 'auth-context-v1',
     user_id: '507f1f77bcf86cd799439901',
     user_email: 'login@gestor.test',
     global_role: null,
@@ -642,6 +643,7 @@ test('owner real: com needsUnitSelection true o login salva contexto parcial e r
   assert.equal(response.redirectStatus, 303);
   assert.equal(response.redirectLocation, '/gestor/login?step=select');
   assert.deepEqual(session.gestorAuthContext, {
+    source: 'auth-context-v1',
     user_id: '507f1f77bcf86cd799439901',
     user_email: 'login@gestor.test',
     global_role: null,
