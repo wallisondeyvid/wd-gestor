@@ -84,7 +84,7 @@ after(() => {
   delete globalThis.__GESTOR_FEEDBACK_LIST200_UNIT_SCOPE_BRIDGE_STATE__;
 });
 
-test('helper 200 preserva unitScope global mesmo com intencao scoped e filtro legacy ativo', async () => {
+test('helper 200 usa unitScope por unidade quando recebe intencao scoped e filtro legacy ativo', async () => {
   await findFeedbackByFilterSortCreatedAtDescLimit200Lean(BASE_FILTER, {
     scopedUnitId: SCOPED_UNIT_ID,
     allowLegacyUnscoped: true,
@@ -93,7 +93,7 @@ test('helper 200 preserva unitScope global mesmo com intencao scoped e filtro le
 
   assert.deepEqual(state.calls200, [
     {
-      unitScope: { type: 'global', unidadeId: null },
+      unitScope: { type: 'unit', unidadeId: SCOPED_UNIT_ID },
       filter: expectedScopedLegacyFilter(),
     },
   ]);

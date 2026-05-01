@@ -1084,7 +1084,7 @@ export async function saveFeedbackDoc(feedbackDoc) {
 
 export async function findFeedbackByFilterSortCreatedAtDescLimit200Lean(filter, options = {}) {
   return findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo({
-    unitScope: GLOBAL_SCOPE,
+    unitScope: resolveFeedbackReadUnitScope(options),
     filter: buildFeedbackScopedFilter(filter, options),
   });
 }
