@@ -87,6 +87,14 @@ function getStoredAuthContext(req) {
   return authContext && typeof authContext === 'object' ? authContext : null;
 }
 
+function resolveOperationalAuthContextUnidadeId({ authContextEnabled = false, authContext = null } = {}) {
+  if (!authContextEnabled || !isCanonicalAuthContext(authContext)) {
+    return '';
+  }
+
+  return normalizeObjectIdString(resolveAuthContextUnidadeId(authContext));
+}
+
 function getRequestTransport(req) {
   const headers = req?.headers || {};
   const path = req.path || req.originalUrl || '';
@@ -135,7 +143,7 @@ export function requireUnitScope(req, res, next) {
   }
 
   const unidadeId = firstNonEmpty(
-    authContextEnabled ? resolveAuthContextUnidadeId(authContext) : '',
+    resolveOperationalAuthContextUnidadeId({ authContextEnabled, authContext }),
     resolveLegacyUnidadeId(req, { authContextEnabled, authContext })
   );
 

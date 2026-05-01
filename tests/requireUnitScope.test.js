@@ -184,6 +184,7 @@ test('requireUnitScope usa a unidade ativa do AuthContext e ignora query body e 
       unidade_principal_id: '000000000000000000000002',
     },
     authContext: {
+      source: 'auth-context-v1',
       active_membership_id: 'mem1',
       active_unidade_id: '000000000000000000000020',
       active_unidade_principal_id: '000000000000000000000021',
@@ -207,6 +208,75 @@ test('requireUnitScope usa a unidade ativa do AuthContext e ignora query body e 
   assert.deepEqual(req.unitScope, {
     type: 'unit',
     unidadeId: '000000000000000000000020',
+  });
+});
+
+test('requireUnitScope não trata sessionAuthContext parcial sem source como autoridade operacional mesmo com auth_version phase3', async () => {
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'phase3-partial@example.com',
+      role: 'diretor',
+      unidade_id: '000000000000000000000001',
+    },
+    sessionUser: {
+      id: 'u1',
+      email: 'phase3-partial@example.com',
+      role: 'diretor',
+      unidade_id: '000000000000000000000001',
+      auth_version: 'phase3',
+    },
+    authContext: {
+      active_membership_id: 'mem-partial',
+      active_unidade_id: '000000000000000000000099',
+      active_funcionario_id: 'func-partial',
+      needs_selection: false,
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.jsonPayload, {
+    success: false,
+    error: 'UNIDADE_ID_REQUIRED',
+  });
+  assert.equal(req.unitScope, undefined);
+});
+
+test('requireUnitScope preserva o fallback legado privilegiado sem promover sessionAuthContext parcial sem source a unidade canônica', async () => {
+  const req = createReq({
+    featureFlags: { gestor_auth_context_resolver: true },
+    user: {
+      id: 'u1',
+      email: 'admin-legacy@example.com',
+      role: 'admin',
+    },
+    sessionUser: {
+      id: 'u1',
+      email: 'admin-legacy@example.com',
+      role: 'admin',
+      auth_version: 'phase3',
+    },
+    authContext: {
+      active_unidade_id: '000000000000000000000099',
+      needs_selection: false,
+    },
+    query: {
+      unidadeId: '000000000000000000000030',
+    },
+  });
+  const res = mockRes();
+
+  const nextCalled = await withMultiTenantEnforced(() => runMw(requireUnitScope, req, res));
+
+  assert.equal(nextCalled, true);
+  assert.deepEqual(req.unitScope, {
+    type: 'unit',
+    unidadeId: '000000000000000000000030',
   });
 });
 
