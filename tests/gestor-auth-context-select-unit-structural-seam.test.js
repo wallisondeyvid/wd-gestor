@@ -38,6 +38,26 @@ function buildFunction(source, signature, context = {}) {
   return script.runInNewContext(context);
 }
 
+function buildStoredGestorAuthContext(authContext) {
+  if (!authContext?.authenticated || authContext?.source !== 'auth-context-v1') {
+    return null;
+  }
+
+  return {
+    source: authContext.source,
+    user_id: authContext.identity?.id || null,
+    user_email: authContext.identity?.email || '',
+    global_role: authContext.globalRole || null,
+    active_membership_id: authContext.activeContext?.membershipId || null,
+    active_unidade_id: authContext.activeContext?.unidadeId || null,
+    active_unidade_principal_id: authContext.activeContext?.unidadePrincipalId || null,
+    active_papel_contextual: authContext.activeContext?.papelContextual || null,
+    active_funcionario_id: authContext.activeContext?.funcionarioId || null,
+    legacy_role: authContext.activeContext?.legacyRole || authContext.effectiveRole || null,
+    needs_selection: !!authContext.needsUnitSelection,
+  };
+}
+
 function createJsonResponseCapture() {
   return {
     statusCode: 200,
@@ -58,7 +78,9 @@ test('selectAuthUnit preserva o owner HTTP e admite uma unidade minima extraivel
   const buildAuthContextResolverOptions = buildFunction(CONTROLLER_SOURCE, 'function buildAuthContextResolverOptions');
   const buildAuthContextHttpPayload = buildFunction(CONTROLLER_SOURCE, 'function buildAuthContextHttpPayload');
   const findMembershipByUnidadeId = buildFunction(CONTROLLER_SOURCE, 'function findMembershipByUnidadeId');
-  const persistActiveMembershipInSession = buildFunction(CONTROLLER_SOURCE, 'function persistActiveMembershipInSession');
+  const persistActiveMembershipInSession = buildFunction(CONTROLLER_SOURCE, 'function persistActiveMembershipInSession', {
+    buildStoredGestorAuthContext,
+  });
   const extractCreateAuthContextOrchestrationCore = (() => {
     const signature = 'createAuthContextOrchestrationCore({';
     const start = CONTROLLER_SOURCE.indexOf(signature);
@@ -196,12 +218,13 @@ test('selectAuthUnit preserva o owner HTTP e admite uma unidade minima extraivel
     }
 
     deps.persistActiveMembershipInSession(session, selectedMembership);
-    await deps.saveSession(session);
-
     const resolvedAfterMutation = await deps.resolveAuthContext({
       ...resolverOptions,
       existingAuthContext: session.gestorAuthContext || null,
     });
+
+    deps.persistActiveMembershipInSession(session, selectedMembership, resolvedAfterMutation);
+    await deps.saveSession(session);
 
     return { kind: 'success', authContext: resolvedAfterMutation };
   };
@@ -217,9 +240,9 @@ test('selectAuthUnit preserva o owner HTTP e admite uma unidade minima extraivel
         deps: {
           resolveAuthContext: resolveGestorAuthContext,
           findMembershipByUnidadeId,
-          persistActiveMembershipInSession: (session, selectedMembership) => {
+          persistActiveMembershipInSession: (session, selectedMembership, resolvedAuthContext = null) => {
             const reqLike = { session };
-            persistActiveMembershipInSession(reqLike, selectedMembership);
+            persistActiveMembershipInSession(reqLike, selectedMembership, resolvedAuthContext);
           },
           saveSession: async (session) => {
             saveCalls += 1;
@@ -245,9 +268,9 @@ test('selectAuthUnit preserva o owner HTTP e admite uma unidade minima extraivel
         mutationDeps: {
           resolveAuthContext: resolveGestorAuthContext,
           findMembershipByUnidadeId,
-          persistActiveMembershipInSession: (session, selectedMembership) => {
+          persistActiveMembershipInSession: (session, selectedMembership, resolvedAuthContext = null) => {
             const reqLike = { session };
-            persistActiveMembershipInSession(reqLike, selectedMembership);
+            persistActiveMembershipInSession(reqLike, selectedMembership, resolvedAuthContext);
           },
           saveSession: async (session) => {
             saveCalls += 1;
@@ -324,6 +347,10 @@ test('selectAuthUnit preserva o owner HTTP e admite uma unidade minima extraivel
   assert.equal(resolveCalls.length, 2);
   assert.equal(saveCalls, 1);
   assert.deepEqual(JSON.parse(JSON.stringify(session.gestorAuthContext)), {
+    source: 'auth-context-v1',
+    user_id: userId,
+    user_email: 'selecionar@gestor.test',
+    global_role: null,
     active_membership_id: '507f1f77bcf86cd799439303',
     active_unidade_id: selectedUnitId,
     active_unidade_principal_id: selectedUnitId,
