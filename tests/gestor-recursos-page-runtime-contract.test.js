@@ -314,8 +314,12 @@ async function withOfflineHarness(run) {
       email: 'recursos-page-offline@example.com',
       role: 'diretor',
       nome: 'Diretor Offline Recursos',
+      unidade_id: OFFLINE_CONTEXT_UNIT_ID,
+      unidade_principal_id: OFFLINE_CONTEXT_UNIT_ID,
+      auth_version: 'phase3',
     };
     req.session.gestorAuthContext = {
+      source: 'auth-context-v1',
       active_unidade_id: OFFLINE_CONTEXT_UNIT_ID,
       active_unidade_principal_id: OFFLINE_CONTEXT_UNIT_ID,
       needs_selection: false,
