@@ -289,6 +289,12 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
             console.log('[requireLogin] autenticado', { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster });
             return next();
           }
+
+          if (hasAuthoritativeSessionProjection(req.session?.user)) {
+            req.user = buildUserFromSession(req.session.user);
+            console.log('[requireLogin] autenticado', { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster });
+            return next();
+          }
         } catch (e) {
           const transientErrorDecision = classifyRequireLoginEntry({
             stage: 'transient-error',
@@ -297,6 +303,12 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
           });
           if (transientErrorDecision.reason !== REQUIRE_LOGIN_ENTRY_REASON.SESSION_FALLBACK) throw e;
           console.warn('[requireLogin] auth-context resolver transitório — usando fallback legado para', req.session.user?.email);
+
+          if (hasAuthoritativeSessionProjection(req.session?.user)) {
+            req.user = buildUserFromSession(req.session.user);
+            console.log('[requireLogin] autenticado', { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster });
+            return next();
+          }
         }
       }
       const legacyHydration = await resolveRequireLoginLegacyHydration({

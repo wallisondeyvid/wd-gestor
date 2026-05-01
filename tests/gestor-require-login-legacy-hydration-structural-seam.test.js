@@ -369,7 +369,7 @@ test('requireLogin preserva o contrato externo enquanto percorre o caminho de hi
   assert.equal(req.session.user.foto, 'db.png');
 });
 
-test('requireLogin ainda permite que legacy hydration vença sobre auth-context-v1 autoritativo quando o resolvedor canônico retorna continue', async () => {
+test('requireLogin preserva a projecao phase3 autoritativa e nao cai em legacy hydration quando o resolvedor canônico retorna continue', async () => {
   clearRequireLoginLegacyHydrationMocks();
 
   const userId = '507f1f77bcf86cd799439021';
@@ -521,17 +521,15 @@ test('requireLogin ainda permite que legacy hydration vença sobre auth-context-
   assert.equal(canonicalResolvedUserCalls[0].existingAuthContext.active_unidade_id, 'unit-canonical');
   assert.equal(canonicalResolvedUserCalls[0].existingAuthContext.active_funcionario_id, 'funcionario-canonico');
 
-  assert.equal(legacyHydrationCalls.length, 1);
-  assert.equal(legacyHydrationCalls[0].user.unidade_id, 'legacy-user-unit');
-  assert.equal(legacyHydrationCalls[0].user.funcionario_id, 'legacy-user-funcionario');
-  assert.equal(legacyHydrationCalls[0].sessionUser.auth_version, 'phase3');
-  assert.equal(legacyHydrationCalls[0].sessionUser.unidade_id, 'legacy-session-unit');
-  assert.equal(legacyHydrationCalls[0].sessionUser.funcionario_id, 'legacy-session-funcionario');
+  assert.equal(legacyHydrationCalls.length, 0);
 
-  assert.equal(req.user.unidade_id, 'legacy-user-unit');
-  assert.equal(req.user.unidade_principal_id, 'legacy-user-principal');
-  assert.equal(req.user.funcionario_id, 'legacy-user-funcionario');
+  assert.equal(req.user.unidade_id, 'unit-canonical');
+  assert.equal(req.user.unidade_principal_id, 'principal-canonical');
+  assert.equal(req.user.funcionario_id, 'funcionario-canonico');
+  assert.equal(req.user.role, 'diretor');
+  assert.equal(req.user.funcao, 'Analista');
   assert.equal(req.session.user.auth_version, 'phase3');
-  assert.equal(req.session.user.foto, 'db.png');
+  assert.equal(req.session.user.unidade_id, 'legacy-session-unit');
+  assert.equal(req.session.user.funcionario_id, 'legacy-session-funcionario');
   assert.equal(req.session.gestorAuthContext.source, 'auth-context-v1');
 });
