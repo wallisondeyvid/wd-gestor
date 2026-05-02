@@ -18,6 +18,12 @@ Checkpoint curto de execucao ja concluido:
 - nenhum dominio, wrapper, `api.db.js`, `auth.db.js`, PostgreSQL ou `user_memberships` entrou no escopo deste primeiro corte;
 - `readiness.ready` fica consolidado como prontidao tecnica e `activation.active` como liberacao operacional explicita; a allowlist atual permanece como gate operacional obrigatorio; com os cinco microcortes executaveis atuais, a primeira subfase passiva do registry fica encerrada parcialmente e qualquer sequencia sobre persistencia ou leitura real do registry deve recomecar em modo document-first/read-only.
 
+Nota curta da proxima subfase:
+
+- a proposta document-first para persistencia e leitura real passiva do registry multi-db fica registrada em [tenant-phase-e-registry-persistence-plan.md](tenant-phase-e-registry-persistence-plan.md);
+- o desenho proposto mantem Mongo global/base como ponto inicial de persistencia, mantem `WD_MULTI_DB_REGISTRY_READ` como gate de leitura e preserva `baseConnection` como fallback obrigatorio em qualquer erro ou duvida.
+
+
 ## 2. Base tecnica ja existente
 
 Ja existem, no estado atual do projeto:

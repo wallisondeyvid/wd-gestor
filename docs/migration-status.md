@@ -225,6 +225,10 @@ Checkpoint tenant enforcement atual:
 - Checkpoint documental curto de encerramento parcial da primeira subfase executavel da Fase E consolidado neste ponto.
 - Decisao consolidada deste encerramento parcial: o bloco passivo do registry fica fechado, por ora, com tres casos fail-safe e dois casos positivos controlados, sem alterar producao nos dois ultimos microcortes e sem abrir persistencia real, leitura passiva por model/repository ou rollout operacional.
 - Recomendacao operacional apos este encerramento parcial: qualquer proxima subfase sobre persistencia ou leitura real do registry deve nascer primeiro em modo document-first/read-only antes de qualquer novo patch tecnico.
+- Proposta document-first da proxima subfase da Fase E registrada neste checkpoint curto.
+- Escopo proposto da proxima subfase: persistencia e leitura real passiva do registry multi-db, ainda sem rollout, sem model/repository implementado e sem alterar os seams tecnicos atuais nesta rodada.
+- Documento de referencia desta abertura documental: [tenant-phase-e-registry-persistence-plan.md](tenant-phase-e-registry-persistence-plan.md).
+- Diretriz consolidada desta proxima subfase: o registry persistido deve nascer no Mongo global/base atual, lido por camada passiva isolada sob shared/db, sem passar por resolveModel.js nem modelRegistry.js, com erro de leitura sempre degradando para baseConnection.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
