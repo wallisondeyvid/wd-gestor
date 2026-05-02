@@ -201,6 +201,12 @@ Checkpoint tenant enforcement atual:
 - Escopo preservado expressamente neste checkpoint curto da Fase E: nenhum dominio foi alterado; api.db.js permaneceu fora; auth.db.js permaneceu fora; wrappers pagesRouter.js e api.js permaneceram fora; PostgreSQL permaneceu fora; user_memberships permaneceu fora; o fallback seguro para baseConnection foi preservado.
 - Validacao consolidada deste checkpoint curto da Fase E: node --test em tests/architecture/resolveConnection_multiDbFlag.test.js e tests/architecture/userdbHandshake.test.js permaneceu verde com 12 tests, 12 pass e 0 fail; npm run verify:imports permaneceu verde.
 - Proximo microcorte natural apos este checkpoint: registry presente com ready=false tambem deve cair para baseConnection, novamente por caracterizacao previa e patch minimo.
+- Segundo microcorte executavel da Fase E concluido neste checkpoint documental curto.
+- Decisao consolidada deste microcorte 2: com WD_MULTI_DB_REGISTRY_READ ligado, registry presente para unidade valida mas com readiness.ready=false continua degradando para baseConnection antes de qualquer tenant routing.
+- Comportamento consolidado do microcorte 2: o corredor diferencia readiness tecnica de activation operacional; readiness.ready=false nao chama useDb, nao dispara handshake e nao ativa tenant db.
+- Escopo preservado expressamente neste checkpoint curto adicional da Fase E: nenhum dominio foi alterado; api.db.js permaneceu fora; auth.db.js permaneceu fora; wrappers pagesRouter.js e api.js permaneceram fora; PostgreSQL permaneceu fora; user_memberships permaneceu fora; activation.active ainda nao foi implementado nem exigido neste estagio.
+- Validacao consolidada deste microcorte 2: as validacoes curtas recentes permaneceram verdes; a referencia operacional atual permanece em 136 tests, 136 pass e 0 fail.
+- Proximo microcorte natural apos este checkpoint: decidir o comportamento de registry com readiness.ready=true, mas ainda sem ativacao operacional efetiva para tenant db.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
