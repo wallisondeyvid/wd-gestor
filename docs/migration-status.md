@@ -185,6 +185,13 @@ Checkpoint tenant enforcement atual:
 - Compatibilidade consolidada apos o microcorte auth: quando houver auth-context-v1 autoritativo, requireLogin volta a reconstruir req.user pela sessao canonica em vez de usar unidade_id e funcionario_id legados divergentes; o fallback legado permanece preservado para sessoes antigas sem auth-context canonico.
 - Escopo preservado expressamente neste checkpoint curto auth: o diff funcional ficou restrito a requireLogin.js e ao teste focal de caracterizacao; auth.db.js permaneceu sem diff material; authController.js permaneceu fora; api.db.js permaneceu fora; wrappers permaneceram fora; user_memberships runtime permaneceu fora; PostgreSQL permaneceu fora.
 - Validacao consolidada deste checkpoint curto auth: a validacao curta mais recente permaneceu verde com 46 tests, 46 pass e 0 fail; o topo local de referencia desta rodada fica composto por 5aab8b2 e d5b4e34 sobre f10fdd2.
+- Encerramento parcial da Fase D pos-auth legacy hydration consolidado neste checkpoint documental curto, sem abertura de nova frente tecnica nesta rodada.
+- Decisao consolidada deste encerramento parcial da Fase D: a fase produziu dois microcortes reais, pequenos e validados na regua atual, sendo feedback read list200 em api.db.js e auth legacy hydration em requireLogin.
+- Trilho consolidado do primeiro microcorte: feedback list200 passou por teste de caracterizacao, patch minimo e checkpoint documental proprio, sem reabrir a frente macro da bridge.
+- Trilho consolidado do segundo microcorte: auth legacy hydration em requireLogin passou por teste de caracterizacao, patch minimo e checkpoint documental proprio, sem reabrir auth.db.js nem authController.js.
+- Resultado consolidado da avaliacao final desta fase: nao foi identificado terceiro microcorte pequeno, inequivoco e seguro na regua atual; pagesRouter.js e api.js ficam apenas como residual read-only futuro de baixo retorno imediato; os residuos remanescentes de api.db.js e auth.db.js permanecem classificados como frentes macro e nao como microcortes oportunistas.
+- Baseline local de referencia deste encerramento parcial: npm test com 2029 tests, 2027 pass, 0 fail e 2 skipped.
+- Recomendacao operacional apos este encerramento parcial: manter a branch local sem push por enquanto e tratar qualquer sequencia futura como nova rodada read-only ou novo enquadramento proprio, e nao como continuidade automatica desta fase.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
