@@ -246,6 +246,12 @@ Checkpoint tenant enforcement atual:
 - Escopo preservado expressamente neste microcorte 3: nao houve model/schema, seed ou rollout; nao houve alteracao em resolveConnection.js, unitDatabaseRegistry.js, resolveModel.js ou modelRegistry.js.
 - Artefatos tecnicos consolidados deste microcorte 3: src/shared/db/unitDatabaseRegistryReader.js e tests/architecture/unitDatabaseRegistryReader.test.js.
 - Validacao consolidada deste microcorte 3: a validacao curta permaneceu verde com 136 tests, 136 pass e 0 fail.
+- Quarto microcorte tecnico da subfase de persistencia passiva do registry multi-db concluido neste checkpoint documental curto.
+- Decisao consolidada deste microcorte 4: unitDatabaseRegistry.js permanece seam sincrono e agora expoe cache passivo em memoria por unidade, com preload/prime assincrono separado via unitDatabaseRegistryReader.js.
+- Comportamento consolidado deste microcorte 4: override de testes continua com precedencia; cache miss continua retornando null; preload bem-sucedido aquece o cache; erro de preload nao contamina o cache; resolveConnection continua consumindo o seam de forma sincrona sem ser transformado em async.
+- Escopo preservado expressamente neste microcorte 4: nao houve model/schema, seed, rollout ou background job; nao houve alteracao em resolveModel.js ou modelRegistry.js.
+- Artefatos tecnicos consolidados deste microcorte 4: src/shared/db/unitDatabaseRegistry.js, tests/architecture/unitDatabaseRegistryCache.test.js e cobertura adicional em tests/architecture/resolveConnection_multiDbFlag.test.js.
+- Validacao consolidada deste microcorte 4: a validacao curta permaneceu verde com 136 tests, 136 pass e 0 fail.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

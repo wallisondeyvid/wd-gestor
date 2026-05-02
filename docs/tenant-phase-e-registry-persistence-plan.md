@@ -208,6 +208,18 @@ Checkpoint curto adicional ja concluido:
 - nao houve alteracao em `resolveConnection.js`, `unitDatabaseRegistry.js`, `resolveModel.js` ou `modelRegistry.js`;
 - os proximos passos ficam explicitamente separados: decidir em rodada propria se e como `unitDatabaseRegistry.js` passara a usar esse reader.
 
+Checkpoint curto adicional ja concluido:
+
+- o Microcorte 4 da subfase de persistencia passiva manteve `unitDatabaseRegistry.js` como seam sincrono;
+- foi adicionado cache passivo em memoria por unidade dentro de `unitDatabaseRegistry.js`;
+- foi adicionada rotina assincrona separada de preload/prime via `unitDatabaseRegistryReader.js`, sem plugar chamada async no caminho principal de `resolveConnection`;
+- override de testes continua preservado e com precedencia sobre o cache;
+- cache miss continua retornando `null` e erro de preload nao contamina o cache;
+- `resolveConnection.js` nao foi transformado em async e continua consumindo o seam de forma sincrona;
+- houve teste adicional caracterizando `resolveConnection` com cache passivo aquecido;
+- nao houve model/schema, seed, rollout ou background job neste microcorte;
+- nao houve alteracao em `resolveModel.js` ou `modelRegistry.js`.
+
 ## 12. Plano minimo de testes antes de qualquer patch
 
 Testes que devem existir antes ou junto dos primeiros microcortes:
