@@ -195,6 +195,12 @@ Checkpoint tenant enforcement atual:
 - Checkpoint documental inicial da Fase E aberto em modo estritamente contratual, sem implementacao tecnica nesta rodada.
 - Escopo consolidado deste checkpoint da Fase E: desenho passivo de provisioning e registry multi-db por unidade, com gates, rollback e suite minima antes de qualquer implementacao futura.
 - Documento de referencia desta abertura: docs/tenant-phase-e-provisioning-registry-plan.md.
+- Primeiro microcorte executavel da Fase E concluido neste checkpoint documental curto.
+- Decisao consolidada deste microcorte 1: foi introduzido seam passivo de registry multi-db apenas na fronteira de resolveConnection, sem ativacao de multi-db real e sem abertura de nova frente arquitetural.
+- Comportamento consolidado do microcorte 1: com WD_MULTI_DB_REGISTRY_READ ligado e registry ausente para unidade valida, resolveConnection retorna baseConnection antes de qualquer tenant routing; o caso nao chama useDb e nao dispara handshake.
+- Escopo preservado expressamente neste checkpoint curto da Fase E: nenhum dominio foi alterado; api.db.js permaneceu fora; auth.db.js permaneceu fora; wrappers pagesRouter.js e api.js permaneceram fora; PostgreSQL permaneceu fora; user_memberships permaneceu fora; o fallback seguro para baseConnection foi preservado.
+- Validacao consolidada deste checkpoint curto da Fase E: node --test em tests/architecture/resolveConnection_multiDbFlag.test.js e tests/architecture/userdbHandshake.test.js permaneceu verde com 12 tests, 12 pass e 0 fail; npm run verify:imports permaneceu verde.
+- Proximo microcorte natural apos este checkpoint: registry presente com ready=false tambem deve cair para baseConnection, novamente por caracterizacao previa e patch minimo.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

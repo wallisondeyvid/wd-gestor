@@ -7,6 +7,13 @@
 - Preservar o comportamento atual quando tudo estiver desligado.
 - Nao implementar nem ativar multi-db nesta fase documental.
 
+Checkpoint curto de execucao ja concluido:
+
+- o Microcorte 1 da Fase E introduziu apenas a leitura passiva inicial do registry em `resolveConnection`, protegida por `WD_MULTI_DB_REGISTRY_READ`;
+- registry ausente para unidade valida continua degradando para `baseConnection`, sem `useDb` e sem handshake;
+- nenhum dominio, wrapper, `api.db.js`, `auth.db.js`, PostgreSQL ou `user_memberships` entrou no escopo deste primeiro corte;
+- o proximo corte natural permanece sendo o cenario `ready=false -> baseConnection`.
+
 ## 2. Base tecnica ja existente
 
 Ja existem, no estado atual do projeto:
