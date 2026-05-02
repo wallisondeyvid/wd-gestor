@@ -92,6 +92,11 @@ function isRegistryEntryConsistent(registryEntry, unidadeId) {
     if (!dbName && !databaseKey) {
       return false;
     }
+
+    const routingMode = String(registryEntry?.routingMode || '').trim().toLowerCase();
+    if (routingMode && routingMode !== 'tenant') {
+      return false;
+    }
   }
 
   return true;
