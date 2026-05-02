@@ -201,3 +201,20 @@ Leitura executiva:
 - o primeiro microcorte futuro nao deve criar owner operacional;
 - o primeiro microcorte futuro nao deve criar rollout;
 - o primeiro microcorte futuro deve apenas endurecer o contrato operacional ao redor de activation e consistencia do registry.
+
+## 12.1 Checkpoint curto do primeiro microcorte tecnico
+
+- o primeiro microcorte tecnico desta subfase foi concluido;
+- o corredor protegido agora trata routingMode explicito diferente de tenant, especialmente routingMode=base, como inconsistencia operacional para tenant routing;
+- esse bloqueio vale mesmo quando readiness.ready=true, activation.active=true, unidadeId esta consistente, dbName/databaseKey estao presentes e a allowlist permite a unidade;
+- nesse corredor contraditorio, resolveConnection permanece em baseConnection;
+- nesse corredor contraditorio, useDb nao e chamado;
+- nesse corredor contraditorio, o handshake nao e disparado.
+
+Limites preservados neste checkpoint:
+
+- routingMode ausente preserva o comportamento anterior neste corte;
+- status continua fora deste microcorte;
+- configVersion continua fora deste microcorte;
+- nao houve alteracao em reader, cache ou preload;
+- nao houve provisionamento real nem rollout real.
