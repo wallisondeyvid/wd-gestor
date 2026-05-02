@@ -131,6 +131,27 @@ Limites preservados neste checkpoint:
 - nao houve seed;
 - nao houve model/schema.
 
+## 6.3 Checkpoint curto de pausa e encerramento parcial
+
+- o servico explicito de preload por lista fica concluido no escopo atual da subfase;
+- o contrato do relatorio fica estabilizado no escopo atual da subfase;
+- nao foi identificado owner operacional manual pequeno, explicito e seguro no codigo atual;
+- por isso a subfase permanece sem caller operacional por enquanto.
+
+Limites preservados neste checkpoint:
+
+- nao havera wrapper manual nesta rodada;
+- nao havera script, CLI, rota ou admin interno nesta rodada;
+- nao havera boot automatico;
+- nao havera background job;
+- nao havera refresh automatico;
+- nao havera rollout real.
+
+Diretriz consolidada apos esta pausa:
+
+- qualquer ponto operacional futuro deve nascer em subfase propria, apos identificar owner real;
+- o candidato mais proximo continua sendo contexto futuro de rollout ou provisioning, mas permanece fora agora para evitar rollout implicito.
+
 ## 7. Riscos
 
 Riscos principais desta subfase:

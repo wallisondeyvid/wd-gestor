@@ -269,6 +269,12 @@ Checkpoint tenant enforcement atual:
 - Reasons consolidados deste checkpoint: skipped cobre missing-unidade-id, invalid-unidade-id e duplicate-unidade-id; failed usa prime-failed.
 - Limites preservados expressamente neste checkpoint: o servico segue sem decidir routing, sem chamar resolveConnection.js, sem wrapper operacional, sem boot automatico, sem background job, sem refresh automatico, sem rollout real, sem seed e sem model/schema.
 - Validacao consolidada deste checkpoint: unitDatabaseRegistryPreload.test.js permaneceu verde com 6 pass; unitDatabaseRegistryCache.test.js e unitDatabaseRegistryReader.test.js permaneceram verdes com 10 pass; npm run verify:imports permaneceu verde; a bateria curta recente permaneceu verde com 136 pass.
+- Checkpoint documental curto de pausa e encerramento parcial da subfase Runtime preload controlado do registry multi-db registrado neste ponto.
+- Decisao consolidada deste checkpoint: o servico explicito de preload por lista e o contrato estabilizado do relatorio ficam concluidos no escopo atual da subfase.
+- Estado operacional consolidado deste checkpoint: nao foi identificado owner operacional manual pequeno, explicito e seguro no codigo atual; por isso a subfase permanece sem caller operacional por enquanto.
+- Limites preservados expressamente neste checkpoint: nao havera wrapper manual nesta rodada; nao havera script, CLI, rota ou admin interno nesta rodada; nao havera boot automatico; nao havera background job; nao havera refresh automatico; nao havera rollout real.
+- Diretriz consolidada apos esta pausa: qualquer ponto operacional futuro deve nascer em subfase propria, apos identificar owner real; o candidato mais proximo continua sendo contexto futuro de rollout ou provisioning, mas permanece fora agora para evitar rollout implicito.
+- Validacao consolidada desta pausa: a baseline completa recente permanece verde com 2054 tests, 2052 pass, 0 fail e 2 skipped.
 - Nova subfase da Fase E aberta em modo document-first: runtime preload controlado do registry multi-db.
 - Objetivo consolidado desta nova subfase: definir aquecimento explicito e controlado do cache de registry sem alterar o contrato sincrono de routing.
 - Documento canonico desta abertura: docs/tenant-phase-e-runtime-preload-plan.md.
