@@ -218,3 +218,22 @@ Limites preservados neste checkpoint:
 - configVersion continua fora deste microcorte;
 - nao houve alteracao em reader, cache ou preload;
 - nao houve provisionamento real nem rollout real.
+
+## 12.2 Checkpoint curto do segundo microcorte tecnico
+
+- o segundo microcorte tecnico desta subfase foi concluido;
+- o reader real do registry agora propaga routingMode quando o documento persistido contem esse campo;
+- o prime/cache agora preserva routingMode quando o entry vem do reader real;
+- com isso, routingMode deixa de ser apenas campo aceito por override de teste ou cache manual aquecido;
+- o fail-safe de routingMode=base passa a ficar coberto tambem no caminho persistido real ate resolveConnection;
+- nesse corredor persistido contraditorio, resolveConnection permanece em baseConnection;
+- nesse corredor persistido contraditorio, useDb nao e chamado;
+- nesse corredor persistido contraditorio, o handshake nao e disparado.
+
+Limites preservados neste checkpoint:
+
+- status continua fora deste microcorte;
+- configVersion continua fora deste microcorte;
+- nao houve alteracao em resolveConnection.js;
+- nao houve alteracao em schema, model ou escrita real do registry;
+- nao houve provisionamento real nem rollout real.

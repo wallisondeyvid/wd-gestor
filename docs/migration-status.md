@@ -286,6 +286,11 @@ Checkpoint tenant enforcement atual:
 - Resultado operacional consolidado deste microcorte: nesse corredor contraditorio, resolveConnection permanece fail-safe em baseConnection, sem useDb e sem disparo de handshake.
 - Limites preservados expressamente neste microcorte: routingMode ausente preserva o comportamento anterior neste ponto; status e configVersion permanecem para microcortes futuros; nao houve alteracao em reader, cache, preload, provisionamento ou rollout.
 - Validacao consolidada deste microcorte: resolveConnection_multiDbFlag.test.js permaneceu verde com 18 pass e a bateria curta recente permaneceu verde com 136 pass.
+- Segundo microcorte tecnico da subfase de provisionamento e ativacao operacional do registry registrado neste checkpoint documental curto.
+- Decisao consolidada deste segundo microcorte: o reader real do registry agora propaga routingMode quando presente e o prime/cache preserva esse campo no caminho passivo real.
+- Resultado operacional consolidado deste segundo microcorte: o fail-safe de routingMode=base deixa de ficar restrito a override de teste ou cache manual e passa a cobrir tambem o caminho persistido real ate resolveConnection, mantendo baseConnection, sem useDb e sem disparo de handshake.
+- Limites preservados expressamente neste segundo microcorte: status e configVersion permanecem para microcortes futuros; nao houve alteracao em resolveConnection.js; nao houve schema, model, escrita real, provisionamento real ou rollout real.
+- Validacao consolidada deste segundo microcorte: node --test em tests/architecture/unitDatabaseRegistryReader.test.js, tests/architecture/unitDatabaseRegistryCache.test.js e tests/architecture/resolveConnection_multiDbFlag.test.js permaneceu verde com 29 tests, 29 pass e 0 fail.
 - Nova subfase da Fase E aberta em modo document-first: runtime preload controlado do registry multi-db.
 - Objetivo consolidado desta nova subfase: definir aquecimento explicito e controlado do cache de registry sem alterar o contrato sincrono de routing.
 - Documento canonico desta abertura: docs/tenant-phase-e-runtime-preload-plan.md.
