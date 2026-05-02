@@ -192,6 +192,9 @@ Checkpoint tenant enforcement atual:
 - Resultado consolidado da avaliacao final desta fase: nao foi identificado terceiro microcorte pequeno, inequivoco e seguro na regua atual; pagesRouter.js e api.js ficam apenas como residual read-only futuro de baixo retorno imediato; os residuos remanescentes de api.db.js e auth.db.js permanecem classificados como frentes macro e nao como microcortes oportunistas.
 - Baseline local de referencia deste encerramento parcial: npm test com 2029 tests, 2027 pass, 0 fail e 2 skipped.
 - Recomendacao operacional apos este encerramento parcial: manter a branch local sem push por enquanto e tratar qualquer sequencia futura como nova rodada read-only ou novo enquadramento proprio, e nao como continuidade automatica desta fase.
+- Checkpoint documental inicial da Fase E aberto em modo estritamente contratual, sem implementacao tecnica nesta rodada.
+- Escopo consolidado deste checkpoint da Fase E: desenho passivo de provisioning e registry multi-db por unidade, com gates, rollback e suite minima antes de qualquer implementacao futura.
+- Documento de referencia desta abertura: docs/tenant-phase-e-provisioning-registry-plan.md.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
