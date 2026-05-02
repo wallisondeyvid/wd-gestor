@@ -87,6 +87,11 @@ function isRegistryEntryConsistent(registryEntry, unidadeId) {
   }
 
   if (isRegistryEntryReady(registryEntry) && isRegistryEntryActive(registryEntry)) {
+    const status = String(registryEntry?.status || '').trim().toLowerCase();
+    if (status && status !== 'active') {
+      return false;
+    }
+
     const dbName = String(registryEntry?.dbName || '').trim();
     const databaseKey = String(registryEntry?.databaseKey || '').trim();
     if (!dbName && !databaseKey) {
