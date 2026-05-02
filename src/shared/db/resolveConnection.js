@@ -68,6 +68,10 @@ function isMultiDbRegistryReadEnabled() {
   return raw === '1' || raw === 'true' || raw === 'on';
 }
 
+function isRegistryEntryReady(registryEntry) {
+  return registryEntry?.readiness?.ready === true;
+}
+
 function isValidUnidadeId(unidadeId) {
   const normalized = String(unidadeId || '').trim();
   return /^[a-f\d]{24}$/i.test(normalized);
@@ -372,6 +376,11 @@ export function resolveConnection(unitScope) {
   if (isMultiDbRegistryReadEnabled()) {
     const registryEntry = readUnitDatabaseRegistry({ unidadeId });
     if (!registryEntry) {
+      recordRoutingGlobal();
+      return baseConnection;
+    }
+
+    if (!isRegistryEntryReady(registryEntry)) {
       recordRoutingGlobal();
       return baseConnection;
     }
