@@ -12,6 +12,10 @@ const userDbHandshakeModuleUrl = pathToFileURL(
   path.join(process.cwd(), 'src/shared/db/userdbHandshake.js')
 ).href;
 
+const unitDatabaseRegistryModuleUrl = pathToFileURL(
+  path.join(process.cwd(), 'src/shared/db/unitDatabaseRegistry.js')
+).href;
+
 let importNonce = 0;
 
 async function loadResolveConnectionFresh() {
@@ -51,6 +55,28 @@ function setMultiDbAllowlist(value) {
   process.env.WD_MULTI_DB_ALLOWLIST = value;
 }
 
+function setMultiDbRegistryReadFlag(value) {
+  if (value === undefined) {
+    delete process.env.WD_MULTI_DB_REGISTRY_READ;
+    return;
+  }
+  process.env.WD_MULTI_DB_REGISTRY_READ = value;
+}
+
+async function setUnitDatabaseRegistryReaderForTests(reader) {
+  const mod = await import(unitDatabaseRegistryModuleUrl);
+  if (typeof mod.__setUnitDatabaseRegistryReaderForTests === 'function') {
+    mod.__setUnitDatabaseRegistryReaderForTests(reader);
+  }
+}
+
+async function resetUnitDatabaseRegistryReaderForTests() {
+  const mod = await import(unitDatabaseRegistryModuleUrl);
+  if (typeof mod.__resetUnitDatabaseRegistryReaderForTests === 'function') {
+    mod.__resetUnitDatabaseRegistryReaderForTests();
+  }
+}
+
 async function flushAsyncWork() {
   await new Promise((resolve) => setImmediate(resolve));
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -86,6 +112,63 @@ test('resolveConnection: WD_MULTI_DB OFF retorna baseConnection e não chama use
     await clearUserDbHandshakeCacheState();
     baseConnection.useDb = originalUseDb;
     setMultiDbFlag(previousFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
+  }
+});
+
+test('resolveConnection com WD_MULTI_DB e registry passivo ligado retorna baseConnection quando registry da unidade está ausente', async () => {
+  const previousFlag = process.env.WD_MULTI_DB;
+  const previousRegistryReadFlag = process.env.WD_MULTI_DB_REGISTRY_READ;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+  const unidadeId = '000000000000000000000010';
+  const baseConnection = mongoose.connection;
+  const originalUseDb = baseConnection.useDb;
+  const tenantConn = { name: 'tenantConn' };
+  const useDbCalls = [];
+  let pingCalls = 0;
+
+  baseConnection.useDb = (...args) => {
+    useDbCalls.push(args);
+    return {
+      ...tenantConn,
+      db: {
+        admin() {
+          return {
+            async ping() {
+              pingCalls += 1;
+              return { ok: 1 };
+            }
+          };
+        }
+      }
+    };
+  };
+
+  try {
+    await clearUserDbHandshakeCacheState();
+    await setUnitDatabaseRegistryReaderForTests(() => null);
+    setMultiDbFlag('1');
+    setMultiDbRegistryReadFlag('1');
+    setUserDbHandshakeFlag('1');
+    setMultiDbAllowlist(unidadeId);
+    const resolveConnection = await loadResolveConnectionFresh();
+
+    const resultA = resolveConnection({ unidadeId });
+    const resultB = resolveConnection({ unidadeId });
+    await flushAsyncWork();
+
+    assert.strictEqual(resultA, baseConnection);
+    assert.strictEqual(resultB, baseConnection);
+    assert.equal(useDbCalls.length, 0);
+    assert.equal(pingCalls, 0);
+  } finally {
+    await clearUserDbHandshakeCacheState();
+    await resetUnitDatabaseRegistryReaderForTests();
+    baseConnection.useDb = originalUseDb;
+    setMultiDbFlag(previousFlag);
+    setMultiDbRegistryReadFlag(previousRegistryReadFlag);
     setUserDbHandshakeFlag(previousHandshakeFlag);
     setMultiDbAllowlist(previousAllowlist);
   }

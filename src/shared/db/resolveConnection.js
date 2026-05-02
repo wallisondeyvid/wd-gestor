@@ -4,6 +4,7 @@ import {
   registerTrackedConnection,
   releaseTrackedTenantConnection,
 } from '#shared/db/connectionFactory.js';
+import { readUnitDatabaseRegistry } from '#shared/db/unitDatabaseRegistry.js';
 import { userDbHandshake } from '#shared/db/userdbHandshake.js';
 
 const dbCache = new Map();
@@ -59,6 +60,11 @@ function isTenantDbAllowedForUnit(unidadeId) {
 
 function isUserDbHandshakeEnabled() {
   const raw = String(process.env.WD_USERDB_HANDSHAKE || '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'on';
+}
+
+function isMultiDbRegistryReadEnabled() {
+  const raw = String(process.env.WD_MULTI_DB_REGISTRY_READ || '').trim().toLowerCase();
   return raw === '1' || raw === 'true' || raw === 'on';
 }
 
@@ -361,6 +367,14 @@ export function resolveConnection(unitScope) {
   if (!unidadeId) {
     recordRoutingGlobal();
     return baseConnection;
+  }
+
+  if (isMultiDbRegistryReadEnabled()) {
+    const registryEntry = readUnitDatabaseRegistry({ unidadeId });
+    if (!registryEntry) {
+      recordRoutingGlobal();
+      return baseConnection;
+    }
   }
 
   if (!isTenantDbAllowedForUnit(unidadeId)) {
