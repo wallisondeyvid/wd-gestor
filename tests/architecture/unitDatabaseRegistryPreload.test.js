@@ -46,7 +46,24 @@ test('preloadUnitDatabaseRegistryForUnits marca skipped para unidade ausente, in
       loaded: ['000000000000000000000010'],
       missing: [],
       failed: [],
-      skipped: [null, '', 'abc', '000000000000000000000010'],
+      skipped: [
+        {
+          input: null,
+          reason: 'missing-unidade-id',
+        },
+        {
+          input: '',
+          reason: 'missing-unidade-id',
+        },
+        {
+          input: 'abc',
+          reason: 'invalid-unidade-id',
+        },
+        {
+          input: '000000000000000000000010',
+          reason: 'duplicate-unidade-id',
+        },
+      ],
     });
   } finally {
     preload.__resetPrimeUnitDatabaseRegistryCacheForTests();
@@ -129,6 +146,7 @@ test('preloadUnitDatabaseRegistryForUnits adiciona em failed quando prime lanca 
       failed: [
         {
           unidadeId: '000000000000000000000011',
+          reason: 'prime-failed',
           error: 'REGISTRY_PRELOAD_FAILED',
         },
       ],
@@ -171,10 +189,20 @@ test('preloadUnitDatabaseRegistryForUnits retorna relatorio deterministico com l
       failed: [
         {
           unidadeId: '000000000000000000000012',
+          reason: 'prime-failed',
           error: 'UNEXPECTED_PRELOAD_ERROR',
         },
       ],
-      skipped: ['abc', '000000000000000000000010'],
+      skipped: [
+        {
+          input: 'abc',
+          reason: 'invalid-unidade-id',
+        },
+        {
+          input: '000000000000000000000010',
+          reason: 'duplicate-unidade-id',
+        },
+      ],
     });
   } finally {
     preload.__resetPrimeUnitDatabaseRegistryCacheForTests();

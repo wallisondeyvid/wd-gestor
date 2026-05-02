@@ -20,6 +20,17 @@ function isValidUnidadeId(unidadeId) {
   return /^[a-f\d]{24}$/i.test(unidadeId);
 }
 
+function createSkippedItem(input, reason) {
+  return {
+    input,
+    reason,
+  };
+}
+
+function serializeErrorMessage(error) {
+  return String(error?.message || error || 'UNIT_DATABASE_REGISTRY_PRELOAD_FAILED');
+}
+
 function getPrimeUnitDatabaseRegistryCache() {
   return typeof primeUnitDatabaseRegistryCacheOverride === 'function'
     ? primeUnitDatabaseRegistryCacheOverride
@@ -37,13 +48,18 @@ export async function preloadUnitDatabaseRegistryForUnits({ unidadeIds } = {}) {
 
   for (const rawUnidadeId of unidadeIds) {
     const unidadeId = normalizeUnidadeId(rawUnidadeId);
-    if (!unidadeId || !isValidUnidadeId(unidadeId)) {
-      report.skipped.push(rawUnidadeId);
+    if (!unidadeId) {
+      report.skipped.push(createSkippedItem(rawUnidadeId, 'missing-unidade-id'));
+      continue;
+    }
+
+    if (!isValidUnidadeId(unidadeId)) {
+      report.skipped.push(createSkippedItem(rawUnidadeId, 'invalid-unidade-id'));
       continue;
     }
 
     if (knownUnitIds.has(unidadeId)) {
-      report.skipped.push(rawUnidadeId);
+      report.skipped.push(createSkippedItem(rawUnidadeId, 'duplicate-unidade-id'));
       continue;
     }
 
@@ -59,7 +75,8 @@ export async function preloadUnitDatabaseRegistryForUnits({ unidadeIds } = {}) {
     } catch (error) {
       report.failed.push({
         unidadeId,
-        error: String(error?.message || error || 'UNIT_DATABASE_REGISTRY_PRELOAD_FAILED'),
+        reason: 'prime-failed',
+        error: serializeErrorMessage(error),
       });
     }
   }
