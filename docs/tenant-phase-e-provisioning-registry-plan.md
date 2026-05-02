@@ -14,8 +14,9 @@ Checkpoint curto de execucao ja concluido:
 - o Microcorte 2 da Fase E passou a tratar registry presente com `readiness.ready=false` como fallback obrigatorio para `baseConnection`, ainda sem ativacao operacional;
 - o Microcorte 3 da Fase E passou a tratar registry tecnicamente pronto, mas sem `activation.active`, como fallback obrigatorio para `baseConnection`, sem ativar tenant db;
 - o Microcorte 4 da Fase E caracterizou o primeiro caso positivo controlado: com `WD_MULTI_DB`, `WD_MULTI_DB_REGISTRY_READ`, registry presente com `readiness.ready=true`, `activation.active=true` e allowlist efetiva para a unidade, `resolveConnection` passa a usar tenant db, reutilizando cache e sem exigir alteracao de producao;
+- o Microcorte 5 da Fase E caracterizou o mesmo corredor positivo com `WD_USERDB_HANDSHAKE` ligado, preservando o handshake atual como comportamento nao-bloqueante e provando que o ping ocorre uma unica vez no caminho positivo reaproveitado;
 - nenhum dominio, wrapper, `api.db.js`, `auth.db.js`, PostgreSQL ou `user_memberships` entrou no escopo deste primeiro corte;
-- `readiness.ready` fica consolidado como prontidao tecnica e `activation.active` como liberacao operacional explicita; a allowlist atual permanece como gate operacional obrigatorio; o proximo corte natural passa a ser decidir se vale caracterizar separadamente o corredor positivo com `WD_USERDB_HANDSHAKE` ligado.
+- `readiness.ready` fica consolidado como prontidao tecnica e `activation.active` como liberacao operacional explicita; a allowlist atual permanece como gate operacional obrigatorio; com os cinco microcortes executaveis atuais, a primeira subfase passiva do registry fica encerrada parcialmente e qualquer sequencia sobre persistencia ou leitura real do registry deve recomecar em modo document-first/read-only.
 
 ## 2. Base tecnica ja existente
 
