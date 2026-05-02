@@ -256,3 +256,20 @@ Limites preservados neste checkpoint:
 - nao houve alteracao em schema, model ou escrita real do registry;
 - nao houve provisionamento real nem rollout real;
 - nao houve abertura de maquina de estados nem validacao de transicoes.
+
+## 12.4 Checkpoint curto de pausa tecnica e encerramento parcial
+
+- os contratos negativos essenciais do corredor operacional desta subfase tecnica ficam encerrados parcialmente neste checkpoint;
+- routingMode explicito contraditorio ja bloqueia tenant routing no corredor protegido;
+- routingMode e status agora atravessam o reader real e o prime/cache no caminho passivo real;
+- status explicito diferente de active ja bloqueia tenant routing como inconsistencia operacional;
+- status=ready nao promove tenant routing;
+- failed, rollback_required e disabled ja forcam baseConnection;
+- status ausente permanece como compatibilidade temporaria deliberada neste ponto;
+- a pausa tecnica desta subfase passa a ser deliberada apos tres microcortes pequenos, locais e validados.
+
+Leitura executiva deste checkpoint:
+
+- configVersion permanece deliberadamente fora desta subfase tecnica e so deve voltar como corte futuro se surgir necessidade concreta de compatibilidade de contrato no runtime;
+- qualquer proximo passo tecnico desta trilha deve nascer de nova rodada propria, e nao como continuacao automatica destes tres microcortes;
+- a regua atual permanece fechada sem schema, sem model, sem escrita real, sem provisionamento real, sem rollout real, sem maquina de estados e sem validacao de transicoes.
