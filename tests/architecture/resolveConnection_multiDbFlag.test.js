@@ -91,6 +91,15 @@ async function clearUnitDatabaseRegistryCacheForTests() {
   }
 }
 
+async function primeUnitDatabaseRegistryCacheForTests(options) {
+  const mod = await import(unitDatabaseRegistryModuleUrl);
+  if (typeof mod.primeUnitDatabaseRegistryCache === 'function') {
+    return mod.primeUnitDatabaseRegistryCache(options);
+  }
+
+  return null;
+}
+
 async function flushAsyncWork() {
   await new Promise((resolve) => setImmediate(resolve));
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -220,6 +229,89 @@ test('resolveConnection com WD_MULTI_DB e registry passivo ligado retorna baseCo
     await clearUserDbHandshakeCacheState();
     await clearUnitDatabaseRegistryCacheForTests();
     await resetUnitDatabaseRegistryReaderForTests();
+    setMultiDbFlag('1');
+    setMultiDbRegistryReadFlag('1');
+    setUserDbHandshakeFlag('1');
+    setMultiDbAllowlist(unidadeId);
+    const resolveConnection = await loadResolveConnectionFresh();
+
+    const resultA = resolveConnection({ unidadeId });
+    const resultB = resolveConnection({ unidadeId });
+    await flushAsyncWork();
+
+    assert.strictEqual(resultA, baseConnection);
+    assert.strictEqual(resultB, baseConnection);
+    assert.equal(useDbCalls.length, 0);
+    assert.equal(pingCalls, 0);
+  } finally {
+    await clearUserDbHandshakeCacheState();
+    await clearUnitDatabaseRegistryCacheForTests();
+    await resetUnitDatabaseRegistryReaderForTests();
+    baseConnection.useDb = originalUseDb;
+    setMultiDbFlag(previousFlag);
+    setMultiDbRegistryReadFlag(previousRegistryReadFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
+  }
+});
+
+test('resolveConnection com WD_MULTI_DB e registry passivo ligado mantém baseConnection quando cache é aquecido pelo reader com routingMode=base', async () => {
+  const previousFlag = process.env.WD_MULTI_DB;
+  const previousRegistryReadFlag = process.env.WD_MULTI_DB_REGISTRY_READ;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+  const unidadeId = '000000000000000000000010';
+  const baseConnection = mongoose.connection;
+  const originalUseDb = baseConnection.useDb;
+  const useDbCalls = [];
+  let pingCalls = 0;
+
+  baseConnection.useDb = (...args) => {
+    useDbCalls.push(args);
+    return {
+      name: 'tenantConn',
+      db: {
+        admin() {
+          return {
+            async ping() {
+              pingCalls += 1;
+              return { ok: 1 };
+            }
+          };
+        }
+      }
+    };
+  };
+
+  try {
+    await clearUserDbHandshakeCacheState();
+    await clearUnitDatabaseRegistryCacheForTests();
+    await resetUnitDatabaseRegistryReaderForTests();
+    await primeUnitDatabaseRegistryCacheForTests({
+      unidadeId,
+      connection: {
+        db: {
+          collection() {
+            return {
+              async findOne() {
+                return {
+                  unidadeId,
+                  dbName: `wdgestor_unit_${unidadeId}`,
+                  databaseKey: `wdgestor_unit_${unidadeId}`,
+                  routingMode: 'base',
+                  readiness: {
+                    ready: true,
+                  },
+                  activation: {
+                    active: true,
+                  },
+                };
+              },
+            };
+          },
+        },
+      },
+    });
     setMultiDbFlag('1');
     setMultiDbRegistryReadFlag('1');
     setUserDbHandshakeFlag('1');

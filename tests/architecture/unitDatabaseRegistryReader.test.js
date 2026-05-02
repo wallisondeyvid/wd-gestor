@@ -110,6 +110,7 @@ test('readUnitDatabaseRegistryFromBase retorna shape mínimo normalizado quando 
               unidadeId: '000000000000000000000010',
               dbName: 'wdgestor_unit_000000000000000000000010',
               databaseKey: 'wdgestor_unit_000000000000000000000010',
+              routingMode: 'base',
               readiness: {
                 ready: true,
                 reason: 'ignored',
@@ -138,6 +139,7 @@ test('readUnitDatabaseRegistryFromBase retorna shape mínimo normalizado quando 
     unidadeId: '000000000000000000000010',
     dbName: 'wdgestor_unit_000000000000000000000010',
     databaseKey: 'wdgestor_unit_000000000000000000000010',
+    routingMode: 'base',
     readiness: {
       ready: true,
     },

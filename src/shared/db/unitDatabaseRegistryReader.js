@@ -5,10 +5,13 @@ const UNIT_DATABASE_REGISTRY_COLLECTION = 'unit_database_registry';
 function normalizeRegistryDocument(document) {
   if (!document) return null;
 
+  const routingMode = String(document?.routingMode || '').trim();
+
   return {
     unidadeId: document.unidadeId,
     dbName: document.dbName,
     databaseKey: document.databaseKey,
+    ...(routingMode ? { routingMode } : {}),
     readiness: {
       ready: document?.readiness?.ready === true,
     },
