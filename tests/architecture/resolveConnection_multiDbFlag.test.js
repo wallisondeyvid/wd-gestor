@@ -300,6 +300,58 @@ test('resolveConnection com WD_MULTI_DB e registry passivo ligado retorna baseCo
   }
 });
 
+test('resolveConnection com WD_MULTI_DB e registry passivo ligado usa tenant db quando registry da unidade está ready, activation.active=true e allowlist permite a unidade', async () => {
+  const previousFlag = process.env.WD_MULTI_DB;
+  const previousRegistryReadFlag = process.env.WD_MULTI_DB_REGISTRY_READ;
+  const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
+  const previousAllowlist = process.env.WD_MULTI_DB_ALLOWLIST;
+  const unidadeId = '000000000000000000000010';
+  const baseConnection = mongoose.connection;
+  const originalUseDb = baseConnection.useDb;
+  const tenantConn = { name: 'tenantConn' };
+  const useDbCalls = [];
+
+  baseConnection.useDb = (...args) => {
+    useDbCalls.push(args);
+    return tenantConn;
+  };
+
+  try {
+    await clearUserDbHandshakeCacheState();
+    await setUnitDatabaseRegistryReaderForTests(() => ({
+      unidadeId,
+      readiness: {
+        ready: true,
+      },
+      activation: {
+        active: true,
+      },
+    }));
+    setMultiDbFlag('1');
+    setMultiDbRegistryReadFlag('1');
+    setUserDbHandshakeFlag('0');
+    setMultiDbAllowlist(unidadeId);
+    const resolveConnection = await loadResolveConnectionFresh();
+
+    const resultA = resolveConnection({ unidadeId });
+    const resultB = resolveConnection({ unidadeId });
+
+    assert.strictEqual(resultA, tenantConn);
+    assert.strictEqual(resultB, tenantConn);
+    assert.strictEqual(resultA, resultB);
+    assert.equal(useDbCalls.length, 1);
+    assert.deepEqual(useDbCalls[0], [`wdgestor_unit_${unidadeId}`, { useCache: true }]);
+  } finally {
+    await clearUserDbHandshakeCacheState();
+    await resetUnitDatabaseRegistryReaderForTests();
+    baseConnection.useDb = originalUseDb;
+    setMultiDbFlag(previousFlag);
+    setMultiDbRegistryReadFlag(previousRegistryReadFlag);
+    setUserDbHandshakeFlag(previousHandshakeFlag);
+    setMultiDbAllowlist(previousAllowlist);
+  }
+});
+
 test('resolveConnection: WD_MULTI_DB ON com allowlist contendo unidade usa useDb e retorna tenantConn', async () => {
   const previousFlag = process.env.WD_MULTI_DB;
   const previousHandshakeFlag = process.env.WD_USERDB_HANDSHAKE;
