@@ -76,6 +76,27 @@ function isRegistryEntryActive(registryEntry) {
   return registryEntry?.activation?.active === true;
 }
 
+function isRegistryEntryConsistent(registryEntry, unidadeId) {
+  if (!registryEntry) return false;
+
+  const registryUnidadeId = String(registryEntry?.unidadeId || '').trim();
+  const requestedUnidadeId = String(unidadeId || '').trim();
+
+  if (registryUnidadeId && registryUnidadeId !== requestedUnidadeId) {
+    return false;
+  }
+
+  if (isRegistryEntryReady(registryEntry) && isRegistryEntryActive(registryEntry)) {
+    const dbName = String(registryEntry?.dbName || '').trim();
+    const databaseKey = String(registryEntry?.databaseKey || '').trim();
+    if (!dbName && !databaseKey) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function isValidUnidadeId(unidadeId) {
   const normalized = String(unidadeId || '').trim();
   return /^[a-f\d]{24}$/i.test(normalized);
@@ -387,6 +408,11 @@ export function resolveConnection(unitScope) {
     }
 
     if (!registryEntry) {
+      recordRoutingGlobal();
+      return baseConnection;
+    }
+
+    if (!isRegistryEntryConsistent(registryEntry, unidadeId)) {
       recordRoutingGlobal();
       return baseConnection;
     }
