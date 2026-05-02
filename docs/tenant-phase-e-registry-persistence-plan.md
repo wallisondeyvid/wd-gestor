@@ -175,6 +175,16 @@ Leitura executiva:
 - o primeiro microcorte seguro nao deve ser seed;
 - o primeiro microcorte seguro deve provar que leitura real continua fail-safe.
 
+Checkpoint curto de execucao ja concluido:
+
+- o Microcorte 1 da subfase de persistencia passiva caracterizou e corrigiu o corredor em que a leitura do registry lança erro;
+- com `WD_MULTI_DB_REGISTRY_READ` ligado, `resolveConnection.js` agora degrada para `baseConnection` sem deixar o erro escapar;
+- nesse corredor, `useDb` nao e chamado e o handshake nao e disparado;
+- o patch ficou restrito a `resolveConnection.js` e `tests/architecture/resolveConnection_multiDbFlag.test.js`;
+- `unitDatabaseRegistry.js` permaneceu seam passivo minimo, sem reader real;
+- nao houve model/schema, Mongo real ou logging neste microcorte;
+- as validacoes focais permaneceram verdes: 14 pass na suite principal, 17 pass na suite combinada, `npm run verify:imports` verde e bateria curta com 136 pass.
+
 ## 12. Plano minimo de testes antes de qualquer patch
 
 Testes que devem existir antes ou junto dos primeiros microcortes:

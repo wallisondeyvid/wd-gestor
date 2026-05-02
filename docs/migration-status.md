@@ -229,6 +229,11 @@ Checkpoint tenant enforcement atual:
 - Escopo proposto da proxima subfase: persistencia e leitura real passiva do registry multi-db, ainda sem rollout, sem model/repository implementado e sem alterar os seams tecnicos atuais nesta rodada.
 - Documento de referencia desta abertura documental: [tenant-phase-e-registry-persistence-plan.md](tenant-phase-e-registry-persistence-plan.md).
 - Diretriz consolidada desta proxima subfase: o registry persistido deve nascer no Mongo global/base atual, lido por camada passiva isolada sob shared/db, sem passar por resolveModel.js nem modelRegistry.js, com erro de leitura sempre degradando para baseConnection.
+- Primeiro microcorte tecnico da subfase de persistencia passiva do registry multi-db concluido neste checkpoint documental curto.
+- Decisao consolidada deste microcorte 1: com WD_MULTI_DB_REGISTRY_READ ligado e erro na leitura do registry, resolveConnection agora degrada para baseConnection sem deixar o erro escapar.
+- Comportamento consolidado deste microcorte 1: no corredor de erro de leitura, a primeira e a segunda chamada retornam baseConnection, useDb nao e chamado e o handshake nao e disparado.
+- Escopo preservado expressamente neste microcorte 1: o patch ficou restrito a resolveConnection.js e resolveConnection_multiDbFlag.test.js; nao houve reader real, model/schema, Mongo real ou logging; unitDatabaseRegistry.js permaneceu como seam passivo minimo.
+- Validacao consolidada deste microcorte 1: node --test em tests/architecture/resolveConnection_multiDbFlag.test.js permaneceu verde com 14 tests, 14 pass e 0 fail; node --test em tests/architecture/resolveConnection_multiDbFlag.test.js e tests/architecture/userdbHandshake.test.js permaneceu verde com 17 tests, 17 pass e 0 fail; npm run verify:imports permaneceu verde com arquitetura limpa; a bateria curta permaneceu verde com 136 tests, 136 pass e 0 fail.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
