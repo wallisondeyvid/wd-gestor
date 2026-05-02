@@ -252,6 +252,12 @@ Checkpoint tenant enforcement atual:
 - Escopo preservado expressamente neste microcorte 4: nao houve model/schema, seed, rollout ou background job; nao houve alteracao em resolveModel.js ou modelRegistry.js.
 - Artefatos tecnicos consolidados deste microcorte 4: src/shared/db/unitDatabaseRegistry.js, tests/architecture/unitDatabaseRegistryCache.test.js e cobertura adicional em tests/architecture/resolveConnection_multiDbFlag.test.js.
 - Validacao consolidada deste microcorte 4: a validacao curta permaneceu verde com 136 tests, 136 pass e 0 fail.
+- Encerramento parcial da subfase de persistencia passiva do registry multi-db registrado neste checkpoint documental curto.
+- Objetivos fechados nesta subfase: fail-safe em erro de leitura; fail-safe em registry inconsistente; reader global passivo minimo isolado; unitDatabaseRegistry.js preservado como seam sincrono; cache passivo por unidade; preload/prime assincrono separado; resolveConnection.js preservado como sincrono; corredor com cache passivo aquecido caracterizado sem promover async no routing.
+- Limites operacionais consolidados antes de qualquer runtime preload: preload nao deve rodar dentro de resolveConnection.js; preload nao promove tenant routing por si so; cache frio continua significando baseConnection; erro de preload continua fail-safe; allowlist, readiness.ready e activation.active continuam obrigatorios mesmo com cache aquecido; preload nao implica background job, refresh automatico, seed, model/schema ou rollout real.
+- Fora de escopo consolidado apos este encerramento parcial: runtime preload; background job; seed; model/schema; rollout real; refresh automatico; invalidacao distribuida; alteracao ampla em resolveConnection.js; alteracao em resolveModel.js ou modelRegistry.js; dominio; api.db.js; auth.db.js; wrappers; PostgreSQL; user_memberships.
+- Proximo eixo consolidado apos este encerramento parcial: abrir subfase propria de runtime preload controlado para decidir quem chama prime, quando chama e com quais limites, sem quebrar o contrato sincrono do routing.
+- Validacao consolidada deste encerramento parcial: a baseline completa permaneceu verde com 2048 tests, 2046 pass, 0 fail e 2 skipped.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

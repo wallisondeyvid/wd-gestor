@@ -220,6 +220,17 @@ Checkpoint curto adicional ja concluido:
 - nao houve model/schema, seed, rollout ou background job neste microcorte;
 - nao houve alteracao em `resolveModel.js` ou `modelRegistry.js`.
 
+Checkpoint curto de encerramento parcial da subfase:
+
+- a subfase de persistencia passiva fechou os objetivos de fail-safe em erro de leitura do registry e fail-safe em registry inconsistente;
+- a subfase fechou os objetivos de reader global passivo minimo isolado, seam `unitDatabaseRegistry.js` preservado como sincrono, cache passivo por unidade e rotina separada de preload/prime assincrono;
+- a subfase fechou o objetivo de manter `resolveConnection.js` como fronteira sincrona e de caracterizar o corredor com cache passivo aquecido sem transformar o routing em async;
+- antes de qualquer runtime preload, fica consolidado que preload nao roda dentro de `resolveConnection.js`, nao promove tenant routing por si so, cache frio continua significando `baseConnection` e erro de preload continua fail-safe;
+- mesmo com cache aquecido, `allowlist`, `readiness.ready` e `activation.active` continuam obrigatorios;
+- preload nao implica background job, refresh automatico, seed, model/schema ou rollout real;
+- continuam fora de escopo: runtime preload, background job, seed, model/schema, rollout real, refresh automatico, invalidacao distribuida, alteracao ampla em `resolveConnection.js`, alteracao em `resolveModel.js`, alteracao em `modelRegistry.js`, dominio, `api.db.js`, `auth.db.js`, wrappers, PostgreSQL e `user_memberships`;
+- o proximo eixo recomendado apos este encerramento parcial e uma subfase propria de runtime preload controlado para decidir quem chama `prime`, quando chama e com quais limites, sem quebrar o contrato sincrono do routing.
+
 ## 12. Plano minimo de testes antes de qualquer patch
 
 Testes que devem existir antes ou junto dos primeiros microcortes:
