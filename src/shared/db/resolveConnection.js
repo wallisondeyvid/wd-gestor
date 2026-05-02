@@ -378,7 +378,14 @@ export function resolveConnection(unitScope) {
   }
 
   if (isMultiDbRegistryReadEnabled()) {
-    const registryEntry = readUnitDatabaseRegistry({ unidadeId });
+    let registryEntry;
+    try {
+      registryEntry = readUnitDatabaseRegistry({ unidadeId });
+    } catch (_) {
+      recordRoutingGlobal();
+      return baseConnection;
+    }
+
     if (!registryEntry) {
       recordRoutingGlobal();
       return baseConnection;
