@@ -240,6 +240,12 @@ Checkpoint tenant enforcement atual:
 - Comportamento consolidado deste microcorte 2: no corredor de registry inconsistente, useDb nao e chamado e o handshake nao e disparado; os testes positivos passam a usar registry valido minimo com dbName e databaseKey.
 - Escopo preservado expressamente neste microcorte 2: o patch ficou restrito a resolveConnection.js e resolveConnection_multiDbFlag.test.js; nao houve reader real, model/schema, Mongo real ou logging; unitDatabaseRegistry.js permaneceu como seam passivo minimo.
 - Validacao consolidada deste microcorte 2: node --test em tests/architecture/resolveConnection_multiDbFlag.test.js permaneceu verde com 15 tests, 15 pass e 0 fail; node --test em tests/architecture/resolveConnection_multiDbFlag.test.js e tests/architecture/userdbHandshake.test.js permaneceu verde com 18 tests, 18 pass e 0 fail; npm run verify:imports permaneceu verde com arquitetura limpa; a bateria curta permaneceu verde com 136 tests, 136 pass e 0 fail.
+- Terceiro microcorte tecnico da subfase de persistencia passiva do registry multi-db concluido neste checkpoint documental curto.
+- Decisao consolidada deste microcorte 3: foi criado um reader global passivo minimo do registry multi-db, ainda isolado e sem integracao com o fluxo principal de resolveConnection.
+- Comportamento consolidado deste microcorte 3: o reader consulta a collection unit_database_registry pela conexao base/global, retorna null quando nao encontra documento, retorna shape minimo normalizado quando encontra documento e propaga erro para o caller.
+- Escopo preservado expressamente neste microcorte 3: nao houve model/schema, seed ou rollout; nao houve alteracao em resolveConnection.js, unitDatabaseRegistry.js, resolveModel.js ou modelRegistry.js.
+- Artefatos tecnicos consolidados deste microcorte 3: src/shared/db/unitDatabaseRegistryReader.js e tests/architecture/unitDatabaseRegistryReader.test.js.
+- Validacao consolidada deste microcorte 3: a validacao curta permaneceu verde com 136 tests, 136 pass e 0 fail.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

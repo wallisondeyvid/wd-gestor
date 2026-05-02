@@ -197,6 +197,17 @@ Checkpoint curto adicional ja concluido:
 - os testes positivos com registry read passam a usar registry valido minimo com `dbName` e `databaseKey`;
 - as validacoes focais permaneceram verdes: 15 pass na suite principal, 18 pass na suite combinada, `npm run verify:imports` verde e bateria curta com 136 pass.
 
+Checkpoint curto adicional ja concluido:
+
+- o Microcorte 3 da subfase de persistencia passiva criou o reader global passivo minimo do registry multi-db;
+- o reader permanece isolado e ainda nao foi integrado ao fluxo principal de `resolveConnection`;
+- o reader consulta diretamente a collection `unit_database_registry` pela conexao base/global;
+- o reader retorna `null` quando nao encontra documento, retorna shape minimo normalizado quando encontra documento e propaga erro para o caller;
+- o microcorte criou `src/shared/db/unitDatabaseRegistryReader.js` e `tests/architecture/unitDatabaseRegistryReader.test.js`;
+- nao houve model/schema, seed ou rollout neste microcorte;
+- nao houve alteracao em `resolveConnection.js`, `unitDatabaseRegistry.js`, `resolveModel.js` ou `modelRegistry.js`;
+- os proximos passos ficam explicitamente separados: decidir em rodada propria se e como `unitDatabaseRegistry.js` passara a usar esse reader.
+
 ## 12. Plano minimo de testes antes de qualquer patch
 
 Testes que devem existir antes ou junto dos primeiros microcortes:
