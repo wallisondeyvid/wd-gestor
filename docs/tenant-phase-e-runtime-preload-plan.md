@@ -105,6 +105,32 @@ Diretriz adicional:
 - nao houve model/schema;
 - nao houve rollout real.
 
+## 6.2 Checkpoint curto do contrato estabilizado do relatorio
+
+- loaded permanece como array de unidadeIds normalizados;
+- missing permanece como array de unidadeIds normalizados;
+- skipped passa a ser array de objetos `{ input, reason }`;
+- failed passa a ser array de objetos `{ unidadeId, reason, error }`.
+
+Reasons consolidados:
+
+- skipped usa `missing-unidade-id`;
+- skipped usa `invalid-unidade-id`;
+- skipped usa `duplicate-unidade-id`;
+- failed usa `prime-failed`.
+
+Limites preservados neste checkpoint:
+
+- o servico segue sem decidir routing;
+- o servico segue sem chamar `resolveConnection.js`;
+- o servico segue sem wrapper operacional;
+- nao houve boot automatico;
+- nao houve background job;
+- nao houve refresh automatico;
+- nao houve rollout real;
+- nao houve seed;
+- nao houve model/schema.
+
 ## 7. Riscos
 
 Riscos principais desta subfase:
