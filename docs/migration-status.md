@@ -234,6 +234,12 @@ Checkpoint tenant enforcement atual:
 - Comportamento consolidado deste microcorte 1: no corredor de erro de leitura, a primeira e a segunda chamada retornam baseConnection, useDb nao e chamado e o handshake nao e disparado.
 - Escopo preservado expressamente neste microcorte 1: o patch ficou restrito a resolveConnection.js e resolveConnection_multiDbFlag.test.js; nao houve reader real, model/schema, Mongo real ou logging; unitDatabaseRegistry.js permaneceu como seam passivo minimo.
 - Validacao consolidada deste microcorte 1: node --test em tests/architecture/resolveConnection_multiDbFlag.test.js permaneceu verde com 14 tests, 14 pass e 0 fail; node --test em tests/architecture/resolveConnection_multiDbFlag.test.js e tests/architecture/userdbHandshake.test.js permaneceu verde com 17 tests, 17 pass e 0 fail; npm run verify:imports permaneceu verde com arquitetura limpa; a bateria curta permaneceu verde com 136 tests, 136 pass e 0 fail.
+- Segundo microcorte tecnico da subfase de persistencia passiva do registry multi-db concluido neste checkpoint documental curto.
+- Decisao consolidada deste microcorte 2: registry inconsistente agora degrada para baseConnection no corredor protegido por WD_MULTI_DB_REGISTRY_READ.
+- Inconsistencia minima coberta neste microcorte 2: unidadeId divergente da unidade solicitada; entrada ready + active sem dbName nem databaseKey.
+- Comportamento consolidado deste microcorte 2: no corredor de registry inconsistente, useDb nao e chamado e o handshake nao e disparado; os testes positivos passam a usar registry valido minimo com dbName e databaseKey.
+- Escopo preservado expressamente neste microcorte 2: o patch ficou restrito a resolveConnection.js e resolveConnection_multiDbFlag.test.js; nao houve reader real, model/schema, Mongo real ou logging; unitDatabaseRegistry.js permaneceu como seam passivo minimo.
+- Validacao consolidada deste microcorte 2: node --test em tests/architecture/resolveConnection_multiDbFlag.test.js permaneceu verde com 15 tests, 15 pass e 0 fail; node --test em tests/architecture/resolveConnection_multiDbFlag.test.js e tests/architecture/userdbHandshake.test.js permaneceu verde com 18 tests, 18 pass e 0 fail; npm run verify:imports permaneceu verde com arquitetura limpa; a bateria curta permaneceu verde com 136 tests, 136 pass e 0 fail.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

@@ -185,6 +185,18 @@ Checkpoint curto de execucao ja concluido:
 - nao houve model/schema, Mongo real ou logging neste microcorte;
 - as validacoes focais permaneceram verdes: 14 pass na suite principal, 17 pass na suite combinada, `npm run verify:imports` verde e bateria curta com 136 pass.
 
+Checkpoint curto adicional ja concluido:
+
+- o Microcorte 2 da subfase de persistencia passiva caracterizou e corrigiu o corredor de registry inconsistente;
+- registry inconsistente agora degrada para `baseConnection` no corredor protegido por `WD_MULTI_DB_REGISTRY_READ`;
+- a inconsistência minima coberta neste ponto e: `unidadeId` divergente da unidade solicitada; entrada `ready + active` sem `dbName` nem `databaseKey`;
+- nesse corredor, `useDb` nao e chamado e o handshake nao e disparado;
+- o patch ficou restrito a `resolveConnection.js` e `tests/architecture/resolveConnection_multiDbFlag.test.js`;
+- `unitDatabaseRegistry.js` permaneceu seam passivo minimo, sem reader real;
+- nao houve model/schema ou Mongo real neste microcorte;
+- os testes positivos com registry read passam a usar registry valido minimo com `dbName` e `databaseKey`;
+- as validacoes focais permaneceram verdes: 15 pass na suite principal, 18 pass na suite combinada, `npm run verify:imports` verde e bateria curta com 136 pass.
+
 ## 12. Plano minimo de testes antes de qualquer patch
 
 Testes que devem existir antes ou junto dos primeiros microcortes:
