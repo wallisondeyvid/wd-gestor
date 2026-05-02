@@ -12,8 +12,9 @@ Checkpoint curto de execucao ja concluido:
 - o Microcorte 1 da Fase E introduziu apenas a leitura passiva inicial do registry em `resolveConnection`, protegida por `WD_MULTI_DB_REGISTRY_READ`;
 - registry ausente para unidade valida continua degradando para `baseConnection`, sem `useDb` e sem handshake;
 - o Microcorte 2 da Fase E passou a tratar registry presente com `readiness.ready=false` como fallback obrigatorio para `baseConnection`, ainda sem ativacao operacional;
+- o Microcorte 3 da Fase E passou a tratar registry tecnicamente pronto, mas sem `activation.active`, como fallback obrigatorio para `baseConnection`, sem ativar tenant db;
 - nenhum dominio, wrapper, `api.db.js`, `auth.db.js`, PostgreSQL ou `user_memberships` entrou no escopo deste primeiro corte;
-- `activation.active` continua fora deste bloco inicial e o proximo corte natural passa a ser o caso `ready=true`, mas ainda sem ativacao operacional.
+- `readiness.ready` fica consolidado como prontidao tecnica e `activation.active` como liberacao operacional explicita; o proximo corte natural passa a ser decidir se `activation.active=false` exige caracterizacao propria ou se esse caso ja e redundante.
 
 ## 2. Base tecnica ja existente
 

@@ -207,6 +207,12 @@ Checkpoint tenant enforcement atual:
 - Escopo preservado expressamente neste checkpoint curto adicional da Fase E: nenhum dominio foi alterado; api.db.js permaneceu fora; auth.db.js permaneceu fora; wrappers pagesRouter.js e api.js permaneceram fora; PostgreSQL permaneceu fora; user_memberships permaneceu fora; activation.active ainda nao foi implementado nem exigido neste estagio.
 - Validacao consolidada deste microcorte 2: as validacoes curtas recentes permaneceram verdes; a referencia operacional atual permanece em 136 tests, 136 pass e 0 fail.
 - Proximo microcorte natural apos este checkpoint: decidir o comportamento de registry com readiness.ready=true, mas ainda sem ativacao operacional efetiva para tenant db.
+- Terceiro microcorte executavel da Fase E concluido neste checkpoint documental curto.
+- Decisao consolidada deste microcorte 3: com WD_MULTI_DB_REGISTRY_READ ligado, registry presente e readiness.ready=true ainda nao basta para tenant routing quando activation.active esta ausente; nesse caso resolveConnection continua retornando baseConnection.
+- Comportamento consolidado do microcorte 3: o corredor passa a separar explicitamente prontidao tecnica de autorizacao operacional; readiness.ready significa aptidao tecnica do registry, enquanto activation.active passa a ser o marcador de liberacao operacional explicita para seguir alem do fallback seguro.
+- Escopo preservado expressamente neste checkpoint curto adicional da Fase E: nenhum dominio foi alterado; api.db.js permaneceu fora; auth.db.js permaneceu fora; wrappers pagesRouter.js e api.js permaneceram fora; PostgreSQL permaneceu fora; user_memberships permaneceu fora; tenant db nao foi ativado neste estagio.
+- Validacao consolidada deste microcorte 3: as validacoes curtas recentes permaneceram verdes; a referencia operacional atual permanece em 136 tests, 136 pass e 0 fail.
+- Proximo microcorte natural apos este checkpoint: avaliar se activation.active=false merece caracterizacao propria por redundancia explicita ou se o caso ja fica suficientemente coberto por esta ausencia de ativacao; alternativamente, abrir rodada read-only curta para decidir isso antes de novo patch.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
