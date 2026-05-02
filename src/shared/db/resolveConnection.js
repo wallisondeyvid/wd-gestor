@@ -72,6 +72,10 @@ function isRegistryEntryReady(registryEntry) {
   return registryEntry?.readiness?.ready === true;
 }
 
+function isRegistryEntryActive(registryEntry) {
+  return registryEntry?.activation?.active === true;
+}
+
 function isValidUnidadeId(unidadeId) {
   const normalized = String(unidadeId || '').trim();
   return /^[a-f\d]{24}$/i.test(normalized);
@@ -381,6 +385,11 @@ export function resolveConnection(unitScope) {
     }
 
     if (!isRegistryEntryReady(registryEntry)) {
+      recordRoutingGlobal();
+      return baseConnection;
+    }
+
+    if (!isRegistryEntryActive(registryEntry)) {
       recordRoutingGlobal();
       return baseConnection;
     }
