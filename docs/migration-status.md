@@ -258,6 +258,12 @@ Checkpoint tenant enforcement atual:
 - Fora de escopo consolidado apos este encerramento parcial: runtime preload; background job; seed; model/schema; rollout real; refresh automatico; invalidacao distribuida; alteracao ampla em resolveConnection.js; alteracao em resolveModel.js ou modelRegistry.js; dominio; api.db.js; auth.db.js; wrappers; PostgreSQL; user_memberships.
 - Proximo eixo consolidado apos este encerramento parcial: abrir subfase propria de runtime preload controlado para decidir quem chama prime, quando chama e com quais limites, sem quebrar o contrato sincrono do routing.
 - Validacao consolidada deste encerramento parcial: a baseline completa permaneceu verde com 2048 tests, 2046 pass, 0 fail e 2 skipped.
+- Nova subfase da Fase E aberta em modo document-first: runtime preload controlado do registry multi-db.
+- Objetivo consolidado desta nova subfase: definir aquecimento explicito e controlado do cache de registry sem alterar o contrato sincrono de routing.
+- Documento canonico desta abertura: docs/tenant-phase-e-runtime-preload-plan.md.
+- Diretrizes consolidadas desta nova subfase: preload nao roda dentro de resolveConnection.js, nao promove tenant routing por si so, nao substitui allowlist/readiness/activation e deve nascer como servico explicito por lista de unidades com relatorio loaded, missing e failed.
+- Limites consolidados nesta abertura: sem boot automatico, sem background job, sem refresh automatico, sem seed, sem model/schema, sem rollout real e sem alteracoes em resolveConnection.js, resolveModel.js ou modelRegistry.js.
+- Validacao consolidada desta abertura documental: a baseline completa permanece registrada como verde com 2048 tests, 2046 pass, 0 fail e 2 skipped.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

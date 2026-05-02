@@ -231,6 +231,11 @@ Checkpoint curto de encerramento parcial da subfase:
 - continuam fora de escopo: runtime preload, background job, seed, model/schema, rollout real, refresh automatico, invalidacao distribuida, alteracao ampla em `resolveConnection.js`, alteracao em `resolveModel.js`, alteracao em `modelRegistry.js`, dominio, `api.db.js`, `auth.db.js`, wrappers, PostgreSQL e `user_memberships`;
 - o proximo eixo recomendado apos este encerramento parcial e uma subfase propria de runtime preload controlado para decidir quem chama `prime`, quando chama e com quais limites, sem quebrar o contrato sincrono do routing.
 
+Nota curta de ponte:
+
+- a subfase seguinte de runtime preload controlado fica registrada em `docs/tenant-phase-e-runtime-preload-plan.md`;
+- o preload futuro permanece explicitamente fora de `resolveConnection.js` e continua separado do contrato sincrono de routing fechado nesta subfase.
+
 ## 12. Plano minimo de testes antes de qualquer patch
 
 Testes que devem existir antes ou junto dos primeiros microcortes:
