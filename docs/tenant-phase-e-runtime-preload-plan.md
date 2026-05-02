@@ -152,6 +152,32 @@ Diretriz consolidada apos esta pausa:
 - qualquer ponto operacional futuro deve nascer em subfase propria, apos identificar owner real;
 - o candidato mais proximo continua sendo contexto futuro de rollout ou provisioning, mas permanece fora agora para evitar rollout implicito.
 
+## 6.4 Checkpoint curto do contrato futuro de owner operacional/manual
+
+- esta rodada nao implementa owner operacional/manual;
+- esta rodada define apenas o contrato do owner futuro admissivel para preload e escrita do registry;
+- o owner futuro admissivel deve nascer como contexto manual e explicito de provisioning/ativacao operacional por unidade, nunca como efeito colateral do runtime de requests;
+- esse owner futuro nao pode residir em `resolveConnection.js`, nem no proprio servico de preload, nem em bootstrap automatico, job, rota, CLI ou admin interno aberto por conveniencia;
+- o menor ponto futuro de chamada continua sendo uma etapa manual e deliberada do corredor de provisioning/ativacao, com lista explicita de `unidadeIds` e intencao operacional inequívoca;
+- preload futuro so pode ser chamado por esse owner futuro depois de decidir explicitamente quais unidades entram no lote;
+- preload futuro continua proibido em fluxo automatico de boot, request path, cache miss, handshake, leitura passiva ou retry implicito;
+- a escrita futura do registry tambem so pode nascer sob esse mesmo owner futuro ou sob servico dedicado chamado por ele, sempre fora do routing sync;
+- escrita futura do registry nao podera ativar tenant routing sozinha;
+- readiness futura nao podera ativar tenant routing sozinha;
+- activation continuara explicita e allowlist continuara como gate operacional simultaneo.
+
+Contrato minimo futuro do owner:
+
+- entrada minima: operador/contexto manual explicito, motivo operacional, lista explicita de `unidadeIds` e acao pretendida;
+- saida minima: relatorio deterministico por unidade, sem promocao automatica para tenant routing;
+- invariantes minimos: `unidadeId` valido, escrita e leitura via base/global, `routingMode=base` como default seguro, `activation.active=false` ate liberacao explicita posterior, e rollback sempre preferindo `disabled` ou `rollback_required`.
+
+Rollback operacional futuro:
+
+- em erro, duvida ou inconsistência, o retorno seguro continua sendo `baseConnection`;
+- o owner futuro deve preferir marcar `disabled` ou `rollback_required`, com `routingMode=base` e `activation.active=false`;
+- remocao ambigua do registry nao e rollback aceitavel neste corredor.
+
 ## 7. Riscos
 
 Riscos principais desta subfase:

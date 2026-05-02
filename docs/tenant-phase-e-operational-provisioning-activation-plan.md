@@ -273,3 +273,28 @@ Leitura executiva deste checkpoint:
 - configVersion permanece deliberadamente fora desta subfase tecnica e so deve voltar como corte futuro se surgir necessidade concreta de compatibilidade de contrato no runtime;
 - qualquer proximo passo tecnico desta trilha deve nascer de nova rodada propria, e nao como continuacao automatica destes tres microcortes;
 - a regua atual permanece fechada sem schema, sem model, sem escrita real, sem provisionamento real, sem rollout real, sem maquina de estados e sem validacao de transicoes.
+
+## 12.5 Checkpoint curto do contrato futuro de owner/manual
+
+- a proxima etapa desta trilha fica redefinida como bloco document-first sobre owner operacional/manual futuro, e nao como implementacao direta;
+- o owner futuro admissivel passa a ser somente um contexto manual e explicito de provisioning/ativacao operacional por unidade;
+- esse owner futuro nao pode nascer de preload automatico, bootstrap, request path, rota, CLI, job, admin interno oportunista ou efeito lateral de leitura;
+- preload futuro so podera ser chamado por esse owner futuro, por lista explicita de `unidadeIds` e sem virar rollout implicito;
+- escrita futura do registry so podera nascer sob esse owner futuro ou por servico dedicado chamado por ele, sempre fora do corredor sync de routing;
+- escrita futura do registry nao podera ativar tenant routing sozinha;
+- readiness futura nao podera ativar tenant routing sozinha;
+- activation continua explicita, allowlist continua obrigatoria e erro, duvida ou inconsistência continuam resultando em `baseConnection`.
+
+Ordem operacional futura consolidada:
+
+1. escrever ou atualizar registry em estado seguro;
+2. aquecer cache apenas se houver lote manual explicito;
+3. concluir validacao tecnica antes de `readiness.ready=true`;
+4. manter `activation.active=false` ate liberacao deliberada;
+5. so admitir tenant routing com gates positivos simultaneos e sem contradicoes de status ou routingMode.
+
+Rollback operacional futuro consolidado:
+
+- o owner futuro deve preferir `disabled` ou `rollback_required`, com `routingMode=base` e `activation.active=false`;
+- remocao ambigua do registry nao conta como rollback aceitavel;
+- qualquer automacao futura deve nascer em subfase propria posterior.

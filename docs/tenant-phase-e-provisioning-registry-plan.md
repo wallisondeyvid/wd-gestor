@@ -232,6 +232,44 @@ Regra de rollback:
 - o estado seguro de retorno e sempre `baseConnection`.
 - rollback deve ser compativel com cache, handshake e conexoes ja abertas sem exigir reescrita de dominio.
 
+## 10.1 Contrato futuro de owner operacional/manual
+
+Owner futuro admissivel:
+
+- o owner futuro do registry deve ser um contexto manual e explicito de provisioning/ativacao operacional por unidade;
+- esse owner nao pode nascer do runtime comum de requests, do bootstrap, do cache/preload passivo ou de efeito lateral de leitura;
+- esse owner tambem nao nasce nesta rodada como rota, CLI, job, seed, schema, model ou admin interno;
+- esta rodada define somente o contrato desse owner futuro, sem implementa-lo.
+
+Menor ponto futuro de chamada:
+
+- o menor ponto futuro seguro e uma etapa manual do corredor de provisioning/ativacao por unidade, depois de existir intencao operacional explicita e antes de qualquer promocao tenant;
+- preload futuro deve permanecer restrito a lote explicito de `unidadeIds`, nunca a descoberta automatica por boot ou request;
+- escrita futura do registry deve nascer como ato deliberado desse mesmo corredor manual, sempre separado de `resolveConnection.js`.
+
+Ordem minima futura entre escrita, preload, readiness e activation:
+
+1. registrar ou atualizar registry em estado seguro com `routingMode=base`, `activation.active=false` e status nao-promotor;
+2. se houver necessidade operacional, chamar preload apenas para aquecer cache do lote explicito;
+3. executar validacao tecnica e somente entao marcar `readiness.ready=true`;
+4. manter a unidade em `baseConnection` enquanto activation e allowlist nao estiverem positivas;
+5. ativar tenant routing somente com `activation.active=true`, allowlist positiva e demais gates simultaneamente consistentes.
+
+Invariantes minimos antes de qualquer escrita real:
+
+- `unidadeId` canonico e valido;
+- `dbName` e/ou `databaseKey` definidos de forma deterministica;
+- escrita pela conexao base/global;
+- default inicial em `routingMode=base`;
+- `activation.active=false` na ausencia de liberacao explicita;
+- status inicial sem promocao implicita;
+- capacidade de retornar para `disabled` ou `rollback_required` sem apagar ambigamente o registry.
+
+Justificativas de escopo:
+
+- `configVersion` continua fora porque ainda nao existe writer real, negociacao de compatibilidade nem branch de runtime que dependa dela para liberar o owner futuro;
+- schema/model continuam fora porque o ganho desta rodada esta na autoridade operacional e na ordem do fluxo, nao na materializacao tecnica da persistencia.
+
 ## 11. Cenarios de falha
 
 Os seguintes cenarios devem ser documentados e testados antes de qualquer implementacao passiva:

@@ -273,3 +273,31 @@ A primeira rodada tecnica desta subfase so deve ser aberta quando houver concord
 - ausencia de dependencia com `resolveModel.js` e `modelRegistry.js`;
 - erro de leitura degradando para `baseConnection`;
 - nenhum gate atual de ativacao sendo relaxado.
+
+## 15. Contrato documental do owner futuro para escrita e preload
+
+Esta rodada fecha apenas o contrato do owner futuro. Nao implementa escrita real, nao implementa caller real e nao cria nenhum entrypoint operacional novo.
+
+Diretrizes consolidadas:
+
+- o owner futuro admissivel deve ser um contexto manual e explicito de provisioning/ativacao por unidade;
+- esse owner futuro deve operar sobre conexao base/global e sobre lote explicito de `unidadeIds`;
+- preload futuro so pode ser chamado por esse owner futuro ou por servico dedicado chamado por ele;
+- escrita futura do registry so pode ser chamada por esse owner futuro ou por servico dedicado chamado por ele;
+- preload e escrita seguem proibidos dentro de `resolveConnection.js`, bootstrap, request path, cache miss, handshake, job automatico, CLI, rota e admin interno oportunista.
+
+Invariantes documentais minimos antes de qualquer escrita real:
+
+- `unidadeId` valido e canonico;
+- destino persistido sob collection do registry no Mongo base/global;
+- `routingMode=base` como estado inicial seguro;
+- `activation.active=false` ate liberacao operacional explicita;
+- status inicial nao-promotor;
+- rollback documentado para `disabled` ou `rollback_required`, sem remocao ambigua;
+- allowlist permanecendo gate separado da escrita e da readiness.
+
+Motivos para manter itens fora deste bloco:
+
+- `configVersion` continua fora porque ainda nao existe writer/reader versionado o suficiente para justificar enforcement de compatibilidade;
+- schema/model continuam fora porque o seam passivo ja sustenta a leitura atual e esta rodada precisa primeiro fechar autoridade operacional, nao materializacao tecnica;
+- qualquer automacao futura continua dependente de subfase propria.

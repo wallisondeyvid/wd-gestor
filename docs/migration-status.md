@@ -308,6 +308,15 @@ Checkpoint tenant enforcement atual:
 - Diretrizes consolidadas desta nova subfase: preload nao roda dentro de resolveConnection.js, nao promove tenant routing por si so, nao substitui allowlist/readiness/activation e deve nascer como servico explicito por lista de unidades com relatorio loaded, missing e failed.
 - Limites consolidados nesta abertura: sem boot automatico, sem background job, sem refresh automatico, sem seed, sem model/schema, sem rollout real e sem alteracoes em resolveConnection.js, resolveModel.js ou modelRegistry.js.
 - Validacao consolidada desta abertura documental: a baseline completa permanece registrada como verde com 2048 tests, 2046 pass, 0 fail e 2 skipped.
+- Checkpoint documental curto do contrato futuro de owner operacional/manual do registry registrado nesta rodada.
+- Decisao consolidada deste checkpoint: o proximo passo da Fase E deixa de ser implementacao tecnica direta e passa a ser apenas o contrato do owner futuro admissivel para preload e escrita do registry.
+- Owner futuro admissivel consolidado neste checkpoint: contexto manual e explicito de provisioning/ativacao operacional por unidade, nunca bootstrap, request path, rota, CLI, job, admin interno oportunista ou efeito lateral de leitura.
+- Regra consolidada para preload e escrita: preload futuro so pode nascer por lote explicito de unidadeIds sob esse owner; escrita futura do registry so pode nascer sob esse owner ou servico dedicado chamado por ele; nenhuma das duas pode promover tenant routing sozinha.
+- Ordem operacional consolidada neste checkpoint: escrita em estado seguro, preload manual opcional por lote explicito, validacao tecnica, readiness, e apenas depois activation explicita com allowlist positiva e demais gates simultaneos.
+- Rollback operacional consolidado neste checkpoint: preferir `disabled` ou `rollback_required`, com `routingMode=base` e `activation.active=false`; remocao ambigua do registry nao e rollback aceitavel.
+- Reclassificacao consolidada neste checkpoint: configVersion continua fora por ainda nao existir necessidade concreta de compatibilidade no runtime; schema/model continuam fora porque a autoridade operacional e a ordem do fluxo ainda sao o problema principal.
+- Limites preservados expressamente neste checkpoint: nenhuma rota, CLI, job, seed, schema, model, escrita real, provisionamento real ou rollout real foi aberta; o contrato atual permanece seguro e passivo.
+- Validacao consolidada deste checkpoint: rodada documental sem alteracao de codigo ou testes; baseline completa de referencia permanece 2058 tests, 2056 pass, 0 fail e 2 skipped.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
