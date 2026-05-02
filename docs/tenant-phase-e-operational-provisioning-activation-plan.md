@@ -237,3 +237,22 @@ Limites preservados neste checkpoint:
 - nao houve alteracao em resolveConnection.js;
 - nao houve alteracao em schema, model ou escrita real do registry;
 - nao houve provisionamento real nem rollout real.
+
+## 12.3 Checkpoint curto do terceiro microcorte tecnico
+
+- o terceiro microcorte tecnico desta subfase foi concluido;
+- status explicito do registry agora atravessa o reader real quando presente no documento persistido;
+- o prime/cache agora preserva status no caminho passivo real;
+- com isso, status deixa de ser apenas campo documental e passa a participar do corredor protegido de routing;
+- status explicito diferente de active passa a bloquear tenant routing como inconsistencia operacional;
+- status=ready nao promove tenant routing mesmo quando readiness.ready=true, activation.active=true e a allowlist permite a unidade;
+- failed, rollback_required e disabled forcam baseConnection mesmo quando readiness.ready=true e activation.active=true;
+- status=active continua permitindo o corredor positivo quando os demais gates permanecem positivos;
+- status ausente preserva compatibilidade temporaria e mantem o comportamento anterior neste ponto.
+
+Limites preservados neste checkpoint:
+
+- configVersion continua fora deste microcorte;
+- nao houve alteracao em schema, model ou escrita real do registry;
+- nao houve provisionamento real nem rollout real;
+- nao houve abertura de maquina de estados nem validacao de transicoes.
