@@ -208,6 +208,37 @@ async function authenticateContextualAgent(app, { unidadeId, papelContextual = '
   return { agent, email };
 }
 
+async function authenticateGlobalAdminAgent(app, { prefix = 'funcionario-get-by-id-runtime-global-admin' } = {}) {
+  const email = uniqueEmail(prefix);
+  const senha = 'Senha@123456';
+  const senhaHash = await bcrypt.hash(senha, 10);
+
+  await User.create({
+    email,
+    senha: senhaHash,
+    cpf: uniqueCpf(),
+    role: 'user',
+    global_role: 'admin',
+    ativo: true,
+    primeiro_acesso: false,
+    senha_provisoria: false,
+    nome: `Get By Id Runtime Global Admin ${nextCounter()}`,
+  });
+
+  sharedHarness.createdEmails.push(email);
+
+  const agent = request.agent(app);
+  const loginRes = await agent
+    .post('/gestor/login')
+    .type('form')
+    .send({ email, senha, modulo: 'gestor' });
+
+  assert.equal(loginRes.status, 303, JSON.stringify(loginRes.body));
+  assert.equal(loginRes.headers.location, '/gestor/dashboard');
+
+  return { agent, email };
+}
+
 async function withHarness(run) {
   const harness = await getSharedHarness();
   await clearFuncionariosInUnits(harness.unidadeA._id, harness.unidadeB._id, harness.unidadeC._id);
@@ -370,6 +401,26 @@ test('GET /gestor/api/funcionarios/:id com funcionario inexistente retorna not f
     assert.equal(res.body?.success, false, JSON.stringify(res.body));
     assert.equal(res.body?.code, 'NOT_FOUND', JSON.stringify(res.body));
     assert.equal(res.body?.message, 'Não encontrado', JSON.stringify(res.body));
+  });
+});
+
+test('GET /gestor/api/funcionarios/:id exige unidade ativa mesmo para privilegiado global', async () => {
+  await withHarness(async ({ app, unidadeB }) => {
+    const { agent } = await authenticateGlobalAdminAgent(app);
+    const funcionario = await createFuncionarioInTenant(unidadeB._id, {
+      nome: `Funcionario Admin Global ${Date.now()}-${nextCounter()}`,
+      email: uniqueEmail('func-get-global-admin'),
+      cpf: uniqueCpf(),
+    });
+
+    const res = await agent
+      .get(`/gestor/api/funcionarios/${normalizeId(funcionario._id)}`)
+      .set('Accept', 'application/json')
+      .set('Connection', 'close');
+
+    assert.equal(res.status, 400, JSON.stringify(res.body));
+    assert.equal(res.body?.success, false, JSON.stringify(res.body));
+    assert.equal(res.body?.error, 'UNIDADE_ID_REQUIRED', JSON.stringify(res.body));
   });
 });
 
