@@ -258,6 +258,12 @@ Checkpoint tenant enforcement atual:
 - Fora de escopo consolidado apos este encerramento parcial: runtime preload; background job; seed; model/schema; rollout real; refresh automatico; invalidacao distribuida; alteracao ampla em resolveConnection.js; alteracao em resolveModel.js ou modelRegistry.js; dominio; api.db.js; auth.db.js; wrappers; PostgreSQL; user_memberships.
 - Proximo eixo consolidado apos este encerramento parcial: abrir subfase propria de runtime preload controlado para decidir quem chama prime, quando chama e com quais limites, sem quebrar o contrato sincrono do routing.
 - Validacao consolidada deste encerramento parcial: a baseline completa permaneceu verde com 2048 tests, 2046 pass, 0 fail e 2 skipped.
+- Primeiro microcorte tecnico da subfase Runtime preload controlado do registry multi-db concluido neste checkpoint documental curto.
+- Decisao consolidada deste microcorte 1: foi criado servico explicito de preload por lista de unidades, usando o seam existente primeUnitDatabaseRegistryCache e retornando relatorio loaded, missing, failed e skipped, sem decidir routing.
+- Comportamento consolidado deste microcorte 1: loaded ocorre quando prime retorna entry; missing ocorre quando prime retorna null; failed ocorre quando prime lanca erro sem derrubar o lote; skipped cobre unidade ausente, invalida ou duplicada.
+- Escopo preservado expressamente neste microcorte 1: o servico nao chama resolveConnection.js, nao chama resolveModel.js nem modelRegistry.js, nao cria conexao direta e nao introduz boot automatico, background job, refresh automatico, seed, model/schema ou rollout real.
+- Artefatos tecnicos consolidados deste microcorte 1: src/shared/db/unitDatabaseRegistryPreload.js e tests/architecture/unitDatabaseRegistryPreload.test.js.
+- Validacao consolidada deste microcorte 1: unitDatabaseRegistryPreload.test.js permaneceu verde com 6 pass; unitDatabaseRegistryCache.test.js e unitDatabaseRegistryReader.test.js permaneceram verdes com 10 pass; resolveConnection_multiDbFlag.test.js e userdbHandshake.test.js permaneceram verdes com 20 pass; npm run verify:imports permaneceu verde; a bateria curta recente permaneceu verde com 136 pass.
 - Nova subfase da Fase E aberta em modo document-first: runtime preload controlado do registry multi-db.
 - Objetivo consolidado desta nova subfase: definir aquecimento explicito e controlado do cache de registry sem alterar o contrato sincrono de routing.
 - Documento canonico desta abertura: docs/tenant-phase-e-runtime-preload-plan.md.

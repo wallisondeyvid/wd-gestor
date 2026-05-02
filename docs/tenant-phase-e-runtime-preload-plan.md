@@ -84,6 +84,27 @@ Diretriz adicional:
 
 - boot automatico, background job e refresh ficam para subfase futura, se ainda fizerem sentido depois dos microcortes controlados.
 
+## 6.1 Checkpoint curto do microcorte tecnico 1
+
+- o primeiro microcorte tecnico desta subfase foi concluido;
+- foi criado servico explicito de preload por lista de unidades;
+- o servico usa o seam existente `primeUnitDatabaseRegistryCache`;
+- o servico retorna relatorio `loaded`, `missing`, `failed` e `skipped`;
+- `loaded` ocorre quando prime retorna entry;
+- `missing` ocorre quando prime retorna null;
+- `failed` ocorre quando prime lanca erro sem derrubar o lote;
+- `skipped` cobre unidade ausente, invalida ou duplicada;
+- o servico nao decide routing;
+- o servico nao chama `resolveConnection.js`;
+- o servico nao chama `resolveModel.js` nem `modelRegistry.js`;
+- o servico nao cria conexao direta;
+- nao houve boot automatico;
+- nao houve background job;
+- nao houve refresh automatico;
+- nao houve seed;
+- nao houve model/schema;
+- nao houve rollout real.
+
 ## 7. Riscos
 
 Riscos principais desta subfase:
