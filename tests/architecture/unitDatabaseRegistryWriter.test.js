@@ -455,6 +455,358 @@ test('markUnitDatabaseRegistryReady não grava active, tenant, allowlist nem act
   }
 });
 
+test('disableUnitDatabaseRegistry desativa entry active com retorno seguro', async () => {
+  const originalDb = mongoose.connection.db;
+  const collectionCalls = [];
+  const findOneCalls = [];
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    collectionCalls,
+    findOneImpl(filter) {
+      findOneCalls.push(filter);
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'active',
+        readiness: { ready: true, reason: 'technical-check-ok' },
+        activation: { active: true },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true, matchedCount: 1, modifiedCount: 1, upsertedCount: 0 };
+    },
+  });
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    const result = await disableUnitDatabaseRegistry({
+      unidadeId: '000000000000000000000010',
+      reason: 'manual-disable',
+    });
+
+    assert.deepEqual(collectionCalls, ['unit_database_registry']);
+    assert.deepEqual(findOneCalls, [{ unidadeId: '000000000000000000000010' }]);
+    assert.equal(updateOneCalls.length, 1);
+    assert.deepEqual(updateOneCalls[0].filter, {
+      unidadeId: '000000000000000000000010',
+    });
+    assert.deepEqual(updateOneCalls[0].options, {
+      upsert: false,
+    });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.status, 'disabled');
+    assert.equal(persistedEntry.routingMode, 'base');
+    assert.deepEqual(persistedEntry.activation.active, false);
+    assert.ok(persistedEntry.activation.deactivatedAt instanceof Date);
+    assert.ok(persistedEntry.updatedAt instanceof Date);
+    assert.equal(persistedEntry.lastError, 'manual-disable');
+    assert.deepEqual(result, persistedEntry);
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry desativa entry ready com retorno seguro', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        readiness: { ready: true },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true, matchedCount: 1, modifiedCount: 1, upsertedCount: 0 };
+    },
+  });
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    const result = await disableUnitDatabaseRegistry({
+      unidadeId: '000000000000000000000010',
+    });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.status, 'disabled');
+    assert.equal(persistedEntry.routingMode, 'base');
+    assert.deepEqual(persistedEntry.readiness, { ready: true });
+    assert.deepEqual(persistedEntry.activation.active, false);
+    assert.deepEqual(result, persistedEntry);
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry é seguro e idempotente para disabled', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'disabled',
+        readiness: { ready: false },
+        activation: {
+          active: false,
+          deactivatedAt: new Date('2026-05-03T10:00:00.000Z'),
+        },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true, matchedCount: 1, modifiedCount: 1, upsertedCount: 0 };
+    },
+  });
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    const result = await disableUnitDatabaseRegistry({
+      unidadeId: '000000000000000000000010',
+    });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.status, 'disabled');
+    assert.equal(persistedEntry.routingMode, 'base');
+    assert.deepEqual(persistedEntry.activation.active, false);
+    assert.ok(persistedEntry.activation.deactivatedAt instanceof Date);
+    assert.ok(persistedEntry.updatedAt instanceof Date);
+    assert.deepEqual(result, persistedEntry);
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry exige unidadeId', async () => {
+  const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+  await assert.rejects(
+    () => disableUnitDatabaseRegistry({ unidadeId: '' }),
+    (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_INPUT'
+  );
+});
+
+test('disableUnitDatabaseRegistry falha se entry não existe', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({});
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => disableUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_ENTRY_NOT_FOUND'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry não remove entry', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'active',
+        readiness: { ready: true },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true };
+    },
+  });
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await disableUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' });
+
+    assert.equal('$unset' in updateOneCalls[0].update, false);
+    assert.equal('$delete' in updateOneCalls[0].update, false);
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry não grava active, tenant, allowlist nem activation.active true', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'rollback_required',
+        readiness: { ready: false },
+        activation: { active: false },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true };
+    },
+  });
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await disableUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.status, 'disabled');
+    assert.notEqual(persistedEntry.status, 'active');
+    assert.equal(persistedEntry.routingMode, 'base');
+    assert.notEqual(persistedEntry.routingMode, 'tenant');
+    assert.deepEqual(persistedEntry.activation.active, false);
+    assert.notEqual(persistedEntry.activation.active, true);
+    assert.equal('allowlist' in persistedEntry, false);
+    assert.equal('allowlisted' in persistedEntry.activation, false);
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry preserva unidadeId, dbName, databaseKey e readiness', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'failed',
+        readiness: { ready: true, reason: 'previous-check' },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true };
+    },
+  });
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await disableUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.unidadeId, '000000000000000000000010');
+    assert.equal(persistedEntry.dbName, 'wdgestor_unit_000000000000000000000010');
+    assert.equal(persistedEntry.databaseKey, 'wdgestor_unit_000000000000000000000010');
+    assert.deepEqual(persistedEntry.readiness, {
+      ready: true,
+      reason: 'previous-check',
+    });
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry grava reason em lastError quando informado', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'provisioning',
+        readiness: { ready: false },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true };
+    },
+  });
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await disableUnitDatabaseRegistry({
+      unidadeId: '000000000000000000000010',
+      reason: 'operator-disabled',
+    });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.lastError, 'operator-disabled');
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry lança erro específico quando conexão base/global está indisponível', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = null;
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => disableUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_BASE_CONNECTION_UNAVAILABLE'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('disableUnitDatabaseRegistry lança erro específico quando a persistência falha', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'active',
+        readiness: { ready: true },
+      };
+    },
+    updateOneImpl() {
+      throw new Error('UPDATE_ONE_FAILED');
+    },
+  });
+
+  try {
+    const { disableUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => disableUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_PERSIST_FAILED'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
 test('unitDatabaseRegistryWriter não importa nem chama resolveConnection', () => {
   const source = fs.readFileSync(writerSourceFilePath, 'utf8');
 
