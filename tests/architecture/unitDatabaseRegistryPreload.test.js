@@ -1,11 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const preloadModuleUrl = pathToFileURL(
   path.join(process.cwd(), 'src/shared/db/unitDatabaseRegistryPreload.js')
 ).href;
+
+const preloadSourceFilePath = path.join(
+  process.cwd(),
+  'src/shared/db/unitDatabaseRegistryPreload.js'
+);
 
 let importNonce = 0;
 
@@ -207,4 +213,46 @@ test('preloadUnitDatabaseRegistryForUnits retorna relatorio deterministico com l
   } finally {
     preload.__resetPrimeUnitDatabaseRegistryCacheForTests();
   }
+});
+
+test('unitDatabaseRegistryPreload preserva limite arquitetural negativo e usa apenas o seam passivo de cache', () => {
+  const source = fs.readFileSync(preloadSourceFilePath, 'utf8');
+
+  assert.match(
+    source,
+    /import\s*\{\s*primeUnitDatabaseRegistryCache\s*\}\s*from\s*['"]#shared\/db\/unitDatabaseRegistry\.js['"];/
+  );
+  assert.match(source, /const\s+primeRegistryCache\s*=\s*getPrimeUnitDatabaseRegistryCache\s*\(\s*\)/);
+  assert.match(source, /primeRegistryCache\s*\(\s*\{\s*unidadeId\s*\}\s*\)/);
+
+  assert.doesNotMatch(source, /#shared\/db\/resolveConnection\.js/);
+  assert.doesNotMatch(source, /\bresolveConnection\s*\(/);
+
+  assert.doesNotMatch(source, /\bstatus\s*:/);
+  assert.doesNotMatch(source, /\.status\s*=/);
+  assert.doesNotMatch(source, /\[['"]status['"]\]\s*=/);
+
+  assert.doesNotMatch(source, /\broutingMode\s*:/);
+  assert.doesNotMatch(source, /\.routingMode\s*=/);
+  assert.doesNotMatch(source, /\[['"]routingMode['"]\]\s*=/);
+
+  assert.doesNotMatch(source, /activation\s*:\s*\{[\s\S]{0,80}\bactive\s*:/);
+  assert.doesNotMatch(source, /activation\s*\.\s*active\s*=/);
+  assert.doesNotMatch(source, /activation\s*\[['"]active['"]\]\s*=/);
+
+  assert.doesNotMatch(source, /readiness\s*:\s*\{[\s\S]{0,80}\bready\s*:/);
+  assert.doesNotMatch(source, /readiness\s*\.\s*ready\s*=/);
+  assert.doesNotMatch(source, /readiness\s*\[['"]ready['"]\]\s*=/);
+
+  assert.doesNotMatch(source, /\ballowlist\s*:/);
+  assert.doesNotMatch(source, /\.allowlist\s*=/);
+  assert.doesNotMatch(source, /\[['"]allowlist['"]\]\s*=/);
+
+  assert.doesNotMatch(source, /setUnitDatabaseRegistryCacheEntry\s*\(/);
+  assert.doesNotMatch(source, /writeUnitDatabaseRegistry\s*\(/);
+  assert.doesNotMatch(source, /saveUnitDatabaseRegistry\s*\(/);
+  assert.doesNotMatch(source, /updateOne\s*\(/);
+  assert.doesNotMatch(source, /insertOne\s*\(/);
+  assert.doesNotMatch(source, /replaceOne\s*\(/);
+  assert.doesNotMatch(source, /findOneAndUpdate\s*\(/);
 });
