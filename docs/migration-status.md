@@ -394,6 +394,9 @@ Checkpoint tenant enforcement atual:
 - Escopo preservado expressamente nesta abertura pratica da Fase F: nao houve patch funcional; nao houve alteracao em producao; nao houve alteracao em registry, writer, reader, cache, preload ou resolveConnection; nao houve owner manual; nao houve piloto; nao houve rollback operacional aberto; rota admin, CLI, script, job e request path permanecem proibidos neste momento; api.db.js, auth.db.js, pagesRouter.js, api.js, modelRegistry, BaseRepository e PostgreSQL permanecem fora.
 - Estado operacional consolidado apos esta abertura: a ativacao real por unidade continua fechada; owner manual, entrypoint operacional explicito, piloto controlado e ritual de rollback permanecem como decisoes futuras e nao foram liberados por este checkpoint.
 - Proximo passo recomendado apos esta abertura: manter a sequencia ainda em modo documental/planejamento operacional ou abrir no maximo novo teste de contrato focal antes de qualquer entrypoint; nao ha autorizacao para rollout, chamador oportunista ou continuidade automatica fora dessa regua.
+- Checkpoint documental curto de planejamento operacional da Fase F consolidado nesta rodada, sem abertura de implementacao real.
+- Documento canonico deste checkpoint: [tenant-phase-f-controlled-activation-plan.md](tenant-phase-f-controlled-activation-plan.md).
+- Decisao consolidada deste checkpoint: a Fase F passa a ter ritual operacional seguro documentado para futura ativacao controlada por unidade, mantendo owner manual como funcao interna deliberada futura, proibindo rota, request path, bootstrap, preload automatico, job, CLI inicial e script solto como primeiros owners, e preservando piloto nao produtivo, rollback minimo explicito e baseline completa como pre-condicoes de qualquer entrypoint futuro.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
