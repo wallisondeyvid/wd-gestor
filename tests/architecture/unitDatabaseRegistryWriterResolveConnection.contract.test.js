@@ -143,6 +143,16 @@ async function primeRegistryCache(registry, unidadeId) {
   await registry.primeUnitDatabaseRegistryCache({ unidadeId });
 }
 
+async function seedActiveRegistryEntry({ writer, unidadeId }) {
+  await writer.registerUnitDatabaseRegistryPending({
+    unidadeId,
+    dbName: `wdgestor_unit_${unidadeId}`,
+    databaseKey: `wdgestor_unit_${unidadeId}`,
+  });
+  await writer.markUnitDatabaseRegistryReady({ unidadeId, reason: 'technical-check-ok' });
+  await writer.activateUnitDatabaseRegistry({ unidadeId });
+}
+
 async function runContractHarness({ allowlist = true } = {}, callback) {
   const previousMultiDb = process.env.WD_MULTI_DB;
   const previousRegistryRead = process.env.WD_MULTI_DB_REGISTRY_READ;
@@ -270,13 +280,7 @@ test('writer -> resolveConnection mantém baseConnection para entry rollback_req
 
 test('writer -> resolveConnection abre tenant connection para entry active coerente com gates completos', async () => {
   await runContractHarness({}, async ({ unidadeId, writer, registry, resolveConnection, tenantConn, useDbCalls }) => {
-    await writer.registerUnitDatabaseRegistryPending({
-      unidadeId,
-      dbName: `wdgestor_unit_${unidadeId}`,
-      databaseKey: `wdgestor_unit_${unidadeId}`,
-    });
-    await writer.markUnitDatabaseRegistryReady({ unidadeId, reason: 'technical-check-ok' });
-    await writer.activateUnitDatabaseRegistry({ unidadeId });
+    await seedActiveRegistryEntry({ writer, unidadeId });
 
     await primeRegistryCache(registry, unidadeId);
     const result = resolveConnection({ unidadeId });
@@ -287,33 +291,102 @@ test('writer -> resolveConnection abre tenant connection para entry active coere
   });
 });
 
-test('writer -> resolveConnection volta para baseConnection quando entry active coerente perde a allowlist', async () => {
-  await runContractHarness({ allowlist: false }, async ({ unidadeId, writer, registry, resolveConnection, useDbCalls }) => {
-    await writer.registerUnitDatabaseRegistryPending({
-      unidadeId,
-      dbName: `wdgestor_unit_${unidadeId}`,
-      databaseKey: `wdgestor_unit_${unidadeId}`,
-    });
-    await writer.markUnitDatabaseRegistryReady({ unidadeId });
-    await writer.activateUnitDatabaseRegistry({ unidadeId });
+test('writer -> resolveConnection faz rollback para baseConnection quando uma unidade active coerente perde a allowlist', async () => {
+  await runContractHarness({}, async ({ unidadeId, writer, registry, resolveConnection, tenantConn, useDbCalls }) => {
+    await seedActiveRegistryEntry({ writer, unidadeId });
 
     await primeRegistryCache(registry, unidadeId);
-    const result = resolveConnection({ unidadeId });
+    const activeResult = resolveConnection({ unidadeId });
 
-    assert.strictEqual(result, mongoose.connection);
-    assert.equal(useDbCalls.length, 0);
+    setEnvFlag('WD_MULTI_DB_ALLOWLIST', undefined);
+
+    const rollbackResult = resolveConnection({ unidadeId });
+
+    assert.strictEqual(activeResult, tenantConn);
+    assert.strictEqual(rollbackResult, mongoose.connection);
+    assert.equal(useDbCalls.length, 1);
   });
 });
 
-test('writer -> resolveConnection mantém baseConnection para entry active corrompida com routingMode=base', async () => {
-  await runContractHarness({}, async ({ unidadeId, writer, registry, resolveConnection, harness, useDbCalls }) => {
-    await writer.registerUnitDatabaseRegistryPending({
-      unidadeId,
-      dbName: `wdgestor_unit_${unidadeId}`,
-      databaseKey: `wdgestor_unit_${unidadeId}`,
+test('writer -> resolveConnection faz rollback para baseConnection quando uma unidade active coerente volta para disabled', async () => {
+  await runContractHarness({}, async ({ unidadeId, writer, registry, resolveConnection, harness, tenantConn, useDbCalls }) => {
+    await seedActiveRegistryEntry({ writer, unidadeId });
+
+    await primeRegistryCache(registry, unidadeId);
+    const activeResult = resolveConnection({ unidadeId });
+
+    await writer.disableUnitDatabaseRegistry({ unidadeId, reason: 'manual-rollback-disabled' });
+    await primeRegistryCache(registry, unidadeId);
+
+    const persistedEntry = harness.read(unidadeId);
+    const rollbackResult = resolveConnection({ unidadeId });
+
+    assert.strictEqual(activeResult, tenantConn);
+    assert.ok(persistedEntry);
+    assert.equal(persistedEntry.status, 'disabled');
+    assert.equal(persistedEntry.routingMode, 'base');
+    assert.equal(persistedEntry.activation?.active, false);
+    assert.strictEqual(rollbackResult, mongoose.connection);
+    assert.equal(useDbCalls.length, 1);
+  });
+});
+
+test('writer -> resolveConnection faz rollback para baseConnection quando uma unidade active coerente volta para rollback_required', async () => {
+  await runContractHarness({}, async ({ unidadeId, writer, registry, resolveConnection, harness, tenantConn, useDbCalls }) => {
+    await seedActiveRegistryEntry({ writer, unidadeId });
+
+    await primeRegistryCache(registry, unidadeId);
+    const activeResult = resolveConnection({ unidadeId });
+
+    await writer.markUnitDatabaseRegistryRollbackRequired({ unidadeId, reason: 'manual-rollback-required' });
+    await primeRegistryCache(registry, unidadeId);
+
+    const persistedEntry = harness.read(unidadeId);
+    const rollbackResult = resolveConnection({ unidadeId });
+
+    assert.strictEqual(activeResult, tenantConn);
+    assert.ok(persistedEntry);
+    assert.equal(persistedEntry.status, 'rollback_required');
+    assert.equal(persistedEntry.routingMode, 'base');
+    assert.equal(persistedEntry.activation?.active, false);
+    assert.strictEqual(rollbackResult, mongoose.connection);
+    assert.equal(useDbCalls.length, 1);
+  });
+});
+
+test('writer -> resolveConnection faz rollback para baseConnection quando uma unidade active coerente perde activation.active', async () => {
+  await runContractHarness({}, async ({ unidadeId, writer, registry, resolveConnection, harness, tenantConn, useDbCalls }) => {
+    await seedActiveRegistryEntry({ writer, unidadeId });
+
+    await primeRegistryCache(registry, unidadeId);
+    const activeResult = resolveConnection({ unidadeId });
+
+    const activeEntry = harness.read(unidadeId);
+    harness.write({
+      ...activeEntry,
+      activation: {
+        ...activeEntry.activation,
+        active: false,
+      },
     });
-    await writer.markUnitDatabaseRegistryReady({ unidadeId });
-    await writer.activateUnitDatabaseRegistry({ unidadeId });
+
+    await primeRegistryCache(registry, unidadeId);
+    const rollbackResult = resolveConnection({ unidadeId });
+
+    assert.strictEqual(activeResult, tenantConn);
+    assert.ok(harness.read(unidadeId));
+    assert.equal(harness.read(unidadeId)?.activation?.active, false);
+    assert.strictEqual(rollbackResult, mongoose.connection);
+    assert.equal(useDbCalls.length, 1);
+  });
+});
+
+test('writer -> resolveConnection faz rollback para baseConnection quando uma unidade active coerente volta para routingMode=base', async () => {
+  await runContractHarness({}, async ({ unidadeId, writer, registry, resolveConnection, harness, tenantConn, useDbCalls }) => {
+    await seedActiveRegistryEntry({ writer, unidadeId });
+
+    await primeRegistryCache(registry, unidadeId);
+    const activeResult = resolveConnection({ unidadeId });
 
     const corruptedEntry = harness.read(unidadeId);
     harness.write({
@@ -322,10 +395,13 @@ test('writer -> resolveConnection mantém baseConnection para entry active corro
     });
 
     await primeRegistryCache(registry, unidadeId);
-    const result = resolveConnection({ unidadeId });
+    const rollbackResult = resolveConnection({ unidadeId });
 
-    assert.strictEqual(result, mongoose.connection);
-    assert.equal(useDbCalls.length, 0);
+    assert.strictEqual(activeResult, tenantConn);
+    assert.ok(harness.read(unidadeId));
+    assert.equal(harness.read(unidadeId)?.routingMode, 'base');
+    assert.strictEqual(rollbackResult, mongoose.connection);
+    assert.equal(useDbCalls.length, 1);
   });
 });
 
