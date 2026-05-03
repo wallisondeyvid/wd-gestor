@@ -18,6 +18,10 @@
 - cache frio continua sendo estado seguro;
 - erro de preload nao deve derrubar a aplicacao nem contaminar o cache.
 
+Principio adicional de autoridade operacional:
+
+- preload nunca e owner operacional do registry.
+
 ## 3. Desenho pretendido
 
 Diretriz da subfase:
@@ -32,6 +36,13 @@ Leitura executiva:
 - o preload passa a ser aquecimento explicito de cache, nao decisao de routing;
 - `resolveConnection.js` continua apenas consumindo o seam sincrono;
 - tenant routing continua dependente dos gates ja existentes.
+
+Limites adicionais obrigatorios:
+
+- preload nunca escreve registry;
+- preload nunca ativa registry;
+- preload nunca muda status;
+- preload nunca mexe em allowlist.
 
 ## 4. Contrato minimo futuro do servico
 
@@ -165,6 +176,11 @@ Diretriz consolidada apos esta pausa:
 - escrita futura do registry nao podera ativar tenant routing sozinha;
 - readiness futura nao podera ativar tenant routing sozinha;
 - activation continuara explicita e allowlist continuara como gate operacional simultaneo.
+
+Reforcos explicitos deste contrato:
+
+- o servico de preload, por si so, nunca escreve, nunca ativa, nunca muda status e nunca altera allowlist;
+- qualquer tentativa futura de usar preload como ponto de decisao operacional deve ser tratada como violacao deste contrato documental.
 
 Contrato minimo futuro do owner:
 

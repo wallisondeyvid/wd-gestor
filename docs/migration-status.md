@@ -338,6 +338,13 @@ Checkpoint tenant enforcement atual:
 - Reclassificacao consolidada neste checkpoint: configVersion continua fora por ainda nao existir necessidade concreta de compatibilidade no runtime; schema/model continuam fora porque a autoridade operacional e a ordem do fluxo ainda sao o problema principal.
 - Limites preservados expressamente neste checkpoint: nenhuma rota, CLI, job, seed, schema, model, escrita real, provisionamento real ou rollout real foi aberta; o contrato atual permanece seguro e passivo.
 - Validacao consolidada deste checkpoint: rodada documental sem alteracao de codigo ou testes; baseline completa de referencia permanece 2058 tests, 2056 pass, 0 fail e 2 skipped.
+- Retomada documental consolidada da Fase E nesta rodada: a frente passa a ficar explicitamente enquadrada como trilha manual/document-first para consolidar o owner operacional do registry.
+- Diagnostico consolidado desta retomada: o problema atual deixa de ser runtime read path e passa a ser autoridade operacional, entry minima, ciclo de vida, transicoes e rollback do registry.
+- Documento canonico consolidado desta retomada: docs/tenant-phase-e-operational-provisioning-activation-plan.md.
+- Diretriz consolidada desta retomada: o owner legitimo nasce como procedimento operacional explicito de provisioning/ativacao por unidade; runtime, preload, request path e bootstrap nunca sao owner operacional.
+- Conteudo contratual consolidado nesta retomada documental: readiness.ready = elegibilidade tecnica; activation.active = autorizacao operacional explicita; allowlist = gate operacional externo e simultaneo; nenhum dos tres, isoladamente, ativa tenant routing.
+- Rollback consolidado nesta retomada documental: preferir `disabled` ou `rollback_required`, com `routingMode=base`, `activation.active=false` e saida da allowlist; remocao ambigua da entry continua proibida.
+- Limites preservados expressamente nesta retomada: nao houve alteracao de producao; nao houve alteracao de testes; nao houve implementacao do owner manual; nao houve abertura de script, rota, job, schema, model, seed ou bootstrap operacional.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

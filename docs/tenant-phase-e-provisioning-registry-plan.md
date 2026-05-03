@@ -7,6 +7,11 @@
 - Preservar o comportamento atual quando tudo estiver desligado.
 - Nao implementar nem ativar multi-db nesta fase documental.
 
+Autoridade documental desta fase para owner e ciclo de vida:
+
+- o documento canonico do owner operacional/manual, da entry minima, do ciclo de vida, das transicoes e do rollback passa a ser [tenant-phase-e-operational-provisioning-activation-plan.md](tenant-phase-e-operational-provisioning-activation-plan.md);
+- este documento permanece como visao geral da fase, dos gates e da moldura contratual ampla do registry.
+
 Checkpoint curto de execucao ja concluido:
 
 - o Microcorte 1 da Fase E introduziu apenas a leitura passiva inicial do registry em `resolveConnection`, protegida por `WD_MULTI_DB_REGISTRY_READ`;
@@ -125,6 +130,12 @@ Regras de interpretacao:
 - `activation` descreve elegibilidade e ativacao de roteamento.
 - `routingMode` define o destino efetivo esperado da unidade (`base` ou `tenant`).
 
+Leitura operacional desta lista:
+
+- a entry minima obrigatoria para o owner manual fica consolidada no documento canonico operacional/manual;
+- esta lista aqui continua descrevendo o contrato amplo desejado da fase, incluindo campos ainda documentais e de observabilidade;
+- readiness, activation e allowlist permanecem conceitos distintos e simultaneos, sem promocao isolada para tenant routing.
+
 ## 5. Estados de provisionamento
 
 - `not_configured`: unidade existe, mas ainda nao possui registry valido.
@@ -141,6 +152,10 @@ Regra central:
 - `ready` nao significa `active`.
 - `active` exige gates explicitos.
 - o default operacional da fase continua sendo `baseConnection`.
+
+Autoridade de ciclo de vida:
+
+- a tabela operacional de estados, transicoes permitidas, transicoes proibidas e representacao de rollback fica consolidada em [tenant-phase-e-operational-provisioning-activation-plan.md](tenant-phase-e-operational-provisioning-activation-plan.md).
 
 ## 6. Fluxo operacional
 
@@ -269,6 +284,12 @@ Justificativas de escopo:
 
 - `configVersion` continua fora porque ainda nao existe writer real, negociacao de compatibilidade nem branch de runtime que dependa dela para liberar o owner futuro;
 - schema/model continuam fora porque o ganho desta rodada esta na autoridade operacional e na ordem do fluxo, nao na materializacao tecnica da persistencia.
+
+Leitura consolidada deste bloco:
+
+- o owner manual continua sendo procedimento operacional explicito de provisioning/ativacao por unidade;
+- request path, runtime comum, preload e bootstrap nao sao owner operacional;
+- este documento descreve a moldura geral da fase, mas a autoridade para o contrato manual detalhado permanece no documento operacional/manual canonico.
 
 ## 11. Cenarios de falha
 

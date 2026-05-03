@@ -8,6 +8,34 @@
 - manter preload como etapa opcional, posterior e nao decisora;
 - evitar rollout implicito nesta rodada documental.
 
+## 1.1 Documento canonico do owner manual
+
+- este documento passa a ser a referencia canonica do owner operacional/manual do registry multi-db da Fase E;
+- o owner manual nasce aqui como procedimento operacional explicito de provisioning/ativacao por unidade, e nao como implementacao tecnica nesta rodada;
+- runtime, preload, request path e bootstrap nunca sao owner operacional do registry;
+- esta rodada consolida contrato, invariantes, estados, gates e rollback, sem autorizar script, rota, job, schema, model, seed ou qualquer executor real.
+
+## 1.2 Owner operacional/manual do registry
+
+Owner legitimo nesta fase:
+
+- um procedimento operacional explicito e deliberado de provisioning/ativacao por unidade;
+- executado fora do runtime comum de requests;
+- orientado por lote explicito de `unidadeIds` quando houver acao em mais de uma unidade;
+- responsavel por escrever ou atualizar a entry em estado seguro, conduzir validacao tecnica, decidir readiness, decidir activation e representar rollback sem ambiguidade.
+
+O owner manual nao pode nascer de:
+
+- runtime comum;
+- preload;
+- request path;
+- bootstrap automatico;
+- efeito lateral de leitura;
+- rota;
+- CLI;
+- job;
+- admin interno oportunista.
+
 ## 2. Fluxo operacional canonico
 
 Fluxo minimo recomendado para a unidade:
@@ -27,6 +55,33 @@ Leitura operacional obrigatoria:
 - readiness validada nao libera tenant routing por si so;
 - ativacao explicita ainda nao substitui os gates globais existentes;
 - preload nao e parte obrigatoria do fluxo minimo.
+
+## 2.1 Entry minima obrigatoria
+
+Campos minimos obrigatorios para uma entry operacionalmente valida:
+
+- `unidadeId`;
+- `dbName`;
+- `databaseKey`;
+- `status`;
+- `routingMode`;
+- `readiness.ready`;
+- `activation.active`;
+- `updatedAt`.
+
+Campos fortemente recomendados, mas ainda nao obrigatorios para liberar este contrato documental:
+
+- `readiness.reason`;
+- `activation.activatedAt`;
+- `activation.deactivatedAt`;
+- `lastError`.
+
+Regras minimas de interpretacao:
+
+- `readiness.ready` = elegibilidade tecnica;
+- `activation.active` = autorizacao operacional explicita;
+- allowlist = gate operacional externo e simultaneo;
+- nenhum dos tres, isoladamente, ativa tenant routing.
 
 ## 3. Estados operacionais do registry
 
@@ -70,6 +125,29 @@ Regras de transicao:
 - reprocesso e recuperacao devem ser deliberados e nunca implicitos;
 - qualquer transicao fora desta lista deve ser tratada como estado invalido e degradada para base.
 
+## 4.1 Tabela de estados e transicoes
+
+| Estado | Significado operacional | Transicoes permitidas | Observacoes |
+| --- | --- | --- | --- |
+| `not_configured` | ausencia de registry valido | `pending` | estado apenas documental ou anterior ao primeiro registro seguro |
+| `pending` | intencao registrada em estado seguro | `provisioning`, `failed`, `disabled` | permanece em base e sem ativacao |
+| `provisioning` | execucao tecnica em andamento | `ready`, `failed`, `rollback_required` | nao promove tenant routing |
+| `ready` | elegibilidade tecnica validada sem liberacao operacional | `active`, `disabled`, `rollback_required`, `failed` | `ready` nao ativa tenant por si so |
+| `active` | autorizacao operacional explicita | `disabled`, `rollback_required`, `failed` | ainda depende de gates simultaneos |
+| `disabled` | bloqueio operacional explicito | `pending` | retorno seguro e deliberado para base |
+| `rollback_required` | inconsistência ou falha exigindo retorno controlado | `pending`, `disabled` | nao pode promover tenant routing |
+| `failed` | falha tecnica ou de consistencia | `pending`, `disabled` | so sai por reprocesso deliberado |
+
+## 4.2 Transicoes proibidas
+
+- `pending -> active`;
+- `provisioning -> active`;
+- `failed -> active`;
+- `rollback_required -> active`;
+- `disabled -> active`;
+- qualquer transicao induzida automaticamente por cache aquecido, preload, leitura passiva, request path ou bootstrap;
+- qualquer promocao para tenant routing sem gates simultaneos positivos.
+
 ## 5. Definicao de provisionar
 
 Provisionar significa:
@@ -104,6 +182,12 @@ Readiness nao significa:
 - bypass de `WD_MULTI_DB_REGISTRY_READ`;
 - bypass de handshake quando habilitado.
 
+Leitura consolidada:
+
+- `readiness.ready=true` apenas declara elegibilidade tecnica;
+- `readiness.ready=true` sem `activation.active=true` continua retornando `baseConnection`;
+- `readiness.ready=true` sem allowlist positiva continua retornando `baseConnection`.
+
 ## 7. Definicao de activation
 
 Activation significa:
@@ -123,6 +207,42 @@ Leitura operacional:
 
 - `activation.active=true` sem os demais gates continua insufficiente para promover tenant routing;
 - `activation.active=false` ou ausente continua significando fallback para `baseConnection`.
+
+## 7.1 Condicoes minimas antes de `activation.active=true`
+
+- entry existente e consistente para a unidade alvo;
+- `unidadeId` canonico e valido;
+- `dbName` e `databaseKey` definidos de forma deterministica;
+- escrita e leitura ocorrendo pela conexao base/global;
+- `routingMode=base` enquanto a unidade ainda nao foi deliberadamente promovida;
+- validacao tecnica concluida;
+- `readiness.ready=true` somente apos essa validacao;
+- status nao bloqueante para o corredor operacional;
+- allowlist preparada como gate externo e simultaneo;
+- ausencia de erro, duvida ou inconsistência no registro.
+
+## 7.2 Entrada e saida da allowlist
+
+Uma unidade so deve entrar na allowlist quando:
+
+- a entry estiver consistente;
+- a validacao tecnica minima tiver sido concluida;
+- `readiness.ready=true` ja puder ser sustentado;
+- ainda houver decisao operacional deliberada de preparar ativacao.
+
+Uma unidade deve sair da allowlist quando:
+
+- houver rollback;
+- houver falha ou inconsistência relevante;
+- `status` migrar para `disabled` ou `rollback_required`;
+- `activation.active` voltar para `false` por retorno seguro deliberado.
+
+Regra central:
+
+- allowlist participa da ativacao como gate externo e simultaneo;
+- allowlist nao substitui readiness;
+- allowlist nao substitui activation;
+- allowlist isolada nunca ativa tenant routing.
 
 ## 8. Papel do preload
 
@@ -154,6 +274,31 @@ Diretriz operacional:
 - preload nunca substitui allowlist;
 - provisionamento bem-sucedido nao ativa tenant automaticamente;
 - readiness validada nao ativa tenant automaticamente.
+
+Invariantes adicionais do contrato manual:
+
+- o runtime nunca inventa transicao de estado;
+- o preload nunca promove estado;
+- o request path nunca escreve nem ativa registry;
+- rollback nunca deve depender de remocao ambigua da entry;
+- o retorno seguro e representado por `routingMode=base`, `activation.active=false` e saida da allowlist;
+- `disabled` ou `rollback_required` sao a representacao preferencial de rollback.
+
+## 9.1 Rollback representado, nunca por remocao ambigua
+
+Rollback seguro deve ser representado por:
+
+- `status=disabled` ou `status=rollback_required`;
+- `routingMode=base`;
+- `activation.active=false`;
+- saida da allowlist;
+- manutencao da entry como metadado explicito e auditavel.
+
+Rollback nao deve ser representado por:
+
+- apagar a entry sem rastro semantico;
+- depender de cache frio para sugerir retorno seguro;
+- deixar status ou activation em estado ambiguo.
 
 ## 10. Riscos
 
@@ -187,6 +332,12 @@ Diretriz operacional:
 - wrappers amplos;
 - PostgreSQL;
 - `user_memberships`.
+
+Fora de escopo adicional desta rodada:
+
+- implementar o owner manual;
+- criar executor do owner manual;
+- interpretar este documento como autorizacao para runtime, preload, request path ou bootstrap assumirem papel operacional.
 
 ## 12. Primeiro microcorte seguro sugerido apos o documento
 
