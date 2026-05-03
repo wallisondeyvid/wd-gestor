@@ -667,7 +667,7 @@ test('resolveConnection com WD_MULTI_DB e registry passivo ligado retorna baseCo
   const originalUseDb = baseConnection.useDb;
 
   try {
-    for (const status of ['failed', 'rollback_required', 'disabled', 'ready']) {
+    for (const status of ['failed', 'rollback_required', 'disabled', 'ready', 'pending', 'provisioning']) {
       const useDbCalls = [];
       let pingCalls = 0;
 
