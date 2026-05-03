@@ -364,6 +364,11 @@ Checkpoint tenant enforcement atual:
 - Conteudo contratual consolidado nesta retomada documental: readiness.ready = elegibilidade tecnica; activation.active = autorizacao operacional explicita; allowlist = gate operacional externo e simultaneo; nenhum dos tres, isoladamente, ativa tenant routing.
 - Rollback consolidado nesta retomada documental: preferir `disabled` ou `rollback_required`, com `routingMode=base`, `activation.active=false` e saida da allowlist; remocao ambigua da entry continua proibida.
 - Limites preservados expressamente nesta retomada: nao houve alteracao de producao; nao houve alteracao de testes; nao houve implementacao do owner manual; nao houve abertura de script, rota, job, schema, model, seed ou bootstrap operacional.
+- Checkpoint documental curto de consolidacao pos-Fase E e pos-pausa formal do Gestor/Core residual registrado nesta rodada, sem abertura de patch funcional.
+- Diagnostico consolidado deste checkpoint: apos o fechamento local da Fase E como bloco tecnico pausado e da pausa formal do Gestor/Core residual como frente caracterizada, nao surgiu novo corredor tecnico pequeno e seguro na regua atual; Clinica segue sem corredor proprio pequeno e reabrir o modulo agora apenas duplicaria o eixo ja pausado de Gestor/Core.
+- Leitura consolidada de Condominios neste checkpoint: o modulo permanece congelado pelo snapshot hibrido V1/V2 e nao aparece novo eixo pequeno, local e seguro para continuidade imediata; GET /condominios/api/habitacoes/sugestoes fica apenas como candidato futuro condicionado, dependente de caller vivo confirmado no frontend, caracterizacao read-only propria e revalidacao sem reabrir V1/V2 amplamente nem tocar arquivos proibidos.
+- Regra consolidada para eventual sequencia tecnica: se houver nova frente tecnica, ela deve comecar por rodada read-only especifica desse endpoint de sugestoes, com criterio de parada duro; na ausencia dessa confirmacao previa, nao ha patch funcional indicado agora.
+- Regra operacional consolidada deste checkpoint: push continua suspenso ate fechamento de frente ampla; qualquer continuidade futura deve nascer sob novo enquadramento proprio e nao por reabertura automatica da Fase E, do Gestor/Core residual, de Clinica ou de Condominios.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
