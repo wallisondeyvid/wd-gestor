@@ -102,6 +102,66 @@ function buildRollbackRequiredEntry({ existingEntry, reason, updatedAt }) {
   };
 }
 
+function isActiveEntryCoherent(existingEntry, unidadeId) {
+  const entryUnidadeId = normalizeRequiredString(existingEntry?.unidadeId);
+  const dbName = normalizeRequiredString(existingEntry?.dbName);
+  const databaseKey = normalizeRequiredString(existingEntry?.databaseKey);
+  const status = normalizeRequiredString(existingEntry?.status);
+  const routingMode = normalizeRequiredString(existingEntry?.routingMode);
+
+  return (
+    entryUnidadeId === unidadeId &&
+    !!dbName &&
+    !!databaseKey &&
+    status === 'active' &&
+    routingMode === 'tenant' &&
+    existingEntry?.readiness?.ready === true &&
+    existingEntry?.activation?.active === true
+  );
+}
+
+function canActivateEntry(existingEntry, unidadeId) {
+  const entryUnidadeId = normalizeRequiredString(existingEntry?.unidadeId);
+  const dbName = normalizeRequiredString(existingEntry?.dbName);
+  const databaseKey = normalizeRequiredString(existingEntry?.databaseKey);
+  const status = normalizeRequiredString(existingEntry?.status);
+  const routingMode = normalizeRequiredString(existingEntry?.routingMode);
+
+  if (entryUnidadeId !== unidadeId || !dbName || !databaseKey) {
+    return false;
+  }
+
+  if (status === 'ready') {
+    return (
+      routingMode === 'base' &&
+      existingEntry?.readiness?.ready === true &&
+      existingEntry?.activation?.active === false
+    );
+  }
+
+  return isActiveEntryCoherent(existingEntry, unidadeId);
+}
+
+function buildActiveEntry({ existingEntry, unidadeId, updatedAt }) {
+  const activatedAt = existingEntry?.activation?.activatedAt instanceof Date
+    ? existingEntry.activation.activatedAt
+    : updatedAt;
+
+  return {
+    unidadeId,
+    dbName: normalizeRequiredString(existingEntry?.dbName),
+    databaseKey: normalizeRequiredString(existingEntry?.databaseKey),
+    status: 'active',
+    routingMode: 'tenant',
+    readiness: existingEntry.readiness,
+    activation: {
+      active: true,
+      activatedAt,
+    },
+    updatedAt,
+  };
+}
+
 export async function registerUnitDatabaseRegistryPending(input = {}) {
   const unidadeId = normalizeRequiredString(input?.unidadeId);
   const dbName = normalizeRequiredString(input?.dbName);
@@ -320,6 +380,74 @@ export async function markUnitDatabaseRegistryRollbackRequired(input = {}) {
     throw createWriterError(
       'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
       'Failed to persist rollback_required unit database registry entry.',
+      error
+    );
+  }
+
+  return entry;
+}
+
+export async function activateUnitDatabaseRegistry(input = {}) {
+  const unidadeId = normalizeRequiredString(input?.unidadeId);
+
+  if (!unidadeId) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_INVALID_INPUT',
+      'unidadeId is required.'
+    );
+  }
+
+  const baseConnection = getConnectionForUnit(null);
+  const collection = getRegistryCollection(baseConnection);
+
+  let existingEntry;
+  try {
+    existingEntry = await collection.findOne({ unidadeId });
+  } catch (error) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
+      'Failed to read unit database registry entry before active transition.',
+      error
+    );
+  }
+
+  if (!existingEntry) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_ENTRY_NOT_FOUND',
+      'Unit database registry entry was not found.'
+    );
+  }
+
+  if (!canActivateEntry(existingEntry, unidadeId)) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION',
+      'Unit database registry entry cannot transition to active.'
+    );
+  }
+
+  const updatedAt = new Date();
+  const entry = buildActiveEntry({
+    existingEntry,
+    unidadeId,
+    updatedAt,
+  });
+
+  try {
+    await collection.updateOne(
+      { unidadeId },
+      {
+        $set: entry,
+        $unset: {
+          lastError: '',
+          'activation.deactivatedAt': '',
+        },
+      },
+      { upsert: false }
+    );
+  } catch (error) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
+      'Failed to persist active unit database registry entry.',
       error
     );
   }

@@ -1154,11 +1154,543 @@ test('markUnitDatabaseRegistryRollbackRequired lança erro específico quando a 
   }
 });
 
+test('activateUnitDatabaseRegistry promove ready para active com tenant explícito', async () => {
+  const originalDb = mongoose.connection.db;
+  const collectionCalls = [];
+  const findOneCalls = [];
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    collectionCalls,
+    findOneImpl(filter) {
+      findOneCalls.push(filter);
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: true, reason: 'technical-check-ok' },
+        activation: { active: false },
+        lastError: 'stale-error',
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true, matchedCount: 1, modifiedCount: 1, upsertedCount: 0 };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    const result = await activateUnitDatabaseRegistry({
+      unidadeId: '000000000000000000000010',
+    });
+
+    assert.deepEqual(collectionCalls, ['unit_database_registry']);
+    assert.deepEqual(findOneCalls, [{ unidadeId: '000000000000000000000010' }]);
+    assert.equal(updateOneCalls.length, 1);
+    assert.deepEqual(updateOneCalls[0].filter, {
+      unidadeId: '000000000000000000000010',
+    });
+    assert.deepEqual(updateOneCalls[0].options, {
+      upsert: false,
+    });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.unidadeId, '000000000000000000000010');
+    assert.equal(persistedEntry.dbName, 'wdgestor_unit_000000000000000000000010');
+    assert.equal(persistedEntry.databaseKey, 'wdgestor_unit_000000000000000000000010');
+    assert.equal(persistedEntry.status, 'active');
+    assert.equal(persistedEntry.routingMode, 'tenant');
+    assert.deepEqual(persistedEntry.readiness, {
+      ready: true,
+      reason: 'technical-check-ok',
+    });
+    assert.equal(persistedEntry.activation.active, true);
+    assert.ok(persistedEntry.activation.activatedAt instanceof Date);
+    assert.ok(persistedEntry.updatedAt instanceof Date);
+    assert.deepEqual(updateOneCalls[0].update.$unset, {
+      lastError: '',
+      'activation.deactivatedAt': '',
+    });
+    assert.deepEqual(result, persistedEntry);
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry é idempotente seguro para active coerente e preserva activatedAt existente', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+  const activatedAt = new Date('2026-05-03T12:00:00.000Z');
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'active',
+        routingMode: 'tenant',
+        readiness: { ready: true },
+        activation: {
+          active: true,
+          activatedAt,
+        },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true, matchedCount: 1, modifiedCount: 1, upsertedCount: 0 };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    const result = await activateUnitDatabaseRegistry({
+      unidadeId: '000000000000000000000010',
+    });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.status, 'active');
+    assert.equal(persistedEntry.routingMode, 'tenant');
+    assert.equal(persistedEntry.activation.active, true);
+    assert.strictEqual(persistedEntry.activation.activatedAt, activatedAt);
+    assert.ok(persistedEntry.updatedAt instanceof Date);
+    assert.deepEqual(result, persistedEntry);
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry exige unidadeId', async () => {
+  const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+  await assert.rejects(
+    () => activateUnitDatabaseRegistry({ unidadeId: '' }),
+    (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_INPUT'
+  );
+});
+
+test('activateUnitDatabaseRegistry falha se entry não existe', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({});
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_ENTRY_NOT_FOUND'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry falha se dbName está ausente', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: '',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: true },
+        activation: { active: false },
+      };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry falha se databaseKey está ausente', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: '',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: true },
+        activation: { active: false },
+      };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry falha se readiness.ready não é true', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: false },
+        activation: { active: false },
+      };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry falha se status atual é pending, provisioning, failed, disabled ou rollback_required', async () => {
+  const disallowedStatuses = ['pending', 'provisioning', 'failed', 'disabled', 'rollback_required'];
+
+  for (const status of disallowedStatuses) {
+    const originalDb = mongoose.connection.db;
+    mongoose.connection.db = createCollectionDouble({
+      findOneImpl() {
+        return {
+          unidadeId: '000000000000000000000010',
+          dbName: 'wdgestor_unit_000000000000000000000010',
+          databaseKey: 'wdgestor_unit_000000000000000000000010',
+          status,
+          routingMode: 'base',
+          readiness: { ready: true },
+          activation: { active: false },
+        };
+      },
+    });
+
+    try {
+      const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+      await assert.rejects(
+        () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+        (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION'
+      );
+    } finally {
+      mongoose.connection.db = originalDb;
+    }
+  }
+});
+
+test('activateUnitDatabaseRegistry falha se ready está com routingMode diferente de base', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'tenant',
+        readiness: { ready: true },
+        activation: { active: false },
+      };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry falha se ready está com activation.active=true', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: true },
+        activation: { active: true },
+      };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry falha se active está incoerente', async () => {
+  const originalDb = mongoose.connection.db;
+  const invalidActiveEntries = [
+    {
+      unidadeId: '000000000000000000000010',
+      dbName: 'wdgestor_unit_000000000000000000000010',
+      databaseKey: 'wdgestor_unit_000000000000000000000010',
+      status: 'active',
+      routingMode: 'base',
+      readiness: { ready: true },
+      activation: { active: true },
+    },
+    {
+      unidadeId: '000000000000000000000010',
+      dbName: 'wdgestor_unit_000000000000000000000010',
+      databaseKey: 'wdgestor_unit_000000000000000000000010',
+      status: 'active',
+      routingMode: 'tenant',
+      readiness: { ready: false },
+      activation: { active: true },
+    },
+    {
+      unidadeId: '000000000000000000000010',
+      dbName: 'wdgestor_unit_000000000000000000000010',
+      databaseKey: 'wdgestor_unit_000000000000000000000010',
+      status: 'active',
+      routingMode: 'tenant',
+      readiness: { ready: true },
+      activation: { active: false },
+    },
+  ];
+
+  try {
+    for (const entry of invalidActiveEntries) {
+      mongoose.connection.db = createCollectionDouble({
+        findOneImpl() {
+          return entry;
+        },
+      });
+
+      const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+      await assert.rejects(
+        () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+        (error) => error?.code === 'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION'
+      );
+    }
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry preserva unidadeId, dbName, databaseKey e readiness', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: true, reason: 'previous-check' },
+        activation: { active: false },
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal(persistedEntry.unidadeId, '000000000000000000000010');
+    assert.equal(persistedEntry.dbName, 'wdgestor_unit_000000000000000000000010');
+    assert.equal(persistedEntry.databaseKey, 'wdgestor_unit_000000000000000000000010');
+    assert.deepEqual(persistedEntry.readiness, {
+      ready: true,
+      reason: 'previous-check',
+    });
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry não grava allowlist e não preserva lastError nem activation.deactivatedAt no sucesso', async () => {
+  const originalDb = mongoose.connection.db;
+  const updateOneCalls = [];
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: true },
+        activation: {
+          active: false,
+          deactivatedAt: new Date('2026-05-03T10:00:00.000Z'),
+        },
+        lastError: 'old-error',
+      };
+    },
+    updateOneImpl(filter, update, options) {
+      updateOneCalls.push({ filter, update, options });
+      return { acknowledged: true };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' });
+
+    const persistedEntry = updateOneCalls[0].update.$set;
+    assert.equal('allowlist' in persistedEntry, false);
+    assert.equal('allowlisted' in persistedEntry.activation, false);
+    assert.equal('lastError' in persistedEntry, false);
+    assert.equal('deactivatedAt' in persistedEntry.activation, false);
+    assert.deepEqual(updateOneCalls[0].update.$unset, {
+      lastError: '',
+      'activation.deactivatedAt': '',
+    });
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry não chama handshake, useDb nem abre tenant diretamente', async () => {
+  const originalDb = mongoose.connection.db;
+  const originalUseDb = mongoose.connection.useDb;
+  const useDbCalls = [];
+
+  mongoose.connection.useDb = (...args) => {
+    useDbCalls.push(args);
+    return { name: 'tenantConn' };
+  };
+
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: true },
+        activation: { active: false },
+      };
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' });
+
+    assert.equal(useDbCalls.length, 0);
+  } finally {
+    mongoose.connection.db = originalDb;
+    mongoose.connection.useDb = originalUseDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry lança erro específico quando conexão base/global está indisponível', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = null;
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_BASE_CONNECTION_UNAVAILABLE'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
+test('activateUnitDatabaseRegistry lança erro específico quando a persistência falha', async () => {
+  const originalDb = mongoose.connection.db;
+  mongoose.connection.db = createCollectionDouble({
+    findOneImpl() {
+      return {
+        unidadeId: '000000000000000000000010',
+        dbName: 'wdgestor_unit_000000000000000000000010',
+        databaseKey: 'wdgestor_unit_000000000000000000000010',
+        status: 'ready',
+        routingMode: 'base',
+        readiness: { ready: true },
+        activation: { active: false },
+      };
+    },
+    updateOneImpl() {
+      throw new Error('UPDATE_ONE_FAILED');
+    },
+  });
+
+  try {
+    const { activateUnitDatabaseRegistry } = await loadWriterModuleFresh();
+
+    await assert.rejects(
+      () => activateUnitDatabaseRegistry({ unidadeId: '000000000000000000000010' }),
+      (error) => error?.code === 'UNIT_DATABASE_REGISTRY_PERSIST_FAILED'
+    );
+  } finally {
+    mongoose.connection.db = originalDb;
+  }
+});
+
 test('unitDatabaseRegistryWriter não importa nem chama resolveConnection', () => {
   const source = fs.readFileSync(writerSourceFilePath, 'utf8');
 
   assert.doesNotMatch(source, /#shared\/db\/resolveConnection\.js/);
   assert.doesNotMatch(source, /\bresolveConnection\s*\(/);
+  assert.doesNotMatch(source, /\.useDb\s*\(/);
+  assert.doesNotMatch(source, /#shared\/db\/userdbHandshake\.js/);
+  assert.doesNotMatch(source, /\buserDbHandshake\s*\(/);
 });
 
 test('unitDatabaseRegistryWriter não importa nem chama unitDatabaseRegistryPreload', () => {
