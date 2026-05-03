@@ -48,6 +48,15 @@ O owner manual nao pode nascer de:
 - a transicao `ready -> active` fica consolidada como promocao apenas de entry coerente, exigindo `dbName`, `databaseKey`, `readiness.ready=true`, `routingMode=base` e `activation.active=false`, com idempotencia admitida somente para `active` ja coerente;
 - o proximo passo desta trilha, se houver continuidade, nao e runtime: e escolher ou definir um entrypoint operacional/manual explicito e seguro para esse owner; sem esse enquadramento, o bloco tecnico pode permanecer encerrado por aqui.
 
+## 1.4 Pausa formal do bloco tecnico
+
+- a Fase E fica pausada formalmente neste ponto como bloco tecnico concluido;
+- o writer manual existe, mas nao ha owner operacional/manual nem entrypoint implementado para chama-lo agora;
+- nao deve nascer neste momento rota, CLI, job, bootstrap, request path ou qualquer caller oportunista para esse writer;
+- allowlist permanece gate externo separado;
+- runtime, reader/cache e preload permanecem passivos;
+- qualquer continuidade futura deve abrir uma subfase propria, primeiro documental, para decidir explicitamente se existe necessidade real de um entrypoint operacional/manual e qual seria o menor formato seguro.
+
 ## 2. Fluxo operacional canonico
 
 Fluxo minimo recomendado para a unidade:
