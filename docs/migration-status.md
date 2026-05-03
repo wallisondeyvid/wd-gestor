@@ -397,6 +397,9 @@ Checkpoint tenant enforcement atual:
 - Checkpoint documental curto de planejamento operacional da Fase F consolidado nesta rodada, sem abertura de implementacao real.
 - Documento canonico deste checkpoint: [tenant-phase-f-controlled-activation-plan.md](tenant-phase-f-controlled-activation-plan.md).
 - Decisao consolidada deste checkpoint: a Fase F passa a ter ritual operacional seguro documentado para futura ativacao controlada por unidade, mantendo owner manual como funcao interna deliberada futura, proibindo rota, request path, bootstrap, preload automatico, job, CLI inicial e script solto como primeiros owners, e preservando piloto nao produtivo, rollback minimo explicito e baseline completa como pre-condicoes de qualquer entrypoint futuro.
+- Checkpoint documental curto de rollback operacional caracterizado da Fase F consolidado nesta rodada, sem abertura de ativacao real.
+- Decisao consolidada deste checkpoint: o rollback operacional da Fase F passa a ficar caracterizado por contrato na propria cadeia unitDatabaseRegistryWriter -> registry em memoria -> reader/cache -> resolveConnection, e nao por execucao contra unidade real; unidade active coerente abre tenant connection e a mesma unidade volta para baseConnection por remocao da allowlist, por disabled via writer, por rollback_required via writer, por routingMode=base e por activation.active=false, preservando a entry e o fail-safe com WD_MULTI_DB e WD_MULTI_DB_REGISTRY_READ ligados.
+- Escopo operacional preservado neste checkpoint: ativacao real continua fechada; owner manual e entrypoint operacional continuam futuros; nao houve patch funcional, nao houve rota, CLI, script, job ou piloto real; push permanece suspenso e os microcortes da Fase F continuam acumulando localmente ate o fechamento global da fase ou autorizacao explicita.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

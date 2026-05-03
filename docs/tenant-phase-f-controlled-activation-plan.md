@@ -159,3 +159,12 @@ Leitura operacional:
 - Fase E permanece como base passiva e tecnica do registry;
 - Gestor/Core residual, Condominios amplo, Clinica e PostgreSQL permanecem fora;
 - qualquer proximo passo tecnico deve continuar pequeno, controlado e reversivel.
+
+## 12. Checkpoint de contrato ja realizado
+
+- o rollback operacional da Fase F ja foi caracterizado por contrato, sem ativacao real e sem uso de unidade real;
+- a cadeia caracterizada permanece `unitDatabaseRegistryWriter -> registry em memoria -> reader/cache -> resolveConnection`;
+- a mesma unidade active coerente volta para `baseConnection` quando perde allowlist, quando volta para `disabled`, quando volta para `rollback_required`, quando volta para `routingMode=base` e quando perde `activation.active`;
+- o rollback via writer preserva a entry e nao apaga o registro como primeira acao;
+- o corredor permaneceu fail-safe com `WD_MULTI_DB` e `WD_MULTI_DB_REGISTRY_READ` ligados;
+- esse checkpoint nao abre ativacao real, nao cria owner manual, nao cria entrypoint e nao altera a regra de acumulacao local dos microcortes da Fase F ate fechamento global ou autorizacao explicita.
