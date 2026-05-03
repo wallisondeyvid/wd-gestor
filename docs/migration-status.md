@@ -13,6 +13,12 @@ Notas:
  Preservacao de escopo neste checkpoint: nenhuma alteracao funcional, nenhum teste alterado, nenhuma flag ativada e nenhum patch tecnico imediato aberto.
  Criterios objetivos para retomada: decisao funcional explicita para uma familia hoje bloqueada, como relacionados V2; novo call site read-only, pequeno, vivo, testado e sem acoplamento amplo; ou autorizacao explicita para mudanca arquitetural maior acima do nivel de microcorte.
  Recomendacao operacional: preservar a baseline verde, manter a implementacao pausada e abrir a Fase C primeiro como checkpoint de planejamento canonico de auth-context.
+ Checkpoint documental curto da rodada read-only pos-restricoes no WD Gestor: a triagem foi concluida sem novo candidato pequeno, seguro e testavel aprovado na regua atual, sem patch funcional, sem alteracao de producao, sem alteracao de testes e sem qualquer reabertura tecnica nesta rodada.
+ Baseline executiva de referencia desta rodada: npm test com 2174 tests, 2172 pass, 0 fail e 2 skipped; branch sincronizada com origin e worktree limpa antes do checkpoint documental.
+ Quase-candidatos avaliados e rejeitados nesta rodada: GET /api/comunicados ficou fora por ser lista central de dominio, com caller vivo, Portal, paginacao e status calculado; GET /api/enquetes ficou fora por ser lista central conectada a Portal, detalhes, votar, finalizar e PDF; pagina /gestor/usuarios ficou fora por ser pagina administrativa hibrida, com bundle semantico amplo de usuarios, unidades e funcionarios; GET /api/debug/whoami ficou fora por baixo valor operacional e por encostar no residual Gestor/Core ja pausado.
+ Decisao operacional consolidada desta rodada: manter pausa tecnica e nao forcar novo microcorte por oportunidade local aparente.
+ Condicao explicita para qualquer retomada tecnica apos esta rodada: so reabrir a trilha se surgir novo caller read-only pequeno e vivo com corredor inequivoco, ou decisao funcional explicita para uma familia hoje ampla, ou nova fase formal deliberada acima da regua atual.
+ Preservacao de escopo e publicacao desta rodada: nenhum patch funcional foi aplicado; nenhum teste foi criado; nenhum corredor proibido foi reaberto; push permanece suspenso ate decisao posterior.
 
 ## Portal Morador
 Status: MIGRADO
