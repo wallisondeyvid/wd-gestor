@@ -27,6 +27,14 @@ Esta subfase nao deve, por ora:
 - abrir PostgreSQL;
 - tocar dominio, `api.db.js`, `auth.db.js`, wrappers ou `user_memberships`.
 
+Checkpoint curto adicional do bloco tecnico do writer manual:
+
+- o bloco tecnico do writer manual do registry multi-db foi concluido em paralelo a esta trilha de persistencia passiva, permanecendo contido em `shared/db` e operando apenas pela conexao base/global;
+- esse writer escreve e atualiza a mesma collection `unit_database_registry`, mas continua separado do runtime de leitura passiva, separado de `resolveConnection.js` e sem papel de owner operacional/manual;
+- o writer nao chama preload, nao chama `resolveConnection`, nao chama `resolveModel` nem `modelRegistry`, nao abre conexao tenant diretamente, nao testa handshake tenant e nao mexe em allowlist;
+- as transicoes tecnicas materializadas nesse bloco ficam restritas a `pending`, `ready`, `disabled`, `rollback_required` e `active`, sem liberar rollout por si so;
+- por isso, o proximo passo desta frente nao e ampliar runtime nem misturar leitura e escrita: e decidir separadamente se existira um entrypoint operacional/manual explicito e seguro para acionar esse writer, ou manter a Fase E pausada com o bloco tecnico encerrado.
+
 ## 3. Onde o registry deve viver inicialmente
 
 O registry persistido deve viver inicialmente no Mongo global/base atual.

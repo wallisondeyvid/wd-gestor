@@ -36,6 +36,18 @@ O owner manual nao pode nascer de:
 - job;
 - admin interno oportunista.
 
+## 1.3 Checkpoint do bloco tecnico do writer manual
+
+- o bloco tecnico do writer manual do registry multi-db fica concluido neste checkpoint como seam tecnico de escrita e transicao sob shared/db;
+- esse writer opera somente pela conexao base/global e escreve apenas na collection `unit_database_registry`;
+- esse writer nao e owner operacional/manual, nao e rota, nao e CLI, nao e job, nao e bootstrap e nao e request path;
+- esse writer nao chama preload, nao chama `resolveConnection`, nao chama `resolveModel` nem `modelRegistry`, nao abre conexao tenant diretamente, nao testa handshake tenant e nao mexe em allowlist;
+- allowlist permanece como gate operacional externo e simultaneo, e o writer nao substitui esse gate;
+- o writer tambem nao faz rollout e nao faz provisionamento fisico do database da unidade;
+- o escopo do writer fica restrito a materializar transicoes manuais explicitas do registry: `pending`, `ready`, `disabled`, `rollback_required` e `active`;
+- a transicao `ready -> active` fica consolidada como promocao apenas de entry coerente, exigindo `dbName`, `databaseKey`, `readiness.ready=true`, `routingMode=base` e `activation.active=false`, com idempotencia admitida somente para `active` ja coerente;
+- o proximo passo desta trilha, se houver continuidade, nao e runtime: e escolher ou definir um entrypoint operacional/manual explicito e seguro para esse owner; sem esse enquadramento, o bloco tecnico pode permanecer encerrado por aqui.
+
 ## 2. Fluxo operacional canonico
 
 Fluxo minimo recomendado para a unidade:
@@ -55,6 +67,11 @@ Leitura operacional obrigatoria:
 - readiness validada nao libera tenant routing por si so;
 - ativacao explicita ainda nao substitui os gates globais existentes;
 - preload nao e parte obrigatoria do fluxo minimo.
+
+Checkpoint curto do fluxo tecnico ja publicado:
+
+- o writer manual ja consegue registrar `pending`, promover para `ready`, forcar `disabled`, marcar `rollback_required` e promover `ready` coerente para `active`;
+- esse bloco continua puramente tecnico e nao introduz chamador humano/operacional nesta rodada.
 
 ## 2.1 Entry minima obrigatoria
 

@@ -28,6 +28,14 @@ Nota curta da proxima subfase:
 - a proposta document-first para persistencia e leitura real passiva do registry multi-db fica registrada em [tenant-phase-e-registry-persistence-plan.md](tenant-phase-e-registry-persistence-plan.md);
 - o desenho proposto mantem Mongo global/base como ponto inicial de persistencia, mantem `WD_MULTI_DB_REGISTRY_READ` como gate de leitura e preserva `baseConnection` como fallback obrigatorio em qualquer erro ou duvida.
 
+Nota curta adicional do bloco tecnico do writer manual:
+
+- o bloco tecnico do writer manual do registry multi-db fica concluido e publicado ate `6a83408 feat(tenant): adiciona writer activate do registry`;
+- esse bloco introduz apenas o seam tecnico de escrita e transicao em `shared/db`, sem criar owner operacional/manual, sem criar rota, CLI, job, bootstrap ou request path;
+- as transicoes tecnicas agora materializadas ficam limitadas a `pending`, `ready`, `disabled`, `rollback_required` e `active`, sempre pela conexao base/global e pela collection `unit_database_registry`;
+- o writer nao substitui allowlist, nao faz rollout, nao faz provisionamento fisico, nao chama preload, nao chama `resolveConnection` e nao abre tenant db diretamente;
+- com isso, o proximo passo da Fase E, se houver continuidade, deixa de ser ampliar runtime e passa a ser decidir se existira um entrypoint operacional/manual explicito e seguro para esse owner; sem isso, a fase pode permanecer pausada com o bloco tecnico do writer encerrado.
+
 
 ## 2. Base tecnica ja existente
 
@@ -46,6 +54,11 @@ Leitura executiva da base atual:
 
 - a infraestrutura tenant-aware ja existe e nao precisa ser reaberta dominio por dominio para a proxima fase;
 - o que falta e o contrato operacional explicito entre unidade e database dedicado.
+
+Leitura executiva adicional apos o bloco do writer:
+
+- o contrato tecnico minimo de escrita do registry ja existe e foi fechado sem tocar no runtime comum;
+- o gap remanescente da Fase E deixa de ser a escrita do registry e passa a ser a definicao do owner/entrypoint operacional explicito, se a trilha continuar.
 
 ## 3. Gap atual
 
