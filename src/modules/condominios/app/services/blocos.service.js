@@ -35,15 +35,29 @@ function assertBlocosListDbAvailable({ mongoose }) {
 async function buildBlocosListFilter({ req, unidade, listarUnidadesParaUsuario }) {
   let filter = { ativo: { $ne: false } };
 
+  const ctxUser = req.user || (req.session && req.session.user) || null;
+  const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+
   if (unidade) {
+    if (!isAdmin) {
+      try {
+        const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+        const unitIds = (unidadesOptions || []).map((u) => String(u._id));
+        if (!unitIds.includes(String(unidade))) {
+          filter._id = { $exists: false };
+          return filter;
+        }
+      } catch (_e) {
+        filter._id = { $exists: false };
+        return filter;
+      }
+    }
     filter.unidade_id = unidade;
     return filter;
   }
 
   try {
-    const ctxUser = req.user || (req.session && req.session.user) || null;
     const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
-    const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
     if (!isAdmin) {
       const unitIds = (unidadesOptions || []).map(u => u._id);
       if (!unitIds.length) {
