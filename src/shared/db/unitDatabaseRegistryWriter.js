@@ -86,6 +86,22 @@ function buildDisabledEntry({ existingEntry, reason, updatedAt, deactivatedAt })
   };
 }
 
+function buildRollbackRequiredEntry({ existingEntry, reason, updatedAt }) {
+  return {
+    unidadeId: existingEntry.unidadeId,
+    dbName: existingEntry.dbName,
+    databaseKey: existingEntry.databaseKey,
+    status: 'rollback_required',
+    routingMode: 'base',
+    activation: {
+      active: false,
+    },
+    ...(existingEntry?.readiness ? { readiness: existingEntry.readiness } : {}),
+    ...(reason ? { lastError: reason } : {}),
+    updatedAt,
+  };
+}
+
 export async function registerUnitDatabaseRegistryPending(input = {}) {
   const unidadeId = normalizeRequiredString(input?.unidadeId);
   const dbName = normalizeRequiredString(input?.dbName);
@@ -248,6 +264,62 @@ export async function disableUnitDatabaseRegistry(input = {}) {
     throw createWriterError(
       'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
       'Failed to persist disabled unit database registry entry.',
+      error
+    );
+  }
+
+  return entry;
+}
+
+export async function markUnitDatabaseRegistryRollbackRequired(input = {}) {
+  const unidadeId = normalizeRequiredString(input?.unidadeId);
+  const reason = normalizeRequiredString(input?.reason);
+
+  if (!unidadeId) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_INVALID_INPUT',
+      'unidadeId is required.'
+    );
+  }
+
+  const baseConnection = getConnectionForUnit(null);
+  const collection = getRegistryCollection(baseConnection);
+
+  let existingEntry;
+  try {
+    existingEntry = await collection.findOne({ unidadeId });
+  } catch (error) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
+      'Failed to read unit database registry entry before rollback_required transition.',
+      error
+    );
+  }
+
+  if (!existingEntry) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_ENTRY_NOT_FOUND',
+      'Unit database registry entry was not found.'
+    );
+  }
+
+  const updatedAt = new Date();
+  const entry = buildRollbackRequiredEntry({
+    existingEntry,
+    reason,
+    updatedAt,
+  });
+
+  try {
+    await collection.updateOne(
+      { unidadeId },
+      { $set: entry },
+      { upsert: false }
+    );
+  } catch (error) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
+      'Failed to persist rollback_required unit database registry entry.',
       error
     );
   }
