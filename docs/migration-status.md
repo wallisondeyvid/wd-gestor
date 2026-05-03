@@ -51,6 +51,10 @@ Status: MIGRADO (auditado)
 Risco: baixo
 Testes: clinica.public-contract + watchdog OK
 Notas: contrato de rotas congelado (clinica-route-contract.md)
+ Checkpoint documental curto de pausa da triagem read-only em Clinica: a frente foi triada e fica pausada de forma deliberada; o modulo segue hoje como wrapper fino e estavel, sem corredor tenant-aware proprio pequeno, local e com risco plausivel que justifique caracterizacao runtime nova.
+ Resultado consolidado da triagem de Clinica: a superficie local do modulo permanece essencialmente restrita a GET /clinica e GET /clinica/dashboard, enquanto o consumo de API vivo observado vem do perfil compartilhado em GET /clinica/api/usuario, GET /clinica/api/modulos e GET /clinica/api/usuario/foto, todos herdados do router compartilhado e nao de handlers clinicos proprios.
+ Regra consolidada apos esta pausa: reabrir Clinica agora apenas duplicaria o eixo ja pausado de Gestor/Core; nao ha leitura contextual por unidade propria do dominio, nao ha requireUnitScope local, nao ha handlers proprios para empresas, pacientes, profissionais, planos ou procedimentos, e nao ha patch de producao nem teste runtime novo recomendado neste momento.
+ Condicao explicita para eventual reabertura: Clinica so deve ser reavaliada quando surgirem callers reais ou handlers proprios de empresas, pacientes, profissionais, planos, procedimentos ou outro cadastro clinico contextual por unidade.
 
 ## Gestor
 Status: HIBRIDO CONTROLADO (wrapper validado + infra tenant-aware existente)
