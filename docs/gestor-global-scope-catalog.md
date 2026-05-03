@@ -77,7 +77,7 @@ O foco não é a implementação, mas a semântica operacional correta de cada c
 | pode usar `req.session.user`? | apenas como projeção derivada de sessão global |
 | destino futuro | permanecer como global legítimo, sem desbloquear writes contextuais sem unidade ativa |
 | risco | médio se escapar do escopo de consulta |
-| testes ou checkpoints próximos | `docs/checkpoints/gestor-auth-context-get-runtime-contract.md`; `docs/checkpoints/gestor-api-unidades-cluster-runtime-contract.md`; `docs/migration-status.md` |
+| testes ou checkpoints próximos | `docs/checkpoints/gestor-auth-context-get-runtime-contract.md`; `docs/checkpoints/gestor-api-unidades-cluster-runtime-contract.md`; `tests/gestor-api-wrapper-structural.test.js`; `tests/gestor-pages-router-wrapper-structural.test.js`; `docs/migration-status.md` |
 
 ### 4. Módulos
 

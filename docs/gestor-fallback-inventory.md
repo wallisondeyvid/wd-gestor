@@ -153,7 +153,7 @@ Registrar, por categoria, os principais fallbacks do Gestor e responder para cad
 | classificação | manter temporariamente; documentar; substituir por auth-context; substituir por req.unitScope |
 | risco | médio; páginas antigas tendem a esconder fallback concorrente por sessão e a misturar catálogo global com operação contextual. |
 | destino futuro | Fechar pages em modo context-first, com cluster permitido e unidade efetiva resolvidos de forma canônica, deixando a compatibilidade apenas na projeção mínima necessária. |
-| testes e checkpoints próximos | `docs/migration-status.md`; `docs/checkpoints/gestor-tenant-enforcement-usuarios-administrativos-decima-quinta-fatia-macro.md`; `docs/checkpoints/gestor-api-unidades-cluster-runtime-contract.md`; suites focais de pages já citadas em `docs/migration-status.md` |
+| testes e checkpoints próximos | `docs/migration-status.md`; `docs/checkpoints/gestor-tenant-enforcement-usuarios-administrativos-decima-quinta-fatia-macro.md`; `docs/checkpoints/gestor-api-unidades-cluster-runtime-contract.md`; `tests/gestor-pages-router-wrapper-structural.test.js`; `tests/gestor-api-wrapper-structural.test.js`; suites focais de pages já citadas em `docs/migration-status.md` |
 
 ### 12. compat de bridge/facades
 
