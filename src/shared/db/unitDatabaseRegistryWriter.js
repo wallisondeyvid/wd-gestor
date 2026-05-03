@@ -45,6 +45,30 @@ function buildPendingEntry({ unidadeId, dbName, databaseKey, updatedAt }) {
   };
 }
 
+function buildReadyEntry({ existingEntry, reason, updatedAt }) {
+  const readiness = {
+    ready: true,
+    ...(reason ? { reason } : {}),
+  };
+
+  return {
+    unidadeId: existingEntry.unidadeId,
+    dbName: existingEntry.dbName,
+    databaseKey: existingEntry.databaseKey,
+    status: 'ready',
+    routingMode: 'base',
+    readiness,
+    activation: {
+      active: false,
+    },
+    updatedAt,
+  };
+}
+
+function isReadyTransitionAllowed(status) {
+  return status === 'pending' || status === 'provisioning';
+}
+
 export async function registerUnitDatabaseRegistryPending(input = {}) {
   const unidadeId = normalizeRequiredString(input?.unidadeId);
   const dbName = normalizeRequiredString(input?.dbName);
@@ -78,6 +102,77 @@ export async function registerUnitDatabaseRegistryPending(input = {}) {
     throw createWriterError(
       'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
       'Failed to persist pending unit database registry entry.',
+      error
+    );
+  }
+
+  return entry;
+}
+
+export async function markUnitDatabaseRegistryReady(input = {}) {
+  const unidadeId = normalizeRequiredString(input?.unidadeId);
+  const reason = normalizeRequiredString(input?.reason);
+
+  if (!unidadeId) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_INVALID_INPUT',
+      'unidadeId is required.'
+    );
+  }
+
+  const baseConnection = getConnectionForUnit(null);
+  const collection = getRegistryCollection(baseConnection);
+
+  let existingEntry;
+  try {
+    existingEntry = await collection.findOne({ unidadeId });
+  } catch (error) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
+      'Failed to read unit database registry entry before ready transition.',
+      error
+    );
+  }
+
+  if (!existingEntry) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_ENTRY_NOT_FOUND',
+      'Unit database registry entry was not found.'
+    );
+  }
+
+  const dbName = normalizeRequiredString(existingEntry?.dbName);
+  const databaseKey = normalizeRequiredString(existingEntry?.databaseKey);
+  const status = normalizeRequiredString(existingEntry?.status);
+
+  if (!dbName || !databaseKey || !isReadyTransitionAllowed(status)) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_INVALID_TRANSITION',
+      'Unit database registry entry cannot transition to ready.'
+    );
+  }
+
+  const updatedAt = new Date();
+  const entry = buildReadyEntry({
+    existingEntry: {
+      unidadeId,
+      dbName,
+      databaseKey,
+    },
+    reason,
+    updatedAt,
+  });
+
+  try {
+    await collection.updateOne(
+      { unidadeId },
+      { $set: entry },
+      { upsert: false }
+    );
+  } catch (error) {
+    throw createWriterError(
+      'UNIT_DATABASE_REGISTRY_PERSIST_FAILED',
+      'Failed to persist ready unit database registry entry.',
       error
     );
   }
