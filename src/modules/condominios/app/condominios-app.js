@@ -12824,8 +12824,22 @@ app.get('/api/habitacoes/busca', async (req, res) => {
   try{
     const filtro = {};
     // Escopo por usuário quando nenhuma unidade é informada
-    if(unidade) filtro.unidade_id = unidade;
-    else {
+    if(unidade) {
+      const ctxUser = req.user || (req.session && req.session.user) || null;
+      const isAdmin = ctxUser && (ctxUser.isMaster || ctxUser.role === 'master' || ctxUser.role === 'admin');
+      if (!isAdmin) {
+        try {
+          const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
+          const unitIds = (unidadesOptions || []).map(u => String(u._id));
+          if (!unitIds.includes(String(unidade))) {
+            return res.json([]);
+          }
+        } catch(_e) {
+          return res.json([]);
+        }
+      }
+      filtro.unidade_id = unidade;
+    } else {
       try {
         const ctxUser = req.user || (req.session && req.session.user) || null;
         const unidadesOptions = await listarUnidadesParaUsuario(ctxUser);
