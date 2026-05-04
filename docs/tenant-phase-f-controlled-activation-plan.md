@@ -168,3 +168,10 @@ Leitura operacional:
 - o rollback via writer preserva a entry e nao apaga o registro como primeira acao;
 - o corredor permaneceu fail-safe com `WD_MULTI_DB` e `WD_MULTI_DB_REGISTRY_READ` ligados;
 - esse checkpoint nao abre ativacao real, nao cria owner manual, nao cria entrypoint e nao altera a regra de acumulacao local dos microcortes da Fase F ate fechamento global ou autorizacao explicita.
+
+## 13. Checkpoint de piloto controlado ja realizado
+
+- o piloto controlado da Fase F ja foi caracterizado por contrato, em harness sintetico e sem uso de unidade real;
+- o fluxo caracterizado usa apenas `unitDatabaseRegistryWriter`, registry em memoria, reader/cache e `resolveConnection`;
+- o piloto sintetico comeca em `baseConnection` sem entry ativa; `pending` nao abre tenant; `ready` sem `activation.active` nao abre tenant; `active` sem allowlist positiva nao abre tenant; `active` com allowlist positiva abre tenant connection; remocao da allowlist, `disabled` e `rollback_required` encerram o piloto com retorno para `baseConnection`;
+- esse checkpoint nao abre ativacao real, nao cria owner manual, nao cria entrypoint e nao altera a regra de acumulacao local dos microcortes da Fase F ate fechamento global ou autorizacao explicita.
