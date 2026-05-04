@@ -107,7 +107,7 @@ Incluir:
 
 Criar gates iniciais todos em estado conservador:
 
-- preparationContractReady: false
+- preparationContractReady: true
 - candidateStillSynthetic: true
 - nonOperationalPreserved: true
 - manualOnlyPreserved: true
@@ -121,7 +121,7 @@ Criar gates iniciais todos em estado conservador:
 
 Explicar:
 
-- preparationContractReady=false porque o contrato ainda acabou de ser aberto.
+- preparationContractReady=true porque o checklist documental da Fase M foi aplicado neste microcorte.
 - rollbackPlanDefined=true porque o plano documental de rollback foi definido neste microcorte.
 - evidencePlanDefined=true porque o plano documental de evidencias foi definido neste microcorte.
 - criteriosDefined=true porque os criterios documentais de preparacao foram definidos neste microcorte.
@@ -440,7 +440,87 @@ Interpretacao obrigatoria:
 - criteriosDefined=true nao autoriza mudar roteamento.
 - criteriosDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 12. Limite semantico da Fase M
+## 12. Checklist documental da Fase M
+
+Registrar que o checklist da Fase M e documental, preparatorio e nao operacional.
+
+### 12.1 Checklist aplicado
+
+Registrar os itens abaixo como verificados documentalmente:
+
+- candidato sintetico herdado preservado;
+- targetId permanece `fase-j-synthetic-unit-candidate-001`;
+- unidadeId permanece `0000000000000000000000a1`;
+- dbName permanece `wdgestor_unit_0000000000000000000000a1`;
+- databaseKey permanece `wdgestor_unit_0000000000000000000000a1`;
+- plannedAllowlist permanece unitaria, explicita e sintetica;
+- rollbackPlanDefined=true;
+- evidencePlanDefined=true;
+- criteriosDefined=true;
+- executionStillForbidden=true;
+- blockedReasons=[];
+- fallback para `baseConnection` preservado como requisito obrigatorio;
+- ausencia de caller real preservada;
+- ausencia de rota, CLI, script, job, bootstrap ou request path preservada;
+- ausencia de alteracao em registry real preservada;
+- ausencia de alteracao em allowlist real preservada;
+- ausencia de tenant DB real aberto preservada;
+- ausencia de Portal preservada;
+- ausencia de dados reais preservada;
+- ausencia de trafego real preservada;
+- ausencia de usuario real preservada;
+- ausencia de unidade real preservada;
+- ausencia de PostgreSQL preservada;
+- baseline curta verde.
+
+### 12.2 Resultado do checklist
+
+Registrar:
+
+- preparationContractReady: true;
+- rollbackPlanDefined permanece true;
+- evidencePlanDefined permanece true;
+- criteriosDefined permanece true;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- preparationContractReady=true significa apenas que o contrato documental de preparacao da Fase M esta pronto.
+- preparationContractReady=true nao autoriza execucao.
+- preparationContractReady=true nao autoriza preparacao operacional concreta.
+- preparationContractReady=true nao autoriza criar comando.
+- preparationContractReady=true nao autoriza criar script.
+- preparationContractReady=true nao autoriza criar caller real.
+- preparationContractReady=true nao autoriza criar rota, CLI, job, bootstrap ou request path.
+- preparationContractReady=true nao autoriza ler ou alterar registry real.
+- preparationContractReady=true nao autoriza ler ou alterar allowlist real.
+- preparationContractReady=true nao autoriza abrir tenant DB real.
+- preparationContractReady=true nao autoriza mudar roteamento.
+- preparationContractReady=true nao autoriza coletar evidencia operacional real.
+- preparationContractReady=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+### 12.3 Estado documental apos checklist
+
+Registrar:
+
+- A Fase M fica documentalmente apta a ser encerrada em microcorte posterior.
+- Esse estado nao e encerramento global automatico.
+- Esse estado nao abre proxima fase.
+- Esse estado nao autoriza execucao.
+- Esse estado nao autoriza preparacao operacional concreta.
+- O proximo microcorte podera ser o encerramento documental da Fase M ou atualizacao de status, conforme decisao posterior.
+- Antes de fechamento global/publicacao da Fase M, recomendar `npm test` completo.
+
+### 12.4 Resultado decisorio provisorio
+
+Registrar:
+
+- Resultado provisorio: apto para encerrar documentalmente a Fase M com recomendacao de fase posterior explicita.
+- Interpretacao obrigatoria: "apto para encerrar documentalmente" nao significa executar, preparar operacao ou criar caller real.
+- Qualquer fase posterior que trate execucao manual controlada devera ser aberta explicitamente, com contrato proprio, gates proprios, rollback proprio e autorizacao propria.
+
+## 13. Limite semantico da Fase M
 
 Registrar:
 
@@ -452,7 +532,7 @@ Registrar:
 - Fase posterior possivel nao significa fase posterior aberta.
 - A Fase M so pode encerrar com recomendacao documental.
 
-## 13. Resultado inicial
+## 14. Resultado inicial
 
 Registrar:
 
@@ -462,7 +542,7 @@ Registrar:
 - blockedReasons=[].
 - Execucao continua proibida.
 
-## 14. Interpretacao obrigatoria
+## 15. Interpretacao obrigatoria
 
 Registrar:
 
