@@ -599,6 +599,18 @@ Checkpoint tenant enforcement atual:
 - Encerramento consolidado sem caller real, rota, CLI, script, job, bootstrap ou request path.
 - Proximo passo consolidado deste encerramento: baseline final completa e publicacao da Fase K somente com autorizacao explicita.
 
+- Checkpoint documental curto de abertura da Fase L consolidado nesta rodada.
+- A Fase K foi encerrada e publicada em `796d690 docs(tenant): encerra fase k`.
+- A Fase L foi aberta localmente em `a84d78d docs(tenant): abre fase l`.
+- Documento canonico da Fase L: [docs/tenant-phase-l-controlled-manual-execution-decision-contract.md](docs/tenant-phase-l-controlled-manual-execution-decision-contract.md).
+- Fase atual: Fase L - Contrato de Decisao para Execucao Manual Controlada Nao Produtiva do Candidato Sintetico Multi-DB.
+- Estado atual da Fase L: aberta, documental, decisoria e nao operacional.
+- Natureza consolidada da Fase L: documental, decisoria, nao operacional, nao e execucao, nao e preparacao operacional, nao autoriza piloto real e nao autoriza caller real.
+- Objetivo consolidado da Fase L: definir o contrato de decisao que determinara se uma fase posterior podera preparar uma execucao manual controlada, nao produtiva e sintetica do candidato multi-DB.
+- Estado obrigatorio durante a Fase L: `nonOperational=true` continua preservado, fallback para `baseConnection` continua obrigatorio, rollback precisa permanecer definido antes de qualquer avanco operacional, allowlist deve continuar unitaria, explicita e sintetica, qualquer ambiguidade degrada para nao executar e qualquer falha de gate cai para `baseConnection`.
+- Proibicoes explicitas mantidas na Fase L: sem execucao real, sem ativacao real, sem alteracao de registry real, sem alteracao de allowlist real, sem abertura de tenant DB real, sem mudanca de roteamento, sem caller real, sem rota, sem CLI, sem script operacional, sem job, sem bootstrap, sem request path, sem Portal, sem dados reais, sem trafego real, sem usuario real, sem unidade real e sem PostgreSQL.
+- Push da Fase L: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
