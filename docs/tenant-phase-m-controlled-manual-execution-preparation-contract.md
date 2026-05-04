@@ -113,7 +113,7 @@ Criar gates iniciais todos em estado conservador:
 - manualOnlyPreserved: true
 - noOperationalSurfaceCreated: true
 - fallbackPreserved: true
-- rollbackPlanDefined: false
+- rollbackPlanDefined: true
 - evidencePlanDefined: false
 - executionStillForbidden: true
 - blockedReasons: []
@@ -121,11 +121,97 @@ Criar gates iniciais todos em estado conservador:
 Explicar:
 
 - preparationContractReady=false porque o contrato ainda acabou de ser aberto.
-- rollbackPlanDefined=false porque o plano de rollback ainda sera definido em microcorte posterior.
+- rollbackPlanDefined=true porque o plano documental de rollback foi definido neste microcorte.
 - evidencePlanDefined=false porque o plano de evidencias ainda sera definido em microcorte posterior.
 - executionStillForbidden=true porque nenhuma execucao esta autorizada na Fase M.
 
-## 9. Limite semantico da Fase M
+## 9. Plano documental de rollback
+
+Registrar que o plano de rollback da Fase M e documental e preparatorio.
+
+### 9.1 Escopo do rollback
+
+- O rollback descrito nesta fase e apenas um contrato documental.
+- Nenhum rollback e executado na Fase M.
+- Nenhum comando de rollback e criado na Fase M.
+- Nenhum script de rollback e criado na Fase M.
+- Nenhum registry real e alterado.
+- Nenhuma allowlist real e alterada.
+- Nenhum tenant DB real e aberto ou removido.
+- Nenhum roteamento e alterado.
+
+### 9.2 Estado seguro esperado
+
+Registrar que qualquer fase posterior que venha a executar algo devera conseguir retornar para:
+
+- uso exclusivo de `baseConnection`;
+- ausencia de allowlist real ativa para o candidato;
+- ausencia de caller real conectado ao owner manual;
+- ausencia de caller real conectado ao entrypoint manual;
+- ausencia de rota, CLI, script, job, bootstrap ou request path operacional;
+- nenhuma dependencia de tenant DB real;
+- nenhuma exposicao ao Portal;
+- nenhum dado real envolvido;
+- nenhum trafego real envolvido;
+- nenhum usuario real envolvido;
+- nenhuma unidade real envolvida.
+
+### 9.3 Pre-condicoes para rollback futuro
+
+Registrar que, antes de qualquer execucao futura em fase posterior, o rollback devera ter:
+
+- ponto de retorno documental definido;
+- estado esperado antes da execucao registrado;
+- estado esperado depois da reversao registrado;
+- lista explicita de artefatos que poderiam ser revertidos;
+- criterio de sucesso do rollback;
+- criterio de falha do rollback;
+- decisao explicita de interromper em caso de falha;
+- validacao minima pos-rollback;
+- confirmacao de que `resolveConnection` continua caindo para `baseConnection`;
+- confirmacao de que nenhuma unidade real foi envolvida.
+
+### 9.4 Gatilhos de rollback futuro
+
+Registrar como gatilhos obrigatorios para uma eventual fase posterior:
+
+- qualquer falha de gate;
+- qualquer ambiguidade sobre unidade;
+- qualquer tentativa de usar unidade real;
+- qualquer tentativa de envolver Portal;
+- qualquer tentativa de envolver dado real;
+- qualquer tentativa de envolver trafego real;
+- qualquer tentativa de envolver usuario real;
+- qualquer alteracao nao planejada em registry real;
+- qualquer alteracao nao planejada em allowlist real;
+- qualquer ausencia de fallback para `baseConnection`;
+- qualquer criacao acidental de caller real;
+- qualquer criacao acidental de rota, CLI, script, job, bootstrap ou request path;
+- qualquer aproximacao de PostgreSQL;
+- qualquer divergencia de baseline.
+
+### 9.5 Resultado do plano de rollback
+
+Registrar:
+
+- rollbackPlanDefined: true;
+- preparationContractReady permanece false;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- rollbackPlanDefined=true significa apenas que o plano documental foi definido.
+- rollbackPlanDefined=true nao autoriza execucao.
+- rollbackPlanDefined=true nao autoriza preparacao operacional concreta.
+- rollbackPlanDefined=true nao autoriza criar comando.
+- rollbackPlanDefined=true nao autoriza criar script.
+- rollbackPlanDefined=true nao autoriza alterar registry real.
+- rollbackPlanDefined=true nao autoriza alterar allowlist real.
+- rollbackPlanDefined=true nao autoriza abrir tenant DB real.
+- rollbackPlanDefined=true nao autoriza mudar roteamento.
+
+## 10. Limite semantico da Fase M
 
 Registrar:
 
@@ -137,7 +223,7 @@ Registrar:
 - Fase posterior possivel nao significa fase posterior aberta.
 - A Fase M so pode encerrar com recomendacao documental.
 
-## 10. Resultado inicial
+## 11. Resultado inicial
 
 Registrar:
 
@@ -147,7 +233,7 @@ Registrar:
 - blockedReasons=[].
 - Execucao continua proibida.
 
-## 11. Interpretacao obrigatoria
+## 12. Interpretacao obrigatoria
 
 Registrar:
 
