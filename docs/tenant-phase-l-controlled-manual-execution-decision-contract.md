@@ -162,7 +162,111 @@ Observacao de gate:
 
 - os criterios formais de decisao foram definidos neste microcorte, mas o gate final `decisionContractReady` permanece `false` ate checklist ou consolidacao posterior.
 
-## 10. Estados possiveis ao final da Fase L
+## 10. Evidencias documentais aceitas na Fase L
+
+Evidencia documental dos contratos herdados:
+
+- Documento canonico da Fase H: `docs/tenant-phase-h-operational-envelope-contract.md`.
+- Documento canonico da Fase I: `docs/tenant-phase-i-target-eligibility-matrix-contract.md`.
+- Documento canonico da Fase J: `docs/tenant-phase-j-synthetic-candidate-proposal-plan.md`.
+- Documento canonico da Fase K: `docs/tenant-phase-k-non-operational-controlled-validation-plan.md`.
+- Documento canonico da Fase L: `docs/tenant-phase-l-controlled-manual-execution-decision-contract.md`.
+
+Evidencia do candidato sintetico herdado:
+
+- `targetId` continua `fase-j-synthetic-unit-candidate-001`;
+- `unidadeId` continua `0000000000000000000000a1`;
+- `dbName` continua `wdgestor_unit_0000000000000000000000a1`;
+- `databaseKey` continua `wdgestor_unit_0000000000000000000000a1`;
+- `plannedAllowlist` continua [`0000000000000000000000a1`];
+- `targetKind` continua `syntheticUnit`;
+- `environment` continua `non-production`;
+- `dataClass` continua `discardable`;
+- `trafficClass` continua `none`;
+- `userClass` continua `none`;
+- `portalExposure` continua `none`;
+- `dedicatedDatabase` continua `true`.
+
+Evidencia de ausencia de caller real:
+
+- nenhuma chamada real ao owner manual fora do proprio modulo e dos testes;
+- nenhuma chamada real ao entrypoint manual fora do proprio modulo e dos testes;
+- nenhum caller criado em rota;
+- nenhum caller criado em CLI;
+- nenhum caller criado em script operacional;
+- nenhum caller criado em job;
+- nenhum caller criado em bootstrap;
+- nenhum caller plugado em request path.
+
+Evidencia de ausencia de superficie operacional:
+
+- nenhuma rota nova;
+- nenhuma CLI nova;
+- nenhum script operacional novo;
+- nenhum job novo;
+- nenhum bootstrap novo;
+- nenhuma integracao com Portal;
+- nenhuma alteracao em `package.json` que autorize operacao;
+- nenhum reaproveitamento de harness de teste como piloto real.
+
+Evidencia de fallback preservado:
+
+- qualquer falha de gate continua degradando para `baseConnection`;
+- ausencia de registry valido continua degradando para `baseConnection`;
+- unidade fora da allowlist continua degradando para `baseConnection`;
+- entry inconsistente, `disabled`, `rollback_required`, `pending` ou `provisioning` continua degradando para `baseConnection`;
+- `routingMode` diferente de `tenant` continua degradando para `baseConnection`;
+- `activation.active` ausente ou falso continua degradando para `baseConnection`.
+
+Evidencia de rollback preservado:
+
+- rollback continua definido antes de qualquer avanco operacional;
+- `rollback_required` continua bloqueante;
+- `disabled` continua bloqueante;
+- perda de allowlist continua bloqueante;
+- perda de `activation.active` continua bloqueante;
+- retorno de `routingMode` para `base` continua bloqueante.
+
+Evidencia de allowlist unitaria e sintetica:
+
+- `plannedAllowlist` continua unitaria;
+- `plannedAllowlist` contem apenas `0000000000000000000000a1`;
+- nao ha allowlist real alterada;
+- nao ha unidade real adicionada;
+- nao ha usuario real envolvido.
+
+Evidencia de baseline verde:
+
+- `verify:imports` deve permanecer verde;
+- testes arquiteturais de owner manual devem permanecer verdes;
+- testes arquiteturais de entrypoint manual devem permanecer verdes;
+- testes arquiteturais de piloto nao produtivo devem permanecer verdes;
+- testes arquiteturais de piloto controlado devem permanecer verdes;
+- testes writer -> `resolveConnection` devem permanecer verdes;
+- antes de qualquer fechamento global da Fase L, `npm test` completo deve ser recomendado.
+
+Evidencia de `blockedReasons`:
+
+- `blockedReasons` deve existir explicitamente;
+- `blockedReasons` pode permanecer vazio apenas se todos os gates documentais estiverem preservados;
+- qualquer ambiguidade operacional deve preencher `blockedReasons`;
+- qualquer violacao de superficie operacional deve preencher `blockedReasons` e bloquear a fase;
+- `blockedReasons` vazio nao autoriza execucao.
+
+Interpretacao obrigatoria das evidencias:
+
+- evidencia documental nao e evidencia operacional real;
+- evidencia de ausencia nao autoriza criacao de caller;
+- baseline verde nao autoriza execucao;
+- fallback preservado nao autoriza abertura de tenant DB real;
+- allowlist planejada nao e allowlist real alterada;
+- nenhuma evidencia da Fase L autoriza piloto dentro da propria Fase L.
+
+Observacao de gate das evidencias:
+
+- as evidencias aceitas foram definidas neste microcorte, mas o gate final `decisionContractReady` continua dependente de checklist ou consolidacao posterior.
+
+## 11. Estados possiveis ao final da Fase L
 
 - Apto para preparar execucao manual controlada em fase posterior:
   significa apenas que uma proxima fase podera preparar, ainda sob contrato explicito, uma execucao manual controlada nao produtiva; nao significa execucao automatica.
@@ -171,7 +275,7 @@ Observacao de gate:
 - Bloqueado:
   significa que algum risco, ambiguidade ou inconsistenca impede qualquer avanco; nesse caso, permanecer no estado pos-Fase K sem operacao.
 
-## 11. Gates da Fase L
+## 12. Gates da Fase L
 
 - `decisionContractReady`
 - `candidateStillSynthetic`
@@ -183,7 +287,7 @@ Observacao de gate:
 - `baselineGreen`
 - `blockedReasons`
 
-## 12. Resultado inicial
+## 13. Resultado inicial
 
 - `decisionContractReady`: `false`
 - `candidateStillSynthetic`: `true`
@@ -195,7 +299,7 @@ Observacao de gate:
 - `baselineGreen`: `true`
 - `blockedReasons`: `[]`
 
-## 13. Interpretacao obrigatoria
+## 14. Interpretacao obrigatoria
 
 - Enquanto a Fase L estiver aberta, nenhuma execucao esta autorizada.
 - Enquanto a Fase L estiver aberta, nenhuma preparacao operacional esta autorizada.
