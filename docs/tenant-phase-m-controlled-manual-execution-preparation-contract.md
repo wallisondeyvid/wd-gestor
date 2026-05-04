@@ -114,7 +114,7 @@ Criar gates iniciais todos em estado conservador:
 - noOperationalSurfaceCreated: true
 - fallbackPreserved: true
 - rollbackPlanDefined: true
-- evidencePlanDefined: false
+- evidencePlanDefined: true
 - executionStillForbidden: true
 - blockedReasons: []
 
@@ -122,7 +122,7 @@ Explicar:
 
 - preparationContractReady=false porque o contrato ainda acabou de ser aberto.
 - rollbackPlanDefined=true porque o plano documental de rollback foi definido neste microcorte.
-- evidencePlanDefined=false porque o plano de evidencias ainda sera definido em microcorte posterior.
+- evidencePlanDefined=true porque o plano documental de evidencias foi definido neste microcorte.
 - executionStillForbidden=true porque nenhuma execucao esta autorizada na Fase M.
 
 ## 9. Plano documental de rollback
@@ -211,7 +211,105 @@ Interpretacao obrigatoria:
 - rollbackPlanDefined=true nao autoriza abrir tenant DB real.
 - rollbackPlanDefined=true nao autoriza mudar roteamento.
 
-## 10. Limite semantico da Fase M
+## 10. Plano documental de evidencias
+
+Registrar que o plano de evidencias da Fase M e documental e preparatorio.
+
+### 10.1 Escopo das evidencias
+
+- As evidencias descritas nesta fase sao apenas requisitos documentais para uma fase posterior.
+- Nenhuma evidencia operacional real e coletada na Fase M.
+- Nenhuma conexao tenant real e aberta na Fase M.
+- Nenhum registry real e lido ou alterado na Fase M.
+- Nenhuma allowlist real e lida ou alterada na Fase M.
+- Nenhum dado real e consultado.
+- Nenhum trafego real e observado.
+- Nenhum usuario real e envolvido.
+- Nenhuma unidade real e envolvida.
+- Nenhum artefato operacional novo e criado.
+
+### 10.2 Evidencias documentais minimas exigidas
+
+Registrar que qualquer fase posterior que pretenda cogitar execucao manual controlada devera ter, antes de qualquer execucao:
+
+- documento da fase posterior aberto explicitamente;
+- objetivo da fase posterior definido;
+- candidato sintetico confirmado;
+- allowlist planejada unitaria, explicita e sintetica;
+- rollback definido antes da execucao;
+- gates da fase posterior definidos;
+- blockedReasons inicial registrado;
+- baseline curta verde antes da execucao;
+- confirmacao documental de que `resolveConnection` preserva fallback para `baseConnection`;
+- confirmacao documental de ausencia de caller real;
+- confirmacao documental de ausencia de rota, CLI, script, job, bootstrap ou request path;
+- confirmacao documental de ausencia de Portal;
+- confirmacao documental de ausencia de dados reais;
+- confirmacao documental de ausencia de trafego real;
+- confirmacao documental de ausencia de usuario real;
+- confirmacao documental de ausencia de unidade real;
+- confirmacao documental de ausencia de PostgreSQL.
+
+### 10.3 Evidencias proibidas na Fase M
+
+Registrar como proibido na Fase M:
+
+- coletar log de execucao real;
+- coletar resultado de conexao tenant real;
+- coletar resultado de abertura de tenant DB real;
+- coletar resultado de alteracao de registry real;
+- coletar resultado de alteracao de allowlist real;
+- coletar evidencia de rota operacional;
+- coletar evidencia de CLI operacional;
+- coletar evidencia de script operacional;
+- coletar evidencia de job operacional;
+- coletar evidencia de bootstrap operacional;
+- coletar evidencia de request path operacional;
+- coletar evidencia envolvendo Portal;
+- coletar evidencia envolvendo dados reais;
+- coletar evidencia envolvendo trafego real;
+- coletar evidencia envolvendo usuario real;
+- coletar evidencia envolvendo unidade real;
+- coletar evidencia envolvendo PostgreSQL.
+
+### 10.4 Evidencias esperadas apenas em fase posterior
+
+Registrar que uma fase posterior, se explicitamente aberta, podera definir evidencias esperadas para execucao manual controlada, mas somente depois de:
+
+- contrato proprio aprovado;
+- gates proprios definidos;
+- rollback proprio confirmado;
+- candidateStillSynthetic=true;
+- executionStillForbidden revisado explicitamente na fase posterior;
+- ausencia de blockedReasons;
+- validacao curta verde;
+- autorizacao explicita do usuario para aquela fase.
+
+### 10.5 Resultado do plano de evidencias
+
+Registrar:
+
+- evidencePlanDefined: true;
+- rollbackPlanDefined permanece true;
+- preparationContractReady permanece false;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- evidencePlanDefined=true significa apenas que o plano documental de evidencias foi definido.
+- evidencePlanDefined=true nao autoriza execucao.
+- evidencePlanDefined=true nao autoriza coleta de evidencia operacional real.
+- evidencePlanDefined=true nao autoriza abrir conexao tenant real.
+- evidencePlanDefined=true nao autoriza ler ou alterar registry real.
+- evidencePlanDefined=true nao autoriza ler ou alterar allowlist real.
+- evidencePlanDefined=true nao autoriza criar comando.
+- evidencePlanDefined=true nao autoriza criar script.
+- evidencePlanDefined=true nao autoriza criar caller real.
+- evidencePlanDefined=true nao autoriza criar rota, CLI, job, bootstrap ou request path.
+- evidencePlanDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 11. Limite semantico da Fase M
 
 Registrar:
 
@@ -223,7 +321,7 @@ Registrar:
 - Fase posterior possivel nao significa fase posterior aberta.
 - A Fase M so pode encerrar com recomendacao documental.
 
-## 11. Resultado inicial
+## 12. Resultado inicial
 
 Registrar:
 
@@ -233,7 +331,7 @@ Registrar:
 - blockedReasons=[].
 - Execucao continua proibida.
 
-## 12. Interpretacao obrigatoria
+## 13. Interpretacao obrigatoria
 
 Registrar:
 
