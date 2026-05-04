@@ -139,7 +139,61 @@ Leitura operacional desta aplicacao:
 - o resultado `eligible=true` nao substitui decisao documental separada sobre selecao ou nao selecao do candidato;
 - qualquer execucao exigira fase ou bloco posterior explicito, baseline completa e autorizacao explicita.
 
-## 9. O que a Fase J nao autoriza
+## 9. Decisao documental de selecao do candidato
+
+Candidato selecionado documentalmente:
+
+- `fase-j-synthetic-unit-candidate-001`.
+
+Base documental desta selecao:
+
+- matriz da Fase I aplicada;
+- `eligible=true`;
+- `blockedReasons=[]`;
+- candidato sintetico;
+- `environment=non-production`;
+- sem unidade real;
+- sem dados reais;
+- sem trafego real;
+- sem Portal;
+- sem usuario real.
+
+Natureza desta selecao:
+
+- selecao documental;
+- selecao futura;
+- nao operacional;
+- nao executavel por si so;
+- nao aciona writer;
+- nao aciona owner;
+- nao aciona entrypoint;
+- nao aciona `resolveConnection`;
+- nao altera registry;
+- nao altera allowlist real;
+- nao abre tenant DB real;
+- nao muda roteamento.
+
+Leitura operacional desta decisao:
+
+- o candidato elegivel fica selecionado apenas como candidato futuro para validacao controlada;
+- esta selecao nao equivale a execucao, ativacao ou rollout;
+- esta selecao nao remove nenhum gate de seguranca herdado das Fases G, H e I.
+
+Proximo passo recomendado a partir desta decisao:
+
+- encerrar a Fase J documentalmente; ou
+- abrir fase posterior explicita para preparacao ou validacao controlada do candidato selecionado documentalmente.
+
+Qualquer execucao futura exigira cumulativamente:
+
+- nova fase ou bloco explicito;
+- baseline completa;
+- autorizacao explicita;
+- manutencao dos gates;
+- plano de rollback;
+- sem caller real ate autorizacao propria.
+
+## 10. O que a Fase J nao autoriza
 
 - nao autoriza execucao real;
 - nao autoriza ativacao real;
@@ -158,13 +212,14 @@ Leitura operacional desta aplicacao:
 - nao autoriza PostgreSQL;
 - nao autoriza remover fallback.
 
-## 10. Sequencia recomendada da Fase J
+## 11. Sequencia recomendada da Fase J
 
 - Microcorte 1: abertura documental da Fase J;
 - Microcorte 2: documento canonico da proposta de candidato;
 - Microcorte 3: preenchimento documental dos campos pendentes do candidato, concluido localmente e ainda sem execucao;
 - Microcorte 4: aplicacao formal da matriz da Fase I ao candidato proposto, concluida localmente com `eligible=true` documental e ainda sem execucao;
-- Microcorte 5: documentar decisao separada sobre selecao ou nao selecao do candidato elegivel, ainda sem execucao.
+- Microcorte 5: decisao documental separada concluida localmente, selecionando o candidato elegivel apenas como candidato futuro para validacao controlada e ainda sem execucao.
+- Microcorte 6: encerramento documental da Fase J ou abertura de fase posterior explicita de preparacao ou validacao controlada.
 
 Leitura operacional da sequencia:
 
@@ -172,7 +227,7 @@ Leitura operacional da sequencia:
 - nenhum microcorte da Fase J deve operar unidade real, dados reais, trafego real ou Portal;
 - qualquer continuidade futura continua dependente de baseline final completa antes de publicacao global.
 
-## 11. Baseline obrigatoria
+## 12. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -182,7 +237,7 @@ Leitura operacional da sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 12. Regra de publicacao
+## 13. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;

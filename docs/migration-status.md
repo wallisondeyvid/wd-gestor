@@ -545,6 +545,13 @@ Checkpoint tenant enforcement atual:
 - Warnings consolidados deste microcorte: `eligible=true` e apenas elegibilidade documental; nao autoriza selecao operacional, execucao real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path; nao remove fallback; nao altera registry, writer, reader, cache, preload ou `resolveConnection`.
 - Proximo passo consolidado deste microcorte: decisao documental separada sobre selecao ou nao selecao do candidato elegivel, ainda sem execucao.
 
+- Checkpoint documental curto da decisao separada de selecao do candidato elegivel da Fase J consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem piloto real, sem execucao real, sem ativacao real, sem alteracao de registry, sem alteracao de allowlist real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Documento canonico atualizado deste checkpoint: [tenant-phase-j-synthetic-candidate-proposal-plan.md](tenant-phase-j-synthetic-candidate-proposal-plan.md).
+- Decisao consolidada deste microcorte: a Fase J seleciona documentalmente o candidato elegivel `fase-j-synthetic-unit-candidate-001` como candidato futuro para validacao controlada.
+- Natureza consolidada desta selecao: selecao documental e futura, nao operacional, nao executavel por si so, sem acionar writer, owner, entrypoint ou `resolveConnection`, sem abrir tenant DB real e sem mudar roteamento.
+- Estado operacional consolidado deste microcorte: nao houve execucao real, nao houve ativacao real, nao houve alteracao de registry ou allowlist real e nao houve caller real, rota, CLI, script, job, bootstrap ou request path.
+- Proximo passo consolidado deste microcorte: encerramento documental da Fase J ou abertura de fase posterior explicita de preparacao ou validacao controlada do candidato selecionado documentalmente.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
