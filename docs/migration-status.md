@@ -579,6 +579,13 @@ Checkpoint tenant enforcement atual:
 - Regra consolidada deste microcorte: `validationPlanReady=true` somente quando todos os criterios de sucesso forem satisfeitos documentalmente e nenhum criterio de abortar estiver presente; qualquer ambiguidade degrada para abortar.
 - Proximo passo consolidado deste microcorte: definir checklist de gates preservados e regra explicita de nao operacao.
 
+- Checkpoint documental curto do checklist de gates preservados e da regra explicita de nao operacao da Fase K consolidado nesta rodada.
+- Gates permanecem obrigatorios para o candidato `fase-j-synthetic-unit-candidate-001`.
+- Fallback para `baseConnection` permanece preservado.
+- Regra padrao consolidada deste microcorte: fail-closed.
+- Estado operacional consolidado deste microcorte: a Fase K permanece sem execucao e nenhum caller real, rota, CLI, script, job, bootstrap ou request path foi criado.
+- Proximo passo consolidado deste microcorte: aplicar checklist da Fase K ao candidato, ainda sem execucao.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados

@@ -309,12 +309,105 @@ Escopo desta secao:
 - definir regra explicita de nao operacao;
 - ainda sem execucao.
 
-## 10. Sequencia sugerida da Fase K
+## 10. Checklist de gates preservados e regra de nao operacao
+
+Escopo desta secao:
+
+- esta secao fica amarrada exclusivamente ao candidato `fase-j-synthetic-unit-candidate-001`;
+- a Fase K nao abre operacao;
+- a Fase K apenas define os gates que devem continuar obrigatorios em qualquer fase posterior;
+- nenhum gate pode ser suavizado por documentacao;
+- ausencia, ambiguidade ou quebra de qualquer gate bloqueia avanco;
+- a regra padrao continua sendo fail-closed para `baseConnection`.
+
+### 10.1 Principio
+
+- os gates abaixo permanecem obrigatorios e documentados como pre-condicoes minimas de qualquer continuidade futura;
+- a documentacao da Fase K nao substitui gate tecnico, nao remove fallback e nao autoriza excecao operacional;
+- qualquer ausencia, ambiguidade, contradicao ou suavizacao documental deve degradar para bloqueio;
+- o comportamento esperado em perda de gate continua sendo retorno para `baseConnection`.
+
+### 10.2 Checklist de gates preservados
+
+- `WD_MULTI_DB` deve continuar exigido para qualquer roteamento futuro;
+- `WD_MULTI_DB_REGISTRY_READ` deve continuar exigido para qualquer leitura futura do registry;
+- entry consistente deve continuar exigido;
+- `readiness.ready=true` deve continuar exigido;
+- `activation.active=true` deve continuar exigido;
+- allowlist positiva deve continuar exigida;
+- `plannedAllowlist` deve permanecer unitaria;
+- `plannedAllowlist` deve conter somente `0000000000000000000000a1`;
+- status bloqueante deve impedir roteamento tenant;
+- `routingMode` bloqueante deve impedir roteamento tenant;
+- ausencia de entry deve cair para `baseConnection`;
+- erro de leitura do registry deve cair para `baseConnection`;
+- incoerencia de `unidadeId`, `dbName` ou `databaseKey` deve cair para `baseConnection`;
+- remocao de qualquer gate deve cair para `baseConnection`;
+- fallback para `baseConnection` deve permanecer preservado;
+- `rollbackPlan` deve permanecer definido antes de qualquer fase posterior;
+- `ownerContextPlan` deve permanecer manual com `source=manual`, `approved=true`, `actor` nao vazio e `reason` nao vazio.
+
+### 10.3 Regra explicita de nao operacao
+
+- esta Fase K nao chama writer;
+- esta Fase K nao chama owner;
+- esta Fase K nao chama entrypoint;
+- esta Fase K nao chama `resolveConnection`;
+- esta Fase K nao le registry real;
+- esta Fase K nao escreve registry real;
+- esta Fase K nao altera allowlist real;
+- esta Fase K nao abre tenant DB;
+- esta Fase K nao cria DB;
+- esta Fase K nao cria conexao tenant;
+- esta Fase K nao muda roteamento;
+- esta Fase K nao cria caller real;
+- esta Fase K nao cria rota;
+- esta Fase K nao cria CLI;
+- esta Fase K nao cria script;
+- esta Fase K nao cria job;
+- esta Fase K nao cria bootstrap;
+- esta Fase K nao pluga nada em request path;
+- esta Fase K nao envolve Portal;
+- esta Fase K nao envolve dado real;
+- esta Fase K nao envolve trafego real;
+- esta Fase K nao envolve usuario real;
+- esta Fase K nao envolve unidade real;
+- esta Fase K nao envolve PostgreSQL;
+- esta Fase K nao remove fallback.
+
+### 10.4 Resultado esperado
+
+- `gatesPreserved=true` somente se todos os gates estiverem definidos como obrigatorios e nenhum for suavizado;
+- `nonOperational=true` somente se a fase continuar sem chamadas operacionais, sem superficie nova e sem execucao real;
+- `gatesPreserved=false` se qualquer gate for ausente, ambiguo ou suavizado;
+- `nonOperational=false` se qualquer acao operacional surgir;
+- se `gatesPreserved=false` ou `nonOperational=false`, o avanco deve ser bloqueado.
+
+### 10.5 Tabela sugerida
+
+| Categoria | Gate/regra | Resultado esperado | Acao se falhar |
+| --- | --- | --- | --- |
+| gate | `WD_MULTI_DB` e `WD_MULTI_DB_REGISTRY_READ` permanecem obrigatorios | gates globais preservados | bloquear avanco e manter fail-closed |
+| gate | entry consistente, `readiness.ready=true`, `activation.active=true` e allowlist positiva permanecem obrigatorios | roteamento futuro continua dependente de gates completos | bloquear avanco e degradar para `baseConnection` |
+| gate | `plannedAllowlist` permanece unitaria contendo somente `0000000000000000000000a1` | alvo documental continua coerente | bloquear avanco e corrigir documentacao |
+| gate | status bloqueante, `routingMode` bloqueante, ausencia de entry, erro de leitura e incoerencia de identidade continuam caindo para `baseConnection` | fallback preservado | bloquear avanco e manter fail-closed |
+| gate | `rollbackPlan` definido e `ownerContextPlan` manual completo permanecem obrigatorios | seguranca minima preservada | bloquear avanco e exigir saneamento documental |
+| nao operacao | nenhuma chamada a writer, owner, entrypoint ou `resolveConnection` surge nesta fase | `nonOperational=true` | bloquear avanco e interromper continuidade |
+| nao operacao | nenhuma leitura ou escrita de registry real, alteracao de allowlist real, abertura de tenant DB ou mudanca de roteamento surge nesta fase | `nonOperational=true` | bloquear avanco e manter zero operacao |
+| nao operacao | nenhuma criacao de caller real, rota, CLI, script, job, bootstrap ou request path surge nesta fase | `nonOperational=true` | bloquear avanco e manter fase documental |
+| nao operacao | nenhum Portal, dado real, trafego real, usuario real, unidade real ou PostgreSQL e envolvido | `nonOperational=true` | bloquear avanco imediatamente |
+
+### 10.6 Proximo microcorte
+
+- aplicar checklist da Fase K ao candidato;
+- ainda sem execucao.
+
+## 11. Sequencia sugerida da Fase K
 
 - Microcorte 1: abertura documental da Fase K e criacao do documento canonico;
 - Microcorte 2: definir pacote de evidencias pre-execucao do candidato, consolidado neste microcorte;
 - Microcorte 3: definir criterios de sucesso e abortar especificos do candidato, consolidado neste microcorte;
-- Microcorte 4: definir checklist de gates preservados e regra de nao operacao;
+- Microcorte 4: definir checklist de gates preservados e regra de nao operacao, consolidado neste microcorte;
 - Microcorte 5: aplicar checklist da Fase K ao candidato;
 - Microcorte 6: encerrar documentalmente a Fase K.
 
@@ -324,7 +417,7 @@ Leitura operacional da sequencia:
 - nenhum microcorte da Fase K deve transformar `eligible=true` ou selecao documental em autorizacao operacional;
 - qualquer continuidade futura continua dependente de fase ou bloco explicito posterior.
 
-## 11. Criterios que impedem avanco operacional
+## 12. Criterios que impedem avanco operacional
 
 - `eligible=true` nao e autorizacao de execucao;
 - selecao documental nao e operacao;
@@ -336,7 +429,7 @@ Leitura operacional da sequencia:
 - qualquer ambiguidade sobre Portal, dado real, trafego real ou unidade real;
 - qualquer tentativa de criar caller real, rota, CLI, script, job, bootstrap ou request path.
 
-## 12. Baseline obrigatoria
+## 13. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -346,7 +439,7 @@ Leitura operacional da sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 13. Regra de publicacao
+## 14. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;
