@@ -13,6 +13,10 @@ const writerModuleUrl = pathToFileURL(
   path.join(process.cwd(), 'src/shared/db/unitDatabaseRegistryWriter.js')
 ).href;
 
+const manualEntrypointModuleUrl = pathToFileURL(
+  path.join(process.cwd(), 'src/shared/db/unitDatabaseRegistryManualEntrypoint.js')
+).href;
+
 const manualOwnerModuleUrl = pathToFileURL(
   path.join(process.cwd(), 'src/shared/db/unitDatabaseRegistryManualOwner.js')
 ).href;
@@ -31,6 +35,11 @@ const manualOwnerSourceFilePath = path.join(
   'src/shared/db/unitDatabaseRegistryManualOwner.js'
 );
 
+const manualEntrypointSourceFilePath = path.join(
+  process.cwd(),
+  'src/shared/db/unitDatabaseRegistryManualEntrypoint.js'
+);
+
 const entrypointContractTestFilePath = path.join(
   process.cwd(),
   'tests/architecture/unitDatabaseRegistryManualEntrypoint.contract.test.js'
@@ -38,6 +47,7 @@ const entrypointContractTestFilePath = path.join(
 
 let resolveConnectionImportNonce = 0;
 let writerImportNonce = 0;
+let manualEntrypointImportNonce = 0;
 let manualOwnerImportNonce = 0;
 
 async function loadResolveConnectionFresh() {
@@ -50,6 +60,11 @@ async function loadWriterModuleFresh() {
   return import(`${writerModuleUrl}?test=${writerImportNonce}`);
 }
 
+async function loadManualEntrypointModuleFresh() {
+  manualEntrypointImportNonce += 1;
+  return import(`${manualEntrypointModuleUrl}?test=${manualEntrypointImportNonce}`);
+}
+
 async function loadManualOwnerModuleFresh() {
   manualOwnerImportNonce += 1;
   return import(`${manualOwnerModuleUrl}?test=${manualOwnerImportNonce}`);
@@ -57,15 +72,6 @@ async function loadManualOwnerModuleFresh() {
 
 async function loadRegistryModuleShared() {
   return import(registryModuleUrl);
-}
-
-function createManualEntrypointError(code, message, cause) {
-  const error = new Error(message);
-  error.code = code;
-  if (cause) {
-    error.cause = cause;
-  }
-  return error;
 }
 
 function normalizeRequiredString(value) {
@@ -180,153 +186,6 @@ async function primeRegistryCache(registry, unidadeId) {
   await registry.primeUnitDatabaseRegistryCache({ unidadeId });
 }
 
-function validateManualEntrypointInput(input) {
-  if (!input || typeof input !== 'object') {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_CONTEXT_REQUIRED',
-      'Manual entrypoint requires explicit input.'
-    );
-  }
-
-  const context = input.context;
-  if (!context || typeof context !== 'object') {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_CONTEXT_REQUIRED',
-      'Manual entrypoint requires explicit manual context.'
-    );
-  }
-
-  const source = normalizeRequiredString(context.source)?.toLowerCase();
-  if (source !== 'manual') {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_INVALID_SOURCE',
-      'Manual entrypoint accepts only source=manual.'
-    );
-  }
-
-  if (context.approved !== true) {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_NOT_APPROVED',
-      'Manual entrypoint requires approved=true.'
-    );
-  }
-
-  const actor = normalizeRequiredString(context.actor);
-  if (!actor) {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_ACTOR_REQUIRED',
-      'Manual entrypoint requires a non-empty actor.'
-    );
-  }
-
-  const reason = normalizeRequiredString(context.reason);
-  if (!reason) {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_REASON_REQUIRED',
-      'Manual entrypoint requires a non-empty reason.'
-    );
-  }
-
-  const environment = normalizeRequiredString(input.environment)?.toLowerCase();
-  if (!environment || environment === 'prod' || environment === 'production') {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_NON_PROD_REQUIRED',
-      'Manual entrypoint requires a non-production environment.'
-    );
-  }
-
-  if (input.syntheticUnit !== true) {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_SYNTHETIC_UNIT_REQUIRED',
-      'Manual entrypoint accepts only synthetic or controlled units.'
-    );
-  }
-
-  const rollbackPlan = normalizeRequiredString(input.rollbackPlan);
-  if (!rollbackPlan) {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_ROLLBACK_PLAN_REQUIRED',
-      'Manual entrypoint requires a rollback plan.'
-    );
-  }
-
-  const plannedAllowlist = Array.isArray(input.plannedAllowlist)
-    ? input.plannedAllowlist
-        .map((value) => normalizeRequiredString(value))
-        .filter(Boolean)
-    : [];
-
-  if (plannedAllowlist.length !== 1) {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_PLANNED_ALLOWLIST_REQUIRED',
-      'Manual entrypoint requires a single planned allowlist target.'
-    );
-  }
-
-  const unidadeId = normalizeRequiredString(input.unidadeId);
-  const dbName = normalizeRequiredString(input.dbName);
-  const databaseKey = normalizeRequiredString(input.databaseKey);
-  const expectedDbName = unidadeId ? `wdgestor_unit_${unidadeId}` : null;
-
-  if (!unidadeId || !dbName || !databaseKey || dbName !== expectedDbName || databaseKey !== expectedDbName) {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_TARGET_MISMATCH',
-      'Manual entrypoint requires coherent unidadeId, dbName and databaseKey.'
-    );
-  }
-
-  if (plannedAllowlist[0] !== unidadeId) {
-    throw createManualEntrypointError(
-      'MANUAL_ENTRYPOINT_PLANNED_ALLOWLIST_MISMATCH',
-      'Manual entrypoint requires planned allowlist matching the target unit.'
-    );
-  }
-
-  return {
-    unidadeId,
-    dbName,
-    databaseKey,
-    environment,
-    syntheticUnit: true,
-    plannedAllowlist,
-    rollbackPlan,
-    context: {
-      source,
-      approved: true,
-      actor,
-      reason,
-    },
-  };
-}
-
-async function runManualEntrypointHarness(input, manualOwner) {
-  const normalizedInput = validateManualEntrypointInput(input);
-  const ownerResult = await manualOwner({
-    unidadeId: normalizedInput.unidadeId,
-    dbName: normalizedInput.dbName,
-    databaseKey: normalizedInput.databaseKey,
-    context: normalizedInput.context,
-  });
-
-  return {
-    ok: true,
-    unidadeId: normalizedInput.unidadeId,
-    actor: normalizedInput.context.actor,
-    reason: normalizedInput.context.reason,
-    environment: normalizedInput.environment,
-    syntheticUnit: normalizedInput.syntheticUnit,
-    plannedAllowlist: normalizedInput.plannedAllowlist,
-    rollbackPlan: normalizedInput.rollbackPlan,
-    ownerResult,
-    postConditions: [
-      'owner-called',
-      'routing-remains-central-routing-owned',
-      'tenant-routing-validated-only-by-harness',
-    ],
-    rollbackHint: 'remove-allowlist-or-disable-via-writer',
-  };
-}
-
 async function runManualEntrypointContractHarness(callback) {
   const previousMultiDb = process.env.WD_MULTI_DB;
   const previousRegistryRead = process.env.WD_MULTI_DB_REGISTRY_READ;
@@ -340,6 +199,7 @@ async function runManualEntrypointContractHarness(callback) {
   const harness = createRegistryStoreHarness();
   const resolveConnectionModule = await loadResolveConnectionFresh();
   const writerModule = await loadWriterModuleFresh();
+  const manualEntrypointModule = await loadManualEntrypointModuleFresh();
   const manualOwnerModule = await loadManualOwnerModuleFresh();
   const registry = await loadRegistryModuleShared();
 
@@ -363,6 +223,7 @@ async function runManualEntrypointContractHarness(callback) {
       tenantConn,
       useDbCalls,
       writerModule,
+      manualEntrypoint: manualEntrypointModule.runUnitDatabaseRegistryManualEntrypoint,
       manualOwner: manualOwnerModule.runUnitDatabaseRegistryManualOwner,
       resolveConnection: resolveConnectionModule.resolveConnection,
       setAllowlist(unidadeId) {
@@ -505,7 +366,7 @@ test('helper local do entrypoint manual deliberado recusa pre-condicoes ausentes
 
   for (const invalidCase of invalidCases) {
     await assert.rejects(
-      () => runManualEntrypointHarness(invalidCase.mutate(baseInput), async () => ({ ok: true })),
+      () => runManualEntrypointContractHarness(async ({ manualEntrypoint }) => manualEntrypoint(invalidCase.mutate(baseInput))),
       (error) => error?.code === invalidCase.code,
       invalidCase.label
     );
@@ -513,34 +374,24 @@ test('helper local do entrypoint manual deliberado recusa pre-condicoes ausentes
 });
 
 test('helper local do entrypoint aceita contexto deliberado completo, chama o owner e retorna relatorio deterministico minimo', async () => {
-  await runManualEntrypointContractHarness(async ({ harness, manualOwner, registry, resolveConnection, setAllowlist, tenantConn, useDbCalls, writerModule }) => {
+  await runManualEntrypointContractHarness(async ({ harness, manualEntrypoint, registry, resolveConnection, setAllowlist, tenantConn, useDbCalls, writerModule }) => {
     const unidadeId = '000000000000000000000040';
-    let ownerCalls = 0;
-    const countedManualOwner = async (input) => {
-      ownerCalls += 1;
-      return manualOwner(input);
-    };
-
-    const result = await runManualEntrypointHarness(
-      {
-        unidadeId,
-        dbName: `wdgestor_unit_${unidadeId}`,
-        databaseKey: `wdgestor_unit_${unidadeId}`,
-        environment: 'staging',
-        syntheticUnit: true,
-        plannedAllowlist: [unidadeId],
-        rollbackPlan: 'remove allowlist then mark rollback_required',
-        context: {
-          source: 'manual',
-          approved: true,
-          actor: 'operador-fase-g',
-          reason: 'manual-entrypoint-approved',
-        },
+    const result = await manualEntrypoint({
+      unidadeId,
+      dbName: `wdgestor_unit_${unidadeId}`,
+      databaseKey: `wdgestor_unit_${unidadeId}`,
+      environment: 'staging',
+      syntheticUnit: true,
+      plannedAllowlist: [unidadeId],
+      rollbackPlan: 'remove allowlist then mark rollback_required',
+      context: {
+        source: 'manual',
+        approved: true,
+        actor: 'operador-fase-g',
+        reason: 'manual-entrypoint-approved',
       },
-      countedManualOwner
-    );
+    });
 
-    assert.equal(ownerCalls, 1);
     assert.deepEqual(result, {
       ok: true,
       unidadeId,
@@ -560,9 +411,16 @@ test('helper local do entrypoint aceita contexto deliberado completo, chama o ow
       postConditions: [
         'owner-called',
         'routing-remains-central-routing-owned',
+        'resolveConnection-remains-separate-decision-point',
         'tenant-routing-validated-only-by-harness',
       ],
-      rollbackHint: 'remove-allowlist-or-disable-via-writer',
+      rollbackHint: [
+        'remove-allowlist',
+        'deactivate-activation',
+        'use-disabled-or-rollback_required',
+        'preserve-baseConnection-fallback',
+        'do-not-delete-entry-first',
+      ],
     });
 
     const activeEntry = harness.read(unidadeId);
@@ -599,29 +457,34 @@ test('helper local do entrypoint aceita contexto deliberado completo, chama o ow
 });
 
 test('contrato estrutural do helper local preserva a borda manual e nao importa superficies proibidas', async () => {
-  const source = fs.readFileSync(entrypointContractTestFilePath, 'utf8');
-  const helperSource = runManualEntrypointHarness.toString();
+  const testSource = fs.readFileSync(entrypointContractTestFilePath, 'utf8');
+  const source = fs.readFileSync(manualEntrypointSourceFilePath, 'utf8');
   const docSource = fs.readFileSync(entrypointDocPath, 'utf8');
   const manualOwnerSource = fs.readFileSync(manualOwnerSourceFilePath, 'utf8');
 
   assert.match(docSource, /wrapper manual e deliberado sobre `runUnitDatabaseRegistryManualOwner`/);
   assert.match(manualOwnerSource, /runUnitDatabaseRegistryManualOwner/);
+  assert.match(source, /from '#shared\/db\/unitDatabaseRegistryManualOwner\.js'/);
   assert.doesNotMatch(source, /#shared\/db\/unitDatabaseRegistryPreload\.js/);
+  assert.doesNotMatch(source, /#shared\/db\/unitDatabaseRegistryWriter\.js/);
+  assert.doesNotMatch(source, /#shared\/db\/resolveConnection\.js/);
   assert.doesNotMatch(source, /pagesRouter\.js/);
   assert.doesNotMatch(source, /api\.js/);
   assert.doesNotMatch(source, /package\.json/);
-  assert.doesNotMatch(helperSource, /registerUnitDatabaseRegistryPending/);
-  assert.doesNotMatch(helperSource, /markUnitDatabaseRegistryReady/);
-  assert.doesNotMatch(helperSource, /activateUnitDatabaseRegistry/);
-  assert.doesNotMatch(helperSource, /disableUnitDatabaseRegistry/);
-  assert.doesNotMatch(helperSource, /resolveConnection/);
-  assert.doesNotMatch(helperSource, /useDb/);
-  assert.doesNotMatch(helperSource, /bootstrap/i);
-  assert.doesNotMatch(helperSource, /preload/i);
-  assert.doesNotMatch(helperSource, /route/i);
-  assert.doesNotMatch(helperSource, /cli/i);
-  assert.doesNotMatch(helperSource, /script/i);
-  assert.doesNotMatch(helperSource, /job/i);
+  assert.doesNotMatch(source, /registerUnitDatabaseRegistryPending/);
+  assert.doesNotMatch(source, /markUnitDatabaseRegistryReady/);
+  assert.doesNotMatch(source, /activateUnitDatabaseRegistry/);
+  assert.doesNotMatch(source, /disableUnitDatabaseRegistry/);
+  assert.doesNotMatch(source, /from '#shared\/db\/resolveConnection\.js'/);
+  assert.doesNotMatch(source, /\bresolveConnection\s*\(/);
+  assert.doesNotMatch(source, /useDb/);
+  assert.doesNotMatch(source, /bootstrap/i);
+  assert.doesNotMatch(source, /preload/i);
+  assert.doesNotMatch(source, /route/i);
+  assert.doesNotMatch(source, /cli/i);
+  assert.doesNotMatch(source, /script/i);
+  assert.doesNotMatch(source, /job/i);
+  assert.match(testSource, /runUnitDatabaseRegistryManualEntrypoint/);
 });
 
 test('nao ha caller real novo para runUnitDatabaseRegistryManualOwner fora do proprio modulo e dos testes', async () => {
@@ -632,5 +495,5 @@ test('nao ha caller real novo para runUnitDatabaseRegistryManualOwner fora do pr
     return source.includes('runUnitDatabaseRegistryManualOwner');
   });
 
-  assert.deepEqual(matchingSrcFiles, [manualOwnerSourceFilePath]);
+  assert.deepEqual(matchingSrcFiles.sort(), [manualEntrypointSourceFilePath, manualOwnerSourceFilePath].sort());
 });
