@@ -84,7 +84,7 @@ Leitura operacional herdada:
 
 ## 7. Lacunas que a Fase K deve fechar
 
-- pacote de evidencias pre-execucao do candidato;
+- aplicacao documental futura do pacote de evidencias pre-execucao do candidato;
 - criterios de sucesso especificos do candidato;
 - criterios de abortar especificos do candidato;
 - checklist de gates preservados;
@@ -92,10 +92,125 @@ Leitura operacional herdada:
 - plano de leitura das evidencias sem executar operacao real;
 - decisao final se o candidato esta pronto para uma fase posterior de validacao controlada.
 
-## 8. Sequencia sugerida da Fase K
+## 8. Pacote de evidencias pre-execucao do candidato
+
+Escopo deste pacote:
+
+- o pacote de evidencias pre-execucao desta fase fica amarrado exclusivamente ao candidato `fase-j-synthetic-unit-candidate-001`;
+- o objetivo deste pacote e definir o que devera ser confirmado antes de qualquer fase posterior de validacao;
+- este microcorte nao coleta evidencia real;
+- este microcorte nao executa entrypoint;
+- este microcorte nao aciona owner;
+- este microcorte nao chama writer;
+- este microcorte nao chama `resolveConnection`;
+- este microcorte nao altera registry ou allowlist real;
+- este microcorte nao abre tenant DB.
+
+### 8.1 Principio
+
+- evidencia pre-execucao e lista obrigatoria do que devera ser confirmado antes de qualquer fase posterior de validacao controlada;
+- a lista abaixo define obrigatorios documentais e nao substitui evidencia real futura;
+- este microcorte apenas registra o pacote esperado;
+- nenhum item desta secao autoriza execucao, ativacao ou superficie operacional.
+
+### 8.2 Evidencias documentais obrigatorias
+
+Identidade do candidato:
+
+- `targetId=fase-j-synthetic-unit-candidate-001`;
+- `unidadeId=0000000000000000000000a1`;
+- `dbName=wdgestor_unit_0000000000000000000000a1`;
+- `databaseKey=wdgestor_unit_0000000000000000000000a1`;
+- `plannedAllowlist=[0000000000000000000000a1]`.
+
+Natureza sintetica:
+
+- `targetKind=syntheticUnit`;
+- `environment=non-production`;
+- `dataClass=discardable`;
+- `trafficClass=none`;
+- `userClass=none`;
+- `portalExposure=none`;
+- `dedicatedDatabase=true`.
+
+Coerencia do alvo:
+
+- `unidadeId` nao vazio;
+- `dbName` e `databaseKey` coerentes com `unidadeId`;
+- `plannedAllowlist` unitaria;
+- `plannedAllowlist` contendo somente o `unidadeId` do candidato.
+
+Ausencia de risco operacional:
+
+- sem unidade real;
+- sem dados reais;
+- sem trafego real;
+- sem Portal;
+- sem usuario real;
+- sem rota;
+- sem CLI;
+- sem script;
+- sem job;
+- sem bootstrap;
+- sem request path.
+
+Gates e fallback:
+
+- `readiness` devera permanecer obrigatorio;
+- `activation` devera permanecer obrigatorio;
+- allowlist devera permanecer unitaria;
+- fallback para `baseConnection` devera permanecer preservado quando gates forem removidos;
+- rollback devera permanecer definido antes de qualquer fase posterior.
+
+Contexto manual:
+
+- `source=manual`;
+- `approved=true`;
+- `actor` nao vazio;
+- `reason` nao vazio.
+
+Baseline:
+
+- `npm run verify:imports` verde;
+- contratos `owner`, `entrypoint`, `nonProductionPilot`, `controlledPilot` e `writerResolveConnection` verdes;
+- `npm test` verde antes de qualquer publicacao global ou avanco posterior.
+
+### 8.3 Resultado esperado do pacote
+
+- `evidenceReady=true` somente se todas as evidencias obrigatorias estiverem documentadas e sem ambiguidade;
+- `evidenceReady=false` se qualquer evidencia estiver ausente, ambigua ou contraditoria;
+- `warnings` nao substituem obrigatorios;
+- ausencia de evidencia bloqueia qualquer fase posterior de execucao.
+
+### 8.4 Tabela sugerida do pacote
+
+| Evidencia | Valor esperado | Fonte documental | Resultado esperado | Observacao |
+| --- | --- | --- | --- | --- |
+| Identidade do candidato | `targetId`, `unidadeId`, `dbName`, `databaseKey` e `plannedAllowlist` coerentes com o candidato selecionado | Fase J; Fase K | obrigatoria | sem candidato coerente, `evidenceReady=false` |
+| Natureza sintetica | `targetKind=syntheticUnit`, `environment=non-production`, `dataClass=discardable`, `trafficClass=none`, `userClass=none`, `portalExposure=none`, `dedicatedDatabase=true` | Fase J; matriz da Fase I | obrigatoria | qualquer desvio bloqueia fase posterior |
+| Coerencia do alvo | `unidadeId` nao vazio, `dbName/databaseKey` coerentes e allowlist unitaria contendo somente a unidade do candidato | Fase J; matriz da Fase I | obrigatoria | ambiguidade ou allowlist multipla invalida o pacote |
+| Ausencia de risco operacional | sem unidade real, dados reais, trafego real, Portal, usuario real e sem superficie operacional | Fase H; Fase I; Fase K | obrigatoria | qualquer risco operacional mantem bloqueio |
+| Gates e fallback | `readiness` e `activation` obrigatorios, allowlist unitaria, fallback para `baseConnection` preservado e rollback definido | envelope da Fase H; Fase K | obrigatoria | perda de gate ou fallback invalida readiness documental |
+| Contexto manual | `source=manual`, `approved=true`, `actor` nao vazio e `reason` nao vazio | Fase J; matriz da Fase I | obrigatoria | contexto incompleto impede qualquer avanco |
+| Baseline | `verify:imports` e contratos verdes; `npm test` verde antes de publicacao global | Fase H; Fase I; Fase K | obrigatoria | `warnings` nao substituem baseline |
+
+### 8.5 Relacao com a Fase J
+
+- a Fase J selecionou documentalmente o candidato `fase-j-synthetic-unit-candidate-001`;
+- a Fase K nao reabre a selecao;
+- a Fase K prepara evidencias pre-execucao do candidato ja selecionado;
+- a Fase K nao executa o candidato.
+
+### 8.6 Proximo microcorte
+
+- definir criterios de sucesso especificos do candidato;
+- definir criterios de abortar especificos do candidato;
+- ainda sem execucao.
+
+## 9. Sequencia sugerida da Fase K
 
 - Microcorte 1: abertura documental da Fase K e criacao do documento canonico;
-- Microcorte 2: definir pacote de evidencias pre-execucao do candidato;
+- Microcorte 2: definir pacote de evidencias pre-execucao do candidato, consolidado neste microcorte;
 - Microcorte 3: definir criterios de sucesso e abortar especificos do candidato;
 - Microcorte 4: definir checklist de gates preservados e regra de nao operacao;
 - Microcorte 5: aplicar checklist da Fase K ao candidato;
@@ -107,7 +222,7 @@ Leitura operacional da sequencia:
 - nenhum microcorte da Fase K deve transformar `eligible=true` ou selecao documental em autorizacao operacional;
 - qualquer continuidade futura continua dependente de fase ou bloco explicito posterior.
 
-## 9. Criterios que impedem avanco operacional
+## 10. Criterios que impedem avanco operacional
 
 - `eligible=true` nao e autorizacao de execucao;
 - selecao documental nao e operacao;
@@ -119,7 +234,7 @@ Leitura operacional da sequencia:
 - qualquer ambiguidade sobre Portal, dado real, trafego real ou unidade real;
 - qualquer tentativa de criar caller real, rota, CLI, script, job, bootstrap ou request path.
 
-## 10. Baseline obrigatoria
+## 11. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -129,7 +244,7 @@ Leitura operacional da sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 11. Regra de publicacao
+## 12. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;
