@@ -592,6 +592,13 @@ Checkpoint tenant enforcement atual:
 - Regra operacional consolidada desta aplicacao: o resultado nao autoriza execucao real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path.
 - Proximo passo consolidado deste microcorte: encerramento documental da Fase K ou registro de bloqueios, ainda sem execucao.
 
+- Checkpoint documental curto de encerramento da Fase K consolidado nesta rodada.
+- Candidato `fase-j-synthetic-unit-candidate-001` ficou documentalmente pronto para fase posterior explicita de validacao controlada.
+- Resultado consolidado deste encerramento: `evidenceReady=true`, `validationPlanReady=true`, `gatesPreserved=true`, `nonOperational=true` e `blockedReasons=[]`.
+- Encerramento consolidado sem execucao real, sem ativacao real, sem coleta de evidencia real, sem alteracao de registry ou allowlist real, sem tenant DB real e sem mudanca de roteamento.
+- Encerramento consolidado sem caller real, rota, CLI, script, job, bootstrap ou request path.
+- Proximo passo consolidado deste encerramento: baseline final completa e publicacao da Fase K somente com autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados

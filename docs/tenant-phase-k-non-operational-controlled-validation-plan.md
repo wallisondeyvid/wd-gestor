@@ -573,14 +573,96 @@ Este resultado nao autoriza:
 - se houver lacuna encontrada, registrar bloqueios.
 - ainda sem execucao.
 
-## 12. Sequencia sugerida da Fase K
+## 12. Encerramento documental da Fase K
+
+- Fase K encerrada documentalmente.
+- objetivo cumprido.
+
+Candidato:
+
+- `fase-j-synthetic-unit-candidate-001`.
+
+Resultado consolidado:
+
+- `evidenceReady=true`;
+- `validationPlanReady=true`;
+- `gatesPreserved=true`;
+- `nonOperational=true`;
+- `blockedReasons=[]`.
+
+Leitura operacional deste encerramento:
+
+- a Fase K abriu a fase;
+- a Fase K criou plano candidato-especifico de validacao controlada nao operacional;
+- a Fase K definiu pacote de evidencias pre-execucao;
+- a Fase K definiu criterios de sucesso e abortar;
+- a Fase K definiu checklist de gates preservados e regra explicita de nao operacao;
+- a Fase K aplicou o checklist ao candidato;
+- a Fase K obteve `evidenceReady=true`;
+- a Fase K obteve `validationPlanReady=true`;
+- a Fase K obteve `gatesPreserved=true`;
+- a Fase K obteve `nonOperational=true`;
+- a Fase K manteve `blockedReasons=[]`;
+- a Fase K manteve zero execucao real;
+- a Fase K manteve zero superficie operacional nova.
+
+A Fase K nao executou:
+
+- piloto real;
+- ativacao real;
+- coleta de evidencia real;
+- writer;
+- owner;
+- entrypoint;
+- `resolveConnection`;
+- registry real;
+- allowlist real;
+- tenant DB real;
+- mudanca de roteamento.
+
+A Fase K nao criou:
+
+- caller real;
+- rota;
+- CLI;
+- script;
+- job;
+- bootstrap;
+- request path;
+- Portal;
+- PostgreSQL;
+- remocao de fallback.
+
+Estado estrategico pos-Fase K:
+
+- o candidato sintetico esta documentalmente pronto para fase posterior explicita de validacao controlada;
+- isso ainda nao autoriza execucao;
+- isso ainda nao autoriza ativacao;
+- isso ainda nao autoriza caller real;
+- qualquer fase posterior deve nascer explicitamente, com baseline completa, autorizacao explicita, rollback preservado e gates mantidos.
+
+Proximo passo apos este encerramento:
+
+- baseline final completa recomendada antes de publicar:
+- `npm run verify:imports`;
+- `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
+- `npm test`.
+- publicacao da Fase K somente com autorizacao explicita;
+- depois da publicacao, proxima fase ou bloco podera decidir preparacao de validacao controlada posterior;
+- ainda nao criar caller real automaticamente.
+
+## 13. Sequencia sugerida da Fase K
 
 - Microcorte 1: abertura documental da Fase K e criacao do documento canonico;
 - Microcorte 2: definir pacote de evidencias pre-execucao do candidato, consolidado neste microcorte;
 - Microcorte 3: definir criterios de sucesso e abortar especificos do candidato, consolidado neste microcorte;
 - Microcorte 4: definir checklist de gates preservados e regra de nao operacao, consolidado neste microcorte;
 - Microcorte 5: aplicar checklist da Fase K ao candidato, consolidado neste microcorte;
-- Microcorte 6: encerrar documentalmente a Fase K.
+- Microcorte 6: encerrar documentalmente a Fase K, consolidado neste microcorte.
 
 Leitura operacional da sequencia:
 
@@ -588,7 +670,7 @@ Leitura operacional da sequencia:
 - nenhum microcorte da Fase K deve transformar `eligible=true` ou selecao documental em autorizacao operacional;
 - qualquer continuidade futura continua dependente de fase ou bloco explicito posterior.
 
-## 13. Criterios que impedem avanco operacional
+## 14. Criterios que impedem avanco operacional
 
 - `eligible=true` nao e autorizacao de execucao;
 - selecao documental nao e operacao;
@@ -600,7 +682,7 @@ Leitura operacional da sequencia:
 - qualquer ambiguidade sobre Portal, dado real, trafego real ou unidade real;
 - qualquer tentativa de criar caller real, rota, CLI, script, job, bootstrap ou request path.
 
-## 14. Baseline obrigatoria
+## 15. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -610,7 +692,7 @@ Leitura operacional da sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 15. Regra de publicacao
+## 16. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;
