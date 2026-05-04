@@ -134,7 +134,31 @@
 - se nao existir, pausar ou encerrar a Fase I sem execucao;
 - qualquer execucao real exigira nova fase ou bloco explicito.
 
-## 10. Baseline obrigatoria
+## 10. Aplicacao inicial da matriz
+
+- a primeira aplicacao read-only da matriz concluiu `eligible=false` no estado atual;
+- `blockedReasons` iniciais da rodada:
+- ausencia de `targetId` documental;
+- ausencia de candidato formal registrado como `syntheticUnit` ou `controlledMirror`;
+- ausencia de `evidencePlan` concreto de candidato;
+- ausencia de `baselinePlan` concreto de candidato;
+- ausencia de `ownerContextPlan` concreto de candidato;
+- ausencia de documentacao concreta vinculada a candidato para `dataClass=discardable`;
+- ausencia de documentacao concreta vinculada a candidato para `trafficClass=none`;
+- ausencia de documentacao concreta vinculada a candidato para `userClass=none`;
+- ausencia de documentacao concreta vinculada a candidato para `portalExposure=none`;
+- `unidadeId`, `dbName`, `databaseKey`, `plannedAllowlist` e `rollbackPlan` existem apenas em exemplos de testes ou harness;
+- pela regra da matriz, nao ha aceite parcial;
+- ausencia de evidencia continua equivalendo a recusa;
+- exemplos de testes ou harness nao substituem candidato documentado nem autorizam execucao.
+
+Proximos caminhos documentais apos esta aplicacao inicial:
+
+- se houver candidato formal no futuro, abrir microcorte documental especifico de proposta de candidato, preencher todos os campos da matriz e ainda sem executar;
+- se nao houver candidato formal, pausar ou encerrar a Fase I sem execucao;
+- qualquer execucao real exige nova fase ou bloco explicito, baseline final, autorizacao explicita e nao pode nascer de teste, harness ou script existente.
+
+## 11. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;

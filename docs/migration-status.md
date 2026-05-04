@@ -499,6 +499,14 @@ Checkpoint tenant enforcement atual:
 - Decisao consolidada deste microcorte: a Fase I passa a registrar criterios objetivos de aceite e recusa para um alvo candidato antes de qualquer selecao; a matriz nao seleciona alvo concreto e nao autoriza execucao real.
 - Estado operacional consolidado deste microcorte: seguem proibidos caller real, rota, CLI, script, job, bootstrap e request path; a avaliacao do alvo continua apenas documental e depende de evidencia, baseline e contexto manual explicito.
 
+- Checkpoint documental curto da aplicacao read-only inicial da matriz da Fase I consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem selecao oficial de alvo, sem piloto real, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Documentos canonicos deste checkpoint: [tenant-phase-i-controlled-target-selection-plan.md](tenant-phase-i-controlled-target-selection-plan.md) e [tenant-phase-i-target-eligibility-matrix-contract.md](tenant-phase-i-target-eligibility-matrix-contract.md).
+- Decisao consolidada deste microcorte: a Fase I aplicou a matriz em rodada read-only e concluiu que nao existe candidato admissivel no estado atual; exemplos de testes ou harness nao contam como candidato formal documentado.
+- `blockedReasons` consolidados deste microcorte: ausencia de `targetId` documental; ausencia de candidato formal registrado como `syntheticUnit` ou `controlledMirror`; ausencia de `evidencePlan`, `baselinePlan` e `ownerContextPlan` concretos de candidato; ausencia de documentacao concreta vinculada a candidato para `dataClass=discardable`, `trafficClass=none`, `userClass=none` e `portalExposure=none`; e existencia de `unidadeId`, `dbName`, `databaseKey`, `plannedAllowlist` e `rollbackPlan` apenas em exemplos de testes ou harness.
+- Regra decisoria consolidada deste microcorte: pela matriz, ambiguidade e ausencia de evidencia equivalem a recusa, e nao existe `eligible=true` parcial.
+- Proximos caminhos consolidados deste microcorte: ou abrir microcorte documental especifico para propor candidato formal futuro preenchendo todos os campos da matriz, ainda sem executar, ou pausar/encerrar a Fase I sem execucao; qualquer execucao real exige nova fase ou bloco explicito, baseline final e autorizacao explicita, e nao pode nascer de teste, harness ou script existente.
+- Estado operacional consolidado deste microcorte: ainda nao ha piloto real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados

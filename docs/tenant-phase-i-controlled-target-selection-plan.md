@@ -152,7 +152,17 @@ Checkpoint atual desta sequencia:
 - o Microcorte 2 fica registrado no documento [tenant-phase-i-target-eligibility-matrix-contract.md](tenant-phase-i-target-eligibility-matrix-contract.md);
 - esse contrato define criterios objetivos de aceite e recusa para alvo candidato sem selecionar alvo concreto e sem autorizar execucao real.
 
-## 10. Baseline obrigatoria
+## 10. Decisao read-only: ausencia de alvo admissivel no estado atual
+
+- a aplicacao inicial da matriz em rodada read-only concluiu que nao existe candidato admissivel no estado atual;
+- nao ha candidato formal documentado na Fase I;
+- exemplos de teste ou harness nao contam como alvo selecionado nem como candidato formal da Fase I;
+- nao ha `targetId` documental de candidato;
+- nao ha pacote minimo de evidencias documentalmente vinculado a um candidato;
+- nao ha selecao oficial de alvo;
+- nao ha autorizacao de execucao, piloto real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path.
+
+## 11. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -162,7 +172,7 @@ Checkpoint atual desta sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 11. Regra de publicacao
+## 12. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;
