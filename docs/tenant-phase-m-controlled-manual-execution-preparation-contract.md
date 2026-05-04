@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -555,3 +555,79 @@ Registrar:
 - A Fase M nao autoriza abertura de tenant DB real.
 - A Fase M nao autoriza mudanca de roteamento.
 - A Fase M nao envolve Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 16. Encerramento documental da Fase M
+
+Registrar que a Fase M foi encerrada documentalmente.
+
+### 16.1 Resultado final
+
+Registrar:
+
+- preparationContractReady=true;
+- rollbackPlanDefined=true;
+- evidencePlanDefined=true;
+- criteriosDefined=true;
+- candidateStillSynthetic=true;
+- nonOperationalPreserved=true;
+- manualOnlyPreserved=true;
+- noOperationalSurfaceCreated=true;
+- fallbackPreserved=true;
+- executionStillForbidden=true;
+- blockedReasons=[].
+
+### 16.2 Interpretacao do encerramento
+
+Registrar:
+
+- O encerramento da Fase M significa apenas que o contrato documental de preparacao foi concluido.
+- O encerramento da Fase M nao autoriza execucao.
+- O encerramento da Fase M nao autoriza preparacao operacional concreta.
+- O encerramento da Fase M nao autoriza criar comando.
+- O encerramento da Fase M nao autoriza criar script.
+- O encerramento da Fase M nao autoriza criar caller real.
+- O encerramento da Fase M nao autoriza criar rota, CLI, job, bootstrap ou request path.
+- O encerramento da Fase M nao autoriza ler ou alterar registry real.
+- O encerramento da Fase M nao autoriza ler ou alterar allowlist real.
+- O encerramento da Fase M nao autoriza abrir tenant DB real.
+- O encerramento da Fase M nao autoriza mudar roteamento.
+- O encerramento da Fase M nao autoriza coletar evidencia operacional real.
+- O encerramento da Fase M nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+### 16.3 Recomendacao final
+
+Registrar:
+
+- Resultado final: apto para discutir fase posterior explicita de contrato de execucao manual controlada, nao produtiva e sintetica.
+- A fase posterior nao esta aberta.
+- A fase posterior nao e automatica.
+- A fase posterior dependera de abertura explicita, contrato proprio, gates proprios, rollback proprio, evidencias proprias e autorizacao propria.
+- Antes de qualquer fechamento global/publicacao da Fase M, recomenda-se rodar `npm test` completo.
+- O registro do encerramento no status global devera ocorrer em microcorte posterior proprio.
+
+### 16.4 Proibicoes preservadas
+
+Registrar que continuam proibidos:
+
+- execucao real;
+- preparacao operacional concreta;
+- criacao de caller real;
+- criacao de rota;
+- criacao de CLI;
+- criacao de script operacional;
+- criacao de job;
+- criacao de bootstrap;
+- ligacao em request path;
+- execucao de piloto real;
+- execucao de rollback real;
+- coleta de evidencia operacional real;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- abertura de tenant DB real;
+- mudanca de roteamento;
+- uso de unidade real;
+- uso de usuario real;
+- uso de dado real;
+- uso de trafego real;
+- exposicao ao Portal;
+- inclusao de PostgreSQL no escopo.
