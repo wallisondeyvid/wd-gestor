@@ -402,13 +402,184 @@ Escopo desta secao:
 - aplicar checklist da Fase K ao candidato;
 - ainda sem execucao.
 
-## 11. Sequencia sugerida da Fase K
+## 11. Aplicacao do checklist da Fase K ao candidato
+
+Escopo desta secao:
+
+- a aplicacao desta secao e exclusivamente documental;
+- esta aplicacao nao coleta evidencia real;
+- esta aplicacao nao executa entrypoint;
+- esta aplicacao nao aciona owner;
+- esta aplicacao nao chama writer;
+- esta aplicacao nao chama `resolveConnection`;
+- esta aplicacao nao le ou escreve registry real;
+- esta aplicacao nao altera allowlist real;
+- esta aplicacao nao abre tenant DB;
+- esta aplicacao nao muda roteamento;
+- esta aplicacao nao cria superficie operacional.
+
+### 11.1 Principio
+
+- a aplicacao abaixo consolida a leitura documental do candidato `fase-j-synthetic-unit-candidate-001` contra o pacote de evidencias, criterios, gates e regra de nao operacao da Fase K;
+- a aplicacao desta secao e declaratoria e contratual, nao executavel por si so;
+- qualquer divergencia futura deve ser registrada como bloqueio documental, nao como acao operacional.
+
+### 11.2 Aplicacao do pacote de evidencias
+
+Identidade do candidato:
+
+- `targetId` presente: atende;
+- `unidadeId` presente: atende;
+- `dbName` presente: atende;
+- `databaseKey` presente: atende;
+- `plannedAllowlist` presente: atende.
+
+Natureza sintetica:
+
+- `targetKind=syntheticUnit`: atende;
+- `environment=non-production`: atende;
+- `dataClass=discardable`: atende;
+- `trafficClass=none`: atende;
+- `userClass=none`: atende;
+- `portalExposure=none`: atende;
+- `dedicatedDatabase=true`: atende.
+
+Coerencia:
+
+- `unidadeId` coerente com `dbName` e `databaseKey`: atende;
+- `plannedAllowlist` unitaria: atende;
+- `plannedAllowlist` contem somente o `unidadeId` do candidato: atende.
+
+Ausencia de risco operacional:
+
+- sem unidade real: atende;
+- sem dados reais: atende;
+- sem trafego real: atende;
+- sem Portal: atende;
+- sem usuario real: atende;
+- sem rota, CLI, script, job, bootstrap ou request path: atende.
+
+Resultado desta aplicacao:
+
+- `evidenceReady=true`.
+- `blockedEvidenceReasons=[]`.
+- `warnings`:
+- `evidenceReady=true` e documental;
+- nao significa evidencia real coletada;
+- nao significa execucao autorizada.
+
+### 11.3 Aplicacao dos criterios de sucesso e abortar
+
+ Criterios de sucesso:
+
+- satisfeitos documentalmente.
+
+Criterios de abortar:
+
+- nenhum presente documentalmente.
+
+Resultado desta aplicacao:
+
+- `validationPlanReady=true`.
+- `blockedValidationReasons=[]`.
+- `warnings`:
+- `validationPlanReady=true` e documental;
+- nao autoriza operacao;
+- nao autoriza fase posterior sem decisao explicita.
+
+### 11.4 Aplicacao do checklist de gates e da regra de nao operacao
+
+Gates preservados:
+
+- `WD_MULTI_DB` obrigatorio: atende;
+- `WD_MULTI_DB_REGISTRY_READ` obrigatorio: atende;
+- entry consistente obrigatorio: atende;
+- `readiness.ready=true` obrigatorio: atende;
+- `activation.active=true` obrigatorio: atende;
+- allowlist positiva obrigatoria: atende;
+- `plannedAllowlist` unitaria: atende;
+- fallback para `baseConnection` preservado: atende;
+- fail-closed preservado: atende;
+- `rollbackPlan` preservado: atende.
+
+Regra de nao operacao:
+
+- nenhuma chamada operacional: atende;
+- nenhuma superficie nova: atende;
+- nenhum roteamento: atende;
+- nenhuma alteracao real: atende.
+
+Resultado desta aplicacao:
+
+- `gatesPreserved=true`.
+- `nonOperational=true`.
+- `blockedGateReasons=[]`.
+- `blockedOperationalReasons=[]`.
+- `warnings`:
+- `gatesPreserved=true` e contratual e documental;
+- `nonOperational=true` depende da Fase K continuar sem codigo, sem caller e sem execucao.
+
+### 11.5 Resultado consolidado da aplicacao
+
+- `evidenceReady=true`;
+- `validationPlanReady=true`;
+- `gatesPreserved=true`;
+- `nonOperational=true`;
+- `blockedReasons=[]`.
+
+Resultado consolidado:
+
+- candidato pronto documentalmente para fase posterior explicita de validacao controlada.
+
+Este resultado nao autoriza:
+
+- execucao real;
+- ativacao real;
+- writer;
+- owner;
+- entrypoint;
+- `resolveConnection`;
+- registry real;
+- allowlist real;
+- tenant DB real;
+- mudanca de roteamento;
+- caller real;
+- rota;
+- CLI;
+- script;
+- job;
+- bootstrap;
+- request path;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL.
+
+### 11.6 Tabela sugerida
+
+| Dimensao | Resultado | Blocked reasons | Observacao |
+| --- | --- | --- | --- |
+| Pacote de evidencias | `evidenceReady=true` | `[]` | resultado documental, sem coleta de evidencia real |
+| Criterios de sucesso e abortar | `validationPlanReady=true` | `[]` | resultado documental, sem autorizacao operacional |
+| Gates preservados | `gatesPreserved=true` | `[]` | preservacao contratual de gates e fallback |
+| Regra de nao operacao | `nonOperational=true` | `[]` | depende da Fase K continuar sem codigo, caller ou execucao |
+| Consolidado | `blockedReasons=[]` | `[]` | candidato pronto apenas documentalmente |
+
+### 11.7 Proximo microcorte
+
+- encerrar documentalmente a Fase K; ou,
+- se houver lacuna encontrada, registrar bloqueios.
+- ainda sem execucao.
+
+## 12. Sequencia sugerida da Fase K
 
 - Microcorte 1: abertura documental da Fase K e criacao do documento canonico;
 - Microcorte 2: definir pacote de evidencias pre-execucao do candidato, consolidado neste microcorte;
 - Microcorte 3: definir criterios de sucesso e abortar especificos do candidato, consolidado neste microcorte;
 - Microcorte 4: definir checklist de gates preservados e regra de nao operacao, consolidado neste microcorte;
-- Microcorte 5: aplicar checklist da Fase K ao candidato;
+- Microcorte 5: aplicar checklist da Fase K ao candidato, consolidado neste microcorte;
 - Microcorte 6: encerrar documentalmente a Fase K.
 
 Leitura operacional da sequencia:
@@ -417,7 +588,7 @@ Leitura operacional da sequencia:
 - nenhum microcorte da Fase K deve transformar `eligible=true` ou selecao documental em autorizacao operacional;
 - qualquer continuidade futura continua dependente de fase ou bloco explicito posterior.
 
-## 12. Criterios que impedem avanco operacional
+## 13. Criterios que impedem avanco operacional
 
 - `eligible=true` nao e autorizacao de execucao;
 - selecao documental nao e operacao;
@@ -429,7 +600,7 @@ Leitura operacional da sequencia:
 - qualquer ambiguidade sobre Portal, dado real, trafego real ou unidade real;
 - qualquer tentativa de criar caller real, rota, CLI, script, job, bootstrap ou request path.
 
-## 13. Baseline obrigatoria
+## 14. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -439,7 +610,7 @@ Leitura operacional da sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 14. Regra de publicacao
+## 15. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;

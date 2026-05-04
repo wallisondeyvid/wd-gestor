@@ -586,6 +586,12 @@ Checkpoint tenant enforcement atual:
 - Estado operacional consolidado deste microcorte: a Fase K permanece sem execucao e nenhum caller real, rota, CLI, script, job, bootstrap ou request path foi criado.
 - Proximo passo consolidado deste microcorte: aplicar checklist da Fase K ao candidato, ainda sem execucao.
 
+- Checkpoint documental curto da aplicacao da Fase K ao candidato `fase-j-synthetic-unit-candidate-001` consolidado nesta rodada.
+- Resultado documental consolidado desta aplicacao: `evidenceReady=true`, `validationPlanReady=true`, `gatesPreserved=true`, `nonOperational=true` e `blockedReasons=[]`.
+- Natureza consolidada deste resultado: documental, nao operacional e ainda sem coleta de evidencia real.
+- Regra operacional consolidada desta aplicacao: o resultado nao autoriza execucao real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path.
+- Proximo passo consolidado deste microcorte: encerramento documental da Fase K ou registro de bloqueios, ainda sem execucao.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
