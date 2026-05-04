@@ -439,6 +439,13 @@ Checkpoint tenant enforcement atual:
 - Validacao consolidada deste microcorte 4: no bloco tecnico anterior, `npm run verify:imports` permaneceu verde com arquitetura limpa; `tests/architecture/unitDatabaseRegistryManualEntrypoint.contract.test.js` permaneceu verde com 4 tests, 4 pass e 0 fail; `tests/architecture/unitDatabaseRegistryManualOwner.contract.test.js` permaneceu verde com 4 tests, 4 pass e 0 fail; `tests/architecture/unitDatabaseRegistryControlledPilot.contract.test.js` permaneceu verde com 2 tests, 2 pass e 0 fail; `tests/architecture/unitDatabaseRegistryWriterResolveConnection.contract.test.js` permaneceu verde com 15 tests, 15 pass e 0 fail.
 - Proximo passo consolidado apos este microcorte 4: a sequencia da Fase G deve voltar para rodada read-only de decisao sobre piloto nao produtivo, e nao para ativacao real.
 
+- Checkpoint documental curto do contrato do piloto nao produtivo da Fase G consolidado nesta rodada, sem abertura de piloto real, caller real, rota, CLI, script, job, bootstrap ou request path.
+- Documento canonico deste novo checkpoint: [tenant-phase-g-non-production-pilot-plan.md](tenant-phase-g-non-production-pilot-plan.md).
+- Decisao consolidada deste microcorte: a Fase G passa a distinguir explicitamente tres camadas do corredor multi-db, sendo o piloto sintetico ja coberto na Fase F, o entrypoint manual minimo ja implementado na Fase G e o piloto nao produtivo futuro ainda apenas contratual e sem execucao.
+- Estado operacional consolidado deste microcorte: ainda nao houve piloto nao produtivo real; ainda nao houve ativacao real; o entrypoint interno continua sem caller real e permanece fora de rota, CLI, script, job, bootstrap e request path.
+- Contrato consolidado deste microcorte: qualquer piloto futuro permanece restrito a ambiente nao produtivo, unidade sintetica ou espelho controlado, dados descartaveis, DB dedicado, allowlist unitaria, zero trafego real, zero dependencia de usuario real, rollback previamente definido, evidencias de fallback e encerramento sem unidade ativa.
+- Regra operacional consolidada deste microcorte: os commits desta frente continuam locais e sem push ate fechamento do bloco ou da fase; o contrato novo nao autoriza implementacao, nao autoriza teste novo por si so e nao autoriza piloto real.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados

@@ -153,6 +153,7 @@ Observacoes obrigatorias de contrato:
 Leitura operacional da sequencia:
 
 - o piloto nao produtivo vem depois do contrato, do teste, da implementacao minima e do checkpoint documental da implementacao;
+- o contrato documental especifico do piloto nao produtivo fica segregado em `docs/tenant-phase-g-non-production-pilot-plan.md`;
 - CLI, script, rota, job, bootstrap e preload continuam caminhos a evitar como primeiro movimento;
 - o primeiro passo da Fase G e documental por desenho, e nao por ausencia de codigo.
 
@@ -204,4 +205,5 @@ Leitura operacional da sequencia:
 - a implementacao nao chama writer diretamente;
 - a implementacao nao abre tenant connection;
 - a implementacao retorna relatorio deterministico;
-- o proximo passo da fase deve ser decisao read-only sobre piloto nao produtivo, e nao ativacao real.
+- o piloto nao produtivo vem depois do entrypoint minimo e continua sem execucao nesta fase;
+- o contrato especifico desse piloto fica documentado em `docs/tenant-phase-g-non-production-pilot-plan.md`.
