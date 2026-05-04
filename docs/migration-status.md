@@ -412,6 +412,9 @@ Checkpoint tenant enforcement atual:
 - Checkpoint documental curto de owner interno manual minimo implementado da Fase F consolidado nesta rodada, sem abertura de ativacao real.
 - Decisao consolidada deste checkpoint: a Fase F passa a ter funcao interna minima de owner manual implementada em `shared/db`, sem caller real; a funcao valida contexto manual explicito, usa somente funcoes publicas do writer para `pending -> ready -> active`, nao escreve registry diretamente, nao chama `resolveConnection` e nao decide tenant routing, preservando `resolveConnection` como unico decisor do corredor tenant.
 - Escopo operacional preservado neste checkpoint: nao houve entrypoint, rota, CLI, script, job, bootstrap ou request path; nao houve ativacao real; o owner permanece interno e desacoplado de qualquer fluxo real; push permanece suspenso e os microcortes da Fase F continuam acumulando localmente ate o fechamento global da fase ou autorizacao explicita.
+- Checkpoint documental curto de fechamento parcial seguro da Fase F consolidado nesta rodada, sem abertura operacional do corredor.
+- Decisao consolidada deste checkpoint: a Fase F passa a poder ser tratada como bloco parcialmente fechado e seguro no estado atual; rollback operacional, piloto controlado sintetico, contrato do owner manual, contrato testado do owner e owner interno manual minimo ficam cobertos sem caller real, sem entrypoint operacional e sem fluxo exposto.
+- Escopo operacional preservado neste checkpoint: nao houve ativacao real, nao houve unidade real, nao houve rota, CLI, script, job, bootstrap ou request path; `resolveConnection` continua como unico decisor de tenant routing e o writer continua como camada de escrita do owner; commits permanecem locais e sem push ate autorizacao explicita ou fechamento global da fase.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO

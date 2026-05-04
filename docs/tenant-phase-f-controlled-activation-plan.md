@@ -249,3 +249,12 @@ Proximo passo permitido, ainda sem implementacao:
 - a implementacao usa apenas funcoes publicas do writer para `pending -> ready -> active`, nao escreve registry diretamente, nao chama `resolveConnection`, nao decide tenant routing e nao abre tenant connection;
 - `resolveConnection` continua sendo o unico decisor de tenant routing e o writer continua sendo a unica camada de escrita usada pelo owner;
 - a ativacao real continua fechada e este checkpoint nao altera a regra de acumulacao local dos microcortes da Fase F ate fechamento global ou autorizacao explicita.
+
+## 17. Fechamento parcial seguro da Fase F
+
+- a Fase F atinge neste ponto um fechamento parcial seguro como bloco local, com rollback operacional, piloto controlado sintetico, contrato do owner manual e owner interno manual minimo ja cobertos por contrato, implementacao minima e documentacao;
+- o owner permanece sem caller real, sem entrypoint operacional e sem qualquer rota, CLI, script, job, bootstrap ou request path;
+- `resolveConnection` permanece como unico decisor de tenant routing; o writer permanece como unica camada de escrita usada pelo owner; fallback e rollback para `baseConnection` permanecem cobertos por teste;
+- nao houve ativacao real, nao houve unidade real e nao houve abertura operacional do corredor multi-db por unidade;
+- o proximo bloco futuro, se houver continuidade, deixa de ser ampliar contrato basico e passa a ser decidir explicitamente entre manter pausa da fase ou abrir um entrypoint manual deliberado em rodada propria;
+- os commits desta frente continuam locais, sem push, ate autorizacao explicita ou fechamento global da fase.
