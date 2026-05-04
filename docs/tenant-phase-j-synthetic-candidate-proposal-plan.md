@@ -66,33 +66,35 @@ Executar piloto:
 - `userClass`: `none`;
 - `portalExposure`: `none`;
 - `dedicatedDatabase`: `true`;
-- `unidadeId`: ainda a definir documentalmente;
-- `dbName`: ainda a definir documentalmente;
-- `databaseKey`: ainda a definir documentalmente;
-- `plannedAllowlist`: deve ser unitaria, deve conter somente o `unidadeId` do candidato e ainda esta a definir documentalmente;
-- `rollbackPlan`: ainda a definir documentalmente;
-- `evidencePlan`: ainda a definir documentalmente;
-- `baselinePlan`: ainda a definir documentalmente;
-- `ownerContextPlan`: `source=manual`, `approved=true`, `actor` a definir e `reason` a definir.
+- `unidadeId`: `0000000000000000000000a1`;
+- `dbName`: `wdgestor_unit_0000000000000000000000a1`;
+- `databaseKey`: `wdgestor_unit_0000000000000000000000a1`;
+- `plannedAllowlist`: `[0000000000000000000000a1]`, unitaria, contendo somente o `unidadeId` sintetico proposto e mantida apenas como plano documental;
+- `rollbackPlan`: remover a unidade sintetica da allowlist planejada, desativar eventual estado documental futuro do candidato e garantir retorno esperado para `baseConnection` em qualquer avaliacao futura, sem executar rollback neste microcorte e sem chamar writer, owner, entrypoint ou `resolveConnection`;
+- `evidencePlan`: registrar relatorio esperado do entrypoint manual em fase futura, confirmar `targetKind=syntheticUnit`, `environment=non-production`, `dataClass=discardable`, `trafficClass=none`, `userClass=none`, `portalExposure=none`, `dedicatedDatabase=true`, ausencia de dados reais, ausencia de trafego real, ausencia de Portal, allowlist unitaria planejada, fallback esperado para `baseConnection` quando gates forem removidos e rollback planejado, sem produzir evidencias reais neste microcorte;
+- `baselinePlan`: `npm run verify:imports`; `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`; e `npm test` antes de publicacao global ou qualquer avanco operacional futuro;
+- `ownerContextPlan`: `source=manual`, `approved=true`, `actor=operador-fase-j-documental` e `reason=synthetic-candidate-proposal-draft`, registrados como valores documentais planejados e nao como execucao.
 
-## 6. Campos ainda pendentes
+## 6. Estado do preenchimento documental
 
-- `unidadeId`;
-- `dbName`;
-- `databaseKey`;
-- `plannedAllowlist`;
-- `rollbackPlan`;
-- `evidencePlan`;
-- `baselinePlan`;
-- `actor`;
-- `reason`.
+- a proposta da Fase J fica documentalmente mais completa neste microcorte;
+- os campos `unidadeId`, `dbName`, `databaseKey`, `plannedAllowlist`, `rollbackPlan`, `evidencePlan`, `baselinePlan`, `actor` e `reason` deixam de ficar pendentes;
+- os valores preenchidos neste microcorte sao sinteticos, novos e exclusivos da Fase J;
+- os exemplos de testes e harness com `000000000000000000000050`, `000000000000000000000020`, `000000000000000000000021` e `000000000000000000000022` continuam proibidos como fonte automatica de alvo;
+- este preenchimento documental nao significa `eligible=true`;
+- este preenchimento documental nao significa selecao operacional;
+- este preenchimento documental nao significa execucao;
+- este preenchimento documental nao significa ativacao;
+- este preenchimento documental nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path.
 
 ## 7. Criterios para a proposta evoluir
 
-- todos os campos pendentes precisam ser preenchidos documentalmente;
+- a aplicacao formal da matriz da Fase I ao candidato da Fase J passa a ser o proximo microcorte natural;
+- o preenchimento documental deste microcorte nao substitui a aplicacao formal da matriz;
 - nenhuma informacao pode ser inferida de harness ou teste;
 - exemplos de teste nao podem virar alvo automaticamente;
 - nenhum script existente pode ser usado como autorizacao;
+- qualquer ambiguidade futura volta a bloquear `eligible=true`;
 - qualquer ambiguidade mantem `eligible=false`;
 - ausencia de evidencia mantem `eligible=false`.
 
@@ -119,8 +121,8 @@ Executar piloto:
 
 - Microcorte 1: abertura documental da Fase J;
 - Microcorte 2: documento canonico da proposta de candidato;
-- Microcorte 3: preencher campos pendentes do candidato, se possivel, ainda sem execucao;
-- Microcorte 4: aplicar a matriz da Fase I ao candidato proposto;
+- Microcorte 3: preenchimento documental dos campos pendentes do candidato, concluido localmente e ainda sem execucao;
+- Microcorte 4: aplicar formalmente a matriz da Fase I ao candidato proposto, ainda sem execucao;
 - Microcorte 5: se `eligible=true`, documentar selecao futura como decisao separada; se `eligible=false`, encerrar ou pausar a Fase J sem execucao.
 
 Leitura operacional da sequencia:

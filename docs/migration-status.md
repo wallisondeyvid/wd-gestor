@@ -529,6 +529,15 @@ Checkpoint tenant enforcement atual:
 - Estado operacional consolidado deste microcorte: ainda nao ha selecao operacional de alvo, ainda nao ha execucao real, ainda nao ha ativacao real, ainda nao ha caller real, rota, CLI, script, job, bootstrap ou request path.
 - Bloqueios consolidados deste microcorte para `eligible=true`: `unidadeId`, `dbName`, `databaseKey`, `plannedAllowlist`, `rollbackPlan`, `evidencePlan`, `baselinePlan`, `actor` e `reason` seguem pendentes e continuam impedindo aceite.
 
+- Checkpoint documental curto do preenchimento dos campos pendentes da Fase J consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem selecao operacional de alvo, sem piloto real, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Documento canonico atualizado deste checkpoint: [tenant-phase-j-synthetic-candidate-proposal-plan.md](tenant-phase-j-synthetic-candidate-proposal-plan.md).
+- Decisao consolidada deste microcorte: a Fase J preenche documentalmente `unidadeId=0000000000000000000000a1`, `dbName=wdgestor_unit_0000000000000000000000a1`, `databaseKey=wdgestor_unit_0000000000000000000000a1`, `plannedAllowlist` unitaria, `rollbackPlan`, `evidencePlan`, `baselinePlan` e `ownerContextPlan`, usando valores sinteticos novos e exclusivos da propria fase.
+- Regra de origem consolidada deste microcorte: os identificadores de testes e harness `000000000000000000000050`, `000000000000000000000020`, `000000000000000000000021` e `000000000000000000000022` continuam proibidos como fonte automatica de alvo e nao foram reaproveitados.
+- Estado operacional consolidado deste microcorte: nao houve selecao operacional, nao houve execucao real, nao houve ativacao real e nao houve caller real, rota, CLI, script, job, bootstrap ou request path.
+- Regra de aceite consolidada deste microcorte: o preenchimento documental deixa a proposta mais completa, mas ainda nao significa `eligible=true` automaticamente e ainda nao autoriza selecao operacional ou execucao.
+- Regra de bloqueio consolidada deste microcorte: qualquer ambiguidade futura continua bloqueando `eligible=true` e qualquer avaliacao formal futura continua dependente da matriz da Fase I.
+- Proximo passo consolidado deste microcorte: aplicar formalmente a matriz da Fase I ao candidato proposto na Fase J, ainda sem execucao.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
