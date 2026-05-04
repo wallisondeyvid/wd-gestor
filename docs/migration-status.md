@@ -558,6 +558,15 @@ Checkpoint tenant enforcement atual:
 - Estado operacional consolidado deste encerramento: encerramento sem execucao real, sem ativacao real, sem alteracao de registry ou allowlist real, sem tenant DB real, sem mudanca de roteamento e sem superficie operacional nova.
 - Regra de continuidade consolidada deste encerramento: a publicacao da Fase J depende de baseline final completa e autorizacao explicita; apos publicacao, a proxima fase ou bloco deve tratar preparacao ou validacao controlada do candidato selecionado documentalmente.
 
+- Checkpoint documental curto de abertura da Fase K consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Nome consolidado desta nova fase: Fase K - Plano de Validacao Controlada Nao Operacional do Candidato Sintetico Multi-DB.
+- Fase K nasce apos a Fase J publicada em `a58848c docs(tenant): encerra fase j`.
+- Documento canonico desta abertura: [tenant-phase-k-non-operational-controlled-validation-plan.md](tenant-phase-k-non-operational-controlled-validation-plan.md).
+- Candidato alvo consolidado desta abertura: `fase-j-synthetic-unit-candidate-001`.
+- Objetivo consolidado desta fase: transformar o envelope generico da Fase H em plano candidato-especifico de validacao controlada nao operacional.
+- Regra operacional consolidada desta abertura: a Fase K nao autoriza execucao real, ativacao real, caller real, rota, CLI, script, job, bootstrap, request path, Portal, dados reais, trafego real, usuario real, unidade real, alteracao de registry ou allowlist real, tenant DB real ou mudanca de roteamento.
+- Proximo microcorte sugerido desta abertura: definir pacote de evidencias pre-execucao do candidato.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
