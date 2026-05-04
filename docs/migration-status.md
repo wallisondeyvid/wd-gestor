@@ -484,6 +484,16 @@ Checkpoint tenant enforcement atual:
 - Regra operacional consolidada deste encerramento: os commits desta frente seguem locais, sem push, ate baseline final e autorizacao explicita de publicacao do fechamento da fase.
 - Regra de continuidade consolidada apos este encerramento: qualquer sequencia futura deve nascer como nova fase ou novo bloco explicito, e nao como extensao implicita da Fase H.
 
+- Checkpoint documental curto de abertura da Fase I consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem piloto real, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Nome consolidado desta nova fase: Fase I - Selecao de Alvo Controlado Nao Produtivo Multi-DB.
+- Documento canonico desta abertura: [tenant-phase-i-controlled-target-selection-plan.md](tenant-phase-i-controlled-target-selection-plan.md).
+- Estado herdado consolidado desta abertura: a Fase F, a Fase G e a Fase H estao encerradas e publicadas; o owner manual minimo existe; o entrypoint manual minimo existe; o harness do piloto nao produtivo existe; o envelope operacional existe; `resolveConnection` continua como unico decisor de tenant routing; ainda nao houve piloto real, ativacao real ou caller real.
+- Decisao consolidada desta abertura: a proxima lacuna real apos a publicacao da Fase H em `a8ad769` e selecionar e congelar um alvo admissivel nao produtivo; por isso a Fase I nasce como fase estritamente documental e read-only, focada em selecao de alvo controlado e nao em execucao.
+- Objetivo inicial consolidado desta fase: selecionar e congelar documentalmente um alvo admissivel para futura validacao controlada nao produtiva, definir matriz de elegibilidade, criterios de exclusao, pacote minimo de evidencias e criterios de abortar, sem executar piloto e sem criar superficie operacional.
+- Regra operacional consolidada desta abertura: ainda nao ha caller real, rota, CLI, script, job, bootstrap ou request path; a abertura da Fase I nao autoriza piloto real, ativacao real nem selecao operacional do alvo fora da documentacao.
+- Baseline obrigatoria consolidada desta abertura: `npm run verify:imports`; `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`; `npm test` antes de publicacao global.
+- Regra de publicacao consolidada desta abertura: os commits desta frente podem acumular localmente, sem push em microcortes; qualquer publicacao futura continua dependente de baseline final completa e autorizacao explicita posterior.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
