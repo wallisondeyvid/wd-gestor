@@ -373,9 +373,9 @@ Interpretacao obrigatoria dos gates:
 - gates verdes nao autorizam rota, CLI, script, job, bootstrap ou request path;
 - qualquer duvida degrada para "nao executar" ou "bloqueado".
 
-## 13. Resultado inicial
+## 13. Resultado do checklist documental
 
-- `decisionContractReady`: `false`
+- `decisionContractReady`: `true`
 - `candidateStillSynthetic`: `true`
 - `manualOnlyPreserved`: `true`
 - `nonOperationalPreserved`: `true`
@@ -384,6 +384,53 @@ Interpretacao obrigatoria dos gates:
 - `noOperationalSurfaceCreated`: `true`
 - `baselineGreen`: `true`
 - `blockedReasons`: `[]`
+
+Interpretacao de `decisionContractReady=true`:
+
+- significa apenas que o contrato documental de decisao da Fase L esta pronto;
+- nao autoriza execucao dentro da Fase L;
+- nao autoriza preparacao operacional;
+- nao autoriza caller real;
+- nao autoriza rota, CLI, script, job, bootstrap ou request path;
+- nao autoriza alteracao de registry real;
+- nao autoriza alteracao de allowlist real;
+- nao autoriza abertura de tenant DB real;
+- nao autoriza mudanca de roteamento;
+- nao envolve Portal;
+- nao envolve dados reais;
+- nao envolve trafego real;
+- nao envolve usuario real;
+- nao envolve unidade real;
+- nao envolve PostgreSQL.
+
+Checklist documental aplicado:
+
+- criterios formais de decisao foram definidos;
+- evidencias documentais aceitas foram definidas;
+- semantica dos gates foi definida;
+- candidato sintetico herdado permanece o mesmo;
+- owner manual permanece sem caller real;
+- entrypoint manual permanece sem caller real;
+- fallback para `baseConnection` permanece obrigatorio;
+- rollback permanece pre-condicao;
+- allowlist permanece unitaria, explicita e sintetica;
+- ausencia de superficie operacional nova permanece preservada;
+- baseline curta permanece verde;
+- `blockedReasons` permanece vazio porque nenhum bloqueador documental foi identificado.
+
+Estado documental apos checklist:
+
+- A Fase L fica documentalmente apta a ser encerrada em microcorte posterior.
+- Esse estado nao e encerramento global automatico.
+- Esse estado nao e autorizacao para execucao.
+- O proximo microcorte devera ser o encerramento documental da Fase L ou uma atualizacao de status, conforme decisao posterior.
+- Antes de fechamento global ou publicacao da Fase L, recomendar `npm test` completo.
+
+Resultado decisorio provisorio:
+
+- Resultado provisorio: apto para preparar discussao de fase posterior explicita.
+- Interpretacao obrigatoria: "apto para preparar discussao" nao significa executar, preparar operacao ou criar caller real.
+- Qualquer fase posterior que trate execucao manual controlada devera ser aberta explicitamente, com novo contrato, novos gates, rollback e autorizacao propria.
 
 ## 14. Interpretacao obrigatoria
 
