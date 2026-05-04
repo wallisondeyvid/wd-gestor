@@ -116,3 +116,49 @@ Checkpoint atual desta sequencia:
 - commits locais podem acumular;
 - sem push em microcortes;
 - push apenas no fechamento global da Fase H, apos baseline final completa e autorizacao explicita.
+
+## 10. Encerramento documental da fase
+
+- a rodada read-only de decisao concluiu que a Fase H pode ser encerrada documentalmente como bloco local;
+- o objetivo desta fase foi cumprido por abertura formal da Fase H, definicao do plano de preparacao, definicao do contrato do envelope operacional e decisao read-only sobre harness;
+- nao criar harness especifico da Fase H neste momento e a decisao consolidada deste encerramento;
+- o harness da Fase G permanece suficiente para a cobertura arquitetural existente;
+- criar harness novo agora duplicaria a cobertura da Fase G sem ganho real.
+
+Estado final consolidado:
+
+- envelope operacional definido;
+- sem piloto real;
+- sem execucao real;
+- sem ativacao real;
+- sem caller real;
+- sem rota;
+- sem CLI;
+- sem script;
+- sem job;
+- sem bootstrap;
+- sem request path;
+- sem alteracao de codigo;
+- sem alteracao de testes.
+
+O que permanece bloqueando execucao real:
+
+- decisao explicita futura;
+- autorizacao futura;
+- escolha de alvo nao produtivo;
+- baseline final;
+- evidencias operacionais;
+- garantia de nao virar caller real nem superficie operacional.
+
+Baseline recomendada para fechamento:
+
+- `npm run verify:imports`;
+- `node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
+- `npm test` antes de publicacao global.
+
+Regra operacional final:
+
+- os commits desta frente seguem locais, sem push, ate baseline final e autorizacao explicita de publicacao do fechamento da fase;
+- qualquer continuidade futura deve nascer como nova fase ou novo bloco explicito, e nao como extensao implicita da Fase H.
