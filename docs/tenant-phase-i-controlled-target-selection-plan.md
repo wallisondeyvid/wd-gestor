@@ -162,7 +162,17 @@ Checkpoint atual desta sequencia:
 - nao ha selecao oficial de alvo;
 - nao ha autorizacao de execucao, piloto real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path.
 
-## 11. Baseline obrigatoria
+## 11. Encerramento documental da Fase I
+
+- a Fase I fica encerrada documentalmente neste microcorte;
+- o objetivo da fase foi cumprido: abertura documental da fase, definicao da matriz de elegibilidade, aplicacao da matriz ao estado atual e conclusao de ausencia de alvo admissivel no estado atual;
+- a Fase I encerra sem alvo selecionado;
+- o resultado consolidado da matriz permanece `eligible=false` no estado atual;
+- a ausencia de candidato admissivel bloqueia o avanco para validacao controlada;
+- qualquer continuidade futura exige novo bloco ou nova fase explicita;
+- eventual candidato futuro deve nascer como proposta documental completa, ainda sem execucao automatica, sem piloto real e sem ativacao real.
+
+## 12. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -172,7 +182,7 @@ Checkpoint atual desta sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 12. Regra de publicacao
+## 13. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;

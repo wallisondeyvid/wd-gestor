@@ -507,6 +507,14 @@ Checkpoint tenant enforcement atual:
 - Proximos caminhos consolidados deste microcorte: ou abrir microcorte documental especifico para propor candidato formal futuro preenchendo todos os campos da matriz, ainda sem executar, ou pausar/encerrar a Fase I sem execucao; qualquer execucao real exige nova fase ou bloco explicito, baseline final e autorizacao explicita, e nao pode nascer de teste, harness ou script existente.
 - Estado operacional consolidado deste microcorte: ainda nao ha piloto real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path.
 
+- Checkpoint documental curto de encerramento da Fase I consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem selecao de alvo, sem piloto real, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Documento canonico deste encerramento: [tenant-phase-i-controlled-target-selection-plan.md](tenant-phase-i-controlled-target-selection-plan.md).
+- Estado de contrato mantido neste encerramento: [tenant-phase-i-target-eligibility-matrix-contract.md](tenant-phase-i-target-eligibility-matrix-contract.md) permanece valido para avaliacoes futuras e continua registrando `eligible=false` na aplicacao inicial ao estado atual.
+- Decisao consolidada deste microcorte: a Fase I encerra documentalmente tendo cumprido seu objetivo de abrir a fase, definir a matriz, aplicar a matriz ao estado atual e concluir que nao existe alvo admissivel no estado atual.
+- Resultado consolidado deste encerramento: a Fase I encerra sem alvo selecionado, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Regra de continuidade consolidada deste encerramento: o proximo avanco depende de novo bloco ou nova fase explicita para proposta formal de candidato ou preparacao futura de alvo, sempre com baseline final e autorizacao explicita antes de qualquer execucao.
+- Regra de publicacao consolidada deste encerramento: os commits desta frente seguem acumulados localmente; sem push neste microcorte.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados

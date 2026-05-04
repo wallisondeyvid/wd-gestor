@@ -158,7 +158,15 @@ Proximos caminhos documentais apos esta aplicacao inicial:
 - se nao houver candidato formal, pausar ou encerrar a Fase I sem execucao;
 - qualquer execucao real exige nova fase ou bloco explicito, baseline final, autorizacao explicita e nao pode nascer de teste, harness ou script existente.
 
-## 11. Baseline obrigatoria
+## 11. Estado de encerramento da Fase I
+
+- a matriz permanece valida como contrato para avaliacoes futuras de candidato;
+- a aplicacao inicial consolidada da matriz retornou `eligible=false` no estado atual;
+- nao existe aceite parcial;
+- testes e harness continuam insuficientes para substituir candidato formal documentado;
+- a matriz nao autoriza execucao real, piloto real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path.
+
+## 12. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
