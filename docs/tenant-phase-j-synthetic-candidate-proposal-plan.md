@@ -98,7 +98,48 @@ Executar piloto:
 - qualquer ambiguidade mantem `eligible=false`;
 - ausencia de evidencia mantem `eligible=false`.
 
-## 8. O que a Fase J nao autoriza
+## 8. Aplicacao formal da matriz da Fase I
+
+| Campo | Valor do candidato | Resultado |
+| --- | --- | --- |
+| `targetId` | `fase-j-synthetic-unit-candidate-001` | atende |
+| `unidadeId` | `0000000000000000000000a1` | atende |
+| `dbName` | `wdgestor_unit_0000000000000000000000a1` | atende |
+| `databaseKey` | `wdgestor_unit_0000000000000000000000a1` | atende |
+| `environment` | `non-production` | atende |
+| `targetKind` | `syntheticUnit` | atende |
+| `dataClass` | `discardable` | atende |
+| `trafficClass` | `none` | atende |
+| `userClass` | `none` | atende |
+| `portalExposure` | `none` | atende |
+| `dedicatedDatabase` | `true` | atende |
+| `plannedAllowlist` | `[0000000000000000000000a1]` | atende |
+| `rollbackPlan` | definido documentalmente | atende |
+| `evidencePlan` | definido documentalmente | atende |
+| `baselinePlan` | definido documentalmente | atende |
+| `ownerContextPlan` | `source=manual`, `approved=true`, `actor/reason` nao vazios | atende |
+
+Resultado formal desta aplicacao:
+
+- `eligible=true`.
+- `blockedReasons=[]`.
+- `warnings`:
+- `eligible=true` e apenas elegibilidade documental;
+- nao autoriza execucao;
+- nao autoriza ativacao;
+- nao seleciona operacionalmente alvo;
+- nao cria caller real;
+- nao cria rota, CLI, script, job, bootstrap ou request path;
+- nao remove fallback;
+- nao altera registry, writer, reader, cache, preload ou `resolveConnection`.
+
+Leitura operacional desta aplicacao:
+
+- o candidato satisfaz documentalmente todos os campos obrigatorios da matriz da Fase I;
+- o resultado `eligible=true` nao substitui decisao documental separada sobre selecao ou nao selecao do candidato;
+- qualquer execucao exigira fase ou bloco posterior explicito, baseline completa e autorizacao explicita.
+
+## 9. O que a Fase J nao autoriza
 
 - nao autoriza execucao real;
 - nao autoriza ativacao real;
@@ -117,13 +158,13 @@ Executar piloto:
 - nao autoriza PostgreSQL;
 - nao autoriza remover fallback.
 
-## 9. Sequencia recomendada da Fase J
+## 10. Sequencia recomendada da Fase J
 
 - Microcorte 1: abertura documental da Fase J;
 - Microcorte 2: documento canonico da proposta de candidato;
 - Microcorte 3: preenchimento documental dos campos pendentes do candidato, concluido localmente e ainda sem execucao;
-- Microcorte 4: aplicar formalmente a matriz da Fase I ao candidato proposto, ainda sem execucao;
-- Microcorte 5: se `eligible=true`, documentar selecao futura como decisao separada; se `eligible=false`, encerrar ou pausar a Fase J sem execucao.
+- Microcorte 4: aplicacao formal da matriz da Fase I ao candidato proposto, concluida localmente com `eligible=true` documental e ainda sem execucao;
+- Microcorte 5: documentar decisao separada sobre selecao ou nao selecao do candidato elegivel, ainda sem execucao.
 
 Leitura operacional da sequencia:
 
@@ -131,7 +172,7 @@ Leitura operacional da sequencia:
 - nenhum microcorte da Fase J deve operar unidade real, dados reais, trafego real ou Portal;
 - qualquer continuidade futura continua dependente de baseline final completa antes de publicacao global.
 
-## 10. Baseline obrigatoria
+## 11. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -141,7 +182,7 @@ Leitura operacional da sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 11. Regra de publicacao
+## 12. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;

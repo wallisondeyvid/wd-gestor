@@ -538,6 +538,13 @@ Checkpoint tenant enforcement atual:
 - Regra de bloqueio consolidada deste microcorte: qualquer ambiguidade futura continua bloqueando `eligible=true` e qualquer avaliacao formal futura continua dependente da matriz da Fase I.
 - Proximo passo consolidado deste microcorte: aplicar formalmente a matriz da Fase I ao candidato proposto na Fase J, ainda sem execucao.
 
+- Checkpoint documental curto da aplicacao formal da matriz da Fase I ao candidato da Fase J consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem selecao operacional de alvo, sem piloto real, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Documento canonico atualizado deste checkpoint: [tenant-phase-j-synthetic-candidate-proposal-plan.md](tenant-phase-j-synthetic-candidate-proposal-plan.md).
+- Decisao consolidada deste microcorte: a Fase J aplica formalmente a matriz da Fase I ao candidato sintetico `fase-j-synthetic-unit-candidate-001` e registra resultado documental `eligible=true`.
+- Resultado consolidado deste microcorte: `blockedReasons=[]`.
+- Warnings consolidados deste microcorte: `eligible=true` e apenas elegibilidade documental; nao autoriza selecao operacional, execucao real, ativacao real, caller real, rota, CLI, script, job, bootstrap ou request path; nao remove fallback; nao altera registry, writer, reader, cache, preload ou `resolveConnection`.
+- Proximo passo consolidado deste microcorte: decisao documental separada sobre selecao ou nao selecao do candidato elegivel, ainda sem execucao.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
