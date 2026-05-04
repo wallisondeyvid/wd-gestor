@@ -552,6 +552,12 @@ Checkpoint tenant enforcement atual:
 - Estado operacional consolidado deste microcorte: nao houve execucao real, nao houve ativacao real, nao houve alteracao de registry ou allowlist real e nao houve caller real, rota, CLI, script, job, bootstrap ou request path.
 - Proximo passo consolidado deste microcorte: encerramento documental da Fase J ou abertura de fase posterior explicita de preparacao ou validacao controlada do candidato selecionado documentalmente.
 
+- Checkpoint documental curto de encerramento da Fase J consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem ativacao real, sem alteracao de registry ou allowlist real, sem tenant DB real, sem mudanca de roteamento e sem caller real, rota, CLI, script, job, bootstrap ou request path.
+- Documento canonico atualizado deste encerramento: [tenant-phase-j-synthetic-candidate-proposal-plan.md](tenant-phase-j-synthetic-candidate-proposal-plan.md).
+- Decisao consolidada deste microcorte: a Fase J encerra documentalmente tendo cumprido seu objetivo de abrir a fase, criar a proposta documental do candidato sintetico, preencher os campos do candidato, aplicar formalmente a matriz da Fase I, obter `eligible=true` com `blockedReasons=[]` e selecionar documentalmente o candidato `fase-j-synthetic-unit-candidate-001`.
+- Estado operacional consolidado deste encerramento: encerramento sem execucao real, sem ativacao real, sem alteracao de registry ou allowlist real, sem tenant DB real, sem mudanca de roteamento e sem superficie operacional nova.
+- Regra de continuidade consolidada deste encerramento: a publicacao da Fase J depende de baseline final completa e autorizacao explicita; apos publicacao, a proxima fase ou bloco deve tratar preparacao ou validacao controlada do candidato selecionado documentalmente.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
