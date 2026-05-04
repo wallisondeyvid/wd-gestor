@@ -96,6 +96,11 @@ Leitura operacional da sequencia:
 - nenhum passo deve operar unidade real, dados reais ou trafego real;
 - qualquer sequencia futura continua dependente de baseline final completa antes de publicacao global.
 
+Checkpoint atual desta sequencia:
+
+- o Microcorte 2 fica registrado no documento [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md);
+- esse contrato fecha apenas a moldura documental do envelope operacional e nao autoriza execucao real nem criacao de superficie operacional.
+
 ## 8. Baseline obrigatoria da fase
 
 - `npm run verify:imports`;

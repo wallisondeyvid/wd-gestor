@@ -469,6 +469,11 @@ Checkpoint tenant enforcement atual:
 - Objetivo inicial consolidado desta fase: definir ritual, alvo admissivel, evidencias, criterios de sucesso, criterios de abortar, baseline e fronteiras do futuro piloto controlado nao produtivo por unidade, sem tocar em runtime, writer, registry, owner, entrypoint, rota, CLI, script, job, bootstrap ou request path.
 - Regra operacional consolidada desta abertura: os commits desta frente podem acumular localmente, sem push em microcortes; qualquer publicacao futura continua dependente de baseline final completa e autorizacao explicita posterior.
 
+- Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
+- Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
+- Estado operacional consolidado deste microcorte: ainda nao ha execucao real, ainda nao ha caller real, ainda nao ha rota, CLI, script, job, bootstrap ou request path; o contrato apenas define entradas, pre-condicoes, evidencias, criterios de sucesso, criterios de abortar, rollback e baseline antes de qualquer decisao futura de execucao.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
