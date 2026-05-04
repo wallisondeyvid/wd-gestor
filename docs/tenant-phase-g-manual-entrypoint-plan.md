@@ -8,7 +8,7 @@
 
 - o owner interno manual minimo ja existe em `src/shared/db/unitDatabaseRegistryManualOwner.js`;
 - o owner permanece sem caller real;
-- nao existe entrypoint manual deliberado;
+- o entrypoint interno minimo da Fase G agora existe em `src/shared/db/unitDatabaseRegistryManualEntrypoint.js`;
 - nao existe rota;
 - nao existe CLI;
 - nao existe script;
@@ -38,7 +38,7 @@ Leitura operacional herdada:
 
 ## 4. Definicao do futuro entrypoint
 
-O futuro entrypoint admissivel desta fase deve ser:
+O entrypoint admissivel desta fase fica consolidado como:
 
 - funcao interna separada;
 - wrapper manual e deliberado sobre `runUnitDatabaseRegistryManualOwner`;
@@ -51,14 +51,20 @@ O futuro entrypoint admissivel desta fase deve ser:
 - sem job;
 - sem bootstrap;
 - sem preload;
-- sem caller real nesta abertura documental.
+- sem caller real neste estado atual da fase.
 
 Leitura operacional:
 
-- o entrypoint futuro nao substitui o owner;
-- o entrypoint futuro fica acima do owner como borda interna de validacao e relato;
+- o entrypoint implementado nao substitui o owner;
+- o entrypoint implementado fica acima do owner como borda interna de validacao e relato;
 - o owner continua sendo o miolo minimo de orquestracao `pending -> ready -> active`;
-- o entrypoint futuro podera chamar `runUnitDatabaseRegistryManualOwner` diretamente quando existir implementacao minima propria.
+- o entrypoint implementado chama `runUnitDatabaseRegistryManualOwner` diretamente;
+- o entrypoint implementado retorna relatorio deterministico;
+- o entrypoint implementado nao chama writer diretamente;
+- o entrypoint implementado nao escreve registry diretamente;
+- o entrypoint implementado nao chama `resolveConnection`;
+- o entrypoint implementado nao decide tenant routing;
+- o entrypoint implementado nao abre tenant connection.
 
 ## 5. Responsabilidades permitidas
 
@@ -70,7 +76,7 @@ Leitura operacional:
 - validar allowlist unitaria prevista para a unidade alvo;
 - validar coerencia minima de `unidadeId`, `dbName` e `databaseKey`;
 - documentar flags esperadas do corredor;
-- chamar `runUnitDatabaseRegistryManualOwner` quando houver implementacao futura;
+- chamar `runUnitDatabaseRegistryManualOwner`;
 - produzir relatorio deterministico;
 - registrar claramente que o entrypoint nao decide routing.
 
@@ -146,7 +152,7 @@ Observacoes obrigatorias de contrato:
 
 Leitura operacional da sequencia:
 
-- o piloto nao produtivo vem depois do contrato, do teste e da implementacao minima do entrypoint;
+- o piloto nao produtivo vem depois do contrato, do teste, da implementacao minima e do checkpoint documental da implementacao;
 - CLI, script, rota, job, bootstrap e preload continuam caminhos a evitar como primeiro movimento;
 - o primeiro passo da Fase G e documental por desenho, e nao por ausencia de codigo.
 
@@ -177,3 +183,25 @@ Leitura operacional da sequencia:
 - este microcorte nao cria caller real;
 - push nao deve ocorrer neste microcorte inicial;
 - commits locais futuros, se houver continuidade, devem acumular ate fechamento de bloco ou de fase.
+
+## 12. Estado atual apos a implementacao minima
+
+- o entrypoint interno minimo foi implementado;
+- a implementacao ainda nao e ativacao real;
+- a implementacao ainda nao tem caller real;
+- a implementacao ainda nao e rota;
+- a implementacao ainda nao e CLI;
+- a implementacao ainda nao e script;
+- a implementacao ainda nao e job;
+- a implementacao ainda nao e bootstrap;
+- a implementacao ainda nao e request path;
+- a implementacao nao opera unidade real;
+- a implementacao nao opera dados reais;
+- a implementacao delega ao owner interno manual existente;
+- a implementacao nao substitui `resolveConnection`;
+- a implementacao nao decide tenant routing;
+- a implementacao nao escreve registry diretamente;
+- a implementacao nao chama writer diretamente;
+- a implementacao nao abre tenant connection;
+- a implementacao retorna relatorio deterministico;
+- o proximo passo da fase deve ser decisao read-only sobre piloto nao produtivo, e nao ativacao real.
