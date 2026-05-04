@@ -231,3 +231,12 @@ Proximo passo permitido, ainda sem implementacao:
 - antes de implementar o owner, o proximo microcorte pode ser apenas ampliar a documentacao ou criar teste de contrato focal do owner futuro;
 - se houver implementacao posterior, ela deve nascer como funcao interna minima, coberta por teste, e ainda sem rota, CLI, script, job, bootstrap ou request path;
 - os commits desta frente continuam locais, sem push, ate o fechamento global da Fase F ou autorizacao explicita.
+
+## 15. Checkpoint de contrato testado do owner interno manual futuro
+
+- o contrato do owner interno manual futuro da Fase F agora tambem esta caracterizado por teste, sem implementacao de owner real e sem uso de unidade real;
+- a caracterizacao foi feita em suite arquitetural propria, por helper local de teste, sem criar modulo de producao, sem export publico e sem virar API de runtime;
+- o helper aceita apenas contexto manual explicito com `source=manual`, `approved=true`, `reason` nao vazia e `actor` nao vazio, e recusa caller automatico, oportunista, request path, rota, CLI, script, job e bootstrap;
+- a orquestracao caracterizada usa apenas funcoes publicas do writer para `pending -> ready -> active`, sem escrita direta do registry e sem burlar writer, reader/cache ou `resolveConnection`;
+- mesmo apos `active`, a abertura de tenant continua dependente dos gates existentes e da allowlist positiva; sem allowlist, o corredor permanece em `baseConnection`; rollback via writer continua retornando para `baseConnection` com fail-safe preservado;
+- esse checkpoint nao implementa owner real, nao cria entrypoint, nao cria rota, nao cria CLI, nao cria script, nao cria job e nao altera a regra de acumulacao local dos microcortes da Fase F ate fechamento global ou autorizacao explicita.
