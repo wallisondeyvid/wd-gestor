@@ -630,6 +630,30 @@ Checkpoint tenant enforcement atual:
 - Interpretacao: Fase M nao autoriza execucao, nao autoriza preparacao operacional concreta, nao cria caller real e nao abre proxima fase automaticamente.
 - Push: pendente; nao realizar push ate fechamento global da Fase M ou bloco amplo e autorizacao explicita.
 
+- Checkpoint documental de encerramento da Fase M consolidado nesta rodada.
+- Fase M encerrada documentalmente em: e008546 docs(tenant): encerra fase m
+- Documento canonico: [docs/tenant-phase-m-controlled-manual-execution-preparation-contract.md](docs/tenant-phase-m-controlled-manual-execution-preparation-contract.md)
+- Natureza: documental, preparatoria e nao operacional.
+- Resultado final: contrato documental de preparacao concluido.
+- Gates finais:
+	- preparationContractReady=true;
+	- rollbackPlanDefined=true;
+	- evidencePlanDefined=true;
+	- criteriosDefined=true;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- manualOnlyPreserved=true;
+	- noOperationalSurfaceCreated=true;
+	- fallbackPreserved=true;
+	- executionStillForbidden=true;
+	- blockedReasons=[].
+- Interpretacao obrigatoria: o encerramento da Fase M nao autoriza execucao, nao autoriza preparacao operacional concreta, nao cria caller real, nao cria rota/CLI/script/job/bootstrap/request path, nao altera registry real, nao altera allowlist real, nao abre tenant DB real, nao muda roteamento e nao envolve Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Recomendacao final: apto para discutir fase posterior explicita de contrato de execucao manual controlada, nao produtiva e sintetica.
+- Proxima fase: nao aberta automaticamente; qualquer fase posterior dependera de abertura explicita, contrato proprio, gates proprios, rollback proprio, evidencias proprias e autorizacao propria.
+- Validacao: baseline curta pos-encerramento documental da Fase M verde: tests 136, suites 14, pass 136, fail 0, skipped 0.
+- Fechamento global/publicacao: antes de push, recomenda-se rodar `npm test` completo.
+- Push: pendente; nao realizar push ate validacao completa final, status consolidado e autorizacao explicita do usuario.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
