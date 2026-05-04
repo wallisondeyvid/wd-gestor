@@ -515,6 +515,14 @@ Checkpoint tenant enforcement atual:
 - Regra de continuidade consolidada deste encerramento: o proximo avanco depende de novo bloco ou nova fase explicita para proposta formal de candidato ou preparacao futura de alvo, sempre com baseline final e autorizacao explicita antes de qualquer execucao.
 - Regra de publicacao consolidada deste encerramento: os commits desta frente seguem acumulados localmente; sem push neste microcorte.
 
+- Checkpoint documental curto de abertura da Fase J consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem documento canônico novo, sem selecao operacional de alvo, sem piloto real, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Nome consolidado desta nova fase: Fase J - Proposta Documental de Candidato Sintetico Controlado Multi-DB.
+- Decisao consolidada desta abertura: a Fase J nasce apos a Fase I publicada em `b8f7b15`, herdando como lacuna real a ausencia de candidato formal admissivel.
+- Objetivo inicial consolidado desta fase: propor documentalmente um candidato sintetico controlado futuro, sem selecionar alvo operacionalmente e sem executar piloto, ativacao ou qualquer fluxo real.
+- Contratos herdados consolidados desta abertura: a matriz de elegibilidade da Fase I, o envelope operacional da Fase H, o harness do piloto nao produtivo da Fase G e o owner e o entrypoint manuais das Fases F/G permanecem como moldura obrigatoria.
+- Regra operacional consolidada desta abertura: a Fase J nao autoriza selecao operacional de alvo, execucao real, ativacao real, caller real, rota, CLI, script, job, bootstrap, request path, Portal, dados reais, trafego real ou unidade real.
+- Proximo microcorte sugerido desta abertura: criar o documento canonico da Fase J com a proposta documental de candidato, ainda sem execucao.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados

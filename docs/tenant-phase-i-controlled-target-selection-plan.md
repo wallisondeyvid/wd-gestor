@@ -172,6 +172,12 @@ Checkpoint atual desta sequencia:
 - qualquer continuidade futura exige novo bloco ou nova fase explicita;
 - eventual candidato futuro deve nascer como proposta documental completa, ainda sem execucao automatica, sem piloto real e sem ativacao real.
 
+Continuidade conservadora apos o encerramento:
+
+- a continuidade conservadora pos-Fase I passa a ser uma nova fase estritamente documental;
+- a Fase J deve propor candidato sintetico controlado sem selecao operacional e sem execucao;
+- a conclusao `eligible=false` da Fase I permanece valida ate existir proposta documental completa que satisfaça a matriz.
+
 ## 12. Baseline obrigatoria
 
 - `npm run verify:imports`;
