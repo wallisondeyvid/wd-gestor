@@ -611,6 +611,16 @@ Checkpoint tenant enforcement atual:
 - Proibicoes explicitas mantidas na Fase L: sem execucao real, sem ativacao real, sem alteracao de registry real, sem alteracao de allowlist real, sem abertura de tenant DB real, sem mudanca de roteamento, sem caller real, sem rota, sem CLI, sem script operacional, sem job, sem bootstrap, sem request path, sem Portal, sem dados reais, sem trafego real, sem usuario real, sem unidade real e sem PostgreSQL.
 - Push da Fase L: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
 
+- Checkpoint documental curto de encerramento da Fase L consolidado nesta rodada.
+- A Fase L foi encerrada documentalmente em `ec8e705 docs(tenant): encerra fase l`.
+- Documento canonico da Fase L: [docs/tenant-phase-l-controlled-manual-execution-decision-contract.md](docs/tenant-phase-l-controlled-manual-execution-decision-contract.md).
+- Resultado final da Fase L: apto para preparar discussao de fase posterior explicita.
+- Interpretacao obrigatoria do resultado da Fase L: esse resultado nao autoriza execucao, nao autoriza preparacao operacional, nao autoriza caller real, nao autoriza rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, nao autoriza alteracao de allowlist real, nao autoriza abertura de tenant DB real, nao autoriza mudanca de roteamento, nao envolve Portal, nao envolve dados reais, nao envolve trafego real, nao envolve usuario real, nao envolve unidade real e nao envolve PostgreSQL.
+- Gates finais consolidados da Fase L: `decisionContractReady=true`, `candidateStillSynthetic=true`, `manualOnlyPreserved=true`, `nonOperationalPreserved=true`, `fallbackPreserved=true`, `rollbackPreconditionsPreserved=true`, `noOperationalSurfaceCreated=true`, `baselineGreen=true` e `blockedReasons=[]`.
+- Baseline completa pos-encerramento da Fase L: `tests=2203`, `suites=17`, `pass=2201`, `fail=0`, `cancelled=0`, `skipped=2`, `todo=0` e `duration_ms=322750.3401`.
+- Proxima fase da trilha de tenant enforcement: nenhuma fase foi aberta automaticamente; uma fase posterior podera discutir preparacao de execucao manual controlada, nao produtiva e sintetica somente se for aberta explicitamente, com contrato proprio, gates proprios, rollback proprio e autorizacao propria.
+- Push apos o encerramento da Fase L: permanece pendente ate status consolidado, validacao final e autorizacao explicita do usuario.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
