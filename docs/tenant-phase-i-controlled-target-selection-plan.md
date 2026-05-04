@@ -147,6 +147,11 @@ Leitura operacional da sequencia:
 - nenhum passo deve operar unidade real, dados reais, usuarios reais ou trafego real;
 - qualquer publicacao futura continua dependente de baseline final completa antes de fechamento global.
 
+Checkpoint atual desta sequencia:
+
+- o Microcorte 2 fica registrado no documento [tenant-phase-i-target-eligibility-matrix-contract.md](tenant-phase-i-target-eligibility-matrix-contract.md);
+- esse contrato define criterios objetivos de aceite e recusa para alvo candidato sem selecionar alvo concreto e sem autorizar execucao real.
+
 ## 10. Baseline obrigatoria
 
 - `npm run verify:imports`;

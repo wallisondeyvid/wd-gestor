@@ -494,6 +494,11 @@ Checkpoint tenant enforcement atual:
 - Baseline obrigatoria consolidada desta abertura: `npm run verify:imports`; `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js`; `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`; `npm test` antes de publicacao global.
 - Regra de publicacao consolidada desta abertura: os commits desta frente podem acumular localmente, sem push em microcortes; qualquer publicacao futura continua dependente de baseline final completa e autorizacao explicita posterior.
 
+- Checkpoint documental curto do contrato da matriz de elegibilidade da Fase I consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem alvo concreto selecionado, sem piloto real, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Documento canonico deste checkpoint: [tenant-phase-i-target-eligibility-matrix-contract.md](tenant-phase-i-target-eligibility-matrix-contract.md).
+- Decisao consolidada deste microcorte: a Fase I passa a registrar criterios objetivos de aceite e recusa para um alvo candidato antes de qualquer selecao; a matriz nao seleciona alvo concreto e nao autoriza execucao real.
+- Estado operacional consolidado deste microcorte: seguem proibidos caller real, rota, CLI, script, job, bootstrap e request path; a avaliacao do alvo continua apenas documental e depende de evidencia, baseline e contexto manual explicito.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
