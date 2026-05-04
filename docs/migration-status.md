@@ -523,6 +523,12 @@ Checkpoint tenant enforcement atual:
 - Regra operacional consolidada desta abertura: a Fase J nao autoriza selecao operacional de alvo, execucao real, ativacao real, caller real, rota, CLI, script, job, bootstrap, request path, Portal, dados reais, trafego real ou unidade real.
 - Proximo microcorte sugerido desta abertura: criar o documento canonico da Fase J com a proposta documental de candidato, ainda sem execucao.
 
+- Checkpoint documental curto do documento canonico da Fase J consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem selecao operacional de alvo, sem piloto real, sem execucao real, sem ativacao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Documento canonico deste checkpoint: [tenant-phase-j-synthetic-candidate-proposal-plan.md](tenant-phase-j-synthetic-candidate-proposal-plan.md).
+- Decisao consolidada deste microcorte: a Fase J passa a registrar o molde documental de um candidato sintetico controlado, ainda sem selecao operacional e sem autorizacao de execucao.
+- Estado operacional consolidado deste microcorte: ainda nao ha selecao operacional de alvo, ainda nao ha execucao real, ainda nao ha ativacao real, ainda nao ha caller real, rota, CLI, script, job, bootstrap ou request path.
+- Bloqueios consolidados deste microcorte para `eligible=true`: `unidadeId`, `dbName`, `databaseKey`, `plannedAllowlist`, `rollbackPlan`, `evidencePlan`, `baselinePlan`, `actor` e `reason` seguem pendentes e continuam impedindo aceite.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
