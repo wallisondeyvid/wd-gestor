@@ -240,3 +240,12 @@ Proximo passo permitido, ainda sem implementacao:
 - a orquestracao caracterizada usa apenas funcoes publicas do writer para `pending -> ready -> active`, sem escrita direta do registry e sem burlar writer, reader/cache ou `resolveConnection`;
 - mesmo apos `active`, a abertura de tenant continua dependente dos gates existentes e da allowlist positiva; sem allowlist, o corredor permanece em `baseConnection`; rollback via writer continua retornando para `baseConnection` com fail-safe preservado;
 - esse checkpoint nao implementa owner real, nao cria entrypoint, nao cria rota, nao cria CLI, nao cria script, nao cria job e nao altera a regra de acumulacao local dos microcortes da Fase F ate fechamento global ou autorizacao explicita.
+
+## 16. Checkpoint de owner interno manual minimo implementado
+
+- a Fase F agora tem owner interno manual minimo implementado como funcao interna em `shared/db`, sem caller real e sem uso de unidade real;
+- a funcao implementada permanece interna, nao cria entrypoint, nao cria rota, nao cria CLI, nao cria script, nao cria job, nao cria bootstrap e nao toca request path;
+- a implementacao valida contexto manual explicito, exige `source=manual`, `approved=true`, `reason` nao vazia e `actor` nao vazio, e recusa caller automatico, oportunista, request path, rota, CLI, script, job e bootstrap;
+- a implementacao usa apenas funcoes publicas do writer para `pending -> ready -> active`, nao escreve registry diretamente, nao chama `resolveConnection`, nao decide tenant routing e nao abre tenant connection;
+- `resolveConnection` continua sendo o unico decisor de tenant routing e o writer continua sendo a unica camada de escrita usada pelo owner;
+- a ativacao real continua fechada e este checkpoint nao altera a regra de acumulacao local dos microcortes da Fase F ate fechamento global ou autorizacao explicita.
