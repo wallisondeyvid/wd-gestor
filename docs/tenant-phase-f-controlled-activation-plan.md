@@ -175,3 +175,59 @@ Leitura operacional:
 - o fluxo caracterizado usa apenas `unitDatabaseRegistryWriter`, registry em memoria, reader/cache e `resolveConnection`;
 - o piloto sintetico comeca em `baseConnection` sem entry ativa; `pending` nao abre tenant; `ready` sem `activation.active` nao abre tenant; `active` sem allowlist positiva nao abre tenant; `active` com allowlist positiva abre tenant connection; remocao da allowlist, `disabled` e `rollback_required` encerram o piloto com retorno para `baseConnection`;
 - esse checkpoint nao abre ativacao real, nao cria owner manual, nao cria entrypoint e nao altera a regra de acumulacao local dos microcortes da Fase F ate fechamento global ou autorizacao explicita.
+
+## 14. Contrato documental minimo do owner interno manual futuro
+
+Base passiva de referencia:
+
+- a Fase E permanece como base passiva do ciclo de vida, do writer e dos estados do registry, especialmente em `tenant-phase-e-operational-provisioning-activation-plan.md`;
+- a Fase F nao reimplementa esse bloco: ela apenas fecha a fronteira operacional do futuro owner manual minimo antes de qualquer implementacao.
+
+Definicao do owner futuro:
+
+- o owner admissivel na Fase F continua sendo uma funcao interna manual, deliberada e autorizada;
+- essa funcao deve ser chamada fora de request path e sem exposicao HTTP;
+- essa funcao nao deve nascer como rota, CLI, script local solto, job, bootstrap automatico, preload automatico ou caller oportunista do runtime comum;
+- este microcorte nao implementa o owner, nao cria entrypoint e nao autoriza execucao real.
+
+Responsabilidades permitidas:
+
+- orquestrar explicitamente a sequencia `pending -> ready -> active` quando todas as pre-condicoes estiverem satisfeitas;
+- validar os gates obrigatorios antes da promocao para `active`;
+- registrar a intencao operacional e o resultado do ciclo;
+- chamar apenas o writer ja existente como seam de transicao;
+- representar rollback sem ambiguidade quando houver falha, duvida ou encerramento do piloto;
+- preservar a cadeia `unitDatabaseRegistryWriter -> registry em memoria -> reader/cache -> resolveConnection` como corredor contratual ja caracterizado.
+
+Responsabilidades proibidas:
+
+- nao decidir tenant routing sozinho;
+- nao abrir tenant connection sem allowlist positiva e sem os demais gates simultaneos;
+- nao ignorar `readiness.ready`, `activation.active`, `status` ou `routingMode`;
+- nao escrever a entry diretamente como atalho fora do writer;
+- nao remover o fallback fail-safe para `baseConnection`;
+- nao operar dados reais, unidade real ou trafego real nesta fase.
+
+Pre-condicoes minimas antes de qualquer owner futuro:
+
+- ambiente nao produtivo;
+- unidade sintetica ou espelho controlado;
+- database dedicado;
+- allowlist unitaria positiva apenas para a unidade alvo;
+- `WD_MULTI_DB=1` e `WD_MULTI_DB_REGISTRY_READ=1`, com flags adicionais obrigatorias quando o corredor exigir;
+- baseline verde e suites focais da Fase F preservadas;
+- plano de rollback definido antes da ativacao controlada.
+
+Pos-condicoes minimas esperadas:
+
+- `resolveConnection` so confirma tenant quando todos os gates passam simultaneamente;
+- remocao da allowlist faz a unidade voltar para `baseConnection`;
+- `disabled` e `rollback_required` fazem a unidade voltar para `baseConnection`;
+- a entry nao e apagada como primeira acao de rollback;
+- o resultado do ciclo fica registrado documentalmente.
+
+Proximo passo permitido, ainda sem implementacao:
+
+- antes de implementar o owner, o proximo microcorte pode ser apenas ampliar a documentacao ou criar teste de contrato focal do owner futuro;
+- se houver implementacao posterior, ela deve nascer como funcao interna minima, coberta por teste, e ainda sem rota, CLI, script, job, bootstrap ou request path;
+- os commits desta frente continuam locais, sem push, ate o fechamento global da Fase F ou autorizacao explicita.
