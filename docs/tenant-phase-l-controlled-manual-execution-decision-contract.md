@@ -277,15 +277,101 @@ Observacao de gate das evidencias:
 
 ## 12. Gates da Fase L
 
-- `decisionContractReady`
-- `candidateStillSynthetic`
-- `manualOnlyPreserved`
-- `nonOperationalPreserved`
-- `fallbackPreserved`
-- `rollbackPreconditionsPreserved`
-- `noOperationalSurfaceCreated`
-- `baselineGreen`
-- `blockedReasons`
+Os gates da Fase L sao gates documentais e decisorios. Eles nao autorizam execucao dentro da propria Fase L.
+
+Gate `decisionContractReady`:
+
+- deve permanecer `false` enquanto a fase ainda nao tiver checklist ou consolidacao final;
+- so podera ser considerado `true` se os criterios formais de decisao estiverem definidos;
+- so podera ser considerado `true` se as evidencias documentais aceitas estiverem definidas;
+- so podera ser considerado `true` se os gates estiverem detalhados;
+- so podera ser considerado `true` se os `blockedReasons` tiverem sido avaliados;
+- so podera ser considerado `true` se a baseline recomendada estiver verde;
+- so podera ser considerado `true` se nao houver violacao operacional;
+- mesmo quando `true`, nao autoriza execucao dentro da Fase L.
+
+Gate `candidateStillSynthetic`:
+
+- exige que o candidato continue exatamente o herdado da Fase J/K;
+- `targetId` deve permanecer `fase-j-synthetic-unit-candidate-001`;
+- `unidadeId` deve permanecer `0000000000000000000000a1`;
+- `dbName` deve permanecer `wdgestor_unit_0000000000000000000000a1`;
+- `databaseKey` deve permanecer `wdgestor_unit_0000000000000000000000a1`;
+- `plannedAllowlist` deve permanecer [`0000000000000000000000a1`];
+- `environment` deve permanecer `non-production`;
+- `dataClass` deve permanecer `discardable`;
+- `trafficClass` deve permanecer `none`;
+- `userClass` deve permanecer `none`;
+- `portalExposure` deve permanecer `none`;
+- qualquer troca de candidato, inclusao de unidade real ou ampliacao de allowlist bloqueia a fase.
+
+Gate `manualOnlyPreserved`:
+
+- exige que owner manual e entrypoint manual continuem sem caller real;
+- proibe caller em rota, CLI, script operacional, job, bootstrap, request path ou Portal;
+- harness de teste nao pode ser reclassificado como piloto real.
+
+Gate `nonOperationalPreserved`:
+
+- exige que a Fase L continue documental, decisoria e nao operacional;
+- proibe execucao real, preparacao operacional, ativacao real, alteracao de registry real, alteracao de allowlist real, abertura de tenant DB real e mudanca de roteamento;
+- baseline verde nao muda essa interpretacao.
+
+Gate `fallbackPreserved`:
+
+- exige que qualquer falha de gate continue caindo para `baseConnection`;
+- exige que entrada ausente, invalida, `disabled`, `rollback_required`, `pending`, `provisioning`, fora da allowlist, sem `activation.active` ou com `routingMode` diferente de `tenant` continue sem abrir tenant connection.
+
+Gate `rollbackPreconditionsPreserved`:
+
+- exige que rollback permaneça definido antes de qualquer avanco operacional posterior;
+- exige que `disabled`, `rollback_required`, perda de allowlist, perda de `activation.active` e retorno de `routingMode` para `base` continuem bloqueantes.
+
+Gate `noOperationalSurfaceCreated`:
+
+- exige ausencia de rota nova;
+- exige ausencia de CLI nova;
+- exige ausencia de script operacional novo;
+- exige ausencia de job novo;
+- exige ausencia de bootstrap novo;
+- exige ausencia de request path novo;
+- exige ausencia de integracao com Portal;
+- exige ausencia de alteracao em `package.json` que autorize operacao;
+- exige ausencia de caller real para owner, entrypoint, writer, registry ou `resolveConnection`.
+
+Gate `baselineGreen`:
+
+- exige baseline curta verde durante microcortes documentais;
+- `verify:imports` deve permanecer verde;
+- testes arquiteturais do owner manual devem permanecer verdes;
+- testes arquiteturais do entrypoint manual devem permanecer verdes;
+- testes arquiteturais do piloto nao produtivo devem permanecer verdes;
+- testes arquiteturais do piloto controlado devem permanecer verdes;
+- testes writer -> `resolveConnection` devem permanecer verdes;
+- antes do fechamento global da Fase L, `npm test` completo deve ser recomendado;
+- baseline verde nao autoriza execucao.
+
+Gate `blockedReasons`:
+
+- deve existir explicitamente;
+- pode permanecer vazio apenas se todos os gates documentais estiverem preservados;
+- deve ser preenchido em caso de ambiguidade operacional;
+- deve ser preenchido em caso de qualquer superficie operacional criada;
+- deve ser preenchido em caso de qualquer alteracao real em registry ou allowlist;
+- deve ser preenchido em caso de qualquer abertura de tenant DB real;
+- deve ser preenchido em caso de qualquer envolvimento de unidade real, usuario real, trafego real, dado real ou Portal;
+- deve ser preenchido em caso de baseline vermelha;
+- deve ser preenchido em caso de fallback ou rollback enfraquecido;
+- deve ser preenchido em caso de PostgreSQL entrando no escopo;
+- `blockedReasons` vazio nao autoriza execucao.
+
+Interpretacao obrigatoria dos gates:
+
+- gates verdes na Fase L autorizam apenas encerramento documental da propria Fase L;
+- gates verdes nao autorizam execucao manual dentro da Fase L;
+- gates verdes nao autorizam caller real;
+- gates verdes nao autorizam rota, CLI, script, job, bootstrap ou request path;
+- qualquer duvida degrada para "nao executar" ou "bloqueado".
 
 ## 13. Resultado inicial
 
