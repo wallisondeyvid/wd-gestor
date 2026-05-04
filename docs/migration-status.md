@@ -461,6 +461,14 @@ Checkpoint tenant enforcement atual:
 - Regra operacional consolidada deste encerramento: a baseline final completa ainda deve ser rodada antes do commit de encerramento ou logo apos este patch documental, conforme o fluxo local; os commits desta frente permanecem locais e sem push ate validacao final e fechamento ou publicacao explicita da fase.
 - Regra de continuidade consolidada apos este encerramento: qualquer sequencia futura deve nascer como nova fase ou novo bloco explicito, e nao como extensao implicita da Fase G.
 
+- Checkpoint documental curto de abertura da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem piloto real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
+- Nome consolidado desta nova fase: Fase H - Preparacao de Piloto Controlado Nao Produtivo Multi-DB por Unidade.
+- Documento canonico desta abertura: [tenant-phase-h-controlled-non-production-pilot-preparation-plan.md](tenant-phase-h-controlled-non-production-pilot-preparation-plan.md).
+- Estado herdado consolidado desta abertura: a Fase F e a Fase G estao encerradas e publicadas; `runUnitDatabaseRegistryManualOwner` e `runUnitDatabaseRegistryManualEntrypoint` existem como seams internos minimos; o harness do piloto nao produtivo existe; `resolveConnection` continua como unico decisor de tenant routing; ainda nao houve piloto real, ativacao real ou caller real.
+- Decisao consolidada desta abertura: a Fase H nasce como fase estritamente documental e read-only para preparar o envelope operacional do futuro piloto controlado nao produtivo, e nao para executar piloto, abrir caller real ou criar superficie operacional nova.
+- Objetivo inicial consolidado desta fase: definir ritual, alvo admissivel, evidencias, criterios de sucesso, criterios de abortar, baseline e fronteiras do futuro piloto controlado nao produtivo por unidade, sem tocar em runtime, writer, registry, owner, entrypoint, rota, CLI, script, job, bootstrap ou request path.
+- Regra operacional consolidada desta abertura: os commits desta frente podem acumular localmente, sem push em microcortes; qualquer publicacao futura continua dependente de baseline final completa e autorizacao explicita posterior.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
