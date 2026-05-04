@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import mongoose from 'mongoose';
@@ -12,12 +13,22 @@ const writerModuleUrl = pathToFileURL(
   path.join(process.cwd(), 'src/shared/db/unitDatabaseRegistryWriter.js')
 ).href;
 
+const manualOwnerModuleUrl = pathToFileURL(
+  path.join(process.cwd(), 'src/shared/db/unitDatabaseRegistryManualOwner.js')
+).href;
+
 const registryModuleUrl = pathToFileURL(
   path.join(process.cwd(), 'src/shared/db/unitDatabaseRegistry.js')
 ).href;
 
+const manualOwnerSourceFilePath = path.join(
+  process.cwd(),
+  'src/shared/db/unitDatabaseRegistryManualOwner.js'
+);
+
 let resolveConnectionImportNonce = 0;
 let writerImportNonce = 0;
+let manualOwnerImportNonce = 0;
 
 async function loadResolveConnectionFresh() {
   resolveConnectionImportNonce += 1;
@@ -29,14 +40,13 @@ async function loadWriterModuleFresh() {
   return import(`${writerModuleUrl}?test=${writerImportNonce}`);
 }
 
-async function loadRegistryModuleShared() {
-  return import(registryModuleUrl);
+async function loadManualOwnerModuleFresh() {
+  manualOwnerImportNonce += 1;
+  return import(`${manualOwnerModuleUrl}?test=${manualOwnerImportNonce}`);
 }
 
-function createContractError(code, message) {
-  const error = new Error(message);
-  error.code = code;
-  return error;
+async function loadRegistryModuleShared() {
+  return import(registryModuleUrl);
 }
 
 function normalizeRequiredString(value) {
@@ -146,107 +156,6 @@ function setEnvFlag(name, value) {
   process.env[name] = String(value);
 }
 
-function validateManualOwnerContext(context) {
-  if (!context || typeof context !== 'object') {
-    throw createContractError(
-      'MANUAL_OWNER_CONTEXT_REQUIRED',
-      'Manual owner requires explicit context.'
-    );
-  }
-
-  const source = normalizeRequiredString(context.source)?.toLowerCase();
-  if (source !== 'manual') {
-    throw createContractError(
-      'MANUAL_OWNER_CONTEXT_INVALID_SOURCE',
-      'Manual owner accepts only source=manual.'
-    );
-  }
-
-  if (context.approved !== true) {
-    throw createContractError(
-      'MANUAL_OWNER_CONTEXT_NOT_APPROVED',
-      'Manual owner requires approved=true.'
-    );
-  }
-
-  const reason = normalizeRequiredString(context.reason);
-  if (!reason) {
-    throw createContractError(
-      'MANUAL_OWNER_CONTEXT_REASON_REQUIRED',
-      'Manual owner requires a non-empty reason.'
-    );
-  }
-
-  const actor = normalizeRequiredString(context.actor);
-  if (!actor) {
-    throw createContractError(
-      'MANUAL_OWNER_CONTEXT_ACTOR_REQUIRED',
-      'Manual owner requires a non-empty actor.'
-    );
-  }
-
-  return {
-    source,
-    approved: true,
-    reason,
-    actor,
-  };
-}
-
-function createManualOwnerHelper(writer) {
-  return async function runManualOwner({ unidadeId, dbName, databaseKey, context } = {}) {
-    const manualContext = validateManualOwnerContext(context);
-    const normalizedUnidadeId = normalizeRequiredString(unidadeId);
-    const normalizedDbName = normalizeRequiredString(dbName);
-    const normalizedDatabaseKey = normalizeRequiredString(databaseKey);
-
-    if (!normalizedUnidadeId || !normalizedDbName || !normalizedDatabaseKey) {
-      throw createContractError(
-        'MANUAL_OWNER_TARGET_INVALID',
-        'Manual owner requires unidadeId, dbName and databaseKey.'
-      );
-    }
-
-    await writer.registerUnitDatabaseRegistryPending({
-      unidadeId: normalizedUnidadeId,
-      dbName: normalizedDbName,
-      databaseKey: normalizedDatabaseKey,
-    });
-
-    await writer.markUnitDatabaseRegistryReady({
-      unidadeId: normalizedUnidadeId,
-      reason: manualContext.reason,
-    });
-
-    await writer.activateUnitDatabaseRegistry({
-      unidadeId: normalizedUnidadeId,
-    });
-
-    return {
-      unidadeId: normalizedUnidadeId,
-      actor: manualContext.actor,
-      reason: manualContext.reason,
-    };
-  };
-}
-
-function createTrackedWriterFacade(writerModule, callLog) {
-  return Object.freeze({
-    async registerUnitDatabaseRegistryPending(input) {
-      callLog.push('registerUnitDatabaseRegistryPending');
-      return writerModule.registerUnitDatabaseRegistryPending(input);
-    },
-    async markUnitDatabaseRegistryReady(input) {
-      callLog.push('markUnitDatabaseRegistryReady');
-      return writerModule.markUnitDatabaseRegistryReady(input);
-    },
-    async activateUnitDatabaseRegistry(input) {
-      callLog.push('activateUnitDatabaseRegistry');
-      return writerModule.activateUnitDatabaseRegistry(input);
-    },
-  });
-}
-
 async function primeRegistryCache(registry, unidadeId) {
   registry.clearUnitDatabaseRegistryCache();
   await registry.primeUnitDatabaseRegistryCache({ unidadeId });
@@ -262,13 +171,11 @@ async function runManualOwnerHarness(callback) {
   const originalUseDb = baseConnection.useDb;
   const tenantConn = { name: 'tenantConn' };
   const useDbCalls = [];
-  const callLog = [];
   const harness = createRegistryStoreHarness();
   const resolveConnectionModule = await loadResolveConnectionFresh();
   const writerModule = await loadWriterModuleFresh();
+  const manualOwnerModule = await loadManualOwnerModuleFresh();
   const registry = await loadRegistryModuleShared();
-  const trackedWriter = createTrackedWriterFacade(writerModule, callLog);
-  const manualOwner = createManualOwnerHelper(trackedWriter);
 
   baseConnection.db = harness.db;
   baseConnection.useDb = (...args) => {
@@ -285,9 +192,8 @@ async function runManualOwnerHarness(callback) {
 
   try {
     return await callback({
-      callLog,
       harness,
-      manualOwner,
+      manualOwner: manualOwnerModule.runUnitDatabaseRegistryManualOwner,
       registry,
       resolveConnection: resolveConnectionModule.resolveConnection,
       setAllowlist(unidadeId) {
@@ -313,13 +219,21 @@ async function runManualOwnerHarness(callback) {
   }
 }
 
-test('owner manual futuro permanece helper local do teste, sem modulo de producao nem owner exportado', async () => {
-  await runManualOwnerHarness(async ({ manualOwner, writerModule }) => {
+test('owner manual real existe como modulo interno minimo e nao importa routing nem mutacao direta de registry', async () => {
+  await runManualOwnerHarness(async ({ manualOwner }) => {
+    const source = fs.readFileSync(manualOwnerSourceFilePath, 'utf8');
+
     assert.equal(typeof manualOwner, 'function');
-    assert.equal(
-      Object.keys(writerModule).some((exportName) => /owner/i.test(exportName)),
-      false
-    );
+    assert.match(source, /runUnitDatabaseRegistryManualOwner/);
+    assert.match(source, /registerUnitDatabaseRegistryPending/);
+    assert.match(source, /markUnitDatabaseRegistryReady/);
+    assert.match(source, /activateUnitDatabaseRegistry/);
+    assert.match(source, /from '#shared\/db\/unitDatabaseRegistryWriter\.js'/);
+    assert.doesNotMatch(source, /resolveConnection/);
+    assert.doesNotMatch(source, /readUnitDatabaseRegistry/);
+    assert.doesNotMatch(source, /setUnitDatabaseRegistryCacheEntry/);
+    assert.doesNotMatch(source, /primeUnitDatabaseRegistryCache/);
+    assert.doesNotMatch(source, /collection\(/);
   });
 });
 
@@ -342,9 +256,11 @@ test('owner manual futuro aceita apenas contexto manual explicito e recusa calle
     });
 
     assert.deepEqual(accepted, {
+      ok: true,
       unidadeId: target.unidadeId,
       actor: 'operador-fase-f',
       reason: 'pilot-manual-owner',
+      finalStatus: 'active',
     });
 
     const invalidCases = [
@@ -424,7 +340,7 @@ test('owner manual futuro aceita apenas contexto manual explicito e recusa calle
 });
 
 test('owner manual futuro orquestra pending -> ready -> active so via writer e depende dos gates para abrir tenant', async () => {
-  await runManualOwnerHarness(async ({ callLog, harness, manualOwner, registry, resolveConnection, setAllowlist, tenantConn, useDbCalls }) => {
+  await runManualOwnerHarness(async ({ harness, manualOwner, registry, resolveConnection, setAllowlist, tenantConn, useDbCalls }) => {
     const unidadeId = '000000000000000000000031';
 
     const result = await manualOwner({
@@ -439,12 +355,6 @@ test('owner manual futuro orquestra pending -> ready -> active so via writer e d
       },
     });
 
-    assert.deepEqual(callLog, [
-      'registerUnitDatabaseRegistryPending',
-      'markUnitDatabaseRegistryReady',
-      'activateUnitDatabaseRegistry',
-    ]);
-
     const activeEntry = harness.read(unidadeId);
     assert.ok(activeEntry);
     assert.equal(activeEntry.status, 'active');
@@ -452,9 +362,11 @@ test('owner manual futuro orquestra pending -> ready -> active so via writer e d
     assert.equal(activeEntry.readiness?.ready, true);
     assert.equal(activeEntry.activation?.active, true);
     assert.deepEqual(result, {
+      ok: true,
       unidadeId,
       actor: 'operador-fase-f',
       reason: 'manual-owner-approved',
+      finalStatus: 'active',
     });
 
     await primeRegistryCache(registry, unidadeId);
