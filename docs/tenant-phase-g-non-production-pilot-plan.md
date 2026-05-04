@@ -151,3 +151,44 @@ Leitura operacional:
 - depois: documentacao do harness;
 - depois: decisao read-only sobre fechamento da Fase G ou necessidade de contrato adicional;
 - baseline completa antes de qualquer publicacao.
+
+## 11. Estado atual apos a documentacao do harness
+
+- o piloto nao produtivo foi caracterizado por harness ou teste arquitetural em `tests/architecture/unitDatabaseRegistryNonProductionPilot.contract.test.js`;
+- o harness usa o entrypoint interno real `runUnitDatabaseRegistryManualEntrypoint`;
+- o harness permanece sem caller real;
+- o harness permanece sem rota;
+- o harness permanece sem CLI;
+- o harness permanece sem script;
+- o harness permanece sem job;
+- o harness permanece sem bootstrap;
+- o harness permanece sem request path;
+- o harness ainda nao e piloto real;
+- o harness ainda nao e ativacao real;
+- o harness permanece sem unidade real;
+- o harness permanece sem dados reais;
+- o harness permanece sem trafego real.
+
+Leitura operacional consolidada:
+
+- o harness valida as recusas de ambiente produtivo;
+- o harness valida recusas de unidade real, dados reais e trafego real;
+- o harness valida rollback obrigatorio e allowlist unitaria;
+- o harness valida contexto manual explicito antes de chamar o entrypoint;
+- o harness prova que `pending` e `ready` nao abrem tenant;
+- o harness prova que `active` sem allowlist continua em `baseConnection`;
+- o harness prova que o caso positivo controlado abre tenant apenas com gates coerentes;
+- o harness prova que a remocao de gate restaura fallback para `baseConnection`;
+- o harness prova que rollback ou desativacao encerram o corredor em `baseConnection`;
+- o harness prova que `resolveConnection` continua sendo o decisor separado de tenant routing;
+- o harness prova que o entrypoint nao decide tenant routing;
+- o harness nao autoriza piloto real;
+- o harness nao autoriza ativacao real;
+- o harness nao recomenda push antes do fechamento global da fase e da baseline final.
+
+## 12. Proximo passo apos esta documentacao
+
+- o proximo passo deve ser rodada read-only para decidir fechamento da Fase G ou necessidade de contrato adicional;
+- a sequencia nao deve recomendar piloto real neste ponto;
+- a sequencia nao deve abrir caller real, rota, CLI, script, job, bootstrap ou request path;
+- qualquer publicacao continua dependente de baseline final e fechamento global da fase.

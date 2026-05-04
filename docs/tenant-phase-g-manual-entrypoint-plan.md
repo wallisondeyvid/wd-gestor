@@ -207,3 +207,30 @@ Leitura operacional da sequencia:
 - a implementacao retorna relatorio deterministico;
 - o piloto nao produtivo vem depois do entrypoint minimo e continua sem execucao nesta fase;
 - o contrato especifico desse piloto fica documentado em `docs/tenant-phase-g-non-production-pilot-plan.md`.
+
+## 13. Estado atual apos a caracterizacao do harness arquitetural do piloto
+
+- o piloto nao produtivo agora esta caracterizado por harness ou teste arquitetural;
+- o harness usa o entrypoint interno real `runUnitDatabaseRegistryManualEntrypoint`;
+- o harness permanece no escopo arquitetural e nao cria caller real;
+- o harness nao e piloto real;
+- o harness nao e ativacao real;
+- o harness nao cria rota;
+- o harness nao cria CLI;
+- o harness nao cria script;
+- o harness nao cria job;
+- o harness nao cria bootstrap;
+- o harness nao cria request path;
+- o harness nao pluga o entrypoint no runtime comum;
+- o harness valida pre-condicoes, evidencias, fallback e rollback;
+- o harness prova que `resolveConnection` continua como decisor separado de tenant routing;
+- o harness prova que o entrypoint nao decide tenant routing;
+- o harness prova que rollback ou desativacao finalizam em `baseConnection`;
+- o harness nao recomenda piloto real nesta fase.
+
+Leitura operacional adicional:
+
+- a caracterizacao por harness nao muda o contrato do entrypoint como borda interna;
+- a caracterizacao por harness nao libera superficie operacional nova;
+- o proximo passo da fase deve voltar para decisao read-only sobre fechamento da Fase G ou necessidade de contrato adicional;
+- push continua fora ate fechamento global da fase e baseline final.
