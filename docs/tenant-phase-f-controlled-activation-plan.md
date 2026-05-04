@@ -258,3 +258,13 @@ Proximo passo permitido, ainda sem implementacao:
 - nao houve ativacao real, nao houve unidade real e nao houve abertura operacional do corredor multi-db por unidade;
 - o proximo bloco futuro, se houver continuidade, deixa de ser ampliar contrato basico e passa a ser decidir explicitamente entre manter pausa da fase ou abrir um entrypoint manual deliberado em rodada propria;
 - os commits desta frente continuam locais, sem push, ate autorizacao explicita ou fechamento global da fase.
+
+## 18. Encerramento global da Fase F
+
+- a Fase F fica encerrada globalmente neste ponto como bloco local validado, sem reabrir codigo, testes ou superficie operacional;
+- o encerramento consolida como cobertos: rollback operacional caracterizado, piloto controlado sintetico caracterizado, contrato documental do owner manual, contrato testado do owner e owner interno manual minimo implementado e documentado;
+- o owner continua sem caller real; nao existe entrypoint operacional, rota, CLI, script, job, bootstrap ou request path; nao houve ativacao real, nao houve unidade real e nao houve dados reais;
+- `resolveConnection` continua como unico decisor de tenant routing; o writer continua como unica camada de escrita usada pelo owner; fallback e rollback para `baseConnection` permanecem preservados e cobertos;
+- a baseline final completa deste encerramento ficou registrada em estado verde: `git status -sb` em `migration/refactor-core...origin/migration/refactor-core [ahead 10]`, `npm run verify:imports` verde com `Arquitetura limpa` e `npm test` verde com 2195 tests, 17 suites, 2193 pass, 0 fail, 2 skipped e `duration_ms=254435.6371`;
+- este encerramento global nao publica a frente: o push continua proibido neste microcorte e so pode acontecer apos o commit documental final desta secao;
+- qualquer continuidade futura deixa de ser extensao automatica da Fase F e passa a exigir nova fase ou novo bloco explicito, apenas para decidir entre manter a pausa sem entrypoint, abrir um entrypoint manual deliberado em rodada propria ou planejar piloto nao produtivo com unidade sintetica/controlada.
