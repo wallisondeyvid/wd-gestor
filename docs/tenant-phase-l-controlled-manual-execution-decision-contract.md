@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada.
 
 ## 2. Natureza da fase
 
@@ -434,11 +434,74 @@ Resultado decisorio provisorio:
 
 ## 14. Interpretacao obrigatoria
 
-- Enquanto a Fase L estiver aberta, nenhuma execucao esta autorizada.
-- Enquanto a Fase L estiver aberta, nenhuma preparacao operacional esta autorizada.
-- Enquanto a Fase L estiver aberta, nenhum caller real esta autorizado.
-- Enquanto a Fase L estiver aberta, nenhuma alteracao em codigo operacional esta autorizada.
-- Enquanto a Fase L estiver aberta, nenhuma alteracao em registry real esta autorizada.
-- Enquanto a Fase L estiver aberta, nenhuma alteracao em allowlist real esta autorizada.
+- Mesmo com a Fase L encerrada documentalmente, nenhuma execucao esta autorizada.
+- Mesmo com a Fase L encerrada documentalmente, nenhuma preparacao operacional esta autorizada.
+- Mesmo com a Fase L encerrada documentalmente, nenhum caller real esta autorizado.
+- Mesmo com a Fase L encerrada documentalmente, nenhuma alteracao em codigo operacional esta autorizada.
+- Mesmo com a Fase L encerrada documentalmente, nenhuma alteracao em registry real esta autorizada.
+- Mesmo com a Fase L encerrada documentalmente, nenhuma alteracao em allowlist real esta autorizada.
 
 - A Fase L e uma trava de decisao, nao um inicio de operacao.
+
+## 15. Encerramento documental da Fase L
+
+- Status final: Encerrada.
+- Tipo de encerramento: documental, decisorio e nao operacional.
+- Resultado final: apto para preparar discussao de fase posterior explicita.
+
+Interpretacao obrigatoria do resultado:
+
+- "apto para preparar discussao de fase posterior explicita" nao significa executar;
+- nao significa preparar operacao;
+- nao significa criar caller real;
+- nao significa criar rota, CLI, script, job, bootstrap ou request path;
+- nao significa alterar registry real;
+- nao significa alterar allowlist real;
+- nao significa abrir tenant DB real;
+- nao significa mudar roteamento;
+- nao envolve Portal;
+- nao envolve dados reais;
+- nao envolve trafego real;
+- nao envolve usuario real;
+- nao envolve unidade real;
+- nao envolve PostgreSQL.
+
+Gates finais:
+
+- `decisionContractReady`: `true`
+- `candidateStillSynthetic`: `true`
+- `manualOnlyPreserved`: `true`
+- `nonOperationalPreserved`: `true`
+- `fallbackPreserved`: `true`
+- `rollbackPreconditionsPreserved`: `true`
+- `noOperationalSurfaceCreated`: `true`
+- `baselineGreen`: `true`
+- `blockedReasons`: `[]`
+
+Evidencias consolidadas:
+
+- criterios formais de decisao definidos;
+- evidencias documentais aceitas definidas;
+- gates detalhados;
+- checklist documental aplicado;
+- candidato sintetico herdado preservado;
+- owner manual sem caller real;
+- entrypoint manual sem caller real;
+- fallback para `baseConnection` preservado;
+- rollback preservado como pre-condicao;
+- allowlist planejada permanece unitaria, explicita e sintetica;
+- nenhuma superficie operacional nova criada;
+- baseline curta verde;
+- `blockedReasons` vazio.
+
+Proxima fase possivel:
+
+- Uma fase posterior podera discutir a preparacao de execucao manual controlada, nao produtiva e sintetica.
+- Essa fase posterior devera ser aberta explicitamente.
+- Essa fase posterior devera ter contrato proprio, gates proprios, rollback proprio e autorizacao propria.
+- A Fase L nao abre essa fase automaticamente.
+
+Recomendacao de validacao antes de publicacao:
+
+- Antes de atualizar o status global e considerar push, recomendar `npm test` completo.
+- O push permanece proibido ate fechamento global, status consolidado e autorizacao explicita.
