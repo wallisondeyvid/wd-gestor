@@ -621,6 +621,15 @@ Checkpoint tenant enforcement atual:
 - Proxima fase da trilha de tenant enforcement: nenhuma fase foi aberta automaticamente; uma fase posterior podera discutir preparacao de execucao manual controlada, nao produtiva e sintetica somente se for aberta explicitamente, com contrato proprio, gates proprios, rollback proprio e autorizacao propria.
 - Push apos o encerramento da Fase L: permanece pendente ate status consolidado, validacao final e autorizacao explicita do usuario.
 
+- Checkpoint documental curto de abertura da Fase M consolidado nesta rodada.
+- Fase M aberta localmente.
+- Documento canonico: [docs/tenant-phase-m-controlled-manual-execution-preparation-contract.md](docs/tenant-phase-m-controlled-manual-execution-preparation-contract.md).
+- Natureza: documental, preparatoria e nao operacional.
+- Origem: Fase L encerrada/publicada em 59d4f36.
+- Objetivo: definir contrato de preparacao para eventual execucao manual controlada, nao produtiva e sintetica em fase posterior explicita.
+- Interpretacao: Fase M nao autoriza execucao, nao autoriza preparacao operacional concreta, nao cria caller real e nao abre proxima fase automaticamente.
+- Push: pendente; nao realizar push ate fechamento global da Fase M ou bloco amplo e autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
