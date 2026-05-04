@@ -92,7 +92,77 @@
 - nenhuma rota, CLI, script, job, bootstrap ou request path e criado;
 - baseline arquitetural permanece verde.
 
-## 9. Estados possiveis ao final da Fase L
+## 9. Criterios formais de decisao da Fase L
+
+Criterios para encerrar como "apto para preparar execucao manual controlada em fase posterior":
+
+- candidato sintetico continua unico, explicito e identico ao herdado da Fase J/K;
+- ambiente continua nao produtivo;
+- dados continuam descartaveis;
+- trafego continua ausente;
+- usuario real continua ausente;
+- Portal continua fora de escopo;
+- PostgreSQL continua fora de escopo;
+- owner manual continua sem caller real;
+- entrypoint manual continua sem caller real;
+- nao existe rota, CLI, script operacional, job, bootstrap ou request path novo;
+- fallback para `baseConnection` continua obrigatorio;
+- rollback permanece definido antes de qualquer avanco operacional;
+- allowlist permanece unitaria, explicita e sintetica;
+- baseline arquitetural permanece verde;
+- nenhuma ambiguidade relevante permanece aberta.
+
+Criterios para encerrar como "apto apenas para nova fase documental":
+
+- ha lacunas de decisao que ainda podem ser resolvidas documentalmente;
+- nao ha evidencia de alteracao operacional indevida;
+- nao ha caller real;
+- nao ha ativacao real;
+- nao ha alteracao de registry real;
+- nao ha alteracao de allowlist real;
+- nao ha abertura de tenant DB real;
+- nao ha mudanca de roteamento;
+- os riscos encontrados nao exigem rollback, apenas nova documentacao ou nova matriz decisoria.
+
+Criterios para encerrar como "bloqueado":
+
+- qualquer caller real foi criado;
+- qualquer rota, CLI, script operacional, job, bootstrap ou request path foi criado;
+- qualquer alteracao operacional foi feita sem fase explicita;
+- qualquer registry real foi alterado;
+- qualquer allowlist real foi alterada;
+- qualquer tenant DB real foi aberto;
+- qualquer unidade real, usuario real, trafego real, dado real ou Portal foi envolvido;
+- PostgreSQL entrou no escopo;
+- fallback para `baseConnection` foi enfraquecido;
+- rollback deixou de estar definido;
+- baseline arquitetural ficou vermelha;
+- ha ambiguidade operacional que nao degrada claramente para nao executar.
+
+Evidencias documentais minimas:
+
+- referencia ao documento canonico da Fase K;
+- referencia ao documento canonico da Fase L;
+- referencia ao candidato sintetico herdado;
+- confirmacao de ausencia de caller real;
+- confirmacao de ausencia de superficie operacional nova;
+- confirmacao de fallback preservado;
+- confirmacao de rollback preservado;
+- confirmacao de baseline verde;
+- lista explicita de `blockedReasons`, ainda que vazia.
+
+Interpretacao obrigatoria dos criterios:
+
+- nenhum criterio da Fase L autoriza execucao dentro da propria Fase L;
+- encerrar como apto para preparar execucao manual controlada significa apenas autorizar discussao ou preparacao em fase posterior explicita;
+- a Fase L nao cria autorizacao retroativa para owner, entrypoint, writer, registry ou `resolveConnection` serem chamados por fluxo real;
+- na duvida, o resultado deve ser "apto apenas para nova fase documental" ou "bloqueado", nunca execucao.
+
+Observacao de gate:
+
+- os criterios formais de decisao foram definidos neste microcorte, mas o gate final `decisionContractReady` permanece `false` ate checklist ou consolidacao posterior.
+
+## 10. Estados possiveis ao final da Fase L
 
 - Apto para preparar execucao manual controlada em fase posterior:
   significa apenas que uma proxima fase podera preparar, ainda sob contrato explicito, uma execucao manual controlada nao produtiva; nao significa execucao automatica.
@@ -101,7 +171,7 @@
 - Bloqueado:
   significa que algum risco, ambiguidade ou inconsistenca impede qualquer avanco; nesse caso, permanecer no estado pos-Fase K sem operacao.
 
-## 10. Gates da Fase L
+## 11. Gates da Fase L
 
 - `decisionContractReady`
 - `candidateStillSynthetic`
@@ -113,7 +183,7 @@
 - `baselineGreen`
 - `blockedReasons`
 
-## 11. Resultado inicial
+## 12. Resultado inicial
 
 - `decisionContractReady`: `false`
 - `candidateStillSynthetic`: `true`
@@ -125,7 +195,7 @@
 - `baselineGreen`: `true`
 - `blockedReasons`: `[]`
 
-## 12. Interpretacao obrigatoria
+## 13. Interpretacao obrigatoria
 
 - Enquanto a Fase L estiver aberta, nenhuma execucao esta autorizada.
 - Enquanto a Fase L estiver aberta, nenhuma preparacao operacional esta autorizada.
