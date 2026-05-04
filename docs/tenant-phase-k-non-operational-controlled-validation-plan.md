@@ -207,11 +207,113 @@ Baseline:
 - definir criterios de abortar especificos do candidato;
 - ainda sem execucao.
 
-## 9. Sequencia sugerida da Fase K
+## 9. Criterios de sucesso e abortar do candidato
+
+Escopo desta secao:
+
+- os criterios desta secao ficam amarrados exclusivamente ao candidato `fase-j-synthetic-unit-candidate-001`;
+- os criterios de sucesso e abortar desta fase sao documentais;
+- eles servem para avaliar fase posterior de validacao controlada;
+- eles nao executam nada nesta Fase K;
+- eles nao autorizam ativacao, writer, owner, entrypoint, `resolveConnection`, registry real, allowlist real ou tenant DB real.
+
+### 9.1 Principio
+
+- criterio de sucesso e criterio de abortar desta fase definem somente a regra documental de avaliacao futura do candidato;
+- nenhum criterio abaixo autoriza execucao real, piloto real, ativacao real ou mudanca de roteamento;
+- warnings nao substituem criterios obrigatorios;
+- ambiguidade deve degradar para abortar.
+
+### 9.2 Criterios de sucesso especificos do candidato
+
+- candidato permanece sintetico;
+- `environment` permanece `non-production`;
+- `dataClass` permanece `discardable`;
+- `trafficClass` permanece `none`;
+- `userClass` permanece `none`;
+- `portalExposure` permanece `none`;
+- `dedicatedDatabase` permanece `true`;
+- `unidadeId` permanece `0000000000000000000000a1`;
+- `dbName` permanece `wdgestor_unit_0000000000000000000000a1`;
+- `databaseKey` permanece `wdgestor_unit_0000000000000000000000a1`;
+- `plannedAllowlist` permanece unitaria e contem somente `0000000000000000000000a1`;
+- `evidenceReady=true` em avaliacao documental futura;
+- `ownerContextPlan` permanece com `source=manual`, `approved=true`, `actor` nao vazio e `reason` nao vazio;
+- fallback para `baseConnection` permanece preservado quando qualquer gate for removido;
+- `rollbackPlan` permanece definido antes de qualquer fase posterior;
+- baseline curta permanece verde;
+- baseline completa e exigida antes de publicacao global ou avanco posterior;
+- nenhum caller real e criado;
+- nenhuma rota, CLI, script, job, bootstrap ou request path e criado;
+- nenhuma unidade real, dado real, trafego real, usuario real ou Portal e envolvido.
+
+### 9.3 Criterios de abortar especificos do candidato
+
+- qualquer duvida sobre unidade real;
+- qualquer duvida sobre dado real;
+- qualquer duvida sobre trafego real;
+- qualquer duvida sobre usuario real;
+- qualquer exposicao a Portal;
+- `plannedAllowlist` ausente, vazia, multipla ou diferente do `unidadeId`;
+- `unidadeId`, `dbName` ou `databaseKey` ausentes ou incoerentes;
+- `environment` produtivo ou ambiguo;
+- `targetKind` diferente de `syntheticUnit`;
+- `dataClass` diferente de `discardable`;
+- `trafficClass` diferente de `none`;
+- `userClass` diferente de `none`;
+- `portalExposure` diferente de `none`;
+- `dedicatedDatabase` diferente de `true`;
+- `ownerContextPlan` sem `source=manual`;
+- `ownerContextPlan` sem `approved=true`;
+- `actor` vazio;
+- `reason` vazio;
+- `rollbackPlan` ausente;
+- `evidenceReady=false`;
+- baseline curta falha;
+- baseline completa falha antes de publicacao ou avanco;
+- tentativa de criar caller real;
+- tentativa de criar rota, CLI, script, job, bootstrap ou request path;
+- tentativa de acionar writer, owner, entrypoint ou `resolveConnection`;
+- tentativa de alterar registry real;
+- tentativa de alterar allowlist real;
+- tentativa de abrir tenant DB real;
+- tentativa de mudar roteamento;
+- tentativa de remover fallback;
+- tentativa de envolver PostgreSQL.
+
+### 9.4 Resultado esperado
+
+- `validationPlanReady=true` somente se todos os criterios de sucesso estiverem satisfeitos documentalmente e nenhum criterio de abortar estiver presente;
+- `validationPlanReady=false` se qualquer criterio de abortar estiver presente;
+- warnings nao substituem criterios obrigatorios;
+- ambiguidade deve degradar para abortar.
+
+### 9.5 Tabela sugerida
+
+| Tipo | Criterio | Resultado esperado | Acao se falhar |
+| --- | --- | --- | --- |
+| sucesso | Identidade e natureza do candidato permanecem exatamente como definidas na Fase J e consolidadas na Fase K | candidato continua apto para validacao documental futura | abortar avaliacao e manter `validationPlanReady=false` |
+| sucesso | `plannedAllowlist` permanece unitaria e contendo somente `0000000000000000000000a1` | coerencia do alvo preservada | abortar avaliacao e bloquear avanco posterior |
+| sucesso | `evidenceReady=true`, `rollbackPlan` definido e `ownerContextPlan` completo | plano documental continua consistente | abortar avaliacao e exigir saneamento documental |
+| sucesso | fallback para `baseConnection` permanece preservado e baseline curta permanece verde | gates e seguranca continuam coerentes | abortar avaliacao e bloquear qualquer fase posterior |
+| sucesso | nenhuma superficie operacional, unidade real, dado real, trafego real, usuario real ou Portal e envolvido | fase continua nao operacional | abortar avaliacao imediatamente |
+| abortar | qualquer ambiguidade sobre unidade real, dado real, trafego real, usuario real ou Portal | `validationPlanReady=false` | interromper continuidade e manter plano nao operacional |
+| abortar | qualquer incoerencia em `unidadeId`, `dbName`, `databaseKey` ou `plannedAllowlist` | `validationPlanReady=false` | interromper continuidade e corrigir documentacao |
+| abortar | qualquer falha em `environment`, `targetKind`, `dataClass`, `trafficClass`, `userClass`, `portalExposure` ou `dedicatedDatabase` | `validationPlanReady=false` | interromper continuidade e reavaliar o candidato |
+| abortar | qualquer falha em `ownerContextPlan`, `rollbackPlan`, `evidenceReady` ou baseline | `validationPlanReady=false` | interromper continuidade e bloquear avanco |
+| abortar | qualquer tentativa de criar caller real, rota, CLI, script, job, bootstrap, request path, alterar registry ou allowlist real, abrir tenant DB real, mudar roteamento ou envolver PostgreSQL | `validationPlanReady=false` | abortar imediatamente e manter zero operacao |
+
+### 9.6 Proximo microcorte
+
+- definir checklist de gates preservados;
+- definir regra explicita de nao operacao;
+- ainda sem execucao.
+
+## 10. Sequencia sugerida da Fase K
 
 - Microcorte 1: abertura documental da Fase K e criacao do documento canonico;
 - Microcorte 2: definir pacote de evidencias pre-execucao do candidato, consolidado neste microcorte;
-- Microcorte 3: definir criterios de sucesso e abortar especificos do candidato;
+- Microcorte 3: definir criterios de sucesso e abortar especificos do candidato, consolidado neste microcorte;
 - Microcorte 4: definir checklist de gates preservados e regra de nao operacao;
 - Microcorte 5: aplicar checklist da Fase K ao candidato;
 - Microcorte 6: encerrar documentalmente a Fase K.
@@ -222,7 +324,7 @@ Leitura operacional da sequencia:
 - nenhum microcorte da Fase K deve transformar `eligible=true` ou selecao documental em autorizacao operacional;
 - qualquer continuidade futura continua dependente de fase ou bloco explicito posterior.
 
-## 10. Criterios que impedem avanco operacional
+## 11. Criterios que impedem avanco operacional
 
 - `eligible=true` nao e autorizacao de execucao;
 - selecao documental nao e operacao;
@@ -234,7 +336,7 @@ Leitura operacional da sequencia:
 - qualquer ambiguidade sobre Portal, dado real, trafego real ou unidade real;
 - qualquer tentativa de criar caller real, rota, CLI, script, job, bootstrap ou request path.
 
-## 11. Baseline obrigatoria
+## 12. Baseline obrigatoria
 
 - `npm run verify:imports`;
 - `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
@@ -244,7 +346,7 @@ Leitura operacional da sequencia:
 - `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`;
 - `npm test` antes de publicacao global.
 
-## 12. Regra de publicacao
+## 13. Regra de publicacao
 
 - commits locais podem acumular;
 - sem push em microcortes;

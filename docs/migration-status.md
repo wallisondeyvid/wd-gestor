@@ -573,6 +573,12 @@ Checkpoint tenant enforcement atual:
 - Regra consolidada deste microcorte: ausencia, ambiguidade ou contradicao em qualquer evidencia obrigatoria mantem `evidenceReady=false` e bloqueia qualquer fase posterior de execucao.
 - Proximo passo consolidado deste microcorte: definir criterios de sucesso e abortar especificos do candidato, ainda sem execucao.
 
+- Checkpoint documental curto dos criterios de sucesso e abortar da Fase K consolidado nesta rodada para o candidato `fase-j-synthetic-unit-candidate-001`.
+- Natureza consolidada destes criterios: documental e nao operacional.
+- Estado operacional consolidado deste microcorte: nenhuma validacao real foi executada, nenhuma ativacao foi executada e nenhum caller real, rota, CLI, script, job, bootstrap ou request path foi criado.
+- Regra consolidada deste microcorte: `validationPlanReady=true` somente quando todos os criterios de sucesso forem satisfeitos documentalmente e nenhum criterio de abortar estiver presente; qualquer ambiguidade degrada para abortar.
+- Proximo passo consolidado deste microcorte: definir checklist de gates preservados e regra explicita de nao operacao.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
