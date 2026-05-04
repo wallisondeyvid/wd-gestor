@@ -192,3 +192,28 @@ Leitura operacional consolidada:
 - a sequencia nao deve recomendar piloto real neste ponto;
 - a sequencia nao deve abrir caller real, rota, CLI, script, job, bootstrap ou request path;
 - qualquer publicacao continua dependente de baseline final e fechamento global da fase.
+
+## 13. Encerramento documental da fase
+
+- a rodada read-only de fechamento concluiu que a Fase G pode ser encerrada sem lacuna obrigatoria restante;
+- o harness do piloto nao produtivo permanece como caracterizacao arquitetural suficiente para esta fase e nao exige piloto real, caller real ou superficie operacional nova;
+- o entrypoint interno minimo permanece existente, mas segue sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path;
+- o entrypoint interno minimo nao decide tenant routing, nao chama `resolveConnection`, nao chama writer diretamente, nao escreve registry diretamente e nao abre tenant connection;
+- o piloto nao produtivo foi caracterizado por harness e continua sem execucao real;
+- piloto real nao foi executado;
+- ativacao real nao foi feita.
+
+Baseline recomendada para fechamento:
+
+- `npm run verify:imports`;
+- `node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`.
+
+Leitura operacional final:
+
+- a baseline final completa ainda deve ser rodada antes do commit de encerramento ou logo apos este patch documental, conforme o fluxo local;
+- os commits desta frente permanecem locais e sem push ate validacao final e fechamento ou publicacao explicita da fase;
+- qualquer continuidade futura deve nascer como nova fase ou novo bloco explicito, e nao como extensao implicita da Fase G.

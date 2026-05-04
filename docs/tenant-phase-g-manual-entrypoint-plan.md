@@ -234,3 +234,39 @@ Leitura operacional adicional:
 - a caracterizacao por harness nao libera superficie operacional nova;
 - o proximo passo da fase deve voltar para decisao read-only sobre fechamento da Fase G ou necessidade de contrato adicional;
 - push continua fora ate fechamento global da fase e baseline final.
+
+## 14. Encerramento documental da fase
+
+- a Fase G fica encerrada documentalmente como bloco local;
+- a decisao read-only final concluiu que nao ha lacuna obrigatoria restante para contrato, teste, codigo minimo ou documentacao desta fase;
+- o objetivo da fase fica registrado como cumprido pelo bloco composto de contrato do entrypoint manual, teste arquitetural do entrypoint, entrypoint interno minimo, documentacao do entrypoint, contrato do piloto nao produtivo, harness ou teste arquitetural do piloto nao produtivo, documentacao do harness e decisao read-only de fechamento;
+- o entrypoint interno minimo existe e segue sem caller real;
+- o entrypoint nao e rota;
+- o entrypoint nao e CLI;
+- o entrypoint nao e script;
+- o entrypoint nao e job;
+- o entrypoint nao e bootstrap;
+- o entrypoint nao e request path;
+- o entrypoint nao decide tenant routing;
+- o entrypoint nao chama `resolveConnection`;
+- o entrypoint nao chama writer diretamente;
+- o entrypoint nao escreve registry diretamente;
+- o entrypoint nao abre tenant connection;
+- o piloto nao produtivo foi caracterizado por harness;
+- piloto real nao foi executado;
+- ativacao real nao foi feita.
+
+Baseline recomendada para fechamento:
+
+- `npm run verify:imports`;
+- `node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js`;
+- `node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js`.
+
+Leitura operacional final:
+
+- a baseline final completa ainda deve ser rodada antes do commit de encerramento ou logo apos este patch documental, conforme o fluxo local;
+- os commits desta frente permanecem locais e sem push ate a validacao final e o fechamento ou publicacao explicita da fase;
+- qualquer continuidade futura deve nascer como nova fase ou novo bloco explicito, e nao como extensao implicita da Fase G.
