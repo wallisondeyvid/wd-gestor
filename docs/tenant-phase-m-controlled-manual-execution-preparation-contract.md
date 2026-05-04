@@ -115,6 +115,7 @@ Criar gates iniciais todos em estado conservador:
 - fallbackPreserved: true
 - rollbackPlanDefined: true
 - evidencePlanDefined: true
+- criteriosDefined: true
 - executionStillForbidden: true
 - blockedReasons: []
 
@@ -123,6 +124,7 @@ Explicar:
 - preparationContractReady=false porque o contrato ainda acabou de ser aberto.
 - rollbackPlanDefined=true porque o plano documental de rollback foi definido neste microcorte.
 - evidencePlanDefined=true porque o plano documental de evidencias foi definido neste microcorte.
+- criteriosDefined=true porque os criterios documentais de preparacao foram definidos neste microcorte.
 - executionStillForbidden=true porque nenhuma execucao esta autorizada na Fase M.
 
 ## 9. Plano documental de rollback
@@ -309,7 +311,136 @@ Interpretacao obrigatoria:
 - evidencePlanDefined=true nao autoriza criar rota, CLI, job, bootstrap ou request path.
 - evidencePlanDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Limite semantico da Fase M
+## 11. Criterios documentais de preparacao
+
+Registrar que os criterios da Fase M sao documentais, preparatorios e nao operacionais.
+
+### 11.1 Criterios para considerar o contrato de preparacao pronto
+
+Registrar que preparationContractReady somente podera ser true em microcorte posterior se todos os itens abaixo estiverem satisfeitos:
+
+- candidato sintetico herdado preservado sem alteracao;
+- rollbackPlanDefined=true;
+- evidencePlanDefined=true;
+- executionStillForbidden=true;
+- blockedReasons=[];
+- fallback para `baseConnection` preservado como requisito obrigatorio;
+- ausencia de caller real preservada;
+- ausencia de rota, CLI, script, job, bootstrap ou request path preservada;
+- ausencia de alteracao em registry real preservada;
+- ausencia de alteracao em allowlist real preservada;
+- ausencia de tenant DB real aberto preservada;
+- ausencia de Portal preservada;
+- ausencia de dados reais preservada;
+- ausencia de trafego real preservada;
+- ausencia de usuario real preservada;
+- ausencia de unidade real preservada;
+- ausencia de PostgreSQL preservada;
+- baseline curta verde antes do checklist final;
+- sem comandos executaveis criados;
+- sem scripts operacionais criados;
+- sem qualquer preparacao operacional concreta.
+
+### 11.2 Criterios para manter o contrato como nao pronto
+
+Registrar que preparationContractReady devera permanecer false se qualquer um dos itens abaixo ocorrer:
+
+- rollbackPlanDefined=false;
+- evidencePlanDefined=false;
+- executionStillForbidden=false dentro da Fase M;
+- blockedReasons diferente de [];
+- duvida sobre o candidato sintetico;
+- duvida sobre unidade;
+- qualquer mencao ambigua a unidade real;
+- qualquer indicio de caller real;
+- qualquer indicio de rota, CLI, script, job, bootstrap ou request path;
+- qualquer leitura ou alteracao de registry real;
+- qualquer leitura ou alteracao de allowlist real;
+- qualquer abertura de tenant DB real;
+- qualquer envolvimento de Portal;
+- qualquer envolvimento de dados reais;
+- qualquer envolvimento de trafego real;
+- qualquer envolvimento de usuario real;
+- qualquer envolvimento de unidade real;
+- qualquer aproximacao de PostgreSQL;
+- baseline curta falhando;
+- tentativa de transformar documentacao em execucao.
+
+### 11.3 Criterios de bloqueio imediato
+
+Registrar que a Fase M devera ser considerada bloqueada se ocorrer:
+
+- criacao de caller real;
+- criacao de rota;
+- criacao de CLI;
+- criacao de script operacional;
+- criacao de job;
+- criacao de bootstrap;
+- ligacao em request path;
+- execucao de piloto real;
+- execucao de rollback real;
+- coleta de evidencia operacional real;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- abertura de tenant DB real;
+- mudanca de roteamento;
+- uso de unidade real;
+- uso de usuario real;
+- uso de dado real;
+- uso de trafego real;
+- exposicao ao Portal;
+- inclusao de PostgreSQL no escopo.
+
+### 11.4 Criterios para recomendacao final da Fase M
+
+Registrar que a Fase M, se todos os gates documentais forem satisfeitos, podera encerrar apenas com recomendacao documental, por exemplo:
+
+- apto para discutir fase posterior explicita;
+- apto para preparar, em fase posterior, um contrato de execucao manual controlada;
+- apto para manter candidato sintetico como unico alvo admissivel;
+- apto para manter rollback e evidencias como pre-condicoes obrigatorias.
+
+Mas deixar claro que a recomendacao final da Fase M nao podera significar:
+
+- executar;
+- preparar operacao concreta;
+- criar caller real;
+- criar rota, CLI, script, job, bootstrap ou request path;
+- alterar registry real;
+- alterar allowlist real;
+- abrir tenant DB real;
+- mudar roteamento;
+- envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+Se mencionar fase posterior, deixar explicito que ela dependera de abertura explicita, contrato proprio, gates proprios, rollback proprio e autorizacao propria.
+
+### 11.5 Resultado dos criterios
+
+Registrar:
+
+- criteriosDefined: true;
+- rollbackPlanDefined permanece true;
+- evidencePlanDefined permanece true;
+- preparationContractReady permanece false;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- criteriosDefined=true significa apenas que os criterios documentais foram definidos.
+- criteriosDefined=true nao autoriza execucao.
+- criteriosDefined=true nao autoriza preparacao operacional concreta.
+- criteriosDefined=true nao autoriza criar comando.
+- criteriosDefined=true nao autoriza criar script.
+- criteriosDefined=true nao autoriza criar caller real.
+- criteriosDefined=true nao autoriza criar rota, CLI, job, bootstrap ou request path.
+- criteriosDefined=true nao autoriza ler ou alterar registry real.
+- criteriosDefined=true nao autoriza ler ou alterar allowlist real.
+- criteriosDefined=true nao autoriza abrir tenant DB real.
+- criteriosDefined=true nao autoriza mudar roteamento.
+- criteriosDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 12. Limite semantico da Fase M
 
 Registrar:
 
@@ -321,7 +452,7 @@ Registrar:
 - Fase posterior possivel nao significa fase posterior aberta.
 - A Fase M so pode encerrar com recomendacao documental.
 
-## 12. Resultado inicial
+## 13. Resultado inicial
 
 Registrar:
 
@@ -331,7 +462,7 @@ Registrar:
 - blockedReasons=[].
 - Execucao continua proibida.
 
-## 13. Interpretacao obrigatoria
+## 14. Interpretacao obrigatoria
 
 Registrar:
 
