@@ -58,7 +58,7 @@ Registrar:
 - preparationAuthorizationContractOpened=true
 - preparationAuthorizationDefined=true
 - preparationScopeDefined=true
-- preparationRollbackDefined=false
+- preparationRollbackDefined=true
 - preparationEvidenceDefined=false
 - preparationChecklistApplied=false
 - preparationStillForbidden=true
@@ -74,7 +74,7 @@ Explicar:
 - preparationAuthorizationContractOpened=true porque a Fase Q foi aberta documentalmente e o contrato preparatorio passou a existir apenas como artefato de referencia.
 - preparationAuthorizationDefined=true porque o formato documental de uma autorizacao preparatoria valida foi definido neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - preparationScopeDefined=true porque o escopo preparatorio autorizavel e os limites preparatorios nao autorizaveis foram definidos documentalmente neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
-- preparationRollbackDefined=false porque nenhum rollback preparatorio documental foi definido nesta abertura.
+- preparationRollbackDefined=true porque o rollback preparatorio documental foi definido neste microcorte, sem executar rollback real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - preparationEvidenceDefined=false porque nenhuma evidencia preparatoria documental foi definida nesta abertura.
 - preparationChecklistApplied=false porque o checklist preparatorio ainda nao foi aplicado nesta abertura.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
@@ -144,7 +144,7 @@ Registrar:
 
 - preparationAuthorizationDefined=true;
 - preparationAuthorizationContractOpened permanece true;
-- preparationScopeDefined permanece false;
+- preparationScopeDefined permanece true;
 - preparationRollbackDefined permanece false;
 - preparationEvidenceDefined permanece false;
 - preparationChecklistApplied permanece false;
@@ -265,7 +265,88 @@ Interpretacao obrigatoria:
 - preparationScopeDefined=true nao autoriza abrir tenant DB real.
 - preparationScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 9. Interpretacao obrigatoria
+## 9. Rollback preparatorio documental
+
+Registrar que a Fase Q define, neste microcorte, o rollback preparatorio documental exigido antes de qualquer preparacao manual controlada sintetica futura.
+
+Registrar que definir rollback preparatorio nao executa rollback real, nao concede autorizacao concreta e nao autoriza preparacao operacional concreta.
+
+### 9.1 Objetivo do rollback preparatorio
+
+Registrar que o rollback preparatorio serve para garantir, documentalmente, que qualquer preparacao futura possa ser interrompida antes de tocar superficies operacionais.
+
+Registrar que o rollback preparatorio nao e rollback de banco real, nao e rollback de tenant DB real, nao e rollback de dados reais e nao e rollback de trafego real.
+
+### 9.2 Condicoes minimas de rollback preparatorio futuro
+
+Registrar que qualquer autorizacao preparatoria futura devera conter, antes de qualquer preparacao concreta:
+
+- criterio de parada;
+- responsavel por acionar parada;
+- lista de arquivos autorizaveis;
+- lista de arquivos proibidos;
+- comando de reversao documental, quando aplicavel;
+- confirmacao de que nenhum tenant DB real foi aberto;
+- confirmacao de que nenhum registry real foi alterado;
+- confirmacao de que nenhuma allowlist real foi alterada;
+- confirmacao de que nenhum roteamento real foi alterado;
+- confirmacao de que nenhum caller real, rota, CLI, script, job, bootstrap ou request path foi criado;
+- confirmacao de que nenhum dado real, trafego real, usuario real, unidade real, Portal ou PostgreSQL foi envolvido.
+
+### 9.3 Bloqueios de rollback
+
+Registrar que o rollback preparatorio devera bloquear imediatamente qualquer avanco se houver:
+
+- tentativa de tocar codigo produtivo sem fase propria;
+- tentativa de criar superficie operacional;
+- tentativa de alterar registry real;
+- tentativa de alterar allowlist real;
+- tentativa de abrir tenant DB real;
+- tentativa de mudar roteamento real;
+- tentativa de envolver Portal;
+- tentativa de envolver dados reais;
+- tentativa de envolver trafego real;
+- tentativa de envolver usuario real;
+- tentativa de envolver unidade real;
+- tentativa de envolver PostgreSQL;
+- tentativa de misturar preparacao e execucao;
+- ausencia de autorizacao explicita propria;
+- ausencia de escopo proprio;
+- ausencia de evidencias proprias;
+- ausencia de gates proprios.
+
+### 9.4 Resultado da definicao de rollback preparatorio
+
+Registrar:
+
+- preparationRollbackDefined=true;
+- preparationScopeDefined permanece true;
+- preparationAuthorizationDefined permanece true;
+- preparationAuthorizationContractOpened permanece true;
+- preparationEvidenceDefined permanece false;
+- preparationChecklistApplied permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- preparationRollbackDefined=true significa apenas que o rollback preparatorio documental foi definido.
+- preparationRollbackDefined=true nao significa que rollback real foi executado.
+- preparationRollbackDefined=true nao autoriza preparacao operacional concreta.
+- preparationRollbackDefined=true nao autoriza execucao.
+- preparationRollbackDefined=true nao autoriza rollback real.
+- preparationRollbackDefined=true nao autoriza evidencia operacional real.
+- preparationRollbackDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- preparationRollbackDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- preparationRollbackDefined=true nao autoriza abrir tenant DB real.
+- preparationRollbackDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 10. Interpretacao obrigatoria
 
 Registrar:
 
@@ -279,7 +360,7 @@ Registrar:
 - preparationAuthorizationContractOpened=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - preparationAuthorizationContractOpened=true nao abre fase posterior automaticamente.
 
-## 10. Criterio de avanco da Fase Q
+## 11. Criterio de avanco da Fase Q
 
 Registrar que a Fase Q so podera avancar documentalmente quando forem definidos:
 
