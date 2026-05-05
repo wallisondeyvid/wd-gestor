@@ -72,7 +72,7 @@ Registrar:
 - operationalPreparationPrerequisitesDefined=true
 - operationalPreparationRollbackDefined=true
 - operationalPreparationEvidenceDefined=true
-- operationalPreparationChecklistApplied=false
+- operationalPreparationChecklistApplied=true
 - operationalPreparationStillForbidden=true
 - executionStillForbidden=true
 - operationalSurfaceStillForbidden=true
@@ -89,7 +89,7 @@ Explicar:
 - operationalPreparationPrerequisitesDefined=true porque as pre-condicoes operacionais preparatorias foram definidas documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationRollbackDefined=true porque o rollback operacional preparatorio foi definido documentalmente neste microcorte, sem executar rollback real, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationEvidenceDefined=true porque as evidencias operacionais preparatorias foram definidas documentalmente neste microcorte, sem coletar evidencia operacional real, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
-- operationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
+- operationalPreparationChecklistApplied=true porque o checklist documental da Fase S foi aplicado neste microcorte, sem coletar evidencia operacional real, sem executar rollback real, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
 - operationalSurfaceStillForbidden=true porque nenhuma superficie operacional pode ser criada nesta fase.
@@ -533,11 +533,94 @@ Interpretacao obrigatoria:
 - operationalPreparationEvidenceDefined=true nao autoriza abrir tenant DB real.
 - operationalPreparationEvidenceDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 12. Interpretacao obrigatoria
+## 12. Checklist documental da Fase S
+
+Registrar que o checklist da Fase S foi aplicado documentalmente e que sua aplicacao nao concede autorizacao concreta, nao autoriza preparacao operacional concreta, nao autoriza execucao, nao executa rollback real, nao coleta evidencia operacional real e nao cria superficie operacional.
+
+### 12.1 Checklist aplicado
+
+Registrar:
+
+- [x] operationalPreparationAuthorizationContractOpened=true.
+- [x] operationalPreparationAuthorizationDefined=true.
+- [x] operationalPreparationScopeDefined=true.
+- [x] operationalPreparationPrerequisitesDefined=true.
+- [x] operationalPreparationRollbackDefined=true.
+- [x] operationalPreparationEvidenceDefined=true.
+- [x] operationalPreparationChecklistApplied=true.
+- [x] operationalPreparationStillForbidden=true.
+- [x] executionStillForbidden=true.
+- [x] operationalSurfaceStillForbidden=true.
+- [x] candidateStillSynthetic=true.
+- [x] nonOperationalPreserved=true.
+- [x] fallbackRequired=true.
+- [x] blockedReasons=[].
+
+### 12.2 Bloqueios preservados pelo checklist
+
+Registrar que o checklist preserva explicitamente os seguintes bloqueios:
+
+- preparacao operacional concreta;
+- execucao;
+- rollback real;
+- evidencia operacional real;
+- caller real;
+- rota;
+- CLI;
+- script;
+- job;
+- bootstrap;
+- request path;
+- registry real;
+- allowlist real;
+- roteamento real;
+- tenant DB real;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- codigo produtivo;
+- testes;
+- package.json.
+
+### 12.3 Resultado da aplicacao documental do checklist
+
+Registrar:
+
+- operationalPreparationChecklistApplied=true;
+- operationalPreparationAuthorizationContractOpened permanece true;
+- operationalPreparationAuthorizationDefined permanece true;
+- operationalPreparationScopeDefined permanece true;
+- operationalPreparationPrerequisitesDefined permanece true;
+- operationalPreparationRollbackDefined permanece true;
+- operationalPreparationEvidenceDefined permanece true;
+- operationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+- operationalPreparationChecklistApplied=true significa apenas que o checklist documental da Fase S foi aplicado.
+- operationalPreparationChecklistApplied=true nao significa autorizacao concreta.
+- operationalPreparationChecklistApplied=true nao autoriza preparacao operacional concreta.
+- operationalPreparationChecklistApplied=true nao autoriza execucao.
+- operationalPreparationChecklistApplied=true nao autoriza rollback real.
+- operationalPreparationChecklistApplied=true nao autoriza evidencia operacional real.
+- operationalPreparationChecklistApplied=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- operationalPreparationChecklistApplied=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- operationalPreparationChecklistApplied=true nao autoriza abrir tenant DB real.
+- operationalPreparationChecklistApplied=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 13. Interpretacao obrigatoria
 
 Registrar que abrir a Fase S nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 13. Criterio de avanco da Fase S
+## 14. Criterio de avanco da Fase S
 
 Registrar que a Fase S so podera avancar documentalmente quando forem definidos:
 
@@ -545,6 +628,8 @@ Registrar que a Fase S so podera avancar documentalmente quando forem definidos:
 - checklist;
 - interpretacao obrigatoria.
 
-Registrar que a autorizacao documental, o escopo operacional preparatorio, as pre-condicoes operacionais preparatorias, o rollback operacional preparatorio e as evidencias operacionais preparatorias ja foram definidos neste microcorte, mas checklist permanece pendente.
+Registrar que a autorizacao documental, o escopo operacional preparatorio, as pre-condicoes operacionais preparatorias, o rollback operacional preparatorio, as evidencias operacionais preparatorias e o checklist documental ja foram definidos ou aplicados neste microcorte.
+
+Registrar que a Fase S permanece aberta apos este microcorte e que seu encerramento depende de microcorte posterior proprio.
 
 Registrar que mesmo um contrato completo da Fase S nao autoriza execucao e nao autoriza preparacao operacional concreta sem fase posterior propria.
