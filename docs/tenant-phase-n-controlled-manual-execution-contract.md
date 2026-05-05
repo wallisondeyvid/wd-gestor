@@ -129,7 +129,7 @@ Criar gates iniciais conservadores:
 - executionScopeDefined: true
 - authorizationGatesDefined: true
 - rollbackDefined: true
-- evidencePlanDefined: false
+- evidencePlanDefined: true
 - candidateStillSynthetic: true
 - nonOperationalPreserved: true
 - noOperationalSurfaceCreated: true
@@ -143,7 +143,7 @@ Explicar:
 - executionScopeDefined=true porque o escopo maximo permitido foi definido documentalmente neste microcorte.
 - authorizationGatesDefined=true porque os gates documentais de autorizacao foram definidos neste microcorte.
 - rollbackDefined=true porque o rollback documental da execucao foi definido neste microcorte.
-- evidencePlanDefined=false porque o plano de evidencias ainda sera definido.
+- evidencePlanDefined=true porque o plano documental de evidencias foi definido neste microcorte.
 - executionStillForbidden=true porque a Fase N nao autoriza execucao neste momento.
 - blockedReasons=[] porque nao ha bloqueio documental inicial, apenas ausencia de contrato completo.
 
@@ -215,8 +215,8 @@ Registrar:
 
 - executionScopeDefined=true;
 - executionContractReady permanece false;
-- authorizationGatesDefined permanece false;
-- rollbackDefined permanece false;
+- authorizationGatesDefined permanece true;
+- rollbackDefined permanece true;
 - evidencePlanDefined permanece false;
 - executionStillForbidden permanece true;
 - blockedReasons permanece [].
@@ -301,7 +301,7 @@ Registrar:
 - authorizationGatesDefined=true;
 - executionScopeDefined permanece true;
 - executionContractReady permanece false;
-- rollbackDefined permanece false;
+- rollbackDefined permanece true;
 - evidencePlanDefined permanece false;
 - executionStillForbidden permanece true;
 - blockedReasons permanece [].
@@ -400,7 +400,117 @@ Interpretacao obrigatoria:
 - rollbackDefined=true nao autoriza abrir tenant DB real nesta fase.
 - rollbackDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 12. Interpretacao obrigatoria
+## 12. Plano documental de evidencias da execucao manual controlada
+
+Registrar que o plano de evidencias da Fase N e documental, preventivo e nao operacional.
+
+### 12.1 Premissa das evidencias
+
+Registrar:
+
+- A Fase N nao coleta evidencia operacional real.
+- A Fase N nao executa piloto real para gerar evidencia.
+- A Fase N nao abre tenant DB real para gerar evidencia.
+- A Fase N nao altera registry real para gerar evidencia.
+- A Fase N nao altera allowlist real para gerar evidencia.
+- A Fase N nao cria comando, script, caller real, rota, CLI, job, bootstrap ou request path para gerar evidencia.
+- A Fase N apenas define quais evidencias deveriam existir antes, durante e depois de uma eventual execucao futura autorizada em fase posterior.
+
+### 12.2 Evidencias documentais minimas esperadas antes de qualquer execucao futura
+
+Registrar que uma fase posterior so podera discutir execucao manual controlada se houver evidencia documental de:
+
+- candidato sintetico identificado;
+- ambiente nao produtivo confirmado;
+- dados descartaveis confirmados;
+- ausencia de Portal confirmada;
+- ausencia de trafego real confirmada;
+- ausencia de usuario real confirmada;
+- ausencia de unidade real confirmada;
+- allowlist unitaria e explicita definida;
+- fallback para `baseConnection` preservado;
+- rollback especifico definido;
+- gates de autorizacao definidos;
+- criterios de bloqueio definidos;
+- baseline curta verde;
+- escopo de execucao explicito;
+- autorizacao propria e posterior;
+- PostgreSQL fora do escopo.
+
+### 12.3 Evidencias esperadas durante eventual execucao futura
+
+Registrar que, se uma fase posterior autorizar execucao manual controlada, as evidencias esperadas deverao demonstrar:
+
+- execucao restrita ao candidato sintetico autorizado;
+- execucao restrita a ambiente nao produtivo;
+- nenhuma exposicao ao Portal;
+- nenhum dado real usado;
+- nenhum trafego real usado;
+- nenhum usuario real usado;
+- nenhuma unidade real usada;
+- fallback para `baseConnection` preservado;
+- nenhuma alteracao fora do escopo autorizado;
+- nenhum caller real, rota, CLI, script, job, bootstrap ou request path criado fora de autorizacao explicita;
+- nenhum registry real alterado fora de autorizacao explicita;
+- nenhuma allowlist real alterada fora de autorizacao explicita;
+- nenhum tenant DB real aberto fora de autorizacao explicita;
+- nenhum PostgreSQL envolvido.
+
+### 12.4 Evidencias esperadas apos eventual execucao futura
+
+Registrar que, se uma fase posterior autorizar execucao manual controlada, as evidencias posteriores deverao demonstrar:
+
+- estado seguro preservado;
+- fallback para `baseConnection` preservado;
+- ausencia de diff oportunista;
+- ausencia de superficie operacional inesperada;
+- ausencia de alteracao em rotas, scripts, package.json, registry, allowlist, modelRegistry ou BaseRepository fora de autorizacao explicita;
+- baseline curta verde apos a execucao;
+- `npm test` completo recomendado antes de publicacao de fase;
+- rollback disponivel caso algum gate posterior falhe;
+- PostgreSQL ainda fora do escopo.
+
+### 12.5 Evidencias que nao contam como autorizacao
+
+Registrar que nao contam como autorizacao:
+
+- existencia de documento;
+- `eligible=true`;
+- `executionScopeDefined=true`;
+- `authorizationGatesDefined=true`;
+- `rollbackDefined=true`;
+- `evidencePlanDefined=true`;
+- baseline curta verde;
+- `npm test` verde;
+- ausencia de bloqueios documentais;
+- presenca de candidato sintetico.
+
+Registrar que autorizacao deve ser explicita, propria e posterior.
+
+### 12.6 Resultado do plano de evidencias
+
+Registrar:
+
+- evidencePlanDefined=true;
+- executionScopeDefined permanece true;
+- authorizationGatesDefined permanece true;
+- rollbackDefined permanece true;
+- executionContractReady permanece false;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- evidencePlanDefined=true significa apenas que o plano documental de evidencias foi definido.
+- evidencePlanDefined=true nao autoriza execucao.
+- evidencePlanDefined=true nao autoriza coleta de evidencia operacional real.
+- evidencePlanDefined=true nao autoriza preparacao operacional concreta.
+- evidencePlanDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- evidencePlanDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- evidencePlanDefined=true nao autoriza abrir tenant DB real nesta fase.
+- evidencePlanDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 13. Interpretacao obrigatoria
 
 Registrar:
 
