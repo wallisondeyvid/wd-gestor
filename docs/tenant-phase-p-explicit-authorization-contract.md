@@ -88,7 +88,7 @@ Registrar os gates iniciais:
 - explicitAuthorizationDefined=false
 - authorizationActorsDefined=true
 - authorizationScopeDefined=true
-- authorizationEvidenceDefined=false
+- authorizationEvidenceDefined=true
 - preparationStillForbidden=true
 - executionStillForbidden=true
 - operationalSurfaceStillForbidden=true
@@ -103,7 +103,7 @@ Explicar:
 - explicitAuthorizationDefined=false porque o contrato de autorizacao explicita ainda nao foi definido.
 - authorizationActorsDefined=true porque os atores/responsaveis documentais pela autorizacao explicita foram definidos neste microcorte sem autorizar qualquer preparacao ou execucao.
 - authorizationScopeDefined=true porque o escopo autorizavel futuro e os limites nao autorizaveis foram definidos documentalmente neste microcorte sem conceder autorizacao explicita final.
-- authorizationEvidenceDefined=false porque as evidencias exigidas ainda nao foram definidas.
+- authorizationEvidenceDefined=true porque as evidencias exigidas antes de qualquer autorizacao futura foram definidas documentalmente neste microcorte sem autorizar preparacao operacional concreta nem execucao.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
 - operationalSurfaceStillForbidden=true porque nenhuma superficie operacional pode ser criada.
@@ -174,7 +174,7 @@ Registrar:
 - authorizationActorsDefined=true;
 - authorizationContractOpened permanece true;
 - explicitAuthorizationDefined permanece false;
-- authorizationScopeDefined permanece false;
+- authorizationScopeDefined permanece true;
 - authorizationEvidenceDefined permanece false;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
@@ -294,7 +294,105 @@ Interpretacao obrigatoria:
 - authorizationScopeDefined=true nao autoriza abrir tenant DB real.
 - authorizationScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 9. Interpretacao obrigatoria
+## 9. Evidencias exigidas antes de qualquer autorizacao futura
+
+Registrar que a Fase P define apenas quais evidencias seriam exigidas antes de qualquer autorizacao futura. A definicao de evidencias exigidas nao e coleta de evidencia operacional real e nao autoriza execucao nem preparacao operacional concreta.
+
+### 9.1 Evidencia documental obrigatoria
+
+Registrar que qualquer avanco futuro exigiria, no minimo:
+
+- contrato documental completo;
+- escopo explicito e limitado;
+- limites nao autorizaveis registrados;
+- rollback futuro proprio definido documentalmente;
+- criterios de entrada e saida definidos documentalmente;
+- checklist pre-preparacao definido documentalmente;
+- interpretacao obrigatoria registrada;
+- ausencia de bloqueios documentais pendentes.
+
+### 9.2 Evidencia de validacao tecnica obrigatoria
+
+Registrar que qualquer avanco futuro exigiria, no minimo:
+
+- baseline curta verde;
+- `npm test` completo verde;
+- registro da tupla completa de testes;
+- status git limpo;
+- historico local coerente;
+- ausencia de alteracoes fora do escopo autorizado;
+- confirmacao de que nenhum arquivo operacional indevido foi alterado.
+
+Registrar que baseline curta verde e `npm test` completo verde sao requisitos de seguranca, mas nao sao autorizacao por si so.
+
+### 9.3 Evidencia operacional real
+
+Registrar que evidencia operacional real permanece proibida na Fase P.
+
+Registrar que nao e permitido na Fase P:
+
+- abrir tenant DB real;
+- acionar registry real;
+- aplicar allowlist real;
+- executar roteamento real;
+- criar caller real;
+- executar script, CLI, job, bootstrap ou request path;
+- usar Portal;
+- usar dados reais;
+- usar usuario real;
+- usar unidade real;
+- gerar trafego real;
+- executar rollback real.
+
+Registrar que se algum dia evidencia operacional real for necessaria, isso exigira fase propria, autorizacao explicita propria, rollback proprio, escopo proprio, gates proprios e validacao propria.
+
+### 9.4 Evidencia de autorizacao textual
+
+Registrar que qualquer autorizacao futura precisaria ser:
+
+- textual;
+- explicita;
+- especifica;
+- limitada;
+- registrada no status da migracao;
+- vinculada a uma fase;
+- vinculada a um escopo;
+- vinculada a um rollback;
+- vinculada a criterios de entrada e saida;
+- revogavel em caso de gate vermelho, ambiguidade ou desvio de escopo.
+
+Registrar que autorizacao generica nao e suficiente.
+
+### 9.5 Resultado das evidencias
+
+Registrar:
+
+- authorizationEvidenceDefined=true;
+- authorizationScopeDefined permanece true;
+- authorizationActorsDefined permanece true;
+- authorizationContractOpened permanece true;
+- explicitAuthorizationDefined permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- authorizationEvidenceDefined=true significa apenas que as evidencias exigidas antes de qualquer autorizacao futura foram definidas documentalmente.
+- authorizationEvidenceDefined=true nao autoriza preparacao operacional concreta.
+- authorizationEvidenceDefined=true nao autoriza execucao.
+- authorizationEvidenceDefined=true nao autoriza rollback real.
+- authorizationEvidenceDefined=true nao autoriza coleta de evidencia operacional real.
+- authorizationEvidenceDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- authorizationEvidenceDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- authorizationEvidenceDefined=true nao autoriza abrir tenant DB real.
+- authorizationEvidenceDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 10. Interpretacao obrigatoria
 
 Registrar:
 
@@ -308,7 +406,7 @@ Registrar:
 - authorizationContractOpened=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - authorizationContractOpened=true nao abre fase posterior automaticamente.
 
-## 10. Criterio de avanco da Fase P
+## 11. Criterio de avanco da Fase P
 
 Registrar que a Fase P so podera avancar quando forem definidos, documentalmente:
 
