@@ -699,7 +699,7 @@ Checkpoint tenant enforcement atual:
 - Push: pendente ate validacao completa final e autorizacao explicita do usuario.
 
 - Fase O aberta documentalmente nesta rodada.
-- Documento canonico: [docs/tenant-phase-o-pre-execution-risk-matrix.md](docs/tenant-phase-o-pre-execution-risk-matrix.md)
+- Documento canonico: docs/tenant-phase-o-pre-execution-risk-matrix.md
 - Natureza: documental, preventiva, nao produtiva, sintetica e nao operacional.
 - Origem: posterior a Fase N encerrada, publicada e auditada.
 - Objetivo: definir matriz de riscos pre-execucao antes de qualquer autorizacao preparatoria.
@@ -747,9 +747,19 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[].
 - Interpretacao obrigatoria: encerramento da Fase O nao autoriza execucao, preparacao operacional concreta, evidencia operacional real, rollback real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - Proxima fase: nao aberta automaticamente.
-- Validacao: baseline curta pos-encerramento verde.
-- Fechamento/publicacao: antes de push, obrigatorio rodar `npm test` completo.
-- Push: pendente ate validacao completa final e autorizacao explicita do usuario.
+- Validacao:
+	- baseline curta pos-encerramento verde;
+	- npm test completo pos-encerramento verde:
+		- tests: 2203;
+		- suites: 17;
+		- pass: 2201;
+		- fail: 0;
+		- cancelled: 0;
+		- skipped: 2;
+		- todo: 0;
+		- duration_ms: 223547.2216.
+- Fechamento/publicacao: validacao completa final concluida; push ainda pendente de autorizacao explicita do usuario.
+- Push: pendente ate autorizacao explicita do usuario.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
