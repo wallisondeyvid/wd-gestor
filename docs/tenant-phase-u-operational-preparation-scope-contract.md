@@ -82,7 +82,7 @@ Explicar:
 - operationalPreparationScopeContractOpened=true porque a Fase U foi aberta documentalmente.
 - operationalPreparationScopeDefined=true porque o escopo documental foi definido, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real e sem coleta de evidencia operacional real.
 - operationalPreparationBoundariesDefined=true porque as fronteiras documentais foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
-- operationalPreparationInputsDefined=false porque as entradas ainda nao foram definidas.
+- operationalPreparationInputsDefined=true porque as entradas documentais foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - operationalPreparationOutputsDefined=false porque as saidas ainda nao foram definidas.
 - operationalPreparationExclusionsDefined=false porque as exclusoes ainda nao foram definidas.
 - operationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
@@ -252,7 +252,74 @@ Interpretacao obrigatoria:
 - fronteiras documentais definidas nao autorizam Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 - fronteiras documentais definidas nao autorizam push.
 
-## 9. Bloqueios obrigatorios nesta abertura
+## 9. Entradas documentais da preparacao operacional concreta futura
+
+Registrar que as entradas sao exclusivamente documentais e nao autorizam preparacao operacional concreta.
+
+Registrar que, se um dia houver fase posterior propria com autorizacao explicita do usuario, comando proprio aprovado e escopo delimitado, as entradas documentais minimas antes de qualquer preparacao operacional concreta futura deverao ser:
+
+- identificador do candidato sintetico;
+- confirmacao de ambiente nao produtivo;
+- confirmacao de banco sintetico descartavel;
+- confirmacao de ausencia de Portal;
+- confirmacao de ausencia de dados reais;
+- confirmacao de ausencia de trafego real;
+- confirmacao de ausencia de usuario real;
+- confirmacao de ausencia de unidade real;
+- confirmacao de PostgreSQL fora de escopo;
+- confirmacao de fallback obrigatorio para baseConnection;
+- confirmacao de que nao havera alteracao em codigo produtivo;
+- confirmacao de que nao havera alteracao em testes;
+- confirmacao de que nao havera alteracao em package.json;
+- confirmacao de que nao havera alteracao em src;
+- rollback documental definido antes de qualquer preparacao concreta;
+- evidencias documentais esperadas antes e depois;
+- validacao anterior obrigatoria;
+- validacao posterior obrigatoria;
+- criterios de bloqueio;
+- criterios de aborto;
+- aprovacao explicita futura do usuario;
+- comando futuro proprio aprovado pelo usuario;
+- registro posterior obrigatorio no ledger global.
+
+Registrar que a ausencia de qualquer entrada documental obrigatoria deve bloquear a preparacao operacional concreta futura.
+
+Registrar que nenhuma entrada documental pode ser interpretada como autorizacao concreta.
+
+Registrar:
+
+- operationalPreparationScopeContractOpened=true
+- operationalPreparationScopeDefined=true
+- operationalPreparationBoundariesDefined=true
+- operationalPreparationInputsDefined=true
+- operationalPreparationOutputsDefined=false
+- operationalPreparationExclusionsDefined=false
+- operationalPreparationChecklistApplied=false
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitAuthorizationStillRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Interpretacao obrigatoria:
+
+- entradas documentais definidas nao autorizam preparacao operacional concreta;
+- entradas documentais definidas nao autorizam execucao;
+- entradas documentais definidas nao autorizam rollback real;
+- entradas documentais definidas nao autorizam coleta de evidencia operacional real;
+- entradas documentais definidas nao autorizam criacao de superficie operacional;
+- entradas documentais definidas nao autorizam caller real, rota, CLI, script, job, bootstrap ou request path;
+- entradas documentais definidas nao autorizam alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- entradas documentais definidas nao autorizam Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- entradas documentais definidas nao autorizam push.
+
+## 10. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase U bloqueia expressamente:
 
@@ -282,7 +349,7 @@ Registrar que a abertura da Fase U bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 10. Interpretacao obrigatoria
+## 11. Interpretacao obrigatoria
 
 Registrar que abrir a Fase U nao significa escopo completo definido.
 
@@ -304,7 +371,7 @@ Registrar que abrir a Fase U nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase U nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Criterio de avanco da Fase U
+## 12. Criterio de avanco da Fase U
 
 Registrar que a Fase U so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
