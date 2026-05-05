@@ -674,6 +674,30 @@ Checkpoint tenant enforcement atual:
 - Interpretacao: abertura da Fase N nao autoriza execucao, preparacao operacional concreta, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
 
+- Fase N encerrada documentalmente em:
+  816e736 docs(tenant): encerra fase n
+- Documento canonico: [docs/tenant-phase-n-controlled-manual-execution-contract.md](docs/tenant-phase-n-controlled-manual-execution-contract.md)
+- Natureza: documental, contratual, nao produtiva, sintetica e nao operacional.
+- Resultado final: contrato documental de execucao manual controlada, nao produtiva e sintetica concluido.
+- Gates finais:
+	- executionContractReady=true;
+	- executionScopeDefined=true;
+	- authorizationGatesDefined=true;
+	- rollbackDefined=true;
+	- evidencePlanDefined=true;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- noOperationalSurfaceCreated=true;
+	- fallbackRequired=true;
+	- executionStillForbidden=true;
+	- blockedReasons=[].
+- Interpretacao obrigatoria: o encerramento da Fase N nao autoriza execucao, nao autoriza coleta de evidencia operacional real, nao autoriza rollback real, nao autoriza preparacao operacional concreta, nao cria caller real, nao cria rota/CLI/script/job/bootstrap/request path, nao altera registry real, nao altera allowlist real, nao abre tenant DB real, nao muda roteamento e nao envolve Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Recomendacao final: apto para discutir fase posterior explicita somente se houver autorizacao propria, contrato proprio, gates proprios, rollback proprio e evidencias proprias.
+- Proxima fase: nao aberta automaticamente; qualquer fase posterior depende de abertura explicita e autorizacao propria.
+- Validacao: baseline curta pos-encerramento verde: tests 136; suites 14; pass 136; fail 0; skipped 0.
+- Fechamento/publicacao: antes de push, ainda e obrigatorio rodar `npm test` completo.
+- Push: pendente ate validacao completa final e autorizacao explicita do usuario.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
