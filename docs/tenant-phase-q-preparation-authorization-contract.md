@@ -59,7 +59,7 @@ Registrar:
 - preparationAuthorizationDefined=true
 - preparationScopeDefined=true
 - preparationRollbackDefined=true
-- preparationEvidenceDefined=false
+- preparationEvidenceDefined=true
 - preparationChecklistApplied=false
 - preparationStillForbidden=true
 - executionStillForbidden=true
@@ -75,7 +75,7 @@ Explicar:
 - preparationAuthorizationDefined=true porque o formato documental de uma autorizacao preparatoria valida foi definido neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - preparationScopeDefined=true porque o escopo preparatorio autorizavel e os limites preparatorios nao autorizaveis foram definidos documentalmente neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - preparationRollbackDefined=true porque o rollback preparatorio documental foi definido neste microcorte, sem executar rollback real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
-- preparationEvidenceDefined=false porque nenhuma evidencia preparatoria documental foi definida nesta abertura.
+- preparationEvidenceDefined=true porque as evidencias preparatorias documentais foram definidas neste microcorte, sem coletar evidencia operacional real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - preparationChecklistApplied=false porque o checklist preparatorio ainda nao foi aplicado nesta abertura.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
@@ -145,8 +145,8 @@ Registrar:
 - preparationAuthorizationDefined=true;
 - preparationAuthorizationContractOpened permanece true;
 - preparationScopeDefined permanece true;
-- preparationRollbackDefined permanece false;
-- preparationEvidenceDefined permanece false;
+- preparationRollbackDefined permanece true;
+- preparationEvidenceDefined permanece true;
 - preparationChecklistApplied permanece false;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
@@ -241,8 +241,8 @@ Registrar:
 - preparationScopeDefined=true;
 - preparationAuthorizationDefined permanece true;
 - preparationAuthorizationContractOpened permanece true;
-- preparationRollbackDefined permanece false;
-- preparationEvidenceDefined permanece false;
+- preparationRollbackDefined permanece true;
+- preparationEvidenceDefined permanece true;
 - preparationChecklistApplied permanece false;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
@@ -323,7 +323,7 @@ Registrar:
 - preparationScopeDefined permanece true;
 - preparationAuthorizationDefined permanece true;
 - preparationAuthorizationContractOpened permanece true;
-- preparationEvidenceDefined permanece false;
+- preparationEvidenceDefined permanece true;
 - preparationChecklistApplied permanece false;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
@@ -346,7 +346,94 @@ Interpretacao obrigatoria:
 - preparationRollbackDefined=true nao autoriza abrir tenant DB real.
 - preparationRollbackDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Interpretacao obrigatoria
+## 10. Evidencias preparatorias documentais
+
+Registrar que a Fase Q define, neste microcorte, as evidencias preparatorias documentais exigidas antes de qualquer preparacao manual controlada sintetica futura.
+
+Registrar que definir evidencias preparatorias nao coleta evidencia operacional real, nao concede autorizacao concreta e nao autoriza preparacao operacional concreta.
+
+### 10.1 Evidencias documentais minimas
+
+Registrar que qualquer autorizacao preparatoria futura devera exigir, antes de qualquer preparacao concreta, evidencia documental de:
+
+- fase autorizada;
+- autorizacao textual explicita;
+- escopo preparatorio autorizado;
+- limites preparatorios nao autorizados;
+- rollback preparatorio definido;
+- criterios de entrada definidos;
+- criterios de saida definidos;
+- candidato sintetico confirmado;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ausencia de PostgreSQL;
+- ausencia de tenant DB real aberto;
+- ausencia de registry real alterado;
+- ausencia de allowlist real alterada;
+- ausencia de roteamento real alterado;
+- ausencia de caller real, rota, CLI, script, job, bootstrap ou request path.
+
+### 10.2 Evidencias proibidas nesta fase
+
+Registrar que a Fase Q proibe tratar como evidencia valida:
+
+- log de execucao real;
+- log de rollback real;
+- conexao real com tenant DB;
+- alteracao real em registry;
+- alteracao real em allowlist;
+- alteracao real em roteamento;
+- evidencia obtida via Portal;
+- evidencia baseada em dados reais;
+- evidencia baseada em trafego real;
+- evidencia baseada em usuario real;
+- evidencia baseada em unidade real;
+- evidencia baseada em PostgreSQL;
+- evidencia obtida por caller real, rota, CLI, script, job, bootstrap ou request path.
+
+### 10.3 Evidencias de bloqueio
+
+Registrar que a ausencia de qualquer evidencia documental minima devera bloquear avanco futuro.
+
+Registrar que qualquer evidencia operacional real coletada fora de fase propria invalida a preparacao e exige interrupcao imediata.
+
+Registrar que evidencia documental nao equivale a autorizacao de preparacao concreta nem a autorizacao de execucao.
+
+### 10.4 Resultado da definicao de evidencias preparatorias
+
+Registrar:
+
+- preparationEvidenceDefined=true;
+- preparationRollbackDefined permanece true;
+- preparationScopeDefined permanece true;
+- preparationAuthorizationDefined permanece true;
+- preparationAuthorizationContractOpened permanece true;
+- preparationChecklistApplied permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- preparationEvidenceDefined=true significa apenas que as evidencias preparatorias documentais foram definidas.
+- preparationEvidenceDefined=true nao significa que evidencia operacional real foi coletada.
+- preparationEvidenceDefined=true nao autoriza preparacao operacional concreta.
+- preparationEvidenceDefined=true nao autoriza execucao.
+- preparationEvidenceDefined=true nao autoriza rollback real.
+- preparationEvidenceDefined=true nao autoriza evidencia operacional real.
+- preparationEvidenceDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- preparationEvidenceDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- preparationEvidenceDefined=true nao autoriza abrir tenant DB real.
+- preparationEvidenceDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 11. Interpretacao obrigatoria
 
 Registrar:
 
@@ -360,7 +447,7 @@ Registrar:
 - preparationAuthorizationContractOpened=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - preparationAuthorizationContractOpened=true nao abre fase posterior automaticamente.
 
-## 11. Criterio de avanco da Fase Q
+## 12. Criterio de avanco da Fase Q
 
 Registrar que a Fase Q so podera avancar documentalmente quando forem definidos:
 
