@@ -64,7 +64,7 @@ Registrar:
 - explicitOperationalPreparationPrerequisitesDefined=true
 - explicitOperationalPreparationRollbackDefined=true
 - explicitOperationalPreparationEvidenceDefined=true
-- explicitOperationalPreparationChecklistApplied=false
+- explicitOperationalPreparationChecklistApplied=true
 - explicitOperationalPreparationStillForbidden=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -84,7 +84,7 @@ Explicar:
 - explicitOperationalPreparationPrerequisitesDefined=true porque as pre-condicoes documentais foram definidas neste microcorte, sem autorizacao concreta e sem preparacao operacional concreta.
 - explicitOperationalPreparationRollbackDefined=true porque o rollback documental foi definido neste microcorte, sem rollback real, sem autorizacao concreta e sem preparacao operacional concreta.
 - explicitOperationalPreparationEvidenceDefined=true porque as evidencias documentais foram definidas neste microcorte, sem coleta de evidencia operacional real, sem autorizacao concreta e sem preparacao operacional concreta.
-- explicitOperationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
+- explicitOperationalPreparationChecklistApplied=true porque o checklist documental da Fase T foi aplicado, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real e sem coleta de evidencia operacional real.
 - explicitOperationalPreparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase por padrao.
 - rollbackStillForbidden=true porque nenhum rollback real e permitido nesta fase por padrao.
@@ -434,7 +434,80 @@ Interpretacao obrigatoria:
 - evidencias documentais definidas nao autorizam criacao de superficie operacional;
 - evidencias documentais definidas nao autorizam Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 12. Bloqueios obrigatorios nesta abertura
+## 12. Checklist documental da Fase T
+
+Registrar checklist com todos os itens abaixo marcados como concluidos:
+
+- [x] contrato da Fase T aberto;
+- [x] origem na Fase S publicada e auditada pos-publicacao registrada;
+- [x] autorizacao explicita documental definida;
+- [x] escopo documental da autorizacao explicita definido;
+- [x] pre-condicoes documentais definidas;
+- [x] rollback documental definido;
+- [x] evidencias documentais definidas;
+- [x] candidato permanece sintetico;
+- [x] ambiente nao produtivo exigido;
+- [x] ausencia de Portal preservada;
+- [x] ausencia de dados reais preservada;
+- [x] ausencia de trafego real preservada;
+- [x] ausencia de usuario real preservada;
+- [x] ausencia de unidade real preservada;
+- [x] PostgreSQL permanece fora de escopo;
+- [x] fallback para baseConnection permanece obrigatorio;
+- [x] preparacao operacional concreta permanece proibida;
+- [x] execucao permanece proibida;
+- [x] rollback real permanece proibido;
+- [x] evidencia operacional real permanece proibida;
+- [x] superficie operacional permanece proibida;
+- [x] caller real permanece proibido;
+- [x] rota permanece proibida;
+- [x] CLI permanece proibida;
+- [x] script permanece proibido;
+- [x] job permanece proibido;
+- [x] bootstrap permanece proibido;
+- [x] request path permanece proibido;
+- [x] registry real permanece proibido;
+- [x] allowlist real permanece proibida;
+- [x] tenant DB real permanece proibido;
+- [x] roteamento real permanece proibido;
+- [x] codigo produtivo permanece intocado;
+- [x] testes permanecem intocados;
+- [x] package.json permanece intocado;
+- [x] src permanece intocado;
+- [x] migration-status.md permanece intocado neste microcorte;
+- [x] push permanece proibido neste microcorte.
+
+Registrar:
+
+- explicitOperationalPreparationChecklistApplied=true;
+- explicitOperationalPreparationAuthorizationContractOpened permanece true;
+- explicitOperationalPreparationAuthorizationDefined permanece true;
+- explicitOperationalPreparationScopeDefined permanece true;
+- explicitOperationalPreparationPrerequisitesDefined permanece true;
+- explicitOperationalPreparationRollbackDefined permanece true;
+- explicitOperationalPreparationEvidenceDefined permanece true;
+- explicitOperationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- rollbackStillForbidden permanece true;
+- operationalEvidenceStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonProductionRequired permanece true;
+- nonOperationalUntilExplicitAuthorization permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- checklist documental aplicado nao autoriza preparacao operacional concreta;
+- checklist documental aplicado nao autoriza execucao;
+- checklist documental aplicado nao autoriza rollback real;
+- checklist documental aplicado nao autoriza coleta de evidencia operacional real;
+- checklist documental aplicado nao autoriza criacao de superficie operacional;
+- checklist documental aplicado nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- checklist documental aplicado nao autoriza push.
+
+## 13. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase T bloqueia expressamente:
 
@@ -464,7 +537,7 @@ Registrar que a abertura da Fase T bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 13. Interpretacao obrigatoria
+## 14. Interpretacao obrigatoria
 
 Registrar que abrir a Fase T nao significa autorizacao explicita concedida.
 
@@ -484,7 +557,7 @@ Registrar que abrir a Fase T nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase T nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 14. Criterio de avanco da Fase T
+## 15. Criterio de avanco da Fase T
 
 Registrar que a Fase T so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
