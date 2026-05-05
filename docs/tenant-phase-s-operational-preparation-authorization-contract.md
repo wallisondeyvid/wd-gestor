@@ -71,7 +71,7 @@ Registrar:
 - operationalPreparationScopeDefined=true
 - operationalPreparationPrerequisitesDefined=true
 - operationalPreparationRollbackDefined=true
-- operationalPreparationEvidenceDefined=false
+- operationalPreparationEvidenceDefined=true
 - operationalPreparationChecklistApplied=false
 - operationalPreparationStillForbidden=true
 - executionStillForbidden=true
@@ -88,7 +88,7 @@ Explicar:
 - operationalPreparationScopeDefined=true porque o escopo operacional preparatorio foi definido documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationPrerequisitesDefined=true porque as pre-condicoes operacionais preparatorias foram definidas documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationRollbackDefined=true porque o rollback operacional preparatorio foi definido documentalmente neste microcorte, sem executar rollback real, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
-- operationalPreparationEvidenceDefined=false porque as evidencias ainda nao foram definidas.
+- operationalPreparationEvidenceDefined=true porque as evidencias operacionais preparatorias foram definidas documentalmente neste microcorte, sem coletar evidencia operacional real, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
 - operationalPreparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
@@ -432,19 +432,119 @@ Interpretacao obrigatoria:
 - operationalPreparationRollbackDefined=true nao autoriza abrir tenant DB real.
 - operationalPreparationRollbackDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Interpretacao obrigatoria
+## 11. Evidencias operacionais preparatorias documentais
+
+Registrar que as evidencias operacionais preparatorias da Fase S sao estritamente documentais e servem apenas para definir quais comprovacoes deverao existir antes, durante e depois de qualquer futura preparacao operacional manual controlada sintetica em fase posterior propria.
+
+Registrar que estas evidencias documentais nao sao evidencias operacionais reais, nao coletam dados reais, nao usam trafego real, nao usam usuario real, nao usam unidade real, nao aprovam comando real, nao autorizam preparacao operacional concreta e nao criam superficie operacional.
+
+### 11.1 Evidencias futuras exigidas antes de qualquer preparacao
+
+Registrar que qualquer futura preparacao operacional manual controlada sintetica so podera ser considerada em fase posterior propria se, antes dela, existirem evidencias documentais de:
+
+- candidato estritamente sintetico;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ambiente nao produtivo;
+- database descartavel ou plenamente reversivel;
+- fallback obrigatorio para baseConnection preservado;
+- escopo operacional preparatorio explicito;
+- pre-condicoes satisfeitas;
+- rollback preparatorio definido antes de qualquer comando real;
+- gates de bloqueio objetivos;
+- validacao verde antes de qualquer autorizacao concreta;
+- autorizacao explicita do usuario antes de qualquer comando real;
+- ausencia de alteracao em registry real, allowlist real e roteamento real;
+- ausencia de criacao de caller real, rota, CLI, script, job, bootstrap ou request path;
+- PostgreSQL fora de escopo.
+
+### 11.2 Evidencias futuras exigidas durante qualquer preparacao
+
+Registrar que se uma futura fase propria um dia autorizar preparacao operacional manual controlada sintetica, ela devera exigir evidencias durante a preparacao de:
+
+- candidato sintetico utilizado;
+- ambiente nao produtivo utilizado;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- preservacao de fallback para baseConnection;
+- comandos efetivamente aprovados naquela fase futura propria;
+- ausencia de comandos fora do escopo aprovado;
+- interrupcao imediata diante de ambiguidade;
+- nao alteracao de registry real, allowlist real ou roteamento real;
+- nao criacao de caller real, rota, CLI, script, job, bootstrap ou request path;
+- nao abertura de tenant DB real;
+- nao envolvimento de PostgreSQL.
+
+### 11.3 Evidencias futuras exigidas depois de qualquer preparacao
+
+Registrar que se uma futura fase propria um dia autorizar preparacao operacional manual controlada sintetica, ela devera exigir evidencias posteriores de:
+
+- resultado da preparacao;
+- ausencia de efeito em Portal;
+- ausencia de efeito em dados reais;
+- ausencia de efeito em trafego real;
+- ausencia de efeito em usuario real;
+- ausencia de efeito em unidade real;
+- preservacao do fallback para baseConnection;
+- ausencia de alteracao em registry real, allowlist real e roteamento real;
+- ausencia de criacao de caller real, rota, CLI, script, job, bootstrap ou request path;
+- ausencia de abertura de tenant DB real;
+- PostgreSQL fora de escopo;
+- validacao verde posterior;
+- rollback acionado ou nao acionado com justificativa documental;
+- bloqueios encontrados, se houver;
+- decisao de prosseguir ou interromper.
+
+### 11.4 Resultado da definicao documental das evidencias
+
+Registrar:
+
+- operationalPreparationEvidenceDefined=true;
+- operationalPreparationAuthorizationContractOpened permanece true;
+- operationalPreparationAuthorizationDefined permanece true;
+- operationalPreparationScopeDefined permanece true;
+- operationalPreparationPrerequisitesDefined permanece true;
+- operationalPreparationRollbackDefined permanece true;
+- operationalPreparationChecklistApplied permanece false;
+- operationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- operationalPreparationEvidenceDefined=true significa apenas que as evidencias operacionais preparatorias foram definidas documentalmente.
+- operationalPreparationEvidenceDefined=true nao significa evidencia operacional real coletada.
+- operationalPreparationEvidenceDefined=true nao significa autorizacao concreta.
+- operationalPreparationEvidenceDefined=true nao autoriza preparacao operacional concreta.
+- operationalPreparationEvidenceDefined=true nao autoriza execucao.
+- operationalPreparationEvidenceDefined=true nao autoriza rollback real.
+- operationalPreparationEvidenceDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- operationalPreparationEvidenceDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- operationalPreparationEvidenceDefined=true nao autoriza abrir tenant DB real.
+- operationalPreparationEvidenceDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 12. Interpretacao obrigatoria
 
 Registrar que abrir a Fase S nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 12. Criterio de avanco da Fase S
+## 13. Criterio de avanco da Fase S
 
 Registrar que a Fase S so podera avancar documentalmente quando forem definidos:
 
-- rollback;
 - evidencias;
 - checklist;
 - interpretacao obrigatoria.
 
-Registrar que a autorizacao documental, o escopo operacional preparatorio, as pre-condicoes operacionais preparatorias e o rollback operacional preparatorio ja foram definidos neste microcorte, mas evidencias e checklist permanecem pendentes.
+Registrar que a autorizacao documental, o escopo operacional preparatorio, as pre-condicoes operacionais preparatorias, o rollback operacional preparatorio e as evidencias operacionais preparatorias ja foram definidos neste microcorte, mas checklist permanece pendente.
 
 Registrar que mesmo um contrato completo da Fase S nao autoriza execucao e nao autoriza preparacao operacional concreta sem fase posterior propria.
