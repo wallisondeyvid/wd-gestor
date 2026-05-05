@@ -977,6 +977,29 @@ Checkpoint tenant enforcement atual:
 - Fechamento/publicacao: validacao completa final concluida; push ainda pendente de autorizacao explicita do usuario.
 - Push: pendente ate autorizacao explicita do usuario.
 
+- Fase S aberta documentalmente.
+- Documento canonico: docs/tenant-phase-s-operational-preparation-authorization-contract.md
+- Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional, nao executiva e nao autorizativa concretamente por padrao.
+- Origem: posterior a Fase R encerrada, validada, publicada e auditada pos-push.
+- Objetivo: definir contrato documental de autorizacao para eventual preparacao operacional manual controlada sintetica.
+- Gates iniciais:
+	- operationalPreparationAuthorizationContractOpened=true;
+	- operationalPreparationAuthorizationDefined=false;
+	- operationalPreparationScopeDefined=false;
+	- operationalPreparationPrerequisitesDefined=false;
+	- operationalPreparationRollbackDefined=false;
+	- operationalPreparationEvidenceDefined=false;
+	- operationalPreparationChecklistApplied=false;
+	- operationalPreparationStillForbidden=true;
+	- executionStillForbidden=true;
+	- operationalSurfaceStillForbidden=true;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- fallbackRequired=true;
+	- blockedReasons=[].
+- Interpretacao: abertura da Fase S nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
