@@ -62,7 +62,7 @@ Registrar:
 
 - manualPreparationContractOpened=true
 - manualPreparationScopeDefined=true
-- manualPreparationInputsDefined=false
+- manualPreparationInputsDefined=true
 - manualPreparationRollbackDefined=false
 - manualPreparationEvidenceDefined=false
 - manualPreparationChecklistApplied=false
@@ -78,7 +78,7 @@ Explicar:
 
 - manualPreparationContractOpened=true porque a Fase R foi aberta documentalmente e o contrato de preparacao manual controlada sintetica passa a existir apenas como artefato de referencia.
 - manualPreparationScopeDefined=true porque o escopo de preparacao manual controlada sintetica foi definido documentalmente neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
-- manualPreparationInputsDefined=false porque as entradas documentais necessarias para eventual preparacao manual ainda nao foram definidas nesta abertura.
+- manualPreparationInputsDefined=true porque as entradas documentais necessarias para eventual preparacao manual controlada sintetica foram definidas neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationRollbackDefined=false porque o rollback preparatorio documental ainda nao foi definido nesta abertura.
 - manualPreparationEvidenceDefined=false porque as evidencias documentais de preparacao ainda nao foram definidas nesta abertura.
 - manualPreparationChecklistApplied=false porque o checklist documental da Fase R ainda nao foi aplicado nesta abertura.
@@ -168,7 +168,7 @@ Registrar:
 
 - manualPreparationScopeDefined=true;
 - manualPreparationContractOpened permanece true;
-- manualPreparationInputsDefined permanece false;
+- manualPreparationInputsDefined permanece true;
 - manualPreparationRollbackDefined permanece false;
 - manualPreparationEvidenceDefined permanece false;
 - manualPreparationChecklistApplied permanece false;
@@ -192,11 +192,102 @@ Interpretacao obrigatoria:
 - manualPreparationScopeDefined=true nao autoriza abrir tenant DB real.
 - manualPreparationScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 9. Interpretacao obrigatoria
+## 9. Entradas de preparacao manual documental
+
+Registrar que a Fase R define, neste microcorte, as entradas documentais necessarias para eventual preparacao manual controlada sintetica futura.
+
+Registrar que definir entradas documentais nao concede autorizacao concreta, nao autoriza preparacao operacional concreta e nao autoriza execucao.
+
+### 9.1 Entradas documentais minimas
+
+Registrar que qualquer preparacao manual controlada sintetica futura devera exigir, antes de qualquer acao concreta, evidencia documental de:
+
+- fase explicitamente aberta para preparacao concreta;
+- autorizacao textual explicita do usuario;
+- escopo de preparacao aprovado;
+- candidato sintetico confirmado;
+- limites operacionais preservados;
+- rollback preparatorio definido;
+- evidencias documentais definidas;
+- checklist aplicado;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ausencia de PostgreSQL;
+- ausencia de tenant DB real aberto;
+- ausencia de registry real alterado;
+- ausencia de allowlist real alterada;
+- ausencia de roteamento real alterado;
+- ausencia de caller real, rota, CLI, script, job, bootstrap ou request path.
+
+### 9.2 Entradas explicitamente invalidas nesta fase
+
+Registrar que a Fase R proibe tratar como entrada valida:
+
+- log de execucao real;
+- log de rollback real;
+- conexao real com tenant DB;
+- alteracao real em registry;
+- alteracao real em allowlist;
+- alteracao real em roteamento;
+- evidencia obtida via Portal;
+- evidencia baseada em dados reais;
+- evidencia baseada em trafego real;
+- evidencia baseada em usuario real;
+- evidencia baseada em unidade real;
+- evidencia baseada em PostgreSQL;
+- evidencia obtida por caller real, rota, CLI, script, job, bootstrap ou request path;
+- comando executavel como entrada autorizativa;
+- commit como autorizacao;
+- baseline verde como autorizacao;
+- push como autorizacao.
+
+### 9.3 Limite das entradas definidas
+
+Registrar que manualPreparationInputsDefined=true significa apenas que as entradas documentais foram definidas.
+
+Registrar que manualPreparationInputsDefined=true nao significa que as entradas foram coletadas operacionalmente.
+
+Registrar que manualPreparationInputsDefined=true nao autoriza preparacao operacional concreta, execucao ou rollback real.
+
+### 9.4 Resultado da definicao de entradas
+
+Registrar:
+
+- manualPreparationInputsDefined=true;
+- manualPreparationScopeDefined permanece true;
+- manualPreparationContractOpened permanece true;
+- manualPreparationRollbackDefined permanece false;
+- manualPreparationEvidenceDefined permanece false;
+- manualPreparationChecklistApplied permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- manualPreparationInputsDefined=true significa apenas que as entradas documentais da preparacao manual foram definidas.
+- manualPreparationInputsDefined=true nao significa que entradas operacionais foram coletadas.
+- manualPreparationInputsDefined=true nao autoriza preparacao operacional concreta.
+- manualPreparationInputsDefined=true nao autoriza execucao.
+- manualPreparationInputsDefined=true nao autoriza rollback real.
+- manualPreparationInputsDefined=true nao autoriza evidencia operacional real.
+- manualPreparationInputsDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- manualPreparationInputsDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- manualPreparationInputsDefined=true nao autoriza abrir tenant DB real.
+- manualPreparationInputsDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 10. Interpretacao obrigatoria
 
 Registrar que abrir a Fase R nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Criterio de avanco da Fase R
+## 11. Criterio de avanco da Fase R
 
 Registrar que a Fase R so podera avancar documentalmente quando forem definidos:
 
