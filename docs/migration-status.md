@@ -979,6 +979,7 @@ Checkpoint tenant enforcement atual:
 
 - Fase S encerrada documentalmente.
 - Commit de encerramento: 2fcfc21 docs(tenant): encerra fase s.
+- Commit de registro do encerramento no status: 39fb69c docs(tenant): registra encerramento da fase s no status.
 - Documento canonico: docs/tenant-phase-s-operational-preparation-authorization-contract.md
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional, nao executiva e nao autorizativa concretamente por padrao.
 - Resultado: contrato de autorizacao para preparacao operacional manual controlada sintetica encerrado documentalmente.
@@ -1027,7 +1028,32 @@ Checkpoint tenant enforcement atual:
 		- cancelled: 0;
 		- skipped: 0;
 		- todo: 0;
-		- duration_ms: 5260.8588.
+		- duration_ms: 5260.8588;
+	- validacao completa final verde:
+		- comando: npm test;
+		- tests: 2203;
+		- suites: 17;
+		- pass: 2201;
+		- fail: 0;
+		- cancelled: 0;
+		- skipped: 2;
+		- todo: 0;
+		- duration_ms: 237642.4104.
+- Ordem da validacao completa final:
+	- executada apos o encerramento documental no contrato canonico;
+	- executada apos o registro do encerramento no migration-status.md.
+- Interpretacao obrigatoria da validacao completa final:
+	- validacao completa verde nao concede autorizacao concreta;
+	- validacao completa verde nao autoriza preparacao operacional concreta;
+	- validacao completa verde nao autoriza execucao;
+	- validacao completa verde nao autoriza rollback real;
+	- validacao completa verde nao autoriza coleta de evidencia operacional real;
+	- validacao completa verde nao autoriza criacao de caller real, rota, CLI, script, job, bootstrap ou request path;
+	- validacao completa verde nao autoriza alteracao de registry real, allowlist real ou roteamento real;
+	- validacao completa verde nao autoriza abertura de tenant DB real;
+	- validacao completa verde nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- validacao completa verde nao abre Fase T automaticamente.
+- Fechamento/publicacao: validacao completa final concluida; push continua pendente ate autorizacao explicita do usuario para publicacao da Fase S.
 - Push: pendente; Fase S ainda nao publicada no remoto e sem autorizacao explicita para push.
 
 ## Escalas
