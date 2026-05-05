@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -571,3 +571,46 @@ Registrar que a Fase R so podera avancar documentalmente quando forem definidos:
 - interpretacao obrigatoria.
 
 Registrar que mesmo um contrato completo da Fase R nao autoriza execucao.
+
+## 15. Encerramento documental da Fase R
+
+Registrar que a Fase R e encerrada documentalmente apos:
+
+- abertura do contrato de preparacao manual controlada sintetica;
+- definicao do escopo de preparacao manual;
+- definicao das entradas documentais;
+- definicao do rollback preparatorio documental;
+- definicao das evidencias documentais;
+- aplicacao do checklist documental.
+
+Registrar os gates finais:
+
+- manualPreparationContractOpened=true;
+- manualPreparationScopeDefined=true;
+- manualPreparationInputsDefined=true;
+- manualPreparationRollbackDefined=true;
+- manualPreparationEvidenceDefined=true;
+- manualPreparationChecklistApplied=true;
+- preparationStillForbidden=true;
+- executionStillForbidden=true;
+- operationalSurfaceStillForbidden=true;
+- candidateStillSynthetic=true;
+- nonOperationalPreserved=true;
+- fallbackRequired=true;
+- blockedReasons=[].
+
+Registrar a interpretacao final obrigatoria:
+
+- O encerramento da Fase R nao concede autorizacao concreta.
+- O encerramento da Fase R nao autoriza preparacao operacional concreta.
+- O encerramento da Fase R nao autoriza execucao.
+- O encerramento da Fase R nao autoriza rollback real.
+- O encerramento da Fase R nao autoriza evidencia operacional real.
+- O encerramento da Fase R nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- O encerramento da Fase R nao autoriza alterar registry real, allowlist real ou roteamento.
+- O encerramento da Fase R nao autoriza abrir tenant DB real.
+- O encerramento da Fase R nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- O encerramento da Fase R nao abre fase posterior automaticamente.
+- Preparacao operacional concreta futura exigira fase propria, autorizacao propria, comando proprio aprovado, rollback proprio, evidencias proprias, gates proprios, validacao propria e comando proprio aprovado.
+
+Registrar que o contrato da Fase R apenas consolida o plano documental de preparacao manual controlada sintetica e preserva todos os bloqueios operacionais.
