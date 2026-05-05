@@ -125,7 +125,7 @@ Registrar os principios que deverao reger qualquer execucao futura:
 
 Criar gates iniciais conservadores:
 
-- executionContractReady: false
+- executionContractReady: true
 - executionScopeDefined: true
 - authorizationGatesDefined: true
 - rollbackDefined: true
@@ -139,7 +139,7 @@ Criar gates iniciais conservadores:
 
 Explicar:
 
-- executionContractReady=false porque a Fase N acabou de ser aberta.
+- executionContractReady=true porque o checklist documental consolidou o contrato da Fase N neste microcorte.
 - executionScopeDefined=true porque o escopo maximo permitido foi definido documentalmente neste microcorte.
 - authorizationGatesDefined=true porque os gates documentais de autorizacao foram definidos neste microcorte.
 - rollbackDefined=true porque o rollback documental da execucao foi definido neste microcorte.
@@ -510,7 +510,95 @@ Interpretacao obrigatoria:
 - evidencePlanDefined=true nao autoriza abrir tenant DB real nesta fase.
 - evidencePlanDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 13. Interpretacao obrigatoria
+## 13. Checklist documental da Fase N
+
+Registrar que o checklist da Fase N e documental, preventivo e nao operacional.
+
+### 13.1 Itens verificados
+
+Registrar que foram verificados documentalmente:
+
+- candidato sintetico herdado identificado;
+- ambiente nao produtivo preservado;
+- dados descartaveis preservados;
+- ausencia de Portal preservada;
+- ausencia de trafego real preservada;
+- ausencia de usuario real preservada;
+- ausencia de unidade real preservada;
+- escopo maximo permitido definido;
+- gates de autorizacao definidos;
+- rollback documental definido;
+- plano documental de evidencias definido;
+- fallback para `baseConnection` exigido;
+- execucao ainda proibida;
+- preparacao operacional concreta ainda proibida;
+- ausencia de caller real;
+- ausencia de rota, CLI, script, job, bootstrap ou request path;
+- ausencia de alteracao em registry real;
+- ausencia de alteracao em allowlist real;
+- ausencia de abertura de tenant DB real nesta fase;
+- ausencia de mudanca de roteamento;
+- PostgreSQL fora do escopo;
+- blockedReasons=[].
+
+### 13.2 Resultado do checklist
+
+Registrar que o checklist documental da Fase N passou, porque:
+
+- executionScopeDefined=true;
+- authorizationGatesDefined=true;
+- rollbackDefined=true;
+- evidencePlanDefined=true;
+- candidateStillSynthetic=true;
+- nonOperationalPreserved=true;
+- noOperationalSurfaceCreated=true;
+- fallbackRequired=true;
+- executionStillForbidden=true;
+- blockedReasons=[].
+
+Registrar que o checklist nao executa nada e nao substitui autorizacao futura.
+
+### 13.3 Consolidacao do contrato documental
+
+Registrar:
+
+- executionContractReady=true;
+- executionScopeDefined permanece true;
+- authorizationGatesDefined permanece true;
+- rollbackDefined permanece true;
+- evidencePlanDefined permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- noOperationalSurfaceCreated permanece true;
+- fallbackRequired permanece true;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- executionContractReady=true significa apenas que o contrato documental da Fase N esta pronto.
+- executionContractReady=true nao autoriza execucao.
+- executionContractReady=true nao autoriza coleta de evidencia operacional real.
+- executionContractReady=true nao autoriza rollback real.
+- executionContractReady=true nao autoriza preparacao operacional concreta.
+- executionContractReady=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- executionContractReady=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- executionContractReady=true nao autoriza abrir tenant DB real nesta fase.
+- executionContractReady=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- executionContractReady=true nao abre fase posterior automaticamente.
+- executionContractReady=true apenas permite discutir encerramento documental da Fase N ou abertura explicita de fase posterior.
+
+### 13.4 Pendencias antes de encerramento/publicacao
+
+Registrar que antes de encerramento global/publicacao da Fase N ainda devem ocorrer, em microcortes posteriores:
+
+- encerramento documental da Fase N;
+- registro do encerramento da Fase N em docs/migration-status.md;
+- baseline curta pos-encerramento;
+- `npm test` completo antes de push;
+- autorizacao explicita do usuario antes de push.
+
+## 14. Interpretacao obrigatoria
 
 Registrar:
 
