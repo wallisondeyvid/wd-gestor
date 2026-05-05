@@ -57,7 +57,7 @@ Registrar:
 
 - preparationAuthorizationContractOpened=true
 - preparationAuthorizationDefined=true
-- preparationScopeDefined=false
+- preparationScopeDefined=true
 - preparationRollbackDefined=false
 - preparationEvidenceDefined=false
 - preparationChecklistApplied=false
@@ -73,7 +73,7 @@ Explicar:
 
 - preparationAuthorizationContractOpened=true porque a Fase Q foi aberta documentalmente e o contrato preparatorio passou a existir apenas como artefato de referencia.
 - preparationAuthorizationDefined=true porque o formato documental de uma autorizacao preparatoria valida foi definido neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
-- preparationScopeDefined=false porque o escopo preparatorio e os limites preparatorios ainda nao foram definidos documentalmente.
+- preparationScopeDefined=true porque o escopo preparatorio autorizavel e os limites preparatorios nao autorizaveis foram definidos documentalmente neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - preparationRollbackDefined=false porque nenhum rollback preparatorio documental foi definido nesta abertura.
 - preparationEvidenceDefined=false porque nenhuma evidencia preparatoria documental foi definida nesta abertura.
 - preparationChecklistApplied=false porque o checklist preparatorio ainda nao foi aplicado nesta abertura.
@@ -169,7 +169,103 @@ Interpretacao obrigatoria:
 - preparationAuthorizationDefined=true nao autoriza abrir tenant DB real.
 - preparationAuthorizationDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 8. Interpretacao obrigatoria
+## 8. Escopo preparatorio documental
+
+Registrar que a Fase Q define, neste microcorte, o escopo preparatorio documental de uma eventual preparacao manual controlada sintetica.
+
+Registrar que definir escopo preparatorio nao concede autorizacao concreta e nao autoriza preparacao operacional concreta.
+
+### 8.1 Escopo preparatorio autorizavel em fase futura propria
+
+Registrar que, em fase futura propria e somente mediante autorizacao explicita propria, podera ser considerado escopo preparatorio documental:
+
+- revisar checklist preparatorio;
+- revisar rollback preparatorio documental;
+- revisar plano de evidencias preparatorias documentais;
+- revisar criterios de entrada;
+- revisar criterios de saida;
+- revisar limites de nao operacao;
+- revisar candidato sintetico herdado das fases anteriores;
+- revisar matriz de bloqueios antes de qualquer preparacao concreta;
+- preparar, ainda documentalmente, um eventual comando futuro;
+- preparar, ainda documentalmente, um eventual plano futuro de execucao manual controlada sintetica.
+
+Registrar que esses itens sao apenas escopo autorizavel futuro, nao autorizacao atual.
+
+### 8.2 Limites preparatorios nao autorizaveis
+
+Registrar que permanecem fora do escopo da Fase Q:
+
+- preparacao operacional concreta;
+- execucao;
+- rollback real;
+- evidencia operacional real;
+- criacao de comando executavel;
+- criacao de script;
+- criacao de caller real;
+- criacao de rota;
+- criacao de CLI;
+- criacao de job;
+- criacao de bootstrap;
+- criacao de request path;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- alteracao de roteamento real;
+- abertura de tenant DB real;
+- uso de Portal;
+- uso de dados reais;
+- uso de trafego real;
+- uso de usuario real;
+- uso de unidade real;
+- PostgreSQL;
+- codigo produtivo;
+- alteracao de testes;
+- alteracao de package.json.
+
+### 8.3 Candidato sintetico e limites de identidade
+
+Registrar que qualquer referencia preparatoria permanece restrita ao candidato sintetico herdado:
+
+- targetId=fase-j-synthetic-unit-candidate-001
+- unidadeId=0000000000000000000000a1
+- dbName=wdgestor_unit_0000000000000000000000a1
+- databaseKey=wdgestor_unit_0000000000000000000000a1
+- plannedAllowlist=["0000000000000000000000a1"]
+
+Registrar que esse candidato nao representa unidade real, usuario real, dado real, trafego real, Portal ou tenant DB real aberto.
+
+### 8.4 Resultado da definicao de escopo preparatorio
+
+Registrar:
+
+- preparationScopeDefined=true;
+- preparationAuthorizationDefined permanece true;
+- preparationAuthorizationContractOpened permanece true;
+- preparationRollbackDefined permanece false;
+- preparationEvidenceDefined permanece false;
+- preparationChecklistApplied permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- preparationScopeDefined=true significa apenas que o escopo preparatorio documental foi definido.
+- preparationScopeDefined=true nao significa que preparacao concreta foi autorizada.
+- preparationScopeDefined=true nao autoriza preparacao operacional concreta.
+- preparationScopeDefined=true nao autoriza execucao.
+- preparationScopeDefined=true nao autoriza rollback real.
+- preparationScopeDefined=true nao autoriza evidencia operacional real.
+- preparationScopeDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- preparationScopeDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- preparationScopeDefined=true nao autoriza abrir tenant DB real.
+- preparationScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 9. Interpretacao obrigatoria
 
 Registrar:
 
@@ -183,7 +279,7 @@ Registrar:
 - preparationAuthorizationContractOpened=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - preparationAuthorizationContractOpened=true nao abre fase posterior automaticamente.
 
-## 9. Criterio de avanco da Fase Q
+## 10. Criterio de avanco da Fase Q
 
 Registrar que a Fase Q so podera avancar documentalmente quando forem definidos:
 
