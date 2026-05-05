@@ -64,7 +64,7 @@ Registrar:
 - manualPreparationScopeDefined=true
 - manualPreparationInputsDefined=true
 - manualPreparationRollbackDefined=true
-- manualPreparationEvidenceDefined=false
+- manualPreparationEvidenceDefined=true
 - manualPreparationChecklistApplied=false
 - preparationStillForbidden=true
 - executionStillForbidden=true
@@ -80,7 +80,7 @@ Explicar:
 - manualPreparationScopeDefined=true porque o escopo de preparacao manual controlada sintetica foi definido documentalmente neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationInputsDefined=true porque as entradas documentais necessarias para eventual preparacao manual controlada sintetica foram definidas neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationRollbackDefined=true porque o rollback preparatorio documental da preparacao manual controlada sintetica foi definido neste microcorte, sem executar rollback real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
-- manualPreparationEvidenceDefined=false porque as evidencias documentais de preparacao ainda nao foram definidas nesta abertura.
+- manualPreparationEvidenceDefined=true porque as evidencias documentais da preparacao manual controlada sintetica foram definidas neste microcorte, sem coletar evidencia operacional real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationChecklistApplied=false porque o checklist documental da Fase R ainda nao foi aplicado nesta abertura.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
@@ -170,7 +170,7 @@ Registrar:
 - manualPreparationContractOpened permanece true;
 - manualPreparationInputsDefined permanece true;
 - manualPreparationRollbackDefined permanece true;
-- manualPreparationEvidenceDefined permanece false;
+- manualPreparationEvidenceDefined permanece true;
 - manualPreparationChecklistApplied permanece false;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
@@ -260,7 +260,7 @@ Registrar:
 - manualPreparationScopeDefined permanece true;
 - manualPreparationContractOpened permanece true;
 - manualPreparationRollbackDefined permanece true;
-- manualPreparationEvidenceDefined permanece false;
+- manualPreparationEvidenceDefined permanece true;
 - manualPreparationChecklistApplied permanece false;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
@@ -353,7 +353,7 @@ Registrar:
 - manualPreparationInputsDefined permanece true;
 - manualPreparationScopeDefined permanece true;
 - manualPreparationContractOpened permanece true;
-- manualPreparationEvidenceDefined permanece false;
+- manualPreparationEvidenceDefined permanece true;
 - manualPreparationChecklistApplied permanece false;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
@@ -376,11 +376,105 @@ Interpretacao obrigatoria:
 - manualPreparationRollbackDefined=true nao autoriza abrir tenant DB real.
 - manualPreparationRollbackDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Interpretacao obrigatoria
+## 11. Evidencias de preparacao manual documental
+
+Registrar que a Fase R define, neste microcorte, as evidencias documentais necessarias para eventual preparacao manual controlada sintetica futura.
+
+Registrar que definir evidencias documentais nao coleta evidencia operacional real, nao concede autorizacao concreta, nao autoriza preparacao operacional concreta e nao autoriza execucao.
+
+### 11.1 Evidencias documentais esperadas
+
+Registrar que qualquer preparacao manual controlada sintetica futura devera exigir evidencias textuais de:
+
+- fase explicitamente aberta para preparacao concreta;
+- autorizacao textual explicita do usuario;
+- escopo aprovado;
+- entradas documentais confirmadas;
+- rollback preparatorio definido;
+- checklist aplicado;
+- candidato sintetico confirmado;
+- fallback preservado;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ausencia de PostgreSQL;
+- ausencia de tenant DB real aberto;
+- ausencia de registry real alterado;
+- ausencia de allowlist real alterada;
+- ausencia de roteamento real alterado;
+- ausencia de caller real, rota, CLI, script, job, bootstrap ou request path;
+- plano textual de parada;
+- plano textual de abortar;
+- criterios documentais de avanco e bloqueio.
+
+### 11.2 Evidencias proibidas nesta fase
+
+Registrar que a Fase R proibe tratar como evidencia valida:
+
+- evidencia operacional real;
+- log de execucao real;
+- log de rollback real;
+- evidencia obtida via Portal;
+- evidencia baseada em dados reais;
+- evidencia baseada em trafego real;
+- evidencia baseada em usuario real;
+- evidencia baseada em unidade real;
+- evidencia baseada em PostgreSQL;
+- evidencia obtida por conexao real com tenant DB;
+- evidencia obtida por alteracao real de registry;
+- evidencia obtida por alteracao real de allowlist;
+- evidencia obtida por alteracao real de roteamento;
+- evidencia obtida por caller real, rota, CLI, script, job, bootstrap ou request path;
+- comando executavel como evidencia autorizativa;
+- commit como autorizacao;
+- baseline verde como autorizacao;
+- push como autorizacao.
+
+### 11.3 Limite das evidencias definidas
+
+Registrar que manualPreparationEvidenceDefined=true significa apenas que as evidencias documentais foram definidas.
+
+Registrar que manualPreparationEvidenceDefined=true nao significa que evidencia operacional real foi coletada.
+
+Registrar que manualPreparationEvidenceDefined=true nao autoriza preparacao operacional concreta, execucao ou rollback real.
+
+### 11.4 Resultado da definicao de evidencias
+
+Registrar:
+
+- manualPreparationEvidenceDefined=true;
+- manualPreparationRollbackDefined permanece true;
+- manualPreparationInputsDefined permanece true;
+- manualPreparationScopeDefined permanece true;
+- manualPreparationContractOpened permanece true;
+- manualPreparationChecklistApplied permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- manualPreparationEvidenceDefined=true significa apenas que as evidencias documentais da preparacao manual foram definidas.
+- manualPreparationEvidenceDefined=true nao significa que evidencia operacional real foi coletada.
+- manualPreparationEvidenceDefined=true nao autoriza preparacao operacional concreta.
+- manualPreparationEvidenceDefined=true nao autoriza execucao.
+- manualPreparationEvidenceDefined=true nao autoriza rollback real.
+- manualPreparationEvidenceDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- manualPreparationEvidenceDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- manualPreparationEvidenceDefined=true nao autoriza abrir tenant DB real.
+- manualPreparationEvidenceDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 12. Interpretacao obrigatoria
 
 Registrar que abrir a Fase R nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 12. Criterio de avanco da Fase R
+## 13. Criterio de avanco da Fase R
 
 Registrar que a Fase R so podera avancar documentalmente quando forem definidos:
 
