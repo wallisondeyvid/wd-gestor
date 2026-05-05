@@ -63,7 +63,7 @@ Registrar:
 - manualPreparationContractOpened=true
 - manualPreparationScopeDefined=true
 - manualPreparationInputsDefined=true
-- manualPreparationRollbackDefined=false
+- manualPreparationRollbackDefined=true
 - manualPreparationEvidenceDefined=false
 - manualPreparationChecklistApplied=false
 - preparationStillForbidden=true
@@ -79,7 +79,7 @@ Explicar:
 - manualPreparationContractOpened=true porque a Fase R foi aberta documentalmente e o contrato de preparacao manual controlada sintetica passa a existir apenas como artefato de referencia.
 - manualPreparationScopeDefined=true porque o escopo de preparacao manual controlada sintetica foi definido documentalmente neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationInputsDefined=true porque as entradas documentais necessarias para eventual preparacao manual controlada sintetica foram definidas neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
-- manualPreparationRollbackDefined=false porque o rollback preparatorio documental ainda nao foi definido nesta abertura.
+- manualPreparationRollbackDefined=true porque o rollback preparatorio documental da preparacao manual controlada sintetica foi definido neste microcorte, sem executar rollback real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationEvidenceDefined=false porque as evidencias documentais de preparacao ainda nao foram definidas nesta abertura.
 - manualPreparationChecklistApplied=false porque o checklist documental da Fase R ainda nao foi aplicado nesta abertura.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
@@ -169,7 +169,7 @@ Registrar:
 - manualPreparationScopeDefined=true;
 - manualPreparationContractOpened permanece true;
 - manualPreparationInputsDefined permanece true;
-- manualPreparationRollbackDefined permanece false;
+- manualPreparationRollbackDefined permanece true;
 - manualPreparationEvidenceDefined permanece false;
 - manualPreparationChecklistApplied permanece false;
 - preparationStillForbidden permanece true;
@@ -259,7 +259,7 @@ Registrar:
 - manualPreparationInputsDefined=true;
 - manualPreparationScopeDefined permanece true;
 - manualPreparationContractOpened permanece true;
-- manualPreparationRollbackDefined permanece false;
+- manualPreparationRollbackDefined permanece true;
 - manualPreparationEvidenceDefined permanece false;
 - manualPreparationChecklistApplied permanece false;
 - preparationStillForbidden permanece true;
@@ -283,11 +283,104 @@ Interpretacao obrigatoria:
 - manualPreparationInputsDefined=true nao autoriza abrir tenant DB real.
 - manualPreparationInputsDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Interpretacao obrigatoria
+## 10. Rollback de preparacao manual documental
+
+Registrar que a Fase R define, neste microcorte, o rollback preparatorio documental necessario para eventual preparacao manual controlada sintetica futura.
+
+Registrar que definir rollback documental nao executa rollback real, nao concede autorizacao concreta, nao autoriza preparacao operacional concreta e nao autoriza execucao.
+
+### 10.1 Premissas do rollback documental
+
+Registrar que qualquer rollback futuro, se algum dia houver fase propria para acao concreta, devera exigir antes:
+
+- fase explicitamente aberta para preparacao concreta;
+- autorizacao textual explicita do usuario;
+- escopo aprovado;
+- entradas documentais confirmadas;
+- evidencias documentais definidas;
+- checklist aplicado;
+- plano de reversao textual aprovado;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ausencia de Portal;
+- ausencia de PostgreSQL;
+- candidato estritamente sintetico;
+- fallback preservado;
+- criterio de parada definido;
+- criterio de abortar definido.
+
+### 10.2 Acoes proibidas nesta fase
+
+Registrar que a Fase R proibe:
+
+- executar rollback real;
+- executar preparacao real;
+- executar piloto real;
+- alterar registry real;
+- alterar allowlist real;
+- alterar roteamento real;
+- abrir tenant DB real;
+- acionar caller real;
+- acionar rota;
+- acionar CLI;
+- acionar script;
+- acionar job;
+- acionar bootstrap;
+- acionar request path;
+- usar Portal;
+- usar dados reais;
+- usar trafego real;
+- usar usuario real;
+- usar unidade real;
+- usar PostgreSQL;
+- coletar evidencia operacional real.
+
+### 10.3 Criterio documental de reversibilidade
+
+Registrar que a reversibilidade permanece apenas documental nesta fase.
+
+Registrar que qualquer preparacao concreta futura devera ser abortavel antes de tocar em registry real, allowlist real, roteamento real, tenant DB real, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+Registrar que fallbackRequired=true permanece obrigatorio.
+
+### 10.4 Resultado da definicao de rollback
+
+Registrar:
+
+- manualPreparationRollbackDefined=true;
+- manualPreparationInputsDefined permanece true;
+- manualPreparationScopeDefined permanece true;
+- manualPreparationContractOpened permanece true;
+- manualPreparationEvidenceDefined permanece false;
+- manualPreparationChecklistApplied permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- manualPreparationRollbackDefined=true significa apenas que o rollback preparatorio documental foi definido.
+- manualPreparationRollbackDefined=true nao significa que rollback real foi executado.
+- manualPreparationRollbackDefined=true nao autoriza preparacao operacional concreta.
+- manualPreparationRollbackDefined=true nao autoriza execucao.
+- manualPreparationRollbackDefined=true nao autoriza rollback real.
+- manualPreparationRollbackDefined=true nao autoriza evidencia operacional real.
+- manualPreparationRollbackDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- manualPreparationRollbackDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- manualPreparationRollbackDefined=true nao autoriza abrir tenant DB real.
+- manualPreparationRollbackDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 11. Interpretacao obrigatoria
 
 Registrar que abrir a Fase R nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Criterio de avanco da Fase R
+## 12. Criterio de avanco da Fase R
 
 Registrar que a Fase R so podera avancar documentalmente quando forem definidos:
 
