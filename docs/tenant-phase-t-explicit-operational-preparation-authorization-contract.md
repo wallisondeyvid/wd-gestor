@@ -63,7 +63,7 @@ Registrar:
 - explicitOperationalPreparationScopeDefined=true
 - explicitOperationalPreparationPrerequisitesDefined=true
 - explicitOperationalPreparationRollbackDefined=true
-- explicitOperationalPreparationEvidenceDefined=false
+- explicitOperationalPreparationEvidenceDefined=true
 - explicitOperationalPreparationChecklistApplied=false
 - explicitOperationalPreparationStillForbidden=true
 - executionStillForbidden=true
@@ -83,7 +83,7 @@ Explicar:
 - explicitOperationalPreparationScopeDefined=true porque o escopo documental da autorizacao explicita foi definido neste microcorte, sem autorizacao concreta e sem preparacao operacional concreta.
 - explicitOperationalPreparationPrerequisitesDefined=true porque as pre-condicoes documentais foram definidas neste microcorte, sem autorizacao concreta e sem preparacao operacional concreta.
 - explicitOperationalPreparationRollbackDefined=true porque o rollback documental foi definido neste microcorte, sem rollback real, sem autorizacao concreta e sem preparacao operacional concreta.
-- explicitOperationalPreparationEvidenceDefined=false porque as evidencias ainda nao foram definidas.
+- explicitOperationalPreparationEvidenceDefined=true porque as evidencias documentais foram definidas neste microcorte, sem coleta de evidencia operacional real, sem autorizacao concreta e sem preparacao operacional concreta.
 - explicitOperationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
 - explicitOperationalPreparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase por padrao.
@@ -372,7 +372,69 @@ Interpretacao obrigatoria:
 - rollback documental definido nao autoriza criacao de superficie operacional;
 - rollback documental definido nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Bloqueios obrigatorios nesta abertura
+## 11. Evidencias documentais da autorizacao explicita
+
+Registrar que as evidencias da autorizacao explicita sao documentais e servem apenas para declarar quais evidencias deveriam existir antes, durante e depois de uma eventual preparacao operacional concreta futura, caso um dia seja explicitamente autorizada.
+
+Registrar que as evidencias documentais obrigatorias devem incluir:
+
+- identificacao documental da autorizacao futura;
+- identificacao do candidato sintetico;
+- confirmacao de ambiente nao produtivo;
+- confirmacao de banco sintetico pretendido;
+- confirmacao de ausencia de Portal;
+- confirmacao de ausencia de dados reais;
+- confirmacao de ausencia de trafego real;
+- confirmacao de ausencia de usuario real;
+- confirmacao de ausencia de unidade real;
+- confirmacao de PostgreSQL fora de escopo;
+- confirmacao de fallback para baseConnection;
+- registro documental do escopo autorizado;
+- registro documental das pre-condicoes satisfeitas;
+- registro documental do rollback definido;
+- registro documental dos criterios de bloqueio;
+- registro documental dos criterios de aborto;
+- validacao anterior obrigatoria;
+- validacao posterior obrigatoria;
+- saida documental esperada da preparacao, se um dia autorizada;
+- evidencia documental de que nenhum Portal/dado real/trafego real/usuario real/unidade real foi envolvido;
+- evidencia documental de que nenhuma superficie operacional produtiva foi criada;
+- registro posterior obrigatorio no ledger global.
+
+Registrar que estas evidencias documentais NAO sao evidencias operacionais reais neste microcorte.
+
+Registrar que nenhuma evidencia operacional real pode ser coletada nesta fase sem autorizacao explicita posterior propria, comando proprio aprovado pelo usuario e escopo proprio.
+
+Registrar:
+
+- explicitOperationalPreparationEvidenceDefined=true;
+- explicitOperationalPreparationAuthorizationContractOpened permanece true;
+- explicitOperationalPreparationAuthorizationDefined permanece true;
+- explicitOperationalPreparationScopeDefined permanece true;
+- explicitOperationalPreparationPrerequisitesDefined permanece true;
+- explicitOperationalPreparationRollbackDefined permanece true;
+- explicitOperationalPreparationChecklistApplied permanece false;
+- explicitOperationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- rollbackStillForbidden permanece true;
+- operationalEvidenceStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonProductionRequired permanece true;
+- nonOperationalUntilExplicitAuthorization permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- evidencias documentais definidas nao autorizam coleta de evidencia operacional real;
+- evidencias documentais definidas nao autorizam preparacao operacional concreta;
+- evidencias documentais definidas nao autorizam execucao;
+- evidencias documentais definidas nao autorizam rollback real;
+- evidencias documentais definidas nao autorizam criacao de superficie operacional;
+- evidencias documentais definidas nao autorizam Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 12. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase T bloqueia expressamente:
 
@@ -402,7 +464,7 @@ Registrar que a abertura da Fase T bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 12. Interpretacao obrigatoria
+## 13. Interpretacao obrigatoria
 
 Registrar que abrir a Fase T nao significa autorizacao explicita concedida.
 
@@ -422,7 +484,7 @@ Registrar que abrir a Fase T nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase T nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 13. Criterio de avanco da Fase T
+## 14. Criterio de avanco da Fase T
 
 Registrar que a Fase T so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
