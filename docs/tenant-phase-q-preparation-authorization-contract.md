@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -567,3 +567,47 @@ Registrar que a Fase Q so podera avancar documentalmente quando forem definidos:
 - interpretacao obrigatoria.
 
 Registrar que mesmo um contrato preparatorio completo nao autoriza execucao.
+
+## 14. Encerramento documental da Fase Q
+
+Registrar que a Fase Q foi encerrada documentalmente apos:
+
+- abertura do contrato de autorizacao preparatoria;
+- definicao do formato de autorizacao preparatoria;
+- definicao do escopo preparatorio documental;
+- definicao dos limites preparatorios nao autorizaveis;
+- definicao do rollback preparatorio documental;
+- definicao das evidencias preparatorias documentais;
+- aplicacao do checklist documental.
+
+Registrar resultado final:
+
+- preparationAuthorizationContractOpened=true;
+- preparationAuthorizationDefined=true;
+- preparationScopeDefined=true;
+- preparationRollbackDefined=true;
+- preparationEvidenceDefined=true;
+- preparationChecklistApplied=true;
+- preparationStillForbidden=true;
+- executionStillForbidden=true;
+- operationalSurfaceStillForbidden=true;
+- candidateStillSynthetic=true;
+- nonOperationalPreserved=true;
+- fallbackRequired=true;
+- blockedReasons=[].
+
+Registrar interpretacao final obrigatoria:
+
+- O encerramento da Fase Q nao concede autorizacao preparatoria concreta.
+- O encerramento da Fase Q nao autoriza preparacao operacional concreta.
+- O encerramento da Fase Q nao autoriza execucao.
+- O encerramento da Fase Q nao autoriza rollback real.
+- O encerramento da Fase Q nao autoriza evidencia operacional real.
+- O encerramento da Fase Q nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- O encerramento da Fase Q nao autoriza alterar registry real, allowlist real ou roteamento.
+- O encerramento da Fase Q nao autoriza abrir tenant DB real.
+- O encerramento da Fase Q nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- O encerramento da Fase Q nao abre fase posterior automaticamente.
+- Qualquer preparacao operacional concreta futura exigira fase propria, autorizacao propria, escopo proprio, rollback proprio, evidencias proprias, gates proprios, validacao propria e comando proprio aprovado.
+
+Registrar que a proxima etapa, se houver, deve ser aberta explicitamente em microcorte proprio e registrada no migration-status.md apenas apos este encerramento documental.
