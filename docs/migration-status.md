@@ -721,7 +721,7 @@ Checkpoint tenant enforcement atual:
 
 - Fase O encerrada documentalmente.
 - Commit de encerramento: 6077426 docs(tenant): encerra fase o
-- Documento canonico: [docs/tenant-phase-o-pre-execution-risk-matrix.md](docs/tenant-phase-o-pre-execution-risk-matrix.md)
+- Documento canonico: docs/tenant-phase-o-pre-execution-risk-matrix.md
 - Natureza: documental, preventiva, nao produtiva, sintetica e nao operacional.
 - Resultado: matriz documental de riscos pre-execucao concluida.
 - Conteudo concluido:
