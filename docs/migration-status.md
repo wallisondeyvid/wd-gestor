@@ -1053,8 +1053,34 @@ Checkpoint tenant enforcement atual:
 	- validacao completa verde nao autoriza abertura de tenant DB real;
 	- validacao completa verde nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 	- validacao completa verde nao abre Fase T automaticamente.
-- Fechamento/publicacao: validacao completa final concluida; push continua pendente ate autorizacao explicita do usuario para publicacao da Fase S.
-- Push: pendente; Fase S ainda nao publicada no remoto e sem autorizacao explicita para push.
+- Fechamento/publicacao: validacao completa final concluida; Fase S publicada e auditada pos-publicacao.
+- Push: realizado; Fase S publicada no remoto em 9c6c287 docs(tenant): completa validacao final da fase s.
+
+- Fase T aberta documentalmente.
+- Documento canonico: docs/tenant-phase-t-explicit-operational-preparation-authorization-contract.md
+- Base: 9c6c287 docs(tenant): completa validacao final da fase s.
+- Natureza: documental, preventiva, nao produtiva, sintetica, nao executiva e nao autorizativa concretamente por padrao.
+- Objetivo: definir contrato documental de autorizacao explicita para eventual preparacao operacional concreta manual controlada sintetica.
+- Gates iniciais:
+	- explicitOperationalPreparationAuthorizationContractOpened=true;
+	- explicitOperationalPreparationAuthorizationDefined=false;
+	- explicitOperationalPreparationScopeDefined=false;
+	- explicitOperationalPreparationPrerequisitesDefined=false;
+	- explicitOperationalPreparationRollbackDefined=false;
+	- explicitOperationalPreparationEvidenceDefined=false;
+	- explicitOperationalPreparationChecklistApplied=false;
+	- explicitOperationalPreparationStillForbidden=true;
+	- executionStillForbidden=true;
+	- rollbackStillForbidden=true;
+	- operationalEvidenceStillForbidden=true;
+	- operationalSurfaceStillForbidden=true;
+	- candidateStillSynthetic=true;
+	- nonProductionRequired=true;
+	- nonOperationalUntilExplicitAuthorization=true;
+	- fallbackRequired=true;
+	- blockedReasons=[].
+- Interpretacao: abertura da Fase T nao concede autorizacao explicita concreta, nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota, CLI, script, job, bootstrap, request path, registry real, allowlist real, tenant DB real, roteamento real, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
