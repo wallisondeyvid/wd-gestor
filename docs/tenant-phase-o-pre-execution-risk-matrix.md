@@ -85,7 +85,7 @@ Registrar que:
 Criar gates iniciais conservadores:
 
 - riskMatrixOpened=true
-- riskMatrixDefined=false
+- riskMatrixDefined=true
 - riskCategoriesDefined=true
 - riskSeverityDefined=true
 - mitigationPlanDefined=true
@@ -100,7 +100,7 @@ Criar gates iniciais conservadores:
 Explicar:
 
 - riskMatrixOpened=true porque a Fase O foi aberta documentalmente.
-- riskMatrixDefined=false porque a matriz de riscos ainda nao foi definida.
+- riskMatrixDefined=true porque a matriz documental preventiva passou a ser consolidada neste microcorte.
 - riskCategoriesDefined=true porque as categorias documentais de risco passaram a ser definidas neste microcorte.
 - riskSeverityDefined=true porque severidade e probabilidade documentais passaram a ser definidas neste microcorte.
 - mitigationPlanDefined=true porque as mitigacoes documentais preventivas passaram a ser definidas neste microcorte.
@@ -479,7 +479,53 @@ Interpretacao obrigatoria:
 - mitigationPlanDefined=true nao autoriza abrir tenant DB real.
 - mitigationPlanDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Superficies proibidas
+## 10. Matriz consolidada de riscos
+
+Registrar que a matriz consolidada da Fase O e documental, preventiva, nao operacional e nao autorizativa. Ela integra categorias, severidade, probabilidade, mitigacao, gatilho de bloqueio e evidencia esperada, mas nao autoriza execucao, nao autoriza preparacao operacional concreta, nao autoriza rollback real e nao substitui fase propria futura.
+
+| ID | Categoria | Severidade | Probabilidade | Mitigacao preventiva | Gatilho de bloqueio | Evidencia esperada |
+|---|---|---|---|---|---|---|
+| O-R1 | Autorizacao implicita | Critica | Alta | Declaracao explicita de nao autorizacao em cada gate e fase | Qualquer texto tratando documento, baseline ou fase anterior como autorizacao | Diff documental demonstrando interpretacao obrigatoria |
+| O-R2 | Materializacao do candidato sintetico | Critica | Media | Manter identificadores sinteticos restritos a documentacao/testes controlados | Candidato sintetico em src, scripts, package.json, rota, job, bootstrap, request path, allowlist real ou tenant DB real | Busca/read-only sem ocorrencia operacional indevida |
+| O-R3 | Superficie operacional acidental | Critica | Media | Restringir microcortes da Fase O a documentacao permitida | Criacao/alteracao de caller real, rota, CLI, script, job, bootstrap, request path, package.json, Portal, autenticacao ou API real | git diff/name-only restrito aos arquivos permitidos |
+| O-R4 | Registry, allowlist e roteamento | Critica | Media | Manter registry, allowlist, cache/preload/readers/writers e roteamento intocados | Alteracao em registry real, allowlist real, cache/preload/readers/writers, roteamento ou fallback | Busca/diff confirmando ausencia de alteracao em superficies sensiveis |
+| O-R5 | Dados, trafego e usuarios reais | Critica | Baixa | Manter Portal, dados reais, trafego real, usuario real, unidade real, credenciais reais e ambiente produtivo proibidos | Qualquer indicio de dado nao descartavel, trafego real, usuario real, unidade real ou credencial real | Evidencia documental de escopo sintetico/nao produtivo |
+| O-R6 | Rollback insuficiente | Alta | Media | Exigir rollback proprio antes de qualquer execucao futura | Discussao operacional sem reversao, interrupcao ou estado seguro proprios | Documento declara que rollback documental nao e rollback real |
+| O-R7 | Evidencia insuficiente | Alta | Alta | Separar evidencia documental de evidencia operacional real e exigir npm test completo no fechamento global | Baseline curta, log solto ou evidencia documental usada como prova operacional | Registro explicito de limites da evidencia e tupla completa em fechamento futuro |
+| O-R8 | PostgreSQL fora de hora | Alta | Baixa | Manter PostgreSQL fora do escopo da Fase O e da migracao multi-tenant atual | Qualquer alteracao funcional motivada por PostgreSQL futuro | Diff sem alteracao funcional e mencao a PostgreSQL apenas como risco bloqueado |
+| O-R9 | Alteracao oportunista | Alta | Media | Bloquear qualquer alteracao fora do microcorte documental permitido | Alteracao em codigo, testes, scripts, package.json, rotas ou arquivos sensiveis | git diff/name-only restrito ao documento permitido |
+
+### 10.1 Resultado da consolidacao
+
+Registrar:
+
+- riskMatrixDefined=true;
+- mitigationPlanDefined permanece true;
+- riskSeverityDefined permanece true;
+- riskCategoriesDefined permanece true;
+- riskMatrixOpened permanece true;
+- authorizationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- riskMatrixDefined=true significa apenas que a matriz documental preventiva foi consolidada.
+- riskMatrixDefined=true nao autoriza execucao.
+- riskMatrixDefined=true nao autoriza preparacao operacional concreta.
+- riskMatrixDefined=true nao autoriza coleta de evidencia operacional real.
+- riskMatrixDefined=true nao autoriza rollback real.
+- riskMatrixDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- riskMatrixDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- riskMatrixDefined=true nao autoriza abrir tenant DB real.
+- riskMatrixDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- riskMatrixDefined=true nao abre fase posterior automaticamente.
+
+## 11. Superficies proibidas
 
 Registrar que permanecem proibidos nesta fase:
 
@@ -506,7 +552,7 @@ Registrar que permanecem proibidos nesta fase:
 - PostgreSQL;
 - qualquer alteracao funcional oportunista.
 
-## 11. Criterio de avanco da Fase O
+## 12. Criterio de avanco da Fase O
 
 Registrar que a Fase O so podera avancar quando a matriz documental de riscos estiver completa, incluindo:
 
@@ -521,7 +567,7 @@ Registrar que a Fase O so podera avancar quando a matriz documental de riscos es
 
 Registrar que mesmo uma matriz completa nao autoriza execucao.
 
-## 12. Interpretacao obrigatoria
+## 13. Interpretacao obrigatoria
 
 Registrar:
 
