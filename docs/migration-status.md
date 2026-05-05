@@ -954,17 +954,27 @@ Checkpoint tenant enforcement atual:
 	- encerramento da Fase R nao autoriza abrir tenant DB real;
 	- encerramento da Fase R nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 	- encerramento da Fase R nao abre fase posterior automaticamente.
-- Validacao: baseline curta pos-encerramento verde.
-	- tests: 136;
-	- suites: 14;
-	- pass: 136;
-	- fail: 0;
-	- cancelled: 0;
-	- skipped: 0;
-	- todo: 0;
-	- duration_ms: 5355.1432.
-- Fechamento/publicacao: antes de push, obrigatorio rodar npm test completo.
-- Push: pendente ate validacao completa final e autorizacao explicita do usuario.
+- Validacao:
+	- baseline curta pos-encerramento verde:
+		- tests: 136;
+		- suites: 14;
+		- pass: 136;
+		- fail: 0;
+		- cancelled: 0;
+		- skipped: 0;
+		- todo: 0;
+		- duration_ms: 5355.1432;
+	- npm test completo pos-encerramento verde:
+		- tests: 2203;
+		- suites: 17;
+		- pass: 2201;
+		- fail: 0;
+		- cancelled: 0;
+		- skipped: 2;
+		- todo: 0;
+		- duration_ms: 229731.8871.
+- Fechamento/publicacao: validacao completa final concluida; push ainda pendente de autorizacao explicita do usuario.
+- Push: pendente ate autorizacao explicita do usuario.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
