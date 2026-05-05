@@ -89,6 +89,7 @@ Registrar os gates iniciais:
 - authorizationActorsDefined=true
 - authorizationScopeDefined=true
 - authorizationEvidenceDefined=true
+- checklistApplied=true
 - preparationStillForbidden=true
 - executionStillForbidden=true
 - operationalSurfaceStillForbidden=true
@@ -104,6 +105,7 @@ Explicar:
 - authorizationActorsDefined=true porque os atores/responsaveis documentais pela autorizacao explicita foram definidos neste microcorte sem autorizar qualquer preparacao ou execucao.
 - authorizationScopeDefined=true porque o escopo autorizavel futuro e os limites nao autorizaveis foram definidos documentalmente neste microcorte sem conceder autorizacao explicita final.
 - authorizationEvidenceDefined=true porque as evidencias exigidas antes de qualquer autorizacao futura foram definidas documentalmente neste microcorte sem autorizar preparacao operacional concreta nem execucao.
+- checklistApplied=true porque o checklist documental da Fase P foi aplicado neste microcorte sem encerrar a fase nem autorizar qualquer operacao concreta.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
 - operationalSurfaceStillForbidden=true porque nenhuma superficie operacional pode ser criada.
@@ -173,7 +175,7 @@ Registrar:
 
 - authorizationActorsDefined=true;
 - authorizationContractOpened permanece true;
-- explicitAuthorizationDefined permanece false;
+- explicitAuthorizationDefined permanece true;
 - authorizationScopeDefined permanece true;
 - authorizationEvidenceDefined permanece true;
 - preparationStillForbidden permanece true;
@@ -371,7 +373,7 @@ Registrar:
 - authorizationScopeDefined permanece true;
 - authorizationActorsDefined permanece true;
 - authorizationContractOpened permanece true;
-- explicitAuthorizationDefined permanece false;
+- explicitAuthorizationDefined permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -488,7 +490,109 @@ Interpretacao obrigatoria:
 - explicitAuthorizationDefined=true nao autoriza abrir tenant DB real.
 - explicitAuthorizationDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Interpretacao obrigatoria
+## 11. Checklist documental da Fase P
+
+Registrar que o checklist da Fase P e documental, preventivo e nao operacional. Aplicar checklist nao autoriza preparacao, execucao, rollback real, evidencia operacional real ou criacao de superficie operacional.
+
+### 11.1 Checklist de completude documental
+
+Registrar os itens como marcados:
+
+- [x] authorizationContractOpened=true.
+- [x] authorizationActorsDefined=true.
+- [x] authorizationScopeDefined=true.
+- [x] authorizationEvidenceDefined=true.
+- [x] explicitAuthorizationDefined=true.
+- [x] atores/responsaveis documentais definidos.
+- [x] escopo autorizavel futuro definido.
+- [x] limites nao autorizaveis definidos.
+- [x] evidencias exigidas antes de autorizacao futura definidas.
+- [x] formato minimo de autorizacao explicita valida definido.
+- [x] autorizacoes invalidas registradas.
+- [x] distincao entre documentar, preparar e executar registrada.
+- [x] condicoes de revogacao ou bloqueio registradas.
+
+### 11.2 Checklist de preservacao de bloqueios
+
+Registrar os itens como marcados:
+
+- [x] preparationStillForbidden=true.
+- [x] executionStillForbidden=true.
+- [x] operationalSurfaceStillForbidden=true.
+- [x] candidateStillSynthetic=true.
+- [x] nonOperationalPreserved=true.
+- [x] fallbackRequired=true.
+- [x] blockedReasons=[].
+- [x] nenhuma preparacao operacional concreta autorizada.
+- [x] nenhuma execucao autorizada.
+- [x] nenhum rollback real autorizado.
+- [x] nenhuma evidencia operacional real autorizada.
+- [x] nenhum caller real autorizado.
+- [x] nenhuma rota autorizada.
+- [x] nenhuma CLI autorizada.
+- [x] nenhum script autorizado.
+- [x] nenhum job autorizado.
+- [x] nenhum bootstrap autorizado.
+- [x] nenhum request path autorizado.
+- [x] nenhum registry real autorizado.
+- [x] nenhuma allowlist real autorizada.
+- [x] nenhum tenant DB real autorizado.
+- [x] nenhum Portal autorizado.
+- [x] nenhum dado real autorizado.
+- [x] nenhum trafego real autorizado.
+- [x] nenhum usuario real autorizado.
+- [x] nenhuma unidade real autorizada.
+- [x] nenhum PostgreSQL autorizado.
+
+### 11.3 Checklist de coerencia interna
+
+Registrar os itens como marcados:
+
+- [x] contrato permanece documental.
+- [x] contrato permanece preventivo.
+- [x] contrato permanece nao produtivo.
+- [x] contrato permanece sintetico.
+- [x] contrato permanece nao operacional.
+- [x] contrato permanece nao autorizativo concretamente.
+- [x] explicitAuthorizationDefined=true nao concede autorizacao concreta.
+- [x] baseline verde nao concede autorizacao.
+- [x] commit nao concede autorizacao.
+- [x] push futuro nao concedera autorizacao operacional.
+- [x] documentacao completa nao concede autorizacao operacional.
+- [x] Fase P nao abre fase posterior automaticamente.
+
+### 11.4 Resultado do checklist
+
+Registrar:
+
+- checklistApplied=true;
+- explicitAuthorizationDefined permanece true;
+- authorizationEvidenceDefined permanece true;
+- authorizationScopeDefined permanece true;
+- authorizationActorsDefined permanece true;
+- authorizationContractOpened permanece true;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- checklistApplied=true significa apenas que o checklist documental da Fase P foi aplicado.
+- checklistApplied=true nao autoriza preparacao operacional concreta.
+- checklistApplied=true nao autoriza execucao.
+- checklistApplied=true nao autoriza rollback real.
+- checklistApplied=true nao autoriza coleta de evidencia operacional real.
+- checklistApplied=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- checklistApplied=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- checklistApplied=true nao autoriza abrir tenant DB real.
+- checklistApplied=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- checklistApplied=true nao encerra a Fase P automaticamente.
+
+## 12. Interpretacao obrigatoria
 
 Registrar:
 
@@ -502,7 +606,7 @@ Registrar:
 - authorizationContractOpened=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - authorizationContractOpened=true nao abre fase posterior automaticamente.
 
-## 12. Criterio de avanco da Fase P
+## 13. Criterio de avanco da Fase P
 
 Registrar que a Fase P so podera avancar quando forem definidos, documentalmente:
 
