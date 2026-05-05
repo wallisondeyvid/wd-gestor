@@ -81,7 +81,7 @@ Explicar:
 
 - operationalPreparationScopeContractOpened=true porque a Fase U foi aberta documentalmente.
 - operationalPreparationScopeDefined=true porque o escopo documental foi definido, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real e sem coleta de evidencia operacional real.
-- operationalPreparationBoundariesDefined=false porque as fronteiras ainda nao foram definidas.
+- operationalPreparationBoundariesDefined=true porque as fronteiras documentais foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - operationalPreparationInputsDefined=false porque as entradas ainda nao foram definidas.
 - operationalPreparationOutputsDefined=false porque as saidas ainda nao foram definidas.
 - operationalPreparationExclusionsDefined=false porque as exclusoes ainda nao foram definidas.
@@ -183,7 +183,76 @@ Interpretacao obrigatoria:
 - escopo documental definido nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 - escopo documental definido nao autoriza push.
 
-## 8. Bloqueios obrigatorios nesta abertura
+## 8. Fronteiras documentais da preparacao operacional concreta futura
+
+Registrar que as fronteiras sao exclusivamente documentais e nao autorizam preparacao operacional concreta.
+
+### Preparacao operacional concreta futura
+
+Registrar que, se um dia autorizada em fase posterior propria, a preparacao operacional concreta futura poderia envolver apenas atos sinteticos, manuais, controlados e nao produtivos necessarios para preparar o candidato sintetico previamente documentado.
+
+Registrar que nesta Fase U ela continua proibida.
+
+### Execucao
+
+Registrar que execucao significa acionar, consumir, plugar, rotear, usar ou validar operacionalmente qualquer preparacao contra fluxo real, request path, caller real, Portal, usuario real, unidade real, dado real, trafego real, registry real, allowlist real, tenant DB real ou roteamento real.
+
+Registrar que execucao continua proibida.
+
+### Rollback real
+
+Registrar que rollback real significa reverter algo que tenha sido concretamente criado, alterado, plugado, executado ou preparado operacionalmente.
+
+Registrar que rollback real continua proibido porque nada concreto foi autorizado ou criado.
+
+### Evidencia operacional real
+
+Registrar que evidencia operacional real significa coleta de saida concreta de comandos, bancos, registry, allowlist, roteamento, request path, Portal, trafego, usuario, unidade ou dado real.
+
+Registrar que evidencia operacional real continua proibida nesta Fase U.
+
+### Superficie operacional
+
+Registrar que superficie operacional significa qualquer caller real, rota, CLI, script, job, bootstrap, request path, registry real, allowlist real, tenant DB real, roteamento real ou acoplamento em codigo produtivo.
+
+Registrar que superficie operacional continua proibida.
+
+Registrar que qualquer ambiguidade entre preparacao, execucao, rollback, evidencia e superficie deve degradar para bloqueio.
+
+Registrar:
+
+- operationalPreparationScopeContractOpened=true
+- operationalPreparationScopeDefined=true
+- operationalPreparationBoundariesDefined=true
+- operationalPreparationInputsDefined=false
+- operationalPreparationOutputsDefined=false
+- operationalPreparationExclusionsDefined=false
+- operationalPreparationChecklistApplied=false
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitAuthorizationStillRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Interpretacao obrigatoria:
+
+- fronteiras documentais definidas nao autorizam preparacao operacional concreta;
+- fronteiras documentais definidas nao autorizam execucao;
+- fronteiras documentais definidas nao autorizam rollback real;
+- fronteiras documentais definidas nao autorizam coleta de evidencia operacional real;
+- fronteiras documentais definidas nao autorizam criacao de superficie operacional;
+- fronteiras documentais definidas nao autorizam caller real, rota, CLI, script, job, bootstrap ou request path;
+- fronteiras documentais definidas nao autorizam alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- fronteiras documentais definidas nao autorizam Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- fronteiras documentais definidas nao autorizam push.
+
+## 9. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase U bloqueia expressamente:
 
@@ -213,7 +282,7 @@ Registrar que a abertura da Fase U bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 9. Interpretacao obrigatoria
+## 10. Interpretacao obrigatoria
 
 Registrar que abrir a Fase U nao significa escopo completo definido.
 
@@ -235,7 +304,7 @@ Registrar que abrir a Fase U nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase U nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Criterio de avanco da Fase U
+## 11. Criterio de avanco da Fase U
 
 Registrar que a Fase U so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
