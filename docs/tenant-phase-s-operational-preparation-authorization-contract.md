@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -630,6 +630,73 @@ Registrar que a Fase S so podera avancar documentalmente quando forem definidos:
 
 Registrar que a autorizacao documental, o escopo operacional preparatorio, as pre-condicoes operacionais preparatorias, o rollback operacional preparatorio, as evidencias operacionais preparatorias e o checklist documental ja foram definidos ou aplicados neste microcorte.
 
-Registrar que a Fase S permanece aberta apos este microcorte e que seu encerramento depende de microcorte posterior proprio.
+Registrar que a Fase S foi encerrada documentalmente neste microcorte.
 
 Registrar que mesmo um contrato completo da Fase S nao autoriza execucao e nao autoriza preparacao operacional concreta sem fase posterior propria.
+
+## 15. Encerramento documental da Fase S
+
+Registrar que a Fase S foi encerrada documentalmente apos definir/aplicar:
+
+- contrato de autorizacao operacional preparatoria;
+- autorizacao operacional preparatoria documental;
+- escopo operacional preparatorio documental;
+- pre-condicoes operacionais preparatorias documentais;
+- rollback operacional preparatorio documental;
+- evidencias operacionais preparatorias documentais;
+- checklist documental.
+
+Registrar os gates finais:
+
+- operationalPreparationAuthorizationContractOpened=true;
+- operationalPreparationAuthorizationDefined=true;
+- operationalPreparationScopeDefined=true;
+- operationalPreparationPrerequisitesDefined=true;
+- operationalPreparationRollbackDefined=true;
+- operationalPreparationEvidenceDefined=true;
+- operationalPreparationChecklistApplied=true;
+- operationalPreparationStillForbidden=true;
+- executionStillForbidden=true;
+- operationalSurfaceStillForbidden=true;
+- candidateStillSynthetic=true;
+- nonOperationalPreserved=true;
+- fallbackRequired=true;
+- blockedReasons=[].
+
+Registrar interpretacao obrigatoria do encerramento:
+
+- Encerrar a Fase S nao concede autorizacao concreta.
+- Encerrar a Fase S nao autoriza preparacao operacional concreta.
+- Encerrar a Fase S nao autoriza execucao.
+- Encerrar a Fase S nao autoriza rollback real.
+- Encerrar a Fase S nao autoriza coleta de evidencia operacional real.
+- Encerrar a Fase S nao autoriza criacao de caller real.
+- Encerrar a Fase S nao autoriza criacao de rota.
+- Encerrar a Fase S nao autoriza criacao de CLI.
+- Encerrar a Fase S nao autoriza criacao de script.
+- Encerrar a Fase S nao autoriza criacao de job.
+- Encerrar a Fase S nao autoriza criacao de bootstrap.
+- Encerrar a Fase S nao autoriza plug em request path.
+- Encerrar a Fase S nao autoriza alteracao de registry real.
+- Encerrar a Fase S nao autoriza alteracao de allowlist real.
+- Encerrar a Fase S nao autoriza alteracao de roteamento real.
+- Encerrar a Fase S nao autoriza abertura de tenant DB real.
+- Encerrar a Fase S nao autoriza uso de Portal.
+- Encerrar a Fase S nao autoriza uso de dados reais.
+- Encerrar a Fase S nao autoriza uso de trafego real.
+- Encerrar a Fase S nao autoriza uso de usuario real.
+- Encerrar a Fase S nao autoriza uso de unidade real.
+- Encerrar a Fase S nao autoriza PostgreSQL.
+- Encerrar a Fase S nao abre fase posterior automaticamente.
+
+Registrar criterio de avanco apos encerramento:
+
+- Qualquer preparacao operacional concreta futura exigira fase posterior propria.
+- Essa fase posterior devera ter escopo proprio.
+- Essa fase posterior devera ter autorizacao explicita propria.
+- Essa fase posterior devera ter rollback proprio.
+- Essa fase posterior devera ter evidencias proprias.
+- Essa fase posterior devera ter gates proprios.
+- Essa fase posterior devera ter validacao propria.
+- Essa fase posterior devera ter comando proprio aprovado pelo usuario.
+- Ate la, operationalPreparationStillForbidden=true, executionStillForbidden=true e operationalSurfaceStillForbidden=true permanecem obrigatorios.
