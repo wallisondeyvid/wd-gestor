@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -618,3 +618,55 @@ Registrar que a Fase P so podera avancar quando forem definidos, documentalmente
 - interpretacao obrigatoria.
 
 Registrar que mesmo um contrato completo nao autoriza execucao nem preparacao operacional concreta.
+
+## 14. Encerramento documental da Fase P
+
+Registrar que a Fase P foi encerrada documentalmente apos:
+
+- abertura do contrato documental;
+- definicao dos atores de autorizacao;
+- definicao do escopo autorizavel e limites nao autorizaveis;
+- definicao das evidencias exigidas;
+- definicao do contrato de autorizacao explicita;
+- aplicacao do checklist documental.
+
+Registrar o resultado final:
+
+- authorizationContractOpened=true;
+- authorizationActorsDefined=true;
+- authorizationScopeDefined=true;
+- authorizationEvidenceDefined=true;
+- explicitAuthorizationDefined=true;
+- checklistApplied=true;
+- preparationStillForbidden=true;
+- executionStillForbidden=true;
+- operationalSurfaceStillForbidden=true;
+- candidateStillSynthetic=true;
+- nonOperationalPreserved=true;
+- fallbackRequired=true;
+- blockedReasons=[].
+
+Registrar a interpretacao obrigatoria:
+
+- Encerrar a Fase P nao concede autorizacao concreta.
+- Encerrar a Fase P nao autoriza preparacao operacional concreta.
+- Encerrar a Fase P nao autoriza execucao.
+- Encerrar a Fase P nao autoriza rollback real.
+- Encerrar a Fase P nao autoriza coleta de evidencia operacional real.
+- Encerrar a Fase P nao autoriza criar comando.
+- Encerrar a Fase P nao autoriza criar script.
+- Encerrar a Fase P nao autoriza criar caller real.
+- Encerrar a Fase P nao autoriza criar rota, CLI, job, bootstrap ou request path.
+- Encerrar a Fase P nao autoriza alterar registry real.
+- Encerrar a Fase P nao autoriza alterar allowlist real.
+- Encerrar a Fase P nao autoriza abrir tenant DB real.
+- Encerrar a Fase P nao autoriza mudar roteamento.
+- Encerrar a Fase P nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Encerrar a Fase P nao abre fase posterior automaticamente.
+- Encerrar a Fase P apenas conclui o contrato documental de autorizacao explicita pre-preparacao.
+
+Registrar tambem:
+
+- A proxima fase, se houver, devera ser aberta explicitamente em microcorte proprio.
+- Qualquer fase posterior ainda devera preservar autorizacao propria, escopo proprio, rollback proprio, evidencias proprias, gates proprios e validacao propria.
+- Push permanece proibido ate atualizacao do status global, validacao completa final e autorizacao explicita.
