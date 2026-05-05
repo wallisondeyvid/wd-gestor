@@ -761,6 +761,27 @@ Checkpoint tenant enforcement atual:
 - Fechamento/publicacao: validacao completa final concluida; push ainda pendente de autorizacao explicita do usuario.
 - Push: pendente ate autorizacao explicita do usuario.
 
+- Fase P aberta documentalmente.
+- Documento canonico: docs/tenant-phase-p-explicit-authorization-contract.md
+- Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional e nao autorizativa por padrao.
+- Origem: posterior a Fase O encerrada, validada, publicada e auditada.
+- Objetivo: definir contrato documental de autorizacao explicita pre-preparacao manual controlada sintetica.
+- Gates iniciais:
+	- authorizationContractOpened=true;
+	- explicitAuthorizationDefined=false;
+	- authorizationActorsDefined=false;
+	- authorizationScopeDefined=false;
+	- authorizationEvidenceDefined=false;
+	- preparationStillForbidden=true;
+	- executionStillForbidden=true;
+	- operationalSurfaceStillForbidden=true;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- fallbackRequired=true;
+	- blockedReasons=[].
+- Interpretacao: abertura da Fase P nao autoriza execucao, preparacao operacional concreta, evidencia operacional real, rollback real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
