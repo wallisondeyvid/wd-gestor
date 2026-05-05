@@ -813,9 +813,19 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[].
 - Interpretacao obrigatoria: encerramento da Fase P nao concede autorizacao concreta, nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza evidencia operacional real, nao autoriza caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - Proxima fase: nao aberta automaticamente.
-- Validacao: baseline curta pos-encerramento verde.
-- Fechamento/publicacao: antes de push, obrigatorio rodar `npm test` completo.
-- Push: pendente ate validacao completa final e autorizacao explicita do usuario.
+- Validacao:
+	- baseline curta pos-encerramento verde;
+	- npm test completo pos-encerramento verde:
+		- tests: 2203;
+		- suites: 17;
+		- pass: 2201;
+		- fail: 0;
+		- cancelled: 0;
+		- skipped: 2;
+		- todo: 0;
+		- duration_ms: 229457.7036.
+- Fechamento/publicacao: validacao completa final concluida; push ainda pendente de autorizacao explicita do usuario.
+- Push: pendente ate autorizacao explicita do usuario.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
