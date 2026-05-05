@@ -59,7 +59,7 @@ Registrar que nada operacional pode ser criado ou executado nesta abertura.
 Registrar:
 
 - operationalPreparationScopeContractOpened=true
-- operationalPreparationScopeDefined=false
+- operationalPreparationScopeDefined=true
 - operationalPreparationBoundariesDefined=false
 - operationalPreparationInputsDefined=false
 - operationalPreparationOutputsDefined=false
@@ -80,7 +80,7 @@ Registrar:
 Explicar:
 
 - operationalPreparationScopeContractOpened=true porque a Fase U foi aberta documentalmente.
-- operationalPreparationScopeDefined=false porque o escopo ainda nao foi definido.
+- operationalPreparationScopeDefined=true porque o escopo documental foi definido, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real e sem coleta de evidencia operacional real.
 - operationalPreparationBoundariesDefined=false porque as fronteiras ainda nao foram definidas.
 - operationalPreparationInputsDefined=false porque as entradas ainda nao foram definidas.
 - operationalPreparationOutputsDefined=false porque as saidas ainda nao foram definidas.
@@ -98,7 +98,92 @@ Explicar:
 - fallbackRequired=true porque fallback para baseConnection permanece obrigatorio.
 - blockedReasons=[] porque nao ha bloqueio documental para abrir a fase; ha apenas trabalho documental pendente para completar o contrato de escopo.
 
-## 7. Bloqueios obrigatorios nesta abertura
+## 7. Escopo documental da preparacao operacional concreta futura
+
+Registrar que o escopo definido e exclusivamente documental e nao autoriza preparacao operacional concreta.
+
+Registrar que o escopo da preparacao operacional concreta futura, se um dia autorizada em fase posterior propria, devera se limitar a:
+
+- candidato sintetico previamente documentado;
+- ambiente nao produtivo;
+- banco sintetico descartavel;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- PostgreSQL fora de escopo;
+- manutencao obrigatoria do fallback para baseConnection;
+- preparacao manual controlada;
+- comando proprio aprovado pelo usuario em momento posterior;
+- autorizacao explicita propria do usuario em momento posterior;
+- evidencias documentais antes e depois;
+- validacao anterior e posterior;
+- rollback definido antes de qualquer preparacao concreta;
+- bloqueio imediato se qualquer condicao deixar de ser sintetica, nao produtiva, manual ou controlada.
+
+Registrar explicitamente que o escopo NAO inclui:
+
+- execucao;
+- rollback real;
+- coleta de evidencia operacional real neste microcorte;
+- criacao de superficie operacional;
+- caller real;
+- rota;
+- CLI;
+- script;
+- job;
+- bootstrap;
+- request path;
+- registry real;
+- allowlist real;
+- roteamento real;
+- tenant DB real;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- alteracao de codigo;
+- alteracao de testes;
+- alteracao de package.json;
+- alteracao de src.
+
+Registrar:
+
+- operationalPreparationScopeContractOpened=true
+- operationalPreparationScopeDefined=true
+- operationalPreparationBoundariesDefined=false
+- operationalPreparationInputsDefined=false
+- operationalPreparationOutputsDefined=false
+- operationalPreparationExclusionsDefined=false
+- operationalPreparationChecklistApplied=false
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitAuthorizationStillRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Interpretacao obrigatoria:
+
+- escopo documental definido nao autoriza preparacao operacional concreta;
+- escopo documental definido nao autoriza execucao;
+- escopo documental definido nao autoriza rollback real;
+- escopo documental definido nao autoriza coleta de evidencia operacional real;
+- escopo documental definido nao autoriza criacao de superficie operacional;
+- escopo documental definido nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- escopo documental definido nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- escopo documental definido nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- escopo documental definido nao autoriza push.
+
+## 8. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase U bloqueia expressamente:
 
@@ -128,7 +213,7 @@ Registrar que a abertura da Fase U bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 8. Interpretacao obrigatoria
+## 9. Interpretacao obrigatoria
 
 Registrar que abrir a Fase U nao significa escopo completo definido.
 
@@ -150,11 +235,10 @@ Registrar que abrir a Fase U nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase U nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 9. Criterio de avanco da Fase U
+## 10. Criterio de avanco da Fase U
 
 Registrar que a Fase U so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
-- escopo documental;
 - fronteiras;
 - entradas;
 - saidas;
