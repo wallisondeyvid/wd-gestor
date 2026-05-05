@@ -95,6 +95,7 @@ Criar gates iniciais conservadores:
 - candidateStillSynthetic=true
 - nonOperationalPreserved=true
 - fallbackRequired=true
+- checklistApplied=true
 - blockedReasons=[]
 
 Explicar:
@@ -110,6 +111,7 @@ Explicar:
 - candidateStillSynthetic=true porque o unico candidato permanece sintetico.
 - nonOperationalPreserved=true porque a fase permanece documental.
 - fallbackRequired=true porque fallback para `baseConnection` permanece obrigatorio.
+- checklistApplied=true porque o checklist documental da Fase O passou a ser aplicado neste microcorte.
 - blockedReasons=[] porque nao ha bloqueio documental inicial; ha apenas ausencia da matriz completa.
 
 ## 7. Categorias documentais de risco
@@ -525,7 +527,112 @@ Interpretacao obrigatoria:
 - riskMatrixDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - riskMatrixDefined=true nao abre fase posterior automaticamente.
 
-## 11. Superficies proibidas
+## 11. Checklist documental da Fase O
+
+Registrar que o checklist da Fase O e documental, preventivo, nao operacional e nao autorizativo. Ele serve apenas para confirmar que a matriz de riscos esta completa e que a fase continua bloqueando qualquer execucao ou preparacao operacional concreta.
+
+### 11.1 Checklist de completude documental
+
+- [x] Documento canonico da Fase O criado.
+- [x] Natureza documental, preventiva, nao produtiva, sintetica e nao operacional registrada.
+- [x] Origem pos-Fase N registrada.
+- [x] Objetivo da matriz de riscos registrado.
+- [x] Relacao com a Fase N registrada.
+- [x] Gates iniciais conservadores registrados.
+- [x] Categorias documentais de risco definidas.
+- [x] Severidade e probabilidade documentais definidas.
+- [x] Mitigacoes documentais preventivas definidas.
+- [x] Matriz consolidada de riscos definida.
+- [x] Superficies proibidas preservadas.
+- [x] Criterio de avanco preserva que matriz completa nao autoriza execucao.
+- [x] Interpretacao obrigatoria preserva ausencia de autorizacao operacional.
+
+### 11.2 Checklist de gates
+
+Registrar:
+
+- [x] riskMatrixOpened=true.
+- [x] riskMatrixDefined=true.
+- [x] riskCategoriesDefined=true.
+- [x] riskSeverityDefined=true.
+- [x] mitigationPlanDefined=true.
+- [x] authorizationStillForbidden=true.
+- [x] executionStillForbidden=true.
+- [x] operationalSurfaceStillForbidden=true.
+- [x] candidateStillSynthetic=true.
+- [x] nonOperationalPreserved=true.
+- [x] fallbackRequired=true.
+- [x] blockedReasons=[].
+
+### 11.3 Checklist de superficies proibidas
+
+Registrar:
+
+- [x] Nenhuma execucao real autorizada.
+- [x] Nenhuma preparacao operacional concreta autorizada.
+- [x] Nenhuma coleta de evidencia operacional real autorizada.
+- [x] Nenhum rollback real autorizado.
+- [x] Nenhum caller real autorizado.
+- [x] Nenhuma rota autorizada.
+- [x] Nenhuma CLI autorizada.
+- [x] Nenhum script autorizado.
+- [x] Nenhum job autorizado.
+- [x] Nenhum bootstrap autorizado.
+- [x] Nenhum request path autorizado.
+- [x] Nenhuma alteracao de registry real autorizada.
+- [x] Nenhuma alteracao de allowlist real autorizada.
+- [x] Nenhuma abertura de tenant DB real autorizada.
+- [x] Nenhuma mudanca de roteamento autorizada.
+- [x] Nenhum Portal autorizado.
+- [x] Nenhum dado real autorizado.
+- [x] Nenhum trafego real autorizado.
+- [x] Nenhum usuario real autorizado.
+- [x] Nenhuma unidade real autorizada.
+- [x] Nenhum PostgreSQL autorizado.
+
+### 11.4 Checklist de evidencia documental
+
+Registrar que a evidencia deste microcorte e apenas documental:
+
+- [x] Diff restrito ao documento canonico da Fase O.
+- [x] Baseline curta exigida antes de commit.
+- [x] `npm test` completo ainda nao exigido neste microcorte, pois a Fase O ainda nao esta sendo encerrada.
+- [x] Push continua proibido ate fechamento global da fase, validacao completa e autorizacao explicita.
+- [x] Evidencia documental nao foi tratada como evidencia operacional real.
+
+### 11.5 Resultado do checklist
+
+Registrar:
+
+- checklistApplied=true;
+- riskMatrixDefined permanece true;
+- mitigationPlanDefined permanece true;
+- riskSeverityDefined permanece true;
+- riskCategoriesDefined permanece true;
+- riskMatrixOpened permanece true;
+- authorizationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- checklistApplied=true significa apenas que o checklist documental da Fase O foi aplicado.
+- checklistApplied=true nao autoriza execucao.
+- checklistApplied=true nao autoriza preparacao operacional concreta.
+- checklistApplied=true nao autoriza coleta de evidencia operacional real.
+- checklistApplied=true nao autoriza rollback real.
+- checklistApplied=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- checklistApplied=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- checklistApplied=true nao autoriza abrir tenant DB real.
+- checklistApplied=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- checklistApplied=true nao encerra a Fase O automaticamente.
+- checklistApplied=true nao abre fase posterior automaticamente.
+
+## 12. Superficies proibidas
 
 Registrar que permanecem proibidos nesta fase:
 
@@ -552,7 +659,7 @@ Registrar que permanecem proibidos nesta fase:
 - PostgreSQL;
 - qualquer alteracao funcional oportunista.
 
-## 12. Criterio de avanco da Fase O
+## 13. Criterio de avanco da Fase O
 
 Registrar que a Fase O so podera avancar quando a matriz documental de riscos estiver completa, incluindo:
 
@@ -567,7 +674,7 @@ Registrar que a Fase O so podera avancar quando a matriz documental de riscos es
 
 Registrar que mesmo uma matriz completa nao autoriza execucao.
 
-## 13. Interpretacao obrigatoria
+## 14. Interpretacao obrigatoria
 
 Registrar:
 
