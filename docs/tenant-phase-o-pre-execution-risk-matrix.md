@@ -87,7 +87,7 @@ Criar gates iniciais conservadores:
 - riskMatrixOpened=true
 - riskMatrixDefined=false
 - riskCategoriesDefined=true
-- riskSeverityDefined=false
+- riskSeverityDefined=true
 - mitigationPlanDefined=false
 - authorizationStillForbidden=true
 - executionStillForbidden=true
@@ -102,7 +102,7 @@ Explicar:
 - riskMatrixOpened=true porque a Fase O foi aberta documentalmente.
 - riskMatrixDefined=false porque a matriz de riscos ainda nao foi definida.
 - riskCategoriesDefined=true porque as categorias documentais de risco passaram a ser definidas neste microcorte.
-- riskSeverityDefined=false porque severidade/probabilidade ainda nao foram definidas.
+- riskSeverityDefined=true porque severidade e probabilidade documentais passaram a ser definidas neste microcorte.
 - mitigationPlanDefined=false porque o plano de mitigacao ainda nao foi definido.
 - authorizationStillForbidden=true porque a Fase O nao autoriza execucao nem preparacao operacional concreta.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
@@ -252,7 +252,101 @@ Interpretacao obrigatoria:
 - riskCategoriesDefined=true nao autoriza abrir tenant DB real.
 - riskCategoriesDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 8. Superficies proibidas
+## 8. Severidade e probabilidade documentais
+
+Registrar que severidade e probabilidade sao documentais e preventivas. Elas nao autorizam execucao, nao substituem mitigacao, nao substituem rollback, nao substituem evidencia e nao permitem criacao de superficie operacional.
+
+### 8.1 Escala de severidade
+
+- Baixa: risco com impacto apenas textual/documental, sem efeito operacional possivel se os gates forem preservados.
+- Media: risco que pode gerar ambiguidade documental relevante ou induzir interpretacao incorreta.
+- Alta: risco que pode induzir criacao indevida de superficie operacional, alteracao de contrato sensivel ou enfraquecimento de fallback.
+- Critica: risco que pode levar a execucao real, uso de dados reais, trafego real, unidade real, Portal, alteracao de registry/allowlist real, tenant DB real, roteamento real ou PostgreSQL fora de fase.
+
+### 8.2 Escala de probabilidade
+
+- Baixa: improvavel no fluxo atual, desde que restricoes e revisao sejam mantidas.
+- Media: possivel se houver interpretacao apressada ou microcorte amplo demais.
+- Alta: provavel se houver autorizacao ambigua, prompt frouxo ou alteracao fora do escopo.
+- Critica: provavel e perigosa se forem criados comandos, scripts, callers reais, rotas, jobs, bootstrap ou request path sem fase propria.
+
+### 8.3 Classificacao inicial das categorias
+
+1. Risco de autorizacao implicita
+	- Severidade: Critica
+	- Probabilidade: Alta
+	- Motivo: pode transformar documento, baseline ou fase anterior em autorizacao indevida.
+
+2. Risco de materializar candidato sintetico
+	- Severidade: Critica
+	- Probabilidade: Media
+	- Motivo: pode deslocar identificadores sinteticos para operacao real, allowlist real ou tenant DB real.
+
+3. Risco de superficie operacional acidental
+	- Severidade: Critica
+	- Probabilidade: Media
+	- Motivo: pode criar caller real, rota, CLI, script, job, bootstrap, request path, package.json ou Portal fora de fase.
+
+4. Risco de registry, allowlist e roteamento
+	- Severidade: Critica
+	- Probabilidade: Media
+	- Motivo: pode alterar registry real, allowlist real, cache/preload/readers/writers, roteamento ou fallback.
+
+5. Risco de dados, trafego e usuarios reais
+	- Severidade: Critica
+	- Probabilidade: Baixa
+	- Motivo: impacto maximo se ocorrer, embora o fluxo atual ainda bloqueie Portal, dados reais, trafego real, usuario real e unidade real.
+
+6. Risco de rollback insuficiente
+	- Severidade: Alta
+	- Probabilidade: Media
+	- Motivo: pode permitir discussao de execucao sem reversao, interrupcao ou estado seguro proprios.
+
+7. Risco de evidencia insuficiente
+	- Severidade: Alta
+	- Probabilidade: Alta
+	- Motivo: pode induzir avanco com baseline curta, log solto ou evidencia documental confundida com evidencia operacional real.
+
+8. Risco de PostgreSQL fora de hora
+	- Severidade: Alta
+	- Probabilidade: Baixa
+	- Motivo: PostgreSQL e objetivo futuro, mas esta fora do escopo da migracao multi-tenant atual em MongoDB.
+
+9. Risco de alteracao oportunista
+	- Severidade: Alta
+	- Probabilidade: Media
+	- Motivo: pode ampliar microcorte documental para codigo, testes, scripts, package.json, rotas ou refatoracoes fora do escopo.
+
+### 8.4 Resultado da classificacao
+
+Registrar:
+
+- riskSeverityDefined=true;
+- riskCategoriesDefined permanece true;
+- riskMatrixOpened permanece true;
+- riskMatrixDefined permanece false;
+- mitigationPlanDefined permanece false;
+- authorizationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- riskSeverityDefined=true significa apenas que severidade e probabilidade documentais foram definidas.
+- riskSeverityDefined=true nao autoriza execucao.
+- riskSeverityDefined=true nao autoriza preparacao operacional concreta.
+- riskSeverityDefined=true nao autoriza coleta de evidencia operacional real.
+- riskSeverityDefined=true nao autoriza rollback real.
+- riskSeverityDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- riskSeverityDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- riskSeverityDefined=true nao autoriza abrir tenant DB real.
+- riskSeverityDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 9. Superficies proibidas
 
 Registrar que permanecem proibidos nesta fase:
 
@@ -279,7 +373,7 @@ Registrar que permanecem proibidos nesta fase:
 - PostgreSQL;
 - qualquer alteracao funcional oportunista.
 
-## 9. Criterio de avanco da Fase O
+## 10. Criterio de avanco da Fase O
 
 Registrar que a Fase O so podera avancar quando a matriz documental de riscos estiver completa, incluindo:
 
@@ -294,7 +388,7 @@ Registrar que a Fase O so podera avancar quando a matriz documental de riscos es
 
 Registrar que mesmo uma matriz completa nao autoriza execucao.
 
-## 10. Interpretacao obrigatoria
+## 11. Interpretacao obrigatoria
 
 Registrar:
 
