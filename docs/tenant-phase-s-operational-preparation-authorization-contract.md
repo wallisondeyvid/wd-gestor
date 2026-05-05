@@ -69,7 +69,7 @@ Registrar:
 - operationalPreparationAuthorizationContractOpened=true
 - operationalPreparationAuthorizationDefined=true
 - operationalPreparationScopeDefined=true
-- operationalPreparationPrerequisitesDefined=false
+- operationalPreparationPrerequisitesDefined=true
 - operationalPreparationRollbackDefined=false
 - operationalPreparationEvidenceDefined=false
 - operationalPreparationChecklistApplied=false
@@ -86,7 +86,7 @@ Explicar:
 - operationalPreparationAuthorizationContractOpened=true porque a Fase S foi aberta documentalmente.
 - operationalPreparationAuthorizationDefined=true porque a autorizacao operacional preparatoria foi definida documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationScopeDefined=true porque o escopo operacional preparatorio foi definido documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
-- operationalPreparationPrerequisitesDefined=false porque as pre-condicoes ainda nao foram definidas.
+- operationalPreparationPrerequisitesDefined=true porque as pre-condicoes operacionais preparatorias foram definidas documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationRollbackDefined=false porque o rollback ainda nao foi definido.
 - operationalPreparationEvidenceDefined=false porque as evidencias ainda nao foram definidas.
 - operationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
@@ -269,20 +269,101 @@ Interpretacao obrigatoria:
 - operationalPreparationScopeDefined=true nao autoriza abrir tenant DB real.
 - operationalPreparationScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 9. Interpretacao obrigatoria
+## 9. Pre-condicoes operacionais preparatorias documentais
+
+Registrar que as pre-condicoes operacionais preparatorias da Fase S sao estritamente documentais e servem apenas para definir o que devera estar comprovado antes de qualquer futura preparacao operacional manual controlada sintetica em fase posterior propria.
+
+Registrar que estas pre-condicoes nao aprovam comando real, nao autorizam preparacao operacional concreta, nao executam piloto, nao executam rollback real e nao coletam evidencia operacional real.
+
+### 9.1 Pre-condicoes obrigatorias futuras
+
+Registrar que uma futura preparacao operacional manual controlada sintetica so podera ser considerada em fase posterior propria se, antes dela, estiverem definidos e comprovados documentalmente:
+
+- candidato estritamente sintetico;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ambiente nao produtivo;
+- database descartavel ou plenamente reversivel;
+- fallback obrigatorio para baseConnection preservado;
+- escopo operacional preparatorio explicito;
+- rollback preparatorio definido antes de qualquer comando real;
+- evidencias exigidas antes, durante e depois de qualquer preparacao futura;
+- gates de bloqueio objetivos;
+- validacao verde antes de qualquer autorizacao concreta;
+- autorizacao explicita do usuario antes de qualquer comando real;
+- ausencia de alteracao em registry real, allowlist real e roteamento real;
+- ausencia de criacao de caller real, rota, CLI, script, job, bootstrap ou request path;
+- PostgreSQL fora de escopo.
+
+### 9.2 Condicoes que bloqueiam qualquer preparacao futura
+
+Registrar que qualquer futura preparacao operacional manual controlada sintetica deve permanecer bloqueada se houver:
+
+- dado real;
+- trafego real;
+- usuario real;
+- unidade real;
+- Portal;
+- ambiente produtivo;
+- ausencia de rollback;
+- ausencia de evidencias exigidas;
+- ausencia de validacao verde;
+- ausencia de autorizacao explicita do usuario;
+- ambiguidade sobre candidato, ambiente, dados, trafego ou unidade;
+- necessidade de alterar registry real, allowlist real ou roteamento real;
+- necessidade de criar caller real, rota, CLI, script, job, bootstrap ou request path;
+- necessidade de abrir tenant DB real;
+- necessidade de tocar em PostgreSQL;
+- qualquer falha em gate documental ou tecnico.
+
+### 9.3 Resultado da definicao documental das pre-condicoes
+
+Registrar:
+
+- operationalPreparationPrerequisitesDefined=true;
+- operationalPreparationAuthorizationContractOpened permanece true;
+- operationalPreparationAuthorizationDefined permanece true;
+- operationalPreparationScopeDefined permanece true;
+- operationalPreparationRollbackDefined permanece false;
+- operationalPreparationEvidenceDefined permanece false;
+- operationalPreparationChecklistApplied permanece false;
+- operationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- operationalPreparationPrerequisitesDefined=true significa apenas que as pre-condicoes operacionais preparatorias foram definidas documentalmente.
+- operationalPreparationPrerequisitesDefined=true nao significa autorizacao concreta.
+- operationalPreparationPrerequisitesDefined=true nao autoriza preparacao operacional concreta.
+- operationalPreparationPrerequisitesDefined=true nao autoriza execucao.
+- operationalPreparationPrerequisitesDefined=true nao autoriza rollback real.
+- operationalPreparationPrerequisitesDefined=true nao autoriza evidencia operacional real.
+- operationalPreparationPrerequisitesDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- operationalPreparationPrerequisitesDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- operationalPreparationPrerequisitesDefined=true nao autoriza abrir tenant DB real.
+- operationalPreparationPrerequisitesDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 10. Interpretacao obrigatoria
 
 Registrar que abrir a Fase S nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Criterio de avanco da Fase S
+## 11. Criterio de avanco da Fase S
 
 Registrar que a Fase S so podera avancar documentalmente quando forem definidos:
 
-- pre-condicoes;
 - rollback;
 - evidencias;
 - checklist;
 - interpretacao obrigatoria.
 
-Registrar que a autorizacao documental e o escopo operacional preparatorio ja foram definidos neste microcorte, mas pre-condicoes, rollback, evidencias e checklist permanecem pendentes.
+Registrar que a autorizacao documental, o escopo operacional preparatorio e as pre-condicoes operacionais preparatorias ja foram definidos neste microcorte, mas rollback, evidencias e checklist permanecem pendentes.
 
 Registrar que mesmo um contrato completo da Fase S nao autoriza execucao e nao autoriza preparacao operacional concreta sem fase posterior propria.
