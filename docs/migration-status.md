@@ -916,6 +916,56 @@ Checkpoint tenant enforcement atual:
 - Interpretacao: abertura da Fase R nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
 
+- Fase R encerrada documentalmente.
+- Commit de encerramento: 372b1e1 docs(tenant): encerra fase r.
+- Documento canonico: docs/tenant-phase-r-manual-preparation-contract.md
+- Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional, nao executiva e nao autorizativa concretamente por padrao.
+- Resultado: contrato de preparacao manual controlada sintetica encerrado documentalmente.
+- Conteudo concluido:
+	- abertura do contrato de preparacao manual controlada sintetica;
+	- definicao do escopo de preparacao manual;
+	- definicao das entradas documentais;
+	- definicao do rollback preparatorio documental;
+	- definicao das evidencias documentais;
+	- aplicacao do checklist documental;
+	- encerramento documental do contrato canonico.
+- Gates finais:
+	- manualPreparationContractOpened=true;
+	- manualPreparationScopeDefined=true;
+	- manualPreparationInputsDefined=true;
+	- manualPreparationRollbackDefined=true;
+	- manualPreparationEvidenceDefined=true;
+	- manualPreparationChecklistApplied=true;
+	- preparationStillForbidden=true;
+	- executionStillForbidden=true;
+	- operationalSurfaceStillForbidden=true;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- fallbackRequired=true;
+	- blockedReasons=[].
+- Interpretacao obrigatoria:
+	- encerramento da Fase R nao concede autorizacao concreta;
+	- encerramento da Fase R nao autoriza preparacao operacional concreta;
+	- encerramento da Fase R nao autoriza execucao;
+	- encerramento da Fase R nao autoriza rollback real;
+	- encerramento da Fase R nao autoriza evidencia operacional real;
+	- encerramento da Fase R nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path;
+	- encerramento da Fase R nao autoriza alterar registry real, allowlist real ou roteamento;
+	- encerramento da Fase R nao autoriza abrir tenant DB real;
+	- encerramento da Fase R nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- encerramento da Fase R nao abre fase posterior automaticamente.
+- Validacao: baseline curta pos-encerramento verde.
+	- tests: 136;
+	- suites: 14;
+	- pass: 136;
+	- fail: 0;
+	- cancelled: 0;
+	- skipped: 0;
+	- todo: 0;
+	- duration_ms: 5355.1432.
+- Fechamento/publicacao: antes de push, obrigatorio rodar npm test completo.
+- Push: pendente ate validacao completa final e autorizacao explicita do usuario.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
