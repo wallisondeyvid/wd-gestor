@@ -88,7 +88,7 @@ Criar gates iniciais conservadores:
 - riskMatrixDefined=false
 - riskCategoriesDefined=true
 - riskSeverityDefined=true
-- mitigationPlanDefined=false
+- mitigationPlanDefined=true
 - authorizationStillForbidden=true
 - executionStillForbidden=true
 - operationalSurfaceStillForbidden=true
@@ -103,7 +103,7 @@ Explicar:
 - riskMatrixDefined=false porque a matriz de riscos ainda nao foi definida.
 - riskCategoriesDefined=true porque as categorias documentais de risco passaram a ser definidas neste microcorte.
 - riskSeverityDefined=true porque severidade e probabilidade documentais passaram a ser definidas neste microcorte.
-- mitigationPlanDefined=false porque o plano de mitigacao ainda nao foi definido.
+- mitigationPlanDefined=true porque as mitigacoes documentais preventivas passaram a ser definidas neste microcorte.
 - authorizationStillForbidden=true porque a Fase O nao autoriza execucao nem preparacao operacional concreta.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
 - operationalSurfaceStillForbidden=true porque nenhuma superficie operacional pode ser criada.
@@ -346,7 +346,140 @@ Interpretacao obrigatoria:
 - riskSeverityDefined=true nao autoriza abrir tenant DB real.
 - riskSeverityDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 9. Superficies proibidas
+## 9. Mitigacoes documentais preventivas
+
+Registrar que as mitigacoes da Fase O sao documentais e preventivas. Elas nao autorizam execucao, nao substituem rollback real, nao substituem evidencia operacional real, nao autorizam preparacao operacional concreta e nao permitem criacao de superficie operacional.
+
+### 9.1 Mitigacao contra autorizacao implicita
+
+Registrar mitigacoes:
+
+- toda fase deve declarar explicitamente se autoriza ou nao autoriza execucao;
+- todo gate documental deve ter interpretacao obrigatoria;
+- baseline verde nao pode ser tratada como autorizacao;
+- ausencia de blockedReasons nao pode ser tratada como autorizacao;
+- conclusao de fase anterior nao pode abrir fase posterior automaticamente;
+- `executionContractReady=true` da Fase N permanece apenas contrato documental;
+- qualquer execucao futura exigiria fase propria, autorizacao propria, rollback proprio, evidencias proprias e gates proprios.
+
+### 9.2 Mitigacao contra materializacao do candidato sintetico
+
+Registrar mitigacoes:
+
+- identificadores sinteticos permanecem restritos a documentacao e testes controlados existentes;
+- e proibido copiar candidato sintetico para src, scripts, package.json, rotas, jobs, bootstrap ou request path;
+- allowlist real nao pode ser criada nesta fase;
+- tenant DB real nao pode ser aberto nesta fase;
+- dados descartaveis nao podem ser tratados como dados reais;
+- qualquer uso operacional futuro exigiria contrato proprio e autorizacao propria.
+
+### 9.3 Mitigacao contra superficie operacional acidental
+
+Registrar mitigacoes:
+
+- microcortes da Fase O so podem alterar documentacao explicitamente permitida;
+- qualquer alteracao em caller real, rota, CLI, script, job, bootstrap ou request path deve bloquear o avanco;
+- package.json nao pode receber comandos ligados a Fase O;
+- Portal, autenticacao e API real permanecem fora do escopo;
+- qualquer superficie operacional detectada deve ser revertida antes de prosseguir.
+
+### 9.4 Mitigacao contra alteracao indevida de registry, allowlist e roteamento
+
+Registrar mitigacoes:
+
+- registry real permanece intocado;
+- allowlist real permanece intocada;
+- cache/preload/readers/writers permanecem fora do escopo;
+- roteamento permanece inalterado;
+- fallback para `baseConnection` permanece obrigatorio;
+- qualquer enfraquecimento de fallback bloqueia o avanco;
+- nenhuma resolucao tenant-aware nova pode ser criada nesta fase.
+
+### 9.5 Mitigacao contra dados, trafego e usuarios reais
+
+Registrar mitigacoes:
+
+- Portal permanece proibido;
+- dados reais permanecem proibidos;
+- trafego real permanece proibido;
+- usuario real permanece proibido;
+- unidade real permanece proibida;
+- credenciais reais permanecem proibidas;
+- ambiente produtivo permanece proibido;
+- qualquer indicio de dado nao descartavel bloqueia o avanco.
+
+### 9.6 Mitigacao contra rollback insuficiente
+
+Registrar mitigacoes:
+
+- rollback documental nao pode ser tratado como rollback real;
+- qualquer execucao futura exigiria rollback proprio antes da execucao;
+- regra de interrupcao precisa existir antes de qualquer execucao futura;
+- estado seguro precisa ser definido antes de qualquer execucao futura;
+- rollback real nao pode ser executado nesta fase;
+- ausencia de rollback proprio bloqueia qualquer discussao operacional futura.
+
+### 9.7 Mitigacao contra evidencia insuficiente
+
+Registrar mitigacoes:
+
+- evidencia documental deve ser separada de evidencia operacional real;
+- baseline curta so valida microcorte documental;
+- quando houver fechamento global de fase, `npm test` completo deve ser exigido antes de push;
+- a tupla completa da suite final deve ser registrada no status global quando a fase for publicada;
+- log solto nao deve ser tratado como evidencia suficiente;
+- evidencia antes, durante e depois deve ser distinguida em qualquer fase futura que autorize operacao.
+
+### 9.8 Mitigacao contra PostgreSQL fora de hora
+
+Registrar mitigacoes:
+
+- PostgreSQL permanece fora do escopo da Fase O;
+- migracao multi-tenant atual continua em MongoDB;
+- nenhuma abstracao deve ser alterada agora por causa de PostgreSQL futuro;
+- qualquer mencao a PostgreSQL deve ser tratada como risco bloqueante se induzir alteracao funcional;
+- PostgreSQL so podera voltar em fase propria futura, explicitamente aberta.
+
+### 9.9 Mitigacao contra alteracao oportunista
+
+Registrar mitigacoes:
+
+- microcorte documental nao pode virar refatoracao;
+- alteracoes em codigo, testes, scripts, package.json, rotas ou arquivos sensiveis bloqueiam avanco;
+- fase posterior nao pode ser aberta automaticamente;
+- push so pode ocorrer no fechamento global da fase, apos validacao completa e autorizacao explicita;
+- qualquer alteracao fora do arquivo permitido deve ser revertida antes do commit.
+
+### 9.10 Resultado das mitigacoes
+
+Registrar:
+
+- mitigationPlanDefined=true;
+- riskSeverityDefined permanece true;
+- riskCategoriesDefined permanece true;
+- riskMatrixOpened permanece true;
+- riskMatrixDefined permanece false;
+- authorizationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- mitigationPlanDefined=true significa apenas que mitigacoes documentais preventivas foram definidas.
+- mitigationPlanDefined=true nao autoriza execucao.
+- mitigationPlanDefined=true nao autoriza preparacao operacional concreta.
+- mitigationPlanDefined=true nao autoriza coleta de evidencia operacional real.
+- mitigationPlanDefined=true nao autoriza rollback real.
+- mitigationPlanDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- mitigationPlanDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- mitigationPlanDefined=true nao autoriza abrir tenant DB real.
+- mitigationPlanDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 10. Superficies proibidas
 
 Registrar que permanecem proibidos nesta fase:
 
@@ -373,7 +506,7 @@ Registrar que permanecem proibidos nesta fase:
 - PostgreSQL;
 - qualquer alteracao funcional oportunista.
 
-## 10. Criterio de avanco da Fase O
+## 11. Criterio de avanco da Fase O
 
 Registrar que a Fase O so podera avancar quando a matriz documental de riscos estiver completa, incluindo:
 
@@ -388,7 +521,7 @@ Registrar que a Fase O so podera avancar quando a matriz documental de riscos es
 
 Registrar que mesmo uma matriz completa nao autoriza execucao.
 
-## 11. Interpretacao obrigatoria
+## 12. Interpretacao obrigatoria
 
 Registrar:
 
