@@ -128,7 +128,7 @@ Criar gates iniciais conservadores:
 - executionContractReady: false
 - executionScopeDefined: true
 - authorizationGatesDefined: true
-- rollbackDefined: false
+- rollbackDefined: true
 - evidencePlanDefined: false
 - candidateStillSynthetic: true
 - nonOperationalPreserved: true
@@ -142,7 +142,7 @@ Explicar:
 - executionContractReady=false porque a Fase N acabou de ser aberta.
 - executionScopeDefined=true porque o escopo maximo permitido foi definido documentalmente neste microcorte.
 - authorizationGatesDefined=true porque os gates documentais de autorizacao foram definidos neste microcorte.
-- rollbackDefined=false porque o rollback especifico da execucao ainda sera definido.
+- rollbackDefined=true porque o rollback documental da execucao foi definido neste microcorte.
 - evidencePlanDefined=false porque o plano de evidencias ainda sera definido.
 - executionStillForbidden=true porque a Fase N nao autoriza execucao neste momento.
 - blockedReasons=[] porque nao ha bloqueio documental inicial, apenas ausencia de contrato completo.
@@ -316,7 +316,91 @@ Interpretacao obrigatoria:
 - authorizationGatesDefined=true nao autoriza abrir tenant DB real nesta fase.
 - authorizationGatesDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Interpretacao obrigatoria
+## 11. Plano documental de rollback da execucao manual controlada
+
+Registrar que o rollback da Fase N e documental, preventivo e nao operacional.
+
+### 11.1 Premissa do rollback
+
+Registrar:
+
+- A Fase N nao executa rollback real.
+- A Fase N nao cria comando de rollback.
+- A Fase N nao cria script de rollback.
+- A Fase N nao altera registry real para permitir rollback.
+- A Fase N nao altera allowlist real para permitir rollback.
+- A Fase N nao abre tenant DB real para testar rollback.
+- A Fase N apenas define quais garantias de rollback deveriam existir antes de qualquer execucao futura.
+
+### 11.2 Estado seguro esperado
+
+Registrar que o estado seguro esperado antes, durante e depois de qualquer fase posterior deve ser:
+
+- fallback para `baseConnection` preservado;
+- ausencia de alteracao em registry real durante a Fase N;
+- ausencia de alteracao em allowlist real durante a Fase N;
+- ausencia de tenant DB real aberto durante a Fase N;
+- ausencia de mudanca de roteamento durante a Fase N;
+- ausencia de caller real durante a Fase N;
+- ausencia de rota, CLI, script, job, bootstrap ou request path durante a Fase N;
+- ausencia de Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+### 11.3 Gatilhos de bloqueio e rollback futuro
+
+Registrar que uma fase posterior devera bloquear ou reverter para estado seguro se ocorrer qualquer uma das condicoes abaixo:
+
+- falha de gate obrigatorio;
+- ambiguidade sobre unidade, usuario, dados ou trafego;
+- tentativa de envolver Portal;
+- tentativa de envolver dado real;
+- tentativa de envolver trafego real;
+- tentativa de envolver usuario real;
+- tentativa de envolver unidade real;
+- tentativa de envolver PostgreSQL;
+- falha de fallback para `baseConnection`;
+- tentativa de alterar registry real fora de autorizacao explicita;
+- tentativa de alterar allowlist real fora de autorizacao explicita;
+- tentativa de abrir tenant DB real fora de autorizacao explicita;
+- tentativa de mudar roteamento fora de autorizacao explicita;
+- tentativa de criar caller real, rota, CLI, script, job, bootstrap ou request path fora de autorizacao explicita;
+- falha de baseline curta;
+- falha de `npm test` completo quando exigido.
+
+### 11.4 Acao segura padrao
+
+Registrar:
+
+- A acao segura padrao e nao executar.
+- Se algo estiver ambiguo, nao executar.
+- Se algum gate falhar, nao executar.
+- Se algum artefato operacional aparecer fora de autorizacao explicita, bloquear.
+- Se execucao futura chegar a ser autorizada em outra fase, rollback devera priorizar retorno ao fallback para `baseConnection`.
+- Nenhum rollback futuro pode depender de Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+### 11.5 Resultado do rollback
+
+Registrar:
+
+- rollbackDefined=true;
+- executionScopeDefined permanece true;
+- authorizationGatesDefined permanece true;
+- executionContractReady permanece false;
+- evidencePlanDefined permanece false;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- rollbackDefined=true significa apenas que o rollback documental foi definido.
+- rollbackDefined=true nao autoriza execucao.
+- rollbackDefined=true nao autoriza execucao de rollback real.
+- rollbackDefined=true nao autoriza preparacao operacional concreta.
+- rollbackDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- rollbackDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- rollbackDefined=true nao autoriza abrir tenant DB real nesta fase.
+- rollbackDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 12. Interpretacao obrigatoria
 
 Registrar:
 
