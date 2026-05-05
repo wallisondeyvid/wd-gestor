@@ -86,7 +86,7 @@ Criar gates iniciais conservadores:
 
 - riskMatrixOpened=true
 - riskMatrixDefined=false
-- riskCategoriesDefined=false
+- riskCategoriesDefined=true
 - riskSeverityDefined=false
 - mitigationPlanDefined=false
 - authorizationStillForbidden=true
@@ -101,7 +101,7 @@ Explicar:
 
 - riskMatrixOpened=true porque a Fase O foi aberta documentalmente.
 - riskMatrixDefined=false porque a matriz de riscos ainda nao foi definida.
-- riskCategoriesDefined=false porque as categorias de risco ainda nao foram detalhadas.
+- riskCategoriesDefined=true porque as categorias documentais de risco passaram a ser definidas neste microcorte.
 - riskSeverityDefined=false porque severidade/probabilidade ainda nao foram definidas.
 - mitigationPlanDefined=false porque o plano de mitigacao ainda nao foi definido.
 - authorizationStillForbidden=true porque a Fase O nao autoriza execucao nem preparacao operacional concreta.
@@ -112,7 +112,147 @@ Explicar:
 - fallbackRequired=true porque fallback para `baseConnection` permanece obrigatorio.
 - blockedReasons=[] porque nao ha bloqueio documental inicial; ha apenas ausencia da matriz completa.
 
-## 7. Superficies proibidas
+## 7. Categorias documentais de risco
+
+Registrar que as categorias de risco da Fase O sao documentais e preventivas. Elas nao autorizam execucao, nao substituem gates, nao substituem rollback, nao substituem evidencias e nao permitem criar superficie operacional.
+
+### 7.1 Risco de autorizacao implicita
+
+Registrar riscos relacionados a:
+
+- interpretar documento como autorizacao;
+- interpretar matriz de risco como autorizacao;
+- interpretar baseline verde como autorizacao;
+- interpretar ausencia de bloqueio documental como autorizacao;
+- interpretar conclusao de fase anterior como autorizacao;
+- interpretar `executionContractReady=true` da Fase N como autorizacao.
+
+### 7.2 Risco de materializar candidato sintetico
+
+Registrar riscos relacionados a:
+
+- transformar candidato sintetico em operacao real;
+- copiar identificadores sinteticos para codigo de producao;
+- usar unidade sintetica fora de documentacao/testes controlados;
+- criar allowlist real para candidato sintetico sem fase propria;
+- abrir tenant DB real para candidato sintetico;
+- confundir dados descartaveis com dados reais.
+
+### 7.3 Risco de superficie operacional acidental
+
+Registrar riscos relacionados a criar ou alterar:
+
+- caller real;
+- rota;
+- CLI;
+- script;
+- job;
+- bootstrap;
+- request path;
+- package.json;
+- integracao com Portal;
+- caminho de autenticacao;
+- caminho de API real.
+
+### 7.4 Risco de registry, allowlist e roteamento
+
+Registrar riscos relacionados a:
+
+- alterar registry real;
+- alterar allowlist real;
+- alterar cache/preload/readers/writers;
+- mudar roteamento;
+- remover ou enfraquecer fallback para `baseConnection`;
+- criar resolucao tenant-aware fora de contrato proprio;
+- ativar unidade por ambiguidade.
+
+### 7.5 Risco de dados, trafego e usuarios reais
+
+Registrar riscos relacionados a envolver:
+
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- credenciais reais;
+- tenant real;
+- ambiente produtivo;
+- auditoria baseada em dados nao descartaveis.
+
+### 7.6 Risco de rollback insuficiente
+
+Registrar riscos relacionados a:
+
+- discutir execucao sem rollback proprio;
+- executar sem regra de interrupcao;
+- executar sem plano de reversao;
+- executar sem criterio de estado seguro;
+- tratar rollback documental como rollback real;
+- executar rollback real sem autorizacao propria.
+
+### 7.7 Risco de evidencia insuficiente
+
+Registrar riscos relacionados a:
+
+- aceitar evidencia documental como evidencia operacional real;
+- aceitar log solto como evidencia suficiente;
+- aceitar baseline curta como validacao completa;
+- avancar sem `npm test` completo quando exigido;
+- nao registrar a tupla completa da suite final quando publicar fase;
+- nao diferenciar evidencia antes, durante e depois.
+
+### 7.8 Risco de PostgreSQL fora de hora
+
+Registrar riscos relacionados a:
+
+- envolver PostgreSQL antes da fase propria;
+- misturar migracao multi-tenant MongoDB com migracao de banco;
+- criar abstracao pensando em PostgreSQL agora;
+- alterar contratos por causa de uma migracao futura ainda fora do escopo.
+
+### 7.9 Risco de alteracao oportunista
+
+Registrar riscos relacionados a:
+
+- aproveitar microcorte documental para alterar codigo;
+- alterar testes sem necessidade;
+- mudar contratos existentes fora do escopo;
+- refatorar arquivos sensiveis;
+- alterar scripts, package.json ou rotas;
+- abrir fase posterior automaticamente;
+- fazer push antes de fechamento global e autorizacao explicita.
+
+### 7.10 Resultado das categorias
+
+Registrar:
+
+- riskCategoriesDefined=true;
+- riskMatrixOpened permanece true;
+- riskMatrixDefined permanece false;
+- riskSeverityDefined permanece false;
+- mitigationPlanDefined permanece false;
+- authorizationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- riskCategoriesDefined=true significa apenas que as categorias documentais de risco foram definidas.
+- riskCategoriesDefined=true nao autoriza execucao.
+- riskCategoriesDefined=true nao autoriza preparacao operacional concreta.
+- riskCategoriesDefined=true nao autoriza coleta de evidencia operacional real.
+- riskCategoriesDefined=true nao autoriza rollback real.
+- riskCategoriesDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- riskCategoriesDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- riskCategoriesDefined=true nao autoriza abrir tenant DB real.
+- riskCategoriesDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 8. Superficies proibidas
 
 Registrar que permanecem proibidos nesta fase:
 
@@ -139,7 +279,7 @@ Registrar que permanecem proibidos nesta fase:
 - PostgreSQL;
 - qualquer alteracao funcional oportunista.
 
-## 8. Criterio de avanco da Fase O
+## 9. Criterio de avanco da Fase O
 
 Registrar que a Fase O so podera avancar quando a matriz documental de riscos estiver completa, incluindo:
 
@@ -154,7 +294,7 @@ Registrar que a Fase O so podera avancar quando a matriz documental de riscos es
 
 Registrar que mesmo uma matriz completa nao autoriza execucao.
 
-## 9. Interpretacao obrigatoria
+## 10. Interpretacao obrigatoria
 
 Registrar:
 
