@@ -918,6 +918,7 @@ Checkpoint tenant enforcement atual:
 
 - Fase R encerrada documentalmente.
 - Commit de encerramento: 372b1e1 docs(tenant): encerra fase r.
+- Commit de validacao final: 29f0b0b docs(tenant): completa validacao final da fase r.
 - Documento canonico: docs/tenant-phase-r-manual-preparation-contract.md
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional, nao executiva e nao autorizativa concretamente por padrao.
 - Resultado: contrato de preparacao manual controlada sintetica encerrado documentalmente.
