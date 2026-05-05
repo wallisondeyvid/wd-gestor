@@ -1086,9 +1086,31 @@ Checkpoint tenant enforcement atual:
 		- Fase T encerrada documentalmente.
 		- Documento canonico: docs/tenant-phase-t-explicit-operational-preparation-authorization-contract.md
 		- Commit de encerramento no contrato canonico: f6dbce3 docs(tenant): encerra fase t
-		- Commit de registro do encerramento: pendente
-		- Validacao final completa: pendente
-		- Push: pendente
+		- Commit de registro do encerramento: 2fd40d1 docs(tenant): registra encerramento da fase t no status
+		- Validacao final completa:
+			- comando: npm test
+			- tests: 2203
+			- suites: 17
+			- pass: 2201
+			- fail: 0
+			- cancelled: 0
+			- skipped: 2
+			- todo: 0
+			- duration_ms: 236196.7333
+		- Ordem da validacao: executada apos o encerramento documental no contrato canonico e apos o registro do encerramento no migration-status.md.
+		- Interpretacao da validacao completa verde:
+			- a validacao completa verde nao concede autorizacao concreta.
+			- a validacao completa verde nao autoriza preparacao operacional concreta.
+			- a validacao completa verde nao autoriza execucao.
+			- a validacao completa verde nao autoriza rollback real.
+			- a validacao completa verde nao autoriza coleta de evidencia operacional real.
+			- a validacao completa verde nao autoriza criacao de superficie operacional.
+			- a validacao completa verde nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path.
+			- a validacao completa verde nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real.
+			- a validacao completa verde nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+			- a validacao completa verde nao abre Fase U automaticamente.
+			- a validacao completa verde nao autoriza push por si so.
+		- Push: pendente ate auditoria pre-publicacao e autorizacao explicita do usuario.
 		- Gates finais:
 			- explicitOperationalPreparationAuthorizationContractOpened=true
 			- explicitOperationalPreparationAuthorizationDefined=true
