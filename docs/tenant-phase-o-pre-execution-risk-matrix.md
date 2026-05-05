@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -692,3 +692,55 @@ Registrar:
 - Abrir a Fase O nao autoriza mudar roteamento.
 - Abrir a Fase O nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - Abrir a Fase O nao abre fase posterior automaticamente.
+
+## 15. Encerramento documental da Fase O
+
+Registrar que a Fase O foi encerrada documentalmente apos:
+
+- abertura do documento canonico;
+- definicao das categorias documentais de risco;
+- definicao de severidade e probabilidade documentais;
+- definicao de mitigacoes documentais preventivas;
+- consolidacao da matriz documental de riscos;
+- aplicacao do checklist documental.
+
+Registrar o resultado final:
+
+- riskMatrixOpened=true;
+- riskMatrixDefined=true;
+- riskCategoriesDefined=true;
+- riskSeverityDefined=true;
+- mitigationPlanDefined=true;
+- checklistApplied=true;
+- authorizationStillForbidden=true;
+- executionStillForbidden=true;
+- operationalSurfaceStillForbidden=true;
+- candidateStillSynthetic=true;
+- nonOperationalPreserved=true;
+- fallbackRequired=true;
+- blockedReasons=[].
+
+Registrar a interpretacao obrigatoria:
+
+- Encerrar a Fase O nao autoriza execucao.
+- Encerrar a Fase O nao autoriza preparacao operacional concreta.
+- Encerrar a Fase O nao autoriza coleta de evidencia operacional real.
+- Encerrar a Fase O nao autoriza rollback real.
+- Encerrar a Fase O nao autoriza criar comando.
+- Encerrar a Fase O nao autoriza criar script.
+- Encerrar a Fase O nao autoriza criar caller real.
+- Encerrar a Fase O nao autoriza criar rota, CLI, job, bootstrap ou request path.
+- Encerrar a Fase O nao autoriza alterar registry real.
+- Encerrar a Fase O nao autoriza alterar allowlist real.
+- Encerrar a Fase O nao autoriza abrir tenant DB real.
+- Encerrar a Fase O nao autoriza mudar roteamento.
+- Encerrar a Fase O nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Encerrar a Fase O nao abre fase posterior automaticamente.
+- Encerrar a Fase O nao equivale a autorizacao preparatoria de execucao manual controlada.
+- Encerrar a Fase O apenas conclui a matriz documental de riscos pre-execucao.
+
+Registrar tambem:
+
+- A proxima fase, se houver, devera ser aberta explicitamente em microcorte proprio.
+- Qualquer fase posterior ainda devera preservar rollback proprio, autorizacao propria, evidencias proprias, gates proprios e validacao propria.
+- Push permanece proibido ate atualizacao do status global, validacao completa final e autorizacao explicita.
