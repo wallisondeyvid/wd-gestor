@@ -60,7 +60,7 @@ Registrar:
 - preparationScopeDefined=true
 - preparationRollbackDefined=true
 - preparationEvidenceDefined=true
-- preparationChecklistApplied=false
+- preparationChecklistApplied=true
 - preparationStillForbidden=true
 - executionStillForbidden=true
 - operationalSurfaceStillForbidden=true
@@ -76,7 +76,7 @@ Explicar:
 - preparationScopeDefined=true porque o escopo preparatorio autorizavel e os limites preparatorios nao autorizaveis foram definidos documentalmente neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - preparationRollbackDefined=true porque o rollback preparatorio documental foi definido neste microcorte, sem executar rollback real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - preparationEvidenceDefined=true porque as evidencias preparatorias documentais foram definidas neste microcorte, sem coletar evidencia operacional real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
-- preparationChecklistApplied=false porque o checklist preparatorio ainda nao foi aplicado nesta abertura.
+- preparationChecklistApplied=true porque o checklist documental da Fase Q foi aplicado neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta e sem autorizar execucao.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
 - operationalSurfaceStillForbidden=true porque nenhuma superficie operacional pode ser criada nesta fase.
@@ -147,7 +147,7 @@ Registrar:
 - preparationScopeDefined permanece true;
 - preparationRollbackDefined permanece true;
 - preparationEvidenceDefined permanece true;
-- preparationChecklistApplied permanece false;
+- preparationChecklistApplied permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -243,7 +243,7 @@ Registrar:
 - preparationAuthorizationContractOpened permanece true;
 - preparationRollbackDefined permanece true;
 - preparationEvidenceDefined permanece true;
-- preparationChecklistApplied permanece false;
+- preparationChecklistApplied permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -324,7 +324,7 @@ Registrar:
 - preparationAuthorizationDefined permanece true;
 - preparationAuthorizationContractOpened permanece true;
 - preparationEvidenceDefined permanece true;
-- preparationChecklistApplied permanece false;
+- preparationChecklistApplied permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -411,7 +411,7 @@ Registrar:
 - preparationScopeDefined permanece true;
 - preparationAuthorizationDefined permanece true;
 - preparationAuthorizationContractOpened permanece true;
-- preparationChecklistApplied permanece false;
+- preparationChecklistApplied permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -433,7 +433,113 @@ Interpretacao obrigatoria:
 - preparationEvidenceDefined=true nao autoriza abrir tenant DB real.
 - preparationEvidenceDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Interpretacao obrigatoria
+## 11. Checklist documental da Fase Q
+
+Registrar que a Fase Q aplica, neste microcorte, o checklist documental do contrato de autorizacao preparatoria manual controlada sintetica.
+
+Registrar que aplicar checklist nao concede autorizacao concreta, nao autoriza preparacao operacional concreta e nao autoriza execucao.
+
+### 11.1 Checklist de contrato documental
+
+- [x] Contrato da Fase Q aberto.
+- [x] Autorizacao preparatoria documental definida.
+- [x] Escopo preparatorio documental definido.
+- [x] Limites preparatorios nao autorizaveis definidos.
+- [x] Rollback preparatorio documental definido.
+- [x] Evidencias preparatorias documentais definidas.
+- [x] Candidato sintetico preservado.
+- [x] Preparacao operacional concreta continua proibida.
+- [x] Execucao continua proibida.
+- [x] Superficie operacional continua proibida.
+- [x] Portal continua proibido.
+- [x] Dados reais continuam proibidos.
+- [x] Trafego real continua proibido.
+- [x] Usuario real continua proibido.
+- [x] Unidade real continua proibida.
+- [x] PostgreSQL continua proibido.
+- [x] Tenant DB real continua proibido.
+- [x] Registry real continua proibido.
+- [x] Allowlist real continua proibida.
+- [x] Roteamento real continua proibido.
+- [x] Caller real, rota, CLI, script, job, bootstrap e request path continuam proibidos.
+
+### 11.2 Checklist de gates
+
+- [x] preparationAuthorizationContractOpened=true.
+- [x] preparationAuthorizationDefined=true.
+- [x] preparationScopeDefined=true.
+- [x] preparationRollbackDefined=true.
+- [x] preparationEvidenceDefined=true.
+- [x] preparationChecklistApplied=true.
+- [x] preparationStillForbidden=true.
+- [x] executionStillForbidden=true.
+- [x] operationalSurfaceStillForbidden=true.
+- [x] candidateStillSynthetic=true.
+- [x] nonOperationalPreserved=true.
+- [x] fallbackRequired=true.
+- [x] blockedReasons=[].
+
+### 11.3 Bloqueios preservados
+
+Registrar que o checklist preserva os bloqueios:
+
+- nao autoriza preparacao operacional concreta;
+- nao autoriza execucao;
+- nao autoriza rollback real;
+- nao autoriza evidencia operacional real;
+- nao autoriza comando executavel;
+- nao autoriza script;
+- nao autoriza caller real;
+- nao autoriza rota;
+- nao autoriza CLI;
+- nao autoriza job;
+- nao autoriza bootstrap;
+- nao autoriza request path;
+- nao autoriza registry real;
+- nao autoriza allowlist real;
+- nao autoriza roteamento real;
+- nao autoriza tenant DB real;
+- nao autoriza Portal;
+- nao autoriza dados reais;
+- nao autoriza trafego real;
+- nao autoriza usuario real;
+- nao autoriza unidade real;
+- nao autoriza PostgreSQL.
+
+### 11.4 Resultado da aplicacao do checklist
+
+Registrar:
+
+- preparationChecklistApplied=true;
+- preparationEvidenceDefined permanece true;
+- preparationRollbackDefined permanece true;
+- preparationScopeDefined permanece true;
+- preparationAuthorizationDefined permanece true;
+- preparationAuthorizationContractOpened permanece true;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- preparationChecklistApplied=true significa apenas que o checklist documental da Fase Q foi aplicado.
+- preparationChecklistApplied=true nao significa que autorizacao preparatoria concreta foi concedida.
+- preparationChecklistApplied=true nao autoriza preparacao operacional concreta.
+- preparationChecklistApplied=true nao autoriza execucao.
+- preparationChecklistApplied=true nao autoriza rollback real.
+- preparationChecklistApplied=true nao autoriza evidencia operacional real.
+- preparationChecklistApplied=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- preparationChecklistApplied=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- preparationChecklistApplied=true nao autoriza abrir tenant DB real.
+- preparationChecklistApplied=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- preparationChecklistApplied=true nao encerra a Fase Q automaticamente.
+- preparationChecklistApplied=true nao abre fase posterior automaticamente.
+
+## 12. Interpretacao obrigatoria
 
 Registrar:
 
@@ -447,7 +553,7 @@ Registrar:
 - preparationAuthorizationContractOpened=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - preparationAuthorizationContractOpened=true nao abre fase posterior automaticamente.
 
-## 12. Criterio de avanco da Fase Q
+## 13. Criterio de avanco da Fase Q
 
 Registrar que a Fase Q so podera avancar documentalmente quando forem definidos:
 
