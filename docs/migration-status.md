@@ -654,6 +654,26 @@ Checkpoint tenant enforcement atual:
 - Fechamento global/publicacao: antes de push, recomenda-se rodar `npm test` completo.
 - Push: pendente; nao realizar push ate validacao completa final, status consolidado e autorizacao explicita do usuario.
 
+- Fase N aberta documentalmente nesta rodada.
+- Documento canonico: [docs/tenant-phase-n-controlled-manual-execution-contract.md](docs/tenant-phase-n-controlled-manual-execution-contract.md)
+- Natureza: documental, contratual, nao produtiva, sintetica e nao operacional.
+- Origem: Fase M encerrada e publicada em f40ad35.
+- Objetivo: definir contrato de execucao manual controlada, sem executar.
+- Gates iniciais:
+	- executionContractReady=false;
+	- executionScopeDefined=false;
+	- authorizationGatesDefined=false;
+	- rollbackDefined=false;
+	- evidencePlanDefined=false;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- noOperationalSurfaceCreated=true;
+	- fallbackRequired=true;
+	- executionStillForbidden=true;
+	- blockedReasons=[].
+- Interpretacao: abertura da Fase N nao autoriza execucao, preparacao operacional concreta, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
