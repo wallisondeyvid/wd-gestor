@@ -698,6 +698,27 @@ Checkpoint tenant enforcement atual:
 - Fechamento/publicacao: antes de push, ainda e obrigatorio rodar `npm test` completo.
 - Push: pendente ate validacao completa final e autorizacao explicita do usuario.
 
+- Fase O aberta documentalmente nesta rodada.
+- Documento canonico: [docs/tenant-phase-o-pre-execution-risk-matrix.md](docs/tenant-phase-o-pre-execution-risk-matrix.md)
+- Natureza: documental, preventiva, nao produtiva, sintetica e nao operacional.
+- Origem: posterior a Fase N encerrada, publicada e auditada.
+- Objetivo: definir matriz de riscos pre-execucao antes de qualquer autorizacao preparatoria.
+- Gates iniciais:
+	- riskMatrixOpened=true;
+	- riskMatrixDefined=false;
+	- riskCategoriesDefined=false;
+	- riskSeverityDefined=false;
+	- mitigationPlanDefined=false;
+	- authorizationStillForbidden=true;
+	- executionStillForbidden=true;
+	- operationalSurfaceStillForbidden=true;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- fallbackRequired=true;
+	- blockedReasons=[].
+- Interpretacao: abertura da Fase O nao autoriza execucao, preparacao operacional concreta, evidencia operacional real, rollback real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
