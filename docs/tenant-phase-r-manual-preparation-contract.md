@@ -61,7 +61,7 @@ Registrar explicitamente que permanecem fora de escopo:
 Registrar:
 
 - manualPreparationContractOpened=true
-- manualPreparationScopeDefined=false
+- manualPreparationScopeDefined=true
 - manualPreparationInputsDefined=false
 - manualPreparationRollbackDefined=false
 - manualPreparationEvidenceDefined=false
@@ -77,7 +77,7 @@ Registrar:
 Explicar:
 
 - manualPreparationContractOpened=true porque a Fase R foi aberta documentalmente e o contrato de preparacao manual controlada sintetica passa a existir apenas como artefato de referencia.
-- manualPreparationScopeDefined=false porque o escopo de preparacao manual ainda nao foi definido documentalmente nesta abertura.
+- manualPreparationScopeDefined=true porque o escopo de preparacao manual controlada sintetica foi definido documentalmente neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationInputsDefined=false porque as entradas documentais necessarias para eventual preparacao manual ainda nao foram definidas nesta abertura.
 - manualPreparationRollbackDefined=false porque o rollback preparatorio documental ainda nao foi definido nesta abertura.
 - manualPreparationEvidenceDefined=false porque as evidencias documentais de preparacao ainda nao foram definidas nesta abertura.
@@ -102,11 +102,101 @@ Registrar:
 
 Registrar que esse candidato nao representa unidade real, usuario real, dado real, trafego real, Portal ou tenant DB real aberto.
 
-## 8. Interpretacao obrigatoria
+## 8. Escopo de preparacao manual documental
+
+Registrar que a Fase R define, neste microcorte, o escopo documental da preparacao manual controlada sintetica.
+
+Registrar que definir escopo de preparacao nao concede autorizacao concreta, nao autoriza preparacao operacional concreta e nao autoriza execucao.
+
+### 8.1 Escopo autorizavel documentalmente
+
+Registrar que a Fase R podera definir documentalmente, em microcortes futuros:
+
+- entradas documentais necessarias;
+- limites operacionais;
+- rollback preparatorio;
+- evidencias documentais;
+- checklist documental;
+- criterios de parada;
+- criterios de avanco;
+- interpretacao obrigatoria;
+- candidato sintetico herdado;
+- relacao com a autorizacao preparatoria da Fase Q;
+- plano textual de preparacao futura.
+
+### 8.2 Escopo nao autorizavel
+
+Registrar que permanecem fora de autorizacao:
+
+- preparacao operacional concreta;
+- execucao;
+- rollback real;
+- evidencia operacional real;
+- comando executavel;
+- script;
+- caller real;
+- rota;
+- CLI;
+- job;
+- bootstrap;
+- request path;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- alteracao de roteamento real;
+- abertura de tenant DB real;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- codigo produtivo;
+- testes;
+- package.json.
+
+### 8.3 Limite do escopo definido
+
+Registrar que manualPreparationScopeDefined=true significa apenas que o escopo documental da preparacao foi definido.
+
+Registrar que manualPreparationScopeDefined=true nao significa que preparacao concreta foi autorizada.
+
+Registrar que qualquer preparacao operacional concreta futura exigira fase propria, autorizacao propria, comando proprio aprovado, rollback proprio, evidencias proprias e validacao propria.
+
+### 8.4 Resultado da definicao de escopo
+
+Registrar:
+
+- manualPreparationScopeDefined=true;
+- manualPreparationContractOpened permanece true;
+- manualPreparationInputsDefined permanece false;
+- manualPreparationRollbackDefined permanece false;
+- manualPreparationEvidenceDefined permanece false;
+- manualPreparationChecklistApplied permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- manualPreparationScopeDefined=true significa apenas que o escopo documental da preparacao manual foi definido.
+- manualPreparationScopeDefined=true nao autoriza preparacao operacional concreta.
+- manualPreparationScopeDefined=true nao autoriza execucao.
+- manualPreparationScopeDefined=true nao autoriza rollback real.
+- manualPreparationScopeDefined=true nao autoriza evidencia operacional real.
+- manualPreparationScopeDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- manualPreparationScopeDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- manualPreparationScopeDefined=true nao autoriza abrir tenant DB real.
+- manualPreparationScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 9. Interpretacao obrigatoria
 
 Registrar que abrir a Fase R nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 9. Criterio de avanco da Fase R
+## 10. Criterio de avanco da Fase R
 
 Registrar que a Fase R so podera avancar documentalmente quando forem definidos:
 
