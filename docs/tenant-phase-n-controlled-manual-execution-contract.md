@@ -127,7 +127,7 @@ Criar gates iniciais conservadores:
 
 - executionContractReady: false
 - executionScopeDefined: true
-- authorizationGatesDefined: false
+- authorizationGatesDefined: true
 - rollbackDefined: false
 - evidencePlanDefined: false
 - candidateStillSynthetic: true
@@ -141,7 +141,7 @@ Explicar:
 
 - executionContractReady=false porque a Fase N acabou de ser aberta.
 - executionScopeDefined=true porque o escopo maximo permitido foi definido documentalmente neste microcorte.
-- authorizationGatesDefined=false porque os gates de autorizacao ainda serao definidos.
+- authorizationGatesDefined=true porque os gates documentais de autorizacao foram definidos neste microcorte.
 - rollbackDefined=false porque o rollback especifico da execucao ainda sera definido.
 - evidencePlanDefined=false porque o plano de evidencias ainda sera definido.
 - executionStillForbidden=true porque a Fase N nao autoriza execucao neste momento.
@@ -231,7 +231,92 @@ Interpretacao obrigatoria:
 - executionScopeDefined=true nao autoriza abrir tenant DB real nesta fase.
 - executionScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Interpretacao obrigatoria
+## 10. Gates de autorizacao da execucao manual controlada
+
+Registrar que os gates da Fase N sao documentais, preventivos e nao operacionais.
+
+### 10.1 Gates obrigatorios para qualquer execucao futura
+
+Registrar que uma fase posterior so podera discutir execucao manual controlada se todos os gates abaixo estiverem definidos e verdes:
+
+- candidato sintetico preservado;
+- ambiente nao produtivo confirmado;
+- dados descartaveis confirmados;
+- ausencia de trafego real confirmada;
+- ausencia de usuario real confirmada;
+- ausencia de unidade real confirmada;
+- ausencia de Portal confirmada;
+- allowlist unitaria e explicita definida;
+- fallback para `baseConnection` preservado;
+- rollback especifico definido antes;
+- plano de evidencias definido antes;
+- criterios de bloqueio definidos antes;
+- autorizacao explicita propria da fase posterior;
+- baseline curta verde antes de qualquer avanco;
+- `npm test` completo recomendado antes de qualquer publicacao de fase;
+- ausencia de caller real;
+- ausencia de rota, CLI, script, job, bootstrap ou request path;
+- ausencia de alteracao em registry real;
+- ausencia de alteracao em allowlist real;
+- ausencia de abertura de tenant DB real nesta fase;
+- ausencia de mudanca de roteamento;
+- PostgreSQL fora do escopo.
+
+### 10.2 Gates de bloqueio imediato
+
+Registrar que qualquer item abaixo bloqueia execucao futura:
+
+- ambiguidade sobre unidade, usuario, dados ou trafego;
+- necessidade de Portal;
+- necessidade de dado real;
+- necessidade de trafego real;
+- necessidade de usuario real;
+- necessidade de unidade real;
+- necessidade de PostgreSQL;
+- ausencia de rollback definido;
+- ausencia de plano de evidencias;
+- ausencia de autorizacao explicita;
+- falha de baseline curta;
+- falha de `npm test` completo quando exigido;
+- qualquer alteracao oportunista em codigo, scripts, rotas, registry, allowlist, modelRegistry ou BaseRepository;
+- qualquer tentativa de plugar a execucao em request path.
+
+Registrar que qualquer bloqueio deve degradar para nao executar.
+
+### 10.3 Relacao entre gates e autorizacao
+
+Registrar:
+
+- gates definidos nao sao autorizacao;
+- gates verdes em fase posterior nao sao autorizacao automatica;
+- autorizacao deve ser explicita, propria e posterior;
+- autorizacao deve mencionar escopo, candidato, rollback, evidencias e limites;
+- autorizacao nao pode ser inferida de `eligible=true`, `executionScopeDefined=true`, `authorizationGatesDefined=true` ou baseline verde;
+- qualquer duvida sobre autorizacao degrada para nao executar.
+
+### 10.4 Resultado dos gates
+
+Registrar:
+
+- authorizationGatesDefined=true;
+- executionScopeDefined permanece true;
+- executionContractReady permanece false;
+- rollbackDefined permanece false;
+- evidencePlanDefined permanece false;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- authorizationGatesDefined=true significa apenas que os gates documentais foram definidos.
+- authorizationGatesDefined=true nao autoriza execucao.
+- authorizationGatesDefined=true nao autoriza preparacao operacional concreta.
+- authorizationGatesDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- authorizationGatesDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- authorizationGatesDefined=true nao autoriza abrir tenant DB real nesta fase.
+- authorizationGatesDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 11. Interpretacao obrigatoria
 
 Registrar:
 
