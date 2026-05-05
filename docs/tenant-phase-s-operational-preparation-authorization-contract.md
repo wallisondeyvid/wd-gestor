@@ -70,7 +70,7 @@ Registrar:
 - operationalPreparationAuthorizationDefined=true
 - operationalPreparationScopeDefined=true
 - operationalPreparationPrerequisitesDefined=true
-- operationalPreparationRollbackDefined=false
+- operationalPreparationRollbackDefined=true
 - operationalPreparationEvidenceDefined=false
 - operationalPreparationChecklistApplied=false
 - operationalPreparationStillForbidden=true
@@ -87,7 +87,7 @@ Explicar:
 - operationalPreparationAuthorizationDefined=true porque a autorizacao operacional preparatoria foi definida documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationScopeDefined=true porque o escopo operacional preparatorio foi definido documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationPrerequisitesDefined=true porque as pre-condicoes operacionais preparatorias foram definidas documentalmente neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
-- operationalPreparationRollbackDefined=false porque o rollback ainda nao foi definido.
+- operationalPreparationRollbackDefined=true porque o rollback operacional preparatorio foi definido documentalmente neste microcorte, sem executar rollback real, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem criar superficie operacional e sem autorizar execucao.
 - operationalPreparationEvidenceDefined=false porque as evidencias ainda nao foram definidas.
 - operationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
 - operationalPreparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
@@ -351,11 +351,92 @@ Interpretacao obrigatoria:
 - operationalPreparationPrerequisitesDefined=true nao autoriza abrir tenant DB real.
 - operationalPreparationPrerequisitesDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Interpretacao obrigatoria
+## 10. Rollback operacional preparatorio documental
+
+Registrar que o rollback operacional preparatorio da Fase S e estritamente documental e serve apenas para definir exigencias minimas de reversao antes de qualquer futura preparacao operacional manual controlada sintetica em fase posterior propria.
+
+Registrar que este rollback documental nao e rollback real, nao executa reversao, nao aprova comando real, nao autoriza preparacao operacional concreta e nao cria superficie operacional.
+
+### 10.1 Exigencias de rollback futuro
+
+Registrar que qualquer futura preparacao operacional manual controlada sintetica so podera ser considerada em fase posterior propria se houver rollback definido antes de qualquer comando real, incluindo:
+
+- estado anterior documentado;
+- escopo exato da reversao;
+- criterio objetivo de acionamento;
+- criterio objetivo de sucesso do rollback;
+- criterio objetivo de falha do rollback;
+- plano de interrupcao imediata em caso de ambiguidade;
+- garantia de preservacao do fallback para baseConnection;
+- garantia de ausencia de Portal;
+- garantia de ausencia de dados reais;
+- garantia de ausencia de trafego real;
+- garantia de ausencia de usuario real;
+- garantia de ausencia de unidade real;
+- garantia de ambiente nao produtivo;
+- garantia de candidato estritamente sintetico;
+- evidencias documentais antes e depois da reversao;
+- validacao verde apos qualquer reversao futura;
+- autorizacao explicita do usuario antes de qualquer comando real de preparacao ou reversao.
+
+### 10.2 Bloqueios de rollback futuro
+
+Registrar que qualquer futura preparacao ou reversao deve permanecer bloqueada se:
+
+- rollback nao estiver definido antes do comando real;
+- criterio de acionamento estiver ambiguo;
+- criterio de sucesso estiver ambiguo;
+- criterio de falha estiver ambiguo;
+- houver risco de afetar dado real;
+- houver risco de afetar trafego real;
+- houver risco de afetar usuario real;
+- houver risco de afetar unidade real;
+- houver uso de Portal;
+- houver ambiente produtivo;
+- houver necessidade de alterar registry real, allowlist real ou roteamento real;
+- houver necessidade de criar caller real, rota, CLI, script, job, bootstrap ou request path;
+- houver necessidade de abrir tenant DB real;
+- houver necessidade de tocar em PostgreSQL;
+- nao houver validacao verde;
+- nao houver autorizacao explicita do usuario.
+
+### 10.3 Resultado da definicao documental do rollback
+
+Registrar:
+
+- operationalPreparationRollbackDefined=true;
+- operationalPreparationAuthorizationContractOpened permanece true;
+- operationalPreparationAuthorizationDefined permanece true;
+- operationalPreparationScopeDefined permanece true;
+- operationalPreparationPrerequisitesDefined permanece true;
+- operationalPreparationEvidenceDefined permanece false;
+- operationalPreparationChecklistApplied permanece false;
+- operationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- operationalPreparationRollbackDefined=true significa apenas que o rollback operacional preparatorio foi definido documentalmente.
+- operationalPreparationRollbackDefined=true nao significa rollback real.
+- operationalPreparationRollbackDefined=true nao significa autorizacao concreta.
+- operationalPreparationRollbackDefined=true nao autoriza preparacao operacional concreta.
+- operationalPreparationRollbackDefined=true nao autoriza execucao.
+- operationalPreparationRollbackDefined=true nao autoriza evidencia operacional real.
+- operationalPreparationRollbackDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- operationalPreparationRollbackDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- operationalPreparationRollbackDefined=true nao autoriza abrir tenant DB real.
+- operationalPreparationRollbackDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 11. Interpretacao obrigatoria
 
 Registrar que abrir a Fase S nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 11. Criterio de avanco da Fase S
+## 12. Criterio de avanco da Fase S
 
 Registrar que a Fase S so podera avancar documentalmente quando forem definidos:
 
@@ -364,6 +445,6 @@ Registrar que a Fase S so podera avancar documentalmente quando forem definidos:
 - checklist;
 - interpretacao obrigatoria.
 
-Registrar que a autorizacao documental, o escopo operacional preparatorio e as pre-condicoes operacionais preparatorias ja foram definidos neste microcorte, mas rollback, evidencias e checklist permanecem pendentes.
+Registrar que a autorizacao documental, o escopo operacional preparatorio, as pre-condicoes operacionais preparatorias e o rollback operacional preparatorio ja foram definidos neste microcorte, mas evidencias e checklist permanecem pendentes.
 
 Registrar que mesmo um contrato completo da Fase S nao autoriza execucao e nao autoriza preparacao operacional concreta sem fase posterior propria.
