@@ -86,7 +86,7 @@ Registrar os gates iniciais:
 
 - authorizationContractOpened=true
 - explicitAuthorizationDefined=false
-- authorizationActorsDefined=false
+- authorizationActorsDefined=true
 - authorizationScopeDefined=false
 - authorizationEvidenceDefined=false
 - preparationStillForbidden=true
@@ -101,7 +101,7 @@ Explicar:
 
 - authorizationContractOpened=true porque a Fase P foi aberta documentalmente.
 - explicitAuthorizationDefined=false porque o contrato de autorizacao explicita ainda nao foi definido.
-- authorizationActorsDefined=false porque os atores/responsaveis pela autorizacao ainda nao foram definidos.
+- authorizationActorsDefined=true porque os atores/responsaveis documentais pela autorizacao explicita foram definidos neste microcorte sem autorizar qualquer preparacao ou execucao.
 - authorizationScopeDefined=false porque o escopo autorizavel ainda nao foi definido.
 - authorizationEvidenceDefined=false porque as evidencias exigidas ainda nao foram definidas.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
@@ -112,7 +112,91 @@ Explicar:
 - fallbackRequired=true porque fallback para `baseConnection` permanece obrigatorio.
 - blockedReasons=[] porque nao ha bloqueio documental inicial; ha apenas ausencia do contrato completo.
 
-## 7. Interpretacao obrigatoria
+## 7. Atores de autorizacao explicita
+
+Registrar que os atores da Fase P sao definidos apenas para fins documentais e de controle de decisao futura. A definicao de atores nao autoriza preparacao, execucao, rollback real, coleta de evidencia operacional real ou criacao de superficie operacional.
+
+Definir os seguintes papeis documentais:
+
+### 7.1 Responsavel tecnico pela migracao
+
+Registrar:
+
+- avalia coerencia tecnica do contrato;
+- confirma se as restricoes de fallback, isolamento e nao operacionalidade foram preservadas;
+- nao pode, sozinho, autorizar execucao;
+- nao pode, sozinho, autorizar preparacao operacional concreta;
+- nao pode transformar documentacao em caller real, script, rota, CLI, job, bootstrap ou request path.
+
+### 7.2 Responsavel funcional pelo WD Gestor
+
+Registrar:
+
+- avalia impactos funcionais esperados;
+- confirma que a visao global de master/admin sem unidade canonica permanece decisao funcional preservada;
+- confirma que nao ha envolvimento de Portal, usuario real, unidade real, dados reais ou trafego real;
+- nao pode, sozinho, autorizar execucao;
+- nao pode, sozinho, autorizar preparacao operacional concreta.
+
+### 7.3 Responsavel por seguranca/rollback
+
+Registrar:
+
+- avalia se qualquer fase futura possui plano de rollback proprio antes de execucao;
+- confirma que rollback documental nao e rollback real;
+- confirma que nenhum rollback real e permitido na Fase P;
+- pode bloquear avanco documental se rollback proprio futuro estiver ausente ou ambiguo.
+
+### 7.4 Responsavel por evidencias e validacao
+
+Registrar:
+
+- avalia se evidencia documental, baseline curta, npm test completo e evidencia operacional real estao separados;
+- confirma que baseline verde nao e autorizacao;
+- confirma que evidencia documental nao substitui evidencia operacional real;
+- pode bloquear avanco documental se evidencia futura estiver ambigua.
+
+### 7.5 Usuario/autorizador explicito
+
+Registrar:
+
+- e o unico que pode conceder autorizacao explicita textual para avanco de fase;
+- autorizacao precisa ser especifica, limitada e registrada;
+- autorizacao generica nao basta;
+- autorizacao para documentar nao equivale a autorizacao para preparar;
+- autorizacao para preparar nao equivale a autorizacao para executar;
+- autorizacao para executar, se algum dia existir, exigira fase propria, rollback proprio, evidencias proprias, gates proprios e escopo proprio.
+
+### 7.6 Resultado dos atores
+
+Registrar:
+
+- authorizationActorsDefined=true;
+- authorizationContractOpened permanece true;
+- explicitAuthorizationDefined permanece false;
+- authorizationScopeDefined permanece false;
+- authorizationEvidenceDefined permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- authorizationActorsDefined=true significa apenas que os papeis documentais de autorizacao foram definidos.
+- authorizationActorsDefined=true nao autoriza preparacao operacional concreta.
+- authorizationActorsDefined=true nao autoriza execucao.
+- authorizationActorsDefined=true nao autoriza rollback real.
+- authorizationActorsDefined=true nao autoriza evidencia operacional real.
+- authorizationActorsDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- authorizationActorsDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- authorizationActorsDefined=true nao autoriza abrir tenant DB real.
+- authorizationActorsDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 8. Interpretacao obrigatoria
 
 Registrar:
 
@@ -126,7 +210,7 @@ Registrar:
 - authorizationContractOpened=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - authorizationContractOpened=true nao abre fase posterior automaticamente.
 
-## 8. Criterio de avanco da Fase P
+## 9. Criterio de avanco da Fase P
 
 Registrar que a Fase P so podera avancar quando forem definidos, documentalmente:
 
