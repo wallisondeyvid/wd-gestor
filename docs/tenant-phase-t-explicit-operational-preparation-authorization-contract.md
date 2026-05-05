@@ -59,7 +59,7 @@ Registrar que nada operacional pode ser criado ou executado nesta abertura.
 Registrar:
 
 - explicitOperationalPreparationAuthorizationContractOpened=true
-- explicitOperationalPreparationAuthorizationDefined=false
+- explicitOperationalPreparationAuthorizationDefined=true
 - explicitOperationalPreparationScopeDefined=false
 - explicitOperationalPreparationPrerequisitesDefined=false
 - explicitOperationalPreparationRollbackDefined=false
@@ -79,7 +79,7 @@ Registrar:
 Explicar:
 
 - explicitOperationalPreparationAuthorizationContractOpened=true porque a Fase T foi aberta documentalmente.
-- explicitOperationalPreparationAuthorizationDefined=false porque a autorizacao explicita ainda nao foi definida.
+- explicitOperationalPreparationAuthorizationDefined=true porque a autorizacao explicita documental foi definida conceitualmente neste microcorte, sem concessao concreta, sem autorizacao de preparacao operacional concreta e sem autorizacao de execucao.
 - explicitOperationalPreparationScopeDefined=false porque o escopo da autorizacao explicita ainda nao foi definido.
 - explicitOperationalPreparationPrerequisitesDefined=false porque as pre-condicoes ainda nao foram definidas.
 - explicitOperationalPreparationRollbackDefined=false porque o rollback ainda nao foi definido.
@@ -96,7 +96,67 @@ Explicar:
 - fallbackRequired=true porque fallback para baseConnection permanece obrigatorio.
 - blockedReasons=[] porque nao ha bloqueio documental para abrir a fase; ha apenas trabalho documental pendente para completar o contrato.
 
-## 7. Bloqueios obrigatorios nesta abertura
+## 7. Autorizacao explicita documental
+
+Registrar que a autorizacao explicita documental da Fase T e uma definicao contratual e nao uma autorizacao concreta de execucao ou de preparacao operacional.
+
+Registrar que a autorizacao explicita documental so sera considerada valida se, em microcortes posteriores, contiver obrigatoriamente:
+
+- identificador documental unico da autorizacao;
+- referencia ao candidato sintetico;
+- confirmacao de ambiente nao produtivo;
+- confirmacao de ausencia de Portal;
+- confirmacao de ausencia de dados reais;
+- confirmacao de ausencia de trafego real;
+- confirmacao de ausencia de usuario real;
+- confirmacao de ausencia de unidade real;
+- declaracao de que PostgreSQL permanece fora de escopo;
+- escopo exato da preparacao operacional concreta pretendida;
+- fronteira explicita entre preparacao e execucao;
+- rollback definido antes de qualquer preparacao;
+- evidencias esperadas definidas antes de qualquer preparacao;
+- criterios de bloqueio;
+- criterios de aborto;
+- validacao obrigatoria antes e depois;
+- comando proprio aprovado pelo usuario;
+- registro posterior no ledger global;
+- proibicao de qualquer fallback implicito que remova baseConnection como fallback obrigatorio.
+
+Registrar que, neste microcorte, nenhum desses itens autoriza execucao pratica. Eles sao apenas requisitos futuros.
+
+Registrar:
+
+- explicitOperationalPreparationAuthorizationDefined=true;
+- explicitOperationalPreparationAuthorizationContractOpened permanece true;
+- explicitOperationalPreparationScopeDefined permanece false;
+- explicitOperationalPreparationPrerequisitesDefined permanece false;
+- explicitOperationalPreparationRollbackDefined permanece false;
+- explicitOperationalPreparationEvidenceDefined permanece false;
+- explicitOperationalPreparationChecklistApplied permanece false;
+- explicitOperationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- rollbackStillForbidden permanece true;
+- operationalEvidenceStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonProductionRequired permanece true;
+- nonOperationalUntilExplicitAuthorization permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- autorizacao explicita documental definida nao significa autorizacao concreta concedida;
+- autorizacao explicita documental definida nao autoriza preparacao operacional concreta;
+- autorizacao explicita documental definida nao autoriza execucao;
+- autorizacao explicita documental definida nao autoriza rollback real;
+- autorizacao explicita documental definida nao autoriza coleta de evidencia operacional real;
+- autorizacao explicita documental definida nao autoriza criacao de caller real, rota, CLI, script, job, bootstrap ou request path;
+- autorizacao explicita documental definida nao autoriza alteracao de registry real, allowlist real ou roteamento real;
+- autorizacao explicita documental definida nao autoriza abertura de tenant DB real;
+- autorizacao explicita documental definida nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 8. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase T bloqueia expressamente:
 
@@ -126,7 +186,7 @@ Registrar que a abertura da Fase T bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 8. Interpretacao obrigatoria
+## 9. Interpretacao obrigatoria
 
 Registrar que abrir a Fase T nao significa autorizacao explicita concedida.
 
@@ -146,7 +206,7 @@ Registrar que abrir a Fase T nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase T nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 9. Criterio de avanco da Fase T
+## 10. Criterio de avanco da Fase T
 
 Registrar que a Fase T so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
