@@ -60,7 +60,7 @@ Registrar:
 
 - explicitOperationalPreparationAuthorizationContractOpened=true
 - explicitOperationalPreparationAuthorizationDefined=true
-- explicitOperationalPreparationScopeDefined=false
+- explicitOperationalPreparationScopeDefined=true
 - explicitOperationalPreparationPrerequisitesDefined=false
 - explicitOperationalPreparationRollbackDefined=false
 - explicitOperationalPreparationEvidenceDefined=false
@@ -80,7 +80,7 @@ Explicar:
 
 - explicitOperationalPreparationAuthorizationContractOpened=true porque a Fase T foi aberta documentalmente.
 - explicitOperationalPreparationAuthorizationDefined=true porque a autorizacao explicita documental foi definida conceitualmente neste microcorte, sem concessao concreta, sem autorizacao de preparacao operacional concreta e sem autorizacao de execucao.
-- explicitOperationalPreparationScopeDefined=false porque o escopo da autorizacao explicita ainda nao foi definido.
+- explicitOperationalPreparationScopeDefined=true porque o escopo documental da autorizacao explicita foi definido neste microcorte, sem autorizacao concreta e sem preparacao operacional concreta.
 - explicitOperationalPreparationPrerequisitesDefined=false porque as pre-condicoes ainda nao foram definidas.
 - explicitOperationalPreparationRollbackDefined=false porque o rollback ainda nao foi definido.
 - explicitOperationalPreparationEvidenceDefined=false porque as evidencias ainda nao foram definidas.
@@ -156,7 +156,91 @@ Interpretacao obrigatoria:
 - autorizacao explicita documental definida nao autoriza abertura de tenant DB real;
 - autorizacao explicita documental definida nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 8. Bloqueios obrigatorios nesta abertura
+## 8. Escopo da autorizacao explicita
+
+Registrar que o escopo da autorizacao explicita e documental e serve apenas para delimitar uma eventual preparacao operacional concreta futura.
+
+Registrar que o escopo permitido para descricao documental pode conter somente:
+
+- identificacao do candidato sintetico;
+- ambiente nao produtivo;
+- banco sintetico pretendido;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ausencia de PostgreSQL;
+- fronteira entre preparacao e execucao;
+- entradas documentais necessarias;
+- saidas documentais esperadas;
+- rollback documental obrigatorio;
+- evidencias documentais obrigatorias;
+- validacoes antes e depois;
+- criterios de bloqueio;
+- criterios de aborto;
+- criterios de nao promocao para producao;
+- confirmacao de fallback obrigatorio para baseConnection;
+- confirmacao de que qualquer comando futuro exigira aprovacao propria do usuario.
+
+Registrar explicitamente que o escopo da autorizacao explicita NAO inclui:
+
+- execucao;
+- preparacao operacional concreta neste microcorte;
+- rollback real;
+- evidencia operacional real;
+- criacao de caller real;
+- criacao de rota;
+- criacao de CLI;
+- criacao de script;
+- criacao de job;
+- criacao de bootstrap;
+- plugar em request path;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- alteracao de roteamento real;
+- abertura de tenant DB real;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- alteracao de codigo;
+- alteracao de testes;
+- alteracao de package.json;
+- alteracao de src.
+
+Registrar:
+
+- explicitOperationalPreparationScopeDefined=true;
+- explicitOperationalPreparationAuthorizationContractOpened permanece true;
+- explicitOperationalPreparationAuthorizationDefined permanece true;
+- explicitOperationalPreparationPrerequisitesDefined permanece false;
+- explicitOperationalPreparationRollbackDefined permanece false;
+- explicitOperationalPreparationEvidenceDefined permanece false;
+- explicitOperationalPreparationChecklistApplied permanece false;
+- explicitOperationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- rollbackStillForbidden permanece true;
+- operationalEvidenceStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonProductionRequired permanece true;
+- nonOperationalUntilExplicitAuthorization permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- escopo documental definido nao autoriza preparacao operacional concreta;
+- escopo documental definido nao autoriza execucao;
+- escopo documental definido nao autoriza rollback real;
+- escopo documental definido nao autoriza coleta de evidencia operacional real;
+- escopo documental definido nao autoriza criacao de superficie operacional;
+- escopo documental definido nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 9. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase T bloqueia expressamente:
 
@@ -186,7 +270,7 @@ Registrar que a abertura da Fase T bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 9. Interpretacao obrigatoria
+## 10. Interpretacao obrigatoria
 
 Registrar que abrir a Fase T nao significa autorizacao explicita concedida.
 
@@ -206,7 +290,7 @@ Registrar que abrir a Fase T nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase T nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Criterio de avanco da Fase T
+## 11. Criterio de avanco da Fase T
 
 Registrar que a Fase T so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
