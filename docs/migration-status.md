@@ -782,6 +782,41 @@ Checkpoint tenant enforcement atual:
 - Interpretacao: abertura da Fase P nao autoriza execucao, preparacao operacional concreta, evidencia operacional real, rollback real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
 
+- Fase P encerrada documentalmente.
+- Commit de encerramento: 994b5f6 docs(tenant): encerra fase p
+- Documento canonico: docs/tenant-phase-p-explicit-authorization-contract.md
+- Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional e nao autorizativa concretamente.
+- Resultado: contrato documental de autorizacao explicita pre-preparacao manual controlada sintetica concluido.
+- Conteudo concluido:
+	- atores/responsaveis documentais definidos;
+	- escopo autorizavel futuro definido;
+	- limites nao autorizaveis definidos;
+	- evidencias exigidas antes de autorizacao futura definidas;
+	- formato minimo de autorizacao explicita valida definido;
+	- autorizacoes invalidas registradas;
+	- distincao entre documentar, preparar e executar registrada;
+	- condicoes de revogacao ou bloqueio registradas;
+	- checklist documental aplicado.
+- Gates finais:
+	- authorizationContractOpened=true;
+	- authorizationActorsDefined=true;
+	- authorizationScopeDefined=true;
+	- authorizationEvidenceDefined=true;
+	- explicitAuthorizationDefined=true;
+	- checklistApplied=true;
+	- preparationStillForbidden=true;
+	- executionStillForbidden=true;
+	- operationalSurfaceStillForbidden=true;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- fallbackRequired=true;
+	- blockedReasons=[].
+- Interpretacao obrigatoria: encerramento da Fase P nao concede autorizacao concreta, nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza evidencia operacional real, nao autoriza caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Proxima fase: nao aberta automaticamente.
+- Validacao: baseline curta pos-encerramento verde.
+- Fechamento/publicacao: antes de push, obrigatorio rodar `npm test` completo.
+- Push: pendente ate validacao completa final e autorizacao explicita do usuario.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
