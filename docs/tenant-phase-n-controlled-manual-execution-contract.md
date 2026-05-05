@@ -126,7 +126,7 @@ Registrar os principios que deverao reger qualquer execucao futura:
 Criar gates iniciais conservadores:
 
 - executionContractReady: false
-- executionScopeDefined: false
+- executionScopeDefined: true
 - authorizationGatesDefined: false
 - rollbackDefined: false
 - evidencePlanDefined: false
@@ -140,14 +140,98 @@ Criar gates iniciais conservadores:
 Explicar:
 
 - executionContractReady=false porque a Fase N acabou de ser aberta.
-- executionScopeDefined=false porque o escopo de execucao ainda sera definido em microcorte posterior.
+- executionScopeDefined=true porque o escopo maximo permitido foi definido documentalmente neste microcorte.
 - authorizationGatesDefined=false porque os gates de autorizacao ainda serao definidos.
 - rollbackDefined=false porque o rollback especifico da execucao ainda sera definido.
 - evidencePlanDefined=false porque o plano de evidencias ainda sera definido.
 - executionStillForbidden=true porque a Fase N nao autoriza execucao neste momento.
 - blockedReasons=[] porque nao ha bloqueio documental inicial, apenas ausencia de contrato completo.
 
-## 9. Interpretacao obrigatoria
+## 9. Escopo maximo permitido da execucao manual controlada
+
+Registrar que o escopo da Fase N e apenas documental e define limites para uma eventual fase posterior.
+
+### 9.1 Escopo permitido apenas como contrato
+
+Registrar que a Fase N pode definir, documentalmente:
+
+- qual candidato sintetico poderia ser usado;
+- quais pre-condicoes deveriam existir;
+- quais gates deveriam estar verdes;
+- quais evidencias deveriam ser esperadas;
+- qual rollback deveria estar definido;
+- quais limites de nao producao deveriam ser preservados;
+- quais criterios bloqueariam a execucao;
+- quais condicoes minimas seriam necessarias antes de qualquer autorizacao futura.
+
+Registrar expressamente que definir escopo nao significa executar.
+
+### 9.2 Escopo maximo de uma eventual execucao futura
+
+Registrar que, se uma fase posterior vier a autorizar execucao manual controlada, o escopo maximo admissivel devera ser limitado a:
+
+- candidato sintetico herdado das Fases J/K/L/M/N;
+- ambiente nao produtivo;
+- dados descartaveis;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ausencia de Portal;
+- allowlist unitaria e explicita;
+- fallback obrigatorio para baseConnection;
+- rollback definido antes da execucao;
+- evidencias esperadas definidas antes da execucao;
+- autorizacao explicita e propria da fase posterior.
+
+Registrar que qualquer item fora desse escopo bloqueia a execucao.
+
+### 9.3 Fora de escopo absoluto
+
+Registrar que continuam fora de escopo:
+
+- execucao em producao;
+- execucao com dados reais;
+- execucao com trafego real;
+- execucao com usuario real;
+- execucao com unidade real;
+- exposicao ao Portal;
+- alteracao de rotas reais;
+- criacao de caller real;
+- criacao de CLI;
+- criacao de script operacional;
+- criacao de job;
+- criacao de bootstrap;
+- ligacao em request path;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- abertura de tenant DB real nesta fase;
+- mudanca de roteamento;
+- PostgreSQL;
+- qualquer alteracao funcional oportunista.
+
+### 9.4 Resultado do escopo
+
+Registrar:
+
+- executionScopeDefined=true;
+- executionContractReady permanece false;
+- authorizationGatesDefined permanece false;
+- rollbackDefined permanece false;
+- evidencePlanDefined permanece false;
+- executionStillForbidden permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- executionScopeDefined=true significa apenas que o escopo documental foi definido.
+- executionScopeDefined=true nao autoriza execucao.
+- executionScopeDefined=true nao autoriza preparacao operacional concreta.
+- executionScopeDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- executionScopeDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- executionScopeDefined=true nao autoriza abrir tenant DB real nesta fase.
+- executionScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 10. Interpretacao obrigatoria
 
 Registrar:
 
