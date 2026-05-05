@@ -62,7 +62,7 @@ Registrar:
 - explicitOperationalPreparationAuthorizationDefined=true
 - explicitOperationalPreparationScopeDefined=true
 - explicitOperationalPreparationPrerequisitesDefined=true
-- explicitOperationalPreparationRollbackDefined=false
+- explicitOperationalPreparationRollbackDefined=true
 - explicitOperationalPreparationEvidenceDefined=false
 - explicitOperationalPreparationChecklistApplied=false
 - explicitOperationalPreparationStillForbidden=true
@@ -82,7 +82,7 @@ Explicar:
 - explicitOperationalPreparationAuthorizationDefined=true porque a autorizacao explicita documental foi definida conceitualmente neste microcorte, sem concessao concreta, sem autorizacao de preparacao operacional concreta e sem autorizacao de execucao.
 - explicitOperationalPreparationScopeDefined=true porque o escopo documental da autorizacao explicita foi definido neste microcorte, sem autorizacao concreta e sem preparacao operacional concreta.
 - explicitOperationalPreparationPrerequisitesDefined=true porque as pre-condicoes documentais foram definidas neste microcorte, sem autorizacao concreta e sem preparacao operacional concreta.
-- explicitOperationalPreparationRollbackDefined=false porque o rollback ainda nao foi definido.
+- explicitOperationalPreparationRollbackDefined=true porque o rollback documental foi definido neste microcorte, sem rollback real, sem autorizacao concreta e sem preparacao operacional concreta.
 - explicitOperationalPreparationEvidenceDefined=false porque as evidencias ainda nao foram definidas.
 - explicitOperationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
 - explicitOperationalPreparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
@@ -301,7 +301,78 @@ Interpretacao obrigatoria:
 - pre-condicoes documentais definidas nao autorizam criacao de superficie operacional;
 - pre-condicoes documentais definidas nao autorizam Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 10. Bloqueios obrigatorios nesta abertura
+## 10. Rollback documental da autorizacao explicita
+
+Registrar que o rollback da autorizacao explicita e documental e serve apenas para declarar como uma eventual preparacao operacional concreta futura deveria ser revertida ou abortada, caso um dia seja explicitamente autorizada.
+
+Registrar que o rollback documental deve conter obrigatoriamente:
+
+- identificador documental da autorizacao futura;
+- referencia ao candidato sintetico;
+- confirmacao de ambiente nao produtivo;
+- confirmacao de que nenhum Portal sera envolvido;
+- confirmacao de que nenhum dado real sera envolvido;
+- confirmacao de que nenhum trafego real sera envolvido;
+- confirmacao de que nenhum usuario real sera envolvido;
+- confirmacao de que nenhuma unidade real sera envolvida;
+- confirmacao de que PostgreSQL permanece fora de escopo;
+- confirmacao de fallback obrigatorio para baseConnection;
+- fronteira entre abortar preparacao e reverter execucao;
+- condicao de aborto antes de qualquer preparacao;
+- condicao de aborto durante preparacao;
+- condicao de bloqueio antes de execucao;
+- criterio para descartar banco sintetico;
+- criterio para remover allowlist sintetica, se algum dia ela for criada em fase futura propria;
+- criterio para remover registry sintetico, se algum dia ele for criado em fase futura propria;
+- criterio para preservar baseConnection como fallback;
+- evidencia documental esperada do rollback;
+- validacao obrigatoria apos rollback;
+- registro obrigatorio do resultado no ledger global;
+- comando futuro proprio aprovado pelo usuario, caso algum rollback real venha a ser autorizado em fase posterior.
+
+Registrar explicitamente que este rollback documental NAO autoriza:
+
+- rollback real neste microcorte;
+- preparacao operacional concreta;
+- execucao;
+- criacao de registry real;
+- criacao de allowlist real;
+- criacao de tenant DB real;
+- alteracao de roteamento real;
+- criacao de caller real, rota, CLI, script, job, bootstrap ou request path;
+- coleta de evidencia operacional real;
+- Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+Registrar:
+
+- explicitOperationalPreparationRollbackDefined=true;
+- explicitOperationalPreparationAuthorizationContractOpened permanece true;
+- explicitOperationalPreparationAuthorizationDefined permanece true;
+- explicitOperationalPreparationScopeDefined permanece true;
+- explicitOperationalPreparationPrerequisitesDefined permanece true;
+- explicitOperationalPreparationEvidenceDefined permanece false;
+- explicitOperationalPreparationChecklistApplied permanece false;
+- explicitOperationalPreparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- rollbackStillForbidden permanece true;
+- operationalEvidenceStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonProductionRequired permanece true;
+- nonOperationalUntilExplicitAuthorization permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- rollback documental definido nao autoriza rollback real;
+- rollback documental definido nao autoriza preparacao operacional concreta;
+- rollback documental definido nao autoriza execucao;
+- rollback documental definido nao autoriza coleta de evidencia operacional real;
+- rollback documental definido nao autoriza criacao de superficie operacional;
+- rollback documental definido nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 11. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase T bloqueia expressamente:
 
@@ -331,7 +402,7 @@ Registrar que a abertura da Fase T bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 11. Interpretacao obrigatoria
+## 12. Interpretacao obrigatoria
 
 Registrar que abrir a Fase T nao significa autorizacao explicita concedida.
 
@@ -351,7 +422,7 @@ Registrar que abrir a Fase T nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase T nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 12. Criterio de avanco da Fase T
+## 13. Criterio de avanco da Fase T
 
 Registrar que a Fase T so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
