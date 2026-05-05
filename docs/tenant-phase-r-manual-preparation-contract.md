@@ -65,7 +65,7 @@ Registrar:
 - manualPreparationInputsDefined=true
 - manualPreparationRollbackDefined=true
 - manualPreparationEvidenceDefined=true
-- manualPreparationChecklistApplied=false
+- manualPreparationChecklistApplied=true
 - preparationStillForbidden=true
 - executionStillForbidden=true
 - operationalSurfaceStillForbidden=true
@@ -81,7 +81,7 @@ Explicar:
 - manualPreparationInputsDefined=true porque as entradas documentais necessarias para eventual preparacao manual controlada sintetica foram definidas neste microcorte, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationRollbackDefined=true porque o rollback preparatorio documental da preparacao manual controlada sintetica foi definido neste microcorte, sem executar rollback real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
 - manualPreparationEvidenceDefined=true porque as evidencias documentais da preparacao manual controlada sintetica foram definidas neste microcorte, sem coletar evidencia operacional real, sem conceder autorizacao concreta e sem autorizar preparacao operacional concreta.
-- manualPreparationChecklistApplied=false porque o checklist documental da Fase R ainda nao foi aplicado nesta abertura.
+- manualPreparationChecklistApplied=true porque o checklist documental da Fase R foi aplicado neste microcorte, sem conceder autorizacao concreta, sem autorizar preparacao operacional concreta, sem coletar evidencia operacional real e sem autorizar execucao.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
 - operationalSurfaceStillForbidden=true porque nenhuma superficie operacional pode ser criada nesta fase.
@@ -171,7 +171,7 @@ Registrar:
 - manualPreparationInputsDefined permanece true;
 - manualPreparationRollbackDefined permanece true;
 - manualPreparationEvidenceDefined permanece true;
-- manualPreparationChecklistApplied permanece false;
+- manualPreparationChecklistApplied permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -261,7 +261,7 @@ Registrar:
 - manualPreparationContractOpened permanece true;
 - manualPreparationRollbackDefined permanece true;
 - manualPreparationEvidenceDefined permanece true;
-- manualPreparationChecklistApplied permanece false;
+- manualPreparationChecklistApplied permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -354,7 +354,7 @@ Registrar:
 - manualPreparationScopeDefined permanece true;
 - manualPreparationContractOpened permanece true;
 - manualPreparationEvidenceDefined permanece true;
-- manualPreparationChecklistApplied permanece false;
+- manualPreparationChecklistApplied permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -449,7 +449,7 @@ Registrar:
 - manualPreparationInputsDefined permanece true;
 - manualPreparationScopeDefined permanece true;
 - manualPreparationContractOpened permanece true;
-- manualPreparationChecklistApplied permanece false;
+- manualPreparationChecklistApplied permanece true;
 - preparationStillForbidden permanece true;
 - executionStillForbidden permanece true;
 - operationalSurfaceStillForbidden permanece true;
@@ -470,11 +470,95 @@ Interpretacao obrigatoria:
 - manualPreparationEvidenceDefined=true nao autoriza abrir tenant DB real.
 - manualPreparationEvidenceDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 12. Interpretacao obrigatoria
+## 12. Checklist documental da Fase R
+
+Registrar que a Fase R aplica, neste microcorte, o checklist documental do contrato de preparacao manual controlada sintetica.
+
+Registrar que aplicar checklist nao concede autorizacao concreta, nao autoriza preparacao operacional concreta, nao coleta evidencia operacional real e nao autoriza execucao.
+
+### 12.1 Checklist aplicado
+
+Registrar a lista com todos os itens marcados:
+
+- [x] manualPreparationContractOpened=true.
+- [x] manualPreparationScopeDefined=true.
+- [x] manualPreparationInputsDefined=true.
+- [x] manualPreparationRollbackDefined=true.
+- [x] manualPreparationEvidenceDefined=true.
+- [x] manualPreparationChecklistApplied=true.
+- [x] preparationStillForbidden=true.
+- [x] executionStillForbidden=true.
+- [x] operationalSurfaceStillForbidden=true.
+- [x] candidateStillSynthetic=true.
+- [x] nonOperationalPreserved=true.
+- [x] fallbackRequired=true.
+- [x] blockedReasons=[].
+
+### 12.2 Bloqueios preservados
+
+Registrar como checklist explicito que permanecem proibidos:
+
+- [x] preparacao operacional concreta.
+- [x] execucao.
+- [x] rollback real.
+- [x] evidencia operacional real.
+- [x] caller real.
+- [x] rota.
+- [x] CLI.
+- [x] script.
+- [x] job.
+- [x] bootstrap.
+- [x] request path.
+- [x] alteracao de registry real.
+- [x] alteracao de allowlist real.
+- [x] alteracao de roteamento real.
+- [x] abertura de tenant DB real.
+- [x] Portal.
+- [x] dados reais.
+- [x] trafego real.
+- [x] usuario real.
+- [x] unidade real.
+- [x] PostgreSQL.
+- [x] codigo produtivo.
+- [x] alteracao de testes.
+- [x] alteracao de package.json.
+
+### 12.3 Resultado da aplicacao do checklist
+
+Registrar:
+
+- manualPreparationChecklistApplied=true;
+- manualPreparationEvidenceDefined permanece true;
+- manualPreparationRollbackDefined permanece true;
+- manualPreparationInputsDefined permanece true;
+- manualPreparationScopeDefined permanece true;
+- manualPreparationContractOpened permanece true;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- manualPreparationChecklistApplied=true significa apenas que o checklist documental da Fase R foi aplicado.
+- manualPreparationChecklistApplied=true nao significa que autorizacao preparatoria concreta foi concedida.
+- manualPreparationChecklistApplied=true nao autoriza preparacao operacional concreta.
+- manualPreparationChecklistApplied=true nao autoriza execucao.
+- manualPreparationChecklistApplied=true nao autoriza rollback real.
+- manualPreparationChecklistApplied=true nao autoriza evidencia operacional real.
+- manualPreparationChecklistApplied=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- manualPreparationChecklistApplied=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- manualPreparationChecklistApplied=true nao autoriza abrir tenant DB real.
+- manualPreparationChecklistApplied=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 13. Interpretacao obrigatoria
 
 Registrar que abrir a Fase R nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 13. Criterio de avanco da Fase R
+## 14. Criterio de avanco da Fase R
 
 Registrar que a Fase R so podera avancar documentalmente quando forem definidos:
 
