@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -614,3 +614,99 @@ Registrar:
 - Abrir a Fase N nao autoriza mudar roteamento.
 - Abrir a Fase N nao autoriza coletar evidencia operacional real.
 - Abrir a Fase N nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 15. Encerramento documental da Fase N
+
+Registrar que a Fase N foi encerrada documentalmente apos:
+
+- definicao do escopo maximo permitido;
+- definicao dos gates de autorizacao;
+- definicao do rollback documental;
+- definicao do plano documental de evidencias;
+- aplicacao do checklist documental.
+
+### 15.1 Resultado final
+
+Registrar:
+
+- executionContractReady=true;
+- executionScopeDefined=true;
+- authorizationGatesDefined=true;
+- rollbackDefined=true;
+- evidencePlanDefined=true;
+- candidateStillSynthetic=true;
+- nonOperationalPreserved=true;
+- noOperationalSurfaceCreated=true;
+- fallbackRequired=true;
+- executionStillForbidden=true;
+- blockedReasons=[].
+
+### 15.2 Interpretacao do encerramento
+
+Registrar expressamente:
+
+- Encerrar a Fase N nao autoriza execucao.
+- Encerrar a Fase N nao autoriza coleta de evidencia operacional real.
+- Encerrar a Fase N nao autoriza rollback real.
+- Encerrar a Fase N nao autoriza preparacao operacional concreta.
+- Encerrar a Fase N nao autoriza criar comando.
+- Encerrar a Fase N nao autoriza criar script.
+- Encerrar a Fase N nao autoriza criar caller real.
+- Encerrar a Fase N nao autoriza criar rota, CLI, job, bootstrap ou request path.
+- Encerrar a Fase N nao autoriza alterar registry real.
+- Encerrar a Fase N nao autoriza alterar allowlist real.
+- Encerrar a Fase N nao autoriza abrir tenant DB real.
+- Encerrar a Fase N nao autoriza mudar roteamento.
+- Encerrar a Fase N nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Encerrar a Fase N nao abre fase posterior automaticamente.
+
+### 15.3 Recomendacao final
+
+Registrar que o resultado da Fase N e:
+
+- contrato documental de execucao manual controlada, nao produtiva e sintetica concluido;
+- apto para registro no status global em microcorte posterior;
+- apto para discutir fase posterior explicita somente se houver autorizacao propria, contrato proprio, gates proprios, rollback proprio e evidencias proprias.
+
+Registrar tambem:
+
+- A eventual fase posterior nao esta aberta.
+- A eventual fase posterior nao e automatica.
+- A eventual fase posterior nao pode inferir autorizacao da Fase N.
+- A eventual fase posterior devera preservar os limites de nao producao, sinteticidade, fallback, rollback, evidencias e ausencia de Portal/dados/trafego/usuario/unidade real/PostgreSQL.
+
+### 15.4 Pendencias antes de publicacao
+
+Registrar que antes de qualquer push ainda devem ocorrer:
+
+- registro do encerramento da Fase N em docs/migration-status.md;
+- baseline curta pos-registro de status;
+- `npm test` completo;
+- autorizacao explicita do usuario para push.
+
+### 15.5 Proibicoes preservadas
+
+Registrar que permanecem proibidos:
+
+- execucao real;
+- preparacao operacional concreta;
+- coleta de evidencia operacional real;
+- rollback real;
+- caller real;
+- rota;
+- CLI;
+- script;
+- job;
+- bootstrap;
+- request path;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- abertura de tenant DB real;
+- mudanca de roteamento;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- qualquer alteracao funcional oportunista.
