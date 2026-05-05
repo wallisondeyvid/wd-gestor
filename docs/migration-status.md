@@ -719,6 +719,38 @@ Checkpoint tenant enforcement atual:
 - Interpretacao: abertura da Fase O nao autoriza execucao, preparacao operacional concreta, evidencia operacional real, rollback real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
 
+- Fase O encerrada documentalmente.
+- Commit de encerramento: 6077426 docs(tenant): encerra fase o
+- Documento canonico: [docs/tenant-phase-o-pre-execution-risk-matrix.md](docs/tenant-phase-o-pre-execution-risk-matrix.md)
+- Natureza: documental, preventiva, nao produtiva, sintetica e nao operacional.
+- Resultado: matriz documental de riscos pre-execucao concluida.
+- Conteudo concluido:
+	- categorias documentais de risco;
+	- severidade e probabilidade documentais;
+	- mitigacoes documentais preventivas;
+	- matriz consolidada de riscos;
+	- checklist documental;
+	- encerramento documental.
+- Gates finais:
+	- riskMatrixOpened=true;
+	- riskMatrixDefined=true;
+	- riskCategoriesDefined=true;
+	- riskSeverityDefined=true;
+	- mitigationPlanDefined=true;
+	- checklistApplied=true;
+	- authorizationStillForbidden=true;
+	- executionStillForbidden=true;
+	- operationalSurfaceStillForbidden=true;
+	- candidateStillSynthetic=true;
+	- nonOperationalPreserved=true;
+	- fallbackRequired=true;
+	- blockedReasons=[].
+- Interpretacao obrigatoria: encerramento da Fase O nao autoriza execucao, preparacao operacional concreta, evidencia operacional real, rollback real, caller real, rota/CLI/script/job/bootstrap/request path, registry real, allowlist real, tenant DB real, roteamento, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Proxima fase: nao aberta automaticamente.
+- Validacao: baseline curta pos-encerramento verde.
+- Fechamento/publicacao: antes de push, obrigatorio rodar `npm test` completo.
+- Push: pendente ate validacao completa final e autorizacao explicita do usuario.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
