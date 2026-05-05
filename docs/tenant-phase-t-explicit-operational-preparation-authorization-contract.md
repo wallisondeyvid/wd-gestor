@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -574,3 +574,61 @@ Registrar que a Fase T so podera avancar documentalmente quando forem definidos,
 Registrar que a abertura da Fase T nao autoriza nenhum comando real.
 
 Registrar que mesmo uma Fase T completa nao autoriza execucao ou preparacao operacional concreta sem comando proprio aprovado pelo usuario em momento posterior e com escopo explicitamente delimitado.
+
+## 16. Encerramento documental da Fase T
+
+Registrar que a Fase T foi encerrada documentalmente porque todos os elementos contratuais previstos foram definidos:
+
+- contrato aberto;
+- autorizacao explicita documental definida;
+- escopo documental definido;
+- pre-condicoes documentais definidas;
+- rollback documental definido;
+- evidencias documentais definidas;
+- checklist documental aplicado.
+
+Registrar os gates finais da Fase T exatamente assim:
+
+- explicitOperationalPreparationAuthorizationContractOpened=true
+- explicitOperationalPreparationAuthorizationDefined=true
+- explicitOperationalPreparationScopeDefined=true
+- explicitOperationalPreparationPrerequisitesDefined=true
+- explicitOperationalPreparationRollbackDefined=true
+- explicitOperationalPreparationEvidenceDefined=true
+- explicitOperationalPreparationChecklistApplied=true
+- explicitOperationalPreparationStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- nonOperationalUntilExplicitAuthorization=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Registrar interpretacao obrigatoria do encerramento:
+
+- encerramento documental da Fase T nao concede autorizacao concreta;
+- encerramento documental da Fase T nao autoriza preparacao operacional concreta;
+- encerramento documental da Fase T nao autoriza execucao;
+- encerramento documental da Fase T nao autoriza rollback real;
+- encerramento documental da Fase T nao autoriza coleta de evidencia operacional real;
+- encerramento documental da Fase T nao autoriza criacao de superficie operacional;
+- encerramento documental da Fase T nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- encerramento documental da Fase T nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- encerramento documental da Fase T nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- encerramento documental da Fase T nao abre Fase U automaticamente;
+- encerramento documental da Fase T nao autoriza push por si so.
+
+Registrar criterio pos-encerramento:
+
+- qualquer preparacao operacional concreta futura exigira fase posterior propria;
+- qualquer preparacao operacional concreta futura exigira autorizacao explicita propria do usuario;
+- qualquer preparacao operacional concreta futura exigira comando proprio aprovado pelo usuario;
+- qualquer preparacao operacional concreta futura exigira escopo delimitado;
+- qualquer preparacao operacional concreta futura exigira rollback definido;
+- qualquer preparacao operacional concreta futura exigira evidencias definidas;
+- qualquer preparacao operacional concreta futura exigira gates verdes;
+- qualquer preparacao operacional concreta futura exigira validacao anterior e posterior;
+- ate la, todos os bloqueios permanecem ativos.
