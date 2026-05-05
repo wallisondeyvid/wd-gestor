@@ -87,7 +87,7 @@ Registrar os gates iniciais:
 - authorizationContractOpened=true
 - explicitAuthorizationDefined=false
 - authorizationActorsDefined=true
-- authorizationScopeDefined=false
+- authorizationScopeDefined=true
 - authorizationEvidenceDefined=false
 - preparationStillForbidden=true
 - executionStillForbidden=true
@@ -102,7 +102,7 @@ Explicar:
 - authorizationContractOpened=true porque a Fase P foi aberta documentalmente.
 - explicitAuthorizationDefined=false porque o contrato de autorizacao explicita ainda nao foi definido.
 - authorizationActorsDefined=true porque os atores/responsaveis documentais pela autorizacao explicita foram definidos neste microcorte sem autorizar qualquer preparacao ou execucao.
-- authorizationScopeDefined=false porque o escopo autorizavel ainda nao foi definido.
+- authorizationScopeDefined=true porque o escopo autorizavel futuro e os limites nao autorizaveis foram definidos documentalmente neste microcorte sem conceder autorizacao explicita final.
 - authorizationEvidenceDefined=false porque as evidencias exigidas ainda nao foram definidas.
 - preparationStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta fase.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase.
@@ -196,7 +196,105 @@ Interpretacao obrigatoria:
 - authorizationActorsDefined=true nao autoriza abrir tenant DB real.
 - authorizationActorsDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 8. Interpretacao obrigatoria
+## 8. Escopo autorizavel e limites nao autorizaveis
+
+Registrar que a Fase P define apenas o escopo que poderia ser autorizado em uma etapa futura, mediante autorizacao explicita textual, especifica e limitada. A definicao de escopo autorizavel nao e autorizacao em si.
+
+### 8.1 Escopo autorizavel futuro, ainda nao concedido
+
+Registrar que, em uma fase futura propria, poderia ser autorizavel apenas:
+
+- preparacao documental complementar;
+- revisao documental de rollback futuro;
+- revisao documental de evidencias futuras;
+- definicao documental de criterios de entrada e saida;
+- definicao documental de checklist pre-preparacao;
+- definicao documental de limites de nao operacao;
+- eventual preparacao manual sintetica somente se houver fase futura propria, autorizacao explicita, escopo proprio, rollback proprio e evidencia propria.
+
+Registrar que nada acima esta autorizado agora.
+
+### 8.2 Limites nao autorizaveis na Fase P
+
+Registrar que a Fase P nao pode autorizar:
+
+- execucao;
+- preparacao operacional concreta;
+- rollback real;
+- coleta de evidencia operacional real;
+- caller real;
+- rota;
+- CLI;
+- script;
+- job;
+- bootstrap;
+- request path;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- abertura de tenant DB real;
+- mudanca de roteamento;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- alteracao de codigo produtivo;
+- alteracao de testes;
+- alteracao de package.json.
+
+### 8.3 Escopo sintetico preservado
+
+Registrar que o unico candidato admitido continua sendo:
+
+- targetId=fase-j-synthetic-unit-candidate-001
+- unidadeId=0000000000000000000000a1
+- dbName=wdgestor_unit_0000000000000000000000a1
+- databaseKey=wdgestor_unit_0000000000000000000000a1
+- plannedAllowlist=["0000000000000000000000a1"]
+
+Registrar:
+
+- o candidato permanece sintetico;
+- nao ha unidade real;
+- nao ha usuario real;
+- nao ha dados reais;
+- nao ha trafego real;
+- nao ha Portal;
+- nao ha tenant DB real aberto;
+- nao ha allowlist real aplicada;
+- nao ha registry real alterado.
+
+### 8.4 Resultado do escopo
+
+Registrar:
+
+- authorizationScopeDefined=true;
+- authorizationActorsDefined permanece true;
+- authorizationContractOpened permanece true;
+- explicitAuthorizationDefined permanece false;
+- authorizationEvidenceDefined permanece false;
+- preparationStillForbidden permanece true;
+- executionStillForbidden permanece true;
+- operationalSurfaceStillForbidden permanece true;
+- candidateStillSynthetic permanece true;
+- nonOperationalPreserved permanece true;
+- fallbackRequired permanece true;
+- blockedReasons permanece [].
+
+Interpretacao obrigatoria:
+
+- authorizationScopeDefined=true significa apenas que o escopo autorizavel futuro e os limites nao autorizaveis foram definidos documentalmente.
+- authorizationScopeDefined=true nao autoriza preparacao operacional concreta.
+- authorizationScopeDefined=true nao autoriza execucao.
+- authorizationScopeDefined=true nao autoriza rollback real.
+- authorizationScopeDefined=true nao autoriza evidencia operacional real.
+- authorizationScopeDefined=true nao autoriza criar comando, script, caller real, rota, CLI, job, bootstrap ou request path.
+- authorizationScopeDefined=true nao autoriza alterar registry real, allowlist real ou roteamento.
+- authorizationScopeDefined=true nao autoriza abrir tenant DB real.
+- authorizationScopeDefined=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+## 9. Interpretacao obrigatoria
 
 Registrar:
 
@@ -210,7 +308,7 @@ Registrar:
 - authorizationContractOpened=true nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - authorizationContractOpened=true nao abre fase posterior automaticamente.
 
-## 9. Criterio de avanco da Fase P
+## 10. Criterio de avanco da Fase P
 
 Registrar que a Fase P so podera avancar quando forem definidos, documentalmente:
 
