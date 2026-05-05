@@ -1152,6 +1152,33 @@ Checkpoint tenant enforcement atual:
 			- qualquer preparacao operacional concreta futura exigira validacao anterior e posterior;
 			- ate la, todos os bloqueios permanecem ativos.
 
+- Fase U aberta documentalmente.
+- Documento canonico: docs/tenant-phase-u-operational-preparation-scope-contract.md
+- Base: 2bcd266 docs(tenant): completa validacao final da fase t.
+- Natureza: documental, preventiva, nao produtiva, sintetica, nao executiva e nao operacional por padrao.
+- Objetivo: definir contrato documental de escopo para eventual preparacao operacional concreta manual controlada sintetica futura.
+- Gates iniciais:
+	- operationalPreparationScopeContractOpened=true
+	- operationalPreparationScopeDefined=false
+	- operationalPreparationBoundariesDefined=false
+	- operationalPreparationInputsDefined=false
+	- operationalPreparationOutputsDefined=false
+	- operationalPreparationExclusionsDefined=false
+	- operationalPreparationChecklistApplied=false
+	- operationalPreparationConcreteStillForbidden=true
+	- executionStillForbidden=true
+	- rollbackStillForbidden=true
+	- operationalEvidenceStillForbidden=true
+	- operationalSurfaceStillForbidden=true
+	- candidateStillSynthetic=true
+	- nonProductionRequired=true
+	- explicitAuthorizationStillRequired=true
+	- commandApprovalStillRequired=true
+	- fallbackRequired=true
+	- blockedReasons=[]
+- Interpretacao: abertura da Fase U nao concede autorizacao explicita concreta, nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota, CLI, script, job, bootstrap, request path, registry real, allowlist real, tenant DB real, roteamento real, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
