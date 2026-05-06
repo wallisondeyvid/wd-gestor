@@ -1168,10 +1168,22 @@ Checkpoint tenant enforcement atual:
 	- f2b7a02 docs(tenant): encerra fase u
 - Estado registrado no ledger:
 	- encerrada documentalmente no contrato canonico;
+	- registrada no ledger global;
+	- validacao final completa executada com npm test;
+	- validacao final completa verde;
 	- ainda nao publicada;
-	- ainda sem validacao final completa registrada;
 	- ainda sem push;
 	- nenhuma Fase V aberta automaticamente.
+- Validacao final completa da Fase U:
+	- comando: npm test
+	- tests: 2203
+	- suites: 17
+	- pass: 2201
+	- fail: 0
+	- cancelled: 0
+	- skipped: 2
+	- todo: 0
+	- duration_ms: 233181.3554
 - Gates finais documentais da Fase U:
 	- operationalPreparationScopeContractOpened=true
 	- operationalPreparationScopeDefined=true
@@ -1192,9 +1204,38 @@ Checkpoint tenant enforcement atual:
 	- fallbackRequired=true
 	- blockedReasons=[]
 - Interpretacao obrigatoria dos gates finais:
-	- blockedReasons=[] significa ausencia de bloqueio documental para encerramento da Fase U;
+	- blockedReasons=[] significa ausencia de bloqueio documental para fechamento da Fase U;
 	- blockedReasons=[] nao significa autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
 - O encerramento da Fase U no ledger nao autoriza:
+	- preparacao operacional concreta;
+	- execucao;
+	- rollback real;
+	- coleta de evidencia operacional real;
+	- criacao de superficie operacional;
+	- caller real;
+	- rota;
+	- CLI;
+	- script;
+	- job;
+	- bootstrap;
+	- request path;
+	- registry real;
+	- allowlist real;
+	- roteamento real;
+	- tenant DB real;
+	- Portal;
+	- dados reais;
+	- trafego real;
+	- usuario real;
+	- unidade real;
+	- PostgreSQL;
+	- alteracao de codigo;
+	- alteracao de testes;
+	- alteracao de package.json;
+	- alteracao de src;
+	- push automatico;
+	- abertura automatica da Fase V.
+- A validacao final completa verde da Fase U nao autoriza:
 	- preparacao operacional concreta;
 	- execucao;
 	- rollback real;
@@ -1233,12 +1274,14 @@ Checkpoint tenant enforcement atual:
 	- todo: 0
 	- duration_ms: 5147.0806
 - Pendencias obrigatorias antes de qualquer push de fechamento da Fase U:
-	- executar validacao final completa com npm test;
-	- registrar a validacao final completa no ledger global;
+	- decisao explicita do usuario;
+	- auditoria final pre-publicacao;
+	- confirmacao de worktree limpa;
+	- confirmacao de diff vazio contra origin depois do push;
 	- decidir explicitamente a publicacao;
 	- manter a Fase V fechada ate autorizacao propria.
 - Microcorte atual preservado: somente docs/migration-status.md foi atualizado; o contrato canonico da Fase U nao foi alterado neste microcorte.
-- Push: pendente; nao realizar push ate validacao final completa, fechamento global da fase e autorizacao explicita.
+- Push: pendente; nao realizar push ate decisao explicita de fechamento/publicacao, auditoria final pre-publicacao e autorizacao explicita.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
