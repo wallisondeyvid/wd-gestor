@@ -1359,19 +1359,42 @@ Checkpoint tenant enforcement atual:
 - Interpretacao adicional: esta validacao final completa da Fase V nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push e nao abre Fase W automaticamente.
 - Push: pendente; nao realizar push ate decisao explicita posterior.
 
-- Fase W aberta documentalmente.
+- Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao executiva e nao operacional por padrao.
 - Objetivo: definir contrato documental de preparacao final pre-operacional concreta manual controlada sintetica futura.
-- Gates iniciais:
+
+- O contrato canonico da Fase W foi encerrado documentalmente no commit local b83abd2.
+- Requisitos finais pre-operacionais foram definidos.
+- Escopo pre-operacional foi definido.
+- Entradas pre-operacionais foram definidas.
+- Saidas pre-operacionais foram definidas.
+- Exclusoes pre-operacionais foram definidas.
+- Checklist documental foi aplicado.
+- Todos os gates documentais especificos da Fase W estao true.
+- blockedReasons=[] permanece restrito ao avanco documental.
+- Preparacao operacional concreta continua proibida.
+- Execucao continua proibida.
+- Rollback real continua proibido.
+- Evidencia operacional real continua proibida.
+- Superficie operacional continua proibida.
+- Candidato sintetico continua obrigatorio.
+- Ambiente nao produtivo continua obrigatorio.
+- Autorizacao explicita futura do usuario continua obrigatoria.
+- Aprovacao explicita futura de comandos continua obrigatoria.
+- Fallback para baseConnection continua obrigatorio.
+- Push continua nao autorizado neste microcorte.
+- Fase posterior nao foi aberta automaticamente.
+
+- Gates documentais finais:
 	- finalPreOperationalPreparationContractOpened=true
-	- finalPreOperationalPreparationRequirementsDefined=false
-	- finalPreOperationalPreparationScopeDefined=false
-	- finalPreOperationalPreparationInputsDefined=false
-	- finalPreOperationalPreparationOutputsDefined=false
-	- finalPreOperationalPreparationExclusionsDefined=false
-	- finalPreOperationalPreparationChecklistApplied=false
+	- finalPreOperationalPreparationRequirementsDefined=true
+	- finalPreOperationalPreparationScopeDefined=true
+	- finalPreOperationalPreparationInputsDefined=true
+	- finalPreOperationalPreparationOutputsDefined=true
+	- finalPreOperationalPreparationExclusionsDefined=true
+	- finalPreOperationalPreparationChecklistApplied=true
 	- operationalPreparationConcreteStillForbidden=true
 	- executionStillForbidden=true
 	- rollbackStillForbidden=true
@@ -1383,7 +1406,7 @@ Checkpoint tenant enforcement atual:
 	- commandApprovalStillRequired=true
 	- fallbackRequired=true
 	- blockedReasons=[]
-- Interpretacao: abertura da Fase W nao concede autorizacao concreta, nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, superficie operacional, caller real, rota, CLI, script, job, bootstrap, request path, registry real, allowlist real, tenant DB real, roteamento real, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Interpretacao obrigatoria: registro de encerramento no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push e nao abre fase posterior automaticamente.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
 
 ## Escalas
