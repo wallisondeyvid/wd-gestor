@@ -670,7 +670,47 @@ Interpretacao final obrigatoria:
 - encerramento documental da Fase V nao autoriza push;
 - encerramento documental da Fase V nao abre Fase W automaticamente.
 
-## 15. Criterio de avanco da Fase V
+## 15. Validacao final completa da Fase V
+
+Registrar:
+
+- validacao final completa executada;
+- comando npm run verify:imports executado com sucesso;
+- comando npm test executado com sucesso;
+- totais da suite completa:
+	- tests: 2203
+	- suites: 17
+	- pass: 2201
+	- fail: 0
+	- cancelled: 0
+	- skipped: 2
+	- todo: 0
+	- duration_ms: 240551.5359
+- HEAD base usado para validacao: b6a561a docs(tenant): registra encerramento da fase v no status
+- resultado: verde;
+- Fase V validada documentalmente;
+- preparacao operacional concreta continua proibida;
+- execucao continua proibida;
+- rollback real continua proibido;
+- evidencia operacional real continua proibida;
+- superficie operacional continua proibida;
+- Fase W nao aberta;
+- push ainda nao realizado neste microcorte.
+
+Interpretacao final obrigatoria:
+
+- validacao final completa da Fase V nao autoriza preparacao operacional concreta;
+- validacao final completa da Fase V nao autoriza execucao;
+- validacao final completa da Fase V nao autoriza rollback real;
+- validacao final completa da Fase V nao autoriza coleta de evidencia operacional real;
+- validacao final completa da Fase V nao autoriza criacao de superficie operacional;
+- validacao final completa da Fase V nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- validacao final completa da Fase V nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- validacao final completa da Fase V nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- validacao final completa da Fase V nao autoriza push;
+- validacao final completa da Fase V nao abre Fase W automaticamente.
+
+## 16. Criterio de avanco da Fase V
 
 Registrar que a Fase V so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
