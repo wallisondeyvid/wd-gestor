@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -485,7 +485,46 @@ Registrar que a abertura da Fase W bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 14. Criterio de avanco da Fase W
+## 14. Encerramento documental da Fase W
+
+Registrar que a Fase W foi encerrada documentalmente porque:
+
+- o contrato foi aberto;
+- os requisitos finais pre-operacionais foram definidos;
+- o escopo pre-operacional foi definido;
+- as entradas pre-operacionais foram definidas;
+- as saidas pre-operacionais foram definidas;
+- as exclusoes pre-operacionais foram definidas;
+- o checklist documental foi aplicado;
+- todos os gates documentais especificos da Fase W estao true;
+- blockedReasons=[] permanece restrito ao avanco documental;
+- preparacao operacional concreta continua proibida;
+- execucao continua proibida;
+- rollback real continua proibido;
+- evidencia operacional real continua proibida;
+- superficie operacional continua proibida;
+- candidato sintetico continua obrigatorio;
+- ambiente nao produtivo continua obrigatorio;
+- autorizacao explicita futura do usuario continua obrigatoria;
+- aprovacao explicita futura de comandos continua obrigatoria;
+- fallback para baseConnection continua obrigatorio;
+- push continua nao autorizado neste microcorte;
+- fase posterior nao foi aberta automaticamente.
+
+Registrar interpretacao final obrigatoria:
+
+- encerramento documental da Fase W nao autoriza preparacao operacional concreta;
+- encerramento documental da Fase W nao autoriza execucao;
+- encerramento documental da Fase W nao autoriza rollback real;
+- encerramento documental da Fase W nao autoriza coleta de evidencia operacional real;
+- encerramento documental da Fase W nao autoriza criacao de superficie operacional;
+- encerramento documental da Fase W nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- encerramento documental da Fase W nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- encerramento documental da Fase W nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- encerramento documental da Fase W nao autoriza push;
+- encerramento documental da Fase W nao abre fase posterior automaticamente.
+
+## 15. Criterio de avanco da Fase W
 
 Registrar que a Fase W so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
