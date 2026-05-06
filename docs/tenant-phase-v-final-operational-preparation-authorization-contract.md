@@ -66,7 +66,7 @@ Registrar os gates iniciais:
 - finalOperationalPreparationAuthorizationContractOpened=true
 - finalOperationalPreparationAuthorizationDefined=true
 - finalOperationalPreparationAuthorizationScopeDefined=true
-- finalOperationalPreparationAuthorizationInputsDefined=false
+- finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=false
 - finalOperationalPreparationAuthorizationExclusionsDefined=false
 - finalOperationalPreparationAuthorizationChecklistApplied=false
@@ -89,7 +89,7 @@ Explicar:
 - finalOperationalPreparationAuthorizationContractOpened=true porque a Fase V foi aberta documentalmente.
 - finalOperationalPreparationAuthorizationDefined=true porque a autorizacao final documental foi definida, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - finalOperationalPreparationAuthorizationScopeDefined=true porque o escopo da autorizacao final documental foi definido, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
-- finalOperationalPreparationAuthorizationInputsDefined=false porque as entradas da autorizacao final ainda nao foram definidas em microcorte proprio.
+- finalOperationalPreparationAuthorizationInputsDefined=true porque as entradas da autorizacao final documental foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - finalOperationalPreparationAuthorizationOutputsDefined=false porque as saidas da autorizacao final ainda nao foram definidas em microcorte proprio.
 - finalOperationalPreparationAuthorizationExclusionsDefined=false porque as exclusoes da autorizacao final ainda nao foram definidas em microcorte proprio.
 - finalOperationalPreparationAuthorizationChecklistApplied=false porque o checklist documental da Fase V ainda nao foi aplicado em microcorte proprio.
@@ -147,8 +147,8 @@ Registrar:
 
 - finalOperationalPreparationAuthorizationContractOpened=true
 - finalOperationalPreparationAuthorizationDefined=true
-- finalOperationalPreparationAuthorizationScopeDefined=false
-- finalOperationalPreparationAuthorizationInputsDefined=false
+- finalOperationalPreparationAuthorizationScopeDefined=true
+- finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=false
 - finalOperationalPreparationAuthorizationExclusionsDefined=false
 - finalOperationalPreparationAuthorizationChecklistApplied=false
@@ -237,7 +237,7 @@ Registrar:
 - finalOperationalPreparationAuthorizationContractOpened=true
 - finalOperationalPreparationAuthorizationDefined=true
 - finalOperationalPreparationAuthorizationScopeDefined=true
-- finalOperationalPreparationAuthorizationInputsDefined=false
+- finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=false
 - finalOperationalPreparationAuthorizationExclusionsDefined=false
 - finalOperationalPreparationAuthorizationChecklistApplied=false
@@ -265,7 +265,82 @@ Interpretacao obrigatoria:
 - escopo da autorizacao final documental definido nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 - escopo da autorizacao final documental definido nao autoriza push.
 
-## 9. Bloqueios obrigatorios nesta abertura
+## 9. Entradas da autorizacao final documental
+
+Registrar que as entradas da autorizacao final sao exclusivamente documentais e nao representam parametros executaveis, comandos, variaveis de ambiente, configuracao operacional ou preparacao concreta.
+
+Registrar que as entradas minimas para eventual fase posterior propria sao:
+
+- identificacao documental do candidato sintetico;
+- confirmacao documental de que o candidato sintetico deriva da Fase J;
+- confirmacao documental de que a Fase U definiu o escopo da preparacao operacional concreta futura;
+- confirmacao documental de ambiente nao produtivo;
+- confirmacao documental de banco sintetico descartavel;
+- confirmacao documental de ausencia de Portal;
+- confirmacao documental de ausencia de dados reais;
+- confirmacao documental de ausencia de trafego real;
+- confirmacao documental de ausencia de usuario real;
+- confirmacao documental de ausencia de unidade real;
+- confirmacao documental de PostgreSQL fora de escopo;
+- confirmacao documental de fallback obrigatorio para baseConnection;
+- confirmacao documental de rollback definido antes de qualquer comando;
+- confirmacao documental de evidencias definidas antes de qualquer comando;
+- confirmacao documental de validacao anterior definida;
+- confirmacao documental de validacao posterior definida;
+- confirmacao documental de comando futuro proprio descrito integralmente;
+- confirmacao documental de aprovacao explicita futura do usuario;
+- confirmacao documental de execucao manual e controlada;
+- confirmacao documental de ausencia de automacao operacional;
+- confirmacao documental de ausencia de superficie operacional generica;
+- confirmacao documental de que qualquer ambiguidade bloqueia avanco.
+
+Registrar que nenhuma entrada documental pode ser usada diretamente como:
+
+- comando;
+- script;
+- variavel de ambiente;
+- allowlist real;
+- registry real;
+- conexao real;
+- tenant DB real;
+- configuracao de roteamento;
+- preparacao operacional concreta;
+- autorizacao implicita.
+
+Registrar:
+
+- finalOperationalPreparationAuthorizationContractOpened=true
+- finalOperationalPreparationAuthorizationDefined=true
+- finalOperationalPreparationAuthorizationScopeDefined=true
+- finalOperationalPreparationAuthorizationInputsDefined=true
+- finalOperationalPreparationAuthorizationOutputsDefined=false
+- finalOperationalPreparationAuthorizationExclusionsDefined=false
+- finalOperationalPreparationAuthorizationChecklistApplied=false
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitUserAuthorizationRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Interpretacao obrigatoria:
+
+- entradas da autorizacao final documental definidas nao autorizam preparacao operacional concreta nesta fase;
+- entradas da autorizacao final documental definidas nao autorizam execucao;
+- entradas da autorizacao final documental definidas nao autorizam rollback real;
+- entradas da autorizacao final documental definidas nao autorizam coleta de evidencia operacional real;
+- entradas da autorizacao final documental definidas nao autorizam criacao de superficie operacional;
+- entradas da autorizacao final documental definidas nao autorizam caller real, rota, CLI, script, job, bootstrap ou request path;
+- entradas da autorizacao final documental definidas nao autorizam alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- entradas da autorizacao final documental definidas nao autorizam Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- entradas da autorizacao final documental definidas nao autorizam push.
+
+## 10. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase V bloqueia expressamente:
 
@@ -298,7 +373,7 @@ Registrar que a abertura da Fase V bloqueia expressamente:
 - push;
 - abertura automatica da Fase W.
 
-## 10. Criterio de avanco da Fase V
+## 11. Criterio de avanco da Fase V
 
 Registrar que a Fase V so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
