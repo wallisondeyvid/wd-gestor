@@ -56,7 +56,7 @@ Registrar os gates iniciais:
 - operationalPreparationScopeDefined=true
 - operationalPreparationInputsDefined=true
 - operationalPreparationOutputsDefined=true
-- operationalPreparationExclusionsDefined=false
+- operationalPreparationExclusionsDefined=true
 - operationalPreparationCommandApprovalDefined=false
 - operationalPreparationRollbackPlanDefined=false
 - operationalPreparationEvidencePlanDefined=false
@@ -81,7 +81,7 @@ Registrar:
 - operationalPreparationScopeDefined=true porque o escopo operacional concreto futuro da Fase X foi definido documentalmente neste microcorte;
 - operationalPreparationInputsDefined=true porque as entradas operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationOutputsDefined=true porque as saidas operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
-- operationalPreparationExclusionsDefined=false porque as exclusoes operacionais concretas ainda nao foram definidas;
+- operationalPreparationExclusionsDefined=true porque as exclusoes operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationCommandApprovalDefined=false porque a aprovacao futura de comandos ainda nao foi definida;
 - operationalPreparationRollbackPlanDefined=false porque o plano de rollback futuro ainda nao foi definido;
 - operationalPreparationEvidencePlanDefined=false porque o plano de evidencia sintetica futura ainda nao foi definido;
@@ -307,7 +307,80 @@ Registrar interpretacao obrigatoria:
 - definicao de saidas nao autoriza push;
 - definicao de saidas nao abre fase posterior automaticamente.
 
-## 10. Bloqueios obrigatorios na abertura da Fase X
+## 10. Exclusoes operacionais concretas futuras da Fase X
+
+Registrar que a Fase X exclui expressamente qualquer acao, artefato, interpretacao ou saida que antecipe preparacao operacional concreta fora de microcorte proprio, autorizacao explicita do usuario e aprovacao explicita de comandos.
+
+Registrar como exclusoes obrigatorias:
+
+- execucao de preparacao operacional concreta neste microcorte;
+- execucao de piloto real;
+- execucao de rollback real;
+- coleta de evidencia operacional real;
+- criacao de superficie operacional;
+- criacao de caller real;
+- criacao de rota real;
+- criacao de CLI real;
+- criacao de script real;
+- criacao de job real;
+- criacao de bootstrap real;
+- plug em request path real;
+- alteracao em src;
+- alteracao em codigo;
+- alteracao em testes;
+- alteracao em package.json;
+- alteracao em scripts;
+- alteracao em rotas;
+- alteracao em registry real;
+- alteracao em allowlist real;
+- abertura de tenant DB real;
+- alteracao de roteamento real;
+- uso de Portal;
+- uso de dados reais;
+- uso de trafego real;
+- uso de usuario real;
+- uso de unidade real;
+- uso de PostgreSQL;
+- uso de segredo, token ou credencial real;
+- criacao ou alteracao de variavel de ambiente operacional;
+- abertura de conexao real;
+- abertura de banco real;
+- execucao de comando sem aprovacao explicita;
+- promocao para producao;
+- automacao operacional;
+- reutilizacao deste contrato como autorizacao operacional;
+- interpretacao de blockedReasons=[] como autorizacao operacional;
+- interpretacao de gates documentais true como autorizacao operacional;
+- interpretacao de validacao verde como autorizacao operacional;
+- abertura automatica de fase posterior;
+- push neste microcorte.
+
+Registrar exclusoes por interpretacao:
+
+- definir escopo nao executa escopo;
+- definir entradas nao coleta entradas reais;
+- definir saidas nao produz saidas operacionais reais;
+- definir exclusoes nao autoriza preparar;
+- ausencia de erro documental nao autoriza executar;
+- commit local nao autoriza push;
+- documentacao nao substitui autorizacao explicita do usuario;
+- package.json, harness de teste ou validacao verde nao representam caller real, rota real, CLI real, script real, job real, bootstrap real ou request path real;
+- qualquer ambiguidade deve degradar para nao executar, nao preparar, nao plugar e nao publicar.
+
+Registrar interpretacao obrigatoria:
+
+- definicao de exclusoes nao autoriza preparacao operacional concreta;
+- definicao de exclusoes nao autoriza execucao;
+- definicao de exclusoes nao autoriza rollback real;
+- definicao de exclusoes nao autoriza coleta de evidencia operacional real;
+- definicao de exclusoes nao autoriza criacao de superficie operacional;
+- definicao de exclusoes nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de exclusoes nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de exclusoes nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de exclusoes nao autoriza push;
+- definicao de exclusoes nao abre fase posterior automaticamente.
+
+## 11. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -341,7 +414,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 11. Criterio de avanco da Fase X
+## 12. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
