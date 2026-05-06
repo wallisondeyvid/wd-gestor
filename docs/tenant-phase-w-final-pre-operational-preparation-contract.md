@@ -40,7 +40,7 @@ Registrar os gates iniciais:
 
 - finalPreOperationalPreparationContractOpened=true
 - finalPreOperationalPreparationRequirementsDefined=true
-- finalPreOperationalPreparationScopeDefined=false
+- finalPreOperationalPreparationScopeDefined=true
 - finalPreOperationalPreparationInputsDefined=false
 - finalPreOperationalPreparationOutputsDefined=false
 - finalPreOperationalPreparationExclusionsDefined=false
@@ -63,7 +63,8 @@ Explicar:
 
 - finalPreOperationalPreparationContractOpened=true porque a Fase W foi aberta documentalmente;
 - finalPreOperationalPreparationRequirementsDefined=true porque os requisitos finais pre-operacionais foram definidos documentalmente neste microcorte;
-- os demais gates documentais especificos ainda permanecem false porque serao definidos em microcortes proprios;
+- finalPreOperationalPreparationScopeDefined=true porque o escopo da preparacao final pre-operacional foi definido documentalmente neste microcorte;
+- os demais gates documentais especificos ainda permanecem false e serao definidos em microcortes proprios;
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura;
 - executionStillForbidden=true porque nenhuma execucao e permitida;
 - rollbackStillForbidden=true porque nenhum rollback real e permitido;
@@ -126,7 +127,69 @@ Interpretacao obrigatoria:
 - definicao de requisitos nao autoriza push;
 - definicao de requisitos nao abre fase posterior automaticamente.
 
-## 8. Bloqueios obrigatorios nesta abertura
+## 8. Escopo da preparacao final pre-operacional
+
+Registrar que o escopo permitido da Fase W e exclusivamente documental e inclui apenas:
+
+- definicao conceitual de fronteiras pre-operacionais;
+- definicao de pre-condicoes documentais;
+- definicao de dependencias documentais;
+- definicao de responsabilidades documentais;
+- definicao de limites de ambiente nao produtivo;
+- definicao de criterios documentais para candidato sintetico;
+- definicao de criterios documentais para fallback obrigatorio para baseConnection;
+- definicao de criterios documentais para autorizacao explicita futura do usuario;
+- definicao de criterios documentais para aprovacao explicita futura de comandos;
+- definicao de criterios documentais para parada, sucesso e falha;
+- definicao de criterios documentais para rollback futuro, sem rollback real;
+- definicao de criterios documentais para evidencia sintetica esperada;
+- preservacao explicita dos bloqueios operacionais.
+
+Registrar que o escopo proibido da Fase W inclui expressamente:
+
+- execucao de preparacao operacional concreta;
+- execucao de piloto real;
+- execucao de rollback real;
+- coleta de evidencia operacional real;
+- criacao de superficie operacional;
+- criacao de caller real;
+- criacao de rota;
+- criacao de CLI;
+- criacao de script;
+- criacao de job;
+- criacao de bootstrap;
+- ligacao em request path;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- abertura de tenant DB real;
+- alteracao de roteamento real;
+- uso de Portal;
+- uso de dados reais;
+- uso de trafego real;
+- uso de usuario real;
+- uso de unidade real;
+- uso de PostgreSQL;
+- alteracao de codigo;
+- alteracao de testes;
+- alteracao de package.json;
+- alteracao de src;
+- push;
+- abertura automatica de fase posterior.
+
+Interpretacao obrigatoria:
+
+- definicao de escopo nao autoriza preparacao operacional concreta;
+- definicao de escopo nao autoriza execucao;
+- definicao de escopo nao autoriza rollback real;
+- definicao de escopo nao autoriza coleta de evidencia operacional real;
+- definicao de escopo nao autoriza criacao de superficie operacional;
+- definicao de escopo nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de escopo nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de escopo nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de escopo nao autoriza push;
+- definicao de escopo nao abre fase posterior automaticamente.
+
+## 9. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase W bloqueia expressamente:
 
@@ -159,7 +222,7 @@ Registrar que a abertura da Fase W bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 9. Criterio de avanco da Fase W
+## 10. Criterio de avanco da Fase W
 
 Registrar que a Fase W so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
