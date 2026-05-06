@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -610,7 +610,67 @@ Registrar que a abertura da Fase V bloqueia expressamente:
 - push;
 - abertura automatica da Fase W.
 
-## 14. Criterio de avanco da Fase V
+## 14. Encerramento documental da Fase V
+
+Registrar que a Fase V foi encerrada documentalmente porque:
+
+- contrato canonico da Fase V foi aberto;
+- autorizacao final documental foi definida;
+- escopo da autorizacao final documental foi definido;
+- entradas da autorizacao final documental foram definidas;
+- saidas da autorizacao final documental foram definidas;
+- exclusoes da autorizacao final documental foram definidas;
+- checklist documental da Fase V foi aplicado;
+- gates documentais da Fase V estao completos;
+- blockedReasons permanece vazio apenas para encerramento documental;
+- preparacao operacional concreta continua proibida;
+- execucao continua proibida;
+- rollback real continua proibido;
+- coleta de evidencia operacional real continua proibida;
+- criacao de superficie operacional continua proibida;
+- candidato continua sintetico;
+- ambiente nao produtivo continua obrigatorio;
+- fallback para baseConnection continua obrigatorio;
+- autorizacao explicita futura do usuario continua obrigatoria;
+- aprovacao explicita de comando futuro continua obrigatoria;
+- push nao foi autorizado;
+- Fase W nao foi aberta automaticamente.
+
+Registrar os gates finais da Fase V:
+
+- finalOperationalPreparationAuthorizationContractOpened=true
+- finalOperationalPreparationAuthorizationDefined=true
+- finalOperationalPreparationAuthorizationScopeDefined=true
+- finalOperationalPreparationAuthorizationInputsDefined=true
+- finalOperationalPreparationAuthorizationOutputsDefined=true
+- finalOperationalPreparationAuthorizationExclusionsDefined=true
+- finalOperationalPreparationAuthorizationChecklistApplied=true
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitUserAuthorizationRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Interpretacao final obrigatoria:
+
+- encerramento documental da Fase V nao autoriza preparacao operacional concreta;
+- encerramento documental da Fase V nao autoriza execucao;
+- encerramento documental da Fase V nao autoriza rollback real;
+- encerramento documental da Fase V nao autoriza coleta de evidencia operacional real;
+- encerramento documental da Fase V nao autoriza criacao de superficie operacional;
+- encerramento documental da Fase V nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- encerramento documental da Fase V nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- encerramento documental da Fase V nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- encerramento documental da Fase V nao autoriza push;
+- encerramento documental da Fase V nao abre Fase W automaticamente.
+
+## 15. Criterio de avanco da Fase V
 
 Registrar que a Fase V so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
