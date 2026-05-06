@@ -55,7 +55,7 @@ Registrar os gates iniciais:
 - operationalPreparationOpeningContractOpened=true
 - operationalPreparationScopeDefined=true
 - operationalPreparationInputsDefined=true
-- operationalPreparationOutputsDefined=false
+- operationalPreparationOutputsDefined=true
 - operationalPreparationExclusionsDefined=false
 - operationalPreparationCommandApprovalDefined=false
 - operationalPreparationRollbackPlanDefined=false
@@ -80,7 +80,7 @@ Registrar:
 - operationalPreparationOpeningContractOpened=true porque o contrato documental de abertura da Fase X foi criado neste microcorte;
 - operationalPreparationScopeDefined=true porque o escopo operacional concreto futuro da Fase X foi definido documentalmente neste microcorte;
 - operationalPreparationInputsDefined=true porque as entradas operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
-- operationalPreparationOutputsDefined=false porque as saidas operacionais concretas ainda nao foram definidas;
+- operationalPreparationOutputsDefined=true porque as saidas operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationExclusionsDefined=false porque as exclusoes operacionais concretas ainda nao foram definidas;
 - operationalPreparationCommandApprovalDefined=false porque a aprovacao futura de comandos ainda nao foi definida;
 - operationalPreparationRollbackPlanDefined=false porque o plano de rollback futuro ainda nao foi definido;
@@ -232,7 +232,82 @@ Registrar interpretacao obrigatoria:
 - definicao de entradas nao autoriza push;
 - definicao de entradas nao abre fase posterior automaticamente.
 
-## 9. Bloqueios obrigatorios na abertura da Fase X
+## 9. Saidas operacionais concretas futuras da Fase X
+
+Registrar que qualquer preparacao operacional concreta manual controlada sintetica futura somente podera produzir saidas documentais, sinteticas e auditaveis.
+
+Registrar como saidas permitidas futuras, ainda dependentes de microcortes proprios, autorizacao explicita do usuario e aprovacao de comandos:
+
+- confirmacao documental do candidato sintetico selecionado;
+- confirmacao documental de ambiente nao produtivo;
+- confirmacao documental de ausencia de Portal;
+- confirmacao documental de ausencia de dados reais;
+- confirmacao documental de ausencia de trafego real;
+- confirmacao documental de ausencia de usuario real;
+- confirmacao documental de ausencia de unidade real;
+- confirmacao documental de ausencia de PostgreSQL;
+- confirmacao documental de ausencia de tenant DB real;
+- confirmacao documental de ausencia de registry real alterado;
+- confirmacao documental de ausencia de allowlist real alterada;
+- confirmacao documental de ausencia de roteamento real alterado;
+- confirmacao documental de fallback obrigatorio para baseConnection;
+- plano de rollback futuro documentado;
+- plano de evidencia sintetica futura documentado;
+- criterios de parada, sucesso e falha documentados;
+- lista de comandos futuros candidatos, sem execucao automatica;
+- matriz de permissoes e bloqueios para acao futura;
+- registro de que qualquer comando futuro dependera de aprovacao explicita do usuario;
+- registro de que qualquer evidencia futura devera ser sintetica e nao operacional real.
+
+Registrar como saidas proibidas neste microcorte e em qualquer preparacao futura sem fase propria:
+
+- preparacao operacional concreta executada;
+- piloto real executado;
+- rollback real executado;
+- evidencia operacional real coletada;
+- superficie operacional criada;
+- caller real criado;
+- rota real criada;
+- CLI real criada;
+- script real criado;
+- job real criado;
+- bootstrap real criado;
+- request path real plugado;
+- alteracao em src;
+- alteracao em codigo;
+- alteracao em testes;
+- alteracao em package.json;
+- alteracao em registry real;
+- alteracao em allowlist real;
+- tenant DB real aberta;
+- roteamento real alterado;
+- Portal usado;
+- dados reais usados;
+- trafego real usado;
+- usuario real usado;
+- unidade real usada;
+- PostgreSQL usado;
+- segredo, token ou credencial real registrado;
+- variavel de ambiente operacional criada ou alterada;
+- conexao real aberta;
+- banco real aberto;
+- comando executado sem aprovacao explicita;
+- qualquer saida que implique preparacao operacional concreta imediata.
+
+Registrar interpretacao obrigatoria:
+
+- definicao de saidas nao autoriza preparacao operacional concreta;
+- definicao de saidas nao autoriza execucao;
+- definicao de saidas nao autoriza rollback real;
+- definicao de saidas nao autoriza coleta de evidencia operacional real;
+- definicao de saidas nao autoriza criacao de superficie operacional;
+- definicao de saidas nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de saidas nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de saidas nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de saidas nao autoriza push;
+- definicao de saidas nao abre fase posterior automaticamente.
+
+## 10. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -266,7 +341,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 10. Criterio de avanco da Fase X
+## 11. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
