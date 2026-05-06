@@ -41,7 +41,7 @@ Registrar os gates iniciais:
 - finalPreOperationalPreparationContractOpened=true
 - finalPreOperationalPreparationRequirementsDefined=true
 - finalPreOperationalPreparationScopeDefined=true
-- finalPreOperationalPreparationInputsDefined=false
+- finalPreOperationalPreparationInputsDefined=true
 - finalPreOperationalPreparationOutputsDefined=false
 - finalPreOperationalPreparationExclusionsDefined=false
 - finalPreOperationalPreparationChecklistApplied=false
@@ -64,6 +64,7 @@ Explicar:
 - finalPreOperationalPreparationContractOpened=true porque a Fase W foi aberta documentalmente;
 - finalPreOperationalPreparationRequirementsDefined=true porque os requisitos finais pre-operacionais foram definidos documentalmente neste microcorte;
 - finalPreOperationalPreparationScopeDefined=true porque o escopo da preparacao final pre-operacional foi definido documentalmente neste microcorte;
+- finalPreOperationalPreparationInputsDefined=true porque as entradas da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
 - os demais gates documentais especificos ainda permanecem false e serao definidos em microcortes proprios;
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura;
 - executionStillForbidden=true porque nenhuma execucao e permitida;
@@ -189,7 +190,82 @@ Interpretacao obrigatoria:
 - definicao de escopo nao autoriza push;
 - definicao de escopo nao abre fase posterior automaticamente.
 
-## 9. Bloqueios obrigatorios nesta abertura
+## 9. Entradas da preparacao final pre-operacional
+
+Registrar que qualquer preparacao operacional concreta manual controlada sintetica futura somente podera ser considerada se as entradas abaixo estiverem documentalmente disponiveis, revisadas e aprovadas antes de qualquer comando, caller, script, rota, job, bootstrap ou request path:
+
+- identificacao documental do candidato sintetico;
+- confirmacao documental de que o candidato nao representa unidade real;
+- confirmacao documental de que o candidato nao representa usuario real;
+- confirmacao documental de que o candidato nao usa dados reais;
+- confirmacao documental de que o candidato nao usa trafego real;
+- confirmacao documental de ambiente nao produtivo;
+- confirmacao documental de ausencia de Portal;
+- confirmacao documental de ausencia de PostgreSQL;
+- confirmacao documental de ausencia de tenant DB real;
+- confirmacao documental de ausencia de alteracao de registry real;
+- confirmacao documental de ausencia de alteracao de allowlist real;
+- confirmacao documental de ausencia de alteracao de roteamento real;
+- confirmacao documental de ausencia de caller real;
+- confirmacao documental de ausencia de rota;
+- confirmacao documental de ausencia de CLI;
+- confirmacao documental de ausencia de script;
+- confirmacao documental de ausencia de job;
+- confirmacao documental de ausencia de bootstrap;
+- confirmacao documental de ausencia de request path;
+- plano documental de rollback futuro, sem rollback real;
+- criterio documental de parada;
+- criterio documental de sucesso;
+- criterio documental de falha;
+- lista documental de evidencias sinteticas esperadas;
+- autorizacao explicita futura do usuario;
+- aprovacao explicita futura de cada comando;
+- confirmacao documental de fallback obrigatorio para baseConnection;
+- confirmacao documental de que nenhum push sera feito neste microcorte;
+- confirmacao documental de que fase posterior nao sera aberta automaticamente.
+
+Registrar entradas expressamente invalidas:
+
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- tenant DB real;
+- registry real;
+- allowlist real;
+- roteamento real;
+- Portal;
+- PostgreSQL;
+- caller real;
+- rota real;
+- CLI real;
+- script real;
+- job real;
+- bootstrap real;
+- request path real;
+- evidencia operacional real;
+- comando executavel;
+- configuracao operacional concreta;
+- segredo, token ou credencial real;
+- variavel de ambiente operacional;
+- conexao real;
+- banco real;
+- qualquer entrada que implique preparacao operacional concreta.
+
+Interpretacao obrigatoria:
+
+- definicao de entradas nao autoriza preparacao operacional concreta;
+- definicao de entradas nao autoriza execucao;
+- definicao de entradas nao autoriza rollback real;
+- definicao de entradas nao autoriza coleta de evidencia operacional real;
+- definicao de entradas nao autoriza criacao de superficie operacional;
+- definicao de entradas nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de entradas nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de entradas nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de entradas nao autoriza push;
+- definicao de entradas nao abre fase posterior automaticamente.
+
+## 10. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase W bloqueia expressamente:
 
@@ -222,7 +298,7 @@ Registrar que a abertura da Fase W bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 10. Criterio de avanco da Fase W
+## 11. Criterio de avanco da Fase W
 
 Registrar que a Fase W so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
