@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- Aberta.
+- Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -528,7 +528,77 @@ Interpretacao obrigatoria:
 - checklist documental aplicado nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 - checklist documental aplicado nao autoriza push.
 
-## 13. Bloqueios obrigatorios nesta abertura
+## 13. Encerramento documental da Fase U
+
+Registrar que a Fase U foi encerrada documentalmente porque foram definidos:
+
+- contrato canonico;
+- origem na Fase T;
+- escopo documental;
+- fronteiras documentais;
+- entradas documentais;
+- saidas documentais;
+- exclusoes documentais;
+- checklist documental;
+- bloqueios obrigatorios;
+- criterio de avanco.
+
+Registrar explicitamente que o encerramento documental da Fase U nao autoriza:
+
+- preparacao operacional concreta;
+- execucao;
+- rollback real;
+- coleta de evidencia operacional real;
+- criacao de superficie operacional;
+- caller real;
+- rota;
+- CLI;
+- script;
+- job;
+- bootstrap;
+- request path;
+- registry real;
+- allowlist real;
+- roteamento real;
+- tenant DB real;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- alteracao de codigo;
+- alteracao de testes;
+- alteracao de package.json;
+- alteracao de src;
+- push.
+
+Registrar que a Fase U encerrada apenas deixa pronto o contrato documental de escopo para eventual preparacao operacional concreta manual controlada sintetica futura, que ainda exigira fase posterior propria, autorizacao explicita propria do usuario, comando proprio aprovado pelo usuario, validacao anterior, validacao posterior, rollback definido e evidencias definidas.
+
+Registrar os gates finais no contrato:
+
+- operationalPreparationScopeContractOpened=true
+- operationalPreparationScopeDefined=true
+- operationalPreparationBoundariesDefined=true
+- operationalPreparationInputsDefined=true
+- operationalPreparationOutputsDefined=true
+- operationalPreparationExclusionsDefined=true
+- operationalPreparationChecklistApplied=true
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitAuthorizationStillRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Registrar que blockedReasons=[] significa ausencia de bloqueio documental para encerrar a Fase U, nao autorizacao para preparar, executar, publicar, ativar ou plugar nada.
+
+## 14. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase U bloqueia expressamente:
 
@@ -558,7 +628,7 @@ Registrar que a abertura da Fase U bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 14. Interpretacao obrigatoria
+## 15. Interpretacao obrigatoria
 
 Registrar que abrir a Fase U nao significa escopo completo definido.
 
@@ -580,7 +650,7 @@ Registrar que abrir a Fase U nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase U nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 15. Criterio de avanco da Fase U
+## 16. Criterio de avanco da Fase U
 
 Registrar que a Fase U so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
