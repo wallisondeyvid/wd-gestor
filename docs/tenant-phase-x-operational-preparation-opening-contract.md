@@ -53,7 +53,7 @@ Deixar explicito que esta abertura:
 Registrar os gates iniciais:
 
 - operationalPreparationOpeningContractOpened=true
-- operationalPreparationScopeDefined=false
+- operationalPreparationScopeDefined=true
 - operationalPreparationInputsDefined=false
 - operationalPreparationOutputsDefined=false
 - operationalPreparationExclusionsDefined=false
@@ -78,7 +78,7 @@ Registrar os gates iniciais:
 Registrar:
 
 - operationalPreparationOpeningContractOpened=true porque o contrato documental de abertura da Fase X foi criado neste microcorte;
-- operationalPreparationScopeDefined=false porque o escopo operacional concreto ainda nao foi definido;
+- operationalPreparationScopeDefined=true porque o escopo operacional concreto futuro da Fase X foi definido documentalmente neste microcorte;
 - operationalPreparationInputsDefined=false porque as entradas operacionais concretas ainda nao foram definidas;
 - operationalPreparationOutputsDefined=false porque as saidas operacionais concretas ainda nao foram definidas;
 - operationalPreparationExclusionsDefined=false porque as exclusoes operacionais concretas ainda nao foram definidas;
@@ -96,9 +96,77 @@ Registrar:
 - explicitUserAuthorizationRequired=true porque autorizacao explicita futura do usuario segue obrigatoria;
 - commandApprovalStillRequired=true porque qualquer comando futuro ainda dependera de aprovacao explicita do usuario;
 - fallbackRequired=true porque fallback para baseConnection continua obrigatorio;
+- os demais gates documentais especificos ainda permanecem false e serao definidos em microcortes proprios;
 - blockedReasons=[] significa apenas ausencia de bloqueio documental para abrir a Fase X, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
 
-## 7. Bloqueios obrigatorios na abertura da Fase X
+## 7. Escopo operacional concreto futuro da Fase X
+
+Registrar que o escopo da Fase X e definir, de forma documental, os limites para uma preparacao operacional concreta manual controlada sintetica futura.
+
+Registrar como escopo permitido futuro, ainda dependente de microcortes proprios, autorizacao explicita do usuario e aprovacao de comandos:
+
+- preparacao concreta de um candidato sintetico;
+- uso exclusivo de ambiente nao produtivo;
+- uso exclusivo de dados sinteticos;
+- uso exclusivo de unidade sintetica;
+- uso exclusivo de usuario sintetico, se necessario;
+- preparacao manual controlada;
+- comandos futuros explicitamente aprovados;
+- plano de rollback futuro antes de qualquer acao concreta;
+- plano de evidencia sintetica futura antes de qualquer acao concreta;
+- confirmacao obrigatoria de fallback para baseConnection;
+- confirmacao de que nenhuma alteracao de roteamento real sera feita sem fase propria;
+- confirmacao de que nenhuma superficie operacional sera criada sem fase propria;
+- confirmacao de que nenhum caller real sera criado sem fase propria;
+- confirmacao de que nenhuma rota, CLI, script, job, bootstrap ou request path sera criado sem fase propria;
+- confirmacao de que PostgreSQL permanece fora do escopo atual.
+
+Registrar como escopo proibido neste microcorte:
+
+- preparacao operacional concreta imediata;
+- execucao;
+- piloto real;
+- rollback real;
+- evidencia operacional real;
+- superficie operacional;
+- caller real;
+- rota real;
+- CLI real;
+- script real;
+- job real;
+- bootstrap real;
+- request path real;
+- alteracao em src;
+- alteracao em codigo;
+- alteracao em testes;
+- alteracao em package.json;
+- alteracao em registry real;
+- alteracao em allowlist real;
+- abertura de tenant DB real;
+- alteracao de roteamento real;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- push;
+- abertura automatica de fase posterior.
+
+Registrar interpretacao obrigatoria:
+
+- definicao de escopo nao autoriza preparacao operacional concreta;
+- definicao de escopo nao autoriza execucao;
+- definicao de escopo nao autoriza rollback real;
+- definicao de escopo nao autoriza coleta de evidencia operacional real;
+- definicao de escopo nao autoriza criacao de superficie operacional;
+- definicao de escopo nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de escopo nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de escopo nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de escopo nao autoriza push;
+- definicao de escopo nao abre fase posterior automaticamente.
+
+## 8. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -132,7 +200,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 8. Criterio de avanco da Fase X
+## 9. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
