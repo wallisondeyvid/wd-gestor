@@ -59,7 +59,7 @@ Registrar os gates iniciais:
 - operationalPreparationExclusionsDefined=true
 - operationalPreparationCommandApprovalDefined=true
 - operationalPreparationRollbackPlanDefined=true
-- operationalPreparationEvidencePlanDefined=false
+- operationalPreparationEvidencePlanDefined=true
 - operationalPreparationChecklistApplied=false
 - operationalPreparationConcreteStillForbiddenInThisOpening=true
 - executionStillForbidden=true
@@ -84,7 +84,7 @@ Registrar:
 - operationalPreparationExclusionsDefined=true porque as exclusoes operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationCommandApprovalDefined=true porque a regra de aprovacao explicita de comandos futuros da Fase X foi definida documentalmente neste microcorte;
 - operationalPreparationRollbackPlanDefined=true porque o plano de rollback futuro da Fase X foi definido documentalmente neste microcorte;
-- operationalPreparationEvidencePlanDefined=false porque o plano de evidencia sintetica futura ainda nao foi definido;
+- operationalPreparationEvidencePlanDefined=true porque o plano de evidencia sintetica futura da Fase X foi definido documentalmente neste microcorte;
 - operationalPreparationChecklistApplied=false porque o checklist da Fase X ainda nao foi aplicado;
 - operationalPreparationConcreteStillForbiddenInThisOpening=true porque nenhuma preparacao operacional concreta e permitida neste microcorte de abertura;
 - executionStillForbidden=true porque nenhuma execucao e permitida;
@@ -529,7 +529,104 @@ Registrar interpretacao obrigatoria:
 - definicao de plano de rollback nao autoriza push;
 - definicao de plano de rollback nao abre fase posterior automaticamente.
 
-## 13. Bloqueios obrigatorios na abertura da Fase X
+## 13. Plano de evidencia sintetica futura da Fase X
+
+Registrar que qualquer preparacao operacional concreta manual controlada sintetica futura devera ter plano de evidencia sintetica definido antes de qualquer acao concreta.
+
+Registrar que o plano de evidencia sintetica futura devera conter, antes de qualquer acao concreta:
+
+- objetivo da evidencia sintetica;
+- hipotese sintetica a ser validada;
+- candidato sintetico explicitamente identificado;
+- ambiente nao produtivo confirmado;
+- ausencia de Portal confirmada;
+- ausencia de dados reais confirmada;
+- ausencia de trafego real confirmada;
+- ausencia de usuario real confirmada;
+- ausencia de unidade real confirmada;
+- ausencia de PostgreSQL confirmada;
+- ausencia de tenant DB real confirmada;
+- ausencia de registry real alterado confirmada;
+- ausencia de allowlist real alterada confirmada;
+- ausencia de roteamento real alterado confirmada;
+- fallback obrigatorio para baseConnection confirmado;
+- comandos futuros completos e visiveis antes de qualquer execucao;
+- aprovacao explicita futura do usuario antes de qualquer comando;
+- criterios de parada, sucesso e falha definidos antes de qualquer evidencia;
+- plano de rollback futuro definido antes de qualquer evidencia;
+- formato documental da evidencia sintetica;
+- local documental onde a evidencia sintetica futura sera registrada;
+- validacoes minimas obrigatorias antes e depois da evidencia.
+
+Registrar como evidencias sinteticas permitidas futuras, ainda dependentes de microcortes proprios, autorizacao explicita e aprovacao de comandos:
+
+- registro documental de pre-condicoes sinteticas;
+- registro documental de comandos futuros candidatos, sem execucao automatica;
+- registro documental de criterios de parada, sucesso e falha;
+- registro documental de resultado sintetico esperado;
+- registro documental de validacoes minimas;
+- registro documental de ausencia de dados reais;
+- registro documental de ausencia de trafego real;
+- registro documental de ausencia de usuario real;
+- registro documental de ausencia de unidade real;
+- registro documental de ausencia de Portal;
+- registro documental de ausencia de PostgreSQL;
+- registro documental de fallback para baseConnection;
+- registro documental de que nenhuma superficie operacional foi criada;
+- registro documental de que nenhum caller real, rota, CLI, script, job, bootstrap ou request path foi criado.
+
+Registrar como evidencias proibidas neste microcorte e em qualquer preparacao futura sem fase propria:
+
+- evidencia operacional real;
+- evidencia baseada em dados reais;
+- evidencia baseada em trafego real;
+- evidencia baseada em usuario real;
+- evidencia baseada em unidade real;
+- evidencia baseada em Portal;
+- evidencia baseada em PostgreSQL;
+- evidencia baseada em tenant DB real;
+- evidencia baseada em registry real alterado;
+- evidencia baseada em allowlist real alterada;
+- evidencia baseada em roteamento real alterado;
+- evidencia obtida por execucao sem aprovacao explicita;
+- evidencia obtida por comando escondido, parcial ou implicito;
+- evidencia obtida por caller real;
+- evidencia obtida por rota real;
+- evidencia obtida por CLI real;
+- evidencia obtida por script real;
+- evidencia obtida por job real;
+- evidencia obtida por bootstrap real;
+- evidencia obtida por request path real;
+- evidencia que dependa de segredo, token, credencial real, conexao real ou banco real;
+- evidencia que implique preparacao operacional concreta imediata;
+- evidencia que implique rollback real;
+- evidencia que implique promocao para producao.
+
+Registrar que, mesmo com plano de evidencia sintetica futura definido:
+
+- coleta de evidencia operacional real continua proibida;
+- execucao continua proibida;
+- preparacao operacional concreta continua proibida;
+- rollback real continua proibido;
+- superficie operacional continua proibida;
+- caller real, rota, CLI, script, job, bootstrap e request path continuam proibidos;
+- registry real, allowlist real, tenant DB real e roteamento real continuam proibidos;
+- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL continuam proibidos.
+
+Registrar interpretacao obrigatoria:
+
+- definicao de plano de evidencia nao autoriza preparacao operacional concreta;
+- definicao de plano de evidencia nao autoriza execucao;
+- definicao de plano de evidencia nao autoriza rollback real;
+- definicao de plano de evidencia nao autoriza coleta de evidencia operacional real;
+- definicao de plano de evidencia nao autoriza criacao de superficie operacional;
+- definicao de plano de evidencia nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de plano de evidencia nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de plano de evidencia nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de plano de evidencia nao autoriza push;
+- definicao de plano de evidencia nao abre fase posterior automaticamente.
+
+## 14. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -563,7 +660,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 14. Criterio de avanco da Fase X
+## 15. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
