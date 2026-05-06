@@ -1283,6 +1283,33 @@ Checkpoint tenant enforcement atual:
 - Microcorte atual preservado: somente docs/migration-status.md foi atualizado; o contrato canonico da Fase U nao foi alterado neste microcorte.
 - Push: pendente; nao realizar push ate decisao explicita de fechamento/publicacao, auditoria final pre-publicacao e autorizacao explicita.
 
+- Fase V aberta documentalmente.
+- Documento canonico: docs/tenant-phase-v-final-operational-preparation-authorization-contract.md
+- Base: e079ff5 docs(tenant): completa validacao final da fase u
+- Natureza: documental, preventiva, nao produtiva, sintetica, nao executiva e nao operacional por padrao.
+- Objetivo: definir contrato documental de autorizacao final antes de qualquer preparacao operacional concreta manual controlada sintetica futura.
+- Gates iniciais:
+	- finalOperationalPreparationAuthorizationContractOpened=true
+	- finalOperationalPreparationAuthorizationDefined=false
+	- finalOperationalPreparationAuthorizationScopeDefined=false
+	- finalOperationalPreparationAuthorizationInputsDefined=false
+	- finalOperationalPreparationAuthorizationOutputsDefined=false
+	- finalOperationalPreparationAuthorizationExclusionsDefined=false
+	- finalOperationalPreparationAuthorizationChecklistApplied=false
+	- operationalPreparationConcreteStillForbidden=true
+	- executionStillForbidden=true
+	- rollbackStillForbidden=true
+	- operationalEvidenceStillForbidden=true
+	- operationalSurfaceStillForbidden=true
+	- candidateStillSynthetic=true
+	- nonProductionRequired=true
+	- explicitUserAuthorizationRequired=true
+	- commandApprovalStillRequired=true
+	- fallbackRequired=true
+	- blockedReasons=[]
+- Interpretacao: abertura da Fase V nao concede autorizacao concreta, nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, superficie operacional, caller real, rota, CLI, script, job, bootstrap, request path, registry real, allowlist real, tenant DB real, roteamento real, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo e autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
