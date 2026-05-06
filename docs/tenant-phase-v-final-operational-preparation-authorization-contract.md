@@ -64,7 +64,7 @@ Deixar claro que esta abertura da Fase V ainda nao autoriza:
 Registrar os gates iniciais:
 
 - finalOperationalPreparationAuthorizationContractOpened=true
-- finalOperationalPreparationAuthorizationDefined=false
+- finalOperationalPreparationAuthorizationDefined=true
 - finalOperationalPreparationAuthorizationScopeDefined=false
 - finalOperationalPreparationAuthorizationInputsDefined=false
 - finalOperationalPreparationAuthorizationOutputsDefined=false
@@ -87,7 +87,12 @@ Registrar os gates iniciais:
 Explicar:
 
 - finalOperationalPreparationAuthorizationContractOpened=true porque a Fase V foi aberta documentalmente.
-- Os gates de definicao permanecem false porque ainda nao foram definidos em microcortes proprios.
+- finalOperationalPreparationAuthorizationDefined=true porque a autorizacao final documental foi definida, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
+- finalOperationalPreparationAuthorizationScopeDefined=false porque o escopo da autorizacao final ainda nao foi definido em microcorte proprio.
+- finalOperationalPreparationAuthorizationInputsDefined=false porque as entradas da autorizacao final ainda nao foram definidas em microcorte proprio.
+- finalOperationalPreparationAuthorizationOutputsDefined=false porque as saidas da autorizacao final ainda nao foram definidas em microcorte proprio.
+- finalOperationalPreparationAuthorizationExclusionsDefined=false porque as exclusoes da autorizacao final ainda nao foram definidas em microcorte proprio.
+- finalOperationalPreparationAuthorizationChecklistApplied=false porque o checklist documental da Fase V ainda nao foi aplicado em microcorte proprio.
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
 - executionStillForbidden=true porque nenhuma execucao e permitida.
 - rollbackStillForbidden=true porque nenhum rollback real e permitido.
@@ -100,7 +105,78 @@ Explicar:
 - fallbackRequired=true porque fallback para baseConnection continua obrigatorio.
 - blockedReasons=[] significa ausencia de bloqueio documental para abrir a Fase V, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
 
-## 7. Bloqueios obrigatorios nesta abertura
+## 7. Autorizacao final documental
+
+Registrar que a autorizacao final da Fase V e exclusivamente documental e nao autoriza preparacao operacional concreta por si so.
+
+Registrar que qualquer preparacao operacional concreta futura somente podera ser considerada se todos os itens abaixo forem verdadeiros em fase posterior propria:
+
+- alvo permanece sintetico;
+- ambiente permanece nao produtivo;
+- banco permanece sintetico e descartavel;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- PostgreSQL permanece fora de escopo;
+- fallback para baseConnection permanece obrigatorio;
+- rollback definido antes de qualquer comando;
+- evidencias definidas antes de qualquer comando;
+- validacao anterior definida;
+- validacao posterior definida;
+- comando futuro proprio descrito integralmente;
+- comando futuro proprio aprovado explicitamente pelo usuario;
+- execucao manual e controlada;
+- nenhuma automacao operacional;
+- nenhuma superficie operacional generica;
+- nenhuma reutilizacao implicita do contrato documental como autorizacao concreta.
+
+Registrar que esta autorizacao documental final nao substitui:
+
+- fase posterior propria;
+- aprovacao explicita do usuario para comando futuro;
+- validacao anterior;
+- validacao posterior;
+- rollback definido;
+- evidencias definidas;
+- auditoria pos-acao;
+- registro posterior no ledger.
+
+Registrar:
+
+- finalOperationalPreparationAuthorizationContractOpened=true
+- finalOperationalPreparationAuthorizationDefined=true
+- finalOperationalPreparationAuthorizationScopeDefined=false
+- finalOperationalPreparationAuthorizationInputsDefined=false
+- finalOperationalPreparationAuthorizationOutputsDefined=false
+- finalOperationalPreparationAuthorizationExclusionsDefined=false
+- finalOperationalPreparationAuthorizationChecklistApplied=false
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitUserAuthorizationRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Interpretacao obrigatoria:
+
+- autorizacao final documental definida nao autoriza preparacao operacional concreta nesta fase;
+- autorizacao final documental definida nao autoriza execucao;
+- autorizacao final documental definida nao autoriza rollback real;
+- autorizacao final documental definida nao autoriza coleta de evidencia operacional real;
+- autorizacao final documental definida nao autoriza criacao de superficie operacional;
+- autorizacao final documental definida nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- autorizacao final documental definida nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- autorizacao final documental definida nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- autorizacao final documental definida nao autoriza push.
+
+## 8. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase V bloqueia expressamente:
 
@@ -133,7 +209,7 @@ Registrar que a abertura da Fase V bloqueia expressamente:
 - push;
 - abertura automatica da Fase W.
 
-## 8. Criterio de avanco da Fase V
+## 9. Criterio de avanco da Fase V
 
 Registrar que a Fase V so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
