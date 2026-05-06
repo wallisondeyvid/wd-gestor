@@ -58,7 +58,7 @@ Registrar os gates iniciais:
 - operationalPreparationOutputsDefined=true
 - operationalPreparationExclusionsDefined=true
 - operationalPreparationCommandApprovalDefined=true
-- operationalPreparationRollbackPlanDefined=false
+- operationalPreparationRollbackPlanDefined=true
 - operationalPreparationEvidencePlanDefined=false
 - operationalPreparationChecklistApplied=false
 - operationalPreparationConcreteStillForbiddenInThisOpening=true
@@ -83,7 +83,7 @@ Registrar:
 - operationalPreparationOutputsDefined=true porque as saidas operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationExclusionsDefined=true porque as exclusoes operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationCommandApprovalDefined=true porque a regra de aprovacao explicita de comandos futuros da Fase X foi definida documentalmente neste microcorte;
-- operationalPreparationRollbackPlanDefined=false porque o plano de rollback futuro ainda nao foi definido;
+- operationalPreparationRollbackPlanDefined=true porque o plano de rollback futuro da Fase X foi definido documentalmente neste microcorte;
 - operationalPreparationEvidencePlanDefined=false porque o plano de evidencia sintetica futura ainda nao foi definido;
 - operationalPreparationChecklistApplied=false porque o checklist da Fase X ainda nao foi aplicado;
 - operationalPreparationConcreteStillForbiddenInThisOpening=true porque nenhuma preparacao operacional concreta e permitida neste microcorte de abertura;
@@ -451,7 +451,85 @@ Registrar interpretacao obrigatoria:
 - definicao de aprovacao de comandos nao autoriza push;
 - definicao de aprovacao de comandos nao abre fase posterior automaticamente.
 
-## 12. Bloqueios obrigatorios na abertura da Fase X
+## 12. Plano de rollback futuro da Fase X
+
+Registrar que qualquer preparacao operacional concreta manual controlada sintetica futura devera ter plano de rollback documental definido antes de qualquer acao concreta.
+
+Registrar que o plano de rollback futuro devera conter, antes de qualquer acao concreta:
+
+- escopo exato do rollback;
+- acao concreta que exigiria rollback;
+- condicao de acionamento do rollback;
+- criterio de parada antes do rollback;
+- criterio de sucesso do rollback;
+- criterio de falha do rollback;
+- comandos de rollback completos e visiveis antes de qualquer execucao futura;
+- confirmacao de que o rollback nao usa Portal;
+- confirmacao de que o rollback nao usa dados reais;
+- confirmacao de que o rollback nao usa trafego real;
+- confirmacao de que o rollback nao usa usuario real;
+- confirmacao de que o rollback nao usa unidade real;
+- confirmacao de que o rollback nao usa PostgreSQL;
+- confirmacao de que o rollback nao abre tenant DB real;
+- confirmacao de que o rollback nao altera registry real;
+- confirmacao de que o rollback nao altera allowlist real;
+- confirmacao de que o rollback nao altera roteamento real;
+- confirmacao de que o rollback nao cria caller real;
+- confirmacao de que o rollback nao cria rota, CLI, script, job, bootstrap ou request path sem fase propria;
+- confirmacao de fallback obrigatorio para baseConnection;
+- aprovacao explicita futura do usuario antes de qualquer execucao de rollback;
+- evidencia sintetica esperada apos rollback;
+- estado esperado do repositorio apos rollback;
+- validacoes minimas obrigatorias apos rollback.
+
+Registrar que nao sao rollback validos:
+
+- rollback implicito;
+- rollback automatico;
+- rollback sem comando visivel;
+- rollback sem aprovacao explicita;
+- rollback baseado apenas em validacao verde;
+- rollback baseado em blockedReasons=[];
+- rollback baseado em gate documental true;
+- rollback que use dados reais;
+- rollback que use trafego real;
+- rollback que use usuario real;
+- rollback que use unidade real;
+- rollback que use Portal;
+- rollback que use PostgreSQL;
+- rollback que altere registry real;
+- rollback que altere allowlist real;
+- rollback que abra tenant DB real;
+- rollback que altere roteamento real;
+- rollback que crie caller real, rota, CLI, script, job, bootstrap ou request path;
+- rollback que dependa de segredo, token, credencial real, conexao real ou banco real;
+- rollback que promova para producao.
+
+Registrar que, mesmo com plano de rollback futuro definido:
+
+- rollback real continua proibido neste microcorte;
+- execucao continua proibida;
+- preparacao operacional concreta continua proibida;
+- evidencia operacional real continua proibida;
+- superficie operacional continua proibida;
+- caller real, rota, CLI, script, job, bootstrap e request path continuam proibidos;
+- registry real, allowlist real, tenant DB real e roteamento real continuam proibidos;
+- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL continuam proibidos.
+
+Registrar interpretacao obrigatoria:
+
+- definicao de plano de rollback nao autoriza preparacao operacional concreta;
+- definicao de plano de rollback nao autoriza execucao;
+- definicao de plano de rollback nao autoriza rollback real;
+- definicao de plano de rollback nao autoriza coleta de evidencia operacional real;
+- definicao de plano de rollback nao autoriza criacao de superficie operacional;
+- definicao de plano de rollback nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de plano de rollback nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de plano de rollback nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de plano de rollback nao autoriza push;
+- definicao de plano de rollback nao abre fase posterior automaticamente.
+
+## 13. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -485,7 +563,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 13. Criterio de avanco da Fase X
+## 14. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
