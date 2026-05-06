@@ -57,7 +57,7 @@ Registrar os gates iniciais:
 - operationalPreparationInputsDefined=true
 - operationalPreparationOutputsDefined=true
 - operationalPreparationExclusionsDefined=true
-- operationalPreparationCommandApprovalDefined=false
+- operationalPreparationCommandApprovalDefined=true
 - operationalPreparationRollbackPlanDefined=false
 - operationalPreparationEvidencePlanDefined=false
 - operationalPreparationChecklistApplied=false
@@ -82,7 +82,7 @@ Registrar:
 - operationalPreparationInputsDefined=true porque as entradas operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationOutputsDefined=true porque as saidas operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationExclusionsDefined=true porque as exclusoes operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
-- operationalPreparationCommandApprovalDefined=false porque a aprovacao futura de comandos ainda nao foi definida;
+- operationalPreparationCommandApprovalDefined=true porque a regra de aprovacao explicita de comandos futuros da Fase X foi definida documentalmente neste microcorte;
 - operationalPreparationRollbackPlanDefined=false porque o plano de rollback futuro ainda nao foi definido;
 - operationalPreparationEvidencePlanDefined=false porque o plano de evidencia sintetica futura ainda nao foi definido;
 - operationalPreparationChecklistApplied=false porque o checklist da Fase X ainda nao foi aplicado;
@@ -380,7 +380,78 @@ Registrar interpretacao obrigatoria:
 - definicao de exclusoes nao autoriza push;
 - definicao de exclusoes nao abre fase posterior automaticamente.
 
-## 11. Bloqueios obrigatorios na abertura da Fase X
+## 11. Aprovacao explicita de comandos futuros da Fase X
+
+Registrar que qualquer comando futuro relacionado a preparacao operacional concreta manual controlada sintetica so podera ser apresentado, considerado ou executado quando houver aprovacao explicita, especifica e previa do usuario.
+
+Registrar que aprovacao explicita de comando exige:
+
+- comando completo visivel antes da execucao;
+- objetivo do comando descrito;
+- arquivos, diretorios ou superficies afetadas descritos;
+- confirmacao de que o comando nao usa Portal;
+- confirmacao de que o comando nao usa dados reais;
+- confirmacao de que o comando nao usa trafego real;
+- confirmacao de que o comando nao usa usuario real;
+- confirmacao de que o comando nao usa unidade real;
+- confirmacao de que o comando nao usa PostgreSQL;
+- confirmacao de que o comando nao abre tenant DB real;
+- confirmacao de que o comando nao altera registry real;
+- confirmacao de que o comando nao altera allowlist real;
+- confirmacao de que o comando nao altera roteamento real;
+- confirmacao de que o comando nao cria caller real;
+- confirmacao de que o comando nao cria rota, CLI, script, job, bootstrap ou request path sem fase propria;
+- confirmacao de fallback obrigatorio para baseConnection;
+- criterio de parada antes da execucao;
+- criterio de sucesso antes da execucao;
+- criterio de falha antes da execucao;
+- plano de rollback futuro definido antes da execucao;
+- plano de evidencia sintetica futura definido antes da execucao.
+
+Registrar que nao sao aprovacoes validas:
+
+- autorizacao generica;
+- silencio do usuario;
+- validacao verde;
+- blockedReasons=[];
+- gate documental true;
+- commit local;
+- documentacao aprovada;
+- prompt anterior;
+- ausencia de erro;
+- suposicao do assistente;
+- comando implicito;
+- comando parcial;
+- comando escondido;
+- execucao por oportunidade;
+- execucao em lote sem revisao individual;
+- qualquer comando que nao tenha sido mostrado integralmente antes.
+
+Registrar que, mesmo com aprovacao futura de comando:
+
+- preparacao operacional concreta continuara limitada ao escopo aprovado;
+- execucao continuara proibida ate fase propria;
+- rollback real continuara proibido ate fase propria;
+- evidencia operacional real continuara proibida;
+- superficie operacional continuara proibida sem fase propria;
+- caller real, rota, CLI, script, job, bootstrap e request path continuarao proibidos sem fase propria;
+- registry real, allowlist real, tenant DB real e roteamento real continuarao proibidos sem fase propria;
+- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL continuarao proibidos.
+
+Registrar interpretacao obrigatoria:
+
+- definicao de aprovacao de comandos nao autoriza preparacao operacional concreta;
+- definicao de aprovacao de comandos nao autoriza execucao;
+- definicao de aprovacao de comandos nao autoriza rollback real;
+- definicao de aprovacao de comandos nao autoriza coleta de evidencia operacional real;
+- definicao de aprovacao de comandos nao autoriza criacao de superficie operacional;
+- definicao de aprovacao de comandos nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de aprovacao de comandos nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de aprovacao de comandos nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de aprovacao de comandos nao autoriza push;
+- definicao de aprovacao de comandos nao abre fase posterior automaticamente.
+
+## 12. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -414,7 +485,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 12. Criterio de avanco da Fase X
+## 13. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
