@@ -524,7 +524,31 @@ Registrar interpretacao final obrigatoria:
 - encerramento documental da Fase W nao autoriza push;
 - encerramento documental da Fase W nao abre fase posterior automaticamente.
 
-## 15. Criterio de avanco da Fase W
+## 15. Validacao final completa da Fase W
+
+Registrar:
+
+- npm run verify:imports executado com sucesso;
+- npm test executado com sucesso;
+- quantidade de tests: 2203;
+- quantidade de suites: 17;
+- quantidade de pass: 2201;
+- quantidade de fail: 0;
+- quantidade de skipped: 2;
+- duration_ms: 241378.9944;
+- validacao completa confirma apenas integridade documental e regressao tecnica inexistente neste ponto;
+- validacao completa nao autoriza preparacao operacional concreta;
+- validacao completa nao autoriza execucao;
+- validacao completa nao autoriza rollback real;
+- validacao completa nao autoriza coleta de evidencia operacional real;
+- validacao completa nao autoriza criacao de superficie operacional;
+- validacao completa nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- validacao completa nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- validacao completa nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- validacao completa nao autoriza push;
+- validacao completa nao abre fase posterior automaticamente.
+
+## 16. Criterio de avanco da Fase W
 
 Registrar que a Fase W so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
