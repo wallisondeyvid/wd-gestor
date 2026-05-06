@@ -1152,19 +1152,34 @@ Checkpoint tenant enforcement atual:
 			- qualquer preparacao operacional concreta futura exigira validacao anterior e posterior;
 			- ate la, todos os bloqueios permanecem ativos.
 
-- Fase U aberta documentalmente.
+- Fase U encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-u-operational-preparation-scope-contract.md
 - Base: 2bcd266 docs(tenant): completa validacao final da fase t.
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao executiva e nao operacional por padrao.
-- Objetivo: definir contrato documental de escopo para eventual preparacao operacional concreta manual controlada sintetica futura.
-- Gates iniciais:
+- Objetivo: registrar no ledger global que o contrato documental de escopo para eventual preparacao operacional concreta manual controlada sintetica futura foi encerrado no documento canonico, preservando todos os bloqueios operacionais.
+- Cadeia local da Fase U ate este ponto:
+	- cf7b622 docs(tenant): abre fase u
+	- 49be368 docs(tenant): define escopo da fase u
+	- b3741ba docs(tenant): define fronteiras da fase u
+	- 720c946 docs(tenant): define entradas da fase u
+	- d320dc9 docs(tenant): define saidas da fase u
+	- f293c0a docs(tenant): define exclusoes da fase u
+	- 93768c3 docs(tenant): aplica checklist da fase u
+	- f2b7a02 docs(tenant): encerra fase u
+- Estado registrado no ledger:
+	- encerrada documentalmente no contrato canonico;
+	- ainda nao publicada;
+	- ainda sem validacao final completa registrada;
+	- ainda sem push;
+	- nenhuma Fase V aberta automaticamente.
+- Gates finais documentais da Fase U:
 	- operationalPreparationScopeContractOpened=true
-	- operationalPreparationScopeDefined=false
-	- operationalPreparationBoundariesDefined=false
-	- operationalPreparationInputsDefined=false
-	- operationalPreparationOutputsDefined=false
-	- operationalPreparationExclusionsDefined=false
-	- operationalPreparationChecklistApplied=false
+	- operationalPreparationScopeDefined=true
+	- operationalPreparationBoundariesDefined=true
+	- operationalPreparationInputsDefined=true
+	- operationalPreparationOutputsDefined=true
+	- operationalPreparationExclusionsDefined=true
+	- operationalPreparationChecklistApplied=true
 	- operationalPreparationConcreteStillForbidden=true
 	- executionStillForbidden=true
 	- rollbackStillForbidden=true
@@ -1176,8 +1191,54 @@ Checkpoint tenant enforcement atual:
 	- commandApprovalStillRequired=true
 	- fallbackRequired=true
 	- blockedReasons=[]
-- Interpretacao: abertura da Fase U nao concede autorizacao explicita concreta, nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, caller real, rota, CLI, script, job, bootstrap, request path, registry real, allowlist real, tenant DB real, roteamento real, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
-- Push: pendente; nao realizar push ate fechamento global da fase ou bloco amplo e autorizacao explicita.
+- Interpretacao obrigatoria dos gates finais:
+	- blockedReasons=[] significa ausencia de bloqueio documental para encerramento da Fase U;
+	- blockedReasons=[] nao significa autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
+- O encerramento da Fase U no ledger nao autoriza:
+	- preparacao operacional concreta;
+	- execucao;
+	- rollback real;
+	- coleta de evidencia operacional real;
+	- criacao de superficie operacional;
+	- caller real;
+	- rota;
+	- CLI;
+	- script;
+	- job;
+	- bootstrap;
+	- request path;
+	- registry real;
+	- allowlist real;
+	- roteamento real;
+	- tenant DB real;
+	- Portal;
+	- dados reais;
+	- trafego real;
+	- usuario real;
+	- unidade real;
+	- PostgreSQL;
+	- alteracao de codigo;
+	- alteracao de testes;
+	- alteracao de package.json;
+	- alteracao de src;
+	- push automatico;
+	- abertura automatica da Fase V.
+- Baseline curta conhecida antes do encerramento documental:
+	- tests: 136
+	- suites: 14
+	- pass: 136
+	- fail: 0
+	- cancelled: 0
+	- skipped: 0
+	- todo: 0
+	- duration_ms: 5147.0806
+- Pendencias obrigatorias antes de qualquer push de fechamento da Fase U:
+	- executar validacao final completa com npm test;
+	- registrar a validacao final completa no ledger global;
+	- decidir explicitamente a publicacao;
+	- manter a Fase V fechada ate autorizacao propria.
+- Microcorte atual preservado: somente docs/migration-status.md foi atualizado; o contrato canonico da Fase U nao foi alterado neste microcorte.
+- Push: pendente; nao realizar push ate validacao final completa, fechamento global da fase e autorizacao explicita.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
