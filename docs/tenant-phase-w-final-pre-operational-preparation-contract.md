@@ -44,7 +44,7 @@ Registrar os gates iniciais:
 - finalPreOperationalPreparationInputsDefined=true
 - finalPreOperationalPreparationOutputsDefined=true
 - finalPreOperationalPreparationExclusionsDefined=true
-- finalPreOperationalPreparationChecklistApplied=false
+- finalPreOperationalPreparationChecklistApplied=true
 - operationalPreparationConcreteStillForbidden=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -67,7 +67,8 @@ Explicar:
 - finalPreOperationalPreparationInputsDefined=true porque as entradas da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
 - finalPreOperationalPreparationOutputsDefined=true porque as saidas da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
 - finalPreOperationalPreparationExclusionsDefined=true porque as exclusoes da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
-- os demais gates documentais especificos ainda permanecem false e serao definidos em microcortes proprios;
+- finalPreOperationalPreparationChecklistApplied=true porque o checklist documental da Fase W foi aplicado neste microcorte;
+- todos os gates documentais especificos da Fase W agora estao true;
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura;
 - executionStillForbidden=true porque nenhuma execucao e permitida;
 - rollbackStillForbidden=true porque nenhum rollback real e permitido;
@@ -78,7 +79,7 @@ Explicar:
 - explicitUserAuthorizationRequired=true porque autorizacao explicita futura do usuario segue obrigatoria;
 - commandApprovalStillRequired=true porque qualquer comando futuro ainda dependera de aprovacao explicita do usuario;
 - fallbackRequired=true porque fallback para baseConnection continua obrigatorio;
-- blockedReasons=[] significa ausencia de bloqueio documental para definir os requisitos finais pre-operacionais na abertura da Fase W, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
+- blockedReasons=[] continua significando apenas ausencia de bloqueio documental para avanco da Fase W, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
 
 ## 7. Requisitos finais pre-operacionais
 
@@ -413,7 +414,45 @@ Interpretacao obrigatoria:
 - definicao de exclusoes nao autoriza push;
 - definicao de exclusoes nao abre fase posterior automaticamente.
 
-## 12. Bloqueios obrigatorios nesta abertura
+## 12. Checklist documental da Fase W
+
+Registrar o checklist como aplicado:
+
+- contrato da Fase W aberto;
+- requisitos finais pre-operacionais definidos;
+- escopo pre-operacional definido;
+- entradas pre-operacionais definidas;
+- saidas pre-operacionais definidas;
+- exclusoes pre-operacionais definidas;
+- checklist documental aplicado;
+- preparacao operacional concreta proibida;
+- execucao proibida;
+- rollback real proibido;
+- evidencia operacional real proibida;
+- superficie operacional proibida;
+- candidato sintetico obrigatorio;
+- ambiente nao produtivo obrigatorio;
+- autorizacao explicita futura do usuario obrigatoria;
+- aprovacao explicita futura de comandos obrigatoria;
+- fallback obrigatorio para baseConnection;
+- blockedReasons=[] apenas para avanco documental;
+- Fase posterior nao aberta automaticamente;
+- push nao autorizado neste microcorte.
+
+Registrar confirmacao de bloqueios:
+
+- o checklist nao autoriza preparacao operacional concreta;
+- o checklist nao autoriza execucao;
+- o checklist nao autoriza rollback real;
+- o checklist nao autoriza coleta de evidencia operacional real;
+- o checklist nao autoriza criacao de superficie operacional;
+- o checklist nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- o checklist nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- o checklist nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- o checklist nao autoriza push;
+- o checklist nao abre fase posterior automaticamente.
+
+## 13. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase W bloqueia expressamente:
 
@@ -446,7 +485,7 @@ Registrar que a abertura da Fase W bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 13. Criterio de avanco da Fase W
+## 14. Criterio de avanco da Fase W
 
 Registrar que a Fase W so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
