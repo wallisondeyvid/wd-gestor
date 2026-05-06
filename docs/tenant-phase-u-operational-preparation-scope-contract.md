@@ -85,7 +85,7 @@ Explicar:
 - operationalPreparationInputsDefined=true porque as entradas documentais foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - operationalPreparationOutputsDefined=true porque as saidas documentais foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - operationalPreparationExclusionsDefined=true porque as exclusoes documentais foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
-- operationalPreparationChecklistApplied=false porque o checklist ainda nao foi aplicado.
+- operationalPreparationChecklistApplied=true porque o checklist documental foi aplicado, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
 - executionStillForbidden=true porque nenhuma execucao e permitida nesta fase por padrao.
 - rollbackStillForbidden=true porque nenhum rollback real e permitido nesta fase por padrao.
@@ -463,7 +463,72 @@ Interpretacao obrigatoria:
 - exclusoes documentais definidas nao autorizam Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 - exclusoes documentais definidas nao autorizam push.
 
-## 12. Bloqueios obrigatorios nesta abertura
+## 12. Checklist documental da Fase U
+
+Registrar que o checklist e exclusivamente documental e nao autoriza preparacao operacional concreta.
+
+Registrar os itens do checklist:
+
+- contrato canonico da Fase U criado;
+- origem na Fase T registrada;
+- escopo documental definido;
+- fronteiras documentais definidas;
+- entradas documentais definidas;
+- saidas documentais definidas;
+- exclusoes documentais definidas;
+- preparacao operacional concreta continua proibida;
+- execucao continua proibida;
+- rollback real continua proibido;
+- evidencia operacional real continua proibida;
+- superficie operacional continua proibida;
+- candidato permanece sintetico;
+- ambiente nao produtivo permanece obrigatorio;
+- fallback para baseConnection permanece obrigatorio;
+- autorizacao explicita futura do usuario permanece obrigatoria;
+- comando futuro proprio aprovado pelo usuario permanece obrigatorio;
+- migration-status.md nao deve ser alterado neste microcorte;
+- encerramento da Fase U nao deve ser registrado neste microcorte;
+- validacao final da Fase U nao deve ser registrada neste microcorte;
+- push nao deve ser realizado.
+
+Registrar que qualquer item negativo, ambiguo ou ausente deve bloquear o avanco.
+
+Registrar que o checklist documental aplicado nao substitui autorizacao explicita futura, comando futuro aprovado pelo usuario, validacao final, encerramento documental ou push de fechamento.
+
+Registrar:
+
+- operationalPreparationScopeContractOpened=true
+- operationalPreparationScopeDefined=true
+- operationalPreparationBoundariesDefined=true
+- operationalPreparationInputsDefined=true
+- operationalPreparationOutputsDefined=true
+- operationalPreparationExclusionsDefined=true
+- operationalPreparationChecklistApplied=true
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitAuthorizationStillRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Interpretacao obrigatoria:
+
+- checklist documental aplicado nao autoriza preparacao operacional concreta;
+- checklist documental aplicado nao autoriza execucao;
+- checklist documental aplicado nao autoriza rollback real;
+- checklist documental aplicado nao autoriza coleta de evidencia operacional real;
+- checklist documental aplicado nao autoriza criacao de superficie operacional;
+- checklist documental aplicado nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- checklist documental aplicado nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- checklist documental aplicado nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- checklist documental aplicado nao autoriza push.
+
+## 13. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase U bloqueia expressamente:
 
@@ -493,7 +558,7 @@ Registrar que a abertura da Fase U bloqueia expressamente:
 - qualquer alteracao em testes;
 - qualquer alteracao em src.
 
-## 13. Interpretacao obrigatoria
+## 14. Interpretacao obrigatoria
 
 Registrar que abrir a Fase U nao significa escopo completo definido.
 
@@ -515,7 +580,7 @@ Registrar que abrir a Fase U nao autoriza abrir tenant DB real.
 
 Registrar que abrir a Fase U nao autoriza envolver Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 
-## 14. Criterio de avanco da Fase U
+## 15. Criterio de avanco da Fase U
 
 Registrar que a Fase U so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
