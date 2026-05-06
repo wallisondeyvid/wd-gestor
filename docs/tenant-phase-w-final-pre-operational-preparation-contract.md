@@ -42,7 +42,7 @@ Registrar os gates iniciais:
 - finalPreOperationalPreparationRequirementsDefined=true
 - finalPreOperationalPreparationScopeDefined=true
 - finalPreOperationalPreparationInputsDefined=true
-- finalPreOperationalPreparationOutputsDefined=false
+- finalPreOperationalPreparationOutputsDefined=true
 - finalPreOperationalPreparationExclusionsDefined=false
 - finalPreOperationalPreparationChecklistApplied=false
 - operationalPreparationConcreteStillForbidden=true
@@ -65,6 +65,7 @@ Explicar:
 - finalPreOperationalPreparationRequirementsDefined=true porque os requisitos finais pre-operacionais foram definidos documentalmente neste microcorte;
 - finalPreOperationalPreparationScopeDefined=true porque o escopo da preparacao final pre-operacional foi definido documentalmente neste microcorte;
 - finalPreOperationalPreparationInputsDefined=true porque as entradas da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
+- finalPreOperationalPreparationOutputsDefined=true porque as saidas da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
 - os demais gates documentais especificos ainda permanecem false e serao definidos em microcortes proprios;
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura;
 - executionStillForbidden=true porque nenhuma execucao e permitida;
@@ -265,7 +266,76 @@ Interpretacao obrigatoria:
 - definicao de entradas nao autoriza push;
 - definicao de entradas nao abre fase posterior automaticamente.
 
-## 10. Bloqueios obrigatorios nesta abertura
+## 10. Saidas da preparacao final pre-operacional
+
+Registrar que as unicas saidas permitidas da Fase W sao documentais e sinteticas, incluindo:
+
+- confirmacao documental de requisitos pre-operacionais;
+- confirmacao documental de escopo pre-operacional;
+- confirmacao documental de entradas pre-operacionais;
+- lista documental de saidas esperadas;
+- matriz documental de saidas permitidas;
+- matriz documental de saidas proibidas;
+- criterios documentais de sucesso;
+- criterios documentais de falha;
+- criterios documentais de parada;
+- plano documental de rollback futuro, sem rollback real;
+- registro documental de fallback obrigatorio para baseConnection;
+- registro documental de autorizacao explicita futura do usuario;
+- registro documental de aprovacao explicita futura de comandos;
+- registro documental de evidencia sintetica esperada;
+- registro documental de que nenhuma evidencia operacional real sera coletada;
+- registro documental de que nenhuma preparacao operacional concreta sera executada nesta fase;
+- registro documental de que nenhuma superficie operacional sera criada;
+- registro documental de que nenhum push sera feito neste microcorte;
+- registro documental de que fase posterior nao sera aberta automaticamente.
+
+Registrar saidas expressamente proibidas:
+
+- evidencia operacional real;
+- log operacional real;
+- conexao real;
+- banco real;
+- tenant DB real;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- alteracao de roteamento real;
+- alteracao de codigo;
+- alteracao de teste;
+- alteracao de package.json;
+- alteracao de src;
+- comando executavel;
+- script;
+- CLI;
+- job;
+- bootstrap;
+- rota;
+- caller real;
+- request path;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- segredo, token ou credencial real;
+- variavel de ambiente operacional;
+- qualquer artefato que possa ser usado como preparacao operacional concreta.
+
+Interpretacao obrigatoria:
+
+- definicao de saidas nao autoriza preparacao operacional concreta;
+- definicao de saidas nao autoriza execucao;
+- definicao de saidas nao autoriza rollback real;
+- definicao de saidas nao autoriza coleta de evidencia operacional real;
+- definicao de saidas nao autoriza criacao de superficie operacional;
+- definicao de saidas nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de saidas nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de saidas nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de saidas nao autoriza push;
+- definicao de saidas nao abre fase posterior automaticamente.
+
+## 11. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase W bloqueia expressamente:
 
@@ -298,7 +368,7 @@ Registrar que a abertura da Fase W bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 11. Criterio de avanco da Fase W
+## 12. Criterio de avanco da Fase W
 
 Registrar que a Fase W so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
