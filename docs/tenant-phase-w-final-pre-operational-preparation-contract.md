@@ -39,7 +39,7 @@ Registrar que a Fase W nao herda autorizacao operacional automatica da Fase V.
 Registrar os gates iniciais:
 
 - finalPreOperationalPreparationContractOpened=true
-- finalPreOperationalPreparationRequirementsDefined=false
+- finalPreOperationalPreparationRequirementsDefined=true
 - finalPreOperationalPreparationScopeDefined=false
 - finalPreOperationalPreparationInputsDefined=false
 - finalPreOperationalPreparationOutputsDefined=false
@@ -62,7 +62,8 @@ Registrar os gates iniciais:
 Explicar:
 
 - finalPreOperationalPreparationContractOpened=true porque a Fase W foi aberta documentalmente;
-- todos os demais gates documentais especificos permanecem false porque ainda serao definidos em microcortes proprios;
+- finalPreOperationalPreparationRequirementsDefined=true porque os requisitos finais pre-operacionais foram definidos documentalmente neste microcorte;
+- os demais gates documentais especificos ainda permanecem false porque serao definidos em microcortes proprios;
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura;
 - executionStillForbidden=true porque nenhuma execucao e permitida;
 - rollbackStillForbidden=true porque nenhum rollback real e permitido;
@@ -73,9 +74,59 @@ Explicar:
 - explicitUserAuthorizationRequired=true porque autorizacao explicita futura do usuario segue obrigatoria;
 - commandApprovalStillRequired=true porque qualquer comando futuro ainda dependera de aprovacao explicita do usuario;
 - fallbackRequired=true porque fallback para baseConnection continua obrigatorio;
-- blockedReasons=[] significa ausencia de bloqueio documental para abrir a Fase W, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
+- blockedReasons=[] significa ausencia de bloqueio documental para definir os requisitos finais pre-operacionais na abertura da Fase W, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
 
-## 7. Bloqueios obrigatorios nesta abertura
+## 7. Requisitos finais pre-operacionais
+
+Registrar que qualquer preparacao operacional concreta manual controlada sintetica futura somente podera ser considerada se todos os requisitos abaixo estiverem definidos e satisfeitos documentalmente antes de qualquer comando, caller, script, rota, job, bootstrap ou request path:
+
+- candidato estritamente sintetico;
+- ambiente estritamente nao produtivo;
+- ausencia de Portal;
+- ausencia de dados reais;
+- ausencia de trafego real;
+- ausencia de usuario real;
+- ausencia de unidade real;
+- ausencia de PostgreSQL;
+- ausencia de tenant DB real;
+- ausencia de alteracao de registry real;
+- ausencia de alteracao de allowlist real;
+- ausencia de alteracao de roteamento real;
+- ausencia de superficie operacional;
+- ausencia de caller real;
+- ausencia de rota;
+- ausencia de CLI;
+- ausencia de script;
+- ausencia de job;
+- ausencia de bootstrap;
+- ausencia de request path;
+- fallback obrigatorio para baseConnection;
+- autorizacao explicita futura do usuario;
+- aprovacao explicita futura de cada comando;
+- plano de rollback documental previo;
+- criterio de parada documental previo;
+- criterio de sucesso documental previo;
+- criterio de falha documental previo;
+- evidencia esperada apenas sintetica e nao operacional;
+- proibicao de coleta de evidencia operacional real;
+- proibicao de execucao real;
+- proibicao de preparacao operacional concreta nesta fase;
+- proibicao de push neste microcorte.
+
+Interpretacao obrigatoria:
+
+- definicao de requisitos nao autoriza preparacao operacional concreta;
+- definicao de requisitos nao autoriza execucao;
+- definicao de requisitos nao autoriza rollback real;
+- definicao de requisitos nao autoriza coleta de evidencia operacional real;
+- definicao de requisitos nao autoriza criacao de superficie operacional;
+- definicao de requisitos nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de requisitos nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de requisitos nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de requisitos nao autoriza push;
+- definicao de requisitos nao abre fase posterior automaticamente.
+
+## 8. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase W bloqueia expressamente:
 
@@ -108,7 +159,7 @@ Registrar que a abertura da Fase W bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 8. Criterio de avanco da Fase W
+## 9. Criterio de avanco da Fase W
 
 Registrar que a Fase W so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
