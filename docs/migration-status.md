@@ -1283,19 +1283,42 @@ Checkpoint tenant enforcement atual:
 - Microcorte atual preservado: somente docs/migration-status.md foi atualizado; o contrato canonico da Fase U nao foi alterado neste microcorte.
 - Push: pendente; nao realizar push ate decisao explicita de fechamento/publicacao, auditoria final pre-publicacao e autorizacao explicita.
 
-- Fase V aberta documentalmente.
+- Fase V encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-v-final-operational-preparation-authorization-contract.md
+- Commit local de encerramento do contrato: aa6c28c docs(tenant): encerra fase v
 - Base: e079ff5 docs(tenant): completa validacao final da fase u
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao executiva e nao operacional por padrao.
-- Objetivo: definir contrato documental de autorizacao final antes de qualquer preparacao operacional concreta manual controlada sintetica futura.
-- Gates iniciais:
+- Objetivo consolidado: registrar no ledger global que a Fase V foi encerrada documentalmente no contrato canonico, sem validacao final completa neste microcorte e sem abertura automatica da Fase W.
+- Encerramento documental consolidado com:
+	- contrato canonico aberto
+	- autorizacao final documental definida
+	- escopo definido
+	- entradas definidas
+	- saidas definidas
+	- exclusoes definidas
+	- checklist documental aplicado
+	- gates documentais completos
+	- blockedReasons=[]
+	- preparacao operacional concreta ainda proibida
+	- execucao ainda proibida
+	- rollback real ainda proibido
+	- evidencia operacional real ainda proibida
+	- superficie operacional ainda proibida
+	- candidato ainda sintetico
+	- ambiente nao produtivo ainda obrigatorio
+	- fallback para baseConnection ainda obrigatorio
+	- autorizacao explicita futura do usuario ainda obrigatoria
+	- aprovacao explicita de comando futuro ainda obrigatoria
+	- Fase W nao aberta automaticamente
+	- push ainda nao autorizado
+- Gates finais documentais da Fase V:
 	- finalOperationalPreparationAuthorizationContractOpened=true
-	- finalOperationalPreparationAuthorizationDefined=false
-	- finalOperationalPreparationAuthorizationScopeDefined=false
-	- finalOperationalPreparationAuthorizationInputsDefined=false
-	- finalOperationalPreparationAuthorizationOutputsDefined=false
-	- finalOperationalPreparationAuthorizationExclusionsDefined=false
-	- finalOperationalPreparationAuthorizationChecklistApplied=false
+	- finalOperationalPreparationAuthorizationDefined=true
+	- finalOperationalPreparationAuthorizationScopeDefined=true
+	- finalOperationalPreparationAuthorizationInputsDefined=true
+	- finalOperationalPreparationAuthorizationOutputsDefined=true
+	- finalOperationalPreparationAuthorizationExclusionsDefined=true
+	- finalOperationalPreparationAuthorizationChecklistApplied=true
 	- operationalPreparationConcreteStillForbidden=true
 	- executionStillForbidden=true
 	- rollbackStillForbidden=true
@@ -1307,8 +1330,8 @@ Checkpoint tenant enforcement atual:
 	- commandApprovalStillRequired=true
 	- fallbackRequired=true
 	- blockedReasons=[]
-- Interpretacao: abertura da Fase V nao concede autorizacao concreta, nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real, superficie operacional, caller real, rota, CLI, script, job, bootstrap, request path, registry real, allowlist real, tenant DB real, roteamento real, Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
-- Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo e autorizacao explicita.
+- Interpretacao: este ledger update nao e validacao final completa da Fase V, nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push e nao abre Fase W automaticamente.
+- Push: pendente; nao realizar push ate decisao explicita posterior.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
