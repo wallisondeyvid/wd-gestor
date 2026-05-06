@@ -54,7 +54,7 @@ Registrar os gates iniciais:
 
 - operationalPreparationOpeningContractOpened=true
 - operationalPreparationScopeDefined=true
-- operationalPreparationInputsDefined=false
+- operationalPreparationInputsDefined=true
 - operationalPreparationOutputsDefined=false
 - operationalPreparationExclusionsDefined=false
 - operationalPreparationCommandApprovalDefined=false
@@ -79,7 +79,7 @@ Registrar:
 
 - operationalPreparationOpeningContractOpened=true porque o contrato documental de abertura da Fase X foi criado neste microcorte;
 - operationalPreparationScopeDefined=true porque o escopo operacional concreto futuro da Fase X foi definido documentalmente neste microcorte;
-- operationalPreparationInputsDefined=false porque as entradas operacionais concretas ainda nao foram definidas;
+- operationalPreparationInputsDefined=true porque as entradas operacionais concretas futuras da Fase X foram definidas documentalmente neste microcorte;
 - operationalPreparationOutputsDefined=false porque as saidas operacionais concretas ainda nao foram definidas;
 - operationalPreparationExclusionsDefined=false porque as exclusoes operacionais concretas ainda nao foram definidas;
 - operationalPreparationCommandApprovalDefined=false porque a aprovacao futura de comandos ainda nao foi definida;
@@ -166,7 +166,73 @@ Registrar interpretacao obrigatoria:
 - definicao de escopo nao autoriza push;
 - definicao de escopo nao abre fase posterior automaticamente.
 
-## 8. Bloqueios obrigatorios na abertura da Fase X
+## 8. Entradas operacionais concretas futuras da Fase X
+
+Registrar que qualquer preparacao operacional concreta manual controlada sintetica futura dependera, antes de qualquer acao concreta, das seguintes entradas documentais e sinteticas:
+
+- identificacao explicita do candidato sintetico;
+- confirmacao de que o candidato nao representa unidade real;
+- confirmacao de que o candidato nao representa usuario real;
+- confirmacao de que o candidato nao usa dados reais;
+- confirmacao de que o candidato nao usa trafego real;
+- confirmacao de que o ambiente e nao produtivo;
+- confirmacao de que nenhum Portal sera usado;
+- confirmacao de que PostgreSQL permanece fora do escopo atual;
+- confirmacao de que nenhuma tenant DB real sera aberta;
+- confirmacao de que nenhum registry real sera alterado;
+- confirmacao de que nenhuma allowlist real sera alterada;
+- confirmacao de que nenhum roteamento real sera alterado;
+- confirmacao de que nenhum caller real existe ou sera criado sem fase propria;
+- confirmacao de que nenhuma rota, CLI, script, job, bootstrap ou request path sera criado sem fase propria;
+- confirmacao de fallback obrigatorio para baseConnection;
+- autorizacao explicita futura do usuario para avancar;
+- aprovacao explicita futura de cada comando antes de qualquer execucao;
+- plano de rollback futuro definido antes de qualquer acao concreta;
+- plano de evidencia sintetica futura definido antes de qualquer acao concreta;
+- criterios de parada, sucesso e falha definidos antes de qualquer acao concreta.
+
+Registrar como entradas invalidas neste microcorte e em qualquer preparacao futura sem fase propria:
+
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- tenant DB real;
+- registry real;
+- allowlist real;
+- roteamento real;
+- Portal;
+- PostgreSQL;
+- caller real;
+- rota real;
+- CLI real;
+- script real;
+- job real;
+- bootstrap real;
+- request path real;
+- segredo, token ou credencial real;
+- variavel de ambiente operacional;
+- conexao real;
+- banco real;
+- evidencia operacional real;
+- comando executavel nao aprovado explicitamente;
+- configuracao operacional concreta nao documentada;
+- qualquer entrada que implique preparacao operacional concreta imediata.
+
+Registrar interpretacao obrigatoria:
+
+- definicao de entradas nao autoriza preparacao operacional concreta;
+- definicao de entradas nao autoriza execucao;
+- definicao de entradas nao autoriza rollback real;
+- definicao de entradas nao autoriza coleta de evidencia operacional real;
+- definicao de entradas nao autoriza criacao de superficie operacional;
+- definicao de entradas nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de entradas nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de entradas nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de entradas nao autoriza push;
+- definicao de entradas nao abre fase posterior automaticamente.
+
+## 9. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -200,7 +266,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 9. Criterio de avanco da Fase X
+## 10. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
