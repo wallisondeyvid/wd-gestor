@@ -43,7 +43,7 @@ Registrar os gates iniciais:
 - finalPreOperationalPreparationScopeDefined=true
 - finalPreOperationalPreparationInputsDefined=true
 - finalPreOperationalPreparationOutputsDefined=true
-- finalPreOperationalPreparationExclusionsDefined=false
+- finalPreOperationalPreparationExclusionsDefined=true
 - finalPreOperationalPreparationChecklistApplied=false
 - operationalPreparationConcreteStillForbidden=true
 - executionStillForbidden=true
@@ -66,6 +66,7 @@ Explicar:
 - finalPreOperationalPreparationScopeDefined=true porque o escopo da preparacao final pre-operacional foi definido documentalmente neste microcorte;
 - finalPreOperationalPreparationInputsDefined=true porque as entradas da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
 - finalPreOperationalPreparationOutputsDefined=true porque as saidas da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
+- finalPreOperationalPreparationExclusionsDefined=true porque as exclusoes da preparacao final pre-operacional foram definidas documentalmente neste microcorte;
 - os demais gates documentais especificos ainda permanecem false e serao definidos em microcortes proprios;
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura;
 - executionStillForbidden=true porque nenhuma execucao e permitida;
@@ -335,7 +336,84 @@ Interpretacao obrigatoria:
 - definicao de saidas nao autoriza push;
 - definicao de saidas nao abre fase posterior automaticamente.
 
-## 11. Bloqueios obrigatorios nesta abertura
+## 11. Exclusoes da preparacao final pre-operacional
+
+Registrar que a Fase W exclui expressamente qualquer acao, artefato ou interpretacao que produza, habilite, prepare ou simule operacionalmente:
+
+- preparacao operacional concreta;
+- execucao;
+- piloto real;
+- rollback real;
+- evidencia operacional real;
+- superficie operacional;
+- caller real;
+- rota real;
+- CLI real;
+- script real;
+- job real;
+- bootstrap real;
+- request path real;
+- alteracao de registry real;
+- alteracao de allowlist real;
+- abertura de tenant DB real;
+- alteracao de roteamento real;
+- Portal;
+- dados reais;
+- trafego real;
+- usuario real;
+- unidade real;
+- PostgreSQL;
+- alteracao de codigo;
+- alteracao de testes;
+- alteracao de package.json;
+- alteracao de src;
+- comando executavel;
+- configuracao operacional concreta;
+- segredo, token ou credencial real;
+- variavel de ambiente operacional;
+- conexao real;
+- banco real;
+- automacao operacional;
+- promocao para producao;
+- autorizacao implicita para fase posterior;
+- reutilizacao deste contrato como permissao operacional concreta;
+- push neste microcorte.
+
+Registrar exclusoes por interpretacao:
+
+- blockedReasons=[] nao autoriza preparacao operacional concreta;
+- gates true nao autorizam execucao;
+- requisitos definidos nao autorizam execucao;
+- escopo definido nao autoriza execucao;
+- entradas definidas nao autorizam execucao;
+- saidas definidas nao autorizam execucao;
+- ausencia de erro documental nao autoriza preparacao operacional concreta;
+- validacao verde nao autoriza preparacao operacional concreta;
+- commit local nao autoriza preparacao operacional concreta;
+- package.json nao representa autorizacao operacional;
+- harness de teste nao representa autorizacao operacional;
+- documentacao nao representa caller;
+- documentacao nao representa rota;
+- documentacao nao representa CLI;
+- documentacao nao representa script;
+- documentacao nao representa job;
+- documentacao nao representa bootstrap;
+- documentacao nao representa request path.
+
+Interpretacao obrigatoria:
+
+- definicao de exclusoes nao autoriza preparacao operacional concreta;
+- definicao de exclusoes nao autoriza execucao;
+- definicao de exclusoes nao autoriza rollback real;
+- definicao de exclusoes nao autoriza coleta de evidencia operacional real;
+- definicao de exclusoes nao autoriza criacao de superficie operacional;
+- definicao de exclusoes nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- definicao de exclusoes nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- definicao de exclusoes nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- definicao de exclusoes nao autoriza push;
+- definicao de exclusoes nao abre fase posterior automaticamente.
+
+## 12. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase W bloqueia expressamente:
 
@@ -368,7 +446,7 @@ Registrar que a abertura da Fase W bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 12. Criterio de avanco da Fase W
+## 13. Criterio de avanco da Fase W
 
 Registrar que a Fase W so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
