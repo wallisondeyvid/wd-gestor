@@ -59,9 +59,9 @@ Deixar claro que esta abertura da Fase V ainda nao autoriza:
 - alteracao de src;
 - push.
 
-## 5. Gates iniciais da Fase V
+## 5. Gates documentais da Fase V
 
-Registrar os gates iniciais:
+Registrar os gates documentais:
 
 - finalOperationalPreparationAuthorizationContractOpened=true
 - finalOperationalPreparationAuthorizationDefined=true
@@ -69,7 +69,7 @@ Registrar os gates iniciais:
 - finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=true
 - finalOperationalPreparationAuthorizationExclusionsDefined=true
-- finalOperationalPreparationAuthorizationChecklistApplied=false
+- finalOperationalPreparationAuthorizationChecklistApplied=true
 - operationalPreparationConcreteStillForbidden=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -82,7 +82,7 @@ Registrar os gates iniciais:
 - fallbackRequired=true
 - blockedReasons=[]
 
-## 6. Interpretacao dos gates iniciais
+## 6. Interpretacao dos gates documentais
 
 Explicar:
 
@@ -92,7 +92,7 @@ Explicar:
 - finalOperationalPreparationAuthorizationInputsDefined=true porque as entradas da autorizacao final documental foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - finalOperationalPreparationAuthorizationOutputsDefined=true porque as saidas da autorizacao final documental foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - finalOperationalPreparationAuthorizationExclusionsDefined=true porque as exclusoes da autorizacao final documental foram definidas, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
-- finalOperationalPreparationAuthorizationChecklistApplied=false porque o checklist documental da Fase V ainda nao foi aplicado em microcorte proprio.
+- finalOperationalPreparationAuthorizationChecklistApplied=true porque o checklist documental da Fase V foi aplicado, sem autorizacao concreta, sem preparacao operacional concreta, sem execucao, sem rollback real, sem coleta de evidencia operacional real e sem criacao de superficie operacional.
 - operationalPreparationConcreteStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura.
 - executionStillForbidden=true porque nenhuma execucao e permitida.
 - rollbackStillForbidden=true porque nenhum rollback real e permitido.
@@ -103,7 +103,7 @@ Explicar:
 - explicitUserAuthorizationRequired=true porque autorizacao explicita futura do usuario segue obrigatoria.
 - commandApprovalStillRequired=true porque qualquer comando futuro proprio ainda dependera de aprovacao explicita do usuario.
 - fallbackRequired=true porque fallback para baseConnection continua obrigatorio.
-- blockedReasons=[] significa ausencia de bloqueio documental para abrir a Fase V, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
+- blockedReasons=[] significa ausencia de bloqueio adicional para avanco documental da Fase V, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
 
 ## 7. Autorizacao final documental
 
@@ -151,7 +151,7 @@ Registrar:
 - finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=true
 - finalOperationalPreparationAuthorizationExclusionsDefined=true
-- finalOperationalPreparationAuthorizationChecklistApplied=false
+- finalOperationalPreparationAuthorizationChecklistApplied=true
 - operationalPreparationConcreteStillForbidden=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -240,7 +240,7 @@ Registrar:
 - finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=true
 - finalOperationalPreparationAuthorizationExclusionsDefined=true
-- finalOperationalPreparationAuthorizationChecklistApplied=false
+- finalOperationalPreparationAuthorizationChecklistApplied=true
 - operationalPreparationConcreteStillForbidden=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -315,7 +315,7 @@ Registrar:
 - finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=true
 - finalOperationalPreparationAuthorizationExclusionsDefined=true
-- finalOperationalPreparationAuthorizationChecklistApplied=false
+- finalOperationalPreparationAuthorizationChecklistApplied=true
 - operationalPreparationConcreteStillForbidden=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -407,8 +407,8 @@ Registrar:
 - finalOperationalPreparationAuthorizationScopeDefined=true
 - finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=true
-- finalOperationalPreparationAuthorizationExclusionsDefined=false
-- finalOperationalPreparationAuthorizationChecklistApplied=false
+- finalOperationalPreparationAuthorizationExclusionsDefined=true
+- finalOperationalPreparationAuthorizationChecklistApplied=true
 - operationalPreparationConcreteStillForbidden=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -493,7 +493,7 @@ Registrar:
 - finalOperationalPreparationAuthorizationInputsDefined=true
 - finalOperationalPreparationAuthorizationOutputsDefined=true
 - finalOperationalPreparationAuthorizationExclusionsDefined=true
-- finalOperationalPreparationAuthorizationChecklistApplied=false
+- finalOperationalPreparationAuthorizationChecklistApplied=true
 - operationalPreparationConcreteStillForbidden=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -519,7 +519,65 @@ Interpretacao obrigatoria:
 - exclusoes da autorizacao final documental definidas nao autorizam push;
 - exclusoes da autorizacao final documental definidas nao abrem Fase W automaticamente.
 
-## 12. Bloqueios obrigatorios nesta abertura
+## 12. Checklist documental da Fase V
+
+Registrar que o checklist documental da Fase V confirma:
+
+- contrato canonico da Fase V aberto;
+- autorizacao final documental definida;
+- escopo da autorizacao final documental definido;
+- entradas da autorizacao final documental definidas;
+- saidas da autorizacao final documental definidas;
+- exclusoes da autorizacao final documental definidas;
+- preparacao operacional concreta continua proibida;
+- execucao continua proibida;
+- rollback real continua proibido;
+- coleta de evidencia operacional real continua proibida;
+- criacao de superficie operacional continua proibida;
+- candidato continua sintetico;
+- ambiente nao produtivo continua obrigatorio;
+- autorizacao explicita futura do usuario continua obrigatoria;
+- aprovacao explicita de comando futuro continua obrigatoria;
+- fallback para baseConnection continua obrigatorio;
+- blockedReasons permanece vazio apenas para avanco documental;
+- Fase W nao foi aberta automaticamente;
+- push nao foi autorizado.
+
+Registrar:
+
+- finalOperationalPreparationAuthorizationContractOpened=true
+- finalOperationalPreparationAuthorizationDefined=true
+- finalOperationalPreparationAuthorizationScopeDefined=true
+- finalOperationalPreparationAuthorizationInputsDefined=true
+- finalOperationalPreparationAuthorizationOutputsDefined=true
+- finalOperationalPreparationAuthorizationExclusionsDefined=true
+- finalOperationalPreparationAuthorizationChecklistApplied=true
+- operationalPreparationConcreteStillForbidden=true
+- executionStillForbidden=true
+- rollbackStillForbidden=true
+- operationalEvidenceStillForbidden=true
+- operationalSurfaceStillForbidden=true
+- candidateStillSynthetic=true
+- nonProductionRequired=true
+- explicitUserAuthorizationRequired=true
+- commandApprovalStillRequired=true
+- fallbackRequired=true
+- blockedReasons=[]
+
+Interpretacao obrigatoria:
+
+- checklist documental aplicado nao autoriza preparacao operacional concreta nesta fase;
+- checklist documental aplicado nao autoriza execucao;
+- checklist documental aplicado nao autoriza rollback real;
+- checklist documental aplicado nao autoriza coleta de evidencia operacional real;
+- checklist documental aplicado nao autoriza criacao de superficie operacional;
+- checklist documental aplicado nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- checklist documental aplicado nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- checklist documental aplicado nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- checklist documental aplicado nao autoriza push;
+- checklist documental aplicado nao abre Fase W automaticamente.
+
+## 13. Bloqueios obrigatorios nesta abertura
 
 Registrar que a abertura da Fase V bloqueia expressamente:
 
@@ -552,7 +610,7 @@ Registrar que a abertura da Fase V bloqueia expressamente:
 - push;
 - abertura automatica da Fase W.
 
-## 13. Criterio de avanco da Fase V
+## 14. Criterio de avanco da Fase V
 
 Registrar que a Fase V so podera avancar documentalmente quando forem definidos, em microcortes separados e auditaveis:
 
