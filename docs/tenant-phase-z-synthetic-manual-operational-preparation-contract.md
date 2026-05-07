@@ -68,7 +68,7 @@ Registrar:
 
 - syntheticManualOperationalPreparationPhaseOpened=true
 - firstConcreteSyntheticActionDefined=true
-- firstConcreteSyntheticCommandApproved=false
+- firstConcreteSyntheticCommandApproved=true
 - firstConcreteSyntheticActionExecuted=false
 - rollbackRealExecuted=false
 - operationalEvidenceRealCollected=false
@@ -93,8 +93,11 @@ Registrar:
 
 - syntheticManualOperationalPreparationPhaseOpened=true porque a Fase Z foi aberta como fase concreta sintetica/manual/controlada;
 - firstConcreteSyntheticActionDefined=true porque o primeiro ato concreto sintetico/manual/controlado futuro foi definido documentalmente neste microcorte;
-- firstConcreteSyntheticCommandApproved=false permanece false porque o comando candidato ainda nao foi aprovado pelo usuario;
+- firstConcreteSyntheticCommandApproved=true porque o comando candidato do primeiro ato concreto sintetico/manual/controlado foi aprovado documentalmente neste microcorte;
 - firstConcreteSyntheticActionExecuted=false permanece false porque nenhuma acao concreta foi executada;
+- aprovacao documental do comando nao executa o comando;
+- aprovacao documental do comando nao substitui microcorte futuro de execucao;
+- aprovacao documental do comando nao autoriza alteracao de arquivos.
 - rollbackRealExecuted=false porque nenhum rollback real foi executado;
 - operationalEvidenceRealCollected=false porque nenhuma evidencia operacional real foi coletada;
 - operationalSurfaceCreated=false porque nenhuma superficie operacional foi criada;
@@ -135,7 +138,7 @@ Registrar finalidade:
 - produzir evidencia sintetica textual e local;
 - preservar fallback para baseConnection.
 
-Registrar comando candidato futuro, ainda nao aprovado e ainda nao executado:
+Registrar comando candidato futuro, aprovado documentalmente e ainda nao executado:
 
 ```powershell
 git status -sb
@@ -147,7 +150,7 @@ Get-ChildItem .\server\db -File | Select-Object Name
 
 Registrar que o comando candidato:
 
-- nao foi aprovado neste microcorte;
+- foi aprovado documentalmente neste microcorte;
 - nao foi executado neste microcorte;
 - devera ser exibido novamente antes de qualquer execucao futura;
 - dependera de autorizacao explicita do usuario;
@@ -220,7 +223,75 @@ Registrar interpretacao obrigatoria:
 - definicao do primeiro ato concreto sintetico nao autoriza push;
 - execucao futura dependera de novo microcorte, comando completo visivel e autorizacao explicita do usuario.
 
-## 8. Bloqueios obrigatorios da abertura da Fase Z
+## 8. Aprovacao documental do comando candidato
+
+Registrar que o comando candidato abaixo foi aprovado documentalmente para execucao futura em microcorte proprio, mas nao foi executado neste microcorte:
+
+```powershell
+git status -sb
+git log --oneline --decorate -8
+Get-ChildItem .\tests\architecture\*unitDatabaseRegistry* -File | Select-Object Name
+Get-ChildItem .\server\config -File | Select-Object Name
+Get-ChildItem .\server\db -File | Select-Object Name
+```
+
+Registrar que a aprovacao documental confirma:
+
+- comando completo visivel;
+- comando limitado a leitura/listagem;
+- comando local;
+- comando nao produtivo;
+- comando sem alteracao de arquivos;
+- comando sem alteracao de codigo;
+- comando sem alteracao de testes;
+- comando sem alteracao de package.json;
+- comando sem alteracao de scripts;
+- comando sem alteracao de rotas;
+- comando sem toque em src;
+- comando sem criacao de caller;
+- comando sem criacao de rota;
+- comando sem criacao de CLI;
+- comando sem criacao de script persistente;
+- comando sem criacao de job;
+- comando sem criacao de bootstrap;
+- comando sem plug em request path;
+- comando sem abertura de tenant DB real;
+- comando sem alteracao de registry real;
+- comando sem alteracao de allowlist real;
+- comando sem alteracao de roteamento real;
+- comando sem uso de Portal;
+- comando sem uso de dados reais;
+- comando sem uso de trafego real;
+- comando sem uso de usuario real;
+- comando sem uso de unidade real;
+- comando sem uso de PostgreSQL;
+- comando sem rollback real;
+- comando sem evidencia operacional real;
+- comando sem criacao de superficie operacional real;
+- comando sem push.
+
+Registrar que a execucao futura devera:
+
+- ocorrer em novo microcorte;
+- repetir o comando completo antes da execucao;
+- confirmar autorizacao explicita do usuario imediatamente antes da execucao;
+- parar se houver qualquer ambiguidade;
+- parar se houver qualquer necessidade de escrita;
+- parar se qualquer comando diferente for necessario;
+- registrar apenas evidencia sintetica textual;
+- preservar fallback para baseConnection.
+
+Registrar interpretacao obrigatoria:
+
+- aprovacao documental do comando nao executa comando;
+- aprovacao documental do comando nao coleta evidencia operacional real;
+- aprovacao documental do comando nao cria superficie operacional;
+- aprovacao documental do comando nao altera codigo;
+- aprovacao documental do comando nao altera testes;
+- aprovacao documental do comando nao autoriza push;
+- execucao futura dependera de novo microcorte.
+
+## 9. Bloqueios obrigatorios da abertura da Fase Z
 
 Registrar que a abertura da Fase Z bloqueia expressamente:
 
@@ -259,7 +330,7 @@ Registrar que a abertura da Fase Z bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 9. Criterio de avanco da Fase Z
+## 10. Criterio de avanco da Fase Z
 
 Registrar que a Fase Z devera avancar diretamente para a definicao do primeiro ato concreto sintetico/manual/controlado, em microcorte proprio.
 
