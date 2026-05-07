@@ -240,7 +240,40 @@ Registrar que a abertura da Fase Y bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 11. Criterio de avanco da Fase Y
+## 11. Validacao final completa da Fase Y
+
+Registrar:
+
+- npm run verify:imports executado com sucesso;
+- npm test executado com sucesso;
+- quantidade de tests: 2203;
+- quantidade de suites: 17;
+- quantidade de pass: 2201;
+- quantidade de fail: 0;
+- quantidade de cancelled: 0;
+- quantidade de skipped: 2;
+- quantidade de todo: 0;
+- duration_ms: 236599.2015;
+- validacao completa confirma apenas integridade documental e ausencia de regressao tecnica neste ponto;
+- validacao completa confirma que a Fase Y permaneceu curta;
+- validacao completa confirma que a Fase X foi usada como base consolidada;
+- validacao completa confirma que escopo, entradas, saidas, exclusoes, rollback e evidencia nao foram reabertos na Fase Y;
+- validacao completa confirma que a proxima fase natural deve ser concreta, sintetica, manual e controlada em fase propria;
+- validacao completa nao autoriza preparacao operacional concreta;
+- validacao completa nao autoriza execucao;
+- validacao completa nao autoriza rollback real;
+- validacao completa nao autoriza coleta de evidencia operacional real;
+- validacao completa nao autoriza criacao de superficie operacional;
+- validacao completa nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- validacao completa nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- validacao completa nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- validacao completa nao autoriza push;
+- validacao completa nao abre fase posterior automaticamente;
+- validacao completa nao substitui autorizacao explicita futura do usuario;
+- validacao completa nao substitui aprovacao individual futura de comandos;
+- validacao completa nao substitui fase propria para a primeira preparacao concreta sintetica/manual/controlada.
+
+## 12. Criterio de avanco da Fase Y
 
 Registrar que a Fase Y deve avancar de forma curta, preferencialmente em poucos microcortes:
 
