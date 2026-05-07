@@ -1584,6 +1584,48 @@ Checkpoint tenant enforcement atual:
 - Interpretacao obrigatoria: registro de encerramento da Fase Y no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push, nao abre fase posterior automaticamente, nao substitui autorizacao explicita futura do usuario, nao substitui aprovacao individual futura de comandos e nao substitui fase propria para a primeira preparacao concreta sintetica/manual/controlada.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
 
+- Fase Z aberta.
+- Documento canonico: docs/tenant-phase-z-synthetic-manual-operational-preparation-contract.md
+- Base: 182985e docs(tenant): completa validacao final da fase y
+- Natureza: concreta em intencao, sintetica, manual, controlada, nao produtiva e nao executiva por abertura.
+- Objetivo: preparar o primeiro ato concreto sintetico/manual/controlado futuro, sem executa-lo neste microcorte de abertura.
+- Base consolidada: Fase X e Fase Y.
+- Observacao estrategica: a Fase Z nao deve reabrir cadeia longa de contratos; o proximo microcorte natural deve definir o primeiro ato concreto sintetico.
+
+- Gates iniciais da Fase Z:
+	- syntheticManualOperationalPreparationPhaseOpened=true
+	- firstConcreteSyntheticActionDefined=false
+	- firstConcreteSyntheticCommandApproved=false
+	- firstConcreteSyntheticActionExecuted=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- operationalSurfaceCreated=false
+	- candidateStillSynthetic=true
+	- nonProductionRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- fallbackRequired=true
+	- portalStillForbidden=true
+	- realDataStillForbidden=true
+	- realTrafficStillForbidden=true
+	- realUserStillForbidden=true
+	- realUnitStillForbidden=true
+	- postgresStillForbidden=true
+	- tenantDbRealStillForbidden=true
+	- blockedReasons=[]
+
+- Interpretacao obrigatoria:
+	- abertura da Fase Z nao executa preparacao operacional concreta;
+	- abertura da Fase Z nao autoriza piloto real;
+	- abertura da Fase Z nao autoriza rollback real;
+	- abertura da Fase Z nao autoriza coleta de evidencia operacional real;
+	- abertura da Fase Z nao autoriza criacao de superficie operacional real;
+	- abertura da Fase Z nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+	- abertura da Fase Z nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+	- abertura da Fase Z nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- abertura da Fase Z nao autoriza push;
+	- abertura da Fase Z nao abre fase posterior automaticamente.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
@@ -1595,6 +1637,7 @@ Notas:
  Decisao de checkpoint: pausar expressamente a frente Escalas por enquanto.
  Motivo da pausa: os proximos corredores naturais empurram a frente para Ausencias, Ferias, disponibilidade, relatorios PDF, paginas/render, writes/delete ou routers amplos, deixando de ser microcortes locais e seguros para esta rodada.
  Recomendacao operacional: nao abrir nova triagem nem novo micro-patch em Escalas agora; manter este checkpoint como ponto de parada da frente ate surgir um corredor pequeno, read-only e inequivoco fora dessas zonas.
+
 
 
 
