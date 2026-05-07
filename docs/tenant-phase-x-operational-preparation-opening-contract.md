@@ -796,7 +796,36 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 17. Criterio de avanco da Fase X
+## 17. Validacao final completa da Fase X
+
+Registrar:
+
+- npm run verify:imports executado com sucesso;
+- npm test executado com sucesso;
+- quantidade de tests: 2203;
+- quantidade de suites: 17;
+- quantidade de pass: 2201;
+- quantidade de fail: 0;
+- quantidade de cancelled: 0;
+- quantidade de skipped: 2;
+- quantidade de todo: 0;
+- duration_ms: 238078.455;
+- validacao completa confirma apenas integridade documental e ausencia de regressao tecnica neste ponto;
+- validacao completa nao autoriza preparacao operacional concreta;
+- validacao completa nao autoriza execucao;
+- validacao completa nao autoriza rollback real;
+- validacao completa nao autoriza coleta de evidencia operacional real;
+- validacao completa nao autoriza criacao de superficie operacional;
+- validacao completa nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- validacao completa nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- validacao completa nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- validacao completa nao autoriza push;
+- validacao completa nao abre fase posterior automaticamente;
+- validacao completa nao substitui autorizacao explicita futura do usuario;
+- validacao completa nao substitui aprovacao explicita futura de comandos;
+- validacao completa nao substitui fase propria para qualquer preparacao concreta futura.
+
+## 18. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
