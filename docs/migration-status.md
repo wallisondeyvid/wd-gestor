@@ -1430,22 +1430,46 @@ Checkpoint tenant enforcement atual:
 - Interpretacao obrigatoria: registro de encerramento no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push e nao abre fase posterior automaticamente.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
 
-- Fase X aberta documentalmente.
+- Fase X encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-x-operational-preparation-opening-contract.md
+- Commit local de encerramento do contrato: 75db8d2 docs(tenant): encerra fase x
 - Base: d106657 docs(tenant): completa validacao final da fase w
-- Natureza: documental na abertura, preventiva, nao produtiva, sintetica, manual, controlada e nao executiva por padrao.
-- Objetivo: abrir o bloco de preparacao operacional concreta manual controlada sintetica sem executar preparacao concreta neste microcorte.
+- A Fase X foi encerrada documentalmente no contrato canonico.
+- O escopo operacional concreto futuro foi definido.
+- As entradas operacionais concretas futuras foram definidas.
+- As saidas operacionais concretas futuras foram definidas.
+- As exclusoes operacionais concretas futuras foram definidas.
+- A aprovacao explicita de comandos futuros foi definida.
+- O plano de rollback futuro foi definido.
+- O plano de evidencia sintetica futura foi definido.
+- O checklist documental foi aplicado.
+- Todos os gates documentais especificos da Fase X estao true.
+- Todos os bloqueios operacionais continuam true.
+- blockedReasons=[] permanece restrito a ausencia de bloqueio documental interno.
+- Preparacao operacional concreta continua proibida.
+- Execucao continua proibida.
+- Rollback real continua proibido.
+- Evidencia operacional real continua proibida.
+- Superficie operacional continua proibida.
+- Candidato sintetico continua obrigatorio.
+- Ambiente nao produtivo continua obrigatorio.
+- Autorizacao explicita futura do usuario continua obrigatoria.
+- Aprovacao explicita futura de comandos continua obrigatoria.
+- Fallback para baseConnection continua obrigatorio.
+- Push continua nao autorizado neste microcorte.
+- Fase posterior nao foi aberta automaticamente.
 
-- Gates iniciais da Fase X:
+
+- Gates finais da Fase X:
 	- operationalPreparationOpeningContractOpened=true
-	- operationalPreparationScopeDefined=false
-	- operationalPreparationInputsDefined=false
-	- operationalPreparationOutputsDefined=false
-	- operationalPreparationExclusionsDefined=false
-	- operationalPreparationCommandApprovalDefined=false
-	- operationalPreparationRollbackPlanDefined=false
-	- operationalPreparationEvidencePlanDefined=false
-	- operationalPreparationChecklistApplied=false
+	- operationalPreparationScopeDefined=true
+	- operationalPreparationInputsDefined=true
+	- operationalPreparationOutputsDefined=true
+	- operationalPreparationExclusionsDefined=true
+	- operationalPreparationCommandApprovalDefined=true
+	- operationalPreparationRollbackPlanDefined=true
+	- operationalPreparationEvidencePlanDefined=true
+	- operationalPreparationChecklistApplied=true
 	- operationalPreparationConcreteStillForbiddenInThisOpening=true
 	- executionStillForbidden=true
 	- rollbackStillForbidden=true
@@ -1458,7 +1482,7 @@ Checkpoint tenant enforcement atual:
 	- fallbackRequired=true
 	- blockedReasons=[]
 
-- Interpretacao: abertura da Fase X nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push e nao abre fase posterior automaticamente.
+- Interpretacao obrigatoria: registro de encerramento no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push, nao abre fase posterior automaticamente, nao substitui autorizacao explicita futura do usuario, nao substitui aprovacao explicita futura de comandos e nao substitui fase propria para qualquer preparacao concreta futura.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
 
 ## Escalas
@@ -1472,4 +1496,5 @@ Notas:
  Decisao de checkpoint: pausar expressamente a frente Escalas por enquanto.
  Motivo da pausa: os proximos corredores naturais empurram a frente para Ausencias, Ferias, disponibilidade, relatorios PDF, paginas/render, writes/delete ou routers amplos, deixando de ser microcortes locais e seguros para esta rodada.
  Recomendacao operacional: nao abrir nova triagem nem novo micro-patch em Escalas agora; manter este checkpoint como ponto de parada da frente ate surgir um corredor pequeno, read-only e inequivoco fora dessas zonas.
+
 
