@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-Aberta.
+Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -159,7 +159,48 @@ Registrar interpretacao obrigatoria:
 - checklist da Fase Y nao substitui aprovacao individual futura de comandos;
 - checklist da Fase Y nao substitui fase propria para a primeira preparacao concreta sintetica/manual/controlada.
 
-## 9. Bloqueios obrigatorios da abertura da Fase Y
+## 9. Encerramento documental da Fase Y
+
+Registrar que a Fase Y foi encerrada documentalmente neste contrato porque:
+
+- o contrato canonico da Fase Y foi aberto;
+- a pre-autorizacao documental final foi definida;
+- o checklist documental curto foi aplicado;
+- a Fase X foi usada como base consolidada;
+- escopo, entradas, saidas, exclusoes, rollback e evidencia nao foram reabertos na Fase Y;
+- a Fase Y permaneceu curta;
+- a proxima fase natural deve ser concreta, sintetica, manual e controlada em fase propria;
+- preparacao operacional concreta continua proibida nesta Fase Y;
+- execucao continua proibida nesta Fase Y;
+- rollback real continua proibido;
+- evidencia operacional real continua proibida;
+- superficie operacional continua proibida;
+- candidato sintetico continua obrigatorio;
+- ambiente nao produtivo continua obrigatorio;
+- autorizacao explicita futura do usuario continua obrigatoria;
+- aprovacao individual futura de comandos continua obrigatoria;
+- fallback para baseConnection continua obrigatorio;
+- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL continuam proibidos;
+- push continua nao autorizado neste microcorte;
+- fase posterior nao foi aberta automaticamente.
+
+Registrar interpretacao final obrigatoria:
+
+- encerramento documental da Fase Y nao autoriza preparacao operacional concreta;
+- encerramento documental da Fase Y nao autoriza execucao;
+- encerramento documental da Fase Y nao autoriza rollback real;
+- encerramento documental da Fase Y nao autoriza coleta de evidencia operacional real;
+- encerramento documental da Fase Y nao autoriza criacao de superficie operacional;
+- encerramento documental da Fase Y nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- encerramento documental da Fase Y nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- encerramento documental da Fase Y nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- encerramento documental da Fase Y nao autoriza push;
+- encerramento documental da Fase Y nao abre fase posterior automaticamente;
+- encerramento documental da Fase Y nao substitui autorizacao explicita futura do usuario;
+- encerramento documental da Fase Y nao substitui aprovacao individual futura de comandos;
+- encerramento documental da Fase Y nao substitui fase propria para a primeira preparacao concreta sintetica/manual/controlada.
+
+## 10. Bloqueios obrigatorios da abertura da Fase Y
 
 Registrar que a abertura da Fase Y bloqueia expressamente:
 
@@ -199,7 +240,7 @@ Registrar que a abertura da Fase Y bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 10. Criterio de avanco da Fase Y
+## 11. Criterio de avanco da Fase Y
 
 Registrar que a Fase Y deve avancar de forma curta, preferencialmente em poucos microcortes:
 
