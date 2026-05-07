@@ -60,7 +60,7 @@ Registrar os gates iniciais:
 - operationalPreparationCommandApprovalDefined=true
 - operationalPreparationRollbackPlanDefined=true
 - operationalPreparationEvidencePlanDefined=true
-- operationalPreparationChecklistApplied=false
+- operationalPreparationChecklistApplied=true
 - operationalPreparationConcreteStillForbiddenInThisOpening=true
 - executionStillForbidden=true
 - rollbackStillForbidden=true
@@ -85,7 +85,7 @@ Registrar:
 - operationalPreparationCommandApprovalDefined=true porque a regra de aprovacao explicita de comandos futuros da Fase X foi definida documentalmente neste microcorte;
 - operationalPreparationRollbackPlanDefined=true porque o plano de rollback futuro da Fase X foi definido documentalmente neste microcorte;
 - operationalPreparationEvidencePlanDefined=true porque o plano de evidencia sintetica futura da Fase X foi definido documentalmente neste microcorte;
-- operationalPreparationChecklistApplied=false porque o checklist da Fase X ainda nao foi aplicado;
+- operationalPreparationChecklistApplied=true porque o checklist documental da Fase X foi aplicado neste microcorte;
 - operationalPreparationConcreteStillForbiddenInThisOpening=true porque nenhuma preparacao operacional concreta e permitida neste microcorte de abertura;
 - executionStillForbidden=true porque nenhuma execucao e permitida;
 - rollbackStillForbidden=true porque nenhum rollback real e permitido;
@@ -96,8 +96,9 @@ Registrar:
 - explicitUserAuthorizationRequired=true porque autorizacao explicita futura do usuario segue obrigatoria;
 - commandApprovalStillRequired=true porque qualquer comando futuro ainda dependera de aprovacao explicita do usuario;
 - fallbackRequired=true porque fallback para baseConnection continua obrigatorio;
-- os demais gates documentais especificos ainda permanecem false e serao definidos em microcortes proprios;
-- blockedReasons=[] significa apenas ausencia de bloqueio documental para abrir a Fase X, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
+- todos os gates documentais especificos anteriores da Fase X ja estao definidos neste contrato;
+- todos os gates de bloqueio operacional continuam true e preservam a proibicao de preparar, executar, coletar evidencia operacional real, criar superficie operacional, publicar, ativar ou plugar qualquer coisa;
+- blockedReasons=[] continua significando apenas ausencia de bloqueio documental interno para abrir a Fase X, nao autorizacao operacional para preparar, executar, publicar, ativar ou plugar qualquer coisa.
 
 ## 7. Escopo operacional concreto futuro da Fase X
 
@@ -626,7 +627,97 @@ Registrar interpretacao obrigatoria:
 - definicao de plano de evidencia nao autoriza push;
 - definicao de plano de evidencia nao abre fase posterior automaticamente.
 
-## 14. Bloqueios obrigatorios na abertura da Fase X
+## 14. Checklist documental da Fase X
+
+Registrar que o checklist da Fase X foi aplicado documentalmente neste microcorte e que sua aplicacao nao autoriza preparacao operacional concreta, execucao, rollback real, evidencia operacional real ou criacao de superficie operacional.
+
+Registrar checklist de gates documentais:
+
+- operationalPreparationOpeningContractOpened=true;
+- operationalPreparationScopeDefined=true;
+- operationalPreparationInputsDefined=true;
+- operationalPreparationOutputsDefined=true;
+- operationalPreparationExclusionsDefined=true;
+- operationalPreparationCommandApprovalDefined=true;
+- operationalPreparationRollbackPlanDefined=true;
+- operationalPreparationEvidencePlanDefined=true;
+- operationalPreparationChecklistApplied=true.
+
+Registrar checklist de bloqueios preservados:
+
+- operationalPreparationConcreteStillForbiddenInThisOpening=true;
+- executionStillForbidden=true;
+- rollbackStillForbidden=true;
+- operationalEvidenceStillForbidden=true;
+- operationalSurfaceStillForbidden=true;
+- candidateStillSynthetic=true;
+- nonProductionRequired=true;
+- explicitUserAuthorizationRequired=true;
+- commandApprovalStillRequired=true;
+- fallbackRequired=true.
+
+Registrar checklist de ausencia operacional:
+
+- nenhuma preparacao operacional concreta foi executada;
+- nenhuma execucao foi realizada;
+- nenhum rollback real foi executado;
+- nenhuma evidencia operacional real foi coletada;
+- nenhuma superficie operacional foi criada;
+- nenhum caller real foi criado;
+- nenhuma rota real foi criada;
+- nenhuma CLI real foi criada;
+- nenhum script real foi criado;
+- nenhum job real foi criado;
+- nenhum bootstrap real foi criado;
+- nenhum request path real foi plugado;
+- nenhum arquivo em src foi alterado;
+- nenhum codigo foi alterado;
+- nenhum teste foi alterado;
+- nenhum package.json foi alterado;
+- nenhum registry real foi alterado;
+- nenhuma allowlist real foi alterada;
+- nenhuma tenant DB real foi aberta;
+- nenhum roteamento real foi alterado;
+- nenhum Portal foi usado;
+- nenhum dado real foi usado;
+- nenhum trafego real foi usado;
+- nenhum usuario real foi usado;
+- nenhuma unidade real foi usada;
+- PostgreSQL permaneceu fora do escopo atual;
+- nenhum push foi realizado;
+- nenhuma fase posterior foi aberta automaticamente.
+
+Registrar checklist de interpretacao:
+
+- checklist aplicado nao autoriza preparacao operacional concreta;
+- checklist aplicado nao autoriza execucao;
+- checklist aplicado nao autoriza rollback real;
+- checklist aplicado nao autoriza coleta de evidencia operacional real;
+- checklist aplicado nao autoriza criacao de superficie operacional;
+- checklist aplicado nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- checklist aplicado nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- checklist aplicado nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- checklist aplicado nao autoriza push;
+- checklist aplicado nao abre fase posterior automaticamente;
+- checklist aplicado nao substitui autorizacao explicita futura do usuario;
+- checklist aplicado nao substitui aprovacao explicita futura de comandos;
+- validacao verde nao autoriza execucao;
+- commit local nao autoriza push;
+- documentacao aprovada nao autoriza operacao;
+- qualquer ambiguidade deve degradar para nao executar, nao preparar, nao plugar e nao publicar.
+
+Registrar criterio documental de checklist aprovado:
+
+- todos os gates documentais da Fase X estao true;
+- todos os bloqueios operacionais permanecem true;
+- blockedReasons=[] permanece valido apenas como ausencia de bloqueio documental interno;
+- nenhuma superficie operacional foi criada;
+- nenhuma preparacao operacional concreta foi executada;
+- nenhuma execucao ocorreu;
+- nenhum rollback real ocorreu;
+- nenhuma evidencia operacional real foi coletada.
+
+## 15. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -660,7 +751,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 15. Criterio de avanco da Fase X
+## 16. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
