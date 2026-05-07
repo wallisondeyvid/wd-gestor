@@ -69,7 +69,7 @@ Registrar:
 - syntheticManualOperationalPreparationPhaseOpened=true
 - firstConcreteSyntheticActionDefined=true
 - firstConcreteSyntheticCommandApproved=true
-- firstConcreteSyntheticActionExecuted=false
+- firstConcreteSyntheticActionExecuted=true
 - rollbackRealExecuted=false
 - operationalEvidenceRealCollected=false
 - operationalSurfaceCreated=false
@@ -94,12 +94,12 @@ Registrar:
 - syntheticManualOperationalPreparationPhaseOpened=true porque a Fase Z foi aberta como fase concreta sintetica/manual/controlada;
 - firstConcreteSyntheticActionDefined=true porque o primeiro ato concreto sintetico/manual/controlado futuro foi definido documentalmente neste microcorte;
 - firstConcreteSyntheticCommandApproved=true porque o comando candidato do primeiro ato concreto sintetico/manual/controlado foi aprovado documentalmente neste microcorte;
-- firstConcreteSyntheticActionExecuted=false permanece false porque nenhuma acao concreta foi executada;
+- firstConcreteSyntheticActionExecuted=true porque o primeiro ato concreto sintetico/manual/controlado read-only foi executado neste microcorte;
 - aprovacao documental do comando nao executa o comando;
 - aprovacao documental do comando nao substitui microcorte futuro de execucao;
 - aprovacao documental do comando nao autoriza alteracao de arquivos.
 - rollbackRealExecuted=false porque nenhum rollback real foi executado;
-- operationalEvidenceRealCollected=false porque nenhuma evidencia operacional real foi coletada;
+- operationalEvidenceRealCollected=false porque a evidencia coletada foi apenas sintetica textual/local, nao operacional real;
 - operationalSurfaceCreated=false porque nenhuma superficie operacional foi criada;
 - candidateStillSynthetic=true porque qualquer candidato futuro deve permanecer estritamente sintetico;
 - nonProductionRequired=true porque qualquer preparacao futura deve permanecer em ambiente nao produtivo;
@@ -138,7 +138,7 @@ Registrar finalidade:
 - produzir evidencia sintetica textual e local;
 - preservar fallback para baseConnection.
 
-Registrar comando candidato futuro, aprovado documentalmente e ainda nao executado:
+Registrar comando candidato futuro, aprovado documentalmente antes da execucao read-only deste microcorte:
 
 ```powershell
 git status -sb
@@ -151,7 +151,7 @@ Get-ChildItem .\server\db -File | Select-Object Name
 Registrar que o comando candidato:
 
 - foi aprovado documentalmente neste microcorte;
-- nao foi executado neste microcorte;
+- foi executado como auditoria read-only neste microcorte;
 - devera ser exibido novamente antes de qualquer execucao futura;
 - dependera de autorizacao explicita do usuario;
 - dependera de aprovacao individual do comando;
@@ -291,7 +291,108 @@ Registrar interpretacao obrigatoria:
 - aprovacao documental do comando nao autoriza push;
 - execucao futura dependera de novo microcorte.
 
-## 9. Bloqueios obrigatorios da abertura da Fase Z
+## 9. Execucao do primeiro ato concreto sintetico read-only
+
+Registrar que o primeiro ato concreto sintetico/manual/controlado da Fase Z foi executado neste microcorte como auditoria local read-only.
+
+Registrar comando executado:
+
+```powershell
+git status -sb
+git log --oneline --decorate -8
+Get-ChildItem .\tests\architecture\*unitDatabaseRegistry* -File | Select-Object Name
+Get-ChildItem .\server\config -File | Select-Object Name
+Get-ChildItem .\server\db -File | Select-Object Name
+```
+
+Registrar evidencia sintetica textual coletada:
+
+- saida de git status -sb:
+
+```text
+## migration/refactor-core...origin/migration/refactor-core [ahead 3]
+```
+
+- saida de git log --oneline --decorate -8:
+
+```text
+2fd60da (HEAD -> migration/refactor-core) docs(tenant): aprova comando do primeiro ato sintetico da fase z
+822b41e docs(tenant): define primeiro ato concreto sintetico da fase z
+62dcbf8 docs(tenant): abre fase z
+182985e (origin/migration/refactor-core) docs(tenant): completa validacao final da fase y
+8b38c9c docs(tenant): registra encerramento da fase y no status
+9a733dd docs(tenant): encerra fase y
+6f33aac docs(tenant): aplica checklist da fase y
+48b0111 docs(tenant): define pre-autorizacao da fase y
+```
+
+- nomes retornados em tests\architecture para unitDatabaseRegistry:
+
+```text
+unitDatabaseRegistryCache.test.js
+unitDatabaseRegistryControlledPilot.contract.test.js
+unitDatabaseRegistryManualEntrypoint.contract.test.js
+unitDatabaseRegistryManualOwner.contract.test.js
+unitDatabaseRegistryNonProductionPilot.contract.test.js
+unitDatabaseRegistryPreload.test.js
+unitDatabaseRegistryReader.test.js
+unitDatabaseRegistryWriter.test.js
+unitDatabaseRegistryWriterResolveConnection.contract.test.js
+```
+
+- nomes retornados em server\config:
+
+```text
+nenhum nome retornado; caminho C:\Projeto3\server\config nao existe.
+```
+
+- nomes retornados em server\db:
+
+```text
+nenhum nome retornado; caminho C:\Projeto3\server\db nao existe.
+```
+
+Registrar confirmacao:
+
+- comando executado era exatamente o comando aprovado;
+- comando foi read-only;
+- nenhum arquivo foi alterado pela execucao;
+- nenhuma superficie operacional foi criada;
+- nenhum caller real foi criado;
+- nenhuma rota foi criada;
+- nenhuma CLI foi criada;
+- nenhum script persistente foi criado;
+- nenhum job foi criado;
+- nenhum bootstrap foi criado;
+- nenhum request path foi plugado;
+- nenhuma tenant DB real foi aberta;
+- nenhum registry real foi alterado;
+- nenhuma allowlist real foi alterada;
+- nenhum roteamento real foi alterado;
+- nenhum Portal foi usado;
+- nenhum dado real foi usado;
+- nenhum trafego real foi usado;
+- nenhum usuario real foi usado;
+- nenhuma unidade real foi usada;
+- PostgreSQL permaneceu fora do escopo;
+- fallback para baseConnection foi preservado;
+- rollback real nao foi executado;
+- evidencia operacional real nao foi coletada;
+- push nao foi realizado.
+
+Registrar interpretacao obrigatoria:
+
+- execucao read-only nao autoriza proxima execucao automaticamente;
+- execucao read-only nao autoriza preparacao operacional real;
+- execucao read-only nao autoriza rollback real;
+- execucao read-only nao autoriza evidencia operacional real;
+- execucao read-only nao autoriza superficie operacional;
+- execucao read-only nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+- execucao read-only nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+- execucao read-only nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- execucao read-only nao autoriza push.
+
+## 10. Bloqueios obrigatorios da abertura da Fase Z
 
 Registrar que a abertura da Fase Z bloqueia expressamente:
 
@@ -330,7 +431,7 @@ Registrar que a abertura da Fase Z bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 10. Criterio de avanco da Fase Z
+## 11. Criterio de avanco da Fase Z
 
 Registrar que a Fase Z devera avancar diretamente para a definicao do primeiro ato concreto sintetico/manual/controlado, em microcorte proprio.
 
