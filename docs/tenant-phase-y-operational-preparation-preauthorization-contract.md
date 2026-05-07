@@ -45,7 +45,7 @@ Registrar que a Fase Y deve preparar a transicao para uma proxima fase concreta,
 Registrar:
 
 - operationalPreparationPreauthorizationContractOpened=true
-- operationalPreparationPreauthorizationDefined=false
+- operationalPreparationPreauthorizationDefined=true
 - operationalPreparationConcreteExecutionStillForbidden=true
 - rollbackStillForbidden=true
 - operationalEvidenceStillForbidden=true
@@ -63,7 +63,9 @@ Registrar:
 Registrar:
 
 - operationalPreparationPreauthorizationContractOpened=true porque o contrato documental de pre-autorizacao da Fase Y foi criado neste microcorte;
-- operationalPreparationPreauthorizationDefined=false porque a pre-autorizacao final ainda nao foi definida em microcorte proprio;
+- operationalPreparationPreauthorizationDefined=true porque a pre-autorizacao documental final da Fase Y foi definida neste microcorte;
+- a pre-autorizacao final nao e autorizacao de execucao;
+- a pre-autorizacao final nao substitui comando completo visivel, autorizacao explicita do usuario e aprovacao individual de cada comando na fase futura concreta;
 - operationalPreparationConcreteExecutionStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura;
 - rollbackStillForbidden=true porque nenhum rollback real e permitido;
 - operationalEvidenceStillForbidden=true porque nenhuma evidencia operacional real pode ser coletada;
@@ -76,7 +78,42 @@ Registrar:
 - nextPhaseMustBeConcreteAndSynthetic=true porque a proxima fase natural nao deve ser novo contrato redundante, mas sim preparacao concreta sintetica/manual/controlada em fase propria;
 - blockedReasons=[] significa apenas ausencia de bloqueio documental para abrir a Fase Y, nao autorizacao para preparar, executar, publicar, ativar ou plugar qualquer coisa.
 
-## 7. Bloqueios obrigatorios da abertura da Fase Y
+## 7. Pre-autorizacao documental final da Fase Y
+
+Registrar que a pre-autorizacao documental final da Fase Y fica definida exclusivamente como permissao documental para abrir, em fase posterior propria, a primeira preparacao operacional concreta sintetica/manual/controlada.
+
+Registrar que esta pre-autorizacao:
+
+- usa a Fase X como base consolidada;
+- nao reabre escopo, entradas, saidas, exclusoes, rollback e evidencia ja definidos na Fase X;
+- nao autoriza execucao nesta Fase Y;
+- nao autoriza preparacao operacional concreta nesta Fase Y;
+- nao autoriza rollback real;
+- nao autoriza coleta de evidencia operacional real;
+- nao autoriza criacao de superficie operacional;
+- nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- nao autoriza push;
+- nao abre fase posterior automaticamente.
+
+Registrar que a proxima fase concreta futura somente podera avancar se, antes de qualquer comando:
+
+- o comando completo estiver visivel;
+- o usuario autorizar explicitamente;
+- cada comando for aprovado individualmente;
+- o candidato permanecer sintetico;
+- o ambiente permanecer nao produtivo;
+- o fallback para baseConnection estiver preservado;
+- o plano de rollback futuro estiver respeitado;
+- o plano de evidencia sintetica futura estiver respeitado;
+- nenhum dado real, trafego real, usuario real, unidade real, Portal ou PostgreSQL for usado;
+- nenhuma superficie operacional real for criada sem fase propria;
+- qualquer ambiguidade degradar para nao executar.
+
+Registrar que a Fase Y deve permanecer curta e nao deve abrir nova cadeia longa de contratos redundantes.
+
+## 8. Bloqueios obrigatorios da abertura da Fase Y
 
 Registrar que a abertura da Fase Y bloqueia expressamente:
 
@@ -116,7 +153,7 @@ Registrar que a abertura da Fase Y bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 8. Criterio de avanco da Fase Y
+## 9. Criterio de avanco da Fase Y
 
 Registrar que a Fase Y deve avancar de forma curta, preferencialmente em poucos microcortes:
 
