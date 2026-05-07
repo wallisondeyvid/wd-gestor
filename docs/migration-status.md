@@ -1510,17 +1510,36 @@ Checkpoint tenant enforcement atual:
 - Interpretacao obrigatoria: registro de encerramento no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push, nao abre fase posterior automaticamente, nao substitui autorizacao explicita futura do usuario, nao substitui aprovacao explicita futura de comandos e nao substitui fase propria para qualquer preparacao concreta futura.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
 
-- Fase Y aberta documentalmente.
+- Fase Y encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-y-operational-preparation-preauthorization-contract.md
+- Commit local de encerramento do contrato: 9a733dd docs(tenant): encerra fase y
 - Base: 9e0ceda docs(tenant): completa validacao final da fase x
-- Natureza: documental, preventiva, nao produtiva, sintetica, manual, controlada e nao executiva por padrao.
-- Objetivo: definir pre-autorizacao documental final antes da primeira preparacao operacional concreta sintetica/manual/controlada futura.
-- Observacao estrategica: a Fase Y deve ser curta e nao deve repetir indefinidamente a cadeia contratual anterior.
-- Proxima fase natural depois da Fase Y: preparacao operacional concreta sintetica/manual/controlada em fase propria.
+- A Fase Y foi encerrada documentalmente no contrato canonico.
+- A pre-autorizacao documental final foi definida.
+- O checklist documental curto foi aplicado.
+- A Fase X foi usada como base consolidada.
+- Escopo, entradas, saidas, exclusoes, rollback e evidencia nao foram reabertos na Fase Y.
+- A Fase Y permaneceu curta.
+- A proxima fase natural deve ser concreta, sintetica, manual e controlada em fase propria.
+- Preparacao operacional concreta continua proibida.
+- Execucao continua proibida.
+- Rollback real continua proibido.
+- Evidencia operacional real continua proibida.
+- Superficie operacional continua proibida.
+- Candidato sintetico continua obrigatorio.
+- Ambiente nao produtivo continua obrigatorio.
+- Autorizacao explicita futura do usuario continua obrigatoria.
+- Aprovacao individual futura de comandos continua obrigatoria.
+- Fallback para baseConnection continua obrigatorio.
+- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL continuam proibidos.
+- Push continua nao autorizado neste microcorte.
+- Fase posterior nao foi aberta automaticamente.
 
-- Gates iniciais da Fase Y:
+
+- Gates finais da Fase Y:
 	- operationalPreparationPreauthorizationContractOpened=true
-	- operationalPreparationPreauthorizationDefined=false
+	- operationalPreparationPreauthorizationDefined=true
+	- operationalPreparationPreauthorizationChecklistApplied=true
 	- operationalPreparationConcreteExecutionStillForbidden=true
 	- rollbackStillForbidden=true
 	- operationalEvidenceStillForbidden=true
@@ -1533,7 +1552,7 @@ Checkpoint tenant enforcement atual:
 	- nextPhaseMustBeConcreteAndSynthetic=true
 	- blockedReasons=[]
 
-- Interpretacao: abertura da Fase Y nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push e nao abre fase posterior automaticamente.
+- Interpretacao obrigatoria: registro de encerramento da Fase Y no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push, nao abre fase posterior automaticamente, nao substitui autorizacao explicita futura do usuario, nao substitui aprovacao individual futura de comandos e nao substitui fase propria para a primeira preparacao concreta sintetica/manual/controlada.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
 
 ## Escalas
@@ -1547,6 +1566,7 @@ Notas:
  Decisao de checkpoint: pausar expressamente a frente Escalas por enquanto.
  Motivo da pausa: os proximos corredores naturais empurram a frente para Ausencias, Ferias, disponibilidade, relatorios PDF, paginas/render, writes/delete ou routers amplos, deixando de ser microcortes locais e seguros para esta rodada.
  Recomendacao operacional: nao abrir nova triagem nem novo micro-patch em Escalas agora; manter este checkpoint como ponto de parada da frente ate surgir um corredor pequeno, read-only e inequivoco fora dessas zonas.
+
 
 
 
