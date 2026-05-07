@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-Aberta.
+Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -717,7 +717,52 @@ Registrar criterio documental de checklist aprovado:
 - nenhum rollback real ocorreu;
 - nenhuma evidencia operacional real foi coletada.
 
-## 15. Bloqueios obrigatorios na abertura da Fase X
+## 15. Encerramento documental da Fase X
+
+Registrar que a Fase X foi encerrada documentalmente neste contrato porque:
+
+- o contrato documental de abertura da Fase X foi criado;
+- o escopo operacional concreto futuro foi definido;
+- as entradas operacionais concretas futuras foram definidas;
+- as saidas operacionais concretas futuras foram definidas;
+- as exclusoes operacionais concretas futuras foram definidas;
+- a aprovacao explicita de comandos futuros foi definida;
+- o plano de rollback futuro foi definido;
+- o plano de evidencia sintetica futura foi definido;
+- o checklist documental foi aplicado;
+- todos os gates documentais especificos da Fase X estao true;
+- todos os bloqueios operacionais continuam true;
+- blockedReasons=[] permanece restrito a ausencia de bloqueio documental interno;
+- preparacao operacional concreta continua proibida;
+- execucao continua proibida;
+- rollback real continua proibido;
+- evidencia operacional real continua proibida;
+- superficie operacional continua proibida;
+- candidato sintetico continua obrigatorio;
+- ambiente nao produtivo continua obrigatorio;
+- autorizacao explicita futura do usuario continua obrigatoria;
+- aprovacao explicita futura de comandos continua obrigatoria;
+- fallback para baseConnection continua obrigatorio;
+- push continua nao autorizado neste microcorte;
+- fase posterior nao foi aberta automaticamente.
+
+Registrar interpretacao final obrigatoria:
+
+- encerramento documental da Fase X nao autoriza preparacao operacional concreta;
+- encerramento documental da Fase X nao autoriza execucao;
+- encerramento documental da Fase X nao autoriza rollback real;
+- encerramento documental da Fase X nao autoriza coleta de evidencia operacional real;
+- encerramento documental da Fase X nao autoriza criacao de superficie operacional;
+- encerramento documental da Fase X nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- encerramento documental da Fase X nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- encerramento documental da Fase X nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- encerramento documental da Fase X nao autoriza push;
+- encerramento documental da Fase X nao abre fase posterior automaticamente;
+- encerramento documental da Fase X nao substitui autorizacao explicita futura do usuario;
+- encerramento documental da Fase X nao substitui aprovacao explicita futura de comandos;
+- encerramento documental da Fase X nao substitui fase propria para qualquer preparacao concreta futura.
+
+## 16. Bloqueios obrigatorios na abertura da Fase X
 
 Registrar que a abertura da Fase X bloqueia expressamente:
 
@@ -751,7 +796,7 @@ Registrar que a abertura da Fase X bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 16. Criterio de avanco da Fase X
+## 17. Criterio de avanco da Fase X
 
 Registrar que a Fase X so podera avancar em microcortes separados e auditaveis, definindo obrigatoriamente:
 
