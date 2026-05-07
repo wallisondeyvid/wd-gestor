@@ -46,6 +46,7 @@ Registrar:
 
 - operationalPreparationPreauthorizationContractOpened=true
 - operationalPreparationPreauthorizationDefined=true
+- operationalPreparationPreauthorizationChecklistApplied=true
 - operationalPreparationConcreteExecutionStillForbidden=true
 - rollbackStillForbidden=true
 - operationalEvidenceStillForbidden=true
@@ -64,8 +65,13 @@ Registrar:
 
 - operationalPreparationPreauthorizationContractOpened=true porque o contrato documental de pre-autorizacao da Fase Y foi criado neste microcorte;
 - operationalPreparationPreauthorizationDefined=true porque a pre-autorizacao documental final da Fase Y foi definida neste microcorte;
+- operationalPreparationPreauthorizationChecklistApplied=true porque o checklist documental curto da Fase Y foi aplicado neste microcorte;
 - a pre-autorizacao final nao e autorizacao de execucao;
 - a pre-autorizacao final nao substitui comando completo visivel, autorizacao explicita do usuario e aprovacao individual de cada comando na fase futura concreta;
+- checklist aplicado nao autoriza execucao;
+- checklist aplicado nao autoriza preparacao operacional concreta;
+- checklist aplicado nao substitui fase propria futura;
+- checklist aplicado confirma que a Fase Y deve permanecer curta.
 - operationalPreparationConcreteExecutionStillForbidden=true porque nenhuma preparacao operacional concreta e permitida nesta abertura;
 - rollbackStillForbidden=true porque nenhum rollback real e permitido;
 - operationalEvidenceStillForbidden=true porque nenhuma evidencia operacional real pode ser coletada;
@@ -113,7 +119,47 @@ Registrar que a proxima fase concreta futura somente podera avancar se, antes de
 
 Registrar que a Fase Y deve permanecer curta e nao deve abrir nova cadeia longa de contratos redundantes.
 
-## 8. Bloqueios obrigatorios da abertura da Fase Y
+## 8. Checklist documental curto da Fase Y
+
+Registrar que o checklist documental curto da Fase Y foi aplicado e confirma:
+
+- contrato canonico da Fase Y aberto;
+- pre-autorizacao documental final definida;
+- Fase X usada como base consolidada;
+- escopo, entradas, saidas, exclusoes, rollback e evidencia nao foram reabertos na Fase Y;
+- Fase Y permanece curta;
+- proxima fase natural deve ser concreta, sintetica, manual e controlada em fase propria;
+- preparacao operacional concreta continua proibida nesta Fase Y;
+- execucao continua proibida nesta Fase Y;
+- rollback real continua proibido;
+- evidencia operacional real continua proibida;
+- superficie operacional continua proibida;
+- candidato sintetico continua obrigatorio;
+- ambiente nao produtivo continua obrigatorio;
+- autorizacao explicita futura do usuario continua obrigatoria;
+- aprovacao individual futura de comandos continua obrigatoria;
+- fallback para baseConnection continua obrigatorio;
+- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL continuam proibidos;
+- push continua nao autorizado neste microcorte;
+- fase posterior nao foi aberta automaticamente.
+
+Registrar interpretacao obrigatoria:
+
+- checklist da Fase Y nao autoriza preparacao operacional concreta;
+- checklist da Fase Y nao autoriza execucao;
+- checklist da Fase Y nao autoriza rollback real;
+- checklist da Fase Y nao autoriza coleta de evidencia operacional real;
+- checklist da Fase Y nao autoriza criacao de superficie operacional;
+- checklist da Fase Y nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
+- checklist da Fase Y nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
+- checklist da Fase Y nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- checklist da Fase Y nao autoriza push;
+- checklist da Fase Y nao abre fase posterior automaticamente;
+- checklist da Fase Y nao substitui autorizacao explicita futura do usuario;
+- checklist da Fase Y nao substitui aprovacao individual futura de comandos;
+- checklist da Fase Y nao substitui fase propria para a primeira preparacao concreta sintetica/manual/controlada.
+
+## 9. Bloqueios obrigatorios da abertura da Fase Y
 
 Registrar que a abertura da Fase Y bloqueia expressamente:
 
@@ -153,7 +199,7 @@ Registrar que a abertura da Fase Y bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 9. Criterio de avanco da Fase Y
+## 10. Criterio de avanco da Fase Y
 
 Registrar que a Fase Y deve avancar de forma curta, preferencialmente em poucos microcortes:
 
