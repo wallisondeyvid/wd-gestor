@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-Aberta.
+Encerrada documentalmente.
 
 ## 2. Natureza da fase
 
@@ -392,7 +392,73 @@ Registrar interpretacao obrigatoria:
 - execucao read-only nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 - execucao read-only nao autoriza push.
 
-## 10. Bloqueios obrigatorios da abertura da Fase Z
+## 10. Encerramento documental da Fase Z
+
+Registrar que a Fase Z foi encerrada documentalmente neste contrato porque:
+
+- a fase foi aberta como concreta em intencao, sintetica, manual e controlada;
+- o primeiro ato concreto sintetico/manual/controlado foi definido;
+- o comando candidato foi aprovado documentalmente;
+- o primeiro ato concreto sintetico read-only foi executado;
+- a evidencia sintetica textual/local foi registrada no contrato;
+- o ledger foi atualizado em microcorte proprio;
+- firstConcreteSyntheticActionDefined=true;
+- firstConcreteSyntheticCommandApproved=true;
+- firstConcreteSyntheticActionExecuted=true;
+- rollbackRealExecuted=false;
+- operationalEvidenceRealCollected=false;
+- operationalSurfaceCreated=false;
+- candidateStillSynthetic=true;
+- nonProductionRequired=true;
+- explicitUserAuthorizationRequired=true;
+- explicitCommandApprovalRequired=true;
+- fallbackRequired=true;
+- portalStillForbidden=true;
+- realDataStillForbidden=true;
+- realTrafficStillForbidden=true;
+- realUserStillForbidden=true;
+- realUnitStillForbidden=true;
+- postgresStillForbidden=true;
+- tenantDbRealStillForbidden=true;
+- blockedReasons=[];
+- nenhum arquivo foi alterado pela execucao read-only;
+- nenhuma superficie operacional foi criada;
+- nenhum caller real foi criado;
+- nenhuma rota foi criada;
+- nenhuma CLI foi criada;
+- nenhum script persistente foi criado;
+- nenhum job foi criado;
+- nenhum bootstrap foi criado;
+- nenhum request path foi plugado;
+- nenhuma tenant DB real foi aberta;
+- nenhum registry real foi alterado;
+- nenhuma allowlist real foi alterada;
+- nenhum roteamento real foi alterado;
+- nenhum Portal foi usado;
+- nenhum dado real foi usado;
+- nenhum trafego real foi usado;
+- nenhum usuario real foi usado;
+- nenhuma unidade real foi usada;
+- PostgreSQL permaneceu fora do escopo;
+- fallback para baseConnection foi preservado;
+- rollback real nao foi executado;
+- evidencia operacional real nao foi coletada;
+- push nao foi realizado.
+
+Registrar interpretacao final obrigatoria:
+
+- encerramento documental da Fase Z nao autoriza proxima execucao automaticamente;
+- encerramento documental da Fase Z nao autoriza preparacao operacional real;
+- encerramento documental da Fase Z nao autoriza rollback real;
+- encerramento documental da Fase Z nao autoriza evidencia operacional real;
+- encerramento documental da Fase Z nao autoriza superficie operacional;
+- encerramento documental da Fase Z nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+- encerramento documental da Fase Z nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+- encerramento documental da Fase Z nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- encerramento documental da Fase Z nao autoriza push;
+- qualquer proximo ato concreto deve ser definido e aprovado em fase ou microcorte proprio.
+
+## 11. Bloqueios obrigatorios da abertura da Fase Z
 
 Registrar que a abertura da Fase Z bloqueia expressamente:
 
@@ -431,7 +497,7 @@ Registrar que a abertura da Fase Z bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 11. Criterio de avanco da Fase Z
+## 12. Criterio de avanco da Fase Z
 
 Registrar que a Fase Z devera avancar diretamente para a definicao do primeiro ato concreto sintetico/manual/controlado, em microcorte proprio.
 
