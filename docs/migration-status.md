@@ -1584,19 +1584,45 @@ Checkpoint tenant enforcement atual:
 - Interpretacao obrigatoria: registro de encerramento da Fase Y no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push, nao abre fase posterior automaticamente, nao substitui autorizacao explicita futura do usuario, nao substitui aprovacao individual futura de comandos e nao substitui fase propria para a primeira preparacao concreta sintetica/manual/controlada.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
 
-- Fase Z aberta.
+- Fase Z com primeiro ato concreto sintetico read-only executado.
 - Documento canonico: docs/tenant-phase-z-synthetic-manual-operational-preparation-contract.md
+- Commit local da execucao read-only: ef04ef5 docs(tenant): executa primeiro ato sintetico read-only da fase z
 - Base: 182985e docs(tenant): completa validacao final da fase y
-- Natureza: concreta em intencao, sintetica, manual, controlada, nao produtiva e nao executiva por abertura.
-- Objetivo: preparar o primeiro ato concreto sintetico/manual/controlado futuro, sem executa-lo neste microcorte de abertura.
-- Base consolidada: Fase X e Fase Y.
-- Observacao estrategica: a Fase Z nao deve reabrir cadeia longa de contratos; o proximo microcorte natural deve definir o primeiro ato concreto sintetico.
+- Primeiro ato concreto sintetico/manual/controlado definido.
+- Comando candidato aprovado documentalmente.
+- Primeiro ato executado como auditoria local read-only.
+- Evidencia sintetica textual registrada no contrato canonico.
+- A execucao confirmou listagem de arquivos unitDatabaseRegistry em tests/architecture.
+- A execucao registrou ausencia dos caminhos server/config e server/db.
+- Nenhum arquivo foi alterado pela execucao read-only.
+- Nenhuma superficie operacional foi criada.
+- Nenhum caller real foi criado.
+- Nenhuma rota foi criada.
+- Nenhuma CLI foi criada.
+- Nenhum script persistente foi criado.
+- Nenhum job foi criado.
+- Nenhum bootstrap foi criado.
+- Nenhum request path foi plugado.
+- Nenhuma tenant DB real foi aberta.
+- Nenhum registry real foi alterado.
+- Nenhuma allowlist real foi alterada.
+- Nenhum roteamento real foi alterado.
+- Nenhum Portal foi usado.
+- Nenhum dado real foi usado.
+- Nenhum trafego real foi usado.
+- Nenhum usuario real foi usado.
+- Nenhuma unidade real foi usada.
+- PostgreSQL permaneceu fora do escopo.
+- Fallback para baseConnection foi preservado.
+- Rollback real nao foi executado.
+- Evidencia operacional real nao foi coletada.
+- Push continua nao autorizado neste microcorte.
 
 - Gates iniciais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
-	- firstConcreteSyntheticActionDefined=false
-	- firstConcreteSyntheticCommandApproved=false
-	- firstConcreteSyntheticActionExecuted=false
+	- firstConcreteSyntheticActionDefined=true
+	- firstConcreteSyntheticCommandApproved=true
+	- firstConcreteSyntheticActionExecuted=true
 	- rollbackRealExecuted=false
 	- operationalEvidenceRealCollected=false
 	- operationalSurfaceCreated=false
@@ -1615,16 +1641,16 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 
 - Interpretacao obrigatoria:
-	- abertura da Fase Z nao executa preparacao operacional concreta;
-	- abertura da Fase Z nao autoriza piloto real;
-	- abertura da Fase Z nao autoriza rollback real;
-	- abertura da Fase Z nao autoriza coleta de evidencia operacional real;
-	- abertura da Fase Z nao autoriza criacao de superficie operacional real;
-	- abertura da Fase Z nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path;
-	- abertura da Fase Z nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real;
-	- abertura da Fase Z nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
-	- abertura da Fase Z nao autoriza push;
-	- abertura da Fase Z nao abre fase posterior automaticamente.
+	- execucao read-only registrada no ledger nao autoriza proxima execucao automaticamente;
+	- execucao read-only registrada no ledger nao autoriza preparacao operacional real;
+	- execucao read-only registrada no ledger nao autoriza rollback real;
+	- execucao read-only registrada no ledger nao autoriza evidencia operacional real;
+	- execucao read-only registrada no ledger nao autoriza superficie operacional;
+	- execucao read-only registrada no ledger nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+	- execucao read-only registrada no ledger nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+	- execucao read-only registrada no ledger nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- execucao read-only registrada no ledger nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
