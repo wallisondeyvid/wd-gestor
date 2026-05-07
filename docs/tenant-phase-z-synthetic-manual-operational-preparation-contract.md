@@ -67,7 +67,7 @@ Registrar que a abertura da Fase Z nao executa esse primeiro ato concreto.
 Registrar:
 
 - syntheticManualOperationalPreparationPhaseOpened=true
-- firstConcreteSyntheticActionDefined=false
+- firstConcreteSyntheticActionDefined=true
 - firstConcreteSyntheticCommandApproved=false
 - firstConcreteSyntheticActionExecuted=false
 - rollbackRealExecuted=false
@@ -92,9 +92,9 @@ Registrar:
 Registrar:
 
 - syntheticManualOperationalPreparationPhaseOpened=true porque a Fase Z foi aberta como fase concreta sintetica/manual/controlada;
-- firstConcreteSyntheticActionDefined=false porque o primeiro ato concreto sintetico ainda nao foi definido;
-- firstConcreteSyntheticCommandApproved=false porque nenhum comando concreto foi apresentado, autorizado ou aprovado;
-- firstConcreteSyntheticActionExecuted=false porque nenhuma acao concreta foi executada;
+- firstConcreteSyntheticActionDefined=true porque o primeiro ato concreto sintetico/manual/controlado futuro foi definido documentalmente neste microcorte;
+- firstConcreteSyntheticCommandApproved=false permanece false porque o comando candidato ainda nao foi aprovado pelo usuario;
+- firstConcreteSyntheticActionExecuted=false permanece false porque nenhuma acao concreta foi executada;
 - rollbackRealExecuted=false porque nenhum rollback real foi executado;
 - operationalEvidenceRealCollected=false porque nenhuma evidencia operacional real foi coletada;
 - operationalSurfaceCreated=false porque nenhuma superficie operacional foi criada;
@@ -112,7 +112,115 @@ Registrar:
 - tenantDbRealStillForbidden=true porque tenant DB real permanece proibida;
 - blockedReasons=[] significa apenas ausencia de bloqueio documental para abrir a Fase Z, nao autorizacao para executar, publicar, ativar ou plugar qualquer coisa.
 
-## 7. Bloqueios obrigatorios da abertura da Fase Z
+## 7. Primeiro ato concreto sintetico/manual/controlado futuro
+
+Registrar que o primeiro ato concreto sintetico/manual/controlado futuro da Fase Z sera:
+
+- auditoria manual;
+- read-only;
+- local;
+- nao produtiva;
+- limitada a listagem e inspecao textual;
+- sem alteracao de arquivos;
+- sem execucao operacional real;
+- sem criacao de superficie operacional.
+
+Registrar finalidade:
+
+- confirmar estado do repositorio antes de qualquer preparacao concreta futura;
+- confirmar presenca dos artefatos de tenant registry/manual pilot;
+- confirmar presenca dos testes arquiteturais relacionados;
+- confirmar ausencia de alteracao em codigo;
+- confirmar que qualquer preparacao futura ainda dependera de autorizacao explicita;
+- produzir evidencia sintetica textual e local;
+- preservar fallback para baseConnection.
+
+Registrar comando candidato futuro, ainda nao aprovado e ainda nao executado:
+
+```powershell
+git status -sb
+git log --oneline --decorate -8
+Get-ChildItem .\tests\architecture\*unitDatabaseRegistry* -File | Select-Object Name
+Get-ChildItem .\server\config -File | Select-Object Name
+Get-ChildItem .\server\db -File | Select-Object Name
+```
+
+Registrar que o comando candidato:
+
+- nao foi aprovado neste microcorte;
+- nao foi executado neste microcorte;
+- devera ser exibido novamente antes de qualquer execucao futura;
+- dependera de autorizacao explicita do usuario;
+- dependera de aprovacao individual do comando;
+- e somente leitura;
+- nao altera arquivos;
+- nao altera codigo;
+- nao altera testes;
+- nao altera package.json;
+- nao altera scripts;
+- nao altera rotas;
+- nao toca em src;
+- nao cria caller;
+- nao cria rota;
+- nao cria CLI;
+- nao cria script persistente;
+- nao cria job;
+- nao cria bootstrap;
+- nao pluga em request path;
+- nao abre tenant DB real;
+- nao altera registry real;
+- nao altera allowlist real;
+- nao altera roteamento real;
+- nao usa Portal;
+- nao usa dados reais;
+- nao usa trafego real;
+- nao usa usuario real;
+- nao usa unidade real;
+- nao usa PostgreSQL;
+- nao executa rollback real;
+- nao coleta evidencia operacional real;
+- nao cria superficie operacional real;
+- nao faz push.
+
+Registrar criterios:
+
+Criterio de parada:
+
+- qualquer comando diferente do listado bloqueia avanco;
+- qualquer necessidade de escrita bloqueia avanco;
+- qualquer referencia a dado real, trafego real, usuario real, unidade real, Portal, PostgreSQL ou tenant DB real bloqueia avanco;
+- qualquer ambiguidade degrada para nao executar.
+
+Criterio de sucesso:
+
+- comando candidato permanece read-only;
+- superficies afetadas permanecem apenas repositorio local e saida textual;
+- nenhum arquivo e alterado;
+- nenhuma superficie operacional e criada;
+- nenhuma execucao operacional real ocorre.
+
+Criterio de falha:
+
+- qualquer alteracao de arquivo;
+- qualquer tentativa de executar comando nao listado;
+- qualquer acesso a dado real;
+- qualquer uso de Portal;
+- qualquer uso de PostgreSQL;
+- qualquer abertura de tenant DB real;
+- qualquer criacao de rota, caller, CLI, script, job, bootstrap ou request path.
+
+Registrar interpretacao obrigatoria:
+
+- definicao do primeiro ato concreto sintetico nao autoriza sua execucao;
+- definicao do primeiro ato concreto sintetico nao aprova comando;
+- definicao do primeiro ato concreto sintetico nao coleta evidencia operacional real;
+- definicao do primeiro ato concreto sintetico nao cria superficie operacional;
+- definicao do primeiro ato concreto sintetico nao altera codigo;
+- definicao do primeiro ato concreto sintetico nao altera testes;
+- definicao do primeiro ato concreto sintetico nao autoriza push;
+- execucao futura dependera de novo microcorte, comando completo visivel e autorizacao explicita do usuario.
+
+## 8. Bloqueios obrigatorios da abertura da Fase Z
 
 Registrar que a abertura da Fase Z bloqueia expressamente:
 
@@ -151,7 +259,7 @@ Registrar que a abertura da Fase Z bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
-## 8. Criterio de avanco da Fase Z
+## 9. Criterio de avanco da Fase Z
 
 Registrar que a Fase Z devera avancar diretamente para a definicao do primeiro ato concreto sintetico/manual/controlado, em microcorte proprio.
 
