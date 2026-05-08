@@ -1620,6 +1620,38 @@ Checkpoint tenant enforcement atual:
 - Rollback real nao foi executado.
 - Evidencia operacional real nao foi coletada.
 - Push continua nao autorizado neste microcorte.
+- Validacao final completa da Fase Z executada com sucesso.
+- npm run verify:imports verde.
+- npm test verde.
+- quantidade de tests: 2203.
+- quantidade de suites: 17.
+- quantidade de pass: 2201.
+- quantidade de fail: 0.
+- quantidade de cancelled: 0.
+- quantidade de skipped: 2.
+- quantidade de todo: 0.
+- duration_ms: 232781.7467.
+- esta validacao final completa confirma somente o encerramento documental validado da Fase Z.
+- esta validacao confirma que a Fase Z executou somente o primeiro ato concreto sintetico read-only.
+- esta validacao confirma que a evidencia coletada foi sintetica, textual e local.
+- esta validacao confirma que nenhum arquivo foi alterado pela execucao read-only.
+- esta validacao confirma que nenhuma superficie operacional foi criada.
+- esta validacao confirma que nenhum caller real, rota, CLI, script, job, bootstrap ou request path foi criado.
+- esta validacao confirma que nenhuma tenant DB real foi aberta.
+- esta validacao confirma que nenhum registry real, allowlist real ou roteamento real foi alterado.
+- esta validacao confirma que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados.
+- esta validacao confirma que rollback real nao foi executado.
+- esta validacao confirma que evidencia operacional real nao foi coletada.
+- esta validacao nao autoriza proxima execucao automaticamente.
+- esta validacao nao autoriza preparacao operacional real.
+- esta validacao nao autoriza rollback real.
+- esta validacao nao autoriza evidencia operacional real.
+- esta validacao nao autoriza superficie operacional.
+- esta validacao nao autoriza caller, rota, CLI, script, job, bootstrap ou request path.
+- esta validacao nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real.
+- esta validacao nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+- esta validacao nao autoriza push.
+- qualquer proximo ato concreto deve ser definido e aprovado em fase ou microcorte proprio.
 
 - Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true

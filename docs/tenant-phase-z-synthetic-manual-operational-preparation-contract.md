@@ -497,6 +497,42 @@ Registrar que a abertura da Fase Z bloqueia expressamente:
 - push;
 - abertura automatica de fase posterior.
 
+## Validacao final completa da Fase Z
+
+Registrar que a validacao final completa da Fase Z foi executada com sucesso neste microcorte, com:
+
+- npm run verify:imports executado com sucesso;
+- npm test executado com sucesso;
+- quantidade de tests: 2203;
+- quantidade de suites: 17;
+- quantidade de pass: 2201;
+- quantidade de fail: 0;
+- quantidade de cancelled: 0;
+- quantidade de skipped: 2;
+- quantidade de todo: 0;
+- duration_ms: 232781.7467;
+- validacao completa confirma apenas integridade documental e ausencia de regressao tecnica neste ponto;
+- validacao completa confirma que a Fase Z executou somente o primeiro ato concreto sintetico read-only;
+- validacao completa confirma que a evidencia coletada foi sintetica, textual e local;
+- validacao completa confirma que nenhum arquivo foi alterado pela execucao read-only;
+- validacao completa confirma que nenhuma superficie operacional foi criada;
+- validacao completa confirma que nenhum caller real, rota, CLI, script, job, bootstrap ou request path foi criado;
+- validacao completa confirma que nenhuma tenant DB real foi aberta;
+- validacao completa confirma que nenhum registry real, allowlist real ou roteamento real foi alterado;
+- validacao completa confirma que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados;
+- validacao completa confirma que rollback real nao foi executado;
+- validacao completa confirma que evidencia operacional real nao foi coletada;
+- validacao completa nao autoriza proxima execucao automaticamente;
+- validacao completa nao autoriza preparacao operacional real;
+- validacao completa nao autoriza rollback real;
+- validacao completa nao autoriza evidencia operacional real;
+- validacao completa nao autoriza superficie operacional;
+- validacao completa nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+- validacao completa nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+- validacao completa nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+- validacao completa nao autoriza push;
+- qualquer proximo ato concreto deve ser definido e aprovado em fase ou microcorte proprio.
+
 ## 12. Criterio de avanco da Fase Z
 
 Registrar que a Fase Z devera avancar diretamente para a definicao do primeiro ato concreto sintetico/manual/controlado, em microcorte proprio.
