@@ -3380,6 +3380,76 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- proxima execucao sintetica devera ocorrer em microcorte proprio aprovado;
 	- push continua adiado ate fechamento consolidado do bloco amplo.
 
+- Teste de escrita sintetica tenant registry com harness de base/global connection criado.
+- Base local: 26a4704 feat(tenant): implementa harness de base global sintetica tenant registry.
+- Arquivo criado:
+	- tests/architecture/unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js
+- Natureza:
+	- teste arquitetural/contratual;
+	- integracao sintetica em harness;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem dados reais;
+	- sem unidade real;
+	- sem PostgreSQL;
+	- sem superficie operacional.
+- Contrato validado:
+	- harness injeta base/global connection sintetica;
+	- manualEntrypoint aceita payload corrigido;
+	- manualOwner e alcancado;
+	- writer e alcancado;
+	- writer usa collection logica unit_database_registry em memoria;
+	- fluxo pending -> ready -> active e validado em harness;
+	- sem harness, fluxo continua bloqueado por ausencia de base/global connection;
+	- nenhuma superficie operacional e criada.
+- Resultado dos testes:
+	- unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js: PASS, 3 tests, 0 fail.
+	- unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryManualOwner.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: PASS, 15 tests, 0 fail.
+	- npm run verify:imports: arquitetura limpa.
+- Confirmacoes:
+	- nenhum comando real fora de teste foi executado;
+	- nenhum rollback foi executado;
+	- nenhuma registry entry real foi criada;
+	- nenhum registry real foi alterado;
+	- nenhuma allowlist real foi alterada;
+	- nenhum tenant DB real foi aberto;
+	- nenhum roteamento real foi alterado;
+	- nenhuma rota/CLI/script/job/bootstrap/request path foi criada;
+	- push nao foi realizado.
+- Gates:
+	- baseGlobalSyntheticHarnessDesignDefined=true
+	- baseGlobalSyntheticHarnessContractTestCreated=true
+	- baseGlobalSyntheticHarnessImplemented=true
+	- syntheticWriteWithHarnessContractTestCreated=true
+	- syntheticWriteWithHarnessValidated=true
+	- realSyntheticWriteBlockedByBaseConnection=true
+	- standaloneSafeBootstrapFound=false
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteExecuted=false
+	- registrySyntheticChanged=true somente em harness de teste
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[UNIT_DATABASE_REGISTRY_BASE_CONNECTION_UNAVAILABLE]
+- Interpretacao obrigatoria:
+	- validacao da escrita em harness nao equivale a escrita real;
+	- validacao da escrita em harness nao autoriza comando real fora de teste;
+	- validacao da escrita em harness nao autoriza rollback;
+	- validacao da escrita em harness nao autoriza tenant DB real;
+	- validacao da escrita em harness nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proxima execucao sintetica fora de teste devera ocorrer em microcorte proprio aprovado;
+	- push continua adiado ate fechamento consolidado do bloco amplo.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
