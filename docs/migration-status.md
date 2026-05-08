@@ -1889,6 +1889,68 @@ Checkpoint tenant enforcement atual:
 	- auditoria read-only de testes nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
 	- auditoria read-only de testes nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+- Auditoria read-only de matriz de cobertura tenant registry executada.
+- Execucao anterior ambigua foi descartada sem edicao.
+- Comandos executados exatamente como aprovados, em etapas separadas.
+- Evidencia sintetica textual coletada.
+- Saida de git status -sb inicial:
+	- ## migration/refactor-core...origin/migration/refactor-core
+- Saida de git --no-pager log --oneline --decorate -8:
+	- 67d9e23 (HEAD -> migration/refactor-core, origin/migration/refactor-core) docs(tenant): registra mapa read-only dos testes tenant registry
+	- 37ccdd8 docs(tenant): registra mapa read-only dos artefatos tenant registry
+	- 973d28a docs(tenant): registra auditoria precisa de caminhos tenant registry
+	- 9c9412d docs(tenant): registra auditoria read-only de caminhos tenant registry
+	- 3274272 docs(tenant): completa validacao final da fase z
+	- 8451429 docs(tenant): registra encerramento da fase z no status
+	- 60cb2f1 docs(tenant): encerra fase z
+	- e6de647 docs(tenant): registra primeiro ato sintetico da fase z no status
+- Resultado de cada teste executado:
+	- unitDatabaseRegistryWriter.test.js: PASS, 55 tests, 0 fail.
+	- unitDatabaseRegistryReader.test.js: PASS, 5 tests, 0 fail.
+	- unitDatabaseRegistryCache.test.js: PASS, 5 tests, 0 fail.
+	- unitDatabaseRegistryPreload.test.js: PASS, 7 tests, 0 fail.
+	- resolveConnection_multiDbFlag.test.js: PASS, 21 tests, 0 fail.
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: PASS, 15 tests, 0 fail.
+	- unitDatabaseRegistryManualOwner.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryNonProductionPilot.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryControlledPilot.contract.test.js: PASS, 2 tests, 0 fail.
+- Matriz resumida de cobertura:
+	- writer: transicoes seguras pending -> ready -> disabled -> rollback_required -> active, validacao de input e falhas de persistencia/base-global sem abrir tenant diretamente.
+	- reader: leitura da collection unit_database_registry na base/global ou conexao injetada, filtro por unidadeId, normalizacao minima e propagacao de erro.
+	- cache: cache miss, cache hit, override de teste e prime do cache sem contaminacao em caso de erro.
+	- preload: processamento deterministico de listas de unidades com loaded, missing, failed e skipped usando apenas o seam passivo de cache.
+	- resolveConnection gates: WD_MULTI_DB, allowlist, registry read passivo, readiness, activation, routingMode, cache e handshake nao bloqueante com fallback seguro para baseConnection.
+	- writer -> resolveConnection: integracao entre estado persistido no registry e liberacao ou rollback do branch tenant sob gates coerentes.
+	- manual owner: orquestracao manual explicita do fluxo pending -> ready -> active apenas via writer e com rollback fail-safe sem superficies novas.
+	- manual entrypoint: validacao da borda manual deliberada antes de delegar ao owner, exigindo contexto explicito e pre-condicoes controladas.
+	- non-production pilot: corredor de piloto nao produtivo contido ao harness, com recusa de pre-condicoes proibidas e sem superficie operacional nova.
+	- controlled pilot: piloto sintetico controlado que mantem fallback seguro ate todos os gates estarem completos e retorna a baseConnection ao encerrar.
+- Confirmacao de que todos os testes executados passaram.
+- Saida de git status -sb final:
+	- ## migration/refactor-core...origin/migration/refactor-core
+- Confirmacao de que nenhum arquivo foi alterado pela execucao.
+- Confirmacao de que nenhum codigo foi alterado.
+- Confirmacao de que nenhum teste foi alterado.
+- Confirmacao de que nenhuma superficie operacional foi criada.
+- Confirmacao de que nenhum caller, rota, CLI, script, job, bootstrap ou request path foi criado.
+- Confirmacao de que nenhum registry real, allowlist real, tenant DB real ou roteamento real foi alterado.
+- Confirmacao de que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados.
+- Confirmacao de que rollback real nao foi executado.
+- Confirmacao de que evidencia operacional real nao foi coletada.
+- Confirmacao de que push nao foi realizado.
+- Interpretacao obrigatoria da auditoria read-only de matriz de cobertura:
+	- auditoria read-only de matriz de cobertura nao autoriza alteracao de arquivos;
+	- auditoria read-only de matriz de cobertura nao autoriza alteracao de testes;
+	- auditoria read-only de matriz de cobertura nao autoriza preparacao operacional real;
+	- auditoria read-only de matriz de cobertura nao autoriza execucao operacional;
+	- auditoria read-only de matriz de cobertura nao autoriza rollback real;
+	- auditoria read-only de matriz de cobertura nao autoriza evidencia operacional real;
+	- auditoria read-only de matriz de cobertura nao autoriza superficie operacional;
+	- auditoria read-only de matriz de cobertura nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+	- auditoria read-only de matriz de cobertura nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+	- auditoria read-only de matriz de cobertura nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
 - Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
