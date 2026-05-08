@@ -1951,6 +1951,70 @@ Checkpoint tenant enforcement atual:
 	- auditoria read-only de matriz de cobertura nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
 	- auditoria read-only de matriz de cobertura nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+- Candidato sintetico minimo tenant registry definido documentalmente.
+- Base publicada: a95ad08 docs(tenant): registra matriz read-only de cobertura tenant registry.
+- Candidato:
+	- unidadeSinteticaId: 000000000000000000000001
+	- unidadeSinteticaLabel: tenant-registry-synthetic-unit-001
+	- actor: synthetic-manual-operator
+	- source: manual
+	- approved: true somente em contexto documental futuro, nao executado neste microcorte
+	- environment: non-production
+	- reason: synthetic manual controlled preparation candidate
+	- rollbackPlan: documented synthetic rollback plan required before execution
+	- plannedAllowlist: tenant-registry-synthetic-unit-001
+- O candidato nao representa unidade real.
+- O candidato nao representa usuario real.
+- O candidato nao usa dados reais.
+- O candidato nao usa trafego real.
+- O candidato nao usa Portal.
+- O candidato nao usa PostgreSQL.
+- O candidato nao abre tenant DB real.
+- O candidato nao altera registry real neste microcorte.
+- O candidato nao altera allowlist real neste microcorte.
+- O candidato nao altera roteamento real neste microcorte.
+- O candidato nao executa writer neste microcorte.
+- O candidato nao executa manualEntrypoint neste microcorte.
+- O candidato nao executa manualOwner neste microcorte.
+- O candidato nao cria superficie operacional.
+- O candidato preserva fallback para baseConnection.
+- Qualquer execucao futura dependera de comando completo visivel, autorizacao explicita do usuario e microcorte proprio.
+- Criterios para futura execucao, ainda nao autorizada:
+	- comando futuro deve ser mostrado integralmente antes;
+	- comando futuro deve ser read-only ou explicitamente documentado se houver escrita sintetica;
+	- qualquer escrita sintetica futura precisa de fase/microcorte proprio;
+	- rollback sintetico precisa estar definido antes de qualquer escrita;
+	- evidencia futura deve ser sintetica, textual e local;
+	- qualquer ambiguidade degrada para nao executar.
+- Gates documentais:
+	- syntheticCandidateDefined=true
+	- syntheticCandidateExecuted=false
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria da definicao do candidato sintetico:
+	- definicao do candidato sintetico nao autoriza execucao;
+	- definicao do candidato sintetico nao autoriza writer;
+	- definicao do candidato sintetico nao autoriza manualEntrypoint;
+	- definicao do candidato sintetico nao autoriza manualOwner;
+	- definicao do candidato sintetico nao autoriza alteracao de registry real;
+	- definicao do candidato sintetico nao autoriza alteracao de allowlist real;
+	- definicao do candidato sintetico nao autoriza abertura de tenant DB real;
+	- definicao do candidato sintetico nao autoriza alteracao de roteamento real;
+	- definicao do candidato sintetico nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- definicao do candidato sintetico nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
 - Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
