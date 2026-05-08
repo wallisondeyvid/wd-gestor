@@ -3450,6 +3450,117 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- proxima execucao sintetica fora de teste devera ocorrer em microcorte proprio aprovado;
 	- push continua adiado ate fechamento consolidado do bloco amplo.
 
+- Comando futuro de escrita sintetica tenant registry com harness definido documentalmente.
+- Base local: 28eeea3 test(tenant): valida escrita sintetica com harness de base global tenant registry.
+- Natureza:
+	- comando futuro;
+	- local;
+	- sintetico;
+	- em memoria;
+	- com harness de base/global connection;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem dados reais;
+	- sem unidade real;
+	- sem PostgreSQL;
+	- ainda nao executado neste microcorte.
+- Comando futuro candidato, ainda nao executado:
+
+```powershell
+node -e "const mongoose = require('mongoose'); (async () => { const { createSyntheticBaseConnectionHarness } = await import('./src/shared/db/unitDatabaseRegistrySyntheticBaseConnectionHarness.js'); const { runUnitDatabaseRegistryManualEntrypoint } = await import('./src/shared/db/unitDatabaseRegistryManualEntrypoint.js'); const originalDb = mongoose.connection.db; const harness = createSyntheticBaseConnectionHarness(); mongoose.connection.db = harness.db; try { const payload = { context: { source: 'manual', approved: true, actor: 'synthetic-manual-operator', reason: 'synthetic manual controlled preparation candidate' }, environment: 'non-production', syntheticUnit: { synthetic: true, controlled: true }, unidadeId: '000000000000000000000001', dbName: 'wdgestor_unit_000000000000000000000001', databaseKey: 'wdgestor_unit_000000000000000000000001', rollbackPlan: 'rollback synthetic tenant-registry-synthetic-unit-001 only', plannedAllowlist: ['000000000000000000000001'] }; const result = await runUnitDatabaseRegistryManualEntrypoint(payload); const entry = harness.read(payload.unidadeId); console.log(JSON.stringify({ ok: true, result, entry }, null, 2)); } finally { mongoose.connection.db = originalDb; harness.reset(); } })().catch((error) => { console.error(error); process.exit(1); });"
+```
+
+- Observacoes obrigatorias sobre o comando:
+	- comando futuro ainda nao foi executado;
+	- comando futuro injeta temporariamente harness.db em mongoose.connection.db;
+	- comando futuro preserva originalDb e restaura no finally;
+	- comando futuro usa createSyntheticBaseConnectionHarness;
+	- comando futuro chama runUnitDatabaseRegistryManualEntrypoint;
+	- manualEntrypoint chama manualOwner;
+	- manualOwner chama writer;
+	- writer usa collection logica unit_database_registry em memoria;
+	- comando futuro imprime result e entry em JSON;
+	- comando futuro deve produzir evidencia sintetica textual;
+	- comando futuro nao conecta em Mongo real;
+	- comando futuro nao abre tenant DB real;
+	- comando futuro nao usa Portal;
+	- comando futuro nao usa dados reais;
+	- comando futuro nao usa usuario real;
+	- comando futuro nao usa unidade real;
+	- comando futuro nao usa PostgreSQL;
+	- comando futuro nao cria rota, CLI persistente, script persistente, job, bootstrap operacional ou request path;
+	- comando futuro nao deve ser confundido com escrita real na base central;
+	- comando futuro e execucao sintetica local com harness em memoria.
+- Pre-checagem obrigatoria antes da execucao futura:
+	- git status -sb
+	- git --no-pager log --oneline --decorate -8
+	- node --test .\tests\architecture\unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js
+	- npm run verify:imports
+	- git status -sb
+- Criterios de parada para execucao futura:
+	- se git status nao estiver limpo, parar;
+	- se qualquer teste falhar, parar;
+	- se verify:imports falhar, parar;
+	- se o comando exigir Mongo real, parar;
+	- se o comando exigir Portal, parar;
+	- se o comando exigir dado real, parar;
+	- se o comando exigir usuario real, parar;
+	- se o comando exigir unidade real, parar;
+	- se o comando exigir tenant DB real, parar;
+	- se o comando exigir PostgreSQL, parar;
+	- se o comando tentar criar rota, CLI persistente, script persistente, job, bootstrap operacional ou request path, parar;
+	- se qualquer arquivo inesperado for alterado, parar;
+	- se houver ambiguidade, degradar para nao executar.
+- Evidencia futura esperada:
+	- status inicial limpo;
+	- log curto;
+	- pre-checagem verde;
+	- saida JSON do comando;
+	- result.ok=true;
+	- result.ownerResult.finalStatus=active, se mantido pelo contrato atual;
+	- entry.status=active;
+	- entry.routingMode=tenant;
+	- entry.readiness.ready=true;
+	- entry.activation.active=true;
+	- confirmacao de restauracao de mongoose.connection.db no finally, quando verificavel;
+	- status final;
+	- confirmacao de ausencia de Mongo real, tenant DB real, Portal, dados reais, usuario real, unidade real, PostgreSQL e superficie operacional.
+- Gates:
+	- baseGlobalSyntheticHarnessDesignDefined=true
+	- baseGlobalSyntheticHarnessContractTestCreated=true
+	- baseGlobalSyntheticHarnessImplemented=true
+	- syntheticWriteWithHarnessContractTestCreated=true
+	- syntheticWriteWithHarnessValidated=true
+	- syntheticWriteWithHarnessCommandDefined=true
+	- syntheticWriteWithHarnessCommandExecuted=false
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteExecuted=false
+	- registrySyntheticChanged=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- definicao do comando com harness nao executa escrita;
+	- definicao do comando com harness nao executa rollback;
+	- definicao do comando com harness nao autoriza execucao automatica;
+	- definicao do comando com harness nao equivale a escrita real na base central;
+	- definicao do comando com harness nao autoriza tenant DB real;
+	- definicao do comando com harness nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- execucao futura devera ocorrer em microcorte proprio aprovado;
+	- push continua adiado ate fechamento consolidado do bloco amplo.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
