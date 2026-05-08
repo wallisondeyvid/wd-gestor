@@ -3008,6 +3008,85 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- push fica adiado ate fechamento consolidado do bloco amplo;
 	- qualquer execucao concreta deve ocorrer em microcorte proprio imediatamente posterior.
 
+- Comando real de escrita sintetica tenant registry corrigido documentalmente.
+- Base local: c77efcc docs(tenant): aprova execucao da escrita sintetica tenant registry.
+- Motivo da correcao:
+	- execucao anterior falhou em MANUAL_ENTRYPOINT_CONTEXT_REQUIRED;
+	- comando anterior colocava source/approved/actor/reason na raiz;
+	- entrypoint exige esses campos em input.context;
+	- comando anterior nao declarava syntheticUnit;
+	- comando anterior nao declarava dbName;
+	- comando anterior nao declarava databaseKey;
+	- plannedAllowlist deve usar unidadeId, nao label.
+- Comando corrigido futuro, ainda nao executado:
+```powershell
+node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shared/db/unitDatabaseRegistryManualEntrypoint'); (async () => { const result = await runUnitDatabaseRegistryManualEntrypoint({ context: { source: 'manual', approved: true, actor: 'synthetic-manual-operator', reason: 'synthetic manual controlled preparation candidate' }, environment: 'non-production', syntheticUnit: { synthetic: true, controlled: true }, unidadeId: '000000000000000000000001', dbName: 'wdgestor_unit_000000000000000000000001', databaseKey: 'wdgestor_unit_000000000000000000000001', rollbackPlan: 'rollback synthetic tenant-registry-synthetic-unit-001 only', plannedAllowlist: ['000000000000000000000001'] }); console.log(JSON.stringify(result, null, 2)); })().catch((error) => { console.error(error); process.exit(1); });"
+```
+- Contrato corrigido do payload:
+	- context.source=manual;
+	- context.approved=true;
+	- context.actor=synthetic-manual-operator;
+	- context.reason=synthetic manual controlled preparation candidate;
+	- environment=non-production;
+	- syntheticUnit.synthetic=true;
+	- syntheticUnit.controlled=true;
+	- unidadeId=000000000000000000000001;
+	- dbName=wdgestor_unit_000000000000000000000001;
+	- databaseKey=wdgestor_unit_000000000000000000000001;
+	- rollbackPlan=rollback synthetic tenant-registry-synthetic-unit-001 only;
+	- plannedAllowlist=[000000000000000000000001].
+- Observacoes obrigatorias:
+	- comando corrigido ainda nao foi executado;
+	- correcao documental nao autoriza execucao automatica;
+	- comando corrigido devera ser exibido novamente antes de qualquer execucao;
+	- comando corrigido dependera de autorizacao explicita do usuario;
+	- execucao futura devera parar se qualquer gate falhar;
+	- execucao futura devera parar se git status nao estiver limpo;
+	- execucao futura devera parar se qualquer arquivo inesperado for alterado;
+	- execucao futura devera parar se aparecer dado real, usuario real, unidade real, Portal, PostgreSQL ou tenant DB real.
+- Gates documentais:
+	- realSyntheticWriteCommandDefined=true
+	- realSyntheticWriteCommandCorrected=true
+	- realSyntheticWriteExecutionApproved=true
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteDefined=true
+	- firstRealSyntheticWriteExecuted=false
+	- syntheticWritePrecheckCommandDefined=true
+	- syntheticWritePrecheckCommandExecuted=true
+	- syntheticRollbackPlanDefined=true
+	- syntheticEvidencePlanDefined=true
+	- syntheticEvidenceCollected=true
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- pushDeferredUntilBlockClosure=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- correcao documental do comando real nao executa o comando;
+	- correcao documental do comando real nao executa writer;
+	- correcao documental do comando real nao executa manualEntrypoint;
+	- correcao documental do comando real nao executa manualOwner;
+	- correcao documental do comando real nao cria registry entry;
+	- correcao documental do comando real nao altera registry real;
+	- correcao documental do comando real nao altera allowlist real;
+	- correcao documental do comando real nao abre tenant DB real;
+	- correcao documental do comando real nao altera roteamento real;
+	- correcao documental do comando real nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- correcao documental do comando real nao autoriza rollback;
+	- correcao documental do comando real nao autoriza push;
+	- push fica adiado ate fechamento consolidado do bloco amplo;
+	- qualquer execucao concreta deve ocorrer em microcorte proprio imediatamente posterior.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
