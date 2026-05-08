@@ -1826,6 +1826,69 @@ Checkpoint tenant enforcement atual:
 	- auditoria read-only de conteudo nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
 	- auditoria read-only de conteudo nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+- Auditoria read-only de conteudo dos testes tenant registry executada.
+- Comando executado exatamente como aprovado.
+- Evidencia sintetica textual coletada.
+- Comando executado:
+	- git status -sb
+	- git log --oneline --decorate -8
+	- Get-Content .\tests\architecture\resolveConnection_multiDbFlag.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryCache.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryPreload.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryReader.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryWriter.test.js -TotalCount 220
+	- Get-Content .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js -TotalCount 220
+- Saida de git status -sb antes da leitura dos testes:
+	- ## migration/refactor-core...origin/migration/refactor-core [ahead 1]
+- Saida de git log --oneline --decorate -8:
+	- 37ccdd8 (HEAD -> migration/refactor-core) docs(tenant): registra mapa read-only dos artefatos tenant registry
+	- 973d28a (origin/migration/refactor-core) docs(tenant): registra auditoria precisa de caminhos tenant registry
+	- 9c9412d docs(tenant): registra auditoria read-only de caminhos tenant registry
+	- 3274272 docs(tenant): completa validacao final da fase z
+	- 8451429 docs(tenant): registra encerramento da fase z no status
+	- 60cb2f1 docs(tenant): encerra fase z
+	- e6de647 docs(tenant): registra primeiro ato sintetico da fase z no status
+	- ef04ef5 docs(tenant): executa primeiro ato sintetico read-only da fase z
+- Mapa resumido de responsabilidade de cada teste lido:
+	- resolveConnection_multiDbFlag.test.js: protege os gates de resolveConnection para WD_MULTI_DB, allowlist, registry read passivo e fallback seguro para baseConnection quando multi-db esta desligado ou quando nao existe entry valida no registry.
+	- unitDatabaseRegistryCache.test.js: protege o comportamento do cache do registry, incluindo cache miss, cache hit, precedencia de override de teste e prime do cache a partir do reader sem contaminar estado em caso de erro.
+	- unitDatabaseRegistryControlledPilot.contract.test.js: protege o contrato do piloto controlado sintetico, garantindo fallback seguro ate todos os gates estarem completos e retorno a baseConnection ao encerrar o piloto.
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: protege o entrypoint manual, exigindo contexto manual aprovado, ambiente nao produtivo, unidade sintetica/controlada, rollback plan e allowlist planejada coerente antes de delegar ao manual owner.
+	- unitDatabaseRegistryManualOwner.contract.test.js: protege o owner manual que orquestra pending -> ready -> active e valida que a ativacao manual depende de contexto explicito e coerente.
+	- unitDatabaseRegistryNonProductionPilot.contract.test.js: protege o corredor de piloto nao produtivo, reforcando requisitos sinteticos e documentais e evitando uso de unidade real, dados reais ou rollout fora do recorte controlado.
+	- unitDatabaseRegistryPreload.test.js: protege o preload do cache por lista de unidades, cobrindo relatorio vazio, skipped por ids ausentes/invalidos/duplicados, loaded, missing, failed e o limite arquitetural de usar apenas o seam passivo de cache.
+	- unitDatabaseRegistryReader.test.js: protege a leitura da collection unit_database_registry na conexao base/global ou injetada, o filtro por unidadeId, o shape minimo normalizado e a propagacao de erro da collection.
+	- unitDatabaseRegistryWriter.test.js: protege o writer nas transicoes seguras do registry, cobrindo validacao de input, persistencia pending via conexao base/global, ausencia de active/tenant/allowlist no pending e erros especificos de conexao ou persistencia.
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: protege o contrato conjunto writer -> resolveConnection, verificando quando o routing deve permanecer em baseConnection e quando uma entry ativa/coerente pode liberar o branch tenant sob gates corretos.
+- Confirmacao de que a auditoria apenas leu arquivos existentes.
+- Saida de git status -sb apos a auditoria de testes:
+	- ## migration/refactor-core...origin/migration/refactor-core [ahead 1]
+- Confirmacao de que nenhum arquivo foi alterado pela execucao.
+- Confirmacao de que nenhum codigo foi alterado.
+- Confirmacao de que nenhum teste foi alterado.
+- Confirmacao de que nenhuma superficie operacional foi criada.
+- Confirmacao de que nenhum caller, rota, CLI, script, job, bootstrap ou request path foi criado.
+- Confirmacao de que nenhum registry real, allowlist real, tenant DB real ou roteamento real foi alterado.
+- Confirmacao de que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados.
+- Confirmacao de que rollback real nao foi executado.
+- Confirmacao de que evidencia operacional real nao foi coletada.
+- Confirmacao de que push nao foi realizado.
+- Interpretacao obrigatoria da auditoria read-only de testes:
+	- auditoria read-only de testes nao autoriza alteracao de arquivos;
+	- auditoria read-only de testes nao autoriza alteracao de testes;
+	- auditoria read-only de testes nao autoriza preparacao operacional real;
+	- auditoria read-only de testes nao autoriza execucao operacional;
+	- auditoria read-only de testes nao autoriza rollback real;
+	- auditoria read-only de testes nao autoriza evidencia operacional real;
+	- auditoria read-only de testes nao autoriza superficie operacional;
+	- auditoria read-only de testes nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+	- auditoria read-only de testes nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+	- auditoria read-only de testes nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
 - Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
