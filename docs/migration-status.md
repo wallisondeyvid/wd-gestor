@@ -2917,6 +2917,97 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- definicao do comando real futuro de escrita sintetica nao autoriza push;
 	- qualquer proximo ato concreto deve ser aprovado explicitamente em microcorte proprio.
 
+- Execucao da escrita sintetica tenant registry aprovada documentalmente.
+- Base publicada: aab056f docs(tenant): define comando real de escrita sintetica tenant registry.
+- Natureza da aprovacao: explicita, documental, local, nao produtiva, ainda sem execucao.
+- Comando aprovado para execucao futura em microcorte proprio:
+```powershell
+node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shared/db/unitDatabaseRegistryManualEntrypoint'); (async () => { const result = await runUnitDatabaseRegistryManualEntrypoint({ source: 'manual', approved: true, actor: 'synthetic-manual-operator', reason: 'synthetic manual controlled preparation candidate', environment: 'non-production', unidadeId: '000000000000000000000001', unidadeLabel: 'tenant-registry-synthetic-unit-001', synthetic: true, controlled: true, rollbackPlan: 'rollback synthetic tenant-registry-synthetic-unit-001 only', plannedAllowlist: ['tenant-registry-synthetic-unit-001'] }); console.log(JSON.stringify(result, null, 2)); })().catch((error) => { console.error(error); process.exit(1); });"
+```
+- Escopo da aprovacao:
+	- aprovacao vale apenas para o candidato sintetico tenant-registry-synthetic-unit-001;
+	- aprovacao vale apenas para ambiente non-production;
+	- aprovacao vale apenas para execucao local controlada;
+	- aprovacao vale apenas para caminho manual ja protegido por testes;
+	- aprovacao nao inclui Portal;
+	- aprovacao nao inclui dados reais;
+	- aprovacao nao inclui trafego real;
+	- aprovacao nao inclui usuario real;
+	- aprovacao nao inclui unidade real;
+	- aprovacao nao inclui PostgreSQL;
+	- aprovacao nao inclui tenant DB real;
+	- aprovacao nao inclui caller, rota, CLI persistente, script persistente, job, bootstrap ou request path;
+	- aprovacao nao inclui push.
+- Cadeia esperada da execucao futura:
+	- runUnitDatabaseRegistryManualEntrypoint;
+	- runUnitDatabaseRegistryManualOwner;
+	- unitDatabaseRegistryWriter;
+	- collection logica unit_database_registry;
+	- conexao esperada base/global via getConnectionForUnit(null);
+	- fallback para baseConnection preservado ate gates completos.
+- Pre-condicoes obrigatorias imediatamente antes da execucao futura:
+	- git status -sb limpo;
+	- git --no-pager log --oneline --decorate -8 conferido;
+	- pre-checagem de testes arquiteturais verde;
+	- comando exibido integralmente novamente;
+	- autorizacao explicita do usuario imediatamente antes da execucao;
+	- rollback sintetico ja documentado;
+	- evidencia sintetica ja documentada;
+	- criterio de parada ativo.
+- Criterios de parada para execucao futura:
+	- se git status nao estiver limpo, parar;
+	- se qualquer teste falhar, parar;
+	- se o comando exigir dado real, parar;
+	- se o comando exigir usuario real, parar;
+	- se o comando exigir unidade real, parar;
+	- se o comando exigir Portal, parar;
+	- se o comando exigir PostgreSQL, parar;
+	- se o comando abrir tenant DB real, parar;
+	- se o comando tentar criar caller, rota, CLI persistente, script persistente, job, bootstrap ou request path, parar;
+	- se qualquer arquivo inesperado for alterado, parar;
+	- se qualquer ambiguidade aparecer, degradar para nao executar.
+- Gates documentais:
+	- realSyntheticWriteCommandDefined=true
+	- realSyntheticWriteExecutionApproved=true
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteDefined=true
+	- firstRealSyntheticWriteExecuted=false
+	- syntheticWritePrecheckCommandDefined=true
+	- syntheticWritePrecheckCommandExecuted=true
+	- syntheticRollbackPlanDefined=true
+	- syntheticEvidencePlanDefined=true
+	- syntheticEvidenceCollected=true
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- pushDeferredUntilBlockClosure=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- aprovacao documental da execucao nao executa o comando;
+	- aprovacao documental da execucao nao executa writer;
+	- aprovacao documental da execucao nao executa manualEntrypoint;
+	- aprovacao documental da execucao nao executa manualOwner;
+	- aprovacao documental da execucao nao cria registry entry neste microcorte;
+	- aprovacao documental da execucao nao altera registry real neste microcorte;
+	- aprovacao documental da execucao nao altera allowlist real neste microcorte;
+	- aprovacao documental da execucao nao abre tenant DB real;
+	- aprovacao documental da execucao nao altera roteamento real;
+	- aprovacao documental da execucao nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- aprovacao documental da execucao nao autoriza rollback;
+	- aprovacao documental da execucao nao autoriza push;
+	- push fica adiado ate fechamento consolidado do bloco amplo;
+	- qualquer execucao concreta deve ocorrer em microcorte proprio imediatamente posterior.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
