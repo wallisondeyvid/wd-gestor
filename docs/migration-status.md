@@ -2177,6 +2177,86 @@ node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.con
 	- encerramento documental da Fase Z no ledger nao autoriza push;
 	- qualquer proximo ato concreto deve ser definido e aprovado em fase ou microcorte proprio.
 
+- Plano de escrita sintetica tenant registry definido documentalmente.
+- Base publicada: 0370de3 docs(tenant): executa comando sintetico de preparacao tenant registry.
+- Natureza do plano: escrita sintetica futura, manual, controlada, nao produtiva, ainda nao executada.
+- Objetivo futuro: testar a trilha pending -> ready -> active apenas em contexto sintetico/controlado, preservando fallback para baseConnection ate gates completos.
+- Artefatos envolvidos futuramente:
+	- unitDatabaseRegistryManualEntrypoint.js
+	- unitDatabaseRegistryManualOwner.js
+	- unitDatabaseRegistryWriter.js
+	- unitDatabaseRegistryReader.js
+	- unitDatabaseRegistry.js
+	- resolveConnection.js
+- Testes de protecao relacionados:
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js
+	- unitDatabaseRegistryManualOwner.contract.test.js
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js
+	- unitDatabaseRegistryNonProductionPilot.contract.test.js
+	- unitDatabaseRegistryControlledPilot.contract.test.js
+- Escopo permitido futuro, ainda nao autorizado:
+	- usar somente candidato sintetico ja documentado;
+	- usar somente ambiente nao produtivo;
+	- usar somente harness/controlador sintetico se previamente definido em microcorte proprio;
+	- preservar fallback para baseConnection;
+	- registrar evidencia sintetica textual/local;
+	- parar em qualquer ambiguidade.
+- Escopo proibido:
+	- dados reais;
+	- trafego real;
+	- usuario real;
+	- unidade real;
+	- Portal;
+	- PostgreSQL;
+	- tenant DB real;
+	- registry real operacional;
+	- allowlist real operacional;
+	- roteamento real operacional;
+	- superficie operacional real;
+	- caller, rota, CLI, script persistente, job, bootstrap ou request path;
+	- rollback real;
+	- evidencia operacional real.
+- Gates documentais:
+	- syntheticWritePlanDefined=true
+	- syntheticWriteExecuted=false
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Criterios para futura execucao, ainda nao autorizada:
+	- comando futuro de escrita sintetica deve ser mostrado integralmente antes;
+	- comando futuro deve ser aprovado explicitamente pelo usuario;
+	- comando futuro deve declarar exatamente se chamara harness, manualEntrypoint, manualOwner ou writer;
+	- comando futuro deve declarar exatamente onde ocorrera a escrita sintetica;
+	- comando futuro deve declarar rollback sintetico antes de qualquer escrita;
+	- comando futuro deve declarar evidencia sintetica esperada;
+	- se qualquer arquivo for alterado inesperadamente, parar;
+	- se qualquer teste falhar, parar;
+	- se qualquer necessidade de dado real, usuario real, unidade real, Portal, PostgreSQL ou tenant DB real aparecer, parar;
+	- se qualquer ambiguidade aparecer, degradar para nao executar.
+- Interpretacao obrigatoria:
+	- definicao do plano de escrita sintetica nao autoriza execucao;
+	- definicao do plano de escrita sintetica nao autoriza writer;
+	- definicao do plano de escrita sintetica nao autoriza manualEntrypoint;
+	- definicao do plano de escrita sintetica nao autoriza manualOwner;
+	- definicao do plano de escrita sintetica nao autoriza alteracao de registry real;
+	- definicao do plano de escrita sintetica nao autoriza alteracao de allowlist real;
+	- definicao do plano de escrita sintetica nao autoriza abertura de tenant DB real;
+	- definicao do plano de escrita sintetica nao autoriza alteracao de roteamento real;
+	- definicao do plano de escrita sintetica nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- definicao do plano de escrita sintetica nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
