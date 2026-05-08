@@ -2393,6 +2393,78 @@ node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.con
 	- execucao do comando sintetico de escrita nao autoriza push;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
+- Plano de rollback sintetico tenant registry definido documentalmente.
+- Base publicada: 5556363 docs(tenant): executa comando sintetico de escrita tenant registry.
+- Natureza do rollback: sintetico, futuro, manual, controlado, nao produtivo, ainda nao executado.
+- Objetivo futuro: permitir desfazer uma eventual escrita sintetica do candidato tenant-registry-synthetic-unit-001, preservando fallback para baseConnection.
+- Rollback alvo futuro:
+	- unidadeSinteticaId: 000000000000000000000001
+	- unidadeSinteticaLabel: tenant-registry-synthetic-unit-001
+	- registry entry sintetica futura, se vier a existir em microcorte proprio
+	- allowlist sintetica futura, se vier a existir em microcorte proprio
+- O rollback nao se aplica a dados reais.
+- O rollback nao se aplica a unidade real.
+- O rollback nao se aplica a usuario real.
+- O rollback nao usa Portal.
+- O rollback nao usa PostgreSQL.
+- O rollback nao abre tenant DB real.
+- O rollback nao altera registry real neste microcorte.
+- O rollback nao altera allowlist real neste microcorte.
+- O rollback nao altera roteamento real neste microcorte.
+- O rollback nao executa writer neste microcorte.
+- O rollback nao executa manualEntrypoint neste microcorte.
+- O rollback nao executa manualOwner neste microcorte.
+- O rollback nao cria superficie operacional.
+- O rollback preserva fallback para baseConnection.
+- Qualquer rollback futuro dependera de comando completo visivel, autorizacao explicita do usuario e microcorte proprio.
+- Estrategia futura, ainda nao autorizada:
+	- antes de qualquer escrita sintetica futura, registrar estado anterior sintetico esperado;
+	- se uma entry sintetica for criada, o rollback futuro devera remover ou desativar somente essa entry sintetica;
+	- se uma allowlist sintetica for criada, o rollback futuro devera remover somente essa allowlist sintetica;
+	- apos rollback sintetico futuro, resolveConnection devera permanecer em baseConnection;
+	- evidencia futura devera ser sintetica, textual e local;
+	- qualquer ambiguidade degrada para nao executar.
+- Gates documentais:
+	- syntheticRollbackPlanDefined=true
+	- syntheticRollbackExecuted=false
+	- syntheticWriteExecuted=false fora de harness
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Criterios para rollback futuro, ainda nao autorizado:
+	- comando futuro de rollback sintetico deve ser mostrado integralmente antes;
+	- comando futuro deve ser aprovado explicitamente pelo usuario;
+	- comando futuro deve declarar exatamente se chamara harness, manualEntrypoint, manualOwner ou writer;
+	- comando futuro deve declarar exatamente onde ocorreria a reversao sintetica;
+	- comando futuro deve declarar evidencia sintetica esperada;
+	- se qualquer arquivo for alterado inesperadamente, parar;
+	- se qualquer teste falhar, parar;
+	- se qualquer necessidade de dado real, usuario real, unidade real, Portal, PostgreSQL ou tenant DB real aparecer, parar;
+	- se qualquer ambiguidade aparecer, degradar para nao executar.
+- Interpretacao obrigatoria:
+	- definicao do rollback sintetico nao autoriza execucao;
+	- definicao do rollback sintetico nao autoriza writer;
+	- definicao do rollback sintetico nao autoriza manualEntrypoint;
+	- definicao do rollback sintetico nao autoriza manualOwner;
+	- definicao do rollback sintetico nao autoriza alteracao de registry real;
+	- definicao do rollback sintetico nao autoriza alteracao de allowlist real;
+	- definicao do rollback sintetico nao autoriza abertura de tenant DB real;
+	- definicao do rollback sintetico nao autoriza alteracao de roteamento real;
+	- definicao do rollback sintetico nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- definicao do rollback sintetico nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
