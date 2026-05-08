@@ -2465,6 +2465,84 @@ node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.con
 	- definicao do rollback sintetico nao autoriza push;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
+- Plano de evidencia sintetica tenant registry definido documentalmente.
+- Base publicada: 8545c10 docs(tenant): define rollback sintetico tenant registry.
+- Natureza da evidencia: sintetica, textual, local, nao produtiva, futura, ainda nao coletada.
+- Objetivo: definir quais evidencias deverao ser coletadas antes/depois de eventual escrita sintetica e eventual rollback sintetico.
+- Evidencia futura antes da escrita:
+	- status limpo do git;
+	- log curto do HEAD;
+	- comando completo aprovado;
+	- candidato sintetico usado;
+	- confirmacao de ambiente nao produtivo;
+	- confirmacao de fallback esperado para baseConnection;
+	- confirmacao de ausencia de Portal, dados reais, usuario real, unidade real, PostgreSQL e tenant DB real.
+- Evidencia futura depois da escrita sintetica, se autorizada em microcorte proprio:
+	- saida textual do comando executado;
+	- status do git apos execucao;
+	- resultado dos testes de protecao;
+	- confirmacao de que qualquer alteracao ficou restrita ao harness ou ao alvo sintetico previamente aprovado;
+	- confirmacao de que nenhuma superficie operacional real foi criada.
+- Evidencia futura depois do rollback sintetico, se autorizado em microcorte proprio:
+	- saida textual do comando de rollback;
+	- confirmacao de remocao/desativacao apenas da entry sintetica;
+	- confirmacao de remocao apenas da allowlist sintetica, se existir;
+	- confirmacao de fallback para baseConnection;
+	- resultado dos testes de protecao;
+	- status final do git.
+- Evidencias proibidas:
+	- evidencia operacional real;
+	- dado real;
+	- trafego real;
+	- usuario real;
+	- unidade real;
+	- Portal;
+	- PostgreSQL;
+	- tenant DB real;
+	- segredo, token ou credencial real.
+- Gates documentais:
+	- syntheticEvidencePlanDefined=true
+	- syntheticEvidenceCollected=false
+	- syntheticWriteExecuted=false fora de harness
+	- syntheticRollbackExecuted=false
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Criterios para coleta futura, ainda nao autorizada:
+	- comando futuro de evidencia deve ser mostrado integralmente antes;
+	- comando futuro deve ser aprovado explicitamente pelo usuario;
+	- toda evidencia deve ser textual, local e sintetica;
+	- se qualquer comando exigir dado real, parar;
+	- se qualquer comando exigir Portal, parar;
+	- se qualquer comando exigir PostgreSQL ou tenant DB real, parar;
+	- se qualquer arquivo for alterado inesperadamente, parar;
+	- se qualquer teste falhar, parar;
+	- se qualquer ambiguidade aparecer, degradar para nao executar.
+- Interpretacao obrigatoria:
+	- definicao do plano de evidencia sintetica nao autoriza coleta;
+	- definicao do plano de evidencia sintetica nao autoriza escrita;
+	- definicao do plano de evidencia sintetica nao autoriza rollback;
+	- definicao do plano de evidencia sintetica nao autoriza writer;
+	- definicao do plano de evidencia sintetica nao autoriza manualEntrypoint;
+	- definicao do plano de evidencia sintetica nao autoriza manualOwner;
+	- definicao do plano de evidencia sintetica nao autoriza alteracao de registry real;
+	- definicao do plano de evidencia sintetica nao autoriza alteracao de allowlist real;
+	- definicao do plano de evidencia sintetica nao autoriza abertura de tenant DB real;
+	- definicao do plano de evidencia sintetica nao autoriza alteracao de roteamento real;
+	- definicao do plano de evidencia sintetica nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- definicao do plano de evidencia sintetica nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
