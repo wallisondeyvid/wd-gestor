@@ -3885,6 +3885,169 @@ node -e "const mongoose = require('mongoose'); (async () => { const { createSynt
 	- execucao futura do rollback sintetico devera ocorrer em microcorte proprio aprovado;
 	- push continua adiado ate fechamento consolidado do bloco amplo.
 
+- Rollback sintetico tenant registry com harness executado.
+- Base local: c60bd50 docs(tenant): define rollback sintetico com harness tenant registry.
+- Comando executado exatamente como aprovado:
+
+```powershell
+node -e "const mongoose = require('mongoose'); (async () => { const { createSyntheticBaseConnectionHarness } = await import('./src/shared/db/unitDatabaseRegistrySyntheticBaseConnectionHarness.js'); const { runUnitDatabaseRegistryManualEntrypoint } = await import('./src/shared/db/unitDatabaseRegistryManualEntrypoint.js'); const { markUnitDatabaseRegistryRollbackRequired } = await import('./src/shared/db/unitDatabaseRegistryWriter.js'); const originalDb = mongoose.connection.db; const harness = createSyntheticBaseConnectionHarness(); mongoose.connection.db = harness.db; try { const payload = { context: { source: 'manual', approved: true, actor: 'synthetic-manual-operator', reason: 'synthetic manual controlled preparation candidate' }, environment: 'non-production', syntheticUnit: { synthetic: true, controlled: true }, unidadeId: '000000000000000000000001', dbName: 'wdgestor_unit_000000000000000000000001', databaseKey: 'wdgestor_unit_000000000000000000000001', rollbackPlan: 'rollback synthetic tenant-registry-synthetic-unit-001 only', plannedAllowlist: ['000000000000000000000001'] }; const writeResult = await runUnitDatabaseRegistryManualEntrypoint(payload); const beforeRollback = harness.read(payload.unidadeId); const rollbackEntry = await markUnitDatabaseRegistryRollbackRequired({ unidadeId: payload.unidadeId, reason: 'synthetic harness rollback validation' }); const afterRollback = harness.read(payload.unidadeId); console.log(JSON.stringify({ ok: true, writeResult, beforeRollback, rollbackEntry, afterRollback }, null, 2)); } finally { mongoose.connection.db = originalDb; harness.reset(); } })().catch((error) => { console.error(error); process.exit(1); });"
+```
+
+- Saida de git status inicial:
+
+```text
+## migration/refactor-core...origin/migration/refactor-core [ahead 12]
+```
+
+- Saida de git log:
+
+```text
+c60bd50 (HEAD -> migration/refactor-core) docs(tenant): define rollback sintetico com harness tenant registry
+2071d29 docs(tenant): executa escrita sintetica com harness tenant registry
+4715f50 docs(tenant): aprova execucao da escrita sintetica com harness tenant registry
+89bceea docs(tenant): define comando de escrita sintetica com harness tenant registry
+28eeea3 test(tenant): valida escrita sintetica com harness de base global tenant registry
+26a4704 feat(tenant): implementa harness de base global sintetica tenant registry
+906514e test(tenant): especifica harness de base global sintetica tenant registry
+f54463a docs(tenant): define desenho do harness de base global sintetica tenant registry
+```
+
+- Resultado da pre-checagem:
+	- unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js: 3 pass, 0 fail;
+	- unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistryManualOwner.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: 15 pass, 0 fail;
+	- npm run verify:imports: arquitetura limpa.
+- Saida JSON do comando:
+
+```json
+{
+	"ok": true,
+	"writeResult": {
+		"ok": true,
+		"unidadeId": "000000000000000000000001",
+		"actor": "synthetic-manual-operator",
+		"reason": "synthetic manual controlled preparation candidate",
+		"environment": "non-production",
+		"syntheticUnit": true,
+		"plannedAllowlist": [
+			"000000000000000000000001"
+		],
+		"rollbackPlan": "rollback synthetic tenant-registry-synthetic-unit-001 only",
+		"ownerResult": {
+			"ok": true,
+			"unidadeId": "000000000000000000000001",
+			"actor": "synthetic-manual-operator",
+			"reason": "synthetic manual controlled preparation candidate",
+			"finalStatus": "active"
+		},
+		"postConditions": [
+			"owner-called",
+			"routing-remains-central-routing-owned",
+			"resolveConnection-remains-separate-decision-point",
+			"tenant-routing-validated-only-by-harness"
+		],
+		"rollbackHint": [
+			"remove-allowlist",
+			"deactivate-activation",
+			"use-disabled-or-rollback_required",
+			"preserve-baseConnection-fallback",
+			"do-not-delete-entry-first"
+		]
+	},
+	"beforeRollback": {
+		"unidadeId": "000000000000000000000001",
+		"dbName": "wdgestor_unit_000000000000000000000001",
+		"databaseKey": "wdgestor_unit_000000000000000000000001",
+		"status": "active",
+		"routingMode": "tenant",
+		"readiness": {
+			"ready": true,
+			"reason": "synthetic manual controlled preparation candidate"
+		},
+		"activation": {
+			"active": true,
+			"activatedAt": "2026-05-08T23:51:30.533Z"
+		},
+		"updatedAt": "2026-05-08T23:51:30.533Z"
+	},
+	"rollbackEntry": {
+		"unidadeId": "000000000000000000000001",
+		"dbName": "wdgestor_unit_000000000000000000000001",
+		"databaseKey": "wdgestor_unit_000000000000000000000001",
+		"status": "rollback_required",
+		"routingMode": "base",
+		"activation": {
+			"active": false
+		},
+		"readiness": {
+			"ready": true,
+			"reason": "synthetic manual controlled preparation candidate"
+		},
+		"lastError": "synthetic harness rollback validation",
+		"updatedAt": "2026-05-08T23:51:30.533Z"
+	},
+	"afterRollback": {
+		"unidadeId": "000000000000000000000001",
+		"dbName": "wdgestor_unit_000000000000000000000001",
+		"databaseKey": "wdgestor_unit_000000000000000000000001",
+		"status": "rollback_required",
+		"routingMode": "base",
+		"readiness": {
+			"ready": true,
+			"reason": "synthetic manual controlled preparation candidate"
+		},
+		"activation": {
+			"active": false
+		},
+		"updatedAt": "2026-05-08T23:51:30.533Z",
+		"lastError": "synthetic harness rollback validation"
+	}
+}
+```
+
+- Confirmacoes:
+	- beforeRollback.status=active;
+	- beforeRollback.routingMode=tenant;
+	- beforeRollback.activation.active=true;
+	- rollbackEntry.status=rollback_required;
+	- afterRollback.status=rollback_required;
+	- afterRollback.routingMode=base;
+	- afterRollback.activation.active=false, logo neutralizado conforme saida;
+	- rollback ocorreu somente em harness/memoria;
+	- mongoose.connection.db foi restaurado no finally com status final limpo;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados;
+	- push nao foi realizado.
+- Gates:
+	- syntheticWriteWithHarnessCommandExecuted=true
+	- syntheticWriteWithHarnessEvidenceCollected=true
+	- syntheticRollbackWithHarnessCommandDefined=true
+	- syntheticRollbackWithHarnessCommandExecuted=true
+	- syntheticRollbackWithHarnessEvidenceCollected=true
+	- registrySyntheticChanged=true somente em harness/memoria
+	- registrySyntheticRollbackExecuted=true somente em harness/memoria
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- execucao do rollback com harness nao equivale a rollback real;
+	- execucao do rollback com harness nao autoriza nova execucao automatica;
+	- execucao do rollback com harness nao autoriza Mongo real;
+	- execucao do rollback com harness nao autoriza tenant DB real;
+	- execucao do rollback com harness nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proximo ato deve ser validacao final do bloco sintetico com harness ou fechamento documental;
+	- push continua adiado ate fechamento consolidado do bloco amplo.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
