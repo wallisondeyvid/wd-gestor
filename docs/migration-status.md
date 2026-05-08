@@ -2543,6 +2543,86 @@ node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.con
 	- definicao do plano de evidencia sintetica nao autoriza push;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
+- Evidencia sintetica tenant registry coletada.
+- Base publicada: fe7489b docs(tenant): define evidencia sintetica tenant registry.
+- Comandos executados pelo usuario:
+	- git status -sb
+	- git --no-pager log --oneline --decorate -8
+	- node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js
+	- git status -sb
+- Saida de git log:
+	- fe7489b (HEAD -> migration/refactor-core, origin/migration/refactor-core) docs(tenant): define evidencia sintetica tenant registry
+	- 8545c10 docs(tenant): define rollback sintetico tenant registry
+	- 5556363 docs(tenant): executa comando sintetico de escrita tenant registry
+	- 4eca1b6 docs(tenant): define comando futuro de escrita sintetica tenant registry
+	- e3b4778 docs(tenant): define plano de escrita sintetica tenant registry
+	- 0370de3 docs(tenant): executa comando sintetico de preparacao tenant registry
+	- 0501bb0 docs(tenant): define comando futuro de preparacao sintetica tenant registry
+	- b4b50e8 docs(tenant): define candidato sintetico minimo tenant registry
+- Resultados dos testes:
+	- unitDatabaseRegistryControlledPilot.contract.test.js: PASS, 2 tests, 0 fail.
+	- unitDatabaseRegistryNonProductionPilot.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryManualOwner.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: PASS, 15 tests, 0 fail.
+- Total:
+	- 29 tests executados nessa coleta.
+	- 29 pass.
+	- 0 fail.
+- Confirmacoes:
+	- status inicial limpo;
+	- status final limpo;
+	- evidencia coletada foi sintetica, textual e local;
+	- execucao limitada a contratos arquiteturais existentes em harness de teste;
+	- nenhum arquivo foi alterado pela execucao;
+	- nenhum codigo foi alterado;
+	- nenhum teste foi alterado;
+	- nenhuma registry entry real foi criada;
+	- nenhum registry real foi alterado;
+	- nenhuma allowlist real foi alterada;
+	- nenhuma tenant DB real foi aberta;
+	- nenhum roteamento real foi alterado;
+	- nenhuma superficie operacional foi criada;
+	- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados;
+	- rollback real nao foi executado;
+	- evidencia operacional real nao foi coletada;
+	- push nao foi realizado.
+- Gates:
+	- syntheticEvidencePlanDefined=true
+	- syntheticEvidenceCollected=true
+	- syntheticWriteExecuted=false fora de harness
+	- syntheticRollbackExecuted=false
+	- writerExecutedOutsideHarness=false
+	- manualEntrypointExecutedOutsideHarness=false
+	- manualOwnerExecutedOutsideHarness=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- coleta de evidencia sintetica nao autoriza escrita;
+	- coleta de evidencia sintetica nao autoriza rollback;
+	- coleta de evidencia sintetica nao autoriza writer fora do harness;
+	- coleta de evidencia sintetica nao autoriza manualEntrypoint fora do harness;
+	- coleta de evidencia sintetica nao autoriza manualOwner fora do harness;
+	- coleta de evidencia sintetica nao autoriza alteracao de registry real;
+	- coleta de evidencia sintetica nao autoriza alteracao de allowlist real;
+	- coleta de evidencia sintetica nao autoriza abertura de tenant DB real;
+	- coleta de evidencia sintetica nao autoriza alteracao de roteamento real;
+	- coleta de evidencia sintetica nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- coleta de evidencia sintetica nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
