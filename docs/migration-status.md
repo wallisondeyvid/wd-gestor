@@ -1652,6 +1652,62 @@ Checkpoint tenant enforcement atual:
 - esta validacao nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
 - esta validacao nao autoriza push.
 - qualquer proximo ato concreto deve ser definido e aprovado em fase ou microcorte proprio.
+- Auditoria read-only de caminhos reais dos artefatos tenant registry executada.
+- Comando executado exatamente como aprovado.
+- Evidencia sintetica textual coletada.
+- Comando executado:
+	- git status -sb
+	- git log --oneline --decorate -8
+	- Get-ChildItem . -Recurse -File -Include "*unitDatabaseRegistry*","*tenant*registry*","*Tenant*Registry*","*registry*manual*","*RegistryManual*","*resolveConnection*" | Select-Object FullName
+- Saida de git status -sb antes da listagem:
+	- ## migration/refactor-core...origin/migration/refactor-core
+- Saida de git log --oneline --decorate -8:
+	- 3274272 (HEAD -> migration/refactor-core, origin/migration/refactor-core) docs(tenant): completa validacao final da fase z
+	- 8451429 docs(tenant): registra encerramento da fase z no status
+	- 60cb2f1 docs(tenant): encerra fase z
+	- e6de647 docs(tenant): registra primeiro ato sintetico da fase z no status
+	- ef04ef5 docs(tenant): executa primeiro ato sintetico read-only da fase z
+	- 2fd60da docs(tenant): aprova comando do primeiro ato sintetico da fase z
+	- 822b41e docs(tenant): define primeiro ato concreto sintetico da fase z
+	- 62dcbf8 docs(tenant): abre fase z
+- Saida de Get-ChildItem:
+	- a saida tabular do PowerShell confirmou ocorrencias relacionadas a tenant registry, unitDatabaseRegistry e resolveConnection;
+	- alguns valores de FullName foram truncados pela formatacao tabular do PowerShell;
+	- a evidencia sintetica desta auditoria deve ser interpretada como localizacao read-only preliminar, nao como inventario canonico completo de caminhos;
+	- nomes visiveis integralmente na saida:
+		- tenant-phase-e-provisioning-registry-plan.md
+		- tenant-phase-e-registry-persistence-plan.md
+		- resolveConnection.js
+		- unitDatabaseRegistry.js
+		- unitDatabaseRegistryManualOwner.js
+		- unitDatabaseRegistryPreload.js
+		- unitDatabaseRegistryReader.js
+		- unitDatabaseRegistryWriter.js
+- Confirmacao de que server/config e server/db nao foram pressupostos como caminhos reais.
+- Confirmacao de que a auditoria apenas localizou caminhos reais existentes.
+- Saida de git status -sb apos a auditoria:
+	- ## migration/refactor-core...origin/migration/refactor-core
+- Confirmacao de que nenhum arquivo foi alterado pela execucao.
+- Confirmacao de que nenhum codigo foi alterado.
+- Confirmacao de que nenhum teste foi alterado.
+- Confirmacao de que nenhuma superficie operacional foi criada.
+- Confirmacao de que nenhum caller, rota, CLI, script, job, bootstrap ou request path foi criado.
+- Confirmacao de que nenhum registry real, allowlist real, tenant DB real ou roteamento real foi alterado.
+- Confirmacao de que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados.
+- Confirmacao de que rollback real nao foi executado.
+- Confirmacao de que evidencia operacional real nao foi coletada.
+- Confirmacao de que push nao foi realizado.
+- Interpretacao obrigatoria da auditoria read-only de caminhos:
+	- auditoria read-only de caminhos nao autoriza alteracao de arquivos;
+	- auditoria read-only de caminhos nao autoriza preparacao operacional real;
+	- auditoria read-only de caminhos nao autoriza execucao operacional;
+	- auditoria read-only de caminhos nao autoriza rollback real;
+	- auditoria read-only de caminhos nao autoriza evidencia operacional real;
+	- auditoria read-only de caminhos nao autoriza superficie operacional;
+	- auditoria read-only de caminhos nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+	- auditoria read-only de caminhos nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+	- auditoria read-only de caminhos nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
 - Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
