@@ -3649,6 +3649,138 @@ node -e "const mongoose = require('mongoose'); (async () => { const { createSynt
 	- execucao futura devera ocorrer em microcorte proprio imediatamente posterior;
 	- push continua adiado ate fechamento consolidado do bloco amplo.
 
+- Escrita sintetica tenant registry com harness executada.
+- Base local: 4715f50 docs(tenant): aprova execucao da escrita sintetica com harness tenant registry.
+- Comando executado exatamente como aprovado:
+
+```powershell
+node -e "const mongoose = require('mongoose'); (async () => { const { createSyntheticBaseConnectionHarness } = await import('./src/shared/db/unitDatabaseRegistrySyntheticBaseConnectionHarness.js'); const { runUnitDatabaseRegistryManualEntrypoint } = await import('./src/shared/db/unitDatabaseRegistryManualEntrypoint.js'); const originalDb = mongoose.connection.db; const harness = createSyntheticBaseConnectionHarness(); mongoose.connection.db = harness.db; try { const payload = { context: { source: 'manual', approved: true, actor: 'synthetic-manual-operator', reason: 'synthetic manual controlled preparation candidate' }, environment: 'non-production', syntheticUnit: { synthetic: true, controlled: true }, unidadeId: '000000000000000000000001', dbName: 'wdgestor_unit_000000000000000000000001', databaseKey: 'wdgestor_unit_000000000000000000000001', rollbackPlan: 'rollback synthetic tenant-registry-synthetic-unit-001 only', plannedAllowlist: ['000000000000000000000001'] }; const result = await runUnitDatabaseRegistryManualEntrypoint(payload); const entry = harness.read(payload.unidadeId); console.log(JSON.stringify({ ok: true, result, entry }, null, 2)); } finally { mongoose.connection.db = originalDb; harness.reset(); } })().catch((error) => { console.error(error); process.exit(1); });"
+```
+
+- Saida de git status inicial:
+
+```text
+## migration/refactor-core...origin/migration/refactor-core [ahead 10]
+```
+
+- Saida de git log:
+
+```text
+4715f50 (HEAD -> migration/refactor-core) docs(tenant): aprova execucao da escrita sintetica com harness tenant registry
+89bceea docs(tenant): define comando de escrita sintetica com harness tenant registry
+28eeea3 test(tenant): valida escrita sintetica com harness de base global tenant registry
+26a4704 feat(tenant): implementa harness de base global sintetica tenant registry
+906514e test(tenant): especifica harness de base global sintetica tenant registry
+f54463a docs(tenant): define desenho do harness de base global sintetica tenant registry
+e74cdc7 docs(tenant): define rota apos bloqueio de base global tenant registry
+a83e94b docs(tenant): registra bloqueio de base global para escrita sintetica tenant registry
+```
+
+- Resultado da pre-checagem:
+	- unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js: 3 pass, 0 fail;
+	- unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistryManualOwner.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: 15 pass, 0 fail;
+	- npm run verify:imports: arquitetura limpa.
+- Saida JSON do comando:
+
+```json
+{
+  "ok": true,
+  "result": {
+    "ok": true,
+    "unidadeId": "000000000000000000000001",
+    "actor": "synthetic-manual-operator",
+    "reason": "synthetic manual controlled preparation candidate",
+    "environment": "non-production",
+    "syntheticUnit": true,
+    "plannedAllowlist": [
+      "000000000000000000000001"
+    ],
+    "rollbackPlan": "rollback synthetic tenant-registry-synthetic-unit-001 only",
+    "ownerResult": {
+      "ok": true,
+      "unidadeId": "000000000000000000000001",
+      "actor": "synthetic-manual-operator",
+      "reason": "synthetic manual controlled preparation candidate",
+      "finalStatus": "active"
+    },
+    "postConditions": [
+      "owner-called",
+      "routing-remains-central-routing-owned",
+      "resolveConnection-remains-separate-decision-point",
+      "tenant-routing-validated-only-by-harness"
+    ],
+    "rollbackHint": [
+      "remove-allowlist",
+      "deactivate-activation",
+      "use-disabled-or-rollback_required",
+      "preserve-baseConnection-fallback",
+      "do-not-delete-entry-first"
+    ]
+  },
+  "entry": {
+    "unidadeId": "000000000000000000000001",
+    "dbName": "wdgestor_unit_000000000000000000000001",
+    "databaseKey": "wdgestor_unit_000000000000000000000001",
+    "status": "active",
+    "routingMode": "tenant",
+    "readiness": {
+      "ready": true,
+      "reason": "synthetic manual controlled preparation candidate"
+    },
+    "activation": {
+      "active": true,
+      "activatedAt": "2026-05-08T23:45:23.226Z"
+    },
+    "updatedAt": "2026-05-08T23:45:23.226Z"
+  }
+}
+```
+
+- Confirmacoes:
+	- result.ok=true;
+	- result.ownerResult.finalStatus=active;
+	- entry.status=active;
+	- entry.routingMode=tenant;
+	- entry.readiness.ready=true;
+	- entry.activation.active=true;
+	- escrita ocorreu somente em harness/memoria;
+	- mongoose.connection.db foi restaurado no finally sem alteracao observavel de arquivos e com status final limpo;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados;
+	- rollback nao foi executado;
+	- push nao foi realizado.
+- Gates:
+	- syntheticWriteWithHarnessCommandDefined=true
+	- syntheticWriteWithHarnessExecutionApproved=true
+	- syntheticWriteWithHarnessCommandExecuted=true
+	- syntheticWriteWithHarnessEvidenceCollected=true
+	- registrySyntheticChanged=true somente em harness/memoria
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- execucao com harness nao equivale a escrita real na base central;
+	- execucao com harness nao autoriza nova execucao automatica;
+	- execucao com harness nao autoriza rollback;
+	- execucao com harness nao autoriza Mongo real;
+	- execucao com harness nao autoriza tenant DB real;
+	- execucao com harness nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proximo ato deve ser rollback sintetico com harness ou evidencia pos-execucao em microcorte proprio;
+	- push continua adiado ate fechamento consolidado do bloco amplo.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
