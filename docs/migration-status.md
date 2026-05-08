@@ -3087,6 +3087,76 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- push fica adiado ate fechamento consolidado do bloco amplo;
 	- qualquer execucao concreta deve ocorrer em microcorte proprio imediatamente posterior.
 
+- Bloqueio de base/global connection para escrita sintetica tenant registry registrado.
+- Base local: 041a88a docs(tenant): corrige comando real de escrita sintetica tenant registry.
+- Tentativa anterior:
+	- pre-checagem minima verde;
+	- comando real corrigido alcancou manualEntrypoint;
+	- comando real corrigido alcancou manualOwner;
+	- comando real corrigido alcancou writer;
+	- comando falhou no writer com UNIT_DATABASE_REGISTRY_BASE_CONNECTION_UNAVAILABLE;
+	- nenhuma escrita sintetica foi concluida;
+	- nenhuma registry entry foi criada;
+	- worktree permaneceu limpa.
+- Causa tecnica:
+	- writer chama getConnectionForUnit(null);
+	- getConnectionForUnit(null) devolve mongoose.connection;
+	- no processo node -e cru, mongoose.connection.db nao estava inicializado;
+	- getRegistryCollection exige connection.db.collection;
+	- como collection nao estava disponivel, o writer bloqueou a execucao;
+	- connectionFactory nao faz bootstrap;
+	- manualEntrypoint nao faz bootstrap;
+	- manualOwner nao faz bootstrap.
+- Conclusao da auditoria de bootstrap:
+	- existe bootstrap do app via start/createServer;
+	- existem scripts de migracao/backfill com mongoose.connect;
+	- testes usam harness em memoria injetando mongoose.connection.db;
+	- nao foi localizado bootstrap standalone seguro ja implementado para inicializar apenas base/global connection sem subir servidor, sem migration script e sem harness de teste;
+	- reutilizar start/createServer ampliaria superficie operacional;
+	- usar scripts de migracao/backfill nao e apropriado para este bloco;
+	- usar harness de teste e seguro para validacao, mas nao equivale a escrita real na base central.
+- Decisao:
+	- nao executar nova tentativa de escrita sintetica real com node -e cru;
+	- nao usar startup completo do app sem microcorte proprio;
+	- nao usar script de migracao/backfill;
+	- antes de qualquer nova tentativa real, sera necessario escolher formalmente uma das rotas:
+	- 1. encerrar o bloco como validacao sintetica em harness;
+	- 2. criar um harness local minimo aprovado para base/global connection sintetica;
+	- 3. aprovar uso controlado de bootstrap existente do app, aceitando a superficie operacional;
+	- 4. implementar microcorte de codigo minimo para inicializar base/global connection local/non-production sem servidor.
+- Gates:
+	- realSyntheticWriteCommandDefined=true
+	- realSyntheticWriteCommandCorrected=true
+	- realSyntheticWriteExecutionApproved=true
+	- realSyntheticWriteCommandExecuted=false
+	- realSyntheticWriteBlockedByBaseConnection=true
+	- firstRealSyntheticWriteExecuted=false
+	- baseGlobalConnectionUnavailable=true
+	- standaloneSafeBootstrapFound=false
+	- registrySyntheticChanged=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- pushDeferredUntilBlockClosure=true
+	- blockedReasons=[UNIT_DATABASE_REGISTRY_BASE_CONNECTION_UNAVAILABLE]
+- Interpretacao obrigatoria:
+	- bloqueio de base/global connection impede considerar a escrita sintetica como executada;
+	- falha no writer nao autoriza nova tentativa automatica;
+	- falha no writer nao autoriza bootstrap do app;
+	- falha no writer nao autoriza script de migracao/backfill;
+	- falha no writer nao autoriza criacao de superficie operacional;
+	- falha no writer nao autoriza alteracao de codigo sem microcorte proprio;
+	- falha no writer nao autoriza registry real, allowlist real, tenant DB real, roteamento real, Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- push continua adiado ate fechamento consolidado do bloco amplo;
+	- qualquer proximo ato concreto deve escolher uma rota formal em microcorte proprio.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
