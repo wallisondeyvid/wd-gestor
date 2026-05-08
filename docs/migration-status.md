@@ -3561,6 +3561,94 @@ node -e "const mongoose = require('mongoose'); (async () => { const { createSynt
 	- execucao futura devera ocorrer em microcorte proprio aprovado;
 	- push continua adiado ate fechamento consolidado do bloco amplo.
 
+- Execucao da escrita sintetica tenant registry com harness aprovada documentalmente.
+- Base local: 89bceea docs(tenant): define comando de escrita sintetica com harness tenant registry.
+- Natureza da aprovacao:
+	- explicita;
+	- documental;
+	- local;
+	- sintetica;
+	- em memoria;
+	- ainda sem execucao neste microcorte.
+- Comando aprovado para execucao futura em microcorte proprio:
+
+```powershell
+node -e "const mongoose = require('mongoose'); (async () => { const { createSyntheticBaseConnectionHarness } = await import('./src/shared/db/unitDatabaseRegistrySyntheticBaseConnectionHarness.js'); const { runUnitDatabaseRegistryManualEntrypoint } = await import('./src/shared/db/unitDatabaseRegistryManualEntrypoint.js'); const originalDb = mongoose.connection.db; const harness = createSyntheticBaseConnectionHarness(); mongoose.connection.db = harness.db; try { const payload = { context: { source: 'manual', approved: true, actor: 'synthetic-manual-operator', reason: 'synthetic manual controlled preparation candidate' }, environment: 'non-production', syntheticUnit: { synthetic: true, controlled: true }, unidadeId: '000000000000000000000001', dbName: 'wdgestor_unit_000000000000000000000001', databaseKey: 'wdgestor_unit_000000000000000000000001', rollbackPlan: 'rollback synthetic tenant-registry-synthetic-unit-001 only', plannedAllowlist: ['000000000000000000000001'] }; const result = await runUnitDatabaseRegistryManualEntrypoint(payload); const entry = harness.read(payload.unidadeId); console.log(JSON.stringify({ ok: true, result, entry }, null, 2)); } finally { mongoose.connection.db = originalDb; harness.reset(); } })().catch((error) => { console.error(error); process.exit(1); });"
+```
+
+- Escopo da aprovacao:
+	- aprovacao vale apenas para execucao local com harness;
+	- aprovacao vale apenas para memoria;
+	- aprovacao vale apenas para candidato sintetico 000000000000000000000001;
+	- aprovacao vale apenas para fluxo manual ja validado em teste;
+	- aprovacao nao inclui escrita real na base central;
+	- aprovacao nao inclui Mongo real;
+	- aprovacao nao inclui tenant DB real;
+	- aprovacao nao inclui Portal;
+	- aprovacao nao inclui dados reais;
+	- aprovacao nao inclui usuario real;
+	- aprovacao nao inclui unidade real;
+	- aprovacao nao inclui PostgreSQL;
+	- aprovacao nao inclui rollback;
+	- aprovacao nao inclui push.
+- Pre-condicoes obrigatorias antes da execucao futura:
+	- git status -sb limpo;
+	- git --no-pager log --oneline --decorate -8 conferido;
+	- unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js verde;
+	- unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js verde;
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js verde;
+	- unitDatabaseRegistryManualOwner.contract.test.js verde;
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js verde;
+	- npm run verify:imports limpo;
+	- comando exibido integralmente novamente;
+	- autorizacao explicita do usuario imediatamente antes da execucao;
+	- criterio de parada ativo.
+- Criterios de parada:
+	- se git status nao estiver limpo, parar;
+	- se qualquer teste falhar, parar;
+	- se verify:imports falhar, parar;
+	- se o comando exigir Mongo real, parar;
+	- se o comando exigir Portal, parar;
+	- se o comando exigir dado real, parar;
+	- se o comando exigir usuario real, parar;
+	- se o comando exigir unidade real, parar;
+	- se o comando exigir tenant DB real, parar;
+	- se o comando exigir PostgreSQL, parar;
+	- se qualquer arquivo inesperado for alterado, parar;
+	- se houver ambiguidade, degradar para nao executar.
+- Gates:
+	- baseGlobalSyntheticHarnessDesignDefined=true
+	- baseGlobalSyntheticHarnessContractTestCreated=true
+	- baseGlobalSyntheticHarnessImplemented=true
+	- syntheticWriteWithHarnessContractTestCreated=true
+	- syntheticWriteWithHarnessValidated=true
+	- syntheticWriteWithHarnessCommandDefined=true
+	- syntheticWriteWithHarnessExecutionApproved=true
+	- syntheticWriteWithHarnessCommandExecuted=false
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteExecuted=false
+	- registrySyntheticChanged=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- aprovacao da execucao com harness nao executa escrita;
+	- aprovacao da execucao com harness nao executa rollback;
+	- aprovacao da execucao com harness nao autoriza execucao automatica;
+	- aprovacao da execucao com harness nao equivale a escrita real na base central;
+	- aprovacao da execucao com harness nao autoriza Mongo real;
+	- aprovacao da execucao com harness nao autoriza tenant DB real;
+	- aprovacao da execucao com harness nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- execucao futura devera ocorrer em microcorte proprio imediatamente posterior;
+	- push continua adiado ate fechamento consolidado do bloco amplo.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
