@@ -2623,6 +2623,110 @@ node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.con
 	- coleta de evidencia sintetica nao autoriza push;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
+- Primeira escrita sintetica real tenant registry definida documentalmente.
+- Base publicada: 89b0909 docs(tenant): registra evidencia sintetica tenant registry.
+- Natureza: escrita sintetica real futura, manual, controlada, nao produtiva, ainda nao executada.
+- Objetivo futuro: criar ou promover exclusivamente uma entry sintetica do tenant registry para o candidato tenant-registry-synthetic-unit-001, preservando fallback para baseConnection ate gates completos.
+- Alvo futuro:
+	- collection logica: unit_database_registry
+	- conexao esperada: base/global connection, nao tenant DB real
+	- unidadeSinteticaId: 000000000000000000000001
+	- unidadeSinteticaLabel: tenant-registry-synthetic-unit-001
+	- ambiente: non-production
+	- dados reais: proibidos
+	- unidade real: proibida
+	- usuario real: proibido
+	- Portal: proibido
+	- PostgreSQL: proibido
+	- tenant DB real: proibido
+- Forma futura permitida, ainda nao autorizada:
+	- a escrita futura deve ocorrer somente por caminho ja protegido por testes;
+	- a escrita futura deve declarar explicitamente se chamara harness, manualEntrypoint, manualOwner ou writer;
+	- a escrita futura deve usar apenas o candidato sintetico ja documentado;
+	- a escrita futura deve preservar fallback para baseConnection ate gates completos;
+	- a escrita futura deve ter rollback sintetico definido antes da execucao;
+	- a escrita futura deve ter evidencia sintetica definida antes da execucao;
+	- qualquer ambiguidade deve degradar para nao executar.
+- Comando futuro candidato, ainda nao executado:
+```powershell
+git status -sb
+git --no-pager log --oneline --decorate -8
+node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js
+node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js
+node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js
+node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js
+node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js
+git status -sb
+```
+- Observacao obrigatoria sobre o comando:
+	- este comando futuro ainda nao executa escrita sintetica fora de harness;
+	- ele sera usado como pre-checagem imediatamente antes de qualquer comando de escrita real futura;
+	- o comando real de escrita sintetica fora de harness ainda devera ser definido em microcorte proprio separado;
+	- este microcorte nao aprova nem executa o comando real de escrita.
+- Rollback futuro associado:
+	- se uma entry sintetica for criada, o rollback futuro devera remover ou desativar somente a entry sintetica do candidato tenant-registry-synthetic-unit-001;
+	- se uma allowlist sintetica for criada, o rollback futuro devera remover somente essa allowlist sintetica;
+	- apos rollback sintetico futuro, resolveConnection devera permanecer ou retornar para baseConnection;
+	- rollback futuro dependera de comando completo visivel e autorizacao explicita do usuario.
+- Evidencia futura associada:
+	- status limpo antes da execucao;
+	- log curto do HEAD;
+	- saida textual do comando de escrita, se autorizado;
+	- saida textual do comando de rollback, se autorizado;
+	- resultado dos testes de protecao;
+	- status final do git;
+	- confirmacao de ausencia de Portal, dados reais, trafego real, usuario real, unidade real, PostgreSQL e tenant DB real;
+	- confirmacao de fallback para baseConnection quando aplicavel.
+- Gates documentais:
+	- firstRealSyntheticWriteDefined=true
+	- firstRealSyntheticWriteExecuted=false
+	- syntheticWritePrecheckCommandDefined=true
+	- syntheticWritePrecheckCommandExecuted=false
+	- syntheticRollbackPlanDefined=true
+	- syntheticEvidencePlanDefined=true
+	- syntheticEvidenceCollected=true
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Criterios para execucao futura, ainda nao autorizada:
+	- comando de pre-checagem deve ser executado antes de qualquer escrita real sintetica;
+	- comando real de escrita sintetica deve ser definido em microcorte proprio;
+	- comando real de escrita sintetica deve ser exibido integralmente antes;
+	- comando real de escrita sintetica deve ser aprovado explicitamente pelo usuario;
+	- comando real deve declarar exatamente se chamara harness, manualEntrypoint, manualOwner ou writer;
+	- comando real deve declarar exatamente onde ocorrera a escrita sintetica;
+	- comando real deve declarar rollback sintetico correspondente;
+	- comando real deve declarar evidencia sintetica esperada;
+	- se qualquer arquivo for alterado inesperadamente, parar;
+	- se qualquer teste falhar, parar;
+	- se qualquer necessidade de dado real, usuario real, unidade real, Portal, PostgreSQL ou tenant DB real aparecer, parar;
+	- se qualquer ambiguidade aparecer, degradar para nao executar.
+- Interpretacao obrigatoria:
+	- definicao da primeira escrita sintetica real nao autoriza execucao;
+	- definicao da primeira escrita sintetica real nao autoriza writer;
+	- definicao da primeira escrita sintetica real nao autoriza manualEntrypoint;
+	- definicao da primeira escrita sintetica real nao autoriza manualOwner;
+	- definicao da primeira escrita sintetica real nao autoriza criacao de registry entry neste microcorte;
+	- definicao da primeira escrita sintetica real nao autoriza alteracao de registry real;
+	- definicao da primeira escrita sintetica real nao autoriza alteracao de allowlist real;
+	- definicao da primeira escrita sintetica real nao autoriza abertura de tenant DB real;
+	- definicao da primeira escrita sintetica real nao autoriza alteracao de roteamento real;
+	- definicao da primeira escrita sintetica real nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- definicao da primeira escrita sintetica real nao autoriza rollback;
+	- definicao da primeira escrita sintetica real nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
