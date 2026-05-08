@@ -3781,6 +3781,110 @@ a83e94b docs(tenant): registra bloqueio de base global para escrita sintetica te
 	- proximo ato deve ser rollback sintetico com harness ou evidencia pos-execucao em microcorte proprio;
 	- push continua adiado ate fechamento consolidado do bloco amplo.
 
+- Comando futuro de rollback sintetico tenant registry com harness definido documentalmente.
+- Base local: 2071d29 docs(tenant): executa escrita sintetica com harness tenant registry.
+- Natureza:
+	- comando futuro;
+	- rollback sintetico;
+	- local;
+	- em memoria;
+	- com harness de base/global connection;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem dados reais;
+	- sem unidade real;
+	- sem PostgreSQL;
+	- ainda nao executado neste microcorte.
+- Objetivo:
+	- desfazer ou neutralizar somente a entry sintetica em harness/memoria;
+	- preservar fallback para baseConnection;
+	- demonstrar que apos rollback sintetico a entry nao permanece ativa para roteamento tenant;
+	- manter tudo restrito ao harness em memoria.
+- Comando futuro candidato, ainda nao executado:
+
+```powershell
+node -e "const mongoose = require('mongoose'); (async () => { const { createSyntheticBaseConnectionHarness } = await import('./src/shared/db/unitDatabaseRegistrySyntheticBaseConnectionHarness.js'); const { runUnitDatabaseRegistryManualEntrypoint } = await import('./src/shared/db/unitDatabaseRegistryManualEntrypoint.js'); const { markUnitDatabaseRegistryRollbackRequired } = await import('./src/shared/db/unitDatabaseRegistryWriter.js'); const originalDb = mongoose.connection.db; const harness = createSyntheticBaseConnectionHarness(); mongoose.connection.db = harness.db; try { const payload = { context: { source: 'manual', approved: true, actor: 'synthetic-manual-operator', reason: 'synthetic manual controlled preparation candidate' }, environment: 'non-production', syntheticUnit: { synthetic: true, controlled: true }, unidadeId: '000000000000000000000001', dbName: 'wdgestor_unit_000000000000000000000001', databaseKey: 'wdgestor_unit_000000000000000000000001', rollbackPlan: 'rollback synthetic tenant-registry-synthetic-unit-001 only', plannedAllowlist: ['000000000000000000000001'] }; const writeResult = await runUnitDatabaseRegistryManualEntrypoint(payload); const beforeRollback = harness.read(payload.unidadeId); const rollbackEntry = await markUnitDatabaseRegistryRollbackRequired({ unidadeId: payload.unidadeId, reason: 'synthetic harness rollback validation' }); const afterRollback = harness.read(payload.unidadeId); console.log(JSON.stringify({ ok: true, writeResult, beforeRollback, rollbackEntry, afterRollback }, null, 2)); } finally { mongoose.connection.db = originalDb; harness.reset(); } })().catch((error) => { console.error(error); process.exit(1); });"
+```
+
+- Observacoes obrigatorias:
+	- comando futuro ainda nao foi executado;
+	- comando futuro cria entry sintetica em harness/memoria e em seguida marca rollback_required no mesmo harness;
+	- comando futuro usa createSyntheticBaseConnectionHarness;
+	- comando futuro injeta temporariamente harness.db em mongoose.connection.db;
+	- comando futuro restaura mongoose.connection.db no finally;
+	- comando futuro usa markUnitDatabaseRegistryRollbackRequired;
+	- comando futuro nao conecta em Mongo real;
+	- comando futuro nao abre tenant DB real;
+	- comando futuro nao usa Portal;
+	- comando futuro nao usa dados reais;
+	- comando futuro nao usa usuario real;
+	- comando futuro nao usa unidade real;
+	- comando futuro nao usa PostgreSQL;
+	- comando futuro nao cria rota, CLI persistente, script persistente, job, bootstrap operacional ou request path;
+	- comando futuro nao equivale a rollback real.
+- Pre-checagem obrigatoria antes da execucao futura:
+	- git status -sb
+	- git --no-pager log --oneline --decorate -8
+	- node --test .\tests\architecture\unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js
+	- npm run verify:imports
+	- git status -sb
+- Evidencia futura esperada:
+	- beforeRollback.status=active;
+	- beforeRollback.routingMode=tenant;
+	- beforeRollback.activation.active=true;
+	- rollbackEntry.status=rollback_required;
+	- rollbackEntry.routingMode=base ou equivalente seguro, conforme contrato atual do writer;
+	- afterRollback.status=rollback_required;
+	- afterRollback.activation.active removido, falso ou neutralizado conforme contrato atual do writer;
+	- ausencia de Mongo real;
+	- ausencia de tenant DB real;
+	- ausencia de Portal, dados reais, usuario real, unidade real e PostgreSQL;
+	- status final limpo.
+- Criterios de parada:
+	- se git status nao estiver limpo, parar;
+	- se qualquer teste falhar, parar;
+	- se verify:imports falhar, parar;
+	- se o comando exigir Mongo real, parar;
+	- se o comando exigir Portal, parar;
+	- se o comando exigir dado real, parar;
+	- se o comando exigir usuario real, parar;
+	- se o comando exigir unidade real, parar;
+	- se o comando exigir tenant DB real, parar;
+	- se o comando exigir PostgreSQL, parar;
+	- se qualquer arquivo inesperado for alterado, parar;
+	- se houver ambiguidade, degradar para nao executar.
+- Gates:
+	- syntheticWriteWithHarnessCommandExecuted=true
+	- syntheticWriteWithHarnessEvidenceCollected=true
+	- syntheticRollbackWithHarnessCommandDefined=true
+	- syntheticRollbackWithHarnessCommandExecuted=false
+	- registrySyntheticChanged=true somente em harness/memoria
+	- registrySyntheticRollbackExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- definicao do rollback com harness nao executa rollback;
+	- definicao do rollback com harness nao executa escrita;
+	- definicao do rollback com harness nao equivale a rollback real;
+	- definicao do rollback com harness nao autoriza Mongo real;
+	- definicao do rollback com harness nao autoriza tenant DB real;
+	- definicao do rollback com harness nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- execucao futura do rollback sintetico devera ocorrer em microcorte proprio aprovado;
+	- push continua adiado ate fechamento consolidado do bloco amplo.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
