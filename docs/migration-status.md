@@ -1584,14 +1584,17 @@ Checkpoint tenant enforcement atual:
 - Interpretacao obrigatoria: registro de encerramento da Fase Y no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push, nao abre fase posterior automaticamente, nao substitui autorizacao explicita futura do usuario, nao substitui aprovacao individual futura de comandos e nao substitui fase propria para a primeira preparacao concreta sintetica/manual/controlada.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
 
-- Fase Z com primeiro ato concreto sintetico read-only executado.
+- Fase Z encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-z-synthetic-manual-operational-preparation-contract.md
+- Commit local de encerramento do contrato: 60cb2f1 docs(tenant): encerra fase z
 - Commit local da execucao read-only: ef04ef5 docs(tenant): executa primeiro ato sintetico read-only da fase z
 - Base: 182985e docs(tenant): completa validacao final da fase y
 - Primeiro ato concreto sintetico/manual/controlado definido.
 - Comando candidato aprovado documentalmente.
 - Primeiro ato executado como auditoria local read-only.
 - Evidencia sintetica textual registrada no contrato canonico.
+- Execucao read-only registrada no ledger.
+- Fase Z encerrada documentalmente no contrato canonico.
 - A execucao confirmou listagem de arquivos unitDatabaseRegistry em tests/architecture.
 - A execucao registrou ausencia dos caminhos server/config e server/db.
 - Nenhum arquivo foi alterado pela execucao read-only.
@@ -1618,7 +1621,7 @@ Checkpoint tenant enforcement atual:
 - Evidencia operacional real nao foi coletada.
 - Push continua nao autorizado neste microcorte.
 
-- Gates iniciais da Fase Z:
+- Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
 	- firstConcreteSyntheticActionDefined=true
 	- firstConcreteSyntheticCommandApproved=true
@@ -1641,16 +1644,16 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 
 - Interpretacao obrigatoria:
-	- execucao read-only registrada no ledger nao autoriza proxima execucao automaticamente;
-	- execucao read-only registrada no ledger nao autoriza preparacao operacional real;
-	- execucao read-only registrada no ledger nao autoriza rollback real;
-	- execucao read-only registrada no ledger nao autoriza evidencia operacional real;
-	- execucao read-only registrada no ledger nao autoriza superficie operacional;
-	- execucao read-only registrada no ledger nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
-	- execucao read-only registrada no ledger nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
-	- execucao read-only registrada no ledger nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
-	- execucao read-only registrada no ledger nao autoriza push;
-	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+	- encerramento documental da Fase Z no ledger nao autoriza proxima execucao automaticamente;
+	- encerramento documental da Fase Z no ledger nao autoriza preparacao operacional real;
+	- encerramento documental da Fase Z no ledger nao autoriza rollback real;
+	- encerramento documental da Fase Z no ledger nao autoriza evidencia operacional real;
+	- encerramento documental da Fase Z no ledger nao autoriza superficie operacional;
+	- encerramento documental da Fase Z no ledger nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+	- encerramento documental da Fase Z no ledger nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+	- encerramento documental da Fase Z no ledger nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- encerramento documental da Fase Z no ledger nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em fase ou microcorte proprio.
 
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
@@ -1663,6 +1666,7 @@ Notas:
  Decisao de checkpoint: pausar expressamente a frente Escalas por enquanto.
  Motivo da pausa: os proximos corredores naturais empurram a frente para Ausencias, Ferias, disponibilidade, relatorios PDF, paginas/render, writes/delete ou routers amplos, deixando de ser microcortes locais e seguros para esta rodada.
  Recomendacao operacional: nao abrir nova triagem nem novo micro-patch em Escalas agora; manter este checkpoint como ponto de parada da frente ate surgir um corredor pequeno, read-only e inequivoco fora dessas zonas.
+
 
 
 
