@@ -3261,6 +3261,58 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- qualquer microcorte de codigo futuro deve ser aprovado explicitamente;
 	- push continua adiado ate fechamento consolidado do bloco amplo.
 
+- Teste arquitetural do harness de base/global connection sintetica tenant registry criado.
+- Base local: f54463a docs(tenant): define desenho do harness de base global sintetica tenant registry.
+- Arquivo criado:
+	- tests/architecture/unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js
+- Natureza:
+	- teste contratual;
+	- sem implementacao em src;
+	- sem escrita real;
+	- sem rollback;
+	- sem Portal;
+	- sem dados reais;
+	- sem unidade real;
+	- sem tenant DB real;
+	- sem PostgreSQL.
+- Contrato especificado:
+	- harness sintetico deve operar em memoria;
+	- deve expor base/global connection sintetica com db.collection('unit_database_registry');
+	- deve ser restrito a non-production/test/synthetic;
+	- nao deve criar superficie operacional;
+	- nao deve usar Mongo real;
+	- nao deve usar tenant DB real;
+	- nao deve usar start/createServer/server;
+	- nao deve usar scripts de migracao/backfill.
+- Resultado do teste:
+	- unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js: PASS, 4 tests, 0 fail.
+- Gates:
+	- baseGlobalSyntheticHarnessDesignDefined=true
+	- baseGlobalSyntheticHarnessContractTestCreated=true
+	- baseGlobalSyntheticHarnessImplemented=false
+	- realSyntheticWriteBlockedByBaseConnection=true
+	- standaloneSafeBootstrapFound=false
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteExecuted=false
+	- registrySyntheticChanged=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[UNIT_DATABASE_REGISTRY_BASE_CONNECTION_UNAVAILABLE]
+- Interpretacao obrigatoria:
+	- criacao do teste nao implementa harness;
+	- criacao do teste nao autoriza escrita;
+	- criacao do teste nao autoriza rollback;
+	- criacao do teste nao autoriza execucao do comando real;
+	- qualquer implementacao futura do harness deve ocorrer em microcorte proprio aprovado;
+	- push continua adiado ate fechamento consolidado do bloco amplo.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
