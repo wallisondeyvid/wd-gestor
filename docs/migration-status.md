@@ -4140,6 +4140,70 @@ a83e94b docs(tenant): registra bloqueio de base global para escrita sintetica te
 	- proximo ato deve ser fechamento documental do bloco ou decisao explicita de push consolidado;
 	- push continua adiado ate minha autorizacao explicita.
 
+- Bloco sintetico com harness tenant registry encerrado documentalmente.
+- Base local: 0a41a4d docs(tenant): valida bloco sintetico com harness tenant registry.
+- Escopo encerrado:
+	- diagnostico do bloqueio de base/global connection;
+	- desenho do harness sintetico;
+	- teste contratual do harness;
+	- implementacao do harness;
+	- teste de escrita sintetica com harness;
+	- definicao, aprovacao e execucao da escrita sintetica com harness;
+	- definicao e execucao do rollback sintetico com harness;
+	- validacao final consolidada.
+- Resultado final:
+	- escrita em harness active/tenant validada;
+	- rollback em harness rollback_required/base validado;
+	- activation.active=false apos rollback validado;
+	- fluxo pending -> ready -> active -> rollback_required validado em memoria;
+	- base/global connection sintetica validada;
+	- writer validado com harness;
+	- manualEntrypoint e manualOwner validados no fluxo.
+- Confirmacoes finais:
+	- nenhuma escrita real na base central;
+	- nenhuma registry real alterada;
+	- nenhuma allowlist real alterada;
+	- nenhum tenant DB real aberto;
+	- nenhum Mongo real usado;
+	- nenhum Portal usado;
+	- nenhum dado real usado;
+	- nenhum usuario real usado;
+	- nenhuma unidade real usada;
+	- nenhum PostgreSQL usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- baseGlobalSyntheticHarnessDesignDefined=true
+	- baseGlobalSyntheticHarnessContractTestCreated=true
+	- baseGlobalSyntheticHarnessImplemented=true
+	- syntheticWriteWithHarnessContractTestCreated=true
+	- syntheticWriteWithHarnessValidated=true
+	- syntheticWriteWithHarnessCommandExecuted=true
+	- syntheticWriteWithHarnessEvidenceCollected=true
+	- syntheticRollbackWithHarnessCommandDefined=true
+	- syntheticRollbackWithHarnessCommandExecuted=true
+	- syntheticRollbackWithHarnessEvidenceCollected=true
+	- syntheticHarnessBlockFinalValidationExecuted=true
+	- syntheticHarnessBlockClosed=true
+	- registrySyntheticChanged=true somente em harness/memoria
+	- registrySyntheticRollbackExecuted=true somente em harness/memoria
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=false apos este fechamento, aguardando autorizacao explicita
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento do bloco sintetico nao equivale a escrita real;
+	- fechamento do bloco sintetico nao autoriza Mongo real;
+	- fechamento do bloco sintetico nao autoriza tenant DB real;
+	- fechamento do bloco sintetico nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proximo ato podera ser push consolidado somente se autorizado explicitamente pelo usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
