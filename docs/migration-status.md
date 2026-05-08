@@ -2015,6 +2015,70 @@ Checkpoint tenant enforcement atual:
 	- definicao do candidato sintetico nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 	- definicao do candidato sintetico nao autoriza push;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+- Comando futuro de preparacao sintetica tenant registry definido documentalmente.
+- Base publicada: b4b50e8 docs(tenant): define candidato sintetico minimo tenant registry.
+- Comando futuro candidato, ainda nao executado:
+```powershell
+node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js
+node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js
+node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js
+```
+- O comando futuro e somente validacao de contratos arquiteturais existentes.
+- O comando futuro nao executa writer diretamente.
+- O comando futuro nao executa manualEntrypoint diretamente fora do harness de teste.
+- O comando futuro nao executa manualOwner diretamente fora do harness de teste.
+- O comando futuro nao cria registry entry real.
+- O comando futuro nao altera registry real.
+- O comando futuro nao altera allowlist real.
+- O comando futuro nao abre tenant DB real.
+- O comando futuro nao altera roteamento real.
+- O comando futuro nao usa Portal.
+- O comando futuro nao usa dados reais.
+- O comando futuro nao usa trafego real.
+- O comando futuro nao usa usuario real.
+- O comando futuro nao usa unidade real.
+- O comando futuro nao usa PostgreSQL.
+- O comando futuro nao cria superficie operacional.
+- O comando futuro preserva fallback para baseConnection.
+- O comando futuro nao foi executado neste microcorte.
+- Qualquer execucao futura dependera de autorizacao explicita do usuario e microcorte proprio.
+- Gates documentais:
+	- syntheticPreparationCommandDefined=true
+	- syntheticPreparationCommandExecuted=false
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Criterios para execucao futura, ainda nao autorizada:
+	- comando futuro deve ser exibido novamente antes da execucao;
+	- comando futuro deve ser aprovado explicitamente pelo usuario;
+	- se qualquer teste falhar, parar e nao prosseguir;
+	- se qualquer arquivo for alterado, parar;
+	- se qualquer necessidade de escrita operacional aparecer, parar;
+	- se qualquer ambiguidade aparecer, degradar para nao executar;
+	- qualquer preparacao com escrita sintetica real deve ter microcorte proprio separado.
+- Interpretacao obrigatoria da definicao do comando futuro:
+	- definicao do comando futuro nao autoriza execucao;
+	- definicao do comando futuro nao autoriza writer;
+	- definicao do comando futuro nao autoriza manualEntrypoint fora do harness de teste;
+	- definicao do comando futuro nao autoriza manualOwner fora do harness de teste;
+	- definicao do comando futuro nao autoriza alteracao de registry real;
+	- definicao do comando futuro nao autoriza alteracao de allowlist real;
+	- definicao do comando futuro nao autoriza abertura de tenant DB real;
+	- definicao do comando futuro nao autoriza alteracao de roteamento real;
+	- definicao do comando futuro nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- definicao do comando futuro nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
 - Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
