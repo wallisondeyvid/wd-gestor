@@ -4048,6 +4048,98 @@ f54463a docs(tenant): define desenho do harness de base global sintetica tenant 
 	- proximo ato deve ser validacao final do bloco sintetico com harness ou fechamento documental;
 	- push continua adiado ate fechamento consolidado do bloco amplo.
 
+- Validacao final do bloco sintetico com harness tenant registry executada.
+- Base local: 794ccad docs(tenant): executa rollback sintetico com harness tenant registry.
+- Saida de git status inicial:
+
+```text
+## migration/refactor-core...origin/migration/refactor-core [ahead 13]
+```
+
+- Saida de git log:
+
+```text
+794ccad (HEAD -> migration/refactor-core) docs(tenant): executa rollback sintetico com harness tenant registry
+c60bd50 docs(tenant): define rollback sintetico com harness tenant registry
+2071d29 docs(tenant): executa escrita sintetica com harness tenant registry
+4715f50 docs(tenant): aprova execucao da escrita sintetica com harness tenant registry
+89bceea docs(tenant): define comando de escrita sintetica com harness tenant registry
+28eeea3 test(tenant): valida escrita sintetica com harness de base global tenant registry
+26a4704 feat(tenant): implementa harness de base global sintetica tenant registry
+906514e test(tenant): especifica harness de base global sintetica tenant registry
+f54463a docs(tenant): define desenho do harness de base global sintetica tenant registry
+e74cdc7 docs(tenant): define rota apos bloqueio de base global tenant registry
+a83e94b docs(tenant): registra bloqueio de base global para escrita sintetica tenant registry
+041a88a docs(tenant): corrige comando real de escrita sintetica tenant registry
+```
+
+- Resultado de npm run verify:imports:
+
+```text
+> wdgestor@1.0.0 verify:imports
+> node scripts/verify-no-relative-imports.js
+
+✔ Arquitetura limpa
+```
+
+- Resultado de cada teste executado:
+	- unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js: 3 pass, 0 fail;
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistryManualOwner.contract.test.js: 4 pass, 0 fail;
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: 15 pass, 0 fail;
+	- unitDatabaseRegistryWriter.test.js: 55 pass, 0 fail.
+- Confirmacoes:
+	- worktree permaneceu limpa antes da edicao documental;
+	- nenhuma escrita manual adicional foi executada;
+	- nenhum rollback manual adicional foi executado;
+	- os testes cobrem harness sintetico de base/global connection;
+	- os testes cobrem escrita sintetica com harness;
+	- os testes cobrem manualEntrypoint;
+	- os testes cobrem manualOwner;
+	- os testes cobrem writer + resolveConnection;
+	- os testes cobrem writer isolado;
+	- o bloco sintetico ja possui evidencia de escrita em harness active/tenant;
+	- o bloco sintetico ja possui evidencia de rollback em harness rollback_required/base;
+	- o bloco sintetico ja possui evidencia de activation.active=false apos rollback;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path foi criada;
+	- push nao foi realizado.
+- Gates:
+	- baseGlobalSyntheticHarnessDesignDefined=true
+	- baseGlobalSyntheticHarnessContractTestCreated=true
+	- baseGlobalSyntheticHarnessImplemented=true
+	- syntheticWriteWithHarnessContractTestCreated=true
+	- syntheticWriteWithHarnessValidated=true
+	- syntheticWriteWithHarnessCommandExecuted=true
+	- syntheticWriteWithHarnessEvidenceCollected=true
+	- syntheticRollbackWithHarnessCommandDefined=true
+	- syntheticRollbackWithHarnessCommandExecuted=true
+	- syntheticRollbackWithHarnessEvidenceCollected=true
+	- syntheticHarnessBlockFinalValidationExecuted=true
+	- registrySyntheticChanged=true somente em harness/memoria
+	- registrySyntheticRollbackExecuted=true somente em harness/memoria
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- validacao final do bloco sintetico nao equivale a escrita real na base central;
+	- validacao final nao autoriza nova execucao automatica;
+	- validacao final nao autoriza Mongo real;
+	- validacao final nao autoriza tenant DB real;
+	- validacao final nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proximo ato deve ser fechamento documental do bloco ou decisao explicita de push consolidado;
+	- push continua adiado ate minha autorizacao explicita.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
