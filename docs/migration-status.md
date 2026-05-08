@@ -1708,6 +1708,68 @@ Checkpoint tenant enforcement atual:
 	- auditoria read-only de caminhos nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
 	- auditoria read-only de caminhos nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+- Auditoria read-only precisa de caminhos tenant registry executada.
+- Comando executado exatamente como aprovado.
+- Evidencia sintetica textual coletada com Select-Object -ExpandProperty FullName.
+- Comando executado:
+	- git status -sb
+	- git log --oneline --decorate -8
+	- Get-ChildItem . -Recurse -File -Include "*unitDatabaseRegistry*","*tenant*registry*","*Tenant*Registry*","*registry*manual*","*RegistryManual*","*resolveConnection*" | Select-Object -ExpandProperty FullName
+- Saida de git status -sb antes da listagem precisa:
+	- ## migration/refactor-core...origin/migration/refactor-core [ahead 1]
+- Saida de git log --oneline --decorate -8:
+	- 9c9412d (HEAD -> migration/refactor-core) docs(tenant): registra auditoria read-only de caminhos tenant registry
+	- 3274272 (origin/migration/refactor-core) docs(tenant): completa validacao final da fase z
+	- 8451429 docs(tenant): registra encerramento da fase z no status
+	- 60cb2f1 docs(tenant): encerra fase z
+	- e6de647 docs(tenant): registra primeiro ato sintetico da fase z no status
+	- ef04ef5 docs(tenant): executa primeiro ato sintetico read-only da fase z
+	- 2fd60da docs(tenant): aprova comando do primeiro ato sintetico da fase z
+	- 822b41e docs(tenant): define primeiro ato concreto sintetico da fase z
+- Lista completa dos caminhos retornados pelo Get-ChildItem sem truncamento:
+	- C:\Projeto3\docs\tenant-phase-e-provisioning-registry-plan.md
+	- C:\Projeto3\docs\tenant-phase-e-registry-persistence-plan.md
+	- C:\Projeto3\src\shared\db\resolveConnection.js
+	- C:\Projeto3\src\shared\db\unitDatabaseRegistry.js
+	- C:\Projeto3\src\shared\db\unitDatabaseRegistryManualEntrypoint.js
+	- C:\Projeto3\src\shared\db\unitDatabaseRegistryManualOwner.js
+	- C:\Projeto3\src\shared\db\unitDatabaseRegistryPreload.js
+	- C:\Projeto3\src\shared\db\unitDatabaseRegistryReader.js
+	- C:\Projeto3\src\shared\db\unitDatabaseRegistryWriter.js
+	- C:\Projeto3\tests\architecture\resolveConnection_multiDbFlag.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryCache.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryPreload.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryReader.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryWriter.test.js
+	- C:\Projeto3\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js
+- Confirmacao de que esta auditoria substitui a limitacao visual da auditoria preliminar anterior.
+- Saida de git status -sb apos a auditoria precisa:
+	- ## migration/refactor-core...origin/migration/refactor-core [ahead 1]
+- Confirmacao de que nenhum arquivo foi alterado pela execucao.
+- Confirmacao de que nenhum codigo foi alterado.
+- Confirmacao de que nenhum teste foi alterado.
+- Confirmacao de que nenhuma superficie operacional foi criada.
+- Confirmacao de que nenhum caller, rota, CLI, script, job, bootstrap ou request path foi criado.
+- Confirmacao de que nenhum registry real, allowlist real, tenant DB real ou roteamento real foi alterado.
+- Confirmacao de que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados.
+- Confirmacao de que rollback real nao foi executado.
+- Confirmacao de que evidencia operacional real nao foi coletada.
+- Confirmacao de que push nao foi realizado.
+- Interpretacao obrigatoria da auditoria read-only precisa de caminhos:
+	- auditoria read-only precisa de caminhos nao autoriza alteracao de arquivos;
+	- auditoria read-only precisa de caminhos nao autoriza preparacao operacional real;
+	- auditoria read-only precisa de caminhos nao autoriza execucao operacional;
+	- auditoria read-only precisa de caminhos nao autoriza rollback real;
+	- auditoria read-only precisa de caminhos nao autoriza evidencia operacional real;
+	- auditoria read-only precisa de caminhos nao autoriza superficie operacional;
+	- auditoria read-only precisa de caminhos nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+	- auditoria read-only precisa de caminhos nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+	- auditoria read-only precisa de caminhos nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
 - Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
