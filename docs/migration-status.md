@@ -3157,6 +3157,55 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- push continua adiado ate fechamento consolidado do bloco amplo;
 	- qualquer proximo ato concreto deve escolher uma rota formal em microcorte proprio.
 
+- Rota pos-bloqueio de base/global connection tenant registry definida documentalmente.
+- Base local: a83e94b docs(tenant): registra bloqueio de base global para escrita sintetica tenant registry.
+- Decisao: nao insistir em nova execucao real com node -e cru.
+- Decisao: nao usar bootstrap completo do app neste bloco sem microcorte proprio.
+- Decisao: nao usar scripts de migracao/backfill para esse fluxo.
+- Decisao: tratar a escrita real fora de harness como bloqueada ate existir seam aprovado de base/global connection.
+- Rota escolhida para continuidade:
+	- preparar um microcorte futuro de codigo minimo ou harness local aprovado para base/global connection sintetica;
+	- esse microcorte futuro devera ser explicitamente non-production;
+	- nao podera criar rota, CLI persistente, script persistente, job, bootstrap operacional ou request path;
+	- devera preservar fallback para baseConnection;
+	- devera ser coberto por testes antes de qualquer nova execucao real.
+- Rotas descartadas neste momento:
+	- nova tentativa com node -e cru;
+	- startup completo do app;
+	- scripts de migracao/backfill;
+	- uso de Portal;
+	- uso de dados reais;
+	- uso de unidade real;
+	- uso de tenant DB real;
+	- uso de PostgreSQL.
+- Gates:
+	- realSyntheticWriteBlockedByBaseConnection=true
+	- standaloneSafeBootstrapFound=false
+	- routeAfterBaseGlobalBlockDefined=true
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteExecuted=false
+	- registrySyntheticChanged=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[UNIT_DATABASE_REGISTRY_BASE_CONNECTION_UNAVAILABLE]
+- Interpretacao obrigatoria:
+	- definicao da rota pos-bloqueio nao autoriza codigo;
+	- definicao da rota pos-bloqueio nao autoriza escrita;
+	- definicao da rota pos-bloqueio nao autoriza rollback;
+	- definicao da rota pos-bloqueio nao autoriza nova tentativa do comando real;
+	- definicao da rota pos-bloqueio nao autoriza bootstrap do app;
+	- definicao da rota pos-bloqueio nao autoriza script de migracao/backfill;
+	- definicao da rota pos-bloqueio nao autoriza Portal, dados reais, usuario real, unidade real, tenant DB real ou PostgreSQL;
+	- qualquer microcorte de codigo futuro deve ser explicitamente aprovado.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
