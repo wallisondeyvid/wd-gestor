@@ -3206,6 +3206,61 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- definicao da rota pos-bloqueio nao autoriza Portal, dados reais, usuario real, unidade real, tenant DB real ou PostgreSQL;
 	- qualquer microcorte de codigo futuro deve ser explicitamente aprovado.
 
+- Desenho do harness de base/global connection sintetica tenant registry definido documentalmente.
+- Base local: e74cdc7 docs(tenant): define rota apos bloqueio de base global tenant registry.
+- Objetivo: permitir uma base/global connection sintetica, local, nao produtiva e controlada para validar o fluxo tenant registry sem subir servidor, sem Portal, sem dados reais e sem tenant DB real.
+- Natureza: desenho tecnico futuro, ainda sem implementacao.
+- Estrategia proposta:
+	- criar seam/harness local minimo em microcorte futuro;
+	- harness deve injetar baseConnection.db compativel com collection('unit_database_registry');
+	- harness deve permanecer restrito a ambiente non-production/test/synthetic;
+	- harness nao deve criar rota, CLI persistente, script persistente, job, bootstrap operacional ou request path;
+	- harness nao deve conectar em Mongo real;
+	- harness nao deve abrir tenant DB real;
+	- harness deve ser coberto por teste arquitetural antes de qualquer execucao sintetica real.
+- Escopo permitido futuro:
+	- codigo minimo isolado, se aprovado;
+	- teste arquitetural novo ou ajuste minimo de teste, se aprovado;
+	- documentacao no ledger.
+- Escopo proibido:
+	- Portal;
+	- dados reais;
+	- usuario real;
+	- unidade real;
+	- PostgreSQL;
+	- tenant DB real;
+	- start/createServer como atalho;
+	- scripts de migracao/backfill;
+	- rota;
+	- CLI persistente;
+	- job;
+	- bootstrap operacional.
+- Gates:
+	- baseGlobalSyntheticHarnessDesignDefined=true
+	- baseGlobalSyntheticHarnessImplemented=false
+	- realSyntheticWriteBlockedByBaseConnection=true
+	- standaloneSafeBootstrapFound=false
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteExecuted=false
+	- registrySyntheticChanged=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushDeferredUntilBlockClosure=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[UNIT_DATABASE_REGISTRY_BASE_CONNECTION_UNAVAILABLE]
+- Interpretacao obrigatoria:
+	- definicao do desenho do harness nao autoriza implementacao;
+	- definicao do desenho do harness nao autoriza escrita;
+	- definicao do desenho do harness nao autoriza rollback;
+	- definicao do desenho do harness nao autoriza execucao do comando real;
+	- qualquer microcorte de codigo futuro deve ser aprovado explicitamente;
+	- push continua adiado ate fechamento consolidado do bloco amplo.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
