@@ -2727,6 +2727,80 @@ git status -sb
 	- definicao da primeira escrita sintetica real nao autoriza push;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
+- Pre-checagem da primeira escrita sintetica real tenant registry executada.
+- Base publicada: 75e476f docs(tenant): define primeira escrita sintetica real tenant registry.
+- Comando executado exatamente como definido previamente no ledger.
+- Evidencia sintetica textual coletada.
+- Saida de git status -sb inicial:
+	- ## migration/refactor-core...origin/migration/refactor-core
+- Saida de git --no-pager log --oneline --decorate -8:
+	- 75e476f (HEAD -> migration/refactor-core, origin/migration/refactor-core) docs(tenant): define primeira escrita sintetica real tenant registry
+	- 89b0909 docs(tenant): registra evidencia sintetica tenant registry
+	- fe7489b docs(tenant): define evidencia sintetica tenant registry
+	- 8545c10 docs(tenant): define rollback sintetico tenant registry
+	- 5556363 docs(tenant): executa comando sintetico de escrita tenant registry
+	- 4eca1b6 docs(tenant): define comando futuro de escrita sintetica tenant registry
+	- e3b4778 docs(tenant): define plano de escrita sintetica tenant registry
+	- 0370de3 docs(tenant): executa comando sintetico de preparacao tenant registry
+- Resultado dos testes executados:
+	- unitDatabaseRegistryNonProductionPilot.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryControlledPilot.contract.test.js: PASS, 2 tests, 0 fail.
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryManualOwner.contract.test.js: PASS, 4 tests, 0 fail.
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: PASS, 15 tests, 0 fail.
+- Confirmacao de que todos os testes executados passaram.
+- Confirmacao de que a pre-checagem foi somente validacao de contratos arquiteturais existentes em harness de teste.
+- Confirmacao de que nenhuma escrita real foi executada.
+- Confirmacao de que writer nao foi executado fora do harness de teste.
+- Confirmacao de que manualEntrypoint nao foi executado fora do harness de teste.
+- Confirmacao de que manualOwner nao foi executado fora do harness de teste.
+- Confirmacao de que nenhuma registry entry real foi criada.
+- Confirmacao de que nenhum registry real foi alterado.
+- Confirmacao de que nenhuma allowlist real foi alterada.
+- Confirmacao de que nenhuma tenant DB real foi aberta.
+- Confirmacao de que nenhum roteamento real foi alterado.
+- Confirmacao de que nenhuma superficie operacional foi criada.
+- Confirmacao de que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados.
+- Confirmacao de que rollback real nao foi executado.
+- Confirmacao de que evidencia operacional real nao foi coletada.
+- Confirmacao de que push nao foi realizado.
+- Gates:
+	- firstRealSyntheticWriteDefined=true
+	- firstRealSyntheticWriteExecuted=false
+	- syntheticWritePrecheckCommandDefined=true
+	- syntheticWritePrecheckCommandExecuted=true
+	- syntheticRollbackPlanDefined=true
+	- syntheticEvidencePlanDefined=true
+	- syntheticEvidenceCollected=true
+	- writerExecutedOutsideHarness=false
+	- manualEntrypointExecutedOutsideHarness=false
+	- manualOwnerExecutedOutsideHarness=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- pre-checagem da primeira escrita sintetica real nao autoriza execucao da escrita real;
+	- pre-checagem nao autoriza writer fora do harness;
+	- pre-checagem nao autoriza manualEntrypoint fora do harness;
+	- pre-checagem nao autoriza manualOwner fora do harness;
+	- pre-checagem nao autoriza criacao de registry entry real;
+	- pre-checagem nao autoriza alteracao de registry real;
+	- pre-checagem nao autoriza alteracao de allowlist real;
+	- pre-checagem nao autoriza abertura de tenant DB real;
+	- pre-checagem nao autoriza alteracao de roteamento real;
+	- pre-checagem nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- pre-checagem nao autoriza rollback;
+	- pre-checagem nao autoriza push;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
