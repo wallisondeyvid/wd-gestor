@@ -1770,6 +1770,62 @@ Checkpoint tenant enforcement atual:
 	- auditoria read-only precisa de caminhos nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
 	- auditoria read-only precisa de caminhos nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
+- Auditoria read-only de conteudo dos artefatos tenant registry executada.
+- Comando executado exatamente como aprovado.
+- Evidencia sintetica textual coletada.
+- Comando executado:
+	- git status -sb
+	- git log --oneline --decorate -8
+	- Get-Content .\src\shared\db\resolveConnection.js -TotalCount 220
+	- Get-Content .\src\shared\db\unitDatabaseRegistry.js -TotalCount 220
+	- Get-Content .\src\shared\db\unitDatabaseRegistryManualEntrypoint.js -TotalCount 220
+	- Get-Content .\src\shared\db\unitDatabaseRegistryManualOwner.js -TotalCount 220
+	- Get-Content .\src\shared\db\unitDatabaseRegistryPreload.js -TotalCount 220
+	- Get-Content .\src\shared\db\unitDatabaseRegistryReader.js -TotalCount 220
+	- Get-Content .\src\shared\db\unitDatabaseRegistryWriter.js -TotalCount 220
+- Saida de git status -sb antes da leitura de conteudo:
+	- ## migration/refactor-core...origin/migration/refactor-core
+- Saida de git log --oneline --decorate -8:
+	- 973d28a (HEAD -> migration/refactor-core, origin/migration/refactor-core) docs(tenant): registra auditoria precisa de caminhos tenant registry
+	- 9c9412d docs(tenant): registra auditoria read-only de caminhos tenant registry
+	- 3274272 docs(tenant): completa validacao final da fase z
+	- 8451429 docs(tenant): registra encerramento da fase z no status
+	- 60cb2f1 docs(tenant): encerra fase z
+	- e6de647 docs(tenant): registra primeiro ato sintetico da fase z no status
+	- ef04ef5 docs(tenant): executa primeiro ato sintetico read-only da fase z
+	- 2fd60da docs(tenant): aprova comando do primeiro ato sintetico da fase z
+- Mapa resumido de responsabilidade de cada arquivo lido:
+	- resolveConnection.js: concentra o roteamento de conexao global versus tenant, aplica gates por flags e allowlist, consulta o registry por readUnitDatabaseRegistry, mantem cache e pendingConnections, e controla handshake/diagnosticos de conexoes tracked.
+	- unitDatabaseRegistry.js: expoe leitura de cache do registry por unidade, prime do cache a partir do reader da base e hooks de override/reset para testes.
+	- unitDatabaseRegistryManualEntrypoint.js: valida contexto manual explicito, exige ambiente nao produtivo, unidade sintetica/controlada, rollback plan e allowlist planejada coerente, e delega a execucao ao manual owner.
+	- unitDatabaseRegistryManualOwner.js: orquestra a trilha manual pending -> ready -> active chamando o writer, com validacao de contexto manual aprovado.
+	- unitDatabaseRegistryPreload.js: faz preload read-only do cache do registry para uma lista de unidades, produzindo relatorio loaded/missing/failed/skipped com validacao de unidade e deduplicacao.
+	- unitDatabaseRegistryReader.js: le a collection unit_database_registry na conexao base/global e normaliza o documento retornado para shape reduzido de consumo.
+	- unitDatabaseRegistryWriter.js: persiste e promove transicoes controladas do registry na conexao base/global, incluindo pending, ready, disabled, rollback_required e active, com validacoes de coerencia de estado.
+- Confirmacao de que a auditoria apenas leu arquivos existentes.
+- Saida de git status -sb apos a auditoria de conteudo:
+	- ## migration/refactor-core...origin/migration/refactor-core
+- Confirmacao de que nenhum arquivo foi alterado pela execucao.
+- Confirmacao de que nenhum codigo foi alterado.
+- Confirmacao de que nenhum teste foi alterado.
+- Confirmacao de que nenhuma superficie operacional foi criada.
+- Confirmacao de que nenhum caller, rota, CLI, script, job, bootstrap ou request path foi criado.
+- Confirmacao de que nenhum registry real, allowlist real, tenant DB real ou roteamento real foi alterado.
+- Confirmacao de que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados.
+- Confirmacao de que rollback real nao foi executado.
+- Confirmacao de que evidencia operacional real nao foi coletada.
+- Confirmacao de que push nao foi realizado.
+- Interpretacao obrigatoria da auditoria read-only de conteudo:
+	- auditoria read-only de conteudo nao autoriza alteracao de arquivos;
+	- auditoria read-only de conteudo nao autoriza preparacao operacional real;
+	- auditoria read-only de conteudo nao autoriza execucao operacional;
+	- auditoria read-only de conteudo nao autoriza rollback real;
+	- auditoria read-only de conteudo nao autoriza evidencia operacional real;
+	- auditoria read-only de conteudo nao autoriza superficie operacional;
+	- auditoria read-only de conteudo nao autoriza caller, rota, CLI, script, job, bootstrap ou request path;
+	- auditoria read-only de conteudo nao autoriza alteracao de registry, allowlist, tenant DB ou roteamento real;
+	- auditoria read-only de conteudo nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
 - Gates finais da Fase Z:
 	- syntheticManualOperationalPreparationPhaseOpened=true
