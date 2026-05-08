@@ -2801,6 +2801,122 @@ git status -sb
 	- pre-checagem nao autoriza push;
 	- qualquer proximo ato concreto deve ser definido e aprovado em microcorte proprio.
 
+- Comando real futuro de escrita sintetica tenant registry definido documentalmente.
+- Base publicada: f8a9f56 docs(tenant): registra prechecagem da primeira escrita sintetica real tenant registry.
+- Natureza: comando real futuro de escrita sintetica, manual, controlado, nao produtivo, ainda nao executado.
+- Objetivo futuro: executar a primeira escrita sintetica do tenant registry para o candidato tenant-registry-synthetic-unit-001, preservando fallback para baseConnection e sem qualquer uso de dado real.
+- Comando real futuro candidato, ainda nao executado:
+```powershell
+node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shared/db/unitDatabaseRegistryManualEntrypoint'); (async () => { const result = await runUnitDatabaseRegistryManualEntrypoint({ source: 'manual', approved: true, actor: 'synthetic-manual-operator', reason: 'synthetic manual controlled preparation candidate', environment: 'non-production', unidadeId: '000000000000000000000001', unidadeLabel: 'tenant-registry-synthetic-unit-001', synthetic: true, controlled: true, rollbackPlan: 'rollback synthetic tenant-registry-synthetic-unit-001 only', plannedAllowlist: ['tenant-registry-synthetic-unit-001'] }); console.log(JSON.stringify(result, null, 2)); })().catch((error) => { console.error(error); process.exit(1); });"
+```
+- Observacoes obrigatorias sobre o comando:
+	- comando futuro ainda nao foi executado;
+	- comando futuro chamaria manualEntrypoint;
+	- manualEntrypoint chamaria manualOwner conforme fluxo ja protegido por testes;
+	- manualOwner chamaria writer conforme fluxo ja protegido por testes;
+	- writer deve usar base/global connection, nao tenant DB real;
+	- comando futuro deve permanecer limitado ao candidato sintetico tenant-registry-synthetic-unit-001;
+	- comando futuro nao deve usar Portal;
+	- comando futuro nao deve usar dados reais;
+	- comando futuro nao deve usar trafego real;
+	- comando futuro nao deve usar usuario real;
+	- comando futuro nao deve usar unidade real;
+	- comando futuro nao deve usar PostgreSQL;
+	- comando futuro nao deve criar caller, rota, CLI persistente, script persistente, job, bootstrap ou request path;
+	- comando futuro nao deve alterar codigo, testes, package.json, scripts, rotas ou src;
+	- comando futuro dependera de autorizacao explicita do usuario em microcorte proprio antes de execucao.
+- Alvo futuro:
+	- collection logica: unit_database_registry;
+	- conexao esperada: base/global connection via getConnectionForUnit(null);
+	- tenant DB real: proibido;
+	- unidade sintetica: 000000000000000000000001;
+	- label sintetico: tenant-registry-synthetic-unit-001;
+	- ambiente: non-production;
+	- source: manual;
+	- approved: true apenas no contexto sintetico explicitamente autorizado;
+	- actor: synthetic-manual-operator;
+	- rollbackPlan: rollback synthetic tenant-registry-synthetic-unit-001 only;
+	- plannedAllowlist: tenant-registry-synthetic-unit-001.
+- Relacao com artefatos:
+	- unitDatabaseRegistryManualEntrypoint.js: borda manual deliberada futura;
+	- unitDatabaseRegistryManualOwner.js: orquestracao pending -> ready -> active futura;
+	- unitDatabaseRegistryWriter.js: escrita futura na collection logica unit_database_registry;
+	- unitDatabaseRegistryReader.js: leitura futura para evidencia sintetica;
+	- unitDatabaseRegistry.js: cache/registry passivo;
+	- resolveConnection.js: validacao futura de fallback/baseConnection e gates de roteamento.
+- Pre-checagem obrigatoria antes da execucao futura:
+	- git status -sb
+	- git --no-pager log --oneline --decorate -8
+	- node --test .\tests\architecture\unitDatabaseRegistryNonProductionPilot.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryControlledPilot.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryManualEntrypoint.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryManualOwner.contract.test.js
+	- node --test .\tests\architecture\unitDatabaseRegistryWriterResolveConnection.contract.test.js
+	- git status -sb
+- Rollback futuro associado:
+	- se a escrita sintetica criar entry, rollback futuro devera remover ou desativar somente a entry sintetica tenant-registry-synthetic-unit-001;
+	- se a escrita sintetica criar allowlist sintetica, rollback futuro devera remover somente essa allowlist sintetica;
+	- rollback futuro devera preservar ou restaurar fallback para baseConnection;
+	- rollback futuro dependera de comando completo visivel, autorizacao explicita e microcorte proprio.
+- Evidencia futura associada:
+	- status limpo antes da execucao;
+	- log curto do HEAD;
+	- saida textual do comando real de escrita sintetica;
+	- leitura textual da entry sintetica criada/promovida, se existir;
+	- confirmacao de que a conexao usada foi base/global connection;
+	- confirmacao de que tenant DB real nao foi aberta;
+	- confirmacao de que Portal, dados reais, trafego real, usuario real, unidade real e PostgreSQL nao foram usados;
+	- resultado dos testes de protecao;
+	- status final do git.
+- Gates documentais:
+	- realSyntheticWriteCommandDefined=true
+	- realSyntheticWriteCommandExecuted=false
+	- firstRealSyntheticWriteDefined=true
+	- firstRealSyntheticWriteExecuted=false
+	- syntheticWritePrecheckCommandDefined=true
+	- syntheticWritePrecheckCommandExecuted=true
+	- syntheticRollbackPlanDefined=true
+	- syntheticEvidencePlanDefined=true
+	- syntheticEvidenceCollected=true
+	- writerExecuted=false
+	- manualEntrypointExecuted=false
+	- manualOwnerExecuted=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- routingRealChanged=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- operationalEvidenceRealCollected=false
+	- fallbackRequired=true
+	- explicitUserAuthorizationRequired=true
+	- explicitCommandApprovalRequired=true
+	- blockedReasons=[]
+- Criterios para execucao futura, ainda nao autorizada:
+	- comando real de escrita sintetica deve ser exibido integralmente novamente antes da execucao;
+	- comando real de escrita sintetica deve ser aprovado explicitamente pelo usuario;
+	- pre-checagem deve estar verde imediatamente antes;
+	- se qualquer teste falhar, parar;
+	- se git status nao estiver limpo antes da execucao, parar;
+	- se o comando exigir dado real, usuario real, unidade real, Portal, PostgreSQL ou tenant DB real, parar;
+	- se o comando tentar criar caller, rota, CLI persistente, script persistente, job, bootstrap ou request path, parar;
+	- se qualquer arquivo inesperado for alterado, parar;
+	- se qualquer ambiguidade aparecer, degradar para nao executar.
+- Interpretacao obrigatoria:
+	- definicao do comando real futuro de escrita sintetica nao autoriza execucao;
+	- definicao do comando real futuro de escrita sintetica nao executa writer;
+	- definicao do comando real futuro de escrita sintetica nao executa manualEntrypoint;
+	- definicao do comando real futuro de escrita sintetica nao executa manualOwner;
+	- definicao do comando real futuro de escrita sintetica nao cria registry entry neste microcorte;
+	- definicao do comando real futuro de escrita sintetica nao altera registry real;
+	- definicao do comando real futuro de escrita sintetica nao altera allowlist real;
+	- definicao do comando real futuro de escrita sintetica nao abre tenant DB real;
+	- definicao do comando real futuro de escrita sintetica nao altera roteamento real;
+	- definicao do comando real futuro de escrita sintetica nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL;
+	- definicao do comando real futuro de escrita sintetica nao autoriza rollback;
+	- definicao do comando real futuro de escrita sintetica nao autoriza push;
+	- qualquer proximo ato concreto deve ser aprovado explicitamente em microcorte proprio.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
