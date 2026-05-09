@@ -5802,6 +5802,81 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 
+- Teste contratual tenant-aware do corredor Funcionarios disponiveis criado.
+- Base local:
+	- 89dd66a docs(tenant): seleciona proximo alvo tenant-aware pos-recursos.
+- Arquivo criado:
+	- tests/architecture/funcionariosDisponiveisTenantScope.contract.test.js
+- Natureza:
+	- teste arquitetural/contratual;
+	- foco em FuncionarioRepository -> api.db.findFuncionariosDisponiveisByUnidadeLean;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem dados reais;
+	- sem escrita real;
+	- sem rollback;
+	- sem nova rota/request path;
+	- sem expansao para page bundle inteiro, create/update/delete, anexos, biometria ou auto-user flow.
+- Contrato validado:
+	- FuncionarioRepository permanece repository amplo, mas o slice protegido fica limitado ao helper de leitura de funcionarios disponiveis;
+	- o helper de funcionarios disponiveis usa resolveModel com unitScope explicito no estado atual;
+	- api.db.findFuncionariosDisponiveisByUnidadeLean permanece bridge pequeno;
+	- escopo por unidade permanece explicito;
+	- este helper exige unidade explicita via createUnitScope e nao forca fallback artificial base/global;
+	- nao ha dependencia de tenant registry;
+	- nao ha dependencia de harness sintetico;
+	- nao ha dependencia de Portal, rotas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nenhuma superficie operacional nova foi criada;
+	- o teste congela o estado atual sem forcar migracao para BaseRepository.
+- Estrategia usada no teste:
+	- leitura estrutural com fs/readFileSync sobre os arquivos permitidos;
+	- extracao localizada das funcoes pequenas do slice com vm para validar o handoff fino da bridge;
+	- mocks locais em memoria apenas para createUnitScope e para o repository alvo;
+	- sem Mongo real, sem tenant DB real, sem createServer, sem supertest e sem request path.
+- Resultado dos testes:
+	- funcionariosDisponiveisTenantScope.contract.test.js: PASS, tests 5, pass 5, fail 0;
+	- gestor-funcionarios-disponiveis-runtime-contract.test.js: PASS, tests 6, pass 6, fail 0;
+	- gestor-funcionarios-load-pagina-bundle-structural-seam.test.js: PASS, tests 1, pass 1, fail 0;
+	- gestor-funcionario-anchor-by-id-unit-scope-bridge.test.js: PASS, tests 3, pass 3, fail 0;
+	- gestor-funcionarios-crud-unit-scope-canonical.test.js: PASS, tests 5, pass 5, fail 0;
+	- repository-unitScope.test.js: PASS, tests 2, pass 2, fail 0;
+	- npm run verify:imports: arquitetura limpa.
+- Confirmacoes:
+	- nenhum arquivo em src foi alterado;
+	- nenhuma escrita foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, usuario real, unidade real e PostgreSQL nao foram usados;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path foi criado;
+	- push nao foi realizado.
+- Gates:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=FuncionarioRepository_apiDb_findFuncionariosDisponiveisByUnidadeLean
+	- funcionariosDisponiveisTenantScopeContractCreated=true
+	- funcionariosDisponiveisTenantScopeContractValidated=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- criacao do teste nao autoriza alteracao funcional;
+	- criacao do teste nao autoriza escrita real;
+	- criacao do teste nao autoriza tenant DB real;
+	- criacao do teste nao autoriza Portal;
+	- criacao do teste nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado, preferencialmente diagnostico read-only de refactor minimo no corredor Funcionarios disponiveis.
+
 
 
 
