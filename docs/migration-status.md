@@ -4831,6 +4831,73 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 
+- Teste contratual tenant-aware do corredor Funcoes criado.
+- Base local:
+	- 070cf5e docs(tenant): seleciona proximo alvo tenant-aware pos-profile.
+- Arquivo criado:
+	- tests/architecture/funcoesTenantScope.contract.test.js
+- Natureza:
+	- teste arquitetural/contratual;
+	- foco em FuncaoReadRepository -> funcoesReadDataFacade -> listarFuncoes.service;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem dados reais;
+	- sem escrita real;
+	- sem rollback;
+	- sem nova rota/request path.
+- Contrato validado:
+	- FuncaoReadRepository permanece no padrao esperado de BaseRepository/unitScope, se aplicavel;
+	- o estado atual do corredor foi congelado sem forcar refactor: o repository continua usando resolveModel com unitScope explicito, sem herdar BaseRepository neste slice atual;
+	- funcoesReadDataFacade/listarFuncoes.service preservam ou propagam scope/unitScope conforme codigo atual;
+	- scopeFromFuncaoFiltro permanece como ponto canonico de derivacao de escopo;
+	- fallback seguro/base-global permanece documentado/congelado;
+	- nao ha dependencia de tenant registry;
+	- nao ha dependencia de harness sintetico;
+	- nao ha dependencia de Portal, rotas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nenhuma superficie operacional nova foi criada.
+- Resultado dos testes:
+	- funcoesTenantScope.contract.test.js: PASS, 5 tests, 0 fail;
+	- gestor-funcoes-list-structural-seam-runtime-contract.test.js: PASS, 5 tests, 0 fail;
+	- gestor-funcoes-get-by-unit-owner-structural-seam.test.js: PASS, 4 tests, 0 fail;
+	- gestor-setor-recurso-unit-scope-canonical.test.js: PASS, 13 tests, 0 fail;
+	- repository-unitScope.test.js: PASS, 2 tests, 0 fail;
+	- npm run verify:imports: arquitetura limpa.
+- Confirmacoes:
+	- nenhum arquivo em src foi alterado;
+	- nenhuma escrita foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, usuario real, unidade real e PostgreSQL nao foram usados;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path foi criado;
+	- push nao foi realizado.
+- Gates:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=FuncaoReadRepository_funcoesReadDataFacade_listarFuncoes
+	- funcoesTenantScopeContractCreated=true
+	- funcoesTenantScopeContractValidated=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- criacao do teste nao autoriza alteracao funcional;
+	- criacao do teste nao autoriza escrita real;
+	- criacao do teste nao autoriza tenant DB real;
+	- criacao do teste nao autoriza Portal;
+	- criacao do teste nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado, preferencialmente diagnostico read-only de refactor minimo no corredor Funcoes.
+
 
 
 
