@@ -5212,6 +5212,49 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado, preferencialmente diagnostico read-only de refactor minimo no corredor Modulos.
 
+- Diagnostico de refactor minimo do corredor Modulos executado.
+- Base local:
+	- 88a7250 test(tenant): protege scope tenant-aware do corredor modulos.
+- Auditoria read-only realizada.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- ModuloReadRepository nao deve migrar para BaseRepository agora;
+	- o estado atual com resolveModel e unitScope explicito no repository e aceitavel para o slice atual;
+	- GLOBAL_SCOPE no bridge atual permanece aceitavel no estado presente porque o slice protegido e pequeno, read-only, explicitamente congelado por contrato e ja coberto por costura vizinha de compatibilidade;
+	- a lacuna restante e de padronizacao futura, nao de defeito funcional concreto no corredor protegido;
+	- converter ModuloReadRepository para BaseRepository agora tende a alterar a forma de enforcement de escopo e ampliar o risco de mudanca runtime sem ganho funcional comprovado para este microcorte;
+	- essa conversao nao e necessaria para manter o corredor tenant-aware no estado atual e nao deve ser usada como refactor estetico;
+	- qualquer microcorte futuro que toque esse corredor deve rerodar modulosTenantScope.contract.test.js, gestor-modulos-get-by-id-structural-seam-runtime-contract.test.js, gestor-modulos-list-owner-structural-seam.test.js e repository-unitScope.test.js;
+	- escopo permitido de qualquer microcorte futuro: validacao consolidada, fechamento documental ou refactor estritamente local e falsificavel se surgir lacuna concreta;
+	- escopo proibido de qualquer microcorte futuro: tenant DB real, Mongo real, Portal, rotas, request path, scripts, CLI, jobs, bootstrap, start.js, server.js, createServer.js, escrita real, rollback real e PostgreSQL.
+- Decisao recomendada:
+	- preferir validacao consolidada ou fechamento desta frente curta;
+	- nao abrir refactor em src enquanto nao houver lacuna concreta, pequena, falsificavel e com ganho claro.
+- Gates:
+	- selectedTarget=ModuloReadRepository_findModuloByIdLeanService
+	- modulosTenantScopeContractCreated=true
+	- modulosTenantScopeContractValidated=true
+	- modulosRefactorDiagnosticExecuted=true
+	- modulosRefactorRecommended=false
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 
 
 
