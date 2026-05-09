@@ -5519,6 +5519,100 @@ Notas:
 	- este microcorte nao autoriza PostgreSQL;
 	- o proximo ato, se houver, pode ser diagnostico read-only para decidir se existe necessidade real de refactor minimo em src neste corredor.
 
+- Diagnostico de refactor minimo do corredor Recursos executado.
+- Base local:
+	- 66e4377 test(tenant): protege scope tenant-aware do corredor recursos.
+- Auditoria read-only realizada.
+	- leituras revisadas:
+		- tests/architecture/recursosTenantScope.contract.test.js
+		- src/modules/gestor/app/repositories/RecursoReadRepository.js
+		- src/modules/gestor/app/data/recursos/recursosReadDataFacade.js
+		- src/modules/gestor/app/data/recursos/recursosScope.js
+		- src/modules/gestor/app/services/recursos/listarRecursos.service.js
+		- src/modules/gestor/app/services/recursos/loadPaginaRecursosBundle.service.js
+		- src/modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js
+		- src/modules/gestor/app/data/recursos/recursosContextDataFacade.js
+		- src/modules/gestor/app/db/api.db.js
+		- src/shared/repositories/BaseRepository.js
+		- src/shared/unitScope.js
+		- tests/gestor-recursos-list-structural-seam-runtime-contract.test.js
+		- tests/gestor-recursos-context-policy-structural.test.js
+		- tests/gestor-setor-recurso-unit-scope-canonical.test.js
+		- tests/architecture/repository-unitScope.test.js
+		- docs/migration-status.md
+	- foco da auditoria:
+		- confirmar se havia lacuna funcional concreta no slice pequeno RecursoReadRepository -> recursosReadDataFacade -> findRecursosByFiltroComUnidadeService;
+		- distinguir necessidade real de refactor em src de mera oportunidade futura de padronizacao.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- RecursoReadRepository nao deve migrar para BaseRepository agora, porque o repository ja usa resolveModel com unitScope explicito no estado atual e o contrato novo congelou exatamente essa garantia;
+	- recursosReadDataFacade e recursosScope nao devem mudar agora, porque continuam pequenos, legiveis e diretamente alinhados ao comportamento tenant-aware que se quis congelar;
+	- a politica ampla de Recursos deve continuar fora deste microcorte, porque createRecursoContextPolicyCore e recursosContextDataFacade representam uma superficie maior, com regra contextual propria, ja protegida por testes adjacentes;
+	- o estado atual com resolveModel mais unitScope explicito e aceitavel no presente, pois entrega escopo tenant-aware claro no repository sem depender de abertura de tenant DB real nem de refactor estrutural adicional;
+	- o fallback base/global atual tambem e aceitavel no estado presente, porque esta centralizado em scopeFromRecursoListFiltro para o slice escolhido e em api.db no caminho FromDb, ambos ja congelados pelo contrato;
+	- o que existe aqui e oportunidade futura de padronizacao, nao lacuna funcional pequena, falsificavel e com ganho claro imediato.
+- Fundamentacao tecnica do diagnostico:
+	- RecursoReadRepository nao herda BaseRepository, mas recebe unitScope por parametro em todas as operacoes e resolve o model por resolveModel com esse escopo;
+	- o slice principal de leitura continua fino: recursosReadDataFacade apenas deriva escopo por scopeFromRecursoListFiltro e delega ao repository;
+	- findRecursosByFiltroComUnidadeService segue como funcao fina, enquanto listarRecursosService concentra a politica ampla de listagem fora do corte contratual principal;
+	- createRecursoContextPolicyCore e recursosContextDataFacade continuam separados, o que reduz acoplamento e evita ampliar o contrato de leitura para regras de autorizacao/contexto;
+	- BaseRepository hoje valida e expone applyTenantFilter, mas convergir RecursoReadRepository para essa base agora alteraria a forma do repository sem mostrar ganho funcional concreto no slice protegido;
+	- qualquer conversao para BaseRepository neste momento seria predominantemente padronizacao estrutural, com risco de abrir um refactor desnecessario no mesmo arquivo que tambem contem create, update e delete.
+- Impacto e risco se houvesse conversao agora:
+	- a chance de mudar comportamento runtime aumentaria, porque a conversao tocaria um repository compartilhado por operacoes de leitura e escrita, nao apenas o slice contratual pequeno;
+	- o risco tecnico subiria de baixo para baixo-moderado ou moderado sem evidencia de ganho funcional proporcional;
+	- a mudanca nao exigiria tenant DB real nem Portal por si so, mas tenderia a puxar uma rodada extra de validacao mais ampla, aumentando custo e superficie do microcorte;
+	- trazer a politica ampla de Recursos para este momento aumentaria ainda mais o risco, porque misturaria o slice pequeno de leitura com regras contextuais, owners e bundles adjacentes.
+- Risco estimado da decisao de nao refatorar agora:
+	- baixo;
+	- o corredor pequeno ja esta suficientemente protegido para o estado atual;
+	- o risco residual principal e apenas de divergencia futura caso outro microcorte mexa em politica ampla ou em bridges adjacentes sem rerodar a bateria de regressao apropriada.
+- Testes que deverao ser rodados em qualquer microcorte futuro deste corredor:
+	- node --test .\tests\architecture\recursosTenantScope.contract.test.js
+	- node --test .\tests\gestor-recursos-list-structural-seam-runtime-contract.test.js
+	- node --test .\tests\gestor-recursos-context-policy-structural.test.js
+	- node --test .\tests\gestor-setor-recurso-unit-scope-canonical.test.js
+	- node --test .\tests\architecture\repository-unitScope.test.js
+	- npm run verify:imports
+- Escopo permitido do proximo microcorte:
+	- validacao consolidada desta frente curta;
+	- fechamento documental desta frente curta, se desejado;
+	- eventual novo microcorte proprio e aprovado apenas se surgir lacuna funcional pequena, concreta e falsificavel.
+- Escopo proibido do proximo microcorte:
+	- alterar src sem novo microcorte aprovado;
+	- expandir para createRecursoContextPolicyCore, recursosContextDataFacade, controller, bundles de pagina ou request path neste mesmo diagnostico;
+	- tenant DB real, Mongo real, Portal, rotas, scripts, CLI, jobs, bootstrap, start.js, server.js, createServer.js ou PostgreSQL;
+	- escrita real, rollback real ou uso de dados reais.
+- Decisao recomendada:
+	- preferir validacao consolidada ou fechamento desta frente curta;
+	- nao abrir refactor minimo em src agora;
+	- tratar qualquer futura conversao estrutural como microcorte proprio, separado e justificado por lacuna funcional concreta, nao por estetica.
+- Gates:
+	- selectedTarget=RecursoReadRepository_recursosReadDataFacade_findRecursosByFiltroComUnidadeService
+	- recursosTenantScopeContractCreated=true
+	- recursosTenantScopeContractValidated=true
+	- recursosRefactorDiagnosticExecuted=true
+	- recursosRefactorRecommended=false
+	- recursosPolicyWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 
 
 
