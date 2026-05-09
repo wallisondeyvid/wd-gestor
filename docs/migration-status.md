@@ -4898,6 +4898,64 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado, preferencialmente diagnostico read-only de refactor minimo no corredor Funcoes.
 
+- Diagnostico de refactor minimo do corredor Funcoes executado.
+- Base local:
+	- a8867a8 test(tenant): protege scope tenant-aware do corredor funcoes.
+- Auditoria read-only realizada.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- o corredor ja esta suficientemente tenant-aware para o escopo atual porque scopeFromFuncaoFiltro permanece como derivacao canonica de escopo, a data facade propaga esse escopo para o repository e o repository ja usa resolveModel com unitScope explicito;
+	- FuncaoReadRepository nao deve migrar para BaseRepository agora;
+	- o estado atual com resolveModel/unitScope explicito e aceitavel para este slice, porque o contrato arquitetural ja congelou a propagacao de escopo e o fallback global/base sem exigir heranca de BaseRepository;
+	- a principal lacuna observada neste momento e apenas oportunidade futura de padronizacao, nao defeito funcional concreto;
+	- converter FuncaoReadRepository para BaseRepository agora tenderia a mudar o ponto de validacao do unitScope e aumentar risco de comportamento runtime sem ganho funcional comprovado;
+	- essa conversao tambem exigiria reavaliar chamadas que hoje aceitam fallback global explicito via scopeFromFuncaoFiltro, o que amplia risco desnecessario para um corredor ja protegido por contrato;
+	- risco estimado de refactor minimo em src hoje: baixo a moderado, nao por defeito conhecido, mas por chance de alterar comportamento implicito de fallback ou endurecer assertTenantScope sem necessidade comprovada;
+	- testes que deverao ser rodados em qualquer microcorte futuro desse corredor:
+		- node --test .\tests\architecture\funcoesTenantScope.contract.test.js
+		- node --test .\tests\gestor-funcoes-list-structural-seam-runtime-contract.test.js
+		- node --test .\tests\gestor-funcoes-get-by-unit-owner-structural-seam.test.js
+		- node --test .\tests\gestor-setor-recurso-unit-scope-canonical.test.js
+		- node --test .\tests\architecture\repository-unitScope.test.js
+		- npm run verify:imports
+	- escopo permitido:
+		- validacao consolidada do corredor atual;
+		- ou fechamento desta frente curta;
+		- ou novo microcorte proprio somente se surgir hipotese local falsificavel mostrando ganho real ao migrar este repository para BaseRepository sem alterar fallback vigente.
+	- escopo proibido:
+		- qualquer alteracao funcional imediata sem novo microcorte aprovado;
+		- tenant registry;
+		- Portal;
+		- tenant DB real, Mongo real, escrita real ou rollback real;
+		- rotas, request path, scripts, CLI, jobs, bootstrap, start.js, server.js ou createServer.js.
+- Decisao recomendada:
+	- preferir validacao consolidada ou fechamento desta frente curta;
+	- nao recomendar refactor minimo em src agora.
+- Gates:
+	- selectedTarget=FuncaoReadRepository_funcoesReadDataFacade_listarFuncoes
+	- funcoesTenantScopeContractCreated=true
+	- funcoesTenantScopeContractValidated=true
+	- funcoesRefactorDiagnosticExecuted=true
+	- funcoesRefactorRecommended=false
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 
 
 
