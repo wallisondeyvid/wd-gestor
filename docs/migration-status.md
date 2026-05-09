@@ -1392,6 +1392,54 @@ Checkpoint tenant enforcement atual:
 - npm test verde.
 - quantidade de tests: 2203.
 - quantidade de suites: 17.
+
+- Proximo alvo tenant-aware pos-Feedback leitura limitada selecionado documentalmente.
+- Base publicada: b52a9d0 docs(tenant): encerra frente feedback leitura limitada tenant-aware.
+- Premissa consolidada desta rodada: a selecao permanece estritamente read-only, sem patch funcional, sem teste novo, sem commit e sem push; a regua continua privilegiando helper pequeno, bridge tenant-aware explicita, owner/local call site claro e ausencia de reabertura de bundle, pagina, widget settings, membership, CRUD, upload, status ou detail amplo.
+- Estado inicial consolidado desta rodada: worktree sincronizada com origin em b52a9d0; frente Feedback leitura limitada encerrada e publicada; nenhum arquivo alterado antes desta selecao; ledger preservado como unico arquivo elegivel para escrita nesta rodada.
+- Auditoria read-only executada nesta rodada:
+	- releitura focal de src/modules/gestor/app/repositories/FeedbackReadRepository.js para confirmar que o residual remanescente mistura findById, update, delete e vizinhanca de widget settings/detail, sem novo slice tao pequeno quanto list200/list500;
+	- releitura focal de src/modules/gestor/app/repositories/SetorReadRepository.js para confirmar que a listagem geral continua encostada em populate/select, counters e writes, embora o microcorte anterior por unidade permaneça fechado;
+	- releitura focal de src/modules/gestor/app/repositories/UnidadeReadRepository.js para comparar helpers pequenos de lookup puro, incluindo findUnidadesByIdsNomeCodigoLeanRepo e vizinhos ligados a pages;
+	- releitura focal de src/modules/gestor/app/repositories/FuncionarioRepository.js para separar helpers pequenos de leitura de corredores acoplados a usuario, membership, create-or-link, anexos, biometria e listagem com refs;
+	- inspeção dos handoffs em src/modules/gestor/app/db/api.db.js para confirmar quais bridges ainda expõem unitScope explicito, GLOBAL_SCOPE deliberado ou fallback scoped/global controlado;
+	- inspeção de call sites proximos em src/modules/gestor/app/controllers/utils/listSetoresCore.js, src/modules/gestor/app/services/usuarios/listUsuariosOwner.service.js, src/modules/gestor/app/services/unidades/loadPaginaUnidadesDiretores.service.js e src/modules/gestor/app/data/unidades/unidadesDiretoresPageDataFacade.js;
+	- leitura dos testes proximos ja existentes, com destaque para tests/gestor-setor-recurso-unit-scope-canonical.test.js, tests/gestor-unidades-unit-scope-canonical.test.js, tests/gestor-funcionario-anchor-by-id-unit-scope-bridge.test.js, tests/gestor-unidades-load-pagina-bundle-structural-seam.test.js e tests/gestor-usuarios-list-owner-structural-seam.test.js.
+- Decisao consolidada desta rodada: o proximo alvo principal recomendado passa a ser o corredor auxiliar de lookup por ids de Unidades, centrado em findUnidadesByIdsNomeCodigoLeanRepo no repository e findUnidadesByIdsNomeCodigoLean na bridge api.db, com proximo passo recomendado classificado como teste contratual novo e pequeno.
+- Racional tecnico consolidado da decisao principal:
+	- o repository helper e pequeno, read-only, lean, selectivo e semanticamente fechado em nome/codigo por ids, sem populate, sem write e sem page bundle proprio;
+	- a bridge em api.db ja explicita a regra tenant-aware do slice por meio de scopedUnitId opcional, extracao de singleUnitId e fallback controlado entre scopeFromUnidadeId e GLOBAL_SCOPE, o que permite congelar precisamente o comportamento tenant-aware sem reabrir a bridge macro inteira;
+	- os call sites ativos observados permanecem auxiliares e compreensiveis, com uso relevante em listSetoresCore e em servicos de usuarios, sem exigir abrir feedback amplo, widget settings, pages bundle de Unidades ou membership como objeto principal do corte;
+	- ja existe cobertura adjacente suficiente para sustentar o microcorte sem exploracao ampla adicional, inclusive caracterizacao runtime da bridge em tests/gestor-setor-recurso-unit-scope-canonical.test.js.
+- Alternativas descartadas ou adiadas nesta rodada:
+	- alternativa adiada 1: corredor de diretores da pagina de Unidades, incluindo loadPaginaUnidadesDiretores.service.js e unidadesDiretoresPageDataFacade.js; embora read-only, ele nasce acoplado ao bundle/pagina, usa GLOBAL_SCOPE deliberado e puxa UserRepository mais fallback por email em FuncionarioRepository, ficando acima da regua conservadora para proximo microcorte;
+	- alternativa adiada 2: helpers pequenos de FuncionarioRepository como findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo ou findFuncionariosByEmailsSelectEmailNomeLeanRepo; apesar de menores que a listagem completa, eles encostam diretamente em fluxo de usuarios, membership implícita, create-or-link, cleanup ou pagina de diretores, o que amplia demais o blast radius do proximo corte;
+	- candidato explicitamente descartado nesta rodada: reabrir Feedback fora do slice list200/list500; o repository continua pequeno no papel para id/update/delete, mas o dominio ja volta a aproximar status, resposta, detail, delete, upload e widget settings, contrariando a regra de nao reabrir a frente ampla imediatamente apos o fechamento publicado.
+- Critérios de seguranca consolidados para esta selecao:
+	- manter o proximo corte limitado ao helper de lookup por ids de Unidades e a sua bridge tenant-aware imediata;
+	- nao converter UnidadeReadRepository inteiro para BaseRepository;
+	- nao abrir pagesController, loadPaginaUnidadesBundle, loadPaginaUnidadesDiretores, widget settings, feedback amplo, setor listagem geral ampla, FuncionarioRepository completo, user membership runtime, auth.db.js, api.db.js macro ou qualquer request path novo;
+	- preferir congelar comportamento de scope explicito e fallback scoped/global do helper selecionado, e nao dos owners inteiros que o consomem.
+- Gates documentais desta selecao:
+	- selectedTarget=findUnidadesByIdsNomeCodigoLean
+	- selectedTargetKind=testeContratualNovoPequeno
+	- selectedTargetRepositoryHelper=findUnidadesByIdsNomeCodigoLeanRepo
+	- selectedTargetBridge=findUnidadesByIdsNomeCodigoLean
+	- selectedTargetReadOnly=true
+	- selectedTargetHasExplicitScopedFallback=true
+	- selectedTargetHasAdjacentCoverage=true
+	- selectedTargetAvoidsBundleReopen=true
+	- selectedTargetAvoidsFeedbackWideReopen=true
+	- selectedTargetAvoidsSetoresGeneralListWideReopen=true
+	- selectedTargetAvoidsFuncionariosWideReopen=true
+	- selectedTargetAvoidsMembershipWideReopen=true
+	- selectedTargetRequiresOnlyFocusedAudit=true
+	- alternativesDeferredCount=2
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta selecao:
+	- selectedTarget=findUnidadesByIdsNomeCodigoLean significa recomendacao documental do proximo microcorte, e nao autorizacao automatica para editar codigo, criar teste, commitar ou publicar;
+	- selectedTargetKind=testeContratualNovoPequeno significa que a proxima rodada, se autorizada, deve comecar por contrato focal do helper/bridge e nao por refactor amplo ou por matriz documental adicional;
+	- blockedReasons=[] significa apenas que a auditoria read-only encontrou um candidato principal suficientemente seguro dentro da regua atual; nao significa que alternativas ficaram liberadas nem que o corte seguinte possa extrapolar para bundle, pagina, feedback amplo, setores amplo, funcionarios amplo ou membership.
 - quantidade de pass: 2201.
 - quantidade de fail: 0.
 - quantidade de skipped: 2.
