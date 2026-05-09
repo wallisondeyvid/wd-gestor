@@ -1804,6 +1804,52 @@ Checkpoint tenant enforcement atual:
 	- postgresMigrationApproved=false
 	- blockedReasons=[]
 
+- Diagnóstico de refactor mínimo do corredor listagem geral de Setores executado.
+- Base local:
+	- 258f236 test(tenant): protege scope tenant-aware da listagem geral de setores.
+- Auditoria read-only realizada.
+- Conclusão:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- SetorReadRepository nao deve migrar para BaseRepository agora, porque o slice protegido ja usa resolveModel + unitScope explicito no padrao atual e a conversao abriria um repository amplo sem ganho funcional comprovado neste corredor;
+	- api.db.findSetoresByFiltroPopulateUnidadeLean nao deve mudar agora, porque a bridge ja esta pequena, com scopeFromSetorFiltro direto e fallback tenant-aware real congelado pelo contrato;
+	- listSetoresCore nao deve mudar agora, porque o core ja e fino, apenas enriquece unidade populada ou faz lookup auxiliar por ids quando necessario, sem assumir decisoes amplas de tenant routing;
+	- getSetoresByUnitCore, page bundle de Setores, counters/create/delete/update, Feedback amplo, Funcionarios, membership e User/UserMembership devem continuar fora deste momento;
+	- o estado atual com unitScope/fallback tenant-aware e aceitavel para o slice escolhido;
+	- o fallback real/filtro tenant-aware atual ficou bem congelado pelo contrato criado, incluindo scopeFromSetorFiltro na bridge, gate contextual no owner e scopedUnitId no lookup auxiliar;
+	- o lookup auxiliar de Unidades por ids esta adequadamente tratado como dependencia ja protegida, sem necessidade de reabrir UnidadeReadRepository amplo;
+	- o que existe aqui e oportunidade futura de padronizacao, nao lacuna funcional pequena, falsificavel e com ganho claro;
+	- risco estimado: baixo para manter como esta; medio se converter agora por estetica e reabrir repository amplo, bridge compartilhada ou core/owner ja estabilizados;
+	- qualquer microcorte futuro neste corredor deve rerodar no minimo tests/architecture/setoresListTenantScope.contract.test.js, tests/gestor-setores-list-runtime-contract.test.js, tests/gestor-setores-list-owner-structural-seam.test.js, tests/architecture/unidadesLookupByIdsTenantScope.contract.test.js e tests/architecture/repository-unitScope.test.js;
+	- escopo permitido em qualquer continuidade futura: validacao consolidada ou fechamento desta frente curta, ou microcorte proprio, pequeno e falsificavel estritamente dentro do helper findSetoresByFiltroPopulateUnidadeLeanRepo, da bridge findSetoresByFiltroPopulateUnidadeLean, do core listSetoresCore ou do owner listarSetores;
+	- escopo proibido em qualquer continuidade futura: getSetoresByUnitCore, page bundle de Setores, counters/create/delete/update, Feedback amplo, Funcionarios, membership, User/UserMembership, tenant DB real, Mongo real, Portal, rota, request path, script, CLI, job, bootstrap e qualquer escrita real.
+- Decisão recomendada:
+	- seguir para validacao consolidada ou fechamento desta frente curta; nao abrir refactor em src por estetica.
+- Gates:
+	- selectedTarget=SetorReadRepository_listSetoresCore_findSetoresByFiltroPopulateUnidadeLean
+	- setoresListTenantScopeContractCreated=true
+	- setoresListTenantScopeContractValidated=true
+	- setoresListRefactorDiagnosticExecuted=true
+	- setoresListRefactorRecommended=false
+	- setoresListWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Fase X encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-x-operational-preparation-opening-contract.md
 - Commit local de encerramento do contrato: 75db8d2 docs(tenant): encerra fase x
