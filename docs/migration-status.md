@@ -4313,6 +4313,83 @@ a83e94b docs(tenant): registra bloqueio de base global para escrita sintetica te
 	- este teste nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
 	- proximo avanco funcional deve depender de novo microcorte aprovado.
 
+- Validacao consolidada pos-protecao do harness sintetico tenant registry executada.
+- Base local: 56c87cd test(tenant): protege harness sintetico contra superficie operacional.
+- Saida de git status inicial:
+
+```text
+## migration/refactor-core...origin/migration/refactor-core [ahead 2]
+```
+
+- Saida de git log:
+
+```text
+56c87cd (HEAD -> migration/refactor-core) test(tenant): protege harness sintetico contra superficie operacional
+07340c7 docs(tenant): inicia pos-bloco harness tenant registry
+aaf9d6f (origin/migration/refactor-core) docs(tenant): encerra bloco sintetico com harness tenant registry
+0a41a4d docs(tenant): valida bloco sintetico com harness tenant registry
+794ccad docs(tenant): executa rollback sintetico com harness tenant registry
+c60bd50 docs(tenant): define rollback sintetico com harness tenant registry
+2071d29 docs(tenant): executa escrita sintetica com harness tenant registry
+4715f50 docs(tenant): aprova execucao da escrita sintetica com harness tenant registry
+89bceea docs(tenant): define comando de escrita sintetica com harness tenant registry
+28eeea3 test(tenant): valida escrita sintetica com harness de base global tenant registry
+26a4704 feat(tenant): implementa harness de base global sintetica tenant registry
+906514e test(tenant): especifica harness de base global sintetica tenant registry
+```
+
+- Resultado de npm run verify:imports:
+
+```text
+> wdgestor@1.0.0 verify:imports
+> node scripts/verify-no-relative-imports.js
+
+✔ Arquitetura limpa
+```
+
+- Resultado de cada teste executado:
+	- unitDatabaseRegistrySyntheticHarnessNoOperationalSurface.contract.test.js: PASS, 3 tests, 0 fail;
+	- unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js: PASS, 4 tests, 0 fail;
+	- unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js: PASS, 3 tests, 0 fail;
+	- unitDatabaseRegistryManualEntrypoint.contract.test.js: PASS, 4 tests, 0 fail;
+	- unitDatabaseRegistryManualOwner.contract.test.js: PASS, 4 tests, 0 fail;
+	- unitDatabaseRegistryWriterResolveConnection.contract.test.js: PASS, 15 tests, 0 fail;
+	- unitDatabaseRegistryWriter.test.js: PASS, 55 tests, 0 fail.
+- Confirmacoes:
+	- worktree permaneceu limpa antes da edicao documental;
+	- nenhum codigo foi alterado;
+	- nenhum teste foi alterado;
+	- nenhuma escrita foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, usuario real, unidade real e PostgreSQL nao foram usados;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path foi criado;
+	- push nao foi realizado;
+	- o harness sintetico segue protegido contra uso operacional indevido.
+- Gates:
+	- postSyntheticHarnessBlockStarted=true
+	- syntheticHarnessOperationalSurfaceProtectionTestCreated=true
+	- syntheticHarnessOperationalSurfaceProtectionValidated=true
+	- harnessRuntimeImportOutsideArchitectureTests=false
+	- operationalHarnessUsageApproved=false
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushRequired=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- validacao pos-protecao nao autoriza uso operacional do harness;
+	- validacao pos-protecao nao autoriza escrita real;
+	- validacao pos-protecao nao autoriza Mongo real;
+	- validacao pos-protecao nao autoriza tenant DB real;
+	- validacao pos-protecao nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proximo ato podera ser fechamento documental desta frente curta ou push consolidado somente com autorizacao explicita do usuario.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
