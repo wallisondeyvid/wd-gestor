@@ -4956,6 +4956,79 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Frente tenant-aware Funcoes encerrada documentalmente.
+- Base local:
+	- c3436ea docs(tenant): diagnostica refactor minimo corredor funcoes.
+- Escopo encerrado:
+	- selecao documental do alvo FuncaoReadRepository -> funcoesReadDataFacade -> listarFuncoes.service;
+	- criacao do teste contratual funcoesTenantScope.contract.test.js;
+	- diagnostico read-only de refactor minimo;
+	- decisao de nao alterar src neste momento.
+- Commits locais da frente:
+	- 070cf5e docs(tenant): seleciona proximo alvo tenant-aware pos-profile;
+	- a8867a8 test(tenant): protege scope tenant-aware do corredor funcoes;
+	- c3436ea docs(tenant): diagnostica refactor minimo corredor funcoes.
+- Resultado final:
+	- scopeFromFuncaoFiltro permanece como ponto canonico de derivacao de escopo;
+	- funcoesReadDataFacade preserva/propaga scope para o repository conforme codigo atual;
+	- listarFuncoes.service permanece protegido pelo contrato novo;
+	- FuncaoReadRepository permanece com resolveModel + unitScope explicito no estado atual;
+	- FuncaoReadRepository nao deve migrar para BaseRepository agora;
+	- fallback seguro/base-global permanece congelado por contrato;
+	- corredor nao depende de tenant registry;
+	- corredor nao depende de harness sintetico;
+	- corredor nao depende de Portal, rotas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nao ha refactor minimo recomendado em src neste momento;
+	- proximo avanco nesse corredor so deve ocorrer se houver nova hipotese falsificavel e microcorte proprio.
+- Confirmacoes finais:
+	- nenhum arquivo em src foi alterado nesta frente;
+	- nenhum teste existente foi alterado indevidamente;
+	- apenas teste arquitetural novo foi criado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- Portal nao usado;
+	- dados reais nao usados;
+	- usuario real nao usado;
+	- unidade real nao usada;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=FuncaoReadRepository_funcoesReadDataFacade_listarFuncoes
+	- funcoesTenantScopeContractCreated=true
+	- funcoesTenantScopeContractValidated=true
+	- funcoesRefactorDiagnosticExecuted=true
+	- funcoesRefactorRecommended=false
+	- funcoesTenantAwareFrontClosed=true
+	- sourceCodeChanged=false
+	- testsChanged=true somente pelo teste arquitetural novo
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento desta frente nao autoriza alteracao funcional;
+	- fechamento desta frente nao autoriza escrita real;
+	- fechamento desta frente nao autoriza tenant DB real;
+	- fechamento desta frente nao autoriza Portal;
+	- fechamento desta frente nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
+
 
 
 
