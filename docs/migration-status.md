@@ -6691,6 +6691,69 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Proximo alvo tenant-aware pos-Setores por unidade selecionado documentalmente.
+- Base publicada:
+	- daea465 docs(tenant): encerra frente setores por unidade tenant-aware.
+- Premissa consolidada:
+	- a proxima selecao deve permanecer em corredor pequeno, read-only, tenant-aware, sem abrir page bundle, write path, status/resposta/upload, widget settings, Portal, PostgreSQL, tenant DB real, request path novo, script, CLI, job ou bootstrap;
+	- o alvo preferencial deve reaproveitar unitScope explicito ou bridge tenant-aware ja existente, com owner fino e teste contratual facil de criar;
+	- BaseRepository nao deve ser introduzido por estetica; so entra se houver ganho funcional pequeno, local e comprovavel.
+- Estado inicial:
+	- branch local e remota sincronizadas em daea465;
+	- worktree limpa antes da auditoria;
+	- frente anterior de Setores por unidade encerrada sem diff em src;
+	- proxima decisao restrita a leitura em src/tests/docs, com edicao final apenas neste ledger.
+- Auditoria read-only executada:
+	- revisao do ledger atual e confirmacao do baseline publicado em daea465;
+	- mapeamento read-only de repositories e services do Gestor com foco em FeedbackReadRepository, SetorReadRepository, UnidadeReadRepository e FuncionarioRepository;
+	- comparacao de sinais de unitScope, GLOBAL_SCOPE, BaseRepository, bridges finas, data facades e owners proximos em api.db.js e services/data do Gestor;
+	- leitura focal de FeedbackReadRepository.js, SetorReadRepository.js, UnidadeReadRepository.js, FuncionarioRepository.js, feedbackListApiController.js, feedbackMyListApiController.js e api.db.js;
+	- leitura focal de testes proximos, incluindo gestor-feedback-list200-unit-scope-bridge.test.js, gestor-feedback-list-owner-structural-seam.test.js, gestor-feedback-my-list-owner-structural-seam.test.js e gestor-feedback-list-runtime-contract.test.js.
+- Decisao:
+	- alvo principal selecionado: FeedbackReadRepository -> api.db.findFeedbackByFilterSortCreatedAtDescLimit200Lean / findFeedbackByFilterSortCreatedAtDescLimit500Lean -> feedbackMyListApiController / feedbackListApiController;
+	- justificativa principal: este e o menor corredor novo ainda aberto com leitura limitada, unitScope/filtro tenant-aware ja explicitados em api.db.js, repository pequeno e owners separados para lista admin e my-list, sem necessidade de abrir detalhe, delete, status patch, resposta patch, upload ou widget settings;
+	- justificativa adicional: ja existem testes proximos que congelam bridge, owner seam e runtime do corredor, reduzindo o custo do proximo teste contratual tenant-aware e permitindo um microcorte documental/testavel sem reabrir o dominio amplo de Feedback;
+	- escopo recomendado do proximo ato: teste contratual pequeno focado no slice read-only de lista limitada de Feedback, congelando repository helper, bridge scoped em api.db.js e owners de lista, sem tocar flows adjacentes.
+- Alternativas descartadas ou adiadas:
+	- alternativa adiada 1: UnidadeReadRepository em helpers adicionais de leitura; adiada porque os helpers remanescentes se misturam com listagens globais, cluster ja fechado, lookups amplos e pages/bundles de Unidades, sem corredor tao pequeno quanto o slice de Feedback lista;
+	- alternativa adiada 2: FuncionarioRepository em lookups de apoio para pagina de Unidades ou listagens; adiada porque os helpers proximos continuam compartilhando arquivo amplo com CRUD, membership, listagem com refs e flows de pagina, sem corte tenant-aware tao estreito quanto Feedback lista limitada;
+	- descartado nesta rodada: SetorReadRepository listagem geral; continua mais largo, acoplado a populate/select de listagem e vizinho de counters/create/delete/update, portanto fora da regua do proximo microcorte.
+- Criterios de seguranca:
+	- manter o alvo restrito a leitura limitada de listas de Feedback;
+	- nao abrir detalhe por id, status patch, resposta patch, upload, widget settings, delete, create ou qualquer write path de Feedback;
+	- nao migrar FeedbackReadRepository inteiro para BaseRepository;
+	- nao abrir tenant registry, tenant DB real, Mongo real, Portal, PostgreSQL, start/server/createServer, bootstrap, script, CLI, job, rota nova ou request path novo;
+	- preservar a separacao entre owner, bridge e repository ja observada nos testes proximos;
+	- se a hipotese do corredor fino cair no proximo ato, interromper e reselecionar em vez de ampliar Feedback por oportunidade local.
+- Gates:
+	- selectedTarget=FeedbackReadRepository_apiDb_feedbackListLimitedScopedRead
+	- nextTenantAwareTargetSelected=true
+	- feedbackListLimitedReadSelected=true
+	- feedbackListLimitedReadOnly=true
+	- feedbackStatusRespostaUploadDeferred=true
+	- feedbackWidgetSettingsDeferred=true
+	- unidadesWideScopeDeferred=true
+	- funcionariosWideScopeDeferred=true
+	- setoresWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta selecao documental nao autoriza alteracao funcional imediata;
+	- esta selecao documental nao autoriza escrita real;
+	- esta selecao documental nao autoriza tenant DB real;
+	- esta selecao documental nao autoriza Portal;
+	- esta selecao documental nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- o proximo ato deve ser microcorte proprio, pequeno e falsificavel dentro do slice de Feedback lista limitada.
+
 
 
 
