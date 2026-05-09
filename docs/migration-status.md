@@ -4659,6 +4659,73 @@ Notas:
 	- diagnostico nao autoriza PostgreSQL;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Frente tenant-aware usuario atual/profile encerrada documentalmente.
+- Base local:
+	- 1075af3 docs(tenant): diagnostica refactor minimo usuario atual profile.
+- Escopo encerrado:
+	- selecao documental do alvo UserProfileRepository -> findUserForProfile -> getUsuarioAtualProfileOwner.service;
+	- criacao do teste contratual userProfileTenantScope.contract.test.js;
+	- diagnostico read-only de refactor minimo;
+	- decisao de nao alterar src neste momento.
+- Commits locais da frente:
+	- f05ffcb docs(tenant): seleciona proximo alvo tenant-aware pos-harness;
+	- 502ba70 test(tenant): protege fallback unitScope do usuario atual profile;
+	- 1075af3 docs(tenant): diagnostica refactor minimo usuario atual profile.
+- Resultado final:
+	- UserProfileRepository ja permanece baseado em BaseRepository;
+	- findUserForProfile ja propaga unitScope para UserProfileRepository;
+	- getUsuarioAtualProfileOwner.service ja preserva unitScope recebido;
+	- fallback sem unitScope permanece seguro e congelado por contrato;
+	- corredor nao depende de tenant registry;
+	- corredor nao depende de harness sintetico;
+	- corredor nao depende de Portal, rotas, start/server/createServer, scripts ou bootstrap;
+	- nao ha refactor minimo recomendado em src neste momento;
+	- proximo avanco nesse corredor so deve ocorrer se houver nova hipotese falsificavel e microcorte proprio.
+- Confirmacoes finais:
+	- nenhum arquivo em src foi alterado nesta frente;
+	- nenhum teste existente foi alterado indevidamente;
+	- apenas teste arquitetural novo foi criado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- Portal nao usado;
+	- dados reais nao usados;
+	- usuario real nao usado;
+	- unidade real nao usada;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=UserProfileRepository_getUsuarioAtualProfileOwner
+	- userProfileTenantScopeContractCreated=true
+	- userProfileTenantScopeContractValidated=true
+	- userProfileRefactorDiagnosticExecuted=true
+	- userProfileTenantAwareFrontClosed=true
+	- sourceCodeChanged=false
+	- testsChanged=true somente pelo teste arquitetural novo
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento desta frente nao autoriza alteracao funcional;
+	- fechamento desta frente nao autoriza escrita real;
+	- fechamento desta frente nao autoriza tenant DB real;
+	- fechamento desta frente nao autoriza Portal;
+	- fechamento desta frente nao autoriza PostgreSQL;
+	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
+
 
 
 
