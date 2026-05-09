@@ -6754,6 +6754,47 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- o proximo ato deve ser microcorte proprio, pequeno e falsificavel dentro do slice de Feedback lista limitada.
 
+- Teste contratual tenant-aware do corredor Feedback leitura limitada criado.
+- Base local:
+	- 632b667 docs(tenant): seleciona proximo alvo tenant-aware pos-setores-unidade.
+- Arquivo criado:
+	- tests/architecture/feedbackReadTenantScope.contract.test.js.
+- Contrato validado:
+	- FeedbackReadRepository permanece repository amplo, mas o slice protegido ficou limitado aos helpers de leitura limitada findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo e findFeedbackByFilterSortCreatedAtDescLimit500LeanRepo;
+	- os helpers 200/500 permanecem usando resolveModel com unitScope explicito no padrao atual;
+	- api.db.findFeedbackByFilterSortCreatedAtDescLimit200Lean e api.db.findFeedbackByFilterSortCreatedAtDescLimit500Lean permanecem bridges pequenas com resolveFeedbackReadUnitScope + buildFeedbackScopedFilter;
+	- feedbackListApiController e feedbackMyListApiController permanecem owners separados neste contrato;
+	- o contrato nao expandiu para status patch, resposta patch, delete, upload, widget settings, detalhe amplo, policy ampla, rota nova, Portal, tenant DB real, request path novo, scripts, CLI, jobs ou bootstrap;
+	- o corredor protegido nao depende de tenant registry nem de harness sintetico;
+	- o contrato nao forca migracao para BaseRepository.
+- Resultado dos testes:
+	- node --test .\tests\architecture\feedbackReadTenantScope.contract.test.js -> tests=5, pass=5, fail=0;
+	- node --test .\tests\gestor-feedback-list200-unit-scope-bridge.test.js -> tests=3, pass=3, fail=0;
+	- node --test .\tests\gestor-feedback-list-owner-structural-seam.test.js -> tests=6, pass=6, fail=0;
+	- node --test .\tests\gestor-feedback-my-list-owner-structural-seam.test.js -> tests=4, pass=4, fail=0;
+	- node --test .\tests\gestor-feedback-list-runtime-contract.test.js -> tests=5, pass=5, fail=0;
+	- node --test .\tests\architecture\repository-unitScope.test.js -> tests=2, pass=2, fail=0;
+	- npm run verify:imports -> Arquitetura limpa.
+- Confirmacoes:
+	- nenhum arquivo em src foi alterado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- nenhum Portal foi usado;
+	- nenhum PostgreSQL foi usado;
+	- nenhuma rota ou request path novo foi criado.
+- Gates:
+	- selectedTarget=FeedbackReadRepository_apiDb_feedbackListControllers_readLimited
+	- feedbackReadTenantScopeContractCreated=true
+	- feedbackReadTenantScopeContractValidated=true
+	- sourceCodeChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+
 
 
 
