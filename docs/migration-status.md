@@ -4463,5 +4463,101 @@ Notas:
 
 
 
+- Proximo alvo tenant-aware pos-harness selecionado documentalmente.
+- Base publicada:
+	- 6f7ef41 docs(tenant): encerra protecao pos-bloco harness tenant registry.
+- Estado inicial:
+	- branch sincronizada com origin;
+	- worktree limpa;
+	- harness sintetico fechado e protegido;
+	- tenant registry nao sera avancado agora.
+- Auditoria read-only executada:
+	- comandos usados:
+		- git status -sb
+		- git --no-pager log --oneline --decorate -12
+		- Get-Content .\docs\migration-status.md -Tail 320
+		- Get-ChildItem .\src -Recurse -File -Include "*Repository*.js","*Service*.js","*.repository.js","*.service.js" | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js -Pattern "unitScope","getConnectionForUnit","baseConnection","mongoose.model","ModelRegistry","BaseRepository","req.unitScope","req.unidade","unidadeId" -CaseSensitive:$false
+		- Get-ChildItem .\tests -Recurse -File | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "UserProfileRepository","obterUsuarioAtual","unitScope","BaseRepository","tenant-aware","tenant aware","repository" -CaseSensitive:$false
+	- arquivos/categorias mapeadas:
+		- ledger final de migracao;
+		- repositories e services em src;
+		- pontos com unitScope, BaseRepository, resolveModel e fallback global/base;
+		- suite de testes em tests;
+		- corredor gestor de usuario atual/profile e candidatos de leitura em gestor.
+	- candidatos observados:
+		- UserProfileRepository + usecase findUserForProfile + getUsuarioAtualProfileOwner.service;
+		- FeedbackReadRepository e seus facades/controladores de feedback;
+		- UnidadeReadRepository e consumidores em bundles/data facades de gestor.
+- Decisao:
+	- alvo principal escolhido:
+		- corredor UserProfileRepository -> findUserForProfile -> getUsuarioAtualProfileOwner.service, com foco inicial em contrato de fallback base/global e propagacao canonica de unitScope.
+	- motivo da escolha:
+		- alvo pequeno e localizado;
+		- ja usa BaseRepository no repository e recebe unitScope no service/usecase;
+		- possui cobertura estrutural e runtime proxima no fluxo de obterUsuarioAtual;
+		- nao exige rota nova, Portal, tenant DB real, escrita real ou bootstrap operacional.
+	- risco estimado:
+		- baixo a moderado, porque toca corredor de usuario atual em autenticacao, mas com escopo estreito e cobertura existente ao redor.
+	- cobertura de testes existente ou lacuna:
+		- existente:
+			- tests/architecture/repository-unitScope.test.js cobre exigencia canonica de unitScope em repositories BaseRepository quando multi-tenant esta ativo;
+			- tests/gestor-usuario-atual-profile-owner-structural-seam.test.js cobre delegacao do owner service, prioridade de session user id e fallback por email;
+			- tests/gestor-auth-user-endpoint-runtime-contract.test.js cobre o contrato runtime de obterUsuarioAtual no corredor principal.
+		- lacuna:
+			- ainda nao ha contrato focado e pequeno para congelar explicitamente o fallback global/baseConnection deste corredor sem ampliar o escopo do endpoint inteiro.
+	- escopo permitido do proximo microcorte:
+		- endurecer ou explicitar tenant-awareness apenas neste corredor pequeno;
+		- manter fallback base/global compativel;
+		- adicionar ou ajustar teste especifico antes de qualquer refactor mais amplo;
+		- limitar leitura/escrita de codigo ao repository/usecase/service estritamente necessario, se aprovado em microcorte proprio.
+	- escopo proibido do proximo microcorte:
+		- tenant registry;
+		- Portal;
+		- rotas novas ou request path novo;
+		- createServer, server.js, start.js ou bootstrap operacional;
+		- escrita real, rollback real ou tenant DB real;
+		- PostgreSQL, dados reais, usuario real ou unidade real.
+- Alternativas descartadas ou adiadas:
+	- FeedbackReadRepository:
+		- adiado por ter superficie maior, misturar leitura e escrita no mesmo arquivo e encostar em varias rotas/controladores de feedback, aumentando risco funcional.
+	- UnidadeReadRepository:
+		- adiado por ter muitos consumidores em bundles, facades e fluxos de gestor, o que amplia demais o microcorte e torna mais dificil isolar regressao pequena.
+- Criterios de seguranca para o proximo microcorte:
+	- manter fallback base/global;
+	- nao abrir tenant DB real;
+	- nao alterar Portal;
+	- nao criar rota;
+	- nao criar CLI/script/job/bootstrap;
+	- nao usar dados reais;
+	- nao executar escrita real;
+	- validar com teste especifico antes de qualquer refactor amplo.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- nextTenantAwareTargetSelected=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=UserProfileRepository_getUsuarioAtualProfileOwner
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental do alvo nao autoriza alteracao de codigo;
+	- selecao documental do alvo nao autoriza escrita real;
+	- selecao documental do alvo nao autoriza tenant DB real;
+	- selecao documental do alvo nao autoriza Portal;
+	- selecao documental do alvo nao autoriza PostgreSQL;
+	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
+
+
+
+
 
 
