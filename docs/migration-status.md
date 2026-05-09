@@ -1440,6 +1440,44 @@ Checkpoint tenant enforcement atual:
 	- selectedTarget=findUnidadesByIdsNomeCodigoLean significa recomendacao documental do proximo microcorte, e nao autorizacao automatica para editar codigo, criar teste, commitar ou publicar;
 	- selectedTargetKind=testeContratualNovoPequeno significa que a proxima rodada, se autorizada, deve comecar por contrato focal do helper/bridge e nao por refactor amplo ou por matriz documental adicional;
 	- blockedReasons=[] significa apenas que a auditoria read-only encontrou um candidato principal suficientemente seguro dentro da regua atual; nao significa que alternativas ficaram liberadas nem que o corte seguinte possa extrapolar para bundle, pagina, feedback amplo, setores amplo, funcionarios amplo ou membership.
+- Teste contratual tenant-aware do corredor lookup de Unidades por ids criado.
+- Base local:
+	- 845e26b docs(tenant): seleciona proximo alvo tenant-aware pos-feedback-leitura.
+- Arquivo criado:
+	- tests/architecture/unidadesLookupByIdsTenantScope.contract.test.js.
+- Contrato validado:
+	- UnidadeReadRepository permanece repository amplo, mas o slice protegido ficou limitado ao helper findUnidadesByIdsNomeCodigoLeanRepo;
+	- api.db.findUnidadesByIdsNomeCodigoLean permaneceu bridge pequena para esse helper;
+	- o uso atual de unitScope/fallback ficou congelado conforme o codigo real, com scopedUnitId explicito ou lista unitaria inferivel resolvendo scope unitario e lista ambigua caindo para GLOBAL_SCOPE;
+	- o corredor protegido nao depende de tenant registry, harness sintetico, Portal, rotas novas, scripts, CLI, jobs, bootstrap ou tenant DB real;
+	- o contrato nao expandiu para listagem completa, diretores, paginas, bundles, Cluster de Unidades, Setores, Feedback ou Funcionarios;
+	- o contrato nao forcou migracao para BaseRepository.
+- Resultado dos testes:
+	- node --test .\tests\architecture\unidadesLookupByIdsTenantScope.contract.test.js -> tests=5, pass=5, fail=0;
+	- node --test .\tests\gestor-setor-recurso-unit-scope-canonical.test.js -> tests=6, pass=6, fail=0;
+	- node --test .\tests\gestor-usuarios-list-owner-structural-seam.test.js -> tests=7, pass=7, fail=0;
+	- node --test .\tests\gestor-unidades-unit-scope-canonical.test.js -> tests=10, pass=10, fail=0;
+	- node --test .\tests\gestor-unidades-list-runtime-contract.test.js -> tests=9, pass=9, fail=0;
+	- node --test .\tests\architecture\repository-unitScope.test.js -> tests=2, pass=2, fail=0;
+	- npm run verify:imports -> Arquitetura limpa.
+- Confirmacoes:
+	- nenhum src foi alterado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- nenhum Portal ou PostgreSQL foi usado;
+	- nenhuma rota ou request path novo foi criado.
+- Gates:
+	- selectedTarget=UnidadeReadRepository_apiDb_findUnidadesByIdsNomeCodigoLean
+	- unidadesLookupByIdsTenantScopeContractCreated=true
+	- unidadesLookupByIdsTenantScopeContractValidated=true
+	- sourceCodeChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
 - quantidade de pass: 2201.
 - quantidade de fail: 0.
 - quantidade de skipped: 2.
