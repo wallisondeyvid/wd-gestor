@@ -4556,6 +4556,63 @@ Notas:
 	- selecao documental do alvo nao autoriza PostgreSQL;
 	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 
+- Teste contratual tenant-aware do corredor usuario atual/profile criado.
+- Base local: f05ffcb docs(tenant): seleciona proximo alvo tenant-aware pos-harness.
+- Arquivo criado:
+	- tests/architecture/userProfileTenantScope.contract.test.js
+- Natureza:
+	- teste arquitetural/contratual;
+	- foco em UserProfileRepository -> findUserForProfile -> getUsuarioAtualProfileOwner.service;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem dados reais;
+	- sem escrita real;
+	- sem nova rota/request path.
+- Contrato validado:
+	- UserProfileRepository permanece baseado em BaseRepository;
+	- corredor preserva ou propaga unitScope conforme codigo atual;
+	- fallback seguro/base-global permanece documentado/congelado;
+	- nao ha dependencia de tenant registry/harness sintetico para esse corredor;
+	- nao ha superficie operacional nova.
+- Resultado dos testes:
+	- userProfileTenantScope.contract.test.js: PASS, 4 tests, 0 fail;
+	- repository-unitScope.test.js: PASS, 2 tests, 0 fail;
+	- gestor-usuario-atual-profile-owner-structural-seam.test.js: PASS, 2 tests, 0 fail;
+	- gestor-auth-user-endpoint-runtime-contract.test.js: PASS, 4 tests, 0 fail;
+	- npm run verify:imports: arquitetura limpa.
+- Confirmacoes:
+	- nenhum arquivo em src foi alterado;
+	- nenhuma escrita foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, usuario real, unidade real e PostgreSQL nao foram usados;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path foi criado;
+	- push nao foi realizado.
+- Gates:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=UserProfileRepository_getUsuarioAtualProfileOwner
+	- userProfileTenantScopeContractCreated=true
+	- userProfileTenantScopeContractValidated=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- criacao do teste nao autoriza alteracao funcional;
+	- criacao do teste nao autoriza escrita real;
+	- criacao do teste nao autoriza tenant DB real;
+	- criacao do teste nao autoriza Portal;
+	- criacao do teste nao autoriza PostgreSQL;
+	- proximo ato deve ser microcorte proprio de refactor minimo, se o contrato mostrar que e seguro.
+
 
 
 
