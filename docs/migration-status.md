@@ -5328,6 +5328,131 @@ Notas:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Proximo alvo tenant-aware pos-Modulos selecionado documentalmente.
+- Base publicada:
+	- a5640c8 docs(tenant): encerra frente modulos tenant-aware.
+- Premissa consolidada:
+	- dados atuais sao ficticios;
+	- nao ha clientes reais;
+	- nao ha migracao de dados legados reais;
+	- objetivo e migracao arquitetural multi-tenant;
+	- dados ficticios poderao ser deletados quando necessario.
+- Estado inicial:
+	- branch sincronizada com origin;
+	- worktree limpa;
+	- tenant registry fechado/protegido;
+	- usuario atual/profile fechado/protegido;
+	- Funcoes fechado/protegido;
+	- Modulos fechado/protegido;
+	- tenant registry nao sera avancado agora.
+- Auditoria read-only executada:
+	- comandos usados:
+		- git status -sb
+		- git --no-pager log --oneline --decorate -12
+		- Get-Content .\docs\migration-status.md -Tail 460
+		- Get-ChildItem .\src -Recurse -File -Include "*Repository*.js","*Service*.js","*.repository.js","*.service.js" | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js -Pattern "unitScope","getConnectionForUnit","baseConnection","mongoose.model","ModelRegistry","BaseRepository","req.unitScope","req.unidade","unidadeId","morador","pessoa","unidade","condominio","apartamento","setor","modulo","recurso" -CaseSensitive:$false
+		- Get-ChildItem .\tests -Recurse -File | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "ReadRepository","Repository","findBy","listar","buscar","obter","Setor","Recurso","Pessoa","Morador","Habitacao","Mailbox","UserMembership","Unidade","Feedback" -CaseSensitive:$false
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "RecursoReadRepository","SetorReadRepository","PessoaReadRepository","MoradorReadRepository","Habitacao","Mailbox","UserMembership","UnidadeReadRepository","FeedbackReadRepository","recursosReadDataFacade","loadPaginaRecursosBundle","loadPaginaSetoresBundle","listarRecursos","listarSetores" -CaseSensitive:$false
+		- leituras pontuais dos candidatos promissores:
+			- src/modules/gestor/app/repositories/RecursoReadRepository.js
+			- src/modules/gestor/app/services/recursos/listarRecursos.service.js
+			- src/modules/gestor/app/services/recursos/loadPaginaRecursosBundle.service.js
+			- src/modules/gestor/app/data/recursos/recursosReadDataFacade.js
+			- src/modules/gestor/app/data/recursos/recursosContextDataFacade.js
+			- src/modules/gestor/app/data/recursos/recursosScope.js
+			- src/modules/gestor/app/services/recursos/createRecursoContextPolicyCore.js
+			- src/modules/gestor/app/repositories/SetorReadRepository.js
+			- src/modules/gestor/app/services/setores/loadPaginaSetoresBundle.service.js
+			- src/modules/gestor/app/db/api.db.js nos trechos de recursos e setores
+			- tests/gestor-recursos-list-structural-seam-runtime-contract.test.js
+			- tests/gestor-recursos-context-policy-structural.test.js
+			- tests/gestor-setores-list-runtime-contract.test.js
+			- tests/gestor-setor-recurso-unit-scope-canonical.test.js
+	- arquivos/categorias mapeadas:
+		- ledger final de migracao;
+		- repositories e services em src;
+		- pontos com unitScope, BaseRepository, resolveModel e uso de escopo global;
+		- suite de testes em tests;
+		- corredores candidatos em recursos, setores, feedback, unidades e memberships.
+	- candidatos observados:
+		- RecursoReadRepository -> recursosReadDataFacade -> findRecursosByFiltroComUnidadeService;
+		- SetorReadRepository -> loadPaginaSetoresBundle.service;
+		- ausencia registrada: src/modules/gestor/app/data/setores/setoresReadDataFacade.js nao existe;
+		- candidatos amplos descartados da primeira linha: FeedbackReadRepository, UnidadeReadRepository e UserMembershipRepository.
+- Decisao:
+	- alvo principal escolhido:
+		- corredor RecursoReadRepository -> recursosReadDataFacade -> findRecursosByFiltroComUnidadeService, com foco em congelar resolveModel com unitScope explicito no repository e a derivacao de escopo por scopeFromRecursoListFiltro no estado atual, sem entrar na politica de acesso ampla de listarRecursosService.
+	- motivo da escolha:
+		- e o menor slice de leitura util entre Recursos e Setores quando recortado antes da politica contextual mais ampla;
+		- ja possui costura de teste proxima para controller -> service e service -> data facade, o que reduz risco de um contrato tenant-aware pequeno;
+		- usa resolveModel com unitScope explicito e uma fachada de dados minima, permitindo congelar o estado atual sem refactor funcional;
+		- evita Portal, rota nova, tenant DB real e request path, e permite adiar o miolo de politica de acesso de Recursos para outro microcorte se necessario.
+	- risco estimado:
+		- baixo a moderado, porque o slice escolhido e pequeno, mas o dominio de Recursos ao redor tem politica contextual e testes de runtime mais largos; o risco fica controlado se o contrato ficar restrito ao repository, a data facade e ao service fino findRecursosByFiltroComUnidadeService.
+	- cobertura de testes existente ou lacuna:
+		- existente:
+			- tests/gestor-recursos-list-structural-seam-runtime-contract.test.js cobre controller -> listarRecursosService e a costura service -> recursosReadDataFacade;
+			- tests/gestor-recursos-context-policy-structural.test.js mostra que a politica de contexto de Recursos ja tem superficie propria e deve ficar fora do proximo microcorte contratual;
+			- tests/gestor-setor-recurso-unit-scope-canonical.test.js indica que Recursos e Setores compartilham uma trilha canonica mais ampla, reforcando a necessidade de manter o proximo corte pequeno.
+		- lacuna:
+			- ainda nao ha contrato tenant-aware pequeno congelando explicitamente RecursoReadRepository, scopeFromRecursoListFiltro e a ausencia de dependencias proibidas no slice RecursoReadRepository -> recursosReadDataFacade -> findRecursosByFiltroComUnidadeService.
+	- escopo permitido do proximo microcorte:
+		- criar teste contratual novo e pequeno para RecursoReadRepository -> recursosReadDataFacade -> findRecursosByFiltroComUnidadeService;
+		- congelar comportamento de leitura, resolveModel com unitScope explicito e derivacao de escopo via scopeFromRecursoListFiltro no estado atual;
+		- validar com teste focal antes de qualquer hipotese de refactor mais amplo.
+	- escopo proibido do proximo microcorte:
+		- alterar codigo em src sem novo microcorte aprovado;
+		- tenant registry;
+		- Portal;
+		- rotas, request path, scripts, CLI, jobs, bootstrap, start.js, server.js ou createServer.js;
+		- tenant DB real, Mongo real, escrita real, rollback real ou PostgreSQL;
+		- expandir o contrato para a politica ampla de listarRecursosService ou para bundles de pagina neste mesmo corte.
+- Alternativas descartadas ou adiadas:
+	- SetorReadRepository -> loadPaginaSetoresBundle.service:
+		- adiado porque o corredor continua mais espalhado em bundle de pagina, usa bridge com lookups adicionais de unidades e o repository mistura leituras com create/delete/counter no mesmo arquivo;
+		- a ausencia de uma setoresReadDataFacade dedicada tambem torna o corte menos limpo que Recursos.
+	- FeedbackReadRepository:
+		- adiado porque continua mais amplo, com trilhas de detalhe, listagem, upload e status, aumentando superficie e custo de um contrato pequeno em comparacao com o slice de Recursos.
+- Criterios de seguranca para o proximo microcorte:
+	- manter fallback base/global;
+	- nao abrir tenant DB real;
+	- nao alterar Portal;
+	- nao criar rota;
+	- nao criar CLI/script/job/bootstrap;
+	- nao usar dados reais;
+	- nao executar escrita real;
+	- validar com teste especifico antes de qualquer refactor amplo.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- userProfileTenantAwareFrontClosed=true
+	- funcoesTenantAwareFrontClosed=true
+	- modulosTenantAwareFrontClosed=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- nextTenantAwareTargetSelected=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=RecursoReadRepository_recursosReadDataFacade_findRecursosByFiltroComUnidadeService
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental do alvo nao autoriza alteracao de codigo;
+	- selecao documental do alvo nao autoriza escrita real;
+	- selecao documental do alvo nao autoriza tenant DB real;
+	- selecao documental do alvo nao autoriza Portal;
+	- selecao documental do alvo nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
+
 
 
 
