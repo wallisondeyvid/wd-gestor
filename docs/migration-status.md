@@ -1521,6 +1521,83 @@ Checkpoint tenant enforcement atual:
 	- diagnostico nao autoriza PostgreSQL;
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado.
+
+- Frente tenant-aware lookup de Unidades por ids encerrada documentalmente.
+- Base local:
+	- 0a75e5a docs(tenant): diagnostica refactor minimo lookup unidades por ids.
+- Escopo encerrado:
+	- selecao documental do alvo UnidadeReadRepository -> findUnidadesByIdsNomeCodigoLeanRepo / api.db.findUnidadesByIdsNomeCodigoLean;
+	- criacao do teste contratual unidadesLookupByIdsTenantScope.contract.test.js;
+	- diagnostico read-only de refactor minimo;
+	- decisao de nao alterar src neste momento;
+	- decisao de manter listagem completa de Unidades, diretores, paginas, bundles, Cluster de Unidades, Setores, Feedback e Funcionarios fora deste slice.
+- Commits locais da frente:
+	- 845e26b docs(tenant): seleciona proximo alvo tenant-aware pos-feedback-leitura;
+	- 4ef3e05 test(tenant): protege scope tenant-aware de lookup unidades por ids;
+	- 0a75e5a docs(tenant): diagnostica refactor minimo lookup unidades por ids.
+- Resultado final:
+	- UnidadeReadRepository permanece repository amplo, mas com slice protegido limitado ao helper findUnidadesByIdsNomeCodigoLeanRepo;
+	- api.db.findUnidadesByIdsNomeCodigoLean permanece bridge pequena;
+	- comportamento real de unitScope/fallback permanece congelado conforme codigo atual;
+	- scopedUnitId explicito ou lista unitaria inferivel permanece resolvendo escopo unitario;
+	- lista ambigua permanece caindo para GLOBAL_SCOPE;
+	- UnidadeReadRepository nao deve migrar para BaseRepository agora;
+	- api.db.findUnidadesByIdsNomeCodigoLean nao deve mudar agora;
+	- listagem completa de Unidades, diretores, paginas, bundles, Cluster de Unidades, Setores, Feedback e Funcionarios permanecem fora do slice principal;
+	- corredor nao depende de tenant registry;
+	- corredor nao depende de harness sintetico;
+	- corredor nao depende de Portal, rotas novas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nao ha refactor minimo recomendado em src neste momento;
+	- proximo avanco nesse corredor so deve ocorrer se houver nova hipotese falsificavel e microcorte proprio.
+- Confirmacoes finais:
+	- nenhum arquivo em src foi alterado nesta frente;
+	- nenhum teste existente foi alterado indevidamente;
+	- apenas teste arquitetural novo foi criado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- Portal nao usado;
+	- dados reais nao usados;
+	- usuario real nao usado;
+	- unidade real nao usada;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=UnidadeReadRepository_apiDb_findUnidadesByIdsNomeCodigoLean
+	- unidadesLookupByIdsTenantScopeContractCreated=true
+	- unidadesLookupByIdsTenantScopeContractValidated=true
+	- unidadesLookupByIdsRefactorDiagnosticExecuted=true
+	- unidadesLookupByIdsRefactorRecommended=false
+	- unidadesLookupByIdsWideScopeDeferred=true
+	- unidadesLookupByIdsTenantAwareFrontClosed=true
+	- sourceCodeChanged=false
+	- testsChanged=true somente pelo teste arquitetural novo
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento desta frente nao autoriza alteracao funcional;
+	- fechamento desta frente nao autoriza escrita real;
+	- fechamento desta frente nao autoriza tenant DB real;
+	- fechamento desta frente nao autoriza Portal;
+	- fechamento desta frente nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
 - quantidade de pass: 2201.
 - quantidade de fail: 0.
 - quantidade de skipped: 2.
