@@ -4613,6 +4613,52 @@ Notas:
 	- criacao do teste nao autoriza PostgreSQL;
 	- proximo ato deve ser microcorte proprio de refactor minimo, se o contrato mostrar que e seguro.
 
+- Diagnostico de refactor minimo do corredor usuario atual/profile executado.
+- Base local: 502ba70 test(tenant): protege fallback unitScope do usuario atual profile.
+- Auditoria read-only realizada.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- o corredor ja esta suficientemente tenant-aware para o escopo atual porque o repository herda BaseRepository, o usecase apenas propaga unitScope e o service preserva o escopo recebido sem abrir superficie nova;
+	- a lacuna observada neste momento e apenas de decisao/encerramento, nao de codigo: qualquer tentativa de canonizar fallback em src mudaria comportamento runtime do corredor e exigiria nova aprovacao propria;
+	- se um microcorte futuro ainda for considerado necessario, o arquivo mais provavel seria src/modules/gestor/app/services/usuarios/getUsuarioAtualProfileOwner.service.js ou, em segunda ordem, src/modules/gestor/app/usecases/user/findUserForProfile.js, mas somente se houver contrato novo demonstrando ganho real sem alterar comportamento indevido;
+	- risco estimado de refactor minimo em src hoje: moderado, por tocar corredor de usuario atual/autenticacao sem evidencia de defeito funcional no estado atual;
+	- testes que deverao ser rodados em qualquer microcorte futuro desse corredor:
+		- node --test .\tests\architecture\userProfileTenantScope.contract.test.js
+		- node --test .\tests\architecture\repository-unitScope.test.js
+		- node --test .\tests\gestor-usuario-atual-profile-owner-structural-seam.test.js
+		- node --test .\tests\gestor-auth-user-endpoint-runtime-contract.test.js
+		- npm run verify:imports
+	- escopo permitido:
+		- somente validacao consolidada do corredor atual;
+		- ou fechamento desta frente curta;
+		- ou novo microcorte proprio apenas se houver hipotese local falsificavel que justifique alterar service/usecase sem ampliar superficie.
+	- escopo proibido:
+		- qualquer alteracao funcional imediata sem novo microcorte aprovado;
+		- tenant registry;
+		- Portal;
+		- tenant DB real, Mongo real, escrita real ou rollback real;
+		- rotas, request path, scripts, CLI, jobs, bootstrap, start.js, server.js ou createServer.js.
+- Gates:
+	- selectedTarget=UserProfileRepository_getUsuarioAtualProfileOwner
+	- userProfileTenantScopeContractCreated=true
+	- userProfileTenantScopeContractValidated=true
+	- userProfileRefactorDiagnosticExecuted=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 
 
 
