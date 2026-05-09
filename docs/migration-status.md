@@ -5453,6 +5453,72 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 
+- Teste contratual tenant-aware do corredor Recursos criado.
+- Escopo do microcorte:
+	- arquivo novo criado: tests/architecture/recursosTenantScope.contract.test.js;
+	- arquivo documental atualizado: docs/migration-status.md;
+	- nenhum arquivo em src foi alterado.
+- Contrato congelado neste microcorte:
+	- corredor RecursoReadRepository -> recursosReadDataFacade -> findRecursosByFiltroComUnidadeService;
+	- resolveModel com unitScope explicito no repository de leitura;
+	- derivacao canonica de escopo por scopeFromRecursoListFiltro, incluindo fallback base/global quando nao ha unidade valida no filtro;
+	- api.db mantendo a delegacao compativel ao service fino e o caminho FromDb com scopeFromRecursoListFiltro;
+	- exclusao contratual de tenant registry, harness, Portal, rotas, bootstrap operacional, request path e abertura de tenant DB real;
+	- ausencia de migracao forcada para BaseRepository neste slice.
+- Estrategia usada no teste:
+	- leitura estrutural com fs/readFileSync e regex sobre source;
+	- execucao isolada por vm apenas das funcoes pequenas do slice, com dependencias injetadas em memoria;
+	- sem Mongo real, sem tenant DB real, sem createServer, sem supertest e sem request path.
+- Validacao executada:
+	- comando focal:
+		- node --test .\tests\architecture\recursosTenantScope.contract.test.js
+	- regressao permitida:
+		- node --test .\tests\gestor-recursos-list-structural-seam-runtime-contract.test.js
+		- node --test .\tests\gestor-recursos-context-policy-structural.test.js
+		- node --test .\tests\gestor-setor-recurso-unit-scope-canonical.test.js
+		- node --test .\tests\architecture\repository-unitScope.test.js
+		- npm run verify:imports
+	- resultados observados:
+		- recursosTenantScope.contract.test.js: tests 5, pass 5, fail 0;
+		- gestor-recursos-list-structural-seam-runtime-contract.test.js: tests 3, pass 3, fail 0;
+		- gestor-recursos-context-policy-structural.test.js: tests 3, pass 3, fail 0;
+		- gestor-setor-recurso-unit-scope-canonical.test.js: tests 13, pass 13, fail 0;
+		- repository-unitScope.test.js: tests 2, pass 2, fail 0;
+		- verify:imports: Arquitetura limpa.
+- Leitura tecnica consolidada apos o teste:
+	- o slice pequeno de Recursos ja estava consistente para congelamento contratual sem refactor funcional em src;
+	- a politica ampla de contexto continua separada em createRecursoContextPolicyCore e recursosContextDataFacade, portanto permanece fora deste contrato principal;
+	- nao surgiu evidencia de necessidade imediata de migrar RecursoReadRepository para BaseRepository apenas por padronizacao.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- userProfileTenantAwareFrontClosed=true
+	- funcoesTenantAwareFrontClosed=true
+	- modulosTenantAwareFrontClosed=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- nextTenantAwareTargetSelected=true
+	- recursosTenantAwareContractCreated=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=RecursoReadRepository_recursosReadDataFacade_findRecursosByFiltroComUnidadeService
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este microcorte autoriza apenas o congelamento contratual do slice pequeno de Recursos;
+	- este microcorte nao autoriza refactor funcional em src por si so;
+	- este microcorte nao autoriza escrita real;
+	- este microcorte nao autoriza tenant DB real;
+	- este microcorte nao autoriza Portal;
+	- este microcorte nao autoriza PostgreSQL;
+	- o proximo ato, se houver, pode ser diagnostico read-only para decidir se existe necessidade real de refactor minimo em src neste corredor.
+
 
 
 
