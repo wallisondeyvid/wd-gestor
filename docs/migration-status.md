@@ -5145,6 +5145,73 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 
+- Teste contratual tenant-aware do corredor Modulos criado.
+- Base local:
+	- f316e02 docs(tenant): seleciona proximo alvo tenant-aware pos-funcoes.
+- Arquivo criado:
+	- tests/architecture/modulosTenantScope.contract.test.js
+- Natureza:
+	- teste arquitetural/contratual;
+	- foco em ModuloReadRepository -> findModuloByIdLean.service;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem dados reais;
+	- sem escrita real;
+	- sem rollback;
+	- sem nova rota/request path.
+- Contrato validado:
+	- ModuloReadRepository permanece corredor pequeno de leitura no slice alvo findModuloByIdLeanRepo, sem forcar migracao para BaseRepository no estado atual;
+	- ModuloReadRepository usa resolveModel com unitScope explicito no estado atual;
+	- findModuloByIdLean.service permanece service fino;
+	- api.db preserva fallback global/base explicito no slice de Modulos, especialmente GLOBAL_SCOPE em findModuloByIdLeanFromDb;
+	- fallback seguro/base-global permanece documentado e congelado;
+	- nao ha dependencia de tenant registry;
+	- nao ha dependencia de harness sintetico;
+	- nao ha dependencia de Portal, rotas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nenhuma superficie operacional nova foi criada;
+	- o teste congela o estado atual sem forcar migracao para BaseRepository.
+- Resultado dos testes:
+	- modulosTenantScope.contract.test.js: PASS, 5 tests, 0 fail.
+	- gestor-modulos-get-by-id-structural-seam-runtime-contract.test.js: PASS, 2 tests, 0 fail.
+	- gestor-modulos-list-owner-structural-seam.test.js: PASS, 5 tests, 0 fail.
+	- repository-unitScope.test.js: PASS, 2 tests, 0 fail.
+	- npm run verify:imports: arquitetura limpa.
+- Confirmacoes:
+	- nenhum arquivo em src foi alterado;
+	- nenhuma escrita foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, usuario real, unidade real e PostgreSQL nao foram usados;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path foi criado;
+	- push nao foi realizado.
+- Gates:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=ModuloReadRepository_findModuloByIdLeanService
+	- modulosTenantScopeContractCreated=true
+	- modulosTenantScopeContractValidated=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- criacao do teste nao autoriza alteracao funcional;
+	- criacao do teste nao autoriza escrita real;
+	- criacao do teste nao autoriza tenant DB real;
+	- criacao do teste nao autoriza Portal;
+	- criacao do teste nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado, preferencialmente diagnostico read-only de refactor minimo no corredor Modulos.
+
 
 
 
