@@ -4831,6 +4831,64 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 
+- Teste contratual tenant-aware do corredor Setores por unidade criado.
+- Base local:
+	- a11015b docs(tenant): seleciona proximo alvo tenant-aware pos-cluster-unidades.
+- Arquivo criado:
+	- tests/architecture/setoresByUnitTenantScope.contract.test.js
+- Contrato validado:
+	- SetorReadRepository limitado ao helper de leitura por unidade;
+	- resolveModel + unitScope explicito;
+	- api.db bridge pequena;
+	- getSetoresByUnitCore fino;
+	- ausencia de tenant registry, harness sintetico, Portal, rotas novas, scripts, CLI, jobs, bootstrap e tenant DB real;
+	- nenhuma expansao para listagem geral, page bundle, counters/create/delete/update, Feedback, Unidades amplas ou Funcionarios.
+- Resultado dos testes:
+	- tests/architecture/setoresByUnitTenantScope.contract.test.js:
+		- tests=5
+		- pass=5
+		- fail=0
+	- tests/gestor-setores-get-by-unit-runtime-contract.test.js:
+		- tests=5
+		- pass=5
+		- fail=0
+	- tests/gestor-setores-get-by-unit-owner-structural-seam.test.js:
+		- tests=3
+		- pass=3
+		- fail=0
+	- tests/gestor-setores-list-runtime-contract.test.js:
+		- tests=6
+		- pass=6
+		- fail=0
+	- tests/architecture/repository-unitScope.test.js:
+		- tests=2
+		- pass=2
+		- fail=0
+	- total validado neste microcorte:
+		- tests=21
+		- pass=21
+		- fail=0
+	- npm run verify:imports:
+		- Arquitetura limpa.
+- Confirmacoes:
+	- nenhum src alterado;
+	- nenhuma escrita real;
+	- nenhum rollback;
+	- nenhum Mongo real;
+	- nenhum tenant DB real;
+	- nenhum Portal/PostgreSQL;
+	- nenhuma rota/request path.
+- Gates:
+	- selectedTarget=SetorReadRepository_getSetoresByUnitCore_findSetoresByUnidadeIdPopulateLean
+	- setoresByUnitTenantScopeContractCreated=true
+	- setoresByUnitTenantScopeContractValidated=true
+	- sourceCodeChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+
 - Teste contratual tenant-aware do corredor Funcoes criado.
 - Base local:
 	- 070cf5e docs(tenant): seleciona proximo alvo tenant-aware pos-profile.
