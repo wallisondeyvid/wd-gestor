@@ -5029,6 +5029,122 @@ Notas:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Proximo alvo tenant-aware pos-Funcoes selecionado documentalmente.
+- Base publicada:
+	- b847011 docs(tenant): encerra frente funcoes tenant-aware.
+- Premissa consolidada:
+	- dados atuais sao ficticios;
+	- nao ha clientes reais;
+	- nao ha migracao de dados legados reais;
+	- objetivo e migracao arquitetural multi-tenant;
+	- dados ficticios poderao ser deletados quando necessario.
+- Estado inicial:
+	- branch sincronizada com origin;
+	- worktree limpa;
+	- tenant registry fechado/protegido;
+	- usuario atual/profile fechado/protegido;
+	- Funcoes fechado/protegido;
+	- tenant registry nao sera avancado agora.
+- Auditoria read-only executada:
+	- comandos usados:
+		- git status -sb
+		- git --no-pager log --oneline --decorate -12
+		- Get-Content .\docs\migration-status.md -Tail 420
+		- Get-ChildItem .\src -Recurse -File -Include "*Repository*.js","*Service*.js","*.repository.js","*.service.js" | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js -Pattern "unitScope","getConnectionForUnit","baseConnection","mongoose.model","ModelRegistry","BaseRepository","req.unitScope","req.unidade","unidadeId","morador","pessoa","unidade","condominio","apartamento","setor","modulo","recurso" -CaseSensitive:$false
+		- Get-ChildItem .\tests -Recurse -File | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "ReadRepository","Repository","findBy","listar","buscar","obter","Setor","Modulo","Recurso","Pessoa","Morador","Habitacao","Mailbox","UserMembership","Unidade","Feedback" -CaseSensitive:$false
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "SetorReadRepository","ModuloReadRepository","RecursoReadRepository","PessoaReadRepository","MoradorReadRepository","Habitacao","Mailbox","UserMembership","UnidadeReadRepository","FeedbackReadRepository" -CaseSensitive:$false
+		- leituras pontuais dos candidatos promissores:
+			- src/modules/gestor/app/repositories/ModuloReadRepository.js
+			- src/modules/gestor/app/services/modulos/findModuloByIdLean.service.js
+			- src/modules/gestor/app/db/api.db.js no trecho de modulos
+			- tests/gestor-modulos-get-by-id-structural-seam-runtime-contract.test.js
+			- tests/gestor-modulos-list-owner-structural-seam.test.js
+			- src/modules/gestor/app/repositories/SetorReadRepository.js
+			- src/modules/gestor/app/services/setores/loadPaginaSetoresBundle.service.js
+			- src/modules/gestor/app/repositories/RecursoReadRepository.js
+			- src/modules/gestor/app/repositories/UnidadeReadRepository.js
+			- src/modules/gestor/app/repositories/FeedbackReadRepository.js
+	- arquivos/categorias mapeadas:
+		- ledger final de migracao;
+		- repositories e services em src;
+		- pontos com unitScope, BaseRepository, resolveModel e uso de escopo global;
+		- suite de testes em tests;
+		- corredores candidatos em modulos, recursos, setores, feedback, unidades e memberships.
+	- candidatos observados:
+		- ModuloReadRepository -> findModuloByIdLean.service;
+		- RecursoReadRepository -> recursosReadDataFacade/listarRecursos.service;
+		- SetorReadRepository -> loadPaginaSetoresBundle.service;
+		- candidatos amplos descartados da primeira linha: FeedbackReadRepository, UnidadeReadRepository e UserMembershipRepository.
+- Decisao:
+	- alvo principal escolhido:
+		- corredor ModuloReadRepository -> findModuloByIdLean.service, com foco em congelar o uso atual de resolveModel com unitScope explicito no repository e o fallback global explicito no handoff api.db -> service -> repository.
+	- motivo da escolha:
+		- e o menor corredor de leitura ainda nao protegido por contrato tenant-aware proprio;
+		- possui costura estrutural/runtime ja existente para controller e service, o que reduz risco e facilita um teste contratual pequeno;
+		- usa resolveModel com unitScope no repository e GLOBAL_SCOPE explicito no bridge atual, o que permite congelar o estado atual sem refactor funcional;
+		- nao toca Portal, nao exige rota nova, nao depende de tenant DB real e nao encosta em autenticacao critica.
+	- risco estimado:
+		- baixo, porque o slice principal pode ficar restrito ao repository, ao service fino e ao bridge atual sem abrir superficie operacional adicional.
+	- cobertura de testes existente ou lacuna:
+		- existente:
+			- tests/gestor-modulos-get-by-id-structural-seam-runtime-contract.test.js cobre a seam controller -> service e a compatibilidade api.db -> service;
+			- tests/gestor-modulos-list-owner-structural-seam.test.js cobre o corredor vizinho de listagem owner/html.
+		- lacuna:
+			- ainda nao ha contrato tenant-aware pequeno congelando explicitamente o repository ModuloReadRepository, o uso de GLOBAL_SCOPE em findModuloByIdLeanFromDb e a ausencia de dependencias proibidas nesse slice.
+	- escopo permitido do proximo microcorte:
+		- criar teste contratual novo e pequeno para ModuloReadRepository -> findModuloByIdLean.service;
+		- congelar comportamento de leitura, resolveModel com unitScope explicito e fallback global explicito do estado atual;
+		- validar com teste focal antes de qualquer hipotese de refactor mais amplo.
+	- escopo proibido do proximo microcorte:
+		- alterar codigo em src sem novo microcorte aprovado;
+		- tenant registry;
+		- Portal;
+		- rotas, request path, scripts, CLI, jobs, bootstrap, start.js, server.js ou createServer.js;
+		- tenant DB real, Mongo real, escrita real, rollback real ou PostgreSQL.
+- Alternativas descartadas ou adiadas:
+	- RecursoReadRepository -> recursosReadDataFacade/listarRecursos.service:
+		- adiado porque o corredor ainda carrega filtros contextuais, politica de acesso e superficie maior de API, aumentando risco e custo do contrato em comparacao com Modulos.
+	- SetorReadRepository -> loadPaginaSetoresBundle.service:
+		- adiado porque continua mais espalhado em bundle de pagina e o repository mistura leituras com operacoes de create/delete/counter no mesmo arquivo.
+- Criterios de seguranca para o proximo microcorte:
+	- manter fallback base/global;
+	- nao abrir tenant DB real;
+	- nao alterar Portal;
+	- nao criar rota;
+	- nao criar CLI/script/job/bootstrap;
+	- nao usar dados reais;
+	- nao executar escrita real;
+	- validar com teste especifico antes de qualquer refactor amplo.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- userProfileTenantAwareFrontClosed=true
+	- funcoesTenantAwareFrontClosed=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- nextTenantAwareTargetSelected=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=ModuloReadRepository_findModuloByIdLeanService
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental do alvo nao autoriza alteracao de codigo;
+	- selecao documental do alvo nao autoriza escrita real;
+	- selecao documental do alvo nao autoriza tenant DB real;
+	- selecao documental do alvo nao autoriza Portal;
+	- selecao documental do alvo nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
+
 
 
 
