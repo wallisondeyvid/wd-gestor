@@ -1478,6 +1478,49 @@ Checkpoint tenant enforcement atual:
 	- portalUsageApproved=false
 	- postgresMigrationApproved=false
 	- blockedReasons=[]
+- Diagnóstico de refactor mínimo do corredor lookup de Unidades por ids executado.
+- Base local:
+	- 4ef3e05 test(tenant): protege scope tenant-aware de lookup unidades por ids.
+- Auditoria read-only realizada.
+- Conclusão:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- UnidadeReadRepository nao deve migrar para BaseRepository agora, porque o helper protegido ja usa resolveModel + unitScope explicito no padrao atual e a conversao ampliaria um repository amplo sem ganho funcional comprovado neste slice;
+	- api.db.findUnidadesByIdsNomeCodigoLean nao deve mudar agora, porque a bridge ja esta pequena, com fallback scoped/global explicito e comportamento real congelado pelo contrato novo;
+	- listagem completa de Unidades, diretores, paginas, bundles, Cluster de Unidades, Setores, Feedback e Funcionarios devem continuar fora deste momento;
+	- o estado atual com unitScope/fallback tenant-aware e aceitavel para o slice escolhido;
+	- o fallback real scoped/global atual e aceitavel e ficou bem congelado pelo contrato criado;
+	- o que resta aqui e oportunidade futura de padronizacao, nao lacuna funcional pequena, falsificavel e com ganho claro;
+	- risco estimado: baixo para manter como esta; medio se converter agora por estetica e abrir acoplamento desnecessario em repository amplo, bridge compartilhada ou call sites adjacentes;
+	- qualquer microcorte futuro neste corredor deve rerodar no minimo tests/architecture/unidadesLookupByIdsTenantScope.contract.test.js, tests/gestor-setor-recurso-unit-scope-canonical.test.js, tests/gestor-usuarios-list-owner-structural-seam.test.js, tests/gestor-unidades-unit-scope-canonical.test.js, tests/gestor-unidades-list-runtime-contract.test.js e tests/architecture/repository-unitScope.test.js;
+	- escopo permitido em qualquer continuidade futura: microcorte proprio, pequeno e falsificavel dentro do helper findUnidadesByIdsNomeCodigoLeanRepo e da bridge findUnidadesByIdsNomeCodigoLean, ou validacao consolidada/fechamento desta frente curta;
+	- escopo proibido em qualquer continuidade futura: listagem completa de Unidades, diretores, paginas, bundles, Cluster de Unidades, Setores, Feedback, Funcionarios, tenant DB real, Mongo real, Portal, rota, request path, script, CLI, job, bootstrap e qualquer escrita real.
+- Decisão recomendada:
+	- seguir para validacao consolidada ou fechamento desta frente curta; nao abrir refactor em src por estetica.
+- Gates:
+	- selectedTarget=UnidadeReadRepository_apiDb_findUnidadesByIdsNomeCodigoLean
+	- unidadesLookupByIdsTenantScopeContractCreated=true
+	- unidadesLookupByIdsTenantScopeContractValidated=true
+	- unidadesLookupByIdsRefactorDiagnosticExecuted=true
+	- unidadesLookupByIdsRefactorRecommended=false
+	- unidadesLookupByIdsWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
 - quantidade de pass: 2201.
 - quantidade de fail: 0.
 - quantidade de skipped: 2.
