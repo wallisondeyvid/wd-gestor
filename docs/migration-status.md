@@ -5691,6 +5691,117 @@ Notas:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Proximo alvo tenant-aware pos-Recursos selecionado documentalmente.
+- Base publicada:
+	- b48e01c docs(tenant): encerra frente recursos tenant-aware.
+- Premissa consolidada:
+	- dados atuais sao ficticios;
+	- nao ha clientes reais;
+	- nao ha migracao de dados legados reais;
+	- objetivo e migracao arquitetural multi-tenant;
+	- dados ficticios poderao ser deletados quando necessario.
+- Estado inicial:
+	- branch sincronizada com origin;
+	- worktree limpa;
+	- tenant registry fechado/protegido;
+	- usuario atual/profile fechado/protegido;
+	- Funcoes fechado/protegido;
+	- Modulos fechado/protegido;
+	- Recursos fechado/protegido;
+	- tenant registry nao sera avancado agora.
+- Auditoria read-only executada:
+	- comandos usados:
+		- git status -sb
+		- git --no-pager log --oneline --decorate -12
+		- leitura do final do ledger de migracao
+		- mapeamento de repositories e services em src
+		- busca de sinais de unitScope, BaseRepository, model global e dominios centrais em src
+		- mapeamento de testes existentes em tests
+		- busca de candidatos pequenos de leitura e comparacao entre Funcionarios, Setores, UnidadeReadRepository e FeedbackReadRepository
+		- leituras pontuais dos candidatos mais promissores e de testes adjacentes
+	- arquivos/categorias mapeadas:
+		- ledger final de migracao;
+		- repositories e services do gestor em src;
+		- bridges em api.db e data facades proximas;
+		- suite de testes existente em tests;
+		- dominios centrais observados: Funcionarios, Setores, Unidades e Feedback.
+	- candidatos observados:
+		- ausencia registrada no gestor de PessoaReadRepository, MoradorReadRepository, MoradoresReadRepository, HabitacaoReadRepository e MailboxReadRepository como corredores pequenos explicitos comparaveis ao microcorte de Recursos;
+		- FuncionarioRepository com helpers pequenos de leitura via bridge, especialmente findFuncionariosDisponiveisByUnidadeLean e findFuncionarioByIdSelectIdUnidadeUsuarioLean;
+		- SetorReadRepository, ainda com mistura de leitura, create, delete e counter no mesmo arquivo e com surface maior ao redor;
+		- UnidadeReadRepository, ainda espalhado demais e servindo muitos corredores distintos;
+		- FeedbackReadRepository, pequeno no repository puro, mas cercado por superficie maior de rotas, owners, policy e runtime contracts.
+- Decisao:
+	- alvo principal escolhido:
+		- FuncionarioRepository -> api.db.findFuncionariosDisponiveisByUnidadeLean, com foco em congelar o uso atual de resolveModel com unitScope explicito por unidade no helper de leitura disponiveis.
+	- motivo da escolha:
+		- e o menor slice encontrado que permanece proximo do nucleo real do produto no gestor atual, mesmo sem um corredor explicito de Pessoas/Moradores/Habitacoes;
+		- continua sendo corredor de leitura pequeno, sem exigir page bundle inteiro, policy ampla, Portal, rota nova ou escrita real;
+		- ja existe cobertura runtime e canonica adjacente para o endpoint de funcionarios disponiveis, o que reduz risco de um contrato tenant-aware pequeno para repository mais bridge;
+		- o repository usa resolveModel com unitScope explicito, permitindo congelar o estado atual sem forcar migracao para BaseRepository.
+	- risco estimado:
+		- baixo a moderado;
+		- o slice principal e pequeno, mas vive dentro de um dominio maior de Funcionarios que contem muita superficie de escrita e runtime;
+		- o risco permanece controlado se o proximo microcorte ficar restrito ao helper de leitura disponiveis e a sua bridge.
+	- cobertura de testes existente ou lacuna:
+		- existente:
+			- gestor-funcionarios-disponiveis-runtime-contract.test.js cobre o comportamento de runtime do endpoint disponiveis;
+			- gestor-funcionarios-crud-unit-scope-canonical.test.js cobre a observacao canonica de respeito a unidade ativa;
+			- gestor-funcionario-anchor-by-id-unit-scope-bridge.test.js mostra que ja ha precedente de microcorte pequeno no dominio de Funcionarios por bridge unitScope.
+		- lacuna:
+			- ainda nao ha contrato arquitetural pequeno congelando explicitamente FuncionarioRepository -> api.db.findFuncionariosDisponiveisByUnidadeLean como corredor tenant-aware de leitura com unitScope explicito por unidade no estado atual.
+	- escopo permitido do proximo microcorte:
+		- criar teste contratual pequeno para FuncionarioRepository -> api.db.findFuncionariosDisponiveisByUnidadeLean;
+		- congelar resolveModel com unitScope explicito por createUnitScope ou escopo unitario equivalente no estado atual;
+		- validar com teste focal e regressao adjacente antes de qualquer hipotese de refactor amplo.
+	- escopo proibido do proximo microcorte:
+		- alterar src sem novo microcorte aprovado;
+		- abrir page bundle de Funcionarios inteiro, create/update/delete, anexos, biometria ou auto-user flow neste mesmo corte;
+		- tenant registry, Portal, rotas novas, request path, scripts, CLI, jobs, bootstrap, start.js, server.js, createServer.js, tenant DB real, Mongo real, escrita real, rollback real ou PostgreSQL.
+- Alternativas descartadas ou adiadas:
+	- SetorReadRepository:
+		- adiado porque continua mais espalhado, mistura leitura com create/delete/counter e ja exige compor com lookups adicionais de unidade, o que o deixa menos limpo que o slice pequeno de Funcionarios disponiveis.
+	- FeedbackReadRepository:
+		- adiado porque, embora o repository puro seja compacto, o dominio de Feedback ao redor continua mais amplo e preso a surface maior de rotas, owners, policy e contratos de runtime, aumentando a chance de o proximo corte deixar de ser pequeno.
+- Criterios de seguranca para o proximo microcorte:
+	- manter fallback base/global quando houver caminho compativel aplicavel no slice escolhido;
+	- nao abrir tenant DB real;
+	- nao alterar Portal;
+	- nao criar rota;
+	- nao criar CLI/script/job/bootstrap;
+	- nao usar dados reais;
+	- nao executar escrita real;
+	- validar com teste especifico antes de qualquer refactor amplo.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- userProfileTenantAwareFrontClosed=true
+	- funcoesTenantAwareFrontClosed=true
+	- modulosTenantAwareFrontClosed=true
+	- recursosTenantAwareFrontClosed=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- nextTenantAwareTargetSelected=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=FuncionarioRepository_apiDb_findFuncionariosDisponiveisByUnidadeLean
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental do alvo nao autoriza alteracao de codigo;
+	- selecao documental do alvo nao autoriza escrita real;
+	- selecao documental do alvo nao autoriza tenant DB real;
+	- selecao documental do alvo nao autoriza Portal;
+	- selecao documental do alvo nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
+
 
 
 
