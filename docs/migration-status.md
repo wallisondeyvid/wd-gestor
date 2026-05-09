@@ -4204,6 +4204,66 @@ a83e94b docs(tenant): registra bloqueio de base global para escrita sintetica te
 	- proximo ato podera ser push consolidado somente se autorizado explicitamente pelo usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Pos-bloco harness tenant registry iniciado.
+- Base publicada:
+	- aaf9d6f docs(tenant): encerra bloco sintetico com harness tenant registry.
+- Estado do repositorio:
+	- branch migration/refactor-core sincronizada com origin;
+	- worktree limpa antes deste microcorte;
+	- push consolidado do bloco sintetico realizado.
+- Baseline final conhecido:
+	- tests 2210;
+	- suites 17;
+	- pass 2208;
+	- fail 0;
+	- skipped 2.
+- Resultado do bloco encerrado:
+	- harness sintetico de base/global connection desenhado, testado e implementado;
+	- escrita sintetica em harness validada e executada;
+	- rollback sintetico em harness validado e executado;
+	- fluxo pending -> ready -> active -> rollback_required validado em memoria;
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- tenant DB real nao aberto;
+	- Mongo real nao usado no bloco sintetico;
+	- nenhuma superficie operacional criada.
+- Decisao pos-bloco:
+	- nao avancar para base/global real agora;
+	- nao executar escrita real;
+	- nao criar script operacional;
+	- nao criar CLI;
+	- nao plugar harness no app;
+	- nao mexer no Portal;
+	- nao avancar para PostgreSQL;
+	- nao abrir tenant DB real.
+- Proxima frente escolhida:
+	- proteger arquiteturalmente o harness sintetico contra uso operacional indevido;
+	- garantir que o harness nao seja importado por rotas, scripts, start, server, createServer, bootstrap, jobs, request path ou superficie operacional;
+	- fazer isso primeiro por teste ou contrato, antes de qualquer novo avanco funcional.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessBlockPublished=true
+	- postSyntheticHarnessBlockStarted=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- operationalHarnessUsageApproved=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- nextFront=protectSyntheticHarnessFromOperationalSurface
+	- pushRequired=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este checkpoint nao autoriza escrita real;
+	- este checkpoint nao autoriza Mongo real;
+	- este checkpoint nao autoriza tenant DB real;
+	- este checkpoint nao autoriza uso operacional do harness;
+	- este checkpoint nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proximo microcorte recomendado deve ser teste arquitetural de protecao contra superficie operacional indevida do harness.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
