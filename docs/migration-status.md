@@ -5877,6 +5877,98 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado, preferencialmente diagnostico read-only de refactor minimo no corredor Funcionarios disponiveis.
 
+- Diagnostico de refactor minimo do corredor Funcionarios disponiveis executado.
+- Base local:
+	- 66b14dd test(tenant): protege scope tenant-aware de funcionarios disponiveis.
+- Auditoria read-only realizada.
+	- leituras revisadas:
+		- tests/architecture/funcionariosDisponiveisTenantScope.contract.test.js
+		- src/modules/gestor/app/repositories/FuncionarioRepository.js
+		- src/modules/gestor/app/db/api.db.js
+		- src/modules/gestor/app/services/funcionarios/loadPaginaFuncionariosBundle.service.js
+		- src/modules/gestor/app/data/funcionarios/funcionariosPageBundleDataFacade.js
+		- src/shared/repositories/BaseRepository.js
+		- src/shared/unitScope.js
+		- tests/gestor-funcionarios-disponiveis-runtime-contract.test.js
+		- tests/gestor-funcionarios-load-pagina-bundle-structural-seam.test.js
+		- tests/gestor-funcionario-anchor-by-id-unit-scope-bridge.test.js
+		- tests/gestor-funcionarios-crud-unit-scope-canonical.test.js
+		- tests/architecture/repository-unitScope.test.js
+		- docs/migration-status.md
+	- foco da auditoria:
+		- confirmar se havia lacuna funcional concreta no slice pequeno FuncionarioRepository -> api.db.findFuncionariosDisponiveisByUnidadeLean;
+		- distinguir necessidade real de refactor em src de mera oportunidade futura de padronizacao.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- FuncionarioRepository nao deve migrar para BaseRepository agora, porque o repository ja usa resolveModel com unitScope explicito no estado atual e o contrato novo congelou exatamente essa garantia;
+	- api.db.findFuncionariosDisponiveisByUnidadeLean nao deve mudar agora, porque continua bridge pequeno, direto e coerente com a exigencia de unidade explicita no helper;
+	- page bundle, create/update/delete, anexos, biometria e auto-user flow devem continuar fora deste momento, porque representam superficie maior do dominio de Funcionarios e nao fazem parte da lacuna pequena congelada;
+	- o estado atual com resolveModel mais unitScope explicito e aceitavel no presente, pois entrega escopo tenant-aware claro no helper de leitura sem exigir tenant DB real, Portal ou refactor estrutural adicional;
+	- a exigencia de unidade explicita via createUnitScope e aceitavel no estado presente, porque este helper modela um corredor por unidade e o contrato novo congelou justamente a ausencia de fallback artificial base/global nesse ponto;
+	- o que existe aqui e oportunidade futura de padronizacao, nao lacuna funcional pequena, falsificavel e com ganho claro imediato.
+- Fundamentacao tecnica do diagnostico:
+	- FuncionarioRepository permanece repository amplo, mas o helper findFuncionariosDisponiveisByUnidadeLeanRepo e pequeno e usa resolveModel com unitScope explicito, filtrando diretamente por unidade_id e por ausencia de usuario_id;
+	- api.db.findFuncionariosDisponiveisByUnidadeLean segue como handoff fino para o helper, montando createUnitScope({ unidadeId }) e repassando unidadeId sem policy ampla adicional;
+	- o corredor por id em findFuncionarioByIdSelectIdUnidadeUsuarioLean mostra que o mesmo dominio ja possui precedente explicito de bridge pequena com comportamento scoped e fallback global separado, o que reforca que o helper de disponiveis pode permanecer mais estrito sem forcar alinhamento artificial;
+	- loadPaginaFuncionariosBundle.service.js e funcionariosPageBundleDataFacade.js continuam separados do slice principal e concentram superficie maior de bundle, lookups e regras contextuais, portanto traze-los agora ampliaria desnecessariamente o microcorte;
+	- BaseRepository hoje valida unitScope e expone applyTenantFilter, mas convergir FuncionarioRepository para essa base agora alteraria a forma de um repository que tambem contem create, update e delete sem mostrar ganho funcional concreto no helper protegido;
+	- os testes adjacentes de runtime, bridge por id, bundle estrutural e CRUD canonico ja cercam o dominio o suficiente para o estado atual, reduzindo a pressao por refactor imediato em src.
+- Impacto e risco se houvesse conversao agora:
+	- a chance de mudar comportamento runtime aumentaria, porque a conversao tocaria um repository compartilhado por operacoes de leitura e escrita, nao apenas o slice contratual pequeno;
+	- o risco tecnico subiria de baixo para baixo-moderado ou moderado sem evidencia de ganho funcional proporcional;
+	- a mudanca nao exigiria tenant DB real nem Portal por si so, mas tenderia a puxar validacao mais ampla de CRUD, bundles e bridges adjacentes, aumentando custo e superficie do microcorte;
+	- expandir agora para page bundle, create/update/delete, anexos, biometria ou auto-user flow aumentaria ainda mais o risco, porque misturaria o slice pequeno de leitura com fluxos maiores e heterogeneos do dominio.
+- Risco estimado da decisao de nao refatorar agora:
+	- baixo;
+	- o corredor pequeno ja esta suficientemente protegido para o estado atual;
+	- o risco residual principal e apenas de divergencia futura caso outro microcorte mexa em bridges ou superficies amplas do dominio sem rerodar a bateria de regressao apropriada.
+- Testes que deverao ser rodados em qualquer microcorte futuro deste corredor:
+	- node --test .\tests\architecture\funcionariosDisponiveisTenantScope.contract.test.js
+	- node --test .\tests\gestor-funcionarios-disponiveis-runtime-contract.test.js
+	- node --test .\tests\gestor-funcionarios-load-pagina-bundle-structural-seam.test.js
+	- node --test .\tests\gestor-funcionario-anchor-by-id-unit-scope-bridge.test.js
+	- node --test .\tests\gestor-funcionarios-crud-unit-scope-canonical.test.js
+	- node --test .\tests\architecture\repository-unitScope.test.js
+	- npm run verify:imports
+- Escopo permitido do proximo microcorte:
+	- validacao consolidada desta frente curta;
+	- fechamento documental desta frente curta, se desejado;
+	- eventual novo microcorte proprio e aprovado apenas se surgir lacuna funcional pequena, concreta e falsificavel.
+- Escopo proibido do proximo microcorte:
+	- alterar src sem novo microcorte aprovado;
+	- expandir para page bundle inteiro, create/update/delete, anexos, biometria, auto-user flow, controller ou request path neste mesmo diagnostico;
+	- tenant DB real, Mongo real, Portal, rotas, scripts, CLI, jobs, bootstrap, start.js, server.js, createServer.js ou PostgreSQL;
+	- escrita real, rollback real ou uso de dados reais.
+- Decisao recomendada:
+	- preferir validacao consolidada ou fechamento desta frente curta;
+	- nao abrir refactor minimo em src agora;
+	- tratar qualquer futura conversao estrutural como microcorte proprio, separado e justificado por lacuna funcional concreta, nao por estetica.
+- Gates:
+	- selectedTarget=FuncionarioRepository_apiDb_findFuncionariosDisponiveisByUnidadeLean
+	- funcionariosDisponiveisTenantScopeContractCreated=true
+	- funcionariosDisponiveisTenantScopeContractValidated=true
+	- funcionariosDisponiveisRefactorDiagnosticExecuted=true
+	- funcionariosDisponiveisRefactorRecommended=false
+	- funcionariosDisponiveisWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 
 
 
