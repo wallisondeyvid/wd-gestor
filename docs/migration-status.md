@@ -1850,6 +1850,86 @@ Checkpoint tenant enforcement atual:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Frente tenant-aware listagem geral de Setores encerrada documentalmente.
+- Base local:
+	- 4e3938d docs(tenant): diagnostica refactor minimo listagem geral setores.
+- Escopo encerrado:
+	- selecao documental do alvo SetorReadRepository -> api.db.findSetoresByFiltroPopulateUnidadeLean -> listSetoresCore -> listarSetores;
+	- criacao do teste contratual tests/architecture/setoresListTenantScope.contract.test.js;
+	- diagnostico read-only de refactor minimo;
+	- decisao de nao alterar src neste momento;
+	- decisao de manter getSetoresByUnitCore, page bundle de Setores, counters/create/delete/update, Feedback amplo, Funcionarios, membership e User/UserMembership fora deste slice.
+- Commits locais da frente:
+	- cd70b3d docs(tenant): seleciona proximo alvo tenant-aware pos-lookup-unidades;
+	- 258f236 test(tenant): protege scope tenant-aware da listagem geral de setores;
+	- 4e3938d docs(tenant): diagnostica refactor minimo listagem geral setores.
+- Resultado final:
+	- SetorReadRepository permanece repository amplo, mas com slice protegido limitado ao helper findSetoresByFiltroPopulateUnidadeLeanRepo;
+	- api.db.findSetoresByFiltroPopulateUnidadeLean permanece bridge pequena;
+	- listSetoresCore permanece core fino;
+	- comportamento real de unitScope/fallback tenant-aware permanece congelado conforme codigo atual;
+	- scopeFromSetorFiltro permanece ponto de decisao da bridge;
+	- owner listarSetores permanece responsavel por gate contextual antes do core;
+	- lookup auxiliar de Unidades por ids permanece apenas apoio ja protegido por contrato proprio;
+	- SetorReadRepository nao deve migrar para BaseRepository agora;
+	- api.db.findSetoresByFiltroPopulateUnidadeLean nao deve mudar agora;
+	- listSetoresCore nao deve mudar agora;
+	- getSetoresByUnitCore, page bundle, counters/create/delete/update, Feedback amplo, Funcionarios, membership e User/UserMembership permanecem fora do slice principal;
+	- corredor nao depende de tenant registry;
+	- corredor nao depende de harness sintetico;
+	- corredor nao depende de Portal, rotas novas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nao ha refactor minimo recomendado em src neste momento;
+	- proximo avanco nesse corredor so deve ocorrer se houver nova hipotese falsificavel e microcorte proprio.
+- Confirmacoes finais:
+	- nenhum arquivo em src foi alterado nesta frente;
+	- nenhum teste existente foi alterado indevidamente;
+	- apenas teste arquitetural novo foi criado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- Portal nao usado;
+	- dados reais nao usados;
+	- usuario real nao usado;
+	- unidade real nao usada;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=SetorReadRepository_listSetoresCore_findSetoresByFiltroPopulateUnidadeLean
+	- setoresListTenantScopeContractCreated=true
+	- setoresListTenantScopeContractValidated=true
+	- setoresListRefactorDiagnosticExecuted=true
+	- setoresListRefactorRecommended=false
+	- setoresListWideScopeDeferred=true
+	- setoresListTenantAwareFrontClosed=true
+	- sourceCodeChanged=false
+	- testsChanged=true somente pelo teste arquitetural novo
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento desta frente nao autoriza alteracao funcional;
+	- fechamento desta frente nao autoriza escrita real;
+	- fechamento desta frente nao autoriza tenant DB real;
+	- fechamento desta frente nao autoriza Portal;
+	- fechamento desta frente nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
+
 - Fase X encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-x-operational-preparation-opening-contract.md
 - Commit local de encerramento do contrato: 75db8d2 docs(tenant): encerra fase x
