@@ -6108,6 +6108,77 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- o proximo ato, se solicitado, deve ser um teste contratual pequeno e focal para o corredor de cluster por ancora;
 	- se esse teste revelar superficie maior do que a observada nesta auditoria, interromper e reavaliar antes de tocar src.
 
+- Teste contratual tenant-aware do corredor Cluster de Unidades criado.
+- Base local:
+	- 9fdcf1e docs(tenant): seleciona proximo alvo tenant-aware pos-funcionarios.
+- Arquivo criado:
+	- tests/architecture/unidadesClusterTenantScope.contract.test.js
+- Natureza:
+	- teste arquitetural/contratual;
+	- foco em UnidadeReadRepository -> unidadesClusterDataFacade -> findClusterUnidadesByAnchorLean;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem dados reais;
+	- sem escrita real;
+	- sem rollback;
+	- sem nova rota/request path;
+	- sem expansao para UnidadeReadRepository inteiro, listagem completa de unidades, diretores, paginas, bundles, Setores, Feedback ou Funcionarios.
+- Contrato validado:
+	- UnidadeReadRepository permanece repository amplo, mas o slice protegido fica limitado ao helper de cluster por ancora;
+	- o helper de cluster usa resolveModel com unitScope explicito no estado atual;
+	- unidadesClusterDataFacade permanece ponte pequena;
+	- findClusterUnidadesByAnchor.service permanece service fino;
+	- escopo tenant-aware a partir da ancora permanece explicito;
+	- fallback seguro/base-global permanece documentado/congelado no estado atual: o corredor principal exige ancora explicita e o caminho compativel FromDb em api.db permanece isolado e congelado sem forcar fallback artificial novo;
+	- nao ha dependencia de tenant registry;
+	- nao ha dependencia de harness sintetico;
+	- nao ha dependencia de Portal, rotas novas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nenhuma superficie operacional nova foi criada;
+	- o teste congela o estado atual sem forcar migracao para BaseRepository.
+- Resultado dos testes:
+	- unidadesClusterTenantScope.contract.test.js: PASS, tests 6, fail 0;
+	- gestor-api-unidades-cluster-runtime-contract.test.js: PASS, tests 4, fail 0;
+	- gestor-api-unidades-cluster-structural-seam-runtime-contract.test.js: PASS, tests 3, fail 0;
+	- gestor-unidades-unit-scope-canonical.test.js: PASS, tests 10, fail 0;
+	- gestor-unidades-list-runtime-contract.test.js: PASS, tests 9, fail 0;
+	- repository-unitScope.test.js: PASS, tests 2, fail 0;
+	- npm run verify:imports: arquitetura limpa.
+- Confirmacoes:
+	- nenhum arquivo em src foi alterado;
+	- nenhuma escrita foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- Portal, dados reais, usuario real, unidade real e PostgreSQL nao foram usados;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path foi criado;
+	- push nao foi realizado.
+- Gates:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=UnidadeReadRepository_unidadesClusterDataFacade_findClusterUnidadesByAnchorLean
+	- unidadesClusterTenantScopeContractCreated=true
+	- unidadesClusterTenantScopeContractValidated=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- criacao do teste nao autoriza alteracao funcional;
+	- criacao do teste nao autoriza escrita real;
+	- criacao do teste nao autoriza tenant DB real;
+	- criacao do teste nao autoriza Portal;
+	- criacao do teste nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado, preferencialmente diagnostico read-only de refactor minimo no corredor Cluster de Unidades.
+
 
 
 
