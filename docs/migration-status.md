@@ -4889,6 +4889,96 @@ Notas:
 	- postgresMigrationApproved=false
 	- blockedReasons=[]
 
+- Diagnostico de refactor minimo do corredor Setores por unidade executado.
+- Base local:
+	- 7d0eb08 test(tenant): protege scope tenant-aware de setores por unidade.
+- Auditoria read-only realizada.
+	- leituras revisadas:
+		- tests/architecture/setoresByUnitTenantScope.contract.test.js
+		- src/modules/gestor/app/repositories/SetorReadRepository.js
+		- src/modules/gestor/app/db/api.db.js
+		- src/modules/gestor/app/controllers/utils/getSetoresByUnitCore.js
+		- src/modules/gestor/app/controllers/setorApiController.js
+		- src/shared/unitScope.js
+		- src/shared/repositories/BaseRepository.js
+		- tests/gestor-setores-get-by-unit-runtime-contract.test.js
+		- tests/gestor-setores-get-by-unit-owner-structural-seam.test.js
+		- tests/gestor-setores-list-runtime-contract.test.js
+		- tests/architecture/repository-unitScope.test.js
+		- docs/migration-status.md
+	- foco da auditoria:
+		- confirmar se o corredor pequeno SetorReadRepository -> api.db.findSetoresByUnidadeIdPopulateLean -> getSetoresByUnitCore -> getSetoresPorUnidade ainda possui lacuna funcional real em src;
+		- distinguir necessidade concreta de refactor minimo de mera oportunidade futura de padronizacao.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- SetorReadRepository nao deve migrar para BaseRepository agora, porque o helper protegido ja usa resolveModel com unitScope explicito e o contrato novo congelou exatamente essa garantia;
+	- api.db.findSetoresByUnidadeIdPopulateLean nao deve mudar agora, porque permanece bridge pequena, direta e tenant-aware por unidade;
+	- getSetoresByUnitCore nao deve mudar agora, porque segue core fino, unario e sem policy ampla adicional;
+	- listagem geral, page bundle, counters/create/delete/update, Feedback, Unidades amplas e Funcionarios devem continuar fora deste momento;
+	- o estado atual com resolveModel mais unitScope explicito e aceitavel no presente;
+	- a exigencia de unidade explicita e aceitavel no estado presente, porque o helper e o core representam leitura por unidade, nao leitura global;
+	- o que existe aqui e oportunidade futura de padronizacao, nao lacuna funcional pequena, falsificavel e com ganho claro imediato.
+- Fundamentacao tecnica do diagnostico:
+	- findSetoresByUnidadeIdPopulateLeanRepo e pequeno, usa resolveModel com unitScope explicito e filtra apenas por unidade_id;
+	- api.db.findSetoresByUnidadeIdPopulateLean apenas cria o escopo com createUnitScope e delega ao helper do repository;
+	- getSetoresByUnitCore apenas repassa effectiveUnitId para a dependencia de leitura, sem fallback global novo e sem surface operacional adicional;
+	- getSetoresPorUnidade resolve a unidade efetiva no owner, preserva lista vazia para unidade nula e delega ao core fino;
+	- BaseRepository hoje valida unitScope e expoe applyTenantFilter, mas converter SetorReadRepository agora alteraria a forma de um repository amplo sem ganho funcional comprovado no helper protegido.
+- Impacto e risco se houvesse conversao agora:
+	- a chance de mudar comportamento runtime aumentaria, porque a conversao tocaria um repository que tambem contem listagem geral, deletes, counters e create;
+	- o risco tecnico subiria de baixo para baixo-moderado sem evidencia de ganho funcional proporcional;
+	- a mudanca nao exigiria tenant DB real nem Portal por si so, mas tenderia a puxar validacao mais ampla de listagem geral, page bundle e fluxos adjacentes de setores;
+	- expandir agora para listagem geral, page bundle, counters/create/delete/update, Feedback, Unidades amplas ou Funcionarios aumentaria desnecessariamente a superficie do microcorte.
+- Risco estimado da decisao de nao refatorar agora:
+	- baixo;
+	- o corredor pequeno ja esta suficientemente protegido para o estado atual;
+	- o risco residual principal e apenas de divergencia futura caso outro microcorte mexa em surfaces amplas de setores sem rerodar a bateria apropriada.
+- Testes que deverao ser rodados em qualquer microcorte futuro deste corredor:
+	- node --test .\tests\architecture\setoresByUnitTenantScope.contract.test.js
+	- node --test .\tests\gestor-setores-get-by-unit-runtime-contract.test.js
+	- node --test .\tests\gestor-setores-get-by-unit-owner-structural-seam.test.js
+	- node --test .\tests\gestor-setores-list-runtime-contract.test.js
+	- node --test .\tests\architecture\repository-unitScope.test.js
+	- npm run verify:imports
+- Escopo permitido do proximo microcorte:
+	- validacao consolidada desta frente curta;
+	- fechamento documental desta frente curta, se desejado;
+	- eventual novo microcorte proprio apenas se surgir lacuna funcional pequena, concreta e falsificavel.
+- Escopo proibido do proximo microcorte:
+	- alterar src sem novo microcorte aprovado;
+	- expandir para listagem geral, page bundle, counters/create/delete/update, Feedback, Unidades amplas ou Funcionarios neste mesmo diagnostico;
+	- tenant DB real, Mongo real, Portal, rotas, request paths, scripts, CLI, jobs, bootstrap, start.js, server.js, createServer.js ou PostgreSQL;
+	- escrita real, rollback real ou uso de dados reais.
+- Decisao recomendada:
+	- preferir validacao consolidada ou fechamento desta frente curta;
+	- nao abrir refactor minimo em src agora;
+	- tratar qualquer futura conversao estrutural como microcorte proprio, separado e justificado por lacuna funcional concreta, nao por estetica.
+- Gates:
+	- selectedTarget=SetorReadRepository_getSetoresByUnitCore_findSetoresByUnidadeIdPopulateLean
+	- setoresByUnitTenantScopeContractCreated=true
+	- setoresByUnitTenantScopeContractValidated=true
+	- setoresByUnitRefactorDiagnosticExecuted=true
+	- setoresByUnitRefactorRecommended=false
+	- setoresByUnitWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Teste contratual tenant-aware do corredor Funcoes criado.
 - Base local:
 	- 070cf5e docs(tenant): seleciona proximo alvo tenant-aware pos-profile.
