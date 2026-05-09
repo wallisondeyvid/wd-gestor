@@ -5969,6 +5969,84 @@ Notas:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Frente tenant-aware Funcionarios disponiveis encerrada documentalmente.
+- Base local:
+	- 298675c docs(tenant): diagnostica refactor minimo funcionarios disponiveis.
+- Escopo encerrado:
+	- selecao documental do alvo FuncionarioRepository -> api.db.findFuncionariosDisponiveisByUnidadeLean;
+	- criacao do teste contratual funcionariosDisponiveisTenantScope.contract.test.js;
+	- diagnostico read-only de refactor minimo;
+	- decisao de nao alterar src neste momento;
+	- decisao de manter page bundle, CRUD, anexos, biometria e auto-user flow fora deste slice.
+- Commits locais da frente:
+	- 89dd66a docs(tenant): seleciona proximo alvo tenant-aware pos-recursos;
+	- 66b14dd test(tenant): protege scope tenant-aware de funcionarios disponiveis;
+	- 298675c docs(tenant): diagnostica refactor minimo funcionarios disponiveis.
+- Resultado final:
+	- FuncionarioRepository permanece repository amplo, mas com slice protegido limitado ao helper de leitura de funcionarios disponiveis;
+	- findFuncionariosDisponiveisByUnidadeLeanRepo permanece com resolveModel + unitScope explicito no estado atual;
+	- api.db.findFuncionariosDisponiveisByUnidadeLean permanece bridge pequeno;
+	- escopo por unidade permanece explicito via createUnitScope;
+	- este helper exige unidade explicita e nao deve inventar fallback artificial base/global;
+	- FuncionarioRepository nao deve migrar para BaseRepository agora;
+	- api.db.findFuncionariosDisponiveisByUnidadeLean nao deve mudar agora;
+	- loadPaginaFuncionariosBundle.service.js e funcionariosPageBundleDataFacade.js permanecem fora do slice principal;
+	- create/update/delete, anexos, biometria e auto-user flow permanecem fora do slice principal;
+	- corredor nao depende de tenant registry;
+	- corredor nao depende de harness sintetico;
+	- corredor nao depende de Portal, rotas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nao ha refactor minimo recomendado em src neste momento;
+	- proximo avanco nesse corredor so deve ocorrer se houver nova hipotese falsificavel e microcorte proprio.
+- Confirmacoes finais:
+	- nenhum arquivo em src foi alterado nesta frente;
+	- nenhum teste existente foi alterado indevidamente;
+	- apenas teste arquitetural novo foi criado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- Portal nao usado;
+	- dados reais nao usados;
+	- usuario real nao usado;
+	- unidade real nao usada;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=FuncionarioRepository_apiDb_findFuncionariosDisponiveisByUnidadeLean
+	- funcionariosDisponiveisTenantScopeContractCreated=true
+	- funcionariosDisponiveisTenantScopeContractValidated=true
+	- funcionariosDisponiveisRefactorDiagnosticExecuted=true
+	- funcionariosDisponiveisRefactorRecommended=false
+	- funcionariosDisponiveisWideScopeDeferred=true
+	- funcionariosDisponiveisTenantAwareFrontClosed=true
+	- sourceCodeChanged=false
+	- testsChanged=true somente pelo teste arquitetural novo
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento desta frente nao autoriza alteracao funcional;
+	- fechamento desta frente nao autoriza escrita real;
+	- fechamento desta frente nao autoriza tenant DB real;
+	- fechamento desta frente nao autoriza Portal;
+	- fechamento desta frente nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
+
 
 
 
