@@ -6047,6 +6047,67 @@ Notas:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmente.
+
+- Base publicada considerada nesta selecao:
+	- branch esperada: migration/refactor-core;
+	- git status -sb inicial: limpo, sem arquivos modificados;
+	- git log --oneline --decorate -12 validado com HEAD e origin/migration/refactor-core em 39d9b25 docs(tenant): encerra frente funcionarios disponiveis tenant-aware.
+- Premissa consolidada para este corte:
+	- escolher apenas um slice pequeno, leitura pura e tenant-aware real;
+	- nao reabrir bundle de pagina, CRUD, anexos, biometria, auto-user flow, Portal, bootstrap, scripts ou request path novo;
+	- nao assumir que Setores, Feedback ou Unidades inteiras sao pequenas apenas pelo nome do dominio;
+	- preferir corredor com service/data facade/bridge fino ja existente e sem necessidade de alterar src nesta etapa documental.
+- Auditoria read-only executada em docs, package.json, src, tests e scripts:
+	- Setores permaneceu mais largo do que parecia: SetorReadRepository mistura leitura com create, delete e counter; o entorno imediato inclui pagesController, loadPaginaSetoresBundle, controller owner/list/get e fallback de lookup de unidades;
+	- Feedback permaneceu ambivalente: FeedbackReadRepository e compacto, mas o corredor ao redor encosta em list/detail/my-list/status/resposta/delete/upload/widget settings e combina leitura com mutacao e politicas de acesso;
+	- Unidades como dominio amplo continuou espalhado, mas apareceu um slice local claramente menor e legivel: findClusterUnidadesByAnchorLeanRepo -> unidadesClusterDataFacade -> findClusterUnidadesByAnchor.service -> obterClusterUnidades/findClusterUnidadesByAnchorLean;
+	- helper pequeno adicional em Funcionarios ainda existe, mas os candidatos mais proximos tocam fluxos sensiveis de usuario, membership ou pagina de unidades e ficaram piores do que o slice de cluster por ancora.
+- Alvo principal selecionado:
+	- UnidadeReadRepository_unidadesClusterDataFacade_findClusterUnidadesByAnchorLean;
+	- justificativa objetiva:
+		- leitura pura;
+		- unitScope explicito a partir da ancora em unidadesClusterDataFacade;
+		- service fino dedicado;
+		- controller/bridge fino ja existente;
+		- recorte pequeno o bastante para congelamento contratual sem puxar o dominio de Unidades inteiro.
+- Tipo do proximo microcorte:
+	- teste contratual novo;
+	- alvo do teste: congelar o corredor de cluster por ancora do repository/data facade/service/bridge, confirmando unitScope tenant-aware e evitando regressao para branch global indevida fora da compatibilidade ja existente.
+- Alternativas adiadas:
+	- FeedbackReadRepository_apiDb_findFeedbackByFilterSortCreatedAtDescLimit200Lean_500Lean:
+		- adiado porque o repository e pequeno, mas o entorno imediato ainda e amplo demais e mistura leituras com status patch, resposta, delete, upload e widget settings;
+	- SetorReadRepository_apiDb_findSetoresByCondNomeOrdenadosSelectLean:
+		- adiado porque o dominio de Setores continua acoplado a list/get/page bundle e o repository segue misturando leitura com create/delete/counter no mesmo owner.
+- Criterios de seguranca confirmados nesta selecao:
+	- nenhuma alteracao em src, tests ou scripts;
+	- nenhum Mongo real usado;
+	- nenhum tenant DB real aberto;
+	- nenhuma escrita real executada;
+	- nenhum Portal, PostgreSQL, bootstrap, rota nova, CLI, job ou request path novo.
+- Gates desta selecao documental:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=UnidadeReadRepository_unidadesClusterDataFacade_findClusterUnidadesByAnchorLean
+	- nextMicrocutMode=teste_contratual_novo
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- scriptsChanged=false
+	- currentDataIsFictional=true
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta selecao nao autoriza alteracao funcional imediata;
+	- esta selecao nao autoriza escrita real;
+	- esta selecao nao autoriza tenant DB real;
+	- esta selecao nao autoriza Portal;
+	- esta selecao nao autoriza PostgreSQL;
+	- o proximo ato, se solicitado, deve ser um teste contratual pequeno e focal para o corredor de cluster por ancora;
+	- se esse teste revelar superficie maior do que a observada nesta auditoria, interromper e reavaliar antes de tocar src.
+
 
 
 
