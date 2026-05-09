@@ -6795,6 +6795,51 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- postgresMigrationApproved=false
 	- blockedReasons=[]
 
+- Diagnostico de refactor minimo do corredor Feedback leitura limitada executado.
+- Base local:
+	- 392d3f4 test(tenant): protege scope tenant-aware de feedback leitura limitada.
+- Auditoria read-only realizada.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- FeedbackReadRepository nao deve migrar para BaseRepository agora, porque o slice protegido de leitura limitada 200/500 ja usa resolveModel + unitScope explicito no padrao atual e a conversao adicionaria risco sem ganho funcional comprovado;
+	- api.db.findFeedbackByFilterSortCreatedAtDescLimit200Lean e api.db.findFeedbackByFilterSortCreatedAtDescLimit500Lean nao devem mudar agora, porque as bridges ja estao pequenas, tenant-aware e com fallback scoped/global explicitamente congelado pelos testes;
+	- feedbackListApiController e feedbackMyListApiController nao devem mudar agora, porque os owners ja estao separados, finos e sem expandir para flows amplos neste corredor;
+	- status patch, resposta, delete, upload, widget settings, detalhe amplo e policy ampla devem continuar fora deste momento;
+	- o estado atual com unitScope e filtro tenant-aware explicitos e aceitavel para o slice escolhido;
+	- o fallback/base/global atual e a exigencia explicita de escopo onde aplicavel estao suficientemente congelados pelo contrato novo e pelos testes adjacentes;
+	- o que resta aqui e oportunidade futura de padronizacao, nao lacuna funcional pequena, falsificavel e com ganho claro;
+	- risco estimado: baixo para manter como esta; medio se converter agora por estetica e abrir acoplamento desnecessario em repository amplo, bridges ou owners;
+	- qualquer microcorte futuro neste corredor deve rerodar no minimo tests/architecture/feedbackReadTenantScope.contract.test.js, tests/gestor-feedback-list200-unit-scope-bridge.test.js, tests/gestor-feedback-list-owner-structural-seam.test.js, tests/gestor-feedback-my-list-owner-structural-seam.test.js, tests/gestor-feedback-list-runtime-contract.test.js, tests/architecture/repository-unitScope.test.js e npm run verify:imports;
+	- escopo permitido em qualquer continuidade futura: microcorte proprio, pequeno e falsificavel dentro do slice read-only 200/500 de Feedback;
+	- escopo proibido em qualquer continuidade futura: status patch, resposta, delete, upload, widget settings, detalhe amplo, policy ampla, tenant DB real, Mongo real, Portal, rota, request path, script, CLI, job, bootstrap e qualquer escrita real.
+- Decisao recomendada:
+	- seguir para validacao consolidada ou fechamento desta frente curta; nao abrir refactor em src por estetica.
+- Gates:
+	- selectedTarget=FeedbackReadRepository_apiDb_feedbackListControllers_readLimited
+	- feedbackReadTenantScopeContractCreated=true
+	- feedbackReadTenantScopeContractValidated=true
+	- feedbackReadRefactorDiagnosticExecuted=true
+	- feedbackReadRefactorRecommended=false
+	- feedbackReadWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 
 
 
