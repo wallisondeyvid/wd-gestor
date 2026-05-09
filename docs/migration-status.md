@@ -4726,6 +4726,111 @@ Notas:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Proximo alvo tenant-aware pos-profile selecionado documentalmente.
+- Base publicada:
+	- 073dad5 docs(tenant): encerra frente usuario atual profile tenant-aware.
+- Premissa consolidada:
+	- dados atuais sao ficticios;
+	- nao ha clientes reais;
+	- nao ha migracao de dados legados reais;
+	- objetivo e migracao arquitetural multi-tenant;
+	- dados ficticios poderao ser deletados quando necessario.
+- Estado inicial:
+	- branch sincronizada com origin;
+	- worktree limpa;
+	- tenant registry fechado/protegido;
+	- usuario atual/profile fechado/protegido;
+	- tenant registry nao sera avancado agora.
+- Auditoria read-only executada:
+	- comandos usados:
+		- git status -sb
+		- git --no-pager log --oneline --decorate -12
+		- Get-Content .\docs\migration-status.md -Tail 360
+		- Get-ChildItem .\src -Recurse -File -Include "*Repository*.js","*Service*.js","*.repository.js","*.service.js" | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js -Pattern "unitScope","getConnectionForUnit","baseConnection","mongoose.model","ModelRegistry","BaseRepository","req.unitScope","req.unidade","unidadeId","morador","pessoa","unidade","condominio","apartamento" -CaseSensitive:$false
+		- Get-ChildItem .\tests -Recurse -File | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "ReadRepository","Repository","findBy","listar","buscar","obter","Morador","Pessoa","Unidade","Funcao","Perfil","Mailbox","Habitacao","Feedback" -CaseSensitive:$false
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "FeedbackReadRepository","UnidadeReadRepository","FuncaoReadRepository","Pessoa","Morador","UserMembership","Habitacao","Mailbox" -CaseSensitive:$false
+	- arquivos/categorias mapeadas:
+		- ledger final de migracao;
+		- repositories e services em src;
+		- pontos com unitScope, BaseRepository, resolveModel, model global e dominios de leitura;
+		- suite de testes em tests;
+		- corredores candidatos em funcoes, modulos, setores, recursos, feedback, unidades e memberships.
+	- candidatos observados:
+		- FuncaoReadRepository -> funcoesReadDataFacade -> listarFuncoes.service;
+		- ModuloReadRepository -> findModuloByIdLean.service;
+		- SetorReadRepository -> loadPaginaSetoresBundle.service;
+		- candidatos amplos descartados na triagem: FeedbackReadRepository, UnidadeReadRepository, RecursoReadRepository e UserMembershipRepository.
+- Decisao:
+	- alvo principal escolhido:
+		- corredor FuncaoReadRepository -> funcoesReadDataFacade -> listarFuncoes.service, com foco em contrato tenant-aware para scopeFromFuncaoFiltro, propagacao de unitScope e fallback base/global no modo de leitura.
+	- motivo da escolha:
+		- corredor de leitura pequeno e localizado;
+		- ja usa resolveModel com unitScope no repository;
+		- ja possui serviço fino e data facade canônica;
+		- ja possui testes estruturais/runtime proximos, mas ainda sem um contrato tenant-aware explicito no mesmo nivel do corredor de usuario atual/profile;
+		- nao toca Portal, nao exige rota nova e nao depende de tenant DB real.
+	- risco estimado:
+		- baixo a moderado, porque ainda encosta em listagem funcional de gestor, mas sem tocar escrita nem autenticacao critica.
+	- cobertura de testes existente ou lacuna:
+		- existente:
+			- tests/gestor-funcoes-list-structural-seam-runtime-contract.test.js cobre a seam estrutural/runtime entre controller, service e data facade;
+			- tests/gestor-funcoes-get-by-unit-owner-structural-seam.test.js cobre corredor vizinho de leitura por unidade;
+			- tests/architecture/repository-unitScope.test.js ja referencia o padrao geral de unitScope em repositories.
+		- lacuna:
+			- ainda nao ha contrato pequeno e especifico congelando scopeFromFuncaoFiltro, o fallback global quando o filtro nao resolve unidade unica valida e a ausencia de dependencias operacionais proibidas nesse corredor.
+	- escopo permitido do proximo microcorte:
+		- criar teste contratual novo e pequeno para FuncaoReadRepository/listarFuncoes.service;
+		- congelar comportamento de leitura, propagacao de scope e fallback base/global;
+		- validar somente com testes focais e verify:imports antes de qualquer refactor amplo.
+	- escopo proibido do proximo microcorte:
+		- alterar codigo em src sem novo microcorte aprovado;
+		- tenant registry;
+		- Portal;
+		- rotas, request path, scripts, CLI, jobs, bootstrap, start.js, server.js ou createServer.js;
+		- tenant DB real, Mongo real, escrita real, rollback real ou PostgreSQL.
+- Alternativas descartadas ou adiadas:
+	- ModuloReadRepository -> findModuloByIdLean.service:
+		- adiado porque o slice ja esta fino e com teste estrutural/runtime especifico; oferece pouco ganho adicional de tenant-awareness agora e avanca menos o padrao unitScope.
+	- SetorReadRepository -> loadPaginaSetoresBundle.service:
+		- adiado porque o corredor continua mais espalhado, mistura leitura com mais contexto de pagina e tem superficie funcional maior do que o microcorte desejado.
+- Criterios de seguranca para o proximo microcorte:
+	- manter fallback base/global;
+	- nao abrir tenant DB real;
+	- nao alterar Portal;
+	- nao criar rota;
+	- nao criar CLI/script/job/bootstrap;
+	- nao usar dados reais;
+	- nao executar escrita real;
+	- validar com teste especifico antes de qualquer refactor amplo.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- userProfileTenantAwareFrontClosed=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- nextTenantAwareTargetSelected=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=FuncaoReadRepository_listarFuncoesService
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental do alvo nao autoriza alteracao de codigo;
+	- selecao documental do alvo nao autoriza escrita real;
+	- selecao documental do alvo nao autoriza tenant DB real;
+	- selecao documental do alvo nao autoriza Portal;
+	- selecao documental do alvo nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
+
 
 
 
