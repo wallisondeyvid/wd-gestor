@@ -4390,6 +4390,64 @@ c60bd50 docs(tenant): define rollback sintetico com harness tenant registry
 	- validacao pos-protecao nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
 	- proximo ato podera ser fechamento documental desta frente curta ou push consolidado somente com autorizacao explicita do usuario.
 
+- Frente curta de protecao pos-bloco harness tenant registry encerrada documentalmente.
+- Base local:
+	- 3c8e43a docs(tenant): valida protecao pos-bloco harness tenant registry.
+- Escopo encerrado:
+	- checkpoint pos-bloco do harness tenant registry;
+	- teste arquitetural contra uso operacional indevido do harness;
+	- validacao consolidada pos-protecao.
+- Commits locais da frente:
+	- 07340c7 docs(tenant): inicia pos-bloco harness tenant registry;
+	- 56c87cd test(tenant): protege harness sintetico contra superficie operacional;
+	- 3c8e43a docs(tenant): valida protecao pos-bloco harness tenant registry.
+- Resultado final:
+	- harness sintetico segue protegido contra runtime import fora dos testes arquiteturais autorizados;
+	- harness nao pode ser importado por src runtime, scripts, rotas, start/server/createServer, bootstrap, jobs ou request path;
+	- validacao consolidada pos-protecao passou;
+	- verify:imports permaneceu limpo;
+	- nenhum codigo em src foi alterado nesta frente curta;
+	- nenhum teste adicional ficou pendente;
+	- nenhuma escrita foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- nenhuma superficie operacional foi criada.
+- Confirmacoes finais:
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- tenant DB real nao aberto;
+	- Portal nao usado;
+	- dados reais nao usados;
+	- usuario real nao usado;
+	- unidade real nao usada;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- postSyntheticHarnessBlockStarted=true
+	- syntheticHarnessOperationalSurfaceProtectionTestCreated=true
+	- syntheticHarnessOperationalSurfaceProtectionValidated=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- harnessRuntimeImportOutsideArchitectureTests=false
+	- operationalHarnessUsageApproved=false
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento desta frente curta nao autoriza uso operacional do harness;
+	- fechamento desta frente curta nao autoriza escrita real;
+	- fechamento desta frente curta nao autoriza Mongo real;
+	- fechamento desta frente curta nao autoriza tenant DB real;
+	- fechamento desta frente curta nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proximo ato podera ser push consolidado dos 3 commits somente com autorizacao explicita do usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
