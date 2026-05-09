@@ -6354,6 +6354,116 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Proximo alvo tenant-aware pos-Cluster de Unidades selecionado documentalmente.
+- Base publicada:
+	- af0ef53 docs(tenant): encerra frente cluster unidades tenant-aware.
+- Premissa consolidada:
+	- dados atuais sao ficticios;
+	- nao ha clientes reais;
+	- nao ha migracao de dados legados reais;
+	- objetivo e migracao arquitetural multi-tenant;
+	- dados ficticios poderao ser deletados quando necessario.
+- Estado inicial:
+	- branch sincronizada com origin;
+	- worktree limpa;
+	- tenant registry fechado/protegido;
+	- usuario atual/profile fechado/protegido;
+	- Funcoes fechado/protegido;
+	- Modulos fechado/protegido;
+	- Recursos fechado/protegido;
+	- Funcionarios disponiveis fechado/protegido;
+	- Cluster de Unidades fechado/protegido;
+	- tenant registry nao sera avancado agora.
+- Auditoria read-only executada:
+	- comandos usados:
+		- git status -sb;
+		- git --no-pager log --oneline --decorate -12;
+		- leitura do final de docs/migration-status.md;
+		- mapeamento read-only de repositories/services em src;
+		- busca read-only de unitScope, BaseRepository, resolveModel e dominios candidatos em src;
+		- mapeamento read-only de testes em tests;
+		- leitura focal de FeedbackReadRepository, SetorReadRepository, UnidadeReadRepository e FuncionarioRepository;
+		- leitura focal de bridges/owners/tests adjacentes de Feedback e Setores.
+	- arquivos/categorias mapeadas:
+		- ledger final da migracao;
+		- repositories/services do modulo gestor;
+		- bridges em api.db e owners/controllers adjacentes;
+		- testes runtime-contract, structural-seam e bridge ja existentes;
+		- slices amplos de Feedback, Setores, Unidades e Funcionarios.
+	- candidatos observados:
+		- FeedbackReadRepository -> findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo/findFeedbackByFilterSortCreatedAtDescLimit500LeanRepo -> api.db.findFeedbackByFilterSortCreatedAtDescLimit200Lean/findFeedbackByFilterSortCreatedAtDescLimit500Lean;
+		- SetorReadRepository -> findSetoresByUnidadeIdPopulateLeanRepo -> api.db.findSetoresByUnidadeIdPopulateLean -> getSetoresByUnitCore -> getSetoresPorUnidade;
+		- SetorReadRepository -> findSetoresByFiltroPopulateUnidadeLeanRepo -> api.db.findSetoresByFiltroPopulateUnidadeLean -> listSetoresCore -> listarSetores;
+		- UnidadeReadRepository e FuncionarioRepository permanecem grandes demais para o proximo microcorte seguro neste momento.
+- Decisao:
+	- alvo principal escolhido:
+		- SetorReadRepository_getSetoresByUnitCore_findSetoresByUnidadeIdPopulateLean.
+	- motivo da escolha:
+		- corredor pequeno, estritamente de leitura e com handoff quase linear;
+		- repository usa resolveModel com unitScope explicito por unidade;
+		- bridge em api.db e praticamente unaria, sem policy ampla adicional;
+		- core getSetoresByUnitCore ja existe e e fino, o que facilita congelar o corredor sem refactor funcional;
+		- ja existem testes runtime-contract e owner structural-seam proximos, reduzindo risco do proximo microcorte.
+	- risco estimado:
+		- baixo.
+	- cobertura de testes existente ou lacuna:
+		- cobertura existente em gestor-setores-get-by-unit-runtime-contract.test.js e gestor-setores-get-by-unit-owner-structural-seam.test.js;
+		- lacuna atual e um teste contratual tenant-aware pequeno congelando repository + bridge + core com unitScope explicito no corredor escolhido.
+	- escopo permitido do proximo microcorte:
+		- criar teste contratual novo para SetorReadRepository_getSetoresByUnitCore_findSetoresByUnidadeIdPopulateLean;
+		- ler apenas repository, api.db, getSetoresByUnitCore, owner/controller e testes adjacentes desse corredor;
+		- validar apenas o slice de leitura por unidade e seu uso de unitScope explicito.
+	- escopo proibido do proximo microcorte:
+		- abrir listagem geral de setores, page bundle de setores ou counters/create/delete/update de setores;
+		- abrir Feedback status/resposta/delete/upload/widget settings;
+		- abrir UnidadeReadRepository inteiro, listagem completa, diretores, pages/bundles ou FuncionarioRepository amplo;
+		- tenant registry, tenant DB real, Portal, PostgreSQL, rotas, request path, scripts, CLI, jobs, bootstrap ou escrita real.
+- Alternativas descartadas ou adiadas:
+	- FeedbackReadRepository_findFeedbackByFilterSortCreatedAtDescLimit200Lean:
+		- adiado porque o repository de Feedback continua misturando create/update/delete com leitura, e a bridge de leitura preserva opcoes de fallback legacy/global que ampliam policy e risco do slice.
+	- SetorReadRepository_findSetoresByFiltroPopulateUnidadeLean_listSetoresCore:
+		- adiado porque a listagem geral de setores ainda puxa branch privilegiado global e fallback de lookup/unidade_label, deixando o corredor mais largo que o get-by-unit.
+- Criterios de seguranca para o proximo microcorte:
+	- manter fallback base/global ou exigencia explicita de unidade/ancora conforme o codigo atual;
+	- nao abrir tenant DB real;
+	- nao alterar Portal;
+	- nao criar rota;
+	- nao criar CLI/script/job/bootstrap;
+	- nao usar dados reais;
+	- nao executar escrita real;
+	- validar com teste especifico antes de qualquer refactor amplo.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- userProfileTenantAwareFrontClosed=true
+	- funcoesTenantAwareFrontClosed=true
+	- modulosTenantAwareFrontClosed=true
+	- recursosTenantAwareFrontClosed=true
+	- funcionariosDisponiveisTenantAwareFrontClosed=true
+	- unidadesClusterTenantAwareFrontClosed=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- nextTenantAwareTargetSelected=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=SetorReadRepository_getSetoresByUnitCore_findSetoresByUnidadeIdPopulateLean
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental do alvo nao autoriza alteracao de codigo;
+	- selecao documental do alvo nao autoriza escrita real;
+	- selecao documental do alvo nao autoriza tenant DB real;
+	- selecao documental do alvo nao autoriza Portal;
+	- selecao documental do alvo nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
+
 
 
 
