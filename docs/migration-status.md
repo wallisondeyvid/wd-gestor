@@ -1603,6 +1603,7 @@ Checkpoint tenant enforcement atual:
 - quantidade de skipped: 2.
 - duration_ms: 241378.9944.
 - esta validacao final completa confirma somente o encerramento documental validado da Fase W.
+
 - esta validacao nao autoriza preparacao operacional concreta.
 - esta validacao nao autoriza execucao.
 - esta validacao nao autoriza rollback real.
@@ -1635,6 +1636,134 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria: registro de encerramento no ledger nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push e nao abre fase posterior automaticamente.
 - Push: pendente; nao realizar push ate fechamento global da fase/bloco amplo, auditoria final pre-publicacao e autorizacao explicita.
+
+- Proximo alvo tenant-aware pos-lookup de Unidades por ids selecionado documentalmente.
+- Base publicada:
+	- 7288680 docs(tenant): encerra frente lookup unidades por ids tenant-aware.
+- Premissa consolidada:
+	- dados atuais sao ficticios;
+	- nao ha clientes reais;
+	- nao ha migracao de dados legados reais;
+	- objetivo e migracao arquitetural multi-tenant;
+	- dados ficticios poderao ser deletados quando necessario.
+- Estado inicial:
+	- branch sincronizada com origin;
+	- worktree limpa;
+	- tenant registry fechado/protegido;
+	- usuario atual/profile fechado/protegido;
+	- Funcoes fechado/protegido;
+	- Modulos fechado/protegido;
+	- Recursos fechado/protegido;
+	- Funcionarios disponiveis fechado/protegido;
+	- Cluster de Unidades fechado/protegido;
+	- Setores por unidade fechado/protegido;
+	- Feedback leitura limitada fechado/protegido;
+	- Lookup de Unidades por ids fechado/protegido;
+	- tenant registry nao sera avancado agora.
+- Auditoria read-only executada:
+	- comandos usados:
+		- git status -sb;
+		- git --no-pager log --oneline --decorate -12;
+		- Get-Content .\docs\migration-status.md -Tail 1100;
+		- Get-ChildItem .\src -Recurse -File -Include "*Repository*.js","*Service*.js","*.repository.js","*.service.js" | Select-Object -ExpandProperty FullName;
+		- Select-String -Path .\src\**\*.js -Pattern "unitScope","getConnectionForUnit","baseConnection","mongoose.model","ModelRegistry","BaseRepository","req.unitScope","req.unidade","unidadeId","feedback","setor","setores","unidade","unidades","funcionario","funcionarios","morador","pessoa","habitacao","apartamento","mailbox","widget","status","upload","resposta","diretor","diretores","membership","usuario","user" -CaseSensitive:$false;
+		- Get-ChildItem .\tests -Recurse -File | Select-Object -ExpandProperty FullName;
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "ReadRepository","Repository","findBy","listar","buscar","obter","Feedback","Setor","Setores","Unidade","Unidades","Funcionario","Funcionarios","Pessoa","Morador","Habitacao","Apartamento","Mailbox","Widget","Status","Diretor","Diretores","Membership","Usuario","User" -CaseSensitive:$false;
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "FeedbackReadRepository","SetorReadRepository","UnidadeReadRepository","FuncionarioRepository","UserMembershipRepository","UserRepository","findFeedback","findSetores","findUnidades","findFuncionario","findFuncionarios","findMembership","findUser","findUsuario","loadPaginaFeedback","loadPaginaSetores","loadPaginaUnidades","loadPaginaFuncionarios","feedbackStatusDataFacade","feedbackReadDataFacade","unidadesClusterDataFacade","unidadesReadDataFacade","unidadesDiretores","setoresReadDataFacade","widgetSettings","resposta","upload","diretores" -CaseSensitive:$false;
+		- Get-Content .\src\modules\gestor\app\repositories\FeedbackReadRepository.js -TotalCount 720;
+		- Get-Content .\src\modules\gestor\app\repositories\SetorReadRepository.js -TotalCount 720;
+		- Get-Content .\src\modules\gestor\app\repositories\UnidadeReadRepository.js -TotalCount 820;
+		- Get-Content .\src\modules\gestor\app\repositories\FuncionarioRepository.js -TotalCount 820;
+		- Get-Content .\src\modules\gestor\app\repositories\UserMembershipRepository.js -TotalCount 520;
+		- Get-Content .\src\modules\gestor\app\repositories\UserRepository.js -TotalCount 520;
+		- Select-String -Path .\src\modules\gestor\app\**\*.js -Pattern "FeedbackReadRepository","SetorReadRepository","UnidadeReadRepository","FuncionarioRepository","UserMembershipRepository","UserRepository","ReadDataFacade","loadPagina","listar","buscar","obter","findFeedback","findSetores","findUnidades","findFuncionario","findFuncionarios","findMembership","findUser","findUsuario","feedbackStatusDataFacade","widgetSettings","resposta","upload","diretores","membership","usuario","user" -CaseSensitive:$false;
+		- Select-String -Path .\tests\**\*.js -Pattern "gestor-feedback","gestor-setores","gestor-unidades","gestor-funcionarios","usuarios","membership","FeedbackReadRepository","SetorReadRepository","UnidadeReadRepository","FuncionarioRepository","UserMembershipRepository","UserRepository","unit-scope","tenantScope","runtime-contract","structural-seam","widget","status","upload","resposta","diretores" -CaseSensitive:$false.
+	- arquivos/categorias mapeadas:
+		- ledger final da migracao tenant-aware;
+		- repositories e services do Gestor com foco em Feedback, Setores, Unidades, Funcionarios, User e UserMembership;
+		- bridges em api.db.js e cores finos adjacentes;
+		- testes runtime-contract, structural-seam e contratos arquiteturais ja existentes;
+		- call sites de listagem geral de Setores, bundles de Funcionarios e lookups auxiliares de Unidades.
+	- candidatos observados:
+		- SetorReadRepository -> findSetoresByFiltroPopulateUnidadeLeanRepo -> api.db.findSetoresByFiltroPopulateUnidadeLean -> listSetoresCore -> listarSetores;
+		- FuncionarioRepository -> findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo / findAllFuncionariosSelectIdNomeCpfLeanRepo, mas em vizinhanca de loadPaginaFuncionariosBundle e listUsuariosOwner;
+		- UnidadeReadRepository -> findUnidadesAtivasCodigoNomeOrdenadasSelectLeanRepo / findUnidadesByCondSelectCodigoNomeOrdenadasLeanRepo, mas puxando page bundle de Funcionarios;
+		- FeedbackReadRepository residual fora de list200/list500, mas vizinho de detail, update, delete, status, resposta, upload e widget settings;
+		- UserMembershipRepository e UserRepository com slices de leitura pequenos, mas proximos de auth, memberships e fluxos administrativos amplos.
+- Decisao:
+	- alvo principal escolhido:
+		- SetorReadRepository_listSetoresCore_findSetoresByFiltroPopulateUnidadeLean.
+	- motivo da escolha:
+		- corredor pequeno, estritamente de leitura e com handoff linear entre repository, bridge e core fino;
+		- findSetoresByFiltroPopulateUnidadeLeanRepo usa resolveModel com unitScope explicito via scopeFromSetorFiltro na bridge, sem write path nem page bundle proprio;
+		- listSetoresCore e fino, so mapeia unidade populada ou lookup auxiliar por ids, reaproveitando o corredor de lookup de Unidades ja protegido;
+		- listarSetores ja possui gate contextual e testes adjacentes de runtime e structural seam, o que reduz risco e facilita um teste contratual novo e pequeno.
+	- risco estimado:
+		- baixo.
+	- cobertura de testes existente ou lacuna:
+		- cobertura existente em tests/gestor-setores-list-runtime-contract.test.js e tests/gestor-setores-list-owner-structural-seam.test.js;
+		- cobertura adjacente adicional em tests/architecture/unidadesLookupByIdsTenantScope.contract.test.js, porque listSetoresCore depende do lookup auxiliar por ids quando o populate nao vem resolvido;
+		- lacuna atual e um teste contratual tenant-aware pequeno congelando repository helper, bridge e core de listagem geral de Setores.
+	- escopo permitido do proximo microcorte:
+		- teste contratual novo e pequeno;
+		- leitura focal de SetorReadRepository.js, api.db.js, listSetoresCore.js, setorApiController.js e testes adjacentes desse corredor;
+		- congelar apenas o uso de unitScope explicito e o handoff do slice read-only de listagem geral de Setores.
+	- escopo proibido do proximo microcorte:
+		- abrir getSetoresByUnitCore novamente;
+		- abrir page bundle de Setores, counters, create, delete ou update;
+		- abrir Feedback amplo, widget settings, status, resposta, detail, upload ou delete;
+		- abrir loadPaginaFuncionariosBundle, listUsuariosOwner, membership, autenticacao, sessao ou qualquer escrita real;
+		- abrir Portal, tenant DB real, Mongo real, PostgreSQL, rota nova, CLI, script, job, bootstrap ou request path.
+- Alternativas descartadas ou adiadas:
+	- alternativa adiada 1:
+		- FuncionarioRepository_findFuncionariosByUnidadeIdsSelectIdNomeCpfLean.
+		- motivo: helper pequeno no papel, mas o corredor observado encosta em loadPaginaFuncionariosBundle, listUsuariosOwner, usuarios e memberships, elevando o blast radius acima da regua do proximo microcorte.
+	- alternativa adiada 2:
+		- FeedbackReadRepository residual fora de list200/list500.
+		- motivo: reabriria imediatamente detail, status, resposta, delete, upload ou widget settings, contrariando a decisao de manter Feedback amplo fechado apos a frente de leitura limitada.
+- Criterios de seguranca para o proximo microcorte:
+	- manter fallback base/global ou exigencia explicita de unidade/ancora conforme o codigo atual;
+	- nao abrir tenant DB real;
+	- nao alterar Portal;
+	- nao criar rota;
+	- nao criar CLI/script/job/bootstrap;
+	- nao usar dados reais;
+	- nao executar escrita real;
+	- validar com teste especifico antes de qualquer refactor amplo.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- userProfileTenantAwareFrontClosed=true
+	- funcoesTenantAwareFrontClosed=true
+	- modulosTenantAwareFrontClosed=true
+	- recursosTenantAwareFrontClosed=true
+	- funcionariosDisponiveisTenantAwareFrontClosed=true
+	- unidadesClusterTenantAwareFrontClosed=true
+	- setoresByUnitTenantAwareFrontClosed=true
+	- feedbackReadTenantAwareFrontClosed=true
+	- unidadesLookupByIdsTenantAwareFrontClosed=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- nextTenantAwareTargetSelected=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=SetorReadRepository_listSetoresCore_findSetoresByFiltroPopulateUnidadeLean
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental do alvo nao autoriza alteracao de codigo;
+	- selecao documental do alvo nao autoriza escrita real;
+	- selecao documental do alvo nao autoriza tenant DB real;
+	- selecao documental do alvo nao autoriza Portal;
+	- selecao documental do alvo nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 
 - Fase X encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-x-operational-preparation-opening-contract.md
