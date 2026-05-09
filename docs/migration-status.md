@@ -6179,6 +6179,102 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado, preferencialmente diagnostico read-only de refactor minimo no corredor Cluster de Unidades.
 
+- Diagnostico de refactor minimo do corredor Cluster de Unidades executado.
+- Base local:
+	- 1bcfd2c test(tenant): protege scope tenant-aware do cluster de unidades.
+- Auditoria read-only realizada.
+	- leituras revisadas:
+		- tests/architecture/unidadesClusterTenantScope.contract.test.js
+		- src/modules/gestor/app/repositories/UnidadeReadRepository.js
+		- src/modules/gestor/app/data/unidades/unidadesClusterDataFacade.js
+		- src/modules/gestor/app/services/unidades/findClusterUnidadesByAnchor.service.js
+		- src/modules/gestor/app/services/apiDbBridgeService.js
+		- src/modules/gestor/app/controllers/miscApiController.js
+		- src/modules/gestor/app/db/api.db.js
+		- src/shared/repositories/BaseRepository.js
+		- src/shared/unitScope.js
+		- tests/gestor-api-unidades-cluster-runtime-contract.test.js
+		- tests/gestor-api-unidades-cluster-structural-seam-runtime-contract.test.js
+		- tests/gestor-unidades-unit-scope-canonical.test.js
+		- tests/gestor-unidades-list-runtime-contract.test.js
+		- tests/architecture/repository-unitScope.test.js
+		- docs/migration-status.md
+	- foco da auditoria:
+		- confirmar se havia lacuna funcional concreta no slice pequeno UnidadeReadRepository -> unidadesClusterDataFacade -> findClusterUnidadesByAnchorLean;
+		- distinguir necessidade real de refactor em src de mera oportunidade futura de padronizacao.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- UnidadeReadRepository nao deve migrar para BaseRepository agora, porque o repository ja usa resolveModel com unitScope explicito no helper protegido e o contrato novo congelou exatamente essa garantia;
+	- unidadesClusterDataFacade nao deve mudar agora, porque continua pequena, legivel e deriva/propaga o escopo tenant-aware a partir da ancora de forma direta e suficiente para o slice escolhido;
+	- findClusterUnidadesByAnchor.service nao deve mudar agora, porque permanece service fino, direto e sem policy ampla adicional;
+	- UnidadeReadRepository inteiro, listagem completa de unidades, diretores, paginas/bundles, Setores, Feedback e Funcionarios devem continuar fora deste momento, porque ampliam desnecessariamente a superficie do microcorte;
+	- o estado atual com resolveModel mais unitScope explicito e aceitavel no presente, pois entrega escopo tenant-aware claro no helper sem exigir tenant DB real, Portal ou refactor estrutural adicional;
+	- a derivacao/propagacao de unitScope a partir da ancora e aceitavel no estado presente, porque o corredor representa uma leitura de cluster por ancora e o codigo atual exige ancora explicita antes de tocar o repository;
+	- o fallback seguro/base-global esta suficientemente congelado conforme o codigo atual: o corredor principal exige ancora explicita, enquanto o caminho compativel FromDb em api.db permanece separado e documentado sem introduzir fallback artificial novo;
+	- o que existe aqui e oportunidade futura de padronizacao, nao lacuna funcional pequena, falsificavel e com ganho claro imediato.
+- Fundamentacao tecnica do diagnostico:
+	- UnidadeReadRepository permanece repository amplo, mas o helper findClusterUnidadesByAnchorLeanRepo e pequeno e usa resolveModel com unitScope explicito, filtrando apenas o cluster derivado da ancora;
+	- unidadesClusterDataFacade continua como ponte pequena: normaliza a ancora, monta as condicoes de cluster e delega ao repository com createUnitScope;
+	- findClusterUnidadesByAnchor.service segue como handoff fino para a facade, sem agregar policy ampla, branch extra ou surface operacional nova;
+	- api.db.findClusterUnidadesByAnchorLean preserva a delegacao compativel ao service fino e api.db.findClusterUnidadesByAnchorLeanFromDb mantem o caminho direto separado, o que ja congela o comportamento atual sem exigir mudanca estrutural;
+	- miscApiController resolve a ancora e aplica os gates de acesso no ponto de borda, mantendo o corredor principal pequeno e sem exigir ampliacao para pages, bundles ou listagem ampla;
+	- BaseRepository hoje valida unitScope e expone applyTenantFilter, mas convergir UnidadeReadRepository para essa base agora alteraria a forma de um repository grande sem mostrar ganho funcional concreto no helper protegido.
+- Impacto e risco se houvesse conversao agora:
+	- a chance de mudar comportamento runtime aumentaria, porque a conversao tocaria um repository compartilhado por muitos corredores alem do slice de cluster por ancora;
+	- o risco tecnico subiria de baixo para baixo-moderado ou moderado sem evidencia de ganho funcional proporcional;
+	- a mudanca nao exigiria tenant DB real nem Portal por si so, mas tenderia a puxar validacao mais ampla de listagem, pages, bundles, diretores e bridges adjacentes, aumentando custo e superficie do microcorte;
+	- expandir agora para UnidadeReadRepository inteiro, listagem completa de unidades, diretores, paginas/bundles, Setores, Feedback ou Funcionarios aumentaria ainda mais o risco, porque misturaria o slice pequeno de cluster com dominios mais largos e heterogeneos.
+- Risco estimado da decisao de nao refatorar agora:
+	- baixo;
+	- o corredor pequeno ja esta suficientemente protegido para o estado atual;
+	- o risco residual principal e apenas de divergencia futura caso outro microcorte mexa em bridges ou superfices amplas do dominio sem rerodar a bateria de regressao apropriada.
+- Testes que deverao ser rodados em qualquer microcorte futuro deste corredor:
+	- node --test .\tests\architecture\unidadesClusterTenantScope.contract.test.js
+	- node --test .\tests\gestor-api-unidades-cluster-runtime-contract.test.js
+	- node --test .\tests\gestor-api-unidades-cluster-structural-seam-runtime-contract.test.js
+	- node --test .\tests\gestor-unidades-unit-scope-canonical.test.js
+	- node --test .\tests\gestor-unidades-list-runtime-contract.test.js
+	- node --test .\tests\architecture\repository-unitScope.test.js
+	- npm run verify:imports
+- Escopo permitido do proximo microcorte:
+	- validacao consolidada desta frente curta;
+	- fechamento documental desta frente curta, se desejado;
+	- eventual novo microcorte proprio e aprovado apenas se surgir lacuna funcional pequena, concreta e falsificavel.
+- Escopo proibido do proximo microcorte:
+	- alterar src sem novo microcorte aprovado;
+	- expandir para UnidadeReadRepository inteiro, listagem completa de unidades, diretores, paginas/bundles, Setores, Feedback ou Funcionarios neste mesmo diagnostico;
+	- tenant DB real, Mongo real, Portal, rotas, scripts, CLI, jobs, bootstrap, start.js, server.js, createServer.js ou PostgreSQL;
+	- escrita real, rollback real ou uso de dados reais.
+- Decisao recomendada:
+	- preferir validacao consolidada ou fechamento desta frente curta;
+	- nao abrir refactor minimo em src agora;
+	- tratar qualquer futura conversao estrutural como microcorte proprio, separado e justificado por lacuna funcional concreta, nao por estetica.
+- Gates:
+	- selectedTarget=UnidadeReadRepository_unidadesClusterDataFacade_findClusterUnidadesByAnchorLean
+	- unidadesClusterTenantScopeContractCreated=true
+	- unidadesClusterTenantScopeContractValidated=true
+	- unidadesClusterRefactorDiagnosticExecuted=true
+	- unidadesClusterRefactorRecommended=false
+	- unidadesClusterWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 
 
 
