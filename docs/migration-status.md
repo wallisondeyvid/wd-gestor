@@ -4264,6 +4264,55 @@ a83e94b docs(tenant): registra bloqueio de base global para escrita sintetica te
 	- este checkpoint nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
 	- proximo microcorte recomendado deve ser teste arquitetural de protecao contra superficie operacional indevida do harness.
 
+- Teste arquitetural de protecao contra uso operacional do harness sintetico tenant registry criado.
+- Base local: 07340c7 docs(tenant): inicia pos-bloco harness tenant registry.
+- Arquivo criado:
+	- tests/architecture/unitDatabaseRegistrySyntheticHarnessNoOperationalSurface.contract.test.js
+- Natureza:
+	- teste arquitetural;
+	- read-only;
+	- protecao contra superficie operacional;
+	- sem escrita;
+	- sem rollback;
+	- sem Mongo real;
+	- sem tenant DB real;
+	- sem Portal;
+	- sem PostgreSQL.
+- Contrato validado:
+	- harness so pode ser usado em testes arquiteturais autorizados;
+	- harness nao pode ser importado por src runtime, rotas, scripts, start, server, createServer, bootstrap, jobs ou request path;
+	- harness continua sem mongoose.connect, createConnection, MONGO_URI, MONGODB_URI, process.argv, express, listen, route ou PostgreSQL.
+- Resultado dos testes:
+	- unitDatabaseRegistrySyntheticHarnessNoOperationalSurface.contract.test.js: PASS, 3 tests, 0 fail;
+	- unitDatabaseRegistrySyntheticBaseConnectionHarness.contract.test.js: PASS, 4 tests, 0 fail;
+	- unitDatabaseRegistrySyntheticWriteWithHarness.contract.test.js: PASS, 3 tests, 0 fail;
+	- npm run verify:imports: arquitetura limpa.
+- Confirmacoes:
+	- nenhum arquivo em src foi alterado;
+	- nenhum package, script, rota ou bootstrap foi alterado;
+	- nenhuma escrita foi executada;
+	- nenhum rollback foi executado;
+	- nenhum push foi realizado.
+- Gates:
+	- postSyntheticHarnessBlockStarted=true
+	- syntheticHarnessOperationalSurfaceProtectionTestCreated=true
+	- operationalHarnessUsageApproved=false
+	- harnessRuntimeImportOutsideArchitectureTests=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- rollbackRealExecuted=false
+	- pushRequired=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este teste nao autoriza uso operacional do harness;
+	- este teste nao autoriza escrita real;
+	- este teste nao autoriza Mongo real;
+	- este teste nao autoriza tenant DB real;
+	- este teste nao autoriza Portal, dados reais, usuario real, unidade real ou PostgreSQL;
+	- proximo avanco funcional deve depender de novo microcorte aprovado.
+
 ## Escalas
 Status: CHECKPOINTADO E PAUSADO
 Tipo: microcortes read-only locais em routers dedicados
