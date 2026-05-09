@@ -1765,6 +1765,45 @@ Checkpoint tenant enforcement atual:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 
+- Teste contratual tenant-aware do corredor listagem geral de Setores criado.
+- Base local:
+	- cd70b3d docs(tenant): seleciona proximo alvo tenant-aware pos-lookup-unidades.
+- Arquivo criado:
+	- tests/architecture/setoresListTenantScope.contract.test.js.
+- Contrato validado:
+	- SetorReadRepository limitado ao helper findSetoresByFiltroPopulateUnidadeLeanRepo;
+	- api.db.findSetoresByFiltroPopulateUnidadeLean;
+	- listSetoresCore como core fino;
+	- uso atual de unitScope/fallback congelado conforme codigo real;
+	- lookup auxiliar de Unidades por ids usado apenas como apoio ja protegido, sem reabrir UnidadeReadRepository amplo;
+	- ausencia de tenant registry, harness sintetico, Portal, rotas novas, scripts, CLI, jobs, bootstrap e tenant DB real;
+	- nenhuma expansao para getSetoresByUnitCore, page bundle, counters/create/delete/update, Feedback, Funcionarios ou membership.
+- Resultado dos testes:
+	- node --test .\tests\architecture\setoresListTenantScope.contract.test.js -> tests=5, pass=5, fail=0;
+	- node --test .\tests\gestor-setores-list-runtime-contract.test.js -> tests=6, pass=6, fail=0;
+	- node --test .\tests\gestor-setores-list-owner-structural-seam.test.js -> tests=4, pass=4, fail=0;
+	- node --test .\tests\architecture\unidadesLookupByIdsTenantScope.contract.test.js -> tests=5, pass=5, fail=0;
+	- node --test .\tests\architecture\repository-unitScope.test.js -> tests=2, pass=2, fail=0;
+	- npm run verify:imports -> Arquitetura limpa.
+- Confirmacoes:
+	- nenhum src alterado;
+	- nenhuma escrita real;
+	- nenhum rollback;
+	- nenhum Mongo real;
+	- nenhum tenant DB real;
+	- nenhum Portal/PostgreSQL;
+	- nenhuma rota/request path.
+- Gates:
+	- selectedTarget=SetorReadRepository_listSetoresCore_findSetoresByFiltroPopulateUnidadeLean
+	- setoresListTenantScopeContractCreated=true
+	- setoresListTenantScopeContractValidated=true
+	- sourceCodeChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+
 - Fase X encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-x-operational-preparation-opening-contract.md
 - Commit local de encerramento do contrato: 75db8d2 docs(tenant): encerra fase x
