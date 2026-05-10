@@ -526,7 +526,7 @@ export function buildDistinctPlan(entity, field) {
 export function validateQueryPlan(plan) {
   const operationValidation = validateOperationAllowlist(plan?.operation);
   const aggregateValidation =
-    plan?.operation === 'aggregate'
+    plan?.operation === 'aggregate' && Array.isArray(plan?.pipeline)
       ? validateAggregatePipeline(plan.pipeline)
       : { ok: true, status: 'not-applicable', blockedStages: [] };
   const hasExplicitProjection =
@@ -581,18 +581,16 @@ export function buildReadOnlyQueryPlan(entityManifest) {
     }
 
     if (entity.duplicateChecks.length > 0) {
-      const pipeline = entity.duplicateChecks.map((duplicateCheck) => ({
-        $group: { _id: duplicateCheck, count: { $sum: 1 } },
-      }));
-
       plans.push({
         entityKey: entity.key,
         type: 'duplicate-check',
         operation: 'aggregate',
         collection: entity.conceptualCollection,
         projectionFields: [],
-        pipeline,
-        notes: ['Plano declarativo de validacao de duplicidade; nao executa banco.'],
+        duplicateKeys: [...entity.duplicateChecks],
+        plannedOperation: 'aggregate',
+        pipelinePreview: 'blocked-until-query-implementation',
+        notes: ['Plano declarativo de validacao de duplicidade; nao executa banco.', 'Pipeline real permanece bloqueado ate microcorte proprio.'],
       });
     }
   }

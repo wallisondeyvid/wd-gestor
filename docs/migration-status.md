@@ -4079,6 +4079,79 @@ Checkpoint tenant enforcement atual:
 	- estes query plans nao autorizam criacao de usuario;
 	- proxima etapa deve revisar o skeleton declarativo de query plans antes de qualquer conexao ou query real.
 
+- Skeleton declarativo de query plans revisado documentalmente.
+- Base publicada:
+	- 018ceea chore(ops): implementa planos de query do inventario read-only.
+- Registro da revisao:
+	- query plans revisados;
+	- duplicate checks mantidos como estrutura declarativa segura;
+	- nenhuma conexao implementada;
+	- nenhuma query real executada;
+	- nenhuma geracao de relatorio real;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico da revisao:
+	- a revisao confirmou ausencia de mongoose, connectMongo, mongoose.connect, fs.writeFile, conexao, query real e escrita real;
+	- o ajuste obrigatorio foi tornar duplicate-check explicitamente nao executavel, usando duplicateKeys, plannedOperation e pipelinePreview bloqueado em vez de stages reais;
+	- validateQueryPlan segue usando validateOperationAllowlist e so inspeciona pipeline quando houver array real de stages.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryConnectionLayer.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryQueryPlanSkeleton
+	- recommendedNextAct=designReadOnlyInventoryConnectionLayer
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryQueryPlanSkeletonReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryQueryPlanSkeleton
+	- recommendedNextAct=designReadOnlyInventoryConnectionLayer
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=true
+	- queryPlanReviewed=true
+	- duplicateChecksDeclarativeOnly=true
+	- queryExecuted=false
+	- connectionImplemented=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao nao executa query;
+	- esta revisao nao implementa conexao;
+	- esta revisao nao implementa leitura real de banco;
+	- esta revisao nao gera relatorio real;
+	- esta revisao nao executa inventario;
+	- esta revisao nao autoriza Mongo;
+	- esta revisao nao autoriza Atlas;
+	- esta revisao nao autoriza package.json;
+	- esta revisao nao autoriza reset ou limpeza;
+	- esta revisao nao autoriza seed, migration ou backfill;
+	- esta revisao nao autoriza criacao de unidade;
+	- esta revisao nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar a camada futura de conexao read-only antes de qualquer conexao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
