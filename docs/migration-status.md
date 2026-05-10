@@ -1849,6 +1849,107 @@ Checkpoint tenant enforcement atual:
 	- selecao documental nao autoriza PostgreSQL;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Matriz documental dos candidatos remanescentes pos-memberships ativos/auth-context registrada.
+- Base local:
+	- f4f46e6 docs(tenant): seleciona proximo alvo tenant-aware pos-memberships-auth-context.
+- Auditoria read-only realizada.
+	- leituras revisadas:
+		- docs/migration-status.md;
+		- package.json;
+		- listUsuariosOwner.service.js;
+		- api.db.js;
+		- UserRepository.js;
+		- UserMembershipRepository.js;
+		- FuncionarioRepository.js;
+		- UnidadeReadRepository.js;
+		- SetorReadRepository.js;
+		- FeedbackReadRepository.js;
+		- testes adjacentes limitados a listUsuariosOwner, bridges de funcionario, lookup/unidade-base de unidades, Setores e Feedback.
+- Matriz:
+	- candidato 1:
+		- arquivos: UserRepository.findUsersByUnidadeIdsExcludingMasterLeanRepo; UserMembershipRepository.findUserMembershipUserIdsByUnidadeIdsLeanRepo; api.db.findUsersByUnidadeIdsExcludingMasterLean/findUserMembershipUserIdsByUnidadeIdsLean/findUsersByIdsExcludingMasterLean; listUsuariosOwner.service.js;
+		- tipo: corredor read-mostly contextual de listagem de usuarios, com agregacao multipla;
+		- risco: medio;
+		- decisao: adiar agora;
+		- proximo ato recomendado: diagnostico focal futuro somente se o recorte ficar limitado ao branch contextual de listUsuariosOwner.service, sem abrir pages/bundles nem escrita.
+	- candidato 2:
+		- arquivos: FuncionarioRepository.findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo; api.db.findFuncionariosByUnidadeIdsSelectIdNomeCpfLean; listUsuariosOwner.service.js;
+		- tipo: helper read-only auxiliar de bundle de listagem de usuarios;
+		- risco: medio;
+		- decisao: adiar agora;
+		- proximo ato recomendado: manter apenas como subparte de eventual diagnostico focal do corredor contextual de listUsuariosOwner, nunca como alvo isolado automatico.
+	- candidato 3:
+		- arquivos: FuncionarioRepository.findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo; api.db.findFuncionarioByIdSelectIdUnidadeUsuarioLean; preflight adjacente em userController;
+		- tipo: helper de ancora/preflight, nao corredor read-only puro de owner pequeno;
+		- risco: medio;
+		- decisao: adiar agora;
+		- proximo ato recomendado: nenhum enquanto continuar acoplado ao preflight de usuario.
+	- candidato 4:
+		- arquivos: UnidadeReadRepository.findUnidadesByIdsNomeCodigoLeanRepo; api.db.findUnidadesByIdsNomeCodigoLean;
+		- tipo: helper read-only pequeno de lookup por ids;
+		- risco: baixo no helper em si, mas sem lacuna nova;
+		- decisao: nao reabrir;
+		- proximo ato recomendado: nenhum, salvo surgimento de lacuna nova e concreta alem da frente ja fechada.
+	- candidato 5:
+		- arquivos: UnidadeReadRepository.findUnidadeUserBaseSetorLeanRepo; api.db.findUnidadeUserBaseSetorLean;
+		- tipo: helper read-only adjacente de Setores por unidade;
+		- risco: baixo no helper em si, mas sem corredor novo proprio;
+		- decisao: nao reabrir;
+		- proximo ato recomendado: nenhum, salvo lacuna nova concreta fora da frente de Setores ja fechada.
+	- candidato 6:
+		- arquivos: SetorReadRepository helpers remanescentes, especialmente findSetoresByFiltroPopulateUnidadeLeanRepo e helpers auxiliares do mesmo arquivo;
+		- tipo: corredores read-only remanescentes de Setores, ja cobertos por frentes encerradas;
+		- risco: baixo-moderado se reaberto sem lacuna nova;
+		- decisao: adiar e nao reabrir frente fechada;
+		- proximo ato recomendado: nenhum agora.
+	- candidato 7:
+		- arquivos: FeedbackReadRepository helpers remanescentes, especialmente findFeedbackByFilterSortCreatedAtDescLimit200LeanRepo e findFeedbackByFilterSortCreatedAtDescLimit500LeanRepo;
+		- tipo: corredor read-only limitado de Feedback;
+		- risco: baixo no helper em si, mas frente ja fechada/protegida;
+		- decisao: nao reabrir sem lacuna nova;
+		- proximo ato recomendado: nenhum agora.
+- Evidencia de testes adjacentes existentes:
+	- listUsuariosOwner: gestor-users-memberships-page.test.js; gestor-usuarios-list-owner-structural-seam.test.js;
+	- funcionario anchor/preflight: gestor-funcionario-anchor-by-id-unit-scope-bridge.test.js;
+	- lookup unidades por ids: architecture/unidadesLookupByIdsTenantScope.contract.test.js;
+	- unidade-base de setores: setor.unidade-base.contract.test.js;
+	- setores: architecture/setoresByUnitTenantScope.contract.test.js; architecture/setoresListTenantScope.contract.test.js;
+	- feedback: architecture/feedbackReadTenantScope.contract.test.js.
+- Conclusao:
+	- nao ha candidato seguro para teste contratual imediato neste momento;
+	- ha no maximo um candidato para diagnostico focal posterior: o branch contextual de listUsuariosOwner.service, e ainda assim somente como microcorte proprio, read-only e estritamente delimitado;
+	- nenhum src deve ser alterado agora;
+	- nenhum teste novo deve ser criado agora;
+	- push continua proibido ate fechamento proprio e push consolidado autorizado.
+- Recomendacao:
+	- adiar todos e encerrar a rodada atual;
+	- se houver continuidade futura, preferir diagnostico focal futuro de listUsuariosOwner contextual antes de qualquer teste novo.
+- Gates:
+	- postActiveMembershipsMatrixExecuted=true
+	- postActiveMembershipsRemainingCandidatesMapped=true
+	- postActiveMembershipsImmediateContractRecommended=false
+	- postActiveMembershipsImmediateRefactorRecommended=false
+	- selectedTarget=matrix_postActiveMembershipsRemainingCandidates
+	- selectedTargetType=matrix
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- matriz nao autoriza alteracao funcional;
+	- matriz nao autoriza teste novo automaticamente;
+	- matriz nao autoriza escrita real;
+	- matriz nao autoriza tenant DB real;
+	- matriz nao autoriza Portal;
+	- matriz nao autoriza PostgreSQL;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
