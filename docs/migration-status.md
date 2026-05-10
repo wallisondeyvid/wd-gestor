@@ -4413,6 +4413,113 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar a camada futura de relatorio, ainda sem gerar arquivo real.
 
+- Camada futura de relatorio do inventario read-only desenhada documentalmente.
+- Base publicada:
+	- 91c59eb chore(ops): revisa skeleton de conexao read-only.
+- Objetivo da futura camada de relatorio:
+	- transformar futuramente dados intermediarios do inventario em relatorio local;
+	- manter o relatorio fora do banco;
+	- mascarar dados sensiveis;
+	- registrar contagens, amostras, orfaos, duplicidades, riscos e pendencias humanas;
+	- nao gerar arquivo neste microcorte.
+- Estrategia tecnica futura:
+	- separar montagem de conteudo do relatorio e escrita de arquivo;
+	- criar primeiro helpers puros de renderizacao;
+	- gerar markdown ou json apenas em microcorte futuro;
+	- manter fs.writeFile bloqueado ate microcorte proprio;
+	- usar caminho aprovado, preferencialmente docs/runbooks/generated ou pasta operacional definida;
+	- incluir timestamp, ambiente mascarado, database alvo, resumo de entidades, planos de query, resultados futuros, candidatos a descarte e pendencias;
+	- nunca incluir senha, hash, token, URI completa, env completa, CPF ou email sem mascara ou anexos brutos.
+- Guardrails obrigatorios:
+	- nao gerar relatorio no mesmo microcorte do desenho;
+	- nao usar fs.writeFile antes de revisao;
+	- nao salvar relatorio no banco;
+	- nao executar query junto da geracao;
+	- nao conectar Mongo junto da geracao;
+	- nao alterar package.json junto da geracao;
+	- nao classificar automaticamente nada como deletavel;
+	- nao expor dados reais;
+	- nao usar Atlas sem autorizacao explicita.
+- Design futuro sugerido:
+	- buildReportMetadata(context);
+	- buildReportSections(inventoryData);
+	- renderMarkdownReport(reportModel);
+	- renderJsonReport(reportModel);
+	- validateReportOutputPath(path);
+	- maskReportSensitiveValues(value);
+	- summarizeReportModel(reportModel).
+- Criterios de aceite futuros:
+	- renderizacao pode ser testada com dados mockados;
+	- escrita em disco so em microcorte proprio;
+	- output path validado;
+	- conteudo sensivel mascarado;
+	- relatorio declara que e inventario read-only;
+	- relatorio declara que nenhuma alteracao foi feita no banco;
+	- relatorio separa candidatos a descarte de decisao humana final.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum helper implementado;
+	- nenhum arquivo gerado;
+	- proximo ato recomendado: implementReadOnlyReportDesignSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryReportLayer
+	- recommendedNextAct=implementReadOnlyReportDesignSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryReportLayerDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryReportLayer
+	- recommendedNextAct=implementReadOnlyReportDesignSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- reportLayerDesigned=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset ou limpeza;
+	- este desenho nao autoriza seed, migration ou backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve implementar apenas skeleton declarativo de relatorio, ainda sem gerar arquivo real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
