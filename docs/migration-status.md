@@ -2071,6 +2071,59 @@ Checkpoint tenant enforcement atual:
 	- diagnostico nao autoriza PostgreSQL;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Diagnostico contextual da listagem de usuarios encerrado documentalmente.
+- Base local:
+	- e8df808 docs(tenant): diagnostica alvo contextual listagem usuarios.
+- Escopo encerrado:
+	- diagnostico read-only focal do branch contextual de listUsuariosOwner.service.js;
+	- decisao de nao abrir teste contratual imediato;
+	- decisao de nao abrir refactor em src;
+	- decisao de manter recommendedNextAct=defer.
+- Resultado final:
+	- branch contextual e read-only no recorte analisado;
+	- branch contextual e amplo demais para teste contratual pequeno agora;
+	- dependencias envolvem multiplos bridges/repositories;
+	- seam principal ja possui cobertura adjacente suficiente;
+	- nenhum src deve ser alterado agora;
+	- nenhum teste novo deve ser criado agora.
+- Confirmacoes finais:
+	- nenhum src alterado;
+	- nenhum teste alterado;
+	- nenhuma escrita real;
+	- nenhum rollback;
+	- nenhum Mongo real;
+	- nenhum tenant DB real;
+	- Portal nao usado;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- userListContextualDiagnosticExecuted=true
+	- userListContextualCandidatesRead=true
+	- userListContextualImmediateContractRecommended=false
+	- userListContextualImmediateRefactorRecommended=false
+	- userListContextualDiagnosticClosed=true
+	- selectedTarget=UserListContextualOwnerReadDiagnostic
+	- recommendedNextAct=defer
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento do diagnostico nao autoriza alteracao funcional;
+	- fechamento do diagnostico nao autoriza teste novo automaticamente;
+	- fechamento do diagnostico nao autoriza escrita real;
+	- fechamento do diagnostico nao autoriza tenant DB real;
+	- fechamento do diagnostico nao autoriza Portal;
+	- fechamento do diagnostico nao autoriza PostgreSQL;
+	- proximo ato podera ser validacao consolidada e push somente com autorizacao explicita.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
