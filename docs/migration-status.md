@@ -1950,6 +1950,62 @@ Checkpoint tenant enforcement atual:
 	- matriz nao autoriza PostgreSQL;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Rodada pos-memberships ativos/auth-context encerrada documentalmente.
+- Base local:
+	- a384ef5 docs(tenant): mapeia matriz de candidatos pos-memberships-auth-context.
+- Escopo encerrado:
+	- selecao documental pos-memberships;
+	- matriz documental dos candidatos remanescentes;
+	- decisao de nao abrir teste contratual imediato;
+	- decisao de nao abrir refactor em src;
+	- decisao de manter candidatos remanescentes adiados ate microcorte proprio.
+- Commits locais da rodada:
+	- f4f46e6 docs(tenant): seleciona proximo alvo tenant-aware pos-memberships-auth-context;
+	- a384ef5 docs(tenant): mapeia matriz de candidatos pos-memberships-auth-context.
+- Resultado final:
+	- nenhum novo slice foi aberto;
+	- nenhum teste novo foi criado;
+	- nenhum src foi alterado;
+	- recomendacao futura mais plausivel: diagnostico focal do branch contextual de listUsuariosOwner.service.js, somente se aprovado em microcorte proprio;
+	- todos os demais candidatos permanecem adiados.
+- Confirmacoes finais:
+	- nenhum src alterado;
+	- nenhum teste alterado;
+	- nenhuma escrita real;
+	- nenhum rollback;
+	- nenhum Mongo real;
+	- nenhum tenant DB real;
+	- Portal nao usado;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- postActiveMembershipsMatrixExecuted=true
+	- postActiveMembershipsRemainingCandidatesMapped=true
+	- postActiveMembershipsImmediateContractRecommended=false
+	- postActiveMembershipsImmediateRefactorRecommended=false
+	- postActiveMembershipsRoundClosed=true
+	- selectedTarget=matrix_postActiveMembershipsRemainingCandidates
+	- selectedTargetType=matrix
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento da rodada nao autoriza alteracao funcional;
+	- fechamento da rodada nao autoriza teste novo automaticamente;
+	- fechamento da rodada nao autoriza escrita real;
+	- fechamento da rodada nao autoriza tenant DB real;
+	- fechamento da rodada nao autoriza Portal;
+	- fechamento da rodada nao autoriza PostgreSQL;
+	- proximo ato podera ser validacao consolidada e push somente com autorizacao explicita.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
