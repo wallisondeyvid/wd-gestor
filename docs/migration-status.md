@@ -2810,6 +2810,80 @@ Checkpoint tenant enforcement atual:
 	- esta preparacao nao autoriza criacao de usuario;
 	- proxima etapa deve ser revisao humana do checklist antes de qualquer execucao.
 
+- Revisao humana/documental do checklist de inventario read-only concluida.
+- Base publicada:
+	- 45b895f docs(ops): prepara checklist de inventario read-only.
+- Checklist revisado:
+	- inventario deve ser somente leitura;
+	- saida deve ser relatorio local;
+	- nenhuma credencial pode ser exposta;
+	- nenhuma colecao pode ser alterada;
+	- nenhuma operacao de escrita pode estar presente;
+	- aggregate so pode ser usado sem $out e sem $merge;
+	- execucao futura ainda depende de autorizacao explicita.
+- Pendencias antes de qualquer execucao futura:
+	- confirmar ambiente alvo;
+	- confirmar se sera banco local/memoria/homologacao, nunca Atlas real sem autorizacao explicita;
+	- confirmar URI mascarada;
+	- confirmar banco/database alvo;
+	- confirmar escopo de colecoes;
+	- confirmar formato do relatorio;
+	- confirmar que nenhum dado real sera usado;
+	- confirmar que dados atuais continuam ficticios/descartaveis;
+	- confirmar snapshot/backup se houver qualquer risco de ambiente persistente.
+- Decisao desta revisao:
+	- checklist documental aprovado para preparar uma execucao read-only controlada em etapa futura;
+	- ainda nao ha autorizacao para executar;
+	- ainda nao ha autorizacao para conectar em Mongo;
+	- ainda nao ha autorizacao para criar script;
+	- reset/limpeza continuam fora de escopo.
+- Proximo ato recomendado:
+	- prepareReadOnlyInventoryExecutionPlan;
+	- esse proximo ato deve ser apenas preparar o plano de execucao read-only controlada, preferencialmente ainda documental, antes de qualquer comando real.
+- Diagnostico da revisao:
+	- o checklist atual ja esta coerente com o principio de leitura pura, com relatorio local e sem exposicao de credenciais;
+	- a allowlist e a blocklist ficaram suficientemente claras para evitar ambiguidade entre inventario, reset, seed e migration;
+	- a execucao futura continua condicionada a confirmacao humana de ambiente, URI, database, colecoes e ausencia de dados reais.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryChecklistBeforeExecution
+	- recommendedNextAct=prepareReadOnlyInventoryExecutionPlan
+- Gates:
+	- readOnlyInventoryChecklistReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryChecklistBeforeExecution
+	- recommendedNextAct=prepareReadOnlyInventoryExecutionPlan
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- scriptCreated=false
+	- commandAgainstDatabaseExecuted=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao nao executa inventario;
+	- esta revisao nao autoriza conexao Mongo;
+	- esta revisao nao autoriza uso de Atlas;
+	- esta revisao nao autoriza criacao de script;
+	- esta revisao nao autoriza reset;
+	- esta revisao nao autoriza limpeza;
+	- esta revisao nao autoriza seed;
+	- esta revisao nao autoriza migration/backfill;
+	- esta revisao nao autoriza criacao de unidade;
+	- esta revisao nao autoriza criacao de usuario;
+	- proxima etapa deve ser preparar plano de execucao read-only controlada, ainda sujeito a aprovacao antes de qualquer execucao.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
