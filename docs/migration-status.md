@@ -3480,6 +3480,76 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve implementar apenas helpers de validacao no script, ainda sem conexao.
 
+- Helpers puros de validacao do inventario read-only implementados.
+- Base publicada:
+	- 20378d6 docs(ops): desenha implementacao segura do inventario read-only.
+- Registro da implementacao:
+	- helpers de validacao implementados;
+	- nenhuma conexao implementada;
+	- nenhuma query implementada;
+	- nenhuma geracao de relatorio real;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico dos helpers:
+	- o script agora valida flags futuras, aprovacao de Atlas, alvo de database, allowlist de operacoes e bloqueio de pipelines com $out ou $merge;
+	- todos os helpers permanecem puros, recebem entrada explicita e nao abrem conexao, nao consultam banco e nao geram arquivos;
+	- buildSafetySummary e main passaram a compor esses resultados mantendo o estado skeletonOnly e sem side effects.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryValidationHelpers.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyInventoryValidationHelpers
+	- recommendedNextAct=reviewReadOnlyInventoryValidationHelpers
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryValidationHelpersImplemented=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyInventoryValidationHelpers
+	- recommendedNextAct=reviewReadOnlyInventoryValidationHelpers
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=true
+	- validationHelpersImplemented=true
+	- connectionImplemented=false
+	- queryImplemented=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- estes helpers nao implementam conexao;
+	- estes helpers nao implementam leitura de banco;
+	- estes helpers nao geram relatorio real;
+	- estes helpers nao executam inventario;
+	- estes helpers nao autorizam Mongo;
+	- estes helpers nao autorizam Atlas;
+	- estes helpers nao autorizam package.json;
+	- estes helpers nao autorizam reset ou limpeza;
+	- estes helpers nao autorizam seed, migration ou backfill;
+	- estes helpers nao autorizam criacao de unidade;
+	- estes helpers nao autorizam criacao de usuario;
+	- proxima etapa deve revisar os helpers antes de qualquer camada de conexao ou leitura.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.

@@ -83,6 +83,233 @@ function describeFutureFlagStatus(value) {
   return value ? 'present-but-not-used' : 'missing';
 }
 
+export function normalizeBooleanFlag(value) {
+  if (typeof value === 'boolean') {
+    return {
+      ok: true,
+      normalized: value,
+      status: value ? 'true' : 'false',
+    };
+  }
+
+  if (typeof value !== 'string') {
+    return {
+      ok: false,
+      normalized: null,
+      status: 'missing',
+    };
+  }
+
+  const normalizedValue = value.trim().toLowerCase();
+  if (!normalizedValue) {
+    return {
+      ok: false,
+      normalized: null,
+      status: 'missing',
+    };
+  }
+
+  if (['true', '1', 'yes', 'on'].includes(normalizedValue)) {
+    return {
+      ok: true,
+      normalized: true,
+      status: 'true',
+    };
+  }
+
+  if (['false', '0', 'no', 'off'].includes(normalizedValue)) {
+    return {
+      ok: true,
+      normalized: false,
+      status: 'false',
+    };
+  }
+
+  return {
+    ok: false,
+    normalized: null,
+    status: 'invalid',
+  };
+}
+
+export function validateRequiredFutureFlags(env = {}) {
+  const requiredFlags = [
+    'WD_OPS_READONLY_CONFIRM',
+    'WD_OPS_ENVIRONMENT_CONFIRM',
+    'WD_OPS_DATABASE_CONFIRM',
+  ];
+
+  const missing = [];
+  const invalid = [];
+  const details = {};
+
+  for (const flagName of requiredFlags) {
+    const result = normalizeBooleanFlag(env[flagName]);
+    details[flagName] = result.status;
+
+    if (result.status === 'missing') {
+      missing.push(flagName);
+      continue;
+    }
+
+    if (result.status === 'invalid') {
+      invalid.push(flagName);
+      continue;
+    }
+
+    if (!result.normalized) {
+      invalid.push(flagName);
+    }
+  }
+
+  return {
+    ok: missing.length === 0 && invalid.length === 0,
+    missing,
+    invalid,
+    status: missing.length > 0 ? 'pending' : invalid.length > 0 ? 'invalid' : 'ready-for-future-review',
+    details,
+  };
+}
+
+export function validateAtlasApproval(env = {}) {
+  const atlasRequested = normalizeBooleanFlag(env.WD_OPS_ATLAS_TARGET);
+  const atlasApproved = normalizeBooleanFlag(env.WD_OPS_ATLAS_EXPLICIT_APPROVAL);
+
+  if (atlasRequested.ok && atlasRequested.normalized) {
+    if (atlasApproved.ok && atlasApproved.normalized) {
+      return {
+        status: 'allowed',
+        reason: 'Atlas marcado e aprovado explicitamente para revisao futura.',
+      };
+    }
+
+    return {
+      status: 'blocked',
+      reason: 'Atlas permanece bloqueado sem aprovacao explicita.',
+    };
+  }
+
+  if (atlasApproved.ok && atlasApproved.normalized) {
+    return {
+      status: 'pending',
+      reason: 'Aprovacao isolada nao habilita Atlas sem marcador de uso futuro.',
+    };
+  }
+
+  return {
+    status: 'pending',
+    reason: 'Uso de Atlas nao solicitado neste skeleton.',
+  };
+}
+
+export function validateDatabaseTarget(value) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return {
+      ok: false,
+      status: 'missing',
+      sanitized: '[database:missing]',
+    };
+  }
+
+  const trimmedValue = value.trim();
+  const loweredValue = trimmedValue.toLowerCase();
+  if (['admin', 'local', 'config'].includes(loweredValue)) {
+    return {
+      ok: false,
+      status: 'blocked',
+      sanitized: '[database:blocked]',
+    };
+  }
+
+  return {
+    ok: true,
+    status: 'valid',
+    sanitized: trimmedValue.slice(0, 32),
+  };
+}
+
+export function validateOperationAllowlist(operation) {
+  const allowedOperations = [
+    'countDocuments',
+    'find',
+    'distinct',
+    'aggregate',
+    'sort',
+    'limit',
+    'memoryValidation',
+    'localReportWriteFutureApproved',
+  ];
+
+  const normalizedOperation = typeof operation === 'string' ? operation.trim() : '';
+  return {
+    ok: allowedOperations.includes(normalizedOperation),
+    status: allowedOperations.includes(normalizedOperation) ? 'allowed' : 'blocked',
+    operation: normalizedOperation || '[operation:missing]',
+  };
+}
+
+export function validateAggregatePipeline(pipeline) {
+  if (!Array.isArray(pipeline)) {
+    return {
+      ok: false,
+      status: 'invalid',
+      blockedStages: [],
+    };
+  }
+
+  const blockedStages = [];
+  for (const stage of pipeline) {
+    if (!stage || typeof stage !== 'object' || Array.isArray(stage)) {
+      continue;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(stage, '$out')) {
+      blockedStages.push('$out');
+    }
+
+    if (Object.prototype.hasOwnProperty.call(stage, '$merge')) {
+      blockedStages.push('$merge');
+    }
+  }
+
+  return {
+    ok: blockedStages.length === 0,
+    status: blockedStages.length === 0 ? 'allowed' : 'blocked',
+    blockedStages,
+  };
+}
+
+export function buildValidationSummary(env = {}) {
+  const requiredFlags = validateRequiredFutureFlags({
+    WD_OPS_READONLY_CONFIRM: env.WD_OPS_READONLY_CONFIRM,
+    WD_OPS_ENVIRONMENT_CONFIRM: env.WD_OPS_ENVIRONMENT_CONFIRM,
+    WD_OPS_DATABASE_CONFIRM: env.WD_OPS_DATABASE_CONFIRM,
+  });
+  const atlasApproval = validateAtlasApproval({
+    WD_OPS_ATLAS_TARGET: env.WD_OPS_ATLAS_TARGET,
+    WD_OPS_ATLAS_EXPLICIT_APPROVAL: env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+  });
+  const databaseTarget = validateDatabaseTarget(env.WD_OPS_DATABASE_CONFIRM);
+  const operationChecks = [
+    validateOperationAllowlist('countDocuments'),
+    validateOperationAllowlist('aggregate'),
+    validateOperationAllowlist('updateMany'),
+  ];
+  const aggregatePipeline = validateAggregatePipeline([{ $match: { active: true } }, { $merge: 'unsafe' }]);
+
+  return {
+    requiredFlags,
+    atlasApproval,
+    databaseTarget,
+    operationChecks,
+    aggregatePipeline,
+    status:
+      requiredFlags.ok && atlasApproval.status !== 'blocked' && databaseTarget.ok
+        ? 'future-validation-ready'
+        : 'future-validation-pending',
+  };
+}
+
 export function maskConnectionString(value) {
   if (typeof value !== 'string' || value.length === 0) {
     return '[masked:empty]';
@@ -121,6 +348,14 @@ export function maskCpf(value) {
 }
 
 export function assertReadOnlyEnvironment(env = {}) {
+  const validationSummary = buildValidationSummary({
+    WD_OPS_READONLY_CONFIRM: env.WD_OPS_READONLY_CONFIRM,
+    WD_OPS_ENVIRONMENT_CONFIRM: env.WD_OPS_ENVIRONMENT_CONFIRM,
+    WD_OPS_DATABASE_CONFIRM: env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_ATLAS_TARGET: env.WD_OPS_ATLAS_TARGET,
+    WD_OPS_ATLAS_EXPLICIT_APPROVAL: env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+  });
+
   const snapshot = {
     environmentConfirmed: describeFutureFlagStatus(env.WD_OPS_ENVIRONMENT_CONFIRM),
     databaseConfirmed: describeFutureFlagStatus(env.WD_OPS_DATABASE_CONFIRM),
@@ -128,6 +363,7 @@ export function assertReadOnlyEnvironment(env = {}) {
     atlasApproval: describeFutureFlagStatus(env.WD_OPS_ATLAS_EXPLICIT_APPROVAL),
     status: 'not-executed',
     reason: 'Skeleton nao valida nem usa conexao; apenas registra bloqueios e pendencias futuras.',
+    validationSummary,
   };
 
   return snapshot;
@@ -151,6 +387,13 @@ export function buildPlannedInventoryManifest() {
 }
 
 export function buildSafetySummary() {
+  const validationSummary = buildValidationSummary({
+    WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+    WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+    WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+    WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+  });
   const envSnapshot = {
     readOnlyConfirm: describeFutureFlagStatus(process.env.WD_OPS_READONLY_CONFIRM),
     environmentConfirm: describeFutureFlagStatus(process.env.WD_OPS_ENVIRONMENT_CONFIRM),
@@ -165,6 +408,7 @@ export function buildSafetySummary() {
     reportWrite: 'disabled',
     packageJsonIntegration: 'absent',
     envSnapshot,
+    validationSummary,
     notes: [
       'Este skeleton nao importa mongoose.',
       'Este skeleton nao importa connect-mongo.',
@@ -179,10 +423,18 @@ export function buildSafetySummary() {
 export function main() {
   const manifest = buildPlannedInventoryManifest();
   const safetySummary = buildSafetySummary();
+  const validationSummary = buildValidationSummary({
+    WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+    WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+    WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+    WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+  });
   const pendingChecks = assertReadOnlyEnvironment({
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
     WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
     WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
   });
 
@@ -196,6 +448,7 @@ export function main() {
     futureReportLocation: manifest.futureReportLocation,
     maskingRules: manifest.maskingRules,
     safetySummary,
+    validationSummary,
     pendingChecks,
     placeholders: {
       maskedConnectionStringExample: maskConnectionString('mongodb://user:secret@example.mongodb.net/wdgestor'),
