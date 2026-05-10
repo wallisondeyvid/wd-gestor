@@ -79,6 +79,10 @@ const MASKING_RULES = [
   'Limitar amostras',
 ];
 
+function describeFutureFlagStatus(value) {
+  return value ? 'present-but-not-used' : 'missing';
+}
+
 export function maskConnectionString(value) {
   if (typeof value !== 'string' || value.length === 0) {
     return '[masked:empty]';
@@ -118,12 +122,12 @@ export function maskCpf(value) {
 
 export function assertReadOnlyEnvironment(env = {}) {
   const snapshot = {
-    environmentConfirmed: env.WD_OPS_ENVIRONMENT_CONFIRM ? 'pending-review' : 'pending',
-    databaseConfirmed: env.WD_OPS_DATABASE_CONFIRM ? 'pending-review' : 'pending',
-    readOnlyConfirmed: env.WD_OPS_READONLY_CONFIRM ? 'pending-review' : 'pending',
-    atlasApproval: env.WD_OPS_ATLAS_EXPLICIT_APPROVAL ? 'pending-review' : 'pending',
+    environmentConfirmed: describeFutureFlagStatus(env.WD_OPS_ENVIRONMENT_CONFIRM),
+    databaseConfirmed: describeFutureFlagStatus(env.WD_OPS_DATABASE_CONFIRM),
+    readOnlyConfirmed: describeFutureFlagStatus(env.WD_OPS_READONLY_CONFIRM),
+    atlasApproval: describeFutureFlagStatus(env.WD_OPS_ATLAS_EXPLICIT_APPROVAL),
     status: 'not-executed',
-    reason: 'Skeleton nao valida nem usa conexao; apenas registra pendencias futuras.',
+    reason: 'Skeleton nao valida nem usa conexao; apenas registra bloqueios e pendencias futuras.',
   };
 
   return snapshot;
@@ -148,10 +152,10 @@ export function buildPlannedInventoryManifest() {
 
 export function buildSafetySummary() {
   const envSnapshot = {
-    readOnlyConfirm: process.env.WD_OPS_READONLY_CONFIRM ? 'pending' : 'pending',
-    environmentConfirm: process.env.WD_OPS_ENVIRONMENT_CONFIRM ? 'pending' : 'pending',
-    databaseConfirm: process.env.WD_OPS_DATABASE_CONFIRM ? 'pending' : 'pending',
-    atlasApproval: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL ? 'pending' : 'pending',
+    readOnlyConfirm: describeFutureFlagStatus(process.env.WD_OPS_READONLY_CONFIRM),
+    environmentConfirm: describeFutureFlagStatus(process.env.WD_OPS_ENVIRONMENT_CONFIRM),
+    databaseConfirm: describeFutureFlagStatus(process.env.WD_OPS_DATABASE_CONFIRM),
+    atlasApproval: describeFutureFlagStatus(process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL),
   };
 
   return {
@@ -167,6 +171,7 @@ export function buildSafetySummary() {
       'Este skeleton nao abre conexao.',
       'Este skeleton nao consulta banco.',
       'Este skeleton nao gera relatorio real.',
+      'Este skeleton so expõe estados seguros de flags futuras, sem usar segredos.',
     ],
   };
 }
