@@ -3376,6 +3376,110 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar a implementacao segura do script antes de adicionar qualquer conexao ou leitura.
 
+- Implementacao segura futura do script read-only desenhada documentalmente.
+- Base publicada:
+	- a013deb chore(ops): revisa esqueleto do inventario read-only.
+- Objetivo da implementacao segura futura:
+	- adicionar leitura controlada somente depois de revisao;
+	- manter operacoes apenas read-only;
+	- produzir relatorio local;
+	- nao escrever no banco;
+	- nao expor credenciais;
+	- nao executar automaticamente.
+- Estrategia tecnica futura:
+	- adicionar camada explicita de conexao somente apos autorizacao;
+	- preferir funcao isolada de criacao de conexao futura;
+	- validar flags obrigatorias antes de qualquer conexao;
+	- mascarar URI antes de qualquer log;
+	- confirmar database alvo;
+	- bloquear Atlas real salvo marcador explicito;
+	- encapsular queries por entidade;
+	- manter allowlist de operacoes;
+	- bloquear aggregate com $out e $merge;
+	- gerar relatorio local apenas apos aprovacao.
+- Ordem futura de implementacao:
+	- primeiro: helpers de validacao de flags;
+	- depois: helpers de mascaramento e relatorio;
+	- depois: manifest de entidades e projections;
+	- depois: camada de conexao read-only;
+	- depois: queries de contagem e amostras;
+	- depois: validacoes em memoria de orfaos e duplicidades;
+	- depois: geracao de relatorio local;
+	- por fim: revisao antes de qualquer execucao.
+- Guardrails obrigatorios:
+	- nao importar mongoose sem microcorte proprio;
+	- nao usar connectMongo;
+	- nao alterar package.json junto da conexao;
+	- nao executar script no mesmo microcorte em que conexao for implementada;
+	- nao usar Atlas sem autorizacao explicita;
+	- nao usar dados reais;
+	- nao executar reset ou limpeza;
+	- nao classificar automaticamente algo como deletavel.
+- Criterios de teste e revisao futura:
+	- revisar diff antes da execucao;
+	- se viavel, criar teste de contrato para bloquear operacoes proibidas;
+	- verificar ausencia de insert, update, delete, drop, bulkWrite e save;
+	- verificar ausencia de $out e $merge;
+	- verificar que logs mascaram URI, email, CPF e tokens;
+	- verificar que relatorio nao contem senha, hash ou anexos brutos.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhuma implementacao adicionada;
+	- script permanece skeletonOnly;
+	- proximo ato recomendado: implementReadOnlyInventoryValidationHelpers.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryScriptSafeImplementation
+	- recommendedNextAct=implementReadOnlyInventoryValidationHelpers
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventorySafeImplementationDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryScriptSafeImplementation
+	- recommendedNextAct=implementReadOnlyInventoryValidationHelpers
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura de banco;
+	- este desenho nao gera relatorio real;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza reset ou limpeza;
+	- este desenho nao autoriza seed, migration ou backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve implementar apenas helpers de validacao no script, ainda sem conexao.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
