@@ -80,6 +80,163 @@ const MASKING_RULES = [
   'Limitar amostras',
 ];
 
+const INVENTORY_ENTITY_MANIFEST = [
+  {
+    key: 'users',
+    label: 'Usuarios',
+    conceptualCollection: 'users',
+    projectionFields: ['_id', 'email', 'nome', 'role', 'global_role', 'unidade_id', 'funcionario_id', 'ativo', 'primeiro_acesso', 'failed_login_attempts', 'lock_until', 'createdAt', 'updatedAt'],
+    sensitiveFields: ['email', 'senha', 'password', 'hash', 'token'],
+    maskedFields: ['email', 'nome'],
+    relationChecks: ['unidade_id -> unidades._id', 'funcionario_id -> funcionarios._id'],
+    duplicateChecks: [],
+    notes: ['Nome deve aparecer apenas de forma parcial.', 'Lock status deve ser tratado sem expor segredo.'],
+  },
+  {
+    key: 'userMemberships',
+    label: 'Memberships',
+    conceptualCollection: 'userMemberships',
+    projectionFields: ['_id', 'user_id', 'unidade_id', 'papel_contextual', 'status', 'funcionario_id', 'origem', 'createdAt', 'updatedAt'],
+    sensitiveFields: [],
+    maskedFields: [],
+    relationChecks: ['user_id -> users._id', 'unidade_id -> unidades._id', 'funcionario_id -> funcionarios._id'],
+    duplicateChecks: ['user_id + unidade_id'],
+    notes: ['Usar para detectar vinculos duplicados e orfaos.'],
+  },
+  {
+    key: 'unidades',
+    label: 'Unidades',
+    conceptualCollection: 'unidades',
+    projectionFields: ['_id', 'codigo', 'nome', 'ativa', 'is_principal', 'subunidade', 'unidade_principal_id', 'modulosAcessiveis', 'diretor_usuario_id'],
+    sensitiveFields: [],
+    maskedFields: ['nome'],
+    relationChecks: ['unidade_principal_id -> unidades._id', 'diretor_usuario_id -> users._id'],
+    duplicateChecks: [],
+    notes: ['Nome deve ser parcial quando exibido em relatorio futuro.'],
+  },
+  {
+    key: 'funcionarios',
+    label: 'Funcionarios',
+    conceptualCollection: 'funcionarios',
+    projectionFields: ['_id', 'codigo', 'nome', 'cpf', 'email', 'unidade_id', 'funcao_id', 'usuario_id', 'ativo', 'createdAt', 'updatedAt'],
+    sensitiveFields: ['cpf', 'email', 'biometria'],
+    maskedFields: ['cpf', 'email', 'nome'],
+    relationChecks: ['unidade_id -> unidades._id', 'funcao_id -> funcoes._id', 'usuario_id -> users._id'],
+    duplicateChecks: ['unidade_id + cpf', 'unidade_id + email'],
+    notes: ['Biometrias nunca devem aparecer no relatorio.'],
+  },
+  {
+    key: 'setores',
+    label: 'Setores',
+    conceptualCollection: 'setores',
+    projectionFields: ['_id', 'codigo', 'nome', 'nome_normalizado', 'ativo', 'unidade_id'],
+    sensitiveFields: [],
+    maskedFields: [],
+    relationChecks: ['unidade_id -> unidades._id'],
+    duplicateChecks: ['unidade_id + nome_normalizado'],
+    notes: ['Nome normalizado serve para detectar duplicidade.'],
+  },
+  {
+    key: 'funcoes',
+    label: 'Funcoes',
+    conceptualCollection: 'funcoes',
+    projectionFields: ['_id', 'codigo', 'nome', 'ativa', 'unidade_principal_id', 'modulos_habilitados'],
+    sensitiveFields: [],
+    maskedFields: [],
+    relationChecks: ['unidade_principal_id -> unidades._id'],
+    duplicateChecks: [],
+    notes: ['Serve como referencia para funcionarios e habilitacao funcional.'],
+  },
+  {
+    key: 'modulos',
+    label: 'Modulos',
+    conceptualCollection: 'modulos',
+    projectionFields: ['_id', 'nome', 'status', 'url_base'],
+    sensitiveFields: [],
+    maskedFields: [],
+    relationChecks: [],
+    duplicateChecks: [],
+    notes: ['Url_base pode ser exibida como metadata funcional.'],
+  },
+  {
+    key: 'recursos',
+    label: 'Recursos',
+    conceptualCollection: 'recursos',
+    projectionFields: ['_id', 'unidade_id', 'tipo', 'placa', 'chassi', 'renavam', 'marca', 'modelo', 'ativo'],
+    sensitiveFields: ['placa', 'chassi', 'renavam'],
+    maskedFields: ['placa', 'chassi', 'renavam'],
+    relationChecks: ['unidade_id -> unidades._id'],
+    duplicateChecks: ['unidade_id + placa', 'unidade_id + chassi', 'unidade_id + renavam'],
+    notes: ['Identificadores devem ser exibidos apenas parcialmente.'],
+  },
+  {
+    key: 'feedback',
+    label: 'Feedback',
+    conceptualCollection: 'feedback',
+    projectionFields: ['_id', 'tipo', 'status', 'unidade_id', 'criadoPor.userId', 'criadoPor.email', 'origem.modulo', 'anexos', 'createdAt', 'updatedAt'],
+    sensitiveFields: ['criadoPor.email', 'anexos'],
+    maskedFields: ['criadoPor.email'],
+    relationChecks: ['unidade_id -> unidades._id', 'criadoPor.userId -> users._id'],
+    duplicateChecks: [],
+    notes: ['Anexos devem virar apenas metadados, nunca conteudo bruto.'],
+  },
+  {
+    key: 'widgetSettings',
+    label: 'Widget Settings',
+    conceptualCollection: 'widgetSettings',
+    projectionFields: ['_id', 'widget', 'module', 'enabled', 'createdAt', 'updatedAt'],
+    sensitiveFields: [],
+    maskedFields: [],
+    relationChecks: [],
+    duplicateChecks: ['widget + module'],
+    notes: ['Serve para detectar configuracoes duplicadas.'],
+  },
+  {
+    key: 'unitProvisioningStatus',
+    label: 'Provisioning Status',
+    conceptualCollection: 'unitProvisioningStatus',
+    projectionFields: ['unidadeId', 'status', 'operation', 'scope', 'moduleKey', 'moduleStatuses', 'lastProvisioningError', 'createdAt', 'updatedAt'],
+    sensitiveFields: ['lastProvisioningError'],
+    maskedFields: ['lastProvisioningError'],
+    relationChecks: ['unidadeId -> unidades._id'],
+    duplicateChecks: [],
+    notes: ['Erros devem ser resumidos, nunca expostos integralmente.'],
+  },
+  {
+    key: 'unitProvisioningEvents',
+    label: 'Provisioning Events',
+    conceptualCollection: 'unitProvisioningEvents',
+    projectionFields: ['unidadeId', 'status', 'operation', 'scope', 'moduleKey', 'moduleStatuses', 'lastProvisioningError', 'createdAt', 'updatedAt'],
+    sensitiveFields: ['lastProvisioningError'],
+    maskedFields: ['lastProvisioningError'],
+    relationChecks: ['unidadeId -> unidades._id'],
+    duplicateChecks: [],
+    notes: ['Eventos devem permanecer resumidos e sem payload bruto.'],
+  },
+  {
+    key: 'testSeeds',
+    label: 'Test Seeds',
+    conceptualCollection: 'gestor-seeds',
+    projectionFields: ['markers', 'origem', 'email', 'createdAt', 'updatedAt'],
+    sensitiveFields: ['email'],
+    maskedFields: ['email'],
+    relationChecks: [],
+    duplicateChecks: [],
+    notes: ['Marcadores textuais ajudam a classificar dados ficticios.'],
+  },
+  {
+    key: 'attachmentsMetadata',
+    label: 'Attachments Metadata',
+    conceptualCollection: 'attachments-metadata',
+    projectionFields: ['filename', 'mime', 'size', 'ownerRefs', 'createdAt', 'updatedAt'],
+    sensitiveFields: ['filename', 'ownerRefs', 'anexos brutos'],
+    maskedFields: ['filename'],
+    relationChecks: ['ownerRefs -> users._id ou entidades relacionadas'],
+    duplicateChecks: [],
+    notes: ['Somente metadados; conteudo bruto permanece fora de escopo.'],
+  },
+];
+
 function describeFutureFlagStatus(value) {
   return value ? 'present-but-not-used' : 'missing';
 }
@@ -280,6 +437,42 @@ export function validateAggregatePipeline(pipeline) {
   };
 }
 
+export function buildEntityManifest() {
+  return INVENTORY_ENTITY_MANIFEST.map((entity) => ({
+    ...entity,
+    projectionFields: [...entity.projectionFields],
+    sensitiveFields: [...entity.sensitiveFields],
+    maskedFields: [...entity.maskedFields],
+    relationChecks: [...entity.relationChecks],
+    duplicateChecks: [...entity.duplicateChecks],
+    notes: [...entity.notes],
+  }));
+}
+
+export function listSensitiveFields() {
+  return [...new Set(buildEntityManifest().flatMap((entity) => entity.sensitiveFields))].sort();
+}
+
+export function listRelationChecks() {
+  return buildEntityManifest().flatMap((entity) => entity.relationChecks);
+}
+
+export function listDuplicateChecks() {
+  return buildEntityManifest().flatMap((entity) => entity.duplicateChecks);
+}
+
+export function getEntityManifestSummary() {
+  const entityManifest = buildEntityManifest();
+  return {
+    entityCount: entityManifest.length,
+    entityKeys: entityManifest.map((entity) => entity.key),
+    maskedFieldCount: entityManifest.reduce((total, entity) => total + entity.maskedFields.length, 0),
+    sensitiveFields: listSensitiveFields(),
+    relationChecks: listRelationChecks(),
+    duplicateChecks: listDuplicateChecks(),
+  };
+}
+
 export function buildValidationSummary(env = {}) {
   const requiredFlags = validateRequiredFutureFlags({
     WD_OPS_READONLY_CONFIRM: env.WD_OPS_READONLY_CONFIRM,
@@ -373,17 +566,19 @@ export function assertReadOnlyEnvironment(env = {}) {
 }
 
 export function buildPlannedInventoryManifest() {
+  const entityManifestSummary = getEntityManifestSummary();
   return {
     scriptName: SCRIPT_NAME,
     scriptPath: SCRIPT_PATH,
     status: SCRIPT_STATUS,
     objective: SCRIPT_OBJECTIVE,
-    targetEntities: TARGET_ENTITIES,
+    targetEntities: entityManifestSummary.entityKeys,
     conceptualAllowlist: CONCEPTUAL_ALLOWLIST,
     conceptualBlocklist: CONCEPTUAL_BLOCKLIST,
     requiredFutureFlags: REQUIRED_FUTURE_FLAGS,
     futureReportLocation: FUTURE_REPORT_LOCATION,
     maskingRules: MASKING_RULES,
+    entityManifestSummary,
     connectionImplementation: 'blocked-until-future-microcut',
     reportGenerationImplementation: 'blocked-until-future-microcut',
   };
@@ -429,6 +624,7 @@ export function buildSafetySummary() {
 export function main() {
   const manifest = buildPlannedInventoryManifest();
   const safetySummary = buildSafetySummary();
+  const entityManifestSummary = getEntityManifestSummary();
   const validationSummary = buildValidationSummary({
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
@@ -452,6 +648,7 @@ export function main() {
     status: manifest.status,
     objective: manifest.objective,
     targetEntities: manifest.targetEntities,
+    entityManifestSummary,
     futureFlags: manifest.requiredFutureFlags,
     futureReportLocation: manifest.futureReportLocation,
     maskingRules: manifest.maskingRules,

@@ -3754,6 +3754,76 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve implementar apenas o skeleton declarativo do manifesto no script, ainda sem conexao ou query.
 
+- Skeleton declarativo do manifesto de entidades e projections implementado.
+- Base publicada:
+	- fd5be98 docs(ops): desenha manifesto do inventario read-only.
+- Registro da implementacao:
+	- skeleton declarativo do manifesto implementado;
+	- nenhuma conexao implementada;
+	- nenhuma query implementada;
+	- nenhuma geracao de relatorio real;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico do manifesto:
+	- o script agora contem apenas dados e helpers puros para descrever entidades, projections, campos sensiveis, mascaramento, relacoes e duplicidades;
+	- buildPlannedInventoryManifest e main passaram a expor apenas resumo seguro do manifesto, sem ler banco, sem gerar relatorio e sem side effects;
+	- o manifesto permanece declarativo e pronto para revisao antes de qualquer camada de query ou conexao.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryEntityManifestSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyInventoryEntityManifestSkeleton
+	- recommendedNextAct=reviewReadOnlyInventoryEntityManifestSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryEntityManifestSkeletonImplemented=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyInventoryEntityManifestSkeleton
+	- recommendedNextAct=reviewReadOnlyInventoryEntityManifestSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=true
+	- entityManifestImplemented=true
+	- connectionImplemented=false
+	- queryImplemented=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este manifesto nao implementa conexao;
+	- este manifesto nao implementa leitura de banco;
+	- este manifesto nao gera relatorio real;
+	- este manifesto nao executa inventario;
+	- este manifesto nao autoriza Mongo;
+	- este manifesto nao autoriza Atlas;
+	- este manifesto nao autoriza package.json;
+	- este manifesto nao autoriza reset ou limpeza;
+	- este manifesto nao autoriza seed, migration ou backfill;
+	- este manifesto nao autoriza criacao de unidade;
+	- este manifesto nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o skeleton declarativo do manifesto antes de qualquer query ou conexao.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
