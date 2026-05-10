@@ -1694,6 +1694,88 @@ Checkpoint tenant enforcement atual:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Frente tenant-aware memberships ativos/auth-context encerrada documentalmente.
+- Base local:
+	- 3d3b1d4 docs(tenant): diagnostica refactor minimo memberships ativos auth-context.
+- Escopo encerrado:
+	- selecao documental do alvo UserMembershipRepository -> findActiveMembershipsByUserIdLeanRepo -> authContextReadDataFacade.loadActiveMembershipsByUserId;
+	- diagnostico read-only focado do alvo;
+	- criacao do teste contratual tests/architecture/activeMembershipsAuthContextRead.contract.test.js;
+	- diagnostico read-only de refactor minimo;
+	- decisao de nao alterar src neste momento;
+	- decisao de manter login, sessao, requireLogin, requireRole, requireUnitScope, authController, auth.db amplo, createUserMembership, setUserMembershipFuncionarioIdIfEmpty, escrita, unlock/toggle, widget settings, pages, bundles, tenant registry, request path, bootstrap, script, CLI, job, rota nova, tenant DB real, Mongo real e PostgreSQL fora deste slice.
+- Commits locais da frente:
+	- f9e258a docs(tenant): seleciona proximo alvo tenant-aware pos-usuarios-bloqueados;
+	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context;
+	- f06c72c test(tenant): protege leitura de memberships ativos auth-context;
+	- 3d3b1d4 docs(tenant): diagnostica refactor minimo memberships ativos auth-context.
+- Resultado final:
+	- UserMembershipRepository permanece repository amplo/misto, mas com slice protegido limitado ao helper findActiveMembershipsByUserIdLeanRepo;
+	- authContextReadDataFacade.loadActiveMembershipsByUserId permanece facade fina;
+	- auth-context.db.loadActiveMembershipsByUserId permanece handoff read-only compativel, se aplicavel conforme o codigo atual;
+	- comportamento real de GLOBAL_SCOPE explicito permanece congelado conforme codigo atual;
+	- loadUnidadeById permanece apenas helper adjacente read-only, nao alvo principal;
+	- corredor permanece read-only e nao abre auth-context amplo;
+	- UserMembershipRepository nao deve migrar para BaseRepository agora por estetica;
+	- authContextReadDataFacade nao deve mudar agora;
+	- auth-context.db.js nao deve mudar agora;
+	- login, sessao, requireLogin, requireRole, requireUnitScope, authController, auth.db amplo, createUserMembership, setUserMembershipFuncionarioIdIfEmpty, escrita, unlock/toggle, widget settings, pages e bundles permanecem fora do slice principal;
+	- corredor nao depende de tenant registry;
+	- corredor nao depende de harness sintetico;
+	- corredor nao depende de Portal, rotas novas, start/server/createServer, scripts, CLI, jobs ou bootstrap;
+	- nao ha refactor minimo recomendado em src neste momento;
+	- proximo avanco nesse corredor so deve ocorrer se houver nova hipotese falsificavel e microcorte proprio.
+- Confirmacoes finais:
+	- nenhum arquivo em src foi alterado nesta frente;
+	- nenhum teste existente foi alterado indevidamente;
+	- apenas teste arquitetural novo foi criado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- Portal nao usado;
+	- dados reais nao usados;
+	- usuario real nao usado;
+	- unidade real nao usada;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=UserMembershipRepository_authContextReadDataFacade_activeMembershipsRead
+	- activeMembershipsFocusedDiagnosticExecuted=true
+	- activeMembershipsAuthContextContractCreated=true
+	- activeMembershipsAuthContextContractValidated=true
+	- activeMembershipsRefactorDiagnosticExecuted=true
+	- activeMembershipsRefactorRecommended=false
+	- activeMembershipsWideScopeDeferred=true
+	- activeMembershipsTenantAwareFrontClosed=true
+	- sourceCodeChanged=false
+	- testsChanged=true somente pelo teste arquitetural novo
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento desta frente nao autoriza alteracao funcional;
+	- fechamento desta frente nao autoriza escrita real;
+	- fechamento desta frente nao autoriza tenant DB real;
+	- fechamento desta frente nao autoriza Portal;
+	- fechamento desta frente nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
