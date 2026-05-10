@@ -2537,6 +2537,148 @@ Checkpoint tenant enforcement atual:
 	- checklist nao autoriza PostgreSQL;
 	- proximo ato deve ser inventario read-only dos dados ficticios.
 
+- Plano de inventario read-only dos dados ficticios do WD Gestor mapeado documentalmente.
+- Base publicada:
+	- a991742 docs(ops): mapeia checklist de prontidao operacional mongo.
+- Entidades/colecoes que precisam ser inventariadas:
+	- usuarios;
+	- memberships;
+	- unidades;
+	- funcionarios;
+	- setores;
+	- funcoes;
+	- modulos;
+	- recursos;
+	- feedback;
+	- widget settings e sinais de dashboard;
+	- seeds e dados criados por testes;
+	- provisioning/status/events;
+	- possiveis anexos e metadados associados.
+- Campos minimos a observar por entidade:
+	- usuarios: _id, email, nome, role, global_role, unidade_id, funcionario_id, ativo, primeiro_acesso, senha_provisoria, failed_login_attempts, lock_until, createdAt, updatedAt;
+	- memberships: _id, user_id, unidade_id, papel_contextual, status, funcionario_id, origem, createdAt, updatedAt;
+	- unidades: _id, codigo, nome, pessoaTipo, is_principal, ativa, subunidade, unidade_principal_id, modulosAcessiveis, diretor_usuario_id;
+	- funcionarios: _id, codigo, unidade_id, funcao_id, usuario_id, nome, cpf, email, departamento, ativo, createdAt, updatedAt;
+	- setores: _id, codigo, nome, nome_normalizado, ativo, unidade_id, createdAt, updatedAt;
+	- funcoes: _id, codigo, nome, ativa, unidade_principal_id, modulos_habilitados, createdAt, updatedAt;
+	- modulos: _id, nome, status, url_base;
+	- recursos: _id, unidade_id, tipo, placa, chassi, renavam, marca, modelo, ativo, createdAt, updatedAt;
+	- feedback: _id, tipo, status, mensagem, resposta, unidade_id, criadoPor.userId, criadoPor.email, origem.modulo, anexos, createdAt, updatedAt;
+	- widget settings/dashboard: _id, widget, module, enabled, createdAt, updatedAt e qualquer referencia de cache/visibilidade apenas como metadado secundario;
+	- provisioning/status/events: unidadeId, status, lastProvisioningError, moduleStatuses, operation, scope, moduleKey, createdAt e marcadores de bootstrap por unidade.
+- Relacoes que precisam ser checadas:
+	- usuario -> unidade por unidade_id;
+	- usuario -> funcionario por funcionario_id;
+	- membership -> user por user_id;
+	- membership -> unidade por unidade_id;
+	- membership -> funcionario por funcionario_id;
+	- funcionario -> unidade por unidade_id;
+	- funcionario -> funcao por funcao_id;
+	- funcionario -> usuario por usuario_id;
+	- setor -> unidade por unidade_id;
+	- funcao -> unidade principal por unidade_principal_id;
+	- funcao -> modulos por modulos_habilitados;
+	- unidade -> diretor usuario por diretor_usuario_id;
+	- unidade -> modulos por modulosAcessiveis;
+	- recurso -> unidade por unidade_id;
+	- feedback -> unidade por unidade_id;
+	- feedback -> usuario por criadoPor.userId;
+	- provisioning status/events -> unidade por unidadeId.
+- Orfaos e duplicidades que devem ser detectados:
+	- usuarios com unidade_id apontando para unidade inexistente;
+	- usuarios com funcionario_id inexistente;
+	- memberships sem user valido, sem unidade valida ou com funcionario_id inexistente;
+	- memberships duplicados por user_id + unidade_id;
+	- memberships conflitantes por unidade_id + funcionario_id;
+	- funcionarios sem unidade valida ou com usuario_id apontando para usuario inexistente;
+	- funcionarios duplicados por unidade_id + cpf ou unidade_id + email;
+	- setores duplicados por unidade_id + nome_normalizado ou sem unidade;
+	- funcoes sem unidade principal coerente ou com modulo inexistente em modulos_habilitados;
+	- recursos duplicados por unidade_id + placa, chassi ou renavam;
+	- feedback com unidade inexistente, userId inexistente, anexos quebrados ou origem inconsistente;
+	- widget settings duplicados por widget + module;
+	- status/events de provisioning sem unidade correspondente ou com status/eventos inconsistentes.
+- Dados claramente ficticios que podem ser candidatos a descarte futuro:
+	- contas de teste com emails padrao, dominios exemplificativos ou massa sintetica de suites;
+	- usuarios master/admin criados por seed ou por testes automatizados;
+	- memberships de origem claramente artificial como harnesses, testes ou seeds;
+	- unidades de teste sem contrato operacional futuro e sem dono real definido;
+	- funcionarios placeholder e vinculos automaticos criados apenas para satisfazer fluxo de teste;
+	- setores, funcoes, modulos associados, recursos e feedback criados por cenarios automatizados;
+	- widget settings, caches e sinais de dashboard criados apenas para suite/homologacao;
+	- snapshots/eventos de provisioning ligados a unidades artificiais;
+	- anexos e metadados sem lastro funcional fora de cenarios de teste.
+- Dados que nao podem ser apagados sem confirmacao, mesmo parecendo ficticios:
+	- qualquer unidade que venha a ser candidata a piloto operacional;
+	- qualquer conta master/admin que o usuario confirme como futura base operacional;
+	- qualquer configuracao de modulo, recurso, setor ou funcao que esteja sendo considerada como baseline manual futura;
+	- qualquer status/evento de provisioning usado para explicar comportamento atual do sistema;
+	- qualquer artefato que nao tenha marcador claro de origem artificial;
+	- qualquer anexo, logo, biometria ou metadata que ainda nao tenha classificacao segura como massa descartavel.
+- Diferenca entre inventario read-only e reset/limpeza:
+	- inventario read-only apenas observa, conta, classifica e descreve dados existentes sem alterar estado;
+	- reset/limpeza altera, remove, corrige, recria ou reorganiza dados;
+	- inventario read-only pode produzir checklist, matriz de orfaos e candidatos a descarte, mas nao executa delete, update, save, bulkWrite nem scripts de seed/migration;
+	- qualquer passo alem de leitura e classificacao permanece fora deste microcorte.
+- Comandos que continuam proibidos:
+	- npm run start:mem:seed;
+	- npm run master:set;
+	- npm run start:atlas;
+	- scripts/set-master-password.js;
+	- scripts/unlock_users.js;
+	- scripts/update_user_role.js;
+	- scripts/update_unidade_codigo.js;
+	- scripts/backfill_setores_orfaos.js;
+	- scripts/backfill_refeicoes_computavel.js;
+	- scripts/migrations/*;
+	- src/modules/gestor/gestor-seeds.js;
+	- qualquer comando com mongoose.connect, connectMongo, deleteMany, updateMany, bulkWrite, save, drop, dropIndex, seed, migration ou backfill sem autorizacao explicita.
+- Proximo ato depois deste inventario documental:
+	- preparar comandos/checklist de inventario read-only para revisao humana antes de qualquer execucao;
+	- manter o proximo passo ainda em modo documental/tecnico de revisao, sem conexao Mongo real nesta rodada.
+- Diagnostico do plano de inventario:
+	- os modelos centrais do Gestor ja expõem chaves minimas suficientes para um inventario seguro de coerencia entre usuarios, memberships, unidades, funcionarios, setores, funcoes, modulos, recursos, feedback e widget settings;
+	- user.js, userMembership.js, unidade.js, Funcionario.js, setor.js, funcao.js, modulo.js, recurso.js, feedback.js e widgetSetting.js permitem definir previamente quais campos e unicidades precisam entrar no checklist de leitura;
+	- UnitProvisioningService.js mostra que o inventario tambem precisa cobrir unit_provisioning_status, unit_provisioning_events e marcadores de bootstrap por unidade, ainda que apenas como alvo documental nesta etapa;
+	- package.json e os scripts do repositorio continuam impondo guardrail forte: o proximo microcorte deve preparar comandos/checklist read-only, e nao executar nada contra banco.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=fictionalDataReadOnlyInventoryPlan
+	- recommendedNextAct=prepareReadOnlyInventoryCommandsOrChecklist
+- Gates:
+	- fictionalDataInventoryPlanMapped=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=fictionalDataReadOnlyInventoryPlan
+	- recommendedNextAct=prepareReadOnlyInventoryCommandsOrChecklist
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- currentDataIsFictional=true
+	- fictionalDataCanBeDiscarded=true
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este plano nao executa inventario real;
+	- este plano nao autoriza conexao Mongo;
+	- este plano nao autoriza reset;
+	- este plano nao autoriza limpeza;
+	- este plano nao autoriza seed;
+	- este plano nao autoriza migration/backfill;
+	- este plano nao autoriza criacao de unidade;
+	- este plano nao autoriza criacao de usuario;
+	- este plano nao autoriza uso de dados reais;
+	- proximo ato deve ser preparar comandos/checklist de inventario read-only, ainda para revisao antes de execucao.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
