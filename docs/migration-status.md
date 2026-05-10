@@ -3096,6 +3096,147 @@ Checkpoint tenant enforcement atual:
 	- esta decisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar o contrato tecnico detalhado do script read-only antes de qualquer implementacao.
 
+- Contrato tecnico detalhado do futuro script read-only desenhado documentalmente.
+- Base publicada:
+	- 252345e docs(ops): decide abordagem do inventario read-only.
+- Nome e localizacao futura:
+	- scripts/ops/inventory-fictional-data-readonly.js;
+	- o diretorio scripts/ops pode ser criado em microcorte futuro, nao agora.
+- Objetivo do script futuro:
+	- inventariar dados ficticios do WD Gestor em modo somente leitura;
+	- gerar relatorio local;
+	- nao alterar banco;
+	- nao expor credenciais;
+	- nao limpar nada;
+	- nao classificar automaticamente nada como deletavel sem revisao humana.
+- Entrada e configuracao:
+	- usar variaveis ja existentes de conexao, sem imprimir segredo;
+	- exigir confirmacao explicita de ambiente;
+	- exigir confirmacao de database alvo;
+	- exigir flag explicita de modo read-only, por exemplo WD_OPS_READONLY_CONFIRM=true;
+	- falhar se qualquer confirmacao obrigatoria estiver ausente;
+	- nao usar Atlas real sem autorizacao explicita e marcador proprio.
+- Saida esperada:
+	- relatorio local em docs/runbooks/generated ou pasta operacional equivalente a decidir;
+	- formato markdown inicialmente preferido;
+	- incluir timestamp, ambiente mascarado, database alvo, contagens, amostras mascaradas, orfaos, duplicidades, candidatos a descarte e pendencias humanas;
+	- nao salvar relatorio no banco.
+- Colecoes e entidades alvo:
+	- usuarios;
+	- memberships;
+	- unidades;
+	- funcionarios;
+	- setores;
+	- funcoes;
+	- modulos;
+	- recursos;
+	- feedback;
+	- widget e dashboard;
+	- provisioning, status e events;
+	- seeds e dados de teste;
+	- anexos e metadados quando detectaveis.
+- Operacoes permitidas:
+	- countDocuments;
+	- find com projection;
+	- distinct;
+	- aggregate sem $out e sem $merge;
+	- sort;
+	- limit;
+	- validacoes em memoria;
+	- escrita apenas de arquivo local de relatorio, se aprovada.
+- Operacoes proibidas:
+	- insert;
+	- update;
+	- updateOne;
+	- updateMany;
+	- replaceOne;
+	- delete;
+	- deleteOne;
+	- deleteMany;
+	- remove;
+	- drop;
+	- dropDatabase;
+	- dropIndex;
+	- createIndex;
+	- bulkWrite;
+	- save;
+	- seed;
+	- migration;
+	- backfill;
+	- qualquer script perigoso ja bloqueado.
+- Seguranca e mascaramento:
+	- mascarar URI;
+	- mascarar emails;
+	- mascarar CPF;
+	- mascarar tokens;
+	- limitar amostras;
+	- nao imprimir senha ou hash;
+	- nao imprimir variaveis de ambiente completas;
+	- nao imprimir anexos brutos.
+- Criterios de falha obrigatoria:
+	- ambiente nao confirmado;
+	- database alvo ausente;
+	- flag read-only ausente;
+	- tentativa de usar operacao proibida;
+	- tentativa de usar $out ou $merge;
+	- tentativa de executar contra Atlas sem autorizacao explicita;
+	- tentativa de gerar relatorio em local nao aprovado.
+- Testabilidade futura:
+	- o script futuro deve ter unidade de teste ou teste de contrato se viavel;
+	- no minimo, deve ser revisado por diff antes de qualquer execucao;
+	- package.json so pode receber comando proprio em microcorte separado;
+	- execucao real read-only so pode ocorrer depois de novo gate documental.
+- Proximo ato recomendado:
+	- implementReadOnlyInventoryScriptSkeleton;
+	- ainda somente criar esqueleto versionado, sem executar contra banco e sem package.json, salvo se autorizado em microcorte proprio.
+- Diagnostico do contrato:
+	- o contrato agora separa com clareza configuracao, saida, allowlist de leitura, blocklist de escrita e criterios de falha;
+	- o risco operacional ficou contido por confirmacoes obrigatorias e mascaramento explicito antes de qualquer futura conexao;
+	- a implementacao futura foi reduzida a um esqueleto versionado, mantendo a etapa atual estritamente documental.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryScriptContract
+	- recommendedNextAct=implementReadOnlyInventoryScriptSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryScriptContractDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryScriptContract
+	- recommendedNextAct=implementReadOnlyInventoryScriptSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptCreated=false
+	- commandAgainstDatabaseExecuted=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este contrato nao cria script;
+	- este contrato nao executa inventario;
+	- este contrato nao autoriza conexao Mongo;
+	- este contrato nao autoriza uso de Atlas;
+	- este contrato nao autoriza alteracao de package.json;
+	- este contrato nao autoriza reset;
+	- este contrato nao autoriza limpeza;
+	- este contrato nao autoriza seed;
+	- este contrato nao autoriza migration/backfill;
+	- este contrato nao autoriza criacao de unidade;
+	- este contrato nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o esqueleto versionado do script read-only, ainda sem execucao contra banco.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
