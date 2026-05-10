@@ -80,6 +80,20 @@ const MASKING_RULES = [
   'Limitar amostras',
 ];
 
+const COMMON_SENSITIVE_FIELDS = [
+  'senha',
+  'password',
+  'hash',
+  'token',
+  'cpf',
+  'email',
+  'anexos brutos',
+  'biometria',
+  'URI',
+  'connection string',
+  'env completa',
+];
+
 const INVENTORY_ENTITY_MANIFEST = [
   {
     key: 'users',
@@ -174,7 +188,7 @@ const INVENTORY_ENTITY_MANIFEST = [
     label: 'Feedback',
     conceptualCollection: 'feedback',
     projectionFields: ['_id', 'tipo', 'status', 'unidade_id', 'criadoPor.userId', 'criadoPor.email', 'origem.modulo', 'anexos', 'createdAt', 'updatedAt'],
-    sensitiveFields: ['criadoPor.email', 'anexos'],
+    sensitiveFields: ['criadoPor.email', 'anexos brutos'],
     maskedFields: ['criadoPor.email'],
     relationChecks: ['unidade_id -> unidades._id', 'criadoPor.userId -> users._id'],
     duplicateChecks: [],
@@ -450,7 +464,7 @@ export function buildEntityManifest() {
 }
 
 export function listSensitiveFields() {
-  return [...new Set(buildEntityManifest().flatMap((entity) => entity.sensitiveFields))].sort();
+  return [...new Set([...COMMON_SENSITIVE_FIELDS, ...buildEntityManifest().flatMap((entity) => entity.sensitiveFields)])].sort();
 }
 
 export function listRelationChecks() {
