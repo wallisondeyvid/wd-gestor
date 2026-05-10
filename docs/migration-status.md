@@ -1599,6 +1599,98 @@ Checkpoint tenant enforcement atual:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Diagnostico read-only focado do alvo memberships ativos/auth-context executado.
+- Base local:
+	- f9e258a docs(tenant): seleciona proximo alvo tenant-aware pos-usuarios-bloqueados.
+- Auditoria read-only realizada sobre:
+	- UserMembershipRepository.js;
+	- authContextReadDataFacade.js;
+	- auth-context.db.js;
+	- api.db.js;
+	- unitScope.js;
+	- BaseRepository.js;
+	- testes adjacentes lidos;
+	- migration-status.md.
+- Conclusao:
+	- o slice UserMembershipRepository.findActiveMembershipsByUserIdLeanRepo -> authContextReadDataFacade.loadActiveMembershipsByUserId e pequeno e read-only no estado atual; o helper do repository apenas resolve o model e faz find/select/sort/lean por user_id + status=active, enquanto a facade apenas aplica GLOBAL_SCOPE e maxTimeMS opcional;
+	- o escopo atual do slice principal e GLOBAL_SCOPE explicito tanto em authContextReadDataFacade.loadActiveMembershipsByUserId quanto em auth-context.db.loadActiveMembershipsByUserId; isso e coerente com o codigo atual porque memberships ativos sao tratados como leitura canonica transversal de auth-context por userId, sem ancora de unidade no ponto de entrada do slice;
+	- esse uso atual de escopo e aceitavel no estado presente, desde que o microcorte permaneça estritamente no corredor read-only e nao tente reabrir a semantica ampla de auth-context, login, sessao ou guards;
+	- authContextReadDataFacade e fina o suficiente para este alvo: ela contem apenas scopeFromUnidadeId, withOptionalMaxTime, loadActiveMembershipsByUserIdData e loadUnidadeByIdData; nao puxa login, sessao, requireLogin, requireRole, requireUnitScope, authController, pages, bundles ou escrita;
+	- loadUnidadeById entra apenas como helper adjacente read-only para enriquecer a leitura do facade e do resolver; ele pode ser considerado no proximo microcorte apenas como helper auxiliar e nao como alvo principal;
+	- ja existe cobertura runtime adjacente suficiente para provar consumo do facade: testes de auth-context endpoint, get runtime, resolver e mutation/require-role mockam e exercitam loadActiveMembershipsByUserId e loadUnidadeById; tambem existe cobertura de bridge em gestor-user-membership-pair-unit-scope-bridge.test.js, mas ela protege outro par do repository, nao o slice principal de memberships ativos;
+	- existe lacuna estrutural real que justifica teste contratual novo no proximo microcorte: hoje nao ha congelamento especifico do slice repository/facade findActiveMembershipsByUserIdLeanRepo -> loadActiveMembershipsByUserId, nem do fato de ele permanecer pequeno, read-only, com GLOBAL_SCOPE explicito e sem abrir createUserMembership, setUserMembershipFuncionarioIdIfEmpty ou auth amplo;
+	- nao ha lacuna que justifique refactor em src agora;
+	- UserMembershipRepository nao deve migrar para BaseRepository agora; isso seria mudanca sobretudo estetica e arriscaria ampliar um repository misto que tambem contem createUserMembershipRepo e setUserMembershipFuncionarioIdIfEmptyRepo, sem ganho funcional concreto para o slice auditado;
+	- authContextReadDataFacade nao deve mudar agora; ela ja esta fina, legivel e suficientemente contida para este corredor;
+	- auth-context.db.js nao deve mudar agora; o arquivo apenas espelha o mesmo handoff read-only da facade para o slice auditado e mexer nele agora ampliaria o corredor em direcao ao auth-context amplo sem necessidade;
+	- login, sessao, requireLogin, requireRole, requireUnitScope, authController, auth amplo, createUserMembership, setUserMembershipFuncionarioIdIfEmpty e qualquer escrita devem continuar fora;
+	- o slice auditado nao exige tenant DB real, Mongo real, Portal, rota, script, job, bootstrap ou request path;
+	- risco estimado: baixo para manter o proximo ato estrito como teste contratual novo; baixo-moderado se o corte tentar expandir para auth-context amplo ou para os helpers de escrita do mesmo repository;
+	- testes que deverao ser rodados se o proximo microcorte for contrato:
+		- node --test .\tests\gestor-user-membership-pair-unit-scope-bridge.test.js
+		- node --test .\tests\gestor-auth-context-endpoint.test.js
+		- node --test .\tests\gestor-auth-context-get-runtime-contract.test.js
+		- node --test .\tests\gestor-auth-context-resolver.test.js
+		- node --test .\tests\gestor-auth-context-mutation-require-role.test.js
+		- npm run verify:imports
+- Decisao recomendada:
+	- proximo microcorte = teste contratual novo;
+	- selectedTarget=UserMembershipRepository_authContextReadDataFacade_activeMembershipsRead.
+- Escopo permitido do proximo microcorte:
+	- apenas UserMembershipRepository.findActiveMembershipsByUserIdLeanRepo;
+	- authContextReadDataFacade.loadActiveMembershipsByUserId;
+	- talvez loadUnidadeById se estritamente necessario e read-only;
+	- testes estruturais sem app/server.
+- Escopo proibido:
+	- login;
+	- sessao;
+	- requireLogin;
+	- requireRole;
+	- requireUnitScope;
+	- authController;
+	- auth.db amplo;
+	- createUserMembership;
+	- setUserMembershipFuncionarioIdIfEmpty;
+	- escrita;
+	- unlock/toggle;
+	- widget settings;
+	- pages;
+	- bundles;
+	- Portal;
+	- tenant registry;
+	- request path;
+	- bootstrap;
+	- script;
+	- CLI;
+	- job;
+	- rota nova;
+	- tenant DB real;
+	- Mongo real;
+	- PostgreSQL.
+- Gates:
+	- selectedTarget=UserMembershipRepository_authContextReadDataFacade_activeMembershipsRead
+	- activeMembershipsFocusedDiagnosticExecuted=true
+	- activeMembershipsContractRecommended=true
+	- activeMembershipsRefactorRecommended=false
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Proximo alvo tenant-aware pos-usuarios bloqueados selecionado documentalmente.
 - Base publicada:
 	- 4efa5b3 docs(tenant): encerra frente usuarios bloqueados tenant-aware.
