@@ -2304,6 +2304,98 @@ Checkpoint tenant enforcement atual:
 	- proximo ato deve ser planejamento de prontidao operacional;
 	- push somente manual pelo usuario.
 
+- Fase de prontidao operacional do WD Gestor em Mongo iniciada documentalmente.
+- Base publicada:
+	- a25ee63 docs(tenant): encerra fase atual de blindagem tenant-aware mongo.
+- Decisao arquitetural herdada:
+	- MongoDB permanece banco principal;
+	- PostgreSQL nao e obrigatorio;
+	- PostgreSQL fica apenas como possibilidade futura se houver dor real;
+	- dados atuais sao ficticios e descartaveis.
+- Objetivo da fase:
+	- preparar o WD Gestor para uso real/controlado;
+	- sair da trilha de microcortes tenant-aware;
+	- validar produto como produto.
+- Escopo da fase:
+	- mapear fluxos essenciais;
+	- mapear dados ficticios;
+	- planejar limpeza/reset controlado;
+	- planejar criacao de unidade piloto;
+	- planejar criacao de usuario master/admin;
+	- planejar checklist manual dos fluxos principais.
+- Fora do escopo nesta abertura:
+	- alterar src;
+	- criar teste;
+	- limpar banco;
+	- executar escrita real;
+	- criar unidade real;
+	- criar usuario real;
+	- abrir tenant DB real;
+	- migrar para PostgreSQL;
+	- usar Portal.
+- Fluxos candidatos para checklist operacional:
+	- login/autenticacao;
+	- usuario master/admin;
+	- selecao/escopo de unidade;
+	- unidades;
+	- usuarios;
+	- pessoas/moradores, se aplicavel;
+	- funcionarios;
+	- setores;
+	- modulos/recursos;
+	- feedback;
+	- dashboard/widget, apenas como risco a validar, nao como alvo imediato.
+- Riscos residuais:
+	- dados ficticios misturados;
+	- pages/bundles amplos;
+	- auth/login/sessao;
+	- fluxos de escrita ainda nao testados com dados reais;
+	- modulos fora do Gestor;
+	- seeds/resets/scripts que podem ser perigosos se executados sem plano.
+- Diagnostico operacional inicial:
+	- objetivo da nova fase: transformar a baseline tenant-aware ja consolidada em prontidao de uso controlado, com foco em autenticacao, criacao segura do primeiro contexto operacional e validacao manual dos fluxos centrais do Gestor sem tocar em producao real nesta abertura;
+	- fluxos que precisam estar prontos antes de uso real/controlado: login, esqueci-senha/reset-password, primeiro acesso, select-unit/switch-unit, criacao e leitura de unidades, status/retry de provisioning, criacao e administracao de usuarios, vinculo usuario-funcionario-membership, CRUD principal de funcionarios, setores, modulos, recursos e feedback, com dashboard/widget ficando apenas como leitura final de sanidade;
+	- dados ficticios existentes ou provaveis: usuarios de teste, unidades de teste, memberships sinteticos, funcionarios placeholder, seeds locais e cadastros artificiais criados por suites/runtime; tratamento conceitual: considerar tudo descartavel, inventariar antes, evitar reaproveitamento implícito e planejar limpeza/reset controlado antes de qualquer onboarding real;
+	- acoes que nao devem ser executadas ainda: qualquer escrita real, reset sem plano, limpeza de banco, criacao de unidade real, criacao de usuario real, abertura de tenant DB real, uso de Portal, migracao para PostgreSQL e execucao solta de scripts de seed/backfill/migration;
+	- riscos residuais que saem da fase tenant-aware e entram na fase operacional: mistura de dados ficticios com futuros dados reais, fluxos amplos de pages/bundles ainda nao exercitados em uso humano ponta a ponta, auth/login/sessao em cenario manual real, provisioning e writes operacionais ainda sem rodada controlada com atores reais, e scripts auxiliares potencialmente perigosos fora de checklist;
+	- validacoes manuais futuras: login com conta master/admin, fluxo de selecao de unidade, navegacao basica de dashboard, criacao/edicao/listagem de unidade piloto, criacao/cheque/administracao de usuario, criacao/listagem de funcionario, setores, modulos, recursos e feedback, validacao de permissoes, logout e retorno de sessao, alem de checagem de mensagens de erro e estados vazios;
+	- validacoes automatizadas que ja existem e continuam gate: npm test, npm run guard:condominios-unidade, npm run guard:unitScope-null, npm run guard:no-model-bypass, npm run verify:imports quando houver microcorte, alem das suites runtime-contract e structural-seam ja presentes para auth, unidades, usuarios, funcionarios, setores, modulos, recursos, feedback, provisioning e wrappers/middlewares do Gestor;
+	- antes de criar qualquer unidade real: inventariar e descartar conceitualmente os dados ficticios, definir plano de limpeza/reset controlado, revisar scripts perigosos, confirmar shape minimo da unidade piloto e revisar provisioning/status/events apenas em modo planejado;
+	- antes de criar qualquer usuario real: definir unidade piloto, validar fluxo manual de login e selecao de unidade em ambiente controlado, revisar politica de primeiro acesso/reset de senha, confirmar papel master/admin inicial e evitar reaproveitar usuarios artificiais existentes;
+	- proximo microcorte apos esta abertura documental: checklist operacional documental focado em precondicoes, ordem de execucao e criterios de aceite da unidade piloto e do primeiro usuario master/admin, sem alterar codigo.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=wdGestorOperationalReadinessPlanning
+	- recommendedNextAct=mapOperationalReadinessChecklist
+- Gates:
+	- operationalReadinessMongoPhaseStarted=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=wdGestorOperationalReadinessPlanning
+	- recommendedNextAct=mapOperationalReadinessChecklist
+	- mongoRemainsPrimaryDatabase=true
+	- postgresMigrationRequired=false
+	- postgresOnlyFutureOptionIfConcretePain=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- currentDataIsFictional=true
+	- fictionalDataCanBeDiscarded=true
+	- tenantDbRealOpened=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- abertura da fase operacional nao autoriza alteracao funcional;
+	- abertura da fase operacional nao autoriza escrita real;
+	- abertura da fase operacional nao autoriza limpeza/reset real;
+	- abertura da fase operacional nao autoriza criacao de unidade real;
+	- abertura da fase operacional nao autoriza criacao de usuario real;
+	- abertura da fase operacional nao autoriza tenant DB real;
+	- abertura da fase operacional nao autoriza Portal;
+	- abertura da fase operacional nao autoriza PostgreSQL;
+	- proximo ato deve ser checklist operacional documental.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
