@@ -1599,6 +1599,47 @@ Checkpoint tenant enforcement atual:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
+- Base local:
+	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
+- Arquivo criado:
+	- tests/architecture/activeMembershipsAuthContextRead.contract.test.js.
+- Contrato validado:
+	- UserMembershipRepository limitado ao helper findActiveMembershipsByUserIdLeanRepo;
+	- authContextReadDataFacade.loadActiveMembershipsByUserId;
+	- auth-context.db.loadActiveMembershipsByUserId;
+	- comportamento real de GLOBAL_SCOPE explicito congelado conforme o codigo atual;
+	- loadUnidadeById tratado apenas como helper adjacente read-only;
+	- ausencia de login, sessao, requireLogin, requireRole, requireUnitScope, authController, auth.db amplo, createUserMembership, setUserMembershipFuncionarioIdIfEmpty, escrita, unlock/toggle, widget settings, pages, bundles, Portal, tenant registry, request path, bootstrap, script, CLI, job, rota nova, tenant DB real, Mongo real e PostgreSQL.
+- Resultado dos testes:
+	- node --test .\tests\architecture\activeMembershipsAuthContextRead.contract.test.js -> tests=5, pass=5, fail=0;
+	- node --test .\tests\gestor-user-membership-pair-unit-scope-bridge.test.js -> tests=3, pass=3, fail=0;
+	- node --test .\tests\gestor-auth-context-endpoint.test.js -> tests=4, pass=4, fail=0;
+	- node --test .\tests\gestor-auth-context-get-runtime-contract.test.js -> tests=6, pass=6, fail=0;
+	- node --test .\tests\gestor-auth-context-resolver.test.js -> tests=10, pass=10, fail=0;
+	- node --test .\tests\gestor-auth-context-mutation-require-role.test.js -> tests=2, pass=2, fail=0;
+	- node --test .\tests\architecture\repository-unitScope.test.js -> tests=2, pass=2, fail=0;
+	- npm run verify:imports -> Arquitetura limpa.
+- Confirmacoes:
+	- nenhum src alterado;
+	- nenhum teste existente alterado;
+	- nenhuma escrita real;
+	- nenhum rollback;
+	- nenhum Mongo real;
+	- nenhum tenant DB real;
+	- nenhum Portal/PostgreSQL;
+	- nenhuma rota/request path.
+- Gates:
+	- selectedTarget=UserMembershipRepository_authContextReadDataFacade_activeMembershipsRead
+	- activeMembershipsAuthContextContractCreated=true
+	- activeMembershipsAuthContextContractValidated=true
+	- sourceCodeChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+
 - Diagnostico read-only focado do alvo memberships ativos/auth-context executado.
 - Base local:
 	- f9e258a docs(tenant): seleciona proximo alvo tenant-aware pos-usuarios-bloqueados.
