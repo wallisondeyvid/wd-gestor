@@ -2237,6 +2237,73 @@ Checkpoint tenant enforcement atual:
 	- auditoria nao autoriza PostgreSQL;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Fase atual de blindagem tenant-aware Mongo encerrada documentalmente.
+- Base local:
+	- ff93ec9 docs(tenant): seleciona proximo passo pos-listagem-usuarios-contextual.
+- Decisao arquitetural:
+	- MongoDB permanece banco principal do WD Gestor.
+	- PostgreSQL nao e obrigatorio.
+	- PostgreSQL fica apenas como possibilidade futura condicionada a dor real.
+- Motivo do encerramento:
+	- as frentes pequenas relevantes ja foram protegidas ou adiadas;
+	- as ultimas auditorias retornaram defer/none/closeWithoutNewTarget;
+	- continuar procurando microcorredores tende a gerar retrabalho;
+	- nao ha lacuna pequena, concreta e falsificavel que justifique novo teste/refactor agora.
+- Frentes protegidas/consolidadas:
+	- registry/harness tenant-aware;
+	- usuario atual/profile;
+	- funcoes;
+	- modulos;
+	- recursos;
+	- funcionarios disponiveis;
+	- cluster de unidades;
+	- setores por unidade;
+	- feedback leitura limitada;
+	- lookup de unidades por ids;
+	- listagem geral de setores;
+	- usuarios bloqueados;
+	- memberships ativos/auth-context;
+	- listagem contextual de usuarios diagnosticada e adiada.
+- Frentes adiadas/riscos residuais:
+	- owners/pages/bundles amplos;
+	- auth amplo/login/sessao;
+	- fluxos operacionais de escrita;
+	- widget settings;
+	- modulos fora do Gestor, se aplicavel;
+	- reabertura apenas com hipotese nova, pequena e falsificavel.
+- Proxima fase recomendada:
+	- prontidao operacional do WD Gestor em Mongo;
+	- validacao de uso real/controlado;
+	- limpeza/reset de dados ficticios;
+	- criacao de unidade piloto;
+	- criacao de usuario master/admin real;
+	- teste manual dos fluxos principais.
+- Gates:
+	- tenantAwareMongoHardeningPhaseClosed=true
+	- selectedTarget=none
+	- recommendedNextAct=operationalReadinessPlanning
+	- mongoRemainsPrimaryDatabase=true
+	- postgresMigrationRequired=false
+	- postgresOnlyFutureOptionIfConcretePain=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- fechamento da fase nao autoriza alteracao funcional;
+	- fechamento da fase nao autoriza escrita real;
+	- fechamento da fase nao autoriza tenant DB real;
+	- fechamento da fase nao autoriza Portal;
+	- fechamento da fase nao autoriza PostgreSQL;
+	- proximo ato deve ser planejamento de prontidao operacional;
+	- push somente manual pelo usuario.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
