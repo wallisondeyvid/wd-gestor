@@ -3508,6 +3508,65 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- push fica adiado ate fechamento consolidado do bloco amplo;
 	- qualquer execucao concreta deve ocorrer em microcorte proprio imediatamente posterior.
 
+- Proximo alvo tenant-aware pos-listagem geral de Setores selecionado documentalmente.
+- Base publicada consolidada da frente anterior: 246245a docs(tenant): encerra frente listagem geral setores tenant-aware.
+- Premissa consolidada para a selecao:
+	- nao ha clientes reais;
+	- os dados atuais continuam ficticios e descartaveis;
+	- a migracao continua arquitetural multi-tenant, nao migracao de dados reais;
+	- o proximo microcorte deve permanecer pequeno, read-only e sem tenant DB real, Portal, PostgreSQL, escrita real, rota nova, CLI, script, job, bootstrap ou request path.
+- Estado inicial consolidado antes desta auditoria read-only:
+	- frentes ja fechadas/protegidas: harness tenant registry, usuario atual/profile, funcoes, modulos, recursos, funcionarios disponiveis, cluster de unidades, setores por unidade, feedback leitura limitada, lookup de unidades por ids e listagem geral de setores;
+	- worktree limpa em migration/refactor-core;
+	- base publicada da frente listagem geral de Setores confirmada em 246245a.
+- Auditoria read-only executada para selecao do proximo alvo:
+	- leitura do final do ledger atual;
+	- leitura de package.json para confirmar gates e runner;
+	- mapeamento de repositories e services candidatos em src/modules/gestor/app;
+	- releitura focal de FeedbackReadRepository.js, SetorReadRepository.js, UnidadeReadRepository.js, FuncionarioRepository.js, UserMembershipRepository.js e UserRepository.js;
+	- releitura focal de api.db.js nos corredores candidatos;
+	- releitura focal de listLockedUsers.service.js e do owner listLockedUsers em userController.js;
+	- leitura dos testes adjacentes gestor-usuarios-bloqueados-structural-seam-runtime-contract.test.js, gestor-usuarios-bloqueados-runtime-contract.test.js e gestor-user-membership-pair-unit-scope-bridge.test.js.
+- Decisao principal:
+	- alvo principal recomendado: corredor de usuarios bloqueados;
+	- slice recomendado: findUsersLockedAfterSelectLeanRepo -> findUsersLockedAfterSelectLeanFromDb -> listLockedUsersService -> listLockedUsers;
+	- tipo do proximo microcorte recomendado: teste contratual novo e pequeno;
+	- racional: este corredor permanece read-only, tem owner e service finos, ja possui cobertura runtime/structural adjacente e nao exige reabrir bundles, pages, CRUD, membership amplo, auth de sessao, anexos, biometria, widget settings ou superficies operacionais.
+- Porque os demais candidatos principais ficaram adiados:
+	- alternativa adiada 1: findUserMembershipByUserAndUnidadeLeanRepo -> api.db.findUserMembershipByUserAndUnidade;
+	- motivo do adiamento 1: apesar de pequeno, este slice encosta imediatamente no auto-user flow de Funcionarios e tende a reabrir create/link/membership num corredor que deixa de ser puramente read-only;
+	- alternativa adiada 2: findUnidadesByMatrizOuPrincipalRepo -> unidadesTestarBancoTargetDataFacade;
+	- motivo do adiamento 2: o nome e o uso adjacente de testar banco aproximam o microcorte de superficie operacional e aumentam a ambiguidade contra a regra de nao abrir tenant DB real nem trilha operacional concreta.
+- Criterios de seguranca para o proximo microcorte recomendado:
+	- proteger apenas o helper de repository, a bridge read-only, o service fino e o owner fino do corredor bloqueados;
+	- manter unitScope explicito GLOBAL_SCOPE onde o comportamento real ja e global de administracao;
+	- nao reabrir toggle, unlock, delete, create, status patch, membership amplo, login, sessao, recovery, reset password, page bundle, upload, biometria, anexos ou auto-user flow;
+	- nao alterar src, package.json, scripts, rotas, bootstraps ou superfices operacionais nesta selecao documental;
+	- se a leitura focal do owner/service indicar ampliacao inesperada do corredor, degradar para matriz documental de candidatos em vez de abrir contrato novo.
+- Gates documentais da selecao do proximo alvo:
+	- nextTargetPostSetoresListAuditExecuted=true
+	- nextTargetPostSetoresListCandidatesRead=true
+	- nextTargetPostSetoresListPrimaryRecommendationDefined=true
+	- nextTargetPostSetoresListAlternativesBounded=true
+	- nextTargetPostSetoresListRecommendedMicrocutTypeDefined=true
+	- nextTargetPostSetoresListPrimaryTarget=usuariosBloqueadosReadOnlyCorridor
+	- nextTargetPostSetoresListPrimaryTargetType=smallArchitectureContract
+	- nextTargetPostSetoresListAlternativesDeferred=[membershipPairReadBridge,unidadesTestarBancoTargetFacade]
+	- nextTargetPostSetoresListRequiresNewRuntimeCoverage=false
+	- nextTargetPostSetoresListRequiresOperationalSurface=false
+	- nextTargetPostSetoresListRequiresTenantDbReal=false
+	- nextTargetPostSetoresListRequiresPortal=false
+	- nextTargetPostSetoresListRequiresPostgreSql=false
+	- nextTargetPostSetoresListRequiresWrites=false
+	- nextTargetPostSetoresListCanDegradeToMatrixIfScopeExpands=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta selecao documental:
+	- esta selecao nao abre automaticamente o microcorte seguinte;
+	- esta selecao nao autoriza alterar src, testes ou package.json neste momento;
+	- esta selecao nao autoriza tenant DB real, Portal, PostgreSQL, escrita real, rota, CLI, script, job, bootstrap ou request path;
+	- esta selecao apenas fixa o corredor recomendado e o criterio de seguranca para a proxima frente pequena;
+	- se o corredor bloqueados deixar de ser pequeno apos uma leitura focal adicional, a resposta correta passa a ser matriz documental curta de candidatos, nao ampliacao oportunista do corte.
+
 - Comando real de escrita sintetica tenant registry corrigido documentalmente.
 - Base local: c77efcc docs(tenant): aprova execucao da escrita sintetica tenant registry.
 - Motivo da correcao:
