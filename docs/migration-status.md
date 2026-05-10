@@ -2679,6 +2679,137 @@ Checkpoint tenant enforcement atual:
 	- este plano nao autoriza uso de dados reais;
 	- proximo ato deve ser preparar comandos/checklist de inventario read-only, ainda para revisao antes de execucao.
 
+- Preparacao documental dos comandos/checklist de inventario read-only concluida.
+- Base publicada:
+	- 7ebbc07 docs(ops): planeja inventario read-only dos dados ficticios.
+- Principio do inventario read-only:
+	- apenas leitura;
+	- sem update;
+	- sem delete;
+	- sem save;
+	- sem bulkWrite;
+	- sem seed;
+	- sem migration;
+	- sem backfill;
+	- sem reset;
+	- sem conexao real nesta etapa.
+- Checklist de seguranca antes de uma execucao futura:
+	- confirmar ambiente;
+	- confirmar URI mascarada, sem expor segredo;
+	- confirmar banco alvo;
+	- confirmar branch/status;
+	- confirmar snapshot/backup quando aplicavel;
+	- confirmar autorizacao explicita do usuario;
+	- confirmar que o comando e somente leitura;
+	- confirmar que a saida sera relatorio, nao alteracao.
+- Formato esperado do relatorio futuro:
+	- contagens por colecao;
+	- amostra limitada de documentos;
+	- relacoes orfas;
+	- duplicidades;
+	- candidatos a descarte futuro;
+	- itens que exigem confirmacao humana;
+	- riscos por colecao;
+	- nenhuma alteracao executada.
+- Comandos/checklists conceituais por entidade, sem executar:
+	- usuarios: checklist de countDocuments, find com projection minima, distinct de roles/global_role e validacao em memoria de unidade_id/funcionario_id;
+	- memberships: checklist de contagem por status/origem, find com projection minima e validacao em memoria de user_id/unidade_id/funcionario_id;
+	- unidades: checklist de contagem por ativa/is_principal/subunidade, amostra limitada e verificacao em memoria de diretor_usuario_id e modulosAcessiveis;
+	- funcionarios: checklist de contagem por unidade/ativo, projection minima e validacao em memoria de usuario_id/funcao_id/departamento;
+	- setores: checklist de contagem por unidade/ativo, projection minima e deteccao em memoria de nome_normalizado duplicado;
+	- funcoes: checklist de contagem por unidade_principal_id/ativa, projection minima e verificacao em memoria de modulos_habilitados;
+	- modulos: checklist de contagem por status, projection minima e distinct de nomes/url_base;
+	- recursos: checklist de contagem por unidade/ativo/tipo, projection minima e verificacao em memoria de placa/chassi/renavam duplicados;
+	- feedback: checklist de contagem por status/tipo/unidade, projection minima, amostra limitada de anexos e verificacao em memoria de criadoPor.userId/unidade_id;
+	- widget/dashboard: checklist de countDocuments de widget settings, projection minima de widget/module/enabled e validacao apenas relatorial de sinais secundarios de dashboard;
+	- provisioning/status/events: checklist de contagem por unidade/status/scope/operation, projection minima de unidadeId/moduleStatuses/lastProvisioningError e verificacao em memoria de incoerencias entre status e events;
+	- anexos/metadados: checklist de amostra limitada, tamanhos, mime, caminhos/urls e referencias quebradas apenas em relatorio;
+	- seeds e dados de teste: checklist de identificadores textuais, origens conhecidas, emails padrao e marcadores artificiais, sempre sem qualquer acao de limpeza.
+- Allowlist conceitual de operacoes permitidas numa execucao futura:
+	- countDocuments;
+	- find com projection;
+	- aggregate sem $out e sem $merge;
+	- limit;
+	- sort;
+	- distinct;
+	- validacoes em memoria;
+	- geracao de relatorio local.
+- Blocklist conceitual permanente:
+	- insert;
+	- update;
+	- updateOne;
+	- updateMany;
+	- replaceOne;
+	- delete;
+	- deleteOne;
+	- deleteMany;
+	- remove;
+	- drop;
+	- dropDatabase;
+	- dropIndex;
+	- createIndex sem aprovacao;
+	- bulkWrite;
+	- save;
+	- seed;
+	- migration;
+	- backfill;
+	- scripts de master/unlock/update/backfill/migration;
+	- qualquer execucao contra Atlas sem autorizacao explicita.
+- Criterios de aceite para este proximo inventario futuro:
+	- relatorio produzido sem escrita;
+	- ambiente confirmado;
+	- nenhuma credencial exposta;
+	- nenhuma colecao alterada;
+	- candidatos a descarte classificados;
+	- duvidas destacadas;
+	- proximo ato ainda dependera de aprovacao humana.
+- Proximo ato depois desta preparacao:
+	- revisar comandos/checklist com o usuario;
+	- so depois autorizar, ou nao, uma execucao read-only controlada;
+	- reset/limpeza continuam fora de escopo.
+- Diagnostico da preparacao:
+	- package.json ja deixa claro que existem comandos sensiveis no workspace, entao a revisao humana previa da allowlist/blocklist precisa permanecer obrigatoria;
+	- o inventario futuro deve produzir relatorio local e nao qualquer efeito colateral em banco, mesmo quando vier a ser autorizado;
+	- a separacao entre checklist por entidade, allowlist de leitura e blocklist permanente reduz o risco de uma futura execucao ser confundida com seed, reset, migration ou backfill.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=readOnlyInventoryCommandsOrChecklist
+	- recommendedNextAct=reviewReadOnlyInventoryChecklistBeforeExecution
+- Gates:
+	- readOnlyInventoryChecklistPrepared=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=readOnlyInventoryCommandsOrChecklist
+	- recommendedNextAct=reviewReadOnlyInventoryChecklistBeforeExecution
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- scriptCreated=false
+	- commandAgainstDatabaseExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta preparacao nao executa inventario;
+	- esta preparacao nao autoriza conexao Mongo;
+	- esta preparacao nao autoriza uso de Atlas;
+	- esta preparacao nao autoriza reset;
+	- esta preparacao nao autoriza limpeza;
+	- esta preparacao nao autoriza seed;
+	- esta preparacao nao autoriza migration/backfill;
+	- esta preparacao nao autoriza criacao de unidade;
+	- esta preparacao nao autoriza criacao de usuario;
+	- proxima etapa deve ser revisao humana do checklist antes de qualquer execucao.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
