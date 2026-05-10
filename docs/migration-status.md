@@ -1598,6 +1598,114 @@ Checkpoint tenant enforcement atual:
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
+
+- Proximo alvo tenant-aware pos-usuarios bloqueados selecionado documentalmente.
+- Base publicada:
+	- 4efa5b3 docs(tenant): encerra frente usuarios bloqueados tenant-aware.
+- Premissa consolidada:
+	- dados atuais sao ficticios;
+	- nao ha clientes reais;
+	- nao ha migracao de dados legados reais;
+	- o objetivo atual e migracao arquitetural multi-tenant;
+	- os dados ficticios atuais poderao ser deletados quando necessario.
+- Estado inicial:
+	- branch sincronizada com origin;
+	- worktree limpa;
+	- tenant registry fechado/protegido;
+	- usuario atual/profile fechado/protegido;
+	- Funcoes fechado/protegido;
+	- Modulos fechado/protegido;
+	- Recursos fechado/protegido;
+	- Funcionarios disponiveis fechado/protegido;
+	- Cluster de Unidades fechado/protegido;
+	- Setores por unidade fechado/protegido;
+	- Feedback leitura limitada fechado/protegido;
+	- Lookup de Unidades por ids fechado/protegido;
+	- Listagem geral de Setores fechado/protegido;
+	- Usuarios bloqueados fechado/protegido;
+	- tenant registry nao sera avancado agora.
+- Auditoria read-only executada:
+	- comandos usados:
+		- git status -sb
+		- git --no-pager log --oneline --decorate -12
+		- Get-Content .\docs\migration-status.md -Tail 1500
+		- Get-ChildItem .\src -Recurse -File -Include "*Repository*.js","*Service*.js","*.repository.js","*.service.js" | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js -Pattern "unitScope","getConnectionForUnit","baseConnection","mongoose.model","ModelRegistry","BaseRepository","req.unitScope","req.unidade","unidadeId","feedback","setor","setores","unidade","unidades","funcionario","funcionarios","morador","pessoa","habitacao","apartamento","mailbox","widget","status","upload","resposta","diretor","diretores","membership","usuario","user","anexo","biometria","bloqueados","locked","unlock","toggle" -CaseSensitive:$false
+		- Get-ChildItem .\tests -Recurse -File | Select-Object -ExpandProperty FullName
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "ReadRepository","Repository","findBy","listar","buscar","obter","Feedback","Setor","Setores","Unidade","Unidades","Funcionario","Funcionarios","Pessoa","Morador","Habitacao","Apartamento","Mailbox","Widget","Status","Diretor","Diretores","Membership","Usuario","User","Anexo","Biometria","Bloqueados","Locked","Unlock","Toggle" -CaseSensitive:$false
+		- Select-String -Path .\src\**\*.js,.\tests\**\*.js -Pattern "FeedbackReadRepository","SetorReadRepository","UnidadeReadRepository","FuncionarioRepository","UserMembershipRepository","UserRepository","findFeedback","findSetores","findUnidades","findFuncionario","findFuncionarios","findMembership","findUser","findUsuario","loadPaginaFeedback","loadPaginaSetores","loadPaginaUnidades","loadPaginaFuncionarios","feedbackStatusDataFacade","feedbackReadDataFacade","unidadesClusterDataFacade","unidadesReadDataFacade","unidadesDiretores","setoresReadDataFacade","widgetSettings","resposta","upload","diretores","anexo","biometria","findUserMembershipByUserAndUnidade","findActiveMembershipsByUserId","findUserMembershipUserIdsByUnidadeIds","findUsersLockedAfterSelectLean","unlockUser","toggleUser","usuariosBloqueados" -CaseSensitive:$false
+		- Get-Content .\src\modules\gestor\app\repositories\FeedbackReadRepository.js -TotalCount 800
+		- Get-Content .\src\modules\gestor\app\repositories\SetorReadRepository.js -TotalCount 800
+		- Get-Content .\src\modules\gestor\app\repositories\UnidadeReadRepository.js -TotalCount 900
+		- Get-Content .\src\modules\gestor\app\repositories\FuncionarioRepository.js -TotalCount 950
+		- Get-Content .\src\modules\gestor\app\repositories\UserMembershipRepository.js -TotalCount 700
+		- Get-Content .\src\modules\gestor\app\repositories\UserRepository.js -TotalCount 760
+		- Select-String -Path .\src\modules\gestor\app\**\*.js -Pattern "FeedbackReadRepository","SetorReadRepository","UnidadeReadRepository","FuncionarioRepository","UserMembershipRepository","UserRepository","ReadDataFacade","loadPagina","listar","buscar","obter","findFeedback","findSetores","findUnidades","findFuncionario","findFuncionarios","findMembership","findUser","findUsuario","feedbackStatusDataFacade","widgetSettings","resposta","upload","diretores","membership","usuario","user","anexo","biometria","unlock","toggle","locked","bloqueados" -CaseSensitive:$false
+		- Select-String -Path .\tests\**\*.js -Pattern "gestor-feedback","gestor-setores","gestor-unidades","gestor-funcionarios","usuarios","membership","FeedbackReadRepository","SetorReadRepository","UnidadeReadRepository","FuncionarioRepository","UserMembershipRepository","UserRepository","unit-scope","tenantScope","runtime-contract","structural-seam","widget","status","upload","resposta","diretores","anexo","biometria","unlock","toggle","bloqueados","locked" -CaseSensitive:$false
+	- arquivos/categorias mapeadas:
+		- ledger documental recente em docs/migration-status.md;
+		- repositories e services do Gestor sob src/modules/gestor/app/repositories e src/modules/gestor/app/services;
+		- bridges e facades em src/modules/gestor/app/db e src/modules/gestor/app/data;
+		- testes arquiteturais, runtime-contract e structural-seam sob tests/architecture e tests/gestor-*.
+	- candidatos observados:
+		- principal observado: UserMembershipRepository.findActiveMembershipsByUserIdLeanRepo e a facade fina authContextReadDataFacade.loadActiveMembershipsByUserId, com loadUnidadeById como helper adjacente de leitura;
+		- candidato adiado: readFeedbackWidgetVisibility.service.js, pequeno e ja coberto, mas acoplado explicitamente a widget settings;
+		- candidato adiado: helpers lean remanescentes de FuncionarioRepository e UnidadeReadRepository, mas embutidos em arquivos amplos com CRUD, bundles, listagens globais ou dominio ja fechado.
+- Decisao:
+	- alvo principal escolhido: UserMembershipRepository.findActiveMembershipsByUserIdLeanRepo -> authContextReadDataFacade.loadActiveMembershipsByUserId;
+	- motivo da escolha: e o menor corredor novo ainda visivel que permanece read-only, usa repository pequeno com resolveModel + unitScope explicito, tem facade fina separada e ja possui bastante cobertura runtime indireta do auth-context sem ainda ter congelamento estrutural proprio do slice repository/facade;
+	- risco estimado: baixo a baixo-moderado se tratado apenas como diagnostico read-only focado; medio se for aberto como teste ou refactor direto agora, porque encosta em auth-context e GLOBAL_SCOPE;
+	- cobertura de testes existente ou lacuna: existe cobertura runtime ampla consumindo loadActiveMembershipsByUserId e loadUnidadeById por mocks nos testes de auth-context; existe teste de bridge em tests/gestor-user-membership-pair-unit-scope-bridge.test.js para findUserMembershipByUserAndUnidade e createUserMembership; a lacuna atual esta no congelamento estrutural do slice read-only de memberships ativos e da facade authContextReadDataFacade propriamente dita;
+	- escopo permitido do proximo microcorte: diagnostico read-only mais focado no slice findActiveMembershipsByUserIdLeanRepo -> loadActiveMembershipsByUserId, admitindo loadUnidadeById apenas como helper adjacente necessario para fechar a leitura do facade sem reabrir auth amplo;
+	- escopo proibido do proximo microcorte: login, sessao, requireLogin, requireRole, requireUnitScope, authController, auth.db.js, createUserMembership, setUserMembershipFuncionarioIdIfEmpty, unlock/toggle, widget settings, pages, bundles, Portal, tenant registry, request path, bootstrap, script, CLI, job, rota nova e qualquer escrita real.
+- Alternativas descartadas ou adiadas:
+	- alternativa adiada 1: readFeedbackWidgetVisibility.service.js; adiada porque, embora pequena e ja coberta, cai exatamente no corredor de widget settings que deve permanecer fora deste microcorte;
+	- alternativa adiada 2: findUserMembershipByUserAndUnidade / createUserMembership em api.db.js; adiada porque o par vizinho mistura leitura com createUserMembership, abrindo escrita real e saindo da regua estrita de corredor read-only.
+- Criterios de seguranca para o proximo microcorte:
+	- manter fallback base/global ou exigencia explicita de unidade/ancora conforme o codigo atual;
+	- nao abrir tenant DB real;
+	- nao alterar Portal;
+	- nao criar rota;
+	- nao criar CLI/script/job/bootstrap;
+	- nao usar dados reais;
+	- nao executar escrita real;
+	- validar com teste especifico antes de qualquer refactor amplo.
+- Gates:
+	- syntheticHarnessBlockClosed=true
+	- syntheticHarnessOperationalSurfaceProtectionClosed=true
+	- userProfileTenantAwareFrontClosed=true
+	- funcoesTenantAwareFrontClosed=true
+	- modulosTenantAwareFrontClosed=true
+	- recursosTenantAwareFrontClosed=true
+	- funcionariosDisponiveisTenantAwareFrontClosed=true
+	- unidadesClusterTenantAwareFrontClosed=true
+	- setoresByUnitTenantAwareFrontClosed=true
+	- feedbackReadTenantAwareFrontClosed=true
+	- unidadesLookupByIdsTenantAwareFrontClosed=true
+	- setoresListTenantAwareFrontClosed=true
+	- usuariosBloqueadosTenantAwareFrontClosed=true
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- nextTenantAwareTargetSelected=true
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- selectedTarget=UserMembershipRepository_authContextReadDataFacade_activeMembershipsRead
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental do alvo nao autoriza alteracao de codigo;
+	- selecao documental do alvo nao autoriza escrita real;
+	- selecao documental do alvo nao autoriza tenant DB real;
+	- selecao documental do alvo nao autoriza Portal;
+	- selecao documental do alvo nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio, pequeno, aprovado e testavel.
 - quantidade de pass: 2201.
 - quantidade de fail: 0.
 - quantidade de skipped: 2.
