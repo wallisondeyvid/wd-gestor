@@ -2006,6 +2006,71 @@ Checkpoint tenant enforcement atual:
 	- fechamento da rodada nao autoriza PostgreSQL;
 	- proximo ato podera ser validacao consolidada e push somente com autorizacao explicita.
 
+- Diagnostico focal do branch contextual de listUsuariosOwner.service.js executado.
+- Base publicada:
+	- 960c4ae docs(tenant): encerra rodada pos-memberships-auth-context.
+- Auditoria read-only realizada.
+- Arquivos lidos:
+	- docs/migration-status.md;
+	- package.json;
+	- src/modules/gestor/app/services/usuarios/listUsuariosOwner.service.js;
+	- src/modules/gestor/app/db/api.db.js;
+	- src/modules/gestor/app/repositories/UserRepository.js;
+	- src/modules/gestor/app/repositories/UserMembershipRepository.js;
+	- src/modules/gestor/app/repositories/FuncionarioRepository.js;
+	- src/modules/gestor/app/repositories/UnidadeReadRepository.js;
+	- src/shared/unitScope.js;
+	- src/shared/repositories/BaseRepository.js;
+	- tests/gestor-users-memberships-page.test.js;
+	- tests/gestor-usuarios-list-owner-structural-seam.test.js;
+	- tests/architecture/repository-unitScope.test.js.
+- Conclusao:
+	- o corredor contextual continua amplo demais para um proximo teste contratual pequeno, porque o branch nasce em resolveAllowedUnitIds, agrega listUsuariosContextuaisService, enrichUsuariosMembershipsSummary, listUsuariosUnidadesFiltradasService e listUsuariosFuncionariosFiltradosService, e depende de multiplos bridges e repositories no mesmo owner;
+	- o recorte analisado e read-only no estado atual, embora encoste em repositories que tambem possuem writes fora do slice;
+	- dependencias do branch contextual: apiDbBridgeService -> api.db -> UserRepository.findUsersByUnidadeIdsExcludingMasterLeanRepo/findUsersByIdsExcludingMasterLeanRepo, UserMembershipRepository.findUserMembershipUserIdsByUnidadeIdsLeanRepo/findUserMembershipsByUserIdsLeanRepo, UnidadeReadRepository.findUnidadeByIdLeanRepo/findUnidadesByMatrizOuPrincipalRepo/findUnidadesByIdsNomeCodigoLeanRepo e FuncionarioRepository.findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo;
+	- o uso atual de unitScope/GLOBAL_SCOPE e aceitavel no desenho presente: req.unitScope ancora allowedUnitIds por unidade, e os reads subsequentes em GLOBAL_SCOPE permanecem filtrados por ids derivados desse escopo; isso e coerente, mas amplia o contrato necessario se alguem tentar congelar o branch inteiro;
+	- nao apareceu lacuna estrutural pequena e falsificavel ainda nao congelada: os testes adjacentes ja ancoram a seam do owner, o bundle final e a filtragem contextual principal por req.unitScope;
+	- a recomendacao e adiar novo teste contratual neste corredor e nao abrir refactor em src agora.
+- Decisao recomendada:
+	- defer.
+	- selectedTarget=UserListContextualOwnerReadDiagnostic.
+	- recommendedNextAct=defer.
+- Escopo permitido de eventual continuidade:
+	- somente novo diagnostico focal e read-only, ainda dentro de listUsuariosOwner.service.js, se houver hipotese mais estreita e falsificavel sobre um unico helper local;
+	- sem abrir pages, bundles, request path, auth amplo ou fluxos operacionais.
+- Escopo proibido:
+	- pages e bundles de usuarios;
+	- auth amplo, login, sessao, requireLogin, requireRole, requireUnitScope e authController;
+	- createUserMembership, setUserMembershipFuncionarioIdIfEmpty e qualquer escrita;
+	- preflight de userController;
+	- fluxos operacionais de funcionarios;
+	- Portal, tenant DB real, Mongo real, PostgreSQL, scripts, jobs, bootstrap, rotas novas e push.
+- Gates:
+	- userListContextualDiagnosticExecuted=true
+	- userListContextualCandidatesRead=true
+	- userListContextualImmediateContractRecommended=false
+	- userListContextualImmediateRefactorRecommended=false
+	- selectedTarget=UserListContextualOwnerReadDiagnostic
+	- recommendedNextAct=defer
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza teste novo automaticamente;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
