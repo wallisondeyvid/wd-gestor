@@ -451,6 +451,151 @@ export function validateAggregatePipeline(pipeline) {
   };
 }
 
+export function designReadOnlyConnectionConfig(env = {}) {
+  const databaseTarget = validateDatabaseTarget(env.WD_OPS_DATABASE_TARGET);
+  const atlasApproval = validateAtlasApproval({
+    WD_OPS_ATLAS_TARGET: env.WD_OPS_ATLAS_TARGET,
+    WD_OPS_ATLAS_EXPLICIT_APPROVAL: env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+  });
+  const maskedUri = maskConnectionString(`mongodb://future-user:future-secret@future-host/${databaseTarget.sanitized}`);
+
+  return {
+    mode: 'future-readonly-connection-design',
+    connectionImplementation: 'blocked-until-future-microcut',
+    queryExecution: 'blocked-until-separate-future-microcut',
+    target: {
+      databaseStatus: databaseTarget.status,
+      databaseLabel: databaseTarget.sanitized,
+      atlasTarget: describeFutureFlagStatus(env.WD_OPS_ATLAS_TARGET),
+      atlasApproval: atlasApproval.status,
+      tenantDbOpenMode: 'manual-only-future-review',
+    },
+    flags: {
+      readOnlyConfirm: describeFutureFlagStatus(env.WD_OPS_READONLY_CONFIRM),
+      environmentConfirm: describeFutureFlagStatus(env.WD_OPS_ENVIRONMENT_CONFIRM),
+      databaseConfirm: describeFutureFlagStatus(env.WD_OPS_DATABASE_CONFIRM),
+      databaseTarget: databaseTarget.status,
+      atlasTarget: describeFutureFlagStatus(env.WD_OPS_ATLAS_TARGET),
+      atlasExplicitApproval: describeFutureFlagStatus(env.WD_OPS_ATLAS_EXPLICIT_APPROVAL),
+    },
+    uri: {
+      present: false,
+      masked: maskedUri,
+      printingRule: 'masked-only',
+    },
+    allowedFutureHelpers: [
+      'validateRequiredFutureFlags',
+      'validateAtlasApproval',
+      'validateDatabaseTarget',
+      'maskConnectionString',
+    ],
+    notes: [
+      'Configuracao declarativa e mascarada.',
+      'Nenhuma conexao e aberta neste microcorte.',
+      'Nenhuma query pode ser executada junto com a futura conexao.',
+    ],
+  };
+}
+
+export function validateConnectionPreconditions(env = {}) {
+  const requiredFlags = validateRequiredFutureFlags({
+    WD_OPS_READONLY_CONFIRM: env.WD_OPS_READONLY_CONFIRM,
+    WD_OPS_ENVIRONMENT_CONFIRM: env.WD_OPS_ENVIRONMENT_CONFIRM,
+    WD_OPS_DATABASE_CONFIRM: env.WD_OPS_DATABASE_CONFIRM,
+  });
+  const databaseTarget = validateDatabaseTarget(env.WD_OPS_DATABASE_TARGET);
+  const atlasApproval = validateAtlasApproval({
+    WD_OPS_ATLAS_TARGET: env.WD_OPS_ATLAS_TARGET,
+    WD_OPS_ATLAS_EXPLICIT_APPROVAL: env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+  });
+  const blockedReasons = [];
+
+  if (!requiredFlags.ok) {
+    if (requiredFlags.missing.length > 0) {
+      blockedReasons.push(`required-flags-missing:${requiredFlags.missing.join(',')}`);
+    }
+
+    if (requiredFlags.invalid.length > 0) {
+      blockedReasons.push(`required-flags-invalid:${requiredFlags.invalid.join(',')}`);
+    }
+  }
+
+  if (!databaseTarget.ok) {
+    blockedReasons.push(`database-target:${databaseTarget.status}`);
+  }
+
+  if (atlasApproval.status === 'blocked') {
+    blockedReasons.push('atlas-approval-missing');
+  }
+
+  return {
+    ok: blockedReasons.length === 0,
+    status: blockedReasons.length === 0 ? 'ready-for-future-connection-review' : 'blocked',
+    blockedReasons,
+    requiredFlags,
+    databaseTarget,
+    atlasApproval,
+    queryExecution: 'blocked-in-this-microcut',
+    connectionExecution: 'blocked-in-this-microcut',
+  };
+}
+
+export function maskConnectionConfig(config = {}) {
+  return {
+    ...config,
+    uri: {
+      present: Boolean(config?.uri?.present),
+      masked: maskConnectionString(typeof config?.uri?.masked === 'string' ? config.uri.masked : ''),
+      printingRule: 'masked-only',
+    },
+  };
+}
+
+export function ensureNoWriteOperationsRegistered() {
+  return {
+    ok: true,
+    status: 'write-operations-blocked',
+    blockedOperations: [
+      'insert',
+      'update',
+      'updateOne',
+      'updateMany',
+      'replaceOne',
+      'delete',
+      'deleteOne',
+      'deleteMany',
+      'remove',
+      'drop',
+      'dropDatabase',
+      'dropIndex',
+      'createIndex',
+      'bulkWrite',
+      'save',
+      'seed',
+      'migration',
+      'backfill',
+    ],
+    writeRegistration: 'not-allowed',
+  };
+}
+
+export function summarizeConnectionDesign(config = {}) {
+  const safeConfig = maskConnectionConfig(config);
+
+  return {
+    mode: safeConfig.mode || 'future-readonly-connection-design',
+    connectionImplementation: safeConfig.connectionImplementation || 'blocked-until-future-microcut',
+    queryExecution: safeConfig.queryExecution || 'blocked-until-separate-future-microcut',
+    databaseStatus: safeConfig?.target?.databaseStatus || 'missing',
+    databaseLabel: safeConfig?.target?.databaseLabel || '[database:missing]',
+    atlasTarget: safeConfig?.target?.atlasTarget || 'missing',
+    atlasApproval: safeConfig?.target?.atlasApproval || 'pending',
+    tenantDbOpenMode: safeConfig?.target?.tenantDbOpenMode || 'manual-only-future-review',
+    uri: safeConfig.uri,
+    allowedFutureHelpers: Array.isArray(safeConfig.allowedFutureHelpers) ? [...safeConfig.allowedFutureHelpers] : [],
+  };
+}
+
 export function buildEntityManifest() {
   return INVENTORY_ENTITY_MANIFEST.map((entity) => ({
     ...entity,
@@ -693,6 +838,16 @@ export function assertReadOnlyEnvironment(env = {}) {
 export function buildPlannedInventoryManifest() {
   const entityManifestSummary = getEntityManifestSummary();
   const queryPlanSummary = summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
+  const connectionDesignSummary = summarizeConnectionDesign(
+    designReadOnlyConnectionConfig({
+      WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+      WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+      WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+      WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
+      WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+      WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+    }),
+  );
   return {
     scriptName: SCRIPT_NAME,
     scriptPath: SCRIPT_PATH,
@@ -706,6 +861,7 @@ export function buildPlannedInventoryManifest() {
     maskingRules: MASKING_RULES,
     entityManifestSummary,
     queryPlanSummary,
+    connectionDesignSummary,
     connectionImplementation: 'blocked-until-future-microcut',
     reportGenerationImplementation: 'blocked-until-future-microcut',
   };
@@ -713,6 +869,24 @@ export function buildPlannedInventoryManifest() {
 
 export function buildSafetySummary() {
   const queryPlanSummary = summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
+  const connectionDesignSummary = summarizeConnectionDesign(
+    designReadOnlyConnectionConfig({
+      WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+      WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+      WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+      WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
+      WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+      WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+    }),
+  );
+  const connectionPreconditions = validateConnectionPreconditions({
+    WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+    WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+    WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
+    WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+    WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+  });
   const validationSummary = buildValidationSummary({
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
@@ -737,6 +911,9 @@ export function buildSafetySummary() {
     packageJsonIntegration: 'absent',
     envSnapshot,
     validationSummary,
+    connectionDesignSummary,
+    connectionPreconditions,
+    writeGuards: ensureNoWriteOperationsRegistered(),
     queryPlanSummary,
     notes: [
       'Este skeleton nao importa mongoose.',
@@ -755,6 +932,16 @@ export function main() {
   const safetySummary = buildSafetySummary();
   const entityManifestSummary = getEntityManifestSummary();
   const queryPlanSummary = summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
+  const connectionDesignSummary = summarizeConnectionDesign(
+    designReadOnlyConnectionConfig({
+      WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+      WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+      WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+      WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
+      WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+      WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+    }),
+  );
   const validationSummary = buildValidationSummary({
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
@@ -780,6 +967,7 @@ export function main() {
     targetEntities: manifest.targetEntities,
     entityManifestSummary,
     queryPlanSummary,
+    connectionDesignSummary,
     futureFlags: manifest.requiredFutureFlags,
     futureReportLocation: manifest.futureReportLocation,
     maskingRules: manifest.maskingRules,
