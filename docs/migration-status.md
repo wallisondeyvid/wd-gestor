@@ -3894,6 +3894,120 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar a camada futura de queries read-only antes de qualquer conexao ou leitura real.
 
+- Camada futura de queries read-only desenhada documentalmente.
+- Base publicada:
+	- c50bbe1 chore(ops): revisa manifesto do inventario read-only.
+- Objetivo da futura camada de queries:
+	- executar apenas leituras controladas;
+	- usar manifesto de entidades e projections;
+	- produzir dados intermediarios para relatorio local futuro;
+	- nao alterar banco;
+	- nao classificar automaticamente nada como deletavel;
+	- nao executar neste microcorte.
+- Estrategia tecnica futura:
+	- criar helpers puros e isolados para montar planos de query;
+	- separar query plan de execucao real;
+	- usar somente allowlist: countDocuments, find com projection, distinct, aggregate sem $out e sem $merge, sort e limit;
+	- validar cada operacao com validateOperationAllowlist;
+	- validar cada pipeline com validateAggregatePipeline;
+	- limitar amostras;
+	- exigir projections explicitas;
+	- mascarar dados antes de qualquer saida.
+- Guardrails obrigatorios:
+	- nao implementar conexao no mesmo microcorte da query layer;
+	- nao importar mongoose nesta etapa;
+	- nao usar connectMongo;
+	- nao executar script no mesmo microcorte em que queries forem adicionadas;
+	- nao alterar package.json junto da query layer;
+	- nao usar Atlas real sem autorizacao explicita;
+	- nao permitir insert, update, delete, drop, bulkWrite ou save;
+	- nao permitir aggregate com $out ou $merge;
+	- nao gerar relatorio real ainda.
+- Estruturas futuras sugeridas:
+	- buildReadOnlyQueryPlan(entityManifest);
+	- buildCountPlan(entity);
+	- buildSamplePlan(entity);
+	- buildDistinctPlan(entity, field);
+	- validateQueryPlan(plan);
+	- validateAllQueryPlans(plans);
+	- summarizeQueryPlans(plans).
+- Saida futura da camada:
+	- planos declarativos de consulta;
+	- nenhuma consulta executada;
+	- nenhuma conexao necessaria;
+	- resumo seguro por entidade;
+	- lista de operacoes planejadas;
+	- lista de projections planejadas;
+	- lista de riscos bloqueados.
+- Criterios de aceite futuros:
+	- planos gerados sem executar banco;
+	- toda operacao validada pela allowlist;
+	- todo aggregate validado contra $out e $merge;
+	- toda projection explicita;
+	- amostras limitadas;
+	- nenhuma credencial exposta;
+	- main continua apenas imprimindo resumo seguro.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhuma query implementada;
+	- nenhuma conexao adicionada;
+	- proximo ato recomendado: implementReadOnlyInventoryQueryPlanSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryQueryLayer
+	- recommendedNextAct=implementReadOnlyInventoryQueryPlanSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryQueryLayerDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryQueryLayer
+	- recommendedNextAct=implementReadOnlyInventoryQueryPlanSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- queryLayerDesigned=true
+	- queryPlanImplemented=false
+	- connectionImplemented=false
+	- queryExecuted=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao implementa query;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura de banco;
+	- este desenho nao gera relatorio real;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza reset ou limpeza;
+	- este desenho nao autoriza seed, migration ou backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve implementar apenas o skeleton declarativo de planos de query, ainda sem conexao ou executar banco.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
