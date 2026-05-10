@@ -3610,6 +3610,81 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- postgresMigrationApproved=false
 	- blockedReasons=[]
 
+- Diagnostico de refactor minimo do corredor usuarios bloqueados executado.
+- Base local:
+	- ceea5de test(tenant): protege contrato read-only de usuarios bloqueados.
+- Auditoria read-only realizada sobre:
+	- tests/architecture/usuariosBloqueadosReadOnly.contract.test.js;
+	- src/modules/gestor/app/repositories/UserRepository.js;
+	- src/modules/gestor/app/db/api.db.js;
+	- src/modules/gestor/app/services/usuarios/listLockedUsers.service.js;
+	- src/modules/gestor/app/controllers/userController.js;
+	- src/shared/unitScope.js;
+	- src/shared/repositories/BaseRepository.js;
+	- tests/gestor-usuarios-bloqueados-structural-seam-runtime-contract.test.js;
+	- tests/gestor-usuarios-bloqueados-runtime-contract.test.js;
+	- tests/architecture/repository-unitScope.test.js.
+- Conclusao do diagnostico:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- o slice usuarios bloqueados ja esta suficientemente tenant-aware/read-only para o estado atual;
+	- a protecao combinada por UserRepository + api.db.findUsersLockedAfterSelectLeanFromDb + listLockedUsersService + userController.listLockedUsers e suficiente para o estado atual;
+	- o uso atual de GLOBAL_SCOPE explicito e aceitavel neste corredor administrativo global;
+	- o contrato congelou corretamente que o corredor e read-only e nao abre tenant routing novo;
+	- a lacuna observada e apenas oportunidade futura de padronizacao, nao necessidade funcional imediata;
+	- UserRepository nao deve migrar para BaseRepository agora alem do que ja existe na classe ampla, porque isso nao traz ganho funcional comprovado para o helper protegido e adiciona risco desnecessario;
+	- api.db.findUsersLockedAfterSelectLeanFromDb nao deve mudar agora;
+	- listLockedUsersService nao deve mudar agora;
+	- userController.listLockedUsers nao deve mudar agora;
+	- unlock, toggle, create, update, delete, recovery, reset password, login, sessao, auth amplo, membership, auto-user flow, page bundle, upload, biometria, anexos e widget settings devem continuar fora deste corte;
+	- o estado atual com GLOBAL_SCOPE explicito permanece aceitavel e coerente com a natureza administrativa global da listagem de bloqueados;
+	- risco estimado de mexer agora: baixo ganho e risco moderado de ampliar escopo ou alterar comportamento runtime sem necessidade.
+- Respostas consolidadas da auditoria:
+	- nao vale converter o helper protegido ou reestruturar UserRepository por estetica agora;
+	- nao vale mexer em api.db.findUsersLockedAfterSelectLeanFromDb agora;
+	- nao vale mexer em listLockedUsersService agora;
+	- nao vale mexer em userController.listLockedUsers agora;
+	- nao vale expandir este microcorte para fluxos de escrita, auth amplo, membership, auto-user flow, bundles ou superficies proibidas;
+	- qualquer conversao agora aumentaria risco de comportamento runtime ou de ampliacao indevida do corte;
+	- qualquer ampliacao util exigiria microcorte proprio e tenderia a aproximar o trabalho de dominios que hoje devem continuar fora;
+	- nao ha necessidade de tenant DB real, Mongo real, Portal, rota, script, job ou bootstrap para sustentar a conclusao atual.
+- Testes que devem ser rodados em qualquer microcorte futuro neste corredor:
+	- node --test .\tests\architecture\usuariosBloqueadosReadOnly.contract.test.js;
+	- node --test .\tests\gestor-usuarios-bloqueados-structural-seam-runtime-contract.test.js;
+	- node --test .\tests\gestor-usuarios-bloqueados-runtime-contract.test.js;
+	- node --test .\tests\architecture\repository-unitScope.test.js;
+	- npm run verify:imports.
+- Escopo permitido e proibido mantido pelo diagnostico:
+	- permitido: auditoria read-only, validacao consolidada e fechamento documental da frente curta;
+	- proibido: alteracao funcional em src, escrita real, rollback, tenant DB real, Mongo real, Portal, PostgreSQL, rota, script, job, bootstrap, request path e qualquer expansao para auth amplo, membership, auto-user flow, bundles, uploads, biometria, anexos ou widget settings.
+- Decisao recomendada:
+	- preferir validacao consolidada ou fechamento desta frente curta;
+	- nao abrir refactor minimo em src enquanto nao existir lacuna concreta, pequena, falsificavel e com ganho funcional claro.
+- Gates do diagnostico usuarios bloqueados:
+	- selectedTarget=UserRepository_listLockedUsers_findUsersLockedAfterSelectLean
+	- usuariosBloqueadosReadOnlyContractCreated=true
+	- usuariosBloqueadosReadOnlyContractValidated=true
+	- usuariosBloqueadosRefactorDiagnosticExecuted=true
+	- usuariosBloqueadosRefactorRecommended=false
+	- usuariosBloqueadosWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Comando real de escrita sintetica tenant registry corrigido documentalmente.
 - Base local: c77efcc docs(tenant): aprova execucao da escrita sintetica tenant registry.
 - Motivo da correcao:
