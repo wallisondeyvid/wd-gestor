@@ -2884,6 +2884,130 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve ser preparar plano de execucao read-only controlada, ainda sujeito a aprovacao antes de qualquer execucao.
 
+- Plano de execucao read-only controlada do inventario de dados ficticios preparado documentalmente.
+- Base publicada:
+	- 164e989 docs(ops): revisa checklist de inventario read-only.
+- Objetivo do plano:
+	- executar futuramente um inventario somente leitura;
+	- produzir relatorio local;
+	- nao alterar nenhuma colecao;
+	- nao expor credenciais;
+	- nao usar dados reais.
+- Pre-condicoes obrigatorias antes de uma execucao futura:
+	- autorizacao explicita do usuario;
+	- confirmacao de ambiente;
+	- confirmacao de que dados continuam ficticios;
+	- confirmacao de URI mascarada;
+	- confirmacao do database alvo;
+	- confirmacao de branch/status;
+	- confirmacao de que o plano nao contem escrita;
+	- confirmacao de backup/snapshot se ambiente persistente;
+	- confirmacao de que Atlas real nao sera usado sem autorizacao explicita.
+- Estrategia de execucao futura:
+	- preferir comando/script temporario ou ferramenta read-only revisada antes;
+	- gerar relatorio local;
+	- usar projection minima;
+	- usar limit para amostras;
+	- usar countDocuments, distinct, find e aggregate sem $out e sem $merge;
+	- fazer validacoes de orfaos e duplicidades em memoria;
+	- mascarar dados sensiveis no relatorio.
+- Escopo do relatorio futuro:
+	- contagens por colecao;
+	- amostras mascaradas;
+	- usuarios, memberships e unidades;
+	- funcionarios, setores e funcoes;
+	- modulos e recursos;
+	- feedback, anexos e metadados;
+	- widget e dashboard;
+	- provisioning, status e events;
+	- seeds e dados de teste;
+	- orfaos;
+	- duplicidades;
+	- candidatos a descarte;
+	- itens pendentes de decisao humana.
+- Operacoes permitidas na execucao futura:
+	- countDocuments;
+	- find com projection;
+	- distinct;
+	- aggregate sem $out e sem $merge;
+	- sort;
+	- limit;
+	- validacoes em memoria;
+	- escrita apenas de relatorio local fora do banco, se aprovada.
+- Operacoes proibidas:
+	- insert;
+	- update;
+	- updateOne;
+	- updateMany;
+	- replaceOne;
+	- delete;
+	- deleteOne;
+	- deleteMany;
+	- remove;
+	- drop;
+	- dropDatabase;
+	- dropIndex;
+	- createIndex;
+	- bulkWrite;
+	- save;
+	- seed;
+	- migration;
+	- backfill;
+	- qualquer script perigoso ja bloqueado.
+- Criterio de sucesso do plano:
+	- plano revisavel;
+	- sem execucao;
+	- sem script criado;
+	- sem conexao Mongo;
+	- sem escrita real;
+	- proximo ato deve ser decidir se criaremos um script/comando read-only revisavel ou se manteremos apenas checklist manual.
+- Proximo ato recomendado:
+	- decideReadOnlyInventoryImplementationApproach;
+	- opcoes futuras: criar script read-only versionado, criar script temporario nao versionado, usar checklist manual com comandos isolados, ou adiar execucao e seguir para plano de reset sem inventario real.
+- Diagnostico do plano:
+	- o roteiro futuro ficou delimitado por pre-condicoes explicitas, allowlist de leitura e blocklist de escrita;
+	- o escopo do relatorio cobre os grupos de dados ficticios mais provaveis sem exigir conexao nesta etapa;
+	- a decisao pendente foi corretamente reduzida a abordagem de implementacao, e nao a execucao do inventario.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=prepareReadOnlyInventoryExecutionPlan
+	- recommendedNextAct=decideReadOnlyInventoryImplementationApproach
+- Gates:
+	- readOnlyInventoryExecutionPlanPrepared=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=prepareReadOnlyInventoryExecutionPlan
+	- recommendedNextAct=decideReadOnlyInventoryImplementationApproach
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- scriptCreated=false
+	- commandAgainstDatabaseExecuted=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este plano nao executa inventario;
+	- este plano nao autoriza conexao Mongo;
+	- este plano nao autoriza uso de Atlas;
+	- este plano nao autoriza criacao de script;
+	- este plano nao autoriza reset;
+	- este plano nao autoriza limpeza;
+	- este plano nao autoriza seed;
+	- este plano nao autoriza migration/backfill;
+	- este plano nao autoriza criacao de unidade;
+	- este plano nao autoriza criacao de usuario;
+	- proxima etapa deve decidir abordagem de implementacao do inventario read-only, ainda antes de qualquer execucao.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
