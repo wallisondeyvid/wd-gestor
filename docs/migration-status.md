@@ -4152,6 +4152,119 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar a camada futura de conexao read-only antes de qualquer conexao real.
 
+- Camada futura de conexao read-only do inventario desenhada documentalmente.
+- Base publicada:
+	- 4fa1311 chore(ops): revisa planos de query do inventario read-only.
+- Objetivo da futura camada de conexao:
+	- permitir, em etapa futura, leitura controlada somente apos autorizacao explicita;
+	- validar flags antes de qualquer conexao;
+	- mascarar URI antes de qualquer saida;
+	- confirmar database alvo;
+	- nao abrir tenant DB real automaticamente;
+	- nao conectar em Atlas real sem autorizacao explicita;
+	- nao executar query no mesmo microcorte de implementacao da conexao.
+- Estrategia tecnica futura:
+	- manter conexao isolada em helper proprio;
+	- separar validacao de ambiente, criacao de conexao e execucao de query;
+	- reutilizar validateRequiredFutureFlags;
+	- reutilizar validateAtlasApproval;
+	- reutilizar validateDatabaseTarget;
+	- exigir WD_OPS_READONLY_CONFIRM=true;
+	- exigir WD_OPS_ENVIRONMENT_CONFIRM=true;
+	- exigir WD_OPS_DATABASE_CONFIRM=true;
+	- exigir WD_OPS_DATABASE_TARGET definido;
+	- exigir marcador explicito se Atlas for alvo futuro;
+	- nunca imprimir URI completa.
+- Guardrails obrigatorios:
+	- nao implementar conexao junto com query real;
+	- nao executar script no mesmo microcorte em que conexao for adicionada;
+	- nao alterar package.json junto da conexao;
+	- nao usar connectMongo;
+	- nao usar tenant resolver real;
+	- nao usar Portal;
+	- nao usar PostgreSQL;
+	- nao usar dados reais;
+	- nao permitir escrita;
+	- nao permitir seed, reset, migration ou backfill;
+	- nao permitir create, update, delete, drop, bulkWrite ou save.
+- Design futuro sugerido:
+	- designReadOnlyConnectionConfig(env);
+	- validateConnectionPreconditions(env);
+	- maskConnectionConfig(config);
+	- createReadOnlyMongoConnection(config) somente em microcorte futuro e com autorizacao;
+	- closeReadOnlyMongoConnection(connection);
+	- ensureNoWriteOperationsRegistered().
+- Criterios de aceite futuros:
+	- conexao so sera implementada em microcorte proprio;
+	- nenhuma query sera executada no mesmo microcorte da conexao;
+	- nenhuma URI sera impressa sem mascara;
+	- falhar se flags obrigatorias ausentes;
+	- falhar se database alvo estiver ausente ou bloqueado;
+	- falhar se Atlas for solicitado sem marcador explicito;
+	- main deve continuar sem executar inventario ate gate posterior.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhuma conexao implementada;
+	- nenhuma query implementada;
+	- proximo ato recomendado: implementReadOnlyConnectionDesignSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryConnectionLayer
+	- recommendedNextAct=implementReadOnlyConnectionDesignSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryConnectionLayerDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryConnectionLayer
+	- recommendedNextAct=implementReadOnlyConnectionDesignSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- connectionLayerDesigned=true
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao gera relatorio real;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset ou limpeza;
+	- este desenho nao autoriza seed, migration ou backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve implementar apenas skeleton declarativo de configuracao ou conexao, ainda sem abrir conexao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
