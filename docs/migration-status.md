@@ -4008,6 +4008,77 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve implementar apenas o skeleton declarativo de planos de query, ainda sem conexao ou executar banco.
 
+- Skeleton declarativo de query plans read-only implementado.
+- Base publicada:
+	- 1dfaf87 docs(ops): desenha camada de queries do inventario read-only.
+- Registro da implementacao:
+	- skeleton declarativo de query plans implementado;
+	- nenhuma conexao implementada;
+	- nenhuma query real executada;
+	- nenhuma geracao de relatorio real;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico dos query plans:
+	- o script agora monta planos declarativos de count, sample, distinct e duplicate-check sem executar banco;
+	- toda operacao continua passando por validateOperationAllowlist e aggregates planejados passam por validateAggregatePipeline apenas no nivel declarativo;
+	- buildPlannedInventoryManifest, buildSafetySummary e main expõem apenas resumo seguro dos planos, sem side effects.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryQueryPlanSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyInventoryQueryPlanSkeleton
+	- recommendedNextAct=reviewReadOnlyInventoryQueryPlanSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryQueryPlanSkeletonImplemented=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyInventoryQueryPlanSkeleton
+	- recommendedNextAct=reviewReadOnlyInventoryQueryPlanSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=true
+	- queryPlanImplemented=true
+	- queryExecuted=false
+	- connectionImplemented=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- estes query plans nao executam query;
+	- estes query plans nao implementam conexao;
+	- estes query plans nao implementam leitura real de banco;
+	- estes query plans nao geram relatorio real;
+	- estes query plans nao executam inventario;
+	- estes query plans nao autorizam Mongo;
+	- estes query plans nao autorizam Atlas;
+	- estes query plans nao autorizam package.json;
+	- estes query plans nao autorizam reset ou limpeza;
+	- estes query plans nao autorizam seed, migration ou backfill;
+	- estes query plans nao autorizam criacao de unidade;
+	- estes query plans nao autorizam criacao de usuario;
+	- proxima etapa deve revisar o skeleton declarativo de query plans antes de qualquer conexao ou query real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.

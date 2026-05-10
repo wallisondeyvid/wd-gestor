@@ -487,6 +487,119 @@ export function getEntityManifestSummary() {
   };
 }
 
+export function buildCountPlan(entity) {
+  return {
+    entityKey: entity.key,
+    type: 'count',
+    operation: 'countDocuments',
+    collection: entity.conceptualCollection,
+    projectionFields: [],
+    notes: ['Plano declarativo de contagem; nao executa banco.'],
+  };
+}
+
+export function buildSamplePlan(entity) {
+  return {
+    entityKey: entity.key,
+    type: 'sample',
+    operation: 'find',
+    collection: entity.conceptualCollection,
+    projectionFields: [...entity.projectionFields],
+    sort: { updatedAt: -1 },
+    limit: 5,
+    notes: ['Plano declarativo de amostra com projection explicita e limite fixo.'],
+  };
+}
+
+export function buildDistinctPlan(entity, field) {
+  return {
+    entityKey: entity.key,
+    type: 'distinct',
+    operation: 'distinct',
+    collection: entity.conceptualCollection,
+    field,
+    projectionFields: [],
+    notes: ['Plano declarativo de distinct; nao executa banco.'],
+  };
+}
+
+export function validateQueryPlan(plan) {
+  const operationValidation = validateOperationAllowlist(plan?.operation);
+  const aggregateValidation =
+    plan?.operation === 'aggregate'
+      ? validateAggregatePipeline(plan.pipeline)
+      : { ok: true, status: 'not-applicable', blockedStages: [] };
+  const hasExplicitProjection =
+    plan?.operation === 'find'
+      ? Array.isArray(plan.projectionFields) && plan.projectionFields.length > 0
+      : true;
+  const hasSafeLimit =
+    plan?.type === 'sample'
+      ? typeof plan.limit === 'number' && plan.limit > 0 && plan.limit <= 10
+      : true;
+
+  return {
+    entityKey: plan?.entityKey ?? '[entity:missing]',
+    operation: plan?.operation ?? '[operation:missing]',
+    ok: operationValidation.ok && aggregateValidation.ok && hasExplicitProjection && hasSafeLimit,
+    blocked: !operationValidation.ok || !aggregateValidation.ok || !hasExplicitProjection || !hasSafeLimit,
+    operationValidation,
+    aggregateValidation,
+    hasExplicitProjection,
+    hasSafeLimit,
+  };
+}
+
+export function validateAllQueryPlans(plans) {
+  return plans.map((plan) => validateQueryPlan(plan));
+}
+
+export function summarizeQueryPlans(plans) {
+  const validations = validateAllQueryPlans(plans);
+  return {
+    totalPlans: plans.length,
+    operationsUsed: [...new Set(plans.map((plan) => plan.operation))].sort(),
+    entitiesCovered: [...new Set(plans.map((plan) => plan.entityKey))].sort(),
+    blockedPlans: validations.filter((validation) => validation.blocked).map((validation) => ({
+      entityKey: validation.entityKey,
+      operation: validation.operation,
+    })),
+    executionPerformed: false,
+  };
+}
+
+export function buildReadOnlyQueryPlan(entityManifest) {
+  const plans = [];
+
+  for (const entity of entityManifest) {
+    plans.push(buildCountPlan(entity));
+    plans.push(buildSamplePlan(entity));
+
+    const firstMaskedField = entity.maskedFields[0];
+    if (firstMaskedField) {
+      plans.push(buildDistinctPlan(entity, firstMaskedField));
+    }
+
+    if (entity.duplicateChecks.length > 0) {
+      const pipeline = entity.duplicateChecks.map((duplicateCheck) => ({
+        $group: { _id: duplicateCheck, count: { $sum: 1 } },
+      }));
+
+      plans.push({
+        entityKey: entity.key,
+        type: 'duplicate-check',
+        operation: 'aggregate',
+        collection: entity.conceptualCollection,
+        projectionFields: [],
+        pipeline,
+        notes: ['Plano declarativo de validacao de duplicidade; nao executa banco.'],
+      });
+    }
+  }
+
+  return plans;
+}
+
 export function buildValidationSummary(env = {}) {
   const requiredFlags = validateRequiredFutureFlags({
     WD_OPS_READONLY_CONFIRM: env.WD_OPS_READONLY_CONFIRM,
@@ -581,6 +694,7 @@ export function assertReadOnlyEnvironment(env = {}) {
 
 export function buildPlannedInventoryManifest() {
   const entityManifestSummary = getEntityManifestSummary();
+  const queryPlanSummary = summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
   return {
     scriptName: SCRIPT_NAME,
     scriptPath: SCRIPT_PATH,
@@ -593,12 +707,14 @@ export function buildPlannedInventoryManifest() {
     futureReportLocation: FUTURE_REPORT_LOCATION,
     maskingRules: MASKING_RULES,
     entityManifestSummary,
+    queryPlanSummary,
     connectionImplementation: 'blocked-until-future-microcut',
     reportGenerationImplementation: 'blocked-until-future-microcut',
   };
 }
 
 export function buildSafetySummary() {
+  const queryPlanSummary = summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
   const validationSummary = buildValidationSummary({
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
@@ -623,6 +739,7 @@ export function buildSafetySummary() {
     packageJsonIntegration: 'absent',
     envSnapshot,
     validationSummary,
+    queryPlanSummary,
     notes: [
       'Este skeleton nao importa mongoose.',
       'Este skeleton nao importa connect-mongo.',
@@ -639,6 +756,7 @@ export function main() {
   const manifest = buildPlannedInventoryManifest();
   const safetySummary = buildSafetySummary();
   const entityManifestSummary = getEntityManifestSummary();
+  const queryPlanSummary = summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
   const validationSummary = buildValidationSummary({
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
@@ -663,6 +781,7 @@ export function main() {
     objective: manifest.objective,
     targetEntities: manifest.targetEntities,
     entityManifestSummary,
+    queryPlanSummary,
     futureFlags: manifest.requiredFutureFlags,
     futureReportLocation: manifest.futureReportLocation,
     maskingRules: manifest.maskingRules,
