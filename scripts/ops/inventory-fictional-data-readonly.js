@@ -461,8 +461,9 @@ export function designReadOnlyConnectionConfig(env = {}) {
 
   return {
     mode: 'future-readonly-connection-design',
-    connectionImplementation: 'blocked-until-future-microcut',
-    queryExecution: 'blocked-until-separate-future-microcut',
+    connectionImplementation: 'design-only-not-implemented',
+    queryExecution: 'blocked-until-separate-query-microcut',
+    connectionState: 'not-opened',
     target: {
       databaseStatus: databaseTarget.status,
       databaseLabel: databaseTarget.sanitized,
@@ -481,6 +482,7 @@ export function designReadOnlyConnectionConfig(env = {}) {
     uri: {
       present: false,
       masked: maskedUri,
+      source: 'synthetic-placeholder',
       printingRule: 'masked-only',
     },
     allowedFutureHelpers: [
@@ -493,6 +495,7 @@ export function designReadOnlyConnectionConfig(env = {}) {
       'Configuracao declarativa e mascarada.',
       'Nenhuma conexao e aberta neste microcorte.',
       'Nenhuma query pode ser executada junto com a futura conexao.',
+      'Este objeto nao representa conexao ativa nem tenant DB aberto.',
     ],
   };
 }
@@ -541,11 +544,17 @@ export function validateConnectionPreconditions(env = {}) {
 }
 
 export function maskConnectionConfig(config = {}) {
+  const safeMaskedValue =
+    typeof config?.uri?.masked === 'string' && config.uri.masked.includes('://[masked]@')
+      ? config.uri.masked
+      : maskConnectionString(typeof config?.uri?.masked === 'string' ? config.uri.masked : '');
+
   return {
     ...config,
     uri: {
       present: Boolean(config?.uri?.present),
-      masked: maskConnectionString(typeof config?.uri?.masked === 'string' ? config.uri.masked : ''),
+      masked: safeMaskedValue,
+      source: config?.uri?.source || 'synthetic-placeholder',
       printingRule: 'masked-only',
     },
   };
@@ -584,8 +593,9 @@ export function summarizeConnectionDesign(config = {}) {
 
   return {
     mode: safeConfig.mode || 'future-readonly-connection-design',
-    connectionImplementation: safeConfig.connectionImplementation || 'blocked-until-future-microcut',
-    queryExecution: safeConfig.queryExecution || 'blocked-until-separate-future-microcut',
+    connectionImplementation: safeConfig.connectionImplementation || 'design-only-not-implemented',
+    queryExecution: safeConfig.queryExecution || 'blocked-until-separate-query-microcut',
+    connectionState: safeConfig.connectionState || 'not-opened',
     databaseStatus: safeConfig?.target?.databaseStatus || 'missing',
     databaseLabel: safeConfig?.target?.databaseLabel || '[database:missing]',
     atlasTarget: safeConfig?.target?.atlasTarget || 'missing',
@@ -777,6 +787,10 @@ export function buildValidationSummary(env = {}) {
 export function maskConnectionString(value) {
   if (typeof value !== 'string' || value.length === 0) {
     return '[masked:empty]';
+  }
+
+  if (value.includes('://[masked]@')) {
+    return value;
   }
 
   const protocolSplit = value.split('://');

@@ -4339,6 +4339,80 @@ Checkpoint tenant enforcement atual:
 	- este skeleton de conexao nao autoriza criacao de usuario;
 	- proxima etapa deve revisar o skeleton de conexao antes de qualquer conexao real.
 
+- Skeleton declarativo de conexao read-only revisado.
+- Base publicada:
+	- 39779a9 chore(ops): implementa skeleton de conexao read-only.
+- Registro da revisao:
+	- skeleton de conexao revisado;
+	- nenhuma conexao real implementada;
+	- nenhuma query real executada;
+	- nenhuma geracao de relatorio real;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico da revisao:
+	- o mascaramento de URI foi tornado idempotente para evitar re-mascaramento confuso;
+	- os status do objeto de conexao ficaram mais explicitos em design-only-not-implemented, blocked-until-separate-query-microcut e connectionState=not-opened;
+	- tenantDbOpenMode permaneceu manual-only-future-review e o objeto continua sem side effects.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryReportLayer.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyConnectionDesignSkeleton
+	- recommendedNextAct=designReadOnlyInventoryReportLayer
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyConnectionDesignSkeletonReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyConnectionDesignSkeleton
+	- recommendedNextAct=designReadOnlyInventoryReportLayer
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=true
+	- connectionDesignSkeletonReviewed=true
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao nao abre conexao;
+	- esta revisao nao implementa leitura real de banco;
+	- esta revisao nao executa query;
+	- esta revisao nao gera relatorio real;
+	- esta revisao nao executa inventario;
+	- esta revisao nao autoriza Mongo;
+	- esta revisao nao autoriza Atlas;
+	- esta revisao nao autoriza package.json;
+	- esta revisao nao autoriza tenant DB real;
+	- esta revisao nao autoriza reset ou limpeza;
+	- esta revisao nao autoriza seed, migration ou backfill;
+	- esta revisao nao autoriza criacao de unidade;
+	- esta revisao nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar a camada futura de relatorio, ainda sem gerar arquivo real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
