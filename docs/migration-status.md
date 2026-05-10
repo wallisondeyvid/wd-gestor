@@ -3237,6 +3237,75 @@ Checkpoint tenant enforcement atual:
 	- este contrato nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o esqueleto versionado do script read-only, ainda sem execucao contra banco.
 
+- Skeleton versionado do inventario read-only criado.
+- Base publicada:
+	- 7421b40 docs(ops): desenha contrato do inventario read-only.
+- Caminho do script:
+	- scripts/ops/inventory-fictional-data-readonly.js.
+- Registro da criacao:
+	- skeleton versionado criado;
+	- package.json nao alterado;
+	- script nao executado contra banco;
+	- sem mongoose.connect;
+	- sem connectMongo;
+	- sem Mongo real;
+	- sem tenant DB;
+	- sem escrita real;
+	- sem relatorio real gerado.
+- Diagnostico do skeleton:
+	- o arquivo foi criado apenas com funcoes puras e seguras para mascaramento, manifesto planejado e resumo de seguranca;
+	- a funcao main apenas imprime um resumo seguro do skeleton e encerra, sem abrir conexao, sem consultar banco e sem gerar relatorio;
+	- a implementacao de conexao e leitura ficou explicitamente bloqueada para microcorte futuro.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryScriptSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyInventoryScriptSkeleton
+	- recommendedNextAct=reviewReadOnlyInventoryScriptSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryScriptSkeletonCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyInventoryScriptSkeleton
+	- recommendedNextAct=reviewReadOnlyInventoryScriptSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptCreated=true
+	- scriptPath=scripts/ops/inventory-fictional-data-readonly.js
+	- scriptExecutedAgainstDatabase=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseConnectUsed=false
+	- connectMongoUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este skeleton nao executa inventario;
+	- este skeleton nao autoriza conexao Mongo;
+	- este skeleton nao autoriza uso de Atlas;
+	- este skeleton nao autoriza alteracao de package.json;
+	- este skeleton nao autoriza reset;
+	- este skeleton nao autoriza limpeza;
+	- este skeleton nao autoriza seed;
+	- este skeleton nao autoriza migration/backfill;
+	- este skeleton nao autoriza criacao de unidade;
+	- este skeleton nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o skeleton antes de qualquer implementacao de conexao ou leitura.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
