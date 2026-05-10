@@ -3008,6 +3008,94 @@ Checkpoint tenant enforcement atual:
 	- este plano nao autoriza criacao de usuario;
 	- proxima etapa deve decidir abordagem de implementacao do inventario read-only, ainda antes de qualquer execucao.
 
+- Abordagem de implementacao do inventario read-only decidida documentalmente.
+- Base publicada:
+	- 110f402 docs(ops): prepara plano de execucao read-only.
+- Opcoes avaliadas:
+	- script read-only versionado;
+	- script temporario nao versionado;
+	- checklist manual com comandos isolados;
+	- adiar execucao e seguir para plano de reset sem inventario real.
+- Decisao:
+	- escolher script read-only versionado como abordagem preferida;
+	- motivo: auditabilidade, revisao por diff, rastreabilidade, repetibilidade e menor risco de comando manual acidental;
+	- o script futuro deve ser estritamente read-only;
+	- o script futuro deve gerar relatorio local;
+	- o script futuro nao deve expor credenciais;
+	- o script futuro nao deve ser executado neste microcorte.
+- Contrato preliminar do script futuro:
+	- nome sugerido: scripts/ops/inventory-fictional-data-readonly.js;
+	- entrada: ambiente/URI via variaveis ja existentes, sem imprimir segredo;
+	- saida: relatorio local em formato markdown ou json dentro de pasta temporaria/relatorios operacionais, a decidir antes da criacao;
+	- operacoes permitidas: countDocuments, find com projection, distinct, aggregate sem $out e sem $merge, sort, limit, validacoes em memoria;
+	- operacoes proibidas: insert, update, updateOne, updateMany, replaceOne, delete, deleteOne, deleteMany, remove, drop, dropDatabase, dropIndex, createIndex, bulkWrite, save, seed, migration, backfill;
+	- nenhuma execucao automatica no package.json neste momento;
+	- se package.json for alterado no futuro, isso exigira microcorte proprio.
+- Controles de seguranca futuros:
+	- dry-run conceitual por padrao;
+	- confirmacao explicita antes de qualquer conexao futura;
+	- URI mascarada;
+	- database alvo impresso sem segredo;
+	- relatorio deve mascarar emails, CPFs e tokens quando aplicavel;
+	- falhar se detectar ambiente nao confirmado;
+	- falhar se detectar tentativa de operacao proibida;
+	- nao usar Atlas real sem autorizacao explicita;
+	- nao gravar nada no banco.
+- Criterio de aceite da decisao:
+	- abordagem escolhida;
+	- script ainda nao criado;
+	- execucao ainda nao autorizada;
+	- proximo ato deve ser desenhar contrato tecnico detalhado do script read-only antes de implementa-lo.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryScriptContract.
+- Diagnostico da decisao:
+	- a opcao versionada reduz risco operacional porque desloca a revisao para diff auditavel antes de qualquer tentativa de conexao;
+	- a opcao manual foi mantida apenas como fallback, mas ficou inferior em repetibilidade e rastreabilidade;
+	- a decisao preserva a disciplina da fase atual porque ainda nao cria script, nao altera package.json e nao aproxima execucao real.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=decideReadOnlyInventoryImplementationApproach
+	- recommendedNextAct=designReadOnlyInventoryScriptContract
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryImplementationApproachDecided=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=decideReadOnlyInventoryImplementationApproach
+	- recommendedNextAct=designReadOnlyInventoryScriptContract
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptCreated=false
+	- commandAgainstDatabaseExecuted=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta decisao nao cria script;
+	- esta decisao nao executa inventario;
+	- esta decisao nao autoriza conexao Mongo;
+	- esta decisao nao autoriza uso de Atlas;
+	- esta decisao nao autoriza alteracao de package.json;
+	- esta decisao nao autoriza reset;
+	- esta decisao nao autoriza limpeza;
+	- esta decisao nao autoriza seed;
+	- esta decisao nao autoriza migration/backfill;
+	- esta decisao nao autoriza criacao de unidade;
+	- esta decisao nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar o contrato tecnico detalhado do script read-only antes de qualquer implementacao.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
