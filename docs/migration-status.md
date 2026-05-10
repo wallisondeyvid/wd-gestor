@@ -3685,6 +3685,86 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- nao ha obrigacao de preservar dados ficticios atuais;
 	- proximo ato deve ser microcorte proprio aprovado.
 
+- Frente tenant-aware usuarios bloqueados encerrada documentalmente.
+- Base local:
+	- f547210 docs(tenant): diagnostica refactor minimo usuarios bloqueados.
+- Escopo encerrado:
+	- selecao documental do alvo UserRepository -> findUsersLockedAfterSelectLeanRepo -> api.db.findUsersLockedAfterSelectLeanFromDb -> listLockedUsersService -> userController.listLockedUsers;
+	- criacao do teste contratual tests/architecture/usuariosBloqueadosReadOnly.contract.test.js;
+	- diagnostico read-only de refactor minimo;
+	- decisao de nao alterar src neste momento;
+	- decisao de manter unlock, toggle, create, update, delete, recovery, reset password, login, sessao, auth amplo, membership, auto-user flow, page bundle, upload, biometria, anexos e widget settings fora deste slice.
+- Commits locais da frente:
+	- 0b20acb docs(tenant): seleciona proximo alvo tenant-aware pos-listagem-setores;
+	- ceea5de test(tenant): protege contrato read-only de usuarios bloqueados;
+	- f547210 docs(tenant): diagnostica refactor minimo usuarios bloqueados.
+- Resultado final da frente:
+	- UserRepository permanece amplo, mas com slice protegido limitado ao helper findUsersLockedAfterSelectLeanRepo;
+	- api.db.findUsersLockedAfterSelectLeanFromDb permanece bridge pequena;
+	- listLockedUsersService permanece service fino;
+	- userController.listLockedUsers permanece owner fino;
+	- comportamento real de GLOBAL_SCOPE explicito permanece congelado conforme o codigo atual;
+	- corredor permanece read-only e nao abre tenant routing novo;
+	- UserRepository nao deve ser reestruturado agora por estetica;
+	- api.db.findUsersLockedAfterSelectLeanFromDb nao deve mudar agora;
+	- listLockedUsersService nao deve mudar agora;
+	- userController.listLockedUsers nao deve mudar agora;
+	- unlock, toggle, create, update, delete, recovery, reset password, login, sessao, auth amplo, membership, auto-user flow, page bundle, upload, biometria, anexos e widget settings permanecem fora do slice principal;
+	- corredor nao depende de tenant registry;
+	- corredor nao depende de harness sintetico;
+	- corredor nao depende de Portal, rotas novas, start, server, createServer, scripts, CLI, jobs ou bootstrap;
+	- nao ha refactor minimo recomendado em src neste momento;
+	- proximo avanco nesse corredor so deve ocorrer se houver nova hipotese falsificavel e microcorte proprio.
+- Confirmacoes finais:
+	- nenhum arquivo em src foi alterado nesta frente;
+	- nenhum teste existente foi alterado indevidamente;
+	- apenas teste arquitetural novo foi criado;
+	- nenhuma escrita real foi executada;
+	- nenhum rollback foi executado;
+	- nenhum Mongo real foi usado;
+	- nenhum tenant DB real foi aberto;
+	- registry real nao alterada;
+	- allowlist real nao alterada;
+	- Portal nao usado;
+	- dados reais nao usados;
+	- usuario real nao usado;
+	- unidade real nao usada;
+	- PostgreSQL nao usado;
+	- nenhuma rota, CLI, script, job, bootstrap ou request path criado.
+- Gates finais da frente usuarios bloqueados:
+	- nextTenantAwareTargetSelected=true
+	- selectedTarget=UserRepository_listLockedUsers_findUsersLockedAfterSelectLean
+	- usuariosBloqueadosReadOnlyContractCreated=true
+	- usuariosBloqueadosReadOnlyContractValidated=true
+	- usuariosBloqueadosRefactorDiagnosticExecuted=true
+	- usuariosBloqueadosRefactorRecommended=false
+	- usuariosBloqueadosWideScopeDeferred=true
+	- usuariosBloqueadosTenantAwareFrontClosed=true
+	- sourceCodeChanged=false
+	- testsChanged=true somente pelo teste arquitetural novo
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantRegistryFurtherWorkDeferred=true
+	- realBaseGlobalUsageApproved=false
+	- realSyntheticWriteApproved=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- allowlistRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- pushRequired=false ate autorizacao explicita
+	- blockedReasons=[]
+- Interpretacao obrigatoria do fechamento:
+	- fechamento desta frente nao autoriza alteracao funcional;
+	- fechamento desta frente nao autoriza escrita real;
+	- fechamento desta frente nao autoriza tenant DB real;
+	- fechamento desta frente nao autoriza Portal;
+	- fechamento desta frente nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
+	- se nao houver autorizacao explicita, continuar sem push.
+
 - Comando real de escrita sintetica tenant registry corrigido documentalmente.
 - Base local: c77efcc docs(tenant): aprova execucao da escrita sintetica tenant registry.
 - Motivo da correcao:
