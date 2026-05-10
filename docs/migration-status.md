@@ -3622,6 +3622,138 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar o manifesto de entidades e projections antes de qualquer conexao ou leitura.
 
+- Manifesto futuro de entidades e projections do inventario read-only desenhado documentalmente.
+- Base publicada:
+	- 31cb2f4 chore(ops): revisa helpers do inventario read-only.
+- Objetivo do manifesto futuro:
+	- declarar entidades-alvo;
+	- declarar campos e projections minimos;
+	- declarar campos sensiveis que devem ser mascarados;
+	- declarar relacoes para validacao em memoria;
+	- declarar chaves para deteccao de orfaos e duplicidades;
+	- nao implementar query ainda.
+- Entidades-alvo iniciais:
+	- users e usuarios;
+	- userMemberships e memberships;
+	- unidades;
+	- funcionarios;
+	- setores;
+	- funcoes;
+	- modulos;
+	- recursos;
+	- feedback;
+	- widgetSettings e dashboard;
+	- unitProvisioningStatus;
+	- unitProvisioningEvents;
+	- seeds e dados de teste;
+	- anexos e metadados quando detectaveis.
+- Projections minimas por entidade:
+	- usuarios: _id, email mascarado, nome parcial, role, global_role, unidade_id, funcionario_id, ativo, primeiro_acesso, lock status, createdAt, updatedAt;
+	- memberships: _id, user_id, unidade_id, papel_contextual, status, funcionario_id, origem, createdAt, updatedAt;
+	- unidades: _id, codigo, nome parcial, ativa, is_principal, subunidade, unidade_principal_id, modulosAcessiveis, diretor_usuario_id;
+	- funcionarios: _id, codigo, nome parcial, cpf mascarado, email mascarado, unidade_id, funcao_id, usuario_id, ativo;
+	- setores: _id, codigo, nome, nome_normalizado, ativo, unidade_id;
+	- funcoes: _id, codigo, nome, ativa, unidade_principal_id, modulos_habilitados;
+	- modulos: _id, nome, status, url_base;
+	- recursos: _id, unidade_id, tipo, placa mascarada ou parcial, chassi parcial, renavam parcial, marca, modelo, ativo;
+	- feedback: _id, tipo, status, unidade_id, criadoPor.userId, criadoPor.email mascarado, origem.modulo, anexos apenas metadados;
+	- widgetSettings e dashboard: _id, widget, module, enabled;
+	- provisioning, status e events: unidadeId, status, operation, scope, moduleKey, moduleStatuses resumido, lastProvisioningError resumido;
+	- seeds e dados de teste: marcadores textuais, emails padrao mascarados, origem, timestamps.
+- Campos sensiveis:
+	- senha;
+	- hash;
+	- token;
+	- CPF;
+	- email completo;
+	- anexos brutos;
+	- biometria;
+	- URI e connection string;
+	- variaveis de ambiente completas.
+- Relacoes para validacao futura em memoria:
+	- user.unidade_id -> unidade._id;
+	- user.funcionario_id -> funcionario._id;
+	- membership.user_id -> user._id;
+	- membership.unidade_id -> unidade._id;
+	- membership.funcionario_id -> funcionario._id;
+	- funcionario.unidade_id -> unidade._id;
+	- funcionario.funcao_id -> funcao._id;
+	- funcionario.usuario_id -> user._id;
+	- setor.unidade_id -> unidade._id;
+	- funcao.unidade_principal_id -> unidade._id;
+	- unidade.diretor_usuario_id -> user._id;
+	- recurso.unidade_id -> unidade._id;
+	- feedback.unidade_id -> unidade._id;
+	- feedback.criadoPor.userId -> user._id;
+	- provisioning.unidadeId -> unidade._id.
+- Duplicidades e orfaos futuros:
+	- memberships duplicados por user_id e unidade_id;
+	- funcionarios duplicados por unidade_id e cpf ou email;
+	- setores duplicados por unidade_id e nome_normalizado;
+	- recursos duplicados por unidade_id e placa, chassi ou renavam;
+	- widget settings duplicados por widget e module;
+	- entidades com referencia para ID inexistente.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- manifesto ainda nao implementado no script;
+	- nenhuma query adicionada;
+	- nenhuma conexao adicionada;
+	- proximo ato recomendado: implementReadOnlyInventoryEntityManifestSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryEntityManifest
+	- recommendedNextAct=implementReadOnlyInventoryEntityManifestSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryEntityManifestDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryEntityManifest
+	- recommendedNextAct=implementReadOnlyInventoryEntityManifestSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- entityManifestImplemented=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao implementa manifesto no script;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura de banco;
+	- este desenho nao gera relatorio real;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza reset ou limpeza;
+	- este desenho nao autoriza seed, migration ou backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve implementar apenas o skeleton declarativo do manifesto no script, ainda sem conexao ou query.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
