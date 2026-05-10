@@ -3550,6 +3550,78 @@ Checkpoint tenant enforcement atual:
 	- estes helpers nao autorizam criacao de usuario;
 	- proxima etapa deve revisar os helpers antes de qualquer camada de conexao ou leitura.
 
+- Helpers puros de validacao revisados documentalmente.
+- Base publicada:
+	- aac1e8a chore(ops): implementa helpers do inventario read-only.
+- Registro da revisao:
+	- helpers de validacao revisados;
+	- separacao entre WD_OPS_DATABASE_CONFIRM e WD_OPS_DATABASE_TARGET aplicada;
+	- nenhuma conexao implementada;
+	- nenhuma query implementada;
+	- nenhuma geracao de relatorio real;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico da revisao:
+	- a revisao confirmou ausencia de mongoose, connectMongo, mongoose.connect, fs.writeFile, conexao, query real e escrita real;
+	- o ajuste principal foi semantico: WD_OPS_DATABASE_CONFIRM permanece flag booleana e WD_OPS_DATABASE_TARGET passa a representar o alvo textual de database;
+	- buildValidationSummary, assertReadOnlyEnvironment, buildSafetySummary e main foram alinhados a essa separacao mantendo o estado skeletonOnly.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryEntityManifest.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryValidationHelpers
+	- recommendedNextAct=designReadOnlyInventoryEntityManifest
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryValidationHelpersReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryValidationHelpers
+	- recommendedNextAct=designReadOnlyInventoryEntityManifest
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=true
+	- validationHelpersReviewed=true
+	- databaseTargetSeparated=true
+	- connectionImplemented=false
+	- queryImplemented=false
+	- reportGenerationImplemented=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- fsWriteFileUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao nao implementa conexao;
+	- esta revisao nao implementa leitura de banco;
+	- esta revisao nao gera relatorio real;
+	- esta revisao nao executa inventario;
+	- esta revisao nao autoriza Mongo;
+	- esta revisao nao autoriza Atlas;
+	- esta revisao nao autoriza package.json;
+	- esta revisao nao autoriza reset ou limpeza;
+	- esta revisao nao autoriza seed, migration ou backfill;
+	- esta revisao nao autoriza criacao de unidade;
+	- esta revisao nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar o manifesto de entidades e projections antes de qualquer conexao ou leitura.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.

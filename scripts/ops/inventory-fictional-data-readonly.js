@@ -63,6 +63,7 @@ const REQUIRED_FUTURE_FLAGS = {
   WD_OPS_READONLY_CONFIRM: 'pending',
   WD_OPS_ENVIRONMENT_CONFIRM: 'pending',
   WD_OPS_DATABASE_CONFIRM: 'pending',
+  WD_OPS_DATABASE_TARGET: 'pending',
   WD_OPS_ATLAS_EXPLICIT_APPROVAL: 'pending',
 };
 
@@ -289,7 +290,7 @@ export function buildValidationSummary(env = {}) {
     WD_OPS_ATLAS_TARGET: env.WD_OPS_ATLAS_TARGET,
     WD_OPS_ATLAS_EXPLICIT_APPROVAL: env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
   });
-  const databaseTarget = validateDatabaseTarget(env.WD_OPS_DATABASE_CONFIRM);
+  const databaseTarget = validateDatabaseTarget(env.WD_OPS_DATABASE_TARGET);
   const operationChecks = [
     validateOperationAllowlist('countDocuments'),
     validateOperationAllowlist('aggregate'),
@@ -352,6 +353,7 @@ export function assertReadOnlyEnvironment(env = {}) {
     WD_OPS_READONLY_CONFIRM: env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: env.WD_OPS_ENVIRONMENT_CONFIRM,
     WD_OPS_DATABASE_CONFIRM: env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_DATABASE_TARGET: env.WD_OPS_DATABASE_TARGET,
     WD_OPS_ATLAS_TARGET: env.WD_OPS_ATLAS_TARGET,
     WD_OPS_ATLAS_EXPLICIT_APPROVAL: env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
   });
@@ -359,10 +361,11 @@ export function assertReadOnlyEnvironment(env = {}) {
   const snapshot = {
     environmentConfirmed: describeFutureFlagStatus(env.WD_OPS_ENVIRONMENT_CONFIRM),
     databaseConfirmed: describeFutureFlagStatus(env.WD_OPS_DATABASE_CONFIRM),
+    databaseTarget: validateDatabaseTarget(env.WD_OPS_DATABASE_TARGET).status,
     readOnlyConfirmed: describeFutureFlagStatus(env.WD_OPS_READONLY_CONFIRM),
     atlasApproval: describeFutureFlagStatus(env.WD_OPS_ATLAS_EXPLICIT_APPROVAL),
     status: 'not-executed',
-    reason: 'Skeleton nao valida nem usa conexao; apenas registra bloqueios e pendencias futuras.',
+    reason: 'Skeleton nao valida nem usa conexao; apenas registra bloqueios, target futuro e pendencias futuras.',
     validationSummary,
   };
 
@@ -391,6 +394,7 @@ export function buildSafetySummary() {
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
     WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
     WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
     WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
   });
@@ -398,6 +402,7 @@ export function buildSafetySummary() {
     readOnlyConfirm: describeFutureFlagStatus(process.env.WD_OPS_READONLY_CONFIRM),
     environmentConfirm: describeFutureFlagStatus(process.env.WD_OPS_ENVIRONMENT_CONFIRM),
     databaseConfirm: describeFutureFlagStatus(process.env.WD_OPS_DATABASE_CONFIRM),
+    databaseTarget: validateDatabaseTarget(process.env.WD_OPS_DATABASE_TARGET).status,
     atlasApproval: describeFutureFlagStatus(process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL),
   };
 
@@ -416,6 +421,7 @@ export function buildSafetySummary() {
       'Este skeleton nao consulta banco.',
       'Este skeleton nao gera relatorio real.',
       'Este skeleton so expõe estados seguros de flags futuras, sem usar segredos.',
+      'Este skeleton separa confirmacao booleana de database target textual.',
     ],
   };
 }
@@ -427,6 +433,7 @@ export function main() {
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
     WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
     WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
     WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
   });
@@ -434,6 +441,7 @@ export function main() {
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
     WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+    WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
     WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
     WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
   });
