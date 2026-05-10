@@ -3567,6 +3567,49 @@ node -e "const { runUnitDatabaseRegistryManualEntrypoint } = require('./src/shar
 	- esta selecao apenas fixa o corredor recomendado e o criterio de seguranca para a proxima frente pequena;
 	- se o corredor bloqueados deixar de ser pequeno apos uma leitura focal adicional, a resposta correta passa a ser matriz documental curta de candidatos, nao ampliacao oportunista do corte.
 
+- Teste contratual tenant-aware/read-only do corredor usuarios bloqueados criado e validado.
+- Base local: 0b20acb docs(tenant): seleciona proximo alvo tenant-aware pos-listagem-setores.
+- Arquivo criado: tests/architecture/usuariosBloqueadosReadOnly.contract.test.js.
+- Contrato validado:
+	- UserRepository limitado ao helper findUsersLockedAfterSelectLeanRepo;
+	- api.db.findUsersLockedAfterSelectLeanFromDb como bridge pequena com GLOBAL_SCOPE explicito conforme o codigo atual;
+	- listLockedUsersService mantido como service fino;
+	- userController.listLockedUsers mantido como owner fino;
+	- comportamento real de escopo/GLOBAL_SCOPE congelado conforme o codigo atual;
+	- ausencia de tenant registry, harness sintetico, Portal, rotas novas, scripts, CLI, jobs, bootstrap e tenant DB real no corredor protegido;
+	- nenhuma expansao para unlock, toggle, create, update, delete, recovery, reset password, login, sessao, auth amplo, membership, auto-user flow, page bundle, upload, biometria, anexos ou widget settings.
+- Validacoes executadas:
+	- node --test .\tests\architecture\usuariosBloqueadosReadOnly.contract.test.js;
+	- node --test .\tests\gestor-usuarios-bloqueados-structural-seam-runtime-contract.test.js;
+	- node --test .\tests\gestor-usuarios-bloqueados-runtime-contract.test.js;
+	- node --test .\tests\architecture\repository-unitScope.test.js;
+	- npm run verify:imports.
+- Resultado dos testes do microcorte:
+	- usuariosBloqueadosReadOnly.contract.test.js: tests=6, pass=6, fail=0;
+	- gestor-usuarios-bloqueados-structural-seam-runtime-contract.test.js: tests=2, pass=2, fail=0;
+	- gestor-usuarios-bloqueados-runtime-contract.test.js: tests=6, pass=6, fail=0;
+	- repository-unitScope.test.js: tests=2, pass=2, fail=0;
+	- total validado neste microcorte: tests=16, pass=16, fail=0;
+	- verify:imports: verde.
+- Confirmacoes:
+	- nenhum src alterado;
+	- nenhuma escrita real executada;
+	- nenhum rollback executado;
+	- nenhum Mongo real aberto;
+	- nenhum tenant DB real aberto;
+	- nenhum Portal ou PostgreSQL usado;
+	- nenhuma rota ou request path criada.
+- Gates do microcorte usuarios bloqueados:
+	- selectedTarget=UserRepository_listLockedUsers_findUsersLockedAfterSelectLean
+	- usuariosBloqueadosReadOnlyContractCreated=true
+	- usuariosBloqueadosReadOnlyContractValidated=true
+	- sourceCodeChanged=false
+	- tenantDbRealOpened=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+
 - Comando real de escrita sintetica tenant registry corrigido documentalmente.
 - Base local: c77efcc docs(tenant): aprova execucao da escrita sintetica tenant registry.
 - Motivo da correcao:
