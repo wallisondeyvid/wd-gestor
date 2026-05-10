@@ -2124,6 +2124,119 @@ Checkpoint tenant enforcement atual:
 	- fechamento do diagnostico nao autoriza PostgreSQL;
 	- proximo ato podera ser validacao consolidada e push somente com autorizacao explicita.
 
+- Auditoria read-only pos-listagem contextual de usuarios executada.
+- Base publicada:
+	- dd13f43 docs(tenant): encerra diagnostico contextual listagem usuarios.
+- Auditoria realizada:
+	- arquivos/categorias lidos:
+		- docs/migration-status.md;
+		- package.json;
+		- repositories, services, data facades, db bridges e controllers do Gestor em src/modules/gestor/app;
+		- src/shared/unitScope.js;
+		- src/shared/repositories/BaseRepository.js;
+		- testes arquiteturais, runtime-contract e structural-seam sob tests/.
+	- criterios aplicados:
+		- slice pequeno, read-only, falsificavel;
+		- repository + bridge/facade/service fino;
+		- unitScope/GLOBAL_SCOPE claramente observavel;
+		- testes adjacentes uteis;
+		- sem reabrir frente ja fechada sem lacuna nova concreta;
+		- sem pages/bundles amplos, escrita, auth amplo, Portal, tenant DB real, PostgreSQL, rotas, scripts, jobs, request path ou bootstrap.
+- Candidatos considerados:
+	- candidato 1:
+		- nome: listLockedUsersService -> apiDb.findUsersLockedAfterSelectLeanFromDb -> UserRepository.findUsersLockedAfterSelectLeanRepo;
+		- arquivos envolvidos: services/usuarios/listLockedUsers.service.js; db/api.db.js; repositories/UserRepository.js; testes architecture/usuariosBloqueadosReadOnly.contract.test.js e gestor-usuarios-bloqueados-structural-seam-runtime-contract.test.js;
+		- tipo de corredor: service fino read-only de usuarios bloqueados;
+		- read-only: sim;
+		- unitScope/GLOBAL_SCOPE observado: GLOBAL_SCOPE explicito no bridge/repository;
+		- testes adjacentes: sim;
+		- risco: baixo;
+		- decisao: nao reabrir por frente ja fechada/protegida.
+	- candidato 2:
+		- nome: getUsuarioAtualProfileOwnerService -> userService -> UserProfileRepository;
+		- arquivos envolvidos: services/usuarios/getUsuarioAtualProfileOwner.service.js; services/userService.js; repositories/UserProfileRepository.js; testes architecture/userProfileTenantScope.contract.test.js e gestor-usuario-atual-profile-owner-structural-seam.test.js;
+		- tipo de corredor: owner read-only de perfil atual;
+		- read-only: sim;
+		- unitScope/GLOBAL_SCOPE observado: unitScope repassado explicitamente ao repository;
+		- testes adjacentes: sim;
+		- risco: baixo;
+		- decisao: nao reabrir por frente ja fechada/protegida.
+	- candidato 3:
+		- nome: findClusterUnidadesByAnchorService -> unidadesClusterDataFacade -> UnidadeReadRepository.findClusterUnidadesByAnchorLeanRepo;
+		- arquivos envolvidos: services/unidades/findClusterUnidadesByAnchor.service.js; data/unidades/unidadesClusterDataFacade.js; repositories/UnidadeReadRepository.js; testes architecture/unidadesClusterTenantScope.contract.test.js e gestor-api-unidades-cluster-structural-seam-runtime-contract.test.js;
+		- tipo de corredor: service/facade read-only de cluster por ancora;
+		- read-only: sim;
+		- unitScope/GLOBAL_SCOPE observado: scope derivado da ancora, sem escrita;
+		- testes adjacentes: sim;
+		- risco: baixo;
+		- decisao: nao reabrir por frente ja fechada/protegida.
+	- candidato 4:
+		- nome: listModulosOwnerService;
+		- arquivos envolvidos: services/modulos/listModulosOwner.service.js; services/apiDbBridgeService.js; db/api.db.js; testes gestor-modulos-list-owner-structural-seam.test.js e gestor-auth-modulos-endpoint-context.test.js;
+		- tipo de corredor: owner read-only auxiliar de modulos, com branch global e contextual;
+		- read-only: sim;
+		- unitScope/GLOBAL_SCOPE observado: branch global para master/admin e branch contextual dependente de authContext/activeUnitId;
+		- testes adjacentes: sim;
+		- risco: medio;
+		- decisao: nao reabrir por frente ja fechada e por aproximar auth de apoio.
+	- candidato 5:
+		- nome: readFeedbackWidgetVisibility.service.js;
+		- arquivos envolvidos: services/widgetSettings/readFeedbackWidgetVisibility.service.js; db/api.db.js; repositories/WidgetSettingWriteRepository.js; testes gestor-widget-feedback-get-runtime-contract.test.js e gestor-widget-feedback-get-owner-structural-seam.test.js;
+		- tipo de corredor: read-only pequeno de widget settings;
+		- read-only: sim;
+		- unitScope/GLOBAL_SCOPE observado: leitura global via bridge/repository de widget settings;
+		- testes adjacentes: sim;
+		- risco: baixo no helper, mas fora da allowlist funcional;
+		- decisao: proibido por escopo de widget settings.
+	- candidato 6:
+		- nome: branch contextual de listUsuariosOwner.service.js;
+		- arquivos envolvidos: services/usuarios/listUsuariosOwner.service.js; db/api.db.js; repositories/UserRepository.js; UserMembershipRepository.js; FuncionarioRepository.js; UnidadeReadRepository.js; testes gestor-users-memberships-page.test.js e gestor-usuarios-list-owner-structural-seam.test.js;
+		- tipo de corredor: owner contextual read-only com agregacao multipla;
+		- read-only: sim no recorte;
+		- unitScope/GLOBAL_SCOPE observado: ancora em req.unitScope com reads posteriores filtrados em GLOBAL_SCOPE por ids derivados;
+		- testes adjacentes: sim;
+		- risco: medio;
+		- decisao: adiar; continua amplo demais e ja fechado como recommendedNextAct=defer.
+- Decisao principal:
+	- selectedTarget=none
+	- recommendedNextAct=closeWithoutNewTarget
+- Justificativa:
+	- nao restou candidato pequeno e seguro para teste contratual imediato; os corredores finos remanescentes ou ja estao fechados/protegidos com cobertura adjacente suficiente, ou caem em escopos proibidos como widget settings, ou reabrem owners/pages/auth de apoio sem lacuna nova concreta;
+	- a decisao nao e refactor estetico porque nao recomenda alteracao em src e parte da ausencia de lacuna funcional pequena e falsificavel no estado atual;
+	- a auditoria nao exige tenant DB real, Portal nem PostgreSQL porque toda a decisao foi tomada por analise estrutural e testes adjacentes existentes.
+- Escopo permitido de eventual continuidade:
+	- apenas nova selecao documental ou diagnostico read-only futuro se surgir hipotese mais estreita, local e falsificavel fora das frentes ja fechadas;
+	- sem abrir pages/bundles, auth amplo, widget settings ou fluxos operacionais.
+- Escopo proibido:
+	- reabrir usuarios bloqueados, usuario atual/profile, cluster de unidades, modulos auxiliares, feedback widget settings ou a listagem contextual de usuarios sem hipotese nova concreta;
+	- escrita, auth amplo, Portal, tenant DB real, PostgreSQL, rotas, scripts, jobs, request path, bootstrap e qualquer push automatico.
+- Gates:
+	- postUserListContextualAuditExecuted=true
+	- postUserListContextualCandidatesMapped=true
+	- postUserListContextualDecisionDefined=true
+	- postUserListContextualImmediateContractRecommended=false
+	- postUserListContextualImmediateRefactorRecommended=false
+	- selectedTarget=none
+	- recommendedNextAct=closeWithoutNewTarget
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- auditoria nao autoriza alteracao funcional;
+	- auditoria nao autoriza teste novo automaticamente;
+	- auditoria nao autoriza escrita real;
+	- auditoria nao autoriza tenant DB real;
+	- auditoria nao autoriza Portal;
+	- auditoria nao autoriza PostgreSQL;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
