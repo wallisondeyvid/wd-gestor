@@ -1599,6 +1599,101 @@ Checkpoint tenant enforcement atual:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Diagnostico de refactor minimo do corredor memberships ativos/auth-context executado.
+- Base local:
+	- f06c72c test(tenant): protege leitura de memberships ativos auth-context.
+- Auditoria read-only realizada sobre:
+	- activeMembershipsAuthContextRead.contract.test.js;
+	- UserMembershipRepository.js;
+	- authContextReadDataFacade.js;
+	- auth-context.db.js;
+	- api.db.js;
+	- unitScope.js;
+	- BaseRepository.js;
+	- testes adjacentes lidos;
+	- migration-status.md.
+- Conclusao:
+	- nao ha refactor minimo recomendado em src neste momento;
+	- o contrato novo ja protege suficientemente o slice principal UserMembershipRepository.findActiveMembershipsByUserIdLeanRepo -> authContextReadDataFacade.loadActiveMembershipsByUserId para o estado atual;
+	- a protecao combinada por UserMembershipRepository + authContextReadDataFacade + auth-context.db e suficiente no estado presente, porque congela o helper read-only, o GLOBAL_SCOPE explicito e o handoff fino sem abrir auth-context amplo;
+	- UserMembershipRepository nao deve migrar para BaseRepository agora; isso ampliaria um repository misto que tambem contem createUserMembershipRepo e setUserMembershipFuncionarioIdIfEmptyRepo, aumentando risco sem ganho funcional concreto no slice protegido;
+	- authContextReadDataFacade nao deve mudar agora; ela ja esta fina, direta e suficiente para o corredor escolhido;
+	- auth-context.db.js nao deve mudar agora; mexer nele tenderia a reabrir auth-context amplo sem necessidade local;
+	- loadUnidadeById deve continuar apenas como helper adjacente read-only e permanecer fora do alvo principal;
+	- login, sessao, requireLogin, requireRole, requireUnitScope, authController, auth amplo, createUserMembership, setUserMembershipFuncionarioIdIfEmpty e qualquer escrita devem continuar fora;
+	- o GLOBAL_SCOPE explicito e aceitavel no estado atual deste slice, porque a leitura de memberships ativos nasce de userId e serve ao auth-context canonico antes de qualquer ancora de unidade;
+	- o que resta aqui e oportunidade futura de padronizacao, nao lacuna concreta em src;
+	- qualquer conversao estrutural agora aumentaria o risco de comportamento runtime, porque tocaria repository misto e seams de auth-context adjacentes sem necessidade funcional comprovada;
+	- nenhuma mudanca aqui exige ou justifica tenant DB real, Mongo real, Portal, rota, script, job, bootstrap ou request path;
+	- risco estimado: baixo para manter como esta; baixo-moderado se houver conversao estrutural por estetica;
+	- testes que deverao ser rodados em qualquer microcorte futuro:
+		- node --test .\tests\architecture\activeMembershipsAuthContextRead.contract.test.js
+		- node --test .\tests\gestor-user-membership-pair-unit-scope-bridge.test.js
+		- node --test .\tests\gestor-auth-context-endpoint.test.js
+		- node --test .\tests\gestor-auth-context-get-runtime-contract.test.js
+		- node --test .\tests\gestor-auth-context-resolver.test.js
+		- node --test .\tests\gestor-auth-context-mutation-require-role.test.js
+		- node --test .\tests\architecture\repository-unitScope.test.js
+		- npm run verify:imports
+	- escopo permitido em qualquer continuidade futura:
+		- apenas UserMembershipRepository.findActiveMembershipsByUserIdLeanRepo;
+		- authContextReadDataFacade.loadActiveMembershipsByUserId;
+		- loadUnidadeById somente se estritamente necessario como helper adjacente read-only;
+		- testes estruturais sem app/server.
+	- escopo proibido em qualquer continuidade futura:
+		- login;
+		- sessao;
+		- requireLogin;
+		- requireRole;
+		- requireUnitScope;
+		- authController;
+		- auth.db amplo;
+		- createUserMembership;
+		- setUserMembershipFuncionarioIdIfEmpty;
+		- escrita;
+		- unlock/toggle;
+		- widget settings;
+		- pages;
+		- bundles;
+		- tenant registry;
+		- request path;
+		- bootstrap;
+		- script;
+		- CLI;
+		- job;
+		- rota nova;
+		- tenant DB real;
+		- Mongo real;
+		- PostgreSQL.
+- Decisao recomendada:
+	- preferir validacao consolidada ou fechamento desta frente curta;
+	- nao abrir refactor minimo em src agora.
+- Gates:
+	- selectedTarget=UserMembershipRepository_authContextReadDataFacade_activeMembershipsRead
+	- activeMembershipsAuthContextContractCreated=true
+	- activeMembershipsAuthContextContractValidated=true
+	- activeMembershipsRefactorDiagnosticExecuted=true
+	- activeMembershipsRefactorRecommended=false
+	- activeMembershipsWideScopeDeferred=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- diagnostico nao autoriza alteracao funcional;
+	- diagnostico nao autoriza escrita real;
+	- diagnostico nao autoriza tenant DB real;
+	- diagnostico nao autoriza Portal;
+	- diagnostico nao autoriza PostgreSQL;
+	- nao ha obrigacao de preservar dados ficticios atuais;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
