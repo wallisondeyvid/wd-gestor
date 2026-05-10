@@ -1776,6 +1776,79 @@ Checkpoint tenant enforcement atual:
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Proximo alvo tenant-aware pos-memberships ativos/auth-context selecionado documentalmente.
+- Base publicada:
+	- e04ed7e docs(tenant): encerra frente memberships ativos auth-context tenant-aware.
+- Auditoria read-only executada.
+	- leituras revisadas:
+		- docs/migration-status.md;
+		- package.json;
+		- UserMembershipRepository.js;
+		- UserRepository.js;
+		- FuncionarioRepository.js;
+		- UnidadeReadRepository.js;
+		- SetorReadRepository.js;
+		- FeedbackReadRepository.js;
+		- api.db.js;
+		- listUsuariosOwner.service.js;
+		- userController.js;
+		- testes adjacentes de architecture, runtime-contract, bridge e structural-seam.
+	- objetivo da auditoria:
+		- encontrar um unico slice pequeno, seguro, read-only e testavel sem reabrir frentes fechadas nem abrir auth amplo, escrita, pages/bundles ou surface operacional.
+- Candidatos considerados:
+	- UserRepository.findUsersByUnidadeIdsExcludingMasterLeanRepo + UserMembershipRepository.findUserMembershipUserIdsByUnidadeIdsLeanRepo + api.db.findUsersByUnidadeIdsExcludingMasterLean/findUserMembershipUserIdsByUnidadeIdsLean + listUsuariosOwner.service;
+	- FuncionarioRepository.findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo + api.db.findFuncionariosByUnidadeIdsSelectIdNomeCpfLean + listUsuariosOwner.service;
+	- FuncionarioRepository.findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo + api.db.findFuncionarioByIdSelectIdUnidadeUsuarioLean + preflight adjacente em userController;
+	- UnidadeReadRepository.findUnidadesByIdsNomeCodigoLeanRepo + api.db.findUnidadesByIdsNomeCodigoLean;
+	- UnidadeReadRepository.findUnidadeUserBaseSetorLeanRepo + api.db.findUnidadeUserBaseSetorLean;
+	- SetorReadRepository helpers read-only remanescentes;
+	- FeedbackReadRepository helpers read-only limitados.
+- Decisao principal:
+	- nenhum novo alvo pequeno deve ser aberto agora;
+	- a recomendacao principal passa a ser matriz documental dos candidatos remanescentes, porque os corredores ainda visiveis ou reabrem frentes ja fechadas, ou encostam em listagem de usuarios/pages/bundles/fluxos operacionais, ou misturam multiplos repositories e bridges no mesmo owner.
+	- selectedTarget=matrix_postActiveMembershipsRemainingCandidates.
+	- selectedTargetType=matrix.
+- Alternativas adiadas:
+	- UserRepository + UserMembershipRepository no branch contextual de listUsuariosOwner.service foram adiados porque o corredor ja nasce multiplo, agrega usuarios, memberships, unidades e funcionarios, e toca listagem de usuarios com bundle de pagina, deixando de ser slice pequeno;
+	- FuncionarioRepository.findFuncionariosByUnidadeIdsSelectIdNomeCpfLeanRepo foi adiado porque, no estado atual, seu uso relevante visivel esta acoplado a listUsuariosOwner.service e a fluxos adjacentes de criacao/limpeza de usuario, aproximando o corte de escrita e operacao;
+	- FuncionarioRepository.findFuncionarioByIdSelectIdUnidadeUsuarioLeanRepo foi adiado porque encosta diretamente em preflight de userController e fluxos de usuario, nao em um corredor read-only isolado;
+	- UnidadeReadRepository.findUnidadesByIdsNomeCodigoLeanRepo foi adiado porque lookup por ids e listagem geral de setores ja foram fechados/protegidos e nao ha lacuna nova e concreta que justifique reabertura;
+	- UnidadeReadRepository.findUnidadeUserBaseSetorLeanRepo foi adiado porque permanece helper adjacente de Setores por unidade, frente ja fechada, sem nova lacuna estrutural concreta nesta auditoria;
+	- SetorReadRepository foi adiado porque Setores por unidade e listagem geral de Setores ja foram fechados/protegidos;
+	- FeedbackReadRepository foi adiado porque Feedback leitura limitada ja foi fechado/protegido.
+- Criterios de seguranca:
+	- preferencia por slice read-only pequeno de repository + bridge/facade/service fino;
+	- preferencia por corredor com testes adjacentes ja existentes;
+	- exclusao de auth amplo, login, sessao, requireLogin, requireRole, requireUnitScope, authController, createUserMembership e setUserMembershipFuncionarioIdIfEmpty como alvo principal;
+	- exclusao de escrita, Portal, tenant DB real, PostgreSQL, scripts, jobs, request path, start/server/createServer e pages/bundles amplos;
+	- exclusao de reabertura de frentes ja fechadas sem lacuna nova e concreta.
+- Gates:
+	- nextTargetPostActiveMembershipsAuditExecuted=true
+	- nextTargetPostActiveMembershipsCandidatesRead=true
+	- nextTargetPostActiveMembershipsPrimaryRecommendationDefined=true
+	- nextTargetPostActiveMembershipsAlternativesBounded=true
+	- nextTargetPostActiveMembershipsRecommendedMicrocutTypeDefined=true
+	- selectedTarget=matrix_postActiveMembershipsRemainingCandidates
+	- selectedTargetType=matrix
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- currentDataIsFictional=true
+	- realLegacyDataMigrationRequired=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- selecao documental nao autoriza alteracao funcional;
+	- selecao documental nao autoriza teste novo automaticamente;
+	- selecao documental nao autoriza escrita real;
+	- selecao documental nao autoriza tenant DB real;
+	- selecao documental nao autoriza Portal;
+	- selecao documental nao autoriza PostgreSQL;
+	- proximo ato deve ser microcorte proprio aprovado.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
