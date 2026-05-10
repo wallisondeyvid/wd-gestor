@@ -2396,6 +2396,147 @@ Checkpoint tenant enforcement atual:
 	- abertura da fase operacional nao autoriza PostgreSQL;
 	- proximo ato deve ser checklist operacional documental.
 
+- Checklist operacional de prontidao Mongo do WD Gestor mapeado documentalmente.
+- Base publicada:
+	- 7cf9e94 docs(ops): inicia prontidao operacional gestor mongo.
+- Inventario de dados ficticios:
+	- usuarios: contas de teste, contas artificiais de runtime e credenciais temporarias de cenarios automatizados;
+	- memberships: vinculos sinteticos de auth-context e cenarios de selecao/troca de unidade;
+	- unidades: unidades de teste, unidades usadas por suites runtime e cadastros artificiais de validacao;
+	- funcionarios: funcionarios placeholder, funcionarios de cenarios CRUD e vinculos automaticos usuario-funcionario;
+	- setores: setores artificiais criados por testes e por cadastros locais anteriores;
+	- funcoes: funcoes de teste e dados auxiliares de cadastros CRUD/contexto;
+	- modulos: catalogos e associacoes artificiais usados por suites de permissao e listagem;
+	- recursos: recursos artificiais de CRUD/listagem e vinculos contextuais;
+	- feedback: registros artificiais de widget, lista, detalhe, status, resposta e anexos de cenarios automatizados;
+	- widget/dashboard: estados de visibilidade, caches e leituras de superficie usados para sanidade e suites de contrato;
+	- seeds e dados criados por testes: massa sintetica criada por tests runtime, harnesses, MONGO_MEMORY e rotinas de seed do Gestor.
+- Comandos e scripts perigosos bloqueados:
+	- scripts/set-master-password.js;
+	- scripts/unlock_users.js;
+	- scripts/update_user_role.js;
+	- scripts/update_unidade_codigo.js;
+	- scripts/backfill_setores_orfaos.js;
+	- scripts/backfill_refeicoes_computavel.js;
+	- scripts/migrations/*;
+	- src/modules/gestor/gestor-seeds.js;
+	- npm run start:mem:seed;
+	- npm run master:set;
+	- npm run start:atlas;
+	- qualquer comando que use mongoose.connect, connectMongo, deleteMany, updateMany, bulkWrite, save, drop, dropIndex ou seed sem autorizacao explicita.
+- Plano futuro de limpeza/reset, sem executar:
+	- inventario read-only primeiro;
+	- snapshot/backup antes de qualquer limpeza;
+	- dry-run obrigatorio;
+	- ordem conceitual de limpeza: seeds e credenciais artificiais, usuarios/memberships, funcionarios, setores/funcoes, recursos/modulos auxiliares, feedback e estados secundarios de widget/dashboard;
+	- criterios de reversao: restauracao do snapshot, validacao de contagens esperadas e confirmacao de que nenhum dado real foi atingido;
+	- proibicao de execucao nesta etapa.
+- Contrato futuro de unidade piloto, sem criar agora:
+	- nome/codigo definidos e nao colidentes;
+	- tipo: matriz/principal/simples a ser decidido explicitamente antes da criacao;
+	- modulos iniciais limitados ao minimo necessario para validacao controlada;
+	- recursos minimos previamente listados;
+	- setores minimos previamente listados;
+	- funcionario administrativo inicial, se necessario, descrito antes da execucao;
+	- provisioning/status/events esperados documentados antes de qualquer criacao;
+	- criterios de aceite: unidade criada, provisioning coerente, acesso controlado e navegacao basica valida;
+	- criterios de descarte: erro de modelagem, naming inadequado, provisioning inconsistente ou conflito com dados ficticios remanescentes.
+- Contrato futuro de usuario master/admin, sem criar agora:
+	- email definido explicitamente e sem reaproveitar contas ficticias;
+	- papel: master ou admin decidido antes da execucao;
+	- senha provisoria com troca de senha obrigatoria em fluxo controlado;
+	- membership esperado descrito antes da criacao;
+	- unidade ativa inicial, se houver, definida antecipadamente;
+	- comportamento sem unidade selecionada validado para visao global legitima quando aplicavel;
+	- comportamento com unidade selecionada validado para fluxo contextual canonico;
+	- proibicao de reaproveitar usuarios ficticios;
+	- bloqueio de credenciais padrao de seed.
+- Fluxos manuais prioritarios:
+	- login;
+	- auth context;
+	- selecao/troca de unidade;
+	- visao global master/admin;
+	- unidades;
+	- usuarios;
+	- funcionarios;
+	- setores/funcoes;
+	- modulos/recursos;
+	- feedback;
+	- dashboard/widget apenas como validacao secundaria.
+- Gates automatizados:
+	- npm run verify:imports;
+	- npm run parity;
+	- npm test;
+	- npm run test:strict quando tocar fronteiras arquiteturais;
+	- guards incluidos no npm test:
+		- guard:condominios-unidade;
+		- guard:unitScope-null;
+		- guard:no-model-bypass.
+- Riscos residuais:
+	- mistura de dados ficticios com dados reais futuros;
+	- scripts perigosos;
+	- seeds com credenciais padrao;
+	- auth/login/sessao;
+	- criacao de usuario master/admin;
+	- provisioning de unidade;
+	- pages/bundles amplos;
+	- widget/dashboard;
+	- modulos fora do Gestor;
+	- ausencia de runbook operacional final.
+- Proximos atos recomendados:
+	- primeiro: inventario read-only dos dados ficticios;
+	- depois: plano de reset/limpeza sem execucao;
+	- depois: contrato de unidade piloto sem criacao;
+	- depois: contrato de usuario master/admin sem criacao;
+	- depois: plano de testes manuais;
+	- so depois: execucao controlada, se aprovada.
+- Diagnostico do checklist:
+	- o inventario de risco operacional ja aponta que o principal perigo imediato nao e arquitetura tenant-aware, mas sim mistura de massa ficticia com futuras acoes reais e disparo acidental de scripts com conexao/escrita;
+	- package.json ja expoe comandos potencialmente sensiveis como start:mem:seed, start:atlas, master:set, migrate:user-memberships-phase1, migrate:user-memberships-phase2 e backfill:refeicoes, o que reforca a necessidade de allowlist operacional antes de qualquer execucao manual;
+	- src/modules/gestor/gestor-seeds.js ainda contem ensureMasterUser com credencial padrao e save/deleteOne, entao seeds do Gestor devem permanecer explicitamente bloqueadas nesta etapa;
+	- authController.js e auth.js confirmam que login, reset-password, primeiro acesso, select-unit e switch-unit sao parte do checklist operacional prioritario;
+	- createUnidadeWrite.js e unidadeApi.js confirmam que criacao de unidade implica provisioning, status e events, entao unidade piloto futura precisa de contrato proprio antes de qualquer escrita;
+	- createUsuarioExecution.service.js e os bridges de membership confirmam que criacao de usuario pode materializar vinculos e funcionario placeholder, logo a conta real inicial nao deve nascer por reaproveitamento de massa ficticia.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=wdGestorOperationalReadinessChecklist
+	- recommendedNextAct=inventoryFictionalDataReadOnly
+- Gates:
+	- operationalReadinessChecklistMapped=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=wdGestorOperationalReadinessChecklist
+	- recommendedNextAct=inventoryFictionalDataReadOnly
+	- mongoRemainsPrimaryDatabase=true
+	- postgresMigrationRequired=false
+	- postgresOnlyFutureOptionIfConcretePain=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- currentDataIsFictional=true
+	- fictionalDataCanBeDiscarded=true
+	- resetExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- tenantDbRealOpened=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- checklist nao autoriza alteracao funcional;
+	- checklist nao autoriza escrita real;
+	- checklist nao autoriza limpeza/reset;
+	- checklist nao autoriza seed;
+	- checklist nao autoriza migration/backfill;
+	- checklist nao autoriza criacao de unidade real;
+	- checklist nao autoriza criacao de usuario real;
+	- checklist nao autoriza tenant DB real;
+	- checklist nao autoriza Portal;
+	- checklist nao autoriza PostgreSQL;
+	- proximo ato deve ser inventario read-only dos dados ficticios.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
