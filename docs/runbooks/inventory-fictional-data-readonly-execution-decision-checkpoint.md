@@ -16,11 +16,11 @@ Este documento nao aprova comando em package.json.
 
 ## Objetivo do Checkpoint
 
-- Decidir futuramente se o inventario read-only sera executado ou adiado.
-- Impedir que runbook e checklist sejam confundidos com autorizacao.
+- Decidir futuramente se o inventario read-only sera executado, adiado, bloqueado ou devolvido para revisao.
+- Impedir que documentacao seja confundida com autorizacao.
 - Exigir decisao humana explicita.
 - Manter gate fechado por padrao.
-- Separar decisao de execucao de implementacao tecnica, conexao, query e relatorio.
+- Separar decisao de execucao de conexao, query, relatorio, limpeza e descarte.
 
 ## Entradas Obrigatorias para Decisao Futura
 
@@ -71,10 +71,12 @@ Este documento nao aprova comando em package.json.
 - Worktree suja.
 - Branch divergente.
 - Report path nao aprovado.
+- Qualquer tentativa de limpar candidatos a descarte.
 
 ## Criterios de Separacao
 
 - Criar checkpoint nao aprova execucao.
+- Revisar checkpoint nao aprova execucao.
 - Criar checkpoint nao executa inventario.
 - Aprovacao futura exigira microcorte proprio.
 - Execucao futura exigira outro microcorte proprio.

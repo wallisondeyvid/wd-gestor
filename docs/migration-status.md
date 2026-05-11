@@ -5804,6 +5804,88 @@ Checkpoint tenant enforcement atual:
 	- este checkpoint nao autoriza criacao de usuario;
 	- proxima etapa deve revisar o checkpoint documental antes de qualquer execucao real.
 
+- Checkpoint documental de decisao de execucao read-only revisado.
+- Base publicada:
+	- 31c182b docs(ops): cria checkpoint de decisao read-only.
+- Registro da revisao:
+	- checkpoint documental de decisao de execucao read-only revisado;
+	- arquivo revisado: docs/runbooks/inventory-fictional-data-readonly-execution-decision-checkpoint.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryExecutionApprovalMatrix.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryExecutionDecisionCheckpoint
+	- recommendedNextAct=designReadOnlyInventoryExecutionApprovalMatrix
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionDecisionCheckpointReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryExecutionDecisionCheckpoint
+	- recommendedNextAct=designReadOnlyInventoryExecutionApprovalMatrix
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileCreated=true
+	- executionDecisionCheckpointReviewed=true
+	- executionDecisionCheckpointPath=docs/runbooks/inventory-fictional-data-readonly-execution-decision-checkpoint.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao nao altera runbook;
+	- esta revisao nao altera checklist;
+	- esta revisao nao libera execucao;
+	- esta revisao nao gera relatorio real;
+	- esta revisao nao usa fs.writeFile;
+	- esta revisao nao implementa conexao;
+	- esta revisao nao implementa leitura real de banco;
+	- esta revisao nao executa query;
+	- esta revisao nao executa inventario;
+	- esta revisao nao autoriza Mongo;
+	- esta revisao nao autoriza Atlas;
+	- esta revisao nao autoriza package.json;
+	- esta revisao nao autoriza tenant DB real;
+	- esta revisao nao autoriza reset/limpeza;
+	- esta revisao nao autoriza seed/migration/backfill;
+	- esta revisao nao autoriza criacao de unidade;
+	- esta revisao nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar matriz de aprovacao de execucao antes de qualquer execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
