@@ -19,6 +19,7 @@ Este documento nao substitui a preparacao de comando manual.
 Este documento nao substitui o rascunho de comando manual.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando real por si so.
 
 ## Objetivo do Checklist
 
@@ -28,6 +29,7 @@ Este documento nao autoriza push.
 - confirmar que o exemplo e nao copiavel e nao executavel;
 - confirmar que nao ha URI real, segredo real ou comando npm;
 - confirmar que nao ha execucao real, query real, Mongo real ou relatorio real;
+- confirmar que nao ha fs.writeFile real;
 - manter push proibido.
 
 ## Checklist de Status e Limites
@@ -47,6 +49,7 @@ Este documento nao autoriza push.
 - [ ] Nao substitui Go/No-Go.
 - [ ] Nao substitui microcorte.
 - [ ] Nao substitui preparacao de comando.
+- [ ] Nao substitui rascunho de comando.
 - [ ] Nao aprova package.json.
 - [ ] Nao autoriza push.
 - [ ] Nao cria comando real por si so.
@@ -61,6 +64,7 @@ Este documento nao autoriza push.
 - [ ] Nao contem comando npm.
 - [ ] Nao contem comando pronto para copiar e executar.
 - [ ] Variaveis e flags sao apenas ilustrativas.
+- [ ] Nao induz execucao por copiar/colar.
 
 ## Checklist das Flags Futuras
 
@@ -94,6 +98,7 @@ Este documento nao autoriza push.
 - [ ] Nao usar PostgreSQL.
 - [ ] Nao fazer push.
 - [ ] Nao tratar candidatos a descarte como autorizacao de limpeza.
+- [ ] Nao converter checklist em autorizacao operacional.
 
 ## Saidas Possiveis
 
