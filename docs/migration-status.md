@@ -8210,6 +8210,169 @@ Checkpoint tenant enforcement atual:
 	- esta revisao do gate nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar a decisao Go/No-Go de execucao read-only, ainda sem execucao real.
 
+- Decisao Go/No-Go de execucao read-only desenhada documentalmente.
+- Base publicada:
+	- c87ba72 docs(ops): revisa gate final de decisao humana read-only.
+- Objetivo da decisao Go/No-Go:
+	- consolidar a cadeia documental antes de qualquer microcorte de execucao;
+	- separar decisao Go/No-Go de execucao real;
+	- impedir que GO execute algo automaticamente;
+	- permitir apenas decidir se um microcorte futuro de execucao podera ser desenhado;
+	- manter bloqueios de Mongo, Atlas, query, relatorio real, package.json e push.
+- Entradas obrigatorias para a decisao futura:
+	- runbook revisado;
+	- checklist revisado;
+	- checkpoint de decisao revisado;
+	- matriz de aprovacao revisada;
+	- aviso de autorizacao revisado;
+	- revisao final pre-execucao revisada;
+	- fechamento da prontidao revisado;
+	- resumo da prontidao revisado;
+	- prompt de decisao humana revisado;
+	- gate final de decisao humana revisado;
+	- script revisado;
+	- package.json sem comando automatico;
+	- branch correta;
+	- worktree limpa;
+	- dados ficticios confirmados;
+	- ausencia de dados reais confirmada.
+- Estados possiveis:
+	- GO_TO_DESIGN_EXECUTION_MICROCUT
+	- NO_GO_DEFER_EXECUTION
+	- NO_GO_RETURN_TO_DOCUMENT_REVIEW
+	- NO_GO_BLOCK_EXECUTION
+- Efeito de GO_TO_DESIGN_EXECUTION_MICROCUT:
+	- nao executa inventario;
+	- nao conecta em Mongo;
+	- nao roda query;
+	- nao gera relatorio real;
+	- nao altera package.json;
+	- nao faz push;
+	- apenas autoriza desenhar um microcorte futuro de execucao read-only.
+- Efeitos dos NO_GO:
+	- DEFER mantem tudo documentado e adia;
+	- RETURN_TO_DOCUMENT_REVIEW volta para revisar documentos;
+	- BLOCK encerra ou bloqueia a frente de execucao ate nova decisao humana.
+- Bloqueios obrigatorios:
+	- qualquer duvida sobre dados reais;
+	- qualquer tentativa de execucao imediata;
+	- qualquer tentativa de conexao Mongo imediata;
+	- qualquer tentativa de query imediata;
+	- qualquer tentativa de gerar relatorio real imediato;
+	- qualquer tentativa de alterar package.json;
+	- qualquer tentativa de reset, limpeza, seed, migration ou backfill;
+	- qualquer tentativa de criar unidade ou usuario;
+	- qualquer tentativa de usar Portal;
+	- qualquer tentativa de usar PostgreSQL;
+	- qualquer tentativa de push;
+	- qualquer tentativa de tratar candidatos a descarte como autorizacao de limpeza.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum arquivo runbook, checklist, checkpoint, matriz, aviso, revisao final, fechamento, resumo, prompt ou gate alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- proximo ato recomendado: createReadOnlyInventoryExecutionGoNoGo.
+- Registro do desenho:
+	- decisao Go/No-Go de execucao read-only desenhada documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryExecutionGoNoGo.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionGoNoGo
+	- recommendedNextAct=createReadOnlyInventoryExecutionGoNoGo
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionGoNoGoDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionGoNoGo
+	- recommendedNextAct=createReadOnlyInventoryExecutionGoNoGo
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoDesigned=true
+	- executionGoNoGoFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao altera checkpoint;
+	- este desenho nao altera matriz;
+	- este desenho nao altera aviso;
+	- este desenho nao altera revisao final;
+	- este desenho nao altera fechamento;
+	- este desenho nao altera resumo;
+	- este desenho nao altera prompt;
+	- este desenho nao altera gate final;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o documento Go/No-Go de execucao read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
