@@ -5886,6 +5886,160 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar matriz de aprovacao de execucao antes de qualquer execucao real.
 
+- Matriz de aprovacao de execucao read-only desenhada documentalmente.
+- Base publicada:
+	- 2915075 docs(ops): revisa checkpoint de decisao read-only.
+- Objetivo da matriz:
+	- organizar criterios de aprovacao, adiamento, bloqueio e retorno para revisao;
+	- impedir que checkpoint revisado seja confundido com autorizacao;
+	- separar decisao humana de execucao tecnica;
+	- manter execucao bloqueada por padrao.
+- Estados possiveis da matriz:
+	- APPROVED_FOR_FUTURE_MICROCUT;
+	- DEFERRED;
+	- BLOCKED;
+	- RETURN_TO_RUNBOOK_REVIEW;
+	- RETURN_TO_SCRIPT_REVIEW;
+	- RETURN_TO_GATE_REVIEW.
+- Criterios para APPROVED_FOR_FUTURE_MICROCUT:
+	- runbook revisado;
+	- checklist revisado;
+	- checkpoint revisado;
+	- script revisado;
+	- gate revisado;
+	- worktree limpa;
+	- branch correta;
+	- dados ficticios confirmados;
+	- ausencia de dados reais confirmada;
+	- flags futuras definidas;
+	- database target aprovado;
+	- Atlas decidido explicitamente;
+	- report path aprovado;
+	- package.json sem comando novo, salvo microcorte proprio;
+	- decisao humana explicita.
+- Criterios para DEFERRED:
+	- decisao humana nao tomada;
+	- ambiente ainda nao escolhido;
+	- report path pendente;
+	- Atlas pendente;
+	- necessidade de nova revisao documental;
+	- preferencia por nao executar ainda.
+- Criterios para BLOCKED:
+	- qualquer risco de dados reais;
+	- worktree suja;
+	- branch divergente;
+	- tentativa de escrita;
+	- tentativa de reset, limpeza, seed, migration ou backfill;
+	- tentativa de usar Portal ou PostgreSQL;
+	- tentativa de conectar em Atlas sem aprovacao;
+	- tentativa de alterar package.json;
+	- tentativa de liberar conexao, query e relatorio no mesmo microcorte;
+	- tentativa de limpar candidatos a descarte.
+- Criterios para RETURN_TO_RUNBOOK_REVIEW:
+	- runbook ambiguo;
+	- runbook parecendo autorizar execucao;
+	- runbook sem bloqueios suficientes;
+	- runbook sem criterios de parada;
+	- runbook sem pos-checagem.
+- Criterios para RETURN_TO_SCRIPT_REVIEW:
+	- script com ambiguidade de execucao;
+	- script expondo preview indevido;
+	- script sugerindo conexao ativa;
+	- script com helper que pareca executar query;
+	- script com risco de escrita.
+- Criterios para RETURN_TO_GATE_REVIEW:
+	- gate nao fechado por padrao;
+	- executionApproved ambiguo;
+	- validateExecutionGate.ok com semantica ambigua;
+	- gate permitindo conexao, query e relatorio juntos;
+	- gate nao bloqueando risco de escrita.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhuma matriz separada criada ainda;
+	- nenhum arquivo runbook, checklist ou checkpoint alterado;
+	- nenhuma execucao liberada;
+	- proximo ato recomendado: createReadOnlyInventoryExecutionApprovalMatrix.
+- Registro do desenho:
+	- matriz de aprovacao de execucao read-only desenhada documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryExecutionApprovalMatrix.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionApprovalMatrix
+	- recommendedNextAct=createReadOnlyInventoryExecutionApprovalMatrix
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionApprovalMatrixDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionApprovalMatrix
+	- recommendedNextAct=createReadOnlyInventoryExecutionApprovalMatrix
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixDesigned=true
+	- executionApprovalMatrixFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao cria matriz separada;
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao altera checkpoint;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas a matriz documental de aprovacao, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
