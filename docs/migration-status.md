@@ -6345,6 +6345,93 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o aviso documental de autorizacao, ainda sem execucao real.
 
+- Aviso documental de autorizacao de execucao read-only criado.
+- Base publicada:
+	- ff3b0d7 docs(ops): desenha aviso de autorizacao read-only.
+- Registro da criacao:
+	- aviso documental de autorizacao de execucao read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-execution-authorization-notice.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryExecutionAuthorizationNotice.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionAuthorizationNotice
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionAuthorizationNotice
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionAuthorizationNoticeCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionAuthorizationNotice
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionAuthorizationNotice
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileCreated=true
+	- executionAuthorizationNoticePath=docs/runbooks/inventory-fictional-data-readonly-execution-authorization-notice.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este aviso nao altera runbook;
+	- este aviso nao altera checklist;
+	- este aviso nao altera checkpoint;
+	- este aviso nao altera matriz;
+	- este aviso nao libera execucao;
+	- este aviso nao gera relatorio real;
+	- este aviso nao usa fs.writeFile;
+	- este aviso nao implementa conexao;
+	- este aviso nao implementa leitura real de banco;
+	- este aviso nao executa query;
+	- este aviso nao executa inventario;
+	- este aviso nao autoriza Mongo;
+	- este aviso nao autoriza Atlas;
+	- este aviso nao autoriza package.json;
+	- este aviso nao autoriza tenant DB real;
+	- este aviso nao autoriza reset/limpeza;
+	- este aviso nao autoriza seed/migration/backfill;
+	- este aviso nao autoriza criacao de unidade;
+	- este aviso nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o aviso documental antes de qualquer execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
