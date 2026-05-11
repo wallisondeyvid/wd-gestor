@@ -5424,6 +5424,84 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o checklist documental de revisao do runbook, ainda sem execucao real.
 
+- Checklist documental de revisao do runbook criado.
+- Base publicada:
+	- d200693 docs(ops): desenha checklist de revisao do runbook read-only.
+- Registro da criacao:
+	- checklist documental de revisao do runbook criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-review-checklist.md;
+	- runbook principal apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryRunbookReviewChecklist.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryRunbookReviewChecklist
+	- recommendedNextAct=reviewReadOnlyInventoryRunbookReviewChecklist
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryRunbookReviewChecklistCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryRunbookReviewChecklist
+	- recommendedNextAct=reviewReadOnlyInventoryRunbookReviewChecklist
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileCreated=true
+	- runbookReviewChecklistPath=docs/runbooks/inventory-fictional-data-readonly-review-checklist.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este checklist nao altera o runbook principal;
+	- este checklist nao libera execucao;
+	- este checklist nao gera relatorio real;
+	- este checklist nao usa fs.writeFile;
+	- este checklist nao implementa conexao;
+	- este checklist nao implementa leitura real de banco;
+	- este checklist nao executa query;
+	- este checklist nao executa inventario;
+	- este checklist nao autoriza Mongo;
+	- este checklist nao autoriza Atlas;
+	- este checklist nao autoriza package.json;
+	- este checklist nao autoriza tenant DB real;
+	- este checklist nao autoriza reset/limpeza;
+	- este checklist nao autoriza seed/migration/backfill;
+	- este checklist nao autoriza criacao de unidade;
+	- este checklist nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o checklist documental antes de qualquer execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
