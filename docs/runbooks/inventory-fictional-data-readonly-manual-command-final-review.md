@@ -20,6 +20,7 @@ Este documento nao substitui o rascunho de comando manual.
 Este documento nao substitui o checklist de revisao do comando manual.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando real por si so.
 
 ## Objetivo da Revisao Final
 
@@ -29,6 +30,7 @@ Este documento nao autoriza push.
 - confirmar que nao ha comando copiavel/executavel;
 - confirmar que nao ha URI real, segredo real ou comando npm;
 - confirmar que nao houve execucao real, Mongo real, query real ou relatorio real;
+- confirmar que nao houve fs.writeFile real;
 - manter push proibido;
 - preparar apenas um futuro fechamento documental da trilha de comando manual.
 
@@ -66,6 +68,7 @@ Este documento nao autoriza push.
 - nenhum segredo bruto exposto;
 - nenhum cleanup, reset, seed, migration ou backfill acoplado;
 - nenhum push executado.
+- nenhum candidato a descarte tratado como autorizacao de limpeza.
 
 ## Condicoes de Bloqueio
 
@@ -78,6 +81,7 @@ Este documento nao autoriza push.
 - qualquer conexao Mongo real;
 - qualquer query real;
 - qualquer relatorio real;
+- qualquer fs.writeFile real;
 - qualquer tentativa de tratar candidato a descarte como autorizacao de limpeza;
 - qualquer tentativa de acoplar reset, seed, migration, backfill ou cleanup;
 - qualquer tentativa de push.
