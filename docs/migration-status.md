@@ -5723,6 +5723,87 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o checkpoint documental de decisao, ainda sem execucao real.
 
+- Checkpoint documental de decisao de execucao read-only criado.
+- Base publicada:
+	- 150a497 docs(ops): desenha checkpoint de decisao read-only.
+- Registro da criacao:
+	- checkpoint documental de decisao de execucao read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-execution-decision-checkpoint.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryExecutionDecisionCheckpoint.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionDecisionCheckpoint
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionDecisionCheckpoint
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionDecisionCheckpointCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionDecisionCheckpoint
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionDecisionCheckpoint
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileCreated=true
+	- executionDecisionCheckpointPath=docs/runbooks/inventory-fictional-data-readonly-execution-decision-checkpoint.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este checkpoint nao altera runbook;
+	- este checkpoint nao altera checklist;
+	- este checkpoint nao libera execucao;
+	- este checkpoint nao gera relatorio real;
+	- este checkpoint nao usa fs.writeFile;
+	- este checkpoint nao implementa conexao;
+	- este checkpoint nao implementa leitura real de banco;
+	- este checkpoint nao executa query;
+	- este checkpoint nao executa inventario;
+	- este checkpoint nao autoriza Mongo;
+	- este checkpoint nao autoriza Atlas;
+	- este checkpoint nao autoriza package.json;
+	- este checkpoint nao autoriza tenant DB real;
+	- este checkpoint nao autoriza reset/limpeza;
+	- este checkpoint nao autoriza seed/migration/backfill;
+	- este checkpoint nao autoriza criacao de unidade;
+	- este checkpoint nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o checkpoint documental antes de qualquer execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
