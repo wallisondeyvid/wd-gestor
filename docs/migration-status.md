@@ -4968,6 +4968,140 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar o runbook do inventario read-only antes de qualquer execucao real.
 
+- Runbook futuro do inventario read-only desenhado documentalmente.
+- Base publicada:
+	- 7aa4a33 chore(ops): revisa skeleton do gate read-only.
+- Objetivo do runbook futuro:
+	- orientar uma futura execucao read-only controlada;
+	- organizar pre-checagens, autorizacao, execucao, relatorio e pos-checagem;
+	- impedir execucao acidental;
+	- manter a execucao futura separada de reset, limpeza, seed, migration e backfill.
+- Estrutura futura sugerida do runbook:
+	- Escopo;
+	- Pre-condicoes;
+	- Ambiente e branch;
+	- Confirmacoes obrigatorias;
+	- Gate de execucao;
+	- Comando futuro permitido;
+	- Saida esperada;
+	- Validacao do relatorio;
+	- Pos-checagem;
+	- Criterios de parada;
+	- Criterios de rollback ou reversao, mesmo sendo read-only;
+	- Itens proibidos.
+- Pre-condicoes futuras:
+	- worktree limpa;
+	- branch correta;
+	- backup ou snapshot se o ambiente for persistente;
+	- confirmacao de dados ficticios;
+	- confirmacao de ausencia de dados reais;
+	- confirmacao humana explicita;
+	- flags obrigatorias;
+	- gate aprovado em microcorte proprio;
+	- script revisado;
+	- report path aprovado.
+- Itens proibidos no runbook:
+	- reset;
+	- limpeza;
+	- seed;
+	- migration;
+	- backfill;
+	- Portal;
+	- PostgreSQL;
+	- conexao Atlas sem autorizacao explicita;
+	- criacao de unidade;
+	- criacao de usuario;
+	- alteracao de package.json;
+	- comando com escrita;
+	- qualquer uso de delete, update, save, drop ou bulkWrite;
+	- qualquer aggregate com $out ou $merge.
+- Saida esperada futura:
+	- relatorio local;
+	- contagens;
+	- amostras mascaradas;
+	- orfaos;
+	- duplicidades;
+	- candidatos a descarte;
+	- pendencias humanas;
+	- declaracao de que nenhuma alteracao foi feita no banco;
+	- declaracao de que o gate foi aprovado antes da execucao.
+- Criterios de aceite futuros:
+	- runbook revisavel;
+	- execucao futura so com autorizacao explicita;
+	- relatorio sem dados sensiveis brutos;
+	- nenhuma escrita no banco;
+	- status final registrado;
+	- decisao humana separada para qualquer limpeza futura.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum arquivo novo criado;
+	- nenhum runbook separado ainda;
+	- nenhuma execucao liberada;
+	- proximo ato recomendado: createReadOnlyInventoryRunbookDraft.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryRunbook
+	- recommendedNextAct=createReadOnlyInventoryRunbookDraft
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryRunbookDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryRunbook
+	- recommendedNextAct=createReadOnlyInventoryRunbookDraft
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookDesigned=true
+	- runbookFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao cria runbook separado;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o rascunho documental do runbook, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
