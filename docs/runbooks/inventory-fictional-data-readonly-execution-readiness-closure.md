@@ -10,6 +10,7 @@ Este documento nao substitui a matriz de aprovacao.
 Este documento nao substitui o aviso de autorizacao.
 Este documento nao substitui a revisao final pre-execucao.
 Este documento nao aprova comando em package.json.
+Este documento nao e autorizacao humana final.
 
 ## Cadeia Documental Consolidada
 
@@ -35,6 +36,7 @@ Este documento nao aprova comando em package.json.
 - candidatos a descarte nao autorizam limpeza;
 - execucao futura exige microcorte proprio;
 - push continua proibido neste momento.
+- contato com Mongo real continua bloqueado ate autorizacao futura.
 
 ## Condicoes que Ainda Impedem Execucao Real
 
@@ -47,6 +49,8 @@ Este documento nao aprova comando em package.json.
 - falta confirmacao de ausencia de dados reais;
 - falta confirmacao de Atlas se aplicavel;
 - falta comando revisado em microcorte proprio, se algum dia for criado.
+- falta decisao explicita de nao alterar package.json;
+- falta confirmacao de que conexao, query e relatorio nao serao liberados juntos.
 
 ## Saidas Possiveis Apos Fechamento Documental
 
