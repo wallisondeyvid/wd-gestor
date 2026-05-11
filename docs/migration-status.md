@@ -7166,6 +7166,154 @@ Checkpoint tenant enforcement atual:
 	- esta revisao de fechamento nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar o resumo da prontidao read-only, ainda sem execucao real.
 
+- Resumo da prontidao read-only desenhado documentalmente.
+- Base publicada:
+	- 39d7eb3 docs(ops): revisa fechamento da prontidao read-only.
+- Objetivo do resumo:
+	- consolidar o estado da frente documental read-only;
+	- listar artefatos criados e revisados;
+	- registrar que a prontidao e documental, nao operacional;
+	- deixar explicito que execucao real ainda nao foi autorizada;
+	- preparar uma futura decisao humana.
+- Artefatos consolidados:
+	- skeleton read-only no script;
+	- manifesto de entidades;
+	- planos de query declarativos;
+	- skeleton de conexao bloqueada;
+	- skeleton de relatorio em memoria;
+	- gate de execucao fechado por padrao;
+	- runbook principal;
+	- checklist de revisao;
+	- checkpoint de decisao;
+	- matriz de aprovacao;
+	- aviso de autorizacao;
+	- revisao final pre-execucao;
+	- fechamento da prontidao.
+- Estado atual:
+	- documentacao avancada;
+	- execucao bloqueada;
+	- Mongo real bloqueado;
+	- Atlas bloqueado sem aprovacao explicita;
+	- package.json sem comando aprovado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado;
+	- nenhum dado real usado;
+	- candidatos a descarte sem autorizacao de limpeza;
+	- push ainda proibido neste momento.
+- Pendencias antes de qualquer execucao futura:
+	- decisao humana explicita;
+	- microcorte proprio de execucao;
+	- confirmacao imediata de branch;
+	- confirmacao imediata de worktree limpa;
+	- confirmacao imediata de dados ficticios;
+	- confirmacao de ausencia de dados reais;
+	- decisao sobre ambiente e Atlas;
+	- decisao sobre comando, se algum dia for criado;
+	- validacao final do gate;
+	- separacao entre conexao, query e relatorio.
+- Saidas possiveis apos este resumo:
+	- CREATE_READINESS_SUMMARY_DOCUMENT
+	- RETURN_TO_DOCUMENT_REVIEW
+	- DEFER_EXECUTION
+	- BLOCK_EXECUTION
+- Registro do desenho:
+	- resumo da prontidao read-only desenhado documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum arquivo runbook/checklist/checkpoint/matriz/aviso/revisao/fechamento alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- proximo ato recomendado: createReadOnlyInventoryReadinessSummary.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryReadinessSummary.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryReadinessSummary
+	- recommendedNextAct=createReadOnlyInventoryReadinessSummary
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryReadinessSummaryDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryReadinessSummary
+	- recommendedNextAct=createReadOnlyInventoryReadinessSummary
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryDesigned=true
+	- readinessSummaryFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao altera checkpoint;
+	- este desenho nao altera matriz;
+	- este desenho nao altera aviso;
+	- este desenho nao altera revisao final;
+	- este desenho nao altera fechamento;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o documento de resumo da prontidao read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
