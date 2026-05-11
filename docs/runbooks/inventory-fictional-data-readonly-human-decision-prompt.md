@@ -12,6 +12,8 @@ Este documento nao substitui a revisao final pre-execucao.
 Este documento nao substitui o fechamento da prontidao.
 Este documento nao substitui o resumo da prontidao.
 Este documento nao aprova comando em package.json.
+Este documento nao e autorizacao humana final.
+Este documento nao autoriza push.
 
 ## Objetivo
 
@@ -20,6 +22,7 @@ Este documento nao aprova comando em package.json.
 - impedir que documentacao seja confundida com autorizacao;
 - deixar claro que aprovar decisao futura nao executa nada por si so;
 - preparar um microcorte futuro de decisao, nao de execucao.
+- separar decisao futura de execucao futura.
 
 ## Pergunta Humana Futura Proposta
 
@@ -35,19 +38,19 @@ Este documento nao aprova comando em package.json.
 ## Efeitos de Cada Resposta
 
 - APPROVE_FUTURE_READONLY_EXECUTION_MICROCUT:
-- nao executa inventario imediatamente;
-- apenas permite desenhar um microcorte futuro de execucao;
-- ainda exige validacoes de branch, worktree, ambiente, dados ficticios, ausencia de dados reais e gate.
+	- nao executa inventario imediatamente;
+	- apenas permite desenhar um microcorte futuro de execucao;
+	- ainda exige validacoes de branch, worktree, ambiente, dados ficticios, ausencia de dados reais e gate.
 - DEFER_READONLY_EXECUTION:
-- mantem tudo documentado;
-- nao altera script;
-- nao executa nada.
+	- mantem tudo documentado;
+	- nao altera script;
+	- nao executa nada.
 - RETURN_TO_DOCUMENT_REVIEW:
-- volta para revisar documentos;
-- nao executa nada.
+	- volta para revisar documentos;
+	- nao executa nada.
 - BLOCK_READONLY_EXECUTION:
-- bloqueia a frente de execucao;
-- mantem apenas os artefatos documentais.
+	- bloqueia a frente de execucao;
+	- mantem apenas os artefatos documentais.
 
 ## Condicoes que a Pergunta Nao Autoriza
 
@@ -65,6 +68,7 @@ Este documento nao aprova comando em package.json.
 - nao autoriza criacao de unidade;
 - nao autoriza criacao de usuario;
 - nao autoriza push.
+- nao autoriza tratar candidatos a descarte como autorizacao de limpeza.
 
 ## Decisao Final
 

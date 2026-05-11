@@ -7743,6 +7743,106 @@ Checkpoint tenant enforcement atual:
 	- este prompt nao autoriza criacao de usuario;
 	- proxima etapa deve revisar o documento do prompt de decisao humana, ainda sem execucao real.
 
+- Documento do prompt de decisao humana read-only revisado.
+- Base publicada:
+	- 5229ed0 docs(ops): cria prompt de decisao humana read-only.
+- Registro da revisao:
+	- documento do prompt de decisao humana read-only revisado;
+	- arquivo revisado: docs/runbooks/inventory-fictional-data-readonly-human-decision-prompt.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryFinalHumanDecisionGate.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryHumanDecisionPrompt
+	- recommendedNextAct=designReadOnlyInventoryFinalHumanDecisionGate
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryHumanDecisionPromptReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryHumanDecisionPrompt
+	- recommendedNextAct=designReadOnlyInventoryFinalHumanDecisionGate
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileCreated=true
+	- humanDecisionPromptReviewed=true
+	- humanDecisionPromptPath=docs/runbooks/inventory-fictional-data-readonly-human-decision-prompt.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao do prompt nao altera runbook;
+	- esta revisao do prompt nao altera checklist;
+	- esta revisao do prompt nao altera checkpoint;
+	- esta revisao do prompt nao altera matriz;
+	- esta revisao do prompt nao altera aviso;
+	- esta revisao do prompt nao altera revisao final;
+	- esta revisao do prompt nao altera fechamento;
+	- esta revisao do prompt nao altera resumo;
+	- esta revisao do prompt nao libera execucao;
+	- esta revisao do prompt nao gera relatorio real;
+	- esta revisao do prompt nao usa fs.writeFile;
+	- esta revisao do prompt nao implementa conexao;
+	- esta revisao do prompt nao implementa leitura real de banco;
+	- esta revisao do prompt nao executa query;
+	- esta revisao do prompt nao executa inventario;
+	- esta revisao do prompt nao autoriza Mongo;
+	- esta revisao do prompt nao autoriza Atlas;
+	- esta revisao do prompt nao autoriza package.json;
+	- esta revisao do prompt nao autoriza tenant DB real;
+	- esta revisao do prompt nao autoriza reset/limpeza;
+	- esta revisao do prompt nao autoriza seed/migration/backfill;
+	- esta revisao do prompt nao autoriza criacao de unidade;
+	- esta revisao do prompt nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar o gate final de decisao humana read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
