@@ -3,6 +3,7 @@
 Status: rascunho documental
 
 Este documento nao autoriza execucao real.
+Este documento nao aprova comando em package.json.
 
 ## Escopo
 
@@ -12,6 +13,7 @@ Este documento nao autoriza execucao real.
 - Nao limpar dados.
 - Nao criar unidade ou usuario.
 - Nao usar dados reais.
+- Separar inventario read-only de reset ou limpeza.
 
 ## Pre-condicoes
 
@@ -25,6 +27,7 @@ Este documento nao autoriza execucao real.
 - Gate aprovado em microcorte proprio.
 - Script revisado.
 - Report path aprovado.
+- package.json sem comando aprovado, salvo microcorte futuro.
 
 ## Flags Futuras
 
@@ -42,6 +45,7 @@ Este documento nao autoriza execucao real.
 - Conexao, query e relatorio nao podem ser liberados juntos.
 - Qualquer risco de escrita bloqueia.
 - Atlas sem aprovacao explicita bloqueia.
+- validateExecutionGate.ok=false e intencional na fase declarativa.
 
 ## Itens Proibidos
 
@@ -57,6 +61,8 @@ Este documento nao autoriza execucao real.
 - alteracao de package.json
 - delete, update, save, drop ou bulkWrite
 - aggregate com $out ou $merge
+- qualquer comando que escreva no banco
+- qualquer comando que use dados reais
 
 ## Comando Futuro
 
@@ -65,6 +71,8 @@ Placeholder apenas.
 Nenhum comando executavel real fica aprovado neste rascunho.
 
 package.json nao possui comando aprovado para esta execucao.
+
+Execucao futura exige microcorte proprio.
 
 ## Saida Esperada Futura
 
@@ -76,6 +84,8 @@ package.json nao possui comando aprovado para esta execucao.
 - Candidatos a descarte.
 - Pendencias humanas.
 - Declaracao de que nenhuma alteracao foi feita.
+- Declaracao de que o gate foi aprovado antes da execucao.
+- Declaracao de que candidatos a descarte nao sao autorizacao de limpeza.
 
 ## Pos-checagem Futura
 
@@ -83,6 +93,7 @@ package.json nao possui comando aprovado para esta execucao.
 - Confirmacao de ausencia de escrita.
 - Confirmacao de relatorio gerado somente quando autorizado.
 - Registro do resultado no ledger.
+- Confirmacao de que nao houve reset, seed, migration ou backfill.
 
 ## Criterios de Parada
 
@@ -93,6 +104,8 @@ package.json nao possui comando aprovado para esta execucao.
 - Operacao de escrita detectada.
 - Path de relatorio nao aprovado.
 - Worktree suja.
+- package.json divergente.
+- comando nao revisado.
 
 ## Rollback ou Reversao
 
@@ -104,6 +117,8 @@ Se qualquer escrita for detectada:
 - registrar incidente;
 - restaurar snapshot ou backup, se aplicavel;
 - nao corrigir automaticamente.
+
+Nao tentar cleanup corretivo sem microcorte proprio.
 
 ## Decisao Final
 
