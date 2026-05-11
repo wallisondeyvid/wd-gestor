@@ -4807,6 +4807,86 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve implementar apenas skeleton declarativo do gate, ainda sem liberar execucao real.
 
+- Skeleton declarativo do gate de execucao read-only implementado.
+- Base publicada:
+	- f96e5ec docs(ops): desenha gate de execucao read-only.
+- Registro da implementacao:
+	- skeleton declarativo do gate implementado;
+	- execucao continua bloqueada por padrao;
+	- nenhuma execucao real liberada;
+	- nenhuma conexao implementada;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico da implementacao:
+	- o script ganhou apenas helpers puros do gate de execucao read-only;
+	- buildPlannedInventoryManifest, buildSafetySummary e main passaram a expor apenas executionGateSummary seguro;
+	- a aprovacao de execucao continua false e o gate permanece fechado por padrao.
+- Proximo ato recomendado:
+	- reviewReadOnlyExecutionGateSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyExecutionGateSkeleton
+	- recommendedNextAct=reviewReadOnlyExecutionGateSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyExecutionGateSkeletonImplemented=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyExecutionGateSkeleton
+	- recommendedNextAct=reviewReadOnlyExecutionGateSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=true
+	- executionGateImplemented=true
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este skeleton de gate nao libera execucao;
+	- este skeleton de gate nao gera relatorio real;
+	- este skeleton de gate nao usa fs.writeFile;
+	- este skeleton de gate nao implementa conexao;
+	- este skeleton de gate nao implementa leitura real de banco;
+	- este skeleton de gate nao executa query;
+	- este skeleton de gate nao executa inventario;
+	- este skeleton de gate nao autoriza Mongo;
+	- este skeleton de gate nao autoriza Atlas;
+	- este skeleton de gate nao autoriza package.json;
+	- este skeleton de gate nao autoriza tenant DB real;
+	- este skeleton de gate nao autoriza reset/limpeza;
+	- este skeleton de gate nao autoriza seed/migration/backfill;
+	- este skeleton de gate nao autoriza criacao de unidade;
+	- este skeleton de gate nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o skeleton do gate antes de qualquer execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.

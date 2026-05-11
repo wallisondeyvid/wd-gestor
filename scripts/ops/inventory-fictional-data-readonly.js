@@ -1042,6 +1042,222 @@ export function assertReadOnlyEnvironment(env = {}) {
   return snapshot;
 }
 
+export function designReadOnlyExecutionGate(context = {}) {
+  const env = context?.env && typeof context.env === 'object' ? context.env : context;
+  const requiredFlags = validateRequiredFutureFlags({
+    WD_OPS_READONLY_CONFIRM: env.WD_OPS_READONLY_CONFIRM,
+    WD_OPS_ENVIRONMENT_CONFIRM: env.WD_OPS_ENVIRONMENT_CONFIRM,
+    WD_OPS_DATABASE_CONFIRM: env.WD_OPS_DATABASE_CONFIRM,
+  });
+  const atlasApproval = validateAtlasApproval({
+    WD_OPS_ATLAS_TARGET: env.WD_OPS_ATLAS_TARGET,
+    WD_OPS_ATLAS_EXPLICIT_APPROVAL: env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+  });
+  const databaseTarget = validateDatabaseTarget(env.WD_OPS_DATABASE_TARGET);
+  const writeGuards = ensureNoWriteOperationsRegistered();
+  const requestedOperations = Array.isArray(context.requestedOperations)
+    ? context.requestedOperations
+        .map((operation) => (typeof operation === 'string' ? operation.trim() : ''))
+        .filter(Boolean)
+    : [];
+  const requestedReleases = {
+    connection: normalizeBooleanFlag(context.allowConnectionExecution).normalized === true,
+    query: normalizeBooleanFlag(context.allowQueryExecution).normalized === true,
+    report: normalizeBooleanFlag(context.allowReportGeneration).normalized === true,
+  };
+  const combinedReleaseRequested = requestedReleases.connection && requestedReleases.query && requestedReleases.report;
+  const worktreeClean = normalizeBooleanFlag(context.worktreeClean);
+  const branchAligned = normalizeBooleanFlag(context.branchAligned);
+  const persistentEnvironment = normalizeBooleanFlag(context.persistentEnvironment);
+  const persistentSnapshotConfirmed = normalizeBooleanFlag(context.persistentSnapshotConfirmed);
+  const fictionalDataConfirmed = normalizeBooleanFlag(context.fictionalDataConfirmed);
+  const commandReadOnlyConfirmed = normalizeBooleanFlag(context.commandReadOnlyConfirmed);
+  const detectedWriteOperations = requestedOperations.filter((operation) => writeGuards.blockedOperations.includes(operation));
+  const queryPlanSummary = context.queryPlanSummary || summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
+  const connectionDesignSummary =
+    context.connectionDesignSummary || summarizeConnectionDesign(designReadOnlyConnectionConfig(env));
+  const reportDesignSummary =
+    context.reportDesignSummary ||
+    summarizeReportModel({
+      metadata: buildReportMetadata({
+        databaseTarget: databaseTarget.sanitized,
+        outputPath: FUTURE_REPORT_LOCATION,
+      }),
+      sections: buildReportSections({
+        entityManifestSummary: getEntityManifestSummary(),
+        queryPlanSummary,
+      }),
+    });
+  const blockedReasons = ['gate-closed-by-default'];
+
+  if (!requiredFlags.ok) {
+    if (requiredFlags.missing.length > 0) {
+      blockedReasons.push(`required-flags-missing:${requiredFlags.missing.join(',')}`);
+    }
+
+    if (requiredFlags.invalid.length > 0) {
+      blockedReasons.push(`required-flags-invalid:${requiredFlags.invalid.join(',')}`);
+    }
+  }
+
+  if (!databaseTarget.ok) {
+    blockedReasons.push(`database-target:${databaseTarget.status}`);
+  }
+
+  if (atlasApproval.status === 'blocked') {
+    blockedReasons.push('atlas-approval-missing');
+  }
+
+  if (worktreeClean.normalized !== true) {
+    blockedReasons.push('worktree-clean-confirmation-missing');
+  }
+
+  if (branchAligned.normalized !== true) {
+    blockedReasons.push('branch-alignment-confirmation-missing');
+  }
+
+  if (persistentEnvironment.normalized === true && persistentSnapshotConfirmed.normalized !== true) {
+    blockedReasons.push('persistent-environment-snapshot-missing');
+  }
+
+  if (fictionalDataConfirmed.normalized !== true) {
+    blockedReasons.push('fictional-data-confirmation-missing');
+  }
+
+  if (commandReadOnlyConfirmed.normalized !== true) {
+    blockedReasons.push('command-readonly-confirmation-missing');
+  }
+
+  if (detectedWriteOperations.length > 0) {
+    blockedReasons.push(`write-risk-detected:${detectedWriteOperations.join(',')}`);
+  }
+
+  if (requestedReleases.connection) {
+    blockedReasons.push('connection-release-requires-separate-review');
+  }
+
+  if (requestedReleases.query) {
+    blockedReasons.push('query-release-requires-separate-review');
+  }
+
+  if (requestedReleases.report) {
+    blockedReasons.push('report-release-requires-separate-review');
+  }
+
+  if (combinedReleaseRequested) {
+    blockedReasons.push('combined-release-review-required');
+  }
+
+  return {
+    mode: 'future-readonly-execution-gate-design',
+    status: 'blocked',
+    defaultClosed: true,
+    executionApproved: false,
+    reviewStatus: blockedReasons.length === 1 ? 'ready-for-future-review' : 'preconditions-pending',
+    blockedReasons,
+    requestedReleases,
+    combinedReleaseRequested,
+    requestedOperations,
+    detectedWriteOperations,
+    requiredFlags,
+    atlasApproval,
+    databaseTarget,
+    writeGuards,
+    operationalConfirmations: {
+      worktreeClean: worktreeClean.status,
+      branchAligned: branchAligned.status,
+      persistentEnvironment: persistentEnvironment.status,
+      persistentSnapshotConfirmed: persistentSnapshotConfirmed.status,
+      fictionalDataConfirmed: fictionalDataConfirmed.status,
+      commandReadOnlyConfirmed: commandReadOnlyConfirmed.status,
+    },
+    connectionDesignSummary,
+    queryPlanSummary,
+    reportDesignSummary,
+    notes: [
+      'Gate declarativo apenas; nenhuma execucao e liberada neste microcorte.',
+      'Conexao, query e relatorio permanecem segregados e bloqueados.',
+      'Qualquer risco de escrita exige bloqueio automatico.',
+    ],
+  };
+}
+
+export function validateExecutionGate(context = {}) {
+  const gate = designReadOnlyExecutionGate(context);
+
+  return {
+    ok: false,
+    status: gate.status,
+    executionApproved: gate.executionApproved,
+    defaultClosed: gate.defaultClosed,
+    reviewStatus: gate.reviewStatus,
+    blockedReasons: [...gate.blockedReasons],
+    combinedReleaseRequested: gate.combinedReleaseRequested,
+    writeRiskDetected: gate.detectedWriteOperations.length > 0,
+  };
+}
+
+export function summarizeExecutionGate(gate = {}) {
+  const resolvedGate = gate?.status ? gate : designReadOnlyExecutionGate(gate);
+
+  return {
+    mode: resolvedGate.mode || 'future-readonly-execution-gate-design',
+    status: resolvedGate.status || 'blocked',
+    defaultClosed: resolvedGate.defaultClosed !== false,
+    executionApproved: false,
+    reviewStatus: resolvedGate.reviewStatus || 'preconditions-pending',
+    blockedReasonCount: Array.isArray(resolvedGate.blockedReasons) ? resolvedGate.blockedReasons.length : 0,
+    blockedReasons: Array.isArray(resolvedGate.blockedReasons) ? [...resolvedGate.blockedReasons] : ['gate-closed-by-default'],
+    requiredFlagsStatus: resolvedGate?.requiredFlags?.status || 'pending',
+    atlasApprovalStatus: resolvedGate?.atlasApproval?.status || 'pending',
+    databaseTargetStatus: resolvedGate?.databaseTarget?.status || 'missing',
+    writeProtectionStatus: resolvedGate?.writeGuards?.status || 'write-operations-blocked',
+    requestedReleases: {
+      connection: Boolean(resolvedGate?.requestedReleases?.connection),
+      query: Boolean(resolvedGate?.requestedReleases?.query),
+      report: Boolean(resolvedGate?.requestedReleases?.report),
+    },
+  };
+}
+
+export function assertExecutionGateClosedByDefault() {
+  const gate = designReadOnlyExecutionGate();
+
+  return {
+    ok: gate.defaultClosed === true && gate.status === 'blocked' && gate.executionApproved === false,
+    status: gate.defaultClosed === true && gate.status === 'blocked' ? 'blocked-by-default' : 'unexpected-open-gate',
+    blockedReasons: [...gate.blockedReasons],
+  };
+}
+
+export function explainBlockedExecution(gate = {}) {
+  const resolvedGate = gate?.status ? gate : designReadOnlyExecutionGate(gate);
+
+  return {
+    status: resolvedGate.status || 'blocked',
+    executionApproved: false,
+    messages: (Array.isArray(resolvedGate.blockedReasons) ? resolvedGate.blockedReasons : ['gate-closed-by-default']).map((reason) => {
+      if (reason === 'gate-closed-by-default') {
+        return 'O gate permanece fechado por padrao neste microcorte.';
+      }
+
+      if (reason === 'atlas-approval-missing') {
+        return 'Atlas continua bloqueado sem aprovacao explicita.';
+      }
+
+      if (reason === 'combined-release-review-required') {
+        return 'Conexao, query e relatorio nao podem ser liberados juntos sem revisao.';
+      }
+
+      if (reason.startsWith('write-risk-detected:')) {
+        return 'Foi detectado risco de escrita em operacoes solicitadas.';
+      }
+
+      return `Execucao bloqueada por ${reason}.`;
+    }),
+  };
+}
+
 export function buildPlannedInventoryManifest() {
   const entityManifestSummary = getEntityManifestSummary();
   const queryPlanSummary = summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
@@ -1065,6 +1281,21 @@ export function buildPlannedInventoryManifest() {
       queryPlanSummary,
     }),
   };
+  const executionGateSummary = summarizeExecutionGate(
+    designReadOnlyExecutionGate({
+      env: {
+        WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+        WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+        WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+        WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
+        WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+        WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+      },
+      queryPlanSummary,
+      connectionDesignSummary,
+      reportDesignSummary: summarizeReportModel(reportModel),
+    }),
+  );
   return {
     scriptName: SCRIPT_NAME,
     scriptPath: SCRIPT_PATH,
@@ -1079,6 +1310,7 @@ export function buildPlannedInventoryManifest() {
     entityManifestSummary,
     queryPlanSummary,
     connectionDesignSummary,
+    executionGateSummary,
     reportDesignSummary: summarizeReportModel(reportModel),
     connectionImplementation: 'blocked-until-future-microcut',
     reportGenerationImplementation: 'blocked-until-future-microcut',
@@ -1132,6 +1364,21 @@ export function buildSafetySummary() {
       queryPlanSummary,
     }),
   };
+  const executionGateSummary = summarizeExecutionGate(
+    designReadOnlyExecutionGate({
+      env: {
+        WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+        WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+        WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+        WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
+        WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+        WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+      },
+      queryPlanSummary,
+      connectionDesignSummary,
+      reportDesignSummary: summarizeReportModel(reportModel),
+    }),
+  );
 
   return {
     scriptStatus: SCRIPT_STATUS,
@@ -1143,6 +1390,7 @@ export function buildSafetySummary() {
     validationSummary,
     connectionDesignSummary,
     connectionPreconditions,
+    executionGateSummary,
     reportDesignSummary: summarizeReportModel(reportModel),
     writeGuards: ensureNoWriteOperationsRegistered(),
     queryPlanSummary,
@@ -1152,6 +1400,7 @@ export function buildSafetySummary() {
       'Este skeleton nao abre conexao.',
       'Este skeleton nao consulta banco.',
       'Este skeleton nao gera relatorio real.',
+      'Este skeleton mantem o gate de execucao fechado por padrao.',
       'Este skeleton so expõe estados seguros de flags futuras, sem usar segredos.',
       'Este skeleton separa confirmacao booleana de database target textual.',
     ],
@@ -1204,6 +1453,21 @@ export function main() {
     WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
     WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
   });
+  const executionGateSummary = summarizeExecutionGate(
+    designReadOnlyExecutionGate({
+      env: {
+        WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
+        WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
+        WD_OPS_DATABASE_CONFIRM: process.env.WD_OPS_DATABASE_CONFIRM,
+        WD_OPS_DATABASE_TARGET: process.env.WD_OPS_DATABASE_TARGET,
+        WD_OPS_ATLAS_TARGET: process.env.WD_OPS_ATLAS_TARGET,
+        WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
+      },
+      queryPlanSummary,
+      connectionDesignSummary,
+      reportDesignSummary: summarizeReportModel(reportModel),
+    }),
+  );
 
   const output = {
     script: manifest.scriptName,
@@ -1214,6 +1478,7 @@ export function main() {
     entityManifestSummary,
     queryPlanSummary,
     connectionDesignSummary,
+    executionGateSummary,
     reportDesignSummary: summarizeReportModel(reportModel),
     futureFlags: manifest.requiredFutureFlags,
     futureReportLocation: manifest.futureReportLocation,
