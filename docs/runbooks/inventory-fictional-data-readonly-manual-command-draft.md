@@ -18,6 +18,7 @@ Este documento nao substitui o microcorte de execucao.
 Este documento nao substitui a preparacao de comando manual.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando real por si so.
 
 ## Objetivo do Rascunho
 
@@ -27,6 +28,7 @@ Este documento nao autoriza push.
 - deixar claro que o comando nao sera executado;
 - separar rascunho de comando de execucao real;
 - manter Mongo, Atlas, query, relatorio real, fs.writeFile e push bloqueados.
+- reforcar que o exemplo nao e copiavel nem executavel.
 
 ## Forma Conceitual do Comando Futuro
 
@@ -73,6 +75,7 @@ Regras deste exemplo:
 - nao contem comando npm;
 - nao contem comando pronto para copiar e executar;
 - usa apenas placeholders conceituais.
+- variaveis e flags sao apenas ilustrativas.
 
 ## Bloqueios Obrigatorios
 
@@ -95,6 +98,7 @@ Regras deste exemplo:
 - nao usar Portal;
 - nao usar PostgreSQL;
 - nao fazer push.
+- nao tratar candidatos a descarte como autorizacao de limpeza.
 
 ## Saidas Possiveis
 
