@@ -887,6 +887,8 @@ export function validateReportOutputPath(path) {
     return {
       ok: false,
       status: 'missing',
+      validationMode: 'path-check-only',
+      directoryCreationPerformed: false,
       normalizedPath: '[report-path:missing]',
     };
   }
@@ -898,6 +900,8 @@ export function validateReportOutputPath(path) {
   return {
     ok: isAllowed,
     status: isAllowed ? 'allowed-conceptual-path' : 'blocked-path',
+    validationMode: 'path-check-only',
+    directoryCreationPerformed: false,
     normalizedPath,
   };
 }
@@ -959,8 +963,9 @@ export function buildReportSections(inventoryData = {}) {
 }
 
 export function renderMarkdownReport(reportModel = {}) {
-  const metadata = reportModel.metadata || {};
-  const sections = Array.isArray(reportModel.sections) ? reportModel.sections : [];
+  const safeModel = maskReportSensitiveValues(reportModel);
+  const metadata = safeModel.metadata || {};
+  const sections = Array.isArray(safeModel.sections) ? safeModel.sections : [];
 
   const lines = [
     '# Inventario Read-Only',
@@ -969,6 +974,7 @@ export function renderMarkdownReport(reportModel = {}) {
     `- outputPathStatus: ${metadata.outputPathStatus || 'missing'}`,
     `- reportGenerated: false`,
     `- writePerformed: false`,
+    `- renderMode: memory-only`,
   ];
 
   for (const section of sections) {
@@ -988,6 +994,7 @@ export function renderJsonReport(reportModel = {}) {
 
   return {
     ...safeModel,
+    renderMode: 'memory-only',
     reportGenerated: false,
     writePerformed: false,
   };
@@ -1002,7 +1009,10 @@ export function summarizeReportModel(reportModel = {}) {
   return {
     sectionCount: sections.length,
     sensitiveMarkersDetected: sensitivePattern.test(serializedModel),
+    sensitiveMarkersSemantics: 'marker-heuristic-only',
     outputPathStatus: outputPathValidation.status,
+    outputPathValidationMode: outputPathValidation.validationMode,
+    renderMode: 'memory-only',
     reportGenerated: false,
     writePerformed: false,
   };
