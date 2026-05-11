@@ -6749,6 +6749,97 @@ Checkpoint tenant enforcement atual:
 	- esta revisao final nao autoriza criacao de usuario;
 	- proxima etapa deve revisar o documento final pre-execucao antes de qualquer execucao real.
 
+- Documento de revisao final pre-execucao revisado.
+- Base publicada:
+	- 17ae9d0 docs(ops): cria revisao final pre-execucao read-only.
+- Registro da revisao:
+	- documento de revisao final pre-execucao revisado;
+	- arquivo revisado: docs/runbooks/inventory-fictional-data-readonly-final-pre-execution-review.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryExecutionReadinessClosure.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryFinalPreExecutionReview
+	- recommendedNextAct=designReadOnlyInventoryExecutionReadinessClosure
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryFinalPreExecutionReviewReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryFinalPreExecutionReview
+	- recommendedNextAct=designReadOnlyInventoryExecutionReadinessClosure
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileCreated=true
+	- finalPreExecutionReviewReviewed=true
+	- finalPreExecutionReviewPath=docs/runbooks/inventory-fictional-data-readonly-final-pre-execution-review.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao final nao altera runbook;
+	- esta revisao final nao altera checklist;
+	- esta revisao final nao altera checkpoint;
+	- esta revisao final nao altera matriz;
+	- esta revisao final nao altera aviso;
+	- esta revisao final nao libera execucao;
+	- esta revisao final nao gera relatorio real;
+	- esta revisao final nao usa fs.writeFile;
+	- esta revisao final nao implementa conexao;
+	- esta revisao final nao implementa leitura real de banco;
+	- esta revisao final nao executa query;
+	- esta revisao final nao executa inventario;
+	- esta revisao final nao autoriza Mongo;
+	- esta revisao final nao autoriza Atlas;
+	- esta revisao final nao autoriza package.json;
+	- esta revisao final nao autoriza tenant DB real;
+	- esta revisao final nao autoriza reset/limpeza;
+	- esta revisao final nao autoriza seed/migration/backfill;
+	- esta revisao final nao autoriza criacao de unidade;
+	- esta revisao final nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar o fechamento da prontidao de execucao read-only antes de qualquer execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.

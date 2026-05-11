@@ -9,6 +9,7 @@ Este documento nao substitui o checkpoint de decisao.
 Este documento nao substitui a matriz de aprovacao.
 Este documento nao substitui o aviso de autorizacao.
 Este documento nao aprova comando em package.json.
+Este documento nao e autorizacao humana final por si so.
 
 ## Documentos a Revisar Futuramente
 
@@ -42,6 +43,7 @@ Este documento nao aprova comando em package.json.
 - package.json continua sem comando novo?
 - conexao, query e relatorio continuam separados?
 - candidatos a descarte continuam sem autorizar limpeza?
+- existe qualquer tentativa de executar mais de uma camada no mesmo microcorte?
 
 ## Condicoes de Bloqueio
 
@@ -54,6 +56,7 @@ Este documento nao aprova comando em package.json.
 - qualquer tentativa de alterar package.json;
 - qualquer tentativa de executar conexao, query e relatorio juntos;
 - qualquer tentativa de tratar candidatos a descarte como autorizacao de limpeza.
+- qualquer tentativa de relativizar escrita acidental.
 
 ## Saidas Possiveis da Revisao Futura
 
