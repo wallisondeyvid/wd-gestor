@@ -6209,6 +6209,142 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar aviso de autorizacao de execucao antes de qualquer execucao real.
 
+- Aviso de autorizacao de execucao read-only desenhado documentalmente.
+- Base publicada:
+	- b28def5 docs(ops): revisa matriz de aprovacao read-only.
+- Objetivo do aviso:
+	- impedir confusao entre aprovacao documental e autorizacao operacional;
+	- deixar claro que nenhuma documentacao anterior executa inventario;
+	- exigir autorizacao humana explicita em microcorte futuro;
+	- reforcar que execucao, conexao, query e relatorio real continuam bloqueados.
+- Conteudo obrigatorio futuro do aviso:
+	- identificacao do ambiente;
+	- confirmacao de branch correta;
+	- confirmacao de worktree limpa;
+	- confirmacao de dados ficticios;
+	- confirmacao de ausencia de dados reais;
+	- confirmacao de gate validado;
+	- confirmacao de matriz consultada;
+	- confirmacao de runbook, checklist e checkpoint revisados;
+	- confirmacao de package.json sem comando novo, salvo microcorte proprio;
+	- confirmacao de que candidatos a descarte nao autorizam limpeza.
+- Frase obrigatoria futura:
+	- "Autorizo apenas a execucao read-only do inventario, sem escrita, sem limpeza, sem reset, sem seed, sem migration, sem backfill, sem criacao de unidade, sem criacao de usuario e sem uso de dados reais."
+- Bloqueios permanentes do aviso:
+	- nao autoriza escrita;
+	- nao autoriza reset;
+	- nao autoriza limpeza;
+	- nao autoriza seed;
+	- nao autoriza migration;
+	- nao autoriza backfill;
+	- nao autoriza criacao de unidade;
+	- nao autoriza criacao de usuario;
+	- nao autoriza uso de dados reais;
+	- nao autoriza Atlas sem aprovacao explicita;
+	- nao autoriza Portal;
+	- nao autoriza PostgreSQL;
+	- nao autoriza alteracao de package.json;
+	- nao autoriza conexao, query e relatorio juntos.
+- Criterios para considerar o aviso insuficiente:
+	- frase incompleta;
+	- ambiente nao identificado;
+	- duvida sobre dados reais;
+	- duvida sobre Atlas;
+	- package.json divergente;
+	- worktree suja;
+	- branch divergente;
+	- tentativa de incluir limpeza ou descarte;
+	- tentativa de executar mais de uma camada no mesmo microcorte.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum aviso separado criado ainda;
+	- nenhum arquivo runbook, checklist, checkpoint ou matriz alterado;
+	- nenhuma execucao liberada;
+	- proximo ato recomendado: createReadOnlyInventoryExecutionAuthorizationNotice.
+- Registro do desenho:
+	- aviso de autorizacao de execucao read-only desenhado documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryExecutionAuthorizationNotice.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionAuthorizationNotice
+	- recommendedNextAct=createReadOnlyInventoryExecutionAuthorizationNotice
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionAuthorizationNoticeDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionAuthorizationNotice
+	- recommendedNextAct=createReadOnlyInventoryExecutionAuthorizationNotice
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeDesigned=true
+	- executionAuthorizationNoticeFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao cria aviso separado;
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao altera checkpoint;
+	- este desenho nao altera matriz;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o aviso documental de autorizacao, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
