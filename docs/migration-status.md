@@ -8005,6 +8005,108 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento do gate final de decisao humana, ainda sem execucao real.
 
+- Documento do gate final de decisao humana read-only criado.
+- Base publicada:
+	- 2d310e2 docs(ops): desenha gate final de decisao humana read-only.
+- Registro da criacao:
+	- documento do gate final de decisao humana read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-final-human-decision-gate.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryFinalHumanDecisionGate.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryFinalHumanDecisionGate
+	- recommendedNextAct=reviewReadOnlyInventoryFinalHumanDecisionGate
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryFinalHumanDecisionGateCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryFinalHumanDecisionGate
+	- recommendedNextAct=reviewReadOnlyInventoryFinalHumanDecisionGate
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileCreated=true
+	- finalHumanDecisionGatePath=docs/runbooks/inventory-fictional-data-readonly-final-human-decision-gate.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este gate nao altera runbook;
+	- este gate nao altera checklist;
+	- este gate nao altera checkpoint;
+	- este gate nao altera matriz;
+	- este gate nao altera aviso;
+	- este gate nao altera revisao final;
+	- este gate nao altera fechamento;
+	- este gate nao altera resumo;
+	- este gate nao altera prompt;
+	- este gate nao libera execucao;
+	- este gate nao gera relatorio real;
+	- este gate nao usa fs.writeFile;
+	- este gate nao implementa conexao;
+	- este gate nao implementa leitura real de banco;
+	- este gate nao executa query;
+	- este gate nao executa inventario;
+	- este gate nao autoriza Mongo;
+	- este gate nao autoriza Atlas;
+	- este gate nao autoriza package.json;
+	- este gate nao autoriza tenant DB real;
+	- este gate nao autoriza reset/limpeza;
+	- este gate nao autoriza seed/migration/backfill;
+	- este gate nao autoriza criacao de unidade;
+	- este gate nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento do gate final de decisao humana read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
