@@ -14,6 +14,8 @@ Este documento nao substitui o resumo da prontidao.
 Este documento nao substitui o prompt de decisao humana.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao e autorizacao humana final.
+Este documento nao executa inventario por si so.
 
 ## Objetivo do Gate Final
 
@@ -22,6 +24,7 @@ Este documento nao autoriza push.
 - separar autorizacao de abrir microcorte futuro da execucao real;
 - confirmar que nenhuma resposta humana executa inventario imediatamente;
 - preparar um eventual microcorte futuro de decisao, nao de execucao.
+- separar decisao futura de execucao futura.
 
 ## Entradas Obrigatorias para o Gate Futuro
 
@@ -40,6 +43,7 @@ Este documento nao autoriza push.
 - worktree limpa;
 - confirmacao de dados ficticios;
 - confirmacao de ausencia de dados reais.
+- confirmacao de que candidatos a descarte nao autorizam limpeza.
 
 ## Respostas Aceitas no Gate
 
@@ -60,6 +64,8 @@ Este documento nao autoriza push.
 - SEED_NOW
 - MIGRATE_NOW
 - BACKFILL_NOW
+- CREATE_UNIT_NOW
+- CREATE_USER_NOW
 - PUSH_NOW
 
 ## Efeito Seguro do Gate
@@ -69,6 +75,7 @@ Este documento nao autoriza push.
 - mesmo se aprovado, nao cria comando package.json automaticamente;
 - mesmo se aprovado, so permite preparar outro microcorte futuro;
 - execucao real continua exigindo validacao imediata de branch, worktree, ambiente, dados ficticios, ausencia de dados reais e gate operacional.
+- qualquer execucao futura continua separada de limpeza, reset, seed, migration, backfill, criacao de unidade e criacao de usuario.
 
 ## Condicoes de Bloqueio
 
@@ -81,6 +88,7 @@ Este documento nao autoriza push.
 - qualquer tentativa de push;
 - qualquer tentativa de usar Portal ou PostgreSQL;
 - qualquer tentativa de Atlas sem aprovacao explicita.
+- qualquer tentativa de tratar candidatos a descarte como autorizacao de limpeza.
 
 ## Decisao Final
 
