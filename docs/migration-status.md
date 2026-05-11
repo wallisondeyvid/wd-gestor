@@ -8373,6 +8373,111 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento Go/No-Go de execucao read-only, ainda sem execucao real.
 
+- Documento Go/No-Go de execucao read-only criado.
+- Base publicada:
+	- 17682c7 docs(ops): desenha decisao go-no-go read-only.
+- Registro da criacao:
+	- documento Go/No-Go de execucao read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-execution-go-no-go.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryExecutionGoNoGo.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionGoNoGo
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionGoNoGo
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionGoNoGoCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionGoNoGo
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionGoNoGo
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileCreated=true
+	- executionGoNoGoPath=docs/runbooks/inventory-fictional-data-readonly-execution-go-no-go.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este documento Go/No-Go nao altera runbook;
+	- este documento Go/No-Go nao altera checklist;
+	- este documento Go/No-Go nao altera checkpoint;
+	- este documento Go/No-Go nao altera matriz;
+	- este documento Go/No-Go nao altera aviso;
+	- este documento Go/No-Go nao altera revisao final;
+	- este documento Go/No-Go nao altera fechamento;
+	- este documento Go/No-Go nao altera resumo;
+	- este documento Go/No-Go nao altera prompt;
+	- este documento Go/No-Go nao altera gate final;
+	- este documento Go/No-Go nao libera execucao;
+	- este documento Go/No-Go nao gera relatorio real;
+	- este documento Go/No-Go nao usa fs.writeFile;
+	- este documento Go/No-Go nao implementa conexao;
+	- este documento Go/No-Go nao implementa leitura real de banco;
+	- este documento Go/No-Go nao executa query;
+	- este documento Go/No-Go nao executa inventario;
+	- este documento Go/No-Go nao autoriza Mongo;
+	- este documento Go/No-Go nao autoriza Atlas;
+	- este documento Go/No-Go nao autoriza package.json;
+	- este documento Go/No-Go nao autoriza tenant DB real;
+	- este documento Go/No-Go nao autoriza reset/limpeza;
+	- este documento Go/No-Go nao autoriza seed/migration/backfill;
+	- este documento Go/No-Go nao autoriza criacao de unidade;
+	- este documento Go/No-Go nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento Go/No-Go de execucao read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
