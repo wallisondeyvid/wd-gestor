@@ -4520,6 +4520,95 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve implementar apenas skeleton declarativo de relatorio, ainda sem gerar arquivo real.
 
+- Skeleton declarativo de relatorio read-only implementado.
+- Base publicada:
+	- d237254 docs(ops): desenha camada de relatorio do inventario read-only.
+- Registro da implementacao:
+	- skeleton declarativo de relatorio implementado;
+	- nenhum arquivo real gerado;
+	- fs.writeFile nao usado;
+	- nenhuma conexao implementada;
+	- nenhuma query real executada;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico da implementacao:
+	- o script ganhou apenas helpers puros de metadata, secoes, renderizacao em memoria, validacao conceitual de output path, mascaramento e resumo seguro de relatorio;
+	- renderMarkdownReport e renderJsonReport retornam conteudo em memoria, sem gravar arquivo;
+	- buildPlannedInventoryManifest, buildSafetySummary e main passaram a expor apenas resumo seguro da camada de relatorio.
+- Proximo ato recomendado:
+	- reviewReadOnlyReportDesignSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyReportDesignSkeleton
+	- recommendedNextAct=reviewReadOnlyReportDesignSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyReportDesignSkeletonImplemented=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=implementReadOnlyReportDesignSkeleton
+	- recommendedNextAct=reviewReadOnlyReportDesignSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=true
+	- reportDesignSkeletonImplemented=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este skeleton de relatorio nao gera arquivo real;
+	- este skeleton de relatorio nao usa fs.writeFile;
+	- este skeleton de relatorio nao implementa conexao;
+	- este skeleton de relatorio nao implementa leitura real de banco;
+	- este skeleton de relatorio nao executa query;
+	- este skeleton de relatorio nao executa inventario;
+	- este skeleton de relatorio nao autoriza Mongo;
+	- este skeleton de relatorio nao autoriza Atlas;
+	- este skeleton de relatorio nao autoriza package.json;
+	- este skeleton de relatorio nao autoriza tenant DB real;
+	- este skeleton de relatorio nao autoriza reset ou limpeza;
+	- este skeleton de relatorio nao autoriza seed, migration ou backfill;
+	- este skeleton de relatorio nao autoriza criacao de unidade;
+	- este skeleton de relatorio nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o skeleton de relatorio antes de qualquer geracao real de arquivo.
+
+- Revisao pre-commit do skeleton de relatorio registrada.
+- Base publicada:
+	- d237254 docs(ops): desenha camada de relatorio do inventario read-only.
+- Ajuste seguro aplicado:
+	- a semantica do resumo foi corrigida para sensitiveMarkersDetected, evitando confusao entre marcador sensivel e valor sensivel real;
+	- markdownPreview e jsonPreview foram removidos do output de main para manter apenas resumo seguro;
+	- nenhum arquivo real foi gerado e fs.writeFile permaneceu ausente.
+- Confirmacoes:
+	- nenhuma conexao implementada;
+	- nenhuma query real executada;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.

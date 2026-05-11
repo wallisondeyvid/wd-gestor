@@ -825,6 +825,189 @@ export function maskCpf(value) {
   return digits.slice(0, 3) + '.***.***-' + digits.slice(-2);
 }
 
+export function maskReportSensitiveValues(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => maskReportSensitiveValues(item));
+  }
+
+  if (value && typeof value === 'object') {
+    const maskedObject = {};
+
+    for (const [key, nestedValue] of Object.entries(value)) {
+      const loweredKey = key.toLowerCase();
+
+      if (loweredKey === 'cpf') {
+        maskedObject[key] = maskCpf(nestedValue);
+        continue;
+      }
+
+      if (loweredKey === 'email') {
+        maskedObject[key] = maskEmail(nestedValue);
+        continue;
+      }
+
+      if (['senha', 'password', 'hash', 'token', 'uri', 'connection string', 'connectionstring', 'env completa', 'anexos brutos'].includes(loweredKey)) {
+        maskedObject[key] = '[masked:sensitive-field]';
+        continue;
+      }
+
+      maskedObject[key] = maskReportSensitiveValues(nestedValue);
+    }
+
+    return maskedObject;
+  }
+
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const loweredValue = value.toLowerCase();
+  if (loweredValue.includes('mongodb://') || loweredValue.includes('mongodb+srv://')) {
+    return maskConnectionString(value);
+  }
+
+  if (value.includes('@')) {
+    return maskEmail(value);
+  }
+
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 11) {
+    return maskCpf(value);
+  }
+
+  if (['senha', 'password', 'hash', 'token', 'env completa', 'anexos brutos', 'connection string'].includes(loweredValue)) {
+    return '[masked:sensitive-value]';
+  }
+
+  return value;
+}
+
+export function validateReportOutputPath(path) {
+  if (typeof path !== 'string' || path.trim() === '') {
+    return {
+      ok: false,
+      status: 'missing',
+      normalizedPath: '[report-path:missing]',
+    };
+  }
+
+  const normalizedPath = path.trim().replace(/\\/g, '/');
+  const allowedPrefixes = ['docs/runbooks/generated', 'ops/generated'];
+  const isAllowed = allowedPrefixes.some((prefix) => normalizedPath.startsWith(prefix));
+
+  return {
+    ok: isAllowed,
+    status: isAllowed ? 'allowed-conceptual-path' : 'blocked-path',
+    normalizedPath,
+  };
+}
+
+export function buildReportMetadata(context = {}) {
+  const outputPathValidation = validateReportOutputPath(context.outputPath || FUTURE_REPORT_LOCATION);
+
+  return {
+    title: 'Inventario read-only do WD Gestor',
+    mode: 'future-report-design',
+    reportKind: 'local-readonly-report',
+    reportGenerated: false,
+    writePerformed: false,
+    timestamp: context.timestamp || 'pending-future-execution-time',
+    environment: maskReportSensitiveValues(context.environment || {
+      environment: 'pending-future-environment',
+      databaseTarget: context.databaseTarget || '[database:missing]',
+    }),
+    outputPath: outputPathValidation.normalizedPath,
+    outputPathStatus: outputPathValidation.status,
+    notes: [
+      'Metadados declarativos apenas.',
+      'Nenhum arquivo e gerado neste microcorte.',
+      'Nenhuma alteracao e feita no banco.',
+    ],
+  };
+}
+
+export function buildReportSections(inventoryData = {}) {
+  const sections = [
+    {
+      key: 'entity-summary',
+      title: 'Resumo de entidades',
+      content: maskReportSensitiveValues(inventoryData.entityManifestSummary || {}),
+    },
+    {
+      key: 'query-plans',
+      title: 'Planos de query',
+      content: maskReportSensitiveValues(inventoryData.queryPlanSummary || {}),
+    },
+    {
+      key: 'future-results',
+      title: 'Resultados futuros',
+      content: maskReportSensitiveValues(inventoryData.futureResults || { status: 'blocked-until-future-microcut' }),
+    },
+    {
+      key: 'discard-candidates',
+      title: 'Candidatos a descarte',
+      content: maskReportSensitiveValues(inventoryData.discardCandidates || { status: 'human-review-required' }),
+    },
+    {
+      key: 'human-pending-items',
+      title: 'Pendencias humanas',
+      content: maskReportSensitiveValues(inventoryData.pendingItems || { status: 'pending-human-review' }),
+    },
+  ];
+
+  return sections;
+}
+
+export function renderMarkdownReport(reportModel = {}) {
+  const metadata = reportModel.metadata || {};
+  const sections = Array.isArray(reportModel.sections) ? reportModel.sections : [];
+
+  const lines = [
+    '# Inventario Read-Only',
+    '',
+    `- modo: ${metadata.mode || 'future-report-design'}`,
+    `- outputPathStatus: ${metadata.outputPathStatus || 'missing'}`,
+    `- reportGenerated: false`,
+    `- writePerformed: false`,
+  ];
+
+  for (const section of sections) {
+    lines.push('');
+    lines.push(`## ${section.title || section.key || 'secao'}`);
+    lines.push('');
+    lines.push('```json');
+    lines.push(JSON.stringify(section.content ?? {}, null, 2));
+    lines.push('```');
+  }
+
+  return lines.join('\n');
+}
+
+export function renderJsonReport(reportModel = {}) {
+  const safeModel = maskReportSensitiveValues(reportModel);
+
+  return {
+    ...safeModel,
+    reportGenerated: false,
+    writePerformed: false,
+  };
+}
+
+export function summarizeReportModel(reportModel = {}) {
+  const sections = Array.isArray(reportModel.sections) ? reportModel.sections : [];
+  const outputPathValidation = validateReportOutputPath(reportModel?.metadata?.outputPath || FUTURE_REPORT_LOCATION);
+  const serializedModel = JSON.stringify(reportModel);
+  const sensitivePattern = /(senha|password|hash|token|mongodb:\/\/|mongodb\+srv:\/\/|anexos brutos)/i;
+
+  return {
+    sectionCount: sections.length,
+    sensitiveMarkersDetected: sensitivePattern.test(serializedModel),
+    outputPathStatus: outputPathValidation.status,
+    reportGenerated: false,
+    writePerformed: false,
+  };
+}
+
 export function assertReadOnlyEnvironment(env = {}) {
   const validationSummary = buildValidationSummary({
     WD_OPS_READONLY_CONFIRM: env.WD_OPS_READONLY_CONFIRM,
@@ -862,6 +1045,16 @@ export function buildPlannedInventoryManifest() {
       WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
     }),
   );
+  const reportModel = {
+    metadata: buildReportMetadata({
+      databaseTarget: validateDatabaseTarget(process.env.WD_OPS_DATABASE_TARGET).sanitized,
+      outputPath: FUTURE_REPORT_LOCATION,
+    }),
+    sections: buildReportSections({
+      entityManifestSummary,
+      queryPlanSummary,
+    }),
+  };
   return {
     scriptName: SCRIPT_NAME,
     scriptPath: SCRIPT_PATH,
@@ -876,6 +1069,7 @@ export function buildPlannedInventoryManifest() {
     entityManifestSummary,
     queryPlanSummary,
     connectionDesignSummary,
+    reportDesignSummary: summarizeReportModel(reportModel),
     connectionImplementation: 'blocked-until-future-microcut',
     reportGenerationImplementation: 'blocked-until-future-microcut',
   };
@@ -883,6 +1077,7 @@ export function buildPlannedInventoryManifest() {
 
 export function buildSafetySummary() {
   const queryPlanSummary = summarizeQueryPlans(buildReadOnlyQueryPlan(buildEntityManifest()));
+  const entityManifestSummary = getEntityManifestSummary();
   const connectionDesignSummary = summarizeConnectionDesign(
     designReadOnlyConnectionConfig({
       WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
@@ -916,6 +1111,17 @@ export function buildSafetySummary() {
     databaseTarget: validateDatabaseTarget(process.env.WD_OPS_DATABASE_TARGET).status,
     atlasApproval: describeFutureFlagStatus(process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL),
   };
+  const reportModel = {
+    metadata: buildReportMetadata({
+      databaseTarget: validateDatabaseTarget(process.env.WD_OPS_DATABASE_TARGET).sanitized,
+      environment: envSnapshot,
+      outputPath: FUTURE_REPORT_LOCATION,
+    }),
+    sections: buildReportSections({
+      entityManifestSummary,
+      queryPlanSummary,
+    }),
+  };
 
   return {
     scriptStatus: SCRIPT_STATUS,
@@ -927,6 +1133,7 @@ export function buildSafetySummary() {
     validationSummary,
     connectionDesignSummary,
     connectionPreconditions,
+    reportDesignSummary: summarizeReportModel(reportModel),
     writeGuards: ensureNoWriteOperationsRegistered(),
     queryPlanSummary,
     notes: [
@@ -956,6 +1163,21 @@ export function main() {
       WD_OPS_ATLAS_EXPLICIT_APPROVAL: process.env.WD_OPS_ATLAS_EXPLICIT_APPROVAL,
     }),
   );
+  const reportModel = {
+    metadata: buildReportMetadata({
+      databaseTarget: validateDatabaseTarget(process.env.WD_OPS_DATABASE_TARGET).sanitized,
+      environment: {
+        readOnlyConfirm: describeFutureFlagStatus(process.env.WD_OPS_READONLY_CONFIRM),
+        environmentConfirm: describeFutureFlagStatus(process.env.WD_OPS_ENVIRONMENT_CONFIRM),
+        databaseConfirm: describeFutureFlagStatus(process.env.WD_OPS_DATABASE_CONFIRM),
+      },
+      outputPath: FUTURE_REPORT_LOCATION,
+    }),
+    sections: buildReportSections({
+      entityManifestSummary,
+      queryPlanSummary,
+    }),
+  };
   const validationSummary = buildValidationSummary({
     WD_OPS_READONLY_CONFIRM: process.env.WD_OPS_READONLY_CONFIRM,
     WD_OPS_ENVIRONMENT_CONFIRM: process.env.WD_OPS_ENVIRONMENT_CONFIRM,
@@ -982,6 +1204,7 @@ export function main() {
     entityManifestSummary,
     queryPlanSummary,
     connectionDesignSummary,
+    reportDesignSummary: summarizeReportModel(reportModel),
     futureFlags: manifest.requiredFutureFlags,
     futureReportLocation: manifest.futureReportLocation,
     maskingRules: manifest.maskingRules,
