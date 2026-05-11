@@ -6979,6 +6979,99 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento de fechamento da prontidao, ainda sem execucao real.
 
+- Documento de fechamento da prontidao read-only criado.
+- Base publicada:
+	- 266fb22 docs(ops): desenha fechamento da prontidao read-only.
+- Registro da criacao:
+	- documento de fechamento da prontidao read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-execution-readiness-closure.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryExecutionReadinessClosure.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionReadinessClosure
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionReadinessClosure
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionReadinessClosureCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionReadinessClosure
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionReadinessClosure
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileCreated=true
+	- executionReadinessClosurePath=docs/runbooks/inventory-fictional-data-readonly-execution-readiness-closure.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este fechamento nao altera runbook;
+	- este fechamento nao altera checklist;
+	- este fechamento nao altera checkpoint;
+	- este fechamento nao altera matriz;
+	- este fechamento nao altera aviso;
+	- este fechamento nao altera revisao final;
+	- este fechamento nao libera execucao;
+	- este fechamento nao gera relatorio real;
+	- este fechamento nao usa fs.writeFile;
+	- este fechamento nao implementa conexao;
+	- este fechamento nao implementa leitura real de banco;
+	- este fechamento nao executa query;
+	- este fechamento nao executa inventario;
+	- este fechamento nao autoriza Mongo;
+	- este fechamento nao autoriza Atlas;
+	- este fechamento nao autoriza package.json;
+	- este fechamento nao autoriza tenant DB real;
+	- este fechamento nao autoriza reset/limpeza;
+	- este fechamento nao autoriza seed/migration/backfill;
+	- este fechamento nao autoriza criacao de unidade;
+	- este fechamento nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento de fechamento da prontidao, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
