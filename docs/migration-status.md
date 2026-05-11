@@ -9798,6 +9798,204 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar o checklist de revisao do rascunho de comando manual read-only, ainda sem criar comando real e sem execucao real.
 
+- Checklist de revisao do rascunho de comando manual read-only desenhado documentalmente.
+- Base publicada:
+	- f5898d4 docs(ops): revisa rascunho de comando manual read-only.
+- Objetivo do checklist:
+	- revisar o rascunho antes de qualquer comando real;
+	- confirmar que o rascunho nao cria comando;
+	- confirmar que o rascunho nao altera package.json;
+	- confirmar que o exemplo e nao copiavel e nao executavel;
+	- confirmar que nao ha URI real, segredo real ou comando npm;
+	- confirmar que nao ha execucao real, query real, Mongo real ou relatorio real;
+	- manter push proibido.
+- Itens de revisao do status e limites:
+	- status deve permanecer rascunho documental;
+	- nao autoriza execucao real;
+	- nao substitui runbook;
+	- nao substitui checklist;
+	- nao substitui checkpoint;
+	- nao substitui matriz;
+	- nao substitui aviso;
+	- nao substitui revisao final;
+	- nao substitui fechamento;
+	- nao substitui resumo;
+	- nao substitui prompt;
+	- nao substitui gate final;
+	- nao substitui Go/No-Go;
+	- nao substitui microcorte;
+	- nao substitui preparacao de comando;
+	- nao aprova package.json;
+	- nao autoriza push;
+	- nao cria comando real por si so.
+- Itens de revisao do exemplo conceitual:
+	- deve estar marcado como nao executavel;
+	- deve conter "nao copiar, nao colar e nao executar";
+	- deve usar apenas placeholders;
+	- nao deve conter URI real;
+	- nao deve conter segredo real;
+	- nao deve conter comando npm;
+	- nao deve conter comando pronto para copiar e executar;
+	- variaveis e flags devem ser apenas ilustrativas.
+- Itens de revisao das flags futuras:
+	- WD_OPS_READONLY_CONFIRM=true
+	- WD_OPS_ENVIRONMENT_CONFIRM=true
+	- WD_OPS_DATABASE_CONFIRM=true
+	- WD_OPS_DATABASE_TARGET=<target-explicito>
+	- WD_OPS_ATLAS_TARGET=true somente se Atlas for alvo
+	- WD_OPS_ATLAS_EXPLICIT_APPROVAL=true somente se Atlas for alvo
+	- demais flags ainda dependem de microcorte proprio
+- Itens de bloqueio obrigatorio:
+	- nao criar comando agora;
+	- nao alterar package.json;
+	- nao executar comando agora;
+	- nao conectar Mongo agora;
+	- nao rodar query agora;
+	- nao gerar relatorio real agora;
+	- nao usar fs.writeFile agora;
+	- nao expor segredo bruto;
+	- nao expor URI completa;
+	- nao acoplar cleanup;
+	- nao acoplar reset;
+	- nao acoplar seed;
+	- nao acoplar migration;
+	- nao acoplar backfill;
+	- nao criar unidade;
+	- nao criar usuario;
+	- nao usar Portal;
+	- nao usar PostgreSQL;
+	- nao fazer push;
+	- nao tratar candidatos a descarte como autorizacao de limpeza.
+- Saidas possiveis do checklist futuro:
+	- READY_TO_CREATE_MANUAL_COMMAND_REVIEW_CHECKLIST_DOC
+	- RETURN_TO_MANUAL_COMMAND_DRAFT_REVIEW
+	- RETURN_TO_MANUAL_COMMAND_PREPARATION_REVIEW
+	- BLOCK_MANUAL_COMMAND_CHECKLIST
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum arquivo runbook/checklist/checkpoint/matriz/aviso/revisao/fechamento/resumo/prompt/gate/go-no-go/microcorte/preparacao/rascunho alterado;
+	- nenhum comando criado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- proximo ato recomendado: createReadOnlyInventoryManualCommandReviewChecklist.
+- Registro do desenho:
+	- checklist de revisao do rascunho de comando manual read-only desenhado documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- preparacao de comando manual apenas lida;
+	- rascunho de comando manual apenas lido;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryManualCommandReviewChecklist.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryManualCommandReviewChecklist
+	- recommendedNextAct=createReadOnlyInventoryManualCommandReviewChecklist
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryManualCommandReviewChecklistDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryManualCommandReviewChecklist
+	- recommendedNextAct=createReadOnlyInventoryManualCommandReviewChecklist
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileChanged=false
+	- manualCommandPreparationFileChanged=false
+	- manualCommandDraftFileChanged=false
+	- manualCommandReviewChecklistDesigned=true
+	- manualCommandReviewChecklistFileCreated=false
+	- commandCreated=false
+	- packageJsonChanged=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao altera checkpoint;
+	- este desenho nao altera matriz;
+	- este desenho nao altera aviso;
+	- este desenho nao altera revisao final;
+	- este desenho nao altera fechamento;
+	- este desenho nao altera resumo;
+	- este desenho nao altera prompt;
+	- este desenho nao altera gate final;
+	- este desenho nao altera Go/No-Go;
+	- este desenho nao altera microcorte;
+	- este desenho nao altera preparacao de comando;
+	- este desenho nao altera rascunho de comando;
+	- este desenho nao cria comando real;
+	- este desenho nao altera package.json;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o documento de checklist de revisao do rascunho de comando manual read-only, ainda sem criar comando real e sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
