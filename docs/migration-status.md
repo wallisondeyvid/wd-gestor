@@ -7507,6 +7507,143 @@ Checkpoint tenant enforcement atual:
 	- esta revisao de resumo nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar o prompt de decisao humana read-only, ainda sem execucao real.
 
+- Prompt de decisao humana read-only desenhado documentalmente.
+- Base publicada:
+	- 7d0706c docs(ops): revisa resumo da prontidao read-only.
+- Objetivo do prompt de decisao humana:
+	- transformar a cadeia documental em uma pergunta humana clara;
+	- separar decisao humana de execucao real;
+	- impedir que documentacao seja confundida com autorizacao;
+	- deixar claro que aprovar decisao futura nao executa nada por si so;
+	- preparar um microcorte futuro de decisao, nao de execucao.
+- Pergunta humana futura proposta:
+	- "Voce autoriza abrir um microcorte futuro e separado para preparar a execucao read-only do inventario dos dados ficticios, sem reset, sem limpeza, sem seed, sem migration, sem backfill, sem criacao de unidade, sem criacao de usuario, sem dados reais, sem package.json automatico e sem push?"
+- Respostas humanas possiveis:
+	- APPROVE_FUTURE_READONLY_EXECUTION_MICROCUT
+	- DEFER_READONLY_EXECUTION
+	- RETURN_TO_DOCUMENT_REVIEW
+	- BLOCK_READONLY_EXECUTION
+- Efeitos de cada resposta:
+	- APPROVE_FUTURE_READONLY_EXECUTION_MICROCUT: nao executa inventario imediatamente; apenas permite desenhar um microcorte futuro de execucao; ainda exige validacoes de branch, worktree, ambiente, dados ficticios, ausencia de dados reais e gate.
+	- DEFER_READONLY_EXECUTION: mantem tudo documentado; nao altera script; nao executa nada.
+	- RETURN_TO_DOCUMENT_REVIEW: volta para revisar documentos; nao executa nada.
+	- BLOCK_READONLY_EXECUTION: bloqueia a frente de execucao; mantem apenas os artefatos documentais.
+- Condicoes que a pergunta NAO autoriza:
+	- nao autoriza execucao imediata;
+	- nao autoriza Mongo real;
+	- nao autoriza Atlas sem aprovacao explicita;
+	- nao autoriza query real;
+	- nao autoriza relatorio real;
+	- nao autoriza package.json;
+	- nao autoriza limpeza;
+	- nao autoriza reset;
+	- nao autoriza seed;
+	- nao autoriza migration;
+	- nao autoriza backfill;
+	- nao autoriza criacao de unidade;
+	- nao autoriza criacao de usuario;
+	- nao autoriza push.
+- Registro do desenho:
+	- prompt de decisao humana read-only desenhado documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum arquivo runbook/checklist/checkpoint/matriz/aviso/revisao/fechamento/resumo alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- proximo ato recomendado: createReadOnlyInventoryHumanDecisionPrompt.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryHumanDecisionPrompt.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryHumanDecisionPrompt
+	- recommendedNextAct=createReadOnlyInventoryHumanDecisionPrompt
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryHumanDecisionPromptDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryHumanDecisionPrompt
+	- recommendedNextAct=createReadOnlyInventoryHumanDecisionPrompt
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptDesigned=true
+	- humanDecisionPromptFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao altera checkpoint;
+	- este desenho nao altera matriz;
+	- este desenho nao altera aviso;
+	- este desenho nao altera revisao final;
+	- este desenho nao altera fechamento;
+	- este desenho nao altera resumo;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o documento do prompt de decisao humana, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
