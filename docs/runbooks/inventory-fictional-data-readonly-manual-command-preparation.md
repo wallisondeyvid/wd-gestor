@@ -17,6 +17,7 @@ Este documento nao substitui a decisao Go/No-Go.
 Este documento nao substitui o microcorte de execucao.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando por si so.
 
 ## Objetivo da Preparacao de Comando Manual
 
@@ -25,6 +26,7 @@ Este documento nao autoriza push.
 - deixar claro que package.json nao sera alterado agora;
 - separar preparacao de comando de execucao real;
 - manter Mongo, Atlas, query, relatorio real e push bloqueados.
+- separar comando manual futuro de npm script automatico.
 
 ## Pre-condicoes Futuras Obrigatorias
 
@@ -59,6 +61,8 @@ Este documento nao autoriza push.
 - sem segredo bruto no terminal;
 - sem URI completa exposta;
 - sem execucao automatica por npm script.
+- sem push automatico;
+- sem reset, seed, migration, backfill ou cleanup acoplado.
 
 ## Escopo Proibido
 
@@ -78,6 +82,7 @@ Este documento nao autoriza push.
 - usar Portal;
 - usar PostgreSQL;
 - push.
+- tratar candidatos a descarte como autorizacao de limpeza.
 
 ## Saidas Possiveis da Preparacao Futura
 
