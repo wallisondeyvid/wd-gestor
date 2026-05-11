@@ -5102,6 +5102,81 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o rascunho documental do runbook, ainda sem execucao real.
 
+- Rascunho documental do runbook criado.
+- Base publicada:
+	- cf5ee27 docs(ops): desenha runbook do inventario read-only.
+- Registro da criacao:
+	- rascunho documental do runbook criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly.md;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryRunbookDraft.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryRunbookDraft
+	- recommendedNextAct=reviewReadOnlyInventoryRunbookDraft
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryRunbookDraftCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryRunbookDraft
+	- recommendedNextAct=reviewReadOnlyInventoryRunbookDraft
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileCreated=true
+	- runbookPath=docs/runbooks/inventory-fictional-data-readonly.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este rascunho nao libera execucao;
+	- este rascunho nao gera relatorio real;
+	- este rascunho nao usa fs.writeFile;
+	- este rascunho nao implementa conexao;
+	- este rascunho nao implementa leitura real de banco;
+	- este rascunho nao executa query;
+	- este rascunho nao executa inventario;
+	- este rascunho nao autoriza Mongo;
+	- este rascunho nao autoriza Atlas;
+	- este rascunho nao autoriza package.json;
+	- este rascunho nao autoriza tenant DB real;
+	- este rascunho nao autoriza reset/limpeza;
+	- este rascunho nao autoriza seed/migration/backfill;
+	- este rascunho nao autoriza criacao de unidade;
+	- este rascunho nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o rascunho do runbook antes de qualquer execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
