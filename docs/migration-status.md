@@ -9559,6 +9559,125 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento de rascunho de comando manual read-only, ainda sem criar comando real e sem execucao real.
 
+- Documento de rascunho de comando manual read-only criado.
+- Base publicada:
+	- bd74dda docs(ops): desenha rascunho de comando manual read-only.
+- Registro da criacao:
+	- documento de rascunho de comando manual read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-manual-command-draft.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- preparacao de comando manual apenas lida;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryManualCommandDraft.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryManualCommandDraft
+	- recommendedNextAct=reviewReadOnlyInventoryManualCommandDraft
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryManualCommandDraftCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryManualCommandDraft
+	- recommendedNextAct=reviewReadOnlyInventoryManualCommandDraft
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileChanged=false
+	- manualCommandPreparationFileChanged=false
+	- manualCommandDraftFileCreated=true
+	- manualCommandDraftPath=docs/runbooks/inventory-fictional-data-readonly-manual-command-draft.md
+	- commandCreated=false
+	- packageJsonChanged=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este rascunho nao altera runbook;
+	- este rascunho nao altera checklist;
+	- este rascunho nao altera checkpoint;
+	- este rascunho nao altera matriz;
+	- este rascunho nao altera aviso;
+	- este rascunho nao altera revisao final;
+	- este rascunho nao altera fechamento;
+	- este rascunho nao altera resumo;
+	- este rascunho nao altera prompt;
+	- este rascunho nao altera gate final;
+	- este rascunho nao altera Go/No-Go;
+	- este rascunho nao altera microcorte;
+	- este rascunho nao altera preparacao de comando;
+	- este rascunho nao cria comando real;
+	- este rascunho nao altera package.json;
+	- este rascunho nao libera execucao;
+	- este rascunho nao gera relatorio real;
+	- este rascunho nao usa fs.writeFile;
+	- este rascunho nao implementa conexao;
+	- este rascunho nao implementa leitura real de banco;
+	- este rascunho nao executa query;
+	- este rascunho nao executa inventario;
+	- este rascunho nao autoriza Mongo;
+	- este rascunho nao autoriza Atlas;
+	- este rascunho nao autoriza tenant DB real;
+	- este rascunho nao autoriza reset/limpeza;
+	- este rascunho nao autoriza seed/migration/backfill;
+	- este rascunho nao autoriza criacao de unidade;
+	- este rascunho nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o rascunho de comando manual read-only, ainda sem criar comando real e sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
