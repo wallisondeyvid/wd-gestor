@@ -4,11 +4,13 @@ Status: checklist documental
 
 Este documento nao autoriza execucao real.
 Este documento nao substitui o runbook principal.
+Este documento nao aprova comando em package.json.
 
 ## Referencia ao Runbook Revisado
 
 - docs/runbooks/inventory-fictional-data-readonly.md
 - O runbook principal nao sera alterado neste microcorte.
+- Este checklist revisa criterios e bloqueios; nao executa operacao.
 
 ## Checklist de Status e Escopo
 
@@ -19,6 +21,7 @@ Este documento nao substitui o runbook principal.
 - [ ] Dados reais permanecem proibidos.
 - [ ] Criacao de unidade ou usuario permanece proibida.
 - [ ] Candidatos a descarte nao autorizam limpeza.
+- [ ] Inventario read-only permanece separado de reset ou limpeza.
 
 ## Checklist de Pre-condicoes
 
@@ -51,6 +54,7 @@ Este documento nao substitui o runbook principal.
 - [ ] Conexao, query e relatorio nao podem ser liberados juntos.
 - [ ] Qualquer risco de escrita bloqueia.
 - [ ] Atlas sem aprovacao explicita bloqueia.
+- [ ] Gate aprovado no futuro nao autoriza limpeza, reset, seed, migration ou backfill.
 
 ## Checklist de Itens Proibidos
 
@@ -68,6 +72,7 @@ Este documento nao substitui o runbook principal.
 - [ ] aggregate com $out ou $merge
 - [ ] qualquer comando que escreva no banco
 - [ ] qualquer comando que use dados reais
+- [ ] qualquer cleanup corretivo sem microcorte proprio
 
 ## Checklist da Saida Esperada Futura
 
@@ -81,6 +86,7 @@ Este documento nao substitui o runbook principal.
 - [ ] Declaracao de ausencia de alteracao no banco.
 - [ ] Declaracao de gate aprovado antes da execucao.
 - [ ] Declaracao de que candidatos a descarte nao autorizam limpeza.
+- [ ] Declaracao de que a execucao foi read-only.
 
 ## Checklist de Pos-checagem Futura
 
@@ -89,6 +95,7 @@ Este documento nao substitui o runbook principal.
 - [ ] Confirmacao de relatorio gerado somente quando autorizado.
 - [ ] Registro do resultado no ledger.
 - [ ] Confirmacao de que nao houve reset, seed, migration ou backfill.
+- [ ] Confirmacao de que nao houve alteracao em package.json.
 
 ## Checklist de Criterios de Parada
 
@@ -101,6 +108,7 @@ Este documento nao substitui o runbook principal.
 - [ ] Worktree suja.
 - [ ] package.json divergente.
 - [ ] Comando nao revisado.
+- [ ] Tentativa de liberar conexao, query e relatorio no mesmo microcorte.
 
 ## Checklist de Rollback ou Reversao
 
@@ -110,10 +118,12 @@ Este documento nao substitui o runbook principal.
 - [ ] Restaurar snapshot ou backup se aplicavel.
 - [ ] Nao corrigir automaticamente.
 - [ ] Nao tentar cleanup corretivo sem microcorte proprio.
+- [ ] Nao tentar esconder ou normalizar escrita acidental.
 
 ## Decisao Final do Checklist
 
 - [ ] Checklist e documental.
 - [ ] Nao libera execucao.
 - [ ] Nao aprova comando.
+- [ ] Nao altera o runbook principal.
 - [ ] Execucao futura exige microcorte proprio.
