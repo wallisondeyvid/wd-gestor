@@ -15,6 +15,7 @@ Este documento nao substitui o prompt de decisao humana.
 Este documento nao substitui o gate final de decisao humana.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+GO nao executa nada automaticamente.
 
 ## Objetivo da Decisao Go/No-Go
 
@@ -23,6 +24,7 @@ Este documento nao autoriza push.
 - impedir que GO execute algo automaticamente;
 - permitir apenas decidir se um microcorte futuro de execucao podera ser desenhado;
 - manter bloqueios de Mongo, Atlas, query, relatorio real, package.json e push.
+- separar decisao futura de execucao futura.
 
 ## Entradas Obrigatorias para Decisao Futura
 
@@ -42,6 +44,7 @@ Este documento nao autoriza push.
 - worktree limpa;
 - dados ficticios confirmados;
 - ausencia de dados reais confirmada.
+- candidatos a descarte nao tratados como autorizacao de limpeza.
 
 ## Estados Possiveis
 
@@ -59,6 +62,7 @@ Este documento nao autoriza push.
 - nao altera package.json;
 - nao faz push;
 - apenas autoriza desenhar um microcorte futuro de execucao read-only.
+- o microcorte futuro ainda devera validar branch, worktree, ambiente, dados ficticios, ausencia de dados reais e gate operacional.
 
 ## Efeitos dos NO_GO
 
@@ -86,6 +90,7 @@ Este documento nao autoriza push.
 - qualquer tentativa de usar PostgreSQL;
 - qualquer tentativa de push;
 - qualquer tentativa de tratar candidatos a descarte como autorizacao de limpeza.
+- qualquer tentativa de liberar conexao, query e relatorio juntos.
 
 ## Decisao Final
 
