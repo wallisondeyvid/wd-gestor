@@ -8584,6 +8584,178 @@ Checkpoint tenant enforcement atual:
 	- esta revisao Go/No-Go nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar o microcorte de execucao read-only, ainda sem execucao real.
 
+- Microcorte futuro de execucao read-only desenhado documentalmente.
+- Base publicada:
+	- 46ae69f docs(ops): revisa decisao go-no-go read-only.
+- Objetivo do microcorte futuro:
+	- preparar, em momento futuro, a execucao read-only do inventario;
+	- deixar claro que este desenho nao executa nada;
+	- separar desenho de execucao;
+	- separar execucao de limpeza, reset, seed, migration e backfill;
+	- manter package.json sem comando automatico;
+	- manter push proibido.
+- Pre-condicoes futuras obrigatorias:
+	- decisao Go/No-Go revisada;
+	- gate final de decisao humana revisado;
+	- prompt de decisao humana revisado;
+	- resumo da prontidao revisado;
+	- fechamento da prontidao revisado;
+	- revisao final pre-execucao revisada;
+	- aviso de autorizacao revisado;
+	- matriz de aprovacao revisada;
+	- checkpoint de decisao revisado;
+	- checklist revisado;
+	- runbook revisado;
+	- script revisado;
+	- branch correta;
+	- worktree limpa;
+	- dados ficticios confirmados;
+	- ausencia de dados reais confirmada;
+	- Atlas decidido explicitamente;
+	- report path decidido explicitamente;
+	- package.json sem comando automatico.
+- Escopo permitido no microcorte futuro:
+	- validar branch;
+	- validar worktree;
+	- validar flags;
+	- validar ambiente;
+	- validar dados ficticios;
+	- validar ausencia de dados reais;
+	- validar gate;
+	- preparar comando manual futuro, se aprovado em microcorte proprio;
+	- preparar execucao read-only, nao executar ainda neste desenho.
+- Escopo proibido:
+	- executar inventario agora;
+	- conectar Mongo agora;
+	- rodar query agora;
+	- gerar relatorio real agora;
+	- alterar package.json agora;
+	- usar fs.writeFile agora;
+	- reset;
+	- limpeza;
+	- seed;
+	- migration;
+	- backfill;
+	- criar unidade;
+	- criar usuario;
+	- usar Portal;
+	- usar PostgreSQL;
+	- push.
+- Saidas possiveis do microcorte futuro:
+	- READY_TO_PREPARE_MANUAL_READONLY_COMMAND
+	- RETURN_TO_GO_NO_GO_REVIEW
+	- RETURN_TO_DOCUMENT_REVIEW
+	- BLOCK_EXECUTION_MICROCUT
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum arquivo runbook, checklist, checkpoint, matriz, aviso, revisao, fechamento, resumo, prompt, gate ou Go/No-Go alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- proximo ato recomendado: createReadOnlyInventoryExecutionMicrocut.
+- Registro do desenho:
+	- microcorte futuro de execucao read-only desenhado documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryExecutionMicrocut.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionMicrocut
+	- recommendedNextAct=createReadOnlyInventoryExecutionMicrocut
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionMicrocutDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionMicrocut
+	- recommendedNextAct=createReadOnlyInventoryExecutionMicrocut
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutDesigned=true
+	- executionMicrocutFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao altera checkpoint;
+	- este desenho nao altera matriz;
+	- este desenho nao altera aviso;
+	- este desenho nao altera revisao final;
+	- este desenho nao altera fechamento;
+	- este desenho nao altera resumo;
+	- este desenho nao altera prompt;
+	- este desenho nao altera gate final;
+	- este desenho nao altera Go/No-Go;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o documento do microcorte de execucao read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
