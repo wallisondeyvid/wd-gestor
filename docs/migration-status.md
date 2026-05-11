@@ -9152,6 +9152,121 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento de preparacao de comando manual read-only, ainda sem execucao real.
 
+- Documento de preparacao de comando manual read-only criado.
+- Base publicada:
+	- c7acff5 docs(ops): revisa microcorte de execucao read-only.
+- Registro da criacao:
+	- documento de preparacao de comando manual read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-manual-command-preparation.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum comando criado em package.json;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryManualCommandPreparation.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryManualCommandPreparation
+	- recommendedNextAct=reviewReadOnlyInventoryManualCommandPreparation
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryManualCommandPreparationCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryManualCommandPreparation
+	- recommendedNextAct=reviewReadOnlyInventoryManualCommandPreparation
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileChanged=false
+	- manualCommandPreparationFileCreated=true
+	- manualCommandPreparationPath=docs/runbooks/inventory-fictional-data-readonly-manual-command-preparation.md
+	- commandCreated=false
+	- packageJsonChanged=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este documento nao altera runbook;
+	- este documento nao altera checklist;
+	- este documento nao altera checkpoint;
+	- este documento nao altera matriz;
+	- este documento nao altera aviso;
+	- este documento nao altera revisao final;
+	- este documento nao altera fechamento;
+	- este documento nao altera resumo;
+	- este documento nao altera prompt;
+	- este documento nao altera gate final;
+	- este documento nao altera Go/No-Go;
+	- este documento nao altera microcorte;
+	- este documento nao cria comando;
+	- este documento nao altera package.json;
+	- este documento nao libera execucao;
+	- este documento nao gera relatorio real;
+	- este documento nao usa fs.writeFile;
+	- este documento nao implementa conexao;
+	- este documento nao implementa leitura real de banco;
+	- este documento nao executa query;
+	- este documento nao executa inventario;
+	- este documento nao autoriza Mongo;
+	- este documento nao autoriza Atlas;
+	- este documento nao autoriza tenant DB real;
+	- este documento nao autoriza reset/limpeza;
+	- este documento nao autoriza seed/migration/backfill;
+	- este documento nao autoriza criacao de unidade;
+	- este documento nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento de preparacao de comando manual read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
