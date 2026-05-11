@@ -16,6 +16,7 @@ Este documento nao substitui o gate final de decisao humana.
 Este documento nao substitui a decisao Go/No-Go.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao executa inventario por si so.
 
 ## Objetivo do Microcorte Futuro
 
@@ -25,6 +26,7 @@ Este documento nao autoriza push.
 - separar execucao de limpeza, reset, seed, migration e backfill;
 - manter package.json sem comando automatico;
 - manter push proibido.
+- separar preparacao futura de execucao real futura.
 
 ## Pre-condicoes Futuras Obrigatorias
 
@@ -44,6 +46,7 @@ Este documento nao autoriza push.
 - worktree limpa;
 - dados ficticios confirmados;
 - ausencia de dados reais confirmada;
+- candidatos a descarte nao tratados como autorizacao de limpeza;
 - Atlas decidido explicitamente;
 - report path decidido explicitamente;
 - package.json sem comando automatico.
@@ -78,6 +81,7 @@ Este documento nao autoriza push.
 - usar Portal;
 - usar PostgreSQL;
 - push.
+- tratar candidatos a descarte como autorizacao de limpeza.
 
 ## Saidas Possiveis do Microcorte Futuro
 

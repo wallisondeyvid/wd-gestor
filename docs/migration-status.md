@@ -8864,6 +8864,115 @@ Checkpoint tenant enforcement atual:
 	- este documento do microcorte nao autoriza criacao de usuario;
 	- proxima etapa deve revisar o documento do microcorte de execucao read-only, ainda sem execucao real.
 
+- Documento do microcorte futuro de execucao read-only revisado.
+- Base publicada:
+	- 5c96ce7 docs(ops): cria microcorte de execucao read-only.
+- Registro da revisao:
+	- documento do microcorte futuro de execucao read-only revisado;
+	- arquivo revisado: docs/runbooks/inventory-fictional-data-readonly-execution-microcut.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryManualCommandPreparation.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryExecutionMicrocut
+	- recommendedNextAct=designReadOnlyInventoryManualCommandPreparation
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionMicrocutReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryExecutionMicrocut
+	- recommendedNextAct=designReadOnlyInventoryManualCommandPreparation
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileCreated=true
+	- executionMicrocutReviewed=true
+	- executionMicrocutPath=docs/runbooks/inventory-fictional-data-readonly-execution-microcut.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao do microcorte nao altera runbook;
+	- esta revisao do microcorte nao altera checklist;
+	- esta revisao do microcorte nao altera checkpoint;
+	- esta revisao do microcorte nao altera matriz;
+	- esta revisao do microcorte nao altera aviso;
+	- esta revisao do microcorte nao altera revisao final;
+	- esta revisao do microcorte nao altera fechamento;
+	- esta revisao do microcorte nao altera resumo;
+	- esta revisao do microcorte nao altera prompt;
+	- esta revisao do microcorte nao altera gate final;
+	- esta revisao do microcorte nao altera Go/No-Go;
+	- esta revisao do microcorte nao libera execucao;
+	- esta revisao do microcorte nao gera relatorio real;
+	- esta revisao do microcorte nao usa fs.writeFile;
+	- esta revisao do microcorte nao implementa conexao;
+	- esta revisao do microcorte nao implementa leitura real de banco;
+	- esta revisao do microcorte nao executa query;
+	- esta revisao do microcorte nao executa inventario;
+	- esta revisao do microcorte nao autoriza Mongo;
+	- esta revisao do microcorte nao autoriza Atlas;
+	- esta revisao do microcorte nao autoriza package.json;
+	- esta revisao do microcorte nao autoriza tenant DB real;
+	- esta revisao do microcorte nao autoriza reset/limpeza;
+	- esta revisao do microcorte nao autoriza seed/migration/backfill;
+	- esta revisao do microcorte nao autoriza criacao de unidade;
+	- esta revisao do microcorte nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar a preparacao de comando manual read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
