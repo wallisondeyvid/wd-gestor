@@ -5581,6 +5581,148 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar checkpoint de decisao antes de qualquer execucao real.
 
+- Checkpoint de decisao de execucao read-only desenhado documentalmente.
+- Base publicada:
+	- bfb5fab docs(ops): revisa checklist do runbook read-only.
+- Objetivo do checkpoint:
+	- decidir futuramente se o inventario read-only sera executado ou adiado;
+	- impedir que runbook e checklist sejam confundidos com autorizacao de execucao;
+	- exigir decisao humana explicita;
+	- manter gate fechado por padrao;
+	- separar decisao de execucao de implementacao tecnica, conexao, query e relatorio.
+- Entradas obrigatorias para decisao futura:
+	- runbook revisado;
+	- checklist de revisao revisado;
+	- script revisado;
+	- gate revisado;
+	- branch correta;
+	- worktree limpa;
+	- confirmacao de dados ficticios;
+	- confirmacao de ausencia de dados reais;
+	- confirmacao de ambiente;
+	- database target definido;
+	- decisao explicita sobre Atlas;
+	- decisao explicita sobre report path;
+	- decisao explicita sobre nao alterar package.json.
+- Saidas possiveis do checkpoint:
+	- APPROVE_READONLY_INVENTORY_IN_FUTURE_MICROCUT;
+	- DEFER_READONLY_INVENTORY;
+	- BLOCK_READONLY_INVENTORY;
+	- RETURN_TO_RUNBOOK_REVIEW;
+	- RETURN_TO_SCRIPT_REVIEW.
+- Condicoes para aprovacao futura:
+	- todas as flags obrigatorias definidas;
+	- gate validado;
+	- runbook e checklist revisados;
+	- script sem escrita;
+	- package.json sem comando novo, salvo microcorte proprio;
+	- nenhum dado real;
+	- nenhum Atlas sem aprovacao explicita;
+	- nenhuma conexao, query e relatorio liberados juntos;
+	- decisao humana explicita.
+- Condicoes para bloqueio:
+	- qualquer duvida sobre dados reais;
+	- package.json divergente;
+	- comando nao revisado;
+	- tentativa de reset, limpeza, seed, migration ou backfill;
+	- tentativa de criar unidade ou usuario;
+	- tentativa de conectar em Atlas sem aprovacao;
+	- tentativa de usar Portal ou PostgreSQL;
+	- tentativa de executar conexao, query e relatorio no mesmo microcorte;
+	- worktree suja;
+	- branch divergente;
+	- report path nao aprovado.
+- Criterios de separacao:
+	- desenhar checkpoint nao aprova execucao;
+	- criar checkpoint nao executa inventario;
+	- aprovacao futura exigira microcorte proprio;
+	- execucao futura exigira outro microcorte proprio;
+	- geracao real de relatorio exigira autorizacao propria;
+	- limpeza ou descarte sempre exigira fase ou microcorte separado.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum checkpoint separado criado ainda;
+	- nenhum arquivo runbook ou checklist alterado;
+	- nenhuma execucao liberada;
+	- proximo ato recomendado: createReadOnlyInventoryExecutionDecisionCheckpoint.
+- Registro do desenho:
+	- checkpoint de decisao de execucao read-only desenhado documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryExecutionDecisionCheckpoint.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionDecisionCheckpoint
+	- recommendedNextAct=createReadOnlyInventoryExecutionDecisionCheckpoint
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionDecisionCheckpointDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionDecisionCheckpoint
+	- recommendedNextAct=createReadOnlyInventoryExecutionDecisionCheckpoint
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointDesigned=true
+	- executionDecisionCheckpointFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao cria checkpoint separado;
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o checkpoint documental de decisao, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
