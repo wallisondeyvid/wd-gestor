@@ -10432,6 +10432,131 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento de revisao final do comando manual read-only, ainda sem criar comando real e sem execucao real.
 
+- Documento de revisao final do comando manual read-only criado.
+- Base publicada:
+	- 6bb61d7 docs(ops): desenha revisao final do comando manual read-only.
+- Registro da criacao:
+	- documento de revisao final do comando manual read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-manual-command-final-review.md;
+	- runbook principal apenas lido;
+	- checklist de revisao original apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- preparacao de comando manual apenas lida;
+	- rascunho de comando manual apenas lido;
+	- checklist de revisao do comando manual apenas lido;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryManualCommandFinalReview.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryManualCommandFinalReview
+	- recommendedNextAct=reviewReadOnlyInventoryManualCommandFinalReview
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryManualCommandFinalReviewCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryManualCommandFinalReview
+	- recommendedNextAct=reviewReadOnlyInventoryManualCommandFinalReview
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileChanged=false
+	- manualCommandPreparationFileChanged=false
+	- manualCommandDraftFileChanged=false
+	- manualCommandReviewChecklistFileChanged=false
+	- manualCommandFinalReviewFileCreated=true
+	- manualCommandFinalReviewPath=docs/runbooks/inventory-fictional-data-readonly-manual-command-final-review.md
+	- commandCreated=false
+	- packageJsonChanged=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao final nao altera runbook;
+	- esta revisao final nao altera checklist original;
+	- esta revisao final nao altera checkpoint;
+	- esta revisao final nao altera matriz;
+	- esta revisao final nao altera aviso;
+	- esta revisao final nao altera revisao final pre-execucao;
+	- esta revisao final nao altera fechamento;
+	- esta revisao final nao altera resumo;
+	- esta revisao final nao altera prompt;
+	- esta revisao final nao altera gate final;
+	- esta revisao final nao altera Go/No-Go;
+	- esta revisao final nao altera microcorte;
+	- esta revisao final nao altera preparacao de comando;
+	- esta revisao final nao altera rascunho de comando;
+	- esta revisao final nao altera checklist do comando;
+	- esta revisao final nao cria comando real;
+	- esta revisao final nao altera package.json;
+	- esta revisao final nao libera execucao;
+	- esta revisao final nao gera relatorio real;
+	- esta revisao final nao usa fs.writeFile;
+	- esta revisao final nao implementa conexao;
+	- esta revisao final nao implementa leitura real de banco;
+	- esta revisao final nao executa query;
+	- esta revisao final nao executa inventario;
+	- esta revisao final nao autoriza Mongo;
+	- esta revisao final nao autoriza Atlas;
+	- esta revisao final nao autoriza tenant DB real;
+	- esta revisao final nao autoriza reset/limpeza;
+	- esta revisao final nao autoriza seed/migration/backfill;
+	- esta revisao final nao autoriza criacao de unidade;
+	- esta revisao final nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento de revisao final do comando manual read-only, ainda sem criar comando real e sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
