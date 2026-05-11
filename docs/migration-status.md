@@ -4685,6 +4685,128 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar o gate de execucao read-only antes de qualquer execucao real.
 
+- Gate de execucao read-only do inventario desenhado documentalmente.
+- Base publicada:
+	- 4add0d3 chore(ops): revisa skeleton de relatorio read-only.
+- Objetivo do gate futuro:
+	- impedir execucao acidental;
+	- exigir confirmacao humana explicita;
+	- exigir ambiente, database target e URI mascarada;
+	- bloquear Atlas sem autorizacao explicita;
+	- bloquear qualquer escrita;
+	- impedir que conexao, query e relatorio sejam liberados no mesmo microcorte sem revisao.
+- Pre-condicoes futuras obrigatorias:
+	- WD_OPS_READONLY_CONFIRM=true;
+	- WD_OPS_ENVIRONMENT_CONFIRM=true;
+	- WD_OPS_DATABASE_CONFIRM=true;
+	- WD_OPS_DATABASE_TARGET definido;
+	- se Atlas for alvo: WD_OPS_ATLAS_TARGET=true e WD_OPS_ATLAS_EXPLICIT_APPROVAL=true;
+	- worktree limpa;
+	- branch correta;
+	- backup ou snapshot quando o ambiente for persistente;
+	- confirmacao de que nao ha dados reais;
+	- confirmacao de que o comando e read-only.
+- Bloqueios permanentes:
+	- insert;
+	- update, updateOne e updateMany;
+	- replaceOne;
+	- delete, deleteOne, deleteMany e remove;
+	- drop, dropDatabase e dropIndex;
+	- createIndex sem aprovacao;
+	- bulkWrite;
+	- save;
+	- seed;
+	- reset;
+	- migration;
+	- backfill;
+	- $out;
+	- $merge;
+	- connectMongo;
+	- tenant resolver real;
+	- Portal;
+	- PostgreSQL.
+- Design futuro sugerido:
+	- designReadOnlyExecutionGate(context);
+	- validateExecutionGate(context);
+	- summarizeExecutionGate(gate);
+	- assertExecutionGateClosedByDefault();
+	- explainBlockedExecution(gate).
+- Criterios de aceite futuros:
+	- gate fechado por padrao;
+	- sem flags, status deve ser blocked;
+	- com qualquer risco de escrita, status deve ser blocked;
+	- Atlas sem aprovacao explicita deve ser blocked;
+	- query, relatorio e conexao nao podem ser liberados juntos sem revisao;
+	- o relatorio deve declarar que o gate foi aprovado antes de execucao futura;
+	- main deve continuar sem executar inventario ate microcorte proprio.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum helper implementado;
+	- nenhuma execucao liberada;
+	- proximo ato recomendado: implementReadOnlyExecutionGateSkeleton.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionGate
+	- recommendedNextAct=implementReadOnlyExecutionGateSkeleton
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionGateDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryExecutionGate
+	- recommendedNextAct=implementReadOnlyExecutionGateSkeleton
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- executionGateDesigned=true
+	- executionGateImplemented=false
+	- executionApproved=false
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao implementa gate executavel;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve implementar apenas skeleton declarativo do gate, ainda sem liberar execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
