@@ -8,6 +8,7 @@ Este documento nao substitui o checklist de revisao.
 Este documento nao substitui o checkpoint de decisao.
 Este documento nao substitui a matriz de aprovacao.
 Este documento nao aprova comando em package.json.
+Este documento nao e autorizacao operacional por si so.
 
 ## Referencias Documentais
 
@@ -27,11 +28,11 @@ Este documento nao aprova comando em package.json.
 
 ## Conteudo Obrigatorio Futuro do Aviso
 
-- Identificacao do ambiente.
-- Confirmacao de branch correta.
-- Confirmacao de worktree limpa.
-- Confirmacao de dados ficticios.
-- Confirmacao de ausencia de dados reais.
+- Ambiente identificado.
+- Branch correta confirmada.
+- Worktree limpa confirmada.
+- Dados ficticios confirmados.
+- Ausencia de dados reais confirmada.
 - Confirmacao de gate validado.
 - Confirmacao de matriz consultada.
 - Confirmacao de runbook, checklist e checkpoint revisados.
@@ -58,6 +59,7 @@ Este documento nao aprova comando em package.json.
 - Nao autoriza PostgreSQL.
 - Nao autoriza alteracao de package.json.
 - Nao autoriza conexao, query e relatorio juntos.
+- Nao autoriza limpeza de candidatos a descarte.
 
 ## Criterios para Considerar o Aviso Insuficiente
 
@@ -70,6 +72,7 @@ Este documento nao aprova comando em package.json.
 - Branch divergente.
 - Tentativa de incluir limpeza ou descarte.
 - Tentativa de executar mais de uma camada no mesmo microcorte.
+- Tentativa de relativizar escrita acidental.
 
 ## Decisao Final
 
