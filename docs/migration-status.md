@@ -6040,6 +6040,90 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas a matriz documental de aprovacao, ainda sem execucao real.
 
+- Matriz documental de aprovacao de execucao read-only criada.
+- Base publicada:
+	- 88cc4d8 docs(ops): desenha matriz de aprovacao read-only.
+- Registro da criacao:
+	- matriz documental de aprovacao de execucao read-only criada;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-execution-approval-matrix.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryExecutionApprovalMatrix.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionApprovalMatrix
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionApprovalMatrix
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionApprovalMatrixCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionApprovalMatrix
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionApprovalMatrix
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileCreated=true
+	- executionApprovalMatrixPath=docs/runbooks/inventory-fictional-data-readonly-execution-approval-matrix.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fsWriteFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta matriz nao altera runbook;
+	- esta matriz nao altera checklist;
+	- esta matriz nao altera checkpoint;
+	- esta matriz nao libera execucao;
+	- esta matriz nao gera relatorio real;
+	- esta matriz nao usa fs.writeFile;
+	- esta matriz nao implementa conexao;
+	- esta matriz nao implementa leitura real de banco;
+	- esta matriz nao executa query;
+	- esta matriz nao executa inventario;
+	- esta matriz nao autoriza Mongo;
+	- esta matriz nao autoriza Atlas;
+	- esta matriz nao autoriza package.json;
+	- esta matriz nao autoriza tenant DB real;
+	- esta matriz nao autoriza reset/limpeza;
+	- esta matriz nao autoriza seed/migration/backfill;
+	- esta matriz nao autoriza criacao de unidade;
+	- esta matriz nao autoriza criacao de usuario;
+	- proxima etapa deve revisar a matriz documental antes de qualquer execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
