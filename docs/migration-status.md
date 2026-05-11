@@ -6520,6 +6520,145 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar a revisao final pre-execucao antes de qualquer execucao real.
 
+- Revisao final pre-execucao desenhada documentalmente.
+- Base publicada:
+	- 4ac9196 docs(ops): revisa aviso de autorizacao read-only.
+- Objetivo:
+	- consolidar runbook, checklist, checkpoint, matriz e aviso;
+	- confirmar que a cadeia documental ainda nao autoriza execucao;
+	- preparar uma futura decisao humana explicita;
+	- impedir execucao acidental;
+	- manter conexao, query, relatorio real e package.json bloqueados.
+- Documentos que deverao ser revisados no futuro:
+	- docs/runbooks/inventory-fictional-data-readonly.md;
+	- docs/runbooks/inventory-fictional-data-readonly-review-checklist.md;
+	- docs/runbooks/inventory-fictional-data-readonly-execution-decision-checkpoint.md;
+	- docs/runbooks/inventory-fictional-data-readonly-execution-approval-matrix.md;
+	- docs/runbooks/inventory-fictional-data-readonly-execution-authorization-notice.md;
+	- scripts/ops/inventory-fictional-data-readonly.js;
+	- package.json.
+- Perguntas obrigatorias da revisao futura:
+	- O ambiente esta identificado?;
+	- A branch esta correta?;
+	- A worktree esta limpa?;
+	- Os dados sao ficticios?;
+	- Ha qualquer dado real?;
+	- O gate esta fechado por padrao?;
+	- A matriz foi consultada?;
+	- O aviso contem a frase obrigatoria completa?;
+	- package.json continua sem comando novo?;
+	- conexao, query e relatorio continuam separados?;
+	- candidatos a descarte continuam sem autorizar limpeza?.
+- Condicoes de bloqueio:
+	- qualquer duvida sobre dados reais;
+	- qualquer tentativa de escrita;
+	- qualquer tentativa de reset, limpeza, seed, migration ou backfill;
+	- qualquer tentativa de criar unidade ou usuario;
+	- qualquer tentativa de usar Portal ou PostgreSQL;
+	- qualquer tentativa de conectar em Atlas sem aprovacao explicita;
+	- qualquer tentativa de alterar package.json;
+	- qualquer tentativa de executar conexao, query e relatorio juntos;
+	- qualquer tentativa de tratar candidatos a descarte como autorizacao de limpeza.
+- Saidas possiveis da revisao futura:
+	- READY_FOR_HUMAN_AUTHORIZATION_NOTICE;
+	- RETURN_TO_RUNBOOK_REVIEW;
+	- RETURN_TO_CHECKLIST_REVIEW;
+	- RETURN_TO_CHECKPOINT_REVIEW;
+	- RETURN_TO_MATRIX_REVIEW;
+	- RETURN_TO_AUTHORIZATION_NOTICE_REVIEW;
+	- BLOCK_EXECUTION.
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum arquivo runbook, checklist, checkpoint, matriz ou aviso alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- proximo ato recomendado: createReadOnlyInventoryFinalPreExecutionReview.
+- Registro do desenho:
+	- revisao final pre-execucao desenhada documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryFinalPreExecutionReview.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryFinalPreExecutionReview
+	- recommendedNextAct=createReadOnlyInventoryFinalPreExecutionReview
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryFinalPreExecutionReviewDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryFinalPreExecutionReview
+	- recommendedNextAct=createReadOnlyInventoryFinalPreExecutionReview
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewDesigned=true
+	- finalPreExecutionReviewFileCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist;
+	- este desenho nao altera checkpoint;
+	- este desenho nao altera matriz;
+	- este desenho nao altera aviso;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza package.json;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o documento de revisao final pre-execucao, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
