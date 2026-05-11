@@ -1153,7 +1153,7 @@ export function designReadOnlyExecutionGate(context = {}) {
     status: 'blocked',
     defaultClosed: true,
     executionApproved: false,
-    reviewStatus: blockedReasons.length === 1 ? 'ready-for-future-review' : 'preconditions-pending',
+    reviewStatus: blockedReasons.length === 1 ? 'blocked-awaiting-explicit-review' : 'blocked-pending-preconditions',
     blockedReasons,
     requestedReleases,
     combinedReleaseRequested,
@@ -1187,6 +1187,7 @@ export function validateExecutionGate(context = {}) {
 
   return {
     ok: false,
+    okSemantics: 'intentionally-false-during-design-phase',
     status: gate.status,
     executionApproved: gate.executionApproved,
     defaultClosed: gate.defaultClosed,
@@ -1203,9 +1204,11 @@ export function summarizeExecutionGate(gate = {}) {
   return {
     mode: resolvedGate.mode || 'future-readonly-execution-gate-design',
     status: resolvedGate.status || 'blocked',
+    statusSemantics: 'blocked-by-design-in-this-phase',
     defaultClosed: resolvedGate.defaultClosed !== false,
     executionApproved: false,
-    reviewStatus: resolvedGate.reviewStatus || 'preconditions-pending',
+    reviewStatus: resolvedGate.reviewStatus || 'blocked-pending-preconditions',
+    okSemantics: 'intentionally-false-during-design-phase',
     blockedReasonCount: Array.isArray(resolvedGate.blockedReasons) ? resolvedGate.blockedReasons.length : 0,
     blockedReasons: Array.isArray(resolvedGate.blockedReasons) ? [...resolvedGate.blockedReasons] : ['gate-closed-by-default'],
     requiredFlagsStatus: resolvedGate?.requiredFlags?.status || 'pending',
@@ -1236,6 +1239,11 @@ export function explainBlockedExecution(gate = {}) {
   return {
     status: resolvedGate.status || 'blocked',
     executionApproved: false,
+    explanationMode: 'blocked-only',
+    notes: [
+      'Esta explicacao descreve apenas bloqueios; nao libera execucao nesta fase.',
+      'ok=false continua sendo intencional enquanto o gate estiver em modo declarativo.',
+    ],
     messages: (Array.isArray(resolvedGate.blockedReasons) ? resolvedGate.blockedReasons : ['gate-closed-by-default']).map((reason) => {
       if (reason === 'gate-closed-by-default') {
         return 'O gate permanece fechado por padrao neste microcorte.';
@@ -1247,6 +1255,18 @@ export function explainBlockedExecution(gate = {}) {
 
       if (reason === 'combined-release-review-required') {
         return 'Conexao, query e relatorio nao podem ser liberados juntos sem revisao.';
+      }
+
+      if (reason === 'connection-release-requires-separate-review') {
+        return 'Conexao continua segregada e exige microcorte proprio antes de qualquer liberacao.';
+      }
+
+      if (reason === 'query-release-requires-separate-review') {
+        return 'Query continua segregada e exige microcorte proprio antes de qualquer liberacao.';
+      }
+
+      if (reason === 'report-release-requires-separate-review') {
+        return 'Relatorio continua segregado e exige microcorte proprio antes de qualquer liberacao.';
       }
 
       if (reason.startsWith('write-risk-detected:')) {
@@ -1401,6 +1421,7 @@ export function buildSafetySummary() {
       'Este skeleton nao consulta banco.',
       'Este skeleton nao gera relatorio real.',
       'Este skeleton mantem o gate de execucao fechado por padrao.',
+      'Este skeleton mantem ok=false no gate de forma intencional nesta fase.',
       'Este skeleton so expõe estados seguros de flags futuras, sem usar segredos.',
       'Este skeleton separa confirmacao booleana de database target textual.',
     ],
