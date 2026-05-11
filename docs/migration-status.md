@@ -7644,6 +7644,105 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento do prompt de decisao humana, ainda sem execucao real.
 
+- Documento do prompt de decisao humana read-only criado.
+- Base publicada:
+	- 7087cf5 docs(ops): desenha prompt de decisao humana read-only.
+- Registro da criacao:
+	- documento do prompt de decisao humana read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-human-decision-prompt.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryHumanDecisionPrompt.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryHumanDecisionPrompt
+	- recommendedNextAct=reviewReadOnlyInventoryHumanDecisionPrompt
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryHumanDecisionPromptCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryHumanDecisionPrompt
+	- recommendedNextAct=reviewReadOnlyInventoryHumanDecisionPrompt
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileCreated=true
+	- humanDecisionPromptPath=docs/runbooks/inventory-fictional-data-readonly-human-decision-prompt.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este prompt nao altera runbook;
+	- este prompt nao altera checklist;
+	- este prompt nao altera checkpoint;
+	- este prompt nao altera matriz;
+	- este prompt nao altera aviso;
+	- este prompt nao altera revisao final;
+	- este prompt nao altera fechamento;
+	- este prompt nao altera resumo;
+	- este prompt nao libera execucao;
+	- este prompt nao gera relatorio real;
+	- este prompt nao usa fs.writeFile;
+	- este prompt nao implementa conexao;
+	- este prompt nao implementa leitura real de banco;
+	- este prompt nao executa query;
+	- este prompt nao executa inventario;
+	- este prompt nao autoriza Mongo;
+	- este prompt nao autoriza Atlas;
+	- este prompt nao autoriza package.json;
+	- este prompt nao autoriza tenant DB real;
+	- este prompt nao autoriza reset/limpeza;
+	- este prompt nao autoriza seed/migration/backfill;
+	- este prompt nao autoriza criacao de unidade;
+	- este prompt nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento do prompt de decisao humana, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
