@@ -11,6 +11,7 @@ Este documento nao substitui o aviso de autorizacao.
 Este documento nao substitui a revisao final pre-execucao.
 Este documento nao substitui o fechamento da prontidao.
 Este documento nao aprova comando em package.json.
+Este documento nao e autorizacao humana final.
 
 ## Artefatos Consolidados
 
@@ -28,6 +29,7 @@ Este documento nao aprova comando em package.json.
 - docs/runbooks/inventory-fictional-data-readonly-final-pre-execution-review.md
 - docs/runbooks/inventory-fictional-data-readonly-execution-readiness-closure.md
 - docs/migration-status.md
+- package.json
 
 ## Estado Atual
 
@@ -42,6 +44,7 @@ Este documento nao aprova comando em package.json.
 - nenhum dado real usado;
 - candidatos a descarte sem autorizacao de limpeza;
 - push proibido neste momento.
+- qualquer execucao futura ainda exige decisao humana explicita.
 
 ## Pendencias Antes de Qualquer Execucao Futura
 
@@ -55,6 +58,7 @@ Este documento nao aprova comando em package.json.
 - decisao sobre comando, se algum dia for criado;
 - validacao final do gate;
 - separacao entre conexao, query e relatorio.
+- confirmacao de que candidatos a descarte nao autorizam limpeza.
 
 ## Saidas Possiveis Apos Este Resumo
 

@@ -7410,6 +7410,103 @@ Checkpoint tenant enforcement atual:
 	- este resumo nao autoriza criacao de usuario;
 	- proxima etapa deve revisar o resumo da prontidao read-only, ainda sem execucao real.
 
+- Documento de resumo da prontidao read-only revisado.
+- Base publicada:
+	- fdd0613 docs(ops): cria resumo da prontidao read-only.
+- Registro da revisao:
+	- documento de resumo da prontidao read-only revisado;
+	- arquivo revisado: docs/runbooks/inventory-fictional-data-readonly-readiness-summary.md;
+	- runbook principal apenas lido;
+	- checklist de revisao apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryHumanDecisionPrompt.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryReadinessSummary
+	- recommendedNextAct=designReadOnlyInventoryHumanDecisionPrompt
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryReadinessSummaryReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryReadinessSummary
+	- recommendedNextAct=designReadOnlyInventoryHumanDecisionPrompt
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileCreated=true
+	- readinessSummaryReviewed=true
+	- readinessSummaryPath=docs/runbooks/inventory-fictional-data-readonly-readiness-summary.md
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao de resumo nao altera runbook;
+	- esta revisao de resumo nao altera checklist;
+	- esta revisao de resumo nao altera checkpoint;
+	- esta revisao de resumo nao altera matriz;
+	- esta revisao de resumo nao altera aviso;
+	- esta revisao de resumo nao altera revisao final;
+	- esta revisao de resumo nao altera fechamento;
+	- esta revisao de resumo nao libera execucao;
+	- esta revisao de resumo nao gera relatorio real;
+	- esta revisao de resumo nao usa fs.writeFile;
+	- esta revisao de resumo nao implementa conexao;
+	- esta revisao de resumo nao implementa leitura real de banco;
+	- esta revisao de resumo nao executa query;
+	- esta revisao de resumo nao executa inventario;
+	- esta revisao de resumo nao autoriza Mongo;
+	- esta revisao de resumo nao autoriza Atlas;
+	- esta revisao de resumo nao autoriza package.json;
+	- esta revisao de resumo nao autoriza tenant DB real;
+	- esta revisao de resumo nao autoriza reset/limpeza;
+	- esta revisao de resumo nao autoriza seed/migration/backfill;
+	- esta revisao de resumo nao autoriza criacao de unidade;
+	- esta revisao de resumo nao autoriza criacao de usuario;
+	- proxima etapa deve desenhar o prompt de decisao humana read-only, ainda sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
