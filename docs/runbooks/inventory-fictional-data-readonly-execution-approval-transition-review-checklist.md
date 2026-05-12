@@ -23,6 +23,7 @@ Este documento nao substitui o fechamento do comando.
 Este documento nao substitui a transicao de aprovacao.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando real por si so.
 
 ## Objetivo do Checklist
 
@@ -36,6 +37,7 @@ Este documento nao autoriza push.
 - confirmar que a transicao nao usa fs.writeFile real;
 - confirmar que a transicao nao cria comando real por si so;
 - manter push proibido.
+- impedir que o checklist seja tratado como aprovacao operacional.
 
 ## Checklist de Status e Limites
 
@@ -82,6 +84,7 @@ Este documento nao autoriza push.
 - [ ] Checklist de revisao do comando manual.
 - [ ] Revisao final do comando manual.
 - [ ] Fechamento da trilha de comando manual.
+- [ ] Transicao de aprovacao.
 
 ## Checklist de Confirmacoes Obrigatorias
 
@@ -98,6 +101,7 @@ Este documento nao autoriza push.
 - [ ] Nenhum cleanup, reset, seed, migration ou backfill acoplado.
 - [ ] Nenhum candidato a descarte tratado como autorizacao de limpeza.
 - [ ] Nenhum push executado.
+- [ ] Nenhuma aprovacao operacional implicita foi criada.
 
 ## Checklist de Bloqueios Obrigatorios
 
@@ -114,6 +118,7 @@ Este documento nao autoriza push.
 - [ ] Qualquer tentativa de tratar candidato a descarte como autorizacao de limpeza bloqueia.
 - [ ] Qualquer tentativa de acoplar reset, seed, migration, backfill ou cleanup bloqueia.
 - [ ] Qualquer tentativa de push bloqueia.
+- [ ] Qualquer tentativa de converter checklist em autorizacao operacional bloqueia.
 
 ## Saidas Possiveis
 
