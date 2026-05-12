@@ -26,6 +26,9 @@ Este documento nao substitui o gate final de aprovacao.
 Este documento nao substitui a decisao operacional.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando real por si so.
+Este documento nao cria aprovacao operacional automatica.
+Este documento nao converte aprovacao em execucao.
 
 ## Objetivo do Fechamento Operacional
 
