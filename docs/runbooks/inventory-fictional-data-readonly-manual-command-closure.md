@@ -21,6 +21,7 @@ Este documento nao substitui o checklist do comando.
 Este documento nao substitui a revisao final do comando.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando real por si so.
 
 ## Objetivo do Fechamento
 
