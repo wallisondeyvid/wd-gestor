@@ -12566,6 +12566,240 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao autoriza criacao de usuario;
 	- proxima etapa deve desenhar a decisao operacional de execucao read-only, ainda sem criar comando real e sem execucao real.
 
+- Decisao operacional de execucao read-only desenhada documentalmente.
+- Base publicada:
+	- 144c6d2 docs(ops): revisa gate final de aprovacao read-only.
+- Objetivo da decisao operacional:
+	- consolidar todos os artefatos documentais anteriores;
+	- preparar uma decisao futura sobre abrir ou nao execucao read-only;
+	- deixar claro que esta decisao ainda nao executa inventario;
+	- deixar claro que esta decisao nao cria comando real;
+	- deixar claro que esta decisao nao altera package.json;
+	- deixar claro que esta decisao nao conecta Mongo;
+	- deixar claro que esta decisao nao executa query;
+	- deixar claro que esta decisao nao gera relatorio real;
+	- deixar claro que esta decisao nao usa fs.writeFile real;
+	- impedir aprovacao operacional implicita;
+	- impedir conversao automatica em execucao;
+	- manter push proibido.
+- Entradas obrigatorias:
+	- runbook principal revisado;
+	- checklist original revisado;
+	- checkpoint de decisao revisado;
+	- matriz de aprovacao revisada;
+	- aviso de autorizacao revisado;
+	- revisao final pre-execucao revisada;
+	- fechamento da prontidao revisado;
+	- resumo da prontidao revisado;
+	- prompt de decisao humana revisado;
+	- gate final de decisao humana revisado;
+	- decisao Go/No-Go revisada;
+	- microcorte de execucao revisado;
+	- preparacao de comando manual revisada;
+	- rascunho de comando manual revisado;
+	- checklist de revisao do comando manual revisado;
+	- revisao final do comando manual revisada;
+	- fechamento da trilha de comando manual revisado;
+	- transicao de aprovacao revisada;
+	- checklist de revisao da transicao revisado;
+	- gate final de aprovacao revisado;
+	- script apenas como referencia;
+	- package.json apenas para confirmar ausencia de comando.
+- Respostas possiveis futuras:
+	- APPROVE_FUTURE_OPERATIONAL_EXECUTION_MICROCUT
+	- DEFER_OPERATIONAL_EXECUTION
+	- RETURN_TO_APPROVAL_FINAL_GATE_REVIEW
+	- RETURN_TO_TRANSITION_REVIEW
+	- BLOCK_OPERATIONAL_EXECUTION
+- Efeito seguro das respostas:
+	- nenhuma resposta executa inventario imediatamente;
+	- nenhuma resposta cria comando automaticamente;
+	- nenhuma resposta altera package.json automaticamente;
+	- nenhuma resposta conecta Mongo;
+	- nenhuma resposta executa query;
+	- nenhuma resposta gera relatorio real;
+	- nenhuma resposta autoriza cleanup, reset, seed, migration ou backfill;
+	- aprovacao futura apenas permitiria desenhar outro microcorte separado.
+- Confirmacoes obrigatorias:
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhum npm script criado;
+	- nenhum comando executado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado;
+	- nenhum fs.writeFile real usado;
+	- nenhuma URI completa exposta;
+	- nenhum segredo bruto exposto;
+	- nenhum cleanup, reset, seed, migration ou backfill acoplado;
+	- nenhum candidato a descarte tratado como autorizacao de limpeza;
+	- nenhuma aprovacao operacional implicita criada;
+	- nenhuma aprovacao automatica para execucao criada;
+	- nenhum push executado.
+- Condicoes de bloqueio:
+	- qualquer comando copiavel pronto para execucao;
+	- qualquer alteracao em package.json;
+	- qualquer comando npm novo;
+	- qualquer URI real;
+	- qualquer segredo real;
+	- qualquer execucao real;
+	- qualquer conexao Mongo real;
+	- qualquer query real;
+	- qualquer relatorio real;
+	- qualquer fs.writeFile real;
+	- qualquer tentativa de tratar candidato a descarte como autorizacao de limpeza;
+	- qualquer tentativa de acoplar reset, seed, migration, backfill ou cleanup;
+	- qualquer tentativa de converter decisao em autorizacao operacional automatica;
+	- qualquer tentativa de converter decisao em execucao automatica;
+	- qualquer tentativa de push.
+- Saidas possiveis deste desenho:
+	- READY_TO_CREATE_OPERATIONAL_EXECUTION_DECISION_DOC
+	- RETURN_TO_EXECUTION_APPROVAL_FINAL_GATE_REVIEW
+	- RETURN_TO_EXECUTION_APPROVAL_TRANSITION_REVIEW
+	- BLOCK_OPERATIONAL_EXECUTION_DECISION
+- Decisao deste microcorte:
+	- apenas desenho documental;
+	- nenhum arquivo runbook/checklist/checkpoint/matriz/aviso/revisao/fechamento/resumo/prompt/gate/go-no-go/microcorte/preparacao/rascunho/checklist-do-comando/revisao-final-do-comando/fechamento-do-comando/transicao/checklist-da-transicao/gate-final-de-aprovacao alterado;
+	- nenhum comando criado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- proximo ato recomendado: createReadOnlyInventoryOperationalExecutionDecision.
+- Registro do desenho:
+	- decisao operacional de execucao read-only desenhada documentalmente;
+	- runbook principal apenas lido;
+	- checklist de revisao original apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- preparacao de comando manual apenas lida;
+	- rascunho de comando manual apenas lido;
+	- checklist de revisao do comando manual apenas lido;
+	- revisao final do comando manual apenas lida;
+	- fechamento da trilha de comando manual apenas lido;
+	- transicao de aprovacao apenas lida;
+	- checklist de revisao da transicao apenas lido;
+	- gate final de aprovacao apenas lido;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryOperationalExecutionDecision.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryOperationalExecutionDecision
+	- recommendedNextAct=createReadOnlyInventoryOperationalExecutionDecision
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalExecutionDecisionDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryOperationalExecutionDecision
+	- recommendedNextAct=createReadOnlyInventoryOperationalExecutionDecision
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileChanged=false
+	- manualCommandPreparationFileChanged=false
+	- manualCommandDraftFileChanged=false
+	- manualCommandReviewChecklistFileChanged=false
+	- manualCommandFinalReviewFileChanged=false
+	- manualCommandClosureFileChanged=false
+	- executionApprovalTransitionFileChanged=false
+	- executionApprovalTransitionReviewChecklistFileChanged=false
+	- executionApprovalFinalGateFileChanged=false
+	- operationalExecutionDecisionDesigned=true
+	- operationalExecutionDecisionFileCreated=false
+	- commandCreated=false
+	- packageJsonChanged=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho nao altera runbook;
+	- este desenho nao altera checklist original;
+	- este desenho nao altera checkpoint;
+	- este desenho nao altera matriz;
+	- este desenho nao altera aviso;
+	- este desenho nao altera revisao final pre-execucao;
+	- este desenho nao altera fechamento da prontidao;
+	- este desenho nao altera resumo;
+	- este desenho nao altera prompt;
+	- este desenho nao altera gate final de decisao humana;
+	- este desenho nao altera Go/No-Go;
+	- este desenho nao altera microcorte;
+	- este desenho nao altera preparacao de comando;
+	- este desenho nao altera rascunho de comando;
+	- este desenho nao altera checklist do comando;
+	- este desenho nao altera revisao final do comando;
+	- este desenho nao altera fechamento do comando;
+	- este desenho nao altera transicao de aprovacao;
+	- este desenho nao altera checklist da transicao;
+	- este desenho nao altera gate final de aprovacao;
+	- este desenho nao cria comando real;
+	- este desenho nao altera package.json;
+	- este desenho nao libera execucao;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile;
+	- este desenho nao implementa conexao;
+	- este desenho nao implementa leitura real de banco;
+	- este desenho nao executa query;
+	- este desenho nao executa inventario;
+	- este desenho nao autoriza Mongo;
+	- este desenho nao autoriza Atlas;
+	- este desenho nao autoriza tenant DB real;
+	- este desenho nao autoriza reset/limpeza;
+	- este desenho nao autoriza seed/migration/backfill;
+	- este desenho nao autoriza criacao de unidade;
+	- este desenho nao autoriza criacao de usuario;
+	- proxima etapa deve criar apenas o documento de decisao operacional de execucao read-only, ainda sem criar comando real e sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
