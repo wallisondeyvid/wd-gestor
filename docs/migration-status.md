@@ -11811,6 +11811,140 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento de checklist de revisao da transicao de aprovacao para execucao read-only, ainda sem criar comando real e sem execucao real.
 
+- Documento de checklist de revisao da transicao de aprovacao para execucao read-only criado.
+- Base publicada:
+	- 8edc4ee docs(ops): desenha checklist de revisao da transicao read-only.
+- Registro da criacao:
+	- documento de checklist de revisao da transicao de aprovacao para execucao read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-execution-approval-transition-review-checklist.md;
+	- runbook principal apenas lido;
+	- checklist de revisao original apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- preparacao de comando manual apenas lida;
+	- rascunho de comando manual apenas lido;
+	- checklist de revisao do comando manual apenas lido;
+	- revisao final do comando manual apenas lida;
+	- fechamento da trilha de comando manual apenas lido;
+	- transicao de aprovacao apenas lida;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryExecutionApprovalTransitionReviewChecklist.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionApprovalTransitionReviewChecklist
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionApprovalTransitionReviewChecklist
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionApprovalTransitionReviewChecklistCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionApprovalTransitionReviewChecklist
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionApprovalTransitionReviewChecklist
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileChanged=false
+	- manualCommandPreparationFileChanged=false
+	- manualCommandDraftFileChanged=false
+	- manualCommandReviewChecklistFileChanged=false
+	- manualCommandFinalReviewFileChanged=false
+	- manualCommandClosureFileChanged=false
+	- executionApprovalTransitionFileChanged=false
+	- executionApprovalTransitionReviewChecklistFileCreated=true
+	- executionApprovalTransitionReviewChecklistPath=docs/runbooks/inventory-fictional-data-readonly-execution-approval-transition-review-checklist.md
+	- commandCreated=false
+	- packageJsonChanged=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este checklist nao altera runbook;
+	- este checklist nao altera checklist original;
+	- este checklist nao altera checkpoint;
+	- este checklist nao altera matriz;
+	- este checklist nao altera aviso;
+	- este checklist nao altera revisao final pre-execucao;
+	- este checklist nao altera fechamento da prontidao;
+	- este checklist nao altera resumo;
+	- este checklist nao altera prompt;
+	- este checklist nao altera gate final;
+	- este checklist nao altera Go/No-Go;
+	- este checklist nao altera microcorte;
+	- este checklist nao altera preparacao de comando;
+	- este checklist nao altera rascunho de comando;
+	- este checklist nao altera checklist do comando;
+	- este checklist nao altera revisao final do comando;
+	- este checklist nao altera fechamento do comando;
+	- este checklist nao altera transicao de aprovacao;
+	- este checklist nao cria comando real;
+	- este checklist nao altera package.json;
+	- este checklist nao libera execucao;
+	- este checklist nao gera relatorio real;
+	- este checklist nao usa fs.writeFile;
+	- este checklist nao implementa conexao;
+	- este checklist nao implementa leitura real de banco;
+	- este checklist nao executa query;
+	- este checklist nao executa inventario;
+	- este checklist nao autoriza Mongo;
+	- este checklist nao autoriza Atlas;
+	- este checklist nao autoriza tenant DB real;
+	- este checklist nao autoriza reset/limpeza;
+	- este checklist nao autoriza seed/migration/backfill;
+	- este checklist nao autoriza criacao de unidade;
+	- este checklist nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento de checklist de revisao da transicao de aprovacao para execucao read-only, ainda sem criar comando real e sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
