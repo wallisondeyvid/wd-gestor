@@ -22,6 +22,7 @@ Este documento nao substitui a revisao final do comando.
 Este documento nao substitui o fechamento do comando.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando real por si so.
 
 ## Objetivo da Transicao
 
@@ -32,6 +33,7 @@ Este documento nao autoriza push.
 - deixar claro que a transicao nao conecta Mongo;
 - deixar claro que a transicao nao executa query;
 - deixar claro que a transicao nao gera relatorio real;
+- deixar claro que a transicao nao usa fs.writeFile real;
 - manter push proibido;
 - preparar apenas um futuro documento de transicao ou aprovacao operacional.
 
