@@ -12291,6 +12291,143 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento de gate final de aprovacao para execucao read-only, ainda sem criar comando real e sem execucao real.
 
+- Documento de gate final de aprovacao para execucao read-only criado.
+- Base publicada:
+	- e40a127 docs(ops): desenha gate final de aprovacao read-only.
+- Registro da criacao:
+	- documento de gate final de aprovacao para execucao read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-execution-approval-final-gate.md;
+	- runbook principal apenas lido;
+	- checklist de revisao original apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- preparacao de comando manual apenas lida;
+	- rascunho de comando manual apenas lido;
+	- checklist de revisao do comando manual apenas lido;
+	- revisao final do comando manual apenas lida;
+	- fechamento da trilha de comando manual apenas lido;
+	- transicao de aprovacao apenas lida;
+	- checklist de revisao da transicao apenas lido;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryExecutionApprovalFinalGate.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionApprovalFinalGate
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionApprovalFinalGate
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionApprovalFinalGateCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionApprovalFinalGate
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionApprovalFinalGate
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileChanged=false
+	- manualCommandPreparationFileChanged=false
+	- manualCommandDraftFileChanged=false
+	- manualCommandReviewChecklistFileChanged=false
+	- manualCommandFinalReviewFileChanged=false
+	- manualCommandClosureFileChanged=false
+	- executionApprovalTransitionFileChanged=false
+	- executionApprovalTransitionReviewChecklistFileChanged=false
+	- executionApprovalFinalGateFileCreated=true
+	- executionApprovalFinalGatePath=docs/runbooks/inventory-fictional-data-readonly-execution-approval-final-gate.md
+	- commandCreated=false
+	- packageJsonChanged=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este gate nao altera runbook;
+	- este gate nao altera checklist original;
+	- este gate nao altera checkpoint;
+	- este gate nao altera matriz;
+	- este gate nao altera aviso;
+	- este gate nao altera revisao final pre-execucao;
+	- este gate nao altera fechamento da prontidao;
+	- este gate nao altera resumo;
+	- este gate nao altera prompt;
+	- este gate nao altera gate final de decisao humana;
+	- este gate nao altera Go/No-Go;
+	- este gate nao altera microcorte;
+	- este gate nao altera preparacao de comando;
+	- este gate nao altera rascunho de comando;
+	- este gate nao altera checklist do comando;
+	- este gate nao altera revisao final do comando;
+	- este gate nao altera fechamento do comando;
+	- este gate nao altera transicao de aprovacao;
+	- este gate nao altera checklist da transicao;
+	- este gate nao cria comando real;
+	- este gate nao altera package.json;
+	- este gate nao libera execucao;
+	- este gate nao gera relatorio real;
+	- este gate nao usa fs.writeFile;
+	- este gate nao implementa conexao;
+	- este gate nao implementa leitura real de banco;
+	- este gate nao executa query;
+	- este gate nao executa inventario;
+	- este gate nao autoriza Mongo;
+	- este gate nao autoriza Atlas;
+	- este gate nao autoriza tenant DB real;
+	- este gate nao autoriza reset/limpeza;
+	- este gate nao autoriza seed/migration/backfill;
+	- este gate nao autoriza criacao de unidade;
+	- este gate nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento de gate final de aprovacao para execucao read-only, ainda sem criar comando real e sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
