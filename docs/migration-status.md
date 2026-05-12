@@ -11323,6 +11323,137 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento de transicao de aprovacao para execucao read-only, ainda sem criar comando real e sem execucao real.
 
+- Documento de transicao de aprovacao para execucao read-only criado.
+- Base publicada:
+	- ee7cbd2 docs(ops): desenha transicao de aprovacao read-only.
+- Registro da criacao:
+	- documento de transicao de aprovacao para execucao read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-execution-approval-transition.md;
+	- runbook principal apenas lido;
+	- checklist de revisao original apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- preparacao de comando manual apenas lida;
+	- rascunho de comando manual apenas lido;
+	- checklist de revisao do comando manual apenas lido;
+	- revisao final do comando manual apenas lida;
+	- fechamento da trilha de comando manual apenas lido;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryExecutionApprovalTransition.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionApprovalTransition
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionApprovalTransition
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryExecutionApprovalTransitionCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryExecutionApprovalTransition
+	- recommendedNextAct=reviewReadOnlyInventoryExecutionApprovalTransition
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- runbookFileChanged=false
+	- runbookReviewChecklistFileChanged=false
+	- executionDecisionCheckpointFileChanged=false
+	- executionApprovalMatrixFileChanged=false
+	- executionAuthorizationNoticeFileChanged=false
+	- finalPreExecutionReviewFileChanged=false
+	- executionReadinessClosureFileChanged=false
+	- readinessSummaryFileChanged=false
+	- humanDecisionPromptFileChanged=false
+	- finalHumanDecisionGateFileChanged=false
+	- executionGoNoGoFileChanged=false
+	- executionMicrocutFileChanged=false
+	- manualCommandPreparationFileChanged=false
+	- manualCommandDraftFileChanged=false
+	- manualCommandReviewChecklistFileChanged=false
+	- manualCommandFinalReviewFileChanged=false
+	- manualCommandClosureFileChanged=false
+	- executionApprovalTransitionFileCreated=true
+	- executionApprovalTransitionPath=docs/runbooks/inventory-fictional-data-readonly-execution-approval-transition.md
+	- commandCreated=false
+	- packageJsonChanged=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerationImplemented=false
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- connectionImplemented=false
+	- queryImplemented=false
+	- queryExecuted=false
+	- commandAgainstDatabaseExecuted=false
+	- mongooseImported=false
+	- mongooseConnectUsed=false
+	- connectMongoImported=false
+	- connectMongoUsed=false
+	- tenantResolverUsed=false
+	- mongoRealConnected=false
+	- tenantDbRealOpened=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta transicao nao altera runbook;
+	- esta transicao nao altera checklist original;
+	- esta transicao nao altera checkpoint;
+	- esta transicao nao altera matriz;
+	- esta transicao nao altera aviso;
+	- esta transicao nao altera revisao final pre-execucao;
+	- esta transicao nao altera fechamento da prontidao;
+	- esta transicao nao altera resumo;
+	- esta transicao nao altera prompt;
+	- esta transicao nao altera gate final;
+	- esta transicao nao altera Go/No-Go;
+	- esta transicao nao altera microcorte;
+	- esta transicao nao altera preparacao de comando;
+	- esta transicao nao altera rascunho de comando;
+	- esta transicao nao altera checklist do comando;
+	- esta transicao nao altera revisao final do comando;
+	- esta transicao nao altera fechamento do comando;
+	- esta transicao nao cria comando real;
+	- esta transicao nao altera package.json;
+	- esta transicao nao libera execucao;
+	- esta transicao nao gera relatorio real;
+	- esta transicao nao usa fs.writeFile;
+	- esta transicao nao implementa conexao;
+	- esta transicao nao implementa leitura real de banco;
+	- esta transicao nao executa query;
+	- esta transicao nao executa inventario;
+	- esta transicao nao autoriza Mongo;
+	- esta transicao nao autoriza Atlas;
+	- esta transicao nao autoriza tenant DB real;
+	- esta transicao nao autoriza reset/limpeza;
+	- esta transicao nao autoriza seed/migration/backfill;
+	- esta transicao nao autoriza criacao de unidade;
+	- esta transicao nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento de transicao de aprovacao para execucao read-only, ainda sem criar comando real e sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
