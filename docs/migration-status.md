@@ -14842,6 +14842,70 @@ Checkpoint tenant enforcement atual:
 	- este fechamento nao autoriza criacao de usuario;
 	- proxima etapa deve revisar o documento de fechamento da prontidao operacional Mongo/read-only, ainda sem criar comando real e sem execucao real.
 
+- Documento de fechamento da prontidao operacional Mongo/read-only revisado.
+- Base publicada:
+	- 906463b docs(ops): cria fechamento operacional mongo read-only.
+- Registro da revisao:
+	- documento de fechamento da prontidao operacional Mongo/read-only revisado;
+	- arquivo revisado: docs/runbooks/inventory-fictional-data-readonly-operational-readiness-mongo-closure.md;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Diagnostico da revisao:
+	- o documento passou a explicitar com mais clareza que o fechamento Mongo/read-only e apenas documental e nao se converte em aprovacao operacional ou execucao automatica;
+	- os bloqueios agora destacam de forma direta a ausencia de conexao Mongo real, query real, relatorio real e uso real de fs.writeFile;
+	- o texto tambem reforca que reset, limpeza, seed, migration, backfill e qualquer leitura de candidatos a descarte como autorizacao de limpeza continuam proibidos neste microcorte.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryOperationalReadinessMongoFinalSummary.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryOperationalReadinessMongoClosure
+	- recommendedNextAct=designReadOnlyInventoryOperationalReadinessMongoFinalSummary
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoClosureReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryOperationalReadinessMongoClosure
+	- recommendedNextAct=designReadOnlyInventoryOperationalReadinessMongoFinalSummary
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao mantem o fechamento como documento e nao como aprovacao operacional;
+	- esta revisao nao cria comando real;
+	- esta revisao nao aprova comando em package.json;
+	- esta revisao nao libera execucao;
+	- esta revisao nao autoriza push;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio real;
+	- esta revisao nao usa fs.writeFile real;
+	- esta revisao nao acopla reset, limpeza, seed, migration ou backfill;
+	- esta revisao nao trata candidato a descarte como autorizacao de limpeza;
+	- proxima etapa deve desenhar apenas o resumo final da prontidao operacional Mongo/read-only em microcorte proprio.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.

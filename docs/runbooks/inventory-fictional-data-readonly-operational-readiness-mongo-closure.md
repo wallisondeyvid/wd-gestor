@@ -2,7 +2,10 @@
 
 Status: fechamento documental da prontidao operacional Mongo
 
+Este documento registra apenas o fechamento documental da prontidao operacional Mongo/read-only.
+
 Este documento nao autoriza execucao real neste microcorte.
+Este documento nao cria comando real por si so.
 Este documento nao substitui o runbook principal.
 Este documento nao substitui o checklist original.
 Este documento nao substitui o checkpoint de decisao.
@@ -28,7 +31,32 @@ Este documento nao substitui o fechamento operacional.
 Este documento nao substitui o resumo final.
 Este documento nao substitui o checkpoint de fechamento.
 Este documento nao aprova comando em package.json.
+Este documento nao cria aprovacao operacional automatica.
+Este documento nao converte aprovacao em execucao.
 Este documento nao autoriza push.
+Este documento nao conecta Mongo real.
+Este documento nao executa query real.
+Este documento nao gera relatorio real.
+Este documento nao usa fs.writeFile real.
+Este documento nao acopla reset, limpeza, seed, migration ou backfill.
+Este documento nao trata candidato a descarte como autorizacao de limpeza.
+Execucao futura exige microcorte proprio.
+
+## Limites Explicitos Deste Fechamento
+
+- este fechamento permanece estritamente documental;
+- este fechamento nao libera execucao operacional neste microcorte;
+- este fechamento nao aprova nem cria comando real em package.json;
+- este fechamento nao aprova push;
+- este fechamento nao cria aprovacao operacional automatica;
+- este fechamento nao converte aprovacao em execucao;
+- este fechamento nao autoriza conexao Mongo real;
+- este fechamento nao autoriza query real;
+- este fechamento nao autoriza geracao de relatorio real;
+- este fechamento nao autoriza uso real de fs.writeFile;
+- este fechamento nao acopla reset, limpeza, seed, migration ou backfill;
+- este fechamento nao transforma candidatos a descarte em autorizacao de limpeza;
+- qualquer execucao futura exige microcorte proprio.
 
 ## Objetivo do Fechamento Mongo/Read-Only
 
@@ -83,6 +111,7 @@ Este documento nao autoriza push.
 - nenhuma query real executada;
 - nenhum relatorio real gerado;
 - nenhum fs.writeFile real usado;
+- nenhum candidato a descarte tratado como autorizacao de limpeza;
 - nenhuma URI completa exposta;
 - nenhum segredo bruto exposto;
 - nenhum cleanup, reset, seed, migration ou backfill acoplado;
@@ -122,8 +151,15 @@ Este documento nao autoriza push.
 - nao cria comando real;
 - nao libera execucao;
 - nao aprova package.json;
+- nao autoriza push;
 - nao cria aprovacao operacional automatica;
 - nao converte aprovacao em execucao;
+- nao conecta Mongo real;
+- nao executa query real;
+- nao gera relatorio real;
+- nao usa fs.writeFile real;
+- nao acopla reset, limpeza, seed, migration ou backfill;
+- nao trata candidato a descarte como autorizacao de limpeza;
 - nao altera runbook;
 - nao altera checklist original;
 - nao altera checkpoint de decisao;
