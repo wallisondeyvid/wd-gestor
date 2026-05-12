@@ -24,6 +24,8 @@ Este documento nao substitui a transicao de aprovacao.
 Este documento nao substitui o checklist da transicao.
 Este documento nao aprova comando em package.json.
 Este documento nao autoriza push.
+Este documento nao cria comando real por si so.
+Este documento nao cria aprovacao operacional automatica.
 
 ## Objetivo do Gate Final
 
@@ -36,6 +38,7 @@ Este documento nao autoriza push.
 - confirmar que o gate final nao gera relatorio real;
 - confirmar que o gate final nao usa fs.writeFile real;
 - impedir aprovacao operacional implicita;
+- impedir conversao automatica em execucao;
 - manter push proibido.
 
 ## Entradas Obrigatorias
@@ -77,6 +80,7 @@ Este documento nao autoriza push.
 - nenhum cleanup, reset, seed, migration ou backfill acoplado;
 - nenhum candidato a descarte tratado como autorizacao de limpeza;
 - nenhuma aprovacao operacional implicita criada;
+- nenhuma aprovacao automatica para execucao criada;
 - nenhum push executado.
 
 ## Condicoes de Bloqueio
@@ -94,6 +98,7 @@ Este documento nao autoriza push.
 - qualquer tentativa de tratar candidato a descarte como autorizacao de limpeza;
 - qualquer tentativa de acoplar reset, seed, migration, backfill ou cleanup;
 - qualquer tentativa de converter gate em autorizacao operacional automatica;
+- qualquer tentativa de converter gate em execucao automatica;
 - qualquer tentativa de push.
 
 ## Saidas Possiveis
@@ -109,6 +114,7 @@ Este documento nao autoriza push.
 - nao cria comando real;
 - nao libera execucao;
 - nao aprova package.json;
+- nao cria aprovacao operacional automatica;
 - nao altera runbook;
 - nao altera checklist original;
 - nao altera checkpoint;
