@@ -14729,6 +14729,119 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao autoriza criacao de usuario;
 	- proxima etapa deve criar apenas o documento de fechamento da prontidao operacional Mongo/read-only, ainda sem criar comando real e sem execucao real.
 
+- Documento de fechamento da prontidao operacional Mongo/read-only criado.
+- Base publicada:
+	- 8e335c7 docs(ops): desenha fechamento operacional mongo read-only.
+- Registro da criacao:
+	- documento de fechamento da prontidao operacional Mongo/read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-operational-readiness-mongo-closure.md;
+	- runbook principal apenas lido;
+	- checklist de revisao original apenas lido;
+	- checkpoint de decisao apenas lido;
+	- matriz de aprovacao apenas lida;
+	- aviso de autorizacao apenas lido;
+	- revisao final pre-execucao apenas lida;
+	- fechamento da prontidao apenas lido;
+	- resumo da prontidao apenas lido;
+	- prompt de decisao humana apenas lido;
+	- gate final de decisao humana apenas lido;
+	- decisao Go/No-Go apenas lida;
+	- microcorte de execucao apenas lido;
+	- preparacao de comando manual apenas lida;
+	- rascunho de comando manual apenas lido;
+	- checklist de revisao do comando manual apenas lido;
+	- revisao final do comando manual apenas lida;
+	- fechamento da trilha de comando manual apenas lido;
+	- transicao de aprovacao apenas lida;
+	- checklist de revisao da transicao apenas lido;
+	- gate final de aprovacao apenas lido;
+	- decisao operacional apenas lida;
+	- fechamento operacional apenas lido;
+	- resumo final da prontidao apenas lido;
+	- checkpoint de fechamento apenas lido;
+	- nenhum comando real criado;
+	- nenhum comando criado em package.json;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- package.json nao alterado;
+	- script nao executado contra banco.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryOperationalReadinessMongoClosure.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryOperationalReadinessMongoClosure
+	- recommendedNextAct=reviewReadOnlyInventoryOperationalReadinessMongoClosure
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoClosureCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryOperationalReadinessMongoClosure
+	- recommendedNextAct=reviewReadOnlyInventoryOperationalReadinessMongoClosure
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este fechamento nao altera runbook;
+	- este fechamento nao altera checklist original;
+	- este fechamento nao altera checkpoint de decisao;
+	- este fechamento nao altera matriz;
+	- este fechamento nao altera aviso;
+	- este fechamento nao altera revisao final pre-execucao;
+	- este fechamento nao altera fechamento da prontidao;
+	- este fechamento nao altera resumo da prontidao;
+	- este fechamento nao altera prompt;
+	- este fechamento nao altera gate final de decisao humana;
+	- este fechamento nao altera Go/No-Go;
+	- este fechamento nao altera microcorte;
+	- este fechamento nao altera preparacao de comando;
+	- este fechamento nao altera rascunho de comando;
+	- este fechamento nao altera checklist do comando;
+	- este fechamento nao altera revisao final do comando;
+	- este fechamento nao altera fechamento do comando;
+	- este fechamento nao altera transicao de aprovacao;
+	- este fechamento nao altera checklist da transicao;
+	- este fechamento nao altera gate final de aprovacao;
+	- este fechamento nao altera decisao operacional;
+	- este fechamento nao altera fechamento operacional;
+	- este fechamento nao altera resumo final;
+	- este fechamento nao altera checkpoint de fechamento;
+	- este fechamento nao cria comando real;
+	- este fechamento nao altera package.json;
+	- este fechamento nao libera execucao;
+	- este fechamento nao gera relatorio real;
+	- este fechamento nao usa fs.writeFile;
+	- este fechamento nao implementa conexao;
+	- este fechamento nao implementa leitura real de banco;
+	- este fechamento nao executa query;
+	- este fechamento nao executa inventario;
+	- este fechamento nao autoriza Mongo;
+	- este fechamento nao autoriza Atlas;
+	- este fechamento nao autoriza tenant DB real;
+	- este fechamento nao autoriza reset/limpeza;
+	- este fechamento nao autoriza seed/migration/backfill;
+	- este fechamento nao autoriza criacao de unidade;
+	- este fechamento nao autoriza criacao de usuario;
+	- proxima etapa deve revisar o documento de fechamento da prontidao operacional Mongo/read-only, ainda sem criar comando real e sem execucao real.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
