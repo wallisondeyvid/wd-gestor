@@ -1359,6 +1359,42 @@ Checkpoint tenant enforcement atual:
 - Interpretacao adicional: esta validacao final completa da Fase V nao autoriza preparacao operacional concreta, nao autoriza execucao, nao autoriza rollback real, nao autoriza coleta de evidencia operacional real, nao autoriza criacao de superficie operacional, nao autoriza caller real, rota, CLI, script, job, bootstrap ou request path, nao autoriza alteracao de registry real, allowlist real, tenant DB real ou roteamento real, nao autoriza Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL, nao autoriza push e nao abre Fase W automaticamente.
 - Push: pendente; nao realizar push ate decisao explicita posterior.
 
+- Checkpoint documental curto da auditoria aprofundada de aderencia ao catalogo de GLOBAL_SCOPE legitimo consolidado nesta rodada, sem abertura de patch funcional, sem alteracao de testes e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: documental, read-only sobre codigo vivo, sem redefinicao arquitetural e sem reclassificacao oportunista por arquivo inteiro.
+- Decisao consolidada deste checkpoint: a arquitetura de GLOBAL_SCOPE legitimo, compat legado e risco tenant-aware ja estava definida documentalmente; a rodada atual apenas verificou aderencia do codigo vivo a esse catalogo e registrou o proximo alvo tecnico pequeno.
+- Leitura consolidada de aderencia deste checkpoint: `loginPreAuthGateDataAccess.js` permanece classificado como `GLOBAL_LEGITIMO_IDENTIDADE_AUTH`; os bridges em `src/modules/gestor/app/services/legacy` permanecem compatibilidade ativa e nao podem ser tratados como codigo morto automaticamente; `UnitProvisioningRepository.js` permanece semanticamente legitimo, mas segue adiado por blast radius alto; `api.db.js` continua exigindo tratamento por grupos funcionais e nao como arquivo unico; `auth.db.js` se mostrou menos problematico do que a leitura inicial sugeria porque seu nucleo vivo atual permanece majoritariamente em identidade/auth legitimos.
+- Resultado consolidado da auditoria aprofundada: nao surgiu caso confirmado e imediato de `GLOBAL_SCOPE` perigoso nos corredores auditados capaz de justificar corte oportunista acima da regua local; o melhor proximo passo permanece uma frente pequena, hibrida, viva e testavel.
+- Alvo tecnico pequeno selecionado neste checkpoint: `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`, no corredor de `updateFeedbackStatusLeanData`, fica registrado como proximo alvo tecnico tenant-aware pequeno por ainda combinar leitura global controlada com validacao contextual posterior e blast radius local menor que os demais candidatos vivos.
+- Justificativa consolidada da selecao: o corredor de feedback status continua vivo em `feedbackApi.js` -> `updateFeedbackStatus.service.js` -> `feedbackStatusDataFacade.js`, tem superficie local, sem exigir reabertura ampla de `api.db.js`, `auth.db.js`, wrappers ou provisioning, e permite diagnostico/protecao/teste focal antes de qualquer mudanca em `src`.
+- Proximo ato recomendado explicitamente neste checkpoint: diagnosticar, proteger e desenhar a validacao focal de `feedbackStatusDataFacade.js` antes de qualquer alteracao de producao, preservando o enquadramento tenant-aware database-per-unit e evitando big-bang em bridges heterogeneas.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=recordGlobalScopeAdherenceAudit
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=diagnoseFeedbackStatusTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- docsChanged=true
+	- onlyMigrationStatusChanged=true
+	- mongoRealConnected=false
+	- mongoQueryExecuted=false
+	- npmTestExecuted=false
+	- verifyImportsExecuted=false
+	- architectureRedefined=false
+	- architectureAdherenceAudited=true
+	- globalScopeCatalogRespected=true
+	- loginPreAuthGateStillLegitimate=true
+	- legacyBridgesStillActive=true
+	- unitProvisioningDeferredByBlastRadius=true
+	- apiDbRequiresGroupSegmentation=true
+	- authDbLessProblematicThanExpected=true
+	- feedbackStatusTargetSelected=true
+	- nextStepIsDiagnosticBeforeSrcChanges=true
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: o registro da auditoria nao autoriza refatoracao imediata de `api.db.js`, `auth.db.js`, `UnitProvisioningRepository.js` ou bridges legacy; nao autoriza tocar `src` ou `tests` nesta rodada; nao autoriza Mongo real, query real, rollout, push ou reabertura ampla de qualquer frente macro; ele apenas congela a leitura de aderencia atual e fixa `feedbackStatusDataFacade.js` como o proximo microalvo tecnico admissivel.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
