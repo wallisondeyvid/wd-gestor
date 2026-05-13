@@ -1684,6 +1684,18 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: esta implementacao altera apenas `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`; esta implementacao nao altera testes; esta implementacao nao altera `package.json`; esta implementacao nao altera `api.db.js`; esta implementacao nao altera `feedbackApi.js`; esta implementacao nao altera `updateFeedbackStatus.service.js`; esta implementacao nao conecta Mongo real; esta implementacao nao executa query real; esta implementacao nao gera relatorio real; a proxima etapa deve ser `runFeedbackStatusTenantAwareProtectionAfterRefactor`.
 
+- Checkpoint documental curto da falha da validacao focal de feedback status apos a refatoracao minima tenant-aware consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests` e sem alteracao em `package.json`.
+- Comando executado nesta rodada: `node --test tests/gestor-feedback-status-tenant-aware-protection.test.js tests/gestor-feedback-status-patch-structural-seam.test.js tests/gestor-feedback-status-patch-runtime-contract.test.js`.
+- Resultado consolidado desta execucao: `tests=13`, `suites=0`, `pass=10`, `fail=3`, `skipped=0`, `todo=0`, `cancelled=0`.
+- Diagnostico consolidado da falha: a quebra ficou concentrada em `tests/gestor-feedback-status-tenant-aware-protection.test.js`, que ainda congela o contrato estrutural anterior da facade com leitura e write em `GLOBAL_SCOPE`; apos a refatoracao minima, a facade passou a consultar primeiro o escopo contextual e a escrever com o escopo contextual efetivo quando `unitScope` ou `scopedUnitId` estiver presente; por isso as assercoes estruturais que esperavam `unitScope: { type: 'global', unidadeId: null }` e a string literal do write global deixaram de refletir o novo comportamento implementado.
+- Casos que falharam nesta rodada:
+	- `facade honra scopedUnitId e permite write apenas para alvo dentro do escopo permitido`
+	- `facade recusa alvo fora de escopo por unitScope antes de qualquer write efetivo`
+	- `facade e bridge preservam o guard before write no source contract atual`
+- Leitura consolidada do restante da execucao: os testes de contrato publico e de seam adjacente permaneceram verdes; a falha ficou restrita ao guardrail estrutural da facade, o que indica incompatibilidade esperada entre o teste congelado e o novo escopo tenant-aware implementado, sem evidencia imediata de regressao no contrato publico do PATCH canonico.
+- Superficies preservadas nesta rodada de validacao com falha: `src` nao foi alterado neste microcorte; `tests` nao foram alterados neste microcorte; `package.json` nao foi alterado; nenhum script foi alterado; nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum relatorio real foi gerado; nenhum commit ou push foi realizado.
+- Interpretacao obrigatoria deste checkpoint: esta rodada registrou somente o diagnostico da falha focal; nenhuma correcao automatica foi aplicada; `src` nao foi alterado apos a falha; `tests` nao foram alterados apos a falha; a proxima etapa deve revisar o corte minimo tenant-aware e o guardrail estrutural antes de qualquer nova alteracao.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
