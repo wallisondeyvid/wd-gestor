@@ -17179,6 +17179,62 @@ Checkpoint tenant enforcement atual:
 	- esta preparacao nao permite reset, cleanup, seed, migration ou backfill;
 	- a etapa seguinte deve criar apenas o documento de instrucao humana/manual de push, sem executar push automaticamente.
 
+- Documento de instrucao humana/manual de push da fase Mongo/read-only criado.
+- Base publicada:
+	- f1bcd65 docs(ops): prepara instrucao humana de push mongo read-only.
+- Registro da criacao:
+	- documento de instrucao humana/manual de push da fase Mongo/read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-operational-readiness-mongo-user-push-instruction.md;
+	- nenhum push executado;
+	- nenhum push automatico autorizado;
+	- nenhum comando real criado;
+	- package.json nao alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum fs.writeFile real usado;
+	- nenhuma aprovacao operacional automatica criada;
+	- nenhuma aprovacao documental convertida em execucao.
+- Diagnostico da criacao:
+	- o novo documento registra a instrucao humana/manual de push como artefato estritamente documental, deixando explicito que a fase Mongo/read-only ja esta fechada e que a autorizacao humana de push foi revisada;
+	- a criacao reforca que o documento nao faz push, nao autoriza push automatico e nao habilita qualquer execucao por si so;
+	- o microcorte permaneceu sem comando real, sem alteracao em package.json, sem conexao Mongo real, sem query real e sem geracao de relatorio real.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryOperationalReadinessMongoUserPushInstruction.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryOperationalReadinessMongoUserPushInstruction
+	- recommendedNextAct=reviewReadOnlyInventoryOperationalReadinessMongoUserPushInstruction
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoUserPushInstructionCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryOperationalReadinessMongoUserPushInstruction
+	- recommendedNextAct=reviewReadOnlyInventoryOperationalReadinessMongoUserPushInstruction
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
