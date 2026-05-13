@@ -1696,6 +1696,47 @@ Checkpoint tenant enforcement atual:
 - Superficies preservadas nesta rodada de validacao com falha: `src` nao foi alterado neste microcorte; `tests` nao foram alterados neste microcorte; `package.json` nao foi alterado; nenhum script foi alterado; nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum relatorio real foi gerado; nenhum commit ou push foi realizado.
 - Interpretacao obrigatoria deste checkpoint: esta rodada registrou somente o diagnostico da falha focal; nenhuma correcao automatica foi aplicada; `src` nao foi alterado apos a falha; `tests` nao foram alterados apos a falha; a proxima etapa deve revisar o corte minimo tenant-aware e o guardrail estrutural antes de qualquer nova alteracao.
 
+- Checkpoint documental curto da revisao diagnostica da falha da validacao pos-refatoracao de feedback status consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests` e sem alteracao em `package.json`.
+- Comando que falhou e foi revisado neste checkpoint: `node --test tests/gestor-feedback-status-tenant-aware-protection.test.js tests/gestor-feedback-status-patch-structural-seam.test.js tests/gestor-feedback-status-patch-runtime-contract.test.js`.
+- Totais consolidados da execucao revisada: `tests=13`, `pass=10`, `fail=3`.
+- Concentracao consolidada da falha: os tres casos vermelhos ficaram em `tests/gestor-feedback-status-tenant-aware-protection.test.js`; os testes publicos e adjacentes permaneceram verdes, incluindo o seam estrutural do service e o runtime contract do PATCH canonico.
+- Hipotese A consolidada nesta revisao: o teste estrutural novo congelou o comportamento anterior da facade com leitura e write literais em `GLOBAL_SCOPE`, inclusive por comparacao de chamadas mockadas e por busca textual do write global no source.
+- Hipotese B consolidada nesta revisao: a refatoracao so representaria bug real se o objetivo contratual ainda exigisse write global literal mesmo quando `unitScope` ou `scopedUnitId` estivesse presente; essa leitura perde forca porque o objetivo explicitado do microcorte anterior era justamente priorizar escopo contextual tenant-aware, reduzir a dependencia pratica de `GLOBAL_SCOPE` e preservar o contrato publico do PATCH, nao preservar a literalidade estrutural do write global na facade.
+- Decisao diagnostica recomendada neste checkpoint: prevalece a Hipotese A; se o objetivo da refatoracao continua sendo tenant-aware contextual, entao o guardrail estrutural deve ser ajustado para esperar leitura e write com escopo contextual efetivo quando houver `unitScope` ou `scopedUnitId`; o contrato publico do PATCH canonico nao deve ser alterado; `src` nao deve ser alterado antes da revisao do guardrail.
+- Leitura consolidada da garantia preservada: o contrato publico observado em `tests/gestor-feedback-status-patch-runtime-contract.test.js` permaneceu verde para 401, 403, 200, 404 e 400; portanto nao ha evidencia imediata, neste checkpoint, de regressao comportamental publica causada pela refatoracao minima.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewFeedbackStatusValidationFailure
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=updateFeedbackStatusTenantAwareProtectionTestForScopedWrite
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusValidationFailureReviewed=true
+	- feedbackStatusFailureLikelyTestContractDrift=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewFeedbackStatusValidationFailure
+	- recommendedNextAct=updateFeedbackStatusTenantAwareProtectionTestForScopedWrite
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: esta revisao apenas diagnostica a falha; esta revisao nao altera codigo; esta revisao nao altera testes; esta revisao nao corrige automaticamente; esta revisao nao cria comando; esta revisao nao conecta Mongo real; esta revisao nao executa query; esta revisao nao gera relatorio; esta revisao nao inicia PostgreSQL; esta revisao nao usa Portal; a proxima etapa deve ajustar o teste de protecao para o novo contrato tenant-aware contextual, salvo se revisao futura identificar bug real na refatoracao.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
