@@ -1601,6 +1601,47 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: esta revisao apenas aceita a protecao criada; esta revisao nao altera codigo; esta revisao nao altera testes; esta revisao nao executa refatoracao; esta revisao nao cria comando; esta revisao nao conecta Mongo real; esta revisao nao executa query; esta revisao nao gera relatorio; esta revisao nao inicia PostgreSQL; esta revisao nao usa Portal; a proxima etapa deve desenhar a refatoracao minima de `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData` antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da refatoracao minima tenant-aware para feedback status consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: desenho documental do proximo corte minimo em `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData`, ainda sem implementacao, sem refatoracao material, sem criacao de comando e sem execucao contra banco.
+- Alvo consolidado deste desenho: `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`, no helper `updateFeedbackStatusLeanData`.
+- Premissa consolidada deste desenho: a refatoracao ainda nao sera implementada neste microcorte; a protecao estrutural ou contratual ja existente em `tests/gestor-feedback-status-tenant-aware-protection.test.js` e o runtime contract ja congelado passam a ser a moldura obrigatoria do proximo corte minimo.
+- Objetivo futuro consolidado deste desenho: reduzir a dependencia de `GLOBAL_SCOPE` na facade; garantir que `unitScope` ou `scopedUnitId` participe da selecao ou validacao antes da mutacao; preservar o contrato publico do PATCH canonico; nao abrir `api.db.js` como big-bang; nao alterar a rota publica; nao alterar o contrato de `updateFeedbackStatus.service.js` fora do necessario.
+- Comportamento que deve permanecer consolidado neste desenho: status valido dentro do escopo permitido continua funcionando; status invalido continua falhando; usuario nao admin continua bloqueado; alvo fora de escopo continua bloqueado; `master` ou `admin` global legitimo continua preservado conforme documentacao e testes ja congelados.
+- Estrategia minima sugerida neste checkpoint: manter a assinatura publica de `updateFeedbackStatusLeanData`; usar `unitScope` ou `scopedUnitId` recebido em `options` para construir o filtro ou a guarda antes da mutacao; evitar write global antes da validacao de escopo; manter fallback global somente quando legitimamente permitido; se necessario, introduzir helper interno pequeno na propria facade; nao mover a logica para `api.db.js` neste primeiro corte; nao reestruturar `feedbackApi.js`; nao reestruturar `updateFeedbackStatus.service.js`, salvo ajuste minimo de repasse ja protegido.
+- Risco preservado expressamente neste desenho: o corredor atual ainda le e escreve com `GLOBAL_SCOPE` na facade; portanto o corte futuro deve ser pequeno, local e guiado pelo teste aceito, sem alterar o contrato HTTP, sem reabrir o alias POST, sem mexer em widget, detail, resposta, delete ou create e sem expandir a frente para bridge heterogenea ampla.
+- Leitura consolidada da protecao ja existente: `tests/gestor-feedback-status-tenant-aware-protection.test.js` ja protege repasse de `unitScope` ou `scopedUnitId`, recusa de alvo fora de escopo antes de write efetivo e preservacao do contrato publico do PATCH canonico; esse guardrail atual passa a ser suficiente para autorizar apenas a implementacao do corte minimo na facade no microcorte seguinte.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designFeedbackStatusTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=implementFeedbackStatusTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareMinimalRefactorDesigned=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designFeedbackStatusTenantAwareMinimalRefactor
+	- recommendedNextAct=implementFeedbackStatusTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: este desenho nao altera codigo; este desenho nao altera testes; este desenho nao implementa refatoracao; este desenho nao cria comando; este desenho nao conecta Mongo real; este desenho nao executa query; este desenho nao gera relatorio; este desenho nao inicia PostgreSQL; este desenho nao usa Portal; a proxima etapa deve implementar apenas a refatoracao minima em `feedbackStatusDataFacade.js`, preservando os testes existentes.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
