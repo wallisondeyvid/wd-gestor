@@ -108,11 +108,11 @@ test('facade honra scopedUnitId e permite write apenas para alvo dentro do escop
   );
 
   assert.deepEqual(HARNESS_STATE.readCalls, [{
-    unitScope: { type: 'global', unidadeId: null },
+    unitScope: { type: 'unit', unidadeId: 'unit-a' },
     id: '507f1f77bcf86cd799439011',
   }]);
   assert.deepEqual(HARNESS_STATE.writeCalls, [{
-    unitScope: { type: 'global', unidadeId: null },
+    unitScope: { type: 'unit', unidadeId: 'unit-a' },
     id: '507f1f77bcf86cd799439011',
     setData: { status: 'resolvido' },
   }]);
@@ -133,7 +133,7 @@ test('facade recusa alvo fora de escopo por unitScope antes de qualquer write ef
 
   assert.equal(result, null, 'alvo fora do escopo permitido deve ser recusado');
   assert.deepEqual(HARNESS_STATE.readCalls, [{
-    unitScope: { type: 'global', unidadeId: null },
+    unitScope: { unidadeId: 'unit-a' },
     id: '507f1f77bcf86cd799439011',
   }]);
   assert.deepEqual(HARNESS_STATE.writeCalls, [], 'nenhum write efetivo deve ocorrer fora de escopo');
@@ -143,15 +143,27 @@ test('facade e bridge preservam o guard before write no source contract atual', 
   const facadeSource = readText(FACADE_FILE);
   const apiDbSource = readText(API_DB_FILE);
 
-  const facadeReadIndex = facadeSource.indexOf('findFeedbackByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id })');
+  const facadeScopedReadIndex = facadeSource.indexOf('const scopedExisting = await findFeedbackByIdLeanRepo({ unitScope: scopedUnitScope, id });');
   const facadeGuardIndex = facadeSource.indexOf('if (!feedbackMatchesScopedUnit(existing, options)) return null;');
-  const facadeWriteIndex = facadeSource.indexOf('findFeedbackByIdAndUpdateSetNewLeanRepo({ unitScope: GLOBAL_SCOPE, id, setData })');
+  const facadeWriteIndex = facadeSource.indexOf('findFeedbackByIdAndUpdateSetNewLeanRepo({ unitScope: writeUnitScope, id, setData })');
 
-  assert.notEqual(facadeReadIndex, -1, 'a facade deve continuar lendo o alvo atual antes da mutação');
+  assert.notEqual(facadeScopedReadIndex, -1, 'a facade deve continuar lendo o alvo atual antes da mutação');
   assert.notEqual(facadeGuardIndex, -1, 'a facade deve continuar validando escopo antes do write');
   assert.notEqual(facadeWriteIndex, -1, 'a facade deve continuar expondo o ponto de write protegido');
-  assert.ok(facadeReadIndex < facadeGuardIndex, 'a validação de escopo deve vir após o lookup atual');
+  assert.ok(facadeScopedReadIndex < facadeGuardIndex, 'a validação de escopo deve vir após o lookup atual');
   assert.ok(facadeGuardIndex < facadeWriteIndex, 'a validação de escopo deve anteceder o write');
+
+  assert.match(
+    facadeSource,
+    /const scopedUnitScope = resolveScopedUnitScope\(options\);[\s\S]*?const scopedExisting = await findFeedbackByIdLeanRepo\(\{ unitScope: scopedUnitScope, id \}\);[\s\S]*?return \{ existing: scopedExisting, writeUnitScope: scopedUnitScope \};/,
+    'a facade deve priorizar leitura e write com escopo contextual efetivo quando houver unitScope ou scopedUnitId',
+  );
+
+  assert.match(
+    facadeSource,
+    /if \(options\?\.allowLegacyUnscoped !== true\) \{[\s\S]*?return \{ existing: null, writeUnitScope: scopedUnitScope \ };/,
+    'a facade deve recusar alvo fora do escopo contextual antes de qualquer write efetivo quando nao houver fallback legado permitido',
+  );
 
   const bridgeGuardPattern = /const existing = await findFeedbackByIdWithinScope\(id, options\);[\s\S]*?if \(!existing\) return null;[\s\S]*?findFeedbackByIdAndUpdateSetNewLeanRepo\(\{ unitScope: GLOBAL_SCOPE, id, setData \}\)/;
   assert.match(

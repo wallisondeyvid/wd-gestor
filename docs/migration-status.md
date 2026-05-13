@@ -1737,6 +1737,43 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: esta revisao apenas diagnostica a falha; esta revisao nao altera codigo; esta revisao nao altera testes; esta revisao nao corrige automaticamente; esta revisao nao cria comando; esta revisao nao conecta Mongo real; esta revisao nao executa query; esta revisao nao gera relatorio; esta revisao nao inicia PostgreSQL; esta revisao nao usa Portal; a proxima etapa deve ajustar o teste de protecao para o novo contrato tenant-aware contextual, salvo se revisao futura identificar bug real na refatoracao.
 
+- Checkpoint documental curto do ajuste do teste de protecao tenant-aware para scoped write ou contextual consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `package.json` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: ajuste local em `tests/gestor-feedback-status-tenant-aware-protection.test.js` para refletir o novo contrato tenant-aware contextual da facade, sem alterar testes adjacentes, sem alterar rota publica, sem alterar service, sem alterar `api.db.js` e sem criar comando.
+- Arquivo alterado nesta rodada: `tests/gestor-feedback-status-tenant-aware-protection.test.js`.
+- Resumo consolidado do ajuste: o teste deixa de exigir leitura e write sempre em `GLOBAL_SCOPE` quando `unitScope` ou `scopedUnitId` estiver presente e passa a exigir escopo contextual efetivo; a recusa de alvo fora do escopo continua protegida antes de write efetivo; o congelamento do contrato publico do PATCH canonico continua preservado; o repasse contextual por rota e service continua preservado; a protecao contra regressao que ignore `unitScope` ou `scopedUnitId` e contra write fora do escopo permitido continua mantida.
+- Superficies preservadas nesta rodada: `src` nao foi alterado; `package.json` nao foi alterado; nenhum script foi alterado; nenhum teste adjacente foi alterado; nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum inventario real foi executado; nenhum relatorio real foi gerado; nenhum commit ou push foi realizado.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=updateFeedbackStatusTenantAwareProtectionTestForScopedWrite
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=rerunFeedbackStatusTenantAwareProtectionAfterTestUpdate
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareProtectionTestUpdatedForScopedWrite=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=updateFeedbackStatusTenantAwareProtectionTestForScopedWrite
+	- recommendedNextAct=rerunFeedbackStatusTenantAwareProtectionAfterTestUpdate
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: este ajuste altera apenas `tests/gestor-feedback-status-tenant-aware-protection.test.js`; este ajuste nao altera codigo de producao; este ajuste nao altera `package.json`; este ajuste nao cria comando; este ajuste nao conecta Mongo real; este ajuste nao executa query real; a proxima etapa deve ser `rerunFeedbackStatusTenantAwareProtectionAfterTestUpdate`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
