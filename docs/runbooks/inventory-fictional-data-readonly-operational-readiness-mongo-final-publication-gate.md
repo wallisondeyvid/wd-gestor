@@ -13,6 +13,7 @@ Este gate final e apenas preparacao documental para decisao humana futura de pus
 Este documento nao faz push.
 Este documento nao autoriza push automatico.
 Push futuro exige decisao humana explicita do usuario.
+Este gate nao substitui uma decisao humana real de push.
 Este documento nao autoriza execucao real neste microcorte.
 Este documento nao cria comando real.
 Este documento nao altera package.json.
@@ -37,6 +38,7 @@ Execucao futura exige microcorte proprio.
 - este documento nao faz push;
 - este documento nao autoriza push automatico;
 - qualquer push futuro exige decisao humana explicita do usuario;
+- este gate nao substitui uma decisao humana real de push;
 - este documento nao autoriza execucao real neste microcorte;
 - este documento nao cria comando real;
 - este documento nao altera package.json;
@@ -92,6 +94,7 @@ Execucao futura exige microcorte proprio.
 - qualquer tentativa de push automatico;
 - qualquer tentativa de tratar este gate documental como autorizacao direta de push;
 - qualquer ausencia de decisao humana futura e explicita do usuario para push;
+- qualquer tentativa de usar este gate como substituto de decisao humana real de push;
 - qualquer tentativa de criar comando real ou copiavel;
 - qualquer alteracao em package.json;
 - qualquer npm script novo;
@@ -122,6 +125,7 @@ Execucao futura exige microcorte proprio.
 - este documento nao faz push;
 - este documento nao autoriza push automatico;
 - push futuro exige decisao humana explicita do usuario;
+- este gate nao substitui uma decisao humana real de push;
 - este documento nao autoriza execucao real;
 - nao cria comando real;
 - nao altera package.json;
