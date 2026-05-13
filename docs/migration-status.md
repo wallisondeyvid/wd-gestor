@@ -1561,6 +1561,46 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: esta validacao apenas confirma a protecao tenant-aware focal; esta validacao nao altera codigo; esta validacao nao altera testes; esta validacao nao altera `package.json`; esta validacao nao executa refatoracao; esta validacao nao conecta Mongo real; esta validacao nao executa query real; esta validacao nao gera relatorio real; esta validacao nao inicia PostgreSQL; esta validacao nao usa Portal; a proxima etapa deve ser `reviewFeedbackStatusTenantAwareProtectionTest` antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da revisao da protecao tenant-aware de feedback status consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: revisao documental do teste estrutural ou contratual `tests/gestor-feedback-status-tenant-aware-protection.test.js`, sem nova execucao de suite ampla, sem refatoracao e sem criacao de comando.
+- Teste revisado neste checkpoint: `tests/gestor-feedback-status-tenant-aware-protection.test.js`.
+- Resultado consolidado da revisao: o teste ja passou com `tests=5`, `pass=5` e `fail=0`; permanece estrutural ou contratual, sem Mongo real; protege o repasse de `unitScope` ou `scopedUnitId`; protege a recusa de alvo fora de escopo antes de write efetivo; preserva o contrato publico do PATCH canonico; continua coerente com os artefatos adjacentes de seam estrutural e runtime contract ja congelados.
+- Leitura consolidada da suficiência atual: a protecao hoje e suficiente para autorizar o proximo microcorte apenas de desenho da refatoracao minima, porque o seam relevante ja ficou cercado no nivel atual sem abrir banco real, sem alterar codigo de producao e sem exigir big-bang em `api.db.js`.
+- Limite consolidado desta aceitacao: embora a protecao atual seja suficiente para liberar o proximo desenho local, a proxima etapa ainda nao deve alterar `src` diretamente sem primeiro desenhar a refatoracao minima de `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData` e explicitar o corte exato da mudanca.
+- Escopo preservado expressamente neste checkpoint: `src` ainda nao foi alterado; `tests` nao serao alterados neste microcorte; `package.json` nao foi alterado; nenhuma query real foi executada; nenhuma conexao Mongo real foi aberta; nenhum inventario real foi executado; nenhum reset, cleanup, seed, migration ou backfill foi executado; nenhum comando de PostgreSQL foi iniciado; nenhum uso de Portal ocorreu; nenhum commit ou push foi realizado.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewFeedbackStatusTenantAwareProtectionTest
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=designFeedbackStatusTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareProtectionTestReviewed=true
+	- feedbackStatusTenantAwareProtectionAccepted=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewFeedbackStatusTenantAwareProtectionTest
+	- recommendedNextAct=designFeedbackStatusTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: esta revisao apenas aceita a protecao criada; esta revisao nao altera codigo; esta revisao nao altera testes; esta revisao nao executa refatoracao; esta revisao nao cria comando; esta revisao nao conecta Mongo real; esta revisao nao executa query; esta revisao nao gera relatorio; esta revisao nao inicia PostgreSQL; esta revisao nao usa Portal; a proxima etapa deve desenhar a refatoracao minima de `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData` antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
