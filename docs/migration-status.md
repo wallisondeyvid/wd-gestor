@@ -1440,6 +1440,49 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: este diagnostico apenas descreve o contrato atual; este diagnostico nao altera codigo; este diagnostico nao altera testes; este diagnostico nao executa refatoracao; este diagnostico nao cria comando; este diagnostico nao conecta Mongo real; este diagnostico nao executa query; este diagnostico nao gera relatorio; este diagnostico nao inicia PostgreSQL; este diagnostico nao usa Portal; a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho de protecao ou teste tenant-aware para `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData` consolidado nesta rodada, sem criacao de teste, sem alteracao em `src`, sem alteracao em `tests` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: definicao documental da protecao futura do corredor de status admin de feedback, ainda sem implementacao, sem refatoracao, sem comando novo e sem execucao de banco.
+- Alvo consolidado deste desenho: `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`, no helper `updateFeedbackStatusLeanData`, permanece como foco do proximo teste ou protecao tenant-aware antes de qualquer alteracao em `src`.
+- Contrato atual a preservar neste desenho: o PATCH canonico de status de feedback continua com o mesmo contrato publico; status valido dentro do escopo permitido continua funcionando; status invalido continua retornando erro; usuario nao admin continua bloqueado; alvo fora da unidade ou escopo continua bloqueado; `master` ou `admin` global legitimo continua preservado conforme a documentacao ja catalogada.
+- Risco principal a proteger neste desenho: lookup ou mutacao global antes da garantia tenant-aware final; mutacao contextual indevida fora de `scopedUnitId` ou `unitScope`; dependencia da checagem posterior para impedir que o corredor escreva fora do tenant permitido.
+- Protecao futura desejada neste checkpoint: o teste deve provar que `unitScope` ou `scopedUnitId` e repassado ate a facade; o teste deve provar que alvo fora da unidade permitida nao sofre mutacao; o teste deve provar que a checagem acontece antes de qualquer write efetivo fora de escopo; o teste deve preservar o comportamento atual para os casos validos ja congelados no contrato publico.
+- Tipo de teste recomendado neste desenho: primeiro um teste estrutural ou contratual de seam, sem Mongo real, usando mocks ou stubs de data facade, repository ou db bridge; sem banco real; sem relatorio real; sem depender de inventario, seed, migration, backfill ou runtime externo.
+- Leitura consolidada do material ja existente: `tests/gestor-feedback-status-patch-structural-seam.test.js` ja prova que o service repassa opcoes contextuais sem alterar o payload; `tests/gestor-feedback-status-patch-runtime-contract.test.js` ja congela 401, 403, 404, 400 e 200 no PATCH canonico; o proximo teste precisa fechar explicitamente a fronteira tenant-aware da facade e da ordem de validacao antes do write.
+- Hipotese de refatoracao futura, sem implementacao neste checkpoint: reduzir a dependencia de `GLOBAL_SCOPE` na facade; empurrar `scopedUnitId` ou `unitScope` para o acesso a dados antes da mutacao; manter fallback global legitimo apenas onde ele ja esta catalogado; evitar refatorar `api.db.js` inteiro e evitar qualquer big-bang na bridge heterogenea.
+- Criterio de sucesso futuro deste desenho: o teste falha se `updateFeedbackStatusLeanData` ignorar `unitScope` ou `scopedUnitId`; o teste falha se a mutacao ocorrer antes da validacao de escopo; o teste falha se alvo de outra unidade for aceito; o teste passa para alvo valido dentro do escopo permitido e preserva o contrato publico atual do PATCH canonico.
+- Objetivo consolidado do proximo microcorte: criar o teste ou protecao tenant-aware focal do corredor `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData` antes de qualquer alteracao em `src`, mantendo o escopo local e sem reabrir `api.db.js` como frente ampla.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designFeedbackStatusTenantAwareProtection
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=createFeedbackStatusTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designFeedbackStatusTenantAwareProtection
+	- recommendedNextAct=createFeedbackStatusTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: este desenho apenas define protecao ou teste futuro; este desenho nao altera codigo; este desenho nao altera testes; este desenho nao cria teste ainda; este desenho nao executa refatoracao; este desenho nao cria comando; este desenho nao conecta Mongo real; este desenho nao executa query; este desenho nao gera relatorio; este desenho nao inicia PostgreSQL; este desenho nao usa Portal; a proxima etapa deve criar o teste ou protecao antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
