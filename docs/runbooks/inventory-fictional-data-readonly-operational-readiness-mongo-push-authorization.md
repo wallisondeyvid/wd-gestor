@@ -13,8 +13,9 @@ Este documento nao autoriza push automatico.
 Push real exige decisao humana explicita e acao manual do usuario.
 Esta autorizacao documental nao e o proprio push.
 Esta autorizacao documental nao substitui autorizacao real de push pelo usuario.
+Esta autorizacao documental nao habilita push executavel por si so.
 Este documento nao autoriza execucao real neste microcorte.
-Este documento nao cria comando real.
+Este documento nao cria comando real por si so.
 Este documento nao altera package.json.
 Este documento nao cria npm script.
 Este documento nao conecta Mongo real.
@@ -38,8 +39,9 @@ Execucao futura exige microcorte proprio.
 - push real exige decisao humana explicita e acao manual do usuario;
 - esta autorizacao documental nao e o proprio push;
 - esta autorizacao documental nao substitui autorizacao real de push pelo usuario;
+- esta autorizacao documental nao habilita push executavel por si so;
 - este documento nao autoriza execucao real neste microcorte;
-- este documento nao cria comando real;
+- este documento nao cria comando real por si so;
 - este documento nao altera package.json;
 - este documento nao cria npm script;
 - este documento nao conecta Mongo real;
@@ -61,6 +63,7 @@ Execucao futura exige microcorte proprio.
 - confirmar que este documento nao faz push nem autoriza push automatico;
 - confirmar que push real depende de decisao humana explicita e acao manual do usuario;
 - confirmar que esta autorizacao documental nao e o proprio push;
+- confirmar que esta autorizacao documental nao habilita push executavel por si so;
 - confirmar que nenhum comando real foi criado;
 - confirmar que package.json nao foi alterado;
 - confirmar que nenhuma execucao foi liberada;
@@ -80,6 +83,7 @@ Execucao futura exige microcorte proprio.
 - push real exige decisao humana explicita e acao manual do usuario;
 - esta autorizacao documental nao e o proprio push;
 - esta autorizacao documental nao substitui autorizacao real de push pelo usuario;
+- esta autorizacao documental nao habilita push executavel por si so;
 - nenhum comando real criado;
 - package.json nao alterado;
 - nenhuma execucao liberada;
@@ -98,6 +102,7 @@ Execucao futura exige microcorte proprio.
 - qualquer ausencia de decisao humana explicita e acao manual do usuario para push real;
 - qualquer tentativa de tratar esta autorizacao documental como se fosse o proprio push;
 - qualquer tentativa de usar esta autorizacao documental como substituto de autorizacao real de push pelo usuario;
+- qualquer tentativa de tratar esta autorizacao documental como push executavel por si so;
 - qualquer tentativa de criar comando real ou copiavel;
 - qualquer alteracao em package.json;
 - qualquer npm script novo;
@@ -129,8 +134,9 @@ Execucao futura exige microcorte proprio.
 - push real exige decisao humana explicita e acao manual do usuario;
 - esta autorizacao documental nao e o proprio push;
 - esta autorizacao documental nao substitui autorizacao real de push pelo usuario;
+- esta autorizacao documental nao habilita push executavel por si so;
 - este documento nao autoriza execucao real;
-- nao cria comando real;
+- nao cria comando real por si so;
 - nao altera package.json;
 - nao cria npm script;
 - nao conecta Mongo real;
