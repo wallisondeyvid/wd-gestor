@@ -1521,6 +1521,46 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: este microcorte cria apenas a protecao ou teste tenant-aware focal; este microcorte nao altera codigo de producao; este microcorte nao altera `package.json`; este microcorte nao cria comando; este microcorte nao conecta Mongo real; este microcorte nao executa query real; este microcorte nao gera relatorio real; este microcorte nao executa refatoracao; a proxima etapa deve ser `runFeedbackStatusTenantAwareProtectionTest` antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da execucao do teste ou protecao tenant-aware de feedback status consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: validacao focal do teste estrutural ou contratual `tests/gestor-feedback-status-tenant-aware-protection.test.js`, sem abrir suite inteira, sem refatoracao e sem comando npm novo.
+- Comando executado neste checkpoint: `node --test tests/gestor-feedback-status-tenant-aware-protection.test.js`.
+- Resultado consolidado do teste focal: verde; `tests=5`; `suites=0`; `pass=5`; `fail=0`; `cancelled=0`; `skipped=0`; `todo=0`; `duration_ms=63.3706`.
+- Leitura consolidada desta validacao: o teste tenant-aware de feedback status passou protegendo o repasse contextual de `unitScope` ou `scopedUnitId`, a recusa de alvo fora de escopo antes de write efetivo, a preservacao do guard before write na facade e na bridge atual e o congelamento explicito do contrato publico do PATCH canonico.
+- Escopo preservado expressamente neste checkpoint: nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum inventario real foi executado; nenhum reset, cleanup, seed, migration ou backfill foi executado; nenhum comando de PostgreSQL foi iniciado; nenhum uso de Portal ocorreu; nenhum commit ou push foi realizado.
+- Resultado operacional consolidado deste microcorte: `src` permaneceu intacto; `package.json` permaneceu intacto; `tests` permaneceram sem diff adicional nesta rodada de execucao; a validacao ficou restrita ao teste focal novo e o proximo ato recomendado passa a ser revisar este teste tenant-aware antes de qualquer alteracao em `src`.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runFeedbackStatusTenantAwareProtectionTest
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=reviewFeedbackStatusTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareProtectionTestRun=true
+	- feedbackStatusTenantAwareProtectionTestPassed=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runFeedbackStatusTenantAwareProtectionTest
+	- recommendedNextAct=reviewFeedbackStatusTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: esta validacao apenas confirma a protecao tenant-aware focal; esta validacao nao altera codigo; esta validacao nao altera testes; esta validacao nao altera `package.json`; esta validacao nao executa refatoracao; esta validacao nao conecta Mongo real; esta validacao nao executa query real; esta validacao nao gera relatorio real; esta validacao nao inicia PostgreSQL; esta validacao nao usa Portal; a proxima etapa deve ser `reviewFeedbackStatusTenantAwareProtectionTest` antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
