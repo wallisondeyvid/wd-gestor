@@ -15887,6 +15887,112 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao permite reset, cleanup, seed, migration ou backfill;
 	- a etapa seguinte deve desenhar apenas o gate final de publicacao documental em microcorte proprio.
 
+- Gate final de publicacao da fase Mongo/read-only desenhado documentalmente.
+- Base publicada:
+	- 8ae9a01 docs(ops): revisa decisao de publicacao mongo read-only.
+- Objetivo do gate final de publicacao:
+	- consolidar documentalmente o gate final de publicacao da fase Mongo/read-only sem converter esse registro em push ou execucao real;
+	- confirmar que a fase Mongo/read-only esta documentalmente fechada;
+	- confirmar que a decisao de publicacao ja foi revisada;
+	- confirmar que este gate final e apenas preparacao documental para decisao humana futura de push.
+- Confirmacoes obrigatorias:
+	- a fase Mongo/read-only esta documentalmente fechada;
+	- a decisao de publicacao foi revisada;
+	- o gate final e apenas preparacao documental para decisao humana futura de push;
+	- este microcorte nao faz push;
+	- nenhum push automatico e autorizado;
+	- nenhum comando real foi criado;
+	- package.json nao foi alterado;
+	- nenhuma execucao foi liberada;
+	- nenhum relatorio real foi gerado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum fs.writeFile real foi usado;
+	- nenhuma aprovacao operacional automatica foi criada;
+	- nenhuma aprovacao documental foi convertida em execucao.
+- Condicoes de bloqueio para push automatico:
+	- qualquer tentativa de push automatico;
+	- qualquer tentativa de tratar este gate documental como autorizacao direta de push;
+	- qualquer ausencia de decisao humana futura e explicita do usuario para push;
+	- qualquer tentativa de pular a criacao formal do gate final de publicacao em microcorte proprio.
+- Condicoes de bloqueio para execucao real:
+	- qualquer tentativa de criar comando real ou copiavel;
+	- qualquer alteracao em package.json;
+	- qualquer liberacao implicita ou explicita de execucao;
+	- qualquer conexao Mongo real;
+	- qualquer query real;
+	- qualquer geracao de relatorio real;
+	- qualquer uso real de fs.writeFile;
+	- qualquer execucao real de inventario;
+	- qualquer uso de dados reais;
+	- qualquer tentativa de criar aprovacao operacional automatica;
+	- qualquer tentativa de converter aprovacao documental em execucao;
+	- qualquer tentativa de acoplar reset, cleanup, seed, migration ou backfill.
+- Decisao deste microcorte:
+	- apenas desenho documental do gate final de publicacao da fase Mongo/read-only;
+	- nenhum push foi executado;
+	- nenhum push automatico foi autorizado;
+	- nenhum comando real foi criado;
+	- package.json nao foi alterado;
+	- nenhuma execucao foi liberada;
+	- nenhum relatorio real foi gerado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum fs.writeFile real foi usado;
+	- nenhuma aprovacao operacional automatica foi criada;
+	- nenhuma aprovacao documental foi convertida em execucao;
+	- proximo ato recomendado: createReadOnlyInventoryOperationalReadinessMongoFinalPublicationGate.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryOperationalReadinessMongoFinalPublicationGate
+	- recommendedNextAct=createReadOnlyInventoryOperationalReadinessMongoFinalPublicationGate
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoFinalPublicationGateDesigned=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=designReadOnlyInventoryOperationalReadinessMongoFinalPublicationGate
+	- recommendedNextAct=createReadOnlyInventoryOperationalReadinessMongoFinalPublicationGate
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este desenho permanece estritamente documental;
+	- este desenho nao faz push;
+	- este desenho nao autoriza push automatico;
+	- este desenho nao cria comando real;
+	- este desenho nao altera package.json;
+	- este desenho nao cria npm script;
+	- este desenho nao libera execucao;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio real;
+	- este desenho nao usa fs.writeFile real;
+	- este desenho nao executa inventario real;
+	- este desenho nao usa dados reais;
+	- este desenho nao cria aprovacao operacional automatica;
+	- este desenho nao converte aprovacao documental em execucao;
+	- este desenho nao permite reset, cleanup, seed, migration ou backfill;
+	- a etapa seguinte deve criar apenas o documento de gate final de publicacao em microcorte proprio.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
