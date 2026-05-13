@@ -17235,6 +17235,83 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Documento de instrucao humana/manual de push da fase Mongo/read-only revisado.
+- Base publicada:
+	- d50c9ec docs(ops): cria instrucao humana de push mongo read-only.
+- Registro da revisao:
+	- documento de instrucao humana/manual de push da fase Mongo/read-only revisado;
+	- arquivo revisado: docs/runbooks/inventory-fictional-data-readonly-operational-readiness-mongo-user-push-instruction.md;
+	- nenhum push executado;
+	- nenhum push automatico autorizado;
+	- nenhum comando real criado;
+	- package.json nao alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum fs.writeFile real usado;
+	- nenhuma aprovacao operacional automatica criada;
+	- nenhuma aprovacao documental convertida em execucao.
+- Diagnostico da revisao:
+	- o documento revisado passou a explicitar de forma mais direta que se trata de instrucao humana/manual documental de push, e nao do proprio push nem de autorizacao executavel por si so;
+	- os bloqueios e a interpretacao obrigatoria foram reforcados para deixar claro que qualquer push real continua dependendo de decisao humana explicita e acao manual do usuario;
+	- a revisao permaneceu estritamente documental, sem comando real, sem alteracao em package.json, sem conexao Mongo real e sem liberacao de execucao.
+- Proximo ato recomendado:
+	- prepareReadOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPush.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryOperationalReadinessMongoUserPushInstruction
+	- recommendedNextAct=prepareReadOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPush
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoUserPushInstructionReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryOperationalReadinessMongoUserPushInstruction
+	- recommendedNextAct=prepareReadOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPush
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao permanece estritamente documental;
+	- esta revisao nao faz push;
+	- esta revisao nao autoriza push automatico;
+	- esta revisao nao e o proprio push;
+	- esta revisao nao substitui autorizacao real de push pelo usuario;
+	- esta revisao nao habilita push executavel por si so;
+	- esta revisao nao cria comando real;
+	- esta revisao nao altera package.json;
+	- esta revisao nao cria npm script;
+	- esta revisao nao libera execucao;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio real;
+	- esta revisao nao usa fs.writeFile real;
+	- esta revisao nao executa inventario real;
+	- esta revisao nao usa dados reais;
+	- esta revisao nao cria aprovacao operacional automatica;
+	- esta revisao nao converte aprovacao documental em execucao;
+	- esta revisao nao permite reset, cleanup, seed, migration ou backfill;
+	- a etapa seguinte deve preparar apenas o status final antes do push manual do usuario, sem executar push automaticamente.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
