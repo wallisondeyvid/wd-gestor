@@ -17312,6 +17312,93 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao permite reset, cleanup, seed, migration ou backfill;
 	- a etapa seguinte deve preparar apenas o status final antes do push manual do usuario, sem executar push automaticamente.
 
+- Preparacao documental do status final antes do push manual do usuario da fase Mongo/read-only registrada.
+- Base publicada:
+	- 7f945bd docs(ops): revisa instrucao humana de push mongo read-only.
+- Registro da preparacao:
+	- objetivo da preparacao do status final antes do push manual registrado documentalmente;
+	- confirmacao de que a fase Mongo/read-only esta documentalmente fechada;
+	- confirmacao de que a instrucao humana/manual de push foi revisada;
+	- confirmacao de que este microcorte nao faz push;
+	- confirmacao de que nenhum push automatico e autorizado;
+	- confirmacao de que push real exige decisao humana explicita e acao manual do usuario;
+	- confirmacao de que esta preparacao nao e o proprio push;
+	- confirmacao de que esta preparacao nao substitui autorizacao real de push pelo usuario;
+	- confirmacao de que esta preparacao nao habilita push executavel por si so;
+	- registro de que nenhum comando real foi criado;
+	- registro de que package.json nao foi alterado;
+	- registro de que nenhuma execucao foi liberada;
+	- registro de que nenhum relatorio real foi gerado;
+	- registro de que nenhum Mongo real foi conectado;
+	- registro de que nenhuma query real foi executada;
+	- registro de que nenhum fs.writeFile real foi usado;
+	- registro de que nenhuma aprovacao operacional automatica foi criada;
+	- registro de que nenhuma aprovacao documental foi convertida em execucao;
+	- condicoes de bloqueio para push automatico registradas como permanentes neste microcorte;
+	- condicoes de bloqueio para execucao real registradas como permanentes neste microcorte.
+- Diagnostico da preparacao:
+	- a preparacao consolida o estado final documental imediatamente anterior ao eventual push manual do usuario, sem converter esse estado em autorizacao executavel;
+	- o ledger passa a registrar de forma explicita que esta etapa nao faz push, nao autoriza push automatico e nao habilita execucao por si so;
+	- os bloqueios permanecem fechados por padrao para push automatico e para execucao real, sem comando real, sem alteracao em package.json, sem conexao Mongo real e sem geracao de relatorio real.
+- Condicoes de bloqueio:
+	- push automatico permanece bloqueado por ausencia de decisao humana explicita e por inexistencia de autorizacao automatica neste microcorte;
+	- qualquer execucao real permanece bloqueada por ausencia de microcorte proprio, de comando real, de aprovacao operacional executavel e de acao manual final do usuario.
+- Proximo ato recomendado:
+	- createReadOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPush.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=prepareReadOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPush
+	- recommendedNextAct=createReadOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPush
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPushPrepared=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=prepareReadOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPush
+	- recommendedNextAct=createReadOnlyInventoryOperationalReadinessMongoFinalStatusBeforeUserPush
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta preparacao permanece estritamente documental;
+	- esta preparacao nao faz push;
+	- esta preparacao nao autoriza push automatico;
+	- esta preparacao nao e o proprio push;
+	- esta preparacao nao substitui autorizacao real de push pelo usuario;
+	- esta preparacao nao habilita push executavel por si so;
+	- esta preparacao nao cria comando real;
+	- esta preparacao nao altera package.json;
+	- esta preparacao nao cria npm script;
+	- esta preparacao nao libera execucao;
+	- esta preparacao nao conecta Mongo real;
+	- esta preparacao nao executa query real;
+	- esta preparacao nao gera relatorio real;
+	- esta preparacao nao usa fs.writeFile real;
+	- esta preparacao nao executa inventario real;
+	- esta preparacao nao usa dados reais;
+	- esta preparacao nao cria aprovacao operacional automatica;
+	- esta preparacao nao converte aprovacao documental em execucao;
+	- esta preparacao nao permite reset, cleanup, seed, migration ou backfill;
+	- a etapa seguinte deve criar apenas o documento de status final antes do push manual do usuario, sem executar push automaticamente.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
