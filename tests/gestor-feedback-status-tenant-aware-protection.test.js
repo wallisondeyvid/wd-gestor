@@ -161,7 +161,7 @@ test('facade e bridge preservam o guard before write no source contract atual', 
 
   assert.match(
     facadeSource,
-    /if \(options\?\.allowLegacyUnscoped !== true\) \{[\s\S]*?return \{ existing: null, writeUnitScope: scopedUnitScope \ };/,
+    /if \(options\?\.allowLegacyUnscoped !== true\) \{[\s\S]*?return \{\s*existing: null,\s*writeUnitScope: scopedUnitScope\s*\};/,
     'a facade deve recusar alvo fora do escopo contextual antes de qualquer write efetivo quando nao houver fallback legado permitido',
   );
 

@@ -1782,6 +1782,43 @@ Checkpoint tenant enforcement atual:
 - Superficies preservadas nesta rodada de reexecucao com falha parcial: `src` nao foi alterado neste microcorte; `tests` nao foram alterados neste microcorte; `package.json` nao foi alterado; nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum relatorio real foi gerado; nenhum commit ou push foi realizado.
 - Interpretacao obrigatoria deste checkpoint: esta rodada registrou somente o diagnostico da falha remanescente; nenhuma correcao automatica foi aplicada; `src` nao foi alterado apos a execucao; `tests` nao foram alterados apos a execucao; a proxima etapa deve revisar o matcher textual remanescente do guardrail estrutural antes de nova reexecucao.
 
+- Checkpoint documental curto do ajuste do matcher textual remanescente do guardrail estrutural de feedback status consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `package.json` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: ajuste local em `tests/gestor-feedback-status-tenant-aware-protection.test.js` para aceitar a forma atual do source em `feedbackStatusDataFacade.js` sem enfraquecer a validacao de guard before write, sem alterar testes publicos adjacentes e sem alterar codigo de producao.
+- Arquivo de teste alterado nesta rodada: `tests/gestor-feedback-status-tenant-aware-protection.test.js`.
+- Resumo consolidado do ajuste: o matcher textual do ramo `allowLegacyUnscoped !== true` foi atualizado para aceitar a formatacao atual de `return { existing: null, writeUnitScope: scopedUnitScope };`, mantendo a exigencia de que exista branch explicito sem fallback legado, retorno nulo protegido e preservacao de `writeUnitScope` contextual; o teste nao voltou a exigir `GLOBAL_SCOPE` literal no ramo contextual.
+- Superficies preservadas nesta rodada: `src` nao foi alterado; `package.json` nao foi alterado; nenhum script foi alterado; nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum inventario real foi executado; nenhum relatorio real foi gerado; nenhum commit ou push foi realizado.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=fixFeedbackStatusProtectionTextMatcher
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=rerunFeedbackStatusTenantAwareFocusedTestsAfterMatcherFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusProtectionTextMatcherFixed=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=fixFeedbackStatusProtectionTextMatcher
+	- recommendedNextAct=rerunFeedbackStatusTenantAwareFocusedTestsAfterMatcherFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: este ajuste altera apenas `tests/gestor-feedback-status-tenant-aware-protection.test.js`; este ajuste nao altera codigo de producao; este ajuste nao altera `package.json`; este ajuste nao cria comando; este ajuste nao conecta Mongo real; este ajuste nao executa query real; a proxima etapa deve ser `rerunFeedbackStatusTenantAwareFocusedTestsAfterMatcherFix`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
