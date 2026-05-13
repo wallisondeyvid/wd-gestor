@@ -1998,6 +1998,67 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: este diagnostico apenas descreve o contrato atual; este diagnostico nao altera codigo; este diagnostico nao altera testes; este diagnostico nao executa refatoracao; este diagnostico nao cria comando; este diagnostico nao conecta Mongo real; este diagnostico nao executa query; este diagnostico nao gera relatorio; este diagnostico nao inicia PostgreSQL; este diagnostico nao usa Portal; a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao/teste tenant-aware de `recursosContextDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests` e sem criacao de arquivo novo.
+- Alvo deste desenho: `src/modules/gestor/app/data/recursos/recursosContextDataFacade.js`.
+- Contrato atual a preservar neste desenho:
+	- `findUnidadeUserBaseLeanData(id)` continua resolvendo `unitScope` via `scopeFromUnidadeId(id)` antes da leitura da unidade base;
+	- `findUnidadesByCondLeanData(cond)` continua tentando inferir um anchor unico por `extractScopedClusterAnchorFromUnidadesCond(cond)`;
+	- quando o cluster vier corretamente ancorado por `_id`, `unidade_principal_id` e `matriz_id`, a leitura continua contextual por `scopeFromUnidadeId(anchor)`;
+	- `listarRecursos.service.js` continua podendo devolver `blocked`, `empty` ou `filter` conforme a policy atual, sem regressao do contrato publico de listagem.
+- Risco principal que a protecao futura precisa cercar: fallback explicito para `GLOBAL_SCOPE` quando `extractScopedClusterAnchorFromUnidadesCond(cond)` nao encontra anchor confiavel; neste corredor tenant por unidade, esse fallback nao pode permanecer implícito e desprotegido.
+- Comportamento desejado para `cond` com anchor unico valido: o facade deve resolver `unitScope` contextual derivado do anchor e nao pode cair em `GLOBAL_SCOPE`; a protecao futura deve congelar esse contrato como o ramo prioritario e esperado do corredor contextual.
+- Comportamento desejado para `cond` sem anchor confiavel no corredor contextual: a protecao futura deve provar que esse ramo nao materializa leitura global indevida; se houver chamada contextual sem anchor confiavel, o resultado esperado deve ser bloqueio, vazio ou outro isolamento explicitamente documentado antes de qualquer refatoracao em `src`.
+- Regra documental para eventual manutencao do fallback global: se algum fallback global precisar permanecer, ele deve ser explicitamente justificado como ramo legado/global legitimo, delimitado por condicoes observaveis e coberto por teste especifico; sem essa justificativa, a hipotese preferencial continua sendo bloquear ou isolar o fallback global no corredor contextual.
+- Protecao futura desejada para este alvo:
+	- teste deve provar que `cond` com unidade ou anchor valido nao cai em `GLOBAL_SCOPE`;
+	- teste deve provar que `cond` sem anchor confiavel nao materializa leitura global indevida no corredor contextual;
+	- teste deve preservar a listagem valida de recursos dentro do escopo permitido;
+	- teste deve documentar se existe ramo legado/global permitido e em quais condicoes ele pode operar sem violar o tenant por unidade.
+- Tipo de teste recomendado neste desenho:
+	- teste estrutural ou contratual de seam;
+	- sem Mongo real;
+	- usando leitura de source e/ou mocks e stubs de repositório;
+	- sem query real;
+	- sem relatorio real.
+- Hipotese de refatoracao futura, sem implementacao neste microcorte:
+	- tornar o fallback global explicito e controlado, em vez de residual e silencioso;
+	- preferir sempre o escopo derivado do anchor quando houver unidade confiavel;
+	- bloquear ou isolar fallback global em chamada contextual sem anchor confiavel;
+	- nao abrir `api.db.js` como big-bang;
+	- nao alterar `listarRecursos.service.js` sem necessidade demonstrada por teste.
+- Decisao operacional consolidada deste desenho: nenhuma refatoracao sera feita neste microcorte; nenhuma criacao de teste ocorrera neste microcorte; a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designRecursosContextTenantAwareProtection
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- recommendedNextAct=createRecursosContextTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- recursosContextTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designRecursosContextTenantAwareProtection
+	- recommendedNextAct=createRecursosContextTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: este desenho apenas define protecao ou teste futuro; este desenho nao altera codigo; este desenho nao altera testes; este desenho nao cria teste ainda; este desenho nao executa refatoracao; este desenho nao cria comando; este desenho nao conecta Mongo real; este desenho nao executa query; este desenho nao gera relatorio; este desenho nao inicia PostgreSQL; este desenho nao usa Portal; a proxima etapa deve criar o teste ou protecao antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
