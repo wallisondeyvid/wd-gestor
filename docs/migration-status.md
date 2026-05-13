@@ -1483,6 +1483,44 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: este desenho apenas define protecao ou teste futuro; este desenho nao altera codigo; este desenho nao altera testes; este desenho nao cria teste ainda; este desenho nao executa refatoracao; este desenho nao cria comando; este desenho nao conecta Mongo real; este desenho nao executa query; este desenho nao gera relatorio; este desenho nao inicia PostgreSQL; este desenho nao usa Portal; a proxima etapa deve criar o teste ou protecao antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao do teste ou protecao tenant-aware de feedback status consolidado nesta rodada, com criacao de `tests/gestor-feedback-status-tenant-aware-protection.test.js`, sem alteracao em `src`, sem alteracao em `package.json` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: protecao estrutural ou contratual de seam, sem banco real, sem query real, sem refatoracao, sem comando npm novo e sem reabertura ampla de `api.db.js`.
+- Arquivo criado neste checkpoint: `tests/gestor-feedback-status-tenant-aware-protection.test.js`.
+- Escopo consolidado do teste criado: o novo teste protege o seam `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData`; prova que `unitScope` ou `scopedUnitId` continuam parte material do contrato esperado; prova que alvo fora da unidade permitida e recusado antes de write efetivo; prova que o contrato publico do PATCH canonico continua explicitamente preservado para os casos validos e invalidos ja congelados.
+- Estrategia consolidada do teste criado: `node:test` com `assert`; sem conexao real; sem banco real; sem dados reais; sem query real; importando a facade real com mocks do repository e usando leitura estrutural dos arquivos adjacentes para proteger o repasse contextual, a ordem guard before write e o contrato publico ja congelado.
+- Resultado consolidado deste microcorte: `src` permaneceu intacto; `package.json` permaneceu intacto; nenhuma refatoracao foi executada; nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum relatorio real foi gerado; o proximo ato recomendado passa a ser rodar o teste focal novo, e nao abrir refatoracao em `src`.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createFeedbackStatusTenantAwareProtectionTest
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=runFeedbackStatusTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createFeedbackStatusTenantAwareProtectionTest
+	- recommendedNextAct=runFeedbackStatusTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: este microcorte cria apenas a protecao ou teste tenant-aware focal; este microcorte nao altera codigo de producao; este microcorte nao altera `package.json`; este microcorte nao cria comando; este microcorte nao conecta Mongo real; este microcorte nao executa query real; este microcorte nao gera relatorio real; este microcorte nao executa refatoracao; a proxima etapa deve ser `runFeedbackStatusTenantAwareProtectionTest` antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
