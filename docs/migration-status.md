@@ -1857,6 +1857,46 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: esta validacao apenas registra a execucao focal verde apos o ajuste final do matcher; esta validacao nao altera codigo; esta validacao nao altera testes; esta validacao nao altera `package.json`; esta validacao nao cria comando; esta validacao nao conecta Mongo real; esta validacao nao executa query real; a proxima etapa deve ser `reviewFeedbackStatusTenantAwareMinimalRefactor`.
 
+- Checkpoint documental curto da revisao e fechamento da refatoracao minima tenant-aware de feedback status consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests` e sem alteracao em `package.json`.
+- Escopo consolidado do fechamento: a refatoracao minima foi implementada em `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`; o teste de protecao tenant-aware foi ajustado para scoped write ou contextual em `tests/gestor-feedback-status-tenant-aware-protection.test.js`; a validacao focal final ficou verde com `tests=13`, `pass=13` e `fail=0`.
+- Leitura consolidada do corredor fechado: o contrato publico do PATCH canonico permaneceu preservado; o seam estrutural adjacente permaneceu preservado; o guardrail tenant-aware permaneceu preservado e alinhado ao novo contrato contextual; nao houve necessidade de reabrir refatoracao ampla.
+- Superficies preservadas expressamente neste fechamento: `src` nao foi alterado neste microcorte; `tests` nao foram alterados neste microcorte; `package.json` nao foi alterado; `api.db.js` nao foi alterado apos o corte minimo; `feedbackApi.js` nao foi alterado; `updateFeedbackStatus.service.js` nao foi alterado; nenhum script foi alterado.
+- Escopo operacional preservado neste fechamento: nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum inventario real foi executado; nenhum relatorio real foi gerado; nenhum reset, cleanup, seed, migration ou backfill foi executado; PostgreSQL nao foi iniciado; Portal nao foi usado; nenhum push foi realizado.
+- Decisao consolidada deste checkpoint: o corredor `feedback status` fica fechado como microcorte tenant-aware minimo validado, com refatoracao localizada na facade, protecao estrutural atualizada e prova focal verde suficiente para encerrar este alvo tecnico pequeno.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewFeedbackStatusTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterFeedbackStatus
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareMinimalRefactorReviewed=true
+	- feedbackStatusTenantAwareMinimalRefactorAccepted=true
+	- feedbackStatusFocusedValidationPassed=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewFeedbackStatusTenantAwareMinimalRefactor
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterFeedbackStatus
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: esta revisao apenas fecha o microcorte `feedback status`; esta revisao nao altera codigo; esta revisao nao altera testes; esta revisao nao executa refatoracao; esta revisao nao cria comando; esta revisao nao conecta Mongo real; esta revisao nao executa query; esta revisao nao gera relatorio; esta revisao nao inicia PostgreSQL; esta revisao nao usa Portal; a proxima etapa deve selecionar o proximo alvo tecnico pequeno tenant-aware, sem abrir refatoracao ampla.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
