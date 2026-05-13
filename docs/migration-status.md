@@ -1819,6 +1819,44 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: este ajuste altera apenas `tests/gestor-feedback-status-tenant-aware-protection.test.js`; este ajuste nao altera codigo de producao; este ajuste nao altera `package.json`; este ajuste nao cria comando; este ajuste nao conecta Mongo real; este ajuste nao executa query real; a proxima etapa deve ser `rerunFeedbackStatusTenantAwareFocusedTestsAfterMatcherFix`.
 
+- Checkpoint documental curto da validacao focal verde de feedback status apos o ajuste final do matcher consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests` e sem alteracao em `package.json`.
+- Comando executado nesta rodada: `node --test tests/gestor-feedback-status-tenant-aware-protection.test.js tests/gestor-feedback-status-patch-structural-seam.test.js tests/gestor-feedback-status-patch-runtime-contract.test.js`.
+- Resultado consolidado desta execucao: `tests=13`, `suites=0`, `pass=13`, `fail=0`, `skipped=0`, `todo=0`, `cancelled=0`.
+- Leitura consolidada da validacao verde: o guardrail tenant-aware atualizado ficou verde; o seam estrutural adjacente permaneceu verde; o contrato publico do PATCH canonico permaneceu verde; nao ha evidencia de regressao funcional no corredor apos a refatoracao minima tenant-aware e apos o ajuste final do matcher textual.
+- Superficies preservadas nesta rodada: `src` nao foi alterado neste microcorte; `tests` nao foram alterados neste microcorte; `package.json` nao foi alterado; nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum relatorio real foi gerado; nenhum commit ou push foi realizado.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=rerunFeedbackStatusTenantAwareFocusedTestsAfterMatcherFix
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=reviewFeedbackStatusTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareFocusedTestsAfterMatcherFixRun=true
+	- feedbackStatusTenantAwareFocusedTestsAfterMatcherFixPassed=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=rerunFeedbackStatusTenantAwareFocusedTestsAfterMatcherFix
+	- recommendedNextAct=reviewFeedbackStatusTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: esta validacao apenas registra a execucao focal verde apos o ajuste final do matcher; esta validacao nao altera codigo; esta validacao nao altera testes; esta validacao nao altera `package.json`; esta validacao nao cria comando; esta validacao nao conecta Mongo real; esta validacao nao executa query real; a proxima etapa deve ser `reviewFeedbackStatusTenantAwareMinimalRefactor`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
