@@ -17619,6 +17619,82 @@ Checkpoint tenant enforcement atual:
 	- este fechamento nao permite reset, cleanup, seed, migration ou backfill;
 	- a etapa seguinte e decisao manual do usuario sobre push, sem executar push automaticamente.
 
+- Checkpoint pos-push da fase Mongo/read-only registrado.
+- Base publicada:
+	- 24a274b docs(ops): registra fechamento final antes do push mongo read-only.
+- Registro do checkpoint pos-push:
+	- fase Mongo/read-only encerrada documentalmente;
+	- push manual executado pelo usuario;
+	- HEAD local e origin sincronizados em 24a274b;
+	- testes fortes verdes: 2274 tests, 2272 pass, 0 fail, 2 skipped;
+	- nenhum push pendente;
+	- nenhum comando real criado;
+	- package.json nao alterado neste microcorte;
+	- nenhuma execucao real liberada;
+	- nenhum Mongo real conectado neste microcorte;
+	- nenhuma query real executada neste microcorte;
+	- nenhum relatorio real gerado neste microcorte;
+	- nenhuma limpeza, reset, seed, migration ou backfill executada;
+	- decisao: encerrar a frente de prontidao operacional Mongo/read-only;
+	- proximo foco: retomar a evolucao arquitetural multi-tenant.
+- Diagnostico do checkpoint pos-push:
+	- o registro consolida que a trilha documental Mongo/read-only foi concluida e publicada, sem pendencia de push entre local e origin;
+	- este microcorte nao reabre a frente de push nem cria qualquer capacidade executavel, apenas fecha o ciclo documental e seleciona o proximo eixo tecnico;
+	- a proxima frente passa a ser o mapeamento do proximo bloco de execucao arquitetural tenant-aware/database por unidade.
+- Proximo ato recomendado:
+	- mapNextTenantArchitectureExecutionBlock.
+- Decisao principal:
+	- phase=postOperationalReadinessMongo
+	- selectedTarget=selectNextArchitecturePhaseAfterMongoReadiness
+	- recommendedNextAct=mapNextTenantArchitectureExecutionBlock
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates:
+	- operationalReadinessMongoPushed=true
+	- postPushCheckpointRegistered=true
+	- localAndOriginSynced=true
+	- testsPassed=true
+	- testCount=2274
+	- testPassed=2272
+	- testFailed=0
+	- testSkipped=2
+	- phase=postOperationalReadinessMongo
+	- selectedTarget=selectNextArchitecturePhaseAfterMongoReadiness
+	- recommendedNextAct=mapNextTenantArchitectureExecutionBlock
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- reportGenerated=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este checkpoint apenas registra o pos-push;
+	- este checkpoint encerra a frente de prontidao operacional Mongo/read-only;
+	- este checkpoint nao inicia execucao real;
+	- este checkpoint nao cria comando;
+	- este checkpoint nao altera package.json;
+	- este checkpoint nao conecta Mongo real;
+	- este checkpoint nao executa query;
+	- este checkpoint nao gera relatorio;
+	- este checkpoint nao altera src;
+	- este checkpoint nao altera tests;
+	- este checkpoint nao inicia PostgreSQL;
+	- este checkpoint nao usa Portal;
+	- este checkpoint nao faz novo push;
+	- a proxima etapa deve mapear o proximo bloco tecnico tenant-aware/database por unidade.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
