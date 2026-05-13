@@ -1395,6 +1395,51 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: o registro da auditoria nao autoriza refatoracao imediata de `api.db.js`, `auth.db.js`, `UnitProvisioningRepository.js` ou bridges legacy; nao autoriza tocar `src` ou `tests` nesta rodada; nao autoriza Mongo real, query real, rollout, push ou reabertura ampla de qualquer frente macro; ele apenas congela a leitura de aderencia atual e fixa `feedbackStatusDataFacade.js` como o proximo microalvo tecnico admissivel.
 
+- Checkpoint documental curto do diagnostico tenant-aware do corredor `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData` consolidado nesta rodada, sem abertura de refatoracao, sem alteracao em `src`, sem alteracao em `tests` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: diagnostico documental do contrato atual, restrito ao corredor de status admin de feedback, sem implementar protecao nova, sem desenhar comando e sem executar query real.
+- Alvo diagnosticado neste checkpoint: `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`, no helper `updateFeedbackStatusLeanData`, fica registrado como corredor tenant-aware `HIBRIDO_AUDITAR` e nao como erro confirmado neste microcorte.
+- Cadeia viva consolidada deste checkpoint: `feedbackApi.js` -> `updateFeedbackStatus.service.js` -> `feedbackStatusDataFacade.js` -> `api.db.js`.
+- Leitura consolidada do contrato atual: `feedbackApi.js` semeia escopo administrativo por `seedFeedbackAdminUnitScopeFromAuthContext`; `updateFeedbackStatus.service.js` recebe e repassa `unitScope` ou `scopedUnitId` sem mudar o payload; `feedbackStatusDataFacade.js` ainda executa `findFeedbackByIdLeanRepo` e `findFeedbackByIdAndUpdateSetNewLeanRepo` com `GLOBAL_SCOPE`; `api.db.js` preserva o mesmo desenho semantico de leitura dentro do escopo seguido de mutacao global.
+- Diagnostico consolidado da ordem operacional atual: a mutacao administrativa continua dependendo de leitura global seguida de checagem posterior de unidade ou contexto, em vez de nascer diretamente de uma garantia tenant-aware na fronteira final da facade.
+- Classificacao consolidada deste checkpoint: o corredor permanece `HIBRIDO_AUDITAR` porque a borda administrativa ja chega com escopo contextual, a regra global legitima de `master` ou `admin` continua preservada, e o contrato runtime hoje observado ainda fecha 404 fora de escopo e 200 no alvo contextual valido; por isso o uso atual nao foi promovido aqui a erro confirmado.
+- Hipotese principal de risco deste checkpoint: a mutacao de dominio contextual ainda toca `GLOBAL_SCOPE` antes da ultima garantia tenant-aware material na data facade, o que deixa o corredor dependente da checagem posterior para evitar ampliacao indevida de escopo.
+- Comportamento atual que precisa ser preservado: sem sessao continua 401; usuario nao admin continua 403 antes da mutacao; admin contextual na unidade correta continua 200 com persistencia do novo status; admin contextual fora de escopo continua 404 sem mutacao; status invalido continua 400 antes da mutacao; a regra de visao global legitima para `master` ou `admin` continua preservada apenas nos ramos documentados.
+- Comportamento que deve ser protegido por teste futuro: a data facade e o seam de service precisam continuar recusando alvo fora de `scopedUnitId` ou `unitScope`, sem mutar o documento; a ordem de protecao deve impedir que lookup ou write global materialize alteracao contextual fora do tenant permitido; a borda PATCH canonica deve continuar preferindo o caminho contextual sem quebrar o alias legacy ja preservado fora deste microcorte.
+- Hipotese de refatoracao futura, sem implementacao neste checkpoint: desenhar protecao focal para que o corredor de status admin deixe de depender de leitura ou mutacao com `GLOBAL_SCOPE` antes da ultima garantia contextual, provavelmente convergindo para lookup e write ancorados em escopo tenant-aware explicito ou para guarda local equivalente antes da mutacao final.
+- Criterio de sucesso da protecao ou teste futuro: manter intacto o contrato publico observado do PATCH canonico, provar que alvo fora de escopo nao sofre mutacao mesmo com repositorio global disponivel, preservar a regra de `master` ou `admin` global ja legitimada e reduzir a dependencia de `GLOBAL_SCOPE` no corredor sem reabrir `api.db.js` como big-bang.
+- Objetivo consolidado do proximo microcorte: desenhar protecao e teste focal antes de qualquer alteracao em `src`, validando a borda tenant-aware do corredor de status sem refatoracao ampla de bridge, facade ou repositorio heterogeneo.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseFeedbackStatusTenantAwareTarget
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=designFeedbackStatusTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseFeedbackStatusTenantAwareTarget
+	- recommendedNextAct=designFeedbackStatusTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: este diagnostico apenas descreve o contrato atual; este diagnostico nao altera codigo; este diagnostico nao altera testes; este diagnostico nao executa refatoracao; este diagnostico nao cria comando; este diagnostico nao conecta Mongo real; este diagnostico nao executa query; este diagnostico nao gera relatorio; este diagnostico nao inicia PostgreSQL; este diagnostico nao usa Portal; a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
