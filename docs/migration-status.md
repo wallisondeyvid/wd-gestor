@@ -2059,6 +2059,58 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: este desenho apenas define protecao ou teste futuro; este desenho nao altera codigo; este desenho nao altera testes; este desenho nao cria teste ainda; este desenho nao executa refatoracao; este desenho nao cria comando; este desenho nao conecta Mongo real; este desenho nao executa query; este desenho nao gera relatorio; este desenho nao inicia PostgreSQL; este desenho nao usa Portal; a proxima etapa deve criar o teste ou protecao antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao da protecao/teste tenant-aware de `recursosContextDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `package.json` e sem conexao com Mongo real.
+- Protecao criada nesta rodada: `tests/gestor-recursos-context-tenant-aware-protection.test.js`.
+- Objetivo consolidado da protecao criada:
+	- proteger que `cond` com unidade ou anchor valido nao caia em `GLOBAL_SCOPE`;
+	- proteger que a ausencia de anchor confiavel nao vire fallback global incondicional ou silencioso no seam;
+	- preservar ramo legado ou global apenas se ele continuar explicitamente condicionado e visivel no contrato atual;
+	- congelar o seam de `recursosContextDataFacade.js` sem depender de Mongo real, query real ou dados reais.
+- Cobertura contratual consolidada do teste criado:
+	- verifica por mock de repositório que `findUnidadeUserBaseLeanData(id)` continua resolvendo `scopeFromUnidadeId(id)`;
+	- verifica por mock de repositório que `findUnidadesByCondLeanData(cond)` usa escopo de unidade quando o `cond` traz anchor unico confiavel;
+	- verifica por mock de repositório que o ramo sem anchor confiavel permanece explicito e observavel, em vez de oculto;
+	- verifica por leitura de source que o extractor continua estrito e que o fallback global segue condicionado ao resultado do anchor;
+	- verifica por leitura de source que `listarRecursos.service.js` continua carregando `scopedUnitId` e `requestedUnitId` antes da policy contextual.
+- Restricoes e invariantes preservados neste microcorte:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma refatoracao foi executada.
+- Decisao operacional consolidada desta rodada: o teste de protecao foi criado, mas nao foi executado neste microcorte; a proxima etapa recomendada deve rodar esse teste de forma focal antes de qualquer alteracao em `src`.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createRecursosContextTenantAwareProtectionTest
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- recommendedNextAct=runRecursosContextTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- recursosContextTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createRecursosContextTenantAwareProtectionTest
+	- recommendedNextAct=runRecursosContextTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
