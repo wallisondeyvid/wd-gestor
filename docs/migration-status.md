@@ -1774,6 +1774,14 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: este ajuste altera apenas `tests/gestor-feedback-status-tenant-aware-protection.test.js`; este ajuste nao altera codigo de producao; este ajuste nao altera `package.json`; este ajuste nao cria comando; este ajuste nao conecta Mongo real; este ajuste nao executa query real; a proxima etapa deve ser `rerunFeedbackStatusTenantAwareProtectionAfterTestUpdate`.
 
+- Checkpoint documental curto da reexecucao focal de feedback status apos o ajuste do guardrail consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests` e sem alteracao em `package.json`.
+- Comando executado nesta rodada: `node --test tests/gestor-feedback-status-tenant-aware-protection.test.js tests/gestor-feedback-status-patch-structural-seam.test.js tests/gestor-feedback-status-patch-runtime-contract.test.js`.
+- Resultado consolidado desta reexecucao: `tests=13`, `suites=0`, `pass=12`, `fail=1`, `skipped=0`, `todo=0`, `cancelled=0`.
+- Diagnostico consolidado da falha remanescente: o corredor funcional e contextual ficou verde, incluindo os casos publicos do PATCH canonico, o seam adjacente e os dois cenarios principais da facade; a unica falha remanescente continuou em `tests/gestor-feedback-status-tenant-aware-protection.test.js`, no caso `facade e bridge preservam o guard before write no source contract atual`, por causa de uma assercao textual cujo regex ainda nao bate exatamente com o source atual da facade no retorno `return { existing: null, writeUnitScope: scopedUnitScope };`.
+- Leitura consolidada desta reexecucao: nao ha evidencia nova de regressao comportamental publica; a falha restante aparenta estar restrita ao matcher textual do guardrail estrutural, nao ao contrato funcional observado do corredor.
+- Superficies preservadas nesta rodada de reexecucao com falha parcial: `src` nao foi alterado neste microcorte; `tests` nao foram alterados neste microcorte; `package.json` nao foi alterado; nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum relatorio real foi gerado; nenhum commit ou push foi realizado.
+- Interpretacao obrigatoria deste checkpoint: esta rodada registrou somente o diagnostico da falha remanescente; nenhuma correcao automatica foi aplicada; `src` nao foi alterado apos a execucao; `tests` nao foram alterados apos a execucao; a proxima etapa deve revisar o matcher textual remanescente do guardrail estrutural antes de nova reexecucao.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
