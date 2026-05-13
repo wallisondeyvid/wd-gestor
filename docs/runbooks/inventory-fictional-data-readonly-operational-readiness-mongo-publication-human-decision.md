@@ -12,8 +12,9 @@ Este documento nao faz push.
 Este documento nao autoriza push automatico.
 Push futuro exige decisao humana explicita do usuario.
 Esta decisao documental nao substitui uma autorizacao real de push pelo usuario.
+Esta decisao documental nao e o proprio push.
 Este documento nao autoriza execucao real neste microcorte.
-Este documento nao cria comando real.
+Este documento nao cria comando real por si so.
 Este documento nao altera package.json.
 Este documento nao cria npm script.
 Este documento nao conecta Mongo real.
@@ -36,8 +37,9 @@ Execucao futura exige microcorte proprio.
 - este documento nao autoriza push automatico;
 - qualquer push futuro exige decisao humana explicita do usuario;
 - esta decisao documental nao substitui uma autorizacao real de push pelo usuario;
+- esta decisao documental nao e o proprio push;
 - este documento nao autoriza execucao real neste microcorte;
-- este documento nao cria comando real;
+- este documento nao cria comando real por si so;
 - este documento nao altera package.json;
 - este documento nao cria npm script;
 - este documento nao conecta Mongo real;
@@ -58,6 +60,7 @@ Execucao futura exige microcorte proprio.
 - confirmar que o gate final de publicacao foi revisado;
 - confirmar que este documento nao faz push nem autoriza push automatico;
 - confirmar que qualquer push futuro depende de decisao humana explicita do usuario;
+- confirmar que esta decisao documental nao e o proprio push;
 - confirmar que nenhum comando real foi criado;
 - confirmar que package.json nao foi alterado;
 - confirmar que nenhuma execucao foi liberada;
@@ -76,6 +79,7 @@ Execucao futura exige microcorte proprio.
 - nenhum push automatico autorizado;
 - qualquer push futuro exige decisao humana explicita do usuario;
 - esta decisao documental nao substitui uma autorizacao real de push pelo usuario;
+- esta decisao documental nao e o proprio push;
 - nenhum comando real criado;
 - package.json nao alterado;
 - nenhuma execucao liberada;
@@ -93,6 +97,7 @@ Execucao futura exige microcorte proprio.
 - qualquer tentativa de tratar esta decisao documental como autorizacao direta de push;
 - qualquer ausencia de decisao humana explicita do usuario para push;
 - qualquer tentativa de usar esta decisao documental como substituto de autorizacao real de push pelo usuario;
+- qualquer tentativa de tratar esta decisao documental como se fosse o proprio push;
 - qualquer tentativa de criar comando real ou copiavel;
 - qualquer alteracao em package.json;
 - qualquer npm script novo;
@@ -123,8 +128,9 @@ Execucao futura exige microcorte proprio.
 - este documento nao autoriza push automatico;
 - push futuro exige decisao humana explicita do usuario;
 - esta decisao documental nao substitui uma autorizacao real de push pelo usuario;
+- esta decisao documental nao e o proprio push;
 - este documento nao autoriza execucao real;
-- nao cria comando real;
+- nao cria comando real por si so;
 - nao altera package.json;
 - nao cria npm script;
 - nao conecta Mongo real;
