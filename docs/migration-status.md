@@ -17532,6 +17532,93 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao permite reset, cleanup, seed, migration ou backfill;
 	- a etapa seguinte deve preparar apenas o fechamento final antes do push manual, sem executar push automaticamente.
 
+- Fechamento final documental antes do push manual do usuario da fase Mongo/read-only registrado.
+- Base publicada:
+	- 760ebcc docs(ops): revisa status final antes do push mongo read-only.
+- Registro do fechamento final:
+	- confirmacao de que a fase Mongo/read-only esta documentalmente fechada;
+	- confirmacao de que o status final antes do push manual foi revisado;
+	- confirmacao de que esta e a ultima etapa documental antes da decisao manual de push;
+	- confirmacao de que este microcorte nao faz push;
+	- confirmacao de que nenhum push automatico e autorizado;
+	- confirmacao de que qualquer push real exige decisao humana explicita e acao manual do usuario;
+	- confirmacao de que este fechamento nao e o proprio push;
+	- confirmacao de que este fechamento nao substitui autorizacao real de push pelo usuario;
+	- confirmacao de que este fechamento nao habilita push executavel por si so;
+	- registro de que nenhum comando real foi criado;
+	- registro de que package.json nao foi alterado;
+	- registro de que nenhuma execucao foi liberada;
+	- registro de que nenhum relatorio real foi gerado;
+	- registro de que nenhum Mongo real foi conectado;
+	- registro de que nenhuma query real foi executada;
+	- registro de que nenhum fs.writeFile real foi usado;
+	- registro de que nenhuma aprovacao operacional automatica foi criada;
+	- registro de que nenhuma aprovacao documental foi convertida em execucao;
+	- condicoes de bloqueio para push automatico registradas como permanentes neste microcorte;
+	- condicoes de bloqueio para execucao real registradas como permanentes neste microcorte.
+- Diagnostico do fechamento final:
+	- esta secao consolida a trilha Mongo/read-only como fechada no plano documental imediatamente anterior a qualquer decisao manual do usuario sobre push;
+	- o ledger passa a registrar de forma explicita que esta etapa final nao faz push, nao autoriza push automatico e nao converte o fechamento documental em execucao;
+	- os bloqueios permanecem fechados por padrao para push automatico e para execucao real, sem comando real, sem alteracao em package.json, sem conexao Mongo real e sem geracao de relatorio real.
+- Condicoes de bloqueio:
+	- push automatico permanece bloqueado por ausencia de decisao humana explicita e por inexistencia de autorizacao automatica nesta etapa final documental;
+	- qualquer execucao real permanece bloqueada por ausencia de microcorte proprio, de comando real, de aprovacao operacional executavel e de acao manual final do usuario.
+- Proximo ato recomendado:
+	- userManualPushDecision.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=finalizeReadOnlyInventoryOperationalReadinessMongoBeforeManualPush
+	- recommendedNextAct=userManualPushDecision
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoFinalClosureBeforeManualPushRegistered=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=finalizeReadOnlyInventoryOperationalReadinessMongoBeforeManualPush
+	- recommendedNextAct=userManualPushDecision
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este fechamento permanece estritamente documental;
+	- este fechamento nao faz push;
+	- este fechamento nao autoriza push automatico;
+	- este fechamento nao e o proprio push;
+	- este fechamento nao substitui autorizacao real de push pelo usuario;
+	- este fechamento nao habilita push executavel por si so;
+	- este fechamento nao cria comando real;
+	- este fechamento nao altera package.json;
+	- este fechamento nao cria npm script;
+	- este fechamento nao libera execucao;
+	- este fechamento nao conecta Mongo real;
+	- este fechamento nao executa query real;
+	- este fechamento nao gera relatorio real;
+	- este fechamento nao usa fs.writeFile real;
+	- este fechamento nao executa inventario real;
+	- este fechamento nao usa dados reais;
+	- este fechamento nao cria aprovacao operacional automatica;
+	- este fechamento nao converte aprovacao documental em execucao;
+	- este fechamento nao permite reset, cleanup, seed, migration ou backfill;
+	- a etapa seguinte e decisao manual do usuario sobre push, sem executar push automaticamente.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
