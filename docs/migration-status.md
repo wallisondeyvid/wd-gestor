@@ -1897,6 +1897,55 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: esta revisao apenas fecha o microcorte `feedback status`; esta revisao nao altera codigo; esta revisao nao altera testes; esta revisao nao executa refatoracao; esta revisao nao cria comando; esta revisao nao conecta Mongo real; esta revisao nao executa query; esta revisao nao gera relatorio; esta revisao nao inicia PostgreSQL; esta revisao nao usa Portal; a proxima etapa deve selecionar o proximo alvo tecnico pequeno tenant-aware, sem abrir refatoracao ampla.
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico pequeno tenant-aware apos `feedback status` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests` e sem alteracao em `package.json`.
+- Premissa consolidada desta selecao: `feedbackStatusDataFacade.js` ja foi selecionado, diagnosticado, protegido, refatorado minimamente e validado; portanto este microcorte apenas escolhe o proximo alvo tecnico e nao implementa qualquer refatoracao.
+- Candidatos avaliados nesta rodada:
+	- `funcionariosPageBundleDataFacade.js`: adiado porque ja separa ramo privilegiado global explicito e ramo contextual por unidade, o que reduz o risco tenant-aware imediato apesar do dominio `funcionarios` permanecer hibrido na matriz.
+	- `funcoesPageBundleOwnerDataFacade.js`: adiado porque mistura catalogo global legitimo de modulos e unidades principais com apenas um helper contextual menor; o risco tenant-aware real existe, mas o corredor dominante ainda e administrativo ou global legitimo.
+	- `unidadesPageBundleDataFacade.js`: adiado porque o bundle e principalmente administrativo ou global legitimo de unidades e modulos, com blast radius maior de page bundle e baixo ganho local imediato.
+	- `unidadesDiretoresPageDataFacade.js`: adiado porque opera pagina administrativa de unidades ou diretores com leitura global explicita, sem corredor contextual pequeno tao nítido quanto o candidato escolhido.
+	- `recursosPageBundleDataFacade.js`: adiado porque e majoritariamente bundle administrativo de unidades para pagina de recursos; o risco tenant-aware mais interessante e mais local ficou concentrado no facade de contexto do mesmo dominio.
+	- `recursosContextDataFacade.js`: escolhido porque e pequeno, vivo, testavel e claramente hibrido; contem fallback explicito para `GLOBAL_SCOPE` quando o `cond` nao produz anchor canonico, apesar de o dominio `recursos` ja estar classificado como tenant por unidade na matriz; tambem possui cadeia viva observavel para `listarRecursos.service.js`, o que torna o alvo menor e mais seguro para diagnostico e protecao antes de qualquer patch.
+	- `removeWrongMasterExecutionDataFacade.js`: adiado porque e facade de debug com semantica global administrativa e cadeia operacional mais excepcional do que o corredor de recursos.
+	- `UserApiModulosCanonicalRepository.js`: adiado porque o catalogo de modulos ja aparece como global legitimo no catalogo e na matriz; o risco tenant-aware aqui e menor do que o fallback residual do contexto de recursos.
+	- slices especificos de `api.db.js`: adiados porque `api.db.js` continua heterogeneo demais; sem seam menor e mais local ja recortado, reabrir a bridge agora aumentaria o blast radius desnecessariamente.
+	- `UnitProvisioningRepository.js`: adiado expressamente por blast radius alto e por permanecer no grupo de provisioning ou snapshot global legitimado.
+- Alvo escolhido nesta rodada: `src/modules/gestor/app/data/recursos/recursosContextDataFacade.js`.
+- Justificativa consolidada do alvo escolhido: o facade e pequeno; tem risco tenant-aware real ou hibrido por depender de `extractScopedClusterAnchorFromUnidadesCond(cond)` e cair em `GLOBAL_SCOPE` quando o anchor nao e inferido; o dominio `recursos` ja esta classificado como tenant por unidade na matriz; ha cadeia viva clara pelo service de listagem de recursos; e o corte pode comecar por diagnostico ou protecao local sem abrir `api.db.js` inteiro, sem tocar login global legitimo e sem tocar provisioning de alto raio.
+- Decisao operacional consolidada desta rodada: nenhuma refatoracao sera feita neste microcorte; a proxima etapa deve diagnosticar o alvo escolhido e desenhar protecao ou teste antes de qualquer alteracao em `src`.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackStatus
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- recommendedNextAct=diagnoseRecursosContextDataFacadeTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- nextTenantAwareTechnicalTargetAfterFeedbackStatusSelected=true
+	- feedbackStatusTenantAwareMicrocutClosed=true
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackStatus
+	- recommendedNextAct=diagnoseRecursosContextDataFacadeTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: esta selecao apenas escolhe o proximo alvo tecnico; esta selecao nao altera codigo; esta selecao nao altera testes; esta selecao nao executa refatoracao; esta selecao nao cria comando; esta selecao nao conecta Mongo real; esta selecao nao executa query; esta selecao nao gera relatorio; esta selecao nao inicia PostgreSQL; esta selecao nao usa Portal; a proxima etapa deve diagnosticar e desenhar protecao ou teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
