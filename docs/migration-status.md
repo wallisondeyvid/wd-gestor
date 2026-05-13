@@ -1946,6 +1946,58 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: esta selecao apenas escolhe o proximo alvo tecnico; esta selecao nao altera codigo; esta selecao nao altera testes; esta selecao nao executa refatoracao; esta selecao nao cria comando; esta selecao nao conecta Mongo real; esta selecao nao executa query; esta selecao nao gera relatorio; esta selecao nao inicia PostgreSQL; esta selecao nao usa Portal; a proxima etapa deve diagnosticar e desenhar protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `recursosContextDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests` e sem alteracao em `package.json`.
+- Alvo diagnosticado nesta rodada: `src/modules/gestor/app/data/recursos/recursosContextDataFacade.js`.
+- Cadeia viva consolidada identificada neste checkpoint: `listarRecursos.service.js` -> `recursosContextDataFacade.js`; o service de listagem monta `currentUser`, `sessionUser`, `scopedUnitId` e `requestedUnitId`, delega a resolucao do contexto ao `recursoContextPolicy.buildListScope(...)` e consome o facade de contexto para leituras auxiliares de unidade base e cluster de unidades.
+- Leitura consolidada do dominio: `recursos` ja esta classificado como `tenant por unidade` na matriz multi-tenant; por isso, qualquer fallback residual para `GLOBAL_SCOPE` neste corredor deve ser tratado como compatibilidade ou hibrido a auditar, nao como default seguro.
+- Leitura consolidada do tamanho e da localidade do alvo: o facade e pequeno e local; expõe apenas `findUnidadeUserBaseLeanData(id)` e `findUnidadesByCondLeanData(cond)`; nao exige reabrir `api.db.js` inteiro nem bundles largos para ser diagnosticado.
+- Contrato observado no facade:
+	- `findUnidadeUserBaseLeanData(id)` resolve `unitScope` por `scopeFromUnidadeId(id)` antes da leitura da unidade base;
+	- `findUnidadesByCondLeanData(cond)` tenta inferir um anchor unico via `extractScopedClusterAnchorFromUnidadesCond(cond)`;
+	- quando o `cond` representa exatamente um cluster ancorado pelos campos `_id`, `unidade_principal_id` e `matriz_id`, o facade usa `scopeFromUnidadeId(anchor)`;
+	- quando o anchor nao e inferido, o facade cai explicitamente em `GLOBAL_SCOPE`.
+- Quando o `GLOBAL_SCOPE` atual e usado: ele e usado no ramo em que `extractScopedClusterAnchorFromUnidadesCond(cond)` retorna vazio, seja porque `cond` nao e objeto valido, nao traz `$or`, nao traz exatamente tres clausulas ou nao forma um anchor unico consistente; nesse ramo, `findUnidadesByCondLeanRepo` recebe `unitScope: GLOBAL_SCOPE`.
+- Evidencia consolidada de contexto antes da facade: existe contexto de unidade antes da facade no corredor vivo, porque `listarRecursos.service.js` ja recebe `unitScope`, `session` e `query.unidadeId`, monta `scopedUnitId` e `requestedUnitId` e delega a uma policy de contexto para produzir `scope.filter`; nao ha `scopedUnitId` como parametro explicito na facade, mas ha condicao de unidade ou filtro por unidade no service e na policy imediatamente acima.
+- Hipotese principal de risco deste checkpoint: o fallback explicito para `GLOBAL_SCOPE` em `findUnidadesByCondLeanData(cond)` pode materializar leitura global de unidades fora do tenant quando o `cond` do cluster nao vier no formato estritamente ancorado esperado, transformando uma falha de inferencia de anchor em leitura global residual.
+- Classificacao consolidada deste alvo: `HIBRIDO_AUDITAR`, e nao erro confirmado; o ramo contextual existe e o dominio e tenant por unidade, mas o fallback global residual ainda precisa ser cercado para confirmar se resta algum ramo legitimo ou se o corredor contextual deve falhar fechado.
+- Comportamento atual que precisa ser preservado: listagem de recursos com escopo valido deve continuar funcionando; leitura de unidade base por `id` deve continuar escopada por unidade; resolucao de cluster com anchor unico valido deve continuar funcionando; o contrato publico do corredor de recursos nao deve ser alterado por este diagnostico; nenhum bundle administrativo global legitimo deve ser quebrado fora do corredor contextual.
+- Comportamento que precisa ser protegido por teste futuro: quando houver anchor unico valido, o facade deve usar `scopeFromUnidadeId(anchor)` e nao `GLOBAL_SCOPE`; quando o corredor contextual nao produzir anchor confiavel, deve ficar provado se o fallback global ainda e legitimo ou se o resultado correto precisa ser bloqueio ou vazio; a leitura de cluster nao deve materializar unidades fora do tenant acessivel por causa de formatacao frouxa do `cond`.
+- Leitura consolidada sobre a legitimidade do fallback global: neste checkpoint, nao ha evidencia suficiente para classificar todo fallback global deste facade como legitimo; pelo contrario, como o dominio `recursos` e tenant por unidade, a hipotese preferencial passa a ser que o fallback global no corredor contextual precisa ser bloqueado ou cercado por teste, salvo demonstracao posterior de ramo administrativo ou global legitimo explicitamente documentado.
+- Chamadas que precisam continuar funcionando: `findUnidadeUserBaseLeanData(id)` com `id` valido; `findUnidadesByCondLeanData(cond)` quando o cluster estiver bem ancorado; `listarRecursos.service.js` para filtros validos e para o fluxo que hoje devolve `blocked`, `empty` ou `filter` conforme a policy de contexto; a leitura contextual de recursos por unidade nao deve perder o comportamento observado do service.
+- Criterio de sucesso de um teste futuro: provar que o facade usa escopo contextual quando existe anchor unico valido; provar que o fallback global nao materializa unidades fora do tenant no corredor contextual; provar que o service continua atendendo os casos validos de listagem sem regressao publica; provar que nenhuma leitura global residual aparece apenas porque o `cond` veio parcialmente formado.
+- Decisao operacional consolidada desta rodada: nenhuma refatoracao sera feita neste microcorte; a proxima etapa deve desenhar protecao ou teste para este corredor antes de qualquer alteracao em `src`.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseRecursosContextDataFacadeTenantAwareTarget
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- recommendedNextAct=designRecursosContextTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- recursosContextTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseRecursosContextDataFacadeTenantAwareTarget
+	- recommendedNextAct=designRecursosContextTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: este diagnostico apenas descreve o contrato atual; este diagnostico nao altera codigo; este diagnostico nao altera testes; este diagnostico nao executa refatoracao; este diagnostico nao cria comando; este diagnostico nao conecta Mongo real; este diagnostico nao executa query; este diagnostico nao gera relatorio; este diagnostico nao inicia PostgreSQL; este diagnostico nao usa Portal; a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
