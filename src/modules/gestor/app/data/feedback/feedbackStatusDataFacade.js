@@ -7,6 +7,17 @@ function normalizeScopedUnitId(options = {}) {
   return String(options?.scopedUnitId || options?.unitScope?.unidadeId || '').trim();
 }
 
+function resolveScopedUnitScope(options = {}) {
+  const scopedUnitId = normalizeScopedUnitId(options);
+  if (!scopedUnitId) return GLOBAL_SCOPE;
+
+  if (options?.unitScope && typeof options.unitScope === 'object') {
+    return { ...options.unitScope, unidadeId: scopedUnitId };
+  }
+
+  return { type: 'unit', unidadeId: scopedUnitId };
+}
+
 function feedbackMatchesScopedUnit(feedback, options = {}) {
   const scopedUnitId = normalizeScopedUnitId(options);
   if (!scopedUnitId) return true;
@@ -16,8 +27,40 @@ function feedbackMatchesScopedUnit(feedback, options = {}) {
   return feedbackUnitId === scopedUnitId;
 }
 
+async function findFeedbackForStatusUpdate(id, options = {}) {
+  const scopedUnitId = normalizeScopedUnitId(options);
+  if (!scopedUnitId) {
+    return {
+      existing: await findFeedbackByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id }),
+      writeUnitScope: GLOBAL_SCOPE,
+    };
+  }
+
+  const scopedUnitScope = resolveScopedUnitScope(options);
+  const scopedExisting = await findFeedbackByIdLeanRepo({ unitScope: scopedUnitScope, id });
+  if (scopedExisting) {
+    return { existing: scopedExisting, writeUnitScope: scopedUnitScope };
+  }
+
+  if (options?.allowLegacyUnscoped !== true) {
+    return { existing: null, writeUnitScope: scopedUnitScope };
+  }
+
+  const fallbackExisting = await findFeedbackByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+  if (!fallbackExisting) {
+    return { existing: null, writeUnitScope: scopedUnitScope };
+  }
+
+  const fallbackUnitId = String(fallbackExisting?.unidade_id || '').trim();
+  return {
+    existing: fallbackExisting,
+    writeUnitScope: fallbackUnitId ? scopedUnitScope : GLOBAL_SCOPE,
+  };
+}
+
 export async function updateFeedbackStatusLeanData(id, setData, options = {}) {
-  const existing = await findFeedbackByIdLeanRepo({ unitScope: GLOBAL_SCOPE, id });
+  const { existing, writeUnitScope } = await findFeedbackForStatusUpdate(id, options);
   if (!feedbackMatchesScopedUnit(existing, options)) return null;
-  return findFeedbackByIdAndUpdateSetNewLeanRepo({ unitScope: GLOBAL_SCOPE, id, setData });
+  if (!existing) return null;
+  return findFeedbackByIdAndUpdateSetNewLeanRepo({ unitScope: writeUnitScope, id, setData });
 }

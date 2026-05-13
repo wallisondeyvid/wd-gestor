@@ -1642,6 +1642,48 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste checkpoint: este desenho nao altera codigo; este desenho nao altera testes; este desenho nao implementa refatoracao; este desenho nao cria comando; este desenho nao conecta Mongo real; este desenho nao executa query; este desenho nao gera relatorio; este desenho nao inicia PostgreSQL; este desenho nao usa Portal; a proxima etapa deve implementar apenas a refatoracao minima em `feedbackStatusDataFacade.js`, preservando os testes existentes.
 
+- Checkpoint documental curto da implementacao da refatoracao minima tenant-aware para feedback status consolidado nesta rodada, com alteracao apenas em `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`, sem alteracao em `tests`, sem alteracao em `package.json` e sem qualquer interacao com Mongo real.
+- Natureza consolidada deste checkpoint: implementacao local e minima em `feedbackStatusDataFacade.js` / `updateFeedbackStatusLeanData`, sem alterar rota publica, sem alterar `feedbackApi.js`, sem alterar `updateFeedbackStatus.service.js`, sem alterar `api.db.js`, sem criar comando e sem abrir refatoracao ampla.
+- Arquivo alterado nesta rodada: `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`.
+- Resumo consolidado da mudanca implementada: a facade passa a resolver um escopo contextual efetivo a partir de `unitScope` ou `scopedUnitId`; quando existe escopo de unidade, a leitura principal deixa de depender de `GLOBAL_SCOPE` e passa a consultar primeiro o escopo contextual; o write efetivo tambem passa a usar esse escopo contextual quando o alvo pertence a unidade permitida; o fallback global permanece apenas para ramo global legitimo e para legado sem unidade quando `allowLegacyUnscoped` estiver habilitado.
+- Contrato preservado expressamente nesta implementacao: a assinatura publica de `updateFeedbackStatusLeanData` foi mantida; o contrato publico do PATCH canonico permanece preservado; status valido dentro do escopo permitido permanece aceito; status invalido permanece tratado fora deste helper; usuario nao admin permanece bloqueado na borda atual; alvo fora de escopo continua retornando sem write efetivo; ramo legitimo de `master` ou `admin` global permanece atendido quando nao houver escopo contextual.
+- Superficies preservadas sem alteracao nesta rodada: `tests` nao foram alterados; `package.json` nao foi alterado; `api.db.js` nao foi alterado; `feedbackApi.js` nao foi alterado; `updateFeedbackStatus.service.js` nao foi alterado; nenhum script foi alterado; nenhum comando npm foi criado.
+- Escopo operacional preservado nesta rodada: nenhum Mongo real foi conectado; nenhuma query real foi executada; nenhum inventario real foi executado; nenhum relatorio real foi gerado; nenhum reset, cleanup, seed, migration ou backfill foi executado; PostgreSQL nao foi iniciado; Portal nao foi usado; nenhum commit ou push foi realizado.
+- Metadados consolidados deste checkpoint:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=implementFeedbackStatusTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- recommendedNextAct=runFeedbackStatusTenantAwareProtectionAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates finais consolidados deste checkpoint:
+	- feedbackStatusTenantAwareMinimalRefactorImplemented=true
+	- selectedTechnicalTarget=feedbackStatusDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=implementFeedbackStatusTenantAwareMinimalRefactor
+	- recommendedNextAct=runFeedbackStatusTenantAwareProtectionAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=true
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- apiDbChanged=false
+	- feedbackApiChanged=false
+	- updateFeedbackStatusServiceChanged=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: esta implementacao altera apenas `src/modules/gestor/app/data/feedback/feedbackStatusDataFacade.js`; esta implementacao nao altera testes; esta implementacao nao altera `package.json`; esta implementacao nao altera `api.db.js`; esta implementacao nao altera `feedbackApi.js`; esta implementacao nao altera `updateFeedbackStatus.service.js`; esta implementacao nao conecta Mongo real; esta implementacao nao executa query real; esta implementacao nao gera relatorio real; a proxima etapa deve ser `runFeedbackStatusTenantAwareProtectionAfterRefactor`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
