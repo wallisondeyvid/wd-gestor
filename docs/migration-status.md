@@ -17695,6 +17695,76 @@ Checkpoint tenant enforcement atual:
 	- este checkpoint nao faz novo push;
 	- a proxima etapa deve mapear o proximo bloco tecnico tenant-aware/database por unidade.
 
+- Mapeamento inicial do proximo bloco tecnico tenant-aware/database por unidade registrado.
+- Base publicada:
+	- 4043428 docs(ops): registra pos-push da prontidao mongo read-only.
+- Confirmacoes de contexto:
+	- a fase Mongo/read-only esta encerrada e publicada;
+	- o checkpoint pos-push foi registrado;
+	- a nova frente nao e operacional/read-only, mas arquitetural tenant-aware;
+	- este microcorte nao altera src nem tests;
+	- este microcorte nao executa validacao pesada;
+	- este microcorte prepara apenas a selecao do proximo alvo tecnico pequeno.
+- Mapeamento inicial de candidatos tecnicos:
+	- api.db.js permanece como candidato forte por concentrar helpers ainda expostos a GLOBAL_SCOPE em leituras adjacentes de unidades e usuarios, incluindo findUnidadeByCodigoLean, findUserByEmailCondLean, findUserByEmailCondLeanMaxTimeMs e findUsersLockedAfterSelectLeanFromDb;
+	- auth.db.js permanece como candidato arquitetural relevante por manter consultas globais em findModuloByOr, findModuloLeanByOrSelect, findFuncionarioByIdPopulate, findFuncionarioByEmailPopulate, findFuncionariosByCpfSelect e loadAllModulosBase;
+	- loginPreAuthGateDataAccess.js permanece mapeado como seam pequeno e sensivel, porque o pre-auth gate ainda opera sobre GLOBAL_SCOPE em leitura e persistencia de estado antes da autenticacao completa;
+	- UnitProvisioningRepository.js permanece mapeado como seam arquitetural database-per-unit de maior blast radius, importante para a estrategia por unidade, mas nao escolhido ainda como proximo microcorte por envolver transicoes de conexao global e tenant;
+	- os consumidores proximos do Gestor que merecem inspeção tenant-aware adicional permanecem ancorados em apiController.js, debugApiController.js, requireApiAuth.js, gestor-app.js, evaluateLoginPreAuthGate.service.js e UnitProvisioningService.js.
+- Priorizacao tecnica inicial:
+	- priorizar pontos ainda dependentes de conexao ou model global em corredores de leitura de baixo risco;
+	- manter foco em caminhos proximos ao Gestor, sem Portal;
+	- preservar a estrategia database por unidade como trilho principal;
+	- exigir protecao por teste antes de qualquer refatoracao;
+	- manter a decisao vigente de que master e admin operam em visao global quando nao houver unidade canonica selecionada.
+- Leitura executiva do mapeamento:
+	- api.db.js e auth.db.js concentram os melhores sinais de continuidade tenant-aware por ainda combinarem helpers globais com consumidores vivos no Gestor;
+	- loginPreAuthGateDataAccess.js aparece como candidato pequeno o suficiente para selecao posterior, mas ainda depende de decisao cuidadosa por estar no corredor pre-auth;
+	- UnitProvisioningRepository.js permanece relevante para a direcao database-per-unit, porem classificado neste checkpoint como frente arquitetural mais larga e nao como proximo alvo pequeno automatico.
+- Proximo ato recomendado:
+	- selectNextTenantAwareTechnicalTarget.
+- Decisao principal:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=mapNextTenantArchitectureExecutionBlock
+	- recommendedNextAct=selectNextTenantAwareTechnicalTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates:
+	- postOperationalReadinessMongoClosed=true
+	- nextArchitectureBlockMapped=true
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=mapNextTenantArchitectureExecutionBlock
+	- recommendedNextAct=selectNextTenantAwareTechnicalTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- este mapeamento apenas abre a proxima frente arquitetural;
+	- este mapeamento nao altera codigo;
+	- este mapeamento nao altera testes;
+	- este mapeamento nao escolhe refatoracao definitiva;
+	- este mapeamento nao cria comando;
+	- este mapeamento nao conecta Mongo real;
+	- este mapeamento nao executa query;
+	- este mapeamento nao gera relatorio;
+	- este mapeamento nao inicia PostgreSQL;
+	- este mapeamento nao usa Portal;
+	- a proxima etapa deve selecionar um alvo tecnico pequeno tenant-aware antes de qualquer alteracao em src ou tests.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
