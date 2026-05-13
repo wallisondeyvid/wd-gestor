@@ -8,6 +8,8 @@ Publicacao, neste contexto, significa apenas preparar decisao humana futura de p
 
 Este documento nao faz push.
 Este documento nao autoriza push automatico.
+Este documento nao substitui o fechamento de fase Mongo/read-only.
+Este documento nao substitui eventual gate final de publicacao documental.
 Este documento nao autoriza execucao real neste microcorte.
 Este documento nao cria comando real por si so.
 Este documento nao altera package.json.
@@ -30,6 +32,8 @@ Push futuro exige decisao humana explicita do usuario.
 - esta decisao de publicacao significa apenas preparar decisao humana futura de push;
 - esta decisao de publicacao nao faz push;
 - esta decisao de publicacao nao autoriza push automatico;
+- esta decisao de publicacao nao substitui o fechamento de fase Mongo/read-only;
+- esta decisao de publicacao nao substitui eventual gate final de publicacao documental;
 - esta decisao de publicacao nao autoriza execucao real neste microcorte;
 - esta decisao de publicacao nao cria comando real por si so;
 - esta decisao de publicacao nao altera package.json;
@@ -83,6 +87,7 @@ Push futuro exige decisao humana explicita do usuario.
 - qualquer tentativa de push automatico;
 - qualquer tentativa de tratar esta decisao documental como autorizacao direta de push;
 - qualquer ausencia de decisao humana futura e explicita do usuario para push;
+- qualquer tentativa de pular gate final de publicacao documental em microcorte proprio;
 - qualquer tentativa de criar comando real ou copiavel;
 - qualquer alteracao em package.json;
 - qualquer npm script novo;
@@ -110,6 +115,8 @@ Push futuro exige decisao humana explicita do usuario.
 - publicacao significa apenas preparar decisao humana futura de push;
 - este documento nao faz push;
 - este documento nao autoriza push automatico;
+- este documento nao substitui o fechamento de fase Mongo/read-only;
+- este documento nao substitui eventual gate final de publicacao documental;
 - este documento nao autoriza execucao real;
 - nao cria comando real;
 - nao altera package.json;

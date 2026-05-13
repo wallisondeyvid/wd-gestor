@@ -15814,6 +15814,79 @@ Checkpoint tenant enforcement atual:
 	- esta criacao nao permite reset, cleanup, seed, migration ou backfill;
 	- a etapa seguinte deve revisar apenas o documento de decisao de publicacao em microcorte proprio.
 
+- Documento de decisao de publicacao da fase Mongo/read-only revisado.
+- Base publicada:
+	- 6c784cf docs(ops): cria decisao de publicacao mongo read-only.
+- Registro da revisao:
+	- documento de decisao de publicacao da fase Mongo/read-only revisado;
+	- arquivo revisado: docs/runbooks/inventory-fictional-data-readonly-operational-readiness-mongo-publication-decision.md;
+	- nenhum push executado;
+	- nenhum comando real criado;
+	- package.json nao alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum fs.writeFile real usado;
+	- nenhuma aprovacao operacional automatica criada;
+	- nenhuma aprovacao documental convertida em execucao.
+- Diagnostico da revisao:
+	- o documento revisado passou a explicitar melhor que a decisao de publicacao permanece apenas marco documental e nao substitui o fechamento de fase nem eventual gate final de publicacao documental;
+	- os bloqueios foram reforcados para deixar claro que push futuro continua dependente de decisao humana explicita do usuario e de gate final proprio, sem qualquer autorizacao automatica;
+	- a revisao manteve package.json intocado, sem comando real, sem npm script e sem qualquer liberacao de execucao ou push.
+- Proximo ato recomendado:
+	- designReadOnlyInventoryOperationalReadinessMongoFinalPublicationGate.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryOperationalReadinessMongoPublicationDecision
+	- recommendedNextAct=designReadOnlyInventoryOperationalReadinessMongoFinalPublicationGate
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoPublicationDecisionReviewed=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=reviewReadOnlyInventoryOperationalReadinessMongoPublicationDecision
+	- recommendedNextAct=designReadOnlyInventoryOperationalReadinessMongoFinalPublicationGate
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta revisao permanece estritamente documental;
+	- esta revisao nao faz push;
+	- esta revisao nao autoriza push automatico;
+	- esta revisao nao cria comando real;
+	- esta revisao nao altera package.json;
+	- esta revisao nao cria npm script;
+	- esta revisao nao libera execucao;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio real;
+	- esta revisao nao usa fs.writeFile real;
+	- esta revisao nao executa inventario real;
+	- esta revisao nao usa dados reais;
+	- esta revisao nao cria aprovacao operacional automatica;
+	- esta revisao nao converte aprovacao documental em execucao;
+	- esta revisao nao permite reset, cleanup, seed, migration ou backfill;
+	- a etapa seguinte deve desenhar apenas o gate final de publicacao documental em microcorte proprio.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
