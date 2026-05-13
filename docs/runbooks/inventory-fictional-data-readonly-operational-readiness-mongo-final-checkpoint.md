@@ -4,6 +4,8 @@ Status: checkpoint documental final da prontidao operacional Mongo
 
 Este documento registra apenas o checkpoint final documental da prontidao operacional Mongo/read-only.
 
+Este checkpoint final permanece um marco documental de fechamento e nao uma aprovacao operacional.
+
 Este documento nao autoriza execucao real neste microcorte.
 Este documento nao cria comando real por si so.
 Este documento nao substitui o resumo final da prontidao operacional Mongo/read-only.
@@ -25,6 +27,25 @@ Este documento nao executa reset, cleanup, seed, migration ou backfill.
 Este documento nao autoriza push.
 Execucao futura exige microcorte proprio.
 
+## Limites Explicitos Deste Checkpoint Final
+
+- este checkpoint final permanece estritamente documental;
+- este checkpoint final nao autoriza execucao real neste microcorte;
+- este checkpoint final nao cria comando real por si so;
+- este checkpoint final nao altera package.json;
+- este checkpoint final nao cria npm script;
+- este checkpoint final nao conecta Mongo real;
+- este checkpoint final nao executa query real;
+- este checkpoint final nao gera relatorio real;
+- este checkpoint final nao usa fs.writeFile real;
+- este checkpoint final nao executa inventario real;
+- este checkpoint final nao usa dados reais;
+- este checkpoint final nao cria aprovacao operacional automatica;
+- este checkpoint final nao converte aprovacao documental em execucao;
+- este checkpoint final nao executa reset, cleanup, seed, migration ou backfill;
+- este checkpoint final nao autoriza push;
+- qualquer execucao futura exige microcorte proprio.
+
 ## Objetivo do Checkpoint Final Mongo/Read-Only
 
 - consolidar o estado final de checkpoint documental da prontidao operacional Mongo/read-only;
@@ -38,6 +59,7 @@ Execucao futura exige microcorte proprio.
 - confirmar que nenhum fs.writeFile real foi usado;
 - confirmar que nenhum inventario real foi executado;
 - confirmar que nenhum dado real foi usado;
+- confirmar que o checkpoint final nao produz aprovacao operacional automatica;
 - impedir aprovacao operacional automatica;
 - impedir conversao de aprovacao documental em execucao;
 - manter push proibido;
@@ -82,6 +104,7 @@ Execucao futura exige microcorte proprio.
 - qualquer tentativa de criar aprovacao operacional automatica;
 - qualquer tentativa de converter aprovacao documental em execucao;
 - qualquer tentativa de acoplar reset, cleanup, seed, migration ou backfill;
+- qualquer tentativa de tratar checkpoint final documental como liberacao operacional;
 - qualquer tentativa de push.
 
 ## Saidas Possiveis
