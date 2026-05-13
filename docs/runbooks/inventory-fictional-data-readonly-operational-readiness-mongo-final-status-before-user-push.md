@@ -15,7 +15,7 @@ Este status documental nao e o proprio push.
 Este status documental nao substitui autorizacao real de push pelo usuario.
 Este status documental nao habilita push executavel por si so.
 Este documento nao autoriza execucao real neste microcorte.
-Este documento nao cria comando real.
+Este documento nao cria comando real por si so.
 Este documento nao altera package.json.
 Este documento nao cria npm script.
 Este documento nao conecta Mongo real.
@@ -119,6 +119,29 @@ Execucao futura exige microcorte proprio.
 - qualquer tentativa de converter aprovacao documental em execucao;
 - qualquer tentativa de acoplar reset, cleanup, seed, migration ou backfill.
 
+## Interpretacao Obrigatoria
+
+- esta revisao permanece estritamente documental;
+- esta revisao nao faz push;
+- esta revisao nao autoriza push automatico;
+- esta revisao nao e o proprio push;
+- esta revisao nao substitui autorizacao real de push pelo usuario;
+- esta revisao nao habilita push executavel por si so;
+- esta revisao nao cria comando real;
+- esta revisao nao altera package.json;
+- esta revisao nao cria npm script;
+- esta revisao nao libera execucao;
+- esta revisao nao conecta Mongo real;
+- esta revisao nao executa query real;
+- esta revisao nao gera relatorio real;
+- esta revisao nao usa fs.writeFile real;
+- esta revisao nao executa inventario real;
+- esta revisao nao usa dados reais;
+- esta revisao nao cria aprovacao operacional automatica;
+- esta revisao nao converte aprovacao documental em execucao;
+- esta revisao nao permite reset, cleanup, seed, migration ou backfill;
+- a etapa seguinte deve preparar apenas o fechamento final antes do push manual, sem executar push automaticamente.
+
 ## Saidas Possiveis
 
 - READY_TO_REVIEW_OPERATIONAL_READINESS_MONGO_FINAL_STATUS_BEFORE_USER_PUSH
@@ -138,7 +161,7 @@ Execucao futura exige microcorte proprio.
 - este status documental nao substitui autorizacao real de push pelo usuario;
 - este status documental nao habilita push executavel por si so;
 - este documento nao autoriza execucao real;
-- nao cria comando real;
+- nao cria comando real por si so;
 - nao altera package.json;
 - nao cria npm script;
 - nao conecta Mongo real;
