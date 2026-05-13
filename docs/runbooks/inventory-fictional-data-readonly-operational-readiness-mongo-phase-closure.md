@@ -8,6 +8,10 @@ Este fechamento de fase permanece um marco documental e nao uma aprovacao operac
 
 Este documento nao autoriza execucao real neste microcorte.
 Este documento nao cria comando real por si so.
+Este documento nao substitui o checkpoint final da prontidao operacional Mongo/read-only.
+Este documento nao substitui o resumo final da prontidao operacional Mongo/read-only.
+Este documento nao substitui o fechamento da prontidao operacional Mongo/read-only.
+Este documento nao substitui eventual decisao futura de publicacao documental.
 Este documento nao altera package.json.
 Este documento nao cria npm script.
 Este documento nao conecta Mongo real.
@@ -27,6 +31,8 @@ Execucao futura exige microcorte proprio.
 - este fechamento de fase permanece estritamente documental;
 - este fechamento de fase nao autoriza execucao real neste microcorte;
 - este fechamento de fase nao cria comando real por si so;
+- este fechamento de fase nao substitui checkpoint final, resumo final ou fechamento documental anterior;
+- este fechamento de fase nao substitui eventual decisao futura de publicacao documental;
 - este fechamento de fase nao altera package.json;
 - este fechamento de fase nao cria npm script;
 - este fechamento de fase nao conecta Mongo real;
@@ -61,9 +67,9 @@ Execucao futura exige microcorte proprio.
 
 ## Artefatos Finais Consolidados
 
-- fechamento da prontidao operacional Mongo/read-only;
-- resumo final da prontidao operacional Mongo/read-only;
 - checkpoint final da prontidao operacional Mongo/read-only;
+- resumo final da prontidao operacional Mongo/read-only;
+- fechamento da prontidao operacional Mongo/read-only;
 - desenho documental do fechamento da fase de prontidao operacional Mongo/read-only.
 
 ## Confirmacoes Obrigatorias
@@ -89,6 +95,7 @@ Execucao futura exige microcorte proprio.
 - qualquer alteracao em package.json;
 - qualquer npm script novo;
 - qualquer liberacao implicita ou explicita de execucao;
+- qualquer tentativa de tratar este fechamento de fase como autorizacao operacional automatica;
 - qualquer conexao Mongo real;
 - qualquer query real;
 - qualquer geracao de relatorio real;
@@ -98,6 +105,7 @@ Execucao futura exige microcorte proprio.
 - qualquer tentativa de criar aprovacao operacional automatica;
 - qualquer tentativa de converter aprovacao documental em execucao;
 - qualquer tentativa de acoplar reset, cleanup, seed, migration ou backfill;
+- qualquer tentativa de pular microcorte proprio para qualquer execucao futura;
 - qualquer tentativa de push.
 
 ## Saidas Possiveis
@@ -112,6 +120,7 @@ Execucao futura exige microcorte proprio.
 - este fechamento de fase e documental;
 - nao autoriza execucao real;
 - nao cria comando real;
+- nao substitui checkpoint final, resumo final ou fechamento documental anterior;
 - nao altera package.json;
 - nao cria npm script;
 - nao conecta Mongo real;
