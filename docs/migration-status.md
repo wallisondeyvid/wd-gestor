@@ -16227,6 +16227,81 @@ Checkpoint tenant enforcement atual:
 	- esta preparacao nao permite reset, cleanup, seed, migration ou backfill;
 	- a etapa seguinte deve criar apenas o documento de decisao humana de publicacao/push, sem executar push automaticamente.
 
+- Documento de decisao humana de publicacao/push da fase Mongo/read-only criado.
+- Base publicada:
+	- bbba605 docs(ops): prepara decisao humana de publicacao mongo read-only.
+- Registro da criacao:
+	- documento de decisao humana de publicacao/push da fase Mongo/read-only criado;
+	- arquivo criado: docs/runbooks/inventory-fictional-data-readonly-operational-readiness-mongo-publication-human-decision.md;
+	- nenhum push executado;
+	- nenhum push automatico autorizado;
+	- nenhum comando real criado;
+	- package.json nao alterado;
+	- nenhuma execucao liberada;
+	- nenhum relatorio real gerado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum fs.writeFile real usado;
+	- nenhuma aprovacao operacional automatica criada;
+	- nenhuma aprovacao documental convertida em execucao.
+- Diagnostico da criacao:
+	- o novo documento consolida a decisao humana documental de publicacao/push da fase Mongo/read-only sem converter esse registro em push real ou autorizacao automatica;
+	- o texto deixa explicito que a fase permanece fechada, que o gate final foi revisado e que qualquer push futuro continua dependente de decisao humana explicita do usuario;
+	- a criacao preserva package.json intocado, sem comando real, sem npm script e sem qualquer liberacao de execucao ou push.
+- Proximo ato recomendado:
+	- reviewReadOnlyInventoryOperationalReadinessMongoPublicationHumanDecision.
+- Decisao principal:
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryOperationalReadinessMongoPublicationHumanDecision
+	- recommendedNextAct=reviewReadOnlyInventoryOperationalReadinessMongoPublicationHumanDecision
+	- chosenApproach=versionedReadOnlyScript
+- Gates:
+	- readOnlyInventoryOperationalReadinessMongoPublicationHumanDecisionCreated=true
+	- phase=operationalReadinessMongo
+	- selectedTarget=createReadOnlyInventoryOperationalReadinessMongoPublicationHumanDecision
+	- recommendedNextAct=reviewReadOnlyInventoryOperationalReadinessMongoPublicationHumanDecision
+	- chosenApproach=versionedReadOnlyScript
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- executionApproved=false
+	- executionGateClosedByDefault=true
+	- reportGenerated=false
+	- fs.writeFileUsed=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- realWriteExecuted=false
+	- realDataUsed=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta criacao permanece estritamente documental;
+	- esta criacao nao faz push;
+	- esta criacao nao autoriza push automatico;
+	- esta criacao nao substitui autorizacao real de push pelo usuario;
+	- esta criacao nao cria comando real;
+	- esta criacao nao altera package.json;
+	- esta criacao nao cria npm script;
+	- esta criacao nao libera execucao;
+	- esta criacao nao conecta Mongo real;
+	- esta criacao nao executa query real;
+	- esta criacao nao gera relatorio real;
+	- esta criacao nao usa fs.writeFile real;
+	- esta criacao nao executa inventario real;
+	- esta criacao nao usa dados reais;
+	- esta criacao nao cria aprovacao operacional automatica;
+	- esta criacao nao converte aprovacao documental em execucao;
+	- esta criacao nao permite reset, cleanup, seed, migration ou backfill;
+	- a etapa seguinte deve revisar apenas o documento de decisao humana de publicacao/push em microcorte proprio.
+
 - Teste contratual tenant-aware/read-only do corredor memberships ativos/auth-context criado.
 - Base local:
 	- 79e191c docs(tenant): diagnostica alvo memberships ativos auth-context.
