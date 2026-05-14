@@ -3385,6 +3385,86 @@ Checkpoint tenant enforcement atual:
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao ou teste tenant-aware de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho: `createUsuarioExecutionService`.
+- Arquivo principal deste desenho: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Helper sensivel consolidado neste desenho: `materializeCriarUsuarioFuncionarioLinkCore`.
+- Ramo sensivel consolidado neste desenho: recuperacao apos conflito ou `duplicate key`.
+- Chamada sensivel atual registrada neste desenho: `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id)`.
+- Risco a proteger neste desenho:
+	- o religamento de funcionario existente pode perder a unidade contextual;
+	- `setById` pode operar mais amplo do que o necessario se `unidadeId` nao for repassado.
+- Contrato atual a preservar neste desenho:
+	- a criacao de usuario continua funcionando;
+	- o vinculo legitimo usuario ou funcionario continua funcionando;
+	- `duplicate key` continua tratado;
+	- usuario existente e funcionario existente continuam tendo resposta compativel;
+	- os ramos ja protegidos com `setIfEmpty` e funcionario existente continuam preservados;
+	- `membership_duplicate` e `funcionario_create_error` continuam preservados.
+- Comportamento desejado a consolidar por protecao futura:
+	- no ramo `duplicate key`, quando houver `existente.unidade_id` ou `unidadeId` disponivel, `setCriarUsuarioFuncionarioUsuarioIdById` deve receber esse contexto;
+	- `setFuncionarioUsuarioIdById` nao deve receber `unidadeId = null` nesse ramo quando a unidade contextual existir;
+	- qualquer fallback sem unidade, se permanecer, deve ser explicito, condicionado e documentado.
+- Protecao futura desejada neste checkpoint:
+	- um teste estrutural deve congelar que o ramo `duplicate key` repassa `existente.unidade_id || unidadeId || null` para `setCriarUsuarioFuncionarioUsuarioIdById`;
+	- um teste contratual de seam deve provar que o bridge `setFuncionarioUsuarioIdById` recebe `unidadeId` no ramo de recuperacao quando a unidade esta disponivel;
+	- o teste deve preservar os ramos semanticos atuais.
+- Tipo de teste recomendado neste desenho:
+	- combinar teste estrutural de source com teste contratual de seam;
+	- sem Mongo real;
+	- usando mocks ou stubs;
+	- sem query real;
+	- sem relatorio real.
+- Hipotese de refatoracao futura, sem implementar neste microcorte:
+	- alterar o ramo `duplicate key` para chamar `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id, existente.unidade_id || unidadeId || null)`;
+	- manter os ramos `setIfEmpty` e funcionario existente como estao, salvo ajuste minimo necessario;
+	- nao abrir `api.db.js` como big-bang;
+	- nao alterar controller;
+	- nao alterar o contrato publico HTTP.
+- Decisao principal consolidada deste desenho:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designCreateUsuarioExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=createCreateUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste desenho:
+	- createUsuarioExecutionServiceTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designCreateUsuarioExecutionServiceTenantAwareProtection
+	- recommendedNextAct=createCreateUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
