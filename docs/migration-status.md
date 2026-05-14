@@ -2898,6 +2898,61 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da validacao verde da protecao tenant-aware de `funcionarioDeletePostDataFacade.js` apos o ajuste do matcher, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real e sem conexao com Mongo real.
+- Comando executado nesta rodada: `node --test tests/gestor-funcionarios-delete-post-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado desta execucao focal:
+	- tests=4
+	- suites=0
+	- pass=4
+	- fail=0
+	- skipped=0
+	- cancelled=0
+	- todo=0
+	- duration_ms=52.2475
+- Diagnostico consolidado desta execucao:
+	- a protecao tenant-aware de delete-post ficou integralmente verde apos o ajuste do matcher estrutural;
+	- o service permaneceu protegido quanto a derivacao de `scopedUnitId`, derivacao de `effectiveUnitId` e repasse do contexto tenant-aware ao seam sensivel;
+	- o seam permaneceu protegido quanto a aceitacao de contexto explicito e quanto a proibicao de `GLOBAL_SCOPE` incondicional.
+- Garantias operacionais desta execucao:
+	- `src` nao alterado neste microcorte;
+	- `tests` nao alterados neste microcorte;
+	- `package.json` nao alterado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado.
+- Proximo ato recomendado apos esta validacao: `runFuncionarioDeletePostFocusedAdjacentTestsAfterRefactor`.
+- Decisao principal consolidada desta validacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=rerunFuncionarioDeletePostTenantAwareProtectionAfterMatcherFix
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=runFuncionarioDeletePostFocusedAdjacentTestsAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta validacao:
+	- funcionarioDeletePostTenantAwareProtectionAfterMatcherFixRun=true
+	- funcionarioDeletePostTenantAwareProtectionAfterMatcherFixPassed=true
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=rerunFuncionarioDeletePostTenantAwareProtectionAfterMatcherFix
+	- recommendedNextAct=runFuncionarioDeletePostFocusedAdjacentTestsAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
