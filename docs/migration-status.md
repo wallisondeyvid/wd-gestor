@@ -2694,6 +2694,79 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto do desenho da refatoracao minima tenant-aware de `funcionarioDeletePostDataFacade.js`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real e sem conexao com Mongo real.
+- Alvo tecnico consolidado deste desenho: `src/modules/gestor/app/data/funcionarios/funcionarioDeletePostDataFacade.js`.
+- Seam sensivel consolidado deste desenho: `findLinkedUserForDeletePostData({ funcionarioId })`.
+- Risco confirmado pela protecao ja executada: leitura de usuario vinculado ainda usa `GLOBAL_SCOPE` incondicional e ainda nao aceita contexto tenant-aware explicito no seam local.
+- Objetivo consolidado da refatoracao minima futura:
+	- propagar contexto tenant-aware ate `findLinkedUserForDeletePostData`;
+	- permitir que o seam aceite `unidadeId`, `canonicalUnitId` ou `unitScope` de forma explicita;
+	- substituir a leitura global incondicional por leitura tenant-aware quando houver unidade ou `canonicalUnitId` disponivel;
+	- impedir que funcionario de outra unidade permita resolucao global indevida de usuario vinculado;
+	- preservar o contrato publico atual do delete-post;
+	- preservar os bloqueios existentes de `unauthorized`, `forbidden` por master, idempotencia ou erro compativel e delete legitimo;
+	- evitar alteracao ampla em rota, controller ou service;
+	- evitar abrir `api.db.js` como refatoracao big-bang.
+- Estrategia minima sugerida para a implementacao futura:
+	- alterar a assinatura de `findLinkedUserForDeletePostData` para aceitar contexto opcional explicito, como `unidadeId`, `canonicalUnitId` ou `unitScope`;
+	- no service, repassar `scopedUnitId` ou `effectiveUnitId` ao chamar `findLinkedUserForDeletePostData`;
+	- no data facade, montar `unitScope` contextual quando houver unidade valida;
+	- remover ou condicionar explicitamente o uso de `GLOBAL_SCOPE` no seam sensivel;
+	- manter fallback global apenas se existir ramo legado documentado, condicionado e protegido por teste;
+	- manter `findFuncionarioForDeletePostData` e `deleteFuncionarioForDeletePostData` com o comportamento atual;
+	- nao alterar o contrato publico HTTP.
+- Comportamento que deve permanecer apos a implementacao futura:
+	- usuario nao autenticado continua `unauthorized`;
+	- alvo master vinculado continua `forbidden`;
+	- alvo fora do escopo contextual continua com idempotencia ou erro compativel;
+	- delete legitimo da unidade ativa continua funcionando.
+- Testes focais recomendados apos a implementacao futura, em microcortes separados:
+	- `node --test tests/gestor-funcionarios-delete-post-tenant-aware-protection.test.js`;
+	- depois, em microcorte separado, os testes focais adjacentes de delete-post.
+- Decisao principal consolidada deste desenho:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designFuncionarioDeletePostTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=implementFuncionarioDeletePostTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste desenho:
+	- funcionarioDeletePostTenantAwareMinimalRefactorDesigned=true
+	- funcionarioDeletePostGlobalScopeRiskConfirmedByProtection=true
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designFuncionarioDeletePostTenantAwareMinimalRefactor
+	- recommendedNextAct=implementFuncionarioDeletePostTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria consolidada deste desenho:
+	- este desenho apenas define a refatoracao minima futura;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve implementar somente o corte minimo necessario, preservando os testes existentes.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
