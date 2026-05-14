@@ -287,7 +287,7 @@ test('deleteFuncionarioPostExecutionService retorna already_removed e nao tenta 
 	assert.equal(deleteFuncionarioCalls.length, 0);
 });
 
-test('deleteFuncionarioPostExecutionService faz lookup global do usuario vinculado e bloqueia delete quando o vinculo e master', async (t) => {
+test('deleteFuncionarioPostExecutionService resolve o usuario vinculado com contexto tenant-aware e bloqueia delete quando o vinculo e master', async (t) => {
 	const funcionario = { _id: 'func-11', unidade_id: 'unit-db-11', nome: 'Funcionario 11' };
     const {
 		deleteFuncionarioPostExecutionService,
@@ -307,7 +307,11 @@ test('deleteFuncionarioPostExecutionService faz lookup global do usuario vincula
 	assert.deepEqual(result, { kind: 'forbidden_master_link' });
 	assert.equal(findFuncionarioCalls.length, 1);
 	assert.equal(findUserCalls.length, 1);
-	assert.deepEqual(findUserCalls[0], [{ funcionarioId: 'func-11' }]);
+	assert.deepEqual(findUserCalls[0], [{
+		funcionarioId: 'func-11',
+		unidadeId: 'unit-ctx-11',
+		canonicalUnitId: 'unit-ctx-11',
+	}]);
 	assert.equal(deleteFuncionarioCalls.length, 0);
 });
 

@@ -3037,6 +3037,53 @@ Checkpoint tenant enforcement atual:
 	- esta rodada nao corrige automaticamente o matcher estrutural adjacente;
 	- esta rodada apenas registra o diagnostico focal e encerra o microcorte sem nova correcao automatica.
 
+- Checkpoint documental curto do ajuste da expectativa estrutural adjacente de `funcionarioDeletePostDataFacade.js`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem query real e sem conexao com Mongo real.
+- Ajuste aplicado nesta rodada:
+	- a expectativa estrutural adjacente em `tests/gestor-funcionarios-delete-post-structural-seam.test.js` deixou de exigir a chamada antiga `[ { funcionarioId: 'func-11' } ]`;
+	- a expectativa passou a exigir a chamada tenant-aware atual `[ { funcionarioId: 'func-11', unidadeId: 'unit-ctx-11', canonicalUnitId: 'unit-ctx-11' } ]`;
+	- o teste continua exigindo que o service resolva o usuario vinculado antes de permitir delete quando o vinculo e `master`;
+	- o bloqueio de `master` permanece protegido;
+	- o contrato estrutural do fluxo de delete-post permanece protegido sem aceitar ausencia de contexto.
+- Arquivo alterado nesta rodada:
+	- `tests/gestor-funcionarios-delete-post-structural-seam.test.js`
+	- `docs/migration-status.md`
+- Garantias operacionais desta rodada:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- Mongo real nao foi conectado;
+	- query real nao foi executada.
+- Proximo ato recomendado apos este ajuste: `rerunFuncionarioDeletePostFocusedAdjacentTestsAfterMatcherFix`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=fixFuncionarioDeletePostAdjacentStructuralMatcher
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=rerunFuncionarioDeletePostFocusedAdjacentTestsAfterMatcherFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- funcionarioDeletePostAdjacentStructuralMatcherFixed=true
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=fixFuncionarioDeletePostAdjacentStructuralMatcher
+	- recommendedNextAct=rerunFuncionarioDeletePostFocusedAdjacentTestsAfterMatcherFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
