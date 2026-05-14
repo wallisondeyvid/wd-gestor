@@ -2518,6 +2518,83 @@ Checkpoint tenant enforcement atual:
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao/teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao/teste tenant-aware de `funcionarioDeletePostDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real e sem conexao com Mongo real.
+- Alvo deste desenho: `src/modules/gestor/app/data/funcionarios/funcionarioDeletePostDataFacade.js`.
+- Funcao sensivel consolidada neste desenho: `findLinkedUserForDeletePostData({ funcionarioId })`.
+- Risco a proteger neste desenho: leitura global explicita de usuario vinculado por `funcionarioId` usando `GLOBAL_SCOPE`.
+- Contrato atual a preservar neste desenho:
+	- o delete-post mantem o contrato publico atual;
+	- bloqueios e validacoes existentes continuam funcionando;
+	- usuario nao autorizado continua bloqueado;
+	- funcionario inexistente ou fora do fluxo esperado continua retornando erro compativel/idempotencia observavel atual;
+	- vinculo legitimo usuario/funcionario continua sendo resolvido quando permitido.
+- Comportamento desejado a consolidar por protecao futura:
+	- quando houver escopo tenant-aware ou `canonicalUnitId` antes da facade, a resolucao do usuario vinculado nao deve ignorar esse contexto;
+	- funcionario de outra unidade nao deve permitir resolucao global indevida de usuario vinculado;
+	- qualquer fallback global, se for mantido, deve ser explicito, condicionado e testado.
+- Lacuna atual que motiva a protecao:
+	- os testes existentes mockam o data facade e nao congelam diretamente `findUserByFuncionarioIdRepo({ unitScope: GLOBAL_SCOPE, funcionarioId })` no seam sensivel.
+- Protecao futura desejada neste checkpoint:
+	- um teste estrutural deve congelar que o seam nao use `GLOBAL_SCOPE` incondicional para resolver usuario vinculado;
+	- um teste runtime/contratual deve provar que o contexto de unidade chega ate o seam ou que a ausencia dele bloqueia fallback indevido;
+	- o teste deve preservar o contrato publico atual do delete-post;
+	- o teste deve falhar se funcionario de outra unidade puder resolver usuario globalmente.
+- Tipo de teste recomendado neste desenho:
+	- combinar teste estrutural de source com teste contratual de seam;
+	- sem Mongo real;
+	- usando mocks e stubs;
+	- sem query real;
+	- sem relatorio real.
+- Hipotese de refatoracao futura, sem implementar neste microcorte:
+	- passar `unitScope` ou `canonicalUnitId` ate `findLinkedUserForDeletePostData`;
+	- trocar a leitura `GLOBAL_SCOPE` por leitura tenant-aware quando houver unidade canonica;
+	- manter fallback global apenas se houver justificativa explicita e condicao documentada;
+	- nao alterar rota, controller ou service alem do necessario;
+	- nao abrir `api.db.js` como big-bang.
+- Decisao principal consolidada deste desenho:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designFuncionarioDeletePostTenantAwareProtection
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=createFuncionarioDeletePostTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste desenho:
+	- funcionarioDeletePostTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designFuncionarioDeletePostTenantAwareProtection
+	- recommendedNextAct=createFuncionarioDeletePostTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria consolidada deste desenho:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar o teste ou protecao antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
