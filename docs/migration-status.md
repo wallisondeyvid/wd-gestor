@@ -2767,6 +2767,67 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao usa Portal;
 	- a proxima etapa deve implementar somente o corte minimo necessario, preservando os testes existentes.
 
+- Checkpoint documental curto da implementacao da refatoracao minima tenant-aware de `funcionarioDeletePostDataFacade.js`, consolidado nesta rodada sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em rotas, sem alteracao em controller, sem alteracao em `api.db.js`, sem query real e sem conexao com Mongo real.
+- Refatoracao minima implementada neste microcorte:
+	- `findLinkedUserForDeletePostData` passou a aceitar contexto explicito opcional por `unidadeId`, `canonicalUnitId` ou `unitScope`;
+	- o data facade passou a montar `unitScope` contextual quando houver unidade valida;
+	- a leitura global incondicional do seam sensivel foi removida;
+	- o fallback global foi mantido apenas como ramo legado explicito e condicionado, para chamadas sem contexto algum;
+	- o service `deleteFuncionarioPostExecution.service.js` passou a repassar `scopedUnitId` e `effectiveUnitId` ao resolver usuario vinculado;
+	- `findFuncionarioForDeletePostData` foi preservada com o comportamento atual;
+	- `deleteFuncionarioForDeletePostData` foi preservada com o comportamento atual;
+	- o contrato publico HTTP do delete-post foi preservado neste corte minimo local.
+- Arquivos alterados nesta implementacao:
+	- `src/modules/gestor/app/data/funcionarios/funcionarioDeletePostDataFacade.js`
+	- `src/modules/gestor/app/services/funcionarios/deleteFuncionarioPostExecution.service.js`
+	- `docs/migration-status.md`
+- Superficies preservadas explicitamente nesta implementacao:
+	- tests nao alterados;
+	- `package.json` nao alterado;
+	- scripts nao alterados;
+	- rotas nao alteradas;
+	- controller nao alterado;
+	- `api.db.js` nao alterado.
+- Garantias operacionais deste microcorte:
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado;
+	- nenhuma suite inteira executada.
+- Proximo ato recomendado apos esta implementacao: `runFuncionarioDeletePostTenantAwareProtectionAfterRefactor`.
+- Decisao principal consolidada desta implementacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=implementFuncionarioDeletePostTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=runFuncionarioDeletePostTenantAwareProtectionAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta implementacao:
+	- funcionarioDeletePostTenantAwareMinimalRefactorImplemented=true
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=implementFuncionarioDeletePostTenantAwareMinimalRefactor
+	- recommendedNextAct=runFuncionarioDeletePostTenantAwareProtectionAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=true
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- routeChanged=false
+	- controllerChanged=false
+	- apiDbChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v

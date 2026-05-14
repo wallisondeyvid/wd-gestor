@@ -20,13 +20,17 @@ export async function deleteFuncionarioPostExecutionService({ funcionarioId, can
 		return { kind: 'already_removed' };
 	}
 
-	const usuarioVinculado = await findLinkedUserForDeletePostData({ funcionarioId: funcionario._id });
+	const effectiveUnitId = scopedUnitId || normalizeUnitId(funcionario?.unidade_id) || null;
+
+	const usuarioVinculado = await findLinkedUserForDeletePostData({
+		funcionarioId: funcionario._id,
+		unidadeId: effectiveUnitId,
+		canonicalUnitId: scopedUnitId,
+	});
 
 	if (usuarioVinculado?.role === 'master') {
 		return { kind: 'forbidden_master_link' };
 	}
-
-	const effectiveUnitId = scopedUnitId || normalizeUnitId(funcionario?.unidade_id) || null;
 
 	await deleteFuncionarioForDeletePostData({
 		funcionarioId,
