@@ -2140,6 +2140,69 @@ Checkpoint tenant enforcement atual:
 	- nenhum relatorio real foi gerado.
 - Decisao operacional consolidada desta rodada: a execucao focal da protecao falhou; nenhuma correcao automatica sera aplicada neste microcorte; a proxima etapa deve revisar o contrato real esperado do teste criado antes de qualquer nova mudanca em `src`.
 
+- Checkpoint documental curto da revisao diagnostica da falha da protecao tenant-aware de `recursosContextDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json` e sem criacao de comando novo.
+- Comando que falhou e permanece registrado neste checkpoint: `node --test tests/gestor-recursos-context-tenant-aware-protection.test.js`.
+- Totais consolidados desta execucao focal revisada:
+	- tests=5
+	- pass=3
+	- fail=2
+- Leitura consolidada da execucao focal revisada:
+	- os testes estruturais passaram e preservaram o seam esperado do source contract;
+	- as falhas ficaram concentradas nos cenarios runtime com IDs sinteticos do harness;
+	- a leitura runtime observada continua compativel com o diagnostico de que `scopeFromUnidadeId(...)` recebeu anchors sinteticos que nao representam corretamente uma unidade valida para derivacao de escopo.
+- Hipoteses diagnosticas registradas neste checkpoint:
+	- hipotese A: o teste/harness usou IDs sinteticos incompativeis com `scopeFromUnidadeId(...)`;
+	- hipotese B: `recursosContextDataFacade.js` realmente nao deriva escopo por unidade como esperado.
+- Decisao diagnostica recomendada neste checkpoint:
+	- antes de alterar `src`, revisar o teste/harness;
+	- calibrar os IDs ou mocks para representar corretamente unidade valida;
+	- manter preservado o teste estrutural que impede fallback global incondicional;
+	- so considerar alteracao em `src` se o teste calibrado ainda demonstrar fallback global indevido.
+- Decisao principal consolidada desta revisao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewRecursosContextProtectionFailure
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- recommendedNextAct=updateRecursosContextTenantAwareProtectionHarness
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta revisao:
+	- recursosContextProtectionFailureReviewed=true
+	- recursosContextFailureLikelyHarnessDrift=true
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewRecursosContextProtectionFailure
+	- recommendedNextAct=updateRecursosContextTenantAwareProtectionHarness
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria consolidada desta revisao:
+	- esta revisao apenas diagnostica a falha;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao corrige automaticamente;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve ajustar o harness/teste antes de qualquer alteracao em `src`.
+- Diagnostico final recomendado desta revisao: entre teste/harness vs bug de facade, a recomendacao atual permanece inclinada a teste/harness, porque os testes estruturais seguiram verdes, o fallback global condicionado permaneceu preservado no source contract e o desvio observado ficou restrito aos IDs sinteticos do harness; `recursosContextDataFacade.js` so deve ser reconsiderado como origem do problema se o harness calibrado ainda reproduzir fallback global indevido em cenario runtime valido.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
