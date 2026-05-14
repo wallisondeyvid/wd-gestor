@@ -3878,6 +3878,63 @@ Checkpoint tenant enforcement atual:
 	- este rerun nao usa Portal;
 	- este rerun nao autoriza correcao automatica do matcher remanescente neste microcorte.
 
+- Checkpoint documental curto do ajuste do matcher de mensagem da protecao tenant-aware de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste ajuste: `createUsuarioExecutionService`.
+- Arquivo alterado nesta rodada: `tests/gestor-create-usuario-tenant-aware-protection.test.js`.
+- Ajuste efetivamente aplicado nesta rodada:
+	- a assercao de `funcionario_create_error` deixou de exigir matcher sem acentuacao;
+	- o matcher agora aceita a mensagem real acentuada `Falha ao criar funcionário automático`;
+	- a protecao de `funcionario_create_error` foi preservada sem enfraquecimento funcional.
+- O que este ajuste preserva:
+	- a protecao semantica de `membership_duplicate` permaneceu intacta;
+	- as protecoes estruturais do ramo `duplicate key` permaneceram intactas;
+	- a protecao contratual do `setById` com unidade permaneceu intacta;
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado.
+- Proximo ato recomendado apos este ajuste:
+	- rerodar a protecao tenant-aware de `createUsuarioExecutionService` apos o ajuste do matcher de mensagem.
+- Decisao principal consolidada deste ajuste:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=fixCreateUsuarioExecutionServiceProtectionMessageMatcher
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=rerunCreateUsuarioExecutionServiceTenantAwareProtectionAfterMessageMatcherFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste ajuste:
+	- createUsuarioExecutionServiceProtectionMessageMatcherFixed=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=fixCreateUsuarioExecutionServiceProtectionMessageMatcher
+	- recommendedNextAct=rerunCreateUsuarioExecutionServiceTenantAwareProtectionAfterMessageMatcherFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste ajuste:
+	- este ajuste altera somente o matcher de mensagem do teste semantico;
+	- este ajuste nao altera `src`;
+	- este ajuste nao altera `package.json`;
+	- este ajuste nao altera scripts;
+	- este ajuste nao conecta Mongo real;
+	- este ajuste nao executa query real;
+	- este ajuste nao gera relatorio real;
+	- este ajuste nao inicia PostgreSQL;
+	- este ajuste nao usa Portal;
+	- a proxima etapa deve rerodar somente a protecao focal apos este ajuste.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v

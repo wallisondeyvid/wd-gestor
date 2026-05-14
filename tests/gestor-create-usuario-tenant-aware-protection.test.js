@@ -245,5 +245,5 @@ test('ramos semanticos relevantes permanecem protegidos sem runtime real', async
 		wantsNewFuncionario: true,
 	});
 	assert.equal(funcionarioErrorResult.kind, 'funcionario_create_error');
-	assert.match(funcionarioErrorResult.message, /Falha ao criar funcionario automatico/i);
+	assert.match(funcionarioErrorResult.message, /Falha ao criar funcionário automático/i);
 });
