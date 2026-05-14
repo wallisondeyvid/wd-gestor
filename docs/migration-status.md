@@ -3282,6 +3282,109 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao usa Portal;
 	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada: `createUsuarioExecutionService`.
+- Arquivo principal deste diagnostico: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Cadeia viva identificada do fluxo de criacao de usuario neste checkpoint:
+	- o owner vivo e `criarUsuario(req, res)` em `src/modules/gestor/app/controllers/userController.js`;
+	- o controller resolve e valida `unidade_id` contextual antes de chamar o service;
+	- quando `funcionario_id` e informado, o controller chama `resolveCriarUsuarioProvidedFuncionario({ funcionarioId, unidadeId })` e preserva o `unidadeId` resolvido no handoff para o service;
+	- o service `createUsuarioExecutionService` recebe `unidadeId`, `funcionarioId`, `funcionarioDoc` e `wantsNewFuncionario`, depois delega a materializacao do usuario, do vinculo com funcionario e da membership;
+	- o helper sensivel deste slice e `materializeCriarUsuarioFuncionarioLinkCore`.
+- Helper sensivel consolidado neste checkpoint: `materializeCriarUsuarioFuncionarioLinkCore`.
+- Ramo sensivel consolidado neste checkpoint: recuperacao apos conflito ou `duplicate key` durante a materializacao ou o vinculo de funcionario.
+- Chamada sensivel observada neste checkpoint: `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id)`.
+- Onde o contexto de unidade entra no fluxo:
+	- o `unidadeId` entra no controller por `unidade_id` contextual ja validado;
+	- o mesmo `unidadeId` segue para `createUsuarioExecutionService`;
+	- no ramo de funcionario existente antes do conflito, o service usa `existente.unidade_id || unidadeId || null` ao chamar `setCriarUsuarioFuncionarioUsuarioIdById`;
+	- no bridge `api.db.js`, `setFuncionarioUsuarioIdById(funcionarioId, userId, unidadeId)` resolve `unitScope` por `scopeFromUnidadeId(unidadeId)`.
+- Onde o contexto de unidade pode ser perdido:
+	- no ramo de recuperacao apos `duplicate key`, o service volta a buscar `existente` por CPF e unidade, mas a chamada seguinte fica em `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id)` sem repassar explicitamente `existente.unidade_id || unidadeId || null`;
+	- nesse ponto, se a unidade contextual estiver disponivel, o religamento pode descer para `setFuncionarioUsuarioIdById` com `unidadeId = null`, ampliando o escopo mais do que o necessario.
+- Contexto tenant-aware esperado neste slice:
+	- `unidadeId` ou a unidade contextual do funcionario existente devem acompanhar o religamento do usuario ao funcionario sempre que estiverem disponiveis.
+- Risco suspeito consolidado deste checkpoint:
+	- o religamento de funcionario existente pode perder a unidade contextual no ramo de recuperacao;
+	- `setById` pode operar mais amplo do que o necessario se nao receber `unidadeId`.
+- Classificacao consolidada deste alvo:
+	- `RISCO_ESTRUTURAL_POTENCIAL`;
+	- `LACUNA_DE_PROTECAO_CONTRATUAL`;
+	- nao fica classificado aqui como bug confirmado ainda.
+- Por que este caso e menor e mais adequado do que bundles, paginas ou admin globais:
+	- o slice esta concentrado em um service pequeno e um helper sensivel unico;
+	- o owner e o bridge proximos sao localizaveis e auditaveis sem abrir `api.db.js` inteiro, page bundles grandes ou corredores administrativos global-legitimos;
+	- a diferenca entre ramo protegido e ramo suspeito ja aparece dentro do mesmo helper, o que reduz blast radius e deixa o proximo microcorte falsificavel.
+- Comportamento atual a preservar neste corredor:
+	- a criacao de usuario continua funcionando;
+	- o vinculo legitimo usuario ou funcionario continua funcionando;
+	- duplicidade ou `duplicate key` continua tratado;
+	- usuario existente e funcionario existente continuam tendo resposta compativel;
+	- os ramos ja protegidos com `setIfEmpty` e funcionario existente continuam preservados.
+- Comportamento a proteger por teste em etapa futura:
+	- o ramo de recuperacao apos `duplicate key` deve preservar `unidadeId` ao religar funcionario existente;
+	- `setCriarUsuarioFuncionarioUsuarioIdById` nao deve ser chamado sem contexto quando a unidade estiver disponivel;
+	- qualquer fallback sem unidade, se permanecer, deve ser explicito, condicionado e documentado.
+- Lacuna atual de protecao contratual neste checkpoint:
+	- `tests/gestor-usuario-create-set-if-empty-unit-scope-bridge.test.js` cobre apenas `setIfEmpty`;
+	- `tests/gestor-criar-usuario-execution-structural-seam.test.js` cobre a orquestracao geral, o ramo de funcionario existente e o uso de `setById` nesse ramo, mas nao congela explicitamente o ramo `duplicate key` com unidade no `setById`;
+	- `tests/gestor-usuarios-create-funcionario-link-structural.test.js` registra a forma estrutural atual da seam, inclusive a chamada sem unidade no ramo de conflito, mas nao a classifica ainda como ramo a endurecer tenant-aware.
+- Existe cobertura direta para o ramo `duplicate key` + `setById`?
+	- nao ha cobertura direta suficiente para congelar esse ramo com repasse explicito de unidade;
+	- a cobertura atual enxerga o ramo e a seam, mas nao prova a preservacao do contexto tenant-aware no religamento apos conflito.
+- Criterio de sucesso de um teste futuro:
+	- provar estruturalmente que o ramo `duplicate key` repassa `existente.unidade_id || unidadeId || null` para `setCriarUsuarioFuncionarioUsuarioIdById` quando houver contexto;
+	- provar contratualmente que o bridge `setFuncionarioUsuarioIdById` nao recebe `unidadeId = null` nesse ramo quando a unidade contextual estiver disponivel;
+	- preservar a resposta semantica atual para criacao normal, vinculo existente, `membership_duplicate` e `funcionario_create_error`.
+- Hipotese de protecao futura consolidada deste checkpoint:
+	- a proxima etapa deve desenhar protecao estrutural e contratual de seam;
+	- nao ha necessidade de abrir runtime amplo ou suite inteira para o primeiro endurecimento;
+	- nenhuma refatoracao sera feita neste microcorte.
+- Recomendacao consolidada para a proxima etapa:
+	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
+- Decisao principal consolidada deste diagnostico:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseCreateUsuarioExecutionServiceTenantAwareTarget
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=designCreateUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste diagnostico:
+	- createUsuarioExecutionServiceTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseCreateUsuarioExecutionServiceTenantAwareTarget
+	- recommendedNextAct=designCreateUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
