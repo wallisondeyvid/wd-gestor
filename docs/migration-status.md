@@ -3008,6 +3008,35 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da execucao dos testes focais adjacentes de `funcionarioDeletePostDataFacade.js` apos a refatoracao minima, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real e sem conexao com Mongo real.
+- Comando executado nesta rodada: `node --test tests/gestor-funcionarios-delete-post-structural-seam.test.js tests/gestor-funcionarios-delete-post-runtime-contract.test.js`.
+- Resultado bruto consolidado desta execucao focal:
+	- tests=15
+	- suites=0
+	- pass=14
+	- fail=1
+	- skipped=0
+	- cancelled=0
+	- todo=0
+	- duration_ms=6344.96
+- Diagnostico consolidado desta execucao:
+	- os cenarios adjacentes de contrato runtime permaneceram verdes;
+	- a falha unica ficou no teste estrutural `deleteFuncionarioPostExecutionService faz lookup global do usuario vinculado e bloqueia delete quando o vinculo e master`;
+	- o motivo ficou claro: o matcher estrutural ainda espera a chamada antiga `findLinkedUserForDeletePostData({ funcionarioId: 'func-11' })`, mas o service agora repassa o contexto tenant-aware atual com `funcionarioId`, `unidadeId: 'unit-ctx-11'` e `canonicalUnitId: 'unit-ctx-11'`;
+	- isso caracteriza drift do teste estrutural adjacente em relacao ao contrato interno refatorado, e nao regressao nova observada no runtime contratual deste microcorte.
+- Garantias operacionais desta execucao:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Interpretacao obrigatoria desta execucao:
+	- esta rodada nao altera `src`;
+	- esta rodada nao altera `tests`;
+	- esta rodada nao corrige automaticamente o matcher estrutural adjacente;
+	- esta rodada apenas registra o diagnostico focal e encerra o microcorte sem nova correcao automatica.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
