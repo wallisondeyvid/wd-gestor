@@ -3605,6 +3605,83 @@ Checkpoint tenant enforcement atual:
 	- esta execucao nao usa Portal;
 	- a proxima etapa deve desenhar refatoracao minima tenant-aware antes de nova tentativa de endurecimento do source.
 
+- Checkpoint documental curto do desenho da refatoracao minima tenant-aware de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho: `createUsuarioExecutionService`.
+- Arquivo principal deste desenho: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Helper sensivel consolidado neste desenho: `materializeCriarUsuarioFuncionarioLinkCore`.
+- Ramo sensivel consolidado neste desenho: recuperacao apos conflito ou `duplicate key`.
+- Risco confirmado pela protecao neste desenho:
+	- a chamada atual sem unidade permanece `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id)`;
+	- o religamento apos `duplicate key` perde contexto de unidade quando `existente.unidade_id` ou `unidadeId` estao disponiveis.
+- Objetivo da refatoracao minima consolidado neste desenho:
+	- propagar `existente.unidade_id || unidadeId || null` ao `setById` no ramo `duplicate key`;
+	- preservar os ramos `setIfEmpty` e funcionario existente antes do conflito;
+	- preservar `membership_duplicate`;
+	- preservar `funcionario_create_error`;
+	- preservar o contrato publico HTTP;
+	- nao alterar controller;
+	- nao abrir `api.db.js` como big-bang;
+	- nao alterar `package.json`.
+- Estrategia minima sugerida neste desenho:
+	- alterar somente a chamada no ramo `duplicate key` para `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id, existente.unidade_id || unidadeId || null)`;
+	- manter a assinatura do bridge existente se ele ja aceita terceiro argumento;
+	- nao alterar ramos que ja repassam unidade;
+	- nao mexer em `auth.db.js`;
+	- nao alterar testes neste microcorte.
+- Observacao consolidada sobre a falha secundaria do teste:
+	- a falha de comparacao estrita de objeto em contexto de `vm` deve ser tratada somente depois da refatoracao se persistir;
+	- nao ajustar teste agora.
+- Testes recomendados apos implementacao futura:
+	- `node --test tests/gestor-create-usuario-tenant-aware-protection.test.js`;
+	- depois, em microcorte separado, testes adjacentes de criacao de usuario.
+- Riscos preservados por esta estrategia minima:
+	- evita expandir o corte para controller, `auth.db.js`, `api.db.js` amplo, contratos HTTP ou scripts;
+	- mantem intocados os ramos ja corretos e reduz blast radius ao ponto unico de religamento apos conflito;
+	- deixa a falha secundaria do teste fora deste corte para nao misturar endurecimento funcional com ajuste de harness.
+- Decisao principal consolidada deste desenho:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=implementCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste desenho:
+	- createUsuarioExecutionServiceTenantAwareMinimalRefactorDesigned=true
+	- createUsuarioExecutionServiceDuplicateKeyUnitContextRiskConfirmedByProtection=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- recommendedNextAct=implementCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define a refatoracao minima futura;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve implementar somente o corte minimo necessario no service.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
