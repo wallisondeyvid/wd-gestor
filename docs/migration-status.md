@@ -2248,6 +2248,61 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da validacao verde da protecao tenant-aware de `recursosContextDataFacade.js` apos o ajuste do harness consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json` e sem conexao com Mongo real.
+- Comando executado nesta rodada: `node --test tests/gestor-recursos-context-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado desta execucao focal:
+	- tests=5
+	- suites=0
+	- pass=5
+	- fail=0
+	- skipped=0
+	- cancelled=0
+	- todo=0
+	- duration_ms=473.8184
+- Leitura consolidada desta validacao:
+	- a protecao runtime da unidade base voltou a observar escopo unitario derivado do id valido do harness;
+	- o cenario com anchor unico confiavel permaneceu protegendo contra queda indevida em `GLOBAL_SCOPE`;
+	- o fallback global continuou restrito ao ramo explicito e condicionado sem regressao estrutural no source contract.
+- Invariantes preservados nesta rodada de validacao:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Diagnostico consolidado desta execucao: o resultado verde apos a calibracao do harness reforca a leitura de que a falha anterior estava no teste/harness, e nao em bug confirmado de `recursosContextDataFacade.js`.
+- Decisao principal consolidada desta validacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=rerunRecursosContextTenantAwareProtectionTestAfterHarnessFix
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- recommendedNextAct=reviewRecursosContextTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta validacao:
+	- recursosContextTenantAwareProtectionAfterHarnessFixRun=true
+	- recursosContextTenantAwareProtectionAfterHarnessFixPassed=true
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=rerunRecursosContextTenantAwareProtectionTestAfterHarnessFix
+	- recommendedNextAct=reviewRecursosContextTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
