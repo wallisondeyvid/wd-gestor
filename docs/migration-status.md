@@ -2203,6 +2203,51 @@ Checkpoint tenant enforcement atual:
 	- a proxima etapa deve ajustar o harness/teste antes de qualquer alteracao em `src`.
 - Diagnostico final recomendado desta revisao: entre teste/harness vs bug de facade, a recomendacao atual permanece inclinada a teste/harness, porque os testes estruturais seguiram verdes, o fallback global condicionado permaneceu preservado no source contract e o desvio observado ficou restrito aos IDs sinteticos do harness; `recursosContextDataFacade.js` so deve ser reconsiderado como origem do problema se o harness calibrado ainda reproduzir fallback global indevido em cenario runtime valido.
 
+- Checkpoint documental curto da calibracao do harness/teste da protecao tenant-aware de `recursosContextDataFacade.js` consolidado nesta rodada, com alteracao apenas em `tests/gestor-recursos-context-tenant-aware-protection.test.js`, sem alteracao em `src`, sem alteracao em `package.json` e sem conexao com Mongo real.
+- Diagnostico consolidado que guiou a calibracao: a verificacao local de `scopeFromUnidadeId(...)` confirmou que IDs sinteticos como `unit-a` resolvem para `GLOBAL_SCOPE`, enquanto IDs com formato valido de unidade resolvem para escopo unitario; por isso o ajuste ficou restrito ao harness/mocks/fixtures do teste.
+- Ajuste consolidado do harness nesta rodada:
+	- o teste passou a usar IDs compatíveis com a derivacao real de escopo para os cenarios runtime que exigem escopo unitario;
+	- o cenario com anchor confiavel continua exigindo escopo unitario e continua protegendo contra queda indevida em `GLOBAL_SCOPE`;
+	- o cenario de fallback global condicionado continua exigindo ausencia de anchor unico confiavel e nao foi enfraquecido;
+	- a protecao estrutural contra fallback global incondicional permaneceu preservada.
+- Arquivo alterado nesta rodada:
+	- `tests/gestor-recursos-context-tenant-aware-protection.test.js`
+- Invariantes preservados nesta calibracao:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada.
+- Decisao principal consolidada desta calibracao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=updateRecursosContextTenantAwareProtectionHarness
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- recommendedNextAct=rerunRecursosContextTenantAwareProtectionTestAfterHarnessFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta calibracao:
+	- recursosContextTenantAwareProtectionHarnessUpdated=true
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=updateRecursosContextTenantAwareProtectionHarness
+	- recommendedNextAct=rerunRecursosContextTenantAwareProtectionTestAfterHarnessFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v

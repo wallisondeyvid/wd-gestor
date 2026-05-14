@@ -9,6 +9,8 @@ const FACADE_FILE = path.resolve(process.cwd(), 'src/modules/gestor/app/data/rec
 const SERVICE_FILE = path.resolve(process.cwd(), 'src/modules/gestor/app/services/recursos/listarRecursos.service.js');
 
 const REPOSITORY_MOCK_MODULE_URL = 'mock:gestor-recursos-context-tenant-aware-protection-unidade-repository';
+const VALID_UNIT_ID = '507f1f77bcf86cd799439011';
+const OTHER_VALID_UNIT_ID = '507f1f77bcf86cd799439012';
 
 const HARNESS_STATE = {
   unidadeUserBaseResult: null,
@@ -92,27 +94,27 @@ test('service preserva a cadeia contextual esperada para recursos antes do facad
 
 test('facade resolve leitura da unidade base com escopo contextual derivado do id', async () => {
   resetHarness();
-  HARNESS_STATE.unidadeUserBaseResult = { _id: 'unit-a', nome: 'Unidade A' };
+  HARNESS_STATE.unidadeUserBaseResult = { _id: VALID_UNIT_ID, nome: 'Unidade A' };
 
   const { findUnidadeUserBaseLeanData } = await importFresh(FACADE_FILE, 'unidade-user-base-scope');
-  const result = await findUnidadeUserBaseLeanData('unit-a');
+  const result = await findUnidadeUserBaseLeanData(VALID_UNIT_ID);
 
   assert.deepEqual(HARNESS_STATE.unidadeUserBaseCalls, [{
-    unitScope: { type: 'unit', unidadeId: 'unit-a' },
-    id: 'unit-a',
+    unitScope: { type: 'unit', unidadeId: VALID_UNIT_ID },
+    id: VALID_UNIT_ID,
   }]);
   assert.equal(result, HARNESS_STATE.unidadeUserBaseResult);
 });
 
 test('facade nao cai em GLOBAL_SCOPE quando o cond traz anchor unico confiavel', async () => {
   resetHarness();
-  HARNESS_STATE.unidadesByCondResult = [{ _id: 'unit-a' }];
+  HARNESS_STATE.unidadesByCondResult = [{ _id: VALID_UNIT_ID }];
 
   const anchoredCond = {
     $or: [
-      { _id: 'unit-a' },
-      { unidade_principal_id: 'unit-a' },
-      { matriz_id: 'unit-a' },
+      { _id: VALID_UNIT_ID },
+      { unidade_principal_id: VALID_UNIT_ID },
+      { matriz_id: VALID_UNIT_ID },
     ],
   };
 
@@ -120,7 +122,7 @@ test('facade nao cai em GLOBAL_SCOPE quando o cond traz anchor unico confiavel',
   const result = await findUnidadesByCondLeanData(anchoredCond);
 
   assert.deepEqual(HARNESS_STATE.unidadesByCondCalls, [{
-    unitScope: { type: 'unit', unidadeId: 'unit-a' },
+    unitScope: { type: 'unit', unidadeId: VALID_UNIT_ID },
     cond: anchoredCond,
   }]);
   assert.equal(result, HARNESS_STATE.unidadesByCondResult);
@@ -132,9 +134,9 @@ test('facade mantem fallback global explicito e condicionado apenas a ausencia d
 
   const nonAnchoredCond = {
     $or: [
-      { _id: 'unit-a' },
-      { unidade_principal_id: 'unit-b' },
-      { matriz_id: 'unit-a' },
+      { _id: VALID_UNIT_ID },
+      { unidade_principal_id: OTHER_VALID_UNIT_ID },
+      { matriz_id: VALID_UNIT_ID },
     ],
   };
 
