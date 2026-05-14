@@ -2427,6 +2427,97 @@ Checkpoint tenant enforcement atual:
 	- este fechamento nao usa Portal;
 	- a proxima etapa deve auditar apenas o alvo residual selecionado.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `funcionarioDeletePostDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada: `src/modules/gestor/app/data/funcionarios/funcionarioDeletePostDataFacade.js`.
+- Cadeia viva identificada do delete-post neste checkpoint:
+	- a rota viva e `POST /gestor/api/funcionarios/:id/delete` em `src/modules/gestor/app/routes/funcionarioApi.js`, protegida por `withRequiredUnitScope(deleteFuncionarioPost)`;
+	- o controller `deleteFuncionarioPost(req, res)` em `src/modules/gestor/app/controllers/funcionarioApiController.js` resolve `canonicalUnitId` via `getCanonicalContextUnitId(req)`;
+	- o service `deleteFuncionarioPostExecutionService({ funcionarioId, canonicalUnitId })` em `src/modules/gestor/app/services/funcionarios/deleteFuncionarioPostExecution.service.js` transforma esse valor em `scopedUnitId` e o usa para localizar o funcionario e para excluir o alvo;
+	- o data facade `src/modules/gestor/app/data/funcionarios/funcionarioDeletePostDataFacade.js` recebe `unidadeId` nos helpers de leitura e delete do funcionario, mas nao recebe esse contexto em `findLinkedUserForDeletePostData({ funcionarioId })`.
+- Funcao sensivel consolidada neste checkpoint: `findLinkedUserForDeletePostData({ funcionarioId })`.
+- Leitura global explicita atual registrada neste checkpoint: `findUserByFuncionarioIdRepo({ unitScope: GLOBAL_SCOPE, funcionarioId })`.
+- Quando o `GLOBAL_SCOPE` atual e usado:
+	- o `GLOBAL_SCOPE` aparece exatamente na resolucao do usuario vinculado ao funcionario em `findLinkedUserForDeletePostData({ funcionarioId })`;
+	- ele e usado depois que o funcionario ja foi resolvido por unidade no service, mas antes do bloqueio de `master` e antes da exclusao;
+	- nao ha branch contextual condicionado no proprio seam para a leitura do usuario vinculado.
+- Existe `unitScope` ou `scopedUnitId` chegando antes da data facade:
+	- sim; `canonicalUnitId` nasce no controller por `getCanonicalContextUnitId(req)`;
+	- sim; o service deriva `scopedUnitId` desse valor e o propaga para `findFuncionarioForDeletePostData` e `deleteFuncionarioForDeletePostData`;
+	- nao; esse contexto nao e repassado para `findLinkedUserForDeletePostData`, que permanece global no seam local.
+- Comportamento atual a preservar neste corredor:
+	- o delete-post continua preservando o contrato publico atual observado pelos testes runtime;
+	- os bloqueios e validacoes existentes continuam funcionando, incluindo `UNAUTHORIZED`, idempotencia observavel e bloqueio de vinculo `master`;
+	- usuario nao autorizado continua bloqueado;
+	- vinculo com usuario/funcionario continua sendo resolvido quando legitimo;
+	- o delete do funcionario continua respeitando a unidade canonica/contextual no caminho principal.
+- Comportamento a proteger por teste em etapa futura:
+	- a leitura de usuario vinculado nao deve ignorar escopo tenant-aware quando houver unidade/contexto;
+	- funcionario de outra unidade nao deve permitir resolucao global indevida de usuario vinculado;
+	- qualquer fallback global, se existir, deve ser explicito, condicionado e documentado.
+- Lacuna atual de protecao contratual neste checkpoint:
+	- `tests/gestor-funcionarios-delete-post-structural-seam.test.js` mocka o data facade e congela controller/service fino, mas nao congela diretamente o uso de `GLOBAL_SCOPE` dentro do seam local;
+	- `tests/gestor-funcionarios-delete-post-runtime-contract.test.js` preserva o contrato HTTP observavel e os bloqueios principais, mas nao prova diretamente como a leitura do usuario vinculado e escopada no data facade;
+	- por isso, a lacuna atual e de protecao contratual direta exatamente no ponto sensivel da leitura global do usuario vinculado.
+- Classificacao consolidada deste alvo:
+	- `RISCO_ESTRUTURAL_REAL`;
+	- `AUSENCIA_DE_PROTECAO_CONTRATUAL`;
+	- nao fica classificado como bug confirmado ainda.
+- Diferenca consolidada em relacao a `recursosContextDataFacade.js`:
+	- Recursos tinha fallback global explicito e condicionado ao fracasso da inferencia de anchor;
+	- Funcionario delete-post aparenta ter leitura global direta no seam local para resolver usuario vinculado, sem branch contextual condicionado equivalente.
+- Hipotese principal de risco deste checkpoint:
+	- o delete-post atual pode resolver usuario vinculado fora do tenant porque a consulta do vinculo usa `GLOBAL_SCOPE` mesmo quando ja existe `canonicalUnitId` e `scopedUnitId` disponiveis no caminho anterior;
+	- isso ainda nao prova bug funcional publico, mas abre risco tenant-aware residual no seam local antes da exclusao efetiva.
+- Criterio de sucesso de um teste futuro:
+	- provar estruturalmente que a leitura do usuario vinculado nao usa `GLOBAL_SCOPE` incondicional quando houver contexto de unidade disponivel, ou que qualquer uso global remanescente esta explicitamente condicionado e documentado;
+	- provar em runtime contratual que funcionario de outra unidade nao materializa resolucao global indevida de usuario vinculado;
+	- provar que o contrato publico atual do delete-post permanece preservado para unauthorized, forbidden por `master`, idempotencia e delete legitimo da unidade ativa.
+- Recomendacao consolidada para a proxima etapa:
+	- a proxima etapa deve desenhar protecao estrutural e runtime contratual, e nao alterar `src` imediatamente;
+	- nenhuma refatoracao sera feita neste microcorte.
+- Decisao principal consolidada deste diagnostico:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseFuncionarioDeletePostTenantAwareTarget
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=designFuncionarioDeletePostTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste diagnostico:
+	- funcionarioDeletePostTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseFuncionarioDeletePostTenantAwareTarget
+	- recommendedNextAct=designFuncionarioDeletePostTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria consolidada deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao/teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
