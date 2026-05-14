@@ -3211,6 +3211,77 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao usa Portal;
 	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `funcionarioDeletePostDataFacade.js`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual consolidada nesta selecao: `tenantArchitectureContinuation`.
+- Corredores ja fechados nesta rodada:
+	- `feedbackStatusDataFacade` protegido, refatorado e validado;
+	- `recursosContextDataFacade` protegido e fechado sem refatoracao imediata;
+	- `funcionarioDeletePostDataFacade` refatorado, protegido e validado como tenant-aware minimo.
+- Candidatos considerados nesta selecao:
+	- `createUsuarioExecutionService` em `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`;
+	- `unidadesDiretoresPageDataFacade` em `src/modules/gestor/app/data/unidades/unidadesDiretoresPageDataFacade.js`;
+	- `passwordRecoveryRequestDataFacade` em `src/modules/gestor/app/data/auth/passwordRecoveryRequestDataFacade.js`;
+	- `funcionariosPageBundleDataFacade` em `src/modules/gestor/app/data/funcionarios/funcionariosPageBundleDataFacade.js`.
+- Candidatos recusados e motivo curto:
+	- `unidadesDiretoresPageDataFacade`: continua acoplado a pagina ou bundle administrativo, usa leitura global deliberada e fica acima da regua conservadora para o proximo microcorte;
+	- `passwordRecoveryRequestDataFacade`: pertence ao auth e opera identidade ou recuperacao global legitima, sem sinal melhor de risco tenant-aware contextual material neste snapshot;
+	- `funcionariosPageBundleDataFacade`: segue amplo demais, mistura catalogos e listagem contextual e ja tinha sido adiado como bundle grande.
+- Proximo alvo tecnico residual selecionado nesta rodada: `createUsuarioExecutionService`.
+- Motivo consolidado da selecao:
+	- o alvo e pequeno, vivo, local e testavel no service de criacao ou link de usuarios;
+	- o risco suspeito fica concentrado no helper `materializeCriarUsuarioFuncionarioLinkCore`, especialmente no ramo de recuperacao apos conflito de duplicate key, que hoje pode chamar `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id)` sem repassar explicitamente `unidadeId`;
+	- isso difere dos ramos ja protegidos do mesmo service, onde o vinculo por funcionario existente e o `setIfEmpty` preservam unidade explicita;
+	- ja existe cobertura estrutural adjacente suficiente para sustentar um microcorte pequeno, mas ela nao congela explicitamente esse ramo de recuperacao com unidade contextual preservada.
+- Risco tenant-aware suspeito consolidado desta selecao:
+	- no ramo de conflito ao criar ou vincular funcionario por CPF e unidade, o relink por `setFuncionarioUsuarioIdById` pode perder o contexto de unidade e recair em comportamento mais amplo do que o necessario;
+	- como o fluxo cria ou religa identidade administrativa contextual, essa perda de unidade tem risco material maior do que um lookup read-only meramente global legitimo.
+- Lacuna de protecao atual consolidada desta selecao:
+	- `tests/gestor-usuario-create-set-if-empty-unit-scope-bridge.test.js` congela apenas o ramo `setIfEmpty` com `funcionarioDoc.unidade_id`;
+	- `tests/gestor-criar-usuario-execution-structural-seam.test.js` cobre a orquestracao geral e o ramo de funcionario existente, mas nao congela o ramo de recuperacao por duplicate key garantindo repasse explicito de unidade ao `setById`.
+- Proximo ato recomendado apos esta selecao: `diagnoseCreateUsuarioExecutionServiceTenantAwareTarget`.
+- Decisao principal consolidada desta selecao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterFuncionarioDeletePost
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=diagnoseCreateUsuarioExecutionServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta selecao:
+	- nextTenantAwareTechnicalTargetAfterFuncionarioDeletePostSelected=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterFuncionarioDeletePost
+	- recommendedNextAct=diagnoseCreateUsuarioExecutionServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
