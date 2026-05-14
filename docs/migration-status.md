@@ -2303,6 +2303,69 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da revisao da protecao tenant-aware de `recursosContextDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real e sem conexao com Mongo real.
+- Teste revisado neste checkpoint: `tests/gestor-recursos-context-tenant-aware-protection.test.js`.
+- Resultado consolidado que sustenta esta revisao:
+	- o teste focal passou com `tests=5`, `pass=5` e `fail=0`;
+	- a falha anterior foi resolvida por ajuste de harness;
+	- a protecao confirma que anchor valido deriva escopo unitario;
+	- a protecao confirma que `cond` com anchor unico confiavel nao cai em `GLOBAL_SCOPE`;
+	- a protecao confirma que o fallback global permanece explicito e condicionado.
+- Leitura prudente consolidada desta protecao:
+	- nao ha bug confirmado em `recursosContextDataFacade.js` no contrato atualmente exercido;
+	- o risco tenant-aware observado neste corredor deixou de ser material neste checkpoint, porque o ramo unitario valido e o ramo com anchor unico confiavel ficaram protegidos por runtime e por source contract;
+	- o fallback global remanescente continua existindo apenas no ramo explicitamente condicionado por ausencia de anchor confiavel, o que permanece compativel com o contrato atual observado.
+- Invariantes preservados nesta revisao:
+	- `src` nao foi alterado;
+	- `tests` nao serao alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhuma query real foi executada;
+	- nenhuma conexao Mongo real foi aberta.
+- Decisao prudente consolidada desta revisao: a protecao atual e suficiente para aceitar o corredor como protegido sem refatoracao imediata; nao ha evidencia nova que justifique abrir desenho de refatoracao minima agora, e a proxima etapa deve fechar documentalmente este microcorte protegido e selecionar o proximo alvo tenant-aware.
+- Decisao principal consolidada desta revisao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewRecursosContextTenantAwareProtectionTest
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- recommendedNextAct=closeRecursosContextTenantAwareProtectedMicrocut
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta revisao:
+	- recursosContextTenantAwareProtectionTestReviewed=true
+	- recursosContextTenantAwareProtectionAccepted=true
+	- selectedTechnicalTarget=recursosContextDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewRecursosContextTenantAwareProtectionTest
+	- recommendedNextAct=closeRecursosContextTenantAwareProtectedMicrocut
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria consolidada desta revisao:
+	- esta revisao apenas aceita ou encaminha a protecao criada;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve seguir a decisao registrada sem abrir refatoracao ampla.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
