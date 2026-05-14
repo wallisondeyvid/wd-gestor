@@ -2595,6 +2595,55 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao usa Portal;
 	- a proxima etapa deve criar o teste ou protecao antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao da protecao/teste tenant-aware de `funcionarioDeletePostDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `package.json`, sem query real, sem conexao com Mongo real e sem refatoracao executada.
+- Teste ou protecao tenant-aware criado nesta rodada:
+	- `tests/gestor-funcionarios-delete-post-tenant-aware-protection.test.js`
+- Escopo consolidado do teste criado:
+	- o arquivo novo protege estruturalmente o seam `findLinkedUserForDeletePostData({ funcionarioId })`;
+	- o teste congela que a leitura de usuario vinculado nao deve permanecer em `GLOBAL_SCOPE` incondicional quando houver contexto tenant-aware disponivel antes da facade;
+	- o teste congela que o seam deve aceitar contexto explicito de unidade para a resolucao do usuario vinculado;
+	- o teste tambem preserva, por leitura dos testes adjacentes, o contrato publico atual de unauthorized, forbidden por `master`, idempotencia observavel e delete legitimo.
+- Leitura consolidada deste checkpoint:
+	- os testes existentes de delete-post mockavam o data facade e por isso nao protegiam diretamente o uso de `GLOBAL_SCOPE` no seam sensivel;
+	- a nova protecao foi criada como teste estrutural ou contratual sem Mongo real, sem query real e sem dependencia de dados reais;
+	- nenhuma refatoracao foi executada neste microcorte.
+- Invariantes preservados nesta rodada:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Decisao principal consolidada desta criacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createFuncionarioDeletePostTenantAwareProtectionTest
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=runFuncionarioDeletePostTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta criacao:
+	- funcionarioDeletePostTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createFuncionarioDeletePostTenantAwareProtectionTest
+	- recommendedNextAct=runFuncionarioDeletePostTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
