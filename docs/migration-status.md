@@ -4058,6 +4058,72 @@ Checkpoint tenant enforcement atual:
 	- esta validacao nao usa Portal;
 	- a proxima etapa deve revisar o corte minimo tenant-aware de `createUsuarioExecutionService`.
 
+- Checkpoint documental curto da revisao final da refatoracao minima tenant-aware de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado: `createUsuarioExecutionService`.
+- Arquivo principal desta revisao: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Diagnostico consolidado desta revisao:
+	- a refatoracao minima tenant-aware foi aceita para o corredor `createUsuarioExecutionService`;
+	- a protecao focal permaneceu verde com tests=4, pass=4 e fail=0;
+	- os testes adjacentes focais permaneceram verdes com tests=11, pass=11 e fail=0;
+	- o risco original foi resolvido porque o ramo de recuperacao apos duplicate key agora repassa `existente.unidade_id || unidadeId || null` ao `setById`;
+	- o contrato publico do service foi preservado;
+	- o controller foi preservado;
+	- `api.db.js` foi preservado;
+	- `auth.db.js` foi preservado;
+	- `package.json` foi preservado;
+	- `setIfEmpty` foi preservado;
+	- o ramo de funcionario existente antes do conflito foi preservado;
+	- `membership_duplicate` foi preservado;
+	- `funcionario_create_error` foi preservado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada.
+- Decisao principal consolidada desta revisao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterCreateUsuario
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta revisao:
+	- createUsuarioExecutionServiceTenantAwareMinimalRefactorReviewed=true
+	- createUsuarioExecutionServiceTenantAwareMicrocutClosed=true
+	- createUsuarioExecutionServiceTenantAwareProtectionPassed=true
+	- createUsuarioExecutionServiceAdjacentTestsPassed=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterCreateUsuario
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa nova refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a decisao desta rodada e fechar o corredor `createUsuarioExecutionService` como tenant-aware minimo validado;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
