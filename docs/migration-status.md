@@ -2111,6 +2111,35 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da execucao focal da protecao tenant-aware de `recursosContextDataFacade.js` consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json` e sem conexao com Mongo real.
+- Comando executado nesta rodada: `node --test tests/gestor-recursos-context-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado da execucao focal:
+	- tests=5
+	- suites=0
+	- pass=3
+	- fail=2
+	- skipped=0
+	- todo=0
+	- cancelled=0
+	- duration_ms=478.1093
+- Casos que passaram nesta execucao:
+	- `service preserva a cadeia contextual esperada para recursos antes do facade`
+	- `facade mantem fallback global explicito e condicionado apenas a ausencia de anchor confiavel`
+	- `source contract mantem extractor estrito e fallback global apenas no ramo explicitamente condicionado`
+- Casos que falharam nesta execucao:
+	- `facade resolve leitura da unidade base com escopo contextual derivado do id`
+	- `facade nao cai em GLOBAL_SCOPE quando o cond traz anchor unico confiavel`
+- Diagnostico consolidado da falha: a falha observada nao confirma regressao estrutural no seam atual; o contrato estrutural do source permaneceu verde, mas os dois cenarios runtime com IDs sinteticos do harness observaram `scopeFromUnidadeId(...)` resolvendo para `GLOBAL_SCOPE` em vez de escopo unitario; neste estado, a hipotese preferencial passa a ser falha ou suposicao incorreta do proprio teste criado, e nao bug confirmado de `recursosContextDataFacade.js`.
+- Leitura operacional obrigatoria desta falha: como o motivo aparente da falha aponta para o proprio teste criado, este microcorte para sem corrigir automaticamente `src` e sem corrigir automaticamente `tests`; qualquer ajuste futuro precisa primeiro revisar o contrato real de `scopeFromUnidadeId(...)` e os dados sinteticos usados pelo harness.
+- Invariantes preservados nesta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Decisao operacional consolidada desta rodada: a execucao focal da protecao falhou; nenhuma correcao automatica sera aplicada neste microcorte; a proxima etapa deve revisar o contrato real esperado do teste criado antes de qualquer nova mudanca em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
