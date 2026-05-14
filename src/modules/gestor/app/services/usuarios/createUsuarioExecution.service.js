@@ -148,7 +148,7 @@ async function materializeCriarUsuarioFuncionarioLinkCore({
 							if (!user.unidade_id && unidadeId) user.unidade_id = unidadeId;
 							await saveUserDoc(user);
 						}
-						try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id); } catch (_up2) {}
+						try { await setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id, existente.unidade_id || unidadeId || null); } catch (_up2) {}
 						console.warn('[criarUsuario] Conflito ao criar funcionário; vinculado a existente', { funcionario_id: existente._id.toString() });
 					}
 				} catch (_e) {}

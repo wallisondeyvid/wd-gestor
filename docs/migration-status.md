@@ -3682,6 +3682,76 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao usa Portal;
 	- a proxima etapa deve implementar somente o corte minimo necessario no service.
 
+- Checkpoint documental curto da implementacao da refatoracao minima tenant-aware de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta implementacao: `createUsuarioExecutionService`.
+- Arquivo principal desta implementacao: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Arquivo alterado nesta rodada: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Escopo minimo efetivamente implementado:
+	- somente a chamada do ramo `duplicate key` foi alterada;
+	- a chamada passou de `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id)` para `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id, existente.unidade_id || unidadeId || null)`;
+	- nenhum outro ramo do helper foi alterado.
+- O que esta implementacao preserva:
+	- os ramos `setIfEmpty` e funcionario existente antes do conflito permanecem intactos;
+	- `membership_duplicate` permanece intacto;
+	- `funcionario_create_error` permanece intacto;
+	- o contrato publico HTTP permanece intacto;
+	- controller nao foi alterado;
+	- `api.db.js` nao foi alterado;
+	- `auth.db.js` nao foi alterado;
+	- `package.json` nao foi alterado.
+- Validacao estreita executada nesta rodada:
+	- checagem de erros do arquivo `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js` sem erros;
+	- nenhum teste foi executado neste microcorte.
+- Proximo ato recomendado apos esta implementacao:
+	- executar a protecao focal tenant-aware apos a refatoracao minima.
+- Decisao principal consolidada desta implementacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=implementCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=runCreateUsuarioExecutionServiceTenantAwareProtectionAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta implementacao:
+	- createUsuarioExecutionServiceTenantAwareMinimalRefactorImplemented=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=implementCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- recommendedNextAct=runCreateUsuarioExecutionServiceTenantAwareProtectionAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=true
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- controllerChanged=false
+	- apiDbChanged=false
+	- authDbChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta implementacao:
+	- esta implementacao altera somente o corte minimo necessario no service e a documentacao;
+	- esta implementacao nao altera testes;
+	- esta implementacao nao altera `package.json`;
+	- esta implementacao nao altera scripts;
+	- esta implementacao nao altera controller;
+	- esta implementacao nao altera `api.db.js`;
+	- esta implementacao nao altera `auth.db.js`;
+	- esta implementacao nao conecta Mongo real;
+	- esta implementacao nao executa query real;
+	- esta implementacao nao gera relatorio real;
+	- esta implementacao nao inicia PostgreSQL;
+	- esta implementacao nao usa Portal;
+	- a proxima etapa deve rodar somente a protecao focal apos a refatoracao.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
