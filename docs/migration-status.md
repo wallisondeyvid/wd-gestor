@@ -3139,6 +3139,78 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da revisao final da refatoracao minima tenant-aware de `funcionarioDeletePostDataFacade.js`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado nesta rodada: `src/modules/gestor/app/data/funcionarios/funcionarioDeletePostDataFacade.js`.
+- Leitura consolidada desta revisao final:
+	- a refatoracao minima tenant-aware foi aceita para este corredor;
+	- a protecao tenant-aware direta permaneceu verde com `tests=4`, `pass=4` e `fail=0`;
+	- os testes focais adjacentes permaneceram verdes com `tests=15`, `pass=15` e `fail=0`;
+	- o contrato publico do delete-post permaneceu preservado;
+	- o bloqueio de `master` permaneceu preservado;
+	- a idempotencia e o erro compativel permaneceram preservados;
+	- o delete legitimo da unidade ativa permaneceu preservado.
+- Leitura estrutural consolidada deste corredor:
+	- o seam sensivel agora recebe contexto explicito;
+	- o service repassa `unidadeId: effectiveUnitId` e `canonicalUnitId: scopedUnitId` ao resolver o usuario vinculado;
+	- o `GLOBAL_SCOPE` incondicional foi removido do caminho principal;
+	- o fallback global remanescente fica classificado como legado, explicito e condicionado a ausencia total de contexto.
+- Superficies preservadas neste fechamento:
+	- rotas nao foram alteradas;
+	- controller nao foi alterado;
+	- `api.db.js` nao foi alterado;
+	- `package.json` nao foi alterado.
+- Garantias operacionais desta revisao:
+	- nenhuma conexao Mongo real foi aberta;
+	- nenhuma query real contra banco real foi executada;
+	- nenhum relatorio real foi gerado.
+- Decisao de fechamento consolidada desta revisao:
+	- o corredor `funcionarioDeletePostDataFacade.js` fica fechado como tenant-aware minimo validado.
+- Decisao principal consolidada desta revisao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewFuncionarioDeletePostTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterFuncionarioDeletePost
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta revisao:
+	- funcionarioDeletePostTenantAwareMinimalRefactorReviewed=true
+	- funcionarioDeletePostTenantAwareMicrocutClosed=true
+	- funcionarioDeletePostTenantAwareProtectionPassed=true
+	- funcionarioDeletePostFocusedAdjacentTestsPassed=true
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewFuncionarioDeletePostTenantAwareMinimalRefactor
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterFuncionarioDeletePost
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa nova refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
