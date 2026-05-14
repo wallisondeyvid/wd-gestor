@@ -3843,6 +3843,41 @@ Checkpoint tenant enforcement atual:
 	- este ajuste nao usa Portal;
 	- a proxima etapa deve rerodar somente a protecao focal apos este ajuste.
 
+- Checkpoint documental curto do rerun da protecao tenant-aware de `createUsuarioExecutionService` apos o ajuste de harness, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste rerun: `createUsuarioExecutionService`.
+- Arquivo principal deste rerun: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Teste focal executado nesta rodada: `node --test tests/gestor-create-usuario-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado deste rerun:
+	- tests=4;
+	- suites=0;
+	- pass=3;
+	- fail=1;
+	- skipped=0;
+	- exitCode=1.
+- Diagnostico consolidado deste rerun:
+	- a protecao estrutural permaneceu verde;
+	- a protecao contratual do religamento apos `duplicate key` permaneceu verde;
+	- o ramo de `setIfEmpty` e funcionario existente antes do conflito permaneceu verde;
+	- a unica falha remanescente ficou no matcher de mensagem de `funcionario_create_error`;
+	- o valor retornado foi `Falha ao criar funcionário automático: falha externa nao-duplicate`, enquanto o teste ainda exige regex sem acentuacao `Falha ao criar funcionario automatico`;
+	- essa falha remanescente continua secundaria e nao indica regressao no source tenant-aware.
+- Classificacao consolidada deste rerun:
+	- `PROTECAO_TENANT_AWARE_PRINCIPAL_VERDE`;
+	- `FALHA_SECUNDARIA_DE_MATCHER_DE_MENSAGEM`;
+	- `SEM_NOVA_ALTERACAO_DE_SOURCE_NESTE_MICROCORTE`.
+- Interpretacao obrigatoria deste rerun:
+	- este rerun rodou apenas o teste focal solicitado;
+	- este rerun nao altera `src`;
+	- este rerun nao altera `tests`;
+	- este rerun nao altera `package.json`;
+	- este rerun nao altera scripts;
+	- este rerun nao conecta Mongo real;
+	- este rerun nao executa query real;
+	- este rerun nao gera relatorio real;
+	- este rerun nao inicia PostgreSQL;
+	- este rerun nao usa Portal;
+	- este rerun nao autoriza correcao automatica do matcher remanescente neste microcorte.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
