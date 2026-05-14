@@ -58,8 +58,8 @@ test('service do delete-post recebe canonicalUnitId antes de resolver o usuario 
 
   assert.match(
     serviceSource,
-    /findFuncionarioForDeletePostData\([\s\S]*unidadeId:\s*scopedUnitId[\s\S]*findLinkedUserForDeletePostData\(\{ funcionarioId: funcionario\._id \}\)/,
-    'o service deve continuar localizando o funcionario sob contexto de unidade antes de resolver o usuario vinculado',
+    /findFuncionarioForDeletePostData\([\s\S]*unidadeId:\s*scopedUnitId[\s\S]*const effectiveUnitId = scopedUnitId \|\| normalizeUnitId\(funcionario\?\.unidade_id\) \|\| null;[\s\S]*findLinkedUserForDeletePostData\(\{[\s\S]*funcionarioId:\s*funcionario\._id,[\s\S]*unidadeId:\s*effectiveUnitId,[\s\S]*canonicalUnitId:\s*scopedUnitId,[\s\S]*\}\)/,
+    'o service deve continuar localizando o funcionario por unidade, derivando effectiveUnitId antes da resolucao e repassando contexto tenant-aware ao seam de usuario vinculado',
   );
 
   assert.match(
