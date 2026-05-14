@@ -3935,6 +3935,68 @@ Checkpoint tenant enforcement atual:
 	- este ajuste nao usa Portal;
 	- a proxima etapa deve rerodar somente a protecao focal apos este ajuste.
 
+- Checkpoint documental curto da validacao verde da protecao tenant-aware de `createUsuarioExecutionService` apos refatoracao minima e ajustes de harness ou matcher, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta validacao: `createUsuarioExecutionService`.
+- Arquivo principal desta validacao: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Teste focal executado nesta rodada: `node --test tests/gestor-create-usuario-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado desta validacao:
+	- tests=4;
+	- suites=0;
+	- pass=4;
+	- fail=0;
+	- skipped=0;
+	- exitCode=0.
+- Diagnostico consolidado desta validacao:
+	- a protecao tenant-aware principal ficou verde;
+	- a protecao estrutural ficou verde;
+	- a protecao contratual do religamento apos `duplicate key` ficou verde;
+	- o ramo de `setIfEmpty` e funcionario existente antes do conflito ficou verde;
+	- a protecao semantica de `membership_duplicate` e `funcionario_create_error` ficou verde;
+	- nao ha indicio restante de regressao no source para este slice.
+- Decisao principal consolidada desta validacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=rerunCreateUsuarioExecutionServiceTenantAwareProtectionAfterMessageMatcherFix
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=runCreateUsuarioExecutionServiceAdjacentTestsAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta validacao:
+	- createUsuarioExecutionServiceTenantAwareProtectionAfterMessageMatcherFixRun=true
+	- createUsuarioExecutionServiceTenantAwareProtectionAfterMessageMatcherFixPassed=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=rerunCreateUsuarioExecutionServiceTenantAwareProtectionAfterMessageMatcherFix
+	- recommendedNextAct=runCreateUsuarioExecutionServiceAdjacentTestsAfterRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta validacao:
+	- esta validacao rodou apenas o teste focal solicitado;
+	- esta validacao nao altera `src`;
+	- esta validacao nao altera `tests`;
+	- esta validacao nao altera `package.json`;
+	- esta validacao nao altera scripts;
+	- esta validacao nao conecta Mongo real;
+	- esta validacao nao executa query real;
+	- esta validacao nao gera relatorio real;
+	- esta validacao nao inicia PostgreSQL;
+	- esta validacao nao usa Portal;
+	- a proxima etapa deve rodar testes adjacentes focais apos esta validacao verde.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
