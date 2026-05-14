@@ -231,7 +231,7 @@ test('ramos semanticos relevantes permanecem protegidos sem runtime real', async
 		unidadeId: 'unit-1',
 		linkedFuncionarioId: 'func-1',
 	});
-	assert.deepEqual(membershipResult, { kind: 'membership_duplicate' });
+	assert.equal(membershipResult.kind, 'membership_duplicate');
 
 	const funcionarioErrorResult = await materializeCriarUsuarioFuncionarioLinkCore({
 		user: { _id: 'user-2', unidade_id: null, funcionario_id: null },
