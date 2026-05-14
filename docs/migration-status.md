@@ -3536,6 +3536,75 @@ Checkpoint tenant enforcement atual:
 	- esta criacao nao usa Portal;
 	- a proxima etapa deve rodar apenas o teste focal criado.
 
+- Checkpoint documental curto da execucao da protecao tenant-aware de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta execucao: `createUsuarioExecutionService`.
+- Arquivo principal desta execucao: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Teste focal executado nesta rodada: `node --test tests/gestor-create-usuario-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado desta execucao:
+	- tests=4;
+	- pass=1;
+	- fail=3;
+	- exitCode=1.
+- Falhas observadas nesta execucao:
+	- a protecao estrutural falhou porque o ramo `duplicate key` ainda contem `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id)` sem o terceiro argumento de unidade;
+	- a protecao contratual falhou porque o religamento apos `duplicate key` chamou `setById` apenas com `funcionarioId` e `userId`, sem `existente.unidade_id`;
+	- houve ainda uma falha secundaria no teste de ramos semanticos por comparacao estrita de objeto em contexto de `vm`, mas essa falha nao altera o diagnostico controlador deste microcorte.
+- Diagnostico consolidado desta execucao:
+	- a falha controladora foi protetiva e esperada;
+	- a protecao confirmou que o risco tenant-aware do ramo `duplicate key` ainda existe no source atual;
+	- o helper sensivel `materializeCriarUsuarioFuncionarioLinkCore` ainda perde unidade contextual no religamento apos conflito;
+	- `src` permanece sem refatoracao nesta rodada.
+- Classificacao consolidada desta execucao:
+	- `FALHA_PROTETIVA_ESPERADA`;
+	- `RISCO_DUPLICATE_KEY_UNIT_CONTEXT_CONFIRMADO`;
+	- `SEM_REFATORACAO_EXECUTADA`.
+- Proximo ato recomendado apos esta execucao:
+	- desenhar a refatoracao minima tenant-aware para o ramo `duplicate key` antes de qualquer alteracao ampla.
+- Decisao principal consolidada desta execucao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runCreateUsuarioExecutionServiceTenantAwareProtectionTest
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=designCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta execucao:
+	- createUsuarioExecutionServiceTenantAwareProtectionTestRun=true
+	- createUsuarioExecutionServiceTenantAwareProtectionTestFailedAsExpected=true
+	- createUsuarioExecutionServiceDuplicateKeyUnitContextRiskConfirmedByProtection=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runCreateUsuarioExecutionServiceTenantAwareProtectionTest
+	- recommendedNextAct=designCreateUsuarioExecutionServiceTenantAwareMinimalRefactor
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta execucao:
+	- esta execucao rodou apenas o teste focal solicitado;
+	- esta execucao nao altera `src`;
+	- esta execucao nao altera `tests`;
+	- esta execucao nao altera `package.json`;
+	- esta execucao nao altera scripts;
+	- esta execucao nao conecta Mongo real;
+	- esta execucao nao executa query real;
+	- esta execucao nao gera relatorio real;
+	- esta execucao nao inicia PostgreSQL;
+	- esta execucao nao usa Portal;
+	- a proxima etapa deve desenhar refatoracao minima tenant-aware antes de nova tentativa de endurecimento do source.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
