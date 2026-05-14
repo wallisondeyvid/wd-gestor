@@ -3465,6 +3465,77 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao usa Portal;
 	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao da protecao ou teste tenant-aware de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta protecao: `createUsuarioExecutionService`.
+- Arquivo principal desta protecao: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Arquivo criado nesta rodada: `tests/gestor-create-usuario-tenant-aware-protection.test.js`.
+- Escopo consolidado desta protecao:
+	- usa `node:test` e `assert`;
+	- nao importa conexao real;
+	- nao conecta Mongo real;
+	- nao executa query real;
+	- nao depende de dados reais;
+	- foca no helper `materializeCriarUsuarioFuncionarioLinkCore`;
+	- congela o ramo de recuperacao apos `duplicate key`.
+- O que a protecao criada endurece:
+	- denuncia a forma atual se o ramo `duplicate key` chamar `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id)` sem terceiro argumento de unidade;
+	- exige a forma tenant-aware `setCriarUsuarioFuncionarioUsuarioIdById(existente._id, user._id, existente.unidade_id || unidadeId || null)` ou equivalente semantico;
+	- protege contratualmente que `setFuncionarioUsuarioIdById` nao receba `unidadeId` nulo nesse ramo quando houver contexto;
+	- preserva os ramos ja corretos de `setIfEmpty` e funcionario existente antes do conflito;
+	- preserva os ramos semanticos `membership_duplicate` e `funcionario_create_error`.
+- Classificacao consolidada da protecao criada:
+	- `PROTECAO_ESTRUTURAL_TENANT_AWARE`;
+	- `PROTECAO_CONTRATUAL_DE_SEAM`;
+	- sem necessidade de runtime real neste microcorte.
+- Estado esperado desta protecao antes da refatoracao futura:
+	- a protecao estrutural e contratual pode falhar contra a forma atual;
+	- essa falha esperada confirma a lacuna tenant-aware ja diagnosticada;
+	- nenhuma refatoracao foi executada nesta rodada.
+- Proximo ato recomendado apos esta criacao:
+	- executar apenas o teste focal criado antes de qualquer alteracao em `src`.
+- Decisao principal consolidada desta criacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createCreateUsuarioExecutionServiceTenantAwareProtectionTest
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- recommendedNextAct=runCreateUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta criacao:
+	- createUsuarioExecutionServiceTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=createUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createCreateUsuarioExecutionServiceTenantAwareProtectionTest
+	- recommendedNextAct=runCreateUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta criacao:
+	- esta criacao altera apenas testes e documentacao;
+	- esta criacao nao altera `src`;
+	- esta criacao nao altera `package.json`;
+	- esta criacao nao altera scripts;
+	- esta criacao nao executa refatoracao;
+	- esta criacao nao conecta Mongo real;
+	- esta criacao nao executa query real;
+	- esta criacao nao gera relatorio real;
+	- esta criacao nao inicia PostgreSQL;
+	- esta criacao nao usa Portal;
+	- a proxima etapa deve rodar apenas o teste focal criado.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
