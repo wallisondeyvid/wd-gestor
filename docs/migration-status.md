@@ -2366,6 +2366,67 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao usa Portal;
 	- a proxima etapa deve seguir a decisao registrada sem abrir refatoracao ampla.
 
+- Checkpoint documental curto de encerramento do microcorte protegido de Recursos consolidado nesta rodada, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem runtime, sem query real e sem conexao com Mongo real.
+- Fechamento consolidado do corredor `src/modules/gestor/app/data/recursos/recursosContextDataFacade.js`:
+	- o corredor foi aceito como protegido sem necessidade de refatoracao imediata;
+	- nao ha bug confirmado no contrato atualmente exercido;
+	- o fallback global residual continua explicitamente condicionado;
+	- anchor valido continua derivando escopo unitario;
+	- `cond` com anchor unico confiavel continua sem cair em `GLOBAL_SCOPE`;
+	- a falha historica deste corredor foi atribuida ao harness, e nao a bug confirmado da facade.
+- Leitura executiva consolidada deste fechamento: o microcorte de Recursos fica encerrado apenas documentalmente porque a protecao focal ja cobre o ramo contextual valido, o ramo com anchor unico confiavel e o ramo de fallback condicionado; nao ha sinal atual de regressao tenant-aware que justifique refatoracao local imediata.
+- Proximo alvo residual tenant-aware selecionado nesta rodada: `src/modules/gestor/app/data/funcionarios/funcionarioDeletePostDataFacade.js`.
+- Justificativa tecnica consolidada da escolha do proximo alvo:
+	- o alvo e pequeno, local e auditavel, ao contrario de bundles amplos ja adiados como `funcionariosPageBundleDataFacade.js`;
+	- o corredor de delete-post expõe uma leitura global explicita em `findLinkedUserForDeletePostData({ funcionarioId })`, que chama `findUserByFuncionarioIdRepo({ unitScope: GLOBAL_SCOPE, funcionarioId })` sem branch contextual condicionado no proprio seam;
+	- isso difere do corredor de Recursos recentemente fechado, onde o fallback global remanescente ficou cercado como explicito e condicionado;
+	- os testes estruturais atuais do delete-post mockam este data facade, o que indica lacuna de protecao contratual direta exatamente no seam onde a leitura global aparece;
+	- por isso, este alvo oferece melhor relacao entre risco residual e blast radius do que corredores ja pausados ou ja caracterizados como compatibilidade controlada.
+- Classificacao consolidada do proximo alvo:
+	- tipo principal: `RISCO_ESTRUTURAL_REAL`;
+	- tipo complementar: `AUSENCIA_DE_PROTECAO_CONTRATUAL`;
+	- nao foi classificado aqui como fallback hibrido condicionado, porque o ponto observado e uma leitura global explicita no seam local;
+	- nao foi priorizado como corredor meramente legado amplo, porque o slice atual permanece suficientemente pequeno para auditoria profunda focal.
+- Decisao principal consolidada deste fechamento:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=closeRecursosContextTenantAwareProtectedMicrocut
+	- selectedTechnicalTarget=funcionarioDeletePostDataFacade
+	- recommendedNextAct=diagnoseFuncionarioDeletePostTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste fechamento:
+	- recursosContextProtectedMicrocutClosed=true
+	- nextTenantAwareResidualTargetSelected=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria consolidada deste fechamento:
+	- este fechamento e apenas documental;
+	- este fechamento nao altera codigo;
+	- este fechamento nao altera testes;
+	- este fechamento nao executa refatoracao;
+	- este fechamento nao executa runtime;
+	- este fechamento nao cria comando;
+	- este fechamento nao conecta Mongo real;
+	- este fechamento nao executa query;
+	- este fechamento nao gera relatorio;
+	- este fechamento nao inicia PostgreSQL;
+	- este fechamento nao usa Portal;
+	- a proxima etapa deve auditar apenas o alvo residual selecionado.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
