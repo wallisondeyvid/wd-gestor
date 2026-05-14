@@ -2828,6 +2828,28 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da execucao da protecao tenant-aware de `funcionarioDeletePostDataFacade.js` apos a refatoracao minima, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real e sem conexao com Mongo real.
+- Comando executado nesta rodada: `node --test tests/gestor-funcionarios-delete-post-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado desta execucao focal:
+	- tests=4
+	- suites=0
+	- pass=3
+	- fail=1
+	- skipped=0
+	- cancelled=0
+	- todo=0
+	- duration_ms=55.4106
+- Diagnostico consolidado desta execucao:
+	- a protecao do seam sensivel ficou parcialmente verde apos a refatoracao minima;
+	- passaram o assert de cobertura adjacente do contrato publico atual, o assert que exige contexto explicito no seam de usuario vinculado e o assert que proibe `GLOBAL_SCOPE` incondicional;
+	- falhou apenas o assert estrutural do service que ainda esperava a chamada antiga `findLinkedUserForDeletePostData({ funcionarioId: funcionario._id })`;
+	- o motivo da falha ficou claro: a refatoracao minima alterou corretamente a chamada do service para repassar `unidadeId: effectiveUnitId` e `canonicalUnitId: scopedUnitId`, entao o matcher estrutural atual do teste ficou desatualizado em relacao ao novo contrato interno.
+- Interpretacao obrigatoria desta falha:
+	- esta rodada nao alterou `src` apos o teste;
+	- esta rodada nao alterou `tests`;
+	- esta rodada nao corrige automaticamente o matcher estrutural;
+	- esta rodada apenas registra que a falha restante e compatível com a nova forma tenant-aware da chamada no service.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
