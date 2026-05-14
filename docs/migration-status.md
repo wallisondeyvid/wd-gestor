@@ -3752,6 +3752,40 @@ Checkpoint tenant enforcement atual:
 	- esta implementacao nao usa Portal;
 	- a proxima etapa deve rodar somente a protecao focal apos a refatoracao.
 
+- Checkpoint documental curto da execucao da protecao tenant-aware de `createUsuarioExecutionService` apos a refatoracao minima, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta execucao: `createUsuarioExecutionService`.
+- Arquivo principal desta execucao: `src/modules/gestor/app/services/usuarios/createUsuarioExecution.service.js`.
+- Teste focal executado nesta rodada: `node --test tests/gestor-create-usuario-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado desta execucao:
+	- tests=4;
+	- suites=0;
+	- pass=3;
+	- fail=1;
+	- skipped=0;
+	- exitCode=1.
+- Diagnostico consolidado desta execucao:
+	- a protecao estrutural tenant-aware passou apos a refatoracao minima;
+	- a protecao contratual do religamento apos `duplicate key` passou apos a refatoracao minima;
+	- o ramo correto de `setIfEmpty` e funcionario existente antes do conflito permaneceu verde;
+	- a unica falha remanescente ficou restrita ao teste semantico `ramos semanticos relevantes permanecem protegidos sem runtime real`;
+	- essa falha remanescente continua consistente com comparacao estrita de objeto em contexto de `vm`, e nao reabre o diagnostico principal de perda de unidade contextual.
+- Classificacao consolidada desta execucao:
+	- `PROTECAO_PRINCIPAL_VALIDADA`;
+	- `FALHA_SECUNDARIA_DE_HARNESS_VM`;
+	- `SEM_NOVA_ALTERACAO_DE_SOURCE_NESTE_MICROCORTE`.
+- Interpretacao obrigatoria desta execucao:
+	- esta execucao rodou apenas o teste focal solicitado;
+	- esta execucao nao altera `src`;
+	- esta execucao nao altera `tests`;
+	- esta execucao nao altera `package.json`;
+	- esta execucao nao altera scripts;
+	- esta execucao nao conecta Mongo real;
+	- esta execucao nao executa query real;
+	- esta execucao nao gera relatorio real;
+	- esta execucao nao inicia PostgreSQL;
+	- esta execucao nao usa Portal;
+	- esta execucao nao autoriza correcao automatica do teste remanescente neste microcorte.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
