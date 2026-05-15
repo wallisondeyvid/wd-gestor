@@ -4390,6 +4390,64 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao usa Portal;
 	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao da protecao ou teste tenant-aware de `updateUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real, sem conexao com Mongo real e sem refatoracao executada.
+- Alvo desta protecao: `updateUsuarioExecutionService`.
+- Arquivo criado nesta rodada: `tests/gestor-update-usuario-tenant-aware-protection.test.js`.
+- Escopo consolidado da protecao criada:
+	- o arquivo novo protege `src/modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js` sem importar conexao real;
+	- o teste congela estruturalmente a captura de `prevUnidadeId` antes da sobrescrita de `user.unidade_id`;
+	- o teste congela estruturalmente a captura de `prevFuncionarioId` antes da sobrescrita de `user.funcionario_id`;
+	- o teste protege em runtime contratual que `unsetFuncionarioUsuarioIdById` recebe `prevFuncionarioId` e `prevUnidadeId`;
+	- o teste protege em runtime contratual que `setFuncionarioUsuarioIdById` recebe `nextFuncionarioId`, `user._id` e `unidadeId || null`;
+	- o teste protege que `saveUserDoc(user)` ocorre apos a sincronizacao de vinculo;
+	- o teste cobre o cenario de troca de `funcionario_id` com troca de unidade;
+	- o teste cobre o cenario de remocao de `funcionario_id`, limpando vinculo anterior sem religamento indevido.
+- Contrato preservado por esta criacao:
+	- a atualizacao de usuario continua sendo o contrato funcional do service;
+	- a duplicidade por CPF/unidade permanece preservada no controller, sem reabrir controller neste teste;
+	- o vinculo legitimo usuario/funcionario continua protegido;
+	- a remocao ou troca de vinculo continua protegida;
+	- `src` nao foi alterado neste microcorte;
+	- `package.json` nao foi alterado neste microcorte.
+- Leitura consolidada desta criacao:
+	- a protecao foi criada como combinacao de estrutural de source com runtime contratual do service;
+	- a protecao usa apenas `node:test`, `assert`, `fs`, `path` e `vm` com mocks e stubs locais;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma refatoracao foi executada.
+- Proximo ato recomendado apos esta criacao: `runUpdateUsuarioExecutionServiceTenantAwareProtectionTest`.
+- Decisao principal consolidada desta criacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createUpdateUsuarioExecutionServiceTenantAwareProtectionTest
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- recommendedNextAct=runUpdateUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta criacao:
+	- updateUsuarioExecutionServiceTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createUpdateUsuarioExecutionServiceTenantAwareProtectionTest
+	- recommendedNextAct=runUpdateUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
