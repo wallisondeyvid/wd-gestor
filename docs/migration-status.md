@@ -4304,6 +4304,92 @@ Checkpoint tenant enforcement atual:
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao/teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao ou teste tenant-aware de `updateUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho: `updateUsuarioExecutionService`.
+- Arquivo principal deste desenho: `src/modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js`.
+- Pontos sensiveis consolidados deste desenho:
+	- `prevUnidadeId` capturado antes da mutacao;
+	- `prevFuncionarioId` capturado antes da mutacao;
+	- `unsetFuncionarioUsuarioIdById(prevFuncionarioId, prevUnidadeId)`;
+	- `setFuncionarioUsuarioIdById(nextFuncionarioId, user._id, unidadeId || null)`;
+	- preflight de duplicidade por CPF/unidade no controller.
+- Risco a proteger neste desenho:
+	- cleanup de funcionario anterior sem unidade antiga;
+	- religamento de funcionario novo sem unidade nova;
+	- operacao mais ampla que o necessario se a unidade contextual for perdida.
+- Contrato atual a preservar neste desenho:
+	- a atualizacao de usuario continua funcionando;
+	- a duplicidade por CPF/unidade continua protegida;
+	- o vinculo legitimo usuario/funcionario continua funcionando;
+	- a remocao ou troca de vinculo continua funcionando;
+	- o contrato publico HTTP permanece compativel;
+	- `saveUserDoc` continua sendo chamado apos a sincronizacao.
+- Comportamento desejado a consolidar por protecao futura:
+	- a troca de `funcionario_id` deve limpar o vinculo anterior com `prevUnidadeId`;
+	- a troca de `funcionario_id` deve religar o novo vinculo com `unidadeId`;
+	- a remocao de `funcionario_id` deve limpar o vinculo anterior com `prevUnidadeId`;
+	- qualquer fallback sem unidade, se existir, deve ser explicito, condicionado e documentado.
+- Protecao futura desejada neste checkpoint:
+	- um teste estrutural deve congelar a captura de `prevUnidadeId` antes de sobrescrever `user.unidade_id`;
+	- um teste estrutural deve congelar `unset` com `prevUnidadeId` e `set` com `unidadeId`;
+	- um teste contratual de seam ou bridge deve provar que os helpers recebem unidades distintas quando ha troca de unidade;
+	- o teste deve preservar o contrato publico e os ramos ja existentes.
+- Tipo de teste recomendado neste desenho:
+	- combinar teste estrutural de source com teste contratual de seam;
+	- sem Mongo real;
+	- usando mocks e stubs;
+	- sem query real;
+	- sem relatorio real.
+- Hipotese de refatoracao futura, sem implementar neste microcorte:
+	- nao alterar `src` antes da protecao;
+	- so considerar ajuste se a protecao mostrar perda real de contexto;
+	- nao abrir `api.db.js` como big-bang;
+	- nao alterar controller neste momento;
+	- nao alterar contrato publico HTTP.
+- Decisao principal consolidada deste desenho:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designUpdateUsuarioExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- recommendedNextAct=createUpdateUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste desenho:
+	- updateUsuarioExecutionServiceTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designUpdateUsuarioExecutionServiceTenantAwareProtection
+	- recommendedNextAct=createUpdateUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
