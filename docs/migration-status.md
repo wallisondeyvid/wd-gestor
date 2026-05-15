@@ -4448,6 +4448,36 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da execucao da protecao tenant-aware de `updateUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta execucao: `updateUsuarioExecutionService`.
+- Arquivo principal desta execucao: `src/modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js`.
+- Comando executado nesta rodada: `node --test tests/gestor-update-usuario-tenant-aware-protection.test.js`.
+- Resultado bruto consolidado desta execucao focal:
+	- tests=3
+	- suites=0
+	- pass=1
+	- fail=2
+	- skipped=0
+	- cancelled=0
+	- todo=0
+	- duration_ms=56.0556
+- Diagnostico consolidado desta falha:
+	- a protecao estrutural de ordem tenant-aware passou;
+	- as duas falhas restantes ficaram concentradas nas assercoes do proprio teste novo sobre o objeto de retorno do service;
+	- o erro observado foi `AssertionError [ERR_ASSERTION]` com mensagem de igualdade estrutural sem igualdade de referencia no resultado retornado por funcao extraida em `vm`;
+	- neste checkpoint, o motivo da falha fica classificado como problema claro de harness ou assertion do teste, e nao como regressao nova confirmada em `src`.
+- Invariantes preservados nesta execucao:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados apos a falha neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Leitura operacional consolidada desta rodada:
+	- como a falha ficou explicita no harness ou na assertion do teste novo, este microcorte para aqui sem correcao automatica;
+	- nenhuma alteracao em `src` sera feita a partir desta execucao falha;
+	- nenhuma alteracao em `tests` sera feita neste mesmo microcorte apos a falha.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
