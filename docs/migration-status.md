@@ -4587,6 +4587,64 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da validacao verde dos testes adjacentes focais de `updateUsuarioExecutionService` apos a protecao tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta validacao: `updateUsuarioExecutionService`.
+- Arquivo principal desta validacao: `src/modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js`.
+- Comando executado nesta rodada: `node --test tests/gestor-atualizar-usuario-execution-structural-seam.test.js tests/gestor-user-admin-update-owner-structural-seam.test.js`.
+- Resultado bruto consolidado desta validacao:
+	- tests=8
+	- suites=0
+	- pass=8
+	- fail=0
+	- skipped=0
+	- cancelled=0
+	- todo=0
+	- duration_ms=62.1673
+- Diagnostico consolidado desta validacao:
+	- o teste estrutural de `atualizarUsuario` permaneceu verde;
+	- o teste estrutural adjacente de `updateUsuarioExecutionService` permaneceu verde;
+	- os testes focais do owner admin de update permaneceram verdes;
+	- nao ha indicio de regressao adjacente neste corredor apos a protecao tenant-aware.
+- Invariantes preservados nesta validacao:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Proximo ato recomendado apos esta validacao: `reviewUpdateUsuarioExecutionServiceTenantAwareProtection`.
+- Decisao principal consolidada desta validacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runUpdateUsuarioExecutionServiceAdjacentTestsAfterProtection
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- recommendedNextAct=reviewUpdateUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta validacao:
+	- updateUsuarioExecutionServiceAdjacentTestsAfterProtectionRun=true
+	- updateUsuarioExecutionServiceAdjacentTestsAfterProtectionPassed=true
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runUpdateUsuarioExecutionServiceAdjacentTestsAfterProtection
+	- recommendedNextAct=reviewUpdateUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
