@@ -4124,6 +4124,87 @@ Checkpoint tenant enforcement atual:
 	- a decisao desta rodada e fechar o corredor `createUsuarioExecutionService` como tenant-aware minimo validado;
 	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `createUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual consolidada nesta selecao: `tenantArchitectureContinuation`.
+- Corredores ja fechados nesta rodada:
+	- `feedbackStatusDataFacade` protegido, refatorado e validado;
+	- `recursosContextDataFacade` protegido e fechado sem refatoracao imediata;
+	- `funcionarioDeletePostDataFacade` refatorado, protegido e validado como tenant-aware minimo;
+	- `createUsuarioExecutionService` refatorado, protegido e validado como tenant-aware minimo.
+- Candidatos considerados nesta selecao:
+	- `updateUsuarioExecutionService` em `src/modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js`;
+	- `deleteUsuarioExecutionService` em `src/modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js`;
+	- `funcionariosPageBundleDataFacade` em `src/modules/gestor/app/data/funcionarios/funcionariosPageBundleDataFacade.js`;
+	- `api.db.js` em `src/modules/gestor/app/db/api.db.js`;
+	- `auth.db.js` em `src/modules/gestor/app/db/auth.db.js`.
+- Candidatos recusados e motivo curto:
+	- `deleteUsuarioExecutionService`: corredor pequeno, mas ja tem cercamento estrutural e bridge focada para cleanup com unidade explicita, ficando menos prioritario neste snapshot;
+	- `funcionariosPageBundleDataFacade`: continua amplo demais, mistura bundle de pagina com leituras e catalogos, acima da regua conservadora para o proximo microcorte;
+	- `api.db.js`: concentra residuos heterogeneos e seria big-bang para este momento;
+	- `auth.db.js`: ainda mistura identidade global legitima com compat legado e permanece grande demais para corte local seguro.
+- Proximo alvo tecnico residual selecionado nesta rodada: `updateUsuarioExecutionService`.
+- Motivo consolidado da selecao:
+	- o alvo e pequeno, vivo, local e testavel no mesmo dominio de usuarios administrativos ja trabalhado nesta frente;
+	- o service concentra o religamento tenant-sensitive de funcionario ao trocar `funcionario_id` e `unidade_id`, preservando `prevUnidadeId` para o `unset` e `unidadeId` para o `set`;
+	- isso representa risco tenant-aware material porque uma regressao local nesse pareamento pode desvincular ou religar funcionario fora da unidade contextual correta;
+	- o alvo evita reabrir controller grande, page bundle grande, `api.db.js` inteiro, `auth.db.js` inteiro ou globais legitimos.
+- Risco tenant-aware suspeito consolidado desta selecao:
+	- o fluxo de atualizacao de usuario administra a transicao entre unidade anterior e unidade nova ao sincronizar o vinculo com funcionario;
+	- se algum ramo perder `prevUnidadeId` no `unset` ou `unidadeId` no `set`, o cleanup ou religamento pode recair em escopo mais amplo do que o necessario.
+- Lacuna de protecao atual consolidada desta selecao:
+	- existe cobertura estrutural em `tests/gestor-atualizar-usuario-execution-structural-seam.test.js`, mas ela ainda nao congela explicitamente este slice como protecao tenant-aware dedicada de bridge ou contrato local;
+	- nao ha teste focal equivalente aos cercamentos tenant-aware recentes de create ou delete para garantir, de forma isolada, a preservacao simultanea de `prevUnidadeId` no `unset` e de `unidadeId` no `set`.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proximo ato recomendado apos esta selecao: `diagnoseUpdateUsuarioExecutionServiceTenantAwareTarget`.
+- Decisao principal consolidada desta selecao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterCreateUsuario
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- recommendedNextAct=diagnoseUpdateUsuarioExecutionServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta selecao:
+	- nextTenantAwareTechnicalTargetAfterCreateUsuarioSelected=true
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterCreateUsuario
+	- recommendedNextAct=diagnoseUpdateUsuarioExecutionServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
