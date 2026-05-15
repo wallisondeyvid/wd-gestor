@@ -4478,6 +4478,56 @@ Checkpoint tenant enforcement atual:
 	- nenhuma alteracao em `src` sera feita a partir desta execucao falha;
 	- nenhuma alteracao em `tests` sera feita neste mesmo microcorte apos a falha.
 
+- Checkpoint documental curto do ajuste de harness ou assertion da protecao tenant-aware de `updateUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste ajuste: `updateUsuarioExecutionService`.
+- Arquivo alterado nesta rodada: `tests/gestor-update-usuario-tenant-aware-protection.test.js`.
+- Ajuste efetivamente aplicado nesta rodada:
+	- as comparacoes de retorno do `result` vindas de funcao extraida em `vm` deixaram de usar comparacao estrutural profunda do objeto inteiro;
+	- as assercoes passaram a validar semanticamente `result.kind`, `result.userId` e `result.updated` com `assert.equal`;
+	- as verificacoes principais sobre `calls`, `unset` com `prevUnidadeId`, `set` com `unidadeId`, ordem tenant-aware e remocao sem religamento indevido foram preservadas.
+- O que este ajuste preserva:
+	- a protecao estrutural de ordem tenant-aware permanece intacta;
+	- a protecao da troca de funcionario com troca de unidade permanece intacta;
+	- a protecao da remocao de funcionario sem religamento indevido permanece intacta;
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado.
+- Leitura consolidada deste ajuste:
+	- o ajuste trata apenas o falso negativo de comparacao entre objetos oriundos de contexto `vm`;
+	- o ajuste nao enfraquece as verificacoes centrais do contrato tenant-aware;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada.
+- Proximo ato recomendado apos este ajuste: `rerunUpdateUsuarioExecutionServiceTenantAwareProtectionAfterHarnessFix`.
+- Decisao principal consolidada deste ajuste:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=fixUpdateUsuarioExecutionServiceProtectionHarnessVmAssertion
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- recommendedNextAct=rerunUpdateUsuarioExecutionServiceTenantAwareProtectionAfterHarnessFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste ajuste:
+	- updateUsuarioExecutionServiceProtectionHarnessVmAssertionFixed=true
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=fixUpdateUsuarioExecutionServiceProtectionHarnessVmAssertion
+	- recommendedNextAct=rerunUpdateUsuarioExecutionServiceTenantAwareProtectionAfterHarnessFix
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v

@@ -112,11 +112,9 @@ test('updateUsuarioExecutionService protege a troca de funcionario e unidade com
     funcionarioId: 'f-novo',
   });
 
-  assert.deepEqual(result, {
-    kind: 'updated',
-    userId: 'u-100',
-    updated: true,
-  });
+  assert.equal(result.kind, 'updated');
+  assert.equal(result.userId, 'u-100');
+  assert.equal(result.updated, true);
   assert.deepEqual(calls, [
     { op: 'unset', funcionarioId: 'f-antigo', unidadeId: 'un-antiga' },
     { op: 'set', funcionarioId: 'f-novo', userId: 'u-100', unidadeId: 'un-nova' },
@@ -175,11 +173,9 @@ test('updateUsuarioExecutionService protege a remocao de funcionario limpando o 
     funcionarioId: '',
   });
 
-  assert.deepEqual(result, {
-    kind: 'updated',
-    userId: 'u-200',
-    updated: true,
-  });
+  assert.equal(result.kind, 'updated');
+  assert.equal(result.userId, 'u-200');
+  assert.equal(result.updated, true);
   assert.deepEqual(calls, [
     { op: 'unset', funcionarioId: 'f-antigo', unidadeId: 'un-antiga' },
     {
