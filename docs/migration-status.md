@@ -4205,6 +4205,105 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao usa Portal;
 	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `updateUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada: `updateUsuarioExecutionService`.
+- Arquivo principal deste diagnostico: `src/modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js`.
+- Cadeia viva identificada do fluxo de atualizacao de usuario quando localizavel neste checkpoint:
+	- o fluxo vivo entra em `atualizarUsuario(req, res)` de `src/modules/gestor/app/controllers/userController.js`;
+	- o controller recebe `unidade_id` e `funcionario_id` do payload, carrega o usuario atual por `findUserById(req.params.id)`, valida precondicoes basicas e faz o preflight de duplicidade por CPF/unidade antes de delegar;
+	- o controller delega para `updateUsuarioExecutionService({ user, isTargetMaster, cleanCpf, trimmedNome, role, unidadeId: unidade_id, funcionarioId: funcionario_id })`;
+	- o service captura `prevUnidadeId` e `prevFuncionarioId` a partir do `user` carregado, materializa `user.unidade_id = unidadeId || null` e `user.funcionario_id = nextFuncionarioId || null`, executa `unsetFuncionarioUsuarioIdById(prevFuncionarioId, prevUnidadeId)` quando ha vinculo anterior, executa `setFuncionarioUsuarioIdById(nextFuncionarioId, user._id, unidadeId || null)` quando ha novo vinculo e so depois persiste por `saveUserDoc(user)`;
+	- na bridge de `src/modules/gestor/app/db/api.db.js`, `unsetFuncionarioUsuarioIdById` deriva `unitScope` por `scopeFromUnidadeId(arguments[1])` e `setFuncionarioUsuarioIdById` deriva `unitScope` por `scopeFromUnidadeId(unidadeId)`, portanto o contrato local depende diretamente de preservar a unidade antiga no `unset` e a unidade nova no `set`.
+- Onde o contexto de unidade entra no fluxo:
+	- entra no controller pelo `unidade_id` recebido do payload;
+	- entra no service pela propriedade `unidadeId` delegada pelo controller;
+	- entra no cleanup do vinculo anterior por `prevUnidadeId`, calculado antes de sobrescrever `user.unidade_id`;
+	- entra no religamento do novo vinculo por `unidadeId`, repassado ao `setFuncionarioUsuarioIdById`.
+- Onde o contexto de unidade pode ser perdido neste fluxo:
+	- se `prevUnidadeId` deixar de ser capturado antes da mutacao de `user.unidade_id`, o `unset` pode limpar vinculo sem o escopo anterior correto;
+	- se `unidadeId` deixar de ser repassado ao `setFuncionarioUsuarioIdById`, o religamento do novo funcionario pode cair em escopo mais amplo ou implicito;
+	- o preflight de duplicidade por CPF/unidade hoje consulta `findUserDuplicadoByCpfUnidadeExcludingId(user._id, cleanCpf, user.unidade_id)` usando a unidade atual carregada do usuario antes da mutacao, o que torna esse ponto sensivel em transicoes de unidade e exige protecao explicita antes de qualquer alteracao futura.
+- Pontos sensiveis consolidados deste diagnostico:
+	- transicao de unidade anterior para unidade nova;
+	- uso de `prevUnidadeId` no `unset`;
+	- uso de `unidadeId` no `set`;
+	- sincronizacao de `funcionario_id` ao trocar ou remover vinculo;
+	- validacao de duplicidade por CPF/unidade no preflight do controller.
+- Risco suspeito consolidado deste diagnostico:
+	- o cleanup de funcionario pode perder a unidade anterior se `prevUnidadeId` deixar de acompanhar o `unset`;
+	- o religamento de funcionario pode perder a unidade nova se `unidadeId` deixar de acompanhar o `set`;
+	- `unset` e `set` podem operar mais amplo que o necessario se a unidade contextual nao for preservada ponta a ponta;
+	- esta leitura fica classificada neste checkpoint como `RISCO_ESTRUTURAL_POTENCIAL` e `LACUNA_DE_PROTECAO_CONTRATUAL`, e nao como bug confirmado ainda.
+- Comportamento atual a preservar neste corredor:
+	- a atualizacao de usuario continua funcionando;
+	- a duplicidade por CPF/unidade continua protegida no contrato atual observado;
+	- o vinculo legitimo usuario/funcionario continua funcionando;
+	- a remocao ou troca de vinculo continua funcionando;
+	- o contrato publico HTTP do update permanece compativel.
+- Comportamento a proteger por teste em etapa futura:
+	- `unsetFuncionarioUsuarioIdById` deve receber `prevUnidadeId` quando houver unidade anterior;
+	- `setFuncionarioUsuarioIdById` deve receber `unidadeId` quando houver unidade nova;
+	- a troca de `funcionario_id` deve limpar o vinculo anterior no escopo antigo e religar o novo no escopo novo;
+	- qualquer fallback sem unidade, se existir, deve ficar explicito, condicionado e documentado.
+- Cobertura atual observada neste checkpoint:
+	- existe teste estrutural geral em `tests/gestor-atualizar-usuario-execution-structural-seam.test.js` que congela o mapeamento owner -> service e um caminho feliz com `unset` em `un-antiga` e `set` em `un-nova`;
+	- essa cobertura responde parcialmente ao contrato local, mas ainda nao congela este slice como protecao tenant-aware dedicada de bridge, nem prova por contrato focal a preservacao simultanea de unidade anterior e unidade nova como risco arquitetural principal;
+	- `deleteUsuarioExecutionService` ja possui bridge focada de cleanup por unidade, mas `updateUsuarioExecutionService` ainda nao tem protecao equivalente.
+- Lacuna atual de protecao contratual consolidada deste diagnostico:
+	- ha teste estrutural geral de update;
+	- nao ha teste tenant-aware dedicado para congelar simultaneamente `prevUnidadeId` no `unset` e `unidadeId` no `set`;
+	- nao ha cercamento equivalente ao corredor recente de delete para este fluxo de transicao de vinculo.
+- Criterio de sucesso de um teste futuro:
+	- provar estruturalmente que o service continua capturando `prevUnidadeId` antes da mutacao e repassando `unidadeId` ao religamento;
+	- provar contratualmente que a troca de `funcionario_id` limpa o vinculo anterior no escopo antigo e religa o novo no escopo novo;
+	- preservar o contrato publico atual de resposta HTTP, validacao basica e duplicidade observavel.
+- Tipo de protecao recomendada para a proxima etapa:
+	- combinar protecao estrutural e runtime contratual;
+	- comecar pelo desenho de protecao/teste antes de qualquer alteracao em `src`;
+	- nenhuma refatoracao sera feita neste microcorte.
+- Decisao principal consolidada deste diagnostico:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseUpdateUsuarioExecutionServiceTenantAwareTarget
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- recommendedNextAct=designUpdateUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste diagnostico:
+	- updateUsuarioExecutionServiceTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseUpdateUsuarioExecutionServiceTenantAwareTarget
+	- recommendedNextAct=designUpdateUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao/teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
