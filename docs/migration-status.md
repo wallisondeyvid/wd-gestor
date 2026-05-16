@@ -5219,6 +5219,89 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao usa Portal;
 	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `checkUsuarioEmailOwnerService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual consolidada nesta selecao: `tenantArchitectureContinuation`.
+- Corredores ja fechados nesta rodada:
+	- `feedbackStatusDataFacade` protegido, refatorado e validado;
+	- `recursosContextDataFacade` protegido e fechado sem refatoracao imediata;
+	- `funcionarioDeletePostDataFacade` refatorado, protegido e validado como tenant-aware minimo;
+	- `createUsuarioExecutionService` refatorado, protegido e validado como tenant-aware minimo;
+	- `updateUsuarioExecutionService` protegido e validado sem refatoracao em `src`;
+	- `checkUsuarioEmailOwnerService` protegido e validado sem refatoracao em `src`.
+- Candidatos considerados nesta selecao:
+	- `authContextReadDataFacade` em `src/modules/gestor/app/data/auth/authContextReadDataFacade.js`;
+	- `listUsuariosOwnerService` em `src/modules/gestor/app/services/usuarios/listUsuariosOwner.service.js`;
+	- `unidadesDiretoresPageDataFacade` em `src/modules/gestor/app/data/unidades/unidadesDiretoresPageDataFacade.js`;
+	- `funcionariosPageBundleDataFacade` em `src/modules/gestor/app/data/funcionarios/funcionariosPageBundleDataFacade.js`.
+- Candidatos recusados e motivo curto:
+	- `listUsuariosOwnerService`: corredor vivo e material, mas mais largo do que a regua atual, com varios subpassos internos e cobertura estrutural/runtime ja relevante;
+	- `unidadesDiretoresPageDataFacade`: mistura pagina administrativa com leitura global que se aproxima mais de catalogo global legitimo do que de risco tenant-aware residual prioritario;
+	- `funcionariosPageBundleDataFacade`: continua amplo demais para microcorte local, com bundle de pagina e multiplos catálogos no mesmo seam.
+- Proximo alvo tecnico residual selecionado nesta rodada: `authContextReadDataFacade`.
+- Motivo consolidado da selecao:
+	- o alvo e pequeno, vivo, local e testavel;
+	- ele permanece diretamente ligado ao eixo auth-context e memberships ativas, que ainda e um hotspot hibrido na matriz multi-tenant;
+	- `loadActiveMembershipsByUserIdData` continua chamando `findActiveMembershipsByUserIdLeanRepo` com `GLOBAL_SCOPE` explicito;
+	- a cobertura atual congela a facade fina e o handoff read-only, mas ainda nao fecha documentalmente se esse `GLOBAL_SCOPE` residual pertence a global legitimo de identidade/auth ou a compatibilidade tenant-aware que merece nova cerca especifica.
+- Risco tenant-aware suspeito consolidado desta selecao:
+	- memberships ativas podem permanecer amplas demais no eixo auth-context se `GLOBAL_SCOPE` continuar mascarando um corredor que deveria explicitar melhor a semantica global versus contextual;
+	- o risco nao e um write contextual imediato, mas uma leitura base de memberships que pode ampliar superficie autorizativa ou semantica de contexto se ficar sem classificacao documental precisa;
+	- por tocar `user_memberships` no auth-context, o corredor permanece material para a continuidade tenant-aware mesmo sendo read-only.
+- Lacuna de protecao atual consolidada desta selecao:
+	- existe cobertura estrutural/contratual em `tests/architecture/activeMembershipsAuthContextRead.contract.test.js`;
+	- essa cobertura congela a facade fina com `GLOBAL_SCOPE` explicito e o handoff read-only;
+	- ainda falta decidir documentalmente se o `GLOBAL_SCOPE` residual neste corredor deve ser tratado como global legitimo de identidade/auth ou como compatibilidade tenant-aware restrita a ser cercada mais de perto em microcorte proprio.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proximo ato recomendado apos esta selecao: `diagnoseAuthContextReadDataFacadeTenantAwareTarget`.
+- Decisao principal consolidada desta selecao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterCheckEmailOwner
+	- selectedTechnicalTarget=authContextReadDataFacade
+	- recommendedNextAct=diagnoseAuthContextReadDataFacadeTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta selecao:
+	- nextTenantAwareTechnicalTargetAfterCheckEmailOwnerSelected=true
+	- selectedTechnicalTarget=authContextReadDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterCheckEmailOwner
+	- recommendedNextAct=diagnoseAuthContextReadDataFacadeTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
