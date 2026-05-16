@@ -114,7 +114,7 @@ test('reset render tenant-aware: token valido permite lookup auxiliar por userId
         return {
           _id: 'reset-1',
           user_id: 'user-1',
-          expiresAt: '2099-01-01T00:00:00.000Z',
+          expiresAt: new Date('2099-01-01T00:00:00.000Z'),
         };
       },
       loadPasswordResetUserNameData: async (args) => {
@@ -219,7 +219,7 @@ test('reset render tenant-aware: token expirado nao dispara lookup auxiliar por 
         return {
           _id: 'reset-expirado',
           user_id: 'user-expirado',
-          expiresAt: '2000-01-01T00:00:00.000Z',
+          expiresAt: new Date('2000-01-01T00:00:00.000Z'),
         };
       },
       loadPasswordResetUserNameData: async (args) => {
@@ -273,7 +273,7 @@ test('reset render tenant-aware: token valido sem usuario encontrado preserva re
         return {
           _id: 'reset-2',
           user_id: 'user-ausente',
-          expiresAt: '2099-01-01T00:00:00.000Z',
+          expiresAt: new Date('2099-01-01T00:00:00.000Z'),
         };
       },
       loadPasswordResetUserNameData: async (args) => {

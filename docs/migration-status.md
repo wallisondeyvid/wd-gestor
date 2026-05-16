@@ -5657,6 +5657,67 @@ Checkpoint tenant enforcement atual:
 	- nenhuma correcao automatica aplicada em `tests`;
 	- este microcorte encerra aqui para revisao local da expectativa falha antes de nova tentativa.
 
+- Checkpoint documental curto do ajuste do harness e da validacao verde da protecao tenant-aware de `resetPasswordRenderDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Ajuste aplicado nesta rodada:
+	- o helper real `isPasswordResetInvalidOrExpired` compara `passwordReset.expiresAt < new Date()`;
+	- o fixture do teste focal usava string ISO em `expiresAt`, o que nao reproduzia corretamente o shape esperado pelo helper;
+	- o harness de `tests/gestor-reset-password-render-tenant-aware-protection.test.js` foi ajustado para usar `Date` real nos cenarios runtime com expiração.
+- Comando executado nesta validacao focal apos o ajuste:
+	- `node --test tests/gestor-reset-password-render-tenant-aware-protection.test.js`.
+- Resultado consolidado desta validacao focal apos o ajuste:
+	- `tests=6`;
+	- `suites=0`;
+	- `pass=6`;
+	- `fail=0`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico consolidado desta rodada:
+	- a falha anterior era causada por fixture incorreto no harness, nao por evidencia nova de defeito em `src`;
+	- o ajuste preservou a protecao de que token expirado nao dispara lookup auxiliar por `userId`;
+	- os demais casos permaneceram cobertos: token valido com usuario encontrado, token invalido ou ausente, token expirado, token valido sem usuario encontrado e protecoes estruturais da facade e da ordem do service.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- `tests` alterados apenas para corrigir o harness da protecao focal;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado;
+	- nenhuma refatoracao executada.
+- Proximo ato recomendado apos esta validacao: `runResetPasswordRenderDataFacadeAdjacentTestsAfterProtection`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=adjustResetPasswordRenderDataFacadeTenantAwareProtectionHarness
+	- selectedTechnicalTarget=resetPasswordRenderDataFacade
+	- recommendedNextAct=runResetPasswordRenderDataFacadeAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- resetPasswordRenderDataFacadeTenantAwareProtectionHarnessAdjusted=true
+	- resetPasswordRenderDataFacadeTenantAwareProtectionTestRun=true
+	- resetPasswordRenderDataFacadeTenantAwareProtectionTestPassed=true
+	- selectedTechnicalTarget=resetPasswordRenderDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=adjustResetPasswordRenderDataFacadeTenantAwareProtectionHarness
+	- recommendedNextAct=runResetPasswordRenderDataFacadeAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
