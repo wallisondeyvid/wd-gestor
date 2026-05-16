@@ -7201,6 +7201,99 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao usa Portal;
 	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `primeiroAcessoExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual consolidada nesta selecao:
+	- `tenantArchitectureContinuation`.
+- Corredores ja fechados nesta rodada:
+	- `feedbackStatusDataFacade` protegido, refatorado e validado;
+	- `recursosContextDataFacade` protegido e fechado sem refatoracao imediata;
+	- `funcionarioDeletePostDataFacade` refatorado, protegido e validado;
+	- `createUsuarioExecutionService` refatorado, protegido e validado;
+	- `updateUsuarioExecutionService` protegido e validado sem refatoracao em `src`;
+	- `checkUsuarioEmailOwnerService` protegido e validado sem refatoracao em `src`;
+	- `authContextReadDataFacade` fechado documentalmente como global legitimo de identidade ou auth;
+	- `passwordRecoveryRequestDataFacade` protegido e validado sem refatoracao em `src`;
+	- `resetPasswordRenderDataFacade` protegido e validado sem refatoracao em `src`;
+	- `resetPasswordExecutionService` protegido, refatorado e validado;
+	- `primeiroAcessoExecutionService` protegido, refatorado e validado.
+- Candidatos considerados nesta selecao:
+	- `unlockUsuarioExecutionService` em `src/modules/gestor/app/services/usuarios/unlockUsuarioExecution.service.js`;
+	- `toggleUsuarioExecutionService` em `src/modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js`;
+	- `updateUsuarioAdminExecutionService` em `src/modules/gestor/app/services/usuarios/updateUsuarioAdminExecution.service.js`;
+	- `listUsuariosOwnerService` em `src/modules/gestor/app/services/usuarios/listUsuariosOwner.service.js`;
+	- `loginPreAuthGateDataFacade` em `src/modules/gestor/app/data/auth/loginPreAuthGateDataFacade.js`.
+- Candidatos recusados e motivo curto:
+	- `toggleUsuarioExecutionService`: corredor tao curto quanto o selecionado, mas a semantica do flag `ativo` permanece mais proxima de identidade global legitima e administracao ampla do usuario do que do menor risco tenant-aware residual disponivel;
+	- `updateUsuarioAdminExecutionService`: corredor pequeno, mas a alteracao de e-mail e role mistura identidade global e administracao ampla em uma superficie mais aberta do que o microcorte atual;
+	- `listUsuariosOwnerService`: corredor vivo e material, porem largo demais para a regua atual, com agregacao multipla e cobertura adjacente relevante;
+	- `loginPreAuthGateDataFacade`: reexport fino que arrasta lockout, bypass de master e semantica pre-auth mais larga do que o microcorte conservador.
+- Proximo alvo tecnico residual selecionado nesta rodada:
+	- `unlockUsuarioExecutionService`.
+- Motivo consolidado da selecao:
+	- o alvo e pequeno, vivo, local e testavel;
+	- o corredor tem callsite vivo em `userController.unlockUsuario`, com teste estrutural adjacente ja existente;
+	- o service faz write real via `saveUserDoc(user)` sobre objeto previamente carregado, sem carregar `unidadeId`, `unitScope` ou ancora contextual propria;
+	- isso o torna mais adequado para um proximo diagnostico micro-local do que listas amplas, bundles de pagina ou auth amplo.
+- Risco tenant-aware suspeito consolidado desta selecao:
+	- o desbloqueio persiste um `User` global por `_id` apos `findUserById(id)`, sem threading explicito de unidade ou membership contextual no corredor fino;
+	- se esse owner estiver servindo administracao contextual e nao apenas ramo global legitimo, o write pode permanecer amplo demais para o tenant correto;
+	- o risco material atual e write administrativo em identidade global sem cerca tenant-aware explicitada localmente.
+- Lacuna de protecao atual consolidada desta selecao:
+	- existe teste estrutural adjacente em `tests/gestor-usuarios-unlock-structural-seam.test.js`, mas ele congela apenas delegacao e mutacao minima do lock state;
+	- ainda nao ha, neste ledger, classificacao documental fechando o corredor como global legitimo nem protecao focal tenant-aware equivalente as ultimas frentes fechadas;
+	- falta decidir se o write de unlock deve ser tratado como auth global legitimo ou como operacao administrativa contextual a cercar mais de perto.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proximo ato recomendado apos esta selecao:
+	- `diagnoseUnlockUsuarioExecutionServiceTenantAwareTarget`.
+- Decisao principal consolidada desta selecao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterPrimeiroAcesso
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- recommendedNextAct=diagnoseUnlockUsuarioExecutionServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta selecao:
+	- nextTenantAwareTechnicalTargetAfterPrimeiroAcessoSelected=true
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterPrimeiroAcesso
+	- recommendedNextAct=diagnoseUnlockUsuarioExecutionServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
