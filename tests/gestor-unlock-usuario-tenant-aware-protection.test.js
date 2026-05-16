@@ -55,6 +55,10 @@ function createResCapture() {
   };
 }
 
+function toPlainJson(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 test('unlock tenant-aware: cadeia owner -> lookup -> service -> saveUserDoc permanece explicita sem abrir big-bang', async () => {
   const ownerBlock = extractFunction(CONTROLLER_SOURCE, 'export async function unlockUsuario');
   const serviceBlock = extractFunction(SERVICE_SOURCE, 'export async function unlockUsuarioExecutionService');
@@ -107,7 +111,7 @@ test('unlock tenant-aware: usuario inexistente nao delega ao service nem cria pr
 
   assert.equal(serviceCalls.length, 0);
   assert.equal(res.statusCode, 404);
-  assert.deepEqual(res.body, {
+  assert.deepEqual(toPlainJson(res.body), {
     success: false,
     error: 'Usuário não encontrado',
     code: 'NOT_FOUND',
@@ -141,7 +145,7 @@ test('unlock tenant-aware: owner delega o user carregado por id ao service fino 
   assert.equal(serviceCalls.length, 1);
   assert.equal(serviceCalls[0].user, user);
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body, {
+  assert.deepEqual(toPlainJson(res.body), {
     success: true,
     unlocked: true,
     id: 'u-1',
@@ -181,7 +185,7 @@ test('unlock tenant-aware: usuario bloqueado limpa lock state antes do saveUserD
       lock_until: null,
     },
   ]);
-  assert.deepEqual(result, {
+  assert.deepEqual(toPlainJson(result), {
     kind: 'ok',
     userId: 'u-bloqueado',
     unlocked: true,
@@ -218,7 +222,7 @@ test('unlock tenant-aware: usuario ja desbloqueado preserva o contrato observado
     failed_login_attempts: 0,
     lock_until: null,
   });
-  assert.deepEqual(result, {
+  assert.deepEqual(toPlainJson(result), {
     kind: 'ok',
     userId: 'u-ja-desbloqueado',
     unlocked: true,
