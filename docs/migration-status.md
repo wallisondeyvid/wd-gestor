@@ -5943,6 +5943,126 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto do diagnostico tenant-aware de `resetPasswordExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada: `resetPasswordExecutionService`.
+- Arquivo principal diagnosticado nesta rodada: `src/modules/gestor/app/services/auth/passwordRecovery.service.js`.
+- Facade envolvida nesta rodada:
+	- `src/modules/gestor/app/data/auth/resetPasswordExecutionDataFacade.js`.
+- Cadeia viva identificada nesta rodada:
+	- `authController.postResetPassword`;
+	- `resetPasswordByTokenService`;
+	- `resetPasswordExecutionService`;
+	- `resetPasswordExecutionDataFacade`.
+- Funcoes sensiveis mapeadas nesta rodada:
+	- `resetPasswordByTokenService`;
+	- `loadPasswordResetExecutionData`;
+	- `completePasswordResetData`;
+	- `isPasswordResetInvalidOrExpired`;
+	- `resolvePasswordResetUserId`.
+- Pontos sensiveis do contrato atual:
+	- leitura de token de reset;
+	- validacao de expiracao;
+	- resolucao de `userId` a partir do token;
+	- hash da nova senha;
+	- conclusao do reset por `userId` e `passwordResetId`;
+	- transicao de leitura global legitima de auth para write derivado.
+- Respostas objetivas do diagnostico atual:
+	- o token entra no corredor em `authController.postResetPassword`, via `req.body?.token`, e segue para `resetPasswordByTokenService({ token, senha })`;
+	- o gate de expiracao ocorre em `resetPasswordByTokenService`, imediatamente apos `loadPasswordResetExecutionData({ token })`, usando `isPasswordResetInvalidOrExpired(passwordReset)`;
+	- a resolucao de `userId` pertence semanticamente ao payload retornado por `loadPasswordResetExecutionData({ token })`, que entrega `passwordReset` e `user` para o service;
+	- o hash ocorre em `resetPasswordByTokenService`, em `const senhaHash = await bcrypt.hash(senha, 10)`;
+	- o write final ocorre em `await completePasswordResetData({ userId: user._id, passwordHash: senhaHash, passwordResetId: passwordReset._id })`;
+	- o token pode ser global legitimo porque representa auth recovery por identidade global, assim como o token de render ja fechado documentalmente;
+	- o write derivado pode ser perigoso porque traduz um token global valido em mutacao material de senha por `userId` e `passwordResetId`, exigindo que essa transicao permaneça local, derivada e estritamente gated;
+	- nao ha cobertura direta focal hoje para o execution/write-side: a cobertura atual identificada e adjacente no owner de reset por token e na protecao recente do render;
+	- o criterio de sucesso de uma protecao futura e congelar a ordem material `token -> gate -> userId -> hash -> complete`, impedindo writes em estados invalidos e preservando o contrato HTTP atual;
+	- a proxima etapa recomendada e desenhar protecao/teste antes de qualquer refatoracao ou fechamento documental final sem refatoracao.
+- Classificacao diagnostica desta rodada:
+	- `HIBRIDO_AUDITAR`;
+	- `RISCO_AUTH_WRITE_DERIVADO_POTENCIAL`;
+	- nao classificado como bug confirmado nesta rodada.
+- Hipotese de risco consolidada desta rodada:
+	- token de reset e global legitimo de auth;
+	- write de senha por `userId` e `passwordResetId` deve permanecer projecao derivada e local de token valido;
+	- token invalido ou expirado nao pode disparar write;
+	- ausencia de `userId` ou de `user` nao pode disparar write;
+	- o risco aqui e `auth/write-side` derivado, nao tenant write comum.
+- Comportamento atual a preservar nesta rodada:
+	- reset por token continua funcionando;
+	- token invalido ou expirado continua rejeitado;
+	- senha e hasheada antes da conclusao;
+	- write final permanece delegado ao data facade;
+	- contrato publico HTTP permanece preservado;
+	- nenhum Mongo real e necessario para este diagnostico.
+- Lacuna de protecao atual consolidada nesta rodada:
+	- existe teste adjacente de owner reset token em `tests/gestor-auth-recovery-reset-token-owner-structural-seam.test.js`;
+	- existe protecao recente do render em `tests/gestor-reset-password-render-tenant-aware-protection.test.js`;
+	- ainda nao ha protecao focal dedicada do execution/write-side;
+	- ainda falta congelar a ordem `token -> gate -> userId -> hash -> complete`.
+- Comportamento a proteger por teste em etapa futura:
+	- token invalido ou expirado nao chama `complete`;
+	- token valido sem `userId` ou sem `user` nao chama `complete`;
+	- token valido com `userId` chama hash antes de `complete`;
+	- `complete` recebe `userId` e `passwordResetId` corretos;
+	- erro de `complete` preserva contrato;
+	- o microcorte futuro nao deve abrir `auth.db.js` como big-bang.
+- Hipotese de protecao futura desta rodada:
+	- criar teste estrutural com congelamento da ordem interna do service;
+	- complementar com runtime contratual leve usando stubs ou mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Interpretacao obrigatoria desta rodada:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
+- Proximo ato recomendado apos este diagnostico: `designResetPasswordExecutionServiceTenantAwareProtection`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseResetPasswordExecutionServiceTenantAwareTarget
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- recommendedNextAct=designResetPasswordExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- resetPasswordExecutionServiceTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseResetPasswordExecutionServiceTenantAwareTarget
+	- recommendedNextAct=designResetPasswordExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
