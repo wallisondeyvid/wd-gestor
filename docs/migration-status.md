@@ -5842,6 +5842,131 @@ Checkpoint tenant enforcement atual:
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao/teste ou fechamento documental antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao/contrato tenant-aware de `passwordRecoveryRequestDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho: `passwordRecoveryRequestDataFacade`.
+- Arquivo principal deste desenho: `src/modules/gestor/app/data/auth/passwordRecoveryRequestDataFacade.js`.
+- Cadeia viva considerada neste desenho:
+	- `authController`;
+	- `requestPasswordRecoveryService`;
+	- `listRecoveryEmailsByCpfService`;
+	- `passwordRecoveryRequestDataFacade`;
+	- `AuthRepository`.
+- Funcoes sensiveis preservadas neste desenho:
+	- `loadRecoveryUsersByCpfData`;
+	- busca direta de usuarios por CPF;
+	- fallback via funcionarios por CPF;
+	- fallback de usuarios por `funcionario_id`;
+	- `createPasswordRecoveryTokenData`.
+- Semantica a decidir e consolidada por este desenho:
+	- o fallback por funcionario/CPF deve ser tratado inicialmente como compatibilidade legitima do auth, mas sob limite explicito e local a este fluxo de recuperacao;
+	- essa semantica inicial nao fecha o corredor como global legitimo pleno;
+	- o fallback permanece tratado como compatibilidade hibrida a cercar, nao como precedente generico para outros fluxos globais.
+- Risco especifico a proteger por este desenho:
+	- descoberta ampla de contas por CPF;
+	- exposicao auxiliar de e-mails recuperaveis por CPF;
+	- transposicao de vinculo contextual de funcionario para fluxo global de auth;
+	- criacao de token apos resolucao por fallback.
+- Contrato atual a preservar por este desenho:
+	- recuperacao de senha continua funcionando;
+	- listagem auxiliar de e-mails por CPF continua funcionando;
+	- criacao de token continua compativel;
+	- identidade global legitima continua preservada;
+	- shape publico HTTP permanece compativel;
+	- nenhum Mongo real e conectado.
+- Protecao futura desejada consolidada neste desenho:
+	- teste estrutural deve congelar que a facade usa busca direta por CPF antes do fallback por funcionario;
+	- teste estrutural deve congelar que o fallback por funcionario/CPF e explicito e local ao fluxo de recuperacao;
+	- teste contratual leve deve cobrir CPF com usuario direto;
+	- teste contratual leve deve cobrir CPF sem usuario direto, mas com funcionario vinculado;
+	- teste contratual leve deve preservar criacao de token sem banco real;
+	- teste deve preservar listagem auxiliar de e-mails por CPF;
+	- teste nao deve abrir `auth.db.js` como big-bang.
+- Tipo de teste recomendado por este desenho:
+	- estrutural + runtime contratual leve com stubs/mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura consolidada neste desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico;
+	- nao abrir `auth.db.js` como frente ampla;
+	- nao alterar contrato HTTP neste momento;
+	- nao mexer em token/recovery alem do limite local.
+- Resposta objetiva deste desenho sobre a semantica inicial do fallback por funcionario/CPF:
+	- a semantica inicial deve ser `compatibilidade legitima do auth sob cerca explicita`, e nao global legitimo irrestrito;
+	- a justificativa e que o fallback pode ser necessario para recuperacao de identidade, mas tambem toca um vinculo nascido de contexto/unidade;
+	- portanto, ele deve permanecer limitado ao fluxo local de recovery e sujeito a protecao especifica antes de qualquer fechamento documental.
+- Resposta objetiva deste desenho sobre a cobertura atual:
+	- a cobertura atual nao e suficiente para fechamento documental do corredor;
+	- `tests/gestor-auth-recovery-request-owner-structural-seam.test.js` aceita a delegacao controller -> service, mas nao congela a ordem busca-direta-antes-fallback, nem o limite local do fallback, nem a criacao de token no seam da facade.
+- Resposta objetiva deste desenho sobre necessidade de teste adicional:
+	- `true`;
+	- este corredor precisa de protecao adicional antes de qualquer fechamento documental final.
+- Criterio para fechamento futuro deste corredor:
+	- congelar explicitamente que a busca direta por CPF acontece antes do fallback por funcionario;
+	- congelar que o fallback por funcionario/CPF permanece local ao fluxo de recuperacao;
+	- preservar criacao de token e shape publico de recovery/listagem auxiliar;
+	- manter tudo sem Mongo real e sem expansao para `auth.db.js`;
+	- se esses pontos ficarem cobertos, o corredor podera ser revisado para fechamento documental.
+- Por que este desenho nao abre `auth.db.js` como big-bang:
+	- o risco material atual esta concentrado na facade de recovery request, nao na totalidade do auth legado;
+	- abrir `auth.db.js` inteiro ampliaria o escopo para identidade, remember, reset, lockout e outros subcorredores sem necessidade desta fatia;
+	- a estrategia correta aqui continua sendo microcorte local, testavel e com semantica verificavel.
+- Encaminhamento recomendado por este desenho:
+	- a proxima etapa deve criar a protecao/teste do corredor antes de qualquer alteracao em `src`;
+	- nao ha base para fechamento documental sem esse teste adicional;
+	- tambem nao ha base para refatoracao minima antes da protecao.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada deste desenho:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designPasswordRecoveryRequestDataFacadeTenantAwareProtection
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- recommendedNextAct=createPasswordRecoveryRequestDataFacadeTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste desenho:
+	- passwordRecoveryRequestDataFacadeTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designPasswordRecoveryRequestDataFacadeTenantAwareProtection
+	- recommendedNextAct=createPasswordRecoveryRequestDataFacadeTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao/teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao/teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
