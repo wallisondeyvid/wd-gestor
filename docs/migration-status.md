@@ -32948,6 +32948,117 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto do desenho da protecao/contrato tenant-aware de `processCreateFeedbackCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho nesta rodada:
+	- `processCreateFeedbackCore`.
+- Arquivo principal deste desenho:
+	- `src/modules/gestor/app/controllers/utils/processCreateFeedbackCore.js`.
+- Callsite vivo considerado neste desenho:
+	- `src/modules/gestor/app/controllers/feedbackCreateApiController.js`.
+- Teste adjacente conhecido neste desenho:
+	- `tests/gestor-feedback-create-owner-structural-seam.test.js`.
+- Semantica a decidir neste desenho:
+	- criacao de feedback como write contextual por unidade;
+	- versus eventual criacao global legitima somente se explicitamente documentada.
+- Semantica inicial atribuida ao core neste desenho:
+	- `processCreateFeedbackCore` deve ser tratado como seam minima de montagem de payload e repasse de contexto para um write contextual de feedback;
+	- o core nao deve ser tratado como owner HTTP, nem como facade de I/O, nem como precedente para write global;
+	- o core permanece pequeno, local e semanticamente subordinado ao contexto resolvido no owner.
+- Semantica inicial atribuida a `scopedUnitId` neste desenho:
+	- `scopedUnitId` deve ser tratado como marcador material de unidade, nao como dado opcional decorativo;
+	- quando houver unidade escopada no callsite, `createFeedback` deve receber `{ scopedUnitId }` como option material do write;
+	- ausencia de `scopedUnitId` so pode sobreviver como contrato atual se isso refletir um ramo explicitamente aceito pelo comportamento vigente, nunca como erosao silenciosa do contexto.
+- Risco a proteger neste desenho:
+	- `scopedUnitId` nao pode virar dado opcional decorativo;
+	- `createFeedback` deve receber `{ scopedUnitId }` como opcao material quando houver unidade escopada;
+	- o payload deve preservar `status`, `criadoPor` e `origem` no shape atual;
+	- o owner deve continuar delegando ao core antes do write sensivel;
+	- o core nao deve passar a fazer I/O, query ou write direto fora da delegacao prevista;
+	- `files` ou `anexos` nao devem ser inventados no contrato atual.
+- Contrato atual a preservar neste desenho:
+	- validacao e extracao permanecem no owner `feedbackCreateApiController`;
+	- montagem do payload permanece no core `processCreateFeedbackCore`;
+	- write final permanece em `createFeedback`;
+	- `scopedUnitId` permanece separado nas options;
+	- resposta publica continua via `apiOk` no owner;
+	- sem Mongo real;
+	- sem query real.
+- Protecao futura desejada neste desenho:
+	- um teste estrutural deve congelar `owner -> processCreateFeedbackCore -> createFeedback`;
+	- um teste runtime contratual leve deve provar o repasse de `scopedUnitId` para `createFeedback`;
+	- um teste runtime contratual leve deve provar o shape do payload com `status`, `criadoPor` e `origem`;
+	- um teste runtime contratual leve deve provar o cenario sem `scopedUnitId`, se o contrato atual permitir esse ramo;
+	- o teste deve provar que o core nao faz I/O ou query propria;
+	- o teste nao deve abrir feedback controllers grandes, data access amplo ou big-bang de bridge.
+- Tipo de teste recomendado neste desenho:
+	- estrutural + runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura neste desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico;
+	- nao abrir feedback controllers grandes;
+	- nao abrir `api.db.js`;
+	- nao alterar contrato HTTP neste momento.
+- Respostas consolidadas deste desenho:
+	- a semantica inicial do core deve ser seam minima de write contextual por unidade, responsavel apenas por montar o payload e repassar o contexto para `createFeedback`;
+	- a semantica inicial de `scopedUnitId` deve ser marcador material de contexto operacional por unidade;
+	- a cobertura atual nao e suficiente para fechamento documental do corredor como protegido e validado;
+	- o slice precisa de teste adicional focal;
+	- o corredor so podera ser fechado quando a protecao provar o repasse material de `scopedUnitId`, o shape atual do payload e a ausencia de I/O proprio no core;
+	- nao ha motivo para abrir controllers maiores ou `api.db.js` como big-bang porque o risco material atual esta concentrado neste core pequeno e no seu callsite minimo, com recorte local e testavel.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao e teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao e o teste antes de qualquer alteracao em `src`.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=designProcessCreateFeedbackCoreTenantAwareProtection`;
+	- `selectedTechnicalTarget=processCreateFeedbackCore`;
+	- `recommendedNextAct=createProcessCreateFeedbackCoreTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `processCreateFeedbackCoreTenantAwareProtectionDesigned=true`
+	- `selectedTechnicalTarget=processCreateFeedbackCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=designProcessCreateFeedbackCoreTenantAwareProtection`
+	- `recommendedNextAct=createProcessCreateFeedbackCoreTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
