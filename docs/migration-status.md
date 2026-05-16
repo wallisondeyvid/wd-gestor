@@ -8259,6 +8259,62 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da validacao dos testes adjacentes de `toggleUsuarioExecutionService` apos a protecao focal verde, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-user-admin-toggle-owner-structural-seam.test.js tests/gestor-usuarios-toggle-structural-seam-runtime-contract.test.js`.
+- Resultado consolidado da execucao nesta rodada:
+	- `tests=10`;
+	- `suites=0`;
+	- `pass=10`;
+	- `fail=0`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico consolidado apos esta validacao:
+	- os testes adjacentes permaneceram verdes apos a protecao focal de `toggleUsuarioExecutionService`;
+	- o owner preserva a ordem estrutural, os bloqueios e a delegacao esperada ao service fino;
+	- o service fino preserva a mutacao de `user.ativo` e a persistencia do proprio documento sem indicar regressao neste corredor.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Proximo ato recomendado apos esta validacao:
+	- `reviewToggleUsuarioExecutionServiceTenantAwareProtection`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runToggleUsuarioExecutionServiceAdjacentTestsAfterProtection
+	- selectedTechnicalTarget=toggleUsuarioExecutionService
+	- recommendedNextAct=reviewToggleUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- toggleUsuarioExecutionServiceAdjacentTestsAfterProtectionRun=true
+	- toggleUsuarioExecutionServiceAdjacentTestsAfterProtectionPassed=true
+	- selectedTechnicalTarget=toggleUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runToggleUsuarioExecutionServiceAdjacentTestsAfterProtection
+	- recommendedNextAct=reviewToggleUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
