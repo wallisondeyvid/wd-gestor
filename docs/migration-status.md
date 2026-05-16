@@ -5911,6 +5911,136 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao inicia PostgreSQL;
 	- esta selecao nao usa Portal;
 	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+
+- Checkpoint documental curto do diagnostico tenant-aware de `createAdminFeedbackDetailHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem push.
+- Alvo diagnosticado nesta rodada:
+	- `createAdminFeedbackDetailHandler`.
+- Arquivo principal diagnosticado nesta rodada:
+	- `src/modules/gestor/app/controllers/feedbackDetailApiController.js`.
+- Core relacionado diagnosticado nesta rodada:
+	- `processAdminFeedbackDetailCore`.
+- Classificacao consolidada deste checkpoint:
+	- `HIBRIDO_AUDITAR`;
+	- `RISCO_FEEDBACK_DETAIL_CONTEXTUAL_READ_POTENCIAL`.
+- Cadeia viva identificada neste checkpoint:
+	- `feedbackDetailApiController`;
+	- extracao e validacao de `feedbackId`;
+	- leitura de `req.user` e `req.unitScope`;
+	- `feedbackPolicy.ensureAdminAccess`;
+	- `access.feedbackQueryOptions`;
+	- `findFeedbackByIdLean(id, access.feedbackQueryOptions)`;
+	- `processAdminFeedbackDetailCore`;
+	- resposta publica HTTP.
+- Funcoes sensiveis consolidadas nesta rodada:
+	- `createAdminFeedbackDetailHandler`;
+	- `feedbackPolicy.ensureAdminAccess`;
+	- `findFeedbackByIdLean`;
+	- `processAdminFeedbackDetailCore` apenas como pos-processamento.
+- Pontos sensiveis consolidados neste checkpoint:
+	- detalhe admin de feedback como leitura contextual por unidade;
+	- `scopedUnitId` como contexto material quando houver unidade escopada;
+	- `access.feedbackQueryOptions` como shape material da leitura admin contextual;
+	- distincao entre detalhe global legitimo e detalhe contextual por unidade;
+	- `processAdminFeedbackDetailCore` como pos-processamento do payload, nao como limite tenant-aware principal.
+- Respostas objetivas do diagnostico nesta rodada:
+	- `feedbackId` entra no owner por `req.params.feedbackId`, e a validacao final do id ocorre logo depois do gate admin;
+	- `user` e `unitScope` entram no owner por `req.user` e `req.unitScope?.unidadeId`, e desse ponto nasce o `scopedUnitId` material do gate;
+	- o gate de policy ou admin ocorre em `feedbackPolicy.ensureAdminAccess({ currentUser: req.user || null, scopedUnitId: String(req.unitScope?.unidadeId || '').trim() })`;
+	- a leitura final ocorre em `findFeedbackByIdLean(id, access.feedbackQueryOptions)`;
+	- o pos-processamento ocorre apenas em `processAdminFeedbackDetailCore({ feedback: fb })`;
+	- ha `scopedUnitId` e `unitScope` explicitos no corredor; nao ha `membership`, `gestor` ou `condominio` explicitos dentro deste owner curto;
+	- o detalhe pode ser global legitimo em algum cenario porque `feedbackPolicy.ensureAdminAccess` preserva branch global quando nao houver `scopedUnitId` e o ator admin-like estiver em ramo global legitimado;
+	- o detalhe pode ser perigoso se for contextual porque a leitura admin por id pode se tornar ampla caso `access.feedbackQueryOptions` deixe de ser repassado materialmente ao read sensivel;
+	- a cobertura atual nao e suficiente para fechamento documental porque os testes adjacentes cercam owner e contrato publico, mas ainda nao congelam explicitamente a protecao tenant-aware focal do handoff `access.feedbackQueryOptions -> findFeedbackByIdLean`;
+	- o criterio de sucesso de uma protecao futura deve ser provar estruturalmente e em runtime leve que o read final recebe o contexto material correto quando houver unidade escopada, sem transformar o core em fronteira de escopo;
+	- a proxima etapa deve desenhar protecao ou teste, e nao refatoracao minima nem fechamento documental sem refatoracao.
+- Leitura consolidada do contrato atual neste checkpoint:
+	- o owner continua curto e concentra policy, validacao de id, traducao 404 e resposta HTTP final;
+	- o owner repassa `access.feedbackQueryOptions` materialmente ao `findFeedbackByIdLean`;
+	- o core relacionado apenas normaliza `feedback.resposta` quando vier em shape legado e devolve o payload saneado;
+	- o core nao recebe `scopedUnitId`, `feedbackQueryOptions`, `req` ou `res`, portanto nao decide escopo e nao deve ser tratado como fronteira tenant-aware principal.
+- Risco suspeito consolidado nesta rodada:
+	- o detalhe admin pode virar leitura ampla se `access.feedbackQueryOptions` nao for repassado materialmente ao `findFeedbackByIdLean`;
+	- `processAdminFeedbackDetailCore` nao deve mascarar perda de contexto na leitura principal;
+	- este checkpoint ainda nao classifica o corredor como bug confirmado.
+- Comportamento atual a preservar neste checkpoint:
+	- usuario nao admin continua bloqueado antes da leitura;
+	- `feedbackId` invalido continua falhando antes do read final;
+	- `Feedback nao encontrado` continua traduzido para 404 antes do pos-processamento;
+	- detalhe admin valido continua respondendo 200 e saneando `resposta` legada quando necessario;
+	- o owner continua segurando a resposta publica HTTP;
+	- o core continua apenas pos-processando payload.
+- Lacuna atual de protecao consolidada nesta rodada:
+	- `tests/gestor-feedback-detail-owner-structural-seam.test.js` prova a ordem estrutural owner -> read -> core -> resposta e protege o papel do core como seam pos-read;
+	- `tests/gestor-feedback-detail-runtime-contract.test.js` preserva o contrato HTTP observado do detalhe admin;
+	- ainda falta uma protecao tenant-aware focal que congele o repasse material de `access.feedbackQueryOptions` ao `findFeedbackByIdLean` e a ausencia de decisao de escopo dentro de `processAdminFeedbackDetailCore`.
+- Comportamento a proteger por teste futuro:
+	- quando houver `scopedUnitId`, o owner deve continuar entregando `access.feedbackQueryOptions` materialmente ao read final;
+	- o read final nao deve degradar para leitura ampla silenciosa em ramo contextual;
+	- `processAdminFeedbackDetailCore` deve continuar sem `scopedUnitId`, sem `feedbackQueryOptions` e sem responsabilidade de decidir tenant;
+	- o contrato publico atual deve permanecer preservado.
+- Hipotese de protecao futura consolidada nesta rodada:
+	- criar teste estrutural + runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao;
+	- congelando handoff material de `access.feedbackQueryOptions` e separacao semantica entre owner curto e core pos-read.
+- Criterio de sucesso de uma protecao futura nesta rodada:
+	- o teste deve falhar se `createAdminFeedbackDetailHandler` parar de repassar `access.feedbackQueryOptions` ao `findFeedbackByIdLean` em ramo contextual;
+	- o teste deve falhar se `processAdminFeedbackDetailCore` passar a receber ou decidir `scopedUnitId` ou `feedbackQueryOptions`;
+	- o teste deve passar preservando o contrato HTTP atual e o saneamento do payload legado.
+- Proxima etapa recomendada nesta rodada:
+	- `designCreateAdminFeedbackDetailHandlerTenantAwareProtection`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum push executado.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=diagnoseCreateAdminFeedbackDetailHandlerTenantAwareTarget`;
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`;
+	- `recommendedNextAct=designCreateAdminFeedbackDetailHandlerTenantAwareProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createAdminFeedbackDetailHandlerTenantAwareTargetDiagnosed=true`
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=diagnoseCreateAdminFeedbackDetailHandlerTenantAwareTarget`
+	- `recommendedNextAct=designCreateAdminFeedbackDetailHandlerTenantAwareProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta rodada:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
