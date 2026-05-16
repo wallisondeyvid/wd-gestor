@@ -4893,6 +4893,102 @@ Checkpoint tenant enforcement atual:
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao/teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta protecao desenhada: `checkUsuarioEmailOwnerService`.
+- Arquivo principal desta protecao desenhada: `src/modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js`.
+- Entrada viva desta protecao desenhada: `GET /gestor/api/usuarios/check-email`.
+- Owner HTTP desta protecao desenhada: `userController.js`.
+- Parametros de escopo relevantes desta protecao:
+	- `isGlobalScope`;
+	- `hasAuthoritativeAuthContext`;
+	- `scopedUnitId`.
+- Pontos sensiveis que a protecao futura precisa congelar:
+	- `visibleMemberships`;
+	- `membershipsSummary`;
+	- `linkedUnidadeIds`;
+	- `blockedUnidadeIds`;
+	- distincao entre ramo global legitimo e ramo contextual restrito.
+- Risco a proteger nesta frente:
+	- scoped admin contextual nao pode ver memberships fora do cluster permitido;
+	- `linkedUnidadeIds` nao pode incluir unidade fora do escopo permitido;
+	- `blockedUnidadeIds` nao pode incluir unidade fora do escopo permitido;
+	- o ramo global legitimo nao pode ser quebrado.
+- Contrato atual a preservar nesta protecao:
+	- `exists=false` continua funcionando;
+	- `exists=true` continua funcionando;
+	- o shape publico HTTP continua compativel;
+	- a visao global legitima de `master` e `admin` continua preservada;
+	- a visao contextual restringe memberships ao cluster permitido.
+- Desenho documental da protecao/teste futuro:
+	- um teste estrutural deve congelar que o service possui branch contextual quando `isGlobalScope=false` e `hasAuthoritativeAuthContext=true`;
+	- um teste runtime contratual leve deve montar memberships de pelo menos duas unidades, uma permitida e outra fora do escopo;
+	- no contexto restrito, `membershipsSummary` deve conter apenas a unidade permitida;
+	- no contexto restrito, `linkedUnidadeIds` deve conter apenas a unidade permitida;
+	- no contexto restrito, `blockedUnidadeIds` deve conter apenas a unidade permitida;
+	- no contexto global, `membershipsSummary`, `linkedUnidadeIds` e `blockedUnidadeIds` devem preservar a visao global legitima.
+- Tipo de teste recomendado nesta rodada:
+	- estrutural + runtime contratual leve;
+	- usando `node:test`, `assert`, `vm` e mocks/stubs;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura apos a protecao:
+	- nao alterar `src` antes da protecao;
+	- so considerar ajuste se a protecao mostrar perda real de contexto;
+	- nao alterar controller neste momento;
+	- nao alterar contrato HTTP;
+	- nao abrir auth-context como frente ampla.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada deste desenho:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designCheckUsuarioEmailOwnerServiceTenantAwareProtection
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- recommendedNextAct=createCheckUsuarioEmailOwnerServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste desenho:
+	- checkUsuarioEmailOwnerServiceTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designCheckUsuarioEmailOwnerServiceTenantAwareProtection
+	- recommendedNextAct=createCheckUsuarioEmailOwnerServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao/teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao/teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
