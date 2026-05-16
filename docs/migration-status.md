@@ -32330,6 +32330,112 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao/teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao/contrato tenant-aware de `createFeedbackPolicyOwnershipCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho nesta rodada: `createFeedbackPolicyOwnershipCore`.
+- Arquivo principal deste desenho: `src/modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js`.
+- Semantica a decidir e congelar no proximo teste:
+	- policy ou ownership de feedback como configuracao global legitima, quando o core estiver apenas modelando ramo administrativo global explicitamente permitido;
+	- versus ownership contextual por unidade, quando `scopedUnitId` participar materialmente da cerca tenant-aware do corredor de feedback.
+- Semantica inicial proposta para o core:
+	- tratar `createFeedbackPolicyOwnershipCore` como seam semantica principal de policy/ownership do corredor de feedback;
+	- classificar inicialmente o core como `HIBRIDO_AUDITAR`, nao como bug confirmado e nao como global legitimo fechado;
+	- assumir que o core hoje e um policy core puro, sem I/O, sem Mongo real e sem write, mas que influencia superfícies tenant-sensitive por meio das options e filtros retornados.
+- Semantica inicial proposta para `scopedUnitId`:
+	- `scopedUnitId` nao deve ser tratado como dado opcional decorativo;
+	- `scopedUnitId` deve ser tratado inicialmente como marcador canonico de contexto operacional por unidade quando presente;
+	- sua ausencia ainda pode representar branch global legitimo, mas isso precisa continuar explicitamente separado do branch contextual;
+	- sua presenca deve permanecer suficiente para distinguir `global` vs `contextual` no shape atual do core.
+- Risco que a protecao futura deve cercar:
+	- `scopedUnitId` nao pode degradar para campo inerte ou apenas cosmetico;
+	- branch global e branch contextual precisam continuar explicitamente separados;
+	- `feedbackQueryOptions`, `feedbackMutationOptions` e filtros de ownership devem preservar a semantica atual;
+	- o core nao pode passar a fazer I/O, query, Mongo real ou write silencioso;
+	- callsites vivos nao podem pular o core antes de leituras ou writes sensiveis do corredor.
+- Contrato atual a preservar no desenho da protecao:
+	- o core continua sem I/O;
+	- o core continua sem Mongo real;
+	- o core continua sem write;
+	- o branch admin ou global continua funcionando no shape atual;
+	- o branch contextual com `scopedUnitId` continua propagando contexto por `feedbackQueryOptions` e `feedbackMutationOptions`;
+	- o branch de creator ou proprietario continua preservando ownership do usuario;
+	- os filtros de `meus feedbacks` continuam preservados no shape atual.
+- Protecao futura desejada:
+	- um teste estrutural deve congelar os callsites vivos minimos chamando `createFeedbackPolicyOwnershipCore` a partir de `feedbackApi.js` e delegando ao core antes das operacoes sensiveis;
+	- um teste runtime contratual leve deve cobrir o branch admin ou global;
+	- um teste runtime contratual leve deve cobrir o branch contextual com `scopedUnitId`;
+	- um teste runtime contratual leve deve cobrir creator ou ownership;
+	- um teste runtime contratual leve deve cobrir o filtro de `meus feedbacks`;
+	- o teste deve provar ausencia de I/O e write no core;
+	- o teste nao deve abrir controllers grandes nem data access como big-bang.
+- Tipo de teste recomendado:
+	- estrutural + runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico ou mistura indevida entre branch global e contextual;
+	- nao abrir feedback controllers como big-bang;
+	- nao abrir `api.db.js`;
+	- nao alterar contrato HTTP neste momento.
+- Resposta objetiva do desenho para a cobertura atual:
+	- a cobertura atual nao e suficiente para fechamento documental do corredor;
+	- a cobertura atual ja ajuda a congelar wiring e callsites, mas ainda nao congela explicitamente a semantica tenant-aware do proprio core;
+	- portanto, e necessario teste adicional antes de qualquer fechamento documental ou refatoracao.
+- Criterio que permitira fechar o corredor no futuro:
+	- o corredor so podera ser fechado quando existir protecao focal pequena comprovando, sem Mongo real e sem query real, que o core permanece puro, que `scopedUnitId` separa corretamente branch contextual de branch global, que ownership de creator continua fail-closed, que o filtro de `meus feedbacks` permanece coerente e que os callsites vivos continuam passando pelo core antes das leituras e writes sensiveis.
+- Por que nao abrir controllers ou `api.db.js` como big-bang neste momento:
+	- o risco atual esta concentrado na classificacao semantica do core, nao em defeito confirmado espalhado por todos os controllers;
+	- abrir controllers agora ampliaria o microcorte sem necessidade, porque eles ja aparecem como callsites adjacentes e podem ser congelados por teste estrutural pequeno;
+	- abrir `api.db.js` agora deslocaria o foco para data access amplo e misturaria esta protecao com corredores maiores de feedback, perdendo localidade, falsificabilidade e baixo blast radius.
+- Protecao ou contrato desenhado nesta rodada:
+	- o teste futuro deve tratar `createFeedbackPolicyOwnershipCore` como seam primaria do corredor de policy/ownership de feedback;
+	- o recorte deve ficar limitado ao core e aos callsites minimos necessarios para provar delegacao, sem reabrir surfaces amplas;
+	- o objetivo do teste nao sera endurecer comportamento novo, mas congelar explicitamente o contrato atual e a separacao entre semantica global e contextual.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=designCreateFeedbackPolicyOwnershipCoreTenantAwareProtection`;
+	- `selectedTechnicalTarget=createFeedbackPolicyOwnershipCore`;
+	- `recommendedNextAct=createCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createFeedbackPolicyOwnershipCoreTenantAwareProtectionDesigned=true`
+	- `selectedTechnicalTarget=createFeedbackPolicyOwnershipCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=designCreateFeedbackPolicyOwnershipCoreTenantAwareProtection`
+	- `recommendedNextAct=createCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+
 
 
 
