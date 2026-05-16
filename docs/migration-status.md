@@ -34039,6 +34039,151 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto do diagnostico tenant-aware de `createDeleteFeedbackHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem push.
+- Alvo diagnosticado nesta rodada:
+	- `createDeleteFeedbackHandler`.
+- Arquivo principal deste diagnostico:
+	- `src/modules/gestor/app/controllers/feedbackDeleteApiController.js`.
+- Cleanup relacionado, mas fora do alvo principal deste diagnostico:
+	- `processFeedbackDeleteCleanupCore` em `src/modules/gestor/app/controllers/utils/processFeedbackDeleteCleanupCore.js`.
+- Teste adjacente conhecido neste diagnostico:
+	- `tests/gestor-feedback-delete-owner-structural-seam.test.js`.
+- Cadeia viva identificada neste diagnostico:
+	- `feedbackDeleteApiController`;
+	- extracao e validacao de `feedbackId`;
+	- leitura de `req.user` e `req.unitScope`;
+	- `feedbackPolicy.ensureAdminAccess`;
+	- `access.feedbackMutationOptions`;
+	- `findFeedbackByIdAndDeleteLean(id, access.feedbackMutationOptions)`;
+	- `processFeedbackDeleteCleanupCore` apenas para cleanup pos-delete;
+	- resposta publica HTTP.
+- Funcoes sensiveis mapeadas neste diagnostico:
+	- `createDeleteFeedbackHandler`;
+	- `feedbackPolicy.ensureAdminAccess`;
+	- `findFeedbackByIdAndDeleteLean`;
+	- `processFeedbackDeleteCleanupCore` apenas como cleanup posterior.
+- Pontos sensiveis observados neste diagnostico:
+	- delete de feedback como mutacao contextual;
+	- `scopedUnitId` e contexto material;
+	- `access.feedbackMutationOptions`;
+	- distincao entre delete global legitimo e delete contextual por unidade;
+	- cleanup blob ou fs como efeito posterior, nao como limite tenant-aware principal.
+- Onde entra `feedbackId` no contrato atual:
+	- `feedbackId` entra no owner por `req.params.feedbackId`;
+	- o owner valida primeiro se o valor existe;
+	- depois valida o formato hex de 24 caracteres antes do delete principal.
+- Onde entram `user` e `unitScope` no contrato atual:
+	- `user` entra no owner por `req.user || null`;
+	- `unitScope` entra no owner por `String(req.unitScope?.unidadeId || '').trim()`;
+	- ambos sao consumidos pelo gate `feedbackPolicy.ensureAdminAccess`.
+- Onde ocorre o gate de policy ou admin:
+	- no owner `createDeleteFeedbackHandler`, antes de qualquer delete ou cleanup, via `feedbackPolicy.ensureAdminAccess({ currentUser, scopedUnitId })`.
+- Onde ocorre o delete final no contrato atual:
+	- no owner, por `findFeedbackByIdAndDeleteLean(id, access.feedbackMutationOptions)`;
+	- o delete sensivel depende materialmente do repasse de `access.feedbackMutationOptions`.
+- Onde ocorre o cleanup posterior no contrato atual:
+	- depois do delete bem-sucedido e somente se `fb` existir;
+	- o cleanup fica isolado em `processFeedbackDeleteCleanupCore`, que tenta remover anexos em blob e em filesystem local.
+- Contexto explicito observado neste diagnostico:
+	- ha `scopedUnitId` explicito no owner;
+	- ha `unitScope` explicito no owner;
+	- nao ha `membership`, `gestor` ou `condominio` explicitos dentro do owner deste slice curto;
+	- o core de cleanup nao recebe `scopedUnitId` nem decide escopo de delete.
+- Leitura semantica consolidada do contrato atual:
+	- `createDeleteFeedbackHandler` e o owner do corredor de delete;
+	- o limite tenant-aware principal acontece no handoff para `findFeedbackByIdAndDeleteLean`;
+	- `processFeedbackDeleteCleanupCore` nao e a fronteira principal do risco tenant-aware, porque opera apenas efeitos posteriores sobre `fb` ja deletado;
+	- o cleanup nao deve mascarar perda de contexto no delete principal.
+- Risco suspeito consolidado neste diagnostico:
+	- o delete de feedback pode virar mutacao ampla se `access.feedbackMutationOptions` nao for repassado ao delete final;
+	- o cleanup posterior nao deve ser confundido com prova de contextualizacao do delete;
+	- este microcorte ainda nao classifica o caso como bug confirmado.
+- Classificacao consolidada deste alvo:
+	- `HIBRIDO_AUDITAR + RISCO_FEEDBACK_DELETE_CONTEXTUAL_WRITE_POTENCIAL`.
+- Global legitimo versus perigo contextual neste slice:
+	- o delete so poderia ser global legitimo se existisse um ramo administrativo explicito e documentado para exclusao global de feedback, o que nao esta demonstrado neste slice local;
+	- quando houver `unitScope`, o comportamento semanticamente seguro e tratar o delete como mutacao contextual por unidade;
+	- por isso o perigo principal e a perda de contexto material no delete, nao o cleanup posterior.
+- Comportamento atual a preservar neste corredor:
+	- validacao de `feedbackId` permanece no owner;
+	- gate admin ou policy permanece no owner;
+	- delete final permanece em `findFeedbackByIdAndDeleteLean(id, access.feedbackMutationOptions)`;
+	- cleanup posterior permanece em `processFeedbackDeleteCleanupCore`;
+	- resposta publica HTTP permanece via `apiOk(res, { id, deleted: true })`;
+	- sem Mongo real;
+	- sem query real.
+- Lacuna atual de protecao observada neste diagnostico:
+	- o teste adjacente atual cobre a estrutura do owner e a existencia da seam de cleanup;
+	- ainda nao existe protecao focal tenant-aware dedicada congelando explicitamente o repasse material de `access.feedbackMutationOptions` no delete principal;
+	- por isso a cobertura atual nao e suficiente para fechamento documental do corredor como protegido e validado.
+- Comportamento a proteger por teste futuro:
+	- o handoff estrutural `feedbackDeleteApiController -> feedbackPolicy.ensureAdminAccess -> findFeedbackByIdAndDeleteLean(..., access.feedbackMutationOptions)`;
+	- o fato de o cleanup acontecer somente depois de um delete bem-sucedido;
+	- a ausencia de repasse decorativo de `scopedUnitId`;
+	- a separacao entre limite tenant-aware principal do delete e efeito posterior de blob ou fs.
+- Hipotese de protecao futura deste slice:
+	- teste estrutural + runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Criterio de sucesso de uma protecao futura:
+	- demonstrar que o owner continua segurando gate admin, validacoes e resposta publica;
+	- demonstrar que o delete final continua recebendo `access.feedbackMutationOptions` materialmente;
+	- demonstrar que o cleanup posterior nao substitui nem oculta a contextualizacao do delete;
+	- fazer isso sem Mongo real, sem query real e sem alterar `src`.
+- Resposta objetiva sobre a proxima etapa deste slice:
+	- a proxima etapa deve desenhar protecao tenant-aware dedicada;
+	- nao ha base suficiente para refatoracao minima ou para fechamento documental sem protecao focal nesta rodada.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
+- Decisao principal consolidada neste diagnostico:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=diagnoseCreateDeleteFeedbackHandlerTenantAwareTarget`;
+	- `selectedTechnicalTarget=createDeleteFeedbackHandler`;
+	- `recommendedNextAct=designCreateDeleteFeedbackHandlerTenantAwareProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createDeleteFeedbackHandlerTenantAwareTargetDiagnosed=true`
+	- `selectedTechnicalTarget=createDeleteFeedbackHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=diagnoseCreateDeleteFeedbackHandlerTenantAwareTarget`
+	- `recommendedNextAct=designCreateDeleteFeedbackHandlerTenantAwareProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
