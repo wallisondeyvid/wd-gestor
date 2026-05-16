@@ -6063,6 +6063,123 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto do desenho da protecao/contrato tenant-aware de `resetPasswordExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho nesta rodada: `resetPasswordExecutionService`.
+- Arquivo principal deste desenho: `src/modules/gestor/app/services/auth/passwordRecovery.service.js`.
+- Facade envolvida neste desenho:
+	- `src/modules/gestor/app/data/auth/resetPasswordExecutionDataFacade.js`.
+- Cadeia viva consolidada neste desenho:
+	- `authController.postResetPassword`;
+	- `resetPasswordByTokenService`;
+	- `resetPasswordExecutionService`;
+	- `resetPasswordExecutionDataFacade`.
+- Funcoes sensiveis mapeadas neste desenho:
+	- `resetPasswordByTokenService`;
+	- `loadPasswordResetExecutionData`;
+	- `completePasswordResetData`;
+	- `isPasswordResetInvalidOrExpired`;
+	- `resolvePasswordResetUserId`.
+- Semantica inicial proposta para o corredor:
+	- o token de reset deve permanecer classificado como global legitimo de auth;
+	- o write de senha por `userId` e `passwordResetId` deve permanecer classificado como projecao derivada local, estritamente condicionada ao token valido;
+	- `GLOBAL/auth token` nao pode virar precedente generico para write amplo fora deste corredor.
+- Risco a proteger neste contrato:
+	- token invalido ou expirado nao pode chamar `completePasswordResetData`;
+	- token valido sem `user` ou sem `userId` nao pode chamar `completePasswordResetData`;
+	- o hash da senha deve ocorrer antes do `complete`;
+	- `complete` deve receber `userId` e `passwordResetId` corretos;
+	- erro de `complete` deve preservar o contrato.
+- Contrato atual a preservar neste desenho:
+	- reset por token continua funcionando;
+	- token invalido ou expirado continua rejeitado;
+	- senha continua sendo hasheada antes da conclusao;
+	- write final continua delegado ao data facade;
+	- contrato publico HTTP permanece compativel;
+	- nenhum Mongo real e conectado.
+- Protecao futura desejada neste desenho:
+	- teste estrutural deve congelar a ordem `token -> gate -> userId -> hash -> complete`;
+	- teste contratual leve deve cobrir token valido;
+	- teste contratual leve deve cobrir token invalido ou ausente;
+	- teste contratual leve deve cobrir token expirado;
+	- teste contratual leve deve cobrir token valido sem `user` ou sem `userId`;
+	- teste contratual leve deve cobrir erro do `complete`;
+	- o teste deve provar que `complete` nao roda antes do hash;
+	- o teste nao deve abrir `auth.db.js` como big-bang.
+- Tipo de teste recomendado neste desenho:
+	- estrutural + runtime contratual leve com stubs ou mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura deste desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico;
+	- nao abrir `auth.db.js` como frente ampla;
+	- nao alterar contrato HTTP neste momento;
+	- nao mexer em render ou reset-render neste microcorte.
+- Respostas objetivas deste desenho:
+	- a semantica inicial do token deve ser `global legitimo de auth`;
+	- a semantica inicial do write derivado por `userId` e `passwordResetId` deve ser `projecao derivada local de token valido`, nunca write global generico;
+	- a cobertura atual nao e suficiente para fechamento documental do corredor, porque hoje so ha cobertura adjacente do owner e do render;
+	- sim, e necessario teste adicional focal do execution/write-side;
+	- o criterio que permitira fechar o corredor e comprovar, por protecao estrutural e contratual leve, que a ordem material e preservada e que estados invalidos nao chegam ao `complete`;
+	- nao abrir `auth.db.js` como big-bang porque o risco atual esta localizado no service e na seam de write derivado, e abrir a DB bridge ampla destruiria localidade, aumentaria superficie e misturaria auth legitimo com frente estrutural maior sem necessidade neste microcorte.
+- Cobertura atual e decisao desta rodada:
+	- existe cobertura adjacente em `tests/gestor-auth-recovery-reset-token-owner-structural-seam.test.js`;
+	- existe protecao recente do render em `tests/gestor-reset-password-render-tenant-aware-protection.test.js`;
+	- essa cobertura ainda nao basta para fechamento documental sem novo teste focal;
+	- a decisao correta neste momento e criar protecao ou teste antes de qualquer refatoracao ou fechamento.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Interpretacao obrigatoria desta rodada:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+- Proximo ato recomendado apos este desenho: `createResetPasswordExecutionServiceTenantAwareProtectionTest`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designResetPasswordExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- recommendedNextAct=createResetPasswordExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- resetPasswordExecutionServiceTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designResetPasswordExecutionServiceTenantAwareProtection
+	- recommendedNextAct=createResetPasswordExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
