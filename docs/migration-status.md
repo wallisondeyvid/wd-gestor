@@ -4645,6 +4645,73 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da revisao final da protecao tenant-aware de `updateUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado: `updateUsuarioExecutionService`.
+- Arquivo principal desta revisao: `src/modules/gestor/app/services/usuarios/updateUsuarioExecution.service.js`.
+- Diagnostico consolidado desta revisao:
+	- a protecao focal tenant-aware foi aceita para o corredor `updateUsuarioExecutionService`;
+	- a protecao focal permaneceu verde com `tests=3`, `pass=3` e `fail=0`;
+	- os testes adjacentes focais permaneceram verdes com `tests=8`, `pass=8` e `fail=0`;
+	- o risco original ficou protegido porque `prevUnidadeId` permaneceu preservado no `unset`;
+	- `unidadeId` permaneceu preservado no `set`;
+	- a troca de funcionario com troca de unidade ficou protegida;
+	- a remocao de funcionario sem religamento indevido ficou protegida;
+	- `saveUserDoc` apos a sincronizacao ficou preservado;
+	- o contrato publico do corredor permaneceu preservado;
+	- o controller permaneceu preservado;
+	- `api.db.js` permaneceu preservado;
+	- `auth.db.js` permaneceu preservado;
+	- `package.json` permaneceu preservado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada.
+- Decisao consolidada desta revisao:
+	- fechar o corredor `updateUsuarioExecutionService` como tenant-aware protegido e validado sem refatoracao em `src`.
+- Decisao principal consolidada desta revisao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewUpdateUsuarioExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterUpdateUsuario
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta revisao:
+	- updateUsuarioExecutionServiceTenantAwareProtectionReviewed=true
+	- updateUsuarioExecutionServiceTenantAwareMicrocutClosed=true
+	- updateUsuarioExecutionServiceTenantAwareProtectionPassed=true
+	- updateUsuarioExecutionServiceAdjacentTestsPassed=true
+	- selectedTechnicalTarget=updateUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewUpdateUsuarioExecutionServiceTenantAwareProtection
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterUpdateUsuario
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
