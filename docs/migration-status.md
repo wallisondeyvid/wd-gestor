@@ -5577,6 +5577,56 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao usa Portal;
 	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao da protecao tenant-aware de `resetPasswordRenderDataFacade`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Teste/protecao tenant-aware de `resetPasswordRenderDataFacade` criado nesta rodada.
+- Arquivo criado nesta rodada: `tests/gestor-reset-password-render-tenant-aware-protection.test.js`.
+- Escopo coberto por esta protecao criada:
+	- protecao estrutural da facade com `GLOBAL_SCOPE` explicito para token e lookup auxiliar;
+	- protecao estrutural da ordem do corredor no service, congelando token como primeira leitura material e lookup auxiliar apenas apos token valido com `user_id`;
+	- protecao runtime contratual leve para token valido com usuario encontrado;
+	- protecao runtime contratual leve para token invalido ou ausente sem lookup auxiliar;
+	- protecao runtime contratual leve para token expirado sem lookup auxiliar;
+	- protecao runtime contratual leve para token valido sem usuario encontrado, preservando nome auxiliar padrao;
+	- preservacao do render model sem banco real.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma refatoracao foi executada.
+- Proximo ato recomendado apos esta criacao: `runResetPasswordRenderDataFacadeTenantAwareProtectionTest`.
+- Decisao principal consolidada desta criacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createResetPasswordRenderDataFacadeTenantAwareProtectionTest
+	- selectedTechnicalTarget=resetPasswordRenderDataFacade
+	- recommendedNextAct=runResetPasswordRenderDataFacadeTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta criacao:
+	- resetPasswordRenderDataFacadeTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=resetPasswordRenderDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createResetPasswordRenderDataFacadeTenantAwareProtectionTest
+	- recommendedNextAct=runResetPasswordRenderDataFacadeTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
