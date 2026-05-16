@@ -33221,6 +33221,91 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Revisao final documental da protecao tenant-aware do corredor `processCreateFeedbackCore`, consolidada nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado:
+	- `processCreateFeedbackCore`.
+	- arquivo principal: `src/modules/gestor/app/controllers/utils/processCreateFeedbackCore.js`.
+	- callsite vivo: `feedbackCreateApiController.js`.
+	- protecao focal aceita.
+- Protecao focal verde:
+	- `tests=4`
+	- `pass=4`
+	- `fail=0`
+- Teste adjacente verde:
+	- `tests=6`
+	- `pass=6`
+	- `fail=0`
+- Risco original protegido:
+	- `feedbackCreateApiController -> processCreateFeedbackCore -> createFeedback`;
+	- `scopedUnitId` como option material em `createFeedback(payload, { scopedUnitId })`;
+	- o payload preserva `status`, `criadoPor` e `origem`;
+	- `mensagem`, `tipo`, `modulo`, `contexto`, `url`, `timezone`, `userAgent` e `referer` permanecem no payload;
+	- o cenario sem `scopedUnitId` fica explicito conforme o contrato atual;
+	- o core permanece sem I/O, query ou write direto;
+	- o owner delega ao core antes do write sensivel.
+- Decisao semantica consolidada:
+	- `processCreateFeedbackCore` permanece seam minima de montagem de payload e repasse de contexto;
+	- a criacao de feedback permanece write contextual quando houver unidade escopada;
+	- `scopedUnitId` e marcador material de contexto operacional por unidade;
+	- a ausencia de `scopedUnitId` so permanece aceita como ramo explicito do contrato atual, nao como erosao silenciosa;
+	- o core nao e tratado como precedente para write global;
+	- nenhuma refatoracao em `src` e necessaria neste momento porque a protecao focal e o teste adjacente preservaram o contrato atual.
+- Confirmacoes finais desta revisao:
+	- contrato publico preservado;
+	- `feedbackCreateApiController` preservado;
+	- `processCreateFeedbackCore` preservado;
+	- `package.json` preservado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada.
+- Decisao de fechamento:
+	- fechar o corredor `processCreateFeedbackCore` como tenant-aware protegido e validado sem refatoracao em `src`.
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja protegido e validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=reviewProcessCreateFeedbackCoreTenantAwareProtection`;
+	- `selectedTechnicalTarget=processCreateFeedbackCore`;
+	- `recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterCreateFeedback`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `processCreateFeedbackCoreTenantAwareProtectionReviewed=true`
+	- `processCreateFeedbackCoreTenantAwareMicrocutClosed=true`
+	- `processCreateFeedbackCoreTenantAwareProtectionPassed=true`
+	- `processCreateFeedbackCoreAdjacentTestsPassed=true`
+	- `processCreateFeedbackCoreSourceRefactorRequired=false`
+	- `selectedTechnicalTarget=processCreateFeedbackCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=reviewProcessCreateFeedbackCoreTenantAwareProtection`
+	- `recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterCreateFeedback`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
