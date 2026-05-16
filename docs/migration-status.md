@@ -5627,6 +5627,36 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da execucao da protecao tenant-aware de `resetPasswordRenderDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Comando executado nesta validacao focal:
+	- `node --test tests/gestor-reset-password-render-tenant-aware-protection.test.js`.
+- Resultado consolidado desta execucao focal:
+	- `tests=6`;
+	- `suites=0`;
+	- `pass=5`;
+	- `fail=1`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico claro da falha nesta rodada:
+	- a falha ocorreu no caso `token expirado nao dispara lookup auxiliar por userId e preserva contrato atual`;
+	- o harness observou `loadPasswordResetUserNameData({ userId: 'user-expirado' })` mesmo no cenario montado como token expirado;
+	- a divergencia ficou localizada na expectativa do teste focal sobre a fronteira entre gate de expiracao e lookup auxiliar por `userId`;
+	- nenhum indicio novo exigiu alteracao imediata em `src` neste microcorte.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado;
+	- `tests` nao foram alterados;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma refatoracao foi executada.
+- Encaminhamento desta rodada:
+	- falha registrada documentalmente;
+	- nenhuma correcao automatica aplicada em `src`;
+	- nenhuma correcao automatica aplicada em `tests`;
+	- este microcorte encerra aqui para revisao local da expectativa falha antes de nova tentativa.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
