@@ -7294,6 +7294,127 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao usa Portal;
 	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `unlockUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada:
+	- `unlockUsuarioExecutionService`.
+- Arquivo principal deste diagnostico:
+	- `src/modules/gestor/app/services/usuarios/unlockUsuarioExecution.service.js`.
+- Callsite vivo identificado neste diagnostico:
+	- `userController.unlockUsuario`.
+- Teste adjacente existente neste diagnostico:
+	- `tests/gestor-usuarios-unlock-structural-seam.test.js`.
+- Cadeia viva identificada neste diagnostico:
+	- `userController.unlockUsuario`;
+	- `findUserById(id)`;
+	- `unlockUsuarioExecutionService`;
+	- `saveUserDoc(user)`.
+- Funcoes sensiveis identificadas neste diagnostico:
+	- `unlockUsuarioExecutionService`;
+	- `findUserById`;
+	- `saveUserDoc`.
+- Pontos sensiveis consolidados deste diagnostico:
+	- usuario carregado por `_id`;
+	- write administrativo de desbloqueio;
+	- ausencia de `unidade`, `membership` ou `unitScope` explicito no corredor fino;
+	- necessidade de distinguir identidade global legitima de operacao administrativa contextual.
+- Onde o `id` do usuario entra no corredor:
+	- o `id` entra em `userController.unlockUsuario` via `req.params.id`.
+- Onde ocorre o lookup neste corredor:
+	- o lookup ocorre no owner, em `findUserById(id)`, antes da delegacao ao service fino.
+- Onde ocorre o write final neste corredor:
+	- o write final ocorre no service fino, em `saveUserDoc(user)`, apos limpar `failed_login_attempts` e `lock_until`.
+- Presenca de `unidade`, `membership` ou `unitScope` no corredor:
+	- nao ha `unidade`, `membership` ou `unitScope` explicito em `userController.unlockUsuario` ou em `unlockUsuarioExecutionService`;
+	- o corredor trabalha apenas com identidade carregada por `_id` e com o write final sobre o `User` global.
+- Classificacao consolidada deste diagnostico:
+	- `HIBRIDO_AUDITAR`;
+	- `RISCO_ADMIN_WRITE_GLOBAL_POTENCIAL`;
+	- nao como bug confirmado neste estado.
+- Risco tenant-aware suspeito consolidado deste diagnostico:
+	- o desbloqueio pode ser global legitimo quando exercido por administracao `master/admin` global;
+	- mas, se o mesmo corredor estiver servindo administracao contextual por unidade, o write por `_id` sem cerca local pode ser amplo demais;
+	- a operacao precisa ser classificada antes de qualquer refatoracao.
+- Comportamento atual a preservar neste diagnostico:
+	- usuario inexistente continua rejeitado;
+	- usuario ja desbloqueado preserva contrato atual;
+	- usuario bloqueado pode ser desbloqueado;
+	- `saveUserDoc` continua sendo o write final;
+	- contrato publico HTTP permanece preservado.
+- Lacuna atual consolidada deste diagnostico:
+	- existe teste estrutural adjacente;
+	- ainda nao ha protecao tenant-aware focal;
+	- ainda falta decidir se unlock e global legitimo ou write administrativo contextual a cercar.
+- Comportamento a proteger por teste em etapa futura:
+	- usuario inexistente nao chama `saveUserDoc`;
+	- usuario ja desbloqueado nao chama `saveUserDoc`, se esse for o contrato atual a ser aceito;
+	- usuario bloqueado chama `saveUserDoc` apos limpar o lock state;
+	- qualquer fallback global deve ficar explicito e documentado;
+	- o teste futuro nao deve abrir `userController` nem `api.db.js` como big-bang.
+- Hipotese de protecao futura consolidada deste diagnostico:
+	- criar teste estrutural mais runtime contratual leve com `stubs` e `mocks`;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Respostas obrigatorias consolidadas deste diagnostico:
+	- onde entra o `id` do usuario: em `req.params.id` no owner `unlockUsuario`;
+	- onde ocorre o lookup: em `findUserById(id)` no owner;
+	- onde ocorre o write final: em `saveUserDoc(user)` no service fino;
+	- se ha `unidade`, `membership` ou `unitScope` no corredor: nao ha no corredor fino atual;
+	- por que pode ser global legitimo: porque o owner exige `master/admin` e opera sobre identidade global do `User`;
+	- por que pode ser perigoso se for operacao contextual: porque um write administrativo por `_id` sem cerca local pode ampliar escopo alem do tenant esperado;
+	- se a cobertura atual e suficiente para fechamento documental: nao, porque a cobertura atual congela apenas shape estrutural e mutacao minima, sem fechar a classificacao tenant-aware;
+	- qual seria o criterio de sucesso de uma protecao futura: provar quando o unlock pode gravar, quando nao pode gravar e se eventual ramo global fica explicito sem ampliar o corredor;
+	- qual deve ser a proxima etapa: desenhar a protecao tenant-aware antes de discutir refatoracao minima ou fechamento documental.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseUnlockUsuarioExecutionServiceTenantAwareTarget
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- recommendedNextAct=designUnlockUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- unlockUsuarioExecutionServiceTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseUnlockUsuarioExecutionServiceTenantAwareTarget
+	- recommendedNextAct=designUnlockUsuarioExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
