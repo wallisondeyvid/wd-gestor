@@ -6180,6 +6180,56 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da criacao da protecao tenant-aware de `resetPasswordExecutionService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Teste/protecao tenant-aware de `resetPasswordExecutionService` criado nesta rodada.
+- Arquivo criado nesta rodada: `tests/gestor-reset-password-execution-tenant-aware-protection.test.js`.
+- Escopo coberto por esta protecao criada:
+	- protecao estrutural de que `loadPasswordResetExecutionData` e a primeira leitura material do corredor;
+	- protecao runtime contratual leve para token invalido ou ausente sem `completePasswordResetData`;
+	- protecao runtime contratual leve para token expirado sem `completePasswordResetData`;
+	- protecao runtime contratual leve para token valido sem `user` sem `completePasswordResetData`;
+	- protecao runtime contratual leve desenhada para token valido sem `userId` sem `completePasswordResetData`;
+	- protecao runtime contratual leve para token valido com hash antes de `completePasswordResetData` e payload derivado correto;
+	- protecao adjacente do contrato HTTP atual quando erro interno do write sobe ao owner.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma refatoracao foi executada.
+- Proximo ato recomendado apos esta criacao: `runResetPasswordExecutionServiceTenantAwareProtectionTest`.
+- Decisao principal consolidada desta criacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createResetPasswordExecutionServiceTenantAwareProtectionTest
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- recommendedNextAct=runResetPasswordExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta criacao:
+	- resetPasswordExecutionServiceTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createResetPasswordExecutionServiceTenantAwareProtectionTest
+	- recommendedNextAct=runResetPasswordExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
