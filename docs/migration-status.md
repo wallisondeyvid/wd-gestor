@@ -32807,6 +32807,147 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto do diagnostico tenant-aware de `processCreateFeedbackCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada:
+	- `processCreateFeedbackCore`.
+- Arquivo principal diagnosticado nesta rodada:
+	- `src/modules/gestor/app/controllers/utils/processCreateFeedbackCore.js`.
+- Callsite vivo identificado nesta rodada:
+	- `src/modules/gestor/app/controllers/feedbackCreateApiController.js`.
+- Teste adjacente conhecido nesta rodada:
+	- `tests/gestor-feedback-create-owner-structural-seam.test.js`.
+- Cadeia viva identificada nesta rodada:
+	- `feedbackCreateApiController`;
+	- `processCreateFeedbackCore`;
+	- dados de `request/body`;
+	- `scopedUnitId` recebido do contexto por `req.unitScope?.unidadeId`;
+	- chamada a `createFeedback`;
+	- resposta publica final do create via `apiOk`.
+- Funcoes sensiveis mapeadas nesta rodada:
+	- `processCreateFeedbackCore`;
+	- `createFeedback`;
+	- nao ha normalizacao propria de arquivos ou anexos dentro do core atual.
+- Pontos sensiveis observados nesta rodada:
+	- criacao de feedback como write contextual;
+	- `scopedUnitId` como marcador material de unidade;
+	- dados de autor em `criadoPor`;
+	- nao ha `files` ou `anexos` participando do payload no core atual;
+	- distincao entre criacao global legitima e criacao contextual por unidade.
+- Classificacao consolidada desta rodada:
+	- `HIBRIDO_AUDITAR + RISCO_CREATE_FEEDBACK_CONTEXTUAL_WRITE_POTENCIAL`.
+- Onde entra `scopedUnitId`:
+	- entra no callsite vivo `feedbackCreateApiController`, derivado de `String(req.unitScope?.unidadeId || '').trim()`;
+	- entra no core como argumento explicito;
+	- sai do core apenas como option separada na chamada final `createFeedback(payload, { scopedUnitId })`.
+- Onde entram `body`, `user` e derivados do request:
+	- `feedbackCreateApiController` extrai `mensagem`, `tipo`, `module/modulo`, `contexto`, `url`, `timezone`, `userAgent`, `referer`, `header user-agent`, `req.user` e `req.unitScope`;
+	- `processCreateFeedbackCore` recebe esses valores ja normalizados ou semi-normalizados para compor o write.
+- Onde ocorre a montagem do payload:
+	- dentro de `processCreateFeedbackCore`, ao montar o payload de `createFeedback` com `tipo`, `status`, `mensagem`, `criadoPor` e `origem`.
+- Onde ocorre o write final:
+	- o write final ocorre na delegacao para `createFeedback`, chamada pelo core com payload e options separadas;
+	- o core nao executa query propria nem I/O proprio antes da delegacao final.
+- Contexto explicito observado nesta rodada:
+	- ha `unitScope` explicito no callsite vivo;
+	- nao ha `membership`, `gestor` ou `condominio` explicitos dentro do core;
+	- a semantica contextual depende do repasse correto de `scopedUnitId` ao write final.
+- Leitura semantica consolidada do contrato atual:
+	- o core atual e pequeno e local;
+	- ele concentra a montagem do payload e a passagem do contexto de unidade ao write;
+	- `scopedUnitId` nao aparece como decoracao morta, porque e encaminhado ao segundo argumento de `createFeedback`;
+	- a autoria do feedback e derivada de `req.user` no callsite e persistida no payload final;
+	- a origem do feedback e inferida a partir de `contexto`, `bodyUrl`, `referer` e `inferModuloFromUrl`.
+- Risco suspeito desta rodada:
+	- se `scopedUnitId` for perdido, omitido ou tratado como opcional decorativo, `createFeedback` pode receber write amplo demais;
+	- a criacao de feedback deve permanecer contextual quando houver unidade escopada;
+	- isso ainda nao e classificado como bug confirmado neste microcorte.
+- Global legitimo versus perigo contextual:
+	- o create so poderia ser global legitimo se existisse ramo funcional explicito e documentado para criacao sem unidade contextual, o que nao esta consolidado neste slice local;
+	- no corredor atual, quando houver `unitScope`, o comportamento semanticamente seguro e tratar a criacao como contextual por unidade;
+	- por isso o risco principal nao e o payload de mensagem em si, mas a erosao do contexto material do write.
+- Comportamento atual a preservar:
+	- validacoes basicas de `mensagem` e `tipo` continuam no owner `feedbackCreateApiController`;
+	- o core continua montando payload pequeno e deterministico;
+	- `status: 'novo'` continua sendo definido no core;
+	- `criadoPor` continua refletindo o usuario atual;
+	- `origem` continua sendo inferida a partir do contexto e headers atuais;
+	- `createFeedback` continua recebendo `scopedUnitId` como option separada do payload.
+- Lacuna atual de protecao observada:
+	- o teste adjacente conhecido hoje cerca o owner e a existencia da seam, mas nao congela de forma focal o contrato tenant-aware interno do proprio `processCreateFeedbackCore`;
+	- ainda nao ha protecao dedicada pequena provando, em runtime leve, que `scopedUnitId` e repassado ao write final e que o payload preserva autoria/origem no shape atual.
+- Comportamento a proteger por teste futuro:
+	- o repasse de `scopedUnitId` ao segundo argumento de `createFeedback`;
+	- a montagem do payload com `status: 'novo'`, `criadoPor` e `origem` no shape atual;
+	- a ausencia de anexos/files como parte do core atual;
+	- o fallback de `origem.modulo`, `origem.path`, `origem.userAgent` e `origem.timezone` sem ampliar escopo;
+	- a preservacao do contrato publico atual sem Mongo real.
+- Hipotese de protecao futura:
+	- teste estrutural + runtime contratual leve com stubs e mocks;
+	- foco direto em `processCreateFeedbackCore` e callsite minimo do owner;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Suficiencia da cobertura atual para fechamento documental:
+	- a cobertura atual nao e suficiente para fechar documentalmente o corredor como protegido e validado;
+	- o slice ainda pede desenho de protecao focal antes de qualquer discussao de refatoracao minima ou fechamento sem refatoracao.
+- Criterio de sucesso de uma protecao futura:
+	- demonstrar que o core repassa `scopedUnitId` de forma material ao write final;
+	- demonstrar que o payload final preserva shape atual de `status`, `criadoPor` e `origem`;
+	- demonstrar que o owner continua delegando ao core antes do write sensivel;
+	- fazer isso sem Mongo real, sem query real e sem alterar `src`.
+- Proxima etapa recomendada por este diagnostico:
+	- desenhar protecao tenant-aware dedicada;
+	- nao ha base suficiente para refatoracao minima nem para fechamento documental sem protecao focal nesta rodada.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao e teste antes de qualquer alteracao em `src`.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=diagnoseProcessCreateFeedbackCoreTenantAwareTarget`;
+	- `selectedTechnicalTarget=processCreateFeedbackCore`;
+	- `recommendedNextAct=designProcessCreateFeedbackCoreTenantAwareProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `processCreateFeedbackCoreTenantAwareTargetDiagnosed=true`
+	- `selectedTechnicalTarget=processCreateFeedbackCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=diagnoseProcessCreateFeedbackCoreTenantAwareTarget`
+	- `recommendedNextAct=designProcessCreateFeedbackCoreTenantAwareProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
