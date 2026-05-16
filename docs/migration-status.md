@@ -5302,6 +5302,122 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao usa Portal;
 	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `authContextReadDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada: `authContextReadDataFacade`.
+- Arquivo principal diagnosticado: `src/modules/gestor/app/data/auth/authContextReadDataFacade.js`.
+- Cadeia viva identificada neste diagnostico, quando localizavel:
+	- `authContextReadDataFacade.loadActiveMembershipsByUserIdData` recebe `userId` e `maxTimeMS`;
+	- a facade delega para `findActiveMembershipsByUserIdLeanRepo` com `GLOBAL_SCOPE` explicito;
+	- o mesmo handoff read-only reaparece em `src/modules/gestor/app/db/auth-context.db.js` via `loadActiveMembershipsByUserId`;
+	- `src/modules/gestor/app/services/authContextDbBridgeService.js` apenas reexporta a borda de `auth-context.db`;
+	- o repositório `findActiveMembershipsByUserIdLeanRepo` resolve o model por `unitScope` e faz apenas leitura lean de memberships ativas.
+- Funcao sensivel deste contrato:
+	- `loadActiveMembershipsByUserIdData`.
+- Chamada sensivel deste contrato:
+	- `findActiveMembershipsByUserIdLeanRepo({ unitScope: GLOBAL_SCOPE, userId })`.
+- Pontos sensiveis do contrato atual:
+	- leitura de memberships ativas;
+	- uso explicito de `GLOBAL_SCOPE`;
+	- distincao entre global legitimo de identidade/auth e escopo contextual de unidade;
+	- impacto no auth-context;
+	- impacto em memberships visiveis e autorizativas.
+- Diagnostico consolidado nesta rodada: `HIBRIDO_AUDITAR` + `RISCO_READ_ONLY_AUTORIZATIVO_POTENCIAL`.
+- Hipotese de risco tenant-aware deste diagnostico:
+	- memberships ativas podem ficar amplas demais se `GLOBAL_SCOPE` mascarar uma leitura que deveria ter semantica contextual explicita;
+	- o auth-context pode carregar superficie autorizativa mais ampla do que o necessario se a semantica global desse handoff nao estiver bem delimitada;
+	- o risco atual e read-only, nao write imediato.
+- Onde o `GLOBAL_SCOPE` entra neste corredor:
+	- entra diretamente em `loadActiveMembershipsByUserIdData` na facade;
+	- reaparece no handoff equivalente de `auth-context.db`;
+	- segue para `findActiveMembershipsByUserIdLeanRepo`, que resolve o model por `unitScope` e le memberships ativas por `user_id` e `status='active'`.
+- Por que o `GLOBAL_SCOPE` pode ser legitimo neste ponto:
+	- o corredor participa da construcao de auth-context e identidade autenticada, nao de write contextual;
+	- memberships ativas, nesse uso, podem funcionar como base global de vinculos necessaria para escolher ou projetar contexto autenticado;
+	- a cobertura atual ja congela o slice como facade fina, handoff read-only e sem dependencia de app, server, bootstrap ou infra real.
+- Por que o `GLOBAL_SCOPE` pode ser perigoso neste ponto:
+	- mesmo sendo read-only, a leitura alimenta superficie autorizativa e contextual;
+	- se a semantica global nao estiver explicitamente cercada, o corredor pode continuar servindo como compatibilidade opaca para ampliar memberships lidas sem matriz documental precisa;
+	- o hotspot auth-context ainda e hibrido na matriz multi-tenant, entao o risco aqui e menos de write e mais de semantica autorizativa ampla demais.
+- Cobertura direta existente hoje:
+	- existe teste direto em `tests/architecture/activeMembershipsAuthContextRead.contract.test.js`;
+	- esse teste congela a facade fina com `GLOBAL_SCOPE` explicito;
+	- esse teste tambem congela o mesmo handoff read-only em `auth-context.db`;
+	- esse teste confirma que o corredor nao depende de app, server, rotas, bootstrap ou infra real.
+- Comportamento atual a preservar neste contrato:
+	- leitura de auth-context continua funcionando;
+	- memberships ativas continuam disponiveis para construir contexto autenticado;
+	- o contrato read-only atual permanece compativel;
+	- nao ha escrita;
+	- nao ha Mongo real.
+- Lacuna de protecao atual consolidada neste diagnostico:
+	- existe teste em `tests/architecture/activeMembershipsAuthContextRead.contract.test.js`;
+	- esse teste congela a facade fina e o handoff read-only com `GLOBAL_SCOPE`;
+	- ainda nao ha decisao documental se `GLOBAL_SCOPE` nesse ponto e global legitimo ou compatibilidade tenant-aware a cercar.
+- Criterio de sucesso para uma protecao futura:
+	- decidir explicitamente se o `GLOBAL_SCOPE` aqui e global legitimo de identidade/auth ou compatibilidade tenant-aware residual;
+	- se for global legitimo, congelar a semantica e impedir expansao acidental fora do auth-context;
+	- se for compatibilidade tenant-aware, desenhar protecao para escopo contextual explicito sem ampliar para write;
+	- preservar o contrato read-only e evitar refatoracao ampla em `auth-context.service.js`, que nao foi localizada como superficie direta neste corredor.
+- Hipotese de protecao futura desta frente:
+	- primeiro desenhar protecao e documentacao do contrato;
+	- talvez criar teste estrutural que limite o uso de `GLOBAL_SCOPE` a esta facade e a este motivo read-only;
+	- talvez criar teste contratual que prove o handoff read-only sem ampliar para escrita;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes de decidir.
+- Encaminhamento sugerido por este diagnostico:
+	- a proxima etapa deve desenhar protecao tenant-aware/documental do corredor antes de qualquer refatoracao;
+	- este diagnostico ainda nao sustenta fechamento documental sem nova cerca explicita, porque a semantica de `GLOBAL_SCOPE` neste ponto continua hibrida.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada deste diagnostico:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseAuthContextReadDataFacadeTenantAwareTarget
+	- selectedTechnicalTarget=authContextReadDataFacade
+	- recommendedNextAct=designAuthContextReadDataFacadeTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste diagnostico:
+	- authContextReadDataFacadeTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=authContextReadDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseAuthContextReadDataFacadeTenantAwareTarget
+	- recommendedNextAct=designAuthContextReadDataFacadeTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao/teste ou fechamento documental antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
