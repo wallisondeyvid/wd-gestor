@@ -6162,6 +6162,75 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao inicia PostgreSQL;
 	- este desenho nao usa Portal;
 	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+
+- Checkpoint documental curto da criacao da protecao tenant-aware de `createAdminFeedbackDetailHandler`, consolidado nesta rodada com criacao de `tests/gestor-feedback-detail-tenant-aware-protection.test.js`, sem alteracao em `src`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem refatoracao executada.
+- Teste ou protecao tenant-aware criado nesta rodada:
+	- `tests/gestor-feedback-detail-tenant-aware-protection.test.js`.
+- Escopo consolidado do teste criado nesta rodada:
+	- protege estruturalmente `feedbackDetailApiController -> feedbackPolicy.ensureAdminAccess -> findFeedbackByIdLean -> processAdminFeedbackDetailCore`;
+	- protege que `feedbackPolicy.ensureAdminAccess` ocorre antes da leitura sensivel;
+	- protege que `findFeedbackByIdLean` recebe `access.feedbackQueryOptions` materialmente;
+	- protege que `access.feedbackQueryOptions` nao vira dado decorativo;
+	- protege que `processAdminFeedbackDetailCore` roda apenas depois de leitura bem-sucedida;
+	- protege que `not found` nao executa pos-processamento indevido;
+	- protege que `processAdminFeedbackDetailCore` nao recebe nem decide `scopedUnitId`, `unitScope` ou `feedbackQueryOptions`;
+	- protege que o owner continua segurando validacoes, gate, leitura e resposta publica;
+	- registra explicitamente no proprio teste que `createAdminFeedbackDetailHandler` e owner curto da leitura admin contextual e nao precedente para leitura global silenciosa.
+- Estrategia consolidada do teste criado:
+	- `node:test` com `assert`;
+	- sem importacao de conexao real;
+	- sem banco real;
+	- sem query real;
+	- sem dependencia de dados reais;
+	- usando `vm`, mocks e stubs para executar o owner em memoria e congelar o handoff tenant-aware focal.
+- Resultado consolidado deste microcorte:
+	- `src` permaneceu intacto;
+	- `package.json` permaneceu intacto;
+	- nenhuma refatoracao foi executada;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- o proximo ato recomendado passa a ser rodar o teste focal novo.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=createCreateAdminFeedbackDetailHandlerTenantAwareProtectionTest`;
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`;
+	- `recommendedNextAct=runCreateAdminFeedbackDetailHandlerTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createAdminFeedbackDetailHandlerTenantAwareProtectionTestCreated=true`
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=createCreateAdminFeedbackDetailHandlerTenantAwareProtectionTest`
+	- `recommendedNextAct=runCreateAdminFeedbackDetailHandlerTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=true`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta rodada:
+	- este microcorte cria apenas a protecao tenant-aware focal;
+	- este microcorte nao altera codigo de producao;
+	- este microcorte nao altera `package.json`;
+	- este microcorte nao cria comando;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao executa query real;
+	- este microcorte nao gera relatorio real;
+	- este microcorte nao executa refatoracao;
+	- a proxima etapa deve ser `runCreateAdminFeedbackDetailHandlerTenantAwareProtectionTest` antes de qualquer alteracao em `src`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
