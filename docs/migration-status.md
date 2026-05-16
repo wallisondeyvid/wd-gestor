@@ -34184,6 +34184,130 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto do desenho da protecao/contrato tenant-aware de `createDeleteFeedbackHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem criacao de teste, sem Mongo real e sem query real.
+- Alvo deste desenho:
+	- `createDeleteFeedbackHandler`.
+- Arquivo principal deste desenho:
+	- `src/modules/gestor/app/controllers/feedbackDeleteApiController.js`.
+- Cleanup relacionado neste desenho:
+	- `processFeedbackDeleteCleanupCore`.
+- Teste adjacente conhecido considerado neste desenho:
+	- `tests/gestor-feedback-delete-owner-structural-seam.test.js`.
+- Semantica a decidir e congelar neste desenho:
+	- delete de feedback deve partir, por padrao inicial, de semantica de mutacao contextual por unidade quando houver contexto material no owner;
+	- eventual delete global legitimo so pode existir se aparecer ramo explicito e documentado separadamente;
+	- na ausencia desse ramo explicito, o delete deve ser tratado como mutacao contextual sensivel.
+- Semantica inicial atribuida ao owner neste desenho:
+	- `createDeleteFeedbackHandler` e o owner curto do corredor de delete;
+	- o owner segura validacoes, gate admin ou policy, delete sensivel e resposta publica;
+	- o owner nao deve transformar `access.feedbackMutationOptions` em dado opcional decorativo;
+	- o owner deve continuar fazendo o handoff material para `findFeedbackByIdAndDeleteLean` antes de qualquer cleanup.
+- Semantica inicial atribuida ao cleanup neste desenho:
+	- `processFeedbackDeleteCleanupCore` permanece apenas cleanup pos-delete;
+	- o cleanup nao e o limite tenant-aware principal da mutacao;
+	- o cleanup nao deve substituir nem mascarar a contextualizacao do delete;
+	- o cleanup nao decide `scopedUnitId` nem escopo de mutacao.
+- Semantica inicial atribuida a `scopedUnitId` e `access.feedbackMutationOptions` neste desenho:
+	- `scopedUnitId` e `access.feedbackMutationOptions` nao sao dado decorativo;
+	- eles representam o contexto material que deve limitar o delete sensivel por unidade quando presente;
+	- o owner continua sendo a origem desse contexto por `req.unitScope`, `feedbackPolicy.ensureAdminAccess` e pelo handoff ao delete final.
+- Risco principal a proteger neste desenho:
+	- `access.feedbackMutationOptions` nao pode virar dado opcional decorativo;
+	- `findFeedbackByIdAndDeleteLean` deve receber `access.feedbackMutationOptions` materialmente;
+	- `feedbackPolicy.ensureAdminAccess` deve ocorrer antes do delete sensivel;
+	- `feedbackId` deve ser validado antes da policy e do delete;
+	- o cleanup posterior nao pode substituir nem mascarar a contextualizacao do delete;
+	- `processFeedbackDeleteCleanupCore` deve continuar como cleanup pos-delete, nao como limite tenant-aware principal;
+	- o owner deve continuar segurando validacoes, gate, delete e resposta publica.
+- Contrato atual a preservar neste desenho:
+	- validacoes ficam no owner;
+	- gate admin ou policy fica no owner;
+	- delete final fica em `findFeedbackByIdAndDeleteLean`;
+	- o contexto material vem de `access.feedbackMutationOptions`;
+	- cleanup posterior fica em `processFeedbackDeleteCleanupCore`;
+	- resposta publica continua via `apiOk`;
+	- sem Mongo real;
+	- sem query real.
+- Protecao futura desejada descrita neste desenho:
+	- teste estrutural deve congelar `owner -> feedbackPolicy.ensureAdminAccess -> findFeedbackByIdAndDeleteLean -> processFeedbackDeleteCleanupCore`;
+	- teste runtime contratual leve deve provar repasse material de `access.feedbackMutationOptions` ao delete final;
+	- teste runtime contratual leve deve provar que cleanup so roda depois de delete bem-sucedido;
+	- teste runtime contratual leve deve provar que cleanup nao recebe nem decide `scopedUnitId`;
+	- teste runtime contratual leve deve provar que erro ou `not found` nao executa cleanup indevidamente, se esse for o contrato atual;
+	- teste deve provar que o owner nao executa delete antes da policy;
+	- o teste nao deve abrir feedback controllers grandes nem data access como big-bang.
+- Tipo de teste recomendado por este desenho:
+	- estrutural + runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura delimitada por este desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao futura demonstrar perda real de limite semantico;
+	- nao abrir feedback controllers grandes;
+	- nao abrir `api.db.js`;
+	- nao alterar contrato HTTP neste momento.
+- Resposta objetiva sobre a cobertura atual:
+	- a cobertura atual nao e suficiente para fechamento documental do corredor como protegido e validado;
+	- o teste adjacente atual congela a estrutura do owner e a seam de cleanup, mas nao congela focalmente o repasse material de `access.feedbackMutationOptions` no delete principal;
+	- este slice ainda precisa de teste adicional dedicado.
+- Resposta objetiva sobre a necessidade de teste adicional:
+	- sim;
+	- a proxima etapa correta e criar uma protecao focal do corredor antes de qualquer alteracao em `src`.
+- Criterio para fechar o corredor apos a protecao futura:
+	- demonstrar estruturalmente que o owner continua segurando validacoes, gate, delete e resposta publica;
+	- demonstrar em runtime leve que o delete final continua recebendo `access.feedbackMutationOptions` materialmente;
+	- demonstrar em runtime leve que cleanup so executa apos delete bem-sucedido;
+	- demonstrar que cleanup nao substitui a contextualizacao do delete;
+	- fazer isso sem Mongo real, sem query real e sem abrir big-bang fora do slice.
+- Por que este desenho nao deve abrir controllers ou `api.db.js` como big-bang:
+	- porque o risco suspeito esta concentrado no handoff curto `owner -> delete final -> cleanup posterior`;
+	- abrir superficies maiores aqui reduziria discriminacao causal e misturaria riscos nao pertencentes a este microcorte;
+	- o objetivo desta frente continua sendo fechar corredores pequenos com protecao focal antes de qualquer ampliacao de escopo.
+- Decisao principal consolidada neste desenho:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=designCreateDeleteFeedbackHandlerTenantAwareProtection`;
+	- `selectedTechnicalTarget=createDeleteFeedbackHandler`;
+	- `recommendedNextAct=createCreateDeleteFeedbackHandlerTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+- Gates:
+	- `createDeleteFeedbackHandlerTenantAwareProtectionDesigned=true`
+	- `selectedTechnicalTarget=createDeleteFeedbackHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=designCreateDeleteFeedbackHandlerTenantAwareProtection`
+	- `recommendedNextAct=createCreateDeleteFeedbackHandlerTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
