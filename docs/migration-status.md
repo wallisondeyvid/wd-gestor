@@ -5037,6 +5037,63 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da validacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Comando executado nesta rodada: `node --test tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
+- Resultado da execucao focal nesta rodada:
+	- tests=3;
+	- suites=0;
+	- pass=3;
+	- fail=0;
+	- cancelled=0;
+	- skipped=0;
+	- todo=0;
+	- duration_ms=54.2912.
+- Validacao consolidada desta rodada:
+	- a protecao tenant-aware de `checkUsuarioEmailOwnerService` executou verde;
+	- o branch contextual permaneceu protegido;
+	- o ramo `exists=false` permaneceu protegido;
+	- o contexto restrito permaneceu limitado a unidade permitida em `membershipsSummary`, `linkedUnidadeIds` e `blockedUnidadeIds`;
+	- o ramo global legitimo permaneceu preservado.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Proximo ato recomendado apos esta validacao: `runCheckUsuarioEmailOwnerServiceAdjacentTestsAfterProtection`.
+- Decisao principal consolidada desta validacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runCheckUsuarioEmailOwnerServiceTenantAwareProtectionTest
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- recommendedNextAct=runCheckUsuarioEmailOwnerServiceAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta validacao:
+	- checkUsuarioEmailOwnerServiceTenantAwareProtectionTestRun=true
+	- checkUsuarioEmailOwnerServiceTenantAwareProtectionTestPassed=true
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runCheckUsuarioEmailOwnerServiceTenantAwareProtectionTest
+	- recommendedNextAct=runCheckUsuarioEmailOwnerServiceAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
