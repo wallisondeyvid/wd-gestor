@@ -6449,6 +6449,83 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da revisao final da protecao/refatoracao tenant-aware de `resetPasswordExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado nesta rodada:
+	- `resetPasswordExecutionService`.
+- Arquivo principal revisado nesta rodada:
+	- `src/modules/gestor/app/services/auth/passwordRecovery.service.js`.
+- Facade envolvida e preservada nesta rodada:
+	- `src/modules/gestor/app/data/auth/resetPasswordExecutionDataFacade.js`.
+- Protecao focal aceita nesta rodada.
+- Protecao focal verde consolidada nesta rodada:
+	- `tests=7`;
+	- `pass=7`;
+	- `fail=0`.
+- Teste adjacente verde consolidado nesta rodada:
+	- `tests=2`;
+	- `pass=2`;
+	- `fail=0`.
+- Risco original protegido neste corredor:
+	- token invalido ou ausente sem `completePasswordResetData`;
+	- token expirado sem `completePasswordResetData`;
+	- token valido sem `user` sem `completePasswordResetData`;
+	- token valido sem `userId` sem `completePasswordResetData`;
+	- token valido com `userId` chama `bcrypt.hash` antes de `completePasswordResetData`;
+	- `completePasswordResetData` recebe `userId`, `passwordResetId` e `passwordHash` corretos;
+	- erro de `complete` preserva contrato atual.
+- Refatoracao minima aplicada e revisada neste corredor:
+	- resolve `userId` antes do hash;
+	- bloqueia ausencia de `userId`;
+	- mantem o write como projecao derivada local do token valido.
+- Semantica final consolidada neste corredor:
+	- token de reset como global legitimo de auth;
+	- write por `userId` e `passwordResetId` como projecao derivada local e estritamente gated;
+	- nao como precedente generico para write global.
+- Preservacoes confirmadas nesta rodada:
+	- contrato publico preservado;
+	- `authController` preservado;
+	- `resetPasswordExecutionDataFacade` preservado;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada.
+- Decisao de fechamento desta rodada:
+	- fechar o corredor `resetPasswordExecutionService` como tenant-aware protegido, refatorado e validado.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewResetPasswordExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterResetExecution
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- resetPasswordExecutionServiceTenantAwareProtectionReviewed=true
+	- resetPasswordExecutionServiceTenantAwareMicrocutClosed=true
+	- resetPasswordExecutionServiceTenantAwareProtectionPassed=true
+	- resetPasswordExecutionServiceAdjacentTestsPassed=true
+	- resetPasswordExecutionServiceTenantAwareMinimalRefactorApplied=true
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewResetPasswordExecutionServiceTenantAwareProtection
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterResetExecution
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste checkpoint: esta revisao apenas fecha o corredor ja protegido, refatorado e validado; esta revisao nao altera codigo; esta revisao nao altera testes; esta revisao nao executa refatoracao; esta revisao nao cria comando; esta revisao nao conecta Mongo real; esta revisao nao executa query real; esta revisao nao gera relatorio; esta revisao nao inicia PostgreSQL; esta revisao nao usa Portal; a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
