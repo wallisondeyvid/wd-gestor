@@ -5149,6 +5149,76 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da revisao final da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado nesta rodada: `checkUsuarioEmailOwnerService`.
+- Arquivo principal revisado nesta rodada: `src/modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js`.
+- Revisao final consolidada desta rodada:
+	- protecao focal aceita;
+	- protecao focal verde: tests=3, pass=3, fail=0;
+	- testes adjacentes verdes: tests=2, pass=2, fail=0.
+- Risco original protegido nesta revisao:
+	- branch contextual com `isGlobalScope=false` e `hasAuthoritativeAuthContext=true` protegido;
+	- `membershipsSummary` limitado ao escopo permitido;
+	- `linkedUnidadeIds` limitado ao escopo permitido;
+	- `blockedUnidadeIds` limitado ao escopo permitido;
+	- `exists=false` preservado sem carregar memberships;
+	- `exists=true` preservado;
+	- ramo global legitimo preservado.
+- Estado preservado nesta revisao:
+	- contrato publico HTTP preservado;
+	- controller preservado;
+	- service preservado;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada.
+- Decisao consolidada desta revisao:
+	- fechar o corredor `checkUsuarioEmailOwnerService` como tenant-aware protegido e validado sem refatoracao em `src`.
+- Decisao principal consolidada desta revisao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewCheckUsuarioEmailOwnerServiceTenantAwareProtection
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterCheckEmailOwner
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta revisao:
+	- checkUsuarioEmailOwnerServiceTenantAwareProtectionReviewed=true
+	- checkUsuarioEmailOwnerServiceTenantAwareMicrocutClosed=true
+	- checkUsuarioEmailOwnerServiceTenantAwareProtectionPassed=true
+	- checkUsuarioEmailOwnerServiceAdjacentTestsPassed=true
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewCheckUsuarioEmailOwnerServiceTenantAwareProtection
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterCheckEmailOwner
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
