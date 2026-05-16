@@ -6977,6 +6977,77 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da refatoracao minima aplicada em `primeiroAcessoExecutionService`, consolidado nesta rodada com ajuste minimo em `src`, ajuste minimo no matcher estrutural do teste focal, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Arquivos alterados nesta rodada:
+	- `src/modules/gestor/app/services/auth/primeiroAcessoExecution.service.js`;
+	- `tests/gestor-primeiro-acesso-execution-tenant-aware-protection.test.js`.
+- Refatoracao minima aplicada nesta rodada:
+	- `primeiroAcessoExecutionService` agora valida `userId` material no inicio do fluxo;
+	- quando `userId` nao existe, o service retorna `{ kind: 'not_found' }` antes de qualquer lookup ou write;
+	- o restante do fluxo foi mantido intacto.
+- Ajuste de protecao focal aplicado nesta rodada:
+	- o matcher estrutural do teste focal foi ajustado apenas para casar com o formato real das linhas `if (!user)` e `if (!user.primeiro_acesso)` no service;
+	- a protecao de `userId` ausente sem write foi preservada.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-primeiro-acesso-execution-tenant-aware-protection.test.js`.
+- Resultado consolidado da execucao nesta rodada:
+	- `tests=7`;
+	- `suites=0`;
+	- `pass=7`;
+	- `fail=0`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico consolidado apos a validacao:
+	- a lacuna real de `userId` ausente ficou fechada no service;
+	- o ajuste do harness ficou restrito ao matcher estrutural necessario;
+	- a protecao focal agora fecha este microcorte como verde sem ampliar escopo para data access, controller ou pacote.
+- Limites explicitos desta rodada:
+	- `authController` nao foi alterado;
+	- data access nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum inventario real foi executado;
+	- nenhum relatorio real foi gerado;
+	- nenhum reset, cleanup, seed, migration ou backfill foi executado;
+	- nenhum push foi executado.
+- Proximo ato recomendado apos esta validacao:
+	- `runPrimeiroAcessoExecutionServiceAdjacentTestsAfterProtection`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=refactorPrimeiroAcessoExecutionServiceTenantAwareMinimal
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- recommendedNextAct=runPrimeiroAcessoExecutionServiceAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- primeiroAcessoExecutionServiceTenantAwareMinimalRefactorApplied=true
+	- primeiroAcessoExecutionServiceTenantAwareProtectionMatcherAdjusted=true
+	- primeiroAcessoExecutionServiceTenantAwareProtectionTestRun=true
+	- primeiroAcessoExecutionServiceTenantAwareProtectionTestPassed=true
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=refactorPrimeiroAcessoExecutionServiceTenantAwareMinimal
+	- recommendedNextAct=runPrimeiroAcessoExecutionServiceAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=true
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.

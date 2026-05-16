@@ -89,8 +89,8 @@ test('primeiro acesso tenant-aware: service e data access mantem lookup local, g
   );
 
   assert.match(serviceBlock, /const user = await loadPrimeiroAcessoUserData\(\{ userId, maxTimeMS \}\)/);
-  assert.match(serviceBlock, /if \(!user\) return \{ kind: 'not_found' \ };/);
-  assert.match(serviceBlock, /if \(!user\.primeiro_acesso\) return \{ kind: 'already_completed' \ };/);
+  assert.match(serviceBlock, /if \(!user\) return \{ kind: 'not_found' \};/);
+  assert.match(serviceBlock, /if \(!user\.primeiro_acesso\) return \{ kind: 'already_completed' \};/);
   assert.match(serviceBlock, /await completePrimeiroAcessoData\(\{ userId, senhaHash \}\)/);
 
   const loadIndex = serviceBlock.indexOf('loadPrimeiroAcessoUserData');
