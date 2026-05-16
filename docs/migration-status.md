@@ -7715,6 +7715,92 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Revisao final documental da protecao tenant-aware de `unlockUsuarioExecutionService`, consolidada nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado nesta rodada:
+	- `unlockUsuarioExecutionService`.
+- Arquivo principal revisado nesta rodada:
+	- `src/modules/gestor/app/services/usuarios/unlockUsuarioExecution.service.js`.
+- Callsite vivo preservado nesta rodada:
+	- `userController.unlockUsuario`.
+- Protecao focal aceita nesta rodada.
+- Protecao focal verde consolidada nesta revisao:
+	- `tests=6`;
+	- `pass=6`;
+	- `fail=0`.
+- Teste adjacente verde consolidado nesta revisao:
+	- `tests=2`;
+	- `pass=2`;
+	- `fail=0`.
+- Risco original protegido e tornado explicito nesta revisao:
+	- usuario inexistente sem delegacao ao service;
+	- owner delega apenas `user` carregado por `id`;
+	- usuario bloqueado limpa `failed_login_attempts` e `lock_until` antes de `saveUserDoc`;
+	- `saveUserDoc` recebe o `user` mutado correto;
+	- erro de `saveUserDoc` preserva o contrato atual;
+	- o contrato observado de usuario ja desbloqueado fica explicito.
+- Decisao semantica consolidada nesta revisao:
+	- `unlock` permanece operacao administrativa hibrida auditada;
+	- write por `_id` permanece operacao administrativa potencialmente ampla;
+	- este write nao e tratado como precedente generico para write global;
+	- nenhuma refatoracao em `src` e necessaria neste momento porque a protecao focal e o teste adjacente preservaram o contrato atual.
+- Contrato e superficies preservados nesta revisao:
+	- contrato publico preservado;
+	- `userController` preservado;
+	- `unlockUsuarioExecutionService` preservado;
+	- `package.json` preservado.
+- Limites explicitos desta revisao:
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhuma alteracao de codigo foi aplicada.
+- Decisao de fechamento desta rodada:
+	- fechar o corredor `unlockUsuarioExecutionService` como tenant-aware protegido e validado sem refatoracao em `src`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewUnlockUsuarioExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterUnlockUsuario
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- unlockUsuarioExecutionServiceTenantAwareProtectionReviewed=true
+	- unlockUsuarioExecutionServiceTenantAwareMicrocutClosed=true
+	- unlockUsuarioExecutionServiceTenantAwareProtectionPassed=true
+	- unlockUsuarioExecutionServiceAdjacentTestsPassed=true
+	- unlockUsuarioExecutionServiceSourceRefactorRequired=false
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewUnlockUsuarioExecutionServiceTenantAwareProtection
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterUnlockUsuario
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja protegido e validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
