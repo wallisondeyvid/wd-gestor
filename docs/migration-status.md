@@ -5041,6 +5041,63 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da validacao da protecao tenant-aware de `passwordRecoveryRequestDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Comando executado nesta validacao:
+	- `node --test tests/gestor-password-recovery-request-tenant-aware-protection.test.js`.
+- Resultado consolidado desta validacao focal:
+	- `tests=6`;
+	- `suites=0`;
+	- `pass=6`;
+	- `fail=0`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico consolidado desta validacao:
+	- a protecao tenant-aware de `passwordRecoveryRequestDataFacade` passou verde no recorte focal;
+	- a ordem de busca direta por CPF antes do fallback por funcionario permaneceu congelada;
+	- o fallback explicito e local ao fluxo de recovery permaneceu congelado;
+	- a delegacao de criacao de token e a listagem auxiliar de e-mails por CPF permaneceram preservadas no harness leve.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado;
+	- nenhum push executado.
+- Proximo ato recomendado apos esta validacao: `runPasswordRecoveryRequestDataFacadeAdjacentTestsAfterProtection`.
+- Decisao principal consolidada desta validacao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runPasswordRecoveryRequestDataFacadeTenantAwareProtectionTest
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- recommendedNextAct=runPasswordRecoveryRequestDataFacadeAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta validacao:
+	- passwordRecoveryRequestDataFacadeTenantAwareProtectionTestRun=true
+	- passwordRecoveryRequestDataFacadeTenantAwareProtectionTestPassed=true
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=runPasswordRecoveryRequestDataFacadeTenantAwareProtectionTest
+	- recommendedNextAct=runPasswordRecoveryRequestDataFacadeAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
