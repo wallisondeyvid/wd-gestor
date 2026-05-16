@@ -7415,6 +7415,112 @@ Checkpoint tenant enforcement atual:
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao e contrato tenant-aware de `unlockUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho:
+	- `unlockUsuarioExecutionService`.
+- Arquivo principal deste desenho:
+	- `src/modules/gestor/app/services/usuarios/unlockUsuarioExecution.service.js`.
+- Callsite vivo considerado neste desenho:
+	- `userController.unlockUsuario`.
+- Teste adjacente existente considerado neste desenho:
+	- `tests/gestor-usuarios-unlock-structural-seam.test.js`.
+- Cadeia viva consolidada neste desenho:
+	- `userController.unlockUsuario`;
+	- `findUserById(id)`;
+	- `unlockUsuarioExecutionService`;
+	- `saveUserDoc(user)`.
+- Semantica que precisa ser decidida neste corredor:
+	- unlock como operacao global legitima de `master/admin`;
+	- versus unlock como write administrativo contextual que precisa de cerca tenant-aware.
+- Risco a proteger neste desenho:
+	- write por `_id` sem unidade explicita nao pode virar precedente generico para write global;
+	- usuario inexistente nao pode chamar `saveUserDoc`;
+	- usuario ja desbloqueado nao deve chamar `saveUserDoc`, se esse for o contrato atual a ser aceito;
+	- usuario bloqueado deve limpar `failed_login_attempts` e `lock_until` antes de `saveUserDoc`;
+	- qualquer fallback global deve ficar explicito e documentado.
+- Contrato atual a preservar neste desenho:
+	- usuario inexistente continua rejeitado;
+	- usuario ja desbloqueado preserva contrato atual;
+	- usuario bloqueado pode ser desbloqueado;
+	- `saveUserDoc` continua sendo o write final;
+	- contrato publico HTTP permanece compativel.
+- Protecao futura desejada neste desenho:
+	- teste estrutural deve congelar a cadeia owner -> lookup -> service -> `saveUserDoc`;
+	- teste contratual leve deve cobrir usuario inexistente;
+	- teste contratual leve deve cobrir usuario ja desbloqueado;
+	- teste contratual leve deve cobrir usuario bloqueado;
+	- teste contratual leve deve cobrir erro de `saveUserDoc`, se houver contrato atual;
+	- o teste deve provar que `saveUserDoc` nao roda antes de limpar lock state;
+	- o teste nao deve abrir `userController` nem `api.db.js` como big-bang.
+- Tipo de teste recomendado neste desenho:
+	- estrutural mais runtime contratual leve com `stubs` e `mocks`;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura consolidada neste desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico;
+	- nao abrir `userController`;
+	- nao abrir `api.db.js`;
+	- nao alterar contrato HTTP neste momento.
+- Respostas obrigatorias consolidadas deste desenho:
+	- qual semantica inicial deve ser atribuida ao desbloqueio: `operacao administrativa hibrida a auditar`, com ramo potencialmente global legitimo apenas se isso ficar explicitamente provado pelo contrato;
+	- qual semantica inicial deve ser atribuida ao write por `_id`: write administrativo potencialmente amplo, que nao deve ser tratado por padrao como global legitimo sem cerca explicita;
+	- se a cobertura atual e suficiente para fechamento documental: nao, porque ainda falta protecao focal tenant-aware que diferencie ramo global legitimo de write contextual sem cerca;
+	- se precisa de teste adicional: sim, precisa de teste adicional focal antes de qualquer refatoracao;
+	- qual criterio permitira fechar o corredor: demonstrar por protecao focal que o corredor preserva o contrato atual, nao amplia write alem do permitido e torna explicito qualquer fallback global legitimo;
+	- por que nao abrir `userController` ou `api.db.js` como big-bang: porque o risco atual esta localizado no service fino e no handoff owner -> service, e ampliar escopo agora misturaria auth, owners e bridge legada sem necessidade para a primeira discriminacao.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designUnlockUsuarioExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- recommendedNextAct=createUnlockUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- unlockUsuarioExecutionServiceTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designUnlockUsuarioExecutionServiceTenantAwareProtection
+	- recommendedNextAct=createUnlockUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
