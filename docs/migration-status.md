@@ -6816,6 +6816,58 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste desenho: este desenho apenas define protecao ou teste futuro; este desenho nao altera codigo; este desenho nao altera testes; este desenho nao cria teste ainda; este desenho nao executa refatoracao; este desenho nao cria comando; este desenho nao conecta Mongo real; este desenho nao executa query real; este desenho nao gera relatorio; este desenho nao inicia PostgreSQL; este desenho nao usa Portal; a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao da protecao tenant-aware de `primeiroAcessoExecutionService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Teste/protecao tenant-aware de `primeiroAcessoExecutionService` criado nesta rodada.
+- Arquivo criado nesta rodada:
+	- `tests/gestor-primeiro-acesso-execution-tenant-aware-protection.test.js`.
+- Escopo coberto por esta protecao criada:
+	- protecao estrutural do service e do data access para `GLOBAL_SCOPE` local, lookup por `userId`, gates e write derivado;
+	- protecao runtime contratual leve para `userId` ausente sem `completePrimeiroAcessoData`;
+	- protecao runtime contratual leve para usuario nao encontrado sem `completePrimeiroAcessoData`;
+	- protecao runtime contratual leve para usuario sem `primeiro_acesso` pendente sem `completePrimeiroAcessoData`;
+	- protecao runtime contratual leve para caminho valido com `userId` e `senhaHash` corretos no write;
+	- protecao runtime contratual leve para erro de write preservando contrato do service;
+	- protecao adjacente de owner para hash antes da delegacao ao service fino.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma refatoracao foi executada.
+- Proximo ato recomendado apos esta criacao:
+	- `runPrimeiroAcessoExecutionServiceTenantAwareProtectionTest`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createPrimeiroAcessoExecutionServiceTenantAwareProtectionTest
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- recommendedNextAct=runPrimeiroAcessoExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- primeiroAcessoExecutionServiceTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createPrimeiroAcessoExecutionServiceTenantAwareProtectionTest
+	- recommendedNextAct=runPrimeiroAcessoExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
