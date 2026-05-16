@@ -6335,6 +6335,63 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da refatoracao minima aplicada em `resetPasswordExecutionService`, consolidado nesta rodada com alteracao pontual em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Arquivo alterado nesta rodada:
+	- `src/modules/gestor/app/services/auth/passwordRecovery.service.js`.
+- Refatoracao minima aplicada nesta rodada:
+	- o fluxo `resetPasswordByTokenService` manteve `loadPasswordResetExecutionData({ token })` como primeira leitura material;
+	- o gate `isPasswordResetInvalidOrExpired(passwordReset)` foi preservado;
+	- o bloqueio de `user` ausente foi preservado;
+	- antes de `bcrypt.hash`, o fluxo passou a resolver `userId` e bloquear ausencia de identificador material com o mesmo contrato compativel de `Usuário não encontrado`;
+	- `bcrypt.hash` permanece antes de `completePasswordResetData`;
+	- o write final permanece derivado local do token valido com `passwordResetId` e `passwordHash`.
+- Resultado do teste focal executado nesta rodada:
+	- comando: `node --test tests/gestor-reset-password-execution-tenant-aware-protection.test.js`;
+	- `tests=7`;
+	- `pass=7`;
+	- `fail=0`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico consolidado apos a refatoracao minima:
+	- a lacuna local de write-side para `user` sem `_id` deixou de atravessar o corredor ate `completePasswordResetData`;
+	- o contrato publico permaneceu compativel para token invalido, expirado, `user` ausente e sucesso valido;
+	- a refatoracao permaneceu restrita ao service sem reabrir `resetPasswordExecutionDataFacade` ou `authController`.
+- Proximo ato recomendado apos esta rodada:
+	- `runResetPasswordExecutionServiceAdjacentTestsAfterProtection`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=refactorResetPasswordExecutionServiceTenantAwareMinimal
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- recommendedNextAct=runResetPasswordExecutionServiceAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- resetPasswordExecutionServiceTenantAwareMinimalRefactorApplied=true
+	- resetPasswordExecutionServiceTenantAwareProtectionTestRun=true
+	- resetPasswordExecutionServiceTenantAwareProtectionTestPassed=true
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=refactorResetPasswordExecutionServiceTenantAwareMinimal
+	- recommendedNextAct=runResetPasswordExecutionServiceAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=true
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.

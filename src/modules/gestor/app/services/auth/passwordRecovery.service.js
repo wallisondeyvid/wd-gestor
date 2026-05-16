@@ -115,6 +115,19 @@ export async function resetPasswordByTokenService({ token, senha } = {}) {
     });
   }
 
+  const userId = typeof resolvePasswordResetUserId === 'function'
+    ? resolvePasswordResetUserId(user)
+    : user?._id || user?.user_id || user?.userId || null;
+  if (!userId) {
+    return buildResetPasswordErrorResult({
+      title: 'Usuário não encontrado',
+      message: 'Usuário não encontrado',
+      showRetry: false,
+    });
+  }
+
+  user._id = userId;
+
   const senhaHash = await bcrypt.hash(senha, 10);
   await completePasswordResetData({
     userId: user._id,
