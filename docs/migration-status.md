@@ -5154,6 +5154,99 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da revisao final da protecao tenant-aware de `passwordRecoveryRequestDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado nesta rodada: `passwordRecoveryRequestDataFacade`.
+- Arquivo principal revisado: `src/modules/gestor/app/data/auth/passwordRecoveryRequestDataFacade.js`.
+- Protecao focal aceita nesta revisao:
+	- `tests/gestor-password-recovery-request-tenant-aware-protection.test.js`.
+- Protecao focal verde nesta revisao:
+	- `tests=6`;
+	- `pass=6`;
+	- `fail=0`.
+- Teste adjacente verde nesta revisao:
+	- `tests=2`;
+	- `pass=2`;
+	- `fail=0`.
+- Risco original protegido e aceito nesta revisao:
+	- busca direta por usuario/CPF antes do fallback por funcionario/CPF;
+	- fallback explicito e local ao fluxo de recovery;
+	- CPF com usuario direto sem fallback;
+	- CPF sem usuario direto, mas com funcionario vinculado;
+	- CPF sem usuario direto e sem funcionario;
+	- `createPasswordRecoveryTokenData` delegado ao repositorio esperado sem banco real;
+	- listagem auxiliar de e-mails por CPF preservada.
+- Semantica final consolidada nesta revisao:
+	- fallback por funcionario/CPF como compatibilidade legitima do auth sob cerca explicita;
+	- nao como global legitimo irrestrito;
+	- nao como precedente generico para outros fluxos tenant-aware.
+- Contrato preservado nesta revisao:
+	- contrato publico preservado;
+	- `authController` preservado;
+	- `passwordRecovery.service.js` preservado;
+	- `passwordRecoveryRequestDataFacade.js` preservado;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada.
+- Decisao desta revisao:
+	- fechar o corredor `passwordRecoveryRequestDataFacade` como tenant-aware protegido e validado sem refatoracao em `src`.
+- Motivo objetivo para o fechamento documental nesta rodada:
+	- a protecao focal congelou o seam material do corredor sem banco real;
+	- o teste adjacente confirmou ausencia de regressao na delegacao controller -> service;
+	- a semantica final do fallback por funcionario/CPF ficou delimitada como compatibilidade legitima do auth sob cerca explicita;
+	- nao restou evidencia local suficiente para exigir refatoracao em `src` neste microcorte.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada desta revisao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewPasswordRecoveryRequestDataFacadeTenantAwareProtection
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterRecoveryRequest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta revisao:
+	- passwordRecoveryRequestDataFacadeTenantAwareProtectionReviewed=true
+	- passwordRecoveryRequestDataFacadeTenantAwareMicrocutClosed=true
+	- passwordRecoveryRequestDataFacadeTenantAwareProtectionPassed=true
+	- passwordRecoveryRequestDataFacadeAdjacentTestsPassed=true
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewPasswordRecoveryRequestDataFacadeTenantAwareProtection
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterRecoveryRequest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja protegido e validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
