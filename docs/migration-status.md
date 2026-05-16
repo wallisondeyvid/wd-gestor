@@ -5708,6 +5708,140 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao usa Portal;
 	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `passwordRecoveryRequestDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada: `passwordRecoveryRequestDataFacade`.
+- Arquivo principal diagnosticado: `src/modules/gestor/app/data/auth/passwordRecoveryRequestDataFacade.js`.
+- Cadeia viva identificada neste diagnostico:
+	- `authController`;
+	- `requestPasswordRecoveryService`;
+	- `listRecoveryEmailsByCpfService`;
+	- `passwordRecoveryRequestDataFacade`;
+	- `AuthRepository`.
+- Funcoes sensiveis deste contrato, incluindo subetapas logicas explicitas do seam:
+	- `loadRecoveryUsersByCpfData`;
+	- `loadRecoveryFuncionariosByCpfData` como subetapa logica atualmente materializada pelo uso de `findFuncionariosByCpfSelectRepo` dentro da facade;
+	- `loadRecoveryUsersByFuncionarioIdsData` como subetapa logica atualmente materializada pelo uso de `findUsersByFuncionarioIdsRepo` dentro da facade;
+	- `createPasswordRecoveryTokenData`.
+- Pontos sensiveis do contrato atual:
+	- busca de usuarios por CPF;
+	- busca de funcionarios por CPF;
+	- fallback de usuarios por `funcionario_id`;
+	- criacao de token de recuperacao;
+	- exposicao/listagem auxiliar de e-mails recuperaveis por CPF;
+	- distincao entre identidade global legitima e vinculo contextual por unidade.
+- Onde entra a busca por CPF neste corredor:
+	- entra em `listRecoveryEmailsByCpfService` e `requestPasswordRecoveryService` apos normalizacao de `cpf` para `cpfDigits`;
+	- segue para `loadRecoveryUsersByCpfData`;
+	- a facade consulta `findUsersByCpfRepo` com `GLOBAL_SCOPE` explicito.
+- Onde ocorre o fallback via funcionario neste corredor:
+	- ocorre dentro de `loadRecoveryUsersByCpfData` quando nao ha usuario encontrado diretamente por CPF;
+	- a facade consulta `findFuncionariosByCpfSelectRepo` com `GLOBAL_SCOPE`;
+	- se houver funcionarios, converte para `ids` e chama `findUsersByFuncionarioIdsRepo`, tambem com `GLOBAL_SCOPE`.
+- Onde ha criacao de token neste corredor:
+	- ocorre em `requestPasswordRecoveryService` apos a resolucao do usuario escolhido;
+	- o service chama `createPasswordRecoveryTokenData`;
+	- a facade delega para `createPasswordResetRepo` com `GLOBAL_SCOPE`.
+- Diagnostico consolidado nesta rodada: `HIBRIDO_AUDITAR` + `RISCO_AUTH_DISCOVERY_TENANT_AWARE_POTENCIAL`.
+- Hipotese de risco tenant-aware deste diagnostico:
+	- leitura global de usuarios por CPF pode ampliar descoberta de contas;
+	- fallback via funcionarios por CPF pode cruzar unidade/contexto sem semantica tenant-aware explicita;
+	- listagem de e-mails recuperaveis por CPF pode expor superficie de descoberta se nao estiver bem cercada;
+	- o risco atual e `auth/read-mostly`, nao write tenant contextual imediato, exceto pela criacao do token de recuperacao.
+- Por que este corredor pode ser identidade global legitima:
+	- recuperacao de senha pertence ao eixo auth e identidade global do usuario;
+	- a criacao e consulta de token de recuperacao tambem se alinham a fluxos globais legitimos do auth;
+	- a busca por CPF pode refletir compatibilidade historica de identidade/autenticacao, nao necessariamente operacao contextual por unidade.
+- Por que este corredor pode ser perigoso em tenant-aware:
+	- o fallback via funcionario por CPF toca um vinculo que nasce de unidade/contexto e o traz para um corredor global sem semantica documental fechada;
+	- a listagem auxiliar de e-mails por CPF amplia a superficie de descoberta do corredor;
+	- o uso de `GLOBAL_SCOPE` aqui pode estar encobrindo uma compatibilidade hibrida entre auth legitimo e dado contextual sem cerca especifica.
+- Comportamento atual a preservar neste contrato:
+	- recuperacao de senha continua funcionando;
+	- listagem auxiliar de e-mails por CPF continua funcionando;
+	- identidade global legitima continua preservada;
+	- criacao de token continua compativel;
+	- nenhum Mongo real;
+	- nenhum contrato publico HTTP alterado.
+- Cobertura direta existente hoje:
+	- nao foi encontrada nesta rodada cobertura direta local da facade `passwordRecoveryRequestDataFacade`;
+	- existe cobertura adjacente em `tests/gestor-auth-recovery-request-owner-structural-seam.test.js`;
+	- essa cobertura congela a delegacao do `authController` para `requestPasswordRecoveryService` e `listRecoveryEmailsByCpfService`, mas nao congela o comportamento interno da facade ou do repositório.
+- Lacuna de protecao atual consolidada neste diagnostico:
+	- ainda nao ha diagnostico fechado sobre se o fallback por funcionario/CPF e compatibilidade legitima de auth ou residuo tenant-aware;
+	- ainda nao ha protecao local equivalente aos corredores recentes;
+	- ainda nao ha decisao documental sobre limites de descoberta por CPF.
+- Comportamento a proteger por teste em etapa futura:
+	- se o fallback por funcionario/CPF for legitimo, congelar a semantica e limitar ao eixo auth;
+	- se for risco tenant-aware, desenhar protecao para impedir ampliacao indevida;
+	- preservar criacao de token;
+	- preservar shape publico de recuperacao;
+	- nao abrir `auth.db.js` como big-bang.
+- Criterio de sucesso para uma protecao futura:
+	- decidir explicitamente se o fallback por funcionario/CPF e global legitimo de auth ou compatibilidade residual a cercar;
+	- congelar a busca direta por CPF e o fallback via funcionario no limite estritamente necessario;
+	- preservar criacao de token e contratos HTTP existentes;
+	- manter a cerca local sem Mongo real e sem ampliar para refatoracao macro do auth.
+- Hipotese de protecao futura desta frente:
+	- primeiro desenhar protecao/documentacao do contrato;
+	- talvez criar teste estrutural sobre a facade e o repositório;
+	- talvez criar teste contratual leve com stubs para CPF com usuario direto e CPF com funcionario vinculado;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes de decidir.
+- Encaminhamento sugerido por este diagnostico:
+	- a proxima etapa deve desenhar protecao tenant-aware/documental do corredor;
+	- este diagnostico ainda nao sustenta fechamento documental sem cerca adicional, porque a semantica do fallback por funcionario/CPF continua hibrida;
+	- nao ha indicacao de refatoracao minima em `src` antes desse desenho.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada deste diagnostico:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnosePasswordRecoveryRequestDataFacadeTenantAwareTarget
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- recommendedNextAct=designPasswordRecoveryRequestDataFacadeTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste diagnostico:
+	- passwordRecoveryRequestDataFacadeTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnosePasswordRecoveryRequestDataFacadeTenantAwareTarget
+	- recommendedNextAct=designPasswordRecoveryRequestDataFacadeTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao/teste ou fechamento documental antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
