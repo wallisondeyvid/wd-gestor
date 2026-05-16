@@ -8199,6 +8199,66 @@ Checkpoint tenant enforcement atual:
 	- a falha foi registrada sem correcao automatica;
 	- a proxima tentativa, se aprovada, deve primeiro ajustar o harness ou matcher da protecao no proprio teste antes de reavaliar qualquer necessidade de alteracao em `src`.
 
+- Checkpoint documental curto do ajuste do harness da protecao tenant-aware de `toggleUsuarioExecutionService`, consolidado nesta rodada com alteracao apenas em `tests/gestor-toggle-usuario-tenant-aware-protection.test.js`, sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Ajuste aplicado nesta rodada:
+	- o extrator do harness passou a localizar o corpo real da funcao depois do fechamento dos parametros, sem confundir a desestruturacao `({ user })` com o corpo da funcao;
+	- a composicao via `vm` passou a registrar a funcao carregada em `globalThis.__loadedFunction`, estabilizando a execucao do runtime contratual do service;
+	- o matcher estrutural permaneceu semantico e continuou exigindo a mutacao de `user.ativo` antes de `saveUserDoc`.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-toggle-usuario-tenant-aware-protection.test.js`.
+- Resultado consolidado da execucao nesta rodada:
+	- `tests=6`;
+	- `suites=0`;
+	- `pass=6`;
+	- `fail=0`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico consolidado apos o ajuste:
+	- a falha anterior estava no extrator ou composicao do harness do teste novo, nao no contrato atual de `src`;
+	- a protecao focal agora fica verde sem alteracao em `src`;
+	- o corredor segue pronto para a validacao dos testes adjacentes.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Proximo ato recomendado apos esta validacao:
+	- `runToggleUsuarioExecutionServiceAdjacentTestsAfterProtection`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=adjustToggleUsuarioExecutionServiceTenantAwareProtectionHarness
+	- selectedTechnicalTarget=toggleUsuarioExecutionService
+	- recommendedNextAct=runToggleUsuarioExecutionServiceAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- toggleUsuarioExecutionServiceTenantAwareProtectionHarnessAdjusted=true
+	- toggleUsuarioExecutionServiceTenantAwareProtectionTestRun=true
+	- toggleUsuarioExecutionServiceTenantAwareProtectionTestPassed=true
+	- selectedTechnicalTarget=toggleUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=adjustToggleUsuarioExecutionServiceTenantAwareProtectionHarness
+	- recommendedNextAct=runToggleUsuarioExecutionServiceAdjacentTestsAfterProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.

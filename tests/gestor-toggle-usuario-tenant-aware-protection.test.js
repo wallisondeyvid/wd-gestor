@@ -17,7 +17,26 @@ function extractFunction(source, signature) {
   const start = source.indexOf(signature);
   assert.ok(start >= 0, `Nao foi possivel localizar a assinatura: ${signature}`);
 
-  const bodyStart = source.indexOf('{', start);
+  const paramsStart = source.indexOf('(', start);
+  assert.ok(paramsStart >= 0, `Nao foi possivel localizar os parametros da funcao: ${signature}`);
+
+  let paramsDepth = 0;
+  let paramsEnd = -1;
+  for (let index = paramsStart; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === '(') paramsDepth += 1;
+    if (char === ')') {
+      paramsDepth -= 1;
+      if (paramsDepth === 0) {
+        paramsEnd = index;
+        break;
+      }
+    }
+  }
+
+  assert.ok(paramsEnd >= 0, `Nao foi possivel localizar o fim dos parametros da funcao: ${signature}`);
+
+  const bodyStart = source.indexOf('{', paramsEnd);
   assert.ok(bodyStart >= 0, `Nao foi possivel localizar o corpo da funcao: ${signature}`);
 
   let depth = 0;
@@ -42,8 +61,10 @@ function buildFunction(source, signature, dependencies = {}) {
 
   const depNames = Object.keys(dependencies);
   const prelude = depNames.map((depName) => `const ${depName} = __deps.${depName};`).join('\n');
-  const script = new vm.Script(`(function (__deps) {\n${prelude}\n${block}\nreturn ${nameMatch[1]};\n})`);
-  return script.runInNewContext({})(dependencies);
+  const context = { __deps: dependencies, __loadedFunction: null };
+  const script = new vm.Script(`${prelude}\n${block}\nglobalThis.__loadedFunction = ${nameMatch[1]};`);
+  script.runInNewContext(context);
+  return context.__loadedFunction;
 }
 
 function createReq(overrides = {}) {
@@ -97,17 +118,17 @@ test('toggle tenant-aware: cadeia owner -> lookup -> service -> saveUserDoc perm
   const seamIndex = ownerBlock.indexOf('await toggleUsuarioExecutionService({ user });');
   const xhrIndex = ownerBlock.indexOf('return res.json({ success:true, id: user._id, ativo: user.ativo });');
   const redirectIndex = ownerBlock.indexOf("res.redirect('/gestor/usuarios');");
-  const mutateIndex = serviceBlock.indexOf('user.ativo = !user.ativo;');
-  const saveIndex = serviceBlock.indexOf('await saveUserDoc(user);');
+  const mutateMatches = /user\.ativo\s*=\s*!user\.ativo\s*;/.test(serviceBlock);
+  const saveMatches = /await\s+saveUserDoc\(user\)\s*;/.test(serviceBlock);
 
   assert.ok(lookupIndex >= 0, 'Owner precisa carregar o usuario alvo por id.');
   assert.ok(seamIndex >= 0, 'Owner precisa delegar ao service fino.');
   assert.ok(xhrIndex >= 0, 'Owner precisa preservar o contrato JSON XHR.');
   assert.ok(redirectIndex >= 0, 'Owner precisa preservar o redirect nao XHR.');
-  assert.ok(mutateIndex >= 0, 'Service precisa alternar user.ativo.');
-  assert.ok(saveIndex >= 0, 'Service precisa persistir via saveUserDoc(user).');
+  assert.ok(mutateMatches, 'Service precisa alternar user.ativo.');
+  assert.ok(saveMatches, 'Service precisa persistir via saveUserDoc(user).');
   assert.ok(lookupIndex < seamIndex, 'Lookup por id precisa ocorrer antes da delegacao.');
-  assert.ok(mutateIndex < saveIndex, 'Mutacao do ativo precisa ocorrer antes do save.');
+  assert.match(serviceBlock, /user\.ativo\s*=\s*!user\.ativo\s*;[\s\S]*await\s+saveUserDoc\(user\)\s*;/, 'Mutacao do ativo precisa ocorrer antes do save.');
 });
 
 test('toggle tenant-aware: usuario inexistente nao delega ao service nem chama saveUserDoc', async () => {
