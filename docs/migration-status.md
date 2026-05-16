@@ -8007,6 +8007,118 @@ Checkpoint tenant enforcement atual:
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao ou contrato tenant-aware de `toggleUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho:
+	- `toggleUsuarioExecutionService`.
+- Arquivo principal deste desenho:
+	- `src/modules/gestor/app/services/usuarios/toggleUsuarioExecution.service.js`.
+- Callsite vivo preservado neste desenho:
+	- `userController.toggleUsuario`.
+- Testes adjacentes existentes considerados neste desenho:
+	- `tests/gestor-user-admin-toggle-owner-structural-seam.test.js`;
+	- `tests/gestor-usuarios-toggle-structural-seam-runtime-contract.test.js`.
+- Cadeia viva consolidada para a futura protecao:
+	- `userController.toggleUsuario`;
+	- `findUserById(req.params.id)`;
+	- `toggleUsuarioExecutionService`;
+	- mutacao de `user.ativo`;
+	- `saveUserDoc(user)`.
+- Semantica que a protecao futura deve decidir e congelar:
+	- `toggle` como operacao global legitima de `master` ou `admin`;
+	- versus `toggle` como write administrativo contextual que precisa de cerca tenant-aware explicita.
+- Risco a proteger consolidado neste desenho:
+	- write por `id` sem unidade explicita nao pode virar precedente generico para write global;
+	- usuario inexistente nao pode chamar `saveUserDoc`;
+	- usuario encontrado deve alternar `user.ativo` antes de `saveUserDoc`;
+	- `saveUserDoc` deve receber o `user` mutado correto;
+	- erro de `saveUserDoc` deve preservar o contrato atual, se esse contrato ficar claro no harness;
+	- qualquer fallback global deve ficar explicito e documentado.
+- Contrato atual a preservar neste desenho:
+	- usuario inexistente continua rejeitado;
+	- usuario encontrado pode ser ativado ou desativado;
+	- `saveUserDoc` continua sendo o write final;
+	- resposta JSON XHR e redirect nao XHR continuam compativeis;
+	- contrato publico HTTP permanece compativel.
+- Protecao futura desejada neste desenho:
+	- teste estrutural deve congelar `owner -> lookup -> service -> saveUserDoc`;
+	- teste contratual leve deve cobrir usuario inexistente;
+	- teste contratual leve deve cobrir usuario ativo virando inativo;
+	- teste contratual leve deve cobrir usuario inativo virando ativo;
+	- teste contratual leve deve cobrir `saveUserDoc` recebendo `user` mutado;
+	- teste contratual leve deve cobrir erro de `saveUserDoc`, se o contrato atual ficar claro;
+	- o teste nao deve abrir `userController` nem `api.db.js` como big-bang.
+- Tipo de teste recomendado neste desenho:
+	- estrutural mais runtime contratual leve com `stubs` ou `mocks`;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura consolidada neste desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico;
+	- nao abrir `userController`;
+	- nao abrir `api.db.js`;
+	- nao alterar contrato HTTP neste momento.
+- Respostas objetivas deste desenho:
+	- a semantica inicial de `toggle` deve ser tratada como `HIBRIDO_AUDITAR`, com presuncao operacional de ramo administrativo global legitimo somente quando isso ficar explicitamente documentado e congelado pela protecao;
+	- a semantica inicial do write por `id` deve ser tratada como `RISCO_ADMIN_WRITE_GLOBAL_POTENCIAL`, nao como bug confirmado e nao como global legitimo automatico;
+	- a cobertura atual nao e suficiente para fechamento documental final, porque ainda nao congela a semantica tenant-aware especifica do slice;
+	- o corredor precisa de teste adicional focal;
+	- o criterio para fechar o corredor sera obter uma protecao focal verde que deixe explicito se o fallback global permanece aceitavel ou se o corredor exige cerca local mais forte, sem regressao do contrato HTTP observado;
+	- nao se deve abrir `userController` ou `api.db.js` como big-bang porque o slice atual ja e local, pequeno e falsificavel, e ampliar a fronteira agora misturaria concerns de owner, bridge e escopo global difuso antes de provar a necessidade.
+- Conclusao operacional deste desenho:
+	- a proxima etapa correta e criar a protecao tenant-aware focal de `toggleUsuarioExecutionService`;
+	- refatoracao minima so deve ser discutida depois da protecao, se houver falha material demonstrando perda de limite semantico.
+- Limites explicitos desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designToggleUsuarioExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=toggleUsuarioExecutionService
+	- recommendedNextAct=createToggleUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- toggleUsuarioExecutionServiceTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=toggleUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designToggleUsuarioExecutionServiceTenantAwareProtection
+	- recommendedNextAct=createToggleUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
