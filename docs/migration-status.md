@@ -8171,6 +8171,34 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da execucao da protecao tenant-aware de `toggleUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-toggle-usuario-tenant-aware-protection.test.js`.
+- Resultado consolidado da execucao nesta rodada:
+	- `tests=6`;
+	- `suites=0`;
+	- `pass=2`;
+	- `fail=4`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico consolidado apos esta execucao:
+	- a falha observada ficou localizada no harness do teste novo, nao em evidencia nova de regressao em `src`;
+	- o caso estrutural falhou porque o matcher atual nao encontrou a mutacao `user.ativo = !user.ativo;` no bloco do service como esperado pelo harness;
+	- os tres casos runtime do service falharam com `SyntaxError: Unexpected token 'return'` durante a montagem da funcao por `vm`, indicando problema local na extracao ou composicao do bloco do service no proprio teste;
+	- os dois cenarios do owner permaneceram verdes, o que preserva a leitura de que o corredor observado ainda nao apresentou bug confirmado em `src` neste microcorte.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte apos a falha;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma correcao automatica foi aplicada.
+- Encaminhamento desta rodada:
+	- a falha foi registrada sem correcao automatica;
+	- a proxima tentativa, se aprovada, deve primeiro ajustar o harness ou matcher da protecao no proprio teste antes de reavaliar qualquer necessidade de alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
