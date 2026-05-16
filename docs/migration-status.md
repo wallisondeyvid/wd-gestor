@@ -5333,6 +5333,136 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao usa Portal;
 	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `resetPasswordRenderDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada: `resetPasswordRenderDataFacade`.
+- Arquivo principal diagnosticado nesta rodada: `src/modules/gestor/app/data/auth/resetPasswordRenderDataFacade.js`.
+- Cadeia viva identificada neste diagnostico:
+	- `authController.renderResetPassword`;
+	- `loadResetPasswordRenderModelService`;
+	- `resetPasswordRenderDataFacade`.
+- Funcoes sensiveis identificadas neste diagnostico:
+	- `loadPasswordResetTokenData`;
+	- `loadPasswordResetUserNameData`.
+- Onde entra o token neste corredor:
+	- o token entra por `req.params.token` em `authController.renderResetPassword`;
+	- o controller delega o token para `loadResetPasswordRenderModelService({ token })`;
+	- o service usa `loadPasswordResetTokenData({ token })` como primeira leitura material do corredor.
+- Onde ocorre o lookup auxiliar por `userId`:
+	- o lookup auxiliar ocorre dentro de `loadResetPasswordRenderModelService`;
+	- ele so e tentado depois da leitura do token e depois do gate de invalido/expirado;
+	- o service resolve `userIdRef` a partir do password reset e chama `loadPasswordResetUserNameData({ userId: userIdRef })`;
+	- o facade delega esse lookup para `findUserByIdSelectRepo` com `GLOBAL_SCOPE` explicito.
+- Pontos sensiveis consolidados neste diagnostico:
+	- leitura de token de reset por token;
+	- leitura auxiliar de usuario por `userId`;
+	- uso explicito de `GLOBAL_SCOPE`;
+	- distincao entre token global legitimo de auth e projecao auxiliar de usuario;
+	- render de reset sem executar alteracao de senha.
+- Classificacao consolidada deste corredor:
+	- `HIBRIDO_AUDITAR`;
+	- `RISCO_READ_ONLY_AUTH_RENDER_POTENCIAL`.
+- Risco suspeito consolidado neste diagnostico:
+	- `GLOBAL_SCOPE` pode ser legitimo para o token de reset, porque o token faz parte do corredor global de identidade/auth;
+	- o lookup de usuario por `userId` no render pode ampliar a superficie auxiliar se permanecer sem cerca local recente;
+	- o risco desta fatia e read-only/render, nao write de reset;
+	- o risco material e a fronteira semantica entre identidade global e lookup auxiliar derivado.
+- Por que este corredor pode ser identidade global legitima:
+	- o token de reset pertence ao fluxo global de recuperacao de senha do auth;
+	- o facade nao decide contexto operacional por unidade nem executa write contextual;
+	- o controller e o service apenas carregam o modelo de render do reset e devolvem o contrato HTTP atual.
+- Por que este corredor pode ser perigoso em tenant-aware:
+	- a mesma borda read-only mistura o token global com uma segunda leitura de usuario por `userId`;
+	- essa segunda leitura auxiliar ainda usa `GLOBAL_SCOPE` explicito e nao possui cerca local recente neste microcorte;
+	- se a fronteira semantica nao ficar congelada, a projecao auxiliar pode virar precedente difuso para lookup global alem do necessario ao render.
+- Comportamento atual a preservar neste diagnostico:
+	- o render de reset continua funcionando;
+	- token valido continua carregando modelo de render;
+	- token invalido ou expirado continua rejeitado conforme o contrato atual;
+	- o nome do usuario continua sendo exibido quando aplicavel;
+	- nenhum reset de senha e executado nesse corredor;
+	- nenhum Mongo real e usado;
+	- nenhum contrato publico HTTP e alterado.
+- Cobertura direta atual identificada neste diagnostico:
+	- existe teste adjacente em `tests/gestor-auth-recovery-reset-token-owner-structural-seam.test.js`;
+	- esse teste cobre a delegacao de `authController.renderResetPassword` para `loadResetPasswordRenderModelService`;
+	- o teste tambem preserva o shape minimo de render HTTP no seam controller -> service;
+	- nao ha hoje, nesta trilha recente, protecao local da facade para `GLOBAL_SCOPE` e para o lookup auxiliar por `userId`.
+- Lacuna atual consolidada neste diagnostico:
+	- a cobertura existente para na delegacao controller -> service;
+	- ainda nao ha protecao local recente da facade que congele `loadPasswordResetTokenData` como entrada principal do corredor;
+	- ainda nao ha protecao local recente da regra de que `loadPasswordResetUserNameData` so deve ocorrer apos token valido com `user_id`.
+- Comportamento a proteger por teste em etapa futura:
+	- `loadPasswordResetTokenData` usa o token como chave do corredor de auth;
+	- `loadPasswordResetUserNameData` so ocorre apos token valido com `user_id`;
+	- o lookup auxiliar por `userId` fica local ao render de reset;
+	- token invalido ou expirado nao deve disparar lookup auxiliar indevido;
+	- o microcorte nao deve abrir `auth.db.js` como big-bang.
+- Hipotese de protecao futura consolidada neste diagnostico:
+	- primeiro desenhar protecao/documentacao do contrato local;
+	- depois avaliar teste estrutural sobre a facade;
+	- depois avaliar teste contratual leve com stubs para token valido, token expirado e ausencia de usuario;
+	- sempre sem Mongo real;
+	- sempre sem query real;
+	- sem alterar `src` antes da decisao documental.
+- Criterio de sucesso de uma protecao futura:
+	- congelar o token como entrada material do corredor;
+	- congelar que o lookup auxiliar por `userId` nao dispara para token invalido ou expirado;
+	- congelar que o nome do usuario e apenas projecao auxiliar de render;
+	- preservar o contrato HTTP publico atual sem introduzir write nem refatoracao ampla.
+- Conclusao deste diagnostico:
+	- nao ha bug confirmado nesta rodada;
+	- o corredor deve permanecer classificado como `HIBRIDO_AUDITAR` com `RISCO_READ_ONLY_AUTH_RENDER_POTENCIAL`;
+	- a proxima etapa deve desenhar protecao/teste, nao refatoracao minima e nao fechamento documental imediato.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada deste diagnostico:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseResetPasswordRenderDataFacadeTenantAwareTarget
+	- selectedTechnicalTarget=resetPasswordRenderDataFacade
+	- recommendedNextAct=designResetPasswordRenderDataFacadeTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste diagnostico:
+	- resetPasswordRenderDataFacadeTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=resetPasswordRenderDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseResetPasswordRenderDataFacadeTenantAwareTarget
+	- recommendedNextAct=designResetPasswordRenderDataFacadeTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao/teste ou fechamento documental antes de qualquer alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
