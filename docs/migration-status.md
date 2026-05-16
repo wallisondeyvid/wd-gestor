@@ -32102,6 +32102,70 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- proximo ato podera ser push consolidado dos commits locais desta frente somente com autorizacao explicita do usuario;
 	- se nao houver autorizacao explicita, continuar sem push.
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `toggleUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual consolidada nesta rodada: `tenantArchitectureContinuation`.
+- Corredores fechados imediatamente antes desta selecao:
+	- `unlockUsuarioExecutionService` protegido e validado sem refatoracao em `src`;
+	- `toggleUsuarioExecutionService` protegido e validado sem refatoracao em `src`.
+- Candidatos considerados nesta triagem curta:
+	- `createFeedbackPolicyOwnershipCore` em `src/modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js`;
+	- `deleteUsuarioExecutionService` em `src/modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js`;
+	- `getUsuarioAtualProfileOwnerService` em `src/modules/gestor/app/services/usuarios/getUsuarioAtualProfileOwner.service.js`;
+	- `statusUsuarioLockStateOwnerService` em `src/modules/gestor/app/services/usuarios/statusUsuarioLockStateOwner.service.js`;
+	- `atualizarSenhaUsuarioExecutionService` em `src/modules/gestor/app/services/usuarios/atualizarSenhaUsuarioExecution.service.js`;
+	- `updateUsuarioAdminExecutionService` em `src/modules/gestor/app/services/usuarios/updateUsuarioAdminExecution.service.js`;
+	- `deleteUnidadeExecutionService` em `src/modules/gestor/app/services/unidades/deleteUnidadeExecution.service.js`;
+	- `updateFeedbackWidgetVisibilityService` em `src/modules/gestor/app/services/widgetSettings/updateFeedbackWidgetVisibility.service.js`;
+	- `deleteModuloByIdService` e `updateModuloByIdService` em `src/modules/gestor/app/services/modulos/`.
+- Candidatos recusados ou adiados nesta triagem:
+	- `deleteUsuarioExecutionService`: ja apareceu como menos prioritario porque o cleanup de vinculo ja passa unidade explicita e a bridge local esta mais cercada;
+	- `getUsuarioAtualProfileOwnerService`: o callsite vivo principal continua ancorado em `sessionUserId`, deixando o fallback por e-mail com menor materialidade tenant-aware agora;
+	- `statusUsuarioLockStateOwnerService`: owner derivativo, sem write e sem novo lookup material por tenant;
+	- `atualizarSenhaUsuarioExecutionService`: corredor mais proximo de identidade global e auth hibrido do que do menor residual administrativo local;
+	- `updateUsuarioAdminExecutionService`: mistura alteracao de identidade global com administracao ampla em superficie mais aberta do que o microcorte atual;
+	- `deleteUnidadeExecutionService`: service fino demais e acoplado a unidade como catalogo administrativo/global, com menor ganho tenant-aware local neste snapshot;
+	- `updateFeedbackWidgetVisibilityService`: corredor de widget settings explicitamente global/configuracional, fora da melhor faixa de risco tenant-aware material agora;
+	- `deleteModuloByIdService` e `updateModuloByIdService`: modulagem administrativa global legitima, com menor tensao tenant-aware do que feedback contextual;
+	- `listLockedUsersService`: permanece suficientemente protegido pelo corredor ja documentado `UserRepository -> api.db.findUsersLockedAfterSelectLeanFromDb -> listLockedUsersService -> userController.listLockedUsers`, sem necessidade de reabertura agora.
+- Proximo alvo tecnico residual selecionado nesta rodada: `createFeedbackPolicyOwnershipCore`.
+- Motivos consolidados da selecao:
+	- e um core pequeno, local e vivo, sem exigir reabertura de `api.db.js`, `auth.db.js`, wrappers amplos ou controllers grandes;
+	- concentra uma decisao tenant-aware material de ownership e acesso administrativo no dominio de feedback, incluindo `ensureAdminAccess`, `ensureCreatorOwnership` e `buildMyFeedbackFilter`;
+	- recebe `scopedUnitId` canonico e produz `feedbackQueryOptions`, `feedbackMutationOptions` e filtros de ownership, ficando exatamente na borda semantica onde contexto por unidade e fallback global legitimo precisam permanecer explicitamente cercados;
+	- possui varios callsites vivos no mesmo corredor de feedback, incluindo `feedbackListApiController`, `feedbackDetailApiController`, `feedbackStatusApiController`, `feedbackRespostaApiController`, `feedbackDeleteApiController`, `feedbackUploadApiController`, `feedbackMyDetailApiController` e `feedbackMyListApiController`;
+	- ja conta com cobertura adjacente pequena e local em `tests/gestor-feedback-policy-ownership-structural.test.js` e `tests/gestor-feedback-upload-owner-structural-seam.test.js`, o que permite um proximo microcorte focal sem Mongo real.
+- Risco tenant-aware suspeito consolidado desta selecao:
+	- se a semantica de `scopedUnitId` ou do branch global/contextual ficar implicita demais, o core pode voltar a mascarar a diferenca entre acesso administrativo global legitimo e ownership contextual por unidade no dominio de feedback.
+- Lacuna de protecao atual consolidada:
+	- embora existam testes estruturais adjacentes, ainda nao ha neste ledger um microcorte proprio congelando explicitamente o contrato tenant-aware desse core como unidade semantica principal do corredor de ownership/policy de feedback.
+- Escopo permitido do proximo microcorte:
+	- diagnostico read-only do contrato tenant-aware de `createFeedbackPolicyOwnershipCore`;
+	- desenho de protecao estrutural e runtime leve sem Mongo real;
+	- eventual teste focal pequeno restrito ao proprio core e aos callsites adjacentes minimos.
+- Escopo proibido do proximo microcorte:
+	- refatoracao ampla de controllers de feedback;
+	- reabertura de `api.db.js`, `auth.db.js` ou widget settings;
+	- alteracao de rotas, contratos HTTP, Portal, scripts, bootstrap ou PostgreSQL.
+- Proximo ato recomendado apos esta selecao: `diagnoseCreateFeedbackPolicyOwnershipCoreTenantAwareTarget`.
+- Gates:
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterToggleUsuario
+	- selectedTechnicalTarget=createFeedbackPolicyOwnershipCore
+	- recommendedNextAct=diagnoseCreateFeedbackPolicyOwnershipCoreTenantAwareTarget
+	- nextTenantAwareTargetSelected=true
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- tenantDbRealOpened=false
+	- registryRealChanged=false
+	- operationalSurfaceCreated=false
+	- portalUsageApproved=false
+	- postgresMigrationApproved=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria:
+	- esta selecao documental nao autoriza alteracao funcional imediata;
+	- esta selecao documental nao autoriza Mongo real, query real ou escrita real;
+	- esta selecao documental nao autoriza reabrir corredores ja fechados somente por proximidade tematica;
+	- o proximo passo deve permanecer pequeno, read-only e falsificavel dentro do corredor de feedback ownership.
+
 
 
 
