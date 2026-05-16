@@ -5622,6 +5622,92 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao usa Portal;
 	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `authContextReadDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual consolidada nesta selecao: `tenantArchitectureContinuation`.
+- Corredores ja fechados nesta rodada:
+	- `feedbackStatusDataFacade` protegido, refatorado e validado;
+	- `recursosContextDataFacade` protegido e fechado sem refatoracao imediata;
+	- `funcionarioDeletePostDataFacade` refatorado, protegido e validado como tenant-aware minimo;
+	- `createUsuarioExecutionService` refatorado, protegido e validado como tenant-aware minimo;
+	- `updateUsuarioExecutionService` protegido e validado sem refatoracao em `src`;
+	- `checkUsuarioEmailOwnerService` protegido e validado sem refatoracao em `src`;
+	- `authContextReadDataFacade` fechado documentalmente como global legitimo de identidade/auth.
+- Candidatos considerados nesta selecao:
+	- `passwordRecoveryRequestDataFacade` em `src/modules/gestor/app/data/auth/passwordRecoveryRequestDataFacade.js`;
+	- `primeiroAcessoExecutionDataFacade` em `src/modules/gestor/app/data/auth/primeiroAcessoExecutionDataFacade.js`;
+	- `getUsuarioAtualProfileOwnerService` em `src/modules/gestor/app/services/usuarios/getUsuarioAtualProfileOwner.service.js`;
+	- `unidadesClusterDataFacade` em `src/modules/gestor/app/data/unidades/unidadesClusterDataFacade.js`;
+	- `funcionariosPageBundleDataFacade` em `src/modules/gestor/app/data/funcionarios/funcionariosPageBundleDataFacade.js`.
+- Candidatos recusados e motivo curto:
+	- `primeiroAcessoExecutionDataFacade`: corredor pequeno, mas predominantemente identidade global e troca de senha, com menor materialidade tenant-aware neste momento;
+	- `getUsuarioAtualProfileOwnerService`: corredor pequeno, mas o fallback por e-mail perde materialidade no callsite vivo principal, que exige `sessionUserId` valido antes da delegacao;
+	- `unidadesClusterDataFacade`: continua mais proximo de lookup/cluster administrativo e ramo global privilegiado ja documentado do que de risco tenant-aware residual prioritario;
+	- `funcionariosPageBundleDataFacade`: corredor real, mas largo demais para microcorte local e mistura bundles de pagina, catálogos e listagem ampla.
+- Proximo alvo tecnico residual selecionado nesta rodada: `passwordRecoveryRequestDataFacade`.
+- Motivo consolidado da selecao:
+	- o alvo e pequeno, vivo, local e testavel;
+	- o corredor e chamado por `requestPasswordRecoveryService` e `listRecoveryEmailsByCpfService`, ambos com callsite vivo em `authController`;
+	- o seam mistura identidade global com lookup via funcionario por CPF, o que toca superficie hibrida entre auth global legitimo e vinculo contextual por unidade;
+	- o corredor evita big-bang em `auth.db.js`, mas ainda ancora risco tenant-aware material o bastante para microcorte proprio.
+- Risco tenant-aware suspeito consolidado desta selecao:
+	- a leitura global de usuarios por CPF e o fallback por funcionarios de mesmo CPF podem ampliar superficie de descoberta/autorizacao no eixo auth;
+	- o uso de `GLOBAL_SCOPE` nesse corredor pode acabar tratando vinculo por funcionario como identidade global sem matriz semantica propria;
+	- o endpoint auxiliar de listar e-mails por CPF reforca que se trata de corredor vivo e sensivel, ainda que read-mostly.
+- Lacuna de protecao atual consolidada desta selecao:
+	- nao foi identificada nesta rodada uma cerca estrutural local equivalente as protecoes recentes dos corredores fechados;
+	- o corredor parece pequeno o bastante para diagnostico e eventual protecao estrutural/documental sem Mongo real;
+	- ainda falta decidir documentalmente se o fallback via funcionario por CPF e compatibilidade legitima do auth ou resquicio tenant-aware a cercar mais de perto.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proximo ato recomendado apos esta selecao: `diagnosePasswordRecoveryRequestDataFacadeTenantAwareTarget`.
+- Decisao principal consolidada desta selecao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterAuthContextRead
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- recommendedNextAct=diagnosePasswordRecoveryRequestDataFacadeTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta selecao:
+	- nextTenantAwareTechnicalTargetAfterAuthContextReadSelected=true
+	- selectedTechnicalTarget=passwordRecoveryRequestDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterAuthContextRead
+	- recommendedNextAct=diagnosePasswordRecoveryRequestDataFacadeTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
