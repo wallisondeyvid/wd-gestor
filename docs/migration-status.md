@@ -6895,6 +6895,88 @@ Checkpoint tenant enforcement atual:
 	- a falha foi registrada sem correcao automatica;
 	- este microcorte encerra aqui para revisao local do limite semantico e da protecao focal antes de nova tentativa.
 
+- Checkpoint documental curto do desenho da refatoracao minima de `primeiroAcessoExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo desta refatoracao minima:
+	- `primeiroAcessoExecutionService`.
+- Arquivo futuro a alterar nesta proposta:
+	- `src/modules/gestor/app/services/auth/primeiroAcessoExecution.service.js`.
+- Teste focal afetado nesta proposta:
+	- `tests/gestor-primeiro-acesso-execution-tenant-aware-protection.test.js`.
+- Falha protetiva confirmada nesta rodada:
+	- `userId` ausente ainda permite alcancar `completePrimeiroAcessoData` quando `loadPrimeiroAcessoUserData` devolve usuario valido.
+- Falha de harness ou matcher consolidada nesta rodada:
+	- a regex estrutural do teste deve ser ajustada futuramente para casar com o formato real do bloco do service.
+- Causa provavel consolidada desta rodada:
+	- o fluxo atual chama `loadPrimeiroAcessoUserData({ userId, maxTimeMS })` sem gate explicito previo para `userId` ausente;
+	- depois, se o load devolver usuario valido, o service segue ate `completePrimeiroAcessoData`.
+- Refatoracao minima proposta nesta rodada:
+	- no inicio de `primeiroAcessoExecutionService`, antes do lookup, validar `userId` material;
+	- se nao houver `userId`, retornar `{ kind: 'not_found' }` ou contrato equivalente ja usado para impedir primeiro acesso;
+	- manter `loadPrimeiroAcessoUserData` como primeira leitura material quando `userId` existe;
+	- manter gate de usuario ausente;
+	- manter gate de usuario sem `primeiro_acesso` pendente;
+	- manter `completePrimeiroAcessoData` recebendo `userId` e `senhaHash`;
+	- nao alterar data access;
+	- nao alterar `authController`;
+	- nao alterar `package.json`.
+- Ajuste futuro necessario no teste focal:
+	- ajustar apenas a regex estrutural para casar com o bloco real;
+	- preservar a protecao de `userId` ausente sem write.
+- Comportamento a preservar nesta refatoracao minima:
+	- primeiro acesso valido continua funcionando;
+	- usuario ausente continua rejeitado;
+	- usuario sem `primeiro_acesso` pendente continua rejeitado;
+	- erro de `complete` continua preservando contrato;
+	- owner continua hasheando antes de delegar;
+	- contrato publico HTTP permanece compativel.
+- Risco da refatoracao minima consolidado nesta rodada:
+	- baixo e localizado no service;
+	- deve ser validado pelo teste focal ja criado;
+	- depois deve rodar testes adjacentes de primeiro acesso.
+- Diagnostico consolidado desta proposta:
+	- a falha de matcher e local ao harness do teste e nao exige abertura de `src` por si so;
+	- a lacuna de `userId` ausente e real e fica localizada no service;
+	- a menor mudanca coerente e introduzir o gate explicito de `userId` antes do lookup e do write derivado.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proximo ato recomendado apos esta proposta:
+	- `refactorPrimeiroAcessoExecutionServiceTenantAwareMinimal`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designPrimeiroAcessoExecutionServiceTenantAwareMinimalRefactor
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- recommendedNextAct=refactorPrimeiroAcessoExecutionServiceTenantAwareMinimal
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- primeiroAcessoExecutionServiceTenantAwareMinimalRefactorDesigned=true
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designPrimeiroAcessoExecutionServiceTenantAwareMinimalRefactor
+	- recommendedNextAct=refactorPrimeiroAcessoExecutionServiceTenantAwareMinimal
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
