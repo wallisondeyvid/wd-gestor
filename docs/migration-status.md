@@ -33111,6 +33111,61 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto da validacao verde da protecao tenant-aware de `processCreateFeedbackCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-feedback-create-tenant-aware-protection.test.js`
+- Resultado consolidado desta execucao focal:
+	- `tests=4`
+	- `suites=0`
+	- `pass=4`
+	- `fail=0`
+	- `skipped=0`
+	- `todo=0`
+	- `cancelled=0`
+- Diagnostico consolidado desta validacao:
+	- a protecao focal de `processCreateFeedbackCore` passou integralmente no recorte atual;
+	- o handoff `feedbackCreateApiController -> processCreateFeedbackCore -> createFeedback` permaneceu protegido;
+	- o repasse material de `scopedUnitId` e o shape atual de `status`, `criadoPor` e `origem` ficaram verdes sem evidencia nova de bug em `src`.
+- Confirmacoes desta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Proximo ato recomendado apos esta validacao: `runProcessCreateFeedbackCoreAdjacentTestsAfterProtection`.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=runProcessCreateFeedbackCoreTenantAwareProtectionTest`;
+	- `selectedTechnicalTarget=processCreateFeedbackCore`;
+	- `recommendedNextAct=runProcessCreateFeedbackCoreAdjacentTestsAfterProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `processCreateFeedbackCoreTenantAwareProtectionTestRun=true`
+	- `processCreateFeedbackCoreTenantAwareProtectionTestPassed=true`
+	- `selectedTechnicalTarget=processCreateFeedbackCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=runProcessCreateFeedbackCoreTenantAwareProtectionTest`
+	- `recommendedNextAct=runProcessCreateFeedbackCoreAdjacentTestsAfterProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
