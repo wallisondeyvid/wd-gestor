@@ -4712,6 +4712,90 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao usa Portal;
 	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `updateUsuarioExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual consolidada nesta selecao: `tenantArchitectureContinuation`.
+- Corredores ja fechados nesta rodada:
+	- `feedbackStatusDataFacade` protegido, refatorado e validado;
+	- `recursosContextDataFacade` protegido e fechado sem refatoracao imediata;
+	- `funcionarioDeletePostDataFacade` refatorado, protegido e validado como tenant-aware minimo;
+	- `createUsuarioExecutionService` refatorado, protegido e validado como tenant-aware minimo;
+	- `updateUsuarioExecutionService` protegido e validado sem refatoracao em `src`.
+- Candidatos considerados nesta selecao:
+	- `checkUsuarioEmailOwnerService` em `src/modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js`;
+	- `deleteUsuarioExecutionService` em `src/modules/gestor/app/services/usuarios/deleteUsuarioExecution.service.js`;
+	- `authContextReadDataFacade` em `src/modules/gestor/app/data/auth/authContextReadDataFacade.js`;
+	- `unidadesDiretoresPageDataFacade` em `src/modules/gestor/app/data/unidades/unidadesDiretoresPageDataFacade.js`;
+	- `funcionariosPageBundleDataFacade` em `src/modules/gestor/app/data/funcionarios/funcionariosPageBundleDataFacade.js`.
+- Candidatos recusados e motivo curto:
+	- `deleteUsuarioExecutionService`: corredor pequeno, mas ja possui cercamento estrutural e bridge focada para cleanup com unidade explicita, ficando menos prioritario neste snapshot;
+	- `authContextReadDataFacade`: apesar de pequeno, continua semanticamente acoplado ao eixo auth-context e memberships, com risco de reabrir uma frente mais larga do que o microcorte atual;
+	- `unidadesDiretoresPageDataFacade`: mistura leitura global legitima com apoio de pagina administrativa, ficando mais proximo de catalogo global e page seam do que de risco tenant-aware residual prioritario;
+	- `funcionariosPageBundleDataFacade`: permanece amplo demais, com bundle de pagina e multiplos catálogos no mesmo seam.
+- Proximo alvo tecnico residual selecionado nesta rodada: `checkUsuarioEmailOwnerService`.
+- Motivo consolidado da selecao:
+	- o alvo e pequeno, vivo, local e testavel no mesmo dominio de usuarios administrativos ja trabalhado nesta frente;
+	- o corredor e chamado por `GET /gestor/api/usuarios/check-email` em `userController.js`, que ja propaga `isGlobalScope`, `hasAuthoritativeAuthContext` e `scopedUnitId` ao owner service;
+	- o service filtra `visibleMemberships` por unidades permitidas quando o auth-context autoritativo existe e o escopo deixa de ser global;
+	- a cobertura atual em teste congela apenas os ramos semanticos `exists=false` e `exists=true`, mas ainda nao congela o branch tenant-aware que limita `membershipsSummary`, `linkedUnidadeIds` e `blockedUnidadeIds` ao cluster permitido.
+- Risco tenant-aware suspeito consolidado desta selecao:
+	- um scoped admin contextual pode observar memberships fora do cluster permitido se o filtro por `scopedUnitId` deixar de ser aplicado ou for relaxado;
+	- `linkedUnidadeIds` e `blockedUnidadeIds` podem materializar visibilidade mais ampla do que o necessario se o branch contextual autoritativo perder o filtro por unidades permitidas;
+	- o risco nao esta no ramo global legitimo de `master` ou `admin`, mas no ramo contextual autoritativo que precisa diferenciar visao global legitima de restricao tenant-aware real.
+- Lacuna de protecao atual consolidada desta selecao:
+	- existe teste estrutural em `tests/gestor-user-check-email-owner-structural-seam.test.js`;
+	- esse teste cobre apenas os ramos `exists=false` e `exists=true`;
+	- nao ha protecao tenant-aware dedicada para congelar o filtro de memberships por `scopedUnitId` e `hasAuthoritativeAuthContext` no branch contextual do owner service.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proximo ato recomendado apos esta selecao: `diagnoseCheckUsuarioEmailOwnerServiceTenantAwareTarget`.
+- Decisao principal consolidada desta selecao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterUpdateUsuario
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- recommendedNextAct=diagnoseCheckUsuarioEmailOwnerServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta selecao:
+	- nextTenantAwareTechnicalTargetAfterUpdateUsuarioSelected=true
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterUpdateUsuario
+	- recommendedNextAct=diagnoseCheckUsuarioEmailOwnerServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
