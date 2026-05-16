@@ -6607,6 +6607,117 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria desta selecao: esta selecao apenas escolhe o proximo alvo; esta selecao nao altera codigo; esta selecao nao altera testes; esta selecao nao executa refatoracao; esta selecao nao cria comando; esta selecao nao conecta Mongo real; esta selecao nao executa query real; esta selecao nao gera relatorio; esta selecao nao inicia PostgreSQL; esta selecao nao usa Portal; a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `primeiroAcessoExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada:
+	- `primeiroAcessoExecutionService`.
+- Arquivo principal diagnosticado nesta rodada:
+	- `src/modules/gestor/app/services/auth/primeiroAcessoExecution.service.js`.
+- Data access envolvido nesta rodada:
+	- `src/modules/gestor/app/data-access/auth/primeiroAcessoExecutionDataAccess.js`.
+- Cadeia viva identificada nesta rodada:
+	- `authController` no owner de `POST /gestor/primeiroacesso` recebe `req.session.user.id`, valida campos e chama `primeiroAcessoExecutionService`;
+	- `primeiroAcessoExecutionService` recebe `userId`, `senhaHash` e `maxTimeMS`;
+	- `primeiroAcessoExecutionDataAccess` executa a leitura de usuario por `userId` e o write final de senha/flags.
+- Funcoes sensiveis identificadas nesta rodada:
+	- `primeiroAcessoExecutionService`;
+	- leitura de usuario por `userId` em `loadPrimeiroAcessoUserData`;
+	- hash da senha no owner `primeiroAcessoPost` via `bcrypt.hash(senha, 10)`;
+	- write final de senha e flags de primeiro acesso em `completePrimeiroAcessoData`.
+- Pontos sensiveis consolidados nesta rodada:
+	- identificacao do usuario por id;
+	- uso de `GLOBAL_SCOPE` no data access;
+	- hash da senha;
+	- conclusao do primeiro acesso;
+	- transicao de identidade global legitima para write por `userId`.
+- Onde entra o `userId` neste corredor:
+	- o `userId` entra no owner `primeiroAcessoPost` por `req.session.user.id` e e repassado ao service como identificador material do proprio usuario autenticado.
+- Onde ocorre o lookup do usuario neste corredor:
+	- o lookup ocorre em `loadPrimeiroAcessoUserData({ userId, maxTimeMS })`, que usa `findUserByIdRepo` com `GLOBAL_SCOPE` e retorna apenas `_id`, `primeiro_acesso` e `senha_provisoria`.
+- Onde ocorre o hash neste corredor:
+	- o hash ocorre no owner `primeiroAcessoPost`, antes da chamada ao service, por `bcrypt.hash(senha, 10)`.
+- Onde ocorre o write final neste corredor:
+	- o write final ocorre em `completePrimeiroAcessoData({ userId, senhaHash })`, que usa `UserRepository({ unitScope: GLOBAL_SCOPE }).updateById(...)` para gravar a senha nova e limpar `primeiro_acesso` e `senha_provisoria`.
+- Classificacao consolidada deste diagnostico:
+	- `HIBRIDO_AUDITAR`;
+	- `RISCO_AUTH_WRITE_DERIVADO_POTENCIAL`.
+- Risco suspeito consolidado deste diagnostico:
+	- `userId` pode ser identidade global legitima no eixo auth;
+	- o write por `userId` deve permanecer local ao fluxo autorizado de primeiro acesso e nao virar precedente generico para write global tenant-aware;
+	- ausencia de usuario nao pode disparar write;
+	- ausencia de `userId` material nao pode disparar write;
+	- hash deve ocorrer antes do write;
+	- erro do write deve preservar contrato.
+- Por que `userId` pode ser identidade global legitima neste corredor:
+	- o fluxo de primeiro acesso nasce de sessao autenticada e trata a identidade global do proprio usuario, nao uma selecao contextual por unidade;
+	- o objetivo funcional e concluir a ativacao da credencial do usuario autenticado, o que permanece no dominio de identidade/auth.
+- Por que o write derivado pode ser perigoso neste corredor:
+	- o data access usa `GLOBAL_SCOPE` explicito tanto na leitura quanto no update final;
+	- sem cerca local dedicada, a mutacao por `userId` pode parecer write global difuso em vez de projecao derivada estritamente autorizada do fluxo de primeiro acesso.
+- Comportamento atual a preservar neste corredor:
+	- primeiro acesso continua funcionando;
+	- a senha e hasheada antes da conclusao;
+	- usuario inexistente continua rejeitado;
+	- contrato publico HTTP permanece preservado;
+	- nenhum Mongo real conectado.
+- Cobertura direta identificada hoje neste corredor:
+	- existem costuras adjacentes e cobertura de contrato funcional em `tests/gestor-auth-primeiro-acesso-post-structural-seam.test.js` e `tests/gestor-auth-primeiro-acesso-post-runtime-contract.test.js`;
+	- ainda nao ha protecao focal tenant-aware dedicada equivalente aos microcortes recentes de recovery;
+	- portanto nao ha cobertura direta hoje para congelar explicitamente a ordem `userId -> lookup -> gate -> hash -> write` sob a regua tenant-aware local.
+- Lacuna atual de protecao consolidada nesta rodada:
+	- existem costuras adjacentes, mas ainda nao ha protecao focal dedicada deste corredor;
+	- falta congelar a ordem `userId -> lookup -> gate -> hash -> write`;
+	- ainda falta isolar o corredor sem reabrir `auth.db.js` ou o data access como big-bang.
+- Comportamento a proteger por teste em etapa futura:
+	- `userId` ausente nao chama write;
+	- usuario nao encontrado nao chama write;
+	- usuario valido chama hash antes do write;
+	- write recebe `userId` e `senhaHash` corretos;
+	- erro de write preserva contrato;
+	- sem abrir `auth.db.js` ou o data access como big-bang.
+- Hipotese de protecao futura consolidada nesta rodada:
+	- criar teste estrutural mais runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Criterio de sucesso de uma protecao futura neste corredor:
+	- provar que a ausencia de `userId` material ou de usuario carregado impede `completePrimeiroAcessoData`;
+	- provar que o caminho valido preserva a ordem material correta entre lookup, gate, hash e write;
+	- provar que o contrato de erro de write continua preservado no owner.
+- Encaminhamento recomendado deste diagnostico:
+	- a proxima etapa deve desenhar protecao/teste antes de qualquer refatoracao minima;
+	- nao ha bug confirmado ainda neste recorte, apenas risco suspeito a cercar documentalmente e depois por protecao focal.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnosePrimeiroAcessoExecutionServiceTenantAwareTarget
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- recommendedNextAct=designPrimeiroAcessoExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- primeiroAcessoExecutionServiceTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnosePrimeiroAcessoExecutionServiceTenantAwareTarget
+	- recommendedNextAct=designPrimeiroAcessoExecutionServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste diagnostico: este diagnostico apenas descreve o contrato atual; este diagnostico nao altera codigo; este diagnostico nao altera testes; este diagnostico nao executa refatoracao; este diagnostico nao cria comando; este diagnostico nao conecta Mongo real; este diagnostico nao executa query real; este diagnostico nao gera relatorio; este diagnostico nao inicia PostgreSQL; este diagnostico nao usa Portal; a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
