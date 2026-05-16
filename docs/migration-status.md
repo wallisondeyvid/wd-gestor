@@ -33940,6 +33940,105 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `processUpdateFeedbackRespostaCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem push.
+- Frente atual consolidada nesta selecao:
+	- `tenantArchitectureContinuation`.
+- Corredores ja fechados considerados nesta rodada:
+	- `feedbackStatusDataFacade` protegido, refatorado e validado;
+	- `recursosContextDataFacade` protegido e fechado sem refatoracao imediata;
+	- `funcionarioDeletePostDataFacade` refatorado, protegido e validado;
+	- `createUsuarioExecutionService` refatorado, protegido e validado;
+	- `updateUsuarioExecutionService` protegido e validado sem refatoracao em `src`;
+	- `checkUsuarioEmailOwnerService` protegido e validado sem refatoracao em `src`;
+	- `authContextReadDataFacade` fechado documentalmente como global legitimo de identidade ou auth;
+	- `passwordRecoveryRequestDataFacade` protegido e validado sem refatoracao em `src`;
+	- `resetPasswordRenderDataFacade` protegido e validado sem refatoracao em `src`;
+	- `resetPasswordExecutionService` protegido, refatorado e validado;
+	- `primeiroAcessoExecutionService` protegido, refatorado e validado;
+	- `unlockUsuarioExecutionService` protegido e validado sem refatoracao em `src`;
+	- `toggleUsuarioExecutionService` protegido e validado sem refatoracao em `src`;
+	- `createFeedbackPolicyOwnershipCore` protegido e validado sem refatoracao em `src`;
+	- `processCreateFeedbackCore` protegido e validado sem refatoracao em `src`;
+	- `processUpdateFeedbackRespostaCore` protegido e validado sem refatoracao em `src`.
+- Candidatos considerados nesta selecao:
+	- `createDeleteFeedbackHandler` em `src/modules/gestor/app/controllers/feedbackDeleteApiController.js`;
+	- `processFeedbackDeleteCleanupCore` em `src/modules/gestor/app/controllers/utils/processFeedbackDeleteCleanupCore.js`;
+	- `createUpdateFeedbackRespostaHandler` em `src/modules/gestor/app/controllers/feedbackRespostaApiController.js`;
+	- `api.db.js`, `auth.db.js` e `auth-context.db.js` como superficies amplas de infraestrutura.
+- Candidatos recusados e motivo curto nesta selecao:
+	- `processFeedbackDeleteCleanupCore`: e pequeno e vivo, mas a parte tenant-aware material do corredor de delete acontece antes, no write contextual de exclusao; o core de cleanup concentra blob ou fs e nao o limite semantico principal da mutacao;
+	- `createUpdateFeedbackRespostaHandler`: acabou de ser fechado com protecao focal verde e teste adjacente verde, portanto reabri-lo agora violaria o recorte conservador;
+	- `api.db.js`, `auth.db.js` e `auth-context.db.js`: continuam grandes demais para o proximo microcorte e misturam globais legitimos com infraestrutura compartilhada, caracterizando big-bang desnecessario.
+- Proximo alvo tecnico residual selecionado nesta rodada:
+	- `createDeleteFeedbackHandler`.
+- Arquivo principal do alvo selecionado nesta rodada:
+	- `src/modules/gestor/app/controllers/feedbackDeleteApiController.js`.
+- Vizinho vivo relevante para o proximo microcorte:
+	- `tests/gestor-feedback-delete-owner-structural-seam.test.js`.
+- Motivo consolidado da selecao:
+	- o alvo e pequeno, vivo, local e testavel;
+	- o ponto tenant-aware material do corredor de delete esta no owner curto que recebe `scopedUnitId`, chama `feedbackPolicy.ensureAdminAccess` e delega o write sensivel por `findFeedbackByIdAndDeleteLean(id, access.feedbackMutationOptions)`;
+	- ja existe um teste adjacente estrutural capaz de sustentar microcorte pequeno, mas ainda nao ha protecao focal tenant-aware dedicada congelando o repasse material de `access.feedbackMutationOptions` na mutacao de delete;
+	- isso evita abrir bundles, controllers grandes ou infraestrutura ampla antes de esgotar o slice curto mais discriminante.
+- Risco tenant-aware suspeito consolidado nesta selecao:
+	- a exclusao de feedback pode virar write amplo se o owner deixar de repassar `access.feedbackMutationOptions` materialmente ao `findFeedbackByIdAndDeleteLean`;
+	- `scopedUnitId` e o contexto material do owner nao podem virar dado decorativo no corredor de delete;
+	- o cleanup posterior nao deve ser confundido com a fronteira tenant-aware principal da mutacao.
+- Lacuna de protecao atual consolidada nesta selecao:
+	- `tests/gestor-feedback-delete-owner-structural-seam.test.js` cerca a estrutura do owner e a existencia da seam de cleanup;
+	- ainda nao existe protecao focal pequena congelando o handoff tenant-aware do delete propriamente dito, isto e, `feedbackDeleteApiController -> feedbackPolicy.ensureAdminAccess -> findFeedbackByIdAndDeleteLean(..., access.feedbackMutationOptions)` antes do cleanup.
+- Proximo ato recomendado apos esta selecao:
+	- `diagnoseCreateDeleteFeedbackHandlerTenantAwareTarget`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+- Decisao principal consolidada nesta selecao:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackResposta`;
+	- `selectedTechnicalTarget=createDeleteFeedbackHandler`;
+	- `recommendedNextAct=diagnoseCreateDeleteFeedbackHandlerTenantAwareTarget`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `nextTenantAwareTechnicalTargetAfterFeedbackRespostaSelected=true`
+	- `selectedTechnicalTarget=createDeleteFeedbackHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackResposta`
+	- `recommendedNextAct=diagnoseCreateDeleteFeedbackHandlerTenantAwareTarget`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
