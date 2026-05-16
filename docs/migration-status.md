@@ -32436,6 +32436,58 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- este desenho nao usa Portal;
 	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao da protecao tenant-aware de `createFeedbackPolicyOwnershipCore`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Teste ou protecao tenant-aware criado nesta rodada: `createFeedbackPolicyOwnershipCore`.
+- Arquivo criado nesta rodada:
+	- `tests/gestor-feedback-policy-ownership-tenant-aware-protection.test.js`.
+- Escopo consolidado da protecao criada:
+	- foco estrito em `src/modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js`;
+	- protecao estrutural da seam semantica de policy ou ownership;
+	- protecao runtime contratual leve para branch admin/global;
+	- protecao runtime contratual leve para branch contextual com `scopedUnitId`;
+	- protecao runtime contratual leve para creator ou ownership;
+	- protecao runtime contratual leve para filtro de `meus feedbacks`;
+	- protecao minima de callsites vivos para impedir bypass do core antes de leituras ou writes sensiveis.
+- Garantias registradas desta criacao:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhuma refatoracao foi executada;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhum controller amplo, `api.db.js` ou data access amplo foi aberto como big-bang.
+- Proximo ato recomendado apos esta criacao: `runCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionTest`.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=createCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionTest`;
+	- `selectedTechnicalTarget=createFeedbackPolicyOwnershipCore`;
+	- `recommendedNextAct=runCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createFeedbackPolicyOwnershipCoreTenantAwareProtectionTestCreated=true`
+	- `selectedTechnicalTarget=createFeedbackPolicyOwnershipCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=createCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionTest`
+	- `recommendedNextAct=runCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=true`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
