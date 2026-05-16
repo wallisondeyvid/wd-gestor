@@ -32714,6 +32714,99 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `createFeedbackPolicyOwnershipCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual desta selecao:
+	- `tenantArchitectureContinuation`.
+- Corredores ja fechados nesta rodada e preservados fora da reabertura:
+	- `feedbackStatusDataFacade`;
+	- `recursosContextDataFacade`;
+	- `funcionarioDeletePostDataFacade`;
+	- `createUsuarioExecutionService`;
+	- `updateUsuarioExecutionService`;
+	- `checkUsuarioEmailOwnerService`;
+	- `authContextReadDataFacade`;
+	- `passwordRecoveryRequestDataFacade`;
+	- `resetPasswordRenderDataFacade`;
+	- `resetPasswordExecutionService`;
+	- `primeiroAcessoExecutionService`;
+	- `unlockUsuarioExecutionService`;
+	- `toggleUsuarioExecutionService`;
+	- `createFeedbackPolicyOwnershipCore`.
+- Candidatos considerados nesta rodada:
+	- `processCreateFeedbackCore` em `src/modules/gestor/app/controllers/utils/processCreateFeedbackCore.js`;
+	- `createDeleteFeedbackHandler` em `src/modules/gestor/app/controllers/feedbackDeleteApiController.js`;
+	- `createUpdateFeedbackRespostaHandler` em `src/modules/gestor/app/controllers/feedbackRespostaApiController.js`;
+	- `createAdminFeedbackListHandler` em `src/modules/gestor/app/controllers/feedbackListApiController.js`.
+- Candidatos recusados e motivo curto:
+	- `createDeleteFeedbackHandler`: recusado por depender de corredor de cleanup de anexos e blob/fs, ainda pequeno, mas mais acoplado a efeitos colaterais e menos estreito que um core puro de write contextual;
+	- `createUpdateFeedbackRespostaHandler`: recusado por permanecer downstream direto do gate admin ja consolidado por `feedbackPolicy.ensureAdminAccess`, com risco tenant-aware residual menos prioritario do que o write inicial de criacao;
+	- `createAdminFeedbackListHandler`: recusado porque leitura admin ja ficou mais cercada pelo fechamento recente de `createFeedbackPolicyOwnershipCore`, e o risco material imediato agora e menor do que o do write de criacao.
+- Proximo alvo tecnico residual selecionado nesta rodada:
+	- `processCreateFeedbackCore`.
+- Motivo consolidado da selecao:
+	- e um alvo pequeno, vivo, local e testavel;
+	- fica fora do corredor de ownership/policy que acabou de ser fechado, evitando reabrir o mesmo slice;
+	- participa diretamente do write inicial de feedback, superficie tenant-aware material por natureza;
+	- ja existe cercamento estrutural adjacente em `tests/gestor-feedback-create-owner-structural-seam.test.js`, o que favorece diagnostico e protecao focal sem big-bang;
+	- nao exige reabrir `api.db.js`, `auth.db.js`, `auth-context.db.js`, bundles grandes de pages nem controllers amplos demais.
+- Risco tenant-aware suspeito desta selecao:
+	- o core de criacao concentra a passagem de `scopedUnitId` para `createFeedback` durante um write contextual sensivel;
+	- qualquer erosao desse repasse pode transformar a criacao em write fora do contexto efetivo da unidade;
+	- o payload de origem e autoria continua pequeno, mas material para preservar o contrato contextual sem ampliar escopo.
+- Lacuna de protecao atual observada:
+	- ha teste estrutural do owner de create, mas ainda nao ha checkpoint focal dedicado no ledger para o contrato tenant-aware do proprio `processCreateFeedbackCore` como seam minima do write contextual;
+	- o corredor ainda nao foi caracterizado documentalmente como protegido ou classificado nesta trilha recente.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proximo ato recomendado apos esta selecao: `diagnoseProcessCreateFeedbackCoreTenantAwareTarget`.
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterOwnershipFeedback`;
+	- `selectedTechnicalTarget=processCreateFeedbackCore`;
+	- `recommendedNextAct=diagnoseProcessCreateFeedbackCoreTenantAwareTarget`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `nextTenantAwareTechnicalTargetAfterOwnershipFeedbackSelected=true`
+	- `selectedTechnicalTarget=processCreateFeedbackCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterOwnershipFeedback`
+	- `recommendedNextAct=diagnoseProcessCreateFeedbackCoreTenantAwareTarget`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
