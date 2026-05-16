@@ -32515,6 +32515,67 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- nenhuma query real foi executada;
 	- nenhum relatorio real foi gerado.
 
+- Checkpoint documental curto do ajuste de harness e da validacao verde da protecao tenant-aware de `createFeedbackPolicyOwnershipCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Ajuste aplicado nesta rodada:
+	- o harness do caso minimo de status em `tests/gestor-feedback-policy-ownership-tenant-aware-protection.test.js` passou a injetar `ALLOWED_FEEDBACK_STATUSES` no contexto isolado da factory `createUpdateFeedbackStatusHandler`;
+	- o ajuste ficou restrito ao teste focal;
+	- nenhuma alteracao foi feita em `src`.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-feedback-policy-ownership-tenant-aware-protection.test.js`
+- Resultado consolidado apos o ajuste:
+	- `tests=7`
+	- `suites=0`
+	- `pass=7`
+	- `fail=0`
+	- `skipped=0`
+	- `todo=0`
+	- `cancelled=0`
+- Diagnostico consolidado desta validacao:
+	- a falha anterior era local ao harness do teste focal;
+	- a injecao explicita de `ALLOWED_FEEDBACK_STATUSES` restaurou o caminho minimo do handler de status sem enfraquecer a protecao semantica;
+	- nao surgiu evidencia nova de bug em `src`;
+	- a protecao focal de `createFeedbackPolicyOwnershipCore` ficou verde no recorte atual.
+- Confirmacoes desta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` foram alterados apenas para ajuste de harness do teste focal;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado.
+- Proximo ato recomendado apos esta validacao: `runCreateFeedbackPolicyOwnershipCoreAdjacentTestsAfterProtection`.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=adjustCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionHarness`;
+	- `selectedTechnicalTarget=createFeedbackPolicyOwnershipCore`;
+	- `recommendedNextAct=runCreateFeedbackPolicyOwnershipCoreAdjacentTestsAfterProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createFeedbackPolicyOwnershipCoreTenantAwareProtectionHarnessAdjusted=true`
+	- `createFeedbackPolicyOwnershipCoreTenantAwareProtectionTestRun=true`
+	- `createFeedbackPolicyOwnershipCoreTenantAwareProtectionTestPassed=true`
+	- `selectedTechnicalTarget=createFeedbackPolicyOwnershipCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=adjustCreateFeedbackPolicyOwnershipCoreTenantAwareProtectionHarness`
+	- `recommendedNextAct=runCreateFeedbackPolicyOwnershipCoreAdjacentTestsAfterProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=true`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 

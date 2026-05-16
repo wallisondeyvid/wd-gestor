@@ -311,7 +311,17 @@ test('feedback policy tenant-aware: callsite minimo de status usa a policy antes
   const createUpdateFeedbackStatusHandler = buildExportedFunction(
     STATUS_CONTROLLER_SOURCE,
     'export function createUpdateFeedbackStatusHandler',
-    { console },
+    {
+      console,
+      ALLOWED_FEEDBACK_STATUSES: new Set([
+        'novo',
+        'respondido',
+        'aberto',
+        'em_andamento',
+        'resolvido',
+        'cancelado',
+      ]),
+    },
   );
 
   const calls = [];
