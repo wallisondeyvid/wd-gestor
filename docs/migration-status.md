@@ -33398,6 +33398,148 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto do diagnostico tenant-aware de `processUpdateFeedbackRespostaCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada:
+	- `processUpdateFeedbackRespostaCore`.
+- Arquivo principal diagnosticado nesta rodada:
+	- `src/modules/gestor/app/controllers/utils/processUpdateFeedbackRespostaCore.js`.
+- Callsite vivo identificado nesta rodada:
+	- `feedbackRespostaApiController.js`.
+- Teste adjacente conhecido nesta rodada:
+	- `tests/gestor-feedback-resposta-owner-structural-seam.test.js`.
+- Cadeia viva identificada nesta rodada:
+	- `feedbackRespostaApiController`;
+	- `feedbackPolicy.ensureAdminAccess` no owner;
+	- `processUpdateFeedbackRespostaCore`;
+	- dados de `resposta/status`;
+	- contexto material herdado do owner via wrapper de `findFeedbackByIdAndUpdateSetNewLean`, quando houver `scopedUnitId`;
+	- operacao final de update de resposta/status;
+	- resposta publica HTTP via `apiOk`.
+- Funcoes sensiveis mapeadas nesta rodada:
+	- `processUpdateFeedbackRespostaCore`;
+	- `findFeedbackByIdAndUpdateSetNewLean` como update final chamado pelo core;
+	- gate admin/policy no owner via `feedbackPolicy.ensureAdminAccess`.
+- Pontos sensiveis observados nesta rodada:
+	- resposta de feedback como write contextual;
+	- `status='respondido'` quando houver `resposta` no contrato atual;
+	- autoria/admin que responde aparece no owner como gate de policy, nao no core;
+	- `scopedUnitId` e options/contexto material aparecem no owner e sao herdados pela operacao final via wrapper;
+	- distincao entre resposta global legitima e resposta contextual por unidade.
+- Classificacao consolidada desta rodada:
+	- `HIBRIDO_AUDITAR + RISCO_FEEDBACK_RESPOSTA_CONTEXTUAL_WRITE_POTENCIAL`.
+- Onde entram `feedbackId`, `resposta/body`, `user` e contexto:
+	- `feedbackId` entra no owner por `req.params.feedbackId` e e validado antes da seam;
+	- `resposta/body` entra no owner por `req.body?.resposta || req.body?.reply` e e validada antes da seam;
+	- `user` entra no owner por `req.user || null` para o gate `feedbackPolicy.ensureAdminAccess`;
+	- o contexto entra no owner por `String(req.unitScope?.unidadeId || '').trim()` e e convertido em `access.feedbackMutationOptions` pela policy.
+- Onde ocorre o gate de policy/admin:
+	- no owner `feedbackRespostaApiController`, antes da seam, por `feedbackPolicy.ensureAdminAccess({ currentUser, scopedUnitId })`.
+- Onde ocorre a montagem do patch/payload:
+	- dentro de `processUpdateFeedbackRespostaCore`, ao montar `const set = { resposta }` e complementar `set.status = 'respondido'` quando houver resposta nao vazia.
+- Onde ocorre o write final:
+	- no core, pela chamada `findFeedbackByIdAndUpdateSetNewLean(id, set)`;
+	- materialmente, o contexto do write e herdado do owner porque o callsite injeta um wrapper que repassa `access.feedbackMutationOptions` ao update final.
+- Contexto explicito observado nesta rodada:
+	- ha `scopedUnitId` explicito no owner;
+	- ha `unitScope` explicito no owner;
+	- nao ha `membership`, `gestor` ou `condominio` explicitos dentro do core;
+	- o core recebe apenas `id`, `resposta` e a funcao final de update ja contextualizada pelo owner.
+- Leitura semantica consolidada do contrato atual:
+	- o core atual e pequeno e local;
+	- ele concentra apenas o patch minimo de `resposta` e eventual `status='respondido'`;
+	- o core nao conhece diretamente `scopedUnitId`, mas depende do repasse material do contexto pelo wrapper do owner;
+	- o owner continua dono do gate admin, da validacao de id, da validacao de limite e da resposta HTTP final.
+- Risco suspeito desta rodada:
+	- a resposta/status de feedback pode virar write amplo se o contexto material do owner nao for repassado corretamente ao update final;
+	- o patch de resposta nao deve escapar do contexto efetivo da unidade;
+	- isso ainda nao e classificado como bug confirmado neste microcorte.
+- Global legitimo versus perigo contextual:
+	- este corredor so poderia ser global legitimo se existisse ramo funcional explicito e documentado de resposta administrativa fora de unidade contextual, o que nao esta caracterizado neste slice local;
+	- no comportamento atual, quando houver `unitScope`, o write semanticamente seguro e contextual por unidade;
+	- por isso o risco principal e a erosao do contexto de mutacao herdado do owner, nao o texto de `resposta` isoladamente.
+- Comportamento atual a preservar:
+	- gate admin permanece no owner antes da seam;
+	- validacao de `feedbackId` permanece no owner;
+	- validacao de limite de `resposta` permanece no owner;
+	- o core continua montando apenas `set = { resposta }` com `status='respondido'` quando aplicavel;
+	- o write final continua delegando a `findFeedbackByIdAndUpdateSetNewLean` ja contextualizada pelo owner;
+	- a resposta publica continua via `apiOk` no owner.
+- Lacuna atual de protecao observada:
+	- o teste adjacente conhecido hoje cerca o owner e a existencia da seam, mas ainda nao congela de forma focal o contrato tenant-aware interno do proprio `processUpdateFeedbackRespostaCore`;
+	- ainda nao ha protecao dedicada pequena provando, em runtime leve, o shape do patch e a dependencia material do contexto herdado do owner no update final.
+- Comportamento a proteger por teste futuro:
+	- o shape do patch com `resposta` e `status='respondido'` quando houver resposta nao vazia;
+	- o comportamento sem resposta, se o contrato atual mantiver `status` inalterado nesse ramo;
+	- a ausencia de I/O ou query propria fora da delegacao final;
+	- a dependencia de update final injetado pelo owner, sem transformar a seam em owner HTTP;
+	- o repasse material do contexto do owner ao write final por meio do wrapper injetado.
+- Hipotese de protecao futura:
+	- teste estrutural + runtime contratual leve com stubs e mocks;
+	- foco direto em `processUpdateFeedbackRespostaCore` e callsite minimo do owner;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Suficiencia da cobertura atual para fechamento documental:
+	- a cobertura atual nao e suficiente para fechar documentalmente o corredor como protegido e validado;
+	- o slice ainda pede desenho de protecao focal antes de qualquer discussao de refatoracao minima ou fechamento sem refatoracao.
+- Criterio de sucesso de uma protecao futura:
+	- demonstrar que o core monta o patch no shape atual;
+	- demonstrar que o update final continua dependente da funcao injetada pelo owner, com contexto material preservado no caminho de mutacao;
+	- demonstrar que o owner continua segurando gate admin, validacoes e resposta HTTP;
+	- fazer isso sem Mongo real, sem query real e sem alterar `src`.
+- Proxima etapa recomendada por este diagnostico:
+	- desenhar protecao tenant-aware dedicada;
+	- nao ha base suficiente para refatoracao minima nem para fechamento documental sem protecao focal nesta rodada.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao e teste antes de qualquer alteracao em `src`.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=diagnoseProcessUpdateFeedbackRespostaCoreTenantAwareTarget`;
+	- `selectedTechnicalTarget=processUpdateFeedbackRespostaCore`;
+	- `recommendedNextAct=designProcessUpdateFeedbackRespostaCoreTenantAwareProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `processUpdateFeedbackRespostaCoreTenantAwareTargetDiagnosed=true`
+	- `selectedTechnicalTarget=processUpdateFeedbackRespostaCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=diagnoseProcessUpdateFeedbackRespostaCoreTenantAwareTarget`
+	- `recommendedNextAct=designProcessUpdateFeedbackRespostaCoreTenantAwareProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
