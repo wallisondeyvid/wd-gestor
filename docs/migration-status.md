@@ -5524,6 +5524,104 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao usa Portal;
 	- a proxima etapa deve revisar se o contrato atual pode ser fechado documentalmente ou se exige teste adicional.
 
+- Checkpoint documental curto da revisao final do contrato tenant-aware de `authContextReadDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado nesta rodada: `authContextReadDataFacade`.
+- Arquivo principal revisado: `src/modules/gestor/app/data/auth/authContextReadDataFacade.js`.
+- Funcao sensivel revisada:
+	- `loadActiveMembershipsByUserIdData`.
+- Chamada sensivel revisada:
+	- `findActiveMembershipsByUserIdLeanRepo({ unitScope: GLOBAL_SCOPE, userId })`.
+- Semantica final atribuida nesta revisao:
+	- `GLOBAL_SCOPE` deve ser classificado como global legitimo de identidade/auth neste corredor especifico;
+	- essa classificacao fica restrita ao corredor read-only de construcao de auth-context aqui revisado.
+- Restricao final consolidada nesta revisao:
+	- esse padrao nao pode ser reutilizado genericamente em outros corredores tenant-aware;
+	- qualquer expansao futura exige novo microcorte com justificativa documental propria.
+- Cobertura aceita nesta revisao:
+	- `tests/architecture/activeMembershipsAuthContextRead.contract.test.js`.
+- Cobertura verde/preexistente aceita como cerca primaria:
+	- facade fina;
+	- handoff read-only;
+	- `GLOBAL_SCOPE` explicito;
+	- sem app, server, bootstrap ou infra real.
+- Risco original tratado e aceito nesta revisao:
+	- leitura read-only de memberships ativas pode alimentar superficie autorizativa;
+	- esse risco fica aceito apenas porque esta restrito ao eixo de construcao de auth-context;
+	- qualquer expansao futura exige novo microcorte.
+- Contrato preservado nesta revisao:
+	- leitura de auth-context continua funcionando;
+	- memberships ativas continuam disponiveis para contexto autenticado;
+	- nenhum write e introduzido;
+	- nenhum Mongo real e conectado;
+	- `package.json` permanece preservado.
+- Conclusao desta revisao sobre o fechamento do corredor:
+	- o corredor `authContextReadDataFacade` pode ser fechado como global legitimo de identidade/auth documentado e cercado pelo teste arquitetural existente;
+	- nao ha necessidade de refatoracao em `src` neste momento;
+	- nao ha necessidade de teste adicional neste momento.
+- Motivo objetivo para o fechamento documental nesta rodada:
+	- a cobertura atual ja congela o comportamento material que interessa neste corredor;
+	- a semantica de `GLOBAL_SCOPE` foi desenhada e agora revisada como legitima apenas neste uso local de auth-context;
+	- nao foi observada lacuna estrutural nova que justifique abrir frente maior ou criar cerca adicional.
+- Necessidade de teste adicional nesta revisao:
+	- `false`;
+	- o teste arquitetural existente e aceito como cerca primaria suficiente para este fechamento documental.
+- Por que o fechamento nao abre `auth-context` como big-bang:
+	- o corredor revisado permanece pequeno, local e isolavel;
+	- a controversia tenant-aware estava concentrada no significado do `GLOBAL_SCOPE` neste handoff read-only especifico;
+	- ampliar a revisao para todo o eixo auth-context quebraria a estrategia de microcortes conservadores sem evidencia de ganho tecnico imediato.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada desta revisao:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewAuthContextReadDataFacadeTenantAwareContract
+	- selectedTechnicalTarget=authContextReadDataFacade
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterAuthContextRead
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta revisao:
+	- authContextReadDataFacadeTenantAwareContractReviewed=true
+	- authContextReadDataFacadeTenantAwareMicrocutClosed=true
+	- authContextReadDataFacadeGlobalScopeClassifiedAsLegitimateAuthContext=true
+	- authContextReadDataFacadeAdditionalTestRequired=false
+	- selectedTechnicalTarget=authContextReadDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewAuthContextReadDataFacadeTenantAwareContract
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterAuthContextRead
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja diagnosticado/desenhado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
