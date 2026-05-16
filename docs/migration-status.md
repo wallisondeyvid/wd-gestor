@@ -33540,6 +33540,129 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto do desenho da protecao/contrato tenant-aware de `processUpdateFeedbackRespostaCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem criacao de teste, sem Mongo real e sem query real.
+- Alvo deste desenho:
+	- `processUpdateFeedbackRespostaCore`.
+- Arquivo principal deste desenho:
+	- `src/modules/gestor/app/controllers/utils/processUpdateFeedbackRespostaCore.js`.
+- Callsite vivo considerado neste desenho:
+	- `feedbackRespostaApiController.js`.
+- Teste adjacente conhecido considerado neste desenho:
+	- `tests/gestor-feedback-resposta-owner-structural-seam.test.js`.
+- Semantica a decidir e congelar neste desenho:
+	- resposta de feedback deve partir, por padrao inicial, de semantica de write contextual por unidade quando houver contexto material vindo do owner;
+	- eventual resposta global legitima so pode existir se aparecer ramo explicito e documentado separadamente;
+	- na ausencia desse ramo explicito, o contrato de seguranca do slice deve tratar `resposta/status` como mutacao contextual sensivel.
+- Semantica inicial atribuida ao core neste desenho:
+	- `processUpdateFeedbackRespostaCore` e uma seam minima e local de montagem de patch;
+	- o core nao e owner HTTP;
+	- o core nao e policy gate;
+	- o core nao decide escopo por conta propria;
+	- o core nao deve evoluir para query propria, I/O proprio ou write direto fora da funcao injetada;
+	- o core preserva apenas o contrato atual de montar `set = { resposta }` e adicionar `status='respondido'` quando houver resposta nao vazia, delegando o write final.
+- Semantica inicial atribuida a `scopedUnitId` e ao contexto material neste desenho:
+	- `scopedUnitId` e contexto material nao sao dado decorativo;
+	- o contexto material carregado pelo owner via `req.unitScope` e convertido pela policy em `access.feedbackMutationOptions` e parte do limite semantico efetivo da mutacao;
+	- o wrapper do owner e a ponte material obrigatoria entre gate/policy e o write final;
+	- se houver `unitScope`, o update final deve continuar semanticamente preso ao contexto herdado do owner.
+- Risco principal a proteger neste desenho:
+	- o patch de resposta nao pode virar write amplo fora do contexto efetivo;
+	- `status='respondido'` deve continuar acoplado ao patch de resposta conforme contrato atual;
+	- o core deve continuar usando a funcao de update injetada pelo owner;
+	- o wrapper do owner deve continuar repassando `access.feedbackMutationOptions`;
+	- `scopedUnitId` e o contexto material nao podem virar ornamentacao sem efeito;
+	- o core nao pode passar a fazer I/O, query ou write direto.
+- Contrato atual a preservar neste desenho:
+	- validacoes de `feedbackId` e de `resposta` permanecem no owner;
+	- gate admin/policy permanece no owner;
+	- montagem do patch minimo permanece no core;
+	- write final permanece na funcao injetada;
+	- contexto material permanece carregado pelo wrapper do owner;
+	- resposta publica permanece via `apiOk`;
+	- sem Mongo real;
+	- sem query real.
+- Protecao futura desejada descrita neste desenho:
+	- teste estrutural deve congelar `owner -> processUpdateFeedbackRespostaCore -> update injetado`;
+	- teste runtime contratual leve deve provar o shape do patch com `resposta`;
+	- teste runtime contratual leve deve provar `status='respondido'` quando houver resposta;
+	- teste runtime contratual leve deve provar dependencia da funcao injetada;
+	- teste runtime contratual leve deve provar que o owner injeta wrapper com `access.feedbackMutationOptions`;
+	- teste runtime contratual leve deve provar que o core nao faz I/O nem query propria;
+	- o teste nao deve abrir feedback controllers grandes nem data access como big-bang.
+- Tipo de teste recomendado por este desenho:
+	- estrutural + runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura delimitada por este desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao futura demonstrar perda real de limite semantico;
+	- nao abrir feedback controllers grandes;
+	- nao abrir `api.db.js`;
+	- nao alterar contrato HTTP neste momento.
+- Resposta objetiva sobre a cobertura atual:
+	- a cobertura atual nao e suficiente para fechamento documental do corredor como protegido e validado;
+	- o teste adjacente atual protege o owner e a existencia da seam, mas nao congela focalmente o contrato tenant-aware interno do core;
+	- este slice precisa de teste adicional dedicado.
+- Resposta objetiva sobre a necessidade de teste adicional:
+	- sim;
+	- a proxima etapa correta e criar uma protecao focal do corredor antes de qualquer alteracao em `src`.
+- Criterio para fechar o corredor apos a protecao futura:
+	- demonstrar estruturalmente que o owner continua segurando gate admin, validacoes e resposta publica;
+	- demonstrar em runtime leve que o core continua montando apenas o patch minimo no shape atual;
+	- demonstrar em runtime leve que `status='respondido'` continua acoplado ao patch de resposta quando houver resposta;
+	- demonstrar que o write final continua dependendo da funcao injetada pelo owner;
+	- demonstrar que o wrapper do owner continua repassando `access.feedbackMutationOptions`;
+	- demonstrar que o core nao introduziu query propria, I/O proprio ou write direto;
+	- fazer isso sem Mongo real, sem query real e sem abrir big-bang fora do slice.
+- Por que este desenho nao deve abrir controllers grandes nem `api.db.js` como big-bang:
+	- porque o risco suspeito esta concentrado no handoff curto `owner -> core -> update injetado`;
+	- abrir superficies maiores aqui reduziria discriminacao causal e misturaria riscos nao pertencentes a este microcorte;
+	- o objetivo desta frente continua sendo fechar corredores pequenos com protecao focal antes de qualquer ampliacao de escopo.
+- Decisao principal consolidada neste desenho:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=designProcessUpdateFeedbackRespostaCoreTenantAwareProtection`;
+	- `selectedTechnicalTarget=processUpdateFeedbackRespostaCore`;
+	- `recommendedNextAct=createProcessUpdateFeedbackRespostaCoreTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao/teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao/teste antes de qualquer alteracao em `src`.
+- Gates:
+	- `processUpdateFeedbackRespostaCoreTenantAwareProtectionDesigned=true`
+	- `selectedTechnicalTarget=processUpdateFeedbackRespostaCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=designProcessUpdateFeedbackRespostaCoreTenantAwareProtection`
+	- `recommendedNextAct=createProcessUpdateFeedbackRespostaCoreTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
