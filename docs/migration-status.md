@@ -6231,6 +6231,66 @@ Checkpoint tenant enforcement atual:
 	- este microcorte nao gera relatorio real;
 	- este microcorte nao executa refatoracao;
 	- a proxima etapa deve ser `runCreateAdminFeedbackDetailHandlerTenantAwareProtectionTest` antes de qualquer alteracao em `src`.
+
+- Checkpoint documental curto da validacao verde da protecao tenant-aware de `createAdminFeedbackDetailHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
+- Protecao validada nesta rodada:
+	- `tests/gestor-feedback-detail-tenant-aware-protection.test.js`.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-feedback-detail-tenant-aware-protection.test.js`.
+- Resultado consolidado desta execucao focal:
+	- `tests=4`;
+	- `suites=0`;
+	- `pass=4`;
+	- `fail=0`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`;
+	- `duration_ms=55.1127`.
+- Leitura objetiva do resultado desta rodada:
+	- a protecao focal passou integralmente em verde;
+	- o handoff material `access.feedbackQueryOptions -> findFeedbackByIdLean` permaneceu protegido;
+	- o core permaneceu protegido como pos-processamento sem contexto material de tenant;
+	- o contrato atual de `not found` sem pos-processamento indevido permaneceu protegido.
+- Confirmacoes desta rodada:
+	- `src` nao alterado neste microcorte;
+	- `tests` nao alterados neste microcorte;
+	- `package.json` nao alterado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado.
+- Proxima etapa recomendada nesta rodada:
+	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=runCreateAdminFeedbackDetailHandlerTenantAwareProtectionTest`;
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`;
+	- `recommendedNextAct=runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createAdminFeedbackDetailHandlerTenantAwareProtectionTestRun=true`
+	- `createAdminFeedbackDetailHandlerTenantAwareProtectionTestPassed=true`
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=runCreateAdminFeedbackDetailHandlerTenantAwareProtectionTest`
+	- `recommendedNextAct=runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
