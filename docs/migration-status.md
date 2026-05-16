@@ -5463,6 +5463,120 @@ Checkpoint tenant enforcement atual:
 	- este diagnostico nao usa Portal;
 	- a proxima etapa deve desenhar protecao/teste ou fechamento documental antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao/contrato tenant-aware de `resetPasswordRenderDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho: `resetPasswordRenderDataFacade`.
+- Arquivo principal deste desenho: `src/modules/gestor/app/data/auth/resetPasswordRenderDataFacade.js`.
+- Cadeia viva consolidada neste desenho:
+	- `authController.renderResetPassword`;
+	- `loadResetPasswordRenderModelService`;
+	- `resetPasswordRenderDataFacade`.
+- Funcoes sensiveis cobertas por este desenho:
+	- `loadPasswordResetTokenData`;
+	- `loadPasswordResetUserNameData`.
+- Semantica inicial proposta para o token neste contrato:
+	- o token de reset deve ser tratado como global legitimo de auth;
+	- ele e a primeira leitura material do corredor;
+	- ele nao deve ser reclassificado como precedente generico para leituras globais fora do fluxo de recovery/reset.
+- Semantica inicial proposta para o lookup auxiliar por `userId` neste contrato:
+	- o lookup auxiliar por `userId` deve ser tratado como projecao derivada local ao render;
+	- ele nao e a entrada principal do corredor;
+	- ele so pode ocorrer depois de token valido com `user_id` resolvido;
+	- o nome do usuario deve permanecer apenas projecao auxiliar do render.
+- Risco a proteger consolidado neste desenho:
+	- `GLOBAL_SCOPE` legitimo para token nao pode virar precedente generico;
+	- lookup auxiliar por `userId` nao pode ocorrer antes de token valido;
+	- token invalido ou expirado nao pode disparar lookup auxiliar;
+	- o nome do usuario nao pode ganhar papel de decisao contextual ou de write.
+- Contrato atual a preservar neste desenho:
+	- o render de reset continua funcionando;
+	- token valido carrega modelo de render;
+	- token invalido ou expirado preserva o contrato atual;
+	- o nome do usuario continua exibido quando aplicavel;
+	- nenhum reset de senha e executado nesse corredor;
+	- o shape publico HTTP permanece compativel;
+	- nenhum Mongo real e conectado.
+- Protecao futura desejada consolidada neste desenho:
+	- teste estrutural deve congelar que `loadPasswordResetTokenData` e a primeira leitura material do corredor;
+	- teste estrutural deve congelar que `loadPasswordResetUserNameData` so ocorre apos token valido com `user_id`;
+	- teste contratual leve deve cobrir token valido;
+	- teste contratual leve deve cobrir token invalido ou ausente;
+	- teste contratual leve deve cobrir token expirado;
+	- teste contratual leve deve cobrir token valido sem usuario encontrado;
+	- o teste deve preservar o render model sem banco real;
+	- o teste nao deve abrir `auth.db.js` como big-bang.
+- Tipo de teste recomendado neste desenho:
+	- estrutural + runtime contratual leve com stubs ou mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura consolidada neste desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico;
+	- nao abrir `auth.db.js` como frente ampla;
+	- nao alterar contrato HTTP neste momento;
+	- nao mexer em `resetPasswordExecution` ou no write-side neste microcorte.
+- Respostas objetivas deste desenho:
+	- a semantica inicial do token deve ser global legitimo de auth;
+	- a semantica inicial do lookup auxiliar por `userId` deve ser projecao derivada local ao render;
+	- a cobertura atual nao e suficiente para fechamento documental do corredor;
+	- o corredor precisa de teste adicional local;
+	- o corredor podera ser fechado quando a protecao congelar a ordem das leituras, impedir lookup auxiliar com token invalido/expirado e preservar o contrato de render sem banco real;
+	- `auth.db.js` nao deve ser aberto como big-bang porque o risco atual e local, read-only e semanticamente estreito, com alvo menor e testavel na propria facade.
+- Necessidade de teste adicional consolidada neste desenho:
+	- sim;
+	- a cobertura atual do seam controller -> service permanece util, mas insuficiente para fechar o corredor;
+	- a proxima etapa deve criar protecao local focada na facade.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada deste desenho:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designResetPasswordRenderDataFacadeTenantAwareProtection
+	- selectedTechnicalTarget=resetPasswordRenderDataFacade
+	- recommendedNextAct=createResetPasswordRenderDataFacadeTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste desenho:
+	- resetPasswordRenderDataFacadeTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=resetPasswordRenderDataFacade
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designResetPasswordRenderDataFacadeTenantAwareProtection
+	- recommendedNextAct=createResetPasswordRenderDataFacadeTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
