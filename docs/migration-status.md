@@ -6718,6 +6718,104 @@ Checkpoint tenant enforcement atual:
 	- blockedReasons=[]
 - Interpretacao obrigatoria deste diagnostico: este diagnostico apenas descreve o contrato atual; este diagnostico nao altera codigo; este diagnostico nao altera testes; este diagnostico nao executa refatoracao; este diagnostico nao cria comando; este diagnostico nao conecta Mongo real; este diagnostico nao executa query real; este diagnostico nao gera relatorio; este diagnostico nao inicia PostgreSQL; este diagnostico nao usa Portal; a proxima etapa deve desenhar protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do desenho da protecao/contrato tenant-aware de `primeiroAcessoExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo deste desenho:
+	- `primeiroAcessoExecutionService`.
+- Arquivo principal deste desenho:
+	- `src/modules/gestor/app/services/auth/primeiroAcessoExecution.service.js`.
+- Data access envolvido neste desenho:
+	- `src/modules/gestor/app/data-access/auth/primeiroAcessoExecutionDataAccess.js`.
+- Cadeia viva consolidada neste desenho:
+	- `authController` no owner `POST /gestor/primeiroacesso`;
+	- `primeiroAcessoExecutionService`;
+	- `primeiroAcessoExecutionDataAccess`.
+- Funcoes sensiveis deste desenho:
+	- `loadPrimeiroAcessoUserData`;
+	- `completePrimeiroAcessoData`;
+	- `bcrypt.hash` no owner.
+- Semantica a decidir neste corredor:
+	- `userId` de sessao como identidade global legitima do proprio usuario autenticado;
+	- versus o write de senha e flags como projecao derivada local, estritamente condicionada ao fluxo autorizado de primeiro acesso.
+- Semantica proposta para `userId` neste desenho:
+	- atribuir inicialmente a `userId` a semantica de identidade global legitima do proprio usuario autenticado;
+	- tratar `userId` como ancora material do fluxo de auth, nao como autorizacao contextual por unidade.
+- Semantica proposta para o write derivado por `userId` e `senhaHash` neste desenho:
+	- atribuir ao write final a semantica de projecao derivada local do fluxo de primeiro acesso autorizado;
+	- o write nao deve ser interpretado como precedente generico para mutacao global ampla apenas porque o data access usa `GLOBAL_SCOPE`.
+- Risco a proteger neste desenho:
+	- `GLOBAL_SCOPE` legitimo para identidade/auth nao pode virar precedente generico para write amplo;
+	- `userId` ausente nao pode chamar `completePrimeiroAcessoData`;
+	- usuario nao encontrado nao pode chamar `completePrimeiroAcessoData`;
+	- usuario sem `primeiro_acesso` pendente nao pode chamar `completePrimeiroAcessoData`;
+	- hash da senha deve ocorrer antes do write;
+	- `completePrimeiroAcessoData` deve receber `userId` e `senhaHash` corretos;
+	- erro de write deve preservar contrato.
+- Contrato atual a preservar neste desenho:
+	- primeiro acesso continua funcionando;
+	- senha continua sendo hasheada antes da conclusao;
+	- usuario inexistente continua rejeitado;
+	- usuario sem primeiro acesso pendente continua rejeitado;
+	- write final continua delegado ao data access;
+	- contrato publico HTTP permanece compativel;
+	- nenhum Mongo real e conectado.
+- Protecao futura desejada neste desenho:
+	- teste estrutural deve congelar a ordem `userId -> lookup -> gate -> hash -> write`;
+	- teste contratual leve deve cobrir `userId` ausente;
+	- teste contratual leve deve cobrir usuario nao encontrado;
+	- teste contratual leve deve cobrir usuario sem primeiro acesso pendente;
+	- teste contratual leve deve cobrir caminho valido;
+	- teste contratual leve deve cobrir erro do write;
+	- teste deve provar que `completePrimeiroAcessoData` nao roda antes do hash;
+	- teste nao deve abrir `auth.db.js` nem o data access como big-bang.
+- Tipo de teste recomendado neste desenho:
+	- estrutural mais runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura consolidada neste desenho:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico;
+	- nao abrir `auth.db.js`;
+	- nao alterar contrato HTTP neste momento.
+- Resposta consolidada deste desenho:
+	- a cobertura atual nao e suficiente para fechamento documental do corredor como protegido;
+	- precisa de teste adicional focal;
+	- o criterio para fechar o corredor sera provar, por protecao dedicada, que o write permanece derivado, gated e ordenado corretamente;
+	- nao se deve abrir `auth.db.js` ou o data access como big-bang porque o corredor atual ja e pequeno, local e cercavel por seam dedicada, e ampliar a frente destruiria a localidade sem aumentar a discriminacao do risco.
+- Encaminhamento principal deste desenho:
+	- a proxima etapa deve criar a protecao/teste antes de qualquer alteracao em `src`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designPrimeiroAcessoExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- recommendedNextAct=createPrimeiroAcessoExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- primeiroAcessoExecutionServiceTenantAwareProtectionDesigned=true
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=designPrimeiroAcessoExecutionServiceTenantAwareProtection
+	- recommendedNextAct=createPrimeiroAcessoExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste desenho: este desenho apenas define protecao ou teste futuro; este desenho nao altera codigo; este desenho nao altera testes; este desenho nao cria teste ainda; este desenho nao executa refatoracao; este desenho nao cria comando; este desenho nao conecta Mongo real; este desenho nao executa query real; este desenho nao gera relatorio; este desenho nao inicia PostgreSQL; este desenho nao usa Portal; a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
