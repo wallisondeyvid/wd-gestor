@@ -6868,6 +6868,33 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da falha parcial na execucao da protecao tenant-aware de `primeiroAcessoExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-primeiro-acesso-execution-tenant-aware-protection.test.js`.
+- Resultado consolidado da execucao nesta rodada:
+	- `tests=7`;
+	- `suites=0`;
+	- `pass=5`;
+	- `fail=2`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`.
+- Diagnostico claro da falha nesta rodada:
+	- uma falha ocorreu na assercao estrutural do proprio teste, por incompatibilidade local entre a regex esperada e o bloco real do service para o gate `if (!user) return { kind: 'not_found' };`;
+	- a outra falha confirmou uma lacuna semantica real no corredor: com `userId` ausente, o service ainda alcança `completePrimeiroAcessoData` quando o mock de leitura devolve usuario valido;
+	- portanto a execucao desta protecao ainda nao fecha o corredor como protegido neste estado.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma correcao automatica foi aplicada.
+- Encaminhamento desta rodada:
+	- a falha foi registrada sem correcao automatica;
+	- este microcorte encerra aqui para revisao local do limite semantico e da protecao focal antes de nova tentativa.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
