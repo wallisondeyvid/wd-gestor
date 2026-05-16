@@ -4796,6 +4796,103 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao usa Portal;
 	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Alvo diagnosticado nesta rodada: `checkUsuarioEmailOwnerService`.
+- Arquivo principal diagnosticado: `src/modules/gestor/app/services/usuarios/checkUsuarioEmailOwner.service.js`.
+- Owner e entrada viva identificados neste diagnostico:
+	- `GET /gestor/api/usuarios/check-email`;
+	- `src/modules/gestor/app/controllers/userController.js`;
+	- `checkUsuarioEmailOwnerService`.
+- Cadeia viva identificada neste diagnostico:
+	- o controller `checkUsuarioEmail` valida privilegio admin/master e normaliza o e-mail de entrada;
+	- `userController.js` propaga `scope` explicito para o owner service com `isGlobalScope`, `hasAuthoritativeAuthContext` e `scopedUnitId`;
+	- `checkUsuarioEmailOwnerService` resolve `user` por e-mail, retorna `exists=false` quando o usuario nao existe e, quando existe, resolve memberships, filtra `visibleMemberships` no ramo contextual autoritativo, monta `membershipsSummary`, deriva `linkedUnidadeIds` e espelha o mesmo conjunto em `blockedUnidadeIds`.
+- Parametros de escopo relevantes deste contrato:
+	- `isGlobalScope`;
+	- `hasAuthoritativeAuthContext`;
+	- `scopedUnitId`.
+- Pontos sensiveis do contrato atual:
+	- distincao entre visao global legitima e visao contextual restrita;
+	- filtragem de `visibleMemberships` quando `isGlobalScope=false` e `hasAuthoritativeAuthContext=true`;
+	- calculo de `membershipsSummary` a partir apenas das memberships visiveis;
+	- calculo de `linkedUnidadeIds` a partir de `membershipsSummary`;
+	- calculo de `blockedUnidadeIds` como espelho de `linkedUnidadeIds`;
+	- preservacao dos comportamentos `exists=false` e `exists=true`.
+- Diagnostico consolidado nesta rodada: `RISCO_ESTRUTURAL_POTENCIAL` + `LACUNA_DE_PROTECAO_CONTRATUAL`.
+- Hipotese de risco tenant-aware deste diagnostico:
+	- um scoped admin contextual pode ver memberships fora do cluster permitido se o filtro por `scopedUnitId` for relaxado, removido ou bypassado no ramo contextual autoritativo;
+	- `linkedUnidadeIds` e `blockedUnidadeIds` podem expor unidades fora do escopo contextual se deixarem de ser derivados apenas das memberships visiveis;
+	- o risco suspeito esta no ramo contextual autoritativo e nao no ramo global legitimo de `master` ou `admin`.
+- Comportamento atual a preservar neste contrato:
+	- `exists=false` continua funcionando e retorna arrays vazios sem carregar memberships;
+	- `exists=true` continua funcionando e retorna o payload publico compativel com o HTTP atual;
+	- a visao global legitima de `master` e `admin` continua preservada;
+	- a visao contextual restringe memberships ao cluster permitido quando houver auth-context autoritativo com escopo nao global;
+	- o contrato publico HTTP permanece compativel em `email`, `exists`, `user`, `membershipsCount`, `membershipsSummary`, `linkedUnidadeIds` e `blockedUnidadeIds`.
+- Lacuna de protecao atual consolidada neste diagnostico:
+	- existe teste estrutural geral em `tests/gestor-user-check-email-owner-structural-seam.test.js`;
+	- esse teste cobre o shape publico do controller e os ramos semanticos `exists=false` e `exists=true` no owner service;
+	- ainda nao existe protecao tenant-aware dedicada para `membershipsSummary`, `linkedUnidadeIds` e `blockedUnidadeIds` sob `scopedUnitId` com auth-context autoritativo.
+- Comportamento a proteger por teste em etapa futura:
+	- quando `isGlobalScope=false` e `hasAuthoritativeAuthContext=true`, memberships fora do cluster permitido nao aparecem em `membershipsSummary`;
+	- `linkedUnidadeIds` nao inclui unidade fora do escopo permitido;
+	- `blockedUnidadeIds` nao inclui unidade fora do escopo permitido;
+	- quando `isGlobalScope=true`, o ramo global legitimo permanece preservado.
+- Hipotese de protecao futura desta frente:
+	- teste estrutural + runtime contratual leve com mocks e stubs;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada deste diagnostico:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseCheckUsuarioEmailOwnerServiceTenantAwareTarget
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- recommendedNextAct=designCheckUsuarioEmailOwnerServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados deste diagnostico:
+	- checkUsuarioEmailOwnerServiceTenantAwareTargetDiagnosed=true
+	- selectedTechnicalTarget=checkUsuarioEmailOwnerService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=diagnoseCheckUsuarioEmailOwnerServiceTenantAwareTarget
+	- recommendedNextAct=designCheckUsuarioEmailOwnerServiceTenantAwareProtection
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria deste diagnostico:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao/teste antes de qualquer alteracao em `src`.
+
 - Fase W encerrada documentalmente no contrato canonico.
 - Documento canonico: docs/tenant-phase-w-final-pre-operational-preparation-contract.md
 - Base: ba4e852 docs(tenant): completa validacao final da fase v
