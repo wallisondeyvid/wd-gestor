@@ -7521,6 +7521,56 @@ Checkpoint tenant enforcement atual:
 	- este desenho nao usa Portal;
 	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
 
+- Checkpoint documental curto da criacao da protecao tenant-aware de `unlockUsuarioExecutionService`, consolidado nesta rodada com novo teste dedicado, sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Teste ou protecao tenant-aware criado nesta rodada:
+	- `tests/gestor-unlock-usuario-tenant-aware-protection.test.js`.
+- Escopo consolidado da protecao criada nesta rodada:
+	- protecao estrutural da cadeia `userController.unlockUsuario` -> `findUserById(id)` -> `unlockUsuarioExecutionService` -> `saveUserDoc(user)`;
+	- protecao de usuario inexistente sem delegacao ao service e sem write;
+	- protecao do caminho bloqueado com limpeza de `failed_login_attempts` e `lock_until` antes do write final;
+	- congelamento do contrato observado para usuario ja desbloqueado no estado atual do source;
+	- congelamento da propagacao do erro de `saveUserDoc` no service fino;
+	- registro explicito, no proprio teste, de que write por `_id` segue como operacao administrativa potencialmente ampla e nao precedente generico para write global.
+- Limites explicitos desta rodada:
+	- `src` nao foi alterado;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma refatoracao foi executada.
+- Proximo ato recomendado apos esta criacao:
+	- `runUnlockUsuarioExecutionServiceTenantAwareProtectionTest`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createUnlockUsuarioExecutionServiceTenantAwareProtectionTest
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- recommendedNextAct=runUnlockUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- unlockUsuarioExecutionServiceTenantAwareProtectionTestCreated=true
+	- selectedTechnicalTarget=unlockUsuarioExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=createUnlockUsuarioExecutionServiceTenantAwareProtectionTest
+	- recommendedNextAct=runUnlockUsuarioExecutionServiceTenantAwareProtectionTest
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=true
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
