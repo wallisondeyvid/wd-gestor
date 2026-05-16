@@ -6362,6 +6362,96 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
+
+- Checkpoint documental curto da revisao final da protecao tenant-aware de `createAdminFeedbackDetailHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem refatoracao em `src`, sem suite inteira e sem relatorio real.
+- Corredor revisado nesta rodada:
+	- `createAdminFeedbackDetailHandler`.
+- Arquivo principal revisado nesta rodada:
+	- `src/modules/gestor/app/controllers/feedbackDetailApiController.js`.
+- Core relacionado revisado nesta rodada:
+	- `processAdminFeedbackDetailCore` em `src/modules/gestor/app/controllers/utils/processAdminFeedbackDetailCore.js`.
+- Protecao focal aceita nesta rodada:
+	- `tests/gestor-feedback-detail-tenant-aware-protection.test.js`.
+- Protecao focal verde consolidada nesta rodada:
+	- `tests=4`;
+	- `pass=4`;
+	- `fail=0`.
+- Testes adjacentes verdes consolidados nesta rodada:
+	- `owner structural seam: tests=6, pass=6, fail=0`;
+	- `runtime contract: tests=5, pass=5, fail=0`.
+- Risco original protegido nesta rodada:
+	- `feedbackDetailApiController -> feedbackPolicy.ensureAdminAccess -> findFeedbackByIdLean -> processAdminFeedbackDetailCore`;
+	- `feedbackPolicy.ensureAdminAccess` antes da leitura sensivel;
+	- `findFeedbackByIdLean` recebendo `access.feedbackQueryOptions` materialmente;
+	- `access.feedbackQueryOptions` nao sendo dado decorativo;
+	- `processAdminFeedbackDetailCore` rodando so depois de leitura bem-sucedida;
+	- `not found` sem pos-processamento indevido;
+	- `id invalido` sem read nem core;
+	- `processAdminFeedbackDetailCore` sem receber ou decidir `scopedUnitId`, `unitScope` ou `feedbackQueryOptions`;
+	- owner curto como fronteira tenant-aware principal da leitura admin contextual.
+- Decisao semantica consolidada nesta rodada:
+	- `createAdminFeedbackDetailHandler` permanece owner curto da leitura admin contextual;
+	- detalhe admin de feedback permanece leitura contextual quando houver unidade escopada;
+	- `access.feedbackQueryOptions` e marcador material de contexto operacional por unidade;
+	- `processAdminFeedbackDetailCore` permanece pos-processamento, nao limite tenant-aware principal;
+	- ausencia de contexto so permanece aceita como ramo explicito do contrato atual ou policy, nao como erosao silenciosa;
+	- `createAdminFeedbackDetailHandler` nao e precedente para leitura global silenciosa;
+	- nenhuma refatoracao em `src` e necessaria neste momento porque a protecao focal e os testes adjacentes preservaram o contrato atual.
+- Preservacoes confirmadas nesta rodada:
+	- contrato publico preservado;
+	- `feedbackDetailApiController` preservado;
+	- `processAdminFeedbackDetailCore` preservado;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada.
+- Decisao de fechamento nesta rodada:
+	- fechar o corredor `createAdminFeedbackDetailHandler` como tenant-aware protegido e validado sem refatoracao em `src`.
+- Interpretacao obrigatoria consolidada nesta rodada:
+	- esta revisao apenas fecha o corredor ja protegido e validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=reviewCreateAdminFeedbackDetailHandlerTenantAwareProtection`;
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`;
+	- `recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterFeedbackDetail`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createAdminFeedbackDetailHandlerTenantAwareProtectionReviewed=true`
+	- `createAdminFeedbackDetailHandlerTenantAwareMicrocutClosed=true`
+	- `createAdminFeedbackDetailHandlerTenantAwareProtectionPassed=true`
+	- `createAdminFeedbackDetailHandlerAdjacentTestsPassed=true`
+	- `createAdminFeedbackDetailHandlerSourceRefactorRequired=false`
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=reviewCreateAdminFeedbackDetailHandlerTenantAwareProtection`
+	- `recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterFeedbackDetail`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
