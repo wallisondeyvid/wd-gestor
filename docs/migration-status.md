@@ -32317,6 +32317,107 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `portalUsageApproved=false`
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
+
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `createDeleteFeedbackHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem push.
+- Frente atual consolidada nesta rodada:
+	- `tenantArchitectureContinuation`.
+- Corredores ja fechados considerados nesta rodada:
+	- `feedbackStatusDataFacade`;
+	- `recursosContextDataFacade`;
+	- `funcionarioDeletePostDataFacade`;
+	- `createUsuarioExecutionService`;
+	- `updateUsuarioExecutionService`;
+	- `checkUsuarioEmailOwnerService`;
+	- `authContextReadDataFacade`;
+	- `passwordRecoveryRequestDataFacade`;
+	- `resetPasswordRenderDataFacade`;
+	- `resetPasswordExecutionService`;
+	- `primeiroAcessoExecutionService`;
+	- `unlockUsuarioExecutionService`;
+	- `toggleUsuarioExecutionService`;
+	- `createFeedbackPolicyOwnershipCore`;
+	- `processCreateFeedbackCore`;
+	- `processUpdateFeedbackRespostaCore`;
+	- `createDeleteFeedbackHandler`.
+- Candidatos considerados nesta rodada:
+	- `createAdminFeedbackDetailHandler` em `src/modules/gestor/app/controllers/feedbackDetailApiController.js`;
+	- `createMyFeedbackDetailHandler` em `src/modules/gestor/app/controllers/feedbackMyDetailApiController.js`;
+	- `createAdminFeedbackListHandler` em `src/modules/gestor/app/controllers/feedbackListApiController.js`;
+	- `createUploadFeedbackAnexoHandler` em `src/modules/gestor/app/controllers/feedbackUploadApiController.js`;
+	- `updateFeedbackWidgetVisibilityService` em `src/modules/gestor/app/services/widgetSettings/updateFeedbackWidgetVisibility.service.js`.
+- Candidatos recusados e motivo curto nesta rodada:
+	- `createAdminFeedbackListHandler`: recusado porque o corredor de leitura limitada ja esta cercado por owner/runtime tests e por `tests/architecture/feedbackReadTenantScope.contract.test.js`, reduzindo a lacuna tenant-aware material imediata;
+	- `createMyFeedbackDetailHandler`: recusado porque o corredor proprio ja nasce com `requireUnitScope` e ownership policy previamente endurecida, deixando o risco residual menor do que no detalhe admin;
+	- `createUploadFeedbackAnexoHandler`: recusado porque continua pequeno e vivo, mas mistura ownership, blob storage, persistencia de anexos e side effects de upload, aumentando o blast radius do proximo microcorte;
+	- `updateFeedbackWidgetVisibilityService`: recusado porque fica mais proximo de configuracao global de widget do que de mutacao ou leitura contextual tenant-aware principal, exigindo diferenciar configuracao global legitima de risco contextual real.
+- Proximo alvo tecnico residual selecionado nesta rodada:
+	- `createAdminFeedbackDetailHandler`.
+- Arquivo principal do alvo selecionado:
+	- `src/modules/gestor/app/controllers/feedbackDetailApiController.js`.
+- Motivo consolidado da selecao nesta rodada:
+	- o corredor e curto, vivo, local e testavel;
+	- permanece no mesmo dominio de feedback admin recentemente drenado, sem reabrir `api.db.js`, `auth.db.js`, `auth-context.db.js` ou bundles grandes;
+	- ainda nao possui protecao tenant-aware focal explicita no mesmo padrao usado para resposta e delete;
+	- oferece melhor relacao entre risco material e blast radius do que upload e widget settings.
+- Risco tenant-aware suspeito neste alvo:
+	- `feedbackDetailApiController -> feedbackPolicy.ensureAdminAccess -> findFeedbackByIdLean -> processAdminFeedbackDetailCore`;
+	- `access.feedbackQueryOptions` permanece como contexto material da leitura admin contextual;
+	- o detalhe admin depende do repasse correto desse contexto ate o read sensivel;
+	- o core de detalhe deve permanecer apenas como saneamento pos-read, sem decidir `scopedUnitId`, `feedbackQueryOptions` ou fronteira tenant-aware principal.
+- Lacuna atual de protecao registrada nesta rodada:
+	- existem testes owner/runtime adjacentes do detalhe admin, mas nao ha protecao tenant-aware focal explicita congelando o handoff material de `access.feedbackQueryOptions` e a separacao semantica entre owner curto e core pos-read;
+	- por isso o corredor continua pequeno o bastante para diagnostico documental antes de qualquer alteracao em `src`.
+- Proximo ato recomendado nesta rodada:
+	- `diagnoseCreateAdminFeedbackDetailHandlerTenantAwareTarget`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackDelete`;
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`;
+	- `recommendedNextAct=diagnoseCreateAdminFeedbackDetailHandlerTenantAwareTarget`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `nextTenantAwareTechnicalTargetAfterFeedbackDeleteSelected=true`
+	- `selectedTechnicalTarget=createAdminFeedbackDetailHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackDelete`
+	- `recommendedNextAct=diagnoseCreateAdminFeedbackDetailHandlerTenantAwareTarget`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta rodada:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
 - Interpretacao obrigatoria:
 	- este diagnostico apenas descreve o contrato atual;
 	- este diagnostico nao altera codigo;
