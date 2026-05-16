@@ -7107,6 +7107,100 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da revisao final da protecao e refatoracao tenant-aware de `primeiroAcessoExecutionService`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Corredor revisado nesta rodada:
+	- `primeiroAcessoExecutionService`.
+- Arquivo principal revisado nesta rodada:
+	- `src/modules/gestor/app/services/auth/primeiroAcessoExecution.service.js`.
+- Data access envolvido e preservado nesta rodada:
+	- `src/modules/gestor/app/data-access/auth/primeiroAcessoExecutionDataAccess.js`.
+- Protecao focal aceita nesta revisao:
+	- a protecao focal foi aceita como suficiente para o risco tenant-aware local deste corredor.
+- Protecao focal verde consolidada nesta revisao:
+	- `tests=7`;
+	- `pass=7`;
+	- `fail=0`.
+- Testes adjacentes verdes consolidados nesta revisao:
+	- `tests=14`;
+	- `pass=14`;
+	- `fail=0`.
+- Risco original protegido nesta revisao:
+	- `userId` ausente sem `completePrimeiroAcessoData`;
+	- usuario nao encontrado sem `completePrimeiroAcessoData`;
+	- usuario sem `primeiro_acesso` pendente sem `completePrimeiroAcessoData`;
+	- caminho valido com `completePrimeiroAcessoData` recebendo `userId` e `senhaHash` corretos;
+	- erro de `complete` preserva contrato atual;
+	- owner continua fazendo `bcrypt.hash` antes da delegacao ao service.
+- Refatoracao minima aplicada e aceita nesta revisao:
+	- gate explicito de `userId` no inicio do service;
+	- bloqueio antes de lookup e write quando `userId` esta ausente;
+	- fluxo restante preservado.
+- Semantica final consolidada desta revisao:
+	- `userId` de sessao como identidade global legitima do proprio usuario autenticado;
+	- write por `userId` e `senhaHash` como projecao derivada local e estritamente gated;
+	- nao como precedente generico para write global.
+- Contratos e superficies preservadas nesta revisao:
+	- contrato publico preservado;
+	- `authController` preservado;
+	- `primeiroAcessoExecutionDataAccess` preservado;
+	- `package.json` preservado.
+- Limites explicitos desta revisao:
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado;
+	- `src` nao foi alterado neste microcorte;
+	- `tests` nao foram alterados neste microcorte;
+	- `package.json` nao foi alterado neste microcorte;
+	- nenhum push foi executado.
+- Decisao desta revisao:
+	- fechar o corredor `primeiroAcessoExecutionService` como tenant-aware protegido, refatorado e validado.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewPrimeiroAcessoExecutionServiceTenantAwareProtection
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterPrimeiroAcesso
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- primeiroAcessoExecutionServiceTenantAwareProtectionReviewed=true
+	- primeiroAcessoExecutionServiceTenantAwareMicrocutClosed=true
+	- primeiroAcessoExecutionServiceTenantAwareProtectionPassed=true
+	- primeiroAcessoExecutionServiceAdjacentTestsPassed=true
+	- primeiroAcessoExecutionServiceTenantAwareMinimalRefactorApplied=true
+	- selectedTechnicalTarget=primeiroAcessoExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=reviewPrimeiroAcessoExecutionServiceTenantAwareProtection
+	- recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterPrimeiroAcesso
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja protegido, refatorado e validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware.
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
