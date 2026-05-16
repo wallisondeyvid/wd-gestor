@@ -33059,6 +33059,58 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto da criacao da protecao tenant-aware de `processCreateFeedbackCore`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Teste ou protecao tenant-aware criado nesta rodada:
+	- `processCreateFeedbackCore`.
+- Arquivo criado nesta rodada:
+	- `tests/gestor-feedback-create-tenant-aware-protection.test.js`.
+- Escopo consolidado da protecao criada:
+	- protege estruturalmente `feedbackCreateApiController -> processCreateFeedbackCore -> createFeedback`;
+	- protege o repasse material de `scopedUnitId` para `createFeedback` nas options;
+	- protege o shape atual do payload com `status`, `criadoPor` e `origem`;
+	- protege a composicao atual de `mensagem`, `tipo`, `modulo`, `contexto` e `url`;
+	- protege o cenario explicito sem `scopedUnitId` conforme o contrato atual;
+	- protege que o core nao faz I/O, query ou write direto fora da delegacao prevista;
+	- protege que o owner continua delegando ao core antes do write sensivel.
+- Confirmacoes desta rodada:
+	- `src` nao foi alterado neste microcorte;
+	- `package.json` nao foi alterado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada;
+	- nenhum relatorio real foi gerado;
+	- nenhuma refatoracao foi executada.
+- Proximo ato recomendado apos esta criacao: `runProcessCreateFeedbackCoreTenantAwareProtectionTest`.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=createProcessCreateFeedbackCoreTenantAwareProtectionTest`;
+	- `selectedTechnicalTarget=processCreateFeedbackCore`;
+	- `recommendedNextAct=runProcessCreateFeedbackCoreTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `processCreateFeedbackCoreTenantAwareProtectionTestCreated=true`
+	- `selectedTechnicalTarget=processCreateFeedbackCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=createProcessCreateFeedbackCoreTenantAwareProtectionTest`
+	- `recommendedNextAct=runProcessCreateFeedbackCoreTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=true`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
