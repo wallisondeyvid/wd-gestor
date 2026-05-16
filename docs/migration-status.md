@@ -5857,6 +5857,92 @@ Checkpoint tenant enforcement atual:
 	- gitPushExecuted=false
 	- blockedReasons=[]
 
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `resetPasswordRenderDataFacade`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Frente atual consolidada nesta selecao: `tenantArchitectureContinuation`.
+- Corredores ja fechados nesta rodada:
+	- `feedbackStatusDataFacade` protegido, refatorado e validado;
+	- `recursosContextDataFacade` protegido e fechado sem refatoracao imediata;
+	- `funcionarioDeletePostDataFacade` refatorado, protegido e validado como tenant-aware minimo;
+	- `createUsuarioExecutionService` refatorado, protegido e validado como tenant-aware minimo;
+	- `updateUsuarioExecutionService` protegido e validado sem refatoracao em `src`;
+	- `checkUsuarioEmailOwnerService` protegido e validado sem refatoracao em `src`;
+	- `authContextReadDataFacade` fechado documentalmente como global legitimo de identidade/auth;
+	- `passwordRecoveryRequestDataFacade` protegido e validado sem refatoracao em `src`;
+	- `resetPasswordRenderDataFacade` protegido e validado sem refatoracao em `src`.
+- Candidatos considerados nesta selecao:
+	- `resetPasswordExecutionService` em `src/modules/gestor/app/services/auth/passwordRecovery.service.js`;
+	- `primeiroAcessoExecutionService` em `src/modules/gestor/app/services/auth/primeiroAcessoExecution.service.js`;
+	- `loginPreAuthGateDataFacade` em `src/modules/gestor/app/data/auth/loginPreAuthGateDataFacade.js`;
+	- `userApiModulosCanonicalDataFacade` em `src/modules/gestor/app/data/auth/userApiModulosCanonicalDataFacade.js`.
+- Candidatos recusados e motivo curto:
+	- `primeiroAcessoExecutionService`: corredor pequeno e vivo, mas predominantemente identidade global e troca de senha obrigatoria em sessao autenticada, com menor materialidade tenant-aware do que o reset por token neste momento;
+	- `loginPreAuthGateDataFacade`: permanece reexport fino para data-access e arrastaria lockout, bypass de master e semantica pre-auth mais larga do que o microcorte atual;
+	- `userApiModulosCanonicalDataFacade`: continua mais proximo de catalogo canônico/global legitimo de modulos do que de risco tenant-aware residual material.
+- Proximo alvo tecnico residual selecionado nesta rodada: `resetPasswordExecutionService`.
+- Motivo consolidado da selecao:
+	- o alvo e pequeno, vivo, local e testavel;
+	- o corredor e adjacente ao `resetPasswordRenderDataFacade` ja fechado, o que preserva continuidade tecnica e semantica no mesmo eixo de auth recovery;
+	- o callsite vivo em `authController` delega diretamente para `resetPasswordByTokenService`, sem exigir reabertura de controllers grandes nem de bridges amplas;
+	- o service concentra uma leitura material por token, validacao de expiracao, lookup derivado de usuario e write final de senha/reset, compondo risco tenant-aware suficiente para um diagnostico proprio sem big-bang em `auth.db.js`.
+- Risco tenant-aware suspeito consolidado desta selecao:
+	- o token de reset e global legitimo de auth, mas o handoff subsequente para `user` e para a conclusao do reset por `userId` pode mascarar projecao derivada como leitura global generica se a semantica nao estiver cercada localmente;
+	- a fronteira entre `loadPasswordResetExecutionData({ token })` e `completePasswordResetData({ userId, passwordResetId })` combina leitura global legitima com write derivado, exigindo clarificacao tenant-aware propria;
+	- o corredor ainda nao tem, neste recorte local, uma protecao focal equivalente a de render para congelar essa ordem material e suas excecoes contratuais.
+- Lacuna de protecao atual consolidada desta selecao:
+	- ha teste estrutural adjacente do owner de reset por token, mas nao foi identificado nesta rodada um checkpoint focal equivalente ao recorte de protecao tenant-aware aplicado ao render;
+	- o service parece pequeno o bastante para diagnostico documental e eventual protecao estrutural sem Mongo real;
+	- ainda falta decidir documentalmente se o write por `userId` permanece projecao derivada legitima do token global de auth ou se ha resquicio tenant-aware adicional a cercar.
+- Nenhuma alteracao funcional nesta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- nenhuma alteracao em `package.json`;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Interpretacao obrigatoria desta rodada:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+- Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
+- Decisao principal consolidada desta rodada:
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterResetRender
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- recommendedNextAct=diagnoseResetPasswordExecutionServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+- Gates consolidados desta rodada:
+	- nextTenantAwareTechnicalTargetAfterResetRenderSelected=true
+	- selectedTechnicalTarget=resetPasswordExecutionService
+	- phase=tenantArchitectureContinuation
+	- selectedTarget=selectNextTenantAwareTechnicalTargetAfterResetRender
+	- recommendedNextAct=diagnoseResetPasswordExecutionServiceTenantAwareTarget
+	- chosenApproach=tenantAwareDatabasePerUnit
+	- sourceCodeChanged=false
+	- testsChanged=false
+	- packageJsonChanged=false
+	- scriptChanged=false
+	- commandCreated=false
+	- mongoRealConnected=false
+	- queryExecuted=false
+	- inventoryExecuted=false
+	- resetExecuted=false
+	- cleanupExecuted=false
+	- seedExecuted=false
+	- migrationExecuted=false
+	- backfillExecuted=false
+	- postgresMigrationApproved=false
+	- portalUsageApproved=false
+	- gitPushExecuted=false
+	- blockedReasons=[]
+
 - Checkpoint documental curto da criacao da protecao tenant-aware de `checkUsuarioEmailOwnerService`, consolidado nesta rodada com novo teste dedicado e sem alteracao em `src`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
 - Teste/protecao tenant-aware de `checkUsuarioEmailOwnerService` criado nesta rodada.
 - Arquivo criado nesta rodada: `tests/gestor-check-email-owner-tenant-aware-protection.test.js`.
