@@ -32166,6 +32166,170 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- esta selecao documental nao autoriza reabrir corredores ja fechados somente por proximidade tematica;
 	- o proximo passo deve permanecer pequeno, read-only e falsificavel dentro do corredor de feedback ownership.
 
+- Checkpoint documental curto do diagnostico tenant-aware de `createFeedbackPolicyOwnershipCore`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem query real contra banco real e sem conexao com Mongo real.
+- Base local:
+	- `1a77072 docs(tenant): seleciona proximo alvo apos toggle usuario`.
+- Alvo diagnosticado nesta rodada: `createFeedbackPolicyOwnershipCore`.
+- Arquivo principal diagnosticado nesta rodada: `src/modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js`.
+- Classificacao documental consolidada deste corredor:
+	- `HIBRIDO_AUDITAR`;
+	- `RISCO_OWNERSHIP_FEEDBACK_CONTEXTUAL_POTENCIAL`.
+- Leituras revisadas nesta auditoria read-only:
+	- `src/modules/gestor/app/services/feedback/createFeedbackPolicyOwnershipCore.service.js`;
+	- `src/modules/gestor/app/routes/feedbackApi.js`;
+	- `src/modules/gestor/app/controllers/feedbackListApiController.js`;
+	- `src/modules/gestor/app/controllers/feedbackDetailApiController.js`;
+	- `src/modules/gestor/app/controllers/feedbackStatusApiController.js`;
+	- `src/modules/gestor/app/controllers/feedbackRespostaApiController.js`;
+	- `src/modules/gestor/app/controllers/feedbackDeleteApiController.js`;
+	- `src/modules/gestor/app/controllers/feedbackUploadApiController.js`;
+	- `src/modules/gestor/app/controllers/feedbackMyDetailApiController.js`;
+	- `src/modules/gestor/app/controllers/feedbackMyListApiController.js`;
+	- `tests/gestor-feedback-policy-ownership-structural.test.js`;
+	- `tests/gestor-feedback-upload-owner-structural-seam.test.js`;
+	- `docs/migration-status.md`.
+- Callsites vivos identificados nesta rodada:
+	- `feedbackApi.js` instancia `const feedbackPolicy = createFeedbackPolicyOwnershipCore({ isAdminLike });`;
+	- `feedbackListApiController` usa `feedbackPolicy.ensureAdminAccess({ currentUser, scopedUnitId })` para listagem administrativa;
+	- `feedbackDetailApiController` usa `feedbackPolicy.ensureAdminAccess({ currentUser, scopedUnitId })` para detalhe administrativo;
+	- `feedbackStatusApiController` usa `feedbackPolicy.ensureAdminAccess({ currentUser, scopedUnitId })` antes do update de status;
+	- `feedbackRespostaApiController` usa `feedbackPolicy.ensureAdminAccess({ currentUser, scopedUnitId })` antes do update de resposta;
+	- `feedbackDeleteApiController` usa `feedbackPolicy.ensureAdminAccess({ currentUser, scopedUnitId })` antes do delete e cleanup;
+	- `feedbackUploadApiController` usa `feedbackPolicy.ensureCreatorOwnership({ currentUser, feedback, scopedUnitId })` antes do upload e save do feedback;
+	- `feedbackMyDetailApiController` usa `feedbackPolicy.ensureCreatorOwnership({ currentUser, feedback, scopedUnitId })` no detalhe do proprio feedback;
+	- `feedbackMyListApiController` usa `feedbackPolicy.buildMyFeedbackFilter({ currentUser, scopedUnitId })` antes da leitura da lista do proprio usuario.
+- Testes adjacentes existentes localizados nesta rodada:
+	- `tests/gestor-feedback-policy-ownership-structural.test.js`;
+	- `tests/gestor-feedback-upload-owner-structural-seam.test.js`;
+	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
+	- `tests/gestor-feedback-my-detail-owner-structural-seam.test.js`;
+	- `tests/gestor-feedback-my-list-owner-structural-seam.test.js`;
+	- `tests/gestor-feedback-upload-controller-structural-seam.test.js`.
+- Cadeia viva identificada nesta rodada:
+	- `feedbackApi.js` -> `createFeedbackPolicyOwnershipCore({ isAdminLike })` -> `feedbackPolicy.ensureAdminAccess` ou `feedbackPolicy.ensureCreatorOwnership` ou `feedbackPolicy.buildMyFeedbackFilter` -> controllers de feedback -> dependencias de leitura ou mutacao de feedback.
+- Funcoes sensiveis identificadas no core:
+	- `resolveActor(currentUser)`;
+	- `resolveCanonicalContextUnitId({ scopedUnitId })`;
+	- `ensureAdminAccess(options)`;
+	- `ensureCreatorOwnership({ currentUser, feedback, scopedUnitId })`;
+	- `buildMyFeedbackFilter({ currentUser, scopedUnitId })`.
+- Onde entram os dados de ownership neste corredor:
+	- `currentUser` entra em todas as funcoes principais do core e e reduzido a `actor.id`, `actor.email` e `actor.isAdmin`;
+	- `feedback.criadoPor.userId`, `feedback.criadoPor.email` e `feedback.unidade_id` entram em `ensureCreatorOwnership`;
+	- `scopedUnitId` entra em `resolveCanonicalContextUnitId`, `ensureAdminAccess`, `ensureCreatorOwnership` e `buildMyFeedbackFilter`;
+	- `isAdminLike` entra na construcao do core em `feedbackApi.js` e governa a distincao inicial entre admin global legitimo e usuario comum.
+- Onde ha unidade, gestor, condominio, membership ou `unitScope` no corredor:
+	- ha `unitScope` explicito na borda dos controllers por `req.unitScope?.unidadeId`, repassado ao core como `scopedUnitId`;
+	- ha vinculo com escopo operacional de Gestor porque o corredor roda sob `feedbackApi.js` e `requireUnitScope` nos handlers de feedback contextual;
+	- nao foi localizada nesta rodada consulta direta a membership dentro do proprio core;
+	- nao foi localizado nesta rodada acoplamento direto a entidade Condominio dentro do proprio core;
+	- a unidade entra como contexto canonico derivado da requisicao, nao como lookup novo interno do core.
+- Onde ocorre a decisao de ownership neste corredor:
+	- a decisao principal de ownership ocorre dentro do proprio `createFeedbackPolicyOwnershipCore`;
+	- `ensureAdminAccess` decide se o branch sera `global` ou `contextual` e produz `feedbackQueryOptions` e `feedbackMutationOptions`;
+	- `ensureCreatorOwnership` decide se o usuario atual pode agir sobre o feedback carregado combinando actor, `feedback.criadoPor` e `feedback.unidade_id`;
+	- `buildMyFeedbackFilter` decide o filtro de ownership usado na listagem do proprio usuario.
+- Onde ocorre eventual write, se houver:
+	- nao ha write dentro do proprio core diagnosticado;
+	- os writes ocorrem depois da decisao do core em callers vivos como `feedbackStatusApiController`, `feedbackRespostaApiController`, `feedbackDeleteApiController` e `feedbackUploadApiController`;
+	- nesses corredores o core nao escreve, mas influencia o write ao montar `feedbackMutationOptions` e ao autorizar ou negar o acesso antes da mutacao.
+- Pontos sensiveis consolidados desta auditoria:
+	- ownership/politica de feedback fica centralizado no core, mas o mesmo objeto decide tanto ramo administrativo quanto ownership do proprio feedback;
+	- `scopedUnitId` canonicamente recebido pode representar contexto operacional por unidade, o que torna a policy mais sensivel do que simples configuracao global;
+	- `feedbackQueryOptions` e `feedbackMutationOptions` carregam `allowLegacyUnscoped: true`, o que preserva compatibilidade atual, mas exige classificacao semantica explicita antes de qualquer endurecimento;
+	- `buildMyFeedbackFilter` aceita feedbacks sem `unidade_id` ao combinar owner filter com `unidade_id` nulo, ausente ou igual ao contexto canonico, o que reforca o carater hibrido do corredor;
+	- a distincao entre configuracao global legitima e ownership contextual tenant-aware nao esta fechada apenas pela forma do codigo atual.
+- Leitura tecnica do comportamento atual a preservar:
+	- admins reconhecidos por `isAdminLike` continuam autorizados no core;
+	- quando `scopedUnitId` existe, `ensureAdminAccess` devolve branch `contextual` e inclui `feedbackQueryOptions` e `feedbackMutationOptions` com `scopedUnitId`, `allowLegacyUnscoped: true` e, nas leituras, `preferScopedRepoRead: true`;
+	- quando `scopedUnitId` nao existe, `ensureAdminAccess` devolve branch `global` com options vazias;
+	- `ensureCreatorOwnership` continua fail-closed quando `feedback.unidade_id` diverge do contexto canonico ou quando `criadoPor.userId` ou `criadoPor.email` divergem do actor resolvido;
+	- `buildMyFeedbackFilter` continua escolhendo `criadoPor.userId` como preferencia e cai para `criadoPor.email` no fallback atual;
+	- o core continua sem fazer I/O, sem query e sem write proprio.
+- Hipotese de risco desta rodada:
+	- ownership de feedback pode ser global legitimo quando o corredor estiver apenas modelando politica geral de acesso administrativo ou quando a ausencia de `scopedUnitId` representar ramo global explicitamente permitido;
+	- o mesmo corredor pode ser amplo demais se a policy estiver, na pratica, representando ownership contextual por unidade e produzindo options/filtros que alcancam reads e writes tenant-sensitive sem cerca contratual especifica suficiente;
+	- por isso, nesta rodada o risco fica classificado como `RISCO_OWNERSHIP_FEEDBACK_CONTEXTUAL_POTENCIAL`, e nao como bug confirmado.
+- Por que pode ser global legitimo:
+	- a decisao administrativa nasce de `isAdminLike` e o branch `global` e explicitamente devolvido pelo core quando nao ha `scopedUnitId`;
+	- o proprio core nao consulta banco nem muta estado, funcionando como policy sem efeitos colaterais diretos;
+	- parte do corredor pode representar regra geral de acesso do modulo, e nao necessariamente uma mutacao tenant-sensitive por si so.
+- Por que pode ser perigoso se for contextual:
+	- `scopedUnitId` entra no core como contexto canonico e influencia filtros e mutation options consumidos por reads e writes reais de feedback;
+	- se a classificacao contextual nao estiver congelada, o branch `global` pode esconder uso amplo demais para superficie que, no runtime, depende de unidade efetiva;
+	- `allowLegacyUnscoped: true` preserva compatibilidade atual e precisa de cerca contratual para nao virar precedente generico fora do corredor explicitamente documentado.
+- Cobertura atual e sufiencia para fechamento documental:
+	- a cobertura atual e suficiente para afirmar wiring, callsites vivos, shape de delegacao e ausencia de I/O direto no core;
+	- a cobertura atual nao e suficiente para fechamento documental definitivo do corredor como global legitimo ou contextual seguro, porque ainda falta uma protecao focal que congele explicitamente a semantica tenant-aware do branch global versus contextual e o uso de `scopedUnitId` no proprio core;
+	- portanto, este microcorte fecha apenas o diagnostico, nao o corredor.
+- Lacuna atual de protecao:
+	- ainda nao existe protecao focal pequena e dedicada que congele o contrato tenant-aware do proprio `createFeedbackPolicyOwnershipCore` como seam principal, distinguindo `global` vs `contextual`, ownership por creator e filtro do proprio usuario com `scopedUnitId`;
+	- os testes adjacentes existentes cobrem wiring e shape dos owners, mas nao consolidam sozinhos a classificacao semantica do core como policy global legitima ou ownership contextual seguro.
+- Comportamento a proteger por teste futuro:
+	- `ensureAdminAccess` deve preservar o branch `global` apenas quando `scopedUnitId` estiver ausente e o actor for admin legitimo;
+	- `ensureAdminAccess` deve preservar o branch `contextual` e o shape atual de `feedbackQueryOptions` e `feedbackMutationOptions` quando `scopedUnitId` existir;
+	- `ensureCreatorOwnership` deve negar acesso quando houver divergencia de unidade contextual ou de ownership por `userId` ou `email`;
+	- `buildMyFeedbackFilter` deve preservar o filtro atual por owner e a combinacao contextual permitida quando houver `scopedUnitId`;
+	- o core deve continuar sem I/O direto, sem query real e sem write proprio.
+- Hipotese de protecao futura:
+	- teste estrutural + runtime contratual leve com stubs e mocks;
+	- foco no proprio `createFeedbackPolicyOwnershipCore` e nos callsites minimos adjacentes;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Criterio de sucesso de uma protecao futura:
+	- congelar explicitamente a classificacao operacional do core como `HIBRIDO_AUDITAR`, sem promover bug inexistente nem liberar endurecimento prematuro;
+	- provar que `scopedUnitId` entra, e distinguido e propagado exatamente no shape atual;
+	- provar que o branch `global` permanece explicito e separado do branch `contextual`;
+	- provar que o core nao escreve e nao consulta banco;
+	- provar que os owners continuam delegando ao core antes de leituras e writes do corredor de feedback.
+- Decisao sobre a proxima etapa:
+	- a proxima etapa deve desenhar protecao;
+	- refatoracao minima em `src` nao e recomendada antes da protecao;
+	- fechamento documental sem nova protecao nao e recomendado neste momento.
+- Decisao principal consolidada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=diagnoseCreateFeedbackPolicyOwnershipCoreTenantAwareTarget`;
+	- `selectedTechnicalTarget=createFeedbackPolicyOwnershipCore`;
+	- `recommendedNextAct=designCreateFeedbackPolicyOwnershipCoreTenantAwareProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createFeedbackPolicyOwnershipCoreTenantAwareTargetDiagnosed=true`
+	- `selectedTechnicalTarget=createFeedbackPolicyOwnershipCore`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=diagnoseCreateFeedbackPolicyOwnershipCoreTenantAwareTarget`
+	- `recommendedNextAct=designCreateFeedbackPolicyOwnershipCoreTenantAwareProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria:
+	- este diagnostico apenas descreve o contrato atual;
+	- este diagnostico nao altera codigo;
+	- este diagnostico nao altera testes;
+	- este diagnostico nao executa refatoracao;
+	- este diagnostico nao cria comando;
+	- este diagnostico nao conecta Mongo real;
+	- este diagnostico nao executa query real;
+	- este diagnostico nao gera relatorio;
+	- este diagnostico nao inicia PostgreSQL;
+	- este diagnostico nao usa Portal;
+	- a proxima etapa deve desenhar protecao/teste antes de qualquer alteracao em `src`.
+
 
 
 
