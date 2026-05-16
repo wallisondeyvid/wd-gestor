@@ -34308,6 +34308,77 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto da criacao da protecao tenant-aware de `createDeleteFeedbackHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem relatorio real e sem refatoracao.
+- Protecao criada nesta rodada:
+	- `tests/gestor-feedback-delete-tenant-aware-protection.test.js`.
+- Alvo desta protecao:
+	- `createDeleteFeedbackHandler`.
+- Arquivo principal desta protecao:
+	- `src/modules/gestor/app/controllers/feedbackDeleteApiController.js`.
+- Cleanup relacionado observado por esta protecao:
+	- `processFeedbackDeleteCleanupCore`.
+- O que a protecao criada congela:
+	- handoff estrutural `feedbackDeleteApiController -> feedbackPolicy.ensureAdminAccess -> findFeedbackByIdAndDeleteLean -> processFeedbackDeleteCleanupCore`;
+	- repasse material de `access.feedbackMutationOptions` ao delete final;
+	- cleanup apenas depois de delete bem-sucedido;
+	- ausencia de `scopedUnitId` e `feedbackMutationOptions` dentro do cleanup;
+	- ramo `not found` sem cleanup indevido;
+	- validacao de `feedbackId` bloqueando delete e cleanup no contrato atual;
+	- guardrail semantico explicito de que o owner e o ponto curto do delete contextual e nao precedente para delete global.
+- Tecnica usada nesta protecao:
+	- `node:test` + `assert/strict`;
+	- harness leve com `fs`, `path` e `vm`;
+	- stubs e mocks locais;
+	- sem conexao real;
+	- sem dado real;
+	- sem abrir feedback controllers grandes, data access ou `api.db.js` como big-bang.
+- Cobertura focal entregue nesta rodada:
+	- prova estrutural da ordem `policy -> delete -> cleanup -> resposta`;
+	- prova runtime leve do repasse material de `access.feedbackMutationOptions` ao delete final;
+	- prova runtime leve de que cleanup so roda apos delete bem-sucedido;
+	- prova runtime leve de que cleanup nao recebe nem decide `scopedUnitId`;
+	- prova runtime leve de que `not found` nao executa cleanup;
+	- prova runtime leve de que `feedbackId` invalido bloqueia delete e cleanup no contrato atual.
+- Confirmacoes desta rodada:
+	- `src` nao alterado;
+	- `package.json` nao alterado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado;
+	- nenhuma refatoracao executada.
+- Proxima etapa recomendada nesta rodada:
+	- `runCreateDeleteFeedbackHandlerTenantAwareProtectionTest`.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=createCreateDeleteFeedbackHandlerTenantAwareProtectionTest`;
+	- `selectedTechnicalTarget=createDeleteFeedbackHandler`;
+	- `recommendedNextAct=runCreateDeleteFeedbackHandlerTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createDeleteFeedbackHandlerTenantAwareProtectionTestCreated=true`
+	- `selectedTechnicalTarget=createDeleteFeedbackHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=createCreateDeleteFeedbackHandlerTenantAwareProtectionTest`
+	- `recommendedNextAct=runCreateDeleteFeedbackHandlerTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=true`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 
 
 
