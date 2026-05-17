@@ -10902,6 +10902,258 @@ Checkpoint tenant enforcement atual:
 	- esta politica nao declara o WD Gestor pronto para producao;
 	- esta politica nao faz push;
 	- a proxima etapa deve definir o checklist preflight de execucao operacional Mongo.
+- Checkpoint documental curto do checklist de preflight operacional MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push, sem transformar este checklist em runbook executavel e sem escrever instrucoes para executar comandos reais agora.
+- Identificacao consolidada deste checklist:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=defineMongoOperationalExecutionPreflightChecklist`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada neste checklist:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada neste checklist:
+	- MongoDB permanece como arquitetura atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Objetivo do preflight:
+	- impedir execucao operacional sem contexto;
+	- impedir uso acidental de Mongo real;
+	- impedir `seed`/`reset`/`cleanup`/`migration`/`backfill` sem autorizacao especifica;
+	- exigir ambiente, dados, risco, autorizacao, backup/rollback e criterios de sucesso antes de execucao futura;
+	- separar intencao documental de execucao real.
+- Checklist minimo antes de qualquer execucao futura:
+	- `qual comando ou fluxo seria executado?`:
+		- pergunta de controle: qual e exatamente o comando, script, fluxo manual ou procedimento que se pretende acionar;
+		- finalidade: impedir execucao vaga ou ambigua;
+		- risco que mitiga: acionar fluxo diferente do pretendido;
+		- resposta exigida antes de execucao futura: nome exato do comando ou descricao exata do fluxo;
+		- evidencia documental esperada: referencia textual no ledger e classificacao do fluxo;
+		- consequencia se nao for respondido: bloquear.
+	- `qual nivel de risco R0/R1/R2/R3/R4/R5/X?`:
+		- pergunta de controle: em qual faixa de risco o fluxo se enquadra;
+		- finalidade: obrigar classificacao antes de qualquer uso;
+		- risco que mitiga: executar fluxo de alto risco como se fosse trivial;
+		- resposta exigida antes de execucao futura: nivel explicito de risco;
+		- evidencia documental esperada: referencia a matriz de risco consolidada;
+		- consequencia se nao for respondido: bloquear.
+	- `qual ambiente-alvo?`:
+		- pergunta de controle: em que ambiente o fluxo incidiria;
+		- finalidade: evitar colapso entre local, memoria, homologacao e producao;
+		- risco que mitiga: atingir ambiente errado;
+		- resposta exigida antes de execucao futura: ambiente nomeado explicitamente;
+		- evidencia documental esperada: referencia a matriz de ambientes;
+		- consequencia se nao for respondido: bloquear.
+	- `o ambiente esta autorizado?`:
+		- pergunta de controle: existe gate humano/documental que permita esse ambiente;
+		- finalidade: impedir execucao por suposicao;
+		- risco que mitiga: operar fora de ambiente autorizado;
+		- resposta exigida antes de execucao futura: sim, com gate identificado;
+		- evidencia documental esperada: autorizacao registrada no ledger;
+		- consequencia se nao for respondido: bloquear.
+	- `os dados sao ficticios ou reais?`:
+		- pergunta de controle: qual e o tipo de dado afetado;
+		- finalidade: separar sintetico de real;
+		- risco que mitiga: tocar dado real achando que e ficticio;
+		- resposta exigida antes de execucao futura: classificacao explicita do dado;
+		- evidencia documental esperada: referencia a politica de dados;
+		- consequencia se nao for respondido: bloquear.
+	- `os dados sao sensiveis?`:
+		- pergunta de controle: ha usuarios, credenciais, uploads, feedback, auth-context ou outra superficie sensivel;
+		- finalidade: acionar controle reforcado;
+		- risco que mitiga: exposicao de superficie sensivel;
+		- resposta exigida antes de execucao futura: sim ou nao, com justificativa;
+		- evidencia documental esperada: superficie sensivel identificada;
+		- consequencia se nao for respondido: bloquear.
+	- `ha unit-scope envolvido?`:
+		- pergunta de controle: o fluxo toca escopo por unidade ou isolamento multiunidade;
+		- finalidade: proteger isolamento por unidade;
+		- risco que mitiga: afetar multiplas unidades sem querer;
+		- resposta exigida antes de execucao futura: sim ou nao, com escopo definido;
+		- evidencia documental esperada: unit-scope ou ausencia dele registrada;
+		- consequencia se nao for respondido: bloquear.
+	- `ha auth-context envolvido?`:
+		- pergunta de controle: o fluxo toca autenticacao, sessao ou contexto operacional;
+		- finalidade: proteger coerencia de autenticacao/autorizacao;
+		- risco que mitiga: degradar auth-context sem perceber;
+		- resposta exigida antes de execucao futura: sim ou nao, com contexto definido;
+		- evidencia documental esperada: superficie de auth-context identificada;
+		- consequencia se nao for respondido: bloquear.
+	- `ha usuarios, unidades, credencial master, feedback ou uploads envolvidos?`:
+		- pergunta de controle: o fluxo toca superficies especialmente sensiveis;
+		- finalidade: concentrar cautela especial;
+		- risco que mitiga: impacto sobre entidades criticas;
+		- resposta exigida antes de execucao futura: lista explicita das superficies afetadas ou confirmacao de ausencia;
+		- evidencia documental esperada: superficies enumeradas no ledger;
+		- consequencia se nao for respondido: bloquear.
+	- `ha backup necessario?`:
+		- pergunta de controle: a operacao exigiria copia previa;
+		- finalidade: evitar execucao sem contingencia;
+		- risco que mitiga: perda irreversivel sem salvaguarda;
+		- resposta exigida antes de execucao futura: sim ou nao, com justificativa;
+		- evidencia documental esperada: politica de backup aplicada;
+		- consequencia se nao for respondido: bloquear.
+	- `ha rollback necessario?`:
+		- pergunta de controle: a operacao exigiria caminho de retorno;
+		- finalidade: impedir operacao sem reversao concebida;
+		- risco que mitiga: falha sem plano de retorno;
+		- resposta exigida antes de execucao futura: sim ou nao, com justificativa;
+		- evidencia documental esperada: politica de rollback aplicada;
+		- consequencia se nao for respondido: bloquear.
+	- `ha plano de reversao escrito?`:
+		- pergunta de controle: existe documento ou bloco no ledger descrevendo reversao;
+		- finalidade: exigir preparo antes da execucao;
+		- risco que mitiga: improviso em situacao de falha;
+		- resposta exigida antes de execucao futura: sim, com referencia;
+		- evidencia documental esperada: plano de reversao citado nominalmente;
+		- consequencia se nao for respondido: bloquear.
+	- `ha criterios de sucesso?`:
+		- pergunta de controle: como se reconheceria que a operacao deu certo;
+		- finalidade: impedir operacao sem objetivo verificavel;
+		- risco que mitiga: ambiguidade de resultado;
+		- resposta exigida antes de execucao futura: criterios objetivos;
+		- evidencia documental esperada: definicao de sucesso no ledger;
+		- consequencia se nao for respondido: bloquear.
+	- `ha criterios de falha?`:
+		- pergunta de controle: como se reconheceria que a operacao falhou;
+		- finalidade: obrigar criterio de abortar;
+		- risco que mitiga: seguir operando em estado ruim;
+		- resposta exigida antes de execucao futura: criterios objetivos de falha;
+		- evidencia documental esperada: definicao de falha no ledger;
+		- consequencia se nao for respondido: bloquear.
+	- `ha logs esperados?`:
+		- pergunta de controle: quais sinais observaveis seriam usados para acompanhar o fluxo;
+		- finalidade: permitir verificacao controlada;
+		- risco que mitiga: operar sem observabilidade minima;
+		- resposta exigida antes de execucao futura: lista de logs/sinais esperados;
+		- evidencia documental esperada: logs ou checkpoints esperados descritos;
+		- consequencia se nao for respondido: bloquear.
+	- `ha autorizacao humana explicita?`:
+		- pergunta de controle: quem autorizou e sob que gate;
+		- finalidade: impedir liberacao implicita;
+		- risco que mitiga: execucao sem dono responsavel;
+		- resposta exigida antes de execucao futura: sim, com identificacao do gate humano;
+		- evidencia documental esperada: autorizacao registrada no ledger;
+		- consequencia se nao for respondido: bloquear.
+	- `ha registro previo no ledger?`:
+		- pergunta de controle: a operacao ja foi descrita previamente no ledger;
+		- finalidade: evitar execucao sem trilha documental;
+		- risco que mitiga: perda de rastreabilidade;
+		- resposta exigida antes de execucao futura: sim, com bloco previo;
+		- evidencia documental esperada: referencia ao registro previo;
+		- consequencia se nao for respondido: bloquear.
+	- `o comando e mutativo?`:
+		- pergunta de controle: o fluxo altera estado;
+		- finalidade: distinguir leitura de mutacao;
+		- risco que mitiga: subestimar impacto de escrita;
+		- resposta exigida antes de execucao futura: sim ou nao;
+		- evidencia documental esperada: classificacao do fluxo;
+		- consequencia se nao for respondido: bloquear.
+	- `o comando pode afetar dados reais?`:
+		- pergunta de controle: existe chance de tocar dado real;
+		- finalidade: acionar bloqueio maximo para dados reais;
+		- risco que mitiga: contato indevido com dados reais;
+		- resposta exigida antes de execucao futura: sim ou nao, com justificativa;
+		- evidencia documental esperada: classificacao do tipo de dado;
+		- consequencia se nao for respondido: bloquear.
+	- `o comando pode afetar multiplas unidades?`:
+		- pergunta de controle: ha alcance multiunidade;
+		- finalidade: proteger isolamento por unidade;
+		- risco que mitiga: abrangencia maior do que a prevista;
+		- resposta exigida antes de execucao futura: sim ou nao, com escopo;
+		- evidencia documental esperada: unit-scope ou alcance descrito;
+		- consequencia se nao for respondido: bloquear.
+	- `o comando pode afetar autenticacao/autorizacao?`:
+		- pergunta de controle: ha efeito sobre login, sessao, roles, auth-context ou credenciais;
+		- finalidade: acionar cautela reforcada sobre auth;
+		- risco que mitiga: quebrar controle de acesso;
+		- resposta exigida antes de execucao futura: sim ou nao, com superficie listada;
+		- evidencia documental esperada: superficie auth descrita;
+		- consequencia se nao for respondido: bloquear.
+	- `o comando pode afetar arquivos/uploads?`:
+		- pergunta de controle: ha impacto em anexos, uploads ou blobs;
+		- finalidade: proteger arquivos e historicos;
+		- risco que mitiga: perda ou corrupcao de anexos;
+		- resposta exigida antes de execucao futura: sim ou nao, com superficie listada;
+		- evidencia documental esperada: origem/destino e impacto descritos;
+		- consequencia se nao for respondido: bloquear.
+	- `o comando esta proibido nesta fase?`:
+		- pergunta de controle: o fluxo cai em uma proibicao explicita vigente;
+		- finalidade: encerrar cedo qualquer tentativa de excecao;
+		- risco que mitiga: executar fluxo explicitamente bloqueado;
+		- resposta exigida antes de execucao futura: nao, ou justificativa de fase futura com novo gate;
+		- evidencia documental esperada: referencia ao bloqueio ou a futura autorizacao;
+		- consequencia se nao for respondido: bloquear.
+- Matriz de bloqueio automatico:
+	- se ambiente nao definido: bloquear;
+	- se autorizacao ausente: bloquear;
+	- se dados reais sem autorizacao especifica: bloquear;
+	- se comando `R4` ou `R5` sem plano de reversao: bloquear;
+	- se `seed`/`reset`/`cleanup`/`migration`/`backfill` sem autorizacao especifica: bloquear;
+	- se Mongo real sem autorizacao especifica: bloquear;
+	- se query real sem autorizacao especifica: bloquear;
+	- se unit-scope/auth-context envolvidos sem validacao: bloquear;
+	- se backup/rollback necessario e ausente: bloquear;
+	- se sucesso/falha/logs nao definidos: bloquear;
+	- se houver duvida entre ficticio e real: bloquear;
+	- se for Portal: bloquear nesta fase;
+	- se for PostgreSQL: bloquear por estar fora do roadmap.
+- Matriz de decisao desta fase:
+	- permitido agora: documentacao do checklist;
+	- permitido agora: commit local documental apos validacao;
+	- nao permitido agora: execucao real de qualquer comando operacional;
+	- nao permitido agora: Mongo real;
+	- nao permitido agora: query real;
+	- nao permitido agora: backup/restore/rollback real;
+	- nao permitido agora: `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- nao permitido agora: Portal;
+	- nao permitido agora: push.
+- Proximo ato recomendado nesta rodada:
+	- `defineMongoOperationalDryRunPolicy`.
+- Gates finais deste checklist:
+	- `mongoOperationalExecutionPreflightChecklistDefined=true`
+	- `selectedTarget=defineMongoOperationalExecutionPreflightChecklist`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria deste checklist:
+	- este checklist apenas organiza o preflight documental antes de qualquer execucao operacional MongoDB futura;
+	- este checklist nao altera codigo;
+	- este checklist nao altera testes;
+	- este checklist nao altera `package.json`;
+	- este checklist nao altera scripts;
+	- este checklist nao cria arquivo novo;
+	- este checklist nao cria comando npm;
+	- este checklist nao executa comandos;
+	- este checklist nao executa scripts npm;
+	- este checklist nao conecta Mongo real;
+	- este checklist nao executa query real;
+	- este checklist nao executa backup/restore/rollback real;
+	- este checklist nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este checklist nao usa Portal;
+	- este checklist nao reintroduz PostgreSQL no roadmap;
+	- este checklist nao declara o WD Gestor pronto para producao;
+	- este checklist nao faz push;
+	- a proxima etapa deve definir a politica documental de dry-run operacional Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
