@@ -8908,6 +8908,101 @@ Checkpoint tenant enforcement atual:
 	- este handoff nao usa Portal;
 	- este handoff nao executa novo push;
 	- qualquer nova frente futura deve ser aberta somente apos decisao explicita.
+- Checkpoint documental curto da revisao do handoff final pos-push da frente `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real externo, sem novo push e sem abertura de nova fase.
+- Frente consolidada nesta revisao:
+	- `tenantArchitectureContinuation`.
+- Status consolidado desta revisao:
+	- publicada, documentada, com registro pos-push final e handoff final preparado localmente.
+- Pushes ja publicados consolidados nesta revisao:
+	- `24a274b..81d90f5`;
+	- `81d90f5..0c81183`.
+- Commit remoto atual consolidado nesta revisao:
+	- `0c81183 docs(tenant): prepara instrucao final pos-push`.
+- Commits locais finais ainda nao publicados:
+	- `bb0ad8a docs(tenant): registra pos-push final tenant-aware`;
+	- `a869065 docs(tenant): prepara handoff final pos-push`.
+- Validacao associada consolidada nesta revisao:
+	- `tests=2364`;
+	- `suites=17`;
+	- `pass=2362`;
+	- `fail=0`;
+	- `skipped=2`;
+	- `cancelled=0`;
+	- `todo=0`.
+- Revisao do handoff consolidada nesta rodada:
+	- o handoff final pos-push esta coerente;
+	- `selectedTechnicalTarget=none` permanece correto;
+	- nenhuma nova frente foi aberta automaticamente;
+	- qualquer nova frente depende de decisao explicita;
+	- qualquer publicacao dos commits finais locais depende de decisao humana posterior.
+- Limites consolidados desta revisao:
+	- nao declara WD Gestor pronto para producao;
+	- nao declara multi-tenant inteiro concluido;
+	- PostgreSQL permanece fora;
+	- Portal permanece fora;
+	- dados reais permanecem fora;
+	- prontidao operacional permanece em trilha separada.
+- Decisao consolidada nesta revisao:
+	- handoff final pos-push revisado;
+	- a proxima etapa deve ser decisao humana sobre publicar os commits finais locais ou manter local.
+- Proximo ato recomendado nesta rodada:
+	- `awaitHumanDecisionOnFinalPostPushDocsPublication`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum novo push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=reviewFinalPostPushHandoffTenantArchitectureContinuation`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=awaitHumanDecisionOnFinalPostPushDocsPublication`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `finalPostPushHandoffTenantArchitectureContinuationReviewed=true`
+	- `finalPostPushHandoffTenantArchitectureContinuationApproved=true`
+	- `localFinalPostPushDocsAheadOrigin=true`
+	- `gitPushExecuted=false`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=reviewFinalPostPushHandoffTenantArchitectureContinuation`
+	- `recommendedNextAct=awaitHumanDecisionOnFinalPostPushDocsPublication`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas revisa o handoff final pos-push;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando npm/script;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio real externo;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- esta revisao nao executa novo push;
+	- qualquer nova frente futura deve ser aberta somente apos decisao explicita;
+	- qualquer publicacao dos commits finais locais depende de decisao humana posterior.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
