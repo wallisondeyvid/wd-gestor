@@ -10620,6 +10620,288 @@ Checkpoint tenant enforcement atual:
 	- esta politica nao declara o WD Gestor pronto para producao;
 	- esta politica nao faz push;
 	- a proxima etapa deve definir a politica operacional de backup e rollback Mongo.
+- Checkpoint documental curto da politica de backup e rollback operacional MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push, sem transformar esta politica em runbook executavel e sem escrever instrucoes para executar comandos reais agora.
+- Identificacao consolidada desta politica:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=defineMongoOperationalBackupRollbackPolicy`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada nesta politica:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nesta politica:
+	- MongoDB permanece como arquitetura atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Objetivo desta politica:
+	- definir criterios documentais antes de qualquer backup ou rollback futuro;
+	- impedir restore acidental;
+	- impedir perda de dados por `cleanup`/`reset`/`migration`/`backfill`;
+	- separar rollback documental, rollback de commit, rollback de dados e recuperacao de emergencia;
+	- registrar explicitamente que esta politica nao autoriza execucao real.
+- Categorias de backup/rollback desta politica:
+	- `backup documental do ledger`:
+		- finalidade: preservar o historico documental da frente sem tocar dados operacionais;
+		- status nesta fase: permitido apenas como conceito documental;
+		- risco principal: confundir historico git com backup de dados Mongo;
+		- permitido agora: sim, apenas como politica documental;
+		- autorizacao exigida: autorizacao documental do microcorte;
+		- ambiente permitido: `documentacao/ledger`;
+		- ambiente proibido: qualquer ambiente de dados;
+		- evidencias necessarias antes de uso futuro: estado git coerente, alvo documental definido e registro no ledger;
+		- relacao com dados ficticios/reais: nao toca nenhum dado de banco;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nenhuma dessas categorias e autorizada por este backup documental;
+		- criterios minimos antes de execucao futura: escopo documental definido e validacao do diff;
+		- proximo tratamento recomendado: manter separado de qualquer nocao de backup de dados.
+	- `rollback documental via git`:
+		- finalidade: registrar a possibilidade conceitual de reverter documentacao ou commits locais no futuro;
+		- status nesta fase: apenas possibilidade futura, sem execucao;
+		- risco principal: usar rollback documental como justificativa para operacao destrutiva imediata;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao humana explicita em microcorte futuro proprio;
+		- ambiente permitido: `documentacao/ledger` em fase futura;
+		- ambiente proibido: qualquer ambiente de dados ou producao;
+		- evidencias necessarias antes de uso futuro: commit-alvo definido, impacto entendido e registro antes/depois no ledger;
+		- relacao com dados ficticios/reais: nao autoriza rollback de dados;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nao substitui estrategia de reversao dessas categorias;
+		- criterios minimos antes de execucao futura: fluxo git classificado e autorizado;
+		- proximo tratamento recomendado: manter estritamente distinto de rollback operacional.
+	- `backup de dados ficticios futuro`:
+		- finalidade: prever copia controlada de dados sinteticos em fase futura, se um ambiente permitido vier a existir;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: dados ficticios abrirem precedente para backup operacional nao controlado;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio para dados ficticios e ambiente definido;
+		- ambiente permitido: ambiente sintetico futuro explicitamente aprovado;
+		- ambiente proibido: Mongo real, homologacao e producao;
+		- evidencias necessarias antes de uso futuro: conjunto de dados rotulado, origem/destino definidos e ausencia de dados reais;
+		- relacao com dados ficticios/reais: restrito a dados ficticios; nao autoriza dados reais;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nao libera nenhuma dessas categorias;
+		- criterios minimos antes de execucao futura: ambiente sintetico definido, fluxo classificado e autorizacao humana;
+		- proximo tratamento recomendado: amarrar a politica de dados sinteticos a um fluxo futuro de copia controlada.
+	- `rollback de dados ficticios futuro`:
+		- finalidade: prever reversao de um experimento sintetico em fase futura, se houver ambiente permitido;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: rollback de dados ser tratado como operacao banal;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio de rollback para dados ficticios;
+		- ambiente permitido: ambiente sintetico futuro explicitamente aprovado;
+		- ambiente proibido: Mongo real, homologacao e producao;
+		- evidencias necessarias antes de uso futuro: origem/destino definidos, reversao descrita e logs esperados;
+		- relacao com dados ficticios/reais: limitado a dados ficticios;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nao se confunde com `reset` ou `cleanup`;
+		- criterios minimos antes de execucao futura: plano de reversao escrito previamente;
+		- proximo tratamento recomendado: manter separado de qualquer nocao de reset geral.
+	- `backup de Mongo em memoria futuro`:
+		- finalidade: documentar a eventual copia de um ambiente efemero em memoria, caso seja aprovado no futuro;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: tratar memoria como licenca ampla para operacao;
+		- permitido agora: nao;
+		- autorizacao exigida: gate autonomo de memoria e dados sinteticos;
+		- ambiente permitido: `Mongo em memoria` futuro explicitamente aprovado;
+		- ambiente proibido: qualquer Mongo real;
+		- evidencias necessarias antes de uso futuro: comprovacao de memoria, dados ficticios e objetivo controlado;
+		- relacao com dados ficticios/reais: apenas dados ficticios em memoria;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nenhuma dessas categorias e liberada;
+		- criterios minimos antes de execucao futura: ambiente efemero definido e risco classificado;
+		- proximo tratamento recomendado: integrar com politica de dados em memoria sem torná-la executavel.
+	- `rollback de Mongo em memoria futuro`:
+		- finalidade: prever descarte ou reversao controlada de estado efemero em memoria, se vier a existir;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: transformar descarte efemero em precedente para rollback real;
+		- permitido agora: nao;
+		- autorizacao exigida: gate autonomo de rollback em memoria;
+		- ambiente permitido: `Mongo em memoria` futuro explicitamente aprovado;
+		- ambiente proibido: Mongo real e producao;
+		- evidencias necessarias antes de uso futuro: estado efemero identificado, reversao descrita e criterio de encerramento;
+		- relacao com dados ficticios/reais: apenas dados ficticios efemeros;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nao autoriza `reset` geral;
+		- criterios minimos antes de execucao futura: plano de reversao e autorizacao humana;
+		- proximo tratamento recomendado: manter como subcaso de ambiente sintetico.
+	- `backup de Mongo real futuro`:
+		- finalidade: reservar o espaco documental para copia de base real em fase futura sob gate maximo;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: exposicao ou movimentacao indevida de dados reais;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao humana explicita, ambiente definido e politica propria de dados reais;
+		- ambiente permitido: ambiente real futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente sem governanca formal;
+		- evidencias necessarias antes de uso futuro: origem/destino definidos, dados-alvo definidos, risco classificado e logs esperados;
+		- relacao com dados ficticios/reais: toca apenas dados reais sob gate proprio;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nenhuma dessas categorias substitui backup real;
+		- criterios minimos antes de execucao futura: autorizacao humana, ambiente definido, plano de reversao e sucesso/falha documentados;
+		- proximo tratamento recomendado: manter bloqueio integral ate checklist preflight formal.
+	- `restore de Mongo real futuro`:
+		- finalidade: reservar o espaco documental para restauracao real futura sob controles maximos;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: sobrescrita irreversivel ou degradacao de dados reais;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao humana explicita e politica propria de restore;
+		- ambiente permitido: ambiente real futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente sem origem validada e destino definido;
+		- evidencias necessarias antes de uso futuro: origem validada, destino definido, logs esperados, criterios de abortar e impacto entendido;
+		- relacao com dados ficticios/reais: aplica-se a dados reais e continua proibido agora;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: restore nao pode ser substituto improvisado dessas categorias;
+		- criterios minimos antes de execucao futura: ambiente definido, origem validada, destino definido, plano de reversao e autorizacao humana;
+		- proximo tratamento recomendado: tratar restore como categoria autonoma de maior risco.
+	- `rollback de migration/backfill futuro`:
+		- finalidade: exigir estrategia de reversao antes de qualquer migration ou backfill futuro;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: escrita estrutural sem plano de retorno;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio por operacao `R4`/`R5` e plano de reversao previo;
+		- ambiente permitido: ambiente futuro explicitamente aprovado, nunca por padrao;
+		- ambiente proibido: qualquer ambiente sem rollback descrito;
+		- evidencias necessarias antes de uso futuro: fluxo classificado, origem/destino definidos, impacto esperado e rollback escrito;
+		- relacao com dados ficticios/reais: depende do tipo de dado e herda suas restricoes;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: aplica-se diretamente a `migration` e `backfill` futuros;
+		- criterios minimos antes de execucao futura: estrategia de rollback documentada antes da execucao;
+		- proximo tratamento recomendado: amarrar todo fluxo mutativo a uma precondicao formal de reversao.
+	- `rollback de credencial master futuro`:
+		- finalidade: prever recuperacao de alteracao de credencial privilegiada sob cautela maxima;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: perda de acesso ou exposicao de privilegio global;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio para credencial master e auditoria formal;
+		- ambiente permitido: ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente sem trilha de auditoria;
+		- evidencias necessarias antes de uso futuro: superficie afetada definida, dono responsavel, origem/destino da credencial e impacto mapeado;
+		- relacao com dados ficticios/reais: afeta superfices sensiveis, nao depende apenas de tipo de dado;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: independente dessas categorias, mas exige cautela superior;
+		- criterios minimos antes de execucao futura: plano de reversao, auditoria e autorizacao humana explicita;
+		- proximo tratamento recomendado: tratar como categoria sensivel autonoma.
+	- `recuperacao de uploads/feedback futura`:
+		- finalidade: prever restauracao ou recomposicao futura de anexos e feedbacks sob protecao reforcada;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: perda ou exposicao de anexos e historicos sensiveis;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio por superficie sensivel;
+		- ambiente permitido: ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente sem controle adicional;
+		- evidencias necessarias antes de uso futuro: superficie definida, origem/destino definidos, impacto e trilha de auditoria;
+		- relacao com dados ficticios/reais: herda restricoes do tipo de dado e da superficie sensivel;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nao pode ser tratada como `cleanup` reversivel;
+		- criterios minimos antes de execucao futura: plano de recuperacao escrito e autorizacao especifica;
+		- proximo tratamento recomendado: mapear superfices de upload/feedback antes de qualquer operacao.
+	- `recuperacao de unit-scope/unidades futura`:
+		- finalidade: prever recuperacao de configuracoes ou relacionamentos ligados a unit-scope e unidades;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: corromper isolamento por unidade;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio com verificacao de unit-scope;
+		- ambiente permitido: ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente sem verificacao contextual;
+		- evidencias necessarias antes de uso futuro: unit-scope definido, impacto por unidade entendido e logs esperados;
+		- relacao com dados ficticios/reais: herda restricoes do tipo de dado e do contexto multi-unidade;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: qualquer uma dessas categorias exige verificacao adicional de escopo;
+		- criterios minimos antes de execucao futura: checagem de unit-scope antes e depois da operacao;
+		- proximo tratamento recomendado: ligar esta categoria ao preflight contextual.
+	- `recuperacao de auth-context futura`:
+		- finalidade: prever restauracao futura de superfices de auth-context sem romper coerencia operacional;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: degradar autenticacao, sessao ou contexto ativo por unidade;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio para auth-context e superficie sensivel;
+		- ambiente permitido: ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente sem verificacao de auth-context;
+		- evidencias necessarias antes de uso futuro: contexto afetado identificado, logs esperados e impacto de recuperacao mapeado;
+		- relacao com dados ficticios/reais: pode incidir sobre dados sensiveis, portanto herda bloqueios maximos;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nenhuma dessas categorias pode tocar auth-context sem estrategia de reversao;
+		- criterios minimos antes de execucao futura: validacao contextual antes/depois e trilha documental obrigatoria;
+		- proximo tratamento recomendado: integrar auth-context ao checklist preflight futuro.
+	- `emergencia/recuperacao futura`:
+		- finalidade: reservar um espaco documental para resposta a incidente e recuperacao futura sob governanca propria;
+		- status nesta fase: apenas desenho futuro;
+		- risco principal: invocar emergencia para pular gates normais;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio de emergencia com dono responsavel e criterio de encerramento;
+		- ambiente permitido: ambiente futuro explicitamente aprovado para contingencia;
+		- ambiente proibido: qualquer ambiente sem incidente caracterizado;
+		- evidencias necessarias antes de uso futuro: incidente caracterizado, origem/destino definidos, impacto e logs esperados;
+		- relacao com dados ficticios/reais: depende do tipo de dado e herda suas restricoes;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nenhuma dessas categorias vira autorizada automaticamente por emergencia;
+		- criterios minimos antes de execucao futura: plano de reversao escrito, ambiente definido e autorizacao humana explicita;
+		- proximo tratamento recomendado: manter apenas como categoria de contingencia futura.
+- Regras gerais desta politica:
+	- backup real nao esta autorizado nesta fase;
+	- restore real nao esta autorizado nesta fase;
+	- rollback de dados nao esta autorizado nesta fase;
+	- rollback documental via git so pode ser tratado como possibilidade futura, nao como acao deste microcorte;
+	- dados reais continuam proibidos;
+	- dados ficticios podem ser documentados, mas nao manipulados por comando;
+	- qualquer restore exige ambiente definido, origem validada, destino definido e autorizacao humana explicita;
+	- qualquer rollback de operacao `R4` ou `R5` exige plano de reversao previo;
+	- qualquer `migration`/`backfill` futuro deve ter estrategia de rollback antes de execucao;
+	- credencial master, uploads/feedback, unit-scope e auth-context exigem cautela especial.
+- Matriz de decisao desta fase:
+	- permitido agora: documentacao da politica de backup/rollback;
+	- permitido agora: commit local documental apos validacao;
+	- nao permitido agora: backup real;
+	- nao permitido agora: restore real;
+	- nao permitido agora: rollback de dados;
+	- nao permitido agora: Mongo real;
+	- nao permitido agora: query real;
+	- nao permitido agora: `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- nao permitido agora: Portal;
+	- nao permitido agora: push.
+- Criterios minimos antes de backup/restore/rollback futuro:
+	- ambiente-alvo definido;
+	- tipo de dado definido;
+	- origem e destino definidos;
+	- comando ou fluxo classificado por risco;
+	- autorizacao humana explicita;
+	- plano de reversao escrito antes da execucao;
+	- logs esperados definidos;
+	- criterios de sucesso/falha definidos;
+	- verificacao de unit-scope/auth-context quando aplicavel;
+	- registro no ledger antes e depois da operacao.
+- Proximo ato recomendado nesta rodada:
+	- `defineMongoOperationalExecutionPreflightChecklist`.
+- Gates finais desta politica:
+	- `mongoOperationalBackupRollbackPolicyDefined=true`
+	- `selectedTarget=defineMongoOperationalBackupRollbackPolicy`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta politica:
+	- esta politica apenas organiza criterios documentais de backup e rollback operacional MongoDB;
+	- esta politica nao altera codigo;
+	- esta politica nao altera testes;
+	- esta politica nao altera `package.json`;
+	- esta politica nao altera scripts;
+	- esta politica nao cria arquivo novo;
+	- esta politica nao cria comando npm;
+	- esta politica nao executa comandos;
+	- esta politica nao executa scripts npm;
+	- esta politica nao conecta Mongo real;
+	- esta politica nao executa query real;
+	- esta politica nao executa backup real, restore real ou rollback real;
+	- esta politica nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta politica nao usa Portal;
+	- esta politica nao reintroduz PostgreSQL no roadmap;
+	- esta politica nao declara o WD Gestor pronto para producao;
+	- esta politica nao faz push;
+	- a proxima etapa deve definir o checklist preflight de execucao operacional Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
