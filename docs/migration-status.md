@@ -11921,6 +11921,196 @@ Checkpoint tenant enforcement atual:
 	- estes criterios nao declaram o WD Gestor pronto para producao;
 	- estes criterios nao fazem push;
 	- a proxima etapa deve preparar o checkpoint final da frente de prontidao operacional Mongo.
+- Checkpoint final documental preparado da frente `operationalReadinessMongo`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem dry-run real, sem geracao de log tecnico real, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push, sem transformar o checkpoint em runbook executavel e sem declarar producao pronta.
+- Identificacao consolidada deste checkpoint:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=prepareMongoOperationalReadinessFinalCheckpoint`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada neste checkpoint:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada neste checkpoint:
+	- MongoDB permanece como arquitetura atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Escopo do checkpoint:
+	- fechamento documental da frente de prontidao operacional MongoDB;
+	- consolidacao das politicas, matrizes e gates criados;
+	- confirmacao de que a frente nao alterou `src`, `tests`, `package.json` ou `scripts`;
+	- confirmacao de que nao houve execucao operacional real;
+	- confirmacao de que producao nao esta declarada pronta;
+	- confirmacao de que push continua reservado ao usuario.
+- Itens consolidados na frente:
+	- `abertura da frente operationalReadinessMongo`:
+		- finalidade: marcar o inicio formal da trilha documental de prontidao operacional Mongo;
+		- evidencia documental esperada: commit e checkpoint inicial de abertura no ledger;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: dispersao do escopo da frente;
+		- pendencia remanescente, se houver: nenhuma dentro do escopo documental.
+	- `checklist inicial de prontidao`:
+		- finalidade: fixar a primeira moldura de verificacao da frente;
+		- evidencia documental esperada: checkpoint inicial de prontidao no ledger;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: perda do fio de readiness entre microcortes;
+		- pendencia remanescente, se houver: nenhuma, exceto preservacao no checkpoint final.
+	- `inventario de fontes`:
+		- finalidade: mapear as fontes documentais e estruturais relevantes;
+		- evidencia documental esperada: inventario consolidado no ledger;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: conclusao sem base suficiente;
+		- pendencia remanescente, se houver: nenhuma.
+	- `leitura read-only das fontes`:
+		- finalidade: garantir que a trilha foi suportada por leitura, nao por execucao;
+		- evidencia documental esperada: checkpoints de leitura consolidada;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: inferencia sem evidencia documental;
+		- pendencia remanescente, se houver: nenhuma.
+	- `matriz de prontidao MongoDB`:
+		- finalidade: estruturar a avaliacao global da frente;
+		- evidencia documental esperada: checkpoint da matriz de prontidao no ledger;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: perda de visao sistemica da readiness;
+		- pendencia remanescente, se houver: nenhuma.
+	- `classificacao de comandos por risco`:
+		- finalidade: separar leitura, mutacao e alto risco;
+		- evidencia documental esperada: checkpoint de classificacao de risco;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: tratar fluxos distintos como equivalentes;
+		- pendencia remanescente, se houver: nenhuma.
+	- `esqueleto de runbook seguro`:
+		- finalidade: organizar a trilha sem instruir execucao real;
+		- evidencia documental esperada: checkpoint do esqueleto seguro no ledger;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: futura operacionalizacao sem estrutura documental;
+		- pendencia remanescente, se houver: manter claro que nao e runbook executavel.
+	- `gates de autorizacao`:
+		- finalidade: explicitar que qualquer operacao futura depende de autorizacao humana/documental;
+		- evidencia documental esperada: checkpoint de gates no ledger;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: execucao futura implicita ou sem dono;
+		- pendencia remanescente, se houver: nenhuma.
+	- `matriz de ambientes`:
+		- finalidade: separar local, memoria, homologacao, producao e outras categorias de ambiente;
+		- evidencia documental esperada: checkpoint da matriz de ambientes;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: colapso entre ambientes e escopos;
+		- pendencia remanescente, se houver: nenhuma.
+	- `politica de dados`:
+		- finalidade: distinguir dados ficticios, reais e sensiveis;
+		- evidencia documental esperada: checkpoint da politica de dados;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: mistura indevida de classes de dados;
+		- pendencia remanescente, se houver: nenhuma.
+	- `politica de backup/rollback`:
+		- finalidade: fixar criterios de contingencia antes de fluxos futuros de maior risco;
+		- evidencia documental esperada: checkpoint da politica de backup/rollback;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: falta de estrategia de reversao;
+		- pendencia remanescente, se houver: nenhuma.
+	- `checklist de preflight`:
+		- finalidade: impor perguntas obrigatorias antes de qualquer operacao futura;
+		- evidencia documental esperada: checkpoint do checklist de preflight;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: operacao futura sem contexto minimo;
+		- pendencia remanescente, se houver: nenhuma.
+	- `politica de dry-run`:
+		- finalidade: separar simulacao documental de execucao real;
+		- evidencia documental esperada: checkpoint da politica de dry-run;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: tratar dry-run como permissao operacional;
+		- pendencia remanescente, se houver: nenhuma.
+	- `politica de auditoria/logs`:
+		- finalidade: fixar rastreabilidade documental e saneamento de logs futuros;
+		- evidencia documental esperada: checkpoint da politica de auditoria/logs;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: ausencia de trilha ou exposicao sensivel em futura operacao;
+		- pendencia remanescente, se houver: nenhuma.
+	- `criterios de saida`:
+		- finalidade: definir quando a frente pode ser considerada documentalmente consolidada;
+		- evidencia documental esperada: checkpoint dos criterios de saida no ledger;
+		- status atual: consolidado nesta trilha;
+		- risco controlado: encerramento prematuro ou ambiguo;
+		- pendencia remanescente, se houver: apenas o commit local posterior deste checkpoint final preparado.
+- Declaracoes negativas obrigatorias:
+	- nao declara producao pronta;
+	- nao autoriza Mongo real;
+	- nao autoriza query real;
+	- nao autoriza dry-run real;
+	- nao autoriza backup/restore/rollback real;
+	- nao autoriza `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- nao autoriza Portal;
+	- nao autoriza push;
+	- nao reabre PostgreSQL;
+	- nao altera arquitetura tecnica;
+	- nao altera codigo-fonte;
+	- nao altera testes;
+	- nao altera scripts.
+- Estado esperado apos o futuro commit local:
+	- branch `migration/refactor-core`;
+	- ahead `16`;
+	- working tree limpa;
+	- push ainda pendente e reservado ao usuario;
+	- checkpoint final documental preparado;
+	- `productionReadyDeclared=false`;
+	- `finalCheckpointPrepared=true`;
+	- `finalCheckpointCommittedAfterValidation=true` somente apos commit posterior;
+	- `gitPushExecuted=false`.
+- Proximo ato recomendado nesta rodada:
+	- `commitMongoOperationalReadinessFinalCheckpoint`.
+- Gates finais deste checkpoint:
+	- `mongoOperationalReadinessFinalCheckpointPrepared=true`
+	- `selectedTarget=prepareMongoOperationalReadinessFinalCheckpoint`
+	- `selectedTechnicalTarget=none`
+	- `productionReadyDeclared=false`
+	- `finalCheckpointPrepared=true`
+	- `finalCheckpointCommittedAfterValidation=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `technicalLogGenerated=false`
+	- `sensitiveLogExposed=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria deste checkpoint:
+	- este checkpoint apenas prepara o fechamento documental final da frente `operationalReadinessMongo`;
+	- este checkpoint nao altera codigo;
+	- este checkpoint nao altera testes;
+	- este checkpoint nao altera `package.json`;
+	- este checkpoint nao altera scripts;
+	- este checkpoint nao cria arquivo novo;
+	- este checkpoint nao cria comando npm;
+	- este checkpoint nao executa comandos;
+	- este checkpoint nao executa scripts npm;
+	- este checkpoint nao executa dry-run real;
+	- este checkpoint nao gera log tecnico real por execucao;
+	- este checkpoint nao conecta Mongo real;
+	- este checkpoint nao executa query real;
+	- este checkpoint nao executa backup real, restore real ou rollback real;
+	- este checkpoint nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este checkpoint nao usa Portal;
+	- este checkpoint nao reintroduz PostgreSQL no roadmap;
+	- este checkpoint nao declara o WD Gestor pronto para producao;
+	- este checkpoint nao faz push;
+	- a proxima etapa deve apenas fechar em commit local este checkpoint final preparado.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
