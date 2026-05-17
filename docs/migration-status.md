@@ -7761,6 +7761,100 @@ Checkpoint tenant enforcement atual:
 	- este handoff nao usa Portal;
 	- este handoff nao executa push;
 	- qualquer push posterior depende de decisao humana explicita e deve ser executado pelo usuario.
+- Checkpoint documental curto da preparacao da decisao humana de push do bloco `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real, sem push e sem abertura de nova fase.
+- Frente encerrada consolidada nesta decisao:
+	- `tenantArchitectureContinuation`.
+- Bloco local consolidado nesta decisao:
+	- bloco pos-fechamento documental da sequencia atual de microcortes tenant-aware no Mongo.
+- Status desta decisao:
+	- decisao humana de push em preparacao.
+- Objetivo consolidado desta decisao:
+	- deixar claro que o bloco esta pronto para avaliacao humana de publicacao, mas que nenhum push deve ser executado por automacao ou Copilot.
+- Estado esperado consolidado desta decisao:
+	- branch `migration/refactor-core`;
+	- `origin/migration/refactor-core` em `24a274b`;
+	- branch local em `ahead 175` apos o commit deste microcorte;
+	- `working tree` deve estar limpa antes de qualquer push futuro.
+- Evidencias consolidadas para decisao humana:
+	- frente encerrada documentalmente;
+	- handoff pos-frente preparado;
+	- `selectedTechnicalTarget=none`;
+	- nenhum novo alvo tecnico residual foi aberto;
+	- o historico local confirma baseline focal ampla recente verde com `136 tests`, `136 pass` e `0 fail`;
+	- sem Mongo real;
+	- sem query real;
+	- sem inventario real;
+	- sem relatorio real;
+	- sem dados reais.
+- Limites consolidados desta decisao:
+	- nao declara o WD Gestor pronto para producao;
+	- nao declara o multi-tenant inteiro concluido;
+	- nao abre nova fase;
+	- nao executa push;
+	- PostgreSQL permanece fora;
+	- Portal permanece fora;
+	- dados reais permanecem fora.
+- Decisao humana futura necessaria consolidada nesta rodada:
+	- se o usuario quiser publicar o bloco, ele proprio deve executar o push manualmente;
+	- antes do push, recomenda-se rodar validacao explicita final escolhida pelo usuario;
+	- o Copilot deve apenas preparar instrucao, nunca executar push.
+- Proximo ato recomendado nesta rodada:
+	- `prepareHumanPushInstructionForTenantArchitectureContinuationBlock`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real gerado;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=prepareHumanPushDecisionForTenantArchitectureContinuationBlock`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=prepareHumanPushInstructionForTenantArchitectureContinuationBlock`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `humanPushDecisionForTenantArchitectureContinuationPrepared=true`
+	- `humanPushInstructionPending=true`
+	- `gitPushExecuted=false`
+	- `noNewTechnicalTargetOpened=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=prepareHumanPushDecisionForTenantArchitectureContinuationBlock`
+	- `recommendedNextAct=prepareHumanPushInstructionForTenantArchitectureContinuationBlock`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta decisao:
+	- esta decisao apenas prepara decisao humana futura de push;
+	- esta decisao nao altera codigo;
+	- esta decisao nao altera testes;
+	- esta decisao nao executa refatoracao;
+	- esta decisao nao cria comando;
+	- esta decisao nao conecta Mongo real;
+	- esta decisao nao executa query real;
+	- esta decisao nao gera relatorio real;
+	- esta decisao nao inicia PostgreSQL;
+	- esta decisao nao usa Portal;
+	- esta decisao nao executa push;
+	- qualquer push posterior depende de decisao humana explicita e deve ser executado pelo usuario.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
