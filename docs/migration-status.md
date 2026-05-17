@@ -9089,6 +9089,111 @@ Checkpoint tenant enforcement atual:
 	- esta abertura nao declara o WD Gestor pronto para producao;
 	- esta abertura nao faz push;
 	- a proxima etapa deve mapear o checklist de prontidao operacional em modo somente leitura e documental.
+- Checkpoint documental curto do mapeamento inicial do checklist de prontidao operacional MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem refatoracao tecnica.
+- Frente atual consolidada nesta rodada:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nesta rodada:
+	- MongoDB permanece como base atual do WD Gestor;
+	- PostgreSQL esta fora do roadmap atual;
+	- nao ha trilha de migracao PostgreSQL planejada.
+- Objetivo consolidado deste checklist:
+	- avaliar se o WD Gestor esta pronto para uso controlado em MongoDB, com dados ficticios e controlados, sem declarar producao pronta.
+- Categorias consolidadas do checklist:
+	- `1. ambiente e configuracao`;
+	- `2. variaveis/env necessarias`;
+	- `3. conexao MongoDB autorizavel futuramente`;
+	- `4. dados ficticios e limpeza segura`;
+	- `5. criacao e validacao de unidade inicial`;
+	- `6. criacao e validacao de usuario master/admin`;
+	- `7. login e sessao`;
+	- `8. auth-context e unidade canonica`;
+	- `9. visao global master/admin sem unidade selecionada`;
+	- `10. selecao e troca de unidade`;
+	- `11. fluxos principais do Gestor`;
+	- `12. permissoes e papeis`;
+	- `13. seeds, resets e cleanups proibidos sem autorizacao explicita`;
+	- `14. backups e rollback antes de qualquer operacao real`;
+	- `15. validacao manual futura`;
+	- `16. criterios de go/no-go para uso controlado`.
+- Fora de escopo consolidado deste checklist:
+	- PostgreSQL, por estar fora do roadmap atual;
+	- Portal;
+	- dados reais;
+	- producao plena;
+	- deploy real;
+	- execucao de scripts reais;
+	- conexao Mongo real sem autorizacao explicita;
+	- `seed`, `reset`, `cleanup`, `migration` e `backfill` sem autorizacao explicita.
+- Riscos iniciais consolidados nesta rodada:
+	- confundir prontidao operacional com producao pronta;
+	- executar scripts destrutivos em dados ficticios sem checklist;
+	- conectar Mongo real antes de autorizacao;
+	- abrir nova refatoracao tecnica sem necessidade;
+	- voltar a tratar PostgreSQL como destino futuro contra a decisao atual.
+- Proximo ato recomendado nesta rodada:
+	- `inventoryOperationalReadinessSourcesMongoReadOnly`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum `seed`, `reset`, `cleanup`, `migration` ou `backfill` executado;
+	- nenhum PostgreSQL iniciado;
+	- nenhum preparo de migracao PostgreSQL;
+	- nenhum Portal usado;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=mapOperationalReadinessChecklistMongo`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=inventoryOperationalReadinessSourcesMongoReadOnly`;
+	- `chosenApproach=mongodbOperationalReadiness`.
+- Gates:
+	- `operationalReadinessChecklistMongoMapped=true`
+	- `mongodbArchitectureDecisionCurrent=true`
+	- `postgresOutOfRoadmap=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=operationalReadinessMongo`
+	- `selectedTarget=mapOperationalReadinessChecklistMongo`
+	- `recommendedNextAct=inventoryOperationalReadinessSourcesMongoReadOnly`
+	- `chosenApproach=mongodbOperationalReadiness`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `postgresRoadmapActive=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria deste checklist:
+	- este checklist apenas mapeia prontidao operacional MongoDB;
+	- este checklist nao altera codigo;
+	- este checklist nao altera testes;
+	- este checklist nao executa refatoracao;
+	- este checklist nao cria comando npm/script;
+	- este checklist nao conecta Mongo real;
+	- este checklist nao executa query real;
+	- este checklist nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este checklist nao inicia PostgreSQL;
+	- este checklist nao considera PostgreSQL como roadmap;
+	- este checklist nao usa Portal;
+	- este checklist nao declara o WD Gestor pronto para producao;
+	- este checklist nao faz push;
+	- a proxima etapa deve inventariar fontes documentais e scripts em modo somente leitura.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
