@@ -9815,6 +9815,180 @@ Checkpoint tenant enforcement atual:
 	- esta classificacao nao declara o WD Gestor pronto para producao;
 	- esta classificacao nao faz push;
 	- a proxima etapa deve desenhar o esqueleto seguro do runbook operacional Mongo.
+- Checkpoint documental curto do esqueleto seguro de runbook operacional MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem Mongo real, sem query real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem transformar este esqueleto em runbook executavel definitivo.
+- Identificacao consolidada deste esqueleto:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=designSafeMongoOperationalRunbookSkeleton`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada neste esqueleto:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada neste esqueleto:
+	- MongoDB permanece como base atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Objetivo consolidado do runbook futuro:
+	- orientar operacao segura do WD Gestor em MongoDB;
+	- separar leitura, verificacao, boot, canary, inventario, mutacao e emergencia;
+	- impedir uso acidental de comandos perigosos;
+	- exigir autorizacao humana explicita para operacoes sensiveis.
+- Secoes previstas do runbook futuro:
+	- `principios de seguranca operacional`:
+		- finalidade: fixar invariantes de seguranca, escopo permitido e limites da frente;
+		- o que pode conter futuramente: regras de precedencia, proibicoes permanentes e linguagem padrao de gate;
+		- o que ainda nao pode conter agora: instrucao de execucao real, aprovacao automatica ou comando operacional;
+		- risco principal: falsa sensacao de autorizacao ampla se os principios forem vagos;
+		- dependencia antes de virar runbook executavel: gates humanos e classificacao de comandos estabilizados.
+	- `pre-condicoes antes de qualquer execucao`:
+		- finalidade: listar verificacoes obrigatorias antes de qualquer comando futuro;
+		- o que pode conter futuramente: checagem de branch, ambiente, dados-alvo, backup, rollback e autorizacao;
+		- o que ainda nao pode conter agora: checklist acionavel com ordem de execucao real;
+		- risco principal: omitir condicoes de seguranca criticas;
+		- dependencia antes de virar runbook executavel: ambiente-alvo e gates de autorizacao definidos.
+	- `matriz de ambientes: local, memoria, homologacao futura, producao futura`:
+		- finalidade: distinguir contextos operacionais e nivel de permissao por ambiente;
+		- o que pode conter futuramente: limites por ambiente, dados permitidos e diferencas entre memoria, local e ambientes reais;
+		- o que ainda nao pode conter agora: permissao implicita para homologacao ou producao;
+		- risco principal: colapsar ambientes sinteticos e reais na mesma trilha;
+		- dependencia antes de virar runbook executavel: definicao formal de ambientes aceitos.
+	- `matriz de comandos por risco`:
+		- finalidade: ancorar comandos conhecidos aos niveis `R0` a `R5` e `X`;
+		- o que pode conter futuramente: tabela acionavel com condicoes, donos e evidencias por comando;
+		- o que ainda nao pode conter agora: autorizacao de uso imediato de qualquer comando;
+		- risco principal: usar a matriz como liberacao automatica;
+		- dependencia antes de virar runbook executavel: classificacao por risco consolidada e revisada.
+	- `fluxo de leitura documental`:
+		- finalidade: formalizar o caminho seguro de leitura e consolidacao sem execucao;
+		- o que pode conter futuramente: fontes obrigatorias, ordem de leitura e forma de registrar evidencias;
+		- o que ainda nao pode conter agora: gatilho para acao operacional subsequente sem revisao humana;
+		- risco principal: misturar leitura com automacao;
+		- dependencia antes de virar runbook executavel: definicao clara de saidas documentais esperadas.
+	- `fluxo de verificacao local`:
+		- finalidade: descrever como futuras verificacoes locais poderao ser avaliadas com seguranca;
+		- o que pode conter futuramente: guardrails, smoke, flags de ambiente e criterios de escopo;
+		- o que ainda nao pode conter agora: permissao de rodar testes ou comandos de verificacao neste momento;
+		- risco principal: transformar verificacao local em execucao padrao sem gate;
+		- dependencia antes de virar runbook executavel: autorizacao humana e escopo da verificacao definido.
+	- `fluxo de boot local sem mutacao`:
+		- finalidade: delimitar como boots locais poderao ser tratados de forma segura no futuro;
+		- o que pode conter futuramente: requisitos de ambiente, ausencia de dados reais e logs esperados;
+		- o que ainda nao pode conter agora: instrucao direta para subir servidor;
+		- risco principal: boot acidental com dependencia real de Mongo;
+		- dependencia antes de virar runbook executavel: ambiente permitido e comando validado como seguro.
+	- `fluxo de inventario read-only`:
+		- finalidade: enquadrar automacoes read-only controladas sem confundir com operacao aprovada;
+		- o que pode conter futuramente: requisitos para dados ficticios, escopo da leitura e evidencias esperadas;
+		- o que ainda nao pode conter agora: permissao para rodar inventario controlado;
+		- risco principal: pseudo-execucao travestida de leitura;
+		- dependencia antes de virar runbook executavel: contrato explicito de dados e ambiente sintetico.
+	- `fluxo de canary controlado`:
+		- finalidade: separar canary de verificacao local comum;
+		- o que pode conter futuramente: criterios de entrada, limites de escopo, sinais de sucesso/falha e criterio de abortar;
+		- o que ainda nao pode conter agora: execucao ou aprovacao implicita de canary;
+		- risco principal: tocar superficies reais antes de haver gate humano suficiente;
+		- dependencia antes de virar runbook executavel: ambiente-alvo, dados-alvo e logs esperados definidos.
+	- `fluxo de operacoes sensiveis`:
+		- finalidade: isolar comandos de alto risco administrativo ou mutativo;
+		- o que pode conter futuramente: gates de aprovacao, papeis responsaveis, backups e validacao pos-acao;
+		- o que ainda nao pode conter agora: roteiro de uso de `master:set`, `cleanup`, `migration` ou `backfill`;
+		- risco principal: normalizar operacoes sensiveis sem trilha de controle;
+		- dependencia antes de virar runbook executavel: autorizacao humana explicita e rollback documentado.
+	- `fluxo de rollback/recuperacao`:
+		- finalidade: prever resposta segura caso uma operacao futura falhe;
+		- o que pode conter futuramente: sinais de falha, rollback, restauracao e encerramento controlado;
+		- o que ainda nao pode conter agora: procedimento de rollback real sem ambiente e backup definidos;
+		- risco principal: criar falsa confianca sem estrategia de recuperacao validada;
+		- dependencia antes de virar runbook executavel: plano de backup/rollback definido quando aplicavel.
+	- `politica de seed/reset/cleanup/migration/backfill`:
+		- finalidade: consolidar o bloco de comandos mutativos ou destrutivos que exigem gate superior;
+		- o que pode conter futuramente: proibicoes por padrao, excecoes controladas e requisitos minimos por categoria;
+		- o que ainda nao pode conter agora: qualquer autorizacao de execucao desses comandos;
+		- risco principal: abrir excecao ampla cedo demais;
+		- dependencia antes de virar runbook executavel: politica formal de autorizacao e ambiente definido.
+	- `politica de credencial master`:
+		- finalidade: delimitar quando e como tratar credenciais privilegiadas;
+		- o que pode conter futuramente: quem autoriza, onde registrar, como auditar e como validar impacto;
+		- o que ainda nao pode conter agora: instrucao operacional para alterar credencial;
+		- risco principal: ampliar acesso privilegiado sem governanca;
+		- dependencia antes de virar runbook executavel: gate humano explicito e trilha de auditoria acordada.
+	- `politica de dados ficticios versus dados reais`:
+		- finalidade: separar claramente uso sintetico de uso real;
+		- o que pode conter futuramente: criterios para rotular dados, limites de exposicao e bloqueios por tipo de dado;
+		- o que ainda nao pode conter agora: permissao de usar dados reais;
+		- risco principal: contaminacao entre ensaio controlado e ambiente real;
+		- dependencia antes de virar runbook executavel: dados-alvo definidos como ficticios ou reais.
+	- `criterios para autorizar Mongo real`:
+		- finalidade: listar o conjunto minimo de gates antes de qualquer contato com banco real;
+		- o que pode conter futuramente: aprovacoes, ambiente, comando, logs e plano de recuo;
+		- o que ainda nao pode conter agora: liberacao de Mongo real;
+		- risco principal: encurtar indevidamente o caminho de autorizacao;
+		- dependencia antes de virar runbook executavel: mapa de gates humanos e tecnicos definido.
+	- `criterios para encerrar a frente operationalReadinessMongo`:
+		- finalidade: estabelecer quando a frente pode ser considerada suficientemente preparada;
+		- o que pode conter futuramente: criterios de completude documental, gates, comando seguros e decisao humana final;
+		- o que ainda nao pode conter agora: declaracao de prontidao de producao;
+		- risco principal: encerrar a frente por inercia documental sem condicoes objetivas;
+		- dependencia antes de virar runbook executavel: gates e criterios de sucesso/falha claramente definidos.
+- Bloqueios explicitos deste esqueleto:
+	- nao autoriza execucao de comando;
+	- nao autoriza Mongo real;
+	- nao autoriza `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- nao autoriza Portal;
+	- nao autoriza push;
+	- nao declara producao pronta;
+	- nao reabre PostgreSQL.
+- Criterios minimos antes de transformar este esqueleto em runbook operacional definitivo:
+	- comandos classificados por risco;
+	- autorizacao humana explicita;
+	- ambiente-alvo definido;
+	- dados-alvo definidos como ficticios ou reais;
+	- plano de backup ou rollback definido quando aplicavel;
+	- logs esperados definidos;
+	- criterios de sucesso ou falha definidos;
+	- comando validado como seguro para o ambiente;
+	- gates documentados no ledger.
+- Proximo ato recomendado nesta rodada:
+	- `mapMongoOperationalAuthorizationGates`.
+- Gates finais deste esqueleto:
+	- `safeMongoOperationalRunbookSkeletonDesigned=true`
+	- `selectedTarget=designSafeMongoOperationalRunbookSkeleton`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria deste esqueleto:
+	- este esqueleto apenas desenha a estrutura documental de um runbook seguro MongoDB;
+	- este esqueleto nao altera codigo;
+	- este esqueleto nao altera testes;
+	- este esqueleto nao altera `package.json`;
+	- este esqueleto nao altera scripts;
+	- este esqueleto nao cria arquivo novo;
+	- este esqueleto nao cria comando npm;
+	- este esqueleto nao executa comandos;
+	- este esqueleto nao executa scripts npm;
+	- este esqueleto nao conecta Mongo real;
+	- este esqueleto nao executa query real;
+	- este esqueleto nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este esqueleto nao usa Portal;
+	- este esqueleto nao reintroduz PostgreSQL no roadmap;
+	- este esqueleto nao declara o WD Gestor pronto para producao;
+	- este esqueleto nao faz push;
+	- a proxima etapa deve mapear os gates de autorizacao operacional Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
