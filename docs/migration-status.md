@@ -11154,6 +11154,291 @@ Checkpoint tenant enforcement atual:
 	- este checklist nao declara o WD Gestor pronto para producao;
 	- este checklist nao faz push;
 	- a proxima etapa deve definir a politica documental de dry-run operacional Mongo.
+- Checkpoint documental curto da politica de dry-run operacional MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem dry-run real, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push, sem transformar esta politica em runbook executavel e sem escrever instrucoes para executar comandos reais agora.
+- Identificacao consolidada desta politica:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=defineMongoOperationalDryRunPolicy`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada nesta politica:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nesta politica:
+	- MongoDB permanece como arquitetura atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Objetivo da politica de dry-run:
+	- separar simulacao documental de execucao real;
+	- impedir que dry-run seja tratado como autorizacao para mutacao;
+	- definir criterios minimos para um dry-run futuro seguro;
+	- exigir preflight completo antes de qualquer dry-run futuro;
+	- impedir que dry-run acesse Mongo real sem autorizacao especifica;
+	- impedir dry-run de `seed`/`reset`/`cleanup`/`migration`/`backfill` sem autorizacao especifica.
+- Tipos de dry-run classificados nesta politica:
+	- `dry-run documental`:
+		- finalidade: simular apenas no ledger a estrutura de uma operacao futura sem tocar ambiente algum;
+		- status nesta fase: categoria ativa apenas como documentacao;
+		- risco principal: ser confundido com permissao operacional;
+		- permitido agora: sim;
+		- autorizacao exigida: autorizacao documental do microcorte;
+		- ambiente permitido: `documentacao/ledger`;
+		- ambiente proibido: qualquer ambiente de dados;
+		- dados permitidos: somente descricao documental;
+		- dados proibidos: qualquer dado operacional, real ou sintetico carregado em execucao;
+		- evidencias necessarias antes de uso futuro: registro no ledger com escopo e bloqueios explicitos;
+		- relacao com preflight: depende do checklist apenas como referencia conceitual;
+		- relacao com backup/rollback: nao autoriza backup nem rollback;
+		- proximo tratamento recomendado: manter separado de qualquer execucao real.
+	- `dry-run de comando sem execucao`:
+		- finalidade: descrever o comando ou fluxo sem invoca-lo;
+		- status nesta fase: permitido apenas como texto documental;
+		- risco principal: virar pretexto para execucao implicita;
+		- permitido agora: sim;
+		- autorizacao exigida: autorizacao documental do microcorte;
+		- ambiente permitido: `documentacao/ledger`;
+		- ambiente proibido: shell, npm, banco ou qualquer runtime;
+		- dados permitidos: nenhum dado carregado em execucao;
+		- dados proibidos: reais, sensiveis e sinteticos usados em simulacao real;
+		- evidencias necessarias antes de uso futuro: comando classificado por risco e descrito no ledger;
+		- relacao com preflight: exige preflight respondido antes de qualquer conversao futura em teste real;
+		- relacao com backup/rollback: herda a necessidade de reversao quando o fluxo futuro for mutativo;
+		- proximo tratamento recomendado: continuar como enumeracao sem invocacao.
+	- `dry-run local sem banco real`:
+		- finalidade: reservar o espaco documental para futura simulacao em ambiente local sem conexao real;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: confundir local com seguro por padrao;
+		- permitido agora: nao;
+		- autorizacao exigida: preflight completo e gate humano especifico;
+		- ambiente permitido: ambiente local futuro explicitamente aprovado;
+		- ambiente proibido: Mongo real, homologacao e producao;
+		- dados permitidos: apenas dados ficticios futuros explicitamente classificados;
+		- dados proibidos: dados reais e sensiveis;
+		- evidencias necessarias antes de uso futuro: ambiente definido, ausencia de banco real comprovada e logs esperados;
+		- relacao com preflight: exige checklist integral respondido;
+		- relacao com backup/rollback: exige avaliacao previa se houver possibilidade de mutacao indireta;
+		- proximo tratamento recomendado: detalhar criterios de isolamento local antes de qualquer aprovacao.
+	- `dry-run com Mongo em memoria futuro`:
+		- finalidade: reservar a categoria para simulacao efemera futura em memoria;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: tratar memoria como licenca ampla para operar;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio para memoria e dados ficticios;
+		- ambiente permitido: `Mongo em memoria` futuro explicitamente aprovado;
+		- ambiente proibido: qualquer Mongo real;
+		- dados permitidos: apenas dados ficticios efemeros;
+		- dados proibidos: dados reais e sensiveis;
+		- evidencias necessarias antes de uso futuro: comprovacao de ambiente efemero, preflight e ausencia de mutacao indevida;
+		- relacao com preflight: exige checklist completo antes de qualquer uso;
+		- relacao com backup/rollback: pode exigir plano de reversao se a simulacao testar fluxo mutativo de alto risco;
+		- proximo tratamento recomendado: amarrar a politica futura de memoria ao ledger antes de qualquer teste.
+	- `dry-run de inventario read-only futuro`:
+		- finalidade: reservar a categoria para um inventario futuro estritamente de leitura;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: uma leitura aparente esconder consulta real nao aprovada;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio de leitura operacional futura;
+		- ambiente permitido: ambiente futuro explicitamente aprovado para leitura controlada;
+		- ambiente proibido: qualquer ambiente nao autorizado ou Portal;
+		- dados permitidos: apenas o conjunto documental explicitamente aprovado para leitura futura;
+		- dados proibidos: dados reais fora de autorizacao especifica;
+		- evidencias necessarias antes de uso futuro: escopo de leitura, preflight, logs esperados e trilha no ledger;
+		- relacao com preflight: checklist completo e classificacao de risco continuam obrigatorios;
+		- relacao com backup/rollback: em principio nao exige rollback, mas exige registrar que nao havera mutacao;
+		- proximo tratamento recomendado: separar claramente leitura controlada de query real.
+	- `dry-run de canary futuro`:
+		- finalidade: reservar a categoria para simulacao futura de verificacao canary controlada;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: dry-run canary virar operacao real disfarcada;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio de canary, preflight e dono responsavel;
+		- ambiente permitido: ambiente futuro explicitamente aprovado;
+		- ambiente proibido: producao por padrao, Mongo real sem gate e Portal;
+		- dados permitidos: apenas os explicitamente autorizados para canary futuro;
+		- dados proibidos: dados reais sem autorizacao especifica;
+		- evidencias necessarias antes de uso futuro: objetivo do canary, logs esperados, criterio de abortar e registro previo no ledger;
+		- relacao com preflight: depende de preflight integral e autorizacao humana;
+		- relacao com backup/rollback: exige avaliar reversao quando houver qualquer efeito colateral potencial;
+		- proximo tratamento recomendado: definir politica propria de canary antes de qualquer uso.
+	- `dry-run de seed futuro`:
+		- finalidade: reservar o espaco documental para simulacao futura de `seed`;
+		- status nesta fase: bloqueado;
+		- risco principal: `seed` ser banalizado como inocuo;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao especifica por operacao e gate humano reforcado;
+		- ambiente permitido: apenas ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente atual;
+		- dados permitidos: apenas dados ficticios futuros aprovados;
+		- dados proibidos: dados reais e sensiveis;
+		- evidencias necessarias antes de uso futuro: preflight completo, plano de nao mutacao comprovado e trilha no ledger;
+		- relacao com preflight: obrigatoria e reforcada;
+		- relacao com backup/rollback: exige criterio de reversao quando aplicavel;
+		- proximo tratamento recomendado: manter bloqueio integral nesta fase.
+	- `dry-run de cleanup futuro`:
+		- finalidade: reservar o espaco documental para simulacao futura de `cleanup`;
+		- status nesta fase: bloqueado;
+		- risco principal: destrutividade encoberta por linguagem de simulacao;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao especifica com gate maximo;
+		- ambiente permitido: apenas ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente atual;
+		- dados permitidos: no maximo dados ficticios futuros sob gate proprio;
+		- dados proibidos: dados reais e sensiveis;
+		- evidencias necessarias antes de uso futuro: preflight, prova de ausencia de mutacao real e plano de reversao quando aplicavel;
+		- relacao com preflight: obrigatoria e bloqueante;
+		- relacao com backup/rollback: exige estrategia previa se houver risco material;
+		- proximo tratamento recomendado: manter proibido ate microcorte especifico.
+	- `dry-run de migration futuro`:
+		- finalidade: reservar o espaco documental para simulacao futura de `migration`;
+		- status nesta fase: bloqueado;
+		- risco principal: escrita estrutural ser normalizada sem reversao;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao especifica por operacao `R4` ou `R5`;
+		- ambiente permitido: apenas ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente atual e qualquer Mongo real sem gate;
+		- dados permitidos: apenas dados ficticios futuros sob classificacao formal;
+		- dados proibidos: dados reais e sensiveis;
+		- evidencias necessarias antes de uso futuro: classificacao de risco, plano de reversao, criterios de sucesso/falha e registro no ledger;
+		- relacao com preflight: obrigatoria e integral;
+		- relacao com backup/rollback: plano de reversao e avaliacao de backup sao obrigatorios quando aplicavel;
+		- proximo tratamento recomendado: manter bloqueio ate politica propria de migracao simulada.
+	- `dry-run de backfill futuro`:
+		- finalidade: reservar o espaco documental para simulacao futura de `backfill`;
+		- status nesta fase: bloqueado;
+		- risco principal: alteracao em massa ser tratada como leitura;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao especifica por operacao `R4` ou `R5`;
+		- ambiente permitido: apenas ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente atual e qualquer Mongo real sem gate;
+		- dados permitidos: apenas dados ficticios futuros aprovados;
+		- dados proibidos: dados reais e sensiveis;
+		- evidencias necessarias antes de uso futuro: preflight, classificacao de risco, nao mutacao comprovada e plano de reversao quando aplicavel;
+		- relacao com preflight: obrigatoria e integral;
+		- relacao com backup/rollback: exige estrategia previa quando houver risco de escrita futura;
+		- proximo tratamento recomendado: manter proibido nesta fase.
+	- `dry-run com Mongo real futuro`:
+		- finalidade: reservar a categoria para simulacao futura envolvendo ambiente Mongo real sob gate maximo;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: tocar banco real sob rotulo enganoso de simulacao;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao humana explicita e especifica para Mongo real;
+		- ambiente permitido: ambiente real futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente real sem governanca formal;
+		- dados permitidos: somente os explicitamente aprovados por gate futuro;
+		- dados proibidos: qualquer dado real fora de autorizacao especifica;
+		- evidencias necessarias antes de uso futuro: ambiente definido, preflight integral, logs esperados e trilha documental maxima;
+		- relacao com preflight: depende integralmente do checklist completo;
+		- relacao com backup/rollback: exige avaliacao formal de backup e reversao quando aplicavel;
+		- proximo tratamento recomendado: manter bloqueio total ate politica especifica para ambiente real.
+	- `dry-run com dados reais futuro`:
+		- finalidade: reservar a categoria para simulacao futura com dados reais sob controles maximos;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: exposicao, leitura ou escrita indevida de dados reais;
+		- permitido agora: nao;
+		- autorizacao exigida: autorizacao humana explicita e especifica para dados reais;
+		- ambiente permitido: ambiente futuro explicitamente aprovado com governanca formal;
+		- ambiente proibido: qualquer ambiente sem autorizacao especifica;
+		- dados permitidos: apenas os explicitamente aprovados por gate futuro;
+		- dados proibidos: qualquer dado real fora de autorizacao especifica e qualquer dado sensivel sem controle reforcado;
+		- evidencias necessarias antes de uso futuro: classificacao do dado, justificativa, preflight, logs e trilha no ledger;
+		- relacao com preflight: depende de resposta integral e sem ambiguidades;
+		- relacao com backup/rollback: exige avaliacao formal se houver qualquer risco de mutacao ou restauracao;
+		- proximo tratamento recomendado: manter bloqueio total ate politica propria de dados reais.
+	- `dry-run de rollback futuro`:
+		- finalidade: reservar a categoria para simulacao futura de um processo de reversao;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: confundir ensaio de rollback com rollback real;
+		- permitido agora: nao;
+		- autorizacao exigida: gate proprio de rollback e dono responsavel;
+		- ambiente permitido: ambiente futuro explicitamente aprovado;
+		- ambiente proibido: qualquer ambiente atual e qualquer ambiente real sem gate;
+		- dados permitidos: apenas os autorizados por politica futura;
+		- dados proibidos: dados reais e sensiveis sem autorizacao especifica;
+		- evidencias necessarias antes de uso futuro: preflight, plano de reversao escrito, criterio de sucesso/falha e logs esperados;
+		- relacao com preflight: obrigatoria e bloqueante;
+		- relacao com backup/rollback: depende diretamente da politica de backup/rollback e nao a substitui;
+		- proximo tratamento recomendado: tratar rollback simulado como categoria autonoma de alto cuidado.
+- Regras gerais desta politica:
+	- dry-run documental e permitido apenas como descricao no ledger;
+	- dry-run real nao esta autorizado nesta fase;
+	- dry-run nao autoriza execucao posterior automaticamente;
+	- dry-run com Mongo real exige autorizacao especifica;
+	- dry-run com dados reais exige autorizacao especifica;
+	- dry-run de operacao `R4` ou `R5` exige plano de reversao quando aplicavel;
+	- dry-run de `seed`/`reset`/`cleanup`/`migration`/`backfill` continua bloqueado nesta fase;
+	- dry-run de canary/inventario futuro exige autorizacao propria;
+	- resultado de dry-run futuro deve ser registrado no ledger antes de qualquer execucao real;
+	- qualquer duvida entre simulacao e execucao real deve bloquear.
+- Matriz de decisao desta fase:
+	- permitido agora: documentacao da politica de dry-run;
+	- permitido agora: commit local documental apos validacao;
+	- nao permitido agora: dry-run real;
+	- nao permitido agora: execucao real de qualquer comando operacional;
+	- nao permitido agora: Mongo real;
+	- nao permitido agora: query real;
+	- nao permitido agora: backup/restore/rollback real;
+	- nao permitido agora: `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- nao permitido agora: Portal;
+	- nao permitido agora: push.
+- Criterios minimos antes de dry-run futuro:
+	- preflight respondido;
+	- ambiente-alvo definido;
+	- tipo de dado definido;
+	- comando ou fluxo classificado por risco;
+	- confirmacao de que o dry-run nao fara mutacao;
+	- autorizacao humana explicita;
+	- logs esperados definidos;
+	- criterios de sucesso/falha definidos;
+	- plano de reversao quando aplicavel;
+	- registro no ledger antes e depois do dry-run.
+- Proximo ato recomendado nesta rodada:
+	- `defineMongoOperationalAuditLogPolicy`.
+- Gates finais desta politica:
+	- `mongoOperationalDryRunPolicyDefined=true`
+	- `selectedTarget=defineMongoOperationalDryRunPolicy`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta politica:
+	- esta politica apenas organiza criterios documentais de dry-run operacional MongoDB;
+	- esta politica nao altera codigo;
+	- esta politica nao altera testes;
+	- esta politica nao altera `package.json`;
+	- esta politica nao altera scripts;
+	- esta politica nao cria arquivo novo;
+	- esta politica nao cria comando npm;
+	- esta politica nao executa comandos;
+	- esta politica nao executa scripts npm;
+	- esta politica nao executa dry-run real;
+	- esta politica nao conecta Mongo real;
+	- esta politica nao executa query real;
+	- esta politica nao executa backup real, restore real ou rollback real;
+	- esta politica nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta politica nao usa Portal;
+	- esta politica nao reintroduz PostgreSQL no roadmap;
+	- esta politica nao declara o WD Gestor pronto para producao;
+	- esta politica nao faz push;
+	- a proxima etapa deve definir a politica documental de audit log operacional Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
