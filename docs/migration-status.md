@@ -9194,6 +9194,99 @@ Checkpoint tenant enforcement atual:
 	- este checklist nao declara o WD Gestor pronto para producao;
 	- este checklist nao faz push;
 	- a proxima etapa deve inventariar fontes documentais e scripts em modo somente leitura.
+- Checkpoint documental curto do inventario das fontes de prontidao operacional MongoDB em modo somente leitura, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem refatoracao tecnica.
+- Frente atual consolidada neste inventario:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada neste inventario:
+	- MongoDB permanece como base atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Objetivo consolidado deste inventario:
+	- identificar quais fontes precisam ser lidas para montar a prontidao operacional, sem executar scripts reais.
+- Fontes a inventariar em modo read-only:
+	- `1. package.json` para scripts disponiveis;
+	- `2. README.md`, se existir, para instrucoes de instalacao e execucao;
+	- `3. docs` existentes para runbooks, checklists e status;
+	- `4. scripts` existentes, apenas nomes e finalidade aparente;
+	- `5. src/server` para boot, start e configuracao;
+	- `6. src/modules/gestor` para fluxos principais do Gestor;
+	- `7. tests` para entender validacoes ja existentes;
+	- `8. docs/migration-status.md` como ledger principal.
+- Riscos consolidados deste inventario:
+	- confundir leitura de scripts com execucao;
+	- executar `seed`, `reset` ou `cleanup` por engano;
+	- conectar Mongo real sem autorizacao;
+	- gerar relatorio real externo sem autorizacao;
+	- reabrir refatoracao tecnica quando a frente atual e operacional;
+	- reintroduzir PostgreSQL como roadmap contra a decisao atual.
+- Saida esperada consolidada deste inventario:
+	- lista de fontes relevantes;
+	- lacunas documentais;
+	- proximos documentos e leituras necessarios;
+	- sem execucao operacional.
+- Proximo ato recomendado nesta rodada:
+	- `readOperationalReadinessSourcesMongoReadOnly`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real contra banco executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum `seed`, `reset`, `cleanup`, `migration` ou `backfill` executado;
+	- nenhum PostgreSQL iniciado;
+	- nenhum preparo de migracao PostgreSQL;
+	- nenhum Portal usado;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=inventoryOperationalReadinessSourcesMongoReadOnly`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=readOperationalReadinessSourcesMongoReadOnly`;
+	- `chosenApproach=mongodbOperationalReadiness`.
+- Gates:
+	- `operationalReadinessSourcesMongoInventoried=true`
+	- `mongodbArchitectureDecisionCurrent=true`
+	- `postgresOutOfRoadmap=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=operationalReadinessMongo`
+	- `selectedTarget=inventoryOperationalReadinessSourcesMongoReadOnly`
+	- `recommendedNextAct=readOperationalReadinessSourcesMongoReadOnly`
+	- `chosenApproach=mongodbOperationalReadiness`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `postgresRoadmapActive=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria deste inventario:
+	- este inventario apenas mapeia fontes de prontidao operacional MongoDB;
+	- este inventario nao altera codigo;
+	- este inventario nao altera testes;
+	- este inventario nao executa refatoracao;
+	- este inventario nao cria comando npm/script;
+	- este inventario nao conecta Mongo real;
+	- este inventario nao executa query real;
+	- este inventario nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este inventario nao inicia PostgreSQL;
+	- este inventario nao considera PostgreSQL como roadmap;
+	- este inventario nao usa Portal;
+	- este inventario nao declara o WD Gestor pronto para producao;
+	- este inventario nao faz push;
+	- a proxima etapa deve ler as fontes inventariadas em modo somente leitura.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
