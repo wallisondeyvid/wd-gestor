@@ -12856,6 +12856,114 @@ Checkpoint tenant enforcement atual:
 	- este registro nao declara o WD Gestor pronto para producao;
 	- este registro nao faz push;
 	- a proxima etapa deve apenas fechar em commit local este registro documental.
+- Checkpoint documental curto da selecao e preparacao da proxima validacao `R1` `validatePackageScriptsInventoryR1` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de validacao real, sem execucao de script npm, sem Mongo real, sem query real, sem dry-run real, sem log tecnico real por execucao, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push e sem declarar producao pronta.
+- Identificacao consolidada desta preparacao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareValidatePackageScriptsInventoryR1`;
+	- `selectedTechnicalTarget=validatePackageScriptsInventoryR1`;
+	- `previousValidation=validateGitLedgerCleanStateR1`;
+	- `previousValidationResult=passed`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo da proxima validacao `R1`:
+	- inventariar documentalmente comandos de `package.json` e `scripts` por nome;
+	- confirmar quais comandos sao apenas candidatos;
+	- confirmar que nenhum script sera executado;
+	- preservar classificacao de risco ja definida;
+	- preparar execucao futura de leitura e inventario `R1` em microcorte separado.
+- Escopo futuro permitido da validacao:
+	- leitura de `package.json`;
+	- leitura estrutural de `scripts` por nome;
+	- leitura estrutural de `scripts/ops` por nome;
+	- classificacao documental de comandos;
+	- nenhuma execucao.
+- Escopo proibido desta validacao futura:
+	- `npm test` manual;
+	- `npm run`;
+	- execucao de qualquer script;
+	- Mongo real;
+	- query real;
+	- dry-run real;
+	- `master:set`;
+	- alteracao do usuario master real;
+	- `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- Portal;
+	- PostgreSQL;
+	- declaracao de producao pronta.
+- Comandos e superficies a observar futuramente apenas por nome:
+	- scripts `R1` candidatos: `guard:no-core-models-import`, `guard:condominios-unidade`, `guard:unitScope-null`, `guard:no-model-bypass`, `guard:condominios-no-unidade-import`, `guard:condominios-no-core-model-import`, `guard:gestor-no-core-model-import`, `guard:portal-morador-no-core-model-import`, `guard:escalas-no-core-model-import`, `verify:legacy`, `verify:imports`, `guard:migration` e `lint:paths`;
+	- guardrails candidatos: `scripts/guardrails/verify-no-model-bypass.js` e `scripts/guardrails/verify-migration-safety.js`;
+	- verify candidatos: `scripts/verify-no-legacy.js` e `scripts/verify-no-relative-imports.js`;
+	- `migration:check` como candidato sensivel posterior;
+	- `smoke:userdb-canary` como candidato `R3` posterior;
+	- `start` e `start:mem` como candidatos `R2/R3` posteriores;
+	- `start:mem:seed` como proibido nesta fase;
+	- `master:set` como proibido nesta fase;
+	- `cleanup:legacy`, `migrate:*` e `backfill:*` como proibidos nesta fase.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitPrepareValidatePackageScriptsInventoryR1`.
+- Gates finais desta preparacao:
+	- `validatePackageScriptsInventoryR1Prepared=true`
+	- `selectedTarget=prepareValidatePackageScriptsInventoryR1`
+	- `selectedTechnicalTarget=validatePackageScriptsInventoryR1`
+	- `previousValidationResult=passed`
+	- `validationExecuted=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta preparacao:
+	- esta preparacao seleciona `validatePackageScriptsInventoryR1` como proxima validacao `R1`;
+	- esta preparacao depende do sucesso anterior de `validateGitLedgerCleanStateR1`;
+	- esta preparacao limita o proximo microcorte a leitura de `package.json`, `scripts` e `scripts/ops` por nome;
+	- esta preparacao nao executa validacao real;
+	- esta preparacao nao executa scripts npm;
+	- esta preparacao nao executa nenhum script;
+	- esta preparacao nao conecta Mongo real;
+	- esta preparacao nao executa query real;
+	- esta preparacao nao executa dry-run real;
+	- esta preparacao nao executa `master:set`;
+	- esta preparacao nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- esta preparacao nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta preparacao nao usa Portal;
+	- esta preparacao nao reintroduz PostgreSQL no roadmap;
+	- esta preparacao nao declara o WD Gestor pronto para producao;
+	- esta preparacao nao faz push;
+	- a proxima etapa deve apenas fechar em commit local esta preparacao antes do inventario futuro.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
