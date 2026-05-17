@@ -8814,6 +8814,100 @@ Checkpoint tenant enforcement atual:
 	- este registro nao usa Portal;
 	- este registro nao executa novo push;
 	- qualquer nova frente futura deve ser aberta somente apos decisao explicita.
+- Checkpoint documental curto da preparacao do handoff final pos-push da frente `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real externo, sem novo push e sem abertura de nova fase.
+- Frente consolidada neste handoff:
+	- `tenantArchitectureContinuation`.
+- Status consolidado deste handoff:
+	- publicada, documentada e com registro pos-push final local.
+- Pushes ja publicados consolidados neste handoff:
+	- `24a274b..81d90f5`;
+	- `81d90f5..0c81183`.
+- Commit remoto atual consolidado neste handoff:
+	- `0c81183 docs(tenant): prepara instrucao final pos-push`.
+- Commit local ainda nao publicado consolidado neste handoff:
+	- `docs(tenant): registra pos-push final tenant-aware`.
+- Validacao associada consolidada neste handoff:
+	- `tests=2364`;
+	- `suites=17`;
+	- `pass=2362`;
+	- `fail=0`;
+	- `skipped=2`;
+	- `cancelled=0`;
+	- `todo=0`.
+- Sintese final consolidada neste handoff:
+	- sequencia `tenantArchitectureContinuation` encerrada;
+	- bloco principal publicado;
+	- complemento documental pos-push publicado;
+	- registro pos-push final preparado localmente;
+	- `selectedTechnicalTarget=none`;
+	- nenhuma nova frente aberta automaticamente.
+- Limites consolidados deste handoff:
+	- nao declara WD Gestor pronto para producao;
+	- nao declara multi-tenant inteiro concluido;
+	- PostgreSQL permanece fora;
+	- Portal permanece fora;
+	- dados reais permanecem fora;
+	- prontidao operacional permanece em trilha separada.
+- Decisao consolidada neste handoff:
+	- handoff final pos-push preparado;
+	- a proxima etapa deve ser revisar o handoff final ou decidir se publica o ultimo commit documental local.
+- Proximo ato recomendado nesta rodada:
+	- `reviewFinalPostPushHandoffTenantArchitectureContinuation`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum novo push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=prepareFinalPostPushHandoffTenantArchitectureContinuation`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=reviewFinalPostPushHandoffTenantArchitectureContinuation`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `finalPostPushHandoffTenantArchitectureContinuationPrepared=true`
+	- `tenantArchitectureContinuationRemoteUpdatedToFinalPostPush=true`
+	- `localFinalPostPushDocAheadOrigin=true`
+	- `gitPushExecuted=false`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=prepareFinalPostPushHandoffTenantArchitectureContinuation`
+	- `recommendedNextAct=reviewFinalPostPushHandoffTenantArchitectureContinuation`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria deste handoff:
+	- este handoff apenas documenta o estado final pos-push;
+	- este handoff nao altera codigo;
+	- este handoff nao altera testes;
+	- este handoff nao executa refatoracao;
+	- este handoff nao cria comando npm/script;
+	- este handoff nao conecta Mongo real;
+	- este handoff nao executa query real;
+	- este handoff nao gera relatorio real externo;
+	- este handoff nao inicia PostgreSQL;
+	- este handoff nao usa Portal;
+	- este handoff nao executa novo push;
+	- qualquer nova frente futura deve ser aberta somente apos decisao explicita.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
