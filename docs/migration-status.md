@@ -6452,6 +6452,104 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
+
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `createAdminFeedbackDetailHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem refatoracao, sem suite inteira, sem runbook novo, sem comando novo e sem relatorio real.
+- Frente atual consolidada nesta rodada:
+	- `tenantArchitectureContinuation`.
+- Corredores ja fechados considerados nesta rodada:
+	- `feedbackStatusDataFacade`;
+	- `recursosContextDataFacade`;
+	- `funcionarioDeletePostDataFacade`;
+	- `createUsuarioExecutionService`;
+	- `updateUsuarioExecutionService`;
+	- `checkUsuarioEmailOwnerService`;
+	- `authContextReadDataFacade`;
+	- `passwordRecoveryRequestDataFacade`;
+	- `resetPasswordRenderDataFacade`;
+	- `resetPasswordExecutionService`;
+	- `primeiroAcessoExecutionService`;
+	- `unlockUsuarioExecutionService`;
+	- `toggleUsuarioExecutionService`;
+	- `createFeedbackPolicyOwnershipCore`;
+	- `processCreateFeedbackCore`;
+	- `processUpdateFeedbackRespostaCore`;
+	- `createDeleteFeedbackHandler`;
+	- `createAdminFeedbackDetailHandler`.
+- Candidatos considerados nesta rodada:
+	- `createUploadFeedbackAnexoHandler` em `src/modules/gestor/app/controllers/feedbackUploadApiController.js`;
+	- `createAdminFeedbackListHandler` em `src/modules/gestor/app/controllers/feedbackListApiController.js`;
+	- `createFeedbackUploadStorageInfraCore` em `src/modules/gestor/app/routes/utils/createFeedbackUploadStorageInfra.js`;
+	- residuos amplos de `GLOBAL_SCOPE` em `src/modules/gestor/app/db/api.db.js` e `src/modules/gestor/app/db/auth.db.js`.
+- Candidatos recusados nesta rodada e motivo curto:
+	- `createAdminFeedbackListHandler`: corredor de leitura read-only com cobertura estrutural e arquitetural ja visivel, menos urgente que upload porque nao materializa write nem storage contextual;
+	- `createFeedbackUploadStorageInfraCore`: ponto mais infra e mais largo que o owner, mistura storage/blob/fs e nao e o menor corte tenant-aware local para a proxima fatia;
+	- residuos amplos de `api.db.js` e `auth.db.js`: big-bang heterogeneo, com mistura de compat legado e globais legitimos, fora da regua de alvo pequeno e local desta rodada.
+- Proximo alvo tecnico residual selecionado nesta rodada:
+	- `createUploadFeedbackAnexoHandler`.
+- Motivo da selecao nesta rodada:
+	- e um owner curto, vivo, local e adjacente a familia feedback recem-fechada;
+	- opera em superficie sensivel de write e anexo, logo o risco tenant-aware material e maior que em listagem read-only;
+	- o owner combina leitura do feedback, ownership contextual e persistencia do anexo no mesmo corredor curto;
+	- a familia ja tem testes adjacentes de owner e runtime, mas ainda nao apareceu protecao focal tenant-aware dedicada para esse owner.
+- Risco tenant-aware suspeito nesta rodada:
+	- `createUploadFeedbackAnexoHandler` le o feedback por `findFeedbackById(feedbackId, { scopedUnitId, allowLegacyUnscoped: true, preferScopedRepoRead: true })` antes do gate final de ownership;
+	- `allowLegacyUnscoped` torna material a necessidade de provar que o fallback legado nao vira ampliacao silenciosa de escopo;
+	- a escrita do anexo e o `saveFeedbackDoc(fb)` dependem de o alvo carregado continuar contextual e autorizado pela unidade efetiva.
+- Lacuna de protecao atual observada nesta rodada:
+	- existe `tests/gestor-feedback-upload-owner-structural-seam.test.js` e existe `tests/gestor-feedback-upload-runtime-contract.test.js`;
+	- nao apareceu protecao focal dedicada no padrao `tests/gestor-feedback-*-tenant-aware-protection.test.js` para `createUploadFeedbackAnexoHandler`;
+	- isso deixa sem congelamento focal explicito o handoff curto entre leitura contextual, ownership e persistencia do anexo.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proxima etapa recomendada nesta rodada:
+	- `diagnoseCreateUploadFeedbackAnexoHandlerTenantAwareTarget`.
+- Interpretacao obrigatoria consolidada nesta rodada:
+	- esta selecao apenas escolhe o proximo alvo;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- a proxima etapa deve diagnosticar documentalmente o alvo escolhido antes de qualquer alteracao em `src`.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackDetail`;
+	- `selectedTechnicalTarget=createUploadFeedbackAnexoHandler`;
+	- `recommendedNextAct=diagnoseCreateUploadFeedbackAnexoHandlerTenantAwareTarget`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `nextTenantAwareTechnicalTargetAfterFeedbackDetailSelected=true`
+	- `selectedTechnicalTarget=createUploadFeedbackAnexoHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackDetail`
+	- `recommendedNextAct=diagnoseCreateUploadFeedbackAnexoHandlerTenantAwareTarget`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
