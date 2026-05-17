@@ -10403,6 +10403,223 @@ Checkpoint tenant enforcement atual:
 	- esta matriz nao declara o WD Gestor pronto para producao;
 	- esta matriz nao faz push;
 	- a proxima etapa deve definir a politica operacional de dados Mongo.
+- Checkpoint documental curto da politica de dados operacionais MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem Mongo real, sem query real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem uso de dados reais, sem uso de dados de producao, sem toque em dados sensiveis, sem PostgreSQL, sem Portal, sem push, sem transformar esta politica em runbook executavel e sem escrever instrucoes para executar comandos reais agora.
+- Identificacao consolidada desta politica:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=defineMongoOperationalDataPolicy`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada nesta politica:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nesta politica:
+	- MongoDB permanece como arquitetura atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Categorias de dados desta politica:
+	- `dados documentais do ledger`:
+		- definicao: registros textuais de decisoes, gates, matrizes, classificacoes e checkpoints em `docs/migration-status.md` e materiais estritamente documentais correlatos;
+		- status nesta fase: permitidos agora;
+		- uso permitido agora: leitura, comparacao, consolidacao e escrita documental no ledger;
+		- uso proibido agora: tomar ledger como autorizacao de execucao, query ou mutacao;
+		- risco principal: confundir documentacao com permissao operacional;
+		- ambiente relacionado: `documentacao/ledger`;
+		- comandos relacionados apenas como referencia documental: `git diff`, `git status`, `git log`, commit local documental quando o microcorte permitir;
+		- autorizacao necessaria antes de uso futuro: microcorte documental explicito;
+		- evidencias necessarias antes de qualquer uso futuro: branch correta, status coerente e alvo documental identificado;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: apenas registra bloqueios e nunca os autoriza;
+		- proximo tratamento recomendado: seguir como camada base de governanca.
+	- `dados ficticios atuais do projeto`:
+		- definicao: dados assumidos como ficticios pela frente atual, incluindo inventarios e referencias sinteticas ja consolidadas documentalmente;
+		- status nesta fase: apenas documentados e classificados agora;
+		- uso permitido agora: classificacao, rotulagem documental e separacao conceitual de dados reais;
+		- uso proibido agora: execucao, seed, inventario automatizado e qualquer mutacao;
+		- risco principal: dados ficticios virarem pretexto para abrir operacao nao autorizada;
+		- ambiente relacionado: `ambiente de dados ficticios`;
+		- comandos relacionados apenas como referencia documental: `start:mem`, `test:mem`, `start:mem:seed`, `scripts/ops/inventory-fictional-data-readonly.js`;
+		- autorizacao necessaria antes de uso futuro: gate proprio para dados ficticios, separado de ambiente e memoria;
+		- evidencias necessarias antes de qualquer uso futuro: prova de ficticiedade, escopo do conjunto de dados e ausencia de escrita indevida;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: `seed` continua bloqueado; os demais permanecem bloqueados;
+		- proximo tratamento recomendado: detalhar criterio formal de ficticiedade.
+	- `dados de teste`:
+		- definicao: dados hipoteticos associados a suites, smoke e verificacoes locais futuras, sem execucao nesta fase;
+		- status nesta fase: apenas referencia documental agora;
+		- uso permitido agora: mapear suites e classificar riscos por nome;
+		- uso proibido agora: rodar testes, fabricar fixtures por execucao ou tocar qualquer banco;
+		- risco principal: mascarar execucao operacional como teste inofensivo;
+		- ambiente relacionado: `local sem banco real` e `Mongo em memoria`;
+		- comandos relacionados apenas como referencia documental: `test`, `test:strict`, `test:smoke`, `test:mem`, `test:win`;
+		- autorizacao necessaria antes de uso futuro: gate especifico para verificacao/teste, com ambiente definido;
+		- evidencias necessarias antes de qualquer uso futuro: comando classificado, criterio de sucesso/falha e prova de ausencia de Mongo real;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nenhuma dessas categorias e autorizada por teste;
+		- proximo tratamento recomendado: separar testes documentais de testes executaveis futuros.
+	- `dados de Mongo em memoria`:
+		- definicao: dados sinteticos efemeros que so poderiam existir em ambiente `mongodb-memory-server` sob gate proprio futuro;
+		- status nesta fase: nao executar agora;
+		- uso permitido agora: apenas classificacao documental do ambiente e dos riscos;
+		- uso proibido agora: subir memoria, popular dados, rodar seed ou testes;
+		- risco principal: memoria ser confundida com permissao ampla de experimento;
+		- ambiente relacionado: `Mongo em memoria`;
+		- comandos relacionados apenas como referencia documental: `start:mem`, `start:mem:seed`, `test:mem`, `test:win`;
+		- autorizacao necessaria antes de uso futuro: gate autonomo para memoria, separado de seed e de teste;
+		- evidencias necessarias antes de qualquer uso futuro: ausencia de Mongo real, dados ficticios definidos e objetivo controlado;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: `seed` continua bloqueado; demais categorias tambem;
+		- proximo tratamento recomendado: amarrar memoria a politica formal de dados sinteticos.
+	- `dados locais futuros`:
+		- definicao: quaisquer dados que um ambiente local futuro possa vir a manipular fora de memoria;
+		- status nesta fase: nao autorizados agora;
+		- uso permitido agora: apenas delimitar o conceito documentalmente;
+		- uso proibido agora: qualquer carga, leitura, query ou mutacao local de dados;
+		- risco principal: transitar de desenho local para contato real sem gate suficiente;
+		- ambiente relacionado: `local sem banco real` e `local com Mongo real futuro`;
+		- comandos relacionados apenas como referencia documental: `start`, `dev`, `start:gestor`, `start:atlas`, `flags:print`;
+		- autorizacao necessaria antes de uso futuro: gate proprio por ambiente local e por tipo de dado;
+		- evidencias necessarias antes de qualquer uso futuro: ambiente definido, comando classificado e dados rotulados como ficticios ou reais;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: todas permanecem bloqueadas;
+		- proximo tratamento recomendado: definir politica local antes de qualquer experimento.
+	- `dados de homologacao futura`:
+		- definicao: dados que poderiam existir em um ambiente intermediario futuro para validacoes controladas;
+		- status nesta fase: nao autorizados agora;
+		- uso permitido agora: apenas desenho documental do dominio;
+		- uso proibido agora: qualquer uso operacional ou consulta a dados de homologacao;
+		- risco principal: homologacao ser usada como atalho para operacao real;
+		- ambiente relacionado: `homologacao futura`;
+		- comandos relacionados apenas como referencia documental: `test:smoke`, `migration:check`, `smoke:userdb-canary`, `start:atlas`;
+		- autorizacao necessaria antes de uso futuro: gate proprio de homologacao com politica de dados definida;
+		- evidencias necessarias antes de qualquer uso futuro: ambiente definido, origem dos dados, criterio de entrada/saida e rollback;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: continuam bloqueadas ate politica propria por ambiente;
+		- proximo tratamento recomendado: formalizar diferenca entre homologacao e producao.
+	- `dados reais futuros`:
+		- definicao: quaisquer dados reais de negocio ou identidade que possam existir fora de producao ou em producao, sob autorizacao futura especifica;
+		- status nesta fase: proibidos agora;
+		- uso permitido agora: nenhum;
+		- uso proibido agora: leitura, query, exportacao, mutacao, canary, seed, cleanup, migration e backfill;
+		- risco principal: exposicao ou mutacao indevida de dados reais;
+		- ambiente relacionado: `local com Mongo real futuro`, `homologacao futura` e `ambiente de dados reais`;
+		- comandos relacionados apenas como referencia documental: `start:atlas`, `smoke:userdb-canary`, `master:set`, `cleanup:legacy`, `migrate:user-memberships-phase1`, `migrate:user-memberships-phase2`, `migrate:backfill-diretor`, `migrate:backfill-habitacao-mailboxes`, `backfill:refeicoes`, `backfill:refeicoes:uri`;
+		- autorizacao necessaria antes de uso futuro: gate autonomo de dados reais, nunca herdado de dados ficticios;
+		- evidencias necessarias antes de qualquer uso futuro: justificativa forte, ambiente definido, protecoes adicionais e plano de controle de dano;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: todas permanecem bloqueadas com rigor maximo;
+		- proximo tratamento recomendado: manter bloqueio integral ate haver mapeamento de superficies sensiveis.
+	- `dados de producao futura`:
+		- definicao: subconjunto de maior criticidade dos dados reais associado a qualquer operacao futura em producao;
+		- status nesta fase: proibidos agora;
+		- uso permitido agora: nenhum;
+		- uso proibido agora: qualquer contato, leitura ou escrita em dados de producao;
+		- risco principal: impacto operacional material em usuarios e unidades reais;
+		- ambiente relacionado: `producao futura`;
+		- comandos relacionados apenas como referencia documental: qualquer comando `R1` a `R5`, inclusive `smoke:userdb-canary`, `master:set`, `cleanup:legacy`, `migrate:*`, `backfill:*`;
+		- autorizacao necessaria antes de uso futuro: autorizacao especifica de producao, ambiente definido e governanca propria;
+		- evidencias necessarias antes de qualquer uso futuro: backup/rollback, criterios de sucesso/falha, donos responsaveis e gates humanos completos;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: todas seguem bloqueadas e demandam gates adicionais;
+		- proximo tratamento recomendado: manter como categoria de risco maximo fora de uso.
+	- `dados sensiveis de usuarios, unidades, auth-context, feedback/uploads e credenciais`:
+		- definicao: dados pessoais, de vinculacao por unidade, auth-context operacional, anexos/feedback e credenciais privilegiadas do ecossistema Gestor;
+		- status nesta fase: protegidos e bloqueados para execucao agora;
+		- uso permitido agora: apenas identificacao documental da existencia dessas superficies;
+		- uso proibido agora: leitura operacional, consulta, exportacao, mutacao, upload, cleanup ou alteracao de credencial;
+		- risco principal: exposicao de superficie sensivel e alteracao de privilegios;
+		- ambiente relacionado: `ambiente de dados reais`, `producao futura` e `ambiente de emergencia/recuperacao futura`;
+		- comandos relacionados apenas como referencia documental: `master:set`, `start:atlas`, `smoke:userdb-canary`, `cleanup:legacy`, `migrate:*`, `backfill:*`;
+		- autorizacao necessaria antes de uso futuro: autorizacao especifica por superficie sensivel, nunca generica;
+		- evidencias necessarias antes de qualquer uso futuro: superficie mapeada, justificativa, ambiente definido, trilha de auditoria e controles adicionais;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: nenhuma dessas categorias pode tocar dados sensiveis sem gate especifico;
+		- proximo tratamento recomendado: mapear explicitamente as superficies sensiveis antes de qualquer execucao futura.
+	- `dados de emergencia/recuperacao futura`:
+		- definicao: dados que poderiam ser envolvidos em rollback, restauracao, reconstrucoes ou medidas de recuperacao futuras;
+		- status nesta fase: apenas desenho futuro;
+		- uso permitido agora: apenas desenho documental da categoria;
+		- uso proibido agora: qualquer operacao de recuperacao, restauracao, limpeza ou recomposicao;
+		- risco principal: invocar emergencia como atalho para romper controles de dados;
+		- ambiente relacionado: `ambiente de emergencia/recuperacao futura`;
+		- comandos relacionados apenas como referencia documental: `cleanup:legacy`, `migration:check`, `migrate:*`, `backfill:*`, `master:set`;
+		- autorizacao necessaria antes de uso futuro: gate proprio de emergencia com donos e criterio de encerramento;
+		- evidencias necessarias antes de qualquer uso futuro: incidente caracterizado, rollback definido, escopo dos dados e responsabilidade formal;
+		- relacao com `seed`/`reset`/`cleanup`/`migration`/`backfill`: todas permanecem bloqueadas ate desenho especifico de recuperacao;
+		- proximo tratamento recomendado: manter apenas como categoria futura de contingencia.
+- Politica explicita desta secao:
+	- dados atuais sao tratados como ficticios, conforme decisao ja consolidada;
+	- dados reais continuam proibidos nesta fase;
+	- Mongo real continua proibido nesta fase;
+	- `seed`/`reset`/`cleanup`/`migration`/`backfill` continuam proibidos;
+	- dados de producao futura exigem autorizacao especifica, ambiente definido, backup/rollback e criterios de sucesso/falha;
+	- dados sensiveis exigem protecao adicional antes de qualquer execucao futura;
+	- nenhuma politica desta secao autoriza execucao operacional.
+- Matriz de decisao de dados nesta fase:
+	- `ledger documental`: permitido agora;
+	- `dados ficticios`: apenas documentacao e classificacao agora;
+	- `dados de teste`: apenas referencia documental agora;
+	- `Mongo em memoria`: nao executar agora;
+	- `dados locais futuros`: nao autorizados agora;
+	- `homologacao futura`: nao autorizada agora;
+	- `dados reais`: proibidos agora;
+	- `producao futura`: proibida agora;
+	- `dados sensiveis`: protegidos e bloqueados para execucao agora;
+	- `emergencia/recuperacao`: apenas desenho futuro.
+- Regras de separacao de dados:
+	- autorizacao para dados ficticios nao autoriza dados reais;
+	- autorizacao para teste nao autoriza producao;
+	- autorizacao para Mongo em memoria nao autoriza Mongo real;
+	- autorizacao para documentacao nao autoriza query;
+	- autorizacao para leitura nao autoriza `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- qualquer operacao sobre dados sensiveis exige autorizacao especifica;
+	- qualquer operacao `R4` ou `R5` sobre dados exige ambiente definido e plano de reversao quando aplicavel.
+- Bloqueios explicitos desta fase:
+	- dados reais continuam proibidos agora;
+	- dados de producao continuam proibidos agora;
+	- dados sensiveis continuam protegidos e bloqueados para execucao agora;
+	- Mongo real continua proibido agora;
+	- query real continua proibida agora;
+	- `seed`/`reset`/`cleanup`/`migration`/`backfill` continuam proibidos;
+	- Portal continua bloqueado;
+	- push continua bloqueado;
+	- PostgreSQL continua fora do roadmap;
+	- nenhuma politica desta secao declara prontidao de producao.
+- Proximo ato recomendado nesta rodada:
+	- `defineMongoOperationalBackupRollbackPolicy`.
+- Gates finais desta politica:
+	- `mongoOperationalDataPolicyDefined=true`
+	- `selectedTarget=defineMongoOperationalDataPolicy`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `realDataUsed=false`
+	- `productionDataUsed=false`
+	- `sensitiveDataTouched=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta politica:
+	- esta politica apenas organiza a classificacao documental dos dados operacionais MongoDB;
+	- esta politica nao altera codigo;
+	- esta politica nao altera testes;
+	- esta politica nao altera `package.json`;
+	- esta politica nao altera scripts;
+	- esta politica nao cria arquivo novo;
+	- esta politica nao cria comando npm;
+	- esta politica nao executa comandos;
+	- esta politica nao executa scripts npm;
+	- esta politica nao conecta Mongo real;
+	- esta politica nao executa query real;
+	- esta politica nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta politica nao usa dados reais, dados de producao ou dados sensiveis;
+	- esta politica nao usa Portal;
+	- esta politica nao reintroduz PostgreSQL no roadmap;
+	- esta politica nao declara o WD Gestor pronto para producao;
+	- esta politica nao faz push;
+	- a proxima etapa deve definir a politica operacional de backup e rollback Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
