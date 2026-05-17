@@ -6671,6 +6671,109 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
+
+- Checkpoint documental curto do desenho da protecao ou contrato tenant-aware de `createUploadFeedbackAnexoHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem refatoracao, sem suite inteira, sem criacao de teste e sem relatorio real.
+- Alvo consolidado nesta rodada:
+	- `createUploadFeedbackAnexoHandler`.
+- Arquivo principal consolidado nesta rodada:
+	- `src/modules/gestor/app/controllers/feedbackUploadApiController.js`.
+- Infra ou storage relacionada nesta rodada:
+	- `createFeedbackUploadStorageInfraCore` em `src/modules/gestor/app/routes/utils/createFeedbackUploadStorageInfra.js`.
+- Semantica a decidir e congelar nesta rodada:
+	- upload ou anexo de feedback como mutacao contextual por unidade;
+	- compat legada explicita por `allowLegacyUnscoped` somente enquanto documentada e cercada por protecao.
+- Risco a proteger nesta rodada:
+	- `scopedUnitId` nao pode virar dado decorativo;
+	- `allowLegacyUnscoped` deve permanecer compat explicita, nao precedente global silencioso;
+	- `preferScopedRepoRead` deve preservar preferencia por leitura escopada;
+	- a leitura contextual deve ocorrer antes do gate e da persistencia;
+	- `ensureCreatorOwnership` deve ocorrer antes de qualquer persistencia do anexo;
+	- `saveFeedbackDoc` so deve ocorrer apos `access.allowed=true` e upload bem-sucedido;
+	- storage, blob ou fs nao podem substituir nem mascarar leitura contextual e ownership;
+	- a infra de storage deve continuar efeito lateral relacionado, nao limite tenant-aware principal;
+	- o owner deve continuar segurando validacoes, leitura, gate, persistencia e resposta publica.
+- Contrato atual a preservar nesta rodada:
+	- validacoes ficam no owner;
+	- leitura contextual fica no owner;
+	- ownership fica no owner ou policy;
+	- persistencia final fica em mutacao de `fb.anexos` mais `saveFeedbackDoc`;
+	- infra de storage fica em `createFeedbackUploadStorageInfraCore`;
+	- resposta publica continua via `apiOk` e `apiFail`;
+	- sem Mongo real;
+	- sem query real.
+- Protecao futura desejada nesta rodada:
+	- teste estrutural deve congelar `owner -> leitura contextual -> ensureCreatorOwnership -> storage -> saveFeedbackDoc -> resposta publica`;
+	- teste runtime contratual leve deve provar que `feedbackId` invalido nao executa read, seam, storage ou persistencia;
+	- teste runtime contratual leve deve provar que `not found` nao executa gate tardio nem write;
+	- teste runtime contratual leve deve provar que o read recebe `scopedUnitId`, `allowLegacyUnscoped` e `preferScopedRepoRead` materialmente;
+	- teste runtime contratual leve deve provar que `ensureCreatorOwnership` recebe `currentUser`, `feedback` carregado e `scopedUnitId`;
+	- teste runtime contratual leve deve provar que `saveFeedbackDoc` so ocorre apos `access.allowed=true` e upload bem-sucedido;
+	- teste runtime contratual leve deve provar que o storage nao decide `scopedUnitId` nem substitui ownership;
+	- o teste nao deve abrir controllers grandes, data access, storage amplo ou `api.db.js` como big-bang.
+- Tipo de teste recomendado nesta rodada:
+	- estrutural mais runtime contratual leve com stubs e mocks;
+	- sem Mongo real;
+	- sem query real;
+	- sem alterar `src` antes da protecao.
+- Hipotese de refatoracao futura nesta rodada:
+	- nao alterar `src` antes da protecao;
+	- so considerar refatoracao se a protecao demonstrar perda real de limite semantico;
+	- nao abrir infra de storage ampla;
+	- nao abrir `api.db.js`;
+	- nao alterar contrato HTTP neste momento.
+- Respostas objetivas do desenho nesta rodada:
+	- a semantica inicial do owner deve ser a de fronteira tenant-aware principal de um write contextual de upload ou anexo;
+	- a semantica inicial da infra ou storage deve ser a de efeito lateral relacionado, subordinado ao owner e sem poder decidir tenant nem ownership;
+	- a semantica inicial de `scopedUnitId`, `allowLegacyUnscoped` e `preferScopedRepoRead` deve ser, respectivamente, contexto material por unidade, compat legada explicita e preferencia obrigatoria por leitura escopada no contrato atual;
+	- a cobertura atual nao e suficiente para fechamento documental do corredor;
+	- e necessario teste adicional focal;
+	- o corredor so podera ser fechado quando a protecao focal provar o handoff curto contextual do owner e os testes adjacentes permanecerem verdes;
+	- nao se deve abrir storage amplo ou `api.db.js` como big-bang porque isso ampliaria o raio de mudanca, misturaria concerns de infra com enforcement tenant-aware e quebraria a regua de alvo pequeno, local e testavel.
+- Necessidade de teste adicional nesta rodada:
+	- sim, a cobertura atual ainda precisa de uma protecao focal tenant-aware dedicada.
+- Interpretacao obrigatoria consolidada nesta rodada:
+	- este desenho apenas define protecao ou teste futuro;
+	- este desenho nao altera codigo;
+	- este desenho nao altera testes;
+	- este desenho nao cria teste ainda;
+	- este desenho nao executa refatoracao;
+	- este desenho nao cria comando;
+	- este desenho nao conecta Mongo real;
+	- este desenho nao executa query real;
+	- este desenho nao gera relatorio;
+	- este desenho nao inicia PostgreSQL;
+	- este desenho nao usa Portal;
+	- a proxima etapa deve criar a protecao ou teste antes de qualquer alteracao em `src`.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=designCreateUploadFeedbackAnexoHandlerTenantAwareProtection`;
+	- `selectedTechnicalTarget=createUploadFeedbackAnexoHandler`;
+	- `recommendedNextAct=createCreateUploadFeedbackAnexoHandlerTenantAwareProtectionTest`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createUploadFeedbackAnexoHandlerTenantAwareProtectionDesigned=true`
+	- `selectedTechnicalTarget=createUploadFeedbackAnexoHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=designCreateUploadFeedbackAnexoHandlerTenantAwareProtection`
+	- `recommendedNextAct=createCreateUploadFeedbackAnexoHandlerTenantAwareProtectionTest`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
