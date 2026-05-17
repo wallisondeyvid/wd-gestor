@@ -8233,6 +8233,99 @@ Checkpoint tenant enforcement atual:
 	- este registro nao usa Portal;
 	- este registro nao executa novo push;
 	- qualquer nova frente futura deve ser aberta somente apos decisao explicita.
+- Checkpoint documental curto da preparacao do resumo pos-publicacao da frente `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real externo, sem novo push e sem abertura de nova fase.
+- Frente resumida nesta rodada:
+	- `tenantArchitectureContinuation`.
+- Status consolidado deste resumo:
+	- publicada manualmente e com pos-push registrado localmente.
+- Push ja executado consolidado neste resumo:
+	- `24a274b..81d90f5`.
+- Commit remoto publicado consolidado neste resumo:
+	- `81d90f5 docs(tenant): apresenta instrucao humana de push tenant-aware`.
+- Commit local pos-push consolidado neste resumo:
+	- `docs(tenant): registra pos-push tenant-aware`.
+- Validacao associada consolidada neste resumo:
+	- `tests=2364`;
+	- `suites=17`;
+	- `pass=2362`;
+	- `fail=0`;
+	- `skipped=2`;
+	- `cancelled=0`;
+	- `todo=0`.
+- Sintese executiva consolidada neste resumo:
+	- sequencia atual de microcortes tenant-aware no Mongo encerrada;
+	- corredores pequenos e fortes drenados;
+	- multiplos corredores protegidos e validados;
+	- ultimos corredores de feedback detail/upload fechados;
+	- nenhum novo alvo tecnico residual selecionado;
+	- `selectedTechnicalTarget=none`.
+- Limites consolidados deste resumo:
+	- nao declara WD Gestor pronto para producao;
+	- nao declara multi-tenant inteiro concluido;
+	- nao abre nova fase;
+	- PostgreSQL permanece fora;
+	- Portal permanece fora;
+	- dados reais permanecem fora;
+	- prontidao operacional permanece em trilha separada.
+- Decisao consolidada neste resumo:
+	- resumo pos-publicacao preparado;
+	- nao abrir nova frente automaticamente;
+	- proximo ato recomendado: `reviewPostPushTenantArchitectureContinuationSummary`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum novo push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=preparePostPushTenantArchitectureContinuationSummary`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=reviewPostPushTenantArchitectureContinuationSummary`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `postPushTenantArchitectureContinuationSummaryPrepared=true`
+	- `tenantArchitectureContinuationAlreadyPushed=true`
+	- `localPostPushDocsAheadOrigin=true`
+	- `gitPushExecuted=false`
+	- `noNewTechnicalTargetOpened=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=preparePostPushTenantArchitectureContinuationSummary`
+	- `recommendedNextAct=reviewPostPushTenantArchitectureContinuationSummary`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria deste resumo:
+	- este resumo apenas documenta o pos-publicacao;
+	- este resumo nao altera codigo;
+	- este resumo nao altera testes;
+	- este resumo nao executa refatoracao;
+	- este resumo nao cria comando npm/script;
+	- este resumo nao conecta Mongo real;
+	- este resumo nao executa query real;
+	- este resumo nao inicia PostgreSQL;
+	- este resumo nao usa Portal;
+	- este resumo nao executa novo push;
+	- qualquer publicacao do commit local pos-push depende de decisao humana posterior.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
