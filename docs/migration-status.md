@@ -11727,6 +11727,200 @@ Checkpoint tenant enforcement atual:
 	- esta politica nao declara o WD Gestor pronto para producao;
 	- esta politica nao faz push;
 	- a proxima etapa deve definir os criterios de saida de prontidao operacional Mongo.
+- Checkpoint documental curto dos criterios de saida da frente `operationalReadinessMongo`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem dry-run real, sem geracao de log tecnico real, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push, sem transformar estes criterios em runbook executavel e sem declarar prontidao de producao.
+- Identificacao consolidada destes criterios:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=defineMongoOperationalReadinessExitCriteria`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada nestes criterios:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nestes criterios:
+	- MongoDB permanece como arquitetura atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Objetivo dos criterios de saida:
+	- definir quando a frente documental de prontidao operacional MongoDB pode ser considerada suficientemente consolidada;
+	- separar encerramento documental de prontidao de producao;
+	- impedir fechamento prematuro sem checklist, politica de dados, backup/rollback, dry-run, auditoria/logs e gates de autorizacao;
+	- preparar um futuro checkpoint final da frente;
+	- manter bloqueadas execucoes reais ate autorizacao especifica.
+- Criterios minimos para considerar a frente documentalmente pronta:
+	- `fontes operacionais inventariadas`:
+		- finalidade: provar que a frente partiu de um mapa minimo das superfices operacionais relevantes;
+		- evidencia documental esperada: checkpoint previo de inventario consolidado no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: lacunas de superficie e falsa sensacao de cobertura;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: manter referencia explicita ao inventario base.
+	- `fontes operacionais lidas em modo read-only`:
+		- finalidade: garantir que a consolidacao foi baseada em leitura e nao em execucao;
+		- evidencia documental esperada: checkpoints de leitura documental das fontes e diretorios relevantes;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: conclusoes sem base documental suficiente;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: manter trilha de leitura explicita no ledger.
+	- `matriz de prontidao MongoDB criada`:
+		- finalidade: fixar a estrutura-base da frente de prontidao;
+		- evidencia documental esperada: checkpoint da matriz de prontidao consolidado no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: ausencia de quadro geral de readiness;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: manter a matriz como ancora do fechamento final.
+	- `comandos classificados por risco`:
+		- finalidade: assegurar diferenciacao entre leitura, mutacao e risco alto;
+		- evidencia documental esperada: checkpoint da classificacao de risco no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: tratar operacoes heterogeneas como equivalentes;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: reapontar para a matriz de risco no checkpoint final.
+	- `esqueleto de runbook seguro desenhado`:
+		- finalidade: provar que existe forma documental de organizar a fase sem executar nada;
+		- evidencia documental esperada: checkpoint do esqueleto de runbook seguro no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: perda de coerencia entre politicas e futura operacionalizacao;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: manter claro que o esqueleto nao e runbook executavel.
+	- `gates de autorizacao mapeados`:
+		- finalidade: assegurar que nenhuma execucao futura seja tratada como implicita;
+		- evidencia documental esperada: checkpoint de gates de autorizacao no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: operacao futura sem dono responsavel;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: manter gates como precondicao central do fechamento.
+	- `matriz de ambientes definida`:
+		- finalidade: separar documentalmente local, memoria, homologacao e producao;
+		- evidencia documental esperada: checkpoint da matriz de ambientes no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: colapso entre ambientes e autorizacoes;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: carregar a matriz de ambientes para o checkpoint final.
+	- `politica de dados definida`:
+		- finalidade: distinguir dados ficticios, reais e sensiveis antes de qualquer uso futuro;
+		- evidencia documental esperada: checkpoint da politica de dados no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: mistura indevida de classes de dados;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: manter a classificacao de dados como gate permanente.
+	- `politica de backup/rollback definida`:
+		- finalidade: garantir contingencia documental antes de qualquer fluxo de maior risco;
+		- evidencia documental esperada: checkpoint da politica de backup/rollback no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: falta de estrategia de reversao futura;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: manter vinculo explicito com operacoes `R4`/`R5`.
+	- `checklist de preflight definido`:
+		- finalidade: assegurar que qualquer operacao futura tenha perguntas de controle obrigatorias;
+		- evidencia documental esperada: checkpoint do checklist de preflight no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: execucao futura sem contexto minimo;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: manter o checklist como gate transversal.
+	- `politica de dry-run definida`:
+		- finalidade: separar simulacao documental de execucao real;
+		- evidencia documental esperada: checkpoint da politica de dry-run no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: dry-run ser tratado como permissao operacional;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: carregar restricoes de dry-run para o fechamento final.
+	- `politica de auditoria/logs definida`:
+		- finalidade: garantir rastreabilidade e saneamento documental de evidencias futuras;
+		- evidencia documental esperada: checkpoint da politica de auditoria/logs no ledger;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: futura execucao sem trilha auditavel ou com exposicao sensivel;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: integrar criterios de auditoria ao checkpoint final.
+	- `bloqueios de Mongo real, scripts, seed/reset/cleanup/migration/backfill, Portal, PostgreSQL e push preservados`:
+		- finalidade: garantir que o encerramento documental nao relaxe os bloqueios operacionais da fase;
+		- evidencia documental esperada: gates finais acumulados ao longo dos microcortes e ausencia de execucao real;
+		- status atual esperado: cumprido nesta trilha;
+		- risco se ausente: fechamento indevido com abertura operacional prematura;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: repetir esses bloqueios no checkpoint final.
+	- `proximo checkpoint de fechamento definido`:
+		- finalidade: impedir que a frente termine sem um ato final explicito de consolidacao;
+		- evidencia documental esperada: recomendacao do proximo ato no ledger;
+		- status atual esperado: a ser definido nesta rodada;
+		- risco se ausente: encerramento difuso e sem ato final verificavel;
+		- consequencia se nao cumprido: nao encerrar a frente;
+		- proximo tratamento recomendado: preparar checkpoint final especifico antes de qualquer tentativa de encerramento.
+- Criterios que NAO significam prontidao de producao:
+	- ter documentacao nao autoriza producao;
+	- ter commits locais nao autoriza push;
+	- ter matriz de risco nao autoriza execucao;
+	- ter politica de dry-run nao autoriza dry-run real;
+	- ter politica de backup/rollback nao autoriza backup/restore real;
+	- ter politica de auditoria/logs nao autoriza geracao de logs tecnicos reais;
+	- ter dados ficticios nao autoriza manipulacao real;
+	- ter testes automaticos verdes em hooks nao autoriza Mongo real.
+- Matriz de decisao desta fase:
+	- permitido agora: documentacao dos criterios de saida;
+	- permitido agora: commit local documental apos validacao;
+	- nao permitido agora: encerramento definitivo da frente sem checkpoint final;
+	- nao permitido agora: declaracao de producao pronta;
+	- nao permitido agora: execucao real de qualquer comando operacional;
+	- nao permitido agora: Mongo real;
+	- nao permitido agora: query real;
+	- nao permitido agora: dry-run real;
+	- nao permitido agora: backup/restore/rollback real;
+	- nao permitido agora: `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- nao permitido agora: Portal;
+	- nao permitido agora: push.
+- Proximo ato recomendado nesta rodada:
+	- `prepareMongoOperationalReadinessFinalCheckpoint`.
+- Gates finais destes criterios:
+	- `mongoOperationalReadinessExitCriteriaDefined=true`
+	- `selectedTarget=defineMongoOperationalReadinessExitCriteria`
+	- `selectedTechnicalTarget=none`
+	- `productionReadyDeclared=false`
+	- `finalCheckpointCreated=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `technicalLogGenerated=false`
+	- `sensitiveLogExposed=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria destes criterios:
+	- estes criterios apenas organizam o encerramento documental da frente `operationalReadinessMongo`;
+	- estes criterios nao alteram codigo;
+	- estes criterios nao alteram testes;
+	- estes criterios nao alteram `package.json`;
+	- estes criterios nao alteram scripts;
+	- estes criterios nao criam arquivo novo;
+	- estes criterios nao criam comando npm;
+	- estes criterios nao executam comandos;
+	- estes criterios nao executam scripts npm;
+	- estes criterios nao executam dry-run real;
+	- estes criterios nao geram log tecnico real por execucao;
+	- estes criterios nao conectam Mongo real;
+	- estes criterios nao executam query real;
+	- estes criterios nao executam backup real, restore real ou rollback real;
+	- estes criterios nao executam `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- estes criterios nao usam Portal;
+	- estes criterios nao reintroduzem PostgreSQL no roadmap;
+	- estes criterios nao declaram o WD Gestor pronto para producao;
+	- estes criterios nao fazem push;
+	- a proxima etapa deve preparar o checkpoint final da frente de prontidao operacional Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
