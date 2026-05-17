@@ -7457,6 +7457,95 @@ Checkpoint tenant enforcement atual:
 	- este checkpoint nao usa Portal;
 	- este checkpoint nao autoriza push;
 	- a proxima etapa deve revisar o checkpoint final e so depois decidir se havera fechamento final documental antes de qualquer push.
+- Checkpoint documental curto da revisao do checkpoint final da frente `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem relatorio real e sem push.
+- Frente revisada nesta rodada:
+	- `tenantArchitectureContinuation`.
+- Checkpoint revisado nesta rodada:
+	- checkpoint final documental preparado.
+- Status consolidado desta revisao:
+	- pronto para fechamento final documental.
+- Validacoes documentais consolidadas desta revisao:
+	- `selectedTechnicalTarget=none` permanece correto;
+	- nao ha alvo residual pequeno, vivo, local e testavel superior a consolidacao;
+	- corredores fortes foram drenados;
+	- os ultimos corredores fortes de feedback detail e upload foram fechados;
+	- os riscos remanescentes sao macro ou hibridos, ou globais legitimos.
+- Sintese revisada dos resultados da frente:
+	- multiplos corredores foram protegidos e validados;
+	- multiplos testes focais foram criados;
+	- multiplos testes adjacentes permaneceram verdes;
+	- refatoracoes foram aplicadas apenas quando necessarias;
+	- varios corredores foram fechados sem refatoracao em `src`;
+	- o historico local preserva baseline focal ampla recente verde com `136 tests`, `136 pass` e `0 fail`.
+- Limites revisados deste checkpoint:
+	- nao declarar producao pronta;
+	- nao declarar o multi-tenant inteiro concluido;
+	- nao abrir nova fase;
+	- nao autorizar push;
+	- nao conectar Mongo real;
+	- nao executar query real;
+	- PostgreSQL permanece fora;
+	- Portal permanece fora.
+- Riscos residuais confirmados nesta revisao:
+	- `api.db.js`, `auth.db.js` e `auth-context.db.js` permanecem como frente macro futura;
+	- `user`, `memberships` e `auth-context` podem exigir decisao funcional futura;
+	- `global scope` legitimo deve continuar separado de risco tenant-aware.
+- Decisao consolidada desta revisao:
+	- checkpoint final documental revisado e apto para fechamento final;
+	- nao abrir novo microcorte tecnico;
+	- proximo ato recomendado: `closeTenantArchitectureContinuationFinalCheckpoint`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=reviewTenantArchitectureContinuationFinalCheckpoint`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=closeTenantArchitectureContinuationFinalCheckpoint`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `tenantArchitectureContinuationFinalCheckpointReviewed=true`
+	- `tenantArchitectureContinuationFinalCheckpointReadyToClose=true`
+	- `noNewTechnicalTargetOpened=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=reviewTenantArchitectureContinuationFinalCheckpoint`
+	- `recommendedNextAct=closeTenantArchitectureContinuationFinalCheckpoint`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas revisa o checkpoint final documental preparado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio real;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- esta revisao nao autoriza push;
+	- a proxima etapa deve fechar documentalmente a frente, ainda sem push, salvo autorizacao posterior explicita.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
