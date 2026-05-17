@@ -12479,6 +12479,169 @@ Checkpoint tenant enforcement atual:
 	- este mapeamento nao declara o WD Gestor pronto para producao;
 	- este mapeamento nao faz push;
 	- a proxima etapa deve selecionar o primeiro gate `R1` seguro antes de qualquer runtime.
+- Checkpoint documental curto da selecao do primeiro gate `R1` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem validacao real, sem teste manual, sem boot manual, sem dry-run real, sem geracao de log tecnico real, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem declarar producao pronta.
+- Identificacao consolidada desta selecao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=selectFirstR1ValidationGate`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta selecao:
+	- escolher a primeira validacao `R1` segura;
+	- nao executar a validacao ainda;
+	- preparar validacao posterior em microcorte separado;
+	- preservar o usuario master real e sensivel `wallisondeyvid13@gmail.com`;
+	- manter `R2`, `R3`, `R4`, `R5` e `X` bloqueados neste microcorte.
+- Candidatos `R1` avaliados documentalmente:
+	- `git status/log/diff`:
+		- finalidade: verificar limpeza do branch, posicao do `HEAD`, ahead/behind e coerencia do ledger;
+		- risco: `R1`;
+		- por que e `R1`: usa apenas leitura local de metadados Git sem tocar banco ou runtime;
+		- por que e seguro apenas como candidato: depende somente do estado do repositorio e do ledger;
+		- por que ainda nao sera executado neste microcorte: este microcorte apenas seleciona o gate, nao valida nada;
+		- dependencias antes de execucao futura: definir checklist curto da validacao, comandos exatos e criterio de sucesso/falha;
+		- relacao com o usuario master real: nenhuma superficie toca credencial ou identidade master;
+		- proximo tratamento recomendado: promover para gate inicial recomendado.
+	- `leitura de package.json`:
+		- finalidade: revisar scripts e dependencias sem execucao;
+		- risco: `R1`;
+		- por que e `R1`: permanece em leitura estatica sem boot nem npm script;
+		- por que e seguro apenas como candidato: so inspeciona inventario de superficies;
+		- por que ainda nao sera executado neste microcorte: a selecao precisa preceder qualquer protocolo de validacao;
+		- dependencias antes de execucao futura: definir quais chaves e scripts entram no checklist e quais ficam excluidos;
+		- relacao com o usuario master real: apenas reforca que `master:set` existe e continua proibido;
+		- proximo tratamento recomendado: manter como apoio documental, nao como primeiro gate.
+	- `leitura estrutural de scripts`:
+		- finalidade: identificar por nome as superficies operacionais e sensiveis;
+		- risco: `R1`;
+		- por que e `R1`: e inventario nominal sem invocacao de script;
+		- por que e seguro apenas como candidato: delimita o que nao deve ser executado cedo demais;
+		- por que ainda nao sera executado neste microcorte: o gate inicial precisa ser ainda mais estreito e centrado em Git/ledger;
+		- dependencias antes de execucao futura: consolidar lista de comandos explicitamente excluidos;
+		- relacao com o usuario master real: ajuda a manter `master:set` fora do escopo;
+		- proximo tratamento recomendado: usar como suporte ao gate inicial, nao como gate principal.
+	- `leitura estrutural de tests`:
+		- finalidade: mapear suites potenciais sem rodar testes;
+		- risco: `R1`;
+		- por que e `R1`: permanece em leitura de nomes e familias de teste;
+		- por que e seguro apenas como candidato: nao executa harness, boot nem runtime;
+		- por que ainda nao sera executado neste microcorte: qualquer teste futuro precisa de recorte e aprovacao separados;
+		- dependencias antes de execucao futura: selecionar suite minima sem tocar Mongo real ou superficie sensivel;
+		- relacao com o usuario master real: evita suites que possam atravessar auth ou credenciais;
+		- proximo tratamento recomendado: deixar para etapa posterior ao gate Git/ledger.
+	- `guardrails candidatos por nome`:
+		- finalidade: registrar guardrails executaveis como material futuro de controle;
+		- risco: `R1` como leitura, mas potencialmente superior na execucao;
+		- por que e `R1`: aqui so ha classificacao nominal, sem disparo de processos;
+		- por que e seguro apenas como candidato: documenta superfices antes de qualquer uso;
+		- por que ainda nao sera executado neste microcorte: qualquer execucao de guardrail ja seria validacao real;
+		- dependencias antes de execucao futura: aprovar guardrail exato, saida esperada e impacto permitido;
+		- relacao com o usuario master real: precisa excluir qualquer guardrail que atravesse credencial ou identidade master;
+		- proximo tratamento recomendado: manter fora da primeira escolha.
+	- `verificacoes documentais do ledger`:
+		- finalidade: confirmar continuidade da trilha, proximo ato e gates acumulados;
+		- risco: `R1`;
+		- por que e `R1`: e leitura pura do ledger sem runtime;
+		- por que e seguro apenas como candidato: atua como preflight documental da frente;
+		- por que ainda nao sera executado neste microcorte: a propria selecao precisa ser registrada antes da validacao;
+		- dependencias antes de execucao futura: definir recorte de linhas/secoes e invariantes obrigatorios;
+		- relacao com o usuario master real: reforca o status do master como dado real e sensivel protegido;
+		- proximo tratamento recomendado: acoplar ao gate Git/ledger selecionado.
+- Selecao recomendada:
+	- selecionar como primeiro gate `R1` futuro a validacao documental/Git sem banco real `validateGitLedgerCleanStateR1`.
+- Justificativa da escolha:
+	- nao toca Mongo real;
+	- nao toca usuario master;
+	- nao toca credenciais;
+	- nao executa script npm;
+	- nao altera `src`, `tests`, `package.json` ou `scripts`;
+	- valida apenas estado Git/ledger antes de qualquer validacao operacional;
+	- e o menor risco antes de qualquer teste ou boot.
+- Candidatos nao escolhidos agora:
+	- `npm test` manual;
+	- guardrails executaveis;
+	- boot local;
+	- Mongo em memoria;
+	- canary;
+	- inventario read-only;
+	- `master:set`;
+	- `seed`, `reset`, `cleanup`, `migration` e `backfill`;
+	- Mongo real;
+	- Portal.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `prepareValidateGitLedgerCleanStateR1`.
+- Gates finais desta selecao:
+	- `firstR1ValidationGateSelected=true`
+	- `selectedTarget=selectFirstR1ValidationGate`
+	- `selectedTechnicalTarget=validateGitLedgerCleanStateR1`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `validationExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `technicalLogGenerated=false`
+	- `sensitiveLogExposed=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o primeiro gate `R1` futuro;
+	- esta selecao nao executa validacao real;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao altera `package.json`;
+	- esta selecao nao altera scripts;
+	- esta selecao nao cria arquivo novo;
+	- esta selecao nao cria comando npm;
+	- esta selecao nao executa comandos;
+	- esta selecao nao executa scripts npm;
+	- esta selecao nao executa teste manual;
+	- esta selecao nao faz boot;
+	- esta selecao nao executa dry-run real;
+	- esta selecao nao gera log tecnico real por execucao;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao executa backup real, restore real ou rollback real;
+	- esta selecao nao executa `master:set`;
+	- esta selecao nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- esta selecao nao expoe senha, token, URI, segredo ou credencial;
+	- esta selecao nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta selecao nao usa Portal;
+	- esta selecao nao reintroduz PostgreSQL no roadmap;
+	- esta selecao nao declara o WD Gestor pronto para producao;
+	- esta selecao nao faz push;
+	- a proxima etapa deve preparar a validacao `validateGitLedgerCleanStateR1` em microcorte separado.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
