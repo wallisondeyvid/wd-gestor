@@ -9619,6 +9619,202 @@ Checkpoint tenant enforcement atual:
 	- esta matriz nao declara o WD Gestor pronto para producao;
 	- esta matriz nao faz push;
 	- a proxima etapa deve classificar os comandos operacionais Mongo por risco.
+- Checkpoint documental curto da classificacao dos comandos operacionais MongoDB por risco, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem Mongo real, sem query real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem transformar esta classificacao em runbook executavel.
+- Identificacao consolidada desta classificacao:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=classifyOperationalMongoCommandsByRisk`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada nesta classificacao:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nesta classificacao:
+	- MongoDB permanece como base atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Niveis de risco consolidados nesta classificacao:
+	- `R0`: leitura documental, sem execucao;
+	- `R1`: verificacao local sem banco real;
+	- `R2`: boot local sem mutacao real;
+	- `R3`: canary ou inventario controlado;
+	- `R4`: operacao sensivel com potencial de alteracao;
+	- `R5`: operacao destrutiva ou mutativa critica;
+	- `X`: proibido nesta fase.
+- Classificacao documental inicial dos comandos e grupos conhecidos:
+	- `start`, `dev`, `start:gestor`, `start:atlas`:
+		- finalidade aparente: boot local do runtime principal da aplicacao;
+		- nivel de risco: `R2`;
+		- motivo do risco: sobe servidor e pode depender de configuracao real, sessao e conexao com Mongo;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: definir ambiente permitido, bloquear Mongo real quando aplicavel e validar objetivo estritamente local;
+		- evidencia usada: `package.json`, `README.md`, `docs/migration-status.md`;
+		- proximo tratamento recomendado: separar boot local diagnostico de boot com dependencia operacional real.
+	- `start:mem`:
+		- finalidade aparente: boot local com Mongo em memoria;
+		- nivel de risco: `R2`;
+		- motivo do risco: continua iniciando runtime completo, embora sem Mongo real por desenho esperado;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: confirmar ambiente sintetico, ausencia de dados reais e objetivo de validacao controlada;
+		- evidencia usada: `package.json`, `docs/migration-status.md`;
+		- proximo tratamento recomendado: manter em faixa de boot nao mutativo, mas ainda bloqueado nesta fase.
+	- `start:mem:seed`:
+		- finalidade aparente: boot em memoria com `seed` habilitado;
+		- nivel de risco: `X`;
+		- motivo do risco: aciona carga automatica de dados e mistura boot com mutacao controlada;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: aprovacao humana explicita, ambiente sintetico isolado e contrato claro de dados de `seed`;
+		- evidencia usada: `package.json`, `docs/migration-status.md`;
+		- proximo tratamento recomendado: manter em grupo explicitamente proibido enquanto `seed` permanecer bloqueado.
+	- `test`, `test:strict`, `test:smoke`, `test:mem`, `test:win`:
+		- finalidade aparente: executar suites, smoke e guardrails automatizados;
+		- nivel de risco: `R1`;
+		- motivo do risco: sao verificacoes locais, mas podem ser amplas, custosas e fora do objetivo deste microcorte;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: selecionar escopo exato, confirmar ausencia de banco real e aprovar custo/abrangencia da validacao;
+		- evidencia usada: `package.json`, estrutura de `tests`, estrutura de `docs/checkpoints`;
+		- proximo tratamento recomendado: quebrar por suites focais, smoke e suites amplas antes de qualquer execucao futura.
+	- `guard:*`, `verify:*`, `arch:map`, `parity`:
+		- finalidade aparente: verificar guardrails arquiteturais, imports, migracao segura e paridade estrutural;
+		- nivel de risco: `R1`;
+		- motivo do risco: tipicamente nao mutativos, mas ainda sao comandos executaveis fora do escopo deste microcorte;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: definir alvo da verificacao, impacto esperado e confirmar ausencia de dependencia operacional real;
+		- evidencia usada: `package.json`, `docs/checkpoints`, estrutura de `scripts`;
+		- proximo tratamento recomendado: classificar por custo e por finalidade de governanca versus validacao tecnica.
+	- `migration:check`:
+		- finalidade aparente: agregar guardrails, mapa arquitetural e smoke num unico comando;
+		- nivel de risco: `R3`;
+		- motivo do risco: combina multiplas verificacoes e pode ser interpretado como gate operacional composto;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: decompor em subpassos autorizados e confirmar que nenhum subcomando usa superficies reais indevidas;
+		- evidencia usada: `package.json`, `docs/migration-status.md`;
+		- proximo tratamento recomendado: tratar como comando composto que depende de classificacao individual dos subcomandos.
+	- `smoke:userdb-canary`:
+		- finalidade aparente: canary operacional focado em userdb;
+		- nivel de risco: `R3`;
+		- motivo do risco: fica proximo de validacao operacional real e pode tocar superficie sensivel;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: aprovacao humana explicita, ambiente permitido, dados nao reais ou contrato especifico e entendimento do escopo do canary;
+		- evidencia usada: `package.json`, `docs/runbooks/userdb-canary.md`, `docs/migration-status.md`;
+		- proximo tratamento recomendado: manter em trilha de risco operacional intermediario-alto, fora da fase atual.
+	- `scripts/ops/inventory-fictional-data-readonly.js`:
+		- finalidade aparente: automacao de inventario controlado read-only com dados ficcionais;
+		- nivel de risco: `R3`;
+		- motivo do risco: embora descrito como read-only, ainda e uma automacao operacional e nao mera leitura documental;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: contrato explicito de ambiente sintetico, ausencia de dados reais e aprovacao humana para automacao;
+		- evidencia usada: `docs/runbooks/inventory-fictional-data-readonly*.md`, estrutura de `scripts/ops`, `docs/migration-status.md`;
+		- proximo tratamento recomendado: manter separado da leitura documental pura e avaliar como comando controlado.
+	- `flags:print`:
+		- finalidade aparente: imprimir flags de configuracao do runtime;
+		- nivel de risco: `R1`;
+		- motivo do risco: leitura local de configuracao, mas ainda um comando executavel com dependencia de ambiente;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: validar que a leitura de ambiente e segura e nao expoe dado sensivel fora de contexto;
+		- evidencia usada: `package.json`, `docs/migration-status.md`;
+		- proximo tratamento recomendado: agrupar com comandos de observabilidade local de baixo risco.
+	- `master:set`:
+		- finalidade aparente: configurar ou alterar credencial master;
+		- nivel de risco: `R4`;
+		- motivo do risco: altera identidade privilegiada e superficie de acesso global;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: aprovacao humana explicita, ambiente permitido, origem de credenciais controlada e trilha de auditoria;
+		- evidencia usada: `package.json`, `docs/checkpoints` de auth/debug, estrutura de `scripts`;
+		- proximo tratamento recomendado: manter em categoria sensivel administrativa com gate humano obrigatorio.
+	- `cleanup:legacy`:
+		- finalidade aparente: limpar legado ou remover residuos operacionais;
+		- nivel de risco: `R5`;
+		- motivo do risco: possui potencial destrutivo ou irreversivel sobre artefatos e dados;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: aprovacao humana explicita, escopo exato definido, backup ou rollback previsto e ambiente controlado;
+		- evidencia usada: `package.json`, estrutura de `scripts`;
+		- proximo tratamento recomendado: manter em faixa critica e explicitamente proibida na fase atual.
+	- `migrate:user-memberships-phase1`, `migrate:user-memberships-phase2`, `migrate:backfill-diretor`, `migrate:backfill-habitacao-mailboxes`:
+		- finalidade aparente: migrar estruturas e preencher dados historicos ou faltantes;
+		- nivel de risco: `R5`;
+		- motivo do risco: alteram persistencia, memberships e dados operacionais com potencial de irreversibilidade;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: aprovacao humana especifica, ambiente permitido, estrategia de rollback e validacao previa do alvo;
+		- evidencia usada: `package.json`, `docs/runbooks/user-memberships-phase2-backfill.md`, estrutura de `scripts/migrations`;
+		- proximo tratamento recomendado: manter bloqueados ate existir contrato operacional proprio.
+	- `backfill:refeicoes`, `backfill:refeicoes:uri`:
+		- finalidade aparente: executar backfill de dados de refeicoes;
+		- nivel de risco: `R5`;
+		- motivo do risco: escrevem ou reconciliam dados e uma variante aceita URI direta;
+		- permitido agora: nao;
+		- exige autorizacao futura: sim;
+		- pre-condicoes antes de uso futuro: aprovacao humana explicita, proibicao de dados reais sem gate e definicao clara de origem/destino;
+		- evidencia usada: `package.json`, estrutura de `scripts`;
+		- proximo tratamento recomendado: manter na trilha de operacoes criticas mutativas.
+- Reforcos de bloqueio desta fase:
+	- comandos de `seed` continuam proibidos;
+	- comandos de `cleanup` continuam proibidos;
+	- comandos de `migration` e `backfill` continuam proibidos;
+	- `master:set` continua proibido sem autorizacao explicita;
+	- canary e inventario controlado ainda nao devem ser executados;
+	- testes e guardrails nao devem ser executados neste microcorte;
+	- Mongo real continua bloqueado;
+	- push continua bloqueado;
+	- PostgreSQL continua fora do roadmap.
+- Sintese transversal desta classificacao:
+	- `R0` permanece limitado a leitura documental e consolidacao no ledger;
+	- `R1` identifica verificacoes locais potencialmente seguras, mas ainda bloqueadas nesta fase;
+	- `R2` cobre boots locais nao mutativos, ainda bloqueados por dependerem de runtime;
+	- `R3` cobre canary e automacoes controladas que exigem gate humano antes de qualquer uso;
+	- `R4` cobre operacoes sensiveis administrativas com potencial de alteracao relevante;
+	- `R5` cobre operacoes mutativas ou destrutivas criticas;
+	- `X` sinaliza comandos explicitamente proibidos nesta fase por regra de frente.
+- Proximo ato recomendado nesta rodada:
+	- `designSafeMongoOperationalRunbookSkeleton`.
+- Gates finais desta classificacao:
+	- `operationalMongoCommandsClassifiedByRisk=true`
+	- `selectedTarget=classifyOperationalMongoCommandsByRisk`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta classificacao:
+	- esta classificacao apenas organiza comandos MongoDB por risco operacional em modo documental;
+	- esta classificacao nao altera codigo;
+	- esta classificacao nao altera testes;
+	- esta classificacao nao altera `package.json`;
+	- esta classificacao nao altera scripts;
+	- esta classificacao nao cria comando npm;
+	- esta classificacao nao executa comandos;
+	- esta classificacao nao executa scripts npm;
+	- esta classificacao nao conecta Mongo real;
+	- esta classificacao nao executa query real;
+	- esta classificacao nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta classificacao nao usa Portal;
+	- esta classificacao nao reintroduz PostgreSQL no roadmap;
+	- esta classificacao nao declara o WD Gestor pronto para producao;
+	- esta classificacao nao faz push;
+	- a proxima etapa deve desenhar o esqueleto seguro do runbook operacional Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
