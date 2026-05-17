@@ -9287,6 +9287,154 @@ Checkpoint tenant enforcement atual:
 	- este inventario nao declara o WD Gestor pronto para producao;
 	- este inventario nao faz push;
 	- a proxima etapa deve ler as fontes inventariadas em modo somente leitura.
+- Checkpoint documental curto da leitura das fontes de prontidao operacional MongoDB em modo somente leitura, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem execucao de script, sem Mongo real, sem query real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem refatoracao tecnica.
+- Frente atual consolidada nesta leitura:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nesta leitura:
+	- MongoDB permanece como base atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Fontes efetivamente lidas nesta rodada:
+	- `package.json`;
+	- `README.md`;
+	- `docs/migration-status.md`;
+	- `docs/gestor-operational-auth-context-model.md`;
+	- `docs/runbooks`;
+	- `docs/checkpoints`;
+	- `scripts`;
+	- `scripts/ops`;
+	- `src/server/createServer.js`;
+	- `src/server/bootstrapRegistry.js`;
+	- `src/modules/gestor/index.js`;
+	- `src/modules/gestor/app/gestor-app.js`;
+	- estrutura de `src/modules/gestor/app/controllers`;
+	- estrutura de `src/modules/gestor/app/routes`;
+	- estrutura de `tests`;
+	- estrutura de `tests/architecture`.
+- Achados read-only por fonte:
+	- `package.json`:
+		- ha scripts de boot local (`start`, `dev`, `start:gestor`, `start:atlas`);
+		- ha scripts de execucao com memoria (`start:mem`) e com `seed` (`start:mem:seed`), que exigem autorizacao futura antes de qualquer uso;
+		- ha scripts de verificacao e guardrails (`test`, `test:strict`, `test:smoke`, `guard:*`, `migration:check`, `verify:*`, `arch:map`, `flags:print`);
+		- ha scripts claramente mutativos ou sensiveis (`master:set`, `cleanup:legacy`, `migrate:*`, `backfill:*`), que ficam fora deste microcorte.
+	- `README.md`:
+		- descreve instalacao generica com `npm install`, configuracao de `.env` e boot via `npm start`;
+		- reafirma MongoDB como banco operacional corrente;
+		- nao traz matriz de prontidao operacional MongoDB nem gates explicitos de autorizacao para execucao sensivel.
+	- `docs`:
+		- `docs/migration-status.md` continua como ledger principal da frente;
+		- `docs/gestor-operational-auth-context-model.md` consolida o modelo operacional hibrido controlado do Gestor e ajuda a separar identidade global, vinculo por unidade e operacao contextual;
+		- `docs/runbooks` contem runbooks e checkpoints operacionais, incluindo trilha `inventory-fictional-data-readonly*` e `userdb-canary.md`;
+		- `docs/checkpoints` concentra contratos de runtime, structural seams e checkpoints de enforcement que servem como base documental de validacao futura.
+	- `scripts`:
+		- o diretorio contem scripts de guardrail, diagnostico, smoke, canary, cleanup, migration e backfill;
+		- os nomes indicam que parte da superficie e estritamente de verificacao, enquanto outra parte tem potencial mutativo direto e precisa de autorizacao futura.
+	- `src/server`:
+		- `createServer.js` centraliza boot do Express, bind de portas, middlewares globais, tentativa de conexao Mongo, montagem de modulos, sessoes, headers de diagnostico e retry de conexao;
+		- `bootstrapRegistry.js` controla composicao da registry e montagem de modulos isolados, inclusive alias e habilitacao opcional de Escalas.
+	- `src/modules/gestor`:
+		- `index.js` monta o modulo Gestor em `/gestor` e revela um hook de `seed` opcional condicionado por ambiente, o que reforca a necessidade de autorizacao explicita antes de qualquer execucao;
+		- `gestor-app.js` organiza superfices de auth, dashboard, funcionarios, funcoes, setores, recursos, modulos, unidades, biometria, feedback, debug e configuracoes de widget, alem de depender do contexto de sessao e do auth-context do Gestor;
+		- a estrutura `controllers/routes/services/usecases/repositories/db` mostra que futuras validacoes operacionais devem priorizar auth-context, uploads, fluxos contextuais por unidade e areas de provisioning/usuarios.
+	- `tests`:
+		- a superficie de testes ja cobre smoke, contratos de runtime, seams estruturais, auth-context, feedback, provisioning, unit-scope, bootstrap e contratos por dominio;
+		- `tests/architecture` concentra guardrails de importacao, limites de camadas, tenant-scope e registry/cache, o que e util para uma matriz futura sem rodar nada agora.
+- Scripts relevantes identificados apenas por nome/finalidade aparente:
+	- `start`, `dev`, `start:gestor`, `start:atlas`: boot da aplicacao;
+	- `start:mem`: boot com Mongo em memoria;
+	- `start:mem:seed`: boot com Mongo em memoria e `seed` habilitado;
+	- `test`, `test:strict`, `test:smoke`, `test:mem`, `test:win`: execucao de suites e checks;
+	- `migration:check`: agrega guardrails, mapa arquitetural e smoke;
+	- `smoke:userdb-canary`: canary operacional para userdb;
+	- `master:set`: ajuste de credencial master;
+	- `cleanup:legacy`: limpeza de legado;
+	- `migrate:user-memberships-phase1`, `migrate:user-memberships-phase2`, `migrate:backfill-diretor`, `migrate:backfill-habitacao-mailboxes`: migracoes/backfills;
+	- `backfill:refeicoes`, `backfill:refeicoes:uri`: backfill de dados;
+	- `guard:*`, `verify:*`, `arch:map`, `flags:print`, `parity`: verificacao, guardrail e observabilidade arquitetural;
+	- `scripts/ops/inventory-fictional-data-readonly.js`: indicio de automacao operacional read-only ligada a inventario controlado.
+- Lacunas documentais iniciais consolidadas nesta leitura:
+	- ainda nao existe uma matriz unica e consolidada de prontidao operacional MongoDB no ledger atual;
+	- README raiz e generico e nao explicita gates de autorizacao operacional;
+	- os artefatos operacionais estao distribuidos entre ledger, runbooks, checkpoints e scripts, exigindo consolidacao em matriz unica;
+	- os scripts sensiveis existem por nome, mas ainda nao ha classificacao unica no ledger separando leitura, verificacao e mutacao.
+- Riscos operacionais iniciais consolidados nesta leitura:
+	- executar por engano scripts mutativos de `seed`, `cleanup`, `migration` ou `backfill`;
+	- interpretar scripts de memoria ou canary como autorizados para uso imediato;
+	- confundir guardrails/testes existentes com prontidao operacional ja aprovada;
+	- tocar superficie de auth-context, provisioning, usuarios ou feedback sem matriz operacional previa;
+	- reintroduzir PostgreSQL como alternativa de roadmap contra a decisao atual.
+- Itens que exigem autorizacao futura antes de execucao:
+	- conectar Mongo real;
+	- rodar scripts;
+	- executar `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- gerar relatorio externo;
+	- usar dados reais.
+- Saida esperada consolidada desta leitura:
+	- base documental para montar matriz de prontidao operacional MongoDB.
+- Proximo ato recomendado nesta rodada:
+	- `buildOperationalReadinessMongoMatrix`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum script executado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real contra banco executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum `seed`, `reset`, `cleanup`, `migration` ou `backfill` executado;
+	- nenhum PostgreSQL iniciado;
+	- nenhum preparo de migracao PostgreSQL;
+	- nenhum Portal usado;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=readOperationalReadinessSourcesMongoReadOnly`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=buildOperationalReadinessMongoMatrix`;
+	- `chosenApproach=mongodbOperationalReadiness`.
+- Gates:
+	- `operationalReadinessSourcesMongoRead=true`
+	- `mongodbArchitectureDecisionCurrent=true`
+	- `postgresOutOfRoadmap=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=operationalReadinessMongo`
+	- `selectedTarget=readOperationalReadinessSourcesMongoReadOnly`
+	- `recommendedNextAct=buildOperationalReadinessMongoMatrix`
+	- `chosenApproach=mongodbOperationalReadiness`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `postgresRoadmapActive=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta leitura:
+	- esta leitura apenas le fontes de prontidao operacional MongoDB;
+	- esta leitura nao altera codigo;
+	- esta leitura nao altera testes;
+	- esta leitura nao executa refatoracao;
+	- esta leitura nao cria comando npm/script;
+	- esta leitura nao conecta Mongo real;
+	- esta leitura nao executa query real;
+	- esta leitura nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta leitura nao inicia PostgreSQL;
+	- esta leitura nao considera PostgreSQL como roadmap;
+	- esta leitura nao usa Portal;
+	- esta leitura nao declara o WD Gestor pronto para producao;
+	- esta leitura nao faz push;
+	- a proxima etapa deve montar matriz de prontidao operacional MongoDB.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
