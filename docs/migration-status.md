@@ -12750,6 +12750,112 @@ Checkpoint tenant enforcement atual:
 	- esta preparacao nao declara o WD Gestor pronto para producao;
 	- esta preparacao nao faz push;
 	- a proxima etapa deve apenas fechar em commit local esta preparacao antes da execucao futura.
+- Checkpoint documental curto do registro do resultado da validacao `R1` `validateGitLedgerCleanStateR1` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem nova validacao, sem execucao de script npm, sem Mongo real, sem query real, sem dry-run real, sem log tecnico real por execucao operacional, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push e sem declarar producao pronta.
+- Identificacao consolidada deste registro:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=recordValidateGitLedgerCleanStateR1Result`;
+	- `selectedTechnicalTarget=validateGitLedgerCleanStateR1`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Resultado consolidado da validacao:
+	- `validationName=validateGitLedgerCleanStateR1`;
+	- `validationExecuted=true`;
+	- `validationResult=passed`;
+	- `validationScope=gitLedgerOnly`;
+	- `commandExecuted=true`;
+	- `npmScriptExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `queryExecuted=false`.
+- Evidencias registradas desta validacao:
+	- `branch=migration/refactor-core`;
+	- `localHead=442bec3 docs(ops): prepara validacao r1 git ledger`;
+	- `remoteHead=e6d68bd docs(ops): prepara checkpoint final prontidao mongo`;
+	- `aheadCount=4`;
+	- `workingTreeClean=true`;
+	- `filesChangedDuringValidation=false`;
+	- `commitCreatedDuringValidation=false`;
+	- `gitPushExecuted=false`.
+- Comandos usados na validacao:
+	- `git status -sb`;
+	- `git --no-pager log --oneline --decorate -10`;
+	- `git --no-pager log --oneline --decorate origin/migration/refactor-core -5`.
+- Interpretacao consolidada desta validacao:
+	- a validacao confirmou estado Git/ledger limpo;
+	- a validacao confirmou que ha commits documentais locais pendentes;
+	- a validacao nao executou runtime;
+	- a validacao nao executou scripts npm;
+	- a validacao nao conectou Mongo real;
+	- a validacao nao tocou usuario master real;
+	- a validacao nao declarou producao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitValidateGitLedgerCleanStateR1Result`.
+- Gates finais deste registro:
+	- `validateGitLedgerCleanStateR1Recorded=true`
+	- `selectedTarget=recordValidateGitLedgerCleanStateR1Result`
+	- `selectedTechnicalTarget=validateGitLedgerCleanStateR1`
+	- `validationExecuted=true`
+	- `validationResult=passed`
+	- `validationScope=gitLedgerOnly`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria deste registro:
+	- este registro documenta resultado ja obtido para `validateGitLedgerCleanStateR1`;
+	- este registro nao executa nova validacao;
+	- este registro nao altera codigo;
+	- este registro nao altera testes;
+	- este registro nao altera `package.json`;
+	- este registro nao altera scripts;
+	- este registro nao cria arquivo novo;
+	- este registro nao executa scripts npm;
+	- este registro nao conecta Mongo real;
+	- este registro nao executa query real;
+	- este registro nao executa dry-run real;
+	- este registro nao gera log tecnico real por execucao operacional;
+	- este registro nao executa backup real, restore real ou rollback real;
+	- este registro nao executa `master:set`;
+	- este registro nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- este registro nao expoe senha, token, URI, segredo ou credencial;
+	- este registro nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este registro nao usa Portal;
+	- este registro nao reintroduz PostgreSQL no roadmap;
+	- este registro nao declara o WD Gestor pronto para producao;
+	- este registro nao faz push;
+	- a proxima etapa deve apenas fechar em commit local este registro documental.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
