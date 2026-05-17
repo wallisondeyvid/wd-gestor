@@ -12111,6 +12111,153 @@ Checkpoint tenant enforcement atual:
 	- este checkpoint nao declara o WD Gestor pronto para producao;
 	- este checkpoint nao faz push;
 	- a proxima etapa deve apenas fechar em commit local este checkpoint final preparado.
+- Checkpoint documental curto de abertura da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem teste manual, sem boot manual, sem dry-run real, sem geracao de log tecnico real, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push, sem uso operacional de dados reais neste microcorte, preservando a excecao documental de que o usuario master `wallisondeyvid13@gmail.com` ja e real/sensivel e nao pode ser tratado como dado ficticio, descartavel ou mutavel nesta abertura, e sem declarar producao pronta.
+- Identificacao consolidada desta abertura:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=openControlledMongoOperationalValidation`;
+	- `selectedTechnicalTarget=none`;
+	- `previousPhase=operationalReadinessMongo`;
+	- `previousPhasePublished=true`;
+	- `previousPhasePostPushValidated=true`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`;
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`;
+	- `realDataUsed=false`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`.
+- Frente anterior consolidada como precondicao desta abertura:
+	- `operationalReadinessMongo` foi fechada documentalmente;
+	- `operationalReadinessMongo` foi publicada;
+	- `operationalReadinessMongo` foi validada em estado pos-push.
+- Decisao arquitetural consolidada nesta abertura:
+	- MongoDB permanece como arquitetura atual;
+	- PostgreSQL esta fora do roadmap atual;
+	- producao continua nao pronta.
+- Objetivo da nova frente:
+	- validar operacionalmente o WD Gestor em MongoDB de forma controlada;
+	- sair da documentacao pura para validacoes progressivas e autorizadas;
+	- comecar sem Mongo real, sem uso operacional de dados reais neste microcorte e sem operacoes mutativas, preservando a excecao documental de que o usuario master `wallisondeyvid13@gmail.com` ja e real/sensivel;
+	- preservar todos os gates definidos na frente `operationalReadinessMongo`;
+	- preparar futuras validacoes `R1` e `R2` antes de qualquer `R3`, `R4` ou `R5`.
+- Escopo permitido nesta abertura:
+	- apenas documentacao da abertura da nova frente;
+	- apenas leitura de fontes;
+	- apenas edicao do ledger;
+	- nenhum comando operacional;
+	- nenhum teste manual;
+	- nenhum boot;
+	- nenhum Mongo real;
+	- nenhum uso operacional de dados reais neste microcorte, preservando a excecao documental do usuario master `wallisondeyvid13@gmail.com` como dado real e sensivel;
+	- novos usuarios apenas como ficticios/controlados em etapa futura, se houver autorizacao explicita.
+- Escopo proibido nesta abertura:
+	- producao;
+	- Mongo real;
+	- query real;
+	- dry-run real;
+	- `seed`, `reset`, `cleanup`, `migration` e `backfill`;
+	- backup, restore ou rollback real;
+	- alterar o usuario master real;
+	- executar `master:set`;
+	- resetar credencial master;
+	- expor senha, token, URI, segredo ou credencial;
+	- tratar `wallisondeyvid13@gmail.com` como usuario ficticio;
+	- Portal;
+	- PostgreSQL;
+	- push;
+	- alteracao em `src`, `tests`, `package.json` ou `scripts`.
+- Sequencia futura recomendada da nova frente:
+	- `mapControlledValidationCandidates`;
+	- `selectFirstR1ValidationGate`;
+	- `validateSafeReadOnlyChecks`;
+	- `evaluateMemoryBootAuthorization`;
+	- `prepareFirstControlledRuntimeValidation`;
+	- somente depois considerar passos de risco mais alto.
+- Criterios de seguranca herdados:
+	- qualquer execucao futura exige preflight;
+	- qualquer execucao futura exige autorizacao humana explicita;
+	- comandos `R4` e `R5` continuam bloqueados;
+	- `seed`, `reset`, `cleanup`, `migration` e `backfill` continuam bloqueados;
+	- uso operacional de dados reais continua proibido, com excecao documental do usuario master `wallisondeyvid13@gmail.com` como dado real e sensivel ja conhecido;
+	- o usuario master real nao pode ser tratado como descartavel, ficticio ou alvo de mutacao nesta abertura;
+	- `master:set`, reset de master, alteracao de credencial master e exposicao de senha, token, URI, segredo ou credencial continuam proibidos;
+	- producao continua nao pronta;
+	- push continua reservado ao usuario.
+- Proximo ato recomendado nesta rodada:
+	- `mapControlledValidationCandidates`.
+- Gates finais desta abertura:
+	- `controlledMongoOperationalValidationOpened=true`
+	- `selectedTarget=openControlledMongoOperationalValidation`
+	- `selectedTechnicalTarget=none`
+	- `previousPhasePublished=true`
+	- `previousPhasePostPushValidated=true`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`
+	- `masterCredentialSensitive=true`
+	- `currentOtherUsersTreatedAsFictional=true`
+	- `futureUsersMayBeFictionalControlled=true`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `technicalLogGenerated=false`
+	- `sensitiveLogExposed=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta abertura:
+	- esta abertura apenas inicia documentalmente a frente `controlledMongoOperationalValidation`;
+	- esta abertura nao altera codigo;
+	- esta abertura nao altera testes;
+	- esta abertura nao altera `package.json`;
+	- esta abertura nao altera scripts;
+	- esta abertura nao cria arquivo novo;
+	- esta abertura nao cria comando npm;
+	- esta abertura nao executa comandos;
+	- esta abertura nao executa scripts npm;
+	- esta abertura nao executa teste manual;
+	- esta abertura nao faz boot;
+	- esta abertura nao executa dry-run real;
+	- esta abertura nao gera log tecnico real por execucao;
+	- esta abertura nao conecta Mongo real;
+	- esta abertura nao executa query real;
+	- esta abertura nao executa backup real, restore real ou rollback real;
+	- esta abertura nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- esta abertura nao executa `master:set`;
+	- esta abertura nao reseta credencial master;
+	- esta abertura nao expoe senha, token, URI, segredo ou credencial;
+	- esta abertura nao trata `wallisondeyvid13@gmail.com` como usuario ficticio;
+	- esta abertura nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta abertura nao usa Portal;
+	- esta abertura nao reintroduz PostgreSQL no roadmap;
+	- esta abertura nao declara o WD Gestor pronto para producao;
+	- esta abertura nao faz push;
+	- a proxima etapa deve mapear candidatos de validacao controlada antes de qualquer tentativa de runtime.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
