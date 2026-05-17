@@ -7546,6 +7546,127 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao usa Portal;
 	- esta revisao nao autoriza push;
 	- a proxima etapa deve fechar documentalmente a frente, ainda sem push, salvo autorizacao posterior explicita.
+- Checkpoint documental curto de fechamento final da frente `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real e sem push.
+- Frente fechada nesta rodada:
+	- `tenantArchitectureContinuation`.
+- Tipo de fechamento desta rodada:
+	- fechamento documental da sequencia atual de microcortes tenant-aware no Mongo.
+- Status final consolidado desta frente:
+	- frente encerrada documentalmente nesta sequencia.
+- Decisao consolidada desta rodada:
+	- nao abrir novo microcorte tecnico;
+	- nao selecionar novo alvo residual;
+	- `selectedTechnicalTarget=none`;
+	- proximo ato recomendado: `preparePostTenantArchitectureContinuationHandoffOrPushDecision`.
+- Sintese final consolidada dos resultados:
+	- corredores pequenos e fortes foram drenados;
+	- multiplos corredores foram protegidos e validados;
+	- multiplos testes focais foram criados;
+	- multiplos testes adjacentes permaneceram verdes;
+	- refatoracoes foram aplicadas apenas quando necessarias;
+	- varios corredores foram fechados sem refatoracao em `src` quando a protecao demonstrou suficiencia;
+	- `feedback detail` e `feedback upload` foram fechados como protegidos e validados no final da sequencia;
+	- a ausencia de novo alvo tecnico forte permanece confirmada.
+- Corredores fechados considerados nesta frente:
+	- `feedbackStatusDataFacade`;
+	- `recursosContextDataFacade`;
+	- `funcionarioDeletePostDataFacade`;
+	- `createUsuarioExecutionService`;
+	- `updateUsuarioExecutionService`;
+	- `checkUsuarioEmailOwnerService`;
+	- `authContextReadDataFacade`;
+	- `passwordRecoveryRequestDataFacade`;
+	- `resetPasswordRenderDataFacade`;
+	- `resetPasswordExecutionService`;
+	- `primeiroAcessoExecutionService`;
+	- `unlockUsuarioExecutionService`;
+	- `toggleUsuarioExecutionService`;
+	- `createFeedbackPolicyOwnershipCore`;
+	- `processCreateFeedbackCore`;
+	- `processUpdateFeedbackRespostaCore`;
+	- `createDeleteFeedbackHandler`;
+	- `createAdminFeedbackDetailHandler`;
+	- `createUploadFeedbackAnexoHandler`.
+- Evidencia final consolidada desta frente:
+	- o historico local confirma baseline focal ampla recente verde com `136 tests`, `136 pass` e `0 fail`.
+- Limites consolidados deste fechamento:
+	- nao declara o WD Gestor pronto para producao;
+	- nao declara a arquitetura multi-tenant inteira concluida;
+	- nao abre nova fase;
+	- nao autoriza push;
+	- nao conecta Mongo real;
+	- nao executa query real;
+	- nao executa inventario real;
+	- nao gera relatorio real;
+	- PostgreSQL permanece fora;
+	- Portal permanece fora;
+	- dados reais permanecem fora.
+- Riscos residuais formalmente assumidos nesta frente:
+	- `api.db.js`, `auth.db.js` e `auth-context.db.js` permanecem como frente macro futura;
+	- `user`, `memberships` e `auth-context` podem exigir decisao funcional futura;
+	- `global scope` legitimo deve continuar separado de risco tenant-aware;
+	- producao ou prontidao operacional exigem frente propria.
+- Proximos caminhos possiveis apos este fechamento, sem execucao nesta rodada:
+	- handoff documental pos-frente;
+	- decisao humana de push do bloco;
+	- nova frente macro futura somente apos decisao explicita;
+	- prontidao operacional futura como trilha separada.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real gerado;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=closeTenantArchitectureContinuationFinalCheckpoint`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=preparePostTenantArchitectureContinuationHandoffOrPushDecision`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `tenantArchitectureContinuationFinalCheckpointClosed=true`
+	- `tenantArchitectureContinuationCurrentMicrocutSequenceClosed=true`
+	- `noNewTechnicalTargetOpened=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=closeTenantArchitectureContinuationFinalCheckpoint`
+	- `recommendedNextAct=preparePostTenantArchitectureContinuationHandoffOrPushDecision`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria deste fechamento:
+	- este fechamento apenas encerra documentalmente a sequencia atual de microcortes tenant-aware no Mongo;
+	- este fechamento nao altera codigo;
+	- este fechamento nao altera testes;
+	- este fechamento nao executa refatoracao;
+	- este fechamento nao cria comando;
+	- este fechamento nao conecta Mongo real;
+	- este fechamento nao executa query real;
+	- este fechamento nao gera relatorio real;
+	- este fechamento nao inicia PostgreSQL;
+	- este fechamento nao usa Portal;
+	- este fechamento nao autoriza push;
+	- qualquer push posterior depende de decisao humana explicita;
+	- qualquer nova frente macro futura deve ser aberta em microcorte proprio, apos handoff ou decisao.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
