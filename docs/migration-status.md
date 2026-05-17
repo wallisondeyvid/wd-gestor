@@ -9435,6 +9435,190 @@ Checkpoint tenant enforcement atual:
 	- esta leitura nao declara o WD Gestor pronto para producao;
 	- esta leitura nao faz push;
 	- a proxima etapa deve montar matriz de prontidao operacional MongoDB.
+- Checkpoint documental curto da matriz inicial de prontidao operacional MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de comando npm, sem execucao de script, sem Mongo real, sem query real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem transformar esta matriz em runbook executavel.
+- Identificacao consolidada desta matriz:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=buildOperationalReadinessMongoMatrix`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada nesta matriz:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nesta matriz:
+	- MongoDB permanece como base atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Classificacao explicita desta fase:
+	- permitido agora: leitura documental;
+	- permitido agora: edicao documental do ledger;
+	- proibido agora: execucao de scripts;
+	- proibido agora: Mongo real;
+	- proibido agora: `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- proibido agora: push;
+	- proibido agora: Portal;
+	- fora do roadmap: PostgreSQL.
+- Matriz documental inicial por superficie operacional:
+	- `boot local`:
+		- finalidade aparente: subir a aplicacao principal por `start`, `dev`, `start:gestor` e `start:atlas`;
+		- risco operacional: inicializa runtime completo e pode depender de configuracao real e conexao Mongo;
+		- status permitido nesta fase: proibido agora;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `package.json`, `README.md`, `src/server/createServer.js`, `src/modules/gestor/index.js`;
+		- proximo tratamento recomendado: classificar comandos de boot por risco e pre-condicoes antes de qualquer execucao.
+	- `boot em memoria`:
+		- finalidade aparente: subir runtime com `MONGO_MEMORY=1` por `start:mem`;
+		- risco operacional: pode ser confundido com autorizacao de validacao tecnica imediata e ainda aciona boot real do servidor;
+		- status permitido nesta fase: proibido agora;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `package.json`, `src/server/createServer.js`;
+		- proximo tratamento recomendado: separar posteriormente uso diagnostico em memoria de uso operacional real.
+	- `boot com seed`:
+		- finalidade aparente: subir runtime em memoria com `GESTOR_SEEDS=1`;
+		- risco operacional: introduz carga automatica de `seed` e altera estado de dados mesmo em ambiente nao produtivo;
+		- status permitido nesta fase: proibido agora;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `package.json`, `src/modules/gestor/index.js`;
+		- proximo tratamento recomendado: manter em trilha separada de comandos mutativos e bloqueados.
+	- `testes e guardrails`:
+		- finalidade aparente: validar contratos, arquitetura, boundaries e smoke por `test`, `test:strict`, `test:smoke`, `guard:*`, `verify:*`, `parity` e conjuntos em `tests`/`tests/architecture`;
+		- risco operacional: pode disparar verificacoes amplas fora do microcorte e ser confundido com prontidao operacional aprovada;
+		- status permitido nesta fase: leitura documental apenas;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `package.json`, estrutura de `tests`, estrutura de `tests/architecture`, `docs/checkpoints`;
+		- proximo tratamento recomendado: classificar por custo, abrangencia e natureza de risco antes de futura autorizacao.
+	- `canary`:
+		- finalidade aparente: smoke operacional direcionado para userdb por `smoke:userdb-canary` e `docs/runbooks/userdb-canary.md`;
+		- risco operacional: pode tocar superficie operacional sensivel e induzir leitura como verificacao autorizada;
+		- status permitido nesta fase: leitura documental apenas;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `package.json`, `docs/runbooks/userdb-canary.md`, `scripts/smoke-userdb-canary.js` por nome;
+		- proximo tratamento recomendado: enquadrar como comando de risco alto dependente de aprovacao explicita.
+	- `inventario read-only`:
+		- finalidade aparente: consolidar leitura de fontes e artefatos sem execucao operacional;
+		- risco operacional: virar pseudo-execucao se misturado com comandos automatizados ou relatorios externos;
+		- status permitido nesta fase: permitido agora;
+		- exige autorizacao futura: nao para leitura documental, sim para qualquer automacao operacional;
+		- pode executar agora: sim, apenas em forma documental;
+		- evidencia documental usada: `docs/migration-status.md`, `docs/runbooks/inventory-fictional-data-readonly*.md`, `scripts/ops/inventory-fictional-data-readonly.js` por nome;
+		- proximo tratamento recomendado: manter separado entre leitura documental e futura classificacao de comando.
+	- `scripts mutativos`:
+		- finalidade aparente: corrigir dados, atualizar cadastros, desbloquear usuarios, ajustar codigos e alterar estado de sistema;
+		- risco operacional: mutacao direta de dados e configuracoes fora de controle desta frente;
+		- status permitido nesta fase: proibido agora;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: nomes em `scripts`, especialmente `update_*`, `unlock_users.js`, `corrigir_*`, `auto_fix_setor_indexes.js`;
+		- proximo tratamento recomendado: inventariar por impacto e ambiente antes de qualquer avaliacao de uso.
+	- `migracoes/backfills`:
+		- finalidade aparente: migrar ou recompor estruturas e dados historicos;
+		- risco operacional: altera persistencia e historico, com potencial de irreversibilidade ou inconsistencias;
+		- status permitido nesta fase: proibido agora;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `package.json`, nomes em `scripts/migrations`, `backfill_*`, `docs/runbooks/user-memberships-phase2-backfill.md`;
+		- proximo tratamento recomendado: manter fora desta frente ate existir gate humano especifico.
+	- `cleanup`:
+		- finalidade aparente: remover legado ou limpar dados/artefatos residuais;
+		- risco operacional: exclusao ou alteracao destrutiva de estado;
+		- status permitido nesta fase: proibido agora;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `package.json`, `scripts/cleanup-legacy.js` por nome;
+		- proximo tratamento recomendado: classificar como operacao destrutiva de risco alto.
+	- `credencial master`:
+		- finalidade aparente: configurar ou ajustar credencial master por `master:set`;
+		- risco operacional: altera acesso privilegiado e credenciais de identidade global;
+		- status permitido nesta fase: proibido agora;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `package.json`, `scripts/set-master-password.js` por nome, checkpoints de auth e debug em `docs/checkpoints`;
+		- proximo tratamento recomendado: manter em faixa de risco alto com aprovacao humana explicita.
+	- `auth-context`:
+		- finalidade aparente: controlar identidade global, vinculo por unidade, selecao de unidade e operacao contextual;
+		- risco operacional: qualquer leitura errada pode levar a execucao futura em superficie hibrida sensivel;
+		- status permitido nesta fase: leitura documental apenas;
+		- exige autorizacao futura: sim para qualquer validacao executavel;
+		- pode executar agora: nao;
+		- evidencia documental usada: `docs/gestor-operational-auth-context-model.md`, `docs/checkpoints/gestor-auth-context-*.md`, `src/modules/gestor/app/gestor-app.js`;
+		- proximo tratamento recomendado: manter auth-context como eixo central da matriz de risco operacional.
+	- `provisioning/usuarios`:
+		- finalidade aparente: tratar onboarding, memberships, usuarios administrativos, retry e eventos de provisioning;
+		- risco operacional: combina identidade global, vinculos por unidade e possivel mutacao de estado administrativo;
+		- status permitido nesta fase: leitura documental apenas;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `docs/checkpoints/gestor-unidades-provisioning-*.md`, `docs/checkpoints/gestor-usuarios-*.md`, `tests` por nome;
+		- proximo tratamento recomendado: separar leitura de status, retry e escrita administrativa em subgrupos de risco.
+	- `unidades/unit-scope`:
+		- finalidade aparente: garantir isolamento por unidade, cluster, lookup e enforcement contextual;
+		- risco operacional: erro aqui contamina autorizacao, escopo de dados e leitura de dominios tenant-sensitive;
+		- status permitido nesta fase: leitura documental apenas;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `docs/gestor-operational-auth-context-model.md`, `docs/checkpoints/gestor-unidades-*.md`, `docs/checkpoints/gestor-tenant-enforcement-*.md`, `tests` por nome;
+		- proximo tratamento recomendado: manter como superficie critica da matriz, com dependencia de auth-context.
+	- `feedback/uploads`:
+		- finalidade aparente: operar leitura, escrita e upload de feedback e anexos no Gestor;
+		- risco operacional: envolve upload, ownership, unit-scope e superficie contextual com impacto em dados e blobs;
+		- status permitido nesta fase: leitura documental apenas;
+		- exige autorizacao futura: sim;
+		- pode executar agora: nao;
+		- evidencia documental usada: `docs/checkpoints/gestor-feedback-*.md`, `README_FEEDBACK_UPLOAD.md` citada no `README.md`, `tests` por nome, `src/modules/gestor/app/gestor-app.js`;
+		- proximo tratamento recomendado: classificar separadamente leitura, upload e write administrativo por risco.
+	- `documentacao/runbooks/checkpoints`:
+		- finalidade aparente: concentrar o conhecimento operacional e contratual existente sem executar nada;
+		- risco operacional: dispersao documental e falsa sensacao de prontidao caso os artefatos nao sejam consolidados;
+		- status permitido nesta fase: permitido agora;
+		- exige autorizacao futura: nao para leitura, sim para converter em runbook executavel;
+		- pode executar agora: sim, apenas como consolidacao documental;
+		- evidencia documental usada: `docs/migration-status.md`, `docs/runbooks`, `docs/checkpoints`;
+		- proximo tratamento recomendado: consolidar comandos e superficies em matriz unica de risco antes de qualquer runbook operacional.
+- Sintese transversal desta matriz:
+	- a unica acao permitida agora e leitura/consolidacao documental;
+	- nenhuma superficie executavel esta autorizada nesta fase;
+	- a matriz ainda nao declara prontidao de producao;
+	- PostgreSQL permanece explicitamente fora do roadmap.
+- Gates finais desta matriz:
+	- `operationalReadinessMongoMatrixBuilt=true`
+	- `selectedTarget=buildOperationalReadinessMongoMatrix`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Proximo ato recomendado nesta rodada:
+	- `classifyOperationalMongoCommandsByRisk`.
+- Interpretacao obrigatoria desta matriz:
+	- esta matriz apenas consolida classificacao documental inicial de prontidao operacional MongoDB;
+	- esta matriz nao altera codigo;
+	- esta matriz nao altera testes;
+	- esta matriz nao altera `package.json`;
+	- esta matriz nao altera scripts;
+	- esta matriz nao cria comando npm;
+	- esta matriz nao executa scripts;
+	- esta matriz nao conecta Mongo real;
+	- esta matriz nao executa query real;
+	- esta matriz nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta matriz nao usa Portal;
+	- esta matriz nao reintroduz PostgreSQL no roadmap;
+	- esta matriz nao declara o WD Gestor pronto para producao;
+	- esta matriz nao faz push;
+	- a proxima etapa deve classificar os comandos operacionais Mongo por risco.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
