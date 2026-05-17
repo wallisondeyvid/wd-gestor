@@ -7855,6 +7855,102 @@ Checkpoint tenant enforcement atual:
 	- esta decisao nao usa Portal;
 	- esta decisao nao executa push;
 	- qualquer push posterior depende de decisao humana explicita e deve ser executado pelo usuario.
+- Checkpoint documental curto da preparacao da instrucao humana de push do bloco `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real, sem push e sem abertura de nova fase.
+- Frente encerrada consolidada nesta instrucao:
+	- `tenantArchitectureContinuation`.
+- Bloco consolidado nesta instrucao:
+	- sequencia atual de microcortes tenant-aware no Mongo.
+- Status desta instrucao:
+	- instrucao humana de push em preparacao.
+- Objetivo consolidado desta instrucao:
+	- documentar exatamente o que o usuario devera validar e executar manualmente caso decida publicar o bloco.
+- Premissas consolidadas para qualquer push futuro:
+	- `working tree` limpa;
+	- branch `migration/refactor-core`;
+	- `origin/migration/refactor-core` em `24a274b`;
+	- branch local em `ahead 176` apos o commit deste microcorte;
+	- ultima validacao conhecida preservada no historico local com baseline focal ampla verde em `136 tests`, `136 pass` e `0 fail`;
+	- sem Mongo real;
+	- sem query real;
+	- sem inventario real;
+	- sem relatorio real;
+	- sem dados reais.
+- Comandos humanos sugeridos para validacao antes de eventual push, apenas como instrucao:
+	- `git status -sb`;
+	- `git --no-pager log --oneline --decorate -30`;
+	- `git --no-pager log --oneline --decorate origin/migration/refactor-core -1`.
+- Comando humano possivel de push, apenas se o usuario decidir executar manualmente:
+	- `git push origin migration/refactor-core`.
+- Limites consolidados desta instrucao:
+	- esta instrucao nao autoriza push automatico;
+	- Copilot nao deve executar push;
+	- esta instrucao nao declara WD Gestor pronto para producao;
+	- esta instrucao nao declara multi-tenant inteiro concluido;
+	- esta instrucao nao abre nova fase;
+	- PostgreSQL permanece fora;
+	- Portal permanece fora;
+	- dados reais permanecem fora.
+- Decisao humana futura necessaria consolidada nesta instrucao:
+	- o usuario decide se quer publicar agora ou preparar resumo/handoff antes;
+	- se decidir publicar, o usuario executa manualmente;
+	- se nao decidir publicar, os commits locais acumulados devem permanecer preservados.
+- Proximo ato recomendado nesta rodada:
+	- `reviewHumanPushInstructionForTenantArchitectureContinuationBlock`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real gerado;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=prepareHumanPushInstructionForTenantArchitectureContinuationBlock`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=reviewHumanPushInstructionForTenantArchitectureContinuationBlock`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `humanPushInstructionForTenantArchitectureContinuationPrepared=true`
+	- `humanPushInstructionReviewPending=true`
+	- `gitPushExecuted=false`
+	- `noNewTechnicalTargetOpened=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=prepareHumanPushInstructionForTenantArchitectureContinuationBlock`
+	- `recommendedNextAct=reviewHumanPushInstructionForTenantArchitectureContinuationBlock`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta instrucao:
+	- esta instrucao apenas prepara orientacao humana futura;
+	- esta instrucao nao altera codigo;
+	- esta instrucao nao altera testes;
+	- esta instrucao nao executa refatoracao;
+	- esta instrucao nao cria comando npm/script;
+	- esta instrucao nao conecta Mongo real;
+	- esta instrucao nao executa query real;
+	- esta instrucao nao gera relatorio real;
+	- esta instrucao nao inicia PostgreSQL;
+	- esta instrucao nao usa Portal;
+	- esta instrucao nao executa push;
+	- qualquer push posterior depende de decisao humana explicita e deve ser executado pelo usuario.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
