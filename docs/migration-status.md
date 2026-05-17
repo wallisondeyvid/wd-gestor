@@ -9003,6 +9003,92 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao executa novo push;
 	- qualquer nova frente futura deve ser aberta somente apos decisao explicita;
 	- qualquer publicacao dos commits finais locais depende de decisao humana posterior.
+- Checkpoint documental curto da abertura da frente `operationalReadinessMongo`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem PostgreSQL, sem Portal, sem push e sem refatoracao tecnica.
+- Frente anterior encerrada consolidada nesta abertura:
+	- `tenantArchitectureContinuation`.
+- Nova frente consolidada nesta abertura:
+	- `operationalReadinessMongo`.
+- Motivo consolidado desta mudanca:
+	- a blindagem tenant-aware por microcortes foi encerrada;
+	- nao ha mais candidato pequeno, local e testavel forte que justifique continuar a mesma frente;
+	- o proximo risco relevante e operacional, nao microcorte tenant-aware.
+- Pergunta central consolidada nesta abertura:
+	- `O WD Gestor esta pronto para uso controlado em Mongo?`.
+- Escopo consolidado desta nova frente:
+	- mapear prontidao operacional;
+	- mapear configuracao e `env`;
+	- mapear scripts existentes apenas por leitura;
+	- mapear fluxo seguro de criacao e uso com dados ficticios;
+	- mapear checklist de validacao manual futura;
+	- mapear riscos antes de uso real.
+- Fora de escopo consolidado desta nova frente:
+	- PostgreSQL;
+	- Portal;
+	- dados reais;
+	- producao plena;
+	- deploy real;
+	- `seed`, `reset`, `cleanup`, `migration` e `backfill` sem autorizacao explicita;
+	- Mongo real sem autorizacao explicita.
+- Primeiro proximo ato recomendado nesta rodada:
+	- `mapOperationalReadinessChecklistMongo`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum `seed`, `reset`, `cleanup`, `migration` ou `backfill` executado;
+	- nenhum PostgreSQL iniciado;
+	- nenhum Portal usado;
+	- nenhum push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=openOperationalReadinessMongo`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=mapOperationalReadinessChecklistMongo`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `operationalReadinessMongoOpened=true`
+	- `previousTenantArchitectureContinuationClosed=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=operationalReadinessMongo`
+	- `selectedTarget=openOperationalReadinessMongo`
+	- `recommendedNextAct=mapOperationalReadinessChecklistMongo`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta abertura:
+	- esta abertura apenas inicia frente documental de prontidao operacional;
+	- esta abertura nao altera codigo;
+	- esta abertura nao altera testes;
+	- esta abertura nao executa refatoracao;
+	- esta abertura nao cria comando npm/script;
+	- esta abertura nao conecta Mongo real;
+	- esta abertura nao executa query real;
+	- esta abertura nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta abertura nao inicia PostgreSQL;
+	- esta abertura nao usa Portal;
+	- esta abertura nao declara o WD Gestor pronto para producao;
+	- esta abertura nao faz push;
+	- a proxima etapa deve mapear o checklist de prontidao operacional em modo somente leitura e documental.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
