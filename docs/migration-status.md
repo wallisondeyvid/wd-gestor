@@ -12642,6 +12642,114 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao declara o WD Gestor pronto para producao;
 	- esta selecao nao faz push;
 	- a proxima etapa deve preparar a validacao `validateGitLedgerCleanStateR1` em microcorte separado.
+- Checkpoint documental curto da preparacao da validacao `R1` `validateGitLedgerCleanStateR1` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem validacao real, sem teste manual, sem boot manual, sem dry-run real, sem geracao de log tecnico real, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem declarar producao pronta.
+- Identificacao consolidada desta preparacao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareValidateGitLedgerCleanStateR1`;
+	- `selectedTechnicalTarget=validateGitLedgerCleanStateR1`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo da validacao futura:
+	- validar estado Git/ledger antes de qualquer validacao operacional;
+	- confirmar branch, `HEAD` local, `HEAD` remoto, ahead esperado e working tree;
+	- confirmar que apenas documentacao foi alterada nos microcortes atuais;
+	- confirmar que nao houve Mongo real, dados reais operacionais, `master:set` ou execucao sensivel;
+	- preparar execucao futura em microcorte separado.
+- Comandos que poderao compor a validacao futura:
+	- `git status -sb`;
+	- `git --no-pager log --oneline --decorate -10`;
+	- `git --no-pager log --oneline --decorate origin/migration/refactor-core -5`;
+	- opcionalmente `git diff --stat`, somente se houver alteracao pendente no microcorte futuro.
+- Criterios esperados para a validacao futura:
+	- branch `migration/refactor-core`;
+	- `HEAD` local esperado sera o commit desta preparacao, apos commit posterior;
+	- `origin/migration/refactor-core` continuara em `e6d68bd` ate push futuro;
+	- repositorio estara `ahead` com commits documentais locais;
+	- working tree devera estar limpa antes da validacao;
+	- producao nao declarada pronta;
+	- usuario master real preservado.
+- Escopo proibido da validacao futura:
+	- nao rodar `npm test`;
+	- nao rodar scripts npm;
+	- nao conectar Mongo real;
+	- nao executar query real;
+	- nao executar `master:set`;
+	- nao tocar usuario master;
+	- nao executar `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- nao usar Portal;
+	- nao declarar producao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitPrepareValidateGitLedgerCleanStateR1`.
+- Gates finais desta preparacao:
+	- `validateGitLedgerCleanStateR1Prepared=true`
+	- `selectedTarget=prepareValidateGitLedgerCleanStateR1`
+	- `selectedTechnicalTarget=validateGitLedgerCleanStateR1`
+	- `validationExecuted=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta preparacao:
+	- esta preparacao apenas organiza a futura validacao `validateGitLedgerCleanStateR1`;
+	- esta preparacao nao executa validacao real;
+	- esta preparacao nao altera codigo;
+	- esta preparacao nao altera testes;
+	- esta preparacao nao altera `package.json`;
+	- esta preparacao nao altera scripts;
+	- esta preparacao nao cria arquivo novo;
+	- esta preparacao nao cria comando npm;
+	- esta preparacao nao executa comandos;
+	- esta preparacao nao executa scripts npm;
+	- esta preparacao nao executa teste manual;
+	- esta preparacao nao faz boot;
+	- esta preparacao nao executa dry-run real;
+	- esta preparacao nao gera log tecnico real por execucao;
+	- esta preparacao nao conecta Mongo real;
+	- esta preparacao nao executa query real;
+	- esta preparacao nao executa backup real, restore real ou rollback real;
+	- esta preparacao nao executa `master:set`;
+	- esta preparacao nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- esta preparacao nao expoe senha, token, URI, segredo ou credencial;
+	- esta preparacao nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta preparacao nao usa Portal;
+	- esta preparacao nao reintroduz PostgreSQL no roadmap;
+	- esta preparacao nao declara o WD Gestor pronto para producao;
+	- esta preparacao nao faz push;
+	- a proxima etapa deve apenas fechar em commit local esta preparacao antes da execucao futura.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
