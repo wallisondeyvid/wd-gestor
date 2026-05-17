@@ -9989,6 +9989,230 @@ Checkpoint tenant enforcement atual:
 	- este esqueleto nao declara o WD Gestor pronto para producao;
 	- este esqueleto nao faz push;
 	- a proxima etapa deve mapear os gates de autorizacao operacional Mongo.
+- Checkpoint documental curto do mapeamento dos gates de autorizacao operacional MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem Mongo real, sem query real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push, sem transformar gates em comandos executaveis e sem escrever instrucoes para executar comandos reais agora.
+- Identificacao consolidada deste mapeamento:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=mapMongoOperationalAuthorizationGates`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada neste mapeamento:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada neste mapeamento:
+	- MongoDB permanece como base atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Objetivo consolidado dos gates:
+	- impedir execucao acidental de comandos operacionais;
+	- separar autorizacao documental de execucao real;
+	- exigir confirmacao humana explicita antes de Mongo real;
+	- proteger dados, usuarios, unidades, auth-context, uploads e scripts sensiveis;
+	- manter `seed`, `reset`, `cleanup`, `migration` e `backfill` bloqueados ate autorizacao especifica.
+- Tipos de autorizacao a mapear:
+	- `autorizacao para leitura documental`:
+		- finalidade: permitir leitura, consolidacao e atualizacao documental do ledger sem acao operacional;
+		- risco principal: confundir leitura com permissao de executar automacao ou comando;
+		- quem deve autorizar: a propria frente documental corrente, sob escopo explicito do microcorte;
+		- pre-condicoes documentais: branch correta, ledger identificado e escopo nao operacional registrado;
+		- evidencias necessarias antes da autorizacao: status limpo, alvo documental definido e restricoes da fase visiveis no ledger;
+		- o que continua proibido sem autorizacao: qualquer execucao de comando, Mongo real e scripts;
+		- status nesta fase: autorizado nesta fase;
+		- proximo tratamento recomendado: manter como autorizacao-base de menor risco.
+	- `autorizacao para verificacao local sem banco real`:
+		- finalidade: permitir validacoes locais controladas sem tocar Mongo real;
+		- risco principal: escopo de verificacao crescer alem do combinado ou acionar dependencias nao previstas;
+		- quem deve autorizar: humano responsavel pela rodada, com escopo e comando explicitados;
+		- pre-condicoes documentais: comandos classificados por risco, ambiente local definido e alvo da verificacao delimitado;
+		- evidencias necessarias antes da autorizacao: justificativa do comando, ausencia de Mongo real e criterio de sucesso/falha;
+		- o que continua proibido sem autorizacao: execucao de testes amplos, canary, Mongo real e mutacoes;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: amarrar a futura matriz de ambientes ao risco `R1`.
+	- `autorizacao para boot local sem mutacao`:
+		- finalidade: tratar boots locais nao mutativos de forma controlada;
+		- risco principal: iniciar runtime com dependencia real de ambiente ou banco;
+		- quem deve autorizar: humano responsavel pela fase, com ambiente local explicitamente aceito;
+		- pre-condicoes documentais: comando classificado, ambiente local definido e proibicao de dados reais mantida;
+		- evidencias necessarias antes da autorizacao: objetivo do boot, logs esperados e criterio de abortar;
+		- o que continua proibido sem autorizacao: boot em producao, Mongo real, `seed` e push;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: atrelar ao futuro bloco de pre-condicoes do runbook.
+	- `autorizacao para Mongo em memoria`:
+		- finalidade: permitir uso controlado de ambiente sintetico em memoria;
+		- risco principal: confundir memoria com liberacao geral de boot ou `seed`;
+		- quem deve autorizar: humano responsavel com delimitacao expressa de ambiente sintetico;
+		- pre-condicoes documentais: diferenca entre memoria e banco real documentada, dados ficticios definidos e comando classificado;
+		- evidencias necessarias antes da autorizacao: prova de ausencia de Mongo real e objetivo local controlado;
+		- o que continua proibido sem autorizacao: `seed`, dados reais, homologacao e producao;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: conectar ao futuro eixo de ambientes locais versus memoria.
+	- `autorizacao para inventario read-only`:
+		- finalidade: enquadrar inventario controlado sem escrita nem dados reais;
+		- risco principal: automacao read-only ser confundida com leitura documental pura;
+		- quem deve autorizar: humano responsavel, com contrato explicito de ambiente sintetico;
+		- pre-condicoes documentais: tipo de dado definido, automacao classificada como `R3` e fontes documentadas;
+		- evidencias necessarias antes da autorizacao: escopo do inventario, saida esperada e prova de ausencia de escrita;
+		- o que continua proibido sem autorizacao: automacao operacional, dados reais e canary;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: diferenciar leitura documental de automacao read-only controlada.
+	- `autorizacao para canary controlado`:
+		- finalidade: permitir canary somente sob gate reforcado;
+		- risco principal: tocar superficie operacional sensivel cedo demais;
+		- quem deve autorizar: decisor humano explicito da frente, com ambiente e escopo aprovados;
+		- pre-condicoes documentais: ambiente-alvo definido, comando classificado, dados-alvo definidos e criterio de abortar documentado;
+		- evidencias necessarias antes da autorizacao: logs esperados, sucesso/falha esperados e superficie afetada;
+		- o que continua proibido sem autorizacao: qualquer canary, Mongo real e superficies sensiveis correlatas;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter como gate autonomo de risco intermediario-alto.
+	- `autorizacao para Mongo real`:
+		- finalidade: permitir qualquer contato intencional com banco real apenas sob decisao especifica;
+		- risco principal: exposicao de dados reais e efeito operacional material;
+		- quem deve autorizar: decisor humano explicito, fora de autorizacao generica;
+		- pre-condicoes documentais: ambiente-alvo definido, dados-alvo definidos, comando classificado e plano de rollback quando aplicavel;
+		- evidencias necessarias antes da autorizacao: motivo operacional, superficie afetada, logs esperados e gates humanos registrados;
+		- o que continua proibido sem autorizacao: toda conexao Mongo real e toda query real;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: mapear gates humanos e tecnicos especificos antes de qualquer uso.
+	- `autorizacao para seed`:
+		- finalidade: tratar carga sintetica de dados como operacao de alto controle;
+		- risco principal: mutacao indevida de estado e falsa sensacao de inocuidade;
+		- quem deve autorizar: decisor humano especifico para operacao mutativa;
+		- pre-condicoes documentais: ambiente sintetico definido, dados-alvo nao reais e rollback aplicavel quando existir;
+		- evidencias necessarias antes da autorizacao: objetivo do `seed`, conjunto de dados previsto e forma de reversao;
+		- o que continua proibido sem autorizacao: qualquer `seed`, inclusive em memoria;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter bloqueio total ate contrato especifico.
+	- `autorizacao para reset`:
+		- finalidade: tratar rotinas de reset como operacao destrutiva controlada;
+		- risco principal: perda de estado e apagamento acidental;
+		- quem deve autorizar: decisor humano especifico para operacao destrutiva;
+		- pre-condicoes documentais: alvo, ambiente, reversao e impacto descritos;
+		- evidencias necessarias antes da autorizacao: justificativa, criterios de sucesso/falha e plano de recuperacao;
+		- o que continua proibido sem autorizacao: qualquer reset;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter em faixa critica de proibicao.
+	- `autorizacao para cleanup`:
+		- finalidade: tratar limpeza de legado ou residuos sob gate maximo;
+		- risco principal: remocao destrutiva de artefatos ou dados;
+		- quem deve autorizar: decisor humano especifico para operacao destrutiva;
+		- pre-condicoes documentais: escopo exato, ambiente, backup e rollback definidos;
+		- evidencias necessarias antes da autorizacao: alvo do cleanup, impacto esperado e checkpoints de seguranca;
+		- o que continua proibido sem autorizacao: qualquer cleanup;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter como gate de alto risco independente.
+	- `autorizacao para migration`:
+		- finalidade: permitir migracoes apenas sob contrato operacional proprio;
+		- risco principal: alteracao estrutural de persistencia e inconsistencias duradouras;
+		- quem deve autorizar: decisor humano especifico com aprovacao orientada por ambiente;
+		- pre-condicoes documentais: estrategia de rollback, alvo da migracao, ambiente e dados-alvo definidos;
+		- evidencias necessarias antes da autorizacao: plano da migracao, criterios de sucesso/falha e impacto esperado;
+		- o que continua proibido sem autorizacao: qualquer migration;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter bloqueio total ate existir gate proprio.
+	- `autorizacao para backfill`:
+		- finalidade: tratar recomposicao de dados como operacao mutativa critica;
+		- risco principal: escrita em massa e contaminacao de dados;
+		- quem deve autorizar: decisor humano especifico com aprovacao de dados e ambiente;
+		- pre-condicoes documentais: origem/destino definidos, impacto estimado e reversao quando aplicavel;
+		- evidencias necessarias antes da autorizacao: plano do backfill, logs esperados e criterio de encerramento;
+		- o que continua proibido sem autorizacao: qualquer backfill;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter como operacao `R5` bloqueada.
+	- `autorizacao para credencial master`:
+		- finalidade: enquadrar alteracoes de credencial privilegiada sob gate humano maximo;
+		- risco principal: ampliacao ou alteracao de acesso global sensivel;
+		- quem deve autorizar: decisor humano explicito com trilha de auditoria;
+		- pre-condicoes documentais: ambiente permitido, motivo operacional, origem de credencial e plano de validacao;
+		- evidencias necessarias antes da autorizacao: justificativa, dono responsavel e registro de auditoria esperado;
+		- o que continua proibido sem autorizacao: qualquer `master:set`;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter como gate administrativo sensivel autonomo.
+	- `autorizacao para dados reais`:
+		- finalidade: separar formalmente uso de dados reais do uso de dados ficticios;
+		- risco principal: exposicao, alteracao ou leitura indevida de dados reais;
+		- quem deve autorizar: decisor humano explicito, nunca por extensao de outro gate;
+		- pre-condicoes documentais: dados-alvo definidos e justificativa forte registrada;
+		- evidencias necessarias antes da autorizacao: ambiente, superficie, logs e plano de controle de dano;
+		- o que continua proibido sem autorizacao: qualquer uso de dados reais;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter separado do gate de ambiente local.
+	- `autorizacao para producao futura`:
+		- finalidade: reservar um gate especifico para qualquer operacao em producao;
+		- risco principal: confundir readiness documental com liberacao de producao;
+		- quem deve autorizar: decisor humano explicito em fase futura;
+		- pre-condicoes documentais: matriz de ambientes concluida, runbook maduro e gates humanos completos;
+		- evidencias necessarias antes da autorizacao: comando seguro validado, criterios de falha e rollback definidos;
+		- o que continua proibido sem autorizacao: qualquer operacao em producao;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter apenas como placeholder de frente futura.
+	- `autorizacao para push de bloco ou fase`:
+		- finalidade: separar publicacao git de autorizacao operacional;
+		- risco principal: confundir commit local ou documentacao com permissao de push;
+		- quem deve autorizar: humano explicito para publicacao;
+		- pre-condicoes documentais: estado git validado, diff revisado e escopo de publicacao definido;
+		- evidencias necessarias antes da autorizacao: status, log e descricao do que sera publicado;
+		- o que continua proibido sem autorizacao: qualquer push;
+		- status nesta fase: nao autorizado nesta fase;
+		- proximo tratamento recomendado: manter push como gate separado da frente operacional.
+- Matriz de decisao consolidada nesta fase:
+	- autorizado nesta fase: leitura documental;
+	- autorizado nesta fase: edicao documental do ledger;
+	- autorizado nesta fase: commits locais documentais apos validacao;
+	- nao autorizado nesta fase: execucao de scripts;
+	- nao autorizado nesta fase: Mongo real;
+	- nao autorizado nesta fase: query real;
+	- nao autorizado nesta fase: `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- nao autorizado nesta fase: Portal;
+	- nao autorizado nesta fase: push;
+	- fora do roadmap: PostgreSQL.
+- Regras de autorizacao humana explicita:
+	- uma autorizacao generica nao autoriza comandos destrutivos;
+	- autorizacao para leitura nao autoriza execucao;
+	- autorizacao para ambiente local nao autoriza homologacao ou producao;
+	- autorizacao para dados ficticios nao autoriza dados reais;
+	- autorizacao para teste nao autoriza `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- autorizacao para commit local nao autoriza push;
+	- qualquer operacao `R4` ou `R5` exige autorizacao especifica, ambiente definido e plano de reversao quando aplicavel.
+- Proximo ato recomendado nesta rodada:
+	- `defineMongoOperationalEnvironmentMatrix`.
+- Gates finais deste mapeamento:
+	- `mongoOperationalAuthorizationGatesMapped=true`
+	- `selectedTarget=mapMongoOperationalAuthorizationGates`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria deste mapeamento:
+	- este mapeamento apenas organiza gates documentais de autorizacao operacional MongoDB;
+	- este mapeamento nao altera codigo;
+	- este mapeamento nao altera testes;
+	- este mapeamento nao altera `package.json`;
+	- este mapeamento nao altera scripts;
+	- este mapeamento nao cria arquivo novo;
+	- este mapeamento nao cria comando npm;
+	- este mapeamento nao executa comandos;
+	- este mapeamento nao executa scripts npm;
+	- este mapeamento nao conecta Mongo real;
+	- este mapeamento nao executa query real;
+	- este mapeamento nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este mapeamento nao usa Portal;
+	- este mapeamento nao reintroduz PostgreSQL no roadmap;
+	- este mapeamento nao declara o WD Gestor pronto para producao;
+	- este mapeamento nao faz push;
+	- a proxima etapa deve definir a matriz de ambientes operacionais Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
