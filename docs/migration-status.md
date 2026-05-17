@@ -7070,6 +7070,97 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao inicia PostgreSQL;
 	- esta revisao nao usa Portal;
 	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware ou, se nao houver candidato forte, iniciar triagem de encerramento da frente.
+- Checkpoint documental curto da selecao do proximo alvo tecnico residual tenant-aware apos o fechamento de `createUploadFeedbackAnexoHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem relatorio real e sem push.
+- Frente atual consolidada nesta selecao:
+	- `tenantArchitectureContinuation`.
+- Corredores ja fechados considerados nesta rodada:
+	- `feedbackStatusDataFacade`;
+	- `recursosContextDataFacade`;
+	- `funcionarioDeletePostDataFacade`;
+	- `createUsuarioExecutionService`;
+	- `updateUsuarioExecutionService`;
+	- `checkUsuarioEmailOwnerService`;
+	- `authContextReadDataFacade`;
+	- `passwordRecoveryRequestDataFacade`;
+	- `resetPasswordRenderDataFacade`;
+	- `resetPasswordExecutionService`;
+	- `primeiroAcessoExecutionService`;
+	- `unlockUsuarioExecutionService`;
+	- `toggleUsuarioExecutionService`;
+	- `createFeedbackPolicyOwnershipCore`;
+	- `processCreateFeedbackCore`;
+	- `processUpdateFeedbackRespostaCore`;
+	- `createDeleteFeedbackHandler`;
+	- `createAdminFeedbackDetailHandler`;
+	- `createUploadFeedbackAnexoHandler`.
+- Candidatos considerados nesta rodada:
+	- `createAdminFeedbackListHandler` em `src/modules/gestor/app/controllers/feedbackListApiController.js`;
+	- handlers residuais pequenos da familia feedback ainda nao reabertos nesta sequencia, com foco em listagem admin ou my-list apenas se restasse lacuna material;
+	- algum owner ou service pequeno residual em user/api ainda nao fechado nesta sequencia;
+	- algum facade pequeno residual em `src/modules/gestor/app/data` ou `src/modules/gestor/app/data-access` que ainda apresentasse risco tenant-aware material sem cair em bridge ampla.
+- Candidatos recusados nesta rodada e motivo curto:
+	- `createAdminFeedbackListHandler`: corredor read-only ja cercado por `tests/gestor-feedback-list-owner-structural-seam.test.js`, `tests/gestor-feedback-list-runtime-contract.test.js` e `tests/architecture/feedbackReadTenantScope.contract.test.js`, o que reduz a lacuna tenant-aware material imediata;
+	- handlers residuais pequenos da familia feedback fora upload e detail: o residual visivel remanescente da familia passa a ser principalmente read-only ou ja cercado por cobertura e checkpoints recentes, sem superar o limiar de candidato forte apos o fechamento de detail e upload;
+	- owner ou service pequeno residual em user/api: o dominio `usuarios` continua classificado como hibrido e de risco alto na matriz, mas os residuos atuais remanescentes aparecem mais difusos entre auth-context, projeção legada e memberships em transicao, sem um corte unico, pequeno e mais forte que uma triagem de encerramento;
+	- facade pequeno residual em `data` ou `data-access`: os corredores pequenos desta sequencia ja foram drenados e o que sobra tende a reencostar em `api.db.js`, `auth.db.js`, `auth-context.db.js` ou em superfícies amplas de compatibilidade, fora da regua deste microcorte.
+- Ausencia de candidato forte consolidada nesta rodada:
+	- nao ha, neste momento, um proximo alvo tecnico residual tenant-aware que seja ao mesmo tempo pequeno, vivo, local, testavel e materialmente mais forte do que iniciar a triagem de encerramento da frente.
+- Motivo consolidado da pausa e da triagem de encerramento:
+	- o corredor mais plausivel remanescente em feedback lista admin ja esta cercado por cobertura estrutural, runtime e arquitetural suficiente para nao justificar nova abertura imediata;
+	- os residuos restantes se concentram em superficies hibridas mais largas de `usuarios`, `global scope` legitimo e compatibilidades legadas, onde o risco existe mas nao se apresenta como microcorte unico e local;
+	- reabrir `api.db.js`, `auth.db.js`, `auth-context.db.js`, controllers grandes ou bundles amplos nesta rodada violaria a regua conservadora do microcorte;
+	- por isso, a melhor decisao local e consolidar a frente e iniciar triagem de encerramento antes de qualquer reabertura oportunista.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum push executado.
+- Proxima etapa recomendada nesta rodada:
+	- `startTenantArchitectureContinuationClosureTriage`.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackUpload`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=startTenantArchitectureContinuationClosureTriage`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `noStrongTenantAwareTechnicalTargetAfterFeedbackUpload=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=selectNextTenantAwareTechnicalTargetAfterFeedbackUpload`
+	- `recommendedNextAct=startTenantArchitectureContinuationClosureTriage`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo alvo ou inicia triagem de encerramento;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao executa refatoracao;
+	- esta selecao nao cria comando;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao gera relatorio;
+	- esta selecao nao inicia PostgreSQL;
+	- esta selecao nao usa Portal;
+	- como nao houve alvo forte, a proxima etapa deve consolidar a frente e preparar encerramento tecnico ou documental antes de qualquer push.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
