@@ -8138,6 +8138,101 @@ Checkpoint tenant enforcement atual:
 	- esta apresentacao nao usa Portal;
 	- esta apresentacao nao executa push;
 	- qualquer push posterior depende de decisao humana explicita e deve ser executado pelo usuario.
+- Checkpoint documental curto do registro pos-push da frente `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real, sem novo push e sem abertura de nova fase.
+- Frente publicada nesta rodada:
+	- `tenantArchitectureContinuation`.
+- Tipo de publicacao consolidado neste registro:
+	- push manual executado pelo usuario.
+- Branch consolidada neste registro:
+	- `migration/refactor-core`.
+- Range publicado consolidado neste registro:
+	- `24a274b..81d90f5`.
+- Commit remoto esperado apos o push:
+	- `81d90f5 docs(tenant): apresenta instrucao humana de push tenant-aware`.
+- Validacao associada consolidada neste registro:
+	- `tests=2364`;
+	- `suites=17`;
+	- `pass=2362`;
+	- `fail=0`;
+	- `skipped=2`;
+	- `cancelled=0`;
+	- `todo=0`.
+- Decisao consolidada neste registro:
+	- publicacao da sequencia atual tenant-aware concluida;
+	- nao abrir nova fase automaticamente;
+	- a proxima etapa deve ser handoff/resumo pos-publicacao ou decisao explicita sobre nova frente.
+- Limites consolidados deste registro:
+	- a publicacao nao declara WD Gestor pronto para producao;
+	- a publicacao nao declara multi-tenant inteiro concluido;
+	- PostgreSQL continua fora;
+	- Portal continua fora;
+	- dados reais continuam fora;
+	- prontidao operacional continua em trilha separada.
+- Proximo ato recomendado nesta rodada:
+	- `preparePostPushTenantArchitectureContinuationSummary`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real gerado;
+	- nenhum novo push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=recordPostPushTenantArchitectureContinuation`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=preparePostPushTenantArchitectureContinuationSummary`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `tenantArchitectureContinuationPushed=true`
+	- `tenantArchitectureContinuationRemoteUpdated=true`
+	- `gitPushExecuted=true`
+	- `gitPushExecutedBy=user`
+	- `pushedRange=24a274b..81d90f5`
+	- `pushedBranch=migration/refactor-core`
+	- `pushedHead=81d90f5`
+	- `fullSuiteAfterOrBeforePushPassed=true`
+	- `fullSuiteTests=2364`
+	- `fullSuitePass=2362`
+	- `fullSuiteFail=0`
+	- `fullSuiteSkipped=2`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=recordPostPushTenantArchitectureContinuation`
+	- `recommendedNextAct=preparePostPushTenantArchitectureContinuationSummary`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria deste registro:
+	- este registro apenas documenta o pos-push;
+	- este registro nao altera codigo;
+	- este registro nao altera testes;
+	- este registro nao executa refatoracao;
+	- este registro nao cria comando npm/script;
+	- este registro nao conecta Mongo real;
+	- este registro nao executa query real;
+	- este registro nao gera relatorio real;
+	- este registro nao inicia PostgreSQL;
+	- este registro nao usa Portal;
+	- este registro nao executa novo push;
+	- qualquer nova frente futura deve ser aberta somente apos decisao explicita.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
