@@ -11439,6 +11439,294 @@ Checkpoint tenant enforcement atual:
 	- esta politica nao declara o WD Gestor pronto para producao;
 	- esta politica nao faz push;
 	- a proxima etapa deve definir a politica documental de audit log operacional Mongo.
+- Checkpoint documental curto da politica de auditoria e logs operacionais MongoDB, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem geracao de log tecnico real, sem dry-run real, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push, sem transformar esta politica em runbook executavel e sem escrever instrucoes para executar comandos reais agora.
+- Identificacao consolidada desta politica:
+	- `phase=operationalReadinessMongo`;
+	- `selectedTarget=defineMongoOperationalAuditLogPolicy`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbOperationalReadiness`;
+	- `postgresOutOfRoadmap=true`.
+- Frente atual consolidada nesta politica:
+	- `operationalReadinessMongo`.
+- Decisao arquitetural consolidada nesta politica:
+	- MongoDB permanece como arquitetura atual;
+	- PostgreSQL esta fora do roadmap atual.
+- Objetivo da politica de auditoria/logs:
+	- definir o que deve ser registrado antes, durante e depois de qualquer operacao futura;
+	- separar log documental do ledger de log tecnico/runtime;
+	- impedir operacao sem evidencia;
+	- permitir rastreabilidade de autorizacao, ambiente, dados, risco e resultado;
+	- proteger dados sensiveis em logs;
+	- impedir exposicao de credenciais, tokens, dados pessoais ou conteudo de uploads.
+- Categorias de registro classificadas nesta politica:
+	- `registro no ledger antes da operacao`:
+		- finalidade: congelar intencao, autorizacao, ambiente e risco antes de qualquer acao futura;
+		- status nesta fase: permitido apenas como documentacao;
+		- risco principal: operar sem trilha de decisao anterior;
+		- permitido agora: sim;
+		- dados que podem aparecer: classificacao de risco, ambiente-alvo, tipo de dado e autorizacao humana sem segredos;
+		- dados que nao podem aparecer: senha, token, credencial, URI sensivel, dado pessoal identificavel e conteudo de upload;
+		- evidencia minima esperada: bloco no ledger com alvo, risco, ambiente e gate humano;
+		- relacao com preflight: exige preflight respondido antes do registro ser considerado suficiente;
+		- relacao com dry-run: deve existir antes de qualquer dry-run futuro;
+		- relacao com backup/rollback: deve registrar se backup ou reversao serao exigidos;
+		- proximo tratamento recomendado: manter obrigatoriedade documental antes de qualquer fase operacional.
+	- `registro no ledger depois da operacao`:
+		- finalidade: consolidar resultado, sucesso/falha, impacto e proximo tratamento;
+		- status nesta fase: permitido apenas como categoria documental;
+		- risco principal: perder rastreabilidade de desfecho;
+		- permitido agora: sim;
+		- dados que podem aparecer: status final, diferenca esperada vs obtida, impacto resumido e decisao seguinte saneada;
+		- dados que nao podem aparecer: segredos, payload bruto sensivel, dados reais e conteudo integral de logs tecnicos;
+		- evidencia minima esperada: bloco de encerramento no ledger apos operacao futura;
+		- relacao com preflight: fecha o ciclo iniciado pelo preflight;
+		- relacao com dry-run: deve existir tambem apos qualquer dry-run futuro;
+		- relacao com backup/rollback: deve registrar se houve acionamento ou se permaneceu dispensado;
+		- proximo tratamento recomendado: preservar formato curto e saneado.
+	- `logs tecnicos locais futuros`:
+		- finalidade: reservar a categoria para sinais de runtime local em fase futura;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: vazamento de dado tecnico sensivel sob aparencia de debug banal;
+		- permitido agora: nao;
+		- dados que podem aparecer: apenas metadados futuros explicitamente autorizados e saneados;
+		- dados que nao podem aparecer: segredo, senha, token, credencial, URI sensivel, dado pessoal e conteudo de upload;
+		- evidencia minima esperada: definicao previa do conjunto de campos autorizados;
+		- relacao com preflight: depende de preflight integral e classificacao do fluxo;
+		- relacao com dry-run: pode ser exigido em dry-run futuro autorizado, nunca agora;
+		- relacao com backup/rollback: deve indicar se ha impacto de reversao sem expor dado sensivel;
+		- proximo tratamento recomendado: definir padrao de saneamento antes de qualquer geracao real.
+	- `logs de dry-run futuro`:
+		- finalidade: reservar a categoria para rastrear uma simulacao futura aprovada;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: simular sem separar log de simulacao de log de execucao real;
+		- permitido agora: nao;
+		- dados que podem aparecer: metadados de simulacao futura, criterios de sucesso/falha e sinais esperados saneados;
+		- dados que nao podem aparecer: segredos, dados reais, payload tecnico bruto e credenciais;
+		- evidencia minima esperada: preflight, autorizacao humana e politica de dry-run associada;
+		- relacao com preflight: obrigatoria e bloqueante;
+		- relacao com dry-run: categoria filha direta da politica de dry-run;
+		- relacao com backup/rollback: registra se a simulacao avaliou necessidade de reversao, sem executa-la;
+		- proximo tratamento recomendado: detalhar taxonomia de sinais permitidos antes de qualquer uso.
+	- `logs de canary futuro`:
+		- finalidade: reservar a categoria para rastrear verificacao canary futura;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: mascarar operacao real como canary observavel;
+		- permitido agora: nao;
+		- dados que podem aparecer: objetivo do canary, criterio de abortar, ambiente e sinais esperados saneados;
+		- dados que nao podem aparecer: segredos, dados reais sem gate, conteudo bruto de respostas e uploads;
+		- evidencia minima esperada: autorizacao propria, ambiente definido e registro previo no ledger;
+		- relacao com preflight: exige checklist completo;
+		- relacao com dry-run: pode coexistir com dry-run futuro, mas nao se confunde com ele;
+		- relacao com backup/rollback: deve registrar necessidade de contingencia quando aplicavel;
+		- proximo tratamento recomendado: tratar canary como categoria autonoma de observabilidade.
+	- `logs de inventario read-only futuro`:
+		- finalidade: reservar a categoria para leitura futura estritamente controlada;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: transformar leitura futura em query real sem governanca;
+		- permitido agora: nao;
+		- dados que podem aparecer: contagens, classificacoes e metadados agregados saneados;
+		- dados que nao podem aparecer: dados reais individualizados, segredos, tokens e URIs sensiveis;
+		- evidencia minima esperada: escopo de leitura, ambiente definido e saneamento previsto;
+		- relacao com preflight: checklist integral continua obrigatorio;
+		- relacao com dry-run: pode informar um dry-run futuro, mas nao o substitui;
+		- relacao com backup/rollback: em principio nao exige reversao, mas exige registrar ausencia de mutacao;
+		- proximo tratamento recomendado: separar inventario agregador de consulta operacional real.
+	- `logs de backup/restore/rollback futuro`:
+		- finalidade: reservar a categoria para trilha futura de contingencia e recuperacao;
+		- status nesta fase: nao autorizado agora;
+		- risco principal: expor origem, destino ou dados sensiveis de recuperacao;
+		- permitido agora: nao;
+		- dados que podem aparecer: identificadores saneados de plano, resultado resumido e criterios de reversao;
+		- dados que nao podem aparecer: URI real, credencial, snapshot sensivel e dados reais brutos;
+		- evidencia minima esperada: politica de backup/rollback aplicada e autorizacao humana;
+		- relacao com preflight: depende de checklist integral;
+		- relacao com dry-run: pode ser avaliado em simulacao futura, nunca nesta fase;
+		- relacao com backup/rollback: categoria diretamente dependente da politica de backup/rollback;
+		- proximo tratamento recomendado: definir estrategia de saneamento antes de qualquer uso.
+	- `logs de migration/backfill futuro`:
+		- finalidade: reservar a categoria para escrita estrutural futura de alto risco;
+		- status nesta fase: bloqueado;
+		- risco principal: expor detalhes estruturais sensiveis ou naturalizar alteracao em massa;
+		- permitido agora: nao;
+		- dados que podem aparecer: somente metadados saneados de risco, escopo e resultado resumido quando aprovados no futuro;
+		- dados que nao podem aparecer: payload real, credenciais, dados reais e chaves sensiveis;
+		- evidencia minima esperada: classificacao `R4`/`R5`, autorizacao, plano de reversao e criterio de sucesso/falha;
+		- relacao com preflight: obrigatoria e integral;
+		- relacao com dry-run: eventual simulacao futura depende desta classificacao, nunca agora;
+		- relacao com backup/rollback: requer registro expresso de contingencia;
+		- proximo tratamento recomendado: manter bloqueio integral nesta fase.
+	- `logs de seed/reset/cleanup futuro`:
+		- finalidade: reservar a categoria para operacoes potencialmente destrutivas futuras;
+		- status nesta fase: bloqueado;
+		- risco principal: banalizar operacoes mutativas como manutencao inocua;
+		- permitido agora: nao;
+		- dados que podem aparecer: apenas metadados futuros saneados e aprovados por gate proprio;
+		- dados que nao podem aparecer: segredos, dados reais, payloads de escrita e URIs sensiveis;
+		- evidencia minima esperada: autorizacao especifica, preflight, justificativa e plano de reversao quando aplicavel;
+		- relacao com preflight: obrigatoria e reforcada;
+		- relacao com dry-run: simulacao futura nao libera execucao real;
+		- relacao com backup/rollback: exige avaliacao previa de contingencia;
+		- proximo tratamento recomendado: manter proibido ate microcorte proprio.
+	- `logs de erro/falha`:
+		- finalidade: reservar a categoria para registrar causa provavel, impacto e decisao diante de falha futura;
+		- status nesta fase: permitido apenas como conceito documental;
+		- risco principal: documentar erro com segredo ou dado sensivel bruto;
+		- permitido agora: sim;
+		- dados que podem aparecer: descricao saneada da falha, impacto, decisao e proximo tratamento;
+		- dados que nao podem aparecer: stack sensivel bruto, token, senha, credencial, URI sensivel e dado real identificavel;
+		- evidencia minima esperada: causa provavel, impacto e decisao registrados no ledger;
+		- relacao com preflight: fecha o ciclo de falha quando a operacao futura acontecer;
+		- relacao com dry-run: tambem se aplica a falhas de dry-run futuro autorizado;
+		- relacao com backup/rollback: deve registrar se contingencia foi considerada ou acionada;
+		- proximo tratamento recomendado: definir padrao curto de saneamento de erro.
+	- `logs de autorizacao humana`:
+		- finalidade: registrar quem autorizou, em que contexto e sob qual gate;
+		- status nesta fase: permitido apenas como dado documental saneado;
+		- risco principal: autorizacao ficar implicita ou irrecuperavel;
+		- permitido agora: sim;
+		- dados que podem aparecer: identificador do gate, papel responsavel e escopo aprovado;
+		- dados que nao podem aparecer: segredo pessoal, credencial e qualquer dado desnecessario do autorizador;
+		- evidencia minima esperada: gate humano registrado no ledger;
+		- relacao com preflight: obrigatorio para qualquer operacao futura;
+		- relacao com dry-run: obrigatorio tambem para dry-run futuro autorizado;
+		- relacao com backup/rollback: obrigatorio quando a operacao tocar contingencia;
+		- proximo tratamento recomendado: manter formato minimo e rastreavel.
+	- `logs de ambiente e dados`:
+		- finalidade: registrar ambiente-alvo e classe de dados sem expor conteudo sensivel;
+		- status nesta fase: permitido apenas como classificacao documental;
+		- risco principal: confundir ambiente ou classe de dado e induzir operacao errada;
+		- permitido agora: sim;
+		- dados que podem aparecer: nome do ambiente, classe do dado, se e ficticio/real e se e sensivel;
+		- dados que nao podem aparecer: dado bruto, URI real, credencial e identificador sensivel completo;
+		- evidencia minima esperada: ambiente e tipo de dado registrados no ledger;
+		- relacao com preflight: requisito basico do checklist;
+		- relacao com dry-run: tambem requisito para qualquer simulacao futura;
+		- relacao com backup/rollback: informa necessidade de contingencia;
+		- proximo tratamento recomendado: padronizar taxonomia de ambiente e dado.
+	- `logs de unit-scope/auth-context`:
+		- finalidade: registrar impacto potencial em escopo por unidade e autenticacao/autorizacao;
+		- status nesta fase: permitido apenas como alerta documental;
+		- risco principal: quebrar isolamento ou auth-context sem trilha clara;
+		- permitido agora: sim;
+		- dados que podem aparecer: indicacao de que ha unit-scope/auth-context, alcance e risco saneados;
+		- dados que nao podem aparecer: token, sessao, credencial, segredo e dado pessoal identificavel;
+		- evidencia minima esperada: superficie afetada descrita no ledger;
+		- relacao com preflight: pergunta obrigatoria do checklist;
+		- relacao com dry-run: continua obrigatorio em simulacao futura;
+		- relacao com backup/rollback: pode alterar grau de contingencia necessario;
+		- proximo tratamento recomendado: manter verificacao contextual explicita.
+	- `logs de uploads/feedback`:
+		- finalidade: registrar risco e impacto sobre anexos e feedbacks sem expor conteudo;
+		- status nesta fase: permitido apenas como classificacao documental;
+		- risco principal: exposicao de anexo, blob ou historico sensivel;
+		- permitido agora: sim;
+		- dados que podem aparecer: referencia saneada da superficie afetada e impacto resumido;
+		- dados que nao podem aparecer: conteudo de upload, nome sensivel de arquivo, blob, URL privada ou feedback identificavel;
+		- evidencia minima esperada: superficie e risco registrados no ledger;
+		- relacao com preflight: obrigatorio quando essa superficie for afetada;
+		- relacao com dry-run: mesma restricao vale para simulacao futura;
+		- relacao com backup/rollback: exige contingencia quando houver risco de perda;
+		- proximo tratamento recomendado: tratar uploads/feedback como superficie sensivel autonoma.
+	- `logs de credencial master`:
+		- finalidade: registrar a existencia de risco sobre credencial privilegiada sem expor segredo;
+		- status nesta fase: permitido apenas como alerta documental;
+		- risco principal: vazamento de privilegio global;
+		- permitido agora: sim;
+		- dados que podem aparecer: indicacao de que a superficie master esta em jogo e qual gate humano a cobre;
+		- dados que nao podem aparecer: senha, hash, token, e-mail sensivel completo, segredo ou URI privilegiada;
+		- evidencia minima esperada: categoria sensivel e gate reforcado registrados no ledger;
+		- relacao com preflight: obrigatorio quando a superficie master for afetada;
+		- relacao com dry-run: continua exigindo controle maximo em simulacao futura;
+		- relacao com backup/rollback: pode demandar contingencia e auditoria especificas;
+		- proximo tratamento recomendado: manter sob governanca maxima e separado de logs comuns.
+- Regras gerais desta politica:
+	- ledger pode registrar decisoes documentais agora;
+	- logs tecnicos reais nao devem ser gerados neste microcorte;
+	- logs nao devem conter segredo, senha, token, credencial ou URI sensivel;
+	- logs nao devem expor dados reais;
+	- logs de dados ficticios nao autorizam dados reais;
+	- logs de erro devem ser saneados antes de documentacao;
+	- qualquer operacao futura `R4` ou `R5` exige registro antes e depois;
+	- qualquer operacao futura com Mongo real exige registro de autorizacao, ambiente, dados e resultado;
+	- qualquer falha futura deve registrar causa provavel, impacto, decisao e proximo tratamento;
+	- ausencia de log esperado deve bloquear execucao futura.
+- Matriz de decisao desta fase:
+	- permitido agora: documentacao da politica de auditoria/logs;
+	- permitido agora: commit local documental apos validacao;
+	- nao permitido agora: geracao de log tecnico real por execucao;
+	- nao permitido agora: execucao real de qualquer comando operacional;
+	- nao permitido agora: Mongo real;
+	- nao permitido agora: query real;
+	- nao permitido agora: dry-run real;
+	- nao permitido agora: backup/restore/rollback real;
+	- nao permitido agora: `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- nao permitido agora: Portal;
+	- nao permitido agora: push.
+- Criterios minimos de auditoria antes de operacao futura:
+	- preflight respondido;
+	- dry-run avaliado quando aplicavel;
+	- autorizacao humana registrada;
+	- ambiente-alvo registrado;
+	- tipo de dado registrado;
+	- risco registrado;
+	- plano de backup/rollback registrado quando aplicavel;
+	- logs esperados definidos;
+	- criterios de sucesso/falha definidos;
+	- plano de saneamento de logs definido quando houver risco sensivel;
+	- registro no ledger antes e depois da operacao.
+- Proximo ato recomendado nesta rodada:
+	- `defineMongoOperationalReadinessExitCriteria`.
+- Gates finais desta politica:
+	- `mongoOperationalAuditLogPolicyDefined=true`
+	- `selectedTarget=defineMongoOperationalAuditLogPolicy`
+	- `selectedTechnicalTarget=none`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `technicalLogGenerated=false`
+	- `sensitiveLogExposed=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta politica:
+	- esta politica apenas organiza criterios documentais de auditoria e logs operacionais MongoDB;
+	- esta politica nao altera codigo;
+	- esta politica nao altera testes;
+	- esta politica nao altera `package.json`;
+	- esta politica nao altera scripts;
+	- esta politica nao cria arquivo novo;
+	- esta politica nao cria comando npm;
+	- esta politica nao executa comandos;
+	- esta politica nao executa scripts npm;
+	- esta politica nao executa dry-run real;
+	- esta politica nao gera log tecnico real por execucao;
+	- esta politica nao conecta Mongo real;
+	- esta politica nao executa query real;
+	- esta politica nao executa backup real, restore real ou rollback real;
+	- esta politica nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta politica nao usa Portal;
+	- esta politica nao reintroduz PostgreSQL no roadmap;
+	- esta politica nao declara o WD Gestor pronto para producao;
+	- esta politica nao faz push;
+	- a proxima etapa deve definir os criterios de saida de prontidao operacional Mongo.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
