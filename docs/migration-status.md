@@ -8708,6 +8708,112 @@ Checkpoint tenant enforcement atual:
 	- esta instrucao nao usa Portal;
 	- esta instrucao nao executa novo push;
 	- qualquer publicacao dos commits locais pos-push depende de decisao humana posterior e deve ser executada manualmente pelo usuario.
+- Checkpoint documental curto do registro pos-push final dos commits documentais pos-push da frente `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real externo, sem novo push e sem abertura de nova fase.
+- Frente consolidada neste registro:
+	- `tenantArchitectureContinuation`.
+- Tipo de publicacao consolidado neste registro:
+	- push manual executado pelo usuario.
+- Branch consolidada neste registro:
+	- `migration/refactor-core`.
+- Push principal ja publicado:
+	- `24a274b..81d90f5`.
+- Push documental pos-push publicado:
+	- `81d90f5..0c81183`.
+- Commit remoto final esperado:
+	- `0c81183 docs(tenant): prepara instrucao final pos-push`.
+- Commits documentais publicados neste segundo push:
+	- `db33470 docs(tenant): registra pos-push tenant-aware`;
+	- `b01f191 docs(tenant): prepara resumo pos-push tenant-aware`;
+	- `c4541c6 docs(tenant): revisa resumo pos-push tenant-aware`;
+	- `03e7723 docs(tenant): prepara decisao de publicacao pos-push`;
+	- `fc24af3 docs(tenant): revisa decisao de publicacao pos-push`;
+	- `0c81183 docs(tenant): prepara instrucao final pos-push`.
+- Validacao associada consolidada neste registro:
+	- `tests=2364`;
+	- `suites=17`;
+	- `pass=2362`;
+	- `fail=0`;
+	- `skipped=2`;
+	- `cancelled=0`;
+	- `todo=0`.
+- Decisao consolidada neste registro:
+	- publicacao documental pos-push concluida;
+	- branch remota atualizada ate `0c81183`;
+	- frente `tenantArchitectureContinuation` publicada e documentada;
+	- nao abrir nova fase automaticamente;
+	- a proxima etapa deve ser resumo final, handoff ou decisao explicita sobre nova frente.
+- Limites consolidados deste registro:
+	- nao declara WD Gestor pronto para producao;
+	- nao declara multi-tenant inteiro concluido;
+	- PostgreSQL continua fora;
+	- Portal continua fora;
+	- dados reais continuam fora;
+	- prontidao operacional continua em trilha separada.
+- Proximo ato recomendado nesta rodada:
+	- `prepareFinalPostPushHandoffTenantArchitectureContinuation`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum novo push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=recordFinalPostPushDocsPublication`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=prepareFinalPostPushHandoffTenantArchitectureContinuation`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `tenantArchitectureContinuationFinalDocsPushed=true`
+	- `tenantArchitectureContinuationRemoteUpdatedToFinalPostPush=true`
+	- `gitPushExecuted=true`
+	- `gitPushExecutedBy=user`
+	- `pushedRange=81d90f5..0c81183`
+	- `pushedBranch=migration/refactor-core`
+	- `pushedHead=0c81183`
+	- `fullSuiteAfterOrBeforePushPassed=true`
+	- `fullSuiteTests=2364`
+	- `fullSuitePass=2362`
+	- `fullSuiteFail=0`
+	- `fullSuiteSkipped=2`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=recordFinalPostPushDocsPublication`
+	- `recommendedNextAct=prepareFinalPostPushHandoffTenantArchitectureContinuation`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria deste registro:
+	- este registro apenas documenta o pos-push final dos commits documentais;
+	- este registro nao altera codigo;
+	- este registro nao altera testes;
+	- este registro nao executa refatoracao;
+	- este registro nao cria comando npm/script;
+	- este registro nao conecta Mongo real;
+	- este registro nao executa query real;
+	- este registro nao gera relatorio real externo;
+	- este registro nao inicia PostgreSQL;
+	- este registro nao usa Portal;
+	- este registro nao executa novo push;
+	- qualquer nova frente futura deve ser aberta somente apos decisao explicita.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
