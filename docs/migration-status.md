@@ -6980,6 +6980,96 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
+- Checkpoint documental curto da revisao final da protecao tenant-aware de `createUploadFeedbackAnexoHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem relatorio real, sem refatoracao e sem push.
+- Corredor revisado nesta rodada:
+	- `createUploadFeedbackAnexoHandler`.
+- Arquivo principal deste corredor:
+	- `src/modules/gestor/app/controllers/feedbackUploadApiController.js`.
+- Infra e storage relacionados neste corredor:
+	- `createFeedbackUploadStorageInfraCore` em `src/modules/gestor/app/routes/utils/createFeedbackUploadStorageInfra.js`.
+- Estado consolidado da protecao neste corredor:
+	- protecao focal aceita;
+	- protecao focal verde com `tests=5`, `pass=5`, `fail=0`;
+	- testes adjacentes verdes com owner structural seam em `tests=4`, `pass=4`, `fail=0`;
+	- testes adjacentes verdes com controller structural seam em `tests=4`, `pass=4`, `fail=0`;
+	- testes adjacentes verdes com runtime contract em `tests=4`, `pass=4`, `fail=0`.
+- Confirmacoes operacionais objetivas desta revisao:
+	- o runtime contract usou Mongo em memoria via `MONGO_MEMORY=1`, nao Mongo real;
+	- o contrato publico foi preservado;
+	- `feedbackUploadApiController` foi preservado;
+	- `createFeedbackUploadStorageInfraCore` foi preservado;
+	- `package.json` foi preservado;
+	- nenhum Mongo real foi conectado;
+	- nenhuma query real foi executada.
+- Risco original protegido e agora revisado como coberto:
+	- `feedbackUploadApiController -> leitura contextual -> ensureCreatorOwnership -> storage -> saveFeedbackDoc -> resposta publica`;
+	- `feedbackId` invalido sem read, seam, storage ou persistencia;
+	- `not found` sem gate tardio nem write;
+	- leitura contextual recebendo `scopedUnitId`, `allowLegacyUnscoped` e `preferScopedRepoRead` materialmente;
+	- `allowLegacyUnscoped` como compat explicita, nao autorizacao global silenciosa;
+	- `preferScopedRepoRead` preservando preferencia por leitura escopada;
+	- `ensureCreatorOwnership` recebendo `currentUser`, `feedback` carregado e `scopedUnitId`;
+	- `saveFeedbackDoc` so apos `access.allowed=true` e upload bem-sucedido;
+	- storage sem decidir `scopedUnitId`, ownership ou leitura contextual;
+	- owner curto como fronteira tenant-aware principal do upload contextual.
+- Decisao semantica consolidada desta revisao:
+	- `createUploadFeedbackAnexoHandler` permanece owner curto do upload ou anexo contextual;
+	- upload ou anexo de feedback permanece mutacao contextual quando houver unidade escopada;
+	- `scopedUnitId` e marcador material de contexto operacional por unidade;
+	- `allowLegacyUnscoped` permanece compat legada explicita, nao autorizacao global silenciosa;
+	- `preferScopedRepoRead` preserva preferencia por leitura escopada;
+	- `createFeedbackUploadStorageInfraCore` permanece infra ou storage e efeito lateral relacionado, nao limite tenant-aware principal;
+	- ausencia de contexto so permanece aceita como ramo explicito do contrato atual ou policy, nao como erosao silenciosa;
+	- `createUploadFeedbackAnexoHandler` nao e precedente para upload global silencioso;
+	- nenhuma refatoracao em `src` e necessaria neste momento porque a protecao focal e os testes adjacentes preservaram o contrato atual.
+- Decisao de fechamento deste corredor:
+	- fechar `createUploadFeedbackAnexoHandler` como tenant-aware protegido e validado sem refatoracao em `src`.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=reviewCreateUploadFeedbackAnexoHandlerTenantAwareProtection`;
+	- `selectedTechnicalTarget=createUploadFeedbackAnexoHandler`;
+	- `recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterFeedbackUpload`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createUploadFeedbackAnexoHandlerTenantAwareProtectionReviewed=true`
+	- `createUploadFeedbackAnexoHandlerTenantAwareMicrocutClosed=true`
+	- `createUploadFeedbackAnexoHandlerTenantAwareProtectionPassed=true`
+	- `createUploadFeedbackAnexoHandlerAdjacentTestsPassed=true`
+	- `createUploadFeedbackAnexoHandlerSourceRefactorRequired=false`
+	- `selectedTechnicalTarget=createUploadFeedbackAnexoHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=reviewCreateUploadFeedbackAnexoHandlerTenantAwareProtection`
+	- `recommendedNextAct=selectNextTenantAwareTechnicalTargetAfterFeedbackUpload`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta revisao:
+	- esta revisao apenas fecha o corredor ja protegido e validado;
+	- esta revisao nao altera codigo;
+	- esta revisao nao altera testes;
+	- esta revisao nao executa refatoracao;
+	- esta revisao nao cria comando;
+	- esta revisao nao conecta Mongo real;
+	- esta revisao nao executa query real;
+	- esta revisao nao gera relatorio;
+	- esta revisao nao inicia PostgreSQL;
+	- esta revisao nao usa Portal;
+	- a proxima etapa deve selecionar o proximo alvo tecnico residual tenant-aware ou, se nao houver candidato forte, iniciar triagem de encerramento da frente.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
