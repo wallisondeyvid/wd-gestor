@@ -6827,6 +6827,36 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
+
+- Checkpoint documental curto da execucao da protecao tenant-aware de `createUploadFeedbackAnexoHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-feedback-upload-tenant-aware-protection.test.js`.
+- Resultado consolidado desta execucao focal:
+	- `tests=5`;
+	- `suites=0`;
+	- `pass=4`;
+	- `fail=1`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`;
+	- `duration_ms=56.8793`.
+- Diagnostico objetivo desta falha nesta rodada:
+	- a falha ocorreu no cenario `owner mantem scoped read material, seam curta e write somente apos upload bem-sucedido`;
+	- o motivo observado foi interno ao proprio teste, nao ao contrato do owner em `src`;
+	- a expectativa comparou o payload serializado da seam com um fixture que ainda carregava o metodo `toObject`;
+	- o valor real serializado nao preserva funcoes, por isso o diff acusou divergencia apenas nesse campo;
+	- nesta rodada isso permanece classificado como falha de assercao do teste focal, nao como bug confirmado em `createUploadFeedbackAnexoHandler`.
+- Confirmacoes desta rodada:
+	- `src` nao alterado neste microcorte;
+	- `tests` nao alterados neste microcorte apos a falha;
+	- `package.json` nao alterado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum relatorio real gerado.
+- Leitura operacional desta rodada:
+	- a protecao focal ainda nao ficou verde;
+	- pelo criterio deste microcorte, nao houve correcao automatica em `tests` nem em `src`;
+	- o proximo passo depende de revisar a assercao do teste focal antes de nova execucao.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
