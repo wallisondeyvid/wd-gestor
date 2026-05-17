@@ -8610,6 +8610,104 @@ Checkpoint tenant enforcement atual:
 	- esta revisao nao usa Portal;
 	- esta revisao nao executa novo push;
 	- qualquer publicacao dos commits locais pos-push depende de decisao humana posterior.
+- Checkpoint documental curto da preparacao da instrucao humana final para eventual publicacao dos commits documentais pos-push da frente `tenantArchitectureContinuation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real, sem inventario real, sem relatorio real externo, sem novo push e sem abertura de nova fase.
+- Frente consolidada nesta instrucao:
+	- `tenantArchitectureContinuation`.
+- Status consolidado desta instrucao:
+	- frente ja publicada ate `81d90f5` e commits documentais pos-push locais revisados.
+- Commits locais pos-push ainda nao publicados:
+	- `db33470 docs(tenant): registra pos-push tenant-aware`;
+	- `b01f191 docs(tenant): prepara resumo pos-push tenant-aware`;
+	- `c4541c6 docs(tenant): revisa resumo pos-push tenant-aware`;
+	- `03e7723 docs(tenant): prepara decisao de publicacao pos-push`;
+	- `fc24af3 docs(tenant): revisa decisao de publicacao pos-push`.
+- Natureza consolidada destes commits:
+	- apenas documentais;
+	- sem alteracao em `src`;
+	- sem alteracao em `tests`;
+	- sem alteracao em `package.json`;
+	- sem Mongo real;
+	- sem query real;
+	- sem nova fase.
+- Comandos humanos sugeridos para validar antes de eventual publicacao:
+	- `git status -sb`;
+	- `git --no-pager log --oneline --decorate -30`;
+	- `git --no-pager log --oneline --decorate origin/migration/refactor-core -1`.
+- Comando humano possivel, somente se o usuario decidir publicar:
+	- `git push origin migration/refactor-core`.
+- Decisao humana aberta nesta rodada:
+	- publicar os commits documentais pos-push;
+	- manter localmente;
+	- pedir handoff final antes de publicar.
+- Validacao associada consolidada nesta instrucao:
+	- suite completa: `tests=2364`, `suites=17`, `pass=2362`, `fail=0`, `skipped=2`;
+	- focal curta: `tests=136`, `suites=14`, `pass=136`, `fail=0`.
+- Limites consolidados desta instrucao:
+	- nao declara WD Gestor pronto para producao;
+	- nao declara multi-tenant inteiro concluido;
+	- nao abre nova fase;
+	- PostgreSQL permanece fora;
+	- Portal permanece fora;
+	- dados reais permanecem fora;
+	- prontidao operacional permanece em trilha separada.
+- Decisao consolidada nesta rodada:
+	- instrucao humana final para publicacao pos-push preparada;
+	- proximo ato recomendado: `awaitHumanDecisionOnPostPushDocsPublication`.
+- Confirmacoes desta rodada:
+	- nenhuma alteracao em `src`;
+	- nenhuma alteracao em `tests`;
+	- `package.json` preservado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada;
+	- nenhum inventario real executado;
+	- nenhum relatorio real externo gerado;
+	- nenhum novo push executado.
+- Decisao principal consolidada desta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=prepareFinalHumanInstructionForPostPushDocsPublication`;
+	- `selectedTechnicalTarget=none`;
+	- `recommendedNextAct=awaitHumanDecisionOnPostPushDocsPublication`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `finalHumanInstructionForPostPushDocsPublicationPrepared=true`
+	- `localPostPushDocsAheadOrigin=true`
+	- `postPushDocsOnly=true`
+	- `gitPushExecuted=false`
+	- `noNewTechnicalTargetOpened=true`
+	- `selectedTechnicalTarget=none`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=prepareFinalHumanInstructionForPostPushDocsPublication`
+	- `recommendedNextAct=awaitHumanDecisionOnPostPushDocsPublication`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `reportGenerated=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `blockedReasons=[]`
+- Interpretacao obrigatoria desta instrucao:
+	- esta instrucao apenas prepara orientacao humana final sobre os commits documentais pos-push;
+	- esta instrucao nao altera codigo;
+	- esta instrucao nao altera testes;
+	- esta instrucao nao executa refatoracao;
+	- esta instrucao nao cria comando npm/script;
+	- esta instrucao nao conecta Mongo real;
+	- esta instrucao nao executa query real;
+	- esta instrucao nao inicia PostgreSQL;
+	- esta instrucao nao usa Portal;
+	- esta instrucao nao executa novo push;
+	- qualquer publicacao dos commits locais pos-push depende de decisao humana posterior e deve ser executada manualmente pelo usuario.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
