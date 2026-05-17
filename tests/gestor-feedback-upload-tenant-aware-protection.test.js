@@ -341,7 +341,7 @@ test('feedback upload tenant-aware: owner mantem scoped read material, seam curt
           nome: 'Creator Feedback',
           role: 'user',
         },
-        feedback: feedbackFixture(),
+        feedback: toPlainJson(feedbackFixture()),
         scopedUnitId: 'unit-77',
       },
     },

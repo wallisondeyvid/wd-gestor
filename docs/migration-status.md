@@ -6857,6 +6857,67 @@ Checkpoint tenant enforcement atual:
 	- a protecao focal ainda nao ficou verde;
 	- pelo criterio deste microcorte, nao houve correcao automatica em `tests` nem em `src`;
 	- o proximo passo depende de revisar a assercao do teste focal antes de nova execucao.
+
+- Checkpoint documental curto do ajuste do harness e da validacao verde da protecao tenant-aware de `createUploadFeedbackAnexoHandler`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
+- Ajuste aplicado nesta rodada:
+	- a expectativa do cenario de write bem-sucedido em `tests/gestor-feedback-upload-tenant-aware-protection.test.js` passou a comparar o payload serializado real da seam, removendo apenas o metodo nao serializavel `toObject` do lado esperado;
+	- o objetivo tenant-aware da protecao permaneceu intacto.
+- Comando executado nesta rodada:
+	- `node --test tests/gestor-feedback-upload-tenant-aware-protection.test.js`.
+- Resultado consolidado desta execucao focal apos o ajuste:
+	- `tests=5`;
+	- `suites=0`;
+	- `pass=5`;
+	- `fail=0`;
+	- `cancelled=0`;
+	- `skipped=0`;
+	- `todo=0`;
+	- `duration_ms=55.8233`.
+- Leitura objetiva desta rodada:
+	- a protecao focal ficou integralmente verde;
+	- a prova de que `ensureCreatorOwnership` recebe `currentUser`, `feedback` carregado e `scopedUnitId` foi preservada;
+	- a prova de que o read recebe `scopedUnitId`, `allowLegacyUnscoped` e `preferScopedRepoRead` materialmente foi preservada;
+	- a prova de que `saveFeedbackDoc` so ocorre apos `access.allowed=true` e upload bem-sucedido foi preservada;
+	- os cenarios de `feedbackId` invalido, `not found`, ownership negado e storage sem decisao de tenant permaneceram preservados.
+- Confirmacoes desta rodada:
+	- `src` nao alterado neste microcorte;
+	- `package.json` nao alterado;
+	- nenhum Mongo real conectado;
+	- nenhuma query real executada.
+- Proxima etapa recomendada nesta rodada:
+	- `runCreateUploadFeedbackAnexoHandlerAdjacentTestsAfterProtection`.
+- Decisao principal consolidada nesta rodada:
+	- `phase=tenantArchitectureContinuation`;
+	- `selectedTarget=fixAndRunCreateUploadFeedbackAnexoHandlerTenantAwareProtectionTest`;
+	- `selectedTechnicalTarget=createUploadFeedbackAnexoHandler`;
+	- `recommendedNextAct=runCreateUploadFeedbackAnexoHandlerAdjacentTestsAfterProtection`;
+	- `chosenApproach=tenantAwareDatabasePerUnit`.
+- Gates:
+	- `createUploadFeedbackAnexoHandlerTenantAwareProtectionHarnessAdjusted=true`
+	- `createUploadFeedbackAnexoHandlerTenantAwareProtectionTestRun=true`
+	- `createUploadFeedbackAnexoHandlerTenantAwareProtectionTestPassed=true`
+	- `selectedTechnicalTarget=createUploadFeedbackAnexoHandler`
+	- `phase=tenantArchitectureContinuation`
+	- `selectedTarget=fixAndRunCreateUploadFeedbackAnexoHandlerTenantAwareProtectionTest`
+	- `recommendedNextAct=runCreateUploadFeedbackAnexoHandlerAdjacentTestsAfterProtection`
+	- `chosenApproach=tenantAwareDatabasePerUnit`
+	- `sourceCodeChanged=false`
+	- `testsChanged=true`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandCreated=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `inventoryExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `seedExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `postgresMigrationApproved=false`
+	- `portalUsageApproved=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
