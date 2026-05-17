@@ -12258,6 +12258,227 @@ Checkpoint tenant enforcement atual:
 	- esta abertura nao declara o WD Gestor pronto para producao;
 	- esta abertura nao faz push;
 	- a proxima etapa deve mapear candidatos de validacao controlada antes de qualquer tentativa de runtime.
+- Checkpoint documental curto do mapeamento de candidatos da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem criacao de comando npm, sem execucao de comando, sem execucao de script npm, sem teste manual, sem boot manual, sem dry-run real, sem geracao de log tecnico real, sem Mongo real, sem query real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem PostgreSQL, sem Portal, sem push e sem declarar producao pronta.
+- Identificacao consolidada deste mapeamento:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=mapControlledValidationCandidates`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo do mapeamento:
+	- listar validacoes candidatas antes de qualquer execucao;
+	- separar candidatos `R1`, `R2` e `R3`;
+	- manter `R4` e `R5` bloqueados;
+	- preservar o usuario master real e sensivel `wallisondeyvid13@gmail.com`;
+	- preparar a escolha futura do primeiro gate `R1` seguro.
+- Categorias de candidatos:
+	- `validacoes Git/documentais`:
+		- finalidade: conferir branch, `HEAD`, sincronizacao, diff e ledger antes de qualquer runtime;
+		- nivel de risco provavel: `R1`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: autorizacao humana leve para leitura local;
+		- evidencia documental usada: `git status`, `git log`, ledger e historico da frente;
+		- risco principal: confiar em estado errado do branch ou do ledger;
+		- proximo tratamento recomendado: usar como primeira familia de gates seguros.
+	- `validacoes de diff/status/log`:
+		- finalidade: consolidar checks locais de integridade e rastreabilidade;
+		- nivel de risco provavel: `R1`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: autorizacao humana explicita para leitura local;
+		- evidencia documental usada: historico recente de `git diff`, `git status -sb` e `git log --decorate`;
+		- risco principal: diff mal interpretado ou incompleto;
+		- proximo tratamento recomendado: compor shortlist inicial de gate `R1`.
+	- `leitura de package.json`:
+		- finalidade: mapear superficies npm sem executar scripts;
+		- nivel de risco provavel: `R1`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: nenhuma alem de leitura documental;
+		- evidencia documental usada: [package.json](package.json);
+		- risco principal: promover script sensivel cedo demais;
+		- proximo tratamento recomendado: separar scripts candidatos por faixa de risco.
+	- `leitura de scripts por nome`:
+		- finalidade: inventariar superficies operacionais como `smoke:userdb-canary`, `cleanup:legacy`, `migrate:*`, `backfill:*` e `master:set`;
+		- nivel de risco provavel: `R1` para mapeamento;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: revisao humana previa por categoria;
+		- evidencia documental usada: [scripts](scripts) e [scripts/ops](scripts/ops);
+		- risco principal: classificar comando mutativo como candidato inocuo;
+		- proximo tratamento recomendado: isolar comandos proibidos e candidatos de memoria.
+	- `leitura de tests por estrutura`:
+		- finalidade: identificar suites estruturais, runtime-contract e smoke sem rodar testes;
+		- nivel de risco provavel: `R1`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: gate humano antes de qualquer execucao automatizada;
+		- evidencia documental usada: [tests](tests);
+		- risco principal: assumir cobertura que nao existe para o alvo de runtime;
+		- proximo tratamento recomendado: destacar testes candidatos a apoiar um gate `R1` ou `R2` futuro.
+	- `guardrails R1 candidatos`:
+		- finalidade: priorizar verificacoes de baixo risco baseadas em leitura e integridade local;
+		- nivel de risco provavel: `R1`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: autorizacao humana explicita;
+		- evidencia documental usada: ledger, `package.json`, nomes de guardrails em scripts e checkpoints;
+		- risco principal: pular da leitura para execucao sem gate formal;
+		- proximo tratamento recomendado: selecionar um primeiro gate `R1` estritamente read-only.
+	- `testes R1 candidatos`:
+		- finalidade: separar testes estruturais ou contratuais que possam futuramente validar superficies sem tocar Mongo real;
+		- nivel de risco provavel: `R1`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: autorizacao humana e recorte de suite;
+		- evidencia documental usada: nomes de testes como `migration.safety.smoke.test.js`, `health-and-session.test.js`, suites estruturais e runtime-contract;
+		- risco principal: escolher suite que faca boot ou escrita indireta;
+		- proximo tratamento recomendado: filtrar testes sem dependencia de Mongo real e sem impacto no master.
+	- `boot local R2 candidato`:
+		- finalidade: preparar hipotese futura de boot local sem mutacao;
+		- nivel de risco provavel: `R2`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: preflight completo e aprovacao humana explicita;
+		- evidencia documental usada: `start`, `start:gestor`, README e checkpoints de bootstrap;
+		- risco principal: abrir superficie de runtime sem isolamento suficiente;
+		- proximo tratamento recomendado: deixar fora da primeira escolha de validacao.
+	- `boot em memoria R2/R3 candidato`:
+		- finalidade: mapear possibilidade futura de execucao isolada com `MONGO_MEMORY=1`;
+		- nivel de risco provavel: `R2/R3`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: aprovacao humana explicita apos gate `R1`;
+		- evidencia documental usada: `start:mem`, `test:mem`, `mongodb-memory-server` e scripts de bootstrap;
+		- risco principal: confundir memoria com permissao operacional ampla;
+		- proximo tratamento recomendado: avaliar apenas depois da selecao do primeiro gate `R1`.
+	- `canary R3 candidato`:
+		- finalidade: mapear o `smoke:userdb-canary` como superficie futura de validacao mais avancada;
+		- nivel de risco provavel: `R3`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: preflight, aprovacao humana e ambiente isolado;
+		- evidencia documental usada: `smoke:userdb-canary`, [docs/runbooks](docs/runbooks) e `userdb-canary.md`;
+		- risco principal: aproximacao indevida de runtime com credenciais ou dados sensiveis;
+		- proximo tratamento recomendado: manter fora do primeiro gate.
+	- `inventario read-only R3 candidato`:
+		- finalidade: mapear superficies tipo `inventory-fictional-data-readonly` como validacao controlada mais avancada;
+		- nivel de risco provavel: `R3`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: preflight e aprovacao humana apos trilha `R1/R2`;
+		- evidencia documental usada: [docs/runbooks](docs/runbooks) e [scripts/ops](scripts/ops);
+		- risco principal: extrapolar inventario read-only para uso operacional prematuro;
+		- proximo tratamento recomendado: manter como candidato posterior ao canary.
+	- `comandos proibidos R4/R5`:
+		- finalidade: congelar explicitamente tudo que e sensivel ou mutativo;
+		- nivel de risco provavel: `R4/R5/X`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: nao elegivel nesta fase inicial;
+		- evidencia documental usada: `master:set`, `cleanup:legacy`, `migrate:*`, `backfill:*`, `start:mem:seed` e backlog documental da readiness;
+		- risco principal: dano em dados, credenciais, historico ou topologia;
+		- proximo tratamento recomendado: manter bloqueio explicito e fora da shortlist inicial.
+	- `superficies sensiveis`:
+		- finalidade: identificar zonas que exigem protecao adicional antes de qualquer runtime;
+		- nivel de risco provavel: `R3/R4`;
+		- permitido mapear agora: sim;
+		- permitido executar agora: nao;
+		- autorizacao futura necessaria: gate humano reforcado e recorte de alvo;
+		- evidencia documental usada: checkpoints de `auth-context`, `unit-scope`, upload/feedback e registro do usuario master real;
+		- risco principal: tocar credencial master, auth-context, unit-scope ou escrita real em uploads/feedback;
+		- proximo tratamento recomendado: excluir da primeira validacao e manter como superficie de auditoria.
+- Classificacao inicial:
+	- `R1 candidatos`: somente leitura e verificacao local sem banco real, incluindo Git/documentacao, diff/status/log, leitura de `package.json`, leitura de scripts por nome e leitura estrutural de testes;
+	- `R2 candidatos`: boot local sem mutacao, ainda nao autorizado;
+	- `R3 candidatos`: canary, inventario read-only e Mongo em memoria, ainda nao autorizados;
+	- `R4/R5`: operacoes sensiveis ou mutativas continuam bloqueadas;
+	- `X`: `master:set`, `seed`, `reset`, `cleanup`, `migration`, `backfill`, Mongo real, dados reais, Portal e PostgreSQL nesta fase.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Candidatos que NAO devem ser escolhidos como primeira validacao:
+	- `master:set`;
+	- `cleanup:legacy`;
+	- `migrate:*`;
+	- `backfill:*`;
+	- `start:mem:seed`;
+	- Mongo real;
+	- dados reais;
+	- Portal;
+	- qualquer fluxo que toque credencial master;
+	- qualquer fluxo que altere `unit-scope` ou `auth-context`;
+	- qualquer fluxo de upload/feedback com escrita real.
+- Proximo ato recomendado nesta rodada:
+	- `selectFirstR1ValidationGate`.
+- Gates finais deste mapeamento:
+	- `controlledValidationCandidatesMapped=true`
+	- `selectedTarget=mapControlledValidationCandidates`
+	- `selectedTechnicalTarget=none`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `technicalLogGenerated=false`
+	- `sensitiveLogExposed=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria deste mapeamento:
+	- este mapeamento apenas organiza candidatos de validacao controlada;
+	- este mapeamento nao altera codigo;
+	- este mapeamento nao altera testes;
+	- este mapeamento nao altera `package.json`;
+	- este mapeamento nao altera scripts;
+	- este mapeamento nao cria arquivo novo;
+	- este mapeamento nao cria comando npm;
+	- este mapeamento nao executa comandos;
+	- este mapeamento nao executa scripts npm;
+	- este mapeamento nao executa teste manual;
+	- este mapeamento nao faz boot;
+	- este mapeamento nao executa dry-run real;
+	- este mapeamento nao gera log tecnico real por execucao;
+	- este mapeamento nao conecta Mongo real;
+	- este mapeamento nao executa query real;
+	- este mapeamento nao executa backup real, restore real ou rollback real;
+	- este mapeamento nao executa `master:set`;
+	- este mapeamento nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- este mapeamento nao expoe senha, token, URI, segredo ou credencial;
+	- este mapeamento nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este mapeamento nao usa Portal;
+	- este mapeamento nao reintroduz PostgreSQL no roadmap;
+	- este mapeamento nao declara o WD Gestor pronto para producao;
+	- este mapeamento nao faz push;
+	- a proxima etapa deve selecionar o primeiro gate `R1` seguro antes de qualquer runtime.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
