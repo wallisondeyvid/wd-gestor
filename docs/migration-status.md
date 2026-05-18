@@ -14276,6 +14276,105 @@ Checkpoint tenant enforcement atual:
 	- este registro confirma que nao houve nova validacao, `npm test`, `npm run precommit` manual ou script adicional;
 	- este registro confirma que nao houve Mongo real, query real, `master:set` ou alteracao do usuario master real `wallisondeyvid13@gmail.com`;
 	- a proxima etapa deve apenas fechar em commit local este resultado em microcorte separado.
+- Checkpoint parcial consolidado da frente `controlledMongoOperationalValidation` apos a conclusao dos primeiros guardrails `R1`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de validacao nova, sem execucao de `npm`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail neste microcorte, sem Mongo real, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit e sem declarar producao pronta.
+- Identificacao consolidada deste checkpoint parcial:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=consolidateR1ValidationCheckpoint`;
+	- `selectedTechnicalTarget=none`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo deste checkpoint parcial:
+	- consolidar o estado parcial da frente apos os primeiros `R1`;
+	- nao executar validacao nova;
+	- nao subir para `R2` ainda;
+	- preservar decisao de seguranca antes do proximo passo;
+	- manter usuario master real protegido.
+- `R1` concluidos nesta consolidacao:
+	- `validateGitLedgerCleanStateR1=passed`;
+	- `validatePackageScriptsInventoryR1=passed`;
+	- `verify:imports=passed`;
+	- `guard:no-core-models-import=passed`;
+	- `guard:no-model-bypass=passed`.
+- Interpretacao consolidada deste checkpoint:
+	- estado Git/ledger foi validado;
+	- inventario package/scripts foi validado;
+	- imports foram validados;
+	- importacao indevida de core models foi validada;
+	- bypass de models foi validado com warnings nao bloqueantes registrados;
+	- ate aqui nao houve Mongo real, query real, dados reais operacionais, `master:set` ou mutacao sensivel;
+	- producao continua nao pronta.
+- Riscos remanescentes desta frente:
+	- runtime ainda nao validado nesta frente;
+	- boot local ainda nao validado nesta frente;
+	- Mongo em memoria ainda nao autorizado nesta frente;
+	- Mongo real continua bloqueado;
+	- dados reais continuam bloqueados;
+	- Portal continua bloqueado;
+	- operacoes `R4` e `R5` continuam bloqueadas.
+- Proximas opcoes possiveis, sem escolher execucao ainda:
+	- continuar com mais guardrails `R1` estruturais;
+	- preparar um `R1` de checklist final antes de `R2`;
+	- preparar primeiro `R2` de boot local sem Mongo real, se autorizado depois;
+	- preparar decisao humana sobre encerrar sub-bloco `R1` e fazer push futuro, se o bloco for considerado suficiente.
+- Recomendacao documental desta rodada:
+	- `recommendedNextAct=decideNextControlledValidationStep`;
+	- `productionReadyDeclared=false`;
+	- `r2Authorized=false`;
+	- `gitPushExecuted=false`.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Gates finais deste checkpoint parcial:
+	- `r1ValidationCheckpointConsolidated=true`
+	- `selectedTarget=consolidateR1ValidationCheckpoint`
+	- `selectedTechnicalTarget=none`
+	- `r1PassedCount=5`
+	- `r2Authorized=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria deste checkpoint parcial:
+	- este checkpoint consolida somente o estado parcial da frente apos cinco `R1` concluidos;
+	- este checkpoint nao executa nova validacao, guardrail ou script;
+	- este checkpoint nao autoriza `R2` automaticamente;
+	- este checkpoint nao declara o WD Gestor pronto para producao;
+	- este checkpoint nao faz push nem commit;
+	- este checkpoint mantem Mongo real, dados reais, Portal e operacoes sensiveis bloqueados;
+	- a proxima etapa deve depender de decisao explicita sobre o proximo passo controlado.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
