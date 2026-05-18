@@ -13254,6 +13254,133 @@ Checkpoint tenant enforcement atual:
 	- esta selecao nao declara o WD Gestor pronto para producao;
 	- esta selecao nao faz push;
 	- a proxima etapa deve preparar a autorizacao do primeiro guardrail `R1` executavel em microcorte separado.
+- Checkpoint documental curto da preparacao da execucao futura do guardrail `R1` `verify:imports` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao manual de `npm`, sem execucao manual de script npm, sem execucao manual de qualquer script, sem execucao manual de `verify:imports`, sem execucao de guardrail real neste microcorte, sem Mongo real, sem query real, sem dry-run real, sem log tecnico real por execucao manual, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push e sem declarar producao pronta.
+- Identificacao consolidada desta preparacao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareFirstExecutableR1Guardrail`;
+	- `selectedTechnicalTarget=verifyImportsR1`;
+	- `selectedGuardrail=verify:imports`;
+	- `previousSelection=selectFirstExecutableR1Guardrail`;
+	- `previousSelectionResult=selected`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta preparacao:
+	- preparar a execucao futura de `verify:imports` em microcorte separado;
+	- confirmar que este microcorte ainda nao executa o guardrail;
+	- definir escopo, criterios de sucesso, criterios de falha e comandos permitidos para a execucao futura;
+	- preservar usuario master real e sensivel;
+	- manter Mongo real, dados reais e operacoes mutativas bloqueados.
+- Comando futuro permitido, somente no microcorte de execucao:
+	- `npm run verify:imports`.
+- Criterios de sucesso futuros:
+	- comando conclui com `exit code 0`;
+	- nao altera arquivos;
+	- nao conecta Mongo real;
+	- nao executa query real;
+	- nao toca usuario master;
+	- nao expoe segredo, token, URI ou credencial;
+	- nao declara producao pronta;
+	- resultado e registrado depois no ledger.
+- Criterios de falha futuros:
+	- `exit code` diferente de `0`;
+	- qualquer arquivo modificado;
+	- tentativa de conectar Mongo real;
+	- tentativa de executar query real;
+	- qualquer exposicao de credencial;
+	- qualquer alteracao de usuario master;
+	- qualquer execucao de `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- qualquer duvida sobre escopo.
+- Escopo proibido:
+	- qualquer comando diferente de `npm run verify:imports` no microcorte futuro;
+	- `npm test`;
+	- `npm run precommit` manual;
+	- `start`, `start:mem` e `start:atlas`;
+	- `smoke:userdb-canary`;
+	- `migration:check`;
+	- `master:set`;
+	- `seed`, `reset`, `cleanup`, `migration` e `backfill`;
+	- Mongo real;
+	- query real;
+	- Portal;
+	- producao.
+- Observacao sobre hooks:
+	- hooks automaticos de `git commit` podem executar `verify:imports` e `precommit` quando houver commit;
+	- isso deve ser diferenciado de execucao manual;
+	- a futura execucao controlada de `verify:imports` deve ser registrada separadamente como validacao `R1` manual e autorizada.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitPrepareFirstExecutableR1Guardrail`.
+- Gates finais desta preparacao:
+	- `firstExecutableR1GuardrailPrepared=true`
+	- `selectedTarget=prepareFirstExecutableR1Guardrail`
+	- `selectedTechnicalTarget=verifyImportsR1`
+	- `selectedGuardrail=verify:imports`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta preparacao:
+	- esta preparacao apenas organiza a execucao futura controlada de `verify:imports`;
+	- esta preparacao nao executa guardrail;
+	- esta preparacao nao executa validacao real;
+	- esta preparacao nao executa manualmente `npm`;
+	- esta preparacao nao executa manualmente scripts npm;
+	- esta preparacao nao executa manualmente qualquer script;
+	- esta preparacao nao executa manualmente `verify:imports`;
+	- esta preparacao nao altera codigo;
+	- esta preparacao nao altera testes;
+	- esta preparacao nao altera `package.json`;
+	- esta preparacao nao altera scripts;
+	- esta preparacao nao cria arquivo novo;
+	- esta preparacao nao conecta Mongo real;
+	- esta preparacao nao executa query real;
+	- esta preparacao nao executa dry-run real;
+	- esta preparacao nao gera log tecnico real por execucao manual;
+	- esta preparacao nao executa backup real, restore real ou rollback real;
+	- esta preparacao nao executa `master:set`;
+	- esta preparacao nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- esta preparacao nao expoe senha, token, URI, segredo ou credencial;
+	- esta preparacao nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta preparacao nao usa Portal;
+	- esta preparacao nao reintroduz PostgreSQL no roadmap;
+	- esta preparacao nao declara o WD Gestor pronto para producao;
+	- esta preparacao nao faz push;
+	- a proxima etapa deve apenas fechar em commit local esta preparacao antes da execucao controlada futura.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
