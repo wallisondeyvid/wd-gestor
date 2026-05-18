@@ -13496,6 +13496,172 @@ Checkpoint tenant enforcement atual:
 	- este registro nao declara o WD Gestor pronto para producao;
 	- este registro nao faz push;
 	- a proxima etapa deve apenas fechar em commit local este registro documental.
+- Checkpoint documental curto da selecao do proximo guardrail `R1` executavel candidato da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de guardrail, sem execucao de validacao real, sem execucao de `npm`, sem execucao de script npm, sem execucao de qualquer script, sem Mongo real, sem query real, sem dry-run real, sem log tecnico real por execucao, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push e sem declarar producao pronta.
+- Identificacao consolidada desta selecao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=selectNextExecutableR1Guardrail`;
+	- `selectedTechnicalTarget=noCoreModelsImportR1Candidate`;
+	- `selectedGuardrail=guard:no-core-models-import`;
+	- `previousGuardrail=verify:imports`;
+	- `previousGuardrailResult=passed`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta selecao:
+	- selecionar o proximo guardrail `R1` candidato;
+	- nao executar o guardrail ainda;
+	- preservar a sequencia progressiva apos `verify:imports`;
+	- manter Mongo real, dados reais, usuario master, credenciais e operacoes mutativas fora de escopo.
+- Guardrails `R1` candidatos avaliados documentalmente:
+	- `guard:no-core-models-import`:
+		- finalidade aparente: bloquear referencias de runtime a `#core/models/` em `src/` e `src/modules/` por varredura estatica;
+		- risco: `R1` baixo, por ser verificacao estrutural de arquitetura sem banco nem runtime operacional;
+		- por que e `R1` candidato: complementa diretamente `verify:imports` e permanece em leitura local de codigo;
+		- por que ainda nao sera executado neste microcorte: este microcorte apenas seleciona o proximo candidato, sem autorizacao de execucao;
+		- relacao com Mongo real: nenhuma conexao ou query real aparente;
+		- relacao com usuario master real: nenhuma interacao com identidade ou credencial master;
+		- proximo tratamento recomendado: preparar microcorte de autorizacao para execucao controlada como proximo guardrail futuro.
+	- `guard:no-model-bypass`:
+		- finalidade aparente: detectar imports de `#models`, queries diretas e acesso indevido ao registry do mongoose em camadas proibidas;
+		- risco: `R1` a `R2` documental, por ampliar a heuristica arquitetural para patterns mais abrangentes;
+		- por que e `R1` candidato: continua sendo leitura local e validacao estrutural sem indicio documental de Mongo real;
+		- por que ainda nao sera executado neste microcorte: convem manter como passo posterior ao guardrail mais estreito e previsivel de `#core/models/`;
+		- relacao com Mongo real: nao deveria conectar Mongo real, embora mencione regras sobre mongoose;
+		- relacao com usuario master real: nenhuma interacao direta;
+		- proximo tratamento recomendado: reavaliar depois do resultado do proximo guardrail estrutural focado.
+	- `verify:legacy`:
+		- finalidade aparente: verificar se arquivos legacy monoliticos reapareceram no workspace;
+		- risco: `R1` baixo, por ser checagem estatica de existencia de arquivos;
+		- por que e `R1` candidato: e executavel estrutural read-only e sem dependencia de banco real;
+		- por que ainda nao sera executado neste microcorte: o foco imediato apos imports relativos deve permanecer em imports de core models;
+		- relacao com Mongo real: nenhuma;
+		- relacao com usuario master real: nenhuma;
+		- proximo tratamento recomendado: manter como candidato estrutural secundario apos a checagem de core models.
+	- `lint:paths`:
+		- finalidade aparente: validar paths e import paths do repositorio por script proprio;
+		- risco: `R1` documental presumido, mas com escopo interno menos focado para a sequencia atual;
+		- por que e `R1` candidato: permanece em validacao estrutural sem indicio documental de Mongo real;
+		- por que ainda nao sera executado neste microcorte: a trilha atual pede um passo complementar mais diretamente conectado ao resultado de `verify:imports`;
+		- relacao com Mongo real: nenhuma relacao documental observada;
+		- relacao com usuario master real: nenhuma;
+		- proximo tratamento recomendado: manter como opcao posterior ou complementar.
+	- `guard:migration`:
+		- finalidade aparente: verificar seguranca de migracao e superficies estruturais do repositorio;
+		- risco: `R1` a `R2` documental, por combinar guardas estruturais com contexto de migracao;
+		- por que e `R1` candidato: ainda e um guardrail executavel de leitura local sem indicio de mutacao;
+		- por que ainda nao sera executado neste microcorte: o nome e o tema migracao sugerem validacao mais forte do que a proxima etapa estrutural desejada;
+		- relacao com Mongo real: nenhuma conexao real aparente, mas o tema pede cautela adicional;
+		- relacao com usuario master real: nenhuma interacao direta;
+		- proximo tratamento recomendado: manter para depois dos guardrails estruturais mais estreitos.
+	- demais guardrails estruturais observados:
+		- finalidade aparente: cobrir restricoes arquiteturais mais especificas por modulo, como imports proibidos, `unitScope:null` e usos diretos de tipos sensiveis;
+		- risco: `R1` documental, mas com escopo mais especializado do que o passo arquitetural seguinte desejado;
+		- por que e `R1` candidato: sao checks locais e sem indicio documental de Mongo real ou credenciais;
+		- por que ainda nao sera executado neste microcorte: a sequencia deve privilegiar um proximo guardrail geral e complementar a `verify:imports`;
+		- relacao com Mongo real: nenhuma relacao documental observada;
+		- relacao com usuario master real: nenhuma;
+		- proximo tratamento recomendado: manter em backlog `R1` controlado conforme necessidade por modulo.
+- Selecao recomendada:
+	- selecionar `guard:no-core-models-import` como proximo guardrail `R1` futuro.
+- Justificativa da escolha:
+	- e guardrail estrutural de arquitetura;
+	- nao conecta Mongo real;
+	- nao usa dados reais;
+	- nao toca usuario master;
+	- nao altera credenciais;
+	- nao e `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- nao e Portal;
+	- nao altera arquivos;
+	- complementa `verify:imports` validando ausencia de importacao indevida de core models.
+- Candidatos NAO escolhidos agora:
+	- `npm test`;
+	- `test:strict`;
+	- `test:mem`;
+	- `start`;
+	- `start:mem`;
+	- `smoke:userdb-canary`;
+	- `migration:check`;
+	- `master:set`;
+	- `cleanup:legacy`;
+	- `migrate:*`;
+	- `backfill:*`;
+	- `start:mem:seed`;
+	- qualquer Mongo real;
+	- qualquer dado real;
+	- Portal.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `prepareNextExecutableR1Guardrail`.
+- Gates finais desta selecao:
+	- `nextExecutableR1GuardrailSelected=true`
+	- `selectedTarget=selectNextExecutableR1Guardrail`
+	- `selectedTechnicalTarget=noCoreModelsImportR1Candidate`
+	- `selectedGuardrail=guard:no-core-models-import`
+	- `previousGuardrailResult=passed`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas escolhe o proximo guardrail `R1` executavel candidato;
+	- esta selecao nao executa guardrail;
+	- esta selecao nao executa validacao real;
+	- esta selecao nao executa `npm`;
+	- esta selecao nao executa scripts npm;
+	- esta selecao nao executa qualquer script;
+	- esta selecao nao altera codigo;
+	- esta selecao nao altera testes;
+	- esta selecao nao altera `package.json`;
+	- esta selecao nao altera scripts;
+	- esta selecao nao cria arquivo novo;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao executa dry-run real;
+	- esta selecao nao gera log tecnico real por execucao;
+	- esta selecao nao executa backup real, restore real ou rollback real;
+	- esta selecao nao executa `master:set`;
+	- esta selecao nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- esta selecao nao expoe senha, token, URI, segredo ou credencial;
+	- esta selecao nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- esta selecao nao usa Portal;
+	- esta selecao nao reintroduz PostgreSQL no roadmap;
+	- esta selecao nao declara o WD Gestor pronto para producao;
+	- esta selecao nao faz push;
+	- a proxima etapa deve preparar a autorizacao do proximo guardrail `R1` executavel em microcorte separado.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
