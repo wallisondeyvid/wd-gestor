@@ -13381,6 +13381,121 @@ Checkpoint tenant enforcement atual:
 	- esta preparacao nao declara o WD Gestor pronto para producao;
 	- esta preparacao nao faz push;
 	- a proxima etapa deve apenas fechar em commit local esta preparacao antes da execucao controlada futura.
+- Checkpoint documental curto do registro do resultado do guardrail `R1` `verify:imports` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem nova validacao, sem `npm test`, sem `npm run precommit` manual, sem scripts adicionais, sem Mongo real, sem query real, sem dry-run real, sem log tecnico real por execucao operacional sensivel, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push e sem declarar producao pronta.
+- Identificacao consolidada deste registro:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=recordVerifyImportsR1Result`;
+	- `selectedTechnicalTarget=verifyImportsR1`;
+	- `selectedGuardrail=verify:imports`;
+	- `previousPreparation=prepareFirstExecutableR1Guardrail`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Resultado consolidado da execucao:
+	- `guardrailExecuted=true`;
+	- `validationExecuted=true`;
+	- `validationResult=passed`;
+	- `commandExecuted=true`;
+	- `command=npm run verify:imports`;
+	- `scriptExecuted=node scripts/verify-no-relative-imports.js`;
+	- `exitCode=0`;
+	- `outputSummary=Arquitetura limpa`;
+	- `filesChangedDuringExecution=false`;
+	- `workingTreeCleanAfterExecution=true`.
+- Evidencias registradas desta execucao:
+	- `branch=migration/refactor-core`;
+	- `localHead=33a3a07 docs(ops): prepara execucao guardrail r1 imports`;
+	- `aheadCount=9`;
+	- `commandScope=verifyImportsOnly`;
+	- `npmTestExecuted=false`;
+	- `precommitExecutedManually=false`;
+	- `extraScriptExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `queryExecuted=false`;
+	- `gitPushExecuted=false`;
+	- `commitCreatedDuringValidation=false`.
+- Interpretacao consolidada desta execucao:
+	- `verify:imports` confirmou a integridade de importacoes relativa ao guardrail;
+	- a saida principal foi `Arquitetura limpa`;
+	- a execucao nao alterou arquivos;
+	- a execucao nao conectou Mongo real;
+	- a execucao nao tocou usuario master;
+	- a execucao nao executou `npm test` nem `precommit` manual;
+	- a execucao nao declarou producao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitVerifyImportsR1Result`.
+- Gates finais deste registro:
+	- `verifyImportsR1ResultRecorded=true`
+	- `selectedTarget=recordVerifyImportsR1Result`
+	- `selectedTechnicalTarget=verifyImportsR1`
+	- `selectedGuardrail=verify:imports`
+	- `guardrailExecuted=true`
+	- `validationExecuted=true`
+	- `validationResult=passed`
+	- `commandExecuted=true`
+	- `npmScriptExecuted=true`
+	- `npmTestExecuted=false`
+	- `precommitExecutedManually=false`
+	- `extraScriptExecuted=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria deste registro:
+	- este registro documenta o resultado da execucao manual controlada de `verify:imports`;
+	- este registro nao executa nova validacao;
+	- este registro nao executa `npm test`;
+	- este registro nao executa `npm run precommit`;
+	- este registro nao executa scripts adicionais;
+	- este registro nao altera codigo;
+	- este registro nao altera testes;
+	- este registro nao altera `package.json`;
+	- este registro nao altera scripts;
+	- este registro nao cria arquivo novo;
+	- este registro nao conecta Mongo real;
+	- este registro nao executa query real;
+	- este registro nao executa dry-run real;
+	- este registro nao gera log tecnico real por execucao operacional sensivel;
+	- este registro nao executa backup real, restore real ou rollback real;
+	- este registro nao executa `master:set`;
+	- este registro nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- este registro nao expoe senha, token, URI, segredo ou credencial;
+	- este registro nao executa `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este registro nao usa Portal;
+	- este registro nao reintroduz PostgreSQL no roadmap;
+	- este registro nao declara o WD Gestor pronto para producao;
+	- este registro nao faz push;
+	- a proxima etapa deve apenas fechar em commit local este registro documental.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
