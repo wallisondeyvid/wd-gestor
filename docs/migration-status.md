@@ -14375,6 +14375,127 @@ Checkpoint tenant enforcement atual:
 	- este checkpoint nao faz push nem commit;
 	- este checkpoint mantem Mongo real, dados reais, Portal e operacoes sensiveis bloqueados;
 	- a proxima etapa deve depender de decisao explicita sobre o proximo passo controlado.
+- Checkpoint documental curto da preparacao do checklist final `R1` da frente `controlledMongoOperationalValidation` antes de qualquer autorizacao de `R2`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de validacao nova, sem execucao de `npm`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail neste microcorte, sem Mongo real, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao automatica de `R2` e sem declarar producao pronta.
+- Identificacao consolidada desta preparacao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareFinalR1ValidationChecklist`;
+	- `selectedTechnicalTarget=none`;
+	- `previousCheckpoint=consolidateR1ValidationCheckpoint`;
+	- `previousR1PassedCount=5`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta preparacao:
+	- preparar checklist final `R1` antes de qualquer `R2`;
+	- nao executar nova validacao neste microcorte;
+	- nao autorizar `R2` automaticamente;
+	- confirmar que os `R1` concluidos sao suficientes para uma decisao posterior;
+	- preservar usuario master real e sensivel;
+	- manter Mongo real, dados reais e operacoes mutativas bloqueados.
+- `R1` ja concluidos e que devem compor o checklist:
+	- `validateGitLedgerCleanStateR1=passed`;
+	- `validatePackageScriptsInventoryR1=passed`;
+	- `verify:imports=passed`;
+	- `guard:no-core-models-import=passed`;
+	- `guard:no-model-bypass=passed`.
+- Itens do checklist final `R1` a serem verificados futuramente:
+	- branch correta;
+	- `HEAD` correto;
+	- `origin` correto;
+	- working tree limpa;
+	- ledger atualizado;
+	- cinco `R1` registrados como `passed`;
+	- usuario master real preservado;
+	- ausencia de Mongo real;
+	- ausencia de query real;
+	- ausencia de `seed`, `reset`, `cleanup`, `migration` e `backfill`;
+	- ausencia de Portal;
+	- ausencia de alteracao em `src`, `tests`, `package.json` e `scripts`;
+	- producao nao declarada pronta;
+	- `R2` ainda nao autorizado.
+- Criterios para considerar o sub-bloco `R1` pronto para decisao:
+	- todos os cinco `R1` permanecem `passed`;
+	- nenhum arquivo pendente fora do ledger;
+	- nenhum script pendente a registrar;
+	- nenhum warning bloqueante pendente;
+	- usuario master real nao foi tocado;
+	- nenhuma operacao sensivel foi executada;
+	- todos os commits locais da frente estao organizados;
+	- decisao humana posterior podera escolher entre continuar `R1`, preparar `R2` ou publicar sub-bloco.
+- Riscos remanescentes antes de `R2`:
+	- runtime ainda nao validado nesta frente;
+	- boot local ainda nao validado nesta frente;
+	- Mongo em memoria ainda nao validado manualmente nesta frente;
+	- Mongo real continua bloqueado;
+	- dados reais continuam bloqueados;
+	- Portal continua bloqueado;
+	- operacoes `R4` e `R5` continuam bloqueadas.
+- Decisao recomendada neste momento:
+	- preparar checklist final `R1` agora;
+	- depois executar e registrar esse checklist documental;
+	- somente depois decidir se havera primeiro `R2`;
+	- nao fazer push automaticamente;
+	- nao declarar producao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitPrepareFinalR1ValidationChecklist`.
+- Gates finais desta preparacao:
+	- `finalR1ValidationChecklistPrepared=true`
+	- `selectedTarget=prepareFinalR1ValidationChecklist`
+	- `selectedTechnicalTarget=none`
+	- `previousR1PassedCount=5`
+	- `r2Authorized=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta preparacao:
+	- esta preparacao organiza somente o checklist final `R1` antes de qualquer autorizacao de `R2`;
+	- esta preparacao nao executa validacao, guardrail ou script;
+	- esta preparacao nao autoriza `R2` automaticamente;
+	- esta preparacao nao altera codigo, testes, `package.json` ou scripts;
+	- esta preparacao nao cria arquivo novo;
+	- esta preparacao nao conecta Mongo real;
+	- esta preparacao nao executa query real;
+	- esta preparacao nao executa `master:set`;
+	- esta preparacao nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- esta preparacao nao declara o WD Gestor pronto para producao;
+	- esta preparacao nao faz push nem commit;
+	- a proxima etapa deve apenas fechar em commit local esta preparacao documental antes da rodada de checklist final `R1`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
