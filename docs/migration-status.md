@@ -14603,6 +14603,127 @@ Checkpoint tenant enforcement atual:
 	- este registro confirma ausencia de validacao nova, script, guardrail, Mongo real, query real e `master:set`;
 	- este registro confirma que `R2` permanece nao autorizado e que a producao permanece nao pronta;
 	- a proxima etapa deve apenas fechar em commit local este resultado em microcorte separado.
+- Checkpoint documental curto da preparacao da decisao de fechamento do sub-bloco `R1` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de validacao nova, sem execucao de `npm`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail neste microcorte, sem Mongo real, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao automatica de `R2` e sem declarar producao pronta.
+- Identificacao consolidada desta preparacao de fechamento:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareR1SubBlockClosureDecision`;
+	- `selectedTechnicalTarget=none`;
+	- `previousCheckpoint=recordFinalR1ValidationChecklistResult`;
+	- `previousR1PassedCount=5`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta preparacao de fechamento:
+	- preparar decisao documental sobre fechamento do sub-bloco `R1`;
+	- nao executar nova validacao;
+	- nao autorizar `R2` automaticamente;
+	- nao fazer push automaticamente;
+	- consolidar que o sub-bloco `R1` esta pronto para decisao humana;
+	- preservar usuario master real e sensivel;
+	- manter Mongo real, dados reais e operacoes mutativas bloqueados.
+- Evidencias consolidadas do sub-bloco `R1`:
+	- `validateGitLedgerCleanStateR1=passed`;
+	- `validatePackageScriptsInventoryR1=passed`;
+	- `verify:imports=passed`;
+	- `guard:no-core-models-import=passed`;
+	- `guard:no-model-bypass=passed`;
+	- `finalR1ValidationChecklistResult=passed`;
+	- `r1PassedCountConfirmed=5`.
+- Interpretacao consolidada do estado do sub-bloco `R1`:
+	- a frente possui um sub-bloco `R1` completo e coerente;
+	- o estado Git/ledger foi validado;
+	- o inventario `package/scripts` foi validado;
+	- os guardrails estruturais selecionados passaram;
+	- o checklist final `R1` passou;
+	- os warnings de `guard:no-model-bypass` foram registrados como nao bloqueantes;
+	- nao houve Mongo real;
+	- nao houve query real;
+	- nao houve `master:set`;
+	- nao houve alteracao do usuario master real;
+	- nao houve `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- nao houve Portal;
+	- producao continua nao pronta.
+- Decisoes possiveis apos este microcorte:
+	- opcao 1: fechar documentalmente o sub-bloco `R1` e preparar push humano;
+	- opcao 2: continuar com mais validacoes `R1`;
+	- opcao 3: preparar primeiro `R2` controlado, somente com autorizacao humana posterior;
+	- opcao 4: manter o estado como checkpoint local sem push por enquanto.
+- Recomendacao documental desta preparacao:
+	- considerar o sub-bloco `R1` pronto para decisao humana;
+	- nao autorizar `R2` neste microcorte;
+	- nao executar nada neste microcorte;
+	- nao fazer push neste microcorte;
+	- `recommendedNextAct=commitPrepareR1SubBlockClosureDecision`.
+- Condicoes minimas para push humano futuro, se escolhido depois:
+	- working tree limpa;
+	- `HEAD` local correto;
+	- commits locais organizados;
+	- documentacao do sub-bloco `R1` fechada;
+	- producao nao declarada pronta;
+	- `R2` nao autorizado automaticamente;
+	- usuario master real preservado;
+	- nenhum segredo exposto;
+	- push feito apenas pelo usuario humano, nao pelo Copilot.
+- Condicoes minimas para `R2` futuro, se escolhido depois:
+	- decisao humana explicita;
+	- microcorte proprio;
+	- escopo `R2` definido antes;
+	- sem Mongo real por padrao;
+	- sem dados reais;
+	- sem `master:set`;
+	- sem `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- plano de parada definido;
+	- registro posterior no ledger.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitPrepareR1SubBlockClosureDecision`.
+- Gates finais desta preparacao de fechamento:
+	- `r1SubBlockClosureDecisionPrepared=true`
+	- `selectedTarget=prepareR1SubBlockClosureDecision`
+	- `selectedTechnicalTarget=none`
+	- `previousR1PassedCount=5`
+	- `finalR1ValidationChecklistResult=passed`
+	- `r1ReadyForHumanDecision=true`
+	- `r2Authorized=false`
+	- `productionReadyDeclared=false`
+	- `pushRecommendedForHumanDecisionOnly=true`
+	- `gitPushExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
