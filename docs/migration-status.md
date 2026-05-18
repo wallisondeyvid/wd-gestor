@@ -13891,6 +13891,158 @@ Checkpoint tenant enforcement atual:
 	- este registro confirma que nao houve nova validacao, `npm test`, `npm run precommit` manual ou script adicional;
 	- este registro confirma que nao houve Mongo real, query real, `master:set` ou alteracao do usuario master real `wallisondeyvid13@gmail.com`;
 	- a proxima etapa deve apenas fechar em commit local este resultado em microcorte separado.
+- Checkpoint documental curto da selecao do proximo guardrail `R1` executavel candidato apos o sucesso de `guard:no-core-models-import` na frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de `npm`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail real neste microcorte, sem Mongo real, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit e sem declarar producao pronta.
+- Identificacao consolidada desta selecao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=selectNextExecutableR1GuardrailAfterCoreModels`;
+	- `selectedTechnicalTarget=noModelBypassR1Candidate`;
+	- `selectedGuardrail=guard:no-model-bypass`;
+	- `previousGuardrail=guard:no-core-models-import`;
+	- `previousGuardrailResult=passed`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo consolidado desta selecao:
+	- selecionar o proximo guardrail `R1` candidato;
+	- nao executar o guardrail ainda;
+	- preservar a sequencia progressiva apos `verify:imports` e `guard:no-core-models-import`;
+	- manter Mongo real, dados reais, usuario master, credenciais e operacoes mutativas fora de escopo.
+- Candidatos avaliados documentalmente nesta rodada:
+	- `guard:no-model-bypass`;
+	- `verify:legacy`;
+	- `lint:paths`;
+	- `guard:migration`;
+	- demais guardrails estruturais observados no inventario atual.
+- Analise documental de `guard:no-model-bypass`:
+	- finalidade aparente: impedir imports `#models/*` fora de `src/shared/repositories` e de `src/modules/*/repositories`, bloqueando bypass indevido de models e repositorios em camadas como controllers, services e middlewares;
+	- risco: medio e controlado, porque pode revelar violacoes estruturais existentes, mas o script associado opera por leitura do codigo em `src` e nao executa fluxo operacional;
+	- por que e `R1` candidato: e guardrail estrutural barato, diretamente alinhado ao endurecimento de arquitetura depois de `verify:imports` e `guard:no-core-models-import`;
+	- por que ainda nao sera executado neste microcorte: este microcorte e apenas de selecao documental e nao autoriza execucao real de guardrail;
+	- relacao com Mongo real: nenhuma necessidade de conectar Mongo real;
+	- relacao com usuario master real: nenhuma interacao com `wallisondeyvid13@gmail.com`;
+	- proximo tratamento recomendado: preparar execucao futura controlada em microcorte separado.
+- Analise documental de `verify:legacy`:
+	- finalidade aparente: verificar permanencia de artefatos ou referencias legadas no codigo;
+	- risco: baixo a medio, mas potencialmente mais amplo que o guardrail de bypass por poder cobrir superficie maior de legado e exigir interpretacao adicional;
+	- por que e `R1` candidato: continua sendo guardrail estrutural por leitura e sem dependencia de Mongo real;
+	- por que ainda nao sera executado neste microcorte: perdeu prioridade para o guardrail mais diretamente complementar ao fechamento de imports e models;
+	- relacao com Mongo real: nenhuma conexao obrigatoria com Mongo real;
+	- relacao com usuario master real: nenhuma interacao direta com usuario master;
+	- proximo tratamento recomendado: manter como candidato estrutural subsequente apos o bloco de bypass de models.
+- Analise documental de `lint:paths`:
+	- finalidade aparente: validar padroes de caminhos e consistencia de imports/referencias de path no repositorio;
+	- risco: baixo, mas com superficie maior e possivel ruido de padronizacao menos diretamente conectado ao ultimo guardrail executado;
+	- por que e `R1` candidato: e verificacao estrutural por leitura, sem natureza mutativa;
+	- por que ainda nao sera executado neste microcorte: fica atras do candidato que fecha o eixo especifico de bypass de models;
+	- relacao com Mongo real: nenhuma necessidade de Mongo real;
+	- relacao com usuario master real: nenhuma interacao com usuario master;
+	- proximo tratamento recomendado: reavaliar apos a trilha de guardrails de arquitetura de models.
+- Analise documental de `guard:migration`:
+	- finalidade aparente: verificar seguranca de migracao e impedir operacoes de migracao fora de trilha segura;
+	- risco: medio, porque o dominio de migracao e mais sensivel e a interpretacao operacional tende a ser menos barata que um guardrail puramente arquitetural;
+	- por que e `R1` candidato: ainda e protecao estrutural importante no inventario;
+	- por que ainda nao sera executado neste microcorte: nao e o melhor proximo passo incremental apos `guard:no-core-models-import` e pode demandar preparacao operacional mais especifica;
+	- relacao com Mongo real: deve permanecer sem Mongo real nesta fase, mas a tematica de migracao exige cautela adicional;
+	- relacao com usuario master real: nenhuma interacao direta esperada, mas permanece fora de escopo por sensibilidade operacional;
+	- proximo tratamento recomendado: manter para rodada posterior, com preparo documental proprio.
+- Analise documental dos demais guardrails estruturais observados:
+	- finalidade aparente: reforcar contratos de arquitetura ou limites por modulo;
+	- risco: varia conforme a superficie coberta;
+	- por que sao candidatos `R1`: varios sao baseados em leitura estaticas e sem mutacao;
+	- por que ainda nao serao executados neste microcorte: a selecao atual precisa continuar estreita e incremental;
+	- relacao com Mongo real: devem permanecer sem Mongo real nesta frente;
+	- relacao com usuario master real: devem continuar sem tocar o usuario master real;
+	- proximo tratamento recomendado: manter em backlog estrutural, sem execucao nesta rodada.
+- Selecao recomendada desta rodada:
+	- selecionar `guard:no-model-bypass` como proximo guardrail `R1` futuro.
+- Justificativa principal da escolha:
+	- e guardrail estrutural de arquitetura;
+	- complementa `verify:imports` e `guard:no-core-models-import`;
+	- busca impedir bypass indevido de models e repositorios;
+	- nao conecta Mongo real;
+	- nao usa dados reais;
+	- nao toca usuario master;
+	- nao altera credenciais;
+	- nao e `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- nao e Portal;
+	- nao altera arquivos.
+- Candidatos nao escolhidos agora:
+	- `npm test`;
+	- `test:strict`;
+	- `test:mem`;
+	- `start`;
+	- `start:mem`;
+	- `smoke:userdb-canary`;
+	- `migration:check`;
+	- `master:set`;
+	- `cleanup:legacy`;
+	- `migrate:*`;
+	- `backfill:*`;
+	- `start:mem:seed`;
+	- qualquer Mongo real;
+	- qualquer dado real;
+	- Portal.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `prepareNoModelBypassR1Guardrail`.
+- Gates finais desta selecao:
+	- `nextExecutableR1GuardrailSelected=true`
+	- `selectedTarget=selectNextExecutableR1GuardrailAfterCoreModels`
+	- `selectedTechnicalTarget=noModelBypassR1Candidate`
+	- `selectedGuardrail=guard:no-model-bypass`
+	- `previousGuardrailResult=passed`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao apenas define o proximo guardrail `R1` executavel candidato apos `guard:no-core-models-import`;
+	- esta selecao nao executa `guard:no-model-bypass`;
+	- esta selecao nao executa qualquer outro guardrail, script ou validacao real;
+	- esta selecao nao altera codigo, testes, `package.json` ou scripts;
+	- esta selecao nao cria arquivo novo;
+	- esta selecao nao conecta Mongo real;
+	- esta selecao nao executa query real;
+	- esta selecao nao executa `master:set`;
+	- esta selecao nao altera o usuario master real `wallisondeyvid13@gmail.com`;
+	- esta selecao nao reintroduz PostgreSQL no roadmap;
+	- esta selecao nao declara o WD Gestor pronto para producao;
+	- esta selecao nao faz push nem commit;
+	- a proxima etapa deve apenas preparar a execucao futura controlada de `guard:no-model-bypass` em microcorte separado.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
