@@ -13791,6 +13791,106 @@ Checkpoint tenant enforcement atual:
 	- esta preparacao nao declara o WD Gestor pronto para producao;
 	- esta preparacao nao faz push;
 	- a proxima etapa deve apenas fechar em commit local esta preparacao antes da execucao controlada futura.
+- Checkpoint documental curto do resultado da execucao manual controlada do guardrail `R1` `guard:no-core-models-import` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem nova validacao alem do guardrail ja executado, sem `npm test`, sem `npm run precommit` manual, sem script adicional, sem Mongo real, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit e sem declarar producao pronta.
+- Identificacao consolidada deste resultado:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=recordNoCoreModelsImportR1Result`;
+	- `selectedTechnicalTarget=noCoreModelsImportR1`;
+	- `selectedGuardrail=guard:no-core-models-import`;
+	- `previousPreparation=prepareNextExecutableR1Guardrail`;
+	- `previousGuardrail=verify:imports`;
+	- `previousGuardrailResult=passed`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Resultado consolidado desta execucao:
+	- `guardrailExecuted=true`;
+	- `validationExecuted=true`;
+	- `validationResult=passed`;
+	- `commandExecuted=true`;
+	- `command=npm run guard:no-core-models-import`;
+	- `exitCode=0`;
+	- `outputSummary=Nenhuma referência a "#core/models/" em src/ e src/modules/`;
+	- `filesChangedDuringExecution=false`;
+	- `workingTreeCleanAfterExecution=true`.
+- Evidencias consolidadas desta execucao:
+	- `branch=migration/refactor-core`;
+	- `localHead=b7e78ea docs(ops): prepara execucao guardrail r1 core models`;
+	- `aheadCount=12`;
+	- `commandScope=noCoreModelsImportOnly`;
+	- `npmTestExecuted=false`;
+	- `precommitExecutedManually=false`;
+	- `extraScriptExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `queryExecuted=false`;
+	- `gitPushExecuted=false`;
+	- `commitCreatedDuringValidation=false`.
+- Interpretacao obrigatoria deste resultado:
+	- `guard:no-core-models-import` confirmou ausencia de referencia proibida a `#core/models/` em `src/` e `src/modules/`;
+	- a execucao nao alterou arquivos;
+	- a execucao nao conectou Mongo real;
+	- a execucao nao executou query real;
+	- a execucao nao tocou usuario master real;
+	- a execucao nao executou `npm test` nem `precommit` manual;
+	- a execucao nao declarou producao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitNoCoreModelsImportR1Result`.
+- Gates finais deste resultado:
+	- `noCoreModelsImportR1ResultRecorded=true`
+	- `selectedTarget=recordNoCoreModelsImportR1Result`
+	- `selectedTechnicalTarget=noCoreModelsImportR1`
+	- `selectedGuardrail=guard:no-core-models-import`
+	- `guardrailExecuted=true`
+	- `validationExecuted=true`
+	- `validationResult=passed`
+	- `commandExecuted=true`
+	- `npmScriptExecuted=true`
+	- `npmTestExecuted=false`
+	- `precommitExecutedManually=false`
+	- `extraScriptExecuted=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao complementar deste resultado:
+	- este registro documenta somente o resultado da execucao manual controlada de `guard:no-core-models-import`;
+	- este registro confirma `exit code 0`;
+	- este registro confirma a saida principal `[GUARD OK] Nenhuma referencia a "#core/models/" em src/ e src/modules/`;
+	- este registro confirma que a working tree permaneceu limpa antes e depois;
+	- este registro confirma que nao houve commit nem push;
+	- este registro confirma que nao houve nova validacao, `npm test`, `npm run precommit` manual ou script adicional;
+	- este registro confirma que nao houve Mongo real, query real, `master:set` ou alteracao do usuario master real `wallisondeyvid13@gmail.com`;
+	- a proxima etapa deve apenas fechar em commit local este resultado em microcorte separado.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
