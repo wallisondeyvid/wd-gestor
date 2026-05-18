@@ -14171,6 +14171,111 @@ Checkpoint tenant enforcement atual:
 	- esta preparacao nao declara o WD Gestor pronto para producao;
 	- esta preparacao nao faz push nem commit;
 	- a proxima etapa deve apenas fechar em commit local esta preparacao antes da execucao controlada futura.
+- Checkpoint documental curto do resultado da execucao manual controlada do guardrail `R1` `guard:no-model-bypass` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem nova validacao alem do guardrail ja executado, sem `npm test`, sem `npm run precommit` manual, sem script adicional, sem Mongo real, sem query real, sem dry-run real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit e sem declarar producao pronta.
+- Identificacao consolidada deste resultado:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=recordNoModelBypassR1Result`;
+	- `selectedTechnicalTarget=noModelBypassR1`;
+	- `selectedGuardrail=guard:no-model-bypass`;
+	- `previousPreparation=prepareNoModelBypassR1Guardrail`;
+	- `previousGuardrail=guard:no-core-models-import`;
+	- `previousGuardrailResult=passed`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Resultado consolidado desta execucao:
+	- `guardrailExecuted=true`;
+	- `validationExecuted=true`;
+	- `validationResult=passed`;
+	- `commandExecuted=true`;
+	- `command=npm run guard:no-model-bypass`;
+	- `exitCode=0`;
+	- `outputSummary=imports #models restritos a src/shared/repositories e src/modules/*/repositories`;
+	- `warningAreasObserved=true`;
+	- `warningAreasBlocking=false`;
+	- `filesChangedDuringExecution=false`;
+	- `workingTreeCleanAfterExecution=true`.
+- Evidencias consolidadas desta execucao:
+	- `branch=migration/refactor-core`;
+	- `localHead=412d5c2 docs(ops): prepara execucao guardrail r1 model bypass`;
+	- `aheadCount=15`;
+	- `commandScope=noModelBypassOnly`;
+	- `npmTestExecuted=false`;
+	- `precommitExecutedManually=false`;
+	- `extraScriptExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `queryExecuted=false`;
+	- `gitPushExecuted=false`;
+	- `commitCreatedDuringValidation=false`.
+- Interpretacao obrigatoria deste resultado:
+	- `guard:no-model-bypass` confirmou que imports `#models` estao restritos as areas permitidas pelo guardrail;
+	- warnings foram observados, mas classificados como nao bloqueantes;
+	- a execucao nao alterou arquivos;
+	- a execucao nao conectou Mongo real;
+	- a execucao nao executou query real;
+	- a execucao nao tocou usuario master real;
+	- a execucao nao executou `npm test` nem `precommit` manual;
+	- a execucao nao declarou producao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitNoModelBypassR1Result`.
+- Gates finais deste resultado:
+	- `noModelBypassR1ResultRecorded=true`
+	- `selectedTarget=recordNoModelBypassR1Result`
+	- `selectedTechnicalTarget=noModelBypassR1`
+	- `selectedGuardrail=guard:no-model-bypass`
+	- `guardrailExecuted=true`
+	- `validationExecuted=true`
+	- `validationResult=passed`
+	- `commandExecuted=true`
+	- `npmScriptExecuted=true`
+	- `npmTestExecuted=false`
+	- `precommitExecutedManually=false`
+	- `extraScriptExecuted=false`
+	- `warningAreasObserved=true`
+	- `warningAreasBlocking=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`
+- Interpretacao complementar deste resultado:
+	- este registro documenta somente o resultado da execucao manual controlada de `guard:no-model-bypass`;
+	- este registro confirma a saida principal `✅ Guard OK: imports #models restritos a src/shared/repositories e src/modules/*/repositories.`;
+	- este registro confirma a presenca de warning-area nao bloqueante;
+	- este registro confirma que a working tree permaneceu limpa antes e depois;
+	- este registro confirma que nao houve commit nem push;
+	- este registro confirma que nao houve nova validacao, `npm test`, `npm run precommit` manual ou script adicional;
+	- este registro confirma que nao houve Mongo real, query real, `master:set` ou alteracao do usuario master real `wallisondeyvid13@gmail.com`;
+	- a proxima etapa deve apenas fechar em commit local este resultado em microcorte separado.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
