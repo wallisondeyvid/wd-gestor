@@ -14724,6 +14724,116 @@ Checkpoint tenant enforcement atual:
 	- `backfillExecuted=false`
 	- `portalUsageApproved=false`
 	- `postgresRoadmapActive=false`.
+- Checkpoint documental curto do registro da decisao de fechamento do sub-bloco `R1` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de validacao nova, sem execucao de `npm`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail neste microcorte, sem Mongo real, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao de `R2` e sem declarar producao pronta.
+- Identificacao consolidada desta decisao registrada:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=recordR1SubBlockClosureDecision`;
+	- `selectedTechnicalTarget=none`;
+	- `previousPreparation=prepareR1SubBlockClosureDecision`;
+	- `previousR1PassedCount=5`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Decisao registrada neste fechamento documental:
+	- `r1SubBlockClosureDecisionRecorded=true`;
+	- `r1SubBlockClosedDocumentally=true`;
+	- `r1ReadyForHumanPushDecision=true`;
+	- `r2Authorized=false`;
+	- `productionReadyDeclared=false`;
+	- `gitPushExecuted=false`;
+	- `pushMustBeHumanOnly=true`.
+- Evidencias consolidadas do sub-bloco `R1` fechado:
+	- `validateGitLedgerCleanStateR1=passed`;
+	- `validatePackageScriptsInventoryR1=passed`;
+	- `verify:imports=passed`;
+	- `guard:no-core-models-import=passed`;
+	- `guard:no-model-bypass=passed`;
+	- `finalR1ValidationChecklistResult=passed`;
+	- `r1PassedCountConfirmed=5`;
+	- `r1ReadyForHumanDecision=true`.
+- Interpretacao consolidada deste fechamento:
+	- o sub-bloco `R1` da frente `controlledMongoOperationalValidation` esta fechado documentalmente;
+	- este fechamento nao declara producao pronta;
+	- este fechamento nao autoriza `R2`;
+	- este fechamento nao autoriza Mongo real;
+	- este fechamento nao autoriza dados reais;
+	- este fechamento nao autoriza `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- este fechamento nao autoriza Portal;
+	- este fechamento apenas prepara uma decisao humana de publicacao/push do bloco `R1`;
+	- o usuario master real permaneceu protegido.
+- Condicoes para push humano futuro:
+	- working tree limpa;
+	- `HEAD` local confirmado;
+	- branch `migration/refactor-core` confirmada;
+	- ahead count confirmado;
+	- origin confirmado;
+	- documentacao do sub-bloco `R1` fechada;
+	- `R2` nao autorizado;
+	- producao nao declarada pronta;
+	- nenhum segredo exposto;
+	- nenhum Mongo real executado;
+	- push feito apenas pelo usuario humano.
+- Condicoes para `R2` futuro, se escolhido depois:
+	- decisao humana explicita;
+	- microcorte proprio;
+	- escopo `R2` definido antes;
+	- sem Mongo real por padrao;
+	- sem dados reais;
+	- sem `master:set`;
+	- sem `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- plano de parada definido;
+	- registro posterior no ledger.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitR1SubBlockClosureDecision`.
+- Gates finais desta decisao registrada:
+	- `r1SubBlockClosureDecisionRecorded=true`
+	- `selectedTarget=recordR1SubBlockClosureDecision`
+	- `selectedTechnicalTarget=none`
+	- `previousR1PassedCount=5`
+	- `finalR1ValidationChecklistResult=passed`
+	- `r1SubBlockClosedDocumentally=true`
+	- `r1ReadyForHumanPushDecision=true`
+	- `r2Authorized=false`
+	- `productionReadyDeclared=false`
+	- `pushMustBeHumanOnly=true`
+	- `gitPushExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
