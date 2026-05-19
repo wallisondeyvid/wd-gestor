@@ -14834,6 +14834,114 @@ Checkpoint tenant enforcement atual:
 	- `backfillExecuted=false`
 	- `portalUsageApproved=false`
 	- `postgresRoadmapActive=false`.
+- Checkpoint documental curto da decisao sobre o proximo passo apos a publicacao do sub-bloco `R1` da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de `npm test`, sem execucao de `npm run`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail, sem execucao de `R2`, sem Mongo real, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao automatica de `R2` e sem declarar producao pronta.
+- Identificacao consolidada desta decisao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=decideNextStepAfterPublishedR1SubBlock`;
+	- `selectedTechnicalTarget=none`;
+	- `previousClosure=recordR1SubBlockClosureDecision`;
+	- `previousPublishedHead=f869c24`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Estado de partida desta decisao:
+	- `r1SubBlockClosedDocumentally=true`;
+	- `r1SubBlockPublished=true`;
+	- `localHead=f869c24 docs(ops): registra fechamento sub-bloco r1`;
+	- `remoteHead=f869c24 docs(ops): registra fechamento sub-bloco r1`;
+	- `localRemoteSynced=true`;
+	- `aheadCount=0`;
+	- `workingTreeClean=true`;
+	- `r2Authorized=false`;
+	- `productionReadyDeclared=false`.
+- Evidencias consolidadas do sub-bloco `R1` ja concluido:
+	- `validateGitLedgerCleanStateR1=passed`;
+	- `validatePackageScriptsInventoryR1=passed`;
+	- `verify:imports=passed`;
+	- `guard:no-core-models-import=passed`;
+	- `guard:no-model-bypass=passed`;
+	- `finalR1ValidationChecklistResult=passed`;
+	- `r1PassedCountConfirmed=5`.
+- Opcoes documentais consideradas neste ponto:
+	- opcao 1: manter pausa/checkpoint antes de avancar;
+	- opcao 2: continuar com mais guardrails `R1`;
+	- opcao 3: preparar o primeiro `R2` controlado sem Mongo real;
+	- opcao 4: preparar planejamento documental de `R2` antes de qualquer execucao.
+- Recomendacao documental desta rodada:
+	- recomendar a opcao 4: preparar planejamento documental do primeiro `R2` controlado;
+	- nao executar `R2` neste microcorte;
+	- nao autorizar `R2` automaticamente;
+	- nao conectar Mongo real;
+	- nao usar dados reais;
+	- nao tocar usuario master real;
+	- nao declarar producao pronta.
+- Possivel primeiro `R2` futuro, apenas como candidato:
+	- `candidato=prepareFirstControlledR2LocalBootPlan`;
+	- escopo futuro: planejamento de boot local controlado sem Mongo real por padrao;
+	- execucao futura dependera de microcorte proprio e autorizacao humana;
+	- Mongo real permanece bloqueado;
+	- dados reais permanecem bloqueados;
+	- `master:set` permanece bloqueado;
+	- `seed`, `reset`, `cleanup`, `migration` e `backfill` permanecem bloqueados.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitDecideNextStepAfterPublishedR1SubBlock`.
+- Gates finais desta decisao:
+	- `nextStepAfterPublishedR1SubBlockDecided=true`
+	- `selectedTarget=decideNextStepAfterPublishedR1SubBlock`
+	- `selectedTechnicalTarget=none`
+	- `recommendedNextPlanning=prepareFirstControlledR2LocalBootPlan`
+	- `r1SubBlockPublished=true`
+	- `localRemoteSynced=true`
+	- `aheadCount=0`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
+- Interpretacao obrigatoria desta decisao:
+	- esta decisao documenta somente o proximo passo apos o sub-bloco `R1` ja ter sido fechado, publicado e sincronizado;
+	- esta decisao nao executa `R2` neste microcorte;
+	- esta decisao nao autoriza `R2` automaticamente;
+	- esta decisao nao declara o WD Gestor pronto para producao;
+	- esta decisao preserva o usuario master real `wallisondeyvid13@gmail.com` como usuario sensivel real;
+	- esta decisao mantem Mongo real, dados reais e operacoes mutativas bloqueados;
+	- a proxima etapa deve apenas fechar em commit local esta decisao documental antes de qualquer planejamento especifico de `R2`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
