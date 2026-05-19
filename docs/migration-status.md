@@ -15071,6 +15071,117 @@ Checkpoint tenant enforcement atual:
 	- esta preparacao preserva o usuario master real `wallisondeyvid13@gmail.com` como usuario sensivel real;
 	- esta preparacao mantem Mongo real, Mongo em memoria, dados reais e operacoes mutativas bloqueados;
 	- a proxima etapa deve apenas fechar em commit local este planejamento documental antes de qualquer avaliacao executavel de `R2`.
+- Checkpoint documental curto da selecao da primeira variante `R2` candidata da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de `npm test`, sem execucao de `npm run`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail, sem execucao de `R2`, sem iniciar servidor, sem executar `start`, sem executar `start:mem`, sem executar `start:atlas`, sem Mongo real, sem Mongo em memoria, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao automatica de `R2` e sem declarar producao pronta.
+- Identificacao consolidada desta selecao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=selectFirstControlledR2Variant`;
+	- `selectedTechnicalTarget=r2AReadBootConfigurationCandidate`;
+	- `previousPlanning=prepareFirstControlledR2LocalBootPlan`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta selecao:
+	- selecionar a primeira variante `R2` candidata;
+	- nao executar `R2` neste microcorte;
+	- nao autorizar execucao automatica;
+	- escolher a variante mais segura antes de qualquer boot;
+	- preservar usuario master real e sensivel;
+	- manter Mongo real, Mongo em memoria, dados reais e operacoes mutativas bloqueados.
+- Variantes avaliadas nesta selecao:
+	- `R2-A`: leitura de configuracao de boot, sem iniciar servidor;
+	- `R2-B`: boot local controlado sem Mongo real, se houver modo seguro;
+	- `R2-C`: boot com Mongo em memoria, somente se explicitamente autorizado depois;
+	- `R2-D`: qualquer Mongo real, bloqueado;
+	- `R2-E`: qualquer `seed`, `reset`, `cleanup`, `migration` ou `backfill`, bloqueado.
+- Avaliacao de risco desta selecao:
+	- `R2-A` e a variante de menor risco porque e apenas leitura documental/tecnica de configuracao;
+	- `R2-B` exige iniciar servidor e deve ficar para etapa posterior;
+	- `R2-C` envolve Mongo em memoria e exige autorizacao explicita posterior;
+	- `R2-D` permanece bloqueado por envolver Mongo real;
+	- `R2-E` permanece bloqueado por envolver operacao mutativa/destrutiva.
+- Selecao recomendada desta rodada:
+	- `selectedR2Variant=R2-A`;
+	- `selectedR2VariantName=readBootConfigurationWithoutStartingServer`;
+	- `selectedR2CommandFuture=none`;
+	- `selectedR2ExecutionFuture=false`.
+- Escopo futuro da `R2-A`:
+	- ler/configurar entendimento de boot sem iniciar servidor;
+	- revisar documentalmente entrypoints e dependencias de boot;
+	- nao executar comandos;
+	- nao iniciar servidor;
+	- nao conectar Mongo;
+	- nao tocar dados;
+	- nao tocar usuario master.
+- Pre-condicoes para eventual execucao/registro futuro da `R2-A`:
+	- decisao humana explicita;
+	- microcorte proprio;
+	- working tree limpa;
+	- `HEAD` esperado confirmado;
+	- arquivos a ler definidos antes;
+	- nenhum comando operacional;
+	- nenhum servidor iniciado;
+	- Mongo real bloqueado;
+	- Mongo em memoria bloqueado;
+	- producao nao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitSelectFirstControlledR2Variant`.
+- Gates finais desta selecao:
+	- `firstControlledR2VariantSelected=true`
+	- `selectedTarget=selectFirstControlledR2Variant`
+	- `selectedTechnicalTarget=r2AReadBootConfigurationCandidate`
+	- `selectedR2Variant=R2-A`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `productionReadyDeclared=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
+- Interpretacao obrigatoria desta selecao:
+	- esta selecao documenta somente a primeira variante `R2` candidata mais segura no estado atual;
+	- esta selecao nao executa `R2` neste microcorte;
+	- esta selecao nao autoriza `R2` automaticamente;
+	- esta selecao nao inicia servidor nem conecta Mongo neste microcorte;
+	- esta selecao preserva o usuario master real `wallisondeyvid13@gmail.com` como usuario sensivel real;
+	- esta selecao mantem Mongo real, Mongo em memoria, dados reais e operacoes mutativas bloqueados;
+	- a proxima etapa deve apenas fechar em commit local esta selecao documental antes de qualquer leitura tecnica especifica de boot.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
