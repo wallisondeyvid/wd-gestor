@@ -15779,6 +15779,127 @@ Checkpoint tenant enforcement atual:
 	- `backfillExecuted=false`
 	- `portalUsageApproved=false`
 	- `postgresRoadmapActive=false`.
+- Decisao documental curta do proximo passo apos o checkpoint `R2-A` estar publicado, sincronizado e limpo em `404ccdc`, consolidada nesta rodada sem executar `R2-B`, sem executar `R2` operacional, sem iniciar servidor, sem alterar `src`, sem alterar `tests`, sem alterar `package.json`, sem alterar `scripts`, sem criar arquivo novo, sem executar `npm`, sem executar script, sem executar validacao, sem executar guardrail, sem Mongo real, sem Mongo em memoria, sem query real, sem `master:set`, sem alterar usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem commit e sem `push`.
+- Identificacao consolidada desta decisao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=decideNextStepAfterPublishedR2ACheckpoint`;
+	- `selectedTechnicalTarget=none`;
+	- `previousCheckpoint=recordPostPushValidationForR2ACheckpoint`;
+	- `selectedR2Variant=R2-A`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Estado de partida desta decisao:
+	- `localHead=404ccdc docs(ops): registra pos-push checkpoint r2a`;
+	- `remoteHead=404ccdc docs(ops): registra pos-push checkpoint r2a`;
+	- `localRemoteSynced=true`;
+	- `aheadCount=0`;
+	- `workingTreeClean=true`;
+	- `r2ACheckpointPublished=true`;
+	- `r2ACheckpointPostPushValidated=true`;
+	- `r2AExecutionType=documentalReadOnly`;
+	- `r2BAuthorized=false`;
+	- `r2BExecuted=false`;
+	- `r2Authorized=false`;
+	- `r2Executed=false`;
+	- `productionReadyDeclared=false`.
+- Opcoes possiveis avaliadas nesta decisao:
+	- opcao 1: manter pausa/checkpoint em `404ccdc`;
+	- opcao 2: preparar planejamento documental da `R2-B`;
+	- opcao 3: realizar leituras documentais adicionais antes da `R2-B`;
+	- opcao 4: encerrar temporariamente a frente `controlledMongoOperationalValidation` neste ponto limpo.
+- Avaliacao de risco desta decisao:
+	- opcao 1 e a mais conservadora, pois nao avanca risco;
+	- opcao 2 e aceitavel somente como planejamento documental, sem execucao;
+	- opcao 3 e segura se permanecer apenas em leitura;
+	- opcao 4 e segura, mas pausa a evolucao operacional;
+	- qualquer `R2-B` real envolve risco maior porque se aproxima de boot/runtime;
+	- qualquer boot, servidor, Mongo real ou Mongo em memoria permanece bloqueado sem autorizacao humana explicita.
+- Recomendacao documental desta decisao:
+	- recomendar opcao 2: preparar planejamento documental da `R2-B`;
+	- nao executar `R2-B` neste microcorte;
+	- nao autorizar `R2-B` automaticamente;
+	- nao iniciar servidor;
+	- nao conectar Mongo real;
+	- nao conectar Mongo em memoria;
+	- nao tocar dados;
+	- nao tocar usuario master real;
+	- nao declarar producao pronta.
+- Candidato de proximo planejamento desta decisao:
+	- `recommendedNextPlanning=prepareR2BLocalBootPlanning`;
+	- `candidateR2BName=controlledLocalBootPlanningWithoutExecution`;
+	- `candidateR2BScope=documentalPlanningOnly`;
+	- `candidateR2BExecutionFuture=false`;
+	- `candidateR2BCommandFuture=none`.
+- Limites para futura `R2-B`:
+	- qualquer `R2-B` futura deve ocorrer em microcorte proprio;
+	- deve comecar como planejamento, nao execucao;
+	- deve definir se havera apenas leitura, simulacao ou boot;
+	- por padrao, nao iniciar servidor;
+	- por padrao, nao conectar Mongo real;
+	- por padrao, nao conectar Mongo em memoria;
+	- `master:set` continua bloqueado;
+	- `seed`/`reset`/`cleanup`/`migration`/`backfill` continuam bloqueados;
+	- Portal continua bloqueado.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitDecideNextStepAfterPublishedR2ACheckpoint`.
+- Gates finais desta decisao:
+	- `nextStepAfterPublishedR2ACheckpointDecided=true`
+	- `selectedTarget=decideNextStepAfterPublishedR2ACheckpoint`
+	- `selectedTechnicalTarget=none`
+	- `selectedR2Variant=R2-A`
+	- `recommendedNextPlanning=prepareR2BLocalBootPlanning`
+	- `candidateR2BExecutionFuture=false`
+	- `candidateR2BCommandFuture=none`
+	- `localRemoteSynced=true`
+	- `aheadCount=0`
+	- `workingTreeClean=true`
+	- `r2ACheckpointPublished=true`
+	- `r2BAuthorized=false`
+	- `r2BExecuted=false`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `productionReadyDeclared=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `validationExecuted=false`
+	- `guardrailExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `dryRunExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
