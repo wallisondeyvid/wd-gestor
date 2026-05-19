@@ -15556,6 +15556,117 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `postgresRoadmapActive=false`
 	- `gitPushExecuted=false`.
+- Preparacao documental curta da decisao humana de publicacao do checkpoint local da `R2-A`, consolidada nesta rodada sem executar `push`, sem autorizar `R2-B`, sem autorizar `R2` operacional, sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de `npm test`, sem execucao de `npm run`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail, sem iniciar servidor, sem Mongo real, sem Mongo em memoria manual, sem query real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem commit e sem declarar producao pronta.
+- Identificacao consolidada desta preparacao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareHumanPublishDecisionForR2ACheckpoint`;
+	- `selectedTechnicalTarget=none`;
+	- `previousCheckpoint=consolidateR2ALocalCheckpoint`;
+	- `selectedR2Variant=R2-A`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta preparacao:
+	- preparar decisao humana de publicacao dos 6 commits locais;
+	- nao executar `push` neste microcorte;
+	- nao autorizar `R2-B`;
+	- nao executar `R2` operacional;
+	- preservar usuario master real/sensivel;
+	- manter producao nao pronta.
+- Estado local desta preparacao:
+	- `localHead=26909f8 docs(ops): consolida checkpoint local r2a`;
+	- `remoteHead=f869c24 docs(ops): registra fechamento sub-bloco r1`;
+	- `aheadCount=6`;
+	- `workingTreeClean=true`;
+	- `r2ALocalCheckpointConsolidated=true`;
+	- `r2AExecutionType=documentalReadOnly`.
+- Commits locais candidatos a publicacao humana:
+	- `26909f8 docs(ops): consolida checkpoint local r2a`;
+	- `1fcc26e docs(ops): registra resultado leitura boot r2a`;
+	- `07a3ef1 docs(ops): prepara leitura boot r2a`;
+	- `eed89e7 docs(ops): seleciona variante r2 leitura boot`;
+	- `24b3c98 docs(ops): prepara plano r2 boot local controlado`;
+	- `f0492df docs(ops): decide proximo passo pos-r1 publicado`.
+- Interpretacao obrigatoria desta preparacao:
+	- os commits locais sao documentais;
+	- `R2-A` foi apenas leitura/documental;
+	- nao houve `R2-B`;
+	- nao houve boot operacional;
+	- nao houve servidor iniciado manualmente;
+	- nao houve Mongo real;
+	- producao continua nao pronta;
+	- `push` deve ser feito apenas pelo usuario humano, se decidido depois.
+- Condicoes minimas antes de eventual `push` humano:
+	- working tree limpa;
+	- `HEAD` local confirmado;
+	- branch `migration/refactor-core` confirmada;
+	- `origin/migration/refactor-core` confirmado;
+	- nenhum segredo exposto;
+	- `R2-B` nao autorizada;
+	- producao nao pronta;
+	- usuario master real preservado.
+- O que o eventual `push` humano NAO significa:
+	- nao significa producao pronta;
+	- nao autoriza `R2-B`;
+	- nao autoriza Mongo real;
+	- nao autoriza Mongo em memoria manual;
+	- nao autoriza `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- nao autoriza Portal.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitPrepareHumanPublishDecisionForR2ACheckpoint`.
+- Gates finais desta preparacao:
+	- `humanPublishDecisionForR2ACheckpointPrepared=true`
+	- `selectedTarget=prepareHumanPublishDecisionForR2ACheckpoint`
+	- `selectedTechnicalTarget=none`
+	- `selectedR2Variant=R2-A`
+	- `aheadCount=6`
+	- `r2ALocalCheckpointConsolidated=true`
+	- `r2AExecutionType=documentalReadOnly`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `r2BAuthorized=false`
+	- `r2BExecuted=false`
+	- `productionReadyDeclared=false`
+	- `gitPushExecuted=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
