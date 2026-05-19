@@ -14942,6 +14942,135 @@ Checkpoint tenant enforcement atual:
 	- esta decisao preserva o usuario master real `wallisondeyvid13@gmail.com` como usuario sensivel real;
 	- esta decisao mantem Mongo real, dados reais e operacoes mutativas bloqueados;
 	- a proxima etapa deve apenas fechar em commit local esta decisao documental antes de qualquer planejamento especifico de `R2`.
+- Checkpoint documental curto da preparacao do planejamento do primeiro `R2` controlado da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de `npm test`, sem execucao de `npm run`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail, sem execucao de `R2`, sem iniciar servidor, sem executar `start`, sem executar `start:mem`, sem executar `start:atlas`, sem Mongo real, sem Mongo em memoria, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao automatica de `R2` e sem declarar producao pronta.
+- Identificacao consolidada desta preparacao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareFirstControlledR2LocalBootPlan`;
+	- `selectedTechnicalTarget=none`;
+	- `previousDecision=decideNextStepAfterPublishedR1SubBlock`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta preparacao:
+	- preparar planejamento documental do primeiro `R2` controlado;
+	- nao executar `R2` neste microcorte;
+	- nao autorizar `R2` automaticamente;
+	- definir escopo, riscos, pre-condicoes e criterios de parada para uma futura validacao `R2`;
+	- preservar usuario master real e sensivel;
+	- manter Mongo real, dados reais e operacoes mutativas bloqueados.
+- Estado de partida desta preparacao:
+	- `r1SubBlockPublished=true`;
+	- `publishedR1Head=f869c24 docs(ops): registra fechamento sub-bloco r1`;
+	- `localDecisionHead=f0492df docs(ops): decide proximo passo pos-r1 publicado`;
+	- `aheadCount=1`;
+	- `workingTreeClean=true`;
+	- `recommendedNextPlanning=prepareFirstControlledR2LocalBootPlan`;
+	- `r2Authorized=false`;
+	- `r2Executed=false`;
+	- `productionReadyDeclared=false`.
+- Escopo `R2` candidato, apenas documental:
+	- `candidato=firstControlledR2LocalBootPlan`;
+	- finalidade: planejar uma futura validacao de boot local controlado;
+	- execucao futura dependera de autorizacao humana explicita;
+	- nenhum comando sera executado neste microcorte;
+	- nenhum servidor sera iniciado neste microcorte;
+	- nenhum Mongo sera conectado neste microcorte.
+- Possiveis variantes futuras de `R2`, sem escolher execucao ainda:
+	- `R2-A`: leitura de configuracao de boot, sem iniciar servidor;
+	- `R2-B`: boot local controlado sem Mongo real, se houver modo seguro;
+	- `R2-C`: boot com Mongo em memoria, somente se explicitamente autorizado depois;
+	- `R2-D`: qualquer Mongo real permanece fora de escopo e bloqueado.
+- Pre-condicoes minimas para qualquer `R2` futuro:
+	- decisao humana explicita;
+	- microcorte proprio;
+	- working tree limpa;
+	- branch correta;
+	- `HEAD` esperado confirmado;
+	- escopo do comando definido antes;
+	- plano de parada definido;
+	- rollback documental definido;
+	- Mongo real bloqueado por padrao;
+	- dados reais bloqueados;
+	- `master:set` bloqueado;
+	- `seed`, `reset`, `cleanup`, `migration` e `backfill` bloqueados;
+	- Portal bloqueado;
+	- producao nao declarada pronta.
+- Criterios de sucesso futuros para um `R2`:
+	- comando futuro, se autorizado, conclui sem erro;
+	- nao altera arquivos;
+	- nao conecta Mongo real;
+	- nao executa query real;
+	- nao toca usuario master real;
+	- nao expoe segredo;
+	- nao executa operacao mutativa;
+	- resultado e registrado no ledger.
+- Criterios de parada futuros:
+	- qualquer arquivo modificado inesperadamente;
+	- qualquer tentativa de Mongo real;
+	- qualquer tentativa de query real;
+	- qualquer exposicao de segredo;
+	- qualquer tentativa de `master:set`;
+	- qualquer `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- qualquer uso de Portal;
+	- qualquer duvida sobre escopo.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitPrepareFirstControlledR2LocalBootPlan`.
+- Gates finais desta preparacao:
+	- `firstControlledR2LocalBootPlanPrepared=true`
+	- `selectedTarget=prepareFirstControlledR2LocalBootPlan`
+	- `selectedTechnicalTarget=none`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `productionReadyDeclared=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
+- Interpretacao obrigatoria desta preparacao:
+	- esta preparacao organiza somente o planejamento documental do primeiro `R2` controlado;
+	- esta preparacao nao executa `R2` neste microcorte;
+	- esta preparacao nao autoriza `R2` automaticamente;
+	- esta preparacao nao inicia servidor nem conecta Mongo neste microcorte;
+	- esta preparacao preserva o usuario master real `wallisondeyvid13@gmail.com` como usuario sensivel real;
+	- esta preparacao mantem Mongo real, Mongo em memoria, dados reais e operacoes mutativas bloqueados;
+	- a proxima etapa deve apenas fechar em commit local este planejamento documental antes de qualquer avaliacao executavel de `R2`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
