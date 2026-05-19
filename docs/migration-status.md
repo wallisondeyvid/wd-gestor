@@ -15182,6 +15182,136 @@ Checkpoint tenant enforcement atual:
 	- esta selecao preserva o usuario master real `wallisondeyvid13@gmail.com` como usuario sensivel real;
 	- esta selecao mantem Mongo real, Mongo em memoria, dados reais e operacoes mutativas bloqueados;
 	- a proxima etapa deve apenas fechar em commit local esta selecao documental antes de qualquer leitura tecnica especifica de boot.
+- Checkpoint documental curto da preparacao da execucao futura da `R2-A` de leitura tecnica/documental da configuracao de boot, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de `npm test`, sem execucao de `npm run`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail, sem execucao de `R2-A`, sem execucao de `R2`, sem iniciar servidor, sem executar `start`, sem executar `start:mem`, sem executar `start:atlas`, sem Mongo real, sem Mongo em memoria, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao automatica de `R2` e sem declarar producao pronta.
+- Identificacao consolidada desta preparacao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareR2AReadBootConfiguration`;
+	- `selectedTechnicalTarget=r2AReadBootConfiguration`;
+	- `previousSelection=selectFirstControlledR2Variant`;
+	- `selectedR2Variant=R2-A`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta preparacao:
+	- preparar leitura tecnica/documental futura da configuracao de boot;
+	- nao executar `R2-A` neste microcorte;
+	- nao iniciar servidor;
+	- nao rodar scripts;
+	- nao conectar Mongo real nem Mongo em memoria;
+	- nao tocar dados;
+	- nao tocar usuario master real;
+	- mapear arquivos a serem lidos futuramente.
+- Arquivos candidatos para leitura futura:
+	- `package.json`;
+	- `README.md`, se util;
+	- `src/start.js` identificado por leitura em `package.json` como entrypoint principal de boot;
+	- `src/server/createServer.js`, existente;
+	- `src/server/bootstrapRegistry.js`, existente;
+	- `src/modules/gestor/index.js`, existente;
+	- `src/server/index.js`, nao encontrado nesta rodada;
+	- `src/server/app.js`, nao encontrado nesta rodada;
+	- `src/index.js`, nao encontrado nesta rodada;
+	- outros entrypoints de boot encontrados apenas por leitura, sem execucao, como `src/server.js` presente em `src/`.
+- Escopo permitido para a futura `R2-A`:
+	- leitura de arquivos;
+	- mapeamento de entrypoints;
+	- identificacao de dependencias de boot;
+	- identificacao de pontos que poderiam iniciar servidor;
+	- identificacao de pontos que poderiam conectar Mongo;
+	- registro no ledger.
+- Escopo proibido para a futura `R2-A`:
+	- executar `npm run`;
+	- executar `npm test`;
+	- executar `start`, `start:mem` ou `start:atlas`;
+	- iniciar servidor;
+	- conectar Mongo real;
+	- conectar Mongo em memoria;
+	- executar query;
+	- executar `seed`, `reset`, `cleanup`, `migration` ou `backfill`;
+	- executar `master:set`;
+	- tocar usuario master real;
+	- usar Portal;
+	- declarar producao pronta.
+- Criterios de sucesso futuros da `R2-A`:
+	- arquivos candidatos lidos com sucesso;
+	- entrypoints de boot documentados;
+	- dependencias de boot documentadas;
+	- pontos de risco de servidor/Mongo identificados;
+	- nenhum comando executado;
+	- nenhum arquivo alterado;
+	- nenhum servidor iniciado;
+	- nenhum Mongo conectado;
+	- usuario master real preservado;
+	- resultado registrado no ledger.
+- Criterios de parada futuros da `R2-A`:
+	- qualquer necessidade de executar comando;
+	- qualquer duvida sobre arquivo sensivel;
+	- qualquer indicio de segredo, token ou URI exposto;
+	- qualquer tentativa de iniciar servidor;
+	- qualquer tentativa de conectar Mongo;
+	- qualquer tentativa de tocar dados;
+	- qualquer tentativa de tocar usuario master;
+	- qualquer arquivo modificado inesperadamente.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitPrepareR2AReadBootConfiguration`.
+- Gates finais desta preparacao:
+	- `r2AReadBootConfigurationPrepared=true`
+	- `selectedTarget=prepareR2AReadBootConfiguration`
+	- `selectedTechnicalTarget=r2AReadBootConfiguration`
+	- `selectedR2Variant=R2-A`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `r2AExecuted=false`
+	- `productionReadyDeclared=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandCreated=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `guardrailExecuted=false`
+	- `validationExecuted=false`
+	- `dryRunExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
+- Interpretacao obrigatoria desta preparacao:
+	- esta preparacao organiza somente a futura leitura tecnica/documental da configuracao de boot da `R2-A`;
+	- esta preparacao nao executa `R2-A` neste microcorte;
+	- esta preparacao nao autoriza `R2` automaticamente;
+	- esta preparacao nao inicia servidor nem conecta Mongo neste microcorte;
+	- esta preparacao preserva o usuario master real `wallisondeyvid13@gmail.com` como usuario sensivel real;
+	- esta preparacao mantem Mongo real, Mongo em memoria, dados reais e operacoes mutativas bloqueados;
+	- a proxima etapa deve apenas fechar em commit local esta preparacao documental antes da leitura futura dos arquivos candidatos.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
