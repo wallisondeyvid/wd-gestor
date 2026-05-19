@@ -16069,6 +16069,183 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `postgresRoadmapActive=false`
 	- `gitPushExecuted=false`.
+- Selecao documental curta da primeira subvariante da `R2-B`, consolidada nesta rodada sem executar `R2-B1`, sem executar `R2-B`, sem executar `R2` operacional, sem iniciar servidor, sem alterar `src`, sem alterar `tests`, sem alterar `package.json`, sem alterar `scripts`, sem criar arquivo novo, sem executar `npm`, sem executar script, sem executar validacao, sem executar guardrail, sem Mongo real, sem Mongo em memoria, sem query real, sem dry-run real, sem backup/restore/rollback real, sem `master:set`, sem alterar usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem commit e sem `push`.
+- Identificacao desta selecao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=selectR2B1BootPathReadVariant`;
+	- `selectedTechnicalTarget=none`;
+	- `previousPlanning=prepareR2BLocalBootPlanning`;
+	- `selectedR2Variant=R2-B`;
+	- `selectedR2Subvariant=R2-B1`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta selecao:
+	- selecionar a primeira subvariante `R2-B`;
+	- definir `R2-B1` como leitura documental do caminho de boot sem execucao;
+	- nao executar `R2-B1` neste microcorte;
+	- nao autorizar `R2-B1` automaticamente;
+	- nao iniciar servidor;
+	- nao rodar scripts;
+	- nao conectar Mongo real;
+	- nao conectar Mongo em memoria;
+	- nao tocar dados;
+	- nao tocar usuario master real.
+- Estado de partida desta selecao:
+	- `localHead=a4ad0f2 docs(ops): prepara plano r2b boot local`;
+	- `remoteHead=404ccdc docs(ops): registra pos-push checkpoint r2a`;
+	- `aheadCount=2`;
+	- `workingTreeClean=true`;
+	- `previousR2BPlanningPrepared=true`;
+	- `plannedR2BScope=documentalPlanningOnly`;
+	- `plannedR2BExecutionFuture=false`;
+	- `plannedR2BCommandFuture=none`;
+	- `r2BAuthorized=false`;
+	- `r2BExecuted=false`;
+	- `r2Authorized=false`;
+	- `r2Executed=false`;
+	- `productionReadyDeclared=false`.
+- Subvariantes `R2-B` avaliadas:
+	- `R2-B1`: leitura documental do caminho de boot sem execucao;
+	- `R2-B2`: simulacao documental de comando futuro, sem executar;
+	- `R2-B3`: preparacao de ambiente de boot local, sem iniciar servidor;
+	- `R2-B4`: boot local controlado, somente se futuramente autorizado;
+	- `R2-B5`: qualquer boot com Mongo em memoria, somente se futuramente autorizado de forma explicita;
+	- `R2-B6`: qualquer Mongo real, bloqueado.
+- Avaliacao de risco das subvariantes:
+	- `R2-B1` e a subvariante de menor risco porque permanece apenas em leitura documental;
+	- `R2-B2` ainda e documental, mas ja aproxima a escolha de comando;
+	- `R2-B3` aproxima configuracao de ambiente e deve vir depois;
+	- `R2-B4` envolve boot e fica bloqueada por enquanto;
+	- `R2-B5` envolve Mongo em memoria e fica bloqueada por enquanto;
+	- `R2-B6` envolve Mongo real e permanece bloqueada.
+- Selecao recomendada desta rodada:
+	- `selectedR2BSubvariant=R2-B1`;
+	- `selectedR2BSubvariantName=readBootPathWithoutExecution`;
+	- `selectedR2BSubvariantScope=documentalReadOnly`;
+	- `selectedR2BSubvariantExecutionFuture=false`;
+	- `selectedR2BSubvariantCommandFuture=none`;
+	- `selectedR2BSubvariantServerStartFuture=false`;
+	- `selectedR2BSubvariantMongoRealFuture=false`;
+	- `selectedR2BSubvariantMemoryMongoFuture=false`.
+- Escopo futuro da `R2-B1`:
+	- ler e mapear o caminho de boot;
+	- documentar a sequencia provavel `start.js -> createServer.js -> bootstrapRegistry.js -> modulos`;
+	- identificar pontos que poderiam iniciar servidor;
+	- identificar pontos que poderiam conectar Mongo;
+	- identificar pontos que poderiam executar seeds;
+	- registrar riscos no ledger;
+	- nao executar comandos;
+	- nao iniciar servidor;
+	- nao conectar Mongo;
+	- nao tocar dados;
+	- nao tocar usuario master real.
+- Escopo proibido desta selecao:
+	- executar `npm`;
+	- executar `npm run`;
+	- executar `npm test`;
+	- executar `start`/`start:mem`/`start:atlas`/`dev`;
+	- iniciar servidor;
+	- conectar Mongo real;
+	- conectar Mongo em memoria;
+	- executar query;
+	- executar `master:set`;
+	- executar `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- tocar dados;
+	- tocar usuario master real;
+	- usar Portal;
+	- declarar producao pronta.
+- Pre-condicoes para futura `R2-B1`:
+	- decisao humana explicita;
+	- microcorte proprio;
+	- working tree limpa;
+	- branch correta;
+	- `HEAD` esperado confirmado;
+	- lista de arquivos a ler definida antes;
+	- nenhum comando operacional;
+	- nenhum servidor iniciado;
+	- Mongo real bloqueado;
+	- Mongo em memoria bloqueado;
+	- usuario master real preservado.
+- Criterios de sucesso futuros da `R2-B1`:
+	- caminho de boot documentado;
+	- riscos de boot documentados;
+	- pontos de Mongo documentados;
+	- pontos de seed documentados;
+	- nenhum comando executado;
+	- nenhum arquivo alterado;
+	- nenhum servidor iniciado;
+	- nenhum Mongo conectado;
+	- usuario master real preservado.
+- Criterios de parada futuros da `R2-B1`:
+	- qualquer necessidade de executar comando;
+	- qualquer tentativa de iniciar servidor;
+	- qualquer tentativa de conectar Mongo real;
+	- qualquer tentativa de conectar Mongo em memoria;
+	- qualquer tentativa de query;
+	- qualquer tentativa de `master:set`;
+	- qualquer `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- qualquer uso de Portal;
+	- qualquer exposicao de segredo/token/URI;
+	- qualquer duvida sobre escopo.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado nesta rodada:
+	- `commitSelectR2B1BootPathReadVariant`.
+- Gates finais desta selecao:
+	- `r2B1BootPathReadVariantSelected=true`
+	- `selectedTarget=selectR2B1BootPathReadVariant`
+	- `selectedTechnicalTarget=none`
+	- `selectedR2Variant=R2-B`
+	- `selectedR2BSubvariant=R2-B1`
+	- `selectedR2BSubvariantScope=documentalReadOnly`
+	- `selectedR2BSubvariantExecutionFuture=false`
+	- `selectedR2BSubvariantCommandFuture=none`
+	- `r2BAuthorized=false`
+	- `r2BExecuted=false`
+	- `r2B1Authorized=false`
+	- `r2B1Executed=false`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `productionReadyDeclared=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `validationExecuted=false`
+	- `guardrailExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `dryRunExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
 - Proximo ato recomendado apos esta selecao: `diagnoseResetPasswordExecutionServiceTenantAwareTarget`.
 - Decisao principal consolidada desta rodada:
 	- phase=tenantArchitectureContinuation
