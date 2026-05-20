@@ -14934,6 +14934,166 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `postgresRoadmapActive=false`
 	- `gitPushExecuted=false`.
+- Registro documental curto do resultado da `R2-B1`, consolidado nesta rodada como leitura documental do caminho de boot, usando o estado real atual do ledger como base, sem executar comando operacional, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria, sem alterar `src`, sem alterar `tests`, sem alterar `package.json`, sem alterar `scripts`, sem criar arquivo novo, sem validacao, sem guardrail, sem commit e sem `push`.
+- Identificacao deste registro:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=recordR2B1BootPathReadResult`;
+	- `selectedTechnicalTarget=r2B1BootPathRead`;
+	- `selectedR2Variant=R2-B`;
+	- `selectedR2BSubvariant=R2-B1`;
+	- `previousPreparation=prepareR2B1BootPathRead`;
+	- `previousPreparationCommit=71efc44 docs(ops): prepara leitura caminho boot r2b1`;
+	- `previousLedgerNextAct=commitPrepareR2B1BootPathRead`;
+	- `previousLedgerNextActSatisfiedByCommit=true`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Resultado desta `R2-B1`:
+	- `r2B1BootPathReadResultRecorded=true`;
+	- `r2B1Executed=true`;
+	- `r2B1ExecutionType=documentalReadOnly`;
+	- `r2B1OperationalExecution=false`;
+	- `r2B1Authorized=false`;
+	- `r2BAuthorized=false`;
+	- `r2BExecuted=false`;
+	- `r2Authorized=false`;
+	- `r2Executed=false`;
+	- `commandExecuted=false`;
+	- `npmScriptExecuted=false`;
+	- `validationExecuted=false`;
+	- `guardrailExecuted=false`;
+	- `serverStarted=false`;
+	- `localBootExecuted=false`;
+	- `memoryMongoConnected=false`;
+	- `mongoRealConnected=false`;
+	- `queryExecuted=false`;
+	- `filesChangedDuringR2B1=false`;
+	- `workingTreeCleanAfterR2B1=true`;
+	- `productionReadyDeclared=false`.
+- Fontes lidas nesta `R2-B1`:
+	- `docs/migration-status.md`;
+	- `package.json`;
+	- `src/start.js`;
+	- `src/server/createServer.js`;
+	- `src/server/bootstrapRegistry.js`;
+	- `src/modules/gestor/index.js`;
+	- `src/server.js`.
+- Arquivos nao encontrados nesta `R2-B1`:
+	- `none`.
+- Caminho de boot documentado nesta `R2-B1`:
+	- `packageJsonMain=start.js`;
+	- `packageJsonStartScriptsPointTo=start.js`;
+	- `primaryBootEntrypoint=src/start.js`;
+	- `startCallsCreateServer=true`;
+	- `localServerListenPoint=src/start.js app.listen`;
+	- `serverFactory=src/server/createServer.js`;
+	- `moduleRegistry=src/server/bootstrapRegistry.js`;
+	- `gestorModuleWrapper=src/modules/gestor/index.js`;
+	- `deprecatedEntrypoint=src/server.js`;
+	- `deprecatedEntrypointPointsTo=src/start.js`.
+- Sequencia provavel do boot nesta `R2-B1`:
+	- `package.json` aponta `main` para `start.js`;
+	- scripts `start`/`dev`/`start:gestor`/`start:mem`/`start:atlas` chamam `start.js`;
+	- `start.js` chama `createServer`;
+	- `createServer.js` monta app/Express;
+	- `createServer.js` compoe registry;
+	- `bootstrapRegistry.js` resolve modulos e aliases;
+	- `createServer.js` pode conectar Mongo;
+	- `createServer.js` roda hooks `init` dos modulos;
+	- `src/modules/gestor/index.js` pode executar `runGestorSeeds` se flags de seed estiverem ligadas;
+	- `start.js` pode abrir porta via `app.listen` fora de Vercel/serverless.
+- Pontos de risco identificados nesta `R2-B1`:
+	- `app.listen` em `src/start.js`;
+	- `createServer` em modo full;
+	- `connectMongo` em `createServer.js`;
+	- `disconnectMongo` em `createServer.js`;
+	- middleware de retry/reconexao Mongo em `createServer.js`;
+	- scripts `start`/`dev`/`start:mem`/`start:atlas`/`start:mem:seed` em `package.json`;
+	- `MONGO_MEMORY` via scripts de memoria;
+	- `runGestorSeeds` em `src/modules/gestor/index.js`;
+	- Portal montado no registry base;
+	- `master:set` em `package.json`;
+	- `seed`/`reset`/`cleanup`/`migration`/`backfill`.
+- Pontos bloqueados apos esta `R2-B1`:
+	- qualquer execucao de `start`/`dev`/`start:mem`/`start:atlas`/`start:mem:seed`;
+	- qualquer caminho que chame `app.listen`;
+	- qualquer caminho que chame `connectMongo`;
+	- qualquer caminho que force `MONGO_MEMORY`;
+	- qualquer execucao de `runGestorSeeds`;
+	- qualquer `master:set`;
+	- qualquer `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- qualquer Portal;
+	- qualquer dado real;
+	- qualquer toque no usuario master real.
+- Interpretacao deste resultado:
+	- `R2-B1` cumpriu objetivo de leitura documental;
+	- caminho de boot foi mapeado sem execucao;
+	- nenhum comando operacional foi executado;
+	- nenhum arquivo foi alterado;
+	- nenhum servidor foi iniciado;
+	- nenhum Mongo foi conectado;
+	- nenhum dado foi tocado;
+	- usuario master real permaneceu protegido;
+	- producao continua nao pronta;
+	- `R2-B` operacional ainda nao foi autorizada.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado apos este registro:
+	- `commitR2B1BootPathReadResult`.
+- Gates finais deste registro:
+	- `r2B1BootPathReadResultRecorded=true`
+	- `selectedTarget=recordR2B1BootPathReadResult`
+	- `selectedTechnicalTarget=r2B1BootPathRead`
+	- `selectedR2Variant=R2-B`
+	- `selectedR2BSubvariant=R2-B1`
+	- `previousLedgerNextActSatisfiedByCommit=true`
+	- `r2B1Executed=true`
+	- `r2B1ExecutionType=documentalReadOnly`
+	- `r2B1OperationalExecution=false`
+	- `r2B1Authorized=false`
+	- `r2BAuthorized=false`
+	- `r2BExecuted=false`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `productionReadyDeclared=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `validationExecuted=false`
+	- `guardrailExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `dryRunExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
 - Interpretacao obrigatoria desta decisao:
 	- esta decisao documenta somente o proximo passo apos o sub-bloco `R1` ja ter sido fechado, publicado e sincronizado;
 	- esta decisao nao executa `R2` neste microcorte;
