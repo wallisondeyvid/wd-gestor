@@ -15228,6 +15228,181 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `postgresRoadmapActive=false`
 	- `gitPushExecuted=false`.
+- Preparacao documental curta do plano da `R2-B2`, consolidada nesta rodada como simulacao documental de comando futuro, sem executar nenhum comando, sem executar `npm`, sem executar `npm run`, sem executar `npm test`, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria, sem alterar `src`, sem alterar `tests`, sem alterar `package.json`, sem alterar `scripts`, sem criar arquivo novo, sem validacao, sem guardrail, sem commit e sem `push`.
+- Identificacao desta preparacao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=prepareR2B2CommandSimulationPlan`;
+	- `selectedTechnicalTarget=none`;
+	- `previousDecision=decideNextStepAfterPublishedR2B1Block`;
+	- `selectedR2Variant=R2-B`;
+	- `selectedR2BSubvariant=R2-B2`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Objetivo desta preparacao:
+	- preparar a `R2-B2` como simulacao documental de comando futuro;
+	- nao executar comando neste microcorte;
+	- nao autorizar `R2-B2` automaticamente;
+	- nao definir comando como executavel autorizado;
+	- nao iniciar servidor;
+	- nao conectar Mongo real;
+	- nao conectar Mongo em memoria;
+	- nao tocar dados;
+	- nao tocar usuario master real;
+	- documentar comandos candidatos, riscos e criterios para uma futura decisao humana.
+- Estado de partida desta preparacao:
+	- `localHead=082d96f docs(ops): decide proximo passo pos-r2b1 publicado`;
+	- `remoteHead=7a50634 docs(ops): registra resultado leitura caminho boot r2b1`;
+	- `aheadCount=1`;
+	- `workingTreeClean=true`;
+	- `previousRecommendedNextPlanning=prepareR2B2CommandSimulationPlan`;
+	- `candidateR2BSubvariant=R2-B2`;
+	- `candidateR2BSubvariantScope=documentalSimulationOnly`;
+	- `candidateR2BSubvariantExecutionFuture=false`;
+	- `candidateR2BSubvariantCommandFuture=none`;
+	- `r2B2Authorized=false`;
+	- `r2B2Executed=false`;
+	- `r2BAuthorized=false`;
+	- `r2BExecuted=false`;
+	- `r2Authorized=false`;
+	- `r2Executed=false`;
+	- `productionReadyDeclared=false`.
+- Definicao da `R2-B2` planejada:
+	- `plannedR2B2Name=documentFutureCommandWithoutExecution`;
+	- `plannedR2B2Scope=documentalSimulationOnly`;
+	- `plannedR2B2ExecutionFuture=false`;
+	- `plannedR2B2CommandFuture=none`;
+	- `plannedR2B2ServerStartFuture=false`;
+	- `plannedR2B2MongoRealFuture=false`;
+	- `plannedR2B2MemoryMongoFuture=false`;
+	- `plannedR2B2DataTouchFuture=false`;
+	- `plannedR2B2MasterTouchFuture=false`.
+- Comandos candidatos a avaliar documentalmente, sem executar:
+	- `npm run start`;
+	- `npm run start:mem`;
+	- `npm run start:atlas`;
+	- `npm run dev`;
+	- `npm run start:gestor`;
+	- `npm run start:mem:seed`;
+	- `npm run master:set`;
+	- scripts de `seed`/`reset`/`cleanup`/`migration`/`backfill`, se aparecerem em `package.json`.
+- Classificacao documental preliminar desta `R2-B2`:
+	- `start`/`dev`/`start:gestor`: aproximam boot/servidor e devem permanecer bloqueados;
+	- `start:mem`/`start:mem:seed`: aproximam boot com Mongo em memoria e devem permanecer bloqueados;
+	- `start:atlas`: aproxima Mongo real/Atlas e deve permanecer bloqueado;
+	- `master:set`: toca usuario master real/sensivel e deve permanecer bloqueado;
+	- `seed`/`reset`/`cleanup`/`migration`/`backfill`: mutativos ou sensiveis e devem permanecer bloqueados;
+	- qualquer comando futuro exigira microcorte proprio e autorizacao humana explicita.
+- Riscos a documentar nesta `R2-B2`:
+	- `app.listen` em `src/start.js`;
+	- `createServer` em modo full;
+	- `connectMongo`/`disconnectMongo` em `createServer.js`;
+	- `MONGO_MEMORY` em scripts de memoria;
+	- `runGestorSeeds` em `src/modules/gestor/index.js`;
+	- `master:set` em `package.json`;
+	- qualquer `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- exposicao de token/URI/segredo;
+	- toque no usuario master real.
+- Escopo permitido neste planejamento:
+	- leitura documental;
+	- listagem de comandos candidatos;
+	- classificacao de risco;
+	- definicao de criterios de sucesso e parada;
+	- nenhum comando operacional;
+	- nenhuma alteracao fora do ledger.
+- Escopo proibido neste planejamento:
+	- executar comando;
+	- executar `npm`;
+	- executar `npm run`;
+	- executar `npm test`;
+	- iniciar servidor;
+	- conectar Mongo real;
+	- conectar Mongo em memoria;
+	- executar query;
+	- executar `master:set`;
+	- executar `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- tocar dados;
+	- tocar usuario master real;
+	- usar Portal;
+	- declarar producao pronta.
+- Criterios de sucesso futuros da `R2-B2`:
+	- comandos candidatos documentados;
+	- riscos por comando documentados;
+	- nenhum comando executado;
+	- nenhum servidor iniciado;
+	- nenhum Mongo conectado;
+	- nenhum dado tocado;
+	- usuario master real preservado;
+	- proximo ato registrado no ledger.
+- Criterios de parada futuros da `R2-B2`:
+	- qualquer necessidade de executar comando;
+	- qualquer tentativa de iniciar servidor;
+	- qualquer tentativa de conectar Mongo real;
+	- qualquer tentativa de conectar Mongo em memoria;
+	- qualquer tentativa de query;
+	- qualquer tentativa de `master:set`;
+	- qualquer `seed`/`reset`/`cleanup`/`migration`/`backfill`;
+	- qualquer uso de Portal;
+	- qualquer exposicao de segredo/token/URI;
+	- qualquer duvida sobre escopo.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado apos esta preparacao:
+	- `commitPrepareR2B2CommandSimulationPlan`.
+- Gates finais desta preparacao:
+	- `r2B2CommandSimulationPlanPrepared=true`
+	- `selectedTarget=prepareR2B2CommandSimulationPlan`
+	- `selectedTechnicalTarget=none`
+	- `selectedR2Variant=R2-B`
+	- `selectedR2BSubvariant=R2-B2`
+	- `plannedR2B2Scope=documentalSimulationOnly`
+	- `plannedR2B2ExecutionFuture=false`
+	- `plannedR2B2CommandFuture=none`
+	- `r2B2Authorized=false`
+	- `r2B2Executed=false`
+	- `r2BAuthorized=false`
+	- `r2BExecuted=false`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `productionReadyDeclared=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `validationExecuted=false`
+	- `guardrailExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `dryRunExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
 - Interpretacao obrigatoria desta decisao:
 	- esta decisao documenta somente o proximo passo apos o sub-bloco `R1` ja ter sido fechado, publicado e sincronizado;
 	- esta decisao nao executa `R2` neste microcorte;
