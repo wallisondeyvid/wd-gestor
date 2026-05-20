@@ -15094,6 +15094,140 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`
 	- `postgresRoadmapActive=false`
 	- `gitPushExecuted=false`.
+- Decisao documental curta do proximo passo apos o bloco `R2-B1` publicado e sincronizado, consolidada nesta rodada sem executar `R2-B2`, sem executar `R2-B`, sem executar `R2` operacional, sem executar comando, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria, sem alterar `src`, sem alterar `tests`, sem alterar `package.json`, sem alterar `scripts`, sem criar arquivo novo, sem validacao, sem guardrail, sem commit e sem `push`.
+- Identificacao desta decisao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=decideNextStepAfterPublishedR2B1Block`;
+	- `selectedTechnicalTarget=none`;
+	- `previousCheckpoint=recordR2B1BootPathReadResult`;
+	- `selectedR2Variant=R2-B`;
+	- `previousR2BSubvariant=R2-B1`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Estado de partida desta decisao:
+	- `localHead=7a50634 docs(ops): registra resultado leitura caminho boot r2b1`;
+	- `remoteHead=7a50634 docs(ops): registra resultado leitura caminho boot r2b1`;
+	- `localRemoteSynced=true`;
+	- `aheadCount=0`;
+	- `workingTreeClean=true`;
+	- `r2B1Published=true`;
+	- `r2B1ExecutionType=documentalReadOnly`;
+	- `r2B1OperationalExecution=false`;
+	- `r2BAuthorized=false`;
+	- `r2BExecuted=false`;
+	- `r2Authorized=false`;
+	- `r2Executed=false`;
+	- `productionReadyDeclared=false`.
+- Opcoes possiveis avaliadas nesta decisao:
+	- opcao 1: manter pausa/checkpoint em `7a50634`;
+	- opcao 2: preparar `R2-B2` como simulacao documental de comando futuro, sem executar;
+	- opcao 3: realizar leituras documentais adicionais antes de qualquer simulacao;
+	- opcao 4: encerrar temporariamente a frente `controlledMongoOperationalValidation` neste ponto limpo.
+- Avaliacao de risco desta decisao:
+	- opcao 1 e a mais conservadora;
+	- opcao 2 ainda e segura se permanecer apenas documental e sem execucao;
+	- opcao 3 e segura, mas pode repetir o que a `R2-B1` ja cobriu;
+	- opcao 4 e segura, mas pausa a evolucao operacional;
+	- qualquer comando real aumenta risco por aproximar boot/runtime;
+	- qualquer `start`/`start:mem`/`start:atlas`/`dev` continua bloqueado;
+	- qualquer Mongo real ou Mongo em memoria continua bloqueado sem autorizacao humana explicita.
+- Recomendacao documental desta decisao:
+	- recomendar opcao 2;
+	- preparar `R2-B2` como simulacao documental de comando futuro;
+	- nao executar `R2-B2` neste microcorte;
+	- nao autorizar `R2-B2` automaticamente;
+	- nao definir comando executavel como autorizado;
+	- nao iniciar servidor;
+	- nao conectar Mongo real;
+	- nao conectar Mongo em memoria;
+	- nao tocar dados;
+	- nao tocar usuario master real;
+	- nao declarar producao pronta.
+- Candidato de proximo planejamento desta decisao:
+	- `recommendedNextPlanning=prepareR2B2CommandSimulationPlan`;
+	- `candidateR2BSubvariant=R2-B2`;
+	- `candidateR2BSubvariantName=documentFutureCommandWithoutExecution`;
+	- `candidateR2BSubvariantScope=documentalSimulationOnly`;
+	- `candidateR2BSubvariantExecutionFuture=false`;
+	- `candidateR2BSubvariantCommandFuture=none`.
+- Limites para futura `R2-B2`:
+	- `R2-B2` deve ocorrer em microcorte proprio;
+	- `R2-B2` deve simular documentalmente qual comando poderia ser avaliado no futuro;
+	- `R2-B2` nao deve executar comando;
+	- `R2-B2` nao deve iniciar servidor;
+	- `R2-B2` nao deve conectar Mongo real;
+	- `R2-B2` nao deve conectar Mongo em memoria;
+	- `R2-B2` nao deve tocar dados;
+	- `R2-B2` nao deve tocar usuario master real;
+	- `master:set` continua bloqueado;
+	- `seed`/`reset`/`cleanup`/`migration`/`backfill` continuam bloqueados;
+	- Portal continua bloqueado;
+	- producao continua nao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado apos esta decisao:
+	- `commitDecideNextStepAfterPublishedR2B1Block`.
+- Gates finais desta decisao:
+	- `nextStepAfterPublishedR2B1BlockDecided=true`
+	- `selectedTarget=decideNextStepAfterPublishedR2B1Block`
+	- `selectedTechnicalTarget=none`
+	- `selectedR2Variant=R2-B`
+	- `previousR2BSubvariant=R2-B1`
+	- `recommendedNextPlanning=prepareR2B2CommandSimulationPlan`
+	- `candidateR2BSubvariant=R2-B2`
+	- `candidateR2BSubvariantScope=documentalSimulationOnly`
+	- `candidateR2BSubvariantExecutionFuture=false`
+	- `candidateR2BSubvariantCommandFuture=none`
+	- `localRemoteSynced=true`
+	- `aheadCount=0`
+	- `workingTreeClean=true`
+	- `r2B1Published=true`
+	- `r2B2Authorized=false`
+	- `r2B2Executed=false`
+	- `r2BAuthorized=false`
+	- `r2BExecuted=false`
+	- `r2Authorized=false`
+	- `r2Executed=false`
+	- `productionReadyDeclared=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `memoryMongoConnected=false`
+	- `mongoRealConnected=false`
+	- `queryExecuted=false`
+	- `commandExecuted=false`
+	- `npmScriptExecuted=false`
+	- `validationExecuted=false`
+	- `guardrailExecuted=false`
+	- `realMasterUserExists=true`
+	- `realMasterUserTouched=false`
+	- `masterCredentialChanged=false`
+	- `masterSetExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `dryRunExecuted=false`
+	- `backupExecuted=false`
+	- `restoreExecuted=false`
+	- `rollbackExecuted=false`
+	- `realDataUsed=false`
+	- `fictionalDataMutated=false`
+	- `seedExecuted=false`
+	- `resetExecuted=false`
+	- `cleanupExecuted=false`
+	- `migrationExecuted=false`
+	- `backfillExecuted=false`
+	- `portalUsageApproved=false`
+	- `postgresRoadmapActive=false`
+	- `gitPushExecuted=false`.
 - Interpretacao obrigatoria desta decisao:
 	- esta decisao documenta somente o proximo passo apos o sub-bloco `R1` ja ter sido fechado, publicado e sincronizado;
 	- esta decisao nao executa `R2` neste microcorte;
