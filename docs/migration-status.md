@@ -15411,6 +15411,194 @@ Checkpoint tenant enforcement atual:
 	- esta decisao preserva o usuario master real `wallisondeyvid13@gmail.com` como usuario sensivel real;
 	- esta decisao mantem Mongo real, dados reais e operacoes mutativas bloqueados;
 	- a proxima etapa deve apenas fechar em commit local esta decisao documental antes de qualquer planejamento especifico de `R2`.
+- Registro documental curto do resultado da `R2-B2`, consolidado nesta rodada como simulacao documental de comando futuro, sem executar comando, sem executar `npm`, sem executar `npm run`, sem executar `npm test`, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria, sem executar query real, sem alterar `src`, sem alterar `tests`, sem alterar `package.json`, sem alterar `scripts`, sem criar arquivo novo, sem `master:set`, sem alterar o usuario master real, sem usar Portal, sem commit e sem `push`.
+- Identificacao deste registro:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=recordR2B2CommandSimulationResult`;
+	- `selectedTechnicalTarget=r2B2CommandSimulation`;
+	- `selectedR2Variant=R2-B`;
+	- `selectedR2BSubvariant=R2-B2`;
+	- `previousPlanning=prepareR2B2CommandSimulationPlan`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Estado inicial confirmado antes deste registro:
+	- `branch=migration/refactor-core`;
+	- `localHead=b21ea56 docs(ops): prepara plano r2b2 simulacao comando`;
+	- `remoteHead=7a50634 docs(ops): registra resultado leitura caminho boot r2b1`;
+	- `aheadCount=2`;
+	- `workingTreeClean=true`;
+	- `recommendedNextActionBeforeRecord=recordR2B2CommandSimulationResult`;
+	- `r2B2WasDocumentalSimulationOnly=true`;
+	- `commandExecutedBeforeRecord=false`;
+	- `productionReadyDeclared=false`.
+- Resultado consolidado desta `R2-B2`:
+	- `r2B2CommandSimulationResultRecorded=true`;
+	- `r2B2Executed=true`;
+	- `r2B2ExecutionType=documentalSimulationOnly`;
+	- `r2B2OperationalExecution=false`;
+	- `r2B2Authorized=false`;
+	- `r2BAuthorized=false`;
+	- `r2BExecuted=false`;
+	- `r2Authorized=false`;
+	- `r2Executed=false`;
+	- `commandExecuted=false`;
+	- `npmExecuted=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `npmScriptExecuted=false`;
+	- `validationExecuted=false`;
+	- `guardrailExecuted=false`;
+	- `serverStarted=false`;
+	- `localBootExecuted=false`;
+	- `memoryMongoConnected=false`;
+	- `mongoRealConnected=false`;
+	- `queryExecuted=false`;
+	- `filesChangedDuringR2B2=false`;
+	- `workingTreeCleanAfterR2B2=true`;
+	- `productionReadyDeclared=false`.
+- Fontes lidas nesta `R2-B2`:
+	- `docs/migration-status.md`;
+	- `package.json`;
+	- `src/start.js`;
+	- `src/server/createServer.js`;
+	- `src/modules/gestor/index.js`.
+- Comandos classificados como boot/servidor:
+	- `npm run start`: `node src/start.js`; risco alto; bloqueado.
+	- `npm run dev`: `nodemon --watch src --watch routes --watch services --watch models --ext js,json,cjs,mjs --signal SIGTERM src/start.js`; risco alto; bloqueado.
+	- `npm run start:gestor`: `node src/start.js`; risco alto; bloqueado.
+	- `npm run start:escalas`: `set ENABLE_ESCALAS=1 && node src/start.js`; risco alto; bloqueado.
+	- `npm run dev:escalas`: `set ENABLE_ESCALAS=1 && nodemon --watch src --watch routes --watch services --watch models --ext js,json,cjs,mjs --signal SIGTERM src/start.js`; risco alto; bloqueado.
+- Comandos classificados como boot com Mongo em memoria:
+	- `npm run start:mem`: `set MONGO_MEMORY=1 && node src/start.js`; risco critico; bloqueado.
+	- `npm run start:mem:seed`: `set MONGO_MEMORY=1 && set GESTOR_SEEDS=1 && node src/start.js`; risco critico maximo; bloqueado.
+	- `npm run test:mem`: `set MONGO_MEMORY=1 && node --test tests/*.test.js`; risco alto; bloqueado neste contexto.
+	- `npm run test:win`: `set NODE_ENV=test && set MONGO_MEMORY=1 && node --test tests/*.test.js`; risco alto; bloqueado neste contexto.
+- Comandos classificados como Mongo real/Atlas:
+	- `npm run start:atlas`: `node src/start.js`; risco critico por aproximacao de Mongo real/Atlas; bloqueado.
+- Comandos classificados como master/usuario real:
+	- `npm run master:set`: `node scripts/set-master-password.js`; risco critico maximo; bloqueado.
+	- `npm run master:set:win`: `set MASTER_EMAIL=%MASTER_EMAIL% && set MASTER_PASSWORD=%MASTER_PASSWORD% && node scripts/set-master-password.js`; risco critico maximo; bloqueado.
+- Comandos classificados como `seed`/`reset`/`cleanup`/`migration`/`backfill`:
+	- `cleanup:legacy`: `node scripts/cleanup-legacy.js`; risco alto; bloqueado.
+	- `migration:check`: `npm run guard:migration && npm run arch:map && npm run test:smoke`; fora do escopo; bloqueado.
+	- `migrate:indices`: `echo 'Script removido'`; risco baixo, mas bloqueado por rotulo `migration`.
+	- `migrate:indices:corrigido`: `echo 'Script removido'`; risco baixo, mas bloqueado por rotulo `migration`.
+	- `migrate:backfill-diretor`: `node scripts/migrations/2025-09-18_backfill-diretor-unidades.js`; backfill mutativo; risco critico; bloqueado.
+	- `migrate:backfill-habitacao-mailboxes`: `node scripts/migrations/2026-01-09_backfill-habitacao-mailboxes.js`; backfill mutativo; risco critico; bloqueado.
+	- `migrate:user-memberships-phase1`: `node scripts/migrations/2026-03-11_criar-user-memberships-fase1.js`; migration estrutural; risco critico; bloqueado.
+	- `migrate:user-memberships-phase2`: `node scripts/migrations/2026-03-11_backfill-user-memberships-fase2.js`; backfill de memberships; risco critico; bloqueado.
+	- `backfill:refeicoes`: `node scripts/backfill_refeicoes_computavel.js "%MONGO_URI%"`; backfill com `MONGO_URI`; risco critico; bloqueado.
+	- `backfill:refeicoes:uri`: `node scripts/backfill_refeicoes_computavel.js`; backfill explicito; risco critico; bloqueado.
+- Comandos classificados como validacoes/testes/guardrails:
+	- `npm test`: guardrails + `node --test`; bloqueado neste microcorte.
+	- `test:strict`: guardrails + `node --test`; bloqueado.
+	- `test:smoke`: testes smoke; bloqueado.
+	- `test:multitenant`: fluxo multi-tenant; bloqueado.
+	- `guard:*`: bloqueados neste microcorte.
+	- `verify:*`: bloqueados neste microcorte.
+	- `parity`/`precommit`: bloqueados neste microcorte.
+- Comandos nao centrais ou auxiliares:
+	- `smoke:userdb-canary`, `flags:print`, `lint:paths`, `lint:data-json`, `test:e2e:refeicoes`: fora do foco `R2-B2` e bloqueados neste contexto.
+	- nenhum script de `Portal` foi encontrado em `package.json`.
+	- `Portal` permanece bloqueado por regra.
+- Interpretacao deste resultado:
+	- `R2-B2` cumpriu objetivo de simulacao documental.
+	- comandos candidatos foram classificados sem execucao.
+	- comandos de boot/servidor permanecem bloqueados.
+	- comandos com Mongo em memoria permanecem bloqueados.
+	- comandos com Mongo real/Atlas permanecem bloqueados.
+	- comandos de master real permanecem bloqueados.
+	- comandos mutativos de `seed`/`reset`/`cleanup`/`migration`/`backfill` permanecem bloqueados.
+	- nenhum comando operacional foi executado.
+	- nenhum arquivo foi alterado durante a `R2-B2`.
+	- nenhum servidor foi iniciado.
+	- nenhum Mongo foi conectado.
+	- nenhum dado foi tocado.
+	- usuario master real permaneceu protegido.
+	- producao continua nao pronta.
+	- `R2-B` operacional ainda nao foi autorizada.
+- Comandos que poderiam ser avaliados futuramente apenas com autorizacao humana explicita:
+	- `start`.
+	- `dev`.
+	- `start:gestor`.
+	- `start:mem`.
+	- `start:atlas`.
+	- `migration:check`.
+	- `cleanup:legacy`.
+	- `migrate:backfill-diretor`.
+	- `migrate:backfill-habitacao-mailboxes`.
+	- `migrate:user-memberships-phase1`.
+	- `migrate:user-memberships-phase2`.
+	- `backfill:refeicoes`.
+	- `backfill:refeicoes:uri`.
+	- `start:escalas`.
+	- `dev:escalas`.
+	- comandos de teste/guardrail.
+- Comandos nao candidatos na regua atual:
+	- `start:mem:seed`, por combinar boot + Mongo em memoria + `seed`.
+	- `master:set`, por tocar usuario master real/sensivel.
+	- `master:set:win`, por tocar usuario master real/sensivel e credenciais.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado apos este registro:
+	- `commitR2B2CommandSimulationResult`.
+- Gates finais deste registro:
+	- `r2B2CommandSimulationResultRecorded=true`.
+	- `selectedTarget=recordR2B2CommandSimulationResult`.
+	- `selectedTechnicalTarget=r2B2CommandSimulation`.
+	- `selectedR2Variant=R2-B`.
+	- `selectedR2BSubvariant=R2-B2`.
+	- `r2B2Executed=true`.
+	- `r2B2ExecutionType=documentalSimulationOnly`.
+	- `r2B2OperationalExecution=false`.
+	- `r2B2Authorized=false`.
+	- `r2BAuthorized=false`.
+	- `r2BExecuted=false`.
+	- `r2Authorized=false`.
+	- `r2Executed=false`.
+	- `productionReadyDeclared=false`.
+	- `serverStarted=false`.
+	- `localBootExecuted=false`.
+	- `memoryMongoConnected=false`.
+	- `mongoRealConnected=false`.
+	- `queryExecuted=false`.
+	- `commandExecuted=false`.
+	- `npmExecuted=false`.
+	- `npmRunExecuted=false`.
+	- `npmTestExecuted=false`.
+	- `npmScriptExecuted=false`.
+	- `validationExecuted=false`.
+	- `guardrailExecuted=false`.
+	- `realMasterUserExists=true`.
+	- `realMasterUserTouched=false`.
+	- `masterCredentialChanged=false`.
+	- `masterSetExecuted=false`.
+	- `sourceCodeChanged=false`.
+	- `testsChanged=false`.
+	- `packageJsonChanged=false`.
+	- `scriptChanged=false`.
+	- `fileCreated=false`.
+	- `dryRunExecuted=false`.
+	- `backupExecuted=false`.
+	- `restoreExecuted=false`.
+	- `rollbackExecuted=false`.
+	- `realDataUsed=false`.
+	- `fictionalDataMutated=false`.
+	- `seedExecuted=false`.
+	- `resetExecuted=false`.
+	- `cleanupExecuted=false`.
+	- `migrationExecuted=false`.
+	- `backfillExecuted=false`.
+	- `portalUsageApproved=false`.
+	- `postgresRoadmapActive=false`.
+	- `gitPushExecuted=false`.
 - Checkpoint documental curto da preparacao do planejamento do primeiro `R2` controlado da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de `npm test`, sem execucao de `npm run`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail, sem execucao de `R2`, sem iniciar servidor, sem executar `start`, sem executar `start:mem`, sem executar `start:atlas`, sem Mongo real, sem Mongo em memoria, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao automatica de `R2` e sem declarar producao pronta.
 - Identificacao consolidada desta preparacao:
 	- `phase=controlledMongoOperationalValidation`;
