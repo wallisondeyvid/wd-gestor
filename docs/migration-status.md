@@ -1384,6 +1384,199 @@ Checkpoint tenant enforcement atual:
 - postgresRoadmapActive=false
 - gitPushExecuted=false
 
+- Checkpoint documental curto de preparacao do plano inicial da auditoria documental ampla de prontidao operacional consolidado nesta rodada, sem abertura de R2-B5, R2-B6, R2-B operacional ou R2 operacional, sem execucao de comando operacional, sem servidor, sem Portal, sem Mongo real e sem Mongo em memoria manual.
+- Identificacao:
+- phase=operationalReadinessAudit
+- selectedTarget=prepareOperationalReadinessAudit
+- selectedTechnicalTarget=none
+- previousCheckpoint=decideNextFrontAfterTemporaryMongoValidationClose
+- currentCheckpoint=c87392f
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- Estado de partida:
+- localHead=c87392f docs(ops): decide proxima frente pos-validacao mongo
+- remoteHead=c87392f docs(ops): decide proxima frente pos-validacao mongo
+- localRemoteSynced=true
+- aheadCount=0
+- workingTreeClean=true
+- recommendedNextFront=prepareOperationalReadinessAudit
+- recommendedNextFrontScope=documentalAuditOnly
+- recommendedNextFrontExecutionFuture=false
+- recommendedNextFrontCommandFuture=none
+- controlledMongoOperationalValidationTemporarilyClosed=true
+- r2BHandoffPublished=true
+- r2BSubBlockClosedDocumentally=true
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- productionReadyDeclared=false
+- Objetivo da auditoria documental:
+- Revisar documentalmente a prontidao operacional do WD Gestor em MongoDB.
+- Consolidar riscos antes de qualquer futura execucao.
+- Revisar se ha documentacao suficiente para um futuro boot controlado.
+- Revisar bloqueios de Mongo real, Mongo em memoria, master:set, seeds, migrations, backfills e Portal.
+- Revisar protecao do usuario master real.
+- Identificar lacunas documentais.
+- Nao executar comando.
+- Nao autorizar boot.
+- Nao autorizar Mongo real.
+- Nao autorizar Mongo em memoria.
+- Nao declarar producao pronta.
+- Escopo permitido nesta futura frente:
+- Leitura documental.
+- Revisao de docs/migration-status.md.
+- Revisao de documentacao/runbooks existentes, se houver.
+- Revisao documental de package.json sem executar scripts.
+- Revisao documental de start.js, createServer.js, bootstrapRegistry.js e modulo Gestor, se necessario.
+- Consolidacao de riscos.
+- Checklist de lacunas.
+- Criterios minimos para futura fase operacional.
+- Registro no ledger.
+- Escopo proibido:
+- Executar comando operacional.
+- Executar npm, npm run ou npm test.
+- Executar validacoes ou guardrails manualmente.
+- Iniciar servidor.
+- Conectar Mongo real.
+- Conectar Mongo em memoria manualmente.
+- Executar query.
+- Executar master:set.
+- Executar seed/reset/cleanup/migration/backfill.
+- Tocar dados.
+- Tocar usuario master real.
+- Usar Portal.
+- Declarar producao pronta.
+- Autorizar R2-B5.
+- Autorizar R2-B6.
+- Autorizar R2-B operacional.
+- Autorizar R2 operacional.
+- Areas a auditar documentalmente:
+- boot/runtime;
+- scripts npm sensiveis;
+- conexao Mongo;
+- Mongo em memoria;
+- Mongo real/Atlas;
+- seeds e runGestorSeeds;
+- master:set e credenciais;
+- protecao do usuario master real;
+- isolamento multi-tenant;
+- escopos unitScope/unitId;
+- repositorios tenant-aware;
+- fallback global;
+- riscos de dados reais;
+- Portal;
+- producao/prontidao;
+- documentacao e runbooks;
+- criterios de rollback/backup/restore, apenas documentalmente;
+- criterios de futura autorizacao operacional.
+- Artefatos candidatos para leitura futura, sem ler agora:
+- docs/migration-status.md;
+- package.json;
+- src/start.js;
+- src/server/createServer.js;
+- src/server/bootstrapRegistry.js;
+- src/modules/gestor/index.js;
+- docs/runbooks, se existirem;
+- docs/checkpoints, se existirem;
+- documentos de arquitetura/migracao existentes, se existirem.
+- Criterios de sucesso da auditoria documental:
+- Riscos de boot documentados.
+- Scripts sensiveis documentados.
+- Riscos de Mongo documentados.
+- Riscos de master/set/seed/backfill documentados.
+- Lacunas documentais listadas.
+- Criterios minimos para futura execucao definidos.
+- Nenhum comando executado.
+- Nenhum servidor iniciado.
+- Nenhum Mongo conectado.
+- Nenhum dado tocado.
+- Usuario master real preservado.
+- Producao ainda nao declarada pronta.
+- Criterios de parada:
+- Qualquer necessidade de executar comando.
+- Qualquer tentativa de iniciar servidor.
+- Qualquer tentativa de conectar Mongo real.
+- Qualquer tentativa de conectar Mongo em memoria.
+- Qualquer tentativa de query.
+- Qualquer tentativa de master:set.
+- Qualquer seed/reset/cleanup/migration/backfill.
+- Qualquer uso de Portal.
+- Qualquer exposicao de segredo/token/URI.
+- Qualquer duvida sobre escopo.
+- Qualquer indicio de usuario master real tratado como ficticio.
+- Registro obrigatorio sobre usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- Proximo ato recomendado:
+- commitPrepareOperationalReadinessAudit
+- Gates finais:
+- operationalReadinessAuditPrepared=true
+- selectedTarget=prepareOperationalReadinessAudit
+- selectedTechnicalTarget=none
+- auditScope=documentalAuditOnly
+- auditExecutionFuture=false
+- auditCommandFuture=none
+- auditMongoRealFuture=false
+- auditMemoryMongoFuture=false
+- auditDataTouchFuture=false
+- auditMasterTouchFuture=false
+- auditProductionDeclarationFuture=false
+- controlledMongoOperationalValidationTemporarilyClosed=true
+- r2BHandoffPublished=true
+- r2BSubBlockClosedDocumentally=true
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+- gitPushExecuted=false
+
 - Fase P aberta documentalmente.
 - Documento canonico: docs/tenant-phase-p-explicit-authorization-contract.md
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional e nao autorizativa por padrao.
