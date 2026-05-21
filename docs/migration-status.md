@@ -16134,6 +16134,139 @@ Checkpoint tenant enforcement atual:
 	- `portalUsageApproved=false`.
 	- `postgresRoadmapActive=false`.
 	- `gitPushExecuted=false`.
+- Decisao documental do proximo passo apos o bloco publicado da `R2-B3`, consolidada nesta rodada sem alterar `src`, sem alterar `tests`, sem alterar `package.json`, sem alterar `scripts`, sem criar arquivo novo, sem executar `npm`, sem executar script, sem executar validacao, sem executar guardrail, sem executar `R2-B4`, sem executar `R2-B`, sem executar `R2`, sem iniciar servidor, sem executar `start`, sem executar `start:mem`, sem executar `start:atlas`, sem executar `dev`, sem conectar Mongo real, sem conectar Mongo em memoria, sem executar query real, sem executar dry-run real, sem executar backup real, sem executar restore real, sem executar rollback real, sem `master:set`, sem alterar o usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem usar `Portal`, sem commit e sem `push`.
+- Identificacao desta decisao:
+	- `phase=controlledMongoOperationalValidation`;
+	- `selectedTarget=decideNextStepAfterPublishedR2B3Block`;
+	- `selectedTechnicalTarget=none`;
+	- `previousCheckpoint=recordR2B3LocalBootEnvironmentResult`;
+	- `selectedR2Variant=R2-B`;
+	- `previousR2BSubvariant=R2-B3`;
+	- `chosenApproach=mongodbControlledValidation`;
+	- `postgresOutOfRoadmap=true`.
+- Estado de partida desta decisao:
+	- `localHead=98f66fa docs(ops): registra resultado ambiente boot r2b3`;
+	- `remoteHead=98f66fa docs(ops): registra resultado ambiente boot r2b3`;
+	- `localRemoteSynced=true`;
+	- `aheadCount=0`;
+	- `workingTreeClean=true`;
+	- `r2B3Published=true`;
+	- `r2B3ExecutionType=documentalEnvironmentReadOnly`;
+	- `r2B3OperationalExecution=false`;
+	- `r2BAuthorized=false`;
+	- `r2BExecuted=false`;
+	- `r2Authorized=false`;
+	- `r2Executed=false`;
+	- `productionReadyDeclared=false`.
+- Opcoes possiveis consideradas apos a publicacao da `R2-B3`:
+	- opcao 1: manter pausa/checkpoint em `98f66fa`.
+	- opcao 2: preparar `R2-B4` como plano documental de boot local controlado, sem executar.
+	- opcao 3: realizar nova revisao documental antes de `R2-B4`.
+	- opcao 4: encerrar temporariamente a frente `controlledMongoOperationalValidation` neste ponto limpo.
+- Avaliacao de risco desta decisao:
+	- opcao 1 e a mais conservadora.
+	- opcao 2 e aceitavel apenas se continuar estritamente documental.
+	- opcao 3 e segura, mas pode repetir a cobertura da `R2-B3`.
+	- opcao 4 e segura, mas pausa a evolucao operacional.
+	- qualquer `R2-B4` real se aproxima de boot/runtime e aumenta risco.
+	- qualquer `start`/`start:mem`/`start:atlas`/`dev` continua bloqueado.
+	- qualquer Mongo real ou Mongo em memoria continua bloqueado sem autorizacao humana explicita.
+- Recomendacao documental desta decisao:
+	- recomendar opcao 2.
+	- preparar `R2-B4` como plano documental de boot local controlado.
+	- nao executar `R2-B4` neste microcorte.
+	- nao autorizar `R2-B4` automaticamente.
+	- nao definir comando executavel como autorizado.
+	- nao iniciar servidor.
+	- nao conectar Mongo real.
+	- nao conectar Mongo em memoria.
+	- nao tocar dados.
+	- nao tocar usuario master real.
+	- nao declarar producao pronta.
+- Candidato de proximo planejamento:
+	- `recommendedNextPlanning=prepareR2B4ControlledLocalBootPlan`;
+	- `candidateR2BSubvariant=R2-B4`;
+	- `candidateR2BSubvariantName=documentControlledLocalBootWithoutExecution`;
+	- `candidateR2BSubvariantScope=documentalBootPlanningOnly`;
+	- `candidateR2BSubvariantExecutionFuture=false`;
+	- `candidateR2BSubvariantCommandFuture=none`.
+- Limites para futura `R2-B4`:
+	- `R2-B4` deve ocorrer em microcorte proprio.
+	- `R2-B4` deve comecar como plano documental, nao execucao.
+	- `R2-B4` nao deve iniciar servidor por padrao.
+	- `R2-B4` nao deve conectar Mongo real.
+	- `R2-B4` nao deve conectar Mongo em memoria sem autorizacao explicita.
+	- `R2-B4` nao deve tocar dados.
+	- `R2-B4` nao deve tocar usuario master real.
+	- `master:set` continua bloqueado.
+	- `seed/reset/cleanup/migration/backfill` continuam bloqueados.
+	- `Portal` continua bloqueado.
+	- producao continua nao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`;
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`;
+	- `masterCredentialSensitive=true`;
+	- `realMasterUserTouched=false`;
+	- `masterCredentialChanged=false`;
+	- `masterSetExecuted=false`;
+	- `currentOtherUsersTreatedAsFictional=true`;
+	- `futureUsersMayBeFictionalControlled=true`.
+- Proximo ato recomendado apos esta decisao:
+	- `commitDecideNextStepAfterPublishedR2B3Block`.
+- Gates finais desta decisao:
+	- `nextStepAfterPublishedR2B3BlockDecided=true`.
+	- `selectedTarget=decideNextStepAfterPublishedR2B3Block`.
+	- `selectedTechnicalTarget=none`.
+	- `selectedR2Variant=R2-B`.
+	- `previousR2BSubvariant=R2-B3`.
+	- `recommendedNextPlanning=prepareR2B4ControlledLocalBootPlan`.
+	- `candidateR2BSubvariant=R2-B4`.
+	- `candidateR2BSubvariantScope=documentalBootPlanningOnly`.
+	- `candidateR2BSubvariantExecutionFuture=false`.
+	- `candidateR2BSubvariantCommandFuture=none`.
+	- `localRemoteSynced=true`.
+	- `aheadCount=0`.
+	- `workingTreeClean=true`.
+	- `r2B3Published=true`.
+	- `r2B4Authorized=false`.
+	- `r2B4Executed=false`.
+	- `r2BAuthorized=false`.
+	- `r2BExecuted=false`.
+	- `r2Authorized=false`.
+	- `r2Executed=false`.
+	- `productionReadyDeclared=false`.
+	- `serverStarted=false`.
+	- `localBootExecuted=false`.
+	- `memoryMongoConnected=false`.
+	- `mongoRealConnected=false`.
+	- `queryExecuted=false`.
+	- `commandExecuted=false`.
+	- `npmScriptExecuted=false`.
+	- `validationExecuted=false`.
+	- `guardrailExecuted=false`.
+	- `realMasterUserExists=true`.
+	- `realMasterUserTouched=false`.
+	- `masterCredentialChanged=false`.
+	- `masterSetExecuted=false`.
+	- `sourceCodeChanged=false`.
+	- `testsChanged=false`.
+	- `packageJsonChanged=false`.
+	- `scriptChanged=false`.
+	- `fileCreated=false`.
+	- `dryRunExecuted=false`.
+	- `backupExecuted=false`.
+	- `restoreExecuted=false`.
+	- `rollbackExecuted=false`.
+	- `realDataUsed=false`.
+	- `fictionalDataMutated=false`.
+	- `seedExecuted=false`.
+	- `resetExecuted=false`.
+	- `cleanupExecuted=false`.
+	- `migrationExecuted=false`.
+	- `backfillExecuted=false`.
+	- `portalUsageApproved=false`.
+	- `postgresRoadmapActive=false`.
+	- `gitPushExecuted=false`.
 - Checkpoint documental curto da preparacao do planejamento do primeiro `R2` controlado da frente `controlledMongoOperationalValidation`, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem alteracao em `scripts`, sem criacao de arquivo novo, sem execucao de `npm test`, sem execucao de `npm run`, sem execucao de script npm, sem execucao de qualquer script, sem execucao de guardrail, sem execucao de `R2`, sem iniciar servidor, sem executar `start`, sem executar `start:mem`, sem executar `start:atlas`, sem Mongo real, sem Mongo em memoria, sem query real, sem dry-run real, sem backup real, sem restore real, sem rollback real, sem `master:set`, sem alteracao do usuario master real, sem `seed`, sem `reset`, sem `cleanup`, sem `migration`, sem `backfill`, sem Portal, sem push, sem commit, sem autorizacao automatica de `R2` e sem declarar producao pronta.
 - Identificacao consolidada desta preparacao:
 	- `phase=controlledMongoOperationalValidation`;
