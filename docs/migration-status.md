@@ -1577,6 +1577,180 @@ Checkpoint tenant enforcement atual:
 - postgresRoadmapActive=false
 - gitPushExecuted=false
 
+- Checkpoint documental curto do resultado da leitura da frente prepareOperationalReadinessAudit consolidado nesta rodada, mantendo o escopo estritamente documentalAuditOnly, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem Portal, sem commit e sem push.
+- Identificacao:
+- phase=operationalReadinessAudit
+- selectedTarget=recordOperationalReadinessAuditReadResult
+- selectedTechnicalTarget=operationalReadinessAuditRead
+- previousPlanning=prepareOperationalReadinessAudit
+- currentCheckpoint=f2d3886
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- Estado de partida:
+- localHead=f2d3886 docs(ops): prepara auditoria prontidao operacional
+- remoteHead=f2d3886 docs(ops): prepara auditoria prontidao operacional
+- localRemoteSynced=true
+- aheadCount=0
+- workingTreeClean=true
+- operationalReadinessAuditPrepared=true
+- auditScope=documentalAuditOnly
+- auditExecutionFuture=false
+- auditCommandFuture=none
+- auditMongoRealFuture=false
+- auditMemoryMongoFuture=false
+- auditDataTouchFuture=false
+- auditMasterTouchFuture=false
+- auditProductionDeclarationFuture=false
+- productionReadyDeclared=false
+- Fontes lidas na auditoria:
+- docs/migration-status.md
+- package.json
+- src/start.js
+- src/server/createServer.js
+- src/server/bootstrapRegistry.js
+- src/modules/gestor/index.js
+- docs/gestor-migration-plan.md
+- docs/gestor-provisioning-contract.md
+- docs/gestor-operational-auth-context-model.md
+- docs/gestor-fallback-inventory.md
+- docs/multi-tenant-domain-matrix.md
+- listagem de docs/runbooks
+- listagem de docs/checkpoints
+- listagem de docs
+- Artefatos esperados:
+- docs/runbooks existe
+- docs/checkpoints existe
+- nenhum diretorio opcional esperado estava ausente
+- Resultado da leitura - boot/runtime:
+- start.js e entrypoint real de boot;
+- start.js contem handler principal, fallback de assets, light mode e criacao de app completo via createServer;
+- start.js confirma risco de inicializacao de servidor e aquecimento de app completo;
+- start.js contem retry/reconexao Mongo sob demanda quando app nao esta em skipDb;
+- createServer.js e ponto critico de montagem do app, middlewares, sessao, registry, trust proxy, headers de diagnostico e reconexao;
+- bootstrapRegistry.js centraliza composicao de modulos e aliases;
+- src/modules/gestor/index.js pode acionar seeds no init sob flags;
+- qualquer boot futuro precisa tratar esses pontos como hotspots.
+- Resultado da leitura - scripts sensiveis:
+- start, dev, start:gestor, start:mem, start:mem:seed e start:atlas apontam para start.js e sao relevantes para boot/runtime;
+- test, test:strict, test:mem, migration:check, guard:*, parity, precommit e verify:imports sao scripts de verificacao ou guardrail que nao devem ser executados nesta frente documental;
+- master:set e master:set:win tocam credenciais do usuario master real e permanecem especialmente sensiveis;
+- scripts de migration, backfill, memberships e backfills continuam bloqueados.
+- Resultado da leitura - Mongo real e Mongo em memoria:
+- start:mem e start:mem:seed usam MONGO_MEMORY=1;
+- start:mem:seed une Mongo em memoria e seed;
+- start:atlas aproxima Mongo real ou Atlas;
+- createServer.js importa connectMongo e disconnectMongo;
+- createServer.js usa mongoose, express-session e connect-mongo;
+- start.js contem retry de conexao baseado em readyState e connectMongo;
+- qualquer boot nao e passivo e pode abrir conexao se nao for cuidadosamente isolado.
+- Resultado da leitura - seed/master:
+- src/modules/gestor/index.js permite runGestorSeeds sob GESTOR_SEEDS=1 ou SEEDS=1;
+- runGestorSeeds pode chamar ensureMasterUser e cleanupWrongEmail;
+- start:mem:seed combina MONGO_MEMORY=1 com GESTOR_SEEDS=1;
+- master:set e master:set:win seguem bloqueados;
+- usuario master real deve permanecer protegido.
+- Resultado da leitura - dados reais:
+- migration-status.md mantem dados reais bloqueados e producao nao pronta;
+- gestor-provisioning-contract.md indica colecoes globais e por tenant, eventos e snapshots de provisioning;
+- multi-tenant-domain-matrix.md evidencia dominios hibridos e tenant-aware;
+- qualquer execucao inadequada pode tocar estado persistente real de unidade.
+- Resultado da leitura - Portal:
+- migration-status.md mantem Portal bloqueado;
+- createServer.js monta portal-morador no registry base;
+- multi-tenant-domain-matrix.md classifica Portal ou Morador como hibrido e sensivel a auth ou contexto;
+- Portal deve permanecer fora de qualquer movimento operacional.
+- Resultado da leitura - multi-tenant/unitScope:
+- gestor-operational-auth-context-model.md fixa identidade global separada de vinculo por unidade;
+- operacao contextual deve usar req.unitScope;
+- projecoes de sessao ficam apenas como compatibilidade;
+- gestor-fallback-inventory.md inventaria fallbacks req.session.user, req.user.unidade_id, active_unidade_id e GLOBAL_SCOPE;
+- multi-tenant-domain-matrix.md diferencia dominios tenant por unidade, hibridos e globais legitimos;
+- ainda ha residuos em api.db.js, auth.db.js e superficies hibridas;
+- gestor-migration-plan.md confirma createServer como ponto de montagem modular e risco medio-alto pela extracao completa por causa de auth ou sessao e compatibilidades no app raiz.
+- Lacunas documentais encontradas:
+- falta runbook canonico especifico para auditoria de prontidao operacional do Gestor em MongoDB;
+- falta matriz unica ligando scripts sensiveis de package.json a riscos operacionais e pre-condicoes;
+- falta checklist documental go/no-go para boot controlado consolidando start.js, createServer.js, connectMongo, MongoStore, retry, seeds, master:set e Portal;
+- falta inventario direto de prontidao minima antes de qualquer futura execucao operacional;
+- falta documento especifico de protecao operacional do usuario master real;
+- runbooks existem, mas nao ha runbook canonico especifico para prepareOperationalReadinessAudit.
+- Criterios minimos sugeridos antes de futura execucao operacional:
+- validar Git no inicio e exigir working tree limpa;
+- confirmar branch e HEAD esperados;
+- congelar escopo antes de qualquer comando;
+- ter checklist especifica de boot e dependencias sensiveis;
+- isolar Mongo real versus Mongo em memoria;
+- bloquear master:set, seeds, migrations, backfills e Portal por padrao;
+- registrar criterios para nao tocar dados reais nem usuario master real;
+- separar globais legitimos de superficies tenant-sensitive;
+- exigir decisao humana explicita para qualquer passo alem de leitura documental;
+- manter producao nao pronta ate fase propria com criterios proprios.
+- Registro obrigatorio sobre usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- Proximo ato recomendado:
+- commitRecordOperationalReadinessAuditReadResult
+- Gates finais:
+- operationalReadinessAuditReadResultRecorded=true
+- selectedTarget=recordOperationalReadinessAuditReadResult
+- selectedTechnicalTarget=operationalReadinessAuditRead
+- auditScope=documentalAuditOnly
+- auditReadOnly=true
+- auditExecutionFuture=false
+- auditCommandFuture=none
+- auditMongoRealFuture=false
+- auditMemoryMongoFuture=false
+- auditDataTouchFuture=false
+- auditMasterTouchFuture=false
+- auditProductionDeclarationFuture=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+- gitPushExecuted=false
+
 - Fase P aberta documentalmente.
 - Documento canonico: docs/tenant-phase-p-explicit-authorization-contract.md
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional e nao autorizativa por padrao.
