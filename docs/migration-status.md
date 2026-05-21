@@ -778,6 +778,174 @@ Checkpoint tenant enforcement atual:
 	- executionStillForbidden=true;
 	- blockedReasons=[].
 - Interpretacao obrigatoria: o encerramento da Fase M nao autoriza execucao, nao autoriza preparacao operacional concreta, nao cria caller real, nao cria rota/CLI/script/job/bootstrap/request path, nao altera registry real, nao altera allowlist real, nao abre tenant DB real, nao muda roteamento e nao envolve Portal, dados reais, trafego real, usuario real, unidade real ou PostgreSQL.
+
+- Checkpoint documental curto de handoff da frente R2-B consolidado nesta rodada, sem abertura de R2-B5, R2-B6, R2-B operacional ou R2 operacional, sem execucao de comando operacional, sem servidor, sem Portal, sem Mongo real e sem Mongo em memoria manual.
+- Identificacao:
+- phase=controlledMongoOperationalValidation
+- selectedTarget=prepareR2BHandoffSummary
+- selectedTechnicalTarget=none
+- previousCheckpoint=closeR2BSubBlockDocumentally
+- selectedR2Variant=R2-B
+- selectedR2BSubvariant=R2-B-handoff
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- Estado de partida:
+- localHead=fc9f6b8 docs(ops): fecha sub-bloco r2b documental
+- remoteHead=fc9f6b8 docs(ops): fecha sub-bloco r2b documental
+- localRemoteSynced=true
+- aheadCount=0
+- workingTreeClean=true
+- r2BSubBlockClosedDocumentally=true
+- r2BFinalChecklistPublished=true
+- r2BFinalChecklistResultRecorded=true
+- r2B1Documental=true
+- r2B2Documental=true
+- r2B3Documental=true
+- r2B4Documental=true
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- productionReadyDeclared=false
+- Resumo da frente R2-B:
+- R2-B foi uma frente documental de aproximacao controlada ao boot/runtime.
+- R2-B1 mapeou documentalmente o caminho de boot.
+- R2-B2 simulou documentalmente comandos futuros.
+- R2-B3 mapeou documentalmente o ambiente de boot local.
+- R2-B4 revisou documentalmente o plano de boot controlado.
+- O checklist final R2-B consolidou as evidencias.
+- O fechamento R2-B encerrou a frente como documentalmente concluida.
+- Nenhuma etapa executou boot operacional.
+- Nenhuma etapa iniciou servidor.
+- Nenhuma etapa conectou Mongo real.
+- Nenhuma etapa conectou Mongo em memoria manualmente.
+- Nenhuma etapa executou query real.
+- Nenhuma etapa tocou dados.
+- Nenhuma etapa tocou usuario master real.
+- Nenhuma etapa declarou producao pronta.
+- Estado funcional apos R2-B:
+- Producao continua nao pronta.
+- R2 operacional continua nao autorizada.
+- R2-B operacional continua nao autorizada.
+- R2-B5 continua nao autorizada.
+- R2-B6 continua nao autorizada.
+- Mongo real continua bloqueado.
+- Mongo em memoria manual continua bloqueado.
+- master:set continua bloqueado.
+- seed/reset/cleanup/migration/backfill continuam bloqueados.
+- Portal continua bloqueado.
+- Dados reais continuam bloqueados.
+- PostgreSQL continua fora do roadmap.
+- MongoDB permanece como arquitetura atual.
+- Principais achados documentais:
+- start.js e o entrypoint principal.
+- package.json aponta scripts principais para start.js.
+- start.js pode iniciar servidor via app.listen.
+- createServer.js e ponto critico de montagem do app.
+- createServer.js pode chamar connectMongo.
+- createServer.js pode usar MongoStore.
+- createServer.js pode ter retry/reconexao Mongo.
+- bootstrapRegistry.js compoe modulos/aliases.
+- src/modules/gestor/index.js pode acionar runGestorSeeds sob flags.
+- start:mem aproxima Mongo em memoria.
+- start:mem:seed aproxima Mongo em memoria + seed.
+- start:atlas aproxima Mongo real/Atlas.
+- master:set e master:set:win tocam usuario master real.
+- Qualquer URI/token/segredo nao deve ser exposto.
+- Decisao de continuidade:
+- Nao avancar para R2-B5 neste momento.
+- Nao avancar para R2-B6 neste momento.
+- Nao iniciar frente operacional sem nova autorizacao humana explicita.
+- Qualquer proxima frente deve comecar como decisao documental propria.
+- Recomendacao: manter checkpoint em fc9f6b8 ou abrir uma nova frente R2-C apenas documental.
+- Possiveis proximos caminhos, sem autorizacao neste microcorte:
+- Opcao 1: manter checkpoint publicado em fc9f6b8.
+- Opcao 2: encerrar temporariamente controlledMongoOperationalValidation.
+- Opcao 3: preparar decisao documental para nova frente R2-C.
+- Opcao 4: preparar auditoria de prontidao documental mais ampla.
+- Opcao 5: somente futuramente, com autorizacao explicita, discutir microcorte operacional controlado, sem Mongo real por padrao.
+- Regras para qualquer proxima frente:
+- Comecar com validacao de Git.
+- Working tree deve estar limpa.
+- Branch deve ser migration/refactor-core.
+- HEAD deve ser explicitamente confirmado.
+- Nenhuma execucao operacional por padrao.
+- Nenhum Mongo real por padrao.
+- Nenhum Mongo em memoria manual por padrao.
+- Nenhum master:set.
+- Nenhum seed/reset/cleanup/migration/backfill.
+- Nenhum Portal.
+- Usuario master real deve continuar protegido.
+- Producao so pode ser declarada pronta mediante fase propria e criterios proprios.
+- Registro obrigatorio sobre usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- Proximo ato recomendado:
+- commitPrepareR2BHandoffSummary
+- Gates finais:
+- r2BHandoffSummaryPrepared=true
+- selectedTarget=prepareR2BHandoffSummary
+- selectedTechnicalTarget=none
+- selectedR2Variant=R2-B
+- selectedR2BSubvariant=R2-B-handoff
+- r2BSubBlockClosedDocumentally=true
+- r2BFinalChecklistPublished=true
+- r2BFinalChecklistResultRecorded=true
+- r2B1Documental=true
+- r2B2Documental=true
+- r2B3Documental=true
+- r2B4Documental=true
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+- gitPushExecuted=false
 - Recomendacao final: apto para discutir fase posterior explicita de contrato de execucao manual controlada, nao produtiva e sintetica.
 - Proxima fase: nao aberta automaticamente; qualquer fase posterior dependera de abertura explicita, contrato proprio, gates proprios, rollback proprio, evidencias proprias e autorizacao propria.
 - Validacao: baseline curta pos-encerramento documental da Fase M verde: tests 136, suites 14, pass 136, fail 0, skipped 0.
