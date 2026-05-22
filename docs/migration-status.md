@@ -2327,6 +2327,176 @@ Checkpoint tenant enforcement atual:
 - postgresRoadmapActive=false
 - gitPushExecuted=false
 
+- Checkpoint documental curto da preparacao da checklist go/no-go de prontidao operacional para futuro boot controlado, derivado da decisao publicada em 3b5b5f4, mantendo o microcorte estritamente documental, sem execucao operacional, sem npm, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem Portal, sem commit e sem push.
+- Identificacao:
+- phase=operationalReadinessAudit
+- selectedTarget=prepareOperationalReadinessGoNoGoChecklist
+- selectedTechnicalTarget=none
+- previousCheckpoint=decideNextCheckpointAfterOperationalReadinessGapRiskMatrix
+- currentCheckpoint=3b5b5f4
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- Estado de partida:
+- localHead=3b5b5f4 docs(ops): decide checklist go-nogo prontidao
+- remoteHead=3b5b5f4 docs(ops): decide checklist go-nogo prontidao
+- localRemoteSynced=true
+- aheadCount=0
+- workingTreeClean=true
+- recommendedNextCheckpoint=prepareOperationalReadinessGoNoGoChecklist
+- recommendedNextCheckpointScope=documentalChecklistOnly
+- recommendedNextCheckpointExecutionFuture=false
+- recommendedNextCheckpointCommandFuture=none
+- operationalReadinessGapRiskMatrixPrepared=true
+- matrixScope=documentalMatrixOnly
+- matrixExecutionFuture=false
+- matrixCommandFuture=none
+- productionReadyDeclared=false
+- Objetivo da checklist:
+- transformar a matriz documental de lacunas e riscos em criterios objetivos de go/no-go;
+- preparar criterios minimos antes de qualquer futuro boot controlado;
+- separar criterios de Git, escopo, boot, Mongo real, Mongo em memoria, dados, master, seeds, Portal, multi-tenant e producao;
+- manter tudo estritamente documental;
+- nao executar comandos;
+- nao autorizar boot;
+- nao autorizar Mongo real;
+- nao autorizar Mongo em memoria;
+- nao declarar producao pronta.
+- Checklist GO documental, todos ainda condicionais e sem autorizar execucao:
+- Git limpo e HEAD esperado confirmado;
+- branch migration/refactor-core confirmada;
+- escopo do microcorte definido antes de qualquer acao;
+- comando futuro, se algum dia houver, definido previamente e aprovado por humano;
+- plano de parada definido antes de qualquer execucao futura;
+- logs esperados definidos;
+- nenhum segredo/token/URI exposto;
+- usuario master real protegido;
+- dados reais bloqueados;
+- Mongo real bloqueado por padrao;
+- Mongo em memoria manual bloqueado por padrao;
+- seeds bloqueados por padrao;
+- master:set bloqueado por padrao;
+- Portal bloqueado por padrao;
+- producao nao pronta ate fase propria.
+- Checklist NO-GO absoluto:
+- working tree suja;
+- HEAD local/remoto divergentes;
+- escopo indefinido;
+- tentativa de executar comando sem autorizacao humana explicita;
+- tentativa de iniciar servidor;
+- tentativa de conectar Mongo real;
+- tentativa de conectar Mongo em memoria;
+- tentativa de executar query real;
+- tentativa de executar master:set;
+- tentativa de executar seed/reset/cleanup/migration/backfill;
+- tentativa de usar Portal;
+- tentativa de tocar dados reais;
+- tentativa de alterar usuario master real;
+- exposicao de senha, token, URI ou segredo;
+- tentativa de declarar producao pronta;
+- qualquer duvida sobre escopo.
+- Criterios por area:
+- 1. Git/checkpoint:
+- GO: branch, HEAD e remoto confirmados; working tree limpa.
+- NO-GO: divergencia, ahead inesperado ou arquivo modificado nao previsto.
+- 2. Boot/runtime:
+- GO: apenas documentacao; nenhum start/dev/start:gestor.
+- NO-GO: qualquer tentativa de app.listen, start.js, createServer operacional ou servidor real.
+- 3. Mongo real/Atlas:
+- GO: bloqueado e apenas documentado.
+- NO-GO: uso de MONGO_URI/MONGODB_URI, start:atlas, connectMongo real, MongoStore real ou retry real.
+- 4. Mongo em memoria:
+- GO: bloqueado e apenas documentado.
+- NO-GO: start:mem, test:mem, test:win, MONGO_MEMORY manual ou qualquer conexao manual.
+- 5. Seeds/runGestorSeeds:
+- GO: bloqueados e apenas documentados.
+- NO-GO: GESTOR_SEEDS, SEEDS, runGestorSeeds, ensureMasterUser ou cleanupWrongEmail.
+- 6. Master real:
+- GO: usuario wallisondeyvid13@gmail.com protegido e intocado.
+- NO-GO: master:set, master:set:win, alteracao de credencial ou tratamento como ficticio.
+- 7. Dados reais:
+- GO: nao tocar dados.
+- NO-GO: query real, mutation, seed, cleanup, migration, backfill, backup/restore/rollback real.
+- 8. Portal:
+- GO: bloqueado e apenas documentado.
+- NO-GO: uso operacional do Portal ou qualquer fluxo portal-morador.
+- 9. Multi-tenant/unitScope:
+- GO: preservar visao global master/admin e contexto por unidade.
+- NO-GO: remover fallback, alterar contexto ou mexer em unitScope sem frente propria.
+- 10. Producao:
+- GO: productionReadyDeclared=false.
+- NO-GO: qualquer declaracao de producao pronta ou autorizacao operacional.
+- Decisao da checklist:
+- checklist go/no-go documental sera considerada preparada;
+- nenhum item GO autoriza execucao neste microcorte;
+- qualquer execucao futura exigira microcorte proprio e autorizacao humana explicita;
+- proximo passo seguro sera registrar resultado da checklist ou preparar runbook documental especifico.
+- Registro obrigatorio sobre usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- Proximo ato recomendado:
+- commitPrepareOperationalReadinessGoNoGoChecklist
+- Gates finais:
+- operationalReadinessGoNoGoChecklistPrepared=true
+- selectedTarget=prepareOperationalReadinessGoNoGoChecklist
+- selectedTechnicalTarget=none
+- checklistScope=documentalChecklistOnly
+- checklistExecutionFuture=false
+- checklistCommandFuture=none
+- checklistMongoRealFuture=false
+- checklistMemoryMongoFuture=false
+- checklistDataTouchFuture=false
+- checklistMasterTouchFuture=false
+- checklistProductionDeclarationFuture=false
+- operationalReadinessGapRiskMatrixPrepared=true
+- matrixScope=documentalMatrixOnly
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+- gitPushExecuted=false
+
 - Fase P aberta documentalmente.
 - Documento canonico: docs/tenant-phase-p-explicit-authorization-contract.md
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional e nao autorizativa por padrao.
