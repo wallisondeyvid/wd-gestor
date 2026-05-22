@@ -1920,6 +1920,247 @@ Checkpoint tenant enforcement atual:
 - postgresRoadmapActive=false
 - gitPushExecuted=false
 
+- Checkpoint documental curto da preparacao da matriz documental de lacunas e riscos de prontidao operacional consolidado nesta rodada, conforme decisao publicada em d66fb9b, mantendo o microcorte estritamente documental, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem Portal, sem commit e sem push.
+- Identificacao:
+- phase=operationalReadinessAudit
+- selectedTarget=prepareOperationalReadinessGapRiskMatrix
+- selectedTechnicalTarget=none
+- previousCheckpoint=prepareNextDocumentalCheckpointAfterOperationalReadinessAuditReadResult
+- currentCheckpoint=d66fb9b
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- Estado de partida:
+- localHead=d66fb9b docs(ops): decide matriz lacunas prontidao
+- remoteHead=d66fb9b docs(ops): decide matriz lacunas prontidao
+- localRemoteSynced=true
+- aheadCount=0
+- workingTreeClean=true
+- recommendedNextCheckpoint=prepareOperationalReadinessGapRiskMatrix
+- recommendedNextCheckpointScope=documentalMatrixOnly
+- recommendedNextCheckpointExecutionFuture=false
+- recommendedNextCheckpointCommandFuture=none
+- operationalReadinessAuditReadResultRecorded=true
+- auditScope=documentalAuditOnly
+- auditReadOnly=true
+- auditExecutionFuture=false
+- auditCommandFuture=none
+- productionReadyDeclared=false
+- Objetivo da matriz:
+- consolidar lacunas documentais e riscos de prontidao operacional;
+- organizar riscos por area;
+- classificar severidade documental;
+- registrar pre-condicoes antes de qualquer execucao futura;
+- registrar bloqueios operacionais preservados;
+- servir como base para futura checklist go/no-go documental;
+- nao executar comandos;
+- nao autorizar boot;
+- nao autorizar Mongo real;
+- nao autorizar Mongo em memoria;
+- nao declarar producao pronta.
+- Estrutura da matriz documental:
+- Para cada area, registrar:
+- area;
+- risco/lacuna;
+- evidencia documental;
+- severidade documental;
+- bloqueio atual;
+- pre-condicao antes de qualquer futura execucao;
+- status atual.
+- Areas da matriz:
+- boot/runtime;
+- scripts npm sensiveis;
+- Mongo real/Atlas;
+- Mongo em memoria;
+- seeds e runGestorSeeds;
+- master:set e credenciais;
+- usuario master real;
+- dados reais;
+- Portal;
+- multi-tenant/unitScope;
+- fallback global;
+- repositorios tenant-aware;
+- documentacao/runbooks;
+- backup/restore/rollback;
+- producao/prontidao.
+- Matriz inicial de riscos e lacunas:
+- 1. Area: boot/runtime
+- risco/lacuna: start.js e createServer.js concentram boot, app completo, servidor, middlewares, registry e reconexao.
+- evidencia documental: leitura da auditoria registrou start.js como entrypoint real e createServer.js como hotspot.
+- severidade documental: alta.
+- bloqueio atual: qualquer boot/servidor continua bloqueado.
+- pre-condicao futura: checklist go/no-go documental de boot, comando definido, plano de parada, logs esperados, autorizacao humana explicita.
+- status atual: nao pronto para execucao.
+- 2. Area: scripts npm sensiveis
+- risco/lacuna: package.json contem start, dev, start:gestor, start:mem, start:mem:seed, start:atlas, master:set, migrations, backfills, tests e guardrails.
+- evidencia documental: leitura da auditoria mapeou scripts sensiveis.
+- severidade documental: alta.
+- bloqueio atual: execucao manual de scripts continua bloqueada.
+- pre-condicao futura: matriz especifica de scripts e bloqueios.
+- status atual: nao pronto para execucao.
+- 3. Area: Mongo real/Atlas
+- risco/lacuna: start:atlas, MONGO_URI/MONGODB_URI, connectMongo, MongoStore e retry podem aproximar infraestrutura real.
+- evidencia documental: leitura da auditoria registrou riscos em start.js e createServer.js.
+- severidade documental: critica.
+- bloqueio atual: Mongo real continua bloqueado.
+- pre-condicao futura: autorizacao humana explicita, ambiente isolado, plano de nao tocar dados reais, rollback/backup documental.
+- status atual: bloqueado.
+- 4. Area: Mongo em memoria
+- risco/lacuna: start:mem e start:mem:seed usam MONGO_MEMORY=1; start:mem:seed combina memoria e seed.
+- evidencia documental: leitura da auditoria registrou MONGO_MEMORY e start:mem:seed.
+- severidade documental: alta.
+- bloqueio atual: Mongo em memoria manual continua bloqueado.
+- pre-condicao futura: microcorte proprio, comando seguro, sem seed, sem master:set, plano de parada.
+- status atual: bloqueado.
+- 5. Area: seeds/runGestorSeeds
+- risco/lacuna: GESTOR_SEEDS ou SEEDS podem acionar runGestorSeeds, ensureMasterUser e cleanupWrongEmail.
+- evidencia documental: leitura da auditoria registrou src/modules/gestor/index.js.
+- severidade documental: critica.
+- bloqueio atual: seeds continuam bloqueados.
+- pre-condicao futura: autorizacao especifica, ambiente controlado, protecao do master real, proibicao de dados reais.
+- status atual: bloqueado.
+- 6. Area: master:set e credenciais
+- risco/lacuna: master:set e master:set:win podem tocar credenciais do usuario master real.
+- evidencia documental: leitura da auditoria registrou package.json.
+- severidade documental: critica.
+- bloqueio atual: master:set continua bloqueado.
+- pre-condicao futura: autorizacao humana explicita especifica e runbook de protecao do master real.
+- status atual: bloqueado.
+- 7. Area: usuario master real
+- risco/lacuna: wallisondeyvid13@gmail.com e usuario real/sensivel, nao ficticio.
+- evidencia documental: memoria operacional e registros do ledger.
+- severidade documental: critica.
+- bloqueio atual: nao tocar, nao alterar credenciais, nao tratar como ficticio.
+- pre-condicao futura: documento de protecao operacional do usuario master real.
+- status atual: protegido.
+- 8. Area: dados reais
+- risco/lacuna: provisioning, unidades, tenants, snapshots e dominios hibridos podem tocar estado persistente.
+- evidencia documental: gestor-provisioning-contract.md e multi-tenant-domain-matrix.md.
+- severidade documental: critica.
+- bloqueio atual: dados reais continuam bloqueados.
+- pre-condicao futura: ambiente isolado, plano de dados ficticios/controlados, criterios de nao mutacao real.
+- status atual: bloqueado.
+- 9. Area: Portal
+- risco/lacuna: Portal/Morador e superficie hibrida sensivel a auth/contexto e aparece no registry.
+- evidencia documental: migration-status.md, createServer.js e multi-tenant-domain-matrix.md.
+- severidade documental: alta.
+- bloqueio atual: Portal continua bloqueado.
+- pre-condicao futura: frente propria, auth/contexto isolados e autorizacao explicita.
+- status atual: bloqueado.
+- 10. Area: multi-tenant/unitScope
+- risco/lacuna: unitScope e eixo correto de operacao contextual, mas ha fallbacks e superficies hibridas.
+- evidencia documental: gestor-operational-auth-context-model.md e gestor-fallback-inventory.md.
+- severidade documental: alta.
+- bloqueio atual: qualquer execucao precisa preservar visao global master/admin e contexto por unidade.
+- pre-condicao futura: checklist de invariantes multi-tenant.
+- status atual: parcialmente documentado, requer matriz de invariantes.
+- 11. Area: fallback global
+- risco/lacuna: req.session.user, req.user.unidade_id, active_unidade_id e GLOBAL_SCOPE ainda aparecem como fallbacks.
+- evidencia documental: gestor-fallback-inventory.md.
+- severidade documental: media/alta.
+- bloqueio atual: nao remover nem alterar sem frente propria.
+- pre-condicao futura: inventario de compatibilidade e plano de remocao gradual.
+- status atual: documentado, nao resolvido.
+- 12. Area: repositorios tenant-aware
+- risco/lacuna: necessidade de confirmar cobertura tenant-aware antes de execucao operacional.
+- evidencia documental: historico multi-tenant e matriz de dominios.
+- severidade documental: media/alta.
+- bloqueio atual: sem execucao operacional antes de checklist.
+- pre-condicao futura: checklist de cobertura por dominio/repositorio.
+- status atual: requer consolidacao.
+- 13. Area: documentacao/runbooks
+- risco/lacuna: falta runbook canonico especifico para prontidao operacional Mongo.
+- evidencia documental: leitura da auditoria registrou lacuna.
+- severidade documental: media/alta.
+- bloqueio atual: nao avancar para execucao sem runbook/checklist.
+- pre-condicao futura: preparar checklist go/no-go e runbook de protecao do master.
+- status atual: lacuna aberta.
+- 14. Area: backup/restore/rollback
+- risco/lacuna: criterios existem apenas como necessidade documental; nao ha autorizacao para execucao real.
+- evidencia documental: lacunas e criterios minimos sugeridos.
+- severidade documental: alta.
+- bloqueio atual: backup/restore/rollback real bloqueados.
+- pre-condicao futura: runbook documental antes de qualquer operacao real.
+- status atual: nao pronto para execucao.
+- 15. Area: producao/prontidao
+- risco/lacuna: producao nao pode ser declarada pronta sem fase propria, criterios e validacoes.
+- evidencia documental: productionReadyDeclared=false em todos os gates.
+- severidade documental: critica.
+- bloqueio atual: producao nao pronta.
+- pre-condicao futura: fase propria de readiness, validacoes definidas e autorizacao humana explicita.
+- status atual: nao pronta.
+- Decisao da matriz:
+- matriz documental inicial sera considerada preparada;
+- nenhuma lacuna sera tratada operacionalmente neste microcorte;
+- nenhuma execucao sera autorizada;
+- proximo passo seguro sera registrar o resultado da matriz ou preparar checklist go/no-go documental.
+- Registro obrigatorio sobre usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- Proximo ato recomendado:
+- commitPrepareOperationalReadinessGapRiskMatrix
+- Gates finais:
+- operationalReadinessGapRiskMatrixPrepared=true
+- selectedTarget=prepareOperationalReadinessGapRiskMatrix
+- selectedTechnicalTarget=none
+- matrixScope=documentalMatrixOnly
+- matrixExecutionFuture=false
+- matrixCommandFuture=none
+- matrixMongoRealFuture=false
+- matrixMemoryMongoFuture=false
+- matrixDataTouchFuture=false
+- matrixMasterTouchFuture=false
+- matrixProductionDeclarationFuture=false
+- operationalReadinessAuditReadResultRecorded=true
+- auditScope=documentalAuditOnly
+- auditReadOnly=true
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+- gitPushExecuted=false
+
 - Fase P aberta documentalmente.
 - Documento canonico: docs/tenant-phase-p-explicit-authorization-contract.md
 - Natureza: documental, preventiva, nao produtiva, sintetica, nao operacional e nao autorizativa por padrao.
