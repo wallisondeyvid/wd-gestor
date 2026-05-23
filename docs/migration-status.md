@@ -1490,6 +1490,87 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da correcao da politica de push da Fase 1 consolidado nesta rodada, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem master:set, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit adicional previo e sem push.
+- A. Identificacao:
+- phase=controlledBootRunbookWithoutExecution
+- selectedTarget=correctPhase1PushPolicyAfterClosure
+- selectedTechnicalTarget=none
+- previousCheckpoint=closeControlledBootRunbookPhase
+- currentLocalCheckpoint=945ac8b
+- currentRemoteCheckpoint=c15eebc
+- correctionType=pushPolicyCorrection
+- postgresOutOfRoadmap=true
+- B. Motivo da correcao:
+- Fase 1 foi fechada documentalmente em 945ac8b
+- O fechamento anterior ainda indicou push ao final da Fase 1
+- O usuario redefiniu a politica: push unico somente apos o termino da 4a fase documental
+- A correcao e documental e nao altera o conteudo tecnico da Fase 1
+- C. Politica correta:
+- phase1ClosedDocumentally=true
+- phase1ReadyForNextDocumentalPhase=true
+- phaseReadyForHumanPush=false
+- phaseEndPushAllowedAfterThisCommit=false
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- nextPushAllowedAfterPhase4=true
+- copilotMustNotPush=true
+- userWillPushOnlyAfterPhase4=true
+- localCommitsAllowedDuringAllFourDocumentalPhases=true
+- pushDuringIntermediateMicrocuts=false
+- pushAfterPhase1=false
+- pushAfterPhase2=false
+- pushAfterPhase3=false
+- pushDuringPhase4=false
+- pushOnlyAfterPhase4Closure=true
+- D. Fases documentais do bloco:
+- phase1=controlledBootRunbookWithoutExecution
+- phase2=prepareMultiTenantInvariantChecklist
+- phase3=prepareRealMasterUserProtectionRunbook
+- phase4=prepareOperationalReadinessFinalHandoff
+- E. Proximo passo:
+- nextPhaseCandidate=prepareMultiTenantInvariantChecklist
+- nextPhaseName=Checklist documental de invariantes multi-tenant/unitScope
+- nextPhaseScope=documentalChecklistOnly
+- nextPhaseExecutionFuture=false
+- nextPhaseCommandFuture=none
+- nextPhasePushPolicy=pushDeferredUntilAllFourDocumentalPhasesComplete
+- F. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- G. Gates finais:
+- phase1PushPolicyCorrected=true
+- selectedTarget=correctPhase1PushPolicyAfterClosure
+- selectedTechnicalTarget=none
+- phase1ClosedDocumentally=true
+- phaseReadyForHumanPush=false
+- phaseEndPushAllowedAfterThisCommit=false
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- nextPushAllowedAfterPhase4=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
