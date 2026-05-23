@@ -5771,6 +5771,131 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto de autorizacao controlada futura para a primeira validacao operacional manual consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledFirstOperationalValidationPlanning
+- selectedTarget=authorizeFirstManualNpmTestValidation
+- selectedTechnicalTarget=npm test
+- previousCheckpoint=closeControlledOperationalAuthorizationMatrixBlock
+- currentLocalCheckpoint=b724875
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- localRemoteSynced=true
+- aheadCount=0
+- workingTreeClean=true
+- controlledOperationalAuthorizationMatrixBlockClosed=true
+- firstOperationalCandidate=npm test
+- firstOperationalCandidateRisk=medio
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Decisao:
+- npm test foi escolhido como primeira validacao operacional manual candidata;
+- esta decisao nao executa npm test ainda;
+- a autorizacao e restrita exclusivamente a npm test em microcorte futuro;
+- nenhum npm run esta autorizado;
+- nenhum script diferente de npm test esta autorizado;
+- nenhum guardrail manual esta autorizado;
+- nenhum boot local esta autorizado;
+- nenhum servidor esta autorizado;
+- nenhum Mongo real esta autorizado;
+- nenhum Mongo em memoria manual esta autorizado neste checkpoint;
+- nenhum master:set ou master:set:win esta autorizado;
+- nenhum seed/reset/cleanup/migration/backfill esta autorizado;
+- nenhum Portal esta autorizado;
+- nenhuma query real esta autorizada;
+- nenhum dado real pode ser usado;
+- producao continua nao pronta;
+- usuario master real permanece protegido.
+- D. Escopo autorizado para microcorte futuro:
+- allowedFutureCommand=npm test
+- allowedFutureCommandScope=manualControlledTestOnly
+- allowedFutureCommandRequiresFreshGitGates=true
+- allowedFutureCommandRequiresWorkingTreeClean=true
+- allowedFutureCommandRequiresNoUncommittedFiles=true
+- allowedFutureCommandRequiresHumanAuthorization=true
+- allowedFutureCommandMayRunOnlyInNextDedicatedMicrocut=true
+- E. Escopo explicitamente nao autorizado:
+- npmRunAuthorized=false
+- genericNpmScriptsAuthorized=false
+- guardrailsAuthorized=false
+- serverStartAuthorized=false
+- localBootAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- F. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- G. Proximo ato recomendado:
+- commitAuthorizeFirstManualNpmTestValidation
+- afterCommitNextCandidate=runFirstManualNpmTestValidation
+- H. Gates finais:
+- firstManualNpmTestValidationAuthorizedDocumentally=true
+- selectedTarget=authorizeFirstManualNpmTestValidation
+- selectedTechnicalTarget=npm test
+- authorizationScope=documentalAuthorizationOnly
+- authorizedFutureCommand=npm test
+- authorizedFutureCommandExecutedNow=false
+- allowedFutureCommandRequiresDedicatedMicrocut=true
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmTestExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
