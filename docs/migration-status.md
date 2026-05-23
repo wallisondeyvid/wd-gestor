@@ -17008,6 +17008,117 @@ Checkpoint tenant enforcement atual:
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto da inspecao dos scripts de boot local antes de qualquer autorizacao, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem rodar seeds, sem tocar usuario master real, sem usar Portal, sem alterar src, sem alterar tests, sem alterar package.json, sem alterar scripts, sem commit e sem push.
+- Arquivos lidos nesta rodada para a inspecao:
+	- `package.json`.
+	- `src/start.js`.
+	- `src/server/createServer.js`.
+	- `src/core/config/index.js`.
+	- `src/core/db/connect.js`.
+	- `src/modules/gestor/index.js`.
+	- `src/server/bootstrapRegistry.js`.
+- Mapeamento documental consolidado dos scripts de boot:
+	- `start:gestor`: `node src/start.js`; chama `createServer()` em modo full; inicia `app.listen` fora de `VERCEL`; tenta conectar Mongo via `config.mongoUri` ou `MONGO_URI`/`MONGODB_URI`; monta `gestor`, `clinica`, `condominios` e `portal-morador`; nao liga `GESTOR_SEEDS` por si; pode tocar Mongo real ou localhost conforme ambiente; pode expor Portal e dados reais se o ambiente apontar para base real; permanece bloqueado.
+	- `start:mem`: `set MONGO_MEMORY=1 && node src/start.js`; chama o mesmo boot full; inicia `app.listen` fora de `VERCEL`; força `loadConfig()` a zerar `config.mongoUri` efetiva e `connectMongo()` a subir `MongoMemoryServer`; nao liga `GESTOR_SEEDS` por si; monta `gestor`, `clinica`, `condominios` e `portal-morador`; toca Mongo em memoria e servidor; permanece bloqueado.
+	- `start:mem:seed`: `set MONGO_MEMORY=1 && set GESTOR_SEEDS=1 && node src/start.js`; chama o mesmo boot full; inicia `app.listen` fora de `VERCEL`; força Mongo em memoria; durante os hooks `meta.init` executa `runGestorSeeds`; `runGestorSeeds` chama `ensureMasterUser()` e `cleanupWrongEmail()` quando `GESTOR_SEEDS` ou `SEEDS` estiverem ativos; combina servidor + Mongo em memoria + seeds + fluxo de usuario master; permanece bloqueado com risco critico maximo.
+	- `start:atlas`: `node src/start.js`; tecnicamente aponta para o mesmo boot de `start:gestor`; a diferenciacao para Atlas/Mongo real depende de `MONGO_URI` ou `MONGODB_URI` fornecidos no ambiente; chama `createServer()` em modo full, tenta `connectMongo()`, pode usar `connect-mongo` para sessao quando `SESSION_STORE=mongo` ou em contexto serverless com URI configurada, monta `portal-morador` por padrao e inicia servidor local fora de `VERCEL`; permanece bloqueado com risco critico por aproximacao de Mongo real.
+- Evidencias objetivas do comportamento de boot lido nesta rodada:
+	- `package.json` aponta `main` para `src/start.js`.
+	- `src/start.js` executa `main()` fora de `VERCEL` e chama `app.listen` em porta local.
+	- `src/start.js` chama `createServer({ skipDb: true })` apenas para paginas leves/estaticos e `createServer()` para o boot full.
+	- `src/server/createServer.js` cria o registry com `gestor` + `clinica` + `condominios` + `portal-morador` por padrao.
+	- `src/server/createServer.js` tenta `connectMongo(mongoUrl)` quando `skipDb=false`.
+	- `src/server/createServer.js` executa hooks `meta.init` de cada modulo antes de montar as rotas.
+	- `src/modules/gestor/index.js` registra `runGestorSeeds` como `meta.init`.
+	- `src/core/config/index.js` usa `MONGO_MEMORY` para desativar `mongoUri` efetiva e, sem memoria forcada, resolve `MONGO_URI`/`MONGODB_URI` com fallback local `mongodb://localhost:27017/wdgestor`.
+	- `src/core/db/connect.js` sobe `MongoMemoryServer` quando `MONGO_MEMORY=1` e tenta Mongo real/URI configurada quando a flag nao esta ativa.
+	- `src/server/createServer.js` pode habilitar `connect-mongo` para sessao quando houver `SESSION_STORE=mongo` ou heuristica serverless com URI configurada.
+- Classificacao documental dos alvos e riscos nesta rodada:
+	- todos os quatro scripts tocam servidor porque passam por `src/start.js` e podem chamar `app.listen` local.
+	- `start:gestor` e `start:atlas` nao se separam por codigo; a diferenca operacional depende do ambiente e da URI fornecida.
+	- `start:gestor` e `start:atlas` podem tocar Mongo nao-memoria e, por isso, podem aproximar Mongo real, sessao persistente e dados reais.
+	- `start:mem` toca Mongo em memoria e servidor, mesmo sem seed.
+	- `start:mem:seed` toca Mongo em memoria, servidor, seeds e fluxo de usuario master.
+	- `portal-morador` faz parte do registry base do boot full e, portanto, qualquer boot full aproxima Portal por padrao.
+	- nenhum dos quatro scripts e autorizavel automaticamente apos esta leitura; qualquer futura execucao exige microcorte proprio com comando nomeado, alvo Mongo documentado e autorizacao humana explicita.
+- Confirmacoes obrigatorias desta rodada:
+	- nenhuma execucao operacional foi realizada.
+	- nenhum comando npm foi executado.
+	- nenhum comando npm run foi executado.
+	- nenhum npm test foi executado.
+	- nenhum guardrail foi executado.
+	- nenhum servidor foi iniciado.
+	- nenhum Mongo real foi conectado.
+	- nenhum Mongo em memoria foi conectado manualmente.
+	- nenhuma seed foi executada.
+	- `ensureMasterUser` nao foi executado.
+	- `cleanupWrongEmail` nao foi executado.
+	- `master:set` nao foi executado.
+	- `master:set:win` nao foi executado.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum script foi alterado.
+	- producao continua nao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`.
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`.
+	- `masterCredentialSensitive=true`.
+	- `realMasterUserTouched=false`.
+	- `masterCredentialChanged=false`.
+	- `masterSetExecuted=false`.
+	- `currentOtherUsersTreatedAsFictional=true`.
+	- `futureUsersMayBeFictionalControlled=true`.
+- Decisao principal consolidada nesta rodada:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=inspectBootScriptsDocumentally`.
+	- `selectedTechnicalTarget=bootScripts`.
+	- `previousCheckpoint=planControlledLocalBoot`.
+	- `currentLocalCheckpoint=3384209 docs(ops): abre planejamento boot local controlado`.
+	- `currentRemoteCheckpoint=adc0598 docs(ops): decide proximo passo operacional`.
+	- `aheadCount=2`.
+	- `recommendedNextAct=decideFutureBootAuthorizationAfterDocumentedInspection`.
+	- `chosenApproach=mongodbControlledValidation`.
+- Gates:
+	- `bootScriptsInspectedDocumentally=true`
+	- `selectedTarget=inspectBootScriptsDocumentally`
+	- `selectedTechnicalTarget=bootScripts`
+	- `phase=controlledLocalBootPlanning`
+	- `previousCheckpoint=planControlledLocalBoot`
+	- `currentLocalCheckpoint=3384209`
+	- `currentRemoteCheckpoint=adc0598`
+	- `aheadCount=2`
+	- `recommendedNextAct=decideFutureBootAuthorizationAfterDocumentedInspection`
+	- `chosenApproach=mongodbControlledValidation`
+	- `workingTreeCleanBeforeEdit=true`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandExecuted=false`
+	- `npmExecuted=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `guardrailExecuted=false`
+	- `parityExecutedManually=false`
+	- `serverStarted=false`
+	- `localBootExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `ensureMasterUserExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `portalUsageApproved=false`
+	- `realDataUsed=false`
+	- `masterSetExecuted=false`
+	- `masterSetWinExecuted=false`
+	- `productionReadyDeclared=false`
+	- `gitPushExecuted=false`
+	- `blockedReasons=[]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
