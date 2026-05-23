@@ -6025,6 +6025,112 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da aceitacao dos testes skipped da primeira validacao npm test consolidado nesta rodada, sem nova execucao operacional, sem novo npm, sem novo npm run, sem novo npm test, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledFirstOperationalValidation
+- selectedTarget=acceptFirstNpmTestSkippedAsKnown
+- selectedTechnicalTarget=npm test skipped
+- previousCheckpoint=recordFirstManualNpmTestValidationResult
+- currentLocalCheckpoint=329a255
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=329a255 docs(ops): registra resultado primeira validacao npm test
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=2
+- workingTreeClean=true
+- npmTestResult=green
+- npmTestTests=2364
+- npmTestSuites=17
+- npmTestPass=2362
+- npmTestFail=0
+- npmTestSkipped=2
+- npmTestTodo=0
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoUsedInternallyByNpmTest=true
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Decisao humana:
+- npmTestSkippedAcceptedAsKnown=true
+- npmTestSkippedCountAccepted=2
+- npmTestSkippedRequiresImmediateInvestigation=false
+- npmTestSkippedBlocksNextPlanning=false
+- npmTestSkippedDoesNotChangeGreenResult=true
+- npmTestSkippedDecisionSource=humanDecision
+- npmTestSkippedDecisionNote=Os 2 testes skipped foram aceitos como conhecidos neste momento.
+- D. Limites da decisao:
+- esta decisao nao altera codigo;
+- esta decisao nao altera testes;
+- esta decisao nao executa nova validacao;
+- esta decisao nao declara producao pronta;
+- esta decisao nao autoriza boot local;
+- esta decisao nao autoriza Mongo real;
+- esta decisao nao autoriza Mongo em memoria manual;
+- esta decisao nao autoriza master:set ou master:set:win;
+- esta decisao nao autoriza seed/reset/cleanup/migration/backfill;
+- esta decisao nao autoriza Portal;
+- esta decisao nao autoriza uso de dados reais.
+- E. Proximo passo recomendado:
+- afterSkippedAcceptanceNextCandidate=planNextOperationalValidationCandidate
+- suggestedNextCandidates=guardrails,bootLocalControlado,mongoMemoryIsolado
+- nextStepMustBeDocumentalPlanning=true
+- nextStepRequiresDedicatedMicrocut=true
+- nextStepRequiresHumanAuthorization=true
+- F. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- G. Gates finais:
+- firstNpmTestSkippedAcceptanceRecorded=true
+- selectedTarget=acceptFirstNpmTestSkippedAsKnown
+- selectedTechnicalTarget=npm test skipped
+- npmTestSkippedAcceptedAsKnown=true
+- npmTestSkippedRequiresImmediateInvestigation=false
+- npmTestSkippedBlocksNextPlanning=false
+- npmTestResultRemainsGreen=true
+- npmTestExecutedAgain=false
+- commandExecuted=false
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
