@@ -4990,6 +4990,173 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto de abertura do bloco controlledOperationalAuthorizationMatrix consolidado nesta rodada, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledOperationalAuthorizationMatrix
+- selectedTarget=prepareControlledOperationalAuthorizationMatrix
+- selectedTechnicalTarget=none
+- previousCheckpoint=recordPostPushFourPhaseDocumentalBlockCheckpoint
+- currentLocalCheckpoint=87c6d7a
+- currentRemoteCheckpoint=658cb5a
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=87c6d7a docs(ops): registra pos-push bloco documental
+- remoteHead=658cb5a docs(ops): fecha fase handoff prontidao operacional
+- aheadCount=1
+- workingTreeClean=true
+- fourPhaseDocumentalBlockClosed=true
+- fourPhaseDocumentalBlockPublished=true
+- postPushFourPhaseDocumentalBlockCheckpointRecorded=true
+- recommendedNextBlock=controlledOperationalAuthorizationMatrix
+- recommendedNextBlockScope=documentalMatrixOnly
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- masterSetExecuted=false
+- C. Objetivo do novo bloco:
+- preparar uma matriz documental de autorizacao operacional controlada;
+- listar acoes futuras possiveis;
+- classificar risco de cada acao;
+- definir pre-condicoes minimas;
+- definir quem autoriza;
+- definir se pode rodar agora;
+- impedir execucao acidental;
+- criar ponte segura entre documentacao e execucao futura;
+- manter producao nao pronta;
+- manter usuario master real protegido.
+- D. Escopo permitido:
+- ler migration-status.md;
+- registrar abertura do bloco;
+- registrar acoes candidatas;
+- registrar riscos e bloqueios;
+- registrar modelo futuro da matriz;
+- manter tudo documental.
+- E. Escopo proibido:
+- executar comando operacional;
+- executar npm, npm run ou npm test;
+- executar validacoes ou guardrails manualmente;
+- iniciar servidor;
+- conectar Mongo real;
+- conectar Mongo em memoria manualmente;
+- executar query real;
+- executar master:set ou master:set:win;
+- executar seed/reset/cleanup/migration/backfill;
+- usar Portal;
+- tocar dados reais;
+- tocar usuario master real;
+- alterar credenciais;
+- declarar producao pronta;
+- fazer push.
+- F. Modelo futuro da matriz:
+- coluna 1: acao futura;
+- coluna 2: risco;
+- coluna 3: pre-condicao minima;
+- coluna 4: quem autoriza;
+- coluna 5: pode rodar agora?;
+- coluna 6: observacao/bloqueio.
+- G. Acoes candidatas iniciais:
+- boot local controlado;
+- Mongo em memoria isolado;
+- Mongo real;
+- Mongo Atlas;
+- npm scripts;
+- npm test;
+- guardrails;
+- master:set;
+- master:set:win;
+- seed/reset/cleanup/migration/backfill;
+- Portal;
+- query real;
+- uso de dados reais;
+- declaracao de producao pronta;
+- push futuro;
+- rollback futuro;
+- backup/restore futuro.
+- H. Classificacao inicial de risco:
+- boot local controlado: medio;
+- Mongo em memoria isolado: medio;
+- Mongo real: critico;
+- Mongo Atlas: critico;
+- npm scripts genericos: variavel;
+- npm test: medio;
+- guardrails: medio;
+- master:set: critico;
+- master:set:win: critico;
+- seed/reset/cleanup/migration/backfill: critico;
+- Portal: alto;
+- query real: critico;
+- uso de dados reais: critico;
+- declaracao de producao pronta: critico;
+- push futuro: medio;
+- rollback futuro: alto;
+- backup/restore futuro: alto.
+- I. Decisao deste microcorte:
+- o bloco controlledOperationalAuthorizationMatrix foi aberto;
+- nenhuma execucao foi feita;
+- nenhum comando foi autorizado;
+- nenhum script foi executado;
+- nenhuma acao operacional pode rodar por este checkpoint;
+- a matriz futura sera preparada em microcorte proprio;
+- producao continua nao pronta;
+- usuario master real continua protegido.
+- J. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- K. Proximo ato recomendado:
+- commitOpenControlledOperationalAuthorizationMatrixBlock
+- L. Gates finais:
+- controlledOperationalAuthorizationMatrixBlockOpened=true
+- selectedTarget=prepareControlledOperationalAuthorizationMatrix
+- selectedTechnicalTarget=none
+- blockScope=documentalMatrixOnly
+- matrixExecutionFuture=false
+- matrixCommandFuture=none
+- matrixMongoRealFuture=false
+- matrixMemoryMongoFuture=false
+- matrixDataTouchFuture=false
+- matrixMasterTouchFuture=false
+- matrixProductionDeclarationFuture=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
