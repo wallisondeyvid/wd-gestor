@@ -6280,6 +6280,128 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da decisao do terceiro candidato de validacao consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem verify:imports, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledThirdValidationPlanning
+- selectedTarget=decideThirdValidationCandidate
+- selectedTechnicalTarget=verify:imports
+- previousCheckpoint=recordSecondGuardrailUnitScopeNullResult
+- currentLocalCheckpoint=23d74e7
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=23d74e7 docs(ops): registra resultado guardrail unitScope
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=11
+- workingTreeClean=true
+- npmTestResult=green
+- npmTestFail=0
+- npmTestSkipped=2
+- npmTestSkippedAcceptedAsKnown=true
+- firstGuardrailName=guard:condominios-unidade
+- firstGuardrailResult=green
+- directUnidadeUsageFoundInCondominios=false
+- secondGuardrailName=guard:unitScope-null
+- secondGuardrailResult=green
+- unitScopeNullFoundInSrc=false
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Decisao do proximo candidato:
+- thirdValidationCandidateSelected=verify:imports
+- thirdValidationCandidateRisk=baixo-medio
+- thirdValidationCandidateReason=validacao estatica/read-only ja inspecionada, sem Mongo, sem servidor, sem dados reais e sem master real, porem com escopo mais amplo que os dois guardrails anteriores.
+- thirdValidationFutureCommand=npm run verify:imports
+- thirdValidationUnderlyingCommand=node verify-no-relative-imports.js
+- thirdValidationExecutionAuthorizedNow=false
+- thirdValidationRequiresDedicatedMicrocut=true
+- thirdValidationRequiresHumanAuthorization=true
+- thirdValidationRequiresFreshGitGates=true
+- thirdValidationRequiresWorkingTreeClean=true
+- thirdValidationRequiresNoUncommittedFiles=true
+- D. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- genericNpmScriptsAuthorized=false
+- verifyImportsExecutionAuthorizedNow=false
+- otherGuardrailsAuthorized=false
+- guardCondominiosUnidadeAuthorizedAgain=false
+- guardUnitScopeNullAuthorizedAgain=false
+- guardNoModelBypassAuthorized=false
+- guardMigrationAuthorized=false
+- serverStartAuthorized=false
+- localBootAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- E. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- F. Proximo ato recomendado:
+- commitDecideThirdValidationCandidate
+- afterCommitNextCandidate=authorizeVerifyImportsValidation
+- G. Gates finais:
+- thirdValidationCandidateDecided=true
+- selectedTarget=decideThirdValidationCandidate
+- selectedTechnicalTarget=verify:imports
+- planningScope=documentalPlanningOnly
+- thirdValidationExecutionAuthorizedNow=false
+- nextExecutionAuthorized=false
+- guardrailExecuted=false
+- verifyImportsExecuted=false
+- npmTestExecutedAgain=false
+- commandExecuted=false
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do resultado da segunda execucao guardrail manual controlada consolidado nesta rodada, sem nova execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails adicionais, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=controlledSecondGuardrailValidation
