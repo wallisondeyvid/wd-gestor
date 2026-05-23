@@ -6280,6 +6280,147 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da autorizacao futura e isolada do guardrail guard:migration consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem scripts, sem guardrails, sem parity manual, sem verify:imports, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledMigrationGuardrailAuthorization
+- selectedTarget=authorizeGuardMigrationExecution
+- selectedTechnicalTarget=guard:migration
+- previousCheckpoint=decideGuardMigrationCandidate
+- currentLocalCheckpoint=3a20897
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=3a20897 docs(ops): decide guardrail migration
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=19
+- workingTreeClean=true
+- guardMigrationCandidateDecided=true
+- nextGuardrailCandidateSelected=guard:migration
+- guardMigrationCandidateRisk=medio-alto
+- guardMigrationExecutionAuthorizedNow=false
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Decisao:
+- guardMigrationCandidateSelected=guard:migration
+- guardMigrationCandidateRisk=medio-alto
+- guardMigrationCandidateReason=guardrail ja inspecionado como aparentemente estatico/read-only, porem com superficie maior por depender de git diff e variaveis de ambiente.
+- guardMigrationFutureCommand=npm run guard:migration
+- guardMigrationExecutionAuthorizedDocumentally=true
+- guardMigrationExecutedNow=false
+- guardMigrationRequiresFreshGitGates=true
+- guardMigrationRequiresWorkingTreeClean=true
+- guardMigrationRequiresNoUncommittedFiles=true
+- guardMigrationRequiresDedicatedMicrocut=true
+- guardMigrationRequiresHumanAuthorization=true
+- D. Escopo autorizado para microcorte futuro:
+- allowedFutureCommand=npm run guard:migration
+- allowedFutureCommandScope=manualControlledGuardrailOnly
+- allowedFutureCommandRequiresFreshGitGates=true
+- allowedFutureCommandRequiresWorkingTreeClean=true
+- allowedFutureCommandRequiresNoUncommittedFiles=true
+- allowedFutureCommandRequiresHumanAuthorization=true
+- allowedFutureCommandMayRunOnlyInNextDedicatedMicrocut=true
+- E. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- genericNpmScriptsAuthorized=false
+- otherGuardrailsAuthorized=false
+- guardNoModelBypassAuthorizedAgain=false
+- guardCondominiosUnidadeAuthorizedAgain=false
+- guardUnitScopeNullAuthorizedAgain=false
+- parityManualAuthorized=false
+- verifyImportsAuthorized=false
+- serverStartAuthorized=false
+- localBootAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- F. Limites tecnicos da autorizacao:
+- guardrailExpectedStaticOnly=true
+- guardrailExpectedTouchesMongo=false
+- guardrailExpectedTouchesMongoReal=false
+- guardrailExpectedTouchesMongoMemory=false
+- guardrailExpectedTouchesMasterUser=false
+- guardrailExpectedTouchesCredentials=false
+- guardrailExpectedTouchesPortal=false
+- guardrailExpectedTouchesRealData=false
+- guardrailExpectedStartsServer=false
+- guardrailExpectedWritesFiles=false
+- guardrailExpectedChangesSource=false
+- guardrailHasWiderSurfaceThanNoModelBypass=true
+- guardrailDependsOnGitDiffOrEnvironment=true
+- G. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- H. Proximo ato recomendado:
+- commitAuthorizeGuardMigrationExecution
+- afterCommitNextCandidate=runGuardMigration
+- I. Gates finais:
+- guardMigrationExecutionAuthorizedDocumentally=true
+- selectedTarget=authorizeGuardMigrationExecution
+- selectedTechnicalTarget=guard:migration
+- authorizationScope=documentalAuthorizationOnly
+- authorizedFutureCommand=npm run guard:migration
+- authorizedFutureCommandExecutedNow=false
+- allowedFutureCommandRequiresDedicatedMicrocut=true
+- nextExecutionAuthorized=false
+- guardrailExecutionAuthorizedForFutureOnly=true
+- guardrailExecuted=false
+- guardMigrationExecuted=false
+- npmTestExecutedAgain=false
+- commandExecuted=false
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto da decisao do proximo candidato guard:migration consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem scripts, sem guardrails, sem parity manual, sem verify:imports, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=controlledMigrationGuardrailPlanning
