@@ -6131,6 +6131,155 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto de abertura do planejamento da proxima validacao operacional consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledNextOperationalValidationPlanning
+- selectedTarget=planNextOperationalValidationCandidate
+- selectedTechnicalTarget=none
+- previousCheckpoint=acceptFirstNpmTestSkippedAsKnown
+- currentLocalCheckpoint=59788ac
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=59788ac docs(ops): aceita skipped primeira validacao npm test
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=3
+- workingTreeClean=true
+- firstManualNpmTestValidationResult=green
+- npmTestTests=2364
+- npmTestSuites=17
+- npmTestPass=2362
+- npmTestFail=0
+- npmTestSkipped=2
+- npmTestSkippedAcceptedAsKnown=true
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoUsedInternallyByNpmTest=true
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Candidatos comparados:
+- 1. guardrails
+- 2. boot local controlado
+- 3. Mongo em memoria isolado
+- D. Avaliacao inicial de guardrails:
+- candidate=guardrails
+- candidateRisk=baixo-medio
+- candidateBenefit=verificar consistencia sem iniciar aplicacao completa
+- candidateRequiresScriptMapping=true
+- candidateCanRunNow=false
+- candidateRequiresDedicatedMicrocut=true
+- candidateRequiresHumanAuthorization=true
+- candidateBlockedUntilExactCommandMapped=true
+- observation=antes de executar qualquer guardrail, e obrigatorio mapear o nome exato do script, seu efeito esperado e se ele toca banco, ambiente, dados ou usuario master real.
+- E. Avaliacao inicial de boot local controlado:
+- candidate=bootLocalControlado
+- candidateRisk=alto
+- candidateBenefit=validar inicializacao real da aplicacao
+- candidateCanRunNow=false
+- candidateRequiresEnvReview=true
+- candidateRequiresMongoTargetReview=true
+- candidateRequiresRollbackPlan=true
+- candidateRequiresDedicatedMicrocut=true
+- candidateRequiresHumanAuthorization=true
+- observation=boot local ainda e cedo porque envolve servidor, env, conexao e risco de tocar banco/configuracao.
+- F. Avaliacao inicial de Mongo em memoria isolado:
+- candidate=mongoMemoryIsolado
+- candidateRisk=medio
+- candidateBenefit=validar fluxo com banco efemero sem Mongo real
+- candidateCanRunNow=false
+- candidateRequiresSeedReview=true
+- candidateRequiresMasterProtectionReview=true
+- candidateRequiresDedicatedMicrocut=true
+- candidateRequiresHumanAuthorization=true
+- observation=Mongo em memoria pode ser seguro, mas precisa garantir ausencia de seed sensivel, ausencia de master:set e isolamento total.
+- G. Decisao recomendada:
+- recommendedNextCandidate=guardrails
+- recommendedNextCandidateReason=menor superficie operacional antes de boot ou banco, desde que o comando exato seja mapeado documentalmente antes.
+- recommendedNextAction=mapGuardrailScriptsBeforeExecution
+- recommendedNextActionScope=documentalReadOnly
+- nextExecutionAuthorized=false
+- guardrailsExecutionAuthorized=false
+- bootLocalExecutionAuthorized=false
+- mongoMemoryExecutionAuthorized=false
+- npmTestExecutionAuthorizedAgain=false
+- H. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- npmRunAuthorized=false
+- genericNpmScriptsAuthorized=false
+- guardrailsAuthorizedForExecutionNow=false
+- serverStartAuthorized=false
+- localBootAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- I. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- J. Proximo ato recomendado:
+- commitPlanNextOperationalValidationCandidate
+- afterCommitNextCandidate=mapGuardrailScriptsBeforeExecution
+- K. Gates finais:
+- nextOperationalValidationPlanningOpened=true
+- selectedTarget=planNextOperationalValidationCandidate
+- selectedTechnicalTarget=none
+- planningScope=documentalPlanningOnly
+- nextExecutionAuthorized=false
+- recommendedNextCandidate=guardrails
+- recommendedNextAction=mapGuardrailScriptsBeforeExecution
+- npmTestExecutedAgain=false
+- commandExecuted=false
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
