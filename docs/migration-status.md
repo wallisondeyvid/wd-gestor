@@ -6280,6 +6280,129 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto do registro da execucao automatica do hook de pre-commit consolidado nesta rodada, sem nova execucao operacional, sem npm manual, sem npm run manual, sem npm test manual, sem guardrails manuais, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledThirdValidationPlanning
+- selectedTarget=recordAutomaticPreCommitHookVerifyImportsExecution
+- selectedTechnicalTarget=pre-commit hook
+- previousCheckpoint=decideThirdValidationCandidate
+- currentLocalCheckpoint=bcece39
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=bcece39 docs(ops): decide validacao verify imports
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=12
+- workingTreeClean=true
+- thirdValidationCandidateSelected=verify:imports
+- thirdValidationExecutionAuthorizedNow=false
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Fato observado:
+- gitCommitNormalExecuted=true
+- gitCommitNoVerifyUsed=false
+- preCommitHookTriggeredAutomatically=true
+- preCommitHookPath=.husky/pre-commit
+- preCommitHookExecutedVerifyImports=true
+- preCommitHookExecutedPrecommit=true
+- verifyImportsExecutedByHook=true
+- verifyImportsExecutedManually=false
+- precommitExecutedByHook=true
+- precommitExecutedManually=false
+- prePushHookExecuted=false
+- npmTestExecutedByPrePush=false
+- gitPushExecuted=false
+- D. Resultado observado:
+- automaticHookResult=green
+- verifyImportsHookResult=green
+- precommitHookResult=green
+- parityHookResult=green
+- parityTests=136
+- parityFail=0
+- hookBlockedCommit=false
+- commitCreatedDespiteHook=true
+- resultingCommit=bcece39 docs(ops): decide validacao verify imports
+- E. Correcao semantica do ledger:
+- priorLedgerSaidVerifyImportsExecutedFalse=true
+- semanticCorrectionNeeded=true
+- verifyImportsManualExecutionRemainsFalse=true
+- verifyImportsAutomaticHookExecutionTrue=true
+- futureManualVerifyImportsAuthorizationStillRequiresDedicatedMicrocut=true
+- automaticHookExecutionDoesNotAuthorizeFutureManualExecution=true
+- F. Escopo confirmado:
+- npmTestManualExecuted=false
+- guardrailManualExecuted=false
+- serverStartExecuted=false
+- localBootExecuted=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- queryRealExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsed=false
+- productionReadyDeclared=false
+- G. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- H. Proximo ato recomendado:
+- commitRecordAutomaticPreCommitHookVerifyImportsExecution
+- afterCommitNextCandidate=decideWhetherManualVerifyImportsStillNeeded
+- I. Gates finais:
+- automaticPreCommitHookVerifyImportsExecutionRecorded=true
+- selectedTarget=recordAutomaticPreCommitHookVerifyImportsExecution
+- selectedTechnicalTarget=pre-commit hook
+- documentationScope=ledgerOnly
+- commandExecuted=false
+- manualCommandExecuted=false
+- verifyImportsExecutedManually=false
+- verifyImportsExecutedByHook=true
+- precommitExecutedByHook=true
+- npmTestExecutedAgain=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- guardrailExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto da decisao do terceiro candidato de validacao consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem verify:imports, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=controlledThirdValidationPlanning
