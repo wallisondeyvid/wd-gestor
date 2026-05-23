@@ -2603,6 +2603,184 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto de abertura da Fase 3 consolidado nesta rodada, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=realMasterUserProtectionRunbook
+- selectedTarget=prepareRealMasterUserProtectionRunbook
+- selectedTechnicalTarget=none
+- previousPhase=multiTenantInvariantChecklist
+- previousCheckpoint=closeMultiTenantInvariantChecklistPhase
+- currentLocalCheckpoint=73b6b91
+- currentRemoteCheckpoint=c15eebc
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=73b6b91 docs(ops): fecha fase checklist invariantes tenant
+- remoteHead=c15eebc docs(ops): encerra temporariamente auditoria prontidao
+- aheadCount=15
+- workingTreeClean=true
+- phase1ClosedDocumentally=true
+- phase2ClosedDocumentally=true
+- phase3Opened=true
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- nextPushAllowedAfterPhase4=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- masterSetExecuted=false
+- C. Objetivo da Fase 3:
+- preparar runbook documental de protecao do usuario master real
+- consolidar regras de manuseio do usuario real wallisondeyvid13@gmail.com
+- registrar scripts proibidos, especialmente master:set e master:set:win
+- registrar bloqueios de seed, reset, cleanup, migration e backfill
+- registrar sinais de parada imediata
+- registrar o que diferencia usuarios ficticios/controlados do usuario master real
+- manter tudo estritamente documental
+- nao executar comandos
+- nao tocar usuario real
+- nao conectar Mongo
+- nao declarar producao pronta
+- D. Politica global de push:
+- fourPhaseDocumentalBlockActive=true
+- phase1=controlledBootRunbookWithoutExecution
+- phase2=multiTenantInvariantChecklist
+- phase3=realMasterUserProtectionRunbook
+- phase4=operationalReadinessFinalHandoff
+- localCommitsAllowedDuringAllFourDocumentalPhases=true
+- pushAfterPhase1=false
+- pushAfterPhase2=false
+- pushAfterPhase3=false
+- pushDuringPhase4=false
+- pushOnlyAfterPhase4Closure=true
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- E. Escopo permitido:
+- ler docs/migration-status.md
+- em microcortes futuros, ler package.json apenas documentalmente para mapear master:set, seeds e scripts sensiveis
+- em microcortes futuros, ler documentacao de provisioning, boot e invariantes tenant
+- registrar runbook documental no ledger
+- mapear riscos e bloqueios do usuario master real
+- mapear criterios de parada
+- mapear regras de usuarios ficticios versus usuario master real
+- F. Escopo proibido:
+- executar comando
+- executar npm, npm run ou npm test
+- executar validacoes ou guardrails manualmente
+- iniciar servidor
+- conectar Mongo real
+- conectar Mongo em memoria manualmente
+- executar query
+- executar master:set
+- executar master:set:win
+- executar seed/reset/cleanup/migration/backfill
+- tocar dados
+- tocar usuario master real
+- alterar credenciais
+- expor senha, token, URI ou segredo
+- usar Portal
+- declarar producao pronta
+- fazer push
+- G. Fontes candidatas para microcortes futuros da Fase 3:
+- docs/migration-status.md
+- package.json
+- docs/gestor-provisioning-contract.md
+- docs/runbooks/controlled-boot-without-execution.md
+- docs/checkpoints/multi-tenant-invariant-checklist.md
+- docs/gestor-operational-auth-context-model.md
+- docs/gestor-fallback-inventory.md
+- scripts relacionados a master, seeds ou provisioning, apenas leitura documental se necessario
+- H. Regras candidatas do runbook:
+- wallisondeyvid13@gmail.com e usuario master real e sensivel
+- esse usuario nao pode ser tratado como ficticio
+- esse usuario nao pode ser alterado sem autorizacao humana explicita e fase propria
+- master:set e master:set:win permanecem bloqueados
+- seeds que possam criar, alterar ou limpar usuario master permanecem bloqueados
+- cleanupWrongEmail permanece bloqueado se puder tocar o usuario real
+- credenciais nao devem ser exibidas no ledger
+- dados reais continuam bloqueados
+- qualquer acao sobre o usuario master exige microcorte proprio, escopo proprio e confirmacao humana explicita
+- producao segue nao pronta
+- I. Riscos candidatos:
+- master real tratado como ficticio: critico
+- master:set executado sem autorizacao: critico
+- seed alterando usuario master: critico
+- cleanup ou migration tocando usuario real: critico
+- exposicao de senha/token/URI/segredo: critico
+- confusao entre usuarios ficticios e master real: alto
+- producao declarada pronta antes de fase propria: critico
+- J. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- K. Proximo ato recomendado:
+- recordRealMasterUserProtectionRunbookOpening
+- L. Gates finais:
+- realMasterUserProtectionRunbookPhaseOpened=true
+- selectedTarget=prepareRealMasterUserProtectionRunbook
+- selectedTechnicalTarget=none
+- phaseScope=documentalRunbookOnly
+- phaseExecutionFuture=false
+- phaseCommandFuture=none
+- phaseMongoRealFuture=false
+- phaseMemoryMongoFuture=false
+- phaseDataTouchFuture=false
+- phaseMasterTouchFuture=false
+- phaseProductionDeclarationFuture=false
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
