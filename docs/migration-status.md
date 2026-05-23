@@ -6280,6 +6280,124 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da decisao do segundo guardrail candidato consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledSecondGuardrailPlanning
+- selectedTarget=decideSecondGuardrailCandidate
+- selectedTechnicalTarget=guard:unitScope-null
+- previousCheckpoint=recordFirstGuardrailCondominiosUnidadeResult
+- currentLocalCheckpoint=c5f4d2d
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=c5f4d2d docs(ops): registra resultado guardrail condominios
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=8
+- workingTreeClean=true
+- npmTestResult=green
+- npmTestFail=0
+- npmTestSkipped=2
+- npmTestSkippedAcceptedAsKnown=true
+- firstGuardrailName=guard:condominios-unidade
+- firstGuardrailResult=green
+- directUnidadeUsageFoundInCondominios=false
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Decisao do proximo candidato:
+- secondGuardrailCandidateSelected=guard:unitScope-null
+- secondGuardrailCandidateRisk=baixo-medio
+- secondGuardrailCandidateReason=guardrail estatico/read-only ja inspecionado, baseado em guard-grep.js, com escopo em src e foco em detectar unitScope:null.
+- secondGuardrailFutureCommand=npm run guard:unitScope-null
+- secondGuardrailUnderlyingCommand=node scripts/guard-grep.js "unitScope:\s*null" "src" "Proibido unitScope:null em src/"
+- secondGuardrailExecutionAuthorizedNow=false
+- secondGuardrailRequiresDedicatedMicrocut=true
+- secondGuardrailRequiresHumanAuthorization=true
+- secondGuardrailRequiresFreshGitGates=true
+- secondGuardrailRequiresWorkingTreeClean=true
+- secondGuardrailRequiresNoUncommittedFiles=true
+- D. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- genericNpmScriptsAuthorized=false
+- secondGuardrailExecutionAuthorizedNow=false
+- otherGuardrailsAuthorized=false
+- verifyImportsAuthorized=false
+- guardCondominiosUnidadeAuthorizedAgain=false
+- guardNoModelBypassAuthorized=false
+- guardMigrationAuthorized=false
+- serverStartAuthorized=false
+- localBootAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- E. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- F. Proximo ato recomendado:
+- commitDecideSecondGuardrailCandidate
+- afterCommitNextCandidate=authorizeSecondGuardrailUnitScopeNull
+- G. Gates finais:
+- secondGuardrailCandidateDecided=true
+- selectedTarget=decideSecondGuardrailCandidate
+- selectedTechnicalTarget=guard:unitScope-null
+- planningScope=documentalPlanningOnly
+- secondGuardrailExecutionAuthorizedNow=false
+- nextExecutionAuthorized=false
+- guardrailExecuted=false
+- npmTestExecutedAgain=false
+- commandExecuted=false
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do resultado da primeira execucao guardrail manual controlada consolidado nesta rodada, sem nova execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails adicionais, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=controlledFirstGuardrailValidation
