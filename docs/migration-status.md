@@ -631,6 +631,158 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto do mapa de entradas da Fase 1 consolidado nesta rodada, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem master:set, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledBootRunbookWithoutExecution
+- selectedTarget=recordControlledBootRunbookSourceMap
+- selectedTechnicalTarget=controlledBootRunbookSources
+- previousCheckpoint=prepareControlledBootRunbookWithoutExecution
+- currentLocalCheckpoint=e3d99e1
+- currentRemoteCheckpoint=c15eebc
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=e3d99e1 docs(ops): abre fase runbook boot controlado
+- remoteHead=c15eebc docs(ops): encerra temporariamente auditoria prontidao
+- aheadCount=1
+- workingTreeClean=true
+- phasePushPolicy=pushOnlyAtPhaseEnd
+- pushDuringIntermediateMicrocuts=false
+- gitPushExecuted=false
+- controlledBootRunbookWithoutExecutionPhaseOpened=true
+- phaseScope=documentalRunbookOnly
+- phaseExecutionFuture=false
+- phaseCommandFuture=none
+- productionReadyDeclared=false
+- C. Fontes lidas:
+- docs/migration-status.md
+- package.json
+- src/start.js
+- src/server/createServer.js
+- src/server/bootstrapRegistry.js
+- src/modules/gestor/index.js
+- docs/runbooks
+- docs/checkpoints
+- D. Mapa documental por fonte:
+- 1. docs/migration-status.md
+- consolidar historico da Fase 1, auditoria operacional, matriz de lacunas, checklist go/no-go e bloqueios ja publicados
+- usar como fonte de gates e decisoes anteriores
+- nao usar como autorizacao operacional
+- 2. package.json
+- mapear scripts de boot: start, dev, start:gestor, start:mem, start:mem:seed e start:atlas
+- mapear scripts sensiveis: master:set, master:set:win, migracoes, backfills, tests, guardrails, parity e precommit
+- registrar todos como bloqueados para execucao neste runbook
+- 3. src/start.js
+- mapear entrypoint de boot e bifurcacao entre handler serverless e main local
+- mapear riscos de app.listen, fallback para cachedStaticApp, light mode, createServer(full), createServer(skipDb) e resposta 503 em falha de boot
+- registrar que qualquer execucao futura exige microcorte proprio
+- 4. src/server/createServer.js
+- mapear montagem do app, middlewares, sessao HTTP, connectMongo, connect-mongo, retry de reconexao e registry
+- mapear uso de MemoryStore por padrao, degradacao para skipDb e hotspot de MongoStore quando SESSION_STORE=mongo ou ambiente serverless exigir store persistente
+- registrar como hotspot critico do boot
+- 5. src/server/bootstrapRegistry.js
+- mapear composicao dinamica de modulos, aliases, montagem do registry e ampliacao de superficie por modulo
+- registrar que Portal e modulos hibridos continuam bloqueados para qualquer boot futuro desta fase
+- 6. src/modules/gestor/index.js
+- mapear risco de GESTOR_SEEDS, SEEDS, runGestorSeeds, ensureMasterUser e cleanupWrongEmail
+- registrar seed e master como bloqueados
+- 7. docs/runbooks
+- mapear runbooks existentes do repositorio, hoje concentrados em inventory-fictional-data-readonly e userdb-canary
+- identificar que nao ha runbook especifico de boot controlado sem execucao nesta pasta
+- registrar lacuna documental explicita para o futuro runbook da Fase 1
+- 8. docs/checkpoints
+- mapear checkpoints existentes relacionados a prontidao operacional, runtime contract, auth-context, wrappers, provisioning e multi-tenant
+- identificar que nao ha checkpoint especifico dedicado ao mapa de entradas da Fase 1 fora deste ledger
+- registrar a lacuna como dependencia documental do futuro runbook
+- E. Classificacao dos riscos para o futuro runbook:
+- boot/runtime: alto
+- Mongo real/Atlas: critico
+- Mongo em memoria manual: alto
+- start:mem:seed: critico
+- master:set: critico
+- seed/reset/cleanup/migration/backfill: critico
+- Portal: alto
+- dados reais: critico
+- usuario master real: critico
+- producao/prontidao: critico
+- F. Lacunas documentais a levar para o runbook:
+- falta roteiro canonico de boot controlado sem execucao
+- falta secao de comandos candidatos sem autorizacao de execucao
+- falta secao de logs esperados
+- falta secao de pontos de parada imediata
+- falta secao de protecao do usuario master real dentro do runbook
+- falta secao de separacao Mongo real versus Mongo em memoria
+- falta secao explicita de proibicao de seed/master:set/Portal
+- falta secao de producao nao pronta
+- G. Decisao deste microcorte:
+- mapa documental das fontes do runbook foi registrado
+- nenhuma execucao foi feita
+- nenhum comando foi autorizado
+- proximo passo seguro sera preparar a estrutura textual do runbook, ainda no ledger ou em docs/runbooks se autorizado em microcorte proprio
+- H. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- I. Proximo ato recomendado:
+- commitRecordControlledBootRunbookSourceMap
+- J. Gates finais:
+- controlledBootRunbookSourceMapRecorded=true
+- selectedTarget=recordControlledBootRunbookSourceMap
+- selectedTechnicalTarget=controlledBootRunbookSources
+- phaseScope=documentalRunbookOnly
+- sourceMapScope=documentalReadOnly
+- sourceMapExecutionFuture=false
+- sourceMapCommandFuture=none
+- phasePushPolicy=pushOnlyAtPhaseEnd
+- localCommitsAllowedDuringPhase=true
+- pushDuringIntermediateMicrocuts=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
