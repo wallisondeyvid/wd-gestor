@@ -6280,6 +6280,153 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da inspecao dos guardrails restantes consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem scripts, sem guardrails, sem parity manual, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledRemainingGuardrailInspection
+- selectedTarget=inspectGuardNoModelBypassAndGuardMigrationDocumentally
+- selectedTechnicalTarget=guard:no-model-bypass,guard:migration
+- previousCheckpoint=planNextValidationAfterVerifyImportsAcceptance
+- currentLocalCheckpoint=d1ff7d8
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=d1ff7d8 docs(ops): planeja validacao pos verify imports
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=15
+- workingTreeClean=true
+- npmTestResult=green
+- guardCondominiosUnidadeResult=green
+- guardUnitScopeNullResult=green
+- verifyImportsHookValidationAccepted=true
+- parityHookResult=green
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Comandos inspecionados:
+- guardNoModelBypassCommand=node scripts/guardrails/verify-no-model-bypass.js
+- guardMigrationCommand=node scripts/guardrails/verify-migration-safety.js
+- implementationFilesRead=package.json,scripts/guardrails/verify-no-model-bypass.js,scripts/guardrails/verify-migration-safety.js
+- D. Resultado da inspecao de guard:no-model-bypass:
+- guardNoModelBypassImplementationRead=true
+- guardNoModelBypassAppearsStaticOnly=true
+- guardNoModelBypassTouchesMongo=false
+- guardNoModelBypassTouchesMongoReal=false
+- guardNoModelBypassTouchesMongoMemory=false
+- guardNoModelBypassTouchesMasterUser=false
+- guardNoModelBypassTouchesCredentials=false
+- guardNoModelBypassTouchesPortal=false
+- guardNoModelBypassTouchesRealData=false
+- guardNoModelBypassStartsServer=false
+- guardNoModelBypassWritesFiles=false
+- guardNoModelBypassChangesSource=false
+- guardNoModelBypassCanRunNow=false
+- guardNoModelBypassRequiresDedicatedMicrocut=true
+- guardNoModelBypassRequiresHumanAuthorization=true
+- E. Resultado da inspecao de guard:migration:
+- guardMigrationImplementationRead=true
+- guardMigrationAppearsStaticOnly=true
+- guardMigrationTouchesMongo=false
+- guardMigrationTouchesMongoReal=false
+- guardMigrationTouchesMongoMemory=false
+- guardMigrationTouchesMasterUser=false
+- guardMigrationTouchesCredentials=false
+- guardMigrationTouchesPortal=false
+- guardMigrationTouchesRealData=false
+- guardMigrationStartsServer=false
+- guardMigrationWritesFiles=false
+- guardMigrationChangesSource=false
+- guardMigrationCanRunNow=false
+- guardMigrationRequiresDedicatedMicrocut=true
+- guardMigrationRequiresHumanAuthorization=true
+- F. Comparacao e recomendacao:
+- remainingGuardrailInspectionCompleted=true
+- recommendedNextCandidate=guard:no-model-bypass
+- recommendedNextCandidateReason=guard:no-model-bypass parece mais estreito e previsivel por operar como varredura estatica em src, enquanto guard:migration depende de git diff, variaveis de ambiente e cobre uma superficie mais ampla de seguranca de migracao.
+- recommendedNextCandidateCanRunNow=false
+- recommendedNextCandidateRequiresDedicatedMicrocut=true
+- recommendedNextCandidateRequiresHumanAuthorization=true
+- nextExecutionAuthorized=false
+- G. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- npmRunAuthorized=false
+- genericNpmScriptsAuthorized=false
+- guardNoModelBypassExecutionAuthorizedNow=false
+- guardMigrationExecutionAuthorizedNow=false
+- parityManualExecutionAuthorizedNow=false
+- bootLocalAuthorized=false
+- serverStartAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- H. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- I. Proximo ato recomendado:
+- commitInspectRemainingGuardrailImplementations
+- afterCommitNextCandidate=decideAuthorizationForRecommendedRemainingGuardrail
+- J. Gates finais:
+- remainingGuardrailImplementationsInspectedDocumentally=true
+- selectedTarget=inspectGuardNoModelBypassAndGuardMigrationDocumentally
+- selectedTechnicalTarget=guard:no-model-bypass,guard:migration
+- planningScope=documentalReadOnly
+- nextExecutionAuthorized=false
+- commandExecuted=false
+- manualCommandExecuted=false
+- npmTestExecutedAgain=false
+- guardrailExecuted=false
+- parityExecutedManually=false
+- verifyImportsExecutedAgainInThisMicrocut=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do planejamento comparativo do proximo candidato consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem scripts, sem verify:imports, sem guardrails, sem parity manual, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=controlledNextValidationPlanning
