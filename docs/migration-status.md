@@ -1906,6 +1906,183 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da estrutura do checklist de invariantes da Fase 2 consolidado nesta rodada, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=multiTenantInvariantChecklist
+- selectedTarget=prepareMultiTenantInvariantChecklistStructure
+- selectedTechnicalTarget=multiTenantInvariantChecklistStructure
+- previousCheckpoint=recordMultiTenantInvariantSourceMap
+- currentLocalCheckpoint=ecb8697
+- currentRemoteCheckpoint=c15eebc
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=ecb8697 docs(ops): mapeia fontes invariantes tenant
+- remoteHead=c15eebc docs(ops): encerra temporariamente auditoria prontidao
+- aheadCount=10
+- workingTreeClean=true
+- multiTenantInvariantChecklistPhaseOpened=true
+- multiTenantInvariantSourceMapRecorded=true
+- phaseScope=documentalChecklistOnly
+- sourceMapScope=documentalReadOnly
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- productionReadyDeclared=false
+- C. Objetivo da estrutura do checklist:
+- transformar o mapa de fontes e invariantes em checklist objetivo
+- organizar invariantes por area
+- registrar evidencia documental esperada
+- registrar risco se a invariante falhar
+- registrar gate esperado
+- manter tudo estritamente documental
+- nao executar comandos
+- nao autorizar boot
+- nao autorizar Mongo real
+- nao autorizar Mongo em memoria
+- nao declarar producao pronta
+- D. Estrutura futura do checklist:
+- 1. Identificacao e escopo
+- Checklist documental de invariantes multi-tenant/unitScope
+- Escopo apenas documental
+- Nao autoriza execucao operacional
+- 2. Pre-condicoes gerais
+- branch correta
+- HEAD esperado
+- working tree limpa
+- escopo definido
+- push bloqueado ate encerramento da Fase 4
+- producao nao pronta
+- 3. Invariantes de contexto operacional
+- req.unitScope como fonte preferencial
+- unitId resolvido explicitamente
+- req.user.unidade_id e active_unidade_id nao substituem unitScope quando unitScope e exigido
+- contexto global legitimo separado de fallback indevido
+- 4. Invariantes de master/admin
+- master/admin podem operar em visao global quando nao houver unidade canonica selecionada
+- visao global legitima nao deve virar bypass tenant indevido
+- usuario master real wallisondeyvid13@gmail.com e real, sensivel e intocavel
+- 5. Invariantes de fallback e GLOBAL_SCOPE
+- req.session.user e compatibilidade, nao fonte principal
+- GLOBAL_SCOPE precisa estar inventariado e justificado
+- fallback tolerado deve ser diferenciado de fallback a eliminar
+- 6. Invariantes de dominio
+- dominios globais legitimos documentados
+- dominios tenant-aware exigem unitScope
+- dominios hibridos declaram fronteira entre global e tenant
+- Portal/Morador permanece fora de execucao
+- 7. Invariantes de repositorios tenant-aware
+- repositorios tenant-aware respeitam unitScope
+- acesso a dados por unidade exige contexto explicito
+- fallback global nao deve mascarar ausencia de unitScope
+- 8. Invariantes de provisioning
+- colecoes globais e por tenant separadas
+- estado persistido real nao e tocado
+- nenhuma execucao de provisioning neste checklist
+- 9. Invariantes de dados reais e producao
+- dados reais bloqueados
+- producao nao pronta
+- nenhuma query real
+- nenhum seed/reset/cleanup/migration/backfill
+- 10. Tabela de checklist
+- coluna Invariante
+- coluna Evidencia documental
+- coluna Risco se falhar
+- coluna Gate esperado
+- coluna Status documental
+- 11. Criterios de parada
+- invariante sem evidencia documental
+- usuario master real tratado como ficticio
+- producao declarada pronta
+- tentativa de execucao
+- tentativa de Mongo real
+- tentativa de Mongo em memoria
+- uso de Portal
+- duvida sobre escopo
+- 12. Criterios de sucesso documental
+- checklist estruturado
+- invariantes principais listadas
+- riscos e gates definidos
+- master real protegido
+- producao continua nao pronta
+- nenhuma execucao feita
+- 13. Proximos passos
+- materializar checklist em arquivo proprio, se autorizado
+- revisar checklist
+- decidir fechamento da Fase 2
+- manter push bloqueado ate Fase 4
+- E. Decisao deste microcorte:
+- estrutura do checklist foi preparada no ledger
+- nenhum arquivo separado foi criado
+- nenhuma execucao foi feita
+- nenhum comando foi autorizado
+- proximo passo seguro sera materializar o checklist em docs, se autorizado em microcorte proprio
+- push continua proibido ate o fim da 4a fase documental
+- F. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- G. Proximo ato recomendado:
+- commitPrepareMultiTenantInvariantChecklistStructure
+- H. Gates finais:
+- multiTenantInvariantChecklistStructurePrepared=true
+- selectedTarget=prepareMultiTenantInvariantChecklistStructure
+- selectedTechnicalTarget=multiTenantInvariantChecklistStructure
+- phaseScope=documentalChecklistOnly
+- checklistStructureScope=documentalOnly
+- checklistStructureExecutionFuture=false
+- checklistStructureCommandFuture=none
+- checklistFileCreated=false
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
