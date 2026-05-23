@@ -6280,6 +6280,148 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto do mapeamento de scripts e guardrails consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledNextOperationalValidationPlanning
+- selectedTarget=mapGuardrailScriptsBeforeExecution
+- selectedTechnicalTarget=package.json scripts
+- previousCheckpoint=planNextOperationalValidationCandidate
+- currentLocalCheckpoint=bf78484
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=bf78484 docs(ops): planeja proxima validacao operacional
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=4
+- workingTreeClean=true
+- firstManualNpmTestValidationResult=green
+- npmTestFail=0
+- npmTestSkipped=2
+- npmTestSkippedAcceptedAsKnown=true
+- recommendedNextCandidate=guardrails
+- recommendedNextAction=mapGuardrailScriptsBeforeExecution
+- nextExecutionAuthorized=false
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Scripts lidos em package.json:
+- testes=startupAndValidationScripts=test,test:strict,test:smoke,test:mem,test:win,test:multitenant,test:e2e:refeicoes
+- guardrailsEValidacoes=guard:no-core-models-import,guard:condominios-unidade,guard:unitScope-null,guard:no-model-bypass,guard:condominios-no-unidade-import,guard:condominios-no-core-model-import,guard:gestor-no-core-model-import,guard:portal-morador-no-core-model-import,guard:escalas-no-core-model-import,parity,precommit,migration:check,verify:legacy,guard:migration,arch:map,flags:print,lint:paths,lint:data-json,verify:imports
+- bootEServidor=start,dev,start:escalas,dev:escalas,start:gestor,start:mem,start:mem:seed,start:atlas
+- bancoMongoMemoria=smoke:userdb-canary,test:mem,test:win,test:multitenant,start:mem,start:mem:seed,start:atlas
+- masterSet=master:set,master:set:win
+- seedResetCleanupMigrationBackfill=cleanup:legacy,migrate:indices,migrate:indices:corrigido,migrate:user-memberships-phase1,migrate:user-memberships-phase2,migrate:backfill-diretor,migrate:backfill-habitacao-mailboxes,backfill:refeicoes,backfill:refeicoes:uri
+- outros=update:cnaes,cnaes:enrich,cnaes:map,cnaes:map:all,cbo:build:csvs,bancos:build,sindicatos:build,sindicatos:build:xlsx,municipios:build,prepare
+- D. Classificacao documental:
+- scriptName=verify:imports | commandText=node scripts/verify-no-relative-imports.js | category=guardrails-validacoes | riskLevel=baixo | touchesMongoUnknownOrYesNo=no | touchesMasterUnknownOrYesNo=no | touchesDataUnknownOrYesNo=no | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=guard:unitScope-null | commandText=node scripts/guard-grep.js "unitScope:\s*null" "src" "Proibido unitScope:null em src/" | category=guardrails-validacoes | riskLevel=baixo-medio | touchesMongoUnknownOrYesNo=no | touchesMasterUnknownOrYesNo=no | touchesDataUnknownOrYesNo=no | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=guard:condominios-unidade | commandText=node scripts/guard-grep.js "\bUnidade\." "src/modules/condominios" "Uso direto de Unidade detectado" | category=guardrails-validacoes | riskLevel=baixo-medio | touchesMongoUnknownOrYesNo=no | touchesMasterUnknownOrYesNo=no | touchesDataUnknownOrYesNo=no | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=guard:no-model-bypass | commandText=node scripts/guardrails/verify-no-model-bypass.js | category=guardrails-validacoes | riskLevel=medio | touchesMongoUnknownOrYesNo=unknown | touchesMasterUnknownOrYesNo=no | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=guard:migration | commandText=node scripts/guardrails/verify-migration-safety.js | category=guardrails-validacoes | riskLevel=medio | touchesMongoUnknownOrYesNo=unknown | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=parity | commandText=node scripts/run-parity.js | category=guardrails-validacoes | riskLevel=medio | touchesMongoUnknownOrYesNo=unknown | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=precommit | commandText=npm run parity | category=guardrails-validacoes | riskLevel=medio | touchesMongoUnknownOrYesNo=unknown | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=test | commandText=npm run guard:condominios-unidade ; npm run guard:unitScope-null ; npm run guard:no-model-bypass ; node --test tests/*.test.js tests/architecture/*.test.js | category=testes | riskLevel=medio | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=no | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=start | commandText=node src/start.js | category=boot-servidor | riskLevel=alto | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=start:mem | commandText=set MONGO_MEMORY=1 && node src/start.js | category=banco-mongo-memoria | riskLevel=medio-alto | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=start:mem:seed | commandText=set MONGO_MEMORY=1 && set GESTOR_SEEDS=1 && node src/start.js | category=seed-reset-cleanup-migration-backfill | riskLevel=alto | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=yes | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=master:set | commandText=node scripts/set-master-password.js | category=master-set | riskLevel=critico | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=yes | touchesDataUnknownOrYesNo=yes | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=master:set:win | commandText=set MASTER_EMAIL=%MASTER_EMAIL% && set MASTER_PASSWORD=%MASTER_PASSWORD% && node scripts/set-master-password.js | category=master-set | riskLevel=critico | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=yes | touchesDataUnknownOrYesNo=yes | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=cleanup:legacy | commandText=node scripts/cleanup-legacy.js | category=seed-reset-cleanup-migration-backfill | riskLevel=alto | touchesMongoUnknownOrYesNo=unknown | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=migrate:user-memberships-phase1 | commandText=node scripts/migrations/2026-03-11_criar-user-memberships-fase1.js | category=seed-reset-cleanup-migration-backfill | riskLevel=critico | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=yes | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=migrate:user-memberships-phase2 | commandText=node scripts/migrations/2026-03-11_backfill-user-memberships-fase2.js | category=seed-reset-cleanup-migration-backfill | riskLevel=critico | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=yes | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=backfill:refeicoes | commandText=node scripts/backfill_refeicoes_computavel.js "%MONGO_URI%" | category=seed-reset-cleanup-migration-backfill | riskLevel=critico | touchesMongoUnknownOrYesNo=yes | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=yes | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- scriptName=smoke:userdb-canary | commandText=node scripts/smoke-userdb-canary.js | category=banco-mongo-memoria | riskLevel=medio-alto | touchesMongoUnknownOrYesNo=unknown | touchesMasterUnknownOrYesNo=unknown | touchesDataUnknownOrYesNo=unknown | canRunNow=false | requiresDedicatedMicrocut=true | requiresHumanAuthorization=true
+- E. Candidato guardrail mais seguro:
+- recommendedGuardrailCandidate=none
+- recommendedGuardrailCandidateReason=os package scripts revelam varios candidatos estaticos, mas sem inspecionar a implementacao nao ha base suficiente para afirmar qual deles e o guardrail mais seguro com risco residual minimizado.
+- recommendedGuardrailCandidateCanRunNow=false
+- recommendedGuardrailCandidateRequiresDedicatedMicrocut=true
+- recommendedGuardrailCandidateRequiresHumanAuthorization=true
+- recommendedGuardrailCandidateRequiresFreshGitGates=true
+- recommendedGuardrailCandidateRequiresNoUncommittedFiles=true
+- F. Se nao houver candidato claro:
+- recommendedGuardrailCandidate=none
+- guardrailCandidateNeedsClarification=true
+- nextStep=inspectGuardrailImplementationDocumentally
+- executionAuthorized=false
+- G. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- npmRunAuthorized=false
+- genericNpmScriptsAuthorized=false
+- guardrailsAuthorizedForExecutionNow=false
+- serverStartAuthorized=false
+- localBootAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- H. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- I. Proximo ato recomendado:
+- commitMapGuardrailScriptsBeforeExecution
+- afterCommitNextCandidate=decideFirstGuardrailExecutionOrInspectImplementation
+- J. Gates finais:
+- guardrailScriptsMappedDocumentally=true
+- selectedTarget=mapGuardrailScriptsBeforeExecution
+- selectedTechnicalTarget=package.json scripts
+- planningScope=documentalReadOnly
+- nextExecutionAuthorized=false
+- guardrailExecutionAuthorized=false
+- npmTestExecutedAgain=false
+- commandExecuted=false
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
