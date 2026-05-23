@@ -17119,6 +17119,127 @@ Checkpoint tenant enforcement atual:
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Decisao documental curta do proximo passo apos a inspecao dos scripts de boot local, consolidada nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem iniciar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem commit e sem push.
+- Identificacao desta decisao:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=decideNextStepAfterBootScriptsInspection`.
+	- `selectedTechnicalTarget=none`.
+	- `previousCheckpoint=inspectBootScriptsDocumentally`.
+	- `currentLocalCheckpoint=3530026 docs(ops): inspeciona scripts de boot local`.
+	- `currentRemoteCheckpoint=adc0598 docs(ops): decide proximo passo operacional`.
+	- `aheadCount=3`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Caminhos possiveis comparados nesta rodada:
+	- `humanPushImmediate`: publicar primeiro os tres commits locais documentais antes de qualquer nova frente; menor risco operacional; preserva auditabilidade; evita misturar publicacao com futura aproximacao de boot, servidor ou Mongo em memoria.
+	- `authorizeStartMemFutureOnly`: manter `start:mem` como unico candidato de boot futuro; nao executar agora; exigir microcorte proprio de autorizacao, gates frescos, working tree limpa e comando explicitamente nomeado antes de qualquer uso.
+	- `inspectSeedMasterRisksBeforeAnySeedBoot`: manter `start:mem:seed` bloqueado; registrar que qualquer caminho com seed exige inspecao adicional por tocar `ensureMasterUser` e `cleanupWrongEmail`; impedir aproximacao prematura do usuario master real.
+	- `keepRealMongoBootBlocked`: manter `start:gestor` e `start:atlas` bloqueados; nao autorizar Mongo real, Atlas, ambiente real nem dados reais; impedir qualquer leitura equivocada de prontidao operacional.
+- Comparacao documental consolidada dos caminhos:
+	- `humanPushImmediate` e o caminho de menor risco imediato porque o bloco atual ja acumula tres commits locais documentais ainda nao publicados.
+	- `authorizeStartMemFutureOnly` continua util como candidato secundario, mas so depois do push humano do bloco atual e em microcorte proprio.
+	- `inspectSeedMasterRisksBeforeAnySeedBoot` permanece obrigatorio antes de qualquer consideracao sobre `start:mem:seed`, porque o caminho de seeds toca `ensureMasterUser` e `cleanupWrongEmail`.
+	- `keepRealMongoBootBlocked` permanece mandato ativo porque `start:gestor` e `start:atlas` compartilham o boot full e podem aproximar Mongo nao-memoria, Portal e dados reais conforme ambiente.
+- Justificativa consolidada desta decisao:
+	- como a branch local ja esta `ahead 3`, o caminho mais seguro e publicar primeiro o bloco documental atual por push humano.
+	- isso preserva auditabilidade antes de abrir microcorte que se aproxime de boot, servidor ou Mongo em memoria.
+	- apos o push humano, o candidato secundario mais seguro passa a ser uma futura autorizacao controlada apenas de `start:mem`, ainda sem seed.
+	- `start:mem:seed` deve continuar bloqueado ate inspecao adicional especifica dos riscos de seed e usuario master.
+	- `start:gestor` e `start:atlas` devem continuar bloqueados enquanto Mongo real, Atlas, ambiente real e dados reais permanecerem fora do escopo autorizado.
+- Recomendacao documental consolidada nesta rodada:
+	- `recommendedNextCandidate=humanPushImmediate`.
+	- `secondaryCandidateAfterPush=authorizeStartMemFutureOnly`.
+	- `seedBootCandidateBlocked=true`.
+	- `realMongoBootCandidateBlocked=true`.
+	- `futureStartMemWouldStillRequireDedicatedAuthorization=true`.
+	- `futureStartMemWouldStillRequireFreshGitGates=true`.
+	- `futureStartMemWouldStillRequireNoSeed=true`.
+- Escopo explicitamente mantido bloqueado por esta decisao:
+	- `start:gestor` continua bloqueado.
+	- `start:atlas` continua bloqueado.
+	- `start:mem` continua bloqueado neste microcorte.
+	- `start:mem:seed` continua bloqueado.
+	- `master:set` continua bloqueado.
+	- `master:set:win` continua bloqueado.
+	- Mongo real continua bloqueado.
+	- Mongo em memoria manual continua bloqueado.
+	- Portal continua bloqueado.
+	- dados reais continuam bloqueados.
+	- producao continua nao pronta.
+- Confirmacoes obrigatorias desta rodada:
+	- nenhuma execucao operacional foi realizada.
+	- nenhum comando npm foi executado.
+	- nenhum comando npm run foi executado.
+	- nenhum npm test foi executado.
+	- nenhum guardrail foi executado.
+	- nenhuma parity manual foi executada.
+	- nenhum boot foi executado.
+	- nenhum servidor foi iniciado.
+	- nenhum Mongo real foi conectado.
+	- nenhum Mongo em memoria foi conectado manualmente.
+	- `start:gestor` nao foi executado.
+	- `start:atlas` nao foi executado.
+	- `start:mem` nao foi executado.
+	- `start:mem:seed` nao foi executado.
+	- `master:set` nao foi executado.
+	- `master:set:win` nao foi executado.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push foi executado.
+	- producao continua nao pronta.
+- Registro obrigatorio sobre usuario master real:
+	- `realMasterUserExists=true`.
+	- `realMasterUserEmail=wallisondeyvid13@gmail.com`.
+	- `masterCredentialSensitive=true`.
+	- `realMasterUserTouched=false`.
+	- `masterCredentialChanged=false`.
+	- `masterSetExecuted=false`.
+	- `currentOtherUsersTreatedAsFictional=true`.
+	- `futureUsersMayBeFictionalControlled=true`.
+- Gates:
+	- `nextStepAfterBootScriptsInspectionDecided=true`
+	- `selectedTarget=decideNextStepAfterBootScriptsInspection`
+	- `selectedTechnicalTarget=none`
+	- `phase=controlledLocalBootPlanning`
+	- `previousCheckpoint=inspectBootScriptsDocumentally`
+	- `currentLocalCheckpoint=3530026`
+	- `currentRemoteCheckpoint=adc0598`
+	- `aheadCount=3`
+	- `recommendedNextCandidate=humanPushImmediate`
+	- `secondaryCandidateAfterPush=authorizeStartMemFutureOnly`
+	- `seedBootCandidateBlocked=true`
+	- `realMongoBootCandidateBlocked=true`
+	- `futureStartMemWouldStillRequireDedicatedAuthorization=true`
+	- `futureStartMemWouldStillRequireFreshGitGates=true`
+	- `futureStartMemWouldStillRequireNoSeed=true`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `fileCreated=false`
+	- `commandExecuted=false`
+	- `npmExecuted=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `guardrailExecuted=false`
+	- `parityExecutedManually=false`
+	- `bootExecuted=false`
+	- `serverStarted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `masterSetExecuted=false`
+	- `masterSetWinExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
