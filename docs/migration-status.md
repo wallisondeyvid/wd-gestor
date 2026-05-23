@@ -6280,6 +6280,138 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto do resultado do guard:no-model-bypass consolidado nesta rodada, sem nova execucao operacional, sem npm, sem npm run, sem npm test, sem scripts, sem guardrails adicionais, sem parity manual, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledRemainingGuardrailValidation
+- selectedTarget=recordGuardNoModelBypassResult
+- selectedTechnicalTarget=guard:no-model-bypass
+- previousCheckpoint=authorizeGuardNoModelBypassExecution
+- currentLocalCheckpoint=33c42db
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=33c42db docs(ops): autoriza guardrail no model bypass
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=17
+- workingTreeCleanBeforeResultRecord=true
+- guardNoModelBypassExecutionAuthorizedDocumentally=true
+- authorizedFutureCommand=npm run guard:no-model-bypass
+- authorizedFutureCommandExecutedNow=true
+- commandExecuted=npm run guard:no-model-bypass
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Resultado da execucao:
+- guardrailExecuted=true
+- guardrailExecutionCount=1
+- guardrailName=guard:no-model-bypass
+- guardrailCommand=npm run guard:no-model-bypass
+- guardrailResult=green
+- guardrailPassed=true
+- guardrailFailed=false
+- guardrailOutputMain=Guard OK: imports #models restritos a src/shared/repositories e src/modules/*/repositories
+- guardNoModelBypassForbiddenLayerFound=false
+- guardNoModelBypassWarningsNonBlocking=true
+- guardNoModelBypassWarningAreas=bootstrap,routes,non-blocking areas
+- guardNoModelBypassWarningBlocksExecution=false
+- guardrailWorkingTreeCleanAfter=true
+- D. Escopo confirmado:
+- onlyAuthorizedCommandExecuted=true
+- onlyCommandExecuted=npm run guard:no-model-bypass
+- npmTestExecutedAgain=false
+- otherGuardrailsExecuted=false
+- guardMigrationExecuted=false
+- guardCondominiosUnidadeExecutedAgain=false
+- guardUnitScopeNullExecutedAgain=false
+- verifyImportsExecutedManually=false
+- parityExecutedManually=false
+- precommitExecutedManually=false
+- serverStartExecuted=false
+- localBootExecuted=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- queryRealExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsed=false
+- productionReadyDeclared=false
+- E. Decisao deste microcorte:
+- resultado do guardrail no-model-bypass foi registrado;
+- guard:no-model-bypass passou;
+- nao houve bypass bloqueante de #models em camada proibida;
+- houve warnings nao bloqueantes em areas fora do bloqueio principal;
+- nenhum arquivo foi alterado pela execucao anterior;
+- nenhuma nova execucao foi feita neste microcorte;
+- producao continua nao pronta;
+- resultado nao autoriza boot, Mongo real, Portal, master:set, seeds ou producao;
+- proximo passo deve ser decidir documentalmente se guard:migration sera autorizado ou se parity/manual/boot deve aguardar.
+- F. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- G. Proximo ato recomendado:
+- commitRecordGuardNoModelBypassResult
+- afterCommitNextCandidate=decideNextValidationCandidateAfterNoModelBypass
+- H. Gates finais:
+- guardNoModelBypassResultRecorded=true
+- selectedTarget=recordGuardNoModelBypassResult
+- selectedTechnicalTarget=guard:no-model-bypass
+- guardrailExecuted=true
+- guardrailResult=green
+- guardrailPassed=true
+- guardNoModelBypassForbiddenLayerFound=false
+- guardNoModelBypassWarningsNonBlocking=true
+- commandExecuted=npm run guard:no-model-bypass
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmTestExecutedAgain=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- otherGuardrailsExecuted=false
+- parityExecutedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto da autorizacao futura e isolada do guard:no-model-bypass consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem scripts, sem guardrails, sem parity manual, sem verify:imports, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=controlledRemainingGuardrailValidation
