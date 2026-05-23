@@ -6280,6 +6280,193 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da inspecao de implementacao dos guardrails de menor risco consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledNextOperationalValidationPlanning
+- selectedTarget=inspectGuardrailImplementationDocumentally
+- selectedTechnicalTarget=verify:imports,guard:unitScope-null,guard:condominios-unidade
+- previousCheckpoint=mapGuardrailScriptsBeforeExecution
+- currentLocalCheckpoint=29389f4
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=29389f4 docs(ops): mapeia scripts guardrail
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=5
+- workingTreeClean=true
+- guardrailScriptsMappedDocumentally=true
+- recommendedGuardrailCandidate=none
+- guardrailCandidateNeedsClarification=true
+- nextExecutionAuthorized=false
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Arquivos lidos:
+- docs/migration-status.md
+- docs/checkpoints/controlled-operational-authorization-matrix.md
+- package.json
+- scripts/verify-no-relative-imports.js
+- scripts/guard-grep.js
+- D. Resultado por script:
+- scriptName=verify:imports
+- commandText=node scripts/verify-no-relative-imports.js
+- implementationFile=scripts/verify-no-relative-imports.js
+- implementationRead=true
+- appearsStaticOnly=true
+- touchesMongo=false
+- touchesMongoMemory=false
+- touchesMongoReal=false
+- touchesMasterUser=false
+- touchesCredentials=false
+- touchesPortal=false
+- touchesRealData=false
+- startsServer=false
+- writesFiles=false
+- changesSource=false
+- riskLevel=baixo
+- canRunNow=false
+- requiresDedicatedMicrocut=true
+- requiresHumanAuthorization=true
+- recommendedAsFirstGuardrailCandidate=false
+- observation=leitura estatica de src,routes,services,models e scripts com fs.readFileSync e regex de imports e queries; nao abre conexao, nao escreve arquivo e nao chama npm.
+- scriptName=guard:unitScope-null
+- commandText=node scripts/guard-grep.js "unitScope:\s*null" "src" "Proibido unitScope:null em src/"
+- implementationFile=scripts/guard-grep.js
+- implementationRead=true
+- appearsStaticOnly=true
+- touchesMongo=false
+- touchesMongoMemory=false
+- touchesMongoReal=false
+- touchesMasterUser=false
+- touchesCredentials=false
+- touchesPortal=false
+- touchesRealData=false
+- startsServer=false
+- writesFiles=false
+- changesSource=false
+- riskLevel=baixo
+- canRunNow=false
+- requiresDedicatedMicrocut=true
+- requiresHumanAuthorization=true
+- recommendedAsFirstGuardrailCandidate=false
+- observation=usa spawnSync para git grep apenas em src; comportamento observado e leitura de texto versionado com saida e codigos de retorno, sem escrita.
+- scriptName=guard:condominios-unidade
+- commandText=node scripts/guard-grep.js "\bUnidade\." "src/modules/condominios" "Uso direto de Unidade detectado"
+- implementationFile=scripts/guard-grep.js
+- implementationRead=true
+- appearsStaticOnly=true
+- touchesMongo=false
+- touchesMongoMemory=false
+- touchesMongoReal=false
+- touchesMasterUser=false
+- touchesCredentials=false
+- touchesPortal=false
+- touchesRealData=false
+- startsServer=false
+- writesFiles=false
+- changesSource=false
+- riskLevel=baixo
+- canRunNow=false
+- requiresDedicatedMicrocut=true
+- requiresHumanAuthorization=true
+- recommendedAsFirstGuardrailCandidate=true
+- observation=usa o mesmo guard-grep read-only, mas com alvo mais estreito em src/modules/condominios; menor superficie documental entre os tres scripts inspecionados.
+- E. Comparacao documental:
+- menorRiscoRelativo=guard:condominios-unidade
+- reason=entre os tres scripts lidos, ele combina implementacao estatica, ausencia de escrita e o alvo mais estreito, limitado ao modulo condominios.
+- scriptsStillAmbiguous=none
+- scriptsExcludedFromFirstCandidate=verify:imports por escanear mais diretorios e agregar mais regras arquiteturais; guard:unitScope-null por buscar em todo src e portanto ter superficie maior que guard:condominios-unidade
+- anyScriptTouchesMongo=false
+- anyScriptTouchesMaster=false
+- anyScriptTouchesRealData=false
+- anyScriptStartsServer=false
+- F. Candidato recomendado:
+- recommendedGuardrailCandidate=guard:condominios-unidade
+- recommendedGuardrailCandidateReason=implementacao documentalmente estavel e estatica via git grep read-only, sem escrita, sem servidor, sem Mongo e com escopo mais estreito entre os candidatos inspecionados.
+- recommendedGuardrailCandidateCanRunNow=false
+- recommendedGuardrailCandidateRequiresDedicatedMicrocut=true
+- recommendedGuardrailCandidateRequiresHumanAuthorization=true
+- recommendedGuardrailCandidateRequiresFreshGitGates=true
+- recommendedGuardrailCandidateRequiresNoUncommittedFiles=true
+- recommendedGuardrailCandidateCommand=node scripts/guard-grep.js "\bUnidade\." "src/modules/condominios" "Uso direto de Unidade detectado"
+- G. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- npmRunAuthorized=false
+- genericNpmScriptsAuthorized=false
+- guardrailsAuthorizedForExecutionNow=false
+- serverStartAuthorized=false
+- localBootAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- H. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- I. Proximo ato recomendado:
+- commitInspectGuardrailImplementationDocumentally
+- afterCommitNextCandidate=decideFirstGuardrailCandidateOrContinueInspection
+- J. Gates finais:
+- guardrailImplementationInspectedDocumentally=true
+- selectedTarget=inspectGuardrailImplementationDocumentally
+- selectedTechnicalTarget=verify:imports,guard:unitScope-null,guard:condominios-unidade
+- planningScope=documentalReadOnly
+- nextExecutionAuthorized=false
+- guardrailExecutionAuthorized=false
+- npmTestExecutedAgain=false
+- commandExecuted=false
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do mapeamento de scripts e guardrails consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=controlledNextOperationalValidationPlanning
