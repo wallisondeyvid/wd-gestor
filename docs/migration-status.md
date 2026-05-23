@@ -6280,6 +6280,143 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da autorizacao futura e isolada do primeiro guardrail consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledFirstGuardrailValidation
+- selectedTarget=authorizeFirstGuardrailExecution
+- selectedTechnicalTarget=guard:condominios-unidade
+- previousCheckpoint=inspectGuardrailImplementationDocumentally
+- currentLocalCheckpoint=2e42f62
+- currentRemoteCheckpoint=b724875
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=2e42f62 docs(ops): inspeciona scripts guardrail
+- remoteHead=b724875 docs(ops): fecha matriz autorizacao operacional
+- aheadCount=6
+- workingTreeClean=true
+- guardrailImplementationInspectedDocumentally=true
+- recommendedGuardrailCandidate=guard:condominios-unidade
+- recommendedGuardrailCandidateCanRunNow=false
+- recommendedGuardrailCandidateRequiresDedicatedMicrocut=true
+- recommendedGuardrailCandidateRequiresHumanAuthorization=true
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Decisao:
+- firstGuardrailCandidateSelected=guard:condominios-unidade
+- firstGuardrailCandidateRisk=baixo
+- firstGuardrailCandidateReason=menor superficie relativa entre os guardrails inspecionados; usa guard-grep read-only limitado a src/modules/condominios.
+- firstGuardrailFutureCommand=npm run guard:condominios-unidade
+- firstGuardrailUnderlyingCommand=node scripts/guard-grep.js "\bUnidade\." "src/modules/condominios" "Uso direto de Unidade detectado"
+- firstGuardrailExecutionAuthorizedDocumentally=true
+- firstGuardrailExecutedNow=false
+- firstGuardrailRequiresFreshGitGates=true
+- firstGuardrailRequiresWorkingTreeClean=true
+- firstGuardrailRequiresNoUncommittedFiles=true
+- firstGuardrailRequiresDedicatedMicrocut=true
+- firstGuardrailRequiresHumanAuthorization=true
+- D. Escopo autorizado para microcorte futuro:
+- allowedFutureCommand=npm run guard:condominios-unidade
+- allowedFutureCommandScope=manualControlledGuardrailOnly
+- allowedFutureCommandRequiresFreshGitGates=true
+- allowedFutureCommandRequiresWorkingTreeClean=true
+- allowedFutureCommandRequiresNoUncommittedFiles=true
+- allowedFutureCommandRequiresHumanAuthorization=true
+- allowedFutureCommandMayRunOnlyInNextDedicatedMicrocut=true
+- E. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- genericNpmScriptsAuthorized=false
+- otherGuardrailsAuthorized=false
+- verifyImportsAuthorized=false
+- guardUnitScopeNullAuthorized=false
+- serverStartAuthorized=false
+- localBootAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- F. Limites tecnicos da autorizacao:
+- guardrailExpectedStaticOnly=true
+- guardrailExpectedTouchesMongo=false
+- guardrailExpectedTouchesMongoReal=false
+- guardrailExpectedTouchesMongoMemory=false
+- guardrailExpectedTouchesMasterUser=false
+- guardrailExpectedTouchesCredentials=false
+- guardrailExpectedTouchesPortal=false
+- guardrailExpectedTouchesRealData=false
+- guardrailExpectedStartsServer=false
+- guardrailExpectedWritesFiles=false
+- guardrailExpectedChangesSource=false
+- G. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- H. Proximo ato recomendado:
+- commitAuthorizeFirstGuardrailExecution
+- afterCommitNextCandidate=runFirstGuardrailCondominiosUnidade
+- I. Gates finais:
+- firstGuardrailExecutionAuthorizedDocumentally=true
+- selectedTarget=authorizeFirstGuardrailExecution
+- selectedTechnicalTarget=guard:condominios-unidade
+- authorizationScope=documentalAuthorizationOnly
+- authorizedFutureCommand=npm run guard:condominios-unidade
+- authorizedFutureCommandExecutedNow=false
+- allowedFutureCommandRequiresDedicatedMicrocut=true
+- nextExecutionAuthorized=false
+- guardrailExecutionAuthorizedForFutureOnly=true
+- guardrailExecuted=false
+- npmTestExecutedAgain=false
+- commandExecuted=false
+- unauthorizedCommandExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto da inspecao de implementacao dos guardrails de menor risco consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test, sem guardrails, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=controlledNextOperationalValidationPlanning
