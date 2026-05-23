@@ -2955,6 +2955,205 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da estrutura do runbook de protecao do usuario master real consolidado nesta rodada, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=realMasterUserProtectionRunbook
+- selectedTarget=prepareRealMasterUserProtectionRunbookStructure
+- selectedTechnicalTarget=realMasterUserProtectionRunbookStructure
+- previousCheckpoint=recordRealMasterUserProtectionSourceMap
+- currentLocalCheckpoint=6d20f6d
+- currentRemoteCheckpoint=c15eebc
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=6d20f6d docs(ops): mapeia fontes protecao master real
+- remoteHead=c15eebc docs(ops): encerra temporariamente auditoria prontidao
+- aheadCount=17
+- workingTreeClean=true
+- realMasterUserProtectionRunbookPhaseOpened=true
+- realMasterUserProtectionSourceMapRecorded=true
+- phaseScope=documentalRunbookOnly
+- sourceMapScope=documentalReadOnly
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- masterSetExecuted=false
+- C. Objetivo da estrutura do runbook:
+- transformar o mapa de fontes, riscos e regras em runbook objetivo
+- organizar scripts sensiveis, riscos e bloqueios
+- registrar protecao explicita do usuario master real
+- registrar criterios de parada imediata
+- registrar separacao entre usuarios ficticios/controlados e usuario master real
+- registrar pre-condicoes para qualquer acao futura
+- manter tudo estritamente documental
+- nao executar comandos
+- nao tocar usuario real
+- nao conectar Mongo
+- nao expor segredos
+- nao declarar producao pronta
+- D. Estrutura futura do runbook:
+- 1. Identificacao e proposito
+- Runbook documental de protecao do usuario master real.
+- Escopo apenas documental.
+- Nao autoriza execucao operacional.
+- Nao altera credenciais.
+- Nao declara producao pronta.
+- 2. Estado atual e premissas
+- wallisondeyvid13@gmail.com e usuario master real.
+- Usuario master real e dado sensivel.
+- Outros usuarios podem ser ficticios/controlados, mas o master real nao.
+- Producao nao pronta.
+- Mongo real bloqueado.
+- Mongo em memoria manual bloqueado.
+- Push bloqueado ate Fase 4.
+- 3. Identidade protegida
+- realMasterUserExists=true.
+- realMasterUserEmail=wallisondeyvid13@gmail.com.
+- masterCredentialSensitive=true.
+- realMasterUserTouched=false.
+- masterCredentialChanged=false.
+- masterSetExecuted=false.
+- 4. Scripts proibidos por padrao
+- master:set.
+- master:set:win.
+- start:mem:seed.
+- seeds que possam criar/alterar/limpar master.
+- cleanupWrongEmail se puder tocar usuario real.
+- reset.
+- cleanup.
+- migration.
+- backfill.
+- 5. Riscos criticos
+- master real tratado como ficticio.
+- master:set executado sem autorizacao.
+- master:set:win executado sem autorizacao.
+- seed alterando usuario master.
+- cleanupWrongEmail tocando usuario real.
+- migration/backfill tocando usuario real.
+- exposicao de senha/token/URI/segredo.
+- producao declarada pronta antes de fase propria.
+- 6. Regras de manuseio
+- Nao tocar usuario master real sem autorizacao humana explicita.
+- Nao alterar credenciais.
+- Nao expor senhas, tokens, URIs ou segredos.
+- Nao usar fallback de sessao para justificar alteracao do master.
+- Qualquer acao futura exige microcorte proprio e escopo proprio.
+- Qualquer acao futura deve comecar com validacao Git.
+- Qualquer acao futura deve declarar ambiente, banco e risco antes de executar.
+- 7. Separacao entre usuarios ficticios e master real
+- currentOtherUsersTreatedAsFictional=true.
+- futureUsersMayBeFictionalControlled=true.
+- master real nunca entra no conjunto ficticio.
+- scripts que limpam ou recriam usuarios nao podem afetar o master real.
+- 8. Dados, banco e ambiente
+- Mongo real bloqueado.
+- Mongo em memoria manual bloqueado.
+- Dados reais bloqueados.
+- Query real bloqueada.
+- Backup/restore/rollback real bloqueados.
+- Producao nao pronta.
+- 9. Criterios de parada imediata
+- qualquer tentativa de master:set;
+- qualquer tentativa de master:set:win;
+- qualquer tentativa de seed que toque master;
+- qualquer tentativa de cleanupWrongEmail sobre usuario real;
+- qualquer exposicao de segredo;
+- qualquer duvida sobre ambiente;
+- qualquer tentativa de Mongo real;
+- qualquer tentativa de producao pronta;
+- qualquer tentativa de tratar master real como ficticio.
+- 10. Criterios de sucesso documental
+- runbook estruturado;
+- scripts sensiveis listados;
+- riscos classificados;
+- master real protegido;
+- producao segue nao pronta;
+- nenhuma execucao feita;
+- push segue bloqueado ate Fase 4.
+- 11. Proximos passos
+- materializar runbook em arquivo proprio, se autorizado;
+- revisar runbook;
+- decidir fechamento da Fase 3;
+- manter push bloqueado ate encerramento da Fase 4.
+- E. Decisao deste microcorte:
+- estrutura do runbook foi preparada no ledger
+- nenhum arquivo separado foi criado
+- nenhuma execucao foi feita
+- nenhum comando foi autorizado
+- nenhum script foi executado
+- usuario master real nao foi tocado
+- proximo passo seguro sera materializar o runbook em docs/runbooks, se autorizado em microcorte proprio
+- push continua proibido ate o fim da 4a fase documental
+- F. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- G. Proximo ato recomendado:
+- commitPrepareRealMasterUserProtectionRunbookStructure
+- H. Gates finais:
+- realMasterUserProtectionRunbookStructurePrepared=true
+- selectedTarget=prepareRealMasterUserProtectionRunbookStructure
+- selectedTechnicalTarget=realMasterUserProtectionRunbookStructure
+- phaseScope=documentalRunbookOnly
+- runbookStructureScope=documentalOnly
+- runbookStructureExecutionFuture=false
+- runbookStructureCommandFuture=none
+- runbookFileCreated=false
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
