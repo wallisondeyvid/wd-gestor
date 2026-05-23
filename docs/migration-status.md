@@ -469,6 +469,168 @@ Checkpoint tenant enforcement atual:
 - Objetivo inicial consolidado desta fase: definir ritual, alvo admissivel, evidencias, criterios de sucesso, criterios de abortar, baseline e fronteiras do futuro piloto controlado nao produtivo por unidade, sem tocar em runtime, writer, registry, owner, entrypoint, rota, CLI, script, job, bootstrap ou request path.
 - Regra operacional consolidada desta abertura: os commits desta frente podem acumular localmente, sem push em microcortes; qualquer publicacao futura continua dependente de baseline final completa e autorizacao explicita posterior.
 
+## Fase 1 - controlledBootRunbookWithoutExecution
+- Checkpoint documental curto de abertura da Fase 1 consolidado nesta rodada, sem execucao operacional, sem alteracao de codigo-fonte, sem alteracao de testes, sem alteracao de scripts, sem alteracao de package.json, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem master:set, sem Portal e sem push.
+- A. Identificacao:
+- phase=controlledBootRunbookWithoutExecution
+- selectedTarget=prepareControlledBootRunbookWithoutExecution
+- selectedTechnicalTarget=none
+- previousCheckpoint=temporarilyCloseOperationalReadinessAudit
+- currentCheckpoint=c15eebc
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=c15eebc docs(ops): encerra temporariamente auditoria prontidao
+- remoteHead=c15eebc docs(ops): encerra temporariamente auditoria prontidao
+- localRemoteSynced=true
+- aheadCount=0
+- workingTreeClean=true
+- operationalReadinessAuditTemporarilyClosed=true
+- controlledMongoOperationalValidationTemporarilyClosed=true
+- r2BSubBlockClosedDocumentally=true
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- masterSetExecuted=false
+- C. Objetivo da Fase 1:
+- preparar runbook documental de boot controlado sem execucao
+- transformar a checklist go/no-go em roteiro futuro de operacao controlada
+- documentar pre-condicoes antes de qualquer boot futuro
+- documentar bloqueios absolutos
+- documentar pontos de parada
+- documentar protecao do usuario master real
+- documentar separacao entre Mongo real, Mongo em memoria, seeds, master:set, Portal e dados reais
+- manter tudo estritamente documental
+- nao executar comandos
+- nao autorizar boot
+- nao autorizar Mongo real
+- nao autorizar Mongo em memoria
+- nao declarar producao pronta
+- D. Regra de push da Fase 1:
+- phasePushPolicy=pushOnlyAtPhaseEnd
+- localCommitsAllowedDuringPhase=true
+- pushDuringIntermediateMicrocuts=false
+- userWillPushAtPhaseEnd=true
+- copilotMustNotPush=true
+- E. Escopo permitido:
+- ler docs/migration-status.md
+- ler package.json, start.js, createServer.js, bootstrapRegistry.js e src/modules/gestor/index.js em microcorte futuro, se necessario
+- ler docs/runbooks e docs/checkpoints em microcorte futuro, se necessario
+- registrar plano documental no ledger
+- preparar estrutura futura do runbook
+- consolidar criterios de boot futuro sem executar nada
+- F. Escopo proibido:
+- executar comando
+- executar npm, npm run ou npm test
+- executar validacoes ou guardrails manualmente
+- iniciar servidor
+- conectar Mongo real
+- conectar Mongo em memoria manualmente
+- executar query
+- executar master:set
+- executar seed/reset/cleanup/migration/backfill
+- tocar dados
+- tocar usuario master real
+- usar Portal
+- declarar producao pronta
+- fazer push durante microcorte intermediario
+- G. Fontes candidatas para microcortes futuros da Fase 1:
+- docs/migration-status.md
+- package.json
+- src/start.js
+- src/server/createServer.js
+- src/server/bootstrapRegistry.js
+- src/modules/gestor/index.js
+- docs/runbooks, se necessario
+- docs/checkpoints, se necessario
+- docs relacionados a migracao, prontidao, multi-tenant e provisioning, se necessario
+- H. Estrutura futura sugerida para o runbook:
+- objetivo do boot controlado
+- pre-condicoes obrigatorias
+- comandos proibidos
+- comandos futuros candidatos, sem autorizar execucao
+- variaveis sensiveis
+- riscos de Mongo real
+- riscos de Mongo em memoria
+- bloqueio de seed/master:set
+- protecao do usuario master real
+- bloqueio de Portal
+- protecao contra dados reais
+- logs esperados em uma futura execucao
+- criterios de parada imediata
+- criterios de sucesso documental
+- regra de producao nao pronta
+- proximos passos apos o runbook
+- I. Registro obrigatorio sobre usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- J. Proximo ato recomendado:
+- recordControlledBootRunbookOpening
+- K. Gates finais:
+- controlledBootRunbookWithoutExecutionPhaseOpened=true
+- selectedTarget=prepareControlledBootRunbookWithoutExecution
+- selectedTechnicalTarget=none
+- phaseScope=documentalRunbookOnly
+- phaseExecutionFuture=false
+- phaseCommandFuture=none
+- phaseMongoRealFuture=false
+- phaseMemoryMongoFuture=false
+- phaseDataTouchFuture=false
+- phaseMasterTouchFuture=false
+- phaseProductionDeclarationFuture=false
+- phasePushPolicy=pushOnlyAtPhaseEnd
+- localCommitsAllowedDuringPhase=true
+- pushDuringIntermediateMicrocuts=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
