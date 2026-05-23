@@ -17367,6 +17367,95 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto da autorizacao futura isolada de `start:mem`, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem novo push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=authorizeStartMemFutureOnly`.
+	- `selectedTechnicalTarget=start:mem`.
+	- `previousCheckpoint=recordPostPushControlledBootPlanningBlock`.
+	- `currentLocalCheckpoint=4d6dfd3 docs(ops): registra pos-push bloco boot local`.
+	- `currentRemoteCheckpoint=8412a77 docs(ops): decide proximo passo pos inspecao boot`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Estado consolidado desta autorizacao documental:
+	- `localRemoteSynced=false`.
+	- `aheadCount=1`.
+	- `humanPushExecuted=true`.
+	- `pushedRange=adc0598..8412a77`.
+	- `pushedHead=8412a77`.
+	- `workingTreeClean=true`.
+	- `postPushControlledBootPlanningBlockRecorded=true`.
+	- `authorizedFutureCommand=npm run start:mem`.
+	- `startMemExecutionAuthorizedDocumentally=true`.
+	- `authorizedFutureCommandExecutedNow=false`.
+	- `nextExecutionAuthorized=false`.
+- Leitura objetiva deste checkpoint:
+	- a autorizacao e apenas documental e futura.
+	- o comando autorizado futuro e exatamente `npm run start:mem`.
+	- nenhum outro comando de boot fica autorizado neste checkpoint.
+	- `start:mem:seed` permanece explicitamente bloqueado por tocar `ensureMasterUser` e `cleanupWrongEmail`.
+	- `start:gestor` e `start:atlas` permanecem explicitamente bloqueados por risco de Mongo nao-memoria, ambiente real, Portal e dados reais.
+	- qualquer execucao futura de `npm run start:mem` exigira microcorte proprio, gates frescos e confirmacao humana explicita antes de rodar.
+	- se houver execucao futura de `npm run start:mem`, ela devera trazer plano claro de parada, observacao do servidor e registro do resultado.
+	- `Portal` entra no registry base do boot full, mas nao foi validado em runtime.
+	- esta autorizacao nao declara producao pronta.
+- Confirmacoes obrigatorias desta rodada:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado novamente neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=authorizeStartMemFutureOnly`
+	- `selectedTechnicalTarget=start:mem`
+	- `authorizedFutureCommand=npm run start:mem`
+	- `startMemExecutionAuthorizedDocumentally=true`
+	- `authorizedFutureCommandExecutedNow=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `bootExecuted=false`
+	- `serverStarted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `masterSetExecuted=false`
+	- `masterSetWinExecuted=false`
+	- `portalRuntimeValidated=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `guardrailExecuted=false`
+	- `npmTestExecutedAgain=false`
+	- `pushExecuted=false`
+	- `sourceCodeChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `scriptChanged=false`
+	- `commandExecuted=false`
+	- `npmExecuted=false`
+	- `npmRunExecuted=false`
+	- `parityExecutedManually=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
