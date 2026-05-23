@@ -6280,6 +6280,131 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto da abertura do planejamento do boot local controlado consolidado nesta rodada, sem execucao operacional, sem boot, sem servidor, sem npm, sem npm run, sem npm test, sem scripts, sem guardrails, sem parity, sem Mongo real, sem Mongo em memoria manual, sem query, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=controlledLocalBootPlanning
+- selectedTarget=planControlledLocalBoot
+- selectedTechnicalTarget=none
+- previousCheckpoint=recordPostPushOperationalStepDecisionCheckpoint
+- currentLocalCheckpoint=b6bf406
+- currentRemoteCheckpoint=adc0598
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=b6bf406 docs(ops): registra pos-push decisao operacional
+- remoteHead=adc0598 docs(ops): decide proximo passo operacional
+- aheadCount=1
+- workingTreeClean=true
+- postPushOperationalStepDecisionCheckpointRecorded=true
+- recommendedNextCandidate=planControlledLocalBoot
+- productionReadyDeclared=false
+- mongoRealConnected=false
+- memoryMongoConnectedManually=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- C. Escopo do planejamento:
+- planningScope=documentalPlanningOnly
+- bootExecutionAuthorizedNow=false
+- serverStartAuthorizedNow=false
+- npmRunAuthorizedNow=false
+- mongoRealAuthorizedNow=false
+- memoryMongoManualAuthorizedNow=false
+- queryRealAuthorizedNow=false
+- productionReadyDeclarationAuthorizedNow=false
+- D. Scripts candidatos de boot/start encontrados em package.json:
+- bootScriptFound=start:gestor | command=node src/start.js | preliminaryRisk=alto | startsServer=true | mayTouchMongo=true | requiresAdditionalInspection=true | canRunNow=false
+- bootScriptFound=start:mem | command=set MONGO_MEMORY=1 && node src/start.js | preliminaryRisk=alto | startsServer=true | mayTouchMongo=true | requiresAdditionalInspection=true | canRunNow=false
+- bootScriptFound=start:mem:seed | command=set MONGO_MEMORY=1 && set GESTOR_SEEDS=1 && node src/start.js | preliminaryRisk=critico | startsServer=true | mayTouchMongo=true | requiresAdditionalInspection=true | canRunNow=false
+- bootScriptFound=start:atlas | command=node src/start.js | preliminaryRisk=critico | startsServer=true | mayTouchMongo=true | requiresAdditionalInspection=true | canRunNow=false
+- bootRunbookRead=docs/runbooks/controlled-boot-without-execution.md
+- E. Riscos minimos do boot local:
+- serverStartRisk=true
+- environmentVariableRisk=true
+- mongoTargetRisk=true
+- accidentalRealMongoRisk=true
+- masterUserProtectionRisk=true
+- portalOrRealDataRisk=true
+- productionReadinessMisinterpretationRisk=true
+- F. Pre-condicoes minimas para futura autorizacao de boot:
+- freshGitGatesRequired=true
+- workingTreeCleanRequired=true
+- noUncommittedFilesRequired=true
+- commandMustBeNamedExplicitly=true
+- envTargetMustBeDocumented=true
+- mongoTargetMustBeDocumented=true
+- realMongoMustRemainBlockedUnlessExplicitlyAuthorized=true
+- memoryMongoManualMustRemainBlockedUnlessExplicitlyAuthorized=true
+- masterUserMustRemainProtected=true
+- noProductionReadyDeclaration=true
+- dedicatedMicrocutRequired=true
+- humanAuthorizationRequired=true
+- G. Recomendacao:
+- recommendedNextAction=inspectBootScriptsBeforeAuthorization
+- recommendedNextCandidate=inspectBootScriptsDocumentally
+- nextExecutionAuthorized=false
+- nextStepRequiresDedicatedMicrocut=true
+- nextStepRequiresHumanAuthorization=true
+- H. Escopo explicitamente nao autorizado:
+- npmTestAgainAuthorized=false
+- parityManualAuthorized=false
+- bootLocalAuthorized=false
+- serverStartAuthorized=false
+- npmRunAuthorized=false
+- genericNpmScriptsAuthorized=false
+- guardrailsAuthorized=false
+- verifyImportsAuthorized=false
+- memoryMongoManualAuthorized=false
+- mongoRealAuthorized=false
+- queryRealAuthorized=false
+- masterSetAuthorized=false
+- masterSetWinAuthorized=false
+- seedAuthorized=false
+- resetAuthorized=false
+- cleanupAuthorized=false
+- migrationAuthorized=false
+- backfillAuthorized=false
+- portalAuthorized=false
+- realDataAuthorized=false
+- productionReadyDeclarationAuthorized=false
+- gitPushAuthorized=false
+- I. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- J. Gates finais:
+- controlledLocalBootPlanningOpened=true
+- selectedTarget=planControlledLocalBoot
+- selectedTechnicalTarget=none
+- planningScope=documentalPlanningOnly
+- nextExecutionAuthorized=false
+- bootLocalExecuted=false
+- serverStarted=false
+- commandExecuted=false
+- manualCommandExecuted=false
+- npmRunExecuted=false
+- npmTestExecutedAgain=false
+- guardrailExecuted=false
+- parityExecutedManually=false
+- memoryMongoConnected=false
+- memoryMongoConnectedManually=false
+- mongoRealConnected=false
+- queryExecuted=false
+- masterSetExecuted=false
+- masterSetWinExecuted=false
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do pos-push do pequeno bloco documental pos-validacoes verdes consolidado nesta rodada, sem execucao operacional, sem npm, sem npm run, sem npm test novo, sem scripts, sem guardrails, sem parity manual, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria manual, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
 - A. Identificacao:
 - phase=postPushOperationalStepDecisionCheckpoint
