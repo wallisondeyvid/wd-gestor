@@ -3696,6 +3696,199 @@ Checkpoint tenant enforcement atual:
 - portalUsageApproved=false
 - postgresRoadmapActive=false
 
+- Checkpoint documental curto de abertura da Fase 4 de handoff final de prontidao operacional consolidado nesta rodada, sem execucao operacional, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem dry-run, sem backup, sem restore, sem rollback, sem master:set, sem master:set:win, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem Portal, sem commit e sem push.
+- A. Identificacao:
+- phase=operationalReadinessFinalHandoff
+- selectedTarget=prepareOperationalReadinessFinalHandoff
+- selectedTechnicalTarget=none
+- previousPhase=realMasterUserProtectionRunbook
+- previousCheckpoint=closeRealMasterUserProtectionRunbookPhase
+- currentLocalCheckpoint=639a969
+- currentRemoteCheckpoint=c15eebc
+- chosenApproach=mongodbControlledValidation
+- postgresOutOfRoadmap=true
+- B. Estado de partida:
+- localHead=639a969 docs(ops): fecha fase protecao master real
+- remoteHead=c15eebc docs(ops): encerra temporariamente auditoria prontidao
+- aheadCount=22
+- workingTreeClean=true
+- phase1ClosedDocumentally=true
+- phase2ClosedDocumentally=true
+- phase3ClosedDocumentally=true
+- phase4Opened=true
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- nextPushAllowedAfterPhase4=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- masterSetExecuted=false
+- C. Objetivo da Fase 4:
+- preparar handoff final documental de prontidao operacional;
+- consolidar o que foi produzido nas Fases 1, 2 e 3;
+- registrar estado documental final do bloco;
+- registrar artefatos criados e revisados;
+- registrar riscos ainda bloqueados;
+- registrar criterios que continuam impedindo execucao operacional;
+- registrar que producao continua nao pronta;
+- registrar que Mongo real, Mongo em memoria manual, Portal, master:set, seed/reset/cleanup/migration/backfill e dados reais seguem bloqueados;
+- registrar que o usuario master real segue protegido;
+- preparar base para push humano unico apos fechamento completo da Fase 4;
+- manter tudo estritamente documental.
+- D. Politica global de push:
+- fourPhaseDocumentalBlockActive=true
+- phase1=controlledBootRunbookWithoutExecution
+- phase2=multiTenantInvariantChecklist
+- phase3=realMasterUserProtectionRunbook
+- phase4=operationalReadinessFinalHandoff
+- phase1ClosedDocumentally=true
+- phase2ClosedDocumentally=true
+- phase3ClosedDocumentally=true
+- phase4Opened=true
+- localCommitsAllowedDuringAllFourDocumentalPhases=true
+- pushAfterPhase1=false
+- pushAfterPhase2=false
+- pushAfterPhase3=false
+- pushDuringPhase4=false
+- pushOnlyAfterPhase4Closure=true
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- E. Artefatos ja produzidos no bloco:
+- docs/runbooks/controlled-boot-without-execution.md
+- docs/checkpoints/multi-tenant-invariant-checklist.md
+- docs/runbooks/real-master-user-protection.md
+- docs/migration-status.md como ledger continuo
+- F. Escopo permitido:
+- ler docs/migration-status.md;
+- em microcortes futuros, ler os tres artefatos documentais produzidos;
+- registrar handoff final no ledger;
+- consolidar riscos, bloqueios, criterios de parada e proximos passos;
+- preparar documento final de handoff, se autorizado em microcorte proprio;
+- revisar handoff, decidir fechamento da Fase 4 e so entao liberar push humano.
+- G. Escopo proibido:
+- executar comando operacional;
+- executar npm, npm run ou npm test;
+- executar validacoes ou guardrails manualmente;
+- iniciar servidor;
+- conectar Mongo real;
+- conectar Mongo em memoria manualmente;
+- executar query;
+- executar master:set;
+- executar master:set:win;
+- executar seed/reset/cleanup/migration/backfill;
+- tocar dados reais;
+- tocar usuario master real;
+- alterar credenciais;
+- expor senha, token, URI ou segredo;
+- usar Portal;
+- declarar producao pronta;
+- fazer push antes do fechamento completo da Fase 4.
+- H. Fontes candidatas para microcortes futuros da Fase 4:
+- docs/migration-status.md;
+- docs/runbooks/controlled-boot-without-execution.md;
+- docs/checkpoints/multi-tenant-invariant-checklist.md;
+- docs/runbooks/real-master-user-protection.md;
+- package.json, apenas leitura documental se necessario;
+- docs/gestor-operational-auth-context-model.md;
+- docs/gestor-fallback-inventory.md;
+- docs/multi-tenant-domain-matrix.md;
+- docs/gestor-provisioning-contract.md.
+- I. Conteudo candidato do handoff final:
+- resumo das quatro fases documentais;
+- artefatos criados;
+- artefatos revisados;
+- riscos bloqueados;
+- criterios de parada;
+- criterios de sucesso documental;
+- estado do usuario master real;
+- estado de producao nao pronta;
+- estado de MongoDB como arquitetura atual;
+- PostgreSQL fora do roadmap;
+- regra de push humano unico apos fechamento da Fase 4;
+- proximos passos possiveis apos o push humano.
+- J. Riscos que continuam bloqueados:
+- producao declarada pronta antes de fase propria: critico;
+- Mongo real conectado sem autorizacao: critico;
+- Mongo em memoria manual usado fora de escopo: alto;
+- master:set ou master:set:win executado sem autorizacao: critico;
+- seed/reset/cleanup/migration/backfill tocando dados ou master real: critico;
+- Portal usado fora de escopo: alto;
+- dados reais usados antes de fase propria: critico;
+- usuario master real tratado como ficticio: critico;
+- push feito antes do fechamento da Fase 4: alto.
+- K. Registro obrigatorio do usuario master real:
+- realMasterUserExists=true
+- realMasterUserEmail=wallisondeyvid13@gmail.com
+- masterCredentialSensitive=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- currentOtherUsersTreatedAsFictional=true
+- futureUsersMayBeFictionalControlled=true
+- L. Proximo ato recomendado:
+- commitOpenOperationalReadinessFinalHandoffPhase
+- M. Gates finais:
+- operationalReadinessFinalHandoffPhaseOpened=true
+- selectedTarget=prepareOperationalReadinessFinalHandoff
+- selectedTechnicalTarget=none
+- phaseScope=documentalHandoffOnly
+- phaseExecutionFuture=false
+- phaseCommandFuture=none
+- phaseMongoRealFuture=false
+- phaseMemoryMongoFuture=false
+- phaseDataTouchFuture=false
+- phaseMasterTouchFuture=false
+- phaseProductionDeclarationFuture=false
+- pushDeferredUntilAllFourDocumentalPhasesComplete=true
+- nextPushAllowedAfterPhase4=true
+- userWillPushOnlyAfterPhase4=true
+- copilotMustNotPush=true
+- gitPushExecuted=false
+- productionReadyDeclared=false
+- serverStarted=false
+- localBootExecuted=false
+- memoryMongoConnected=false
+- mongoRealConnected=false
+- queryExecuted=false
+- commandExecuted=false
+- npmScriptExecuted=false
+- validationExecuted=false
+- guardrailExecuted=false
+- r2B5Authorized=false
+- r2B5Executed=false
+- r2B6Authorized=false
+- r2B6Executed=false
+- r2BAuthorized=false
+- r2BExecuted=false
+- r2Authorized=false
+- r2Executed=false
+- realMasterUserExists=true
+- realMasterUserTouched=false
+- masterCredentialChanged=false
+- masterSetExecuted=false
+- sourceCodeChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- scriptChanged=false
+- fileCreated=false
+- dryRunExecuted=false
+- backupExecuted=false
+- restoreExecuted=false
+- rollbackExecuted=false
+- realDataUsed=false
+- fictionalDataMutated=false
+- seedExecuted=false
+- resetExecuted=false
+- cleanupExecuted=false
+- migrationExecuted=false
+- backfillExecuted=false
+- portalUsageApproved=false
+- postgresRoadmapActive=false
+
 - Checkpoint documental curto do contrato do envelope operacional da Fase H consolidado nesta rodada, sem alteracao de codigo, sem alteracao de testes, sem execucao real, sem caller real, sem rota, sem CLI, sem script, sem job, sem bootstrap e sem request path.
 - Documento canonico deste checkpoint: [tenant-phase-h-operational-envelope-contract.md](tenant-phase-h-operational-envelope-contract.md).
 - Decisao consolidada deste microcorte: a Fase H passa a registrar formalmente o envelope operacional obrigatorio do futuro piloto controlado nao produtivo como documentacao preparatoria, e nao como ferramenta, caller, CLI, script, rota, job, bootstrap ou fluxo executavel.
