@@ -23797,6 +23797,118 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=openValidateOperationalReadinessPlanning`
 	- `secondaryCandidate=planTenantBoundaryGapFollowupsDocumentally`
+
+- Checkpoint documental curto da abertura do planejamento de `validateOperationalReadiness`, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando operacional, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Categorias planejadas para a fase `validateOperationalReadiness`:
+	- `readinessCriteriaInventory`:
+		- inventariar criterios minimos de prontidao operacional;
+		- cobrir ambiente, variaveis, scripts, gates, logs, rollback e protecao de dados.
+	- `runtimeCommandRiskClassification`:
+		- classificar `start:mem`, `start:mem:seed`, `start:gestor` e `start:atlas` por risco;
+		- manter a rodada estritamente documental, sem executar comandos.
+	- `realMongoTransitionPreconditions`:
+		- mapear pre-condicoes para Mongo real e Atlas;
+		- manter Mongo real bloqueado nesta fase de planejamento.
+	- `seedMasterProtectionPreconditions`:
+		- mapear protecao do master real e bloqueios de seed/master;
+		- manter `wallisondeyvid13@gmail.com` protegido.
+	- `operationalRollbackAndAbortCriteria`:
+		- definir criterios de abortar, rollback e parada segura antes de qualquer runtime futuro.
+	- `productionReadinessGate`:
+		- manter a decisao de producao bloqueada ate todos os criterios anteriores estarem verdes.
+- Resultado consolidado desta rodada:
+	- a fase `validateOperationalReadiness` foi aberta apenas como planejamento documental;
+	- prontidao operacional continua nao validada e runtime real continua nao validado;
+	- `start:gestor`, `start:atlas`, `start:mem:seed`, Mongo real e seed/master continuam nao autorizados agora;
+	- qualquer execucao operacional futura continua exigindo microcorte proprio, autorizacao explicita e criterios de abortar;
+	- producao continua nao pronta.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=openValidateOperationalReadinessPlanning`;
+	- `planningScope=documentalOnly`;
+	- `validateOperationalReadinessPlanningOpened=true`;
+	- `previousPhase=auditTenantBoundaries`;
+	- `previousPhasePublished=true`;
+	- `previousPhaseClosed=true`;
+	- `tenantBoundaryCriticalGapFound=false`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `mongoRealAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `productionReadinessDecisionAuthorizedNow=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=inventoryOperationalReadinessCriteriaDocumentally`;
+	- `secondaryCandidate=classifyRuntimeCommandsRiskDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- nao executar runtime;
+	- nao executar `start:gestor`;
+	- nao executar `start:atlas`;
+	- nao executar `start:mem`;
+	- nao executar `start:mem:seed`;
+	- nao conectar Mongo real;
+	- nao executar seed/master;
+	- nao declarar producao pronta;
+	- qualquer execucao operacional futura deve ter microcorte proprio, autorizacao explicita e criterios de abortar.
+- Gates:
+	- `selectedTarget=openValidateOperationalReadinessPlanning`
+	- `planningScope=documentalOnly`
+	- `validateOperationalReadinessPlanningOpened=true`
+	- `previousPhase=auditTenantBoundaries`
+	- `previousPhasePublished=true`
+	- `previousPhaseClosed=true`
+	- `tenantBoundaryCriticalGapFound=false`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `startGestorAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `mongoRealAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `productionReadinessDecisionAuthorizedNow=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=inventoryOperationalReadinessCriteriaDocumentally`
+	- `secondaryCandidate=classifyRuntimeCommandsRiskDocumentally`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
