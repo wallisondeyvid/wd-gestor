@@ -24168,6 +24168,136 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=mapRealMongoTransitionPreconditionsDocumentally`
 	- `secondaryCandidate=mapSeedMasterProtectionPreconditionsDocumentally`
+
+- Checkpoint documental curto do mapeamento das pre-condicoes para qualquer futura transicao controlada para Mongo real ou Atlas, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar runtime, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem `start:mem:seed`, sem `start:gestor`, sem `start:atlas`, sem conexao a Mongo real, sem conexao manual de Mongo em memoria, sem seed, sem master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Pre-condicoes obrigatorias mapeadas nesta rodada para qualquer futura tentativa envolvendo Mongo real ou Atlas:
+	- `realMongoEnvironmentPreconditions`:
+		- `MONGO_URI` ou `MONGODB_URI` reais devem ser identificados como segredos sensiveis e permanecer protegidos, sem exposicao em logs, terminal, payload, commit, ledger ou qualquer artefato documental;
+		- o ambiente futuro deve distinguir explicitamente `dev`, `test`, `memory` e `real`, sem ambiguidade entre `MONGO_MEMORY`, runtime local e runtime real;
+		- `NODE_ENV`, flags e variaveis de ambiente devem estar coerentes antes de qualquer contato futuro com Mongo real ou Atlas;
+		- qualquer uso futuro de Atlas depende de validacao previa de segredos mascarados, superficie de sessao e store real, ainda sem autorizacao agora.
+	- `backupAndRollbackPreconditions`:
+		- backup deve existir antes de qualquer conexao real futura;
+		- rollback deve estar previamente definido, incluindo criterio de parada, retorno ao estado anterior e responsavel humano explicito;
+		- o primeiro abort deve privilegiar interrupcao sem escrita real quando qualquer ambiguidade surgir;
+		- logs minimos de auditoria devem ser definidos antes de qualquer execucao futura e nao podem expor segredos.
+	- `dataProtectionPreconditions`:
+		- o usuario master real `wallisondeyvid13@gmail.com` permanece protegido e fora de qualquer rotina automatica;
+		- `cleanupWrongEmail` permanece bloqueado sempre que puder tocar o usuario master real;
+		- `GESTOR_SEEDS`, `SEEDS`, `start:mem:seed`, seeds em geral e qualquer rotina de `ensureMasterUser` permanecem bloqueados;
+		- `master:set` e `master:set:win` permanecem bloqueados;
+		- nenhuma mutacao real pode ocorrer antes de autorizacao humana explicita em microcorte proprio.
+	- `tenantPreconditions`:
+		- a auditoria `auditTenantBoundaries` precisa permanecer publicada e como referencia vigente;
+		- `tenantBoundaryCriticalGapFound=false` permanece pre-condicao obrigatoria para qualquer rodada futura envolvendo Mongo real;
+		- pendencias, ressalvas e corredores hibridos conhecidos devem continuar documentados antes de qualquer tentativa futura;
+		- nenhuma correcao automatica tenant-sensitive pode ser embutida numa primeira ida a Mongo real sem microcorte proprio.
+	- `validationPreconditions`:
+		- `npm test`, pre-push e hooks continuam exigidos como gate de validacao futura, ainda que nao executados neste microcorte;
+		- `guardrails` e `parity` precisam permanecer definidos e coerentes com a trilha antes de qualquer futura liberacao de `start:atlas` ou `start:gestor`;
+		- os criterios minimos de prontidao operacional ja inventariados precisam continuar satisfeitos antes de qualquer runtime real futuro.
+	- `dryRunOrReadOnlyPreconditions`:
+		- qualquer primeiro contato futuro com Mongo real deve preferir leitura ou diagnostico controlado;
+		- sem seed, sem login real, sem mutacao e sem declaracao de producao pronta;
+		- o objetivo inicial de qualquer futura aproximacao deve ser confirmar ambiente, conexao, logs e criterio de parada, nunca normalizar dados.
+- Resultado consolidado desta rodada:
+	- Mongo real e `start:atlas` continuam bloqueados agora;
+	- `start:gestor`, `start:mem`, `start:mem:seed`, seed/master e qualquer mutacao real continuam bloqueados agora;
+	- a transicao futura para Mongo real ou Atlas so pode ser discutida depois de ambiente, backup, rollback, protecao de dados, tenant e validacao estarem explicitamente fechados em microcortes proprios;
+	- este checkpoint nao autoriza execucao e nao declara producao pronta.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=mapRealMongoTransitionPreconditionsDocumentally`;
+	- `planningScope=documentalOnly`;
+	- `realMongoTransitionPreconditionsMapped=true`;
+	- `realMongoEnvironmentPreconditionsMapped=true`;
+	- `backupAndRollbackPreconditionsMapped=true`;
+	- `dataProtectionPreconditionsMapped=true`;
+	- `tenantPreconditionsMapped=true`;
+	- `validationPreconditionsMapped=true`;
+	- `dryRunOrReadOnlyPreconditionsMapped=true`;
+	- `mongoRealAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `masterSetAuthorizedNow=false`;
+	- `productionReadinessDecisionAuthorizedNow=false`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=mapSeedMasterProtectionPreconditionsDocumentally`;
+	- `secondaryCandidate=defineOperationalRollbackAndAbortCriteriaDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- nao executar runtime;
+	- nao executar `start:gestor`;
+	- nao executar `start:atlas`;
+	- nao executar `start:mem`;
+	- nao executar `start:mem:seed`;
+	- nao conectar Mongo real;
+	- nao executar seed ou master;
+	- nao declarar producao pronta;
+	- Mongo real continua bloqueado.
+- Gates:
+	- `selectedTarget=mapRealMongoTransitionPreconditionsDocumentally`
+	- `planningScope=documentalOnly`
+	- `realMongoTransitionPreconditionsMapped=true`
+	- `realMongoEnvironmentPreconditionsMapped=true`
+	- `backupAndRollbackPreconditionsMapped=true`
+	- `dataProtectionPreconditionsMapped=true`
+	- `tenantPreconditionsMapped=true`
+	- `validationPreconditionsMapped=true`
+	- `dryRunOrReadOnlyPreconditionsMapped=true`
+	- `mongoRealAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `startGestorAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `masterSetAuthorizedNow=false`
+	- `productionReadinessDecisionAuthorizedNow=false`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=mapSeedMasterProtectionPreconditionsDocumentally`
+	- `secondaryCandidate=defineOperationalRollbackAndAbortCriteriaDocumentally`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
