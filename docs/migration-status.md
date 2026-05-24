@@ -23384,6 +23384,94 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da auditoria das mutation surfaces tenant-aware, consolidado nesta rodada apenas por leitura documental e de codigo em `docs/migration-status.md`, sem executar qualquer comando, sem auditoria automatizada, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Achados principais desta rodada:
+	- `shared/routes/userApi` e `gestor/app/routes/userApi.js` expõem mutações administrativas em `/api/usuarios/:id/update|toggle|delete` sob gate global `admin/master`, com a fronteira tenant-aware dependendo mais do controller e do auth-context do que do route layer;
+	- `portal-morador/app/portal-morador-app.js` concentra writes de `servicos`, `visitantes`, voto em enquete, avatar e push subscription com filtros por `unidade_id` e `morador_email`, mas ainda escreve diretamente em modelos a partir de `req.user`, sem `req.unitScope` explícito;
+	- `escalas/app/routes/ausencias.js`, `ferias.js` e a família `escalasApi.new.js` fazem creates, updates e deletes amplos apoiados em `requireEscalasAuth`, porém com pouca ou nenhuma marca tenant-aware explícita no payload gravado ou no filtro local de cada write;
+	- `condominios/app/services/blocos.service.js` aparece como corredor mais conservador desta rodada, porque valida divergência entre `unitScope` e `unidade_id`, instancia `BlocosRepository` escopado e falha fechado quando o escopo não é unitário;
+	- `condominios/assembleias/shared/executionOpen.logic.js` e os corredores V2 correlatos usam `mustControl`, audit log e persistência de execução sob fluxo administrativo controlado, mas continuam dependentes da cadeia anterior de autenticação/controle e do lookup por `assembleiaId`;
+	- `condominios/app/condominios-app.js` concentra a maior superfície mutante do conjunto auditado, com muitos `create`, `findByIdAndUpdate`, `findOneAndUpdate`, `updateMany`, `deleteOne`, `deleteMany` e soft deletes espalhados em um módulo grande e híbrido;
+	- `gestor-seeds.js` permanece como superfície operacional sensível de escrita e deleção de usuário master, explicitamente fora desta trilha documental e bloqueado para qualquer execução.
+- Classificacao dos achados desta rodada:
+	- `saferTenantMutationSurfaces`:
+		- `src/modules/condominios/app/services/blocos.service.js`, com validação de `UNIDADE_ID_MISMATCH`, exigência de `unitScope` unitário para update/delete e uso de `BlocosRepository` escopado;
+		- corredores V2 de `assembleias/execution`, em especial `executionOpen.logic.js`, quando encadeados por `mustControl`, `writeAuditLog` e repositories/modelos resolvidos pelo corredor V2.
+	- `needsTenantMutationSurfaceReview`:
+		- `src/shared/routes/userApi.js` e `src/modules/gestor/app/routes/userApi.js`, porque os writes administrativos de usuários nascem de gate global `admin/master` e não de `req.unitScope` explícito no route layer;
+		- `src/modules/portal-morador/app/portal-morador-app.js`, porque creates/updates/deletes de `servicos` e `visitantes` dependem de `req.user.unidade_id`, `morador_email` e lookups locais, sem contrato tenant-aware canônico na própria borda de mutação;
+		- `src/modules/escalas/app/routes/ausencias.js`, `src/modules/escalas/app/routes/ferias.js` e a família `src/modules/escalas/app/routes/escalasApi.new.js`, porque os writes recaem em modelos e documentos com dependência de contexto legado ou auth de módulo, não de escopo tenant-aware explicitado localmente;
+		- `src/modules/condominios/app/condominios-app.js`, porque o módulo agrega writes de blocos, andares, moradores, proprietários, áreas comuns, materiais, habitacoes, comunicados, enquetes, visitas e mensagens com combinações heterogêneas de `unidade_id`, soft delete e queries diretas;
+		- `src/modules/portal-morador/lib/portalAuth.js` e `src/modules/portal-morador/app/repositories/PortalAuthRepository.js`, porque persistem usuário/vínculo portal a partir de composição local de unidade e login.
+	- `masterOrGlobalMutationBypasses`:
+		- `src/modules/gestor/app/routes/userApi.js`, via `compatRequireLogin` e `requireLegacyAdminMutationAccess` para mutações administrativas legadas de usuários;
+		- `src/shared/tenant/assertTenantScope.js`, via `ALLOW_GLOBAL` para escopos globais legítimos ou permissivos;
+		- `src/modules/condominios/app/middlewares/requireUnitScope.js`, ao aceitar `unitScope` global quando `WDG_MULTI_TENANT` não está enforced;
+		- superfícies administrativas legadas em `usuarios/userApi`, `assembleias` e partes de `condominios-app.js` que preservam ramos privilegiados por `master/admin`.
+	- `blockedOperationalMutationSurfaces`:
+		- `src/modules/gestor/gestor-seeds.js`, `master:set`, `master:set:win`, `start:mem:seed`, `start:gestor`, `start:atlas`, seeds, backfills e qualquer write em Mongo real;
+		- qualquer mutação que possa tocar o usuário master real `wallisondeyvid13@gmail.com`, credenciais reais, dados reais ou runtime de produção.
+	- `unknownOrAmbiguousMutationSurfaces`:
+		- `src/routes/usuario.js`, por ainda carregar trilha legada de mutação administrativa fora da cadeia tenant-aware canônica revisada nesta rodada;
+		- partes de `src/shared/routes/userApi.js` e `src/modules/condominios/app/condominios-app.js` em que a garantia tenant-aware depende mais do encadeamento anterior do request do que do método mutante local;
+		- superfícies específicas de `feedback/ocorrencias`, porque feedback administrativo apareceu no inventário anterior, mas `ocorrencias` não se materializou aqui como módulo mutante próprio e fechado.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=auditTenantMutationSurfacesDocumentally`;
+	- `auditScope=documentalCodeReadOnly`;
+	- `tenantMutationSurfacesAudited=true`;
+	- `mutationSurfacesMapped=true`;
+	- `createSurfacesMapped=true`;
+	- `updateSurfacesMapped=true`;
+	- `deleteSurfacesMapped=true`;
+	- `adminMutationSurfacesMapped=true`;
+	- `codeReadOnly=true`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `tenantMutationSurfaceCriticalGapFound=false`;
+	- `recommendedNextCandidate=auditTenantBypassAndMasterScopeDocumentally`;
+	- `secondaryCandidate=closeTenantBoundaryAuditPlanningForExecutionDecision`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas leitura e documentacao;
+	- nao executar `npm`, `npm run`, `npm test` ou guardrails;
+	- nao abrir servidor, navegador ou fazer HTTP;
+	- nao fazer login, nao enviar credenciais e nao fazer mutacao;
+	- nao conectar Mongo real nem Mongo em memoria;
+	- nao alterar codigo, nao alterar testes e nao criar arquivos;
+	- nao fazer push;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=auditTenantMutationSurfacesDocumentally`
+	- `auditScope=documentalCodeReadOnly`
+	- `tenantMutationSurfacesAudited=true`
+	- `mutationSurfacesMapped=true`
+	- `createSurfacesMapped=true`
+	- `updateSurfacesMapped=true`
+	- `deleteSurfacesMapped=true`
+	- `adminMutationSurfacesMapped=true`
+	- `codeReadOnly=true`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `tenantMutationSurfaceCriticalGapFound=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
