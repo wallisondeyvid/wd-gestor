@@ -17753,6 +17753,103 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto do planejamento da proxima observacao runtime sem seed, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem novo push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=planRuntimeObservationWithoutSeed`.
+	- `planningScope=documentalPlanningOnly`.
+	- `previousCheckpoint=recordPostPushStartMemBootResult`.
+	- `currentLocalCheckpoint=c0d5a74 docs(ops): registra pos-push boot start mem`.
+	- `currentRemoteCheckpoint=c0d5a74 docs(ops): registra pos-push boot start mem`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Estado consolidado deste planejamento:
+	- `startMemPreviouslyExecuted=true`.
+	- `startMemPreviousResult=green`.
+	- `runtimeObservationPlanned=true`.
+	- `runtimeObservationExecutedNow=false`.
+	- `recommendedFutureCommand=npm run start:mem`.
+	- `recommendedObservationMode=startMemOnlyNoSeed`.
+	- `allowSeed=false`.
+	- `allowMongoReal=false`.
+	- `allowMasterScripts=false`.
+	- `allowStartGestor=false`.
+	- `allowStartAtlas=false`.
+	- `allowStartMemSeed=false`.
+	- `allowPortalMutation=false`.
+	- `allowProductionReady=false`.
+	- `nextExecutionAuthorized=false`.
+- Planejamento consolidado para microcorte futuro separado:
+	- executar somente `npm run start:mem`.
+	- confirmar novamente `MONGO_MEMORY=1`.
+	- confirmar Mongo in-memory.
+	- confirmar ausencia de Mongo real.
+	- confirmar ausencia de seeds.
+	- confirmar ausencia de `ensureMasterUser` e `cleanupWrongEmail`.
+	- observar endpoints ou rotas minimas somente se forem passivas e sem mutacao.
+	- nao fazer login real.
+	- nao criar ou alterar usuarios.
+	- nao tocar usuario master real.
+	- nao chamar `master:set` ou `master:set:win`.
+	- nao chamar `start:mem:seed`.
+	- parar servidor controladamente.
+	- registrar resultado no ledger.
+- Leitura objetiva deste checkpoint:
+	- este microcorte e apenas documental.
+	- o resultado verde anterior de `start:mem` permanece a referencia para o planejamento.
+	- a publicacao deste planejamento nao autoriza nova execucao automatica.
+	- qualquer nova execucao de `start:mem` precisa de microcorte proprio.
+	- a proxima etapa recomendada e apenas observacao runtime sem seed, sem Mongo real e sem master, se houver nova autorizacao explicita.
+	- `start:mem:seed` permanece bloqueado.
+	- `start:gestor` e `start:atlas` permanecem bloqueados.
+	- Mongo real permanece bloqueado.
+	- `Portal` runtime ainda nao foi validado funcionalmente.
+	- producao continua nao pronta.
+- Confirmacoes obrigatorias desta rodada:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=planRuntimeObservationWithoutSeed`
+	- `planningScope=documentalPlanningOnly`
+	- `startMemPreviouslyExecuted=true`
+	- `startMemPreviousResult=green`
+	- `runtimeObservationPlanned=true`
+	- `runtimeObservationExecutedNow=false`
+	- `recommendedFutureCommand=npm run start:mem`
+	- `recommendedObservationMode=startMemOnlyNoSeed`
+	- `allowSeed=false`
+	- `allowMongoReal=false`
+	- `allowMasterScripts=false`
+	- `allowStartGestor=false`
+	- `allowStartAtlas=false`
+	- `allowStartMemSeed=false`
+	- `allowPortalMutation=false`
+	- `allowProductionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
