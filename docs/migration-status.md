@@ -20886,6 +20886,171 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto do desenho do contrato/API futuro do `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada sem criar helper, sem criar arquivo, sem alterar codigo, sem criar fixture, sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=designHelperApiContractDocumentally`.
+	- `designScope=documentalOnly`.
+	- `previousCheckpoint=decideHelperScopeUserOnlyVsUnitMembership`.
+	- `currentLocalCheckpoint=fd60030 docs(ops): decide escopo helper fixture`.
+	- `currentRemoteCheckpoint=9499455 docs(ops): fecha planejamento validacao ficticia`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo deste desenho:
+	- `helperApiContractDesigned=true`.
+	- `helperName=controlledMemoryOnlyFixtureHelper`.
+	- `futureFile=tests/helpers/controlledMemoryOnlyFixtureHelper.js`.
+	- `initialScope=userOnly`.
+	- `primaryFunction=createControlledMemoryOnlyUserFixture`.
+	- `userMembershipOutOfScope=true`.
+	- `helperCreatedNow=false`.
+	- `helperCreationExecutionAuthorizedNow=false`.
+	- `fixtureCreatedNow=false`.
+	- `fixtureCreationExecutionAuthorizedNow=false`.
+	- `codeChanged=false`.
+	- `newFileCreated=false`.
+	- `npmRunExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `loginExecuted=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `mongoRealConnected=false`.
+	- `memoryMongoConnectedManually=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Contrato futuro minimo de entrada:
+	- `emailPrefix` opcional.
+	- `nome` opcional com padrao sintetico quando ausente.
+	- `role` opcional com padrao seguro.
+	- `senhaFicticia` opcional com padrao seguro.
+- Contrato futuro minimo de saida:
+	- `userId`.
+	- `email`.
+	- `cpf`.
+	- `senhaFicticia`.
+	- `cleanupHint` ou `memoryOnly=true`.
+- Comportamento futuro minimo esperado:
+	- gerar email `@example.com`.
+	- gerar CPF ficticio.
+	- gerar hash com `bcrypt.hash`.
+	- criar `User` ativo e ficticio.
+	- marcar `primeiro_acesso` e `senha_provisoria` conforme padrao seguro a decidir na implementacao.
+	- nao criar `Unidade` ou `UserMembership` na versao inicial.
+	- nao criar sessao.
+	- nao fazer login.
+	- nao chamar HTTP.
+	- nao tocar seed, master ou Mongo real.
+- Restricoes obrigatorias do contrato:
+	- nao aceitar email real.
+	- nao aceitar `wallisondeyvid13@gmail.com`.
+	- nao aceitar dominio diferente de `@example.com` na versao inicial.
+	- nao aceitar `role=master` real.
+	- nao aceitar URI de Mongo como input.
+	- nao abrir conexao propria.
+	- depender de conexao e model ja controlados pelo ambiente futuro de teste e memoria.
+	- falhar fechado se nao houver garantia documental de Mongo em memoria.
+- Leitura objetiva deste contrato:
+	- o helper futuro fica limitado a uma funcao primaria pequena e previsivel.
+	- a API futura foi reduzida ao minimo necessario para criar apenas um `User` ficticio basico.
+	- o contrato evita transporte HTTP, sessao, login e qualquer dependencia de seed ou master.
+	- a dependencia de conexao controlada pelo ambiente reduz o risco de o helper tentar abrir acesso fora do contexto permitido.
+- Justificativa consolidada:
+	- depois de definir localizacao, guardas e escopo inicial, o contrato/API precisava ser documentado antes de qualquer criacao de arquivo.
+	- isso reduz risco de implementacao improvisada e mantem o helper limitado a `User` ficticio basico em Mongo em memoria.
+	- a separacao explicita entre inputs, outputs e restricoes facilita revisar futuramente a implementacao contra o desenho documental.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=decideHelperApiContractReadiness`.
+	- `secondaryCandidate=closeHelperPlanningBlockForPushDecision`.
+	- este microcorte e apenas documentacao.
+	- nao criar helper agora.
+	- nao criar arquivo.
+	- nao alterar codigo.
+	- nao criar fixture.
+	- nao executar nada.
+	- nao fazer login.
+	- nao enviar credenciais.
+	- nao criar, editar ou excluir dados.
+	- nao rodar seed.
+	- nao tocar usuario master real.
+	- nao executar `master:set` ou `master:set:win`.
+	- nao executar `start:mem:seed`.
+	- nao executar `start:gestor` ou `start:atlas`.
+	- nao conectar Mongo real.
+	- nao declarar producao pronta.
+	- nao fazer push.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- nenhum login foi executado neste microcorte.
+	- nenhuma credencial foi enviada neste microcorte.
+	- nenhuma mutacao foi executada neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum arquivo novo foi criado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=designHelperApiContractDocumentally`
+	- `designScope=documentalOnly`
+	- `helperApiContractDesigned=true`
+	- `helperName=controlledMemoryOnlyFixtureHelper`
+	- `futureFile=tests/helpers/controlledMemoryOnlyFixtureHelper.js`
+	- `initialScope=userOnly`
+	- `primaryFunction=createControlledMemoryOnlyUserFixture`
+	- `userMembershipOutOfScope=true`
+	- `helperCreatedNow=false`
+	- `helperCreationExecutionAuthorizedNow=false`
+	- `fixtureCreatedNow=false`
+	- `fixtureCreationExecutionAuthorizedNow=false`
+	- `codeChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=decideHelperApiContractReadiness`
+	- `secondaryCandidate=closeHelperPlanningBlockForPushDecision`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
