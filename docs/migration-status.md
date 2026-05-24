@@ -28984,6 +28984,133 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=decideHowToSetMongoUriInSameSessionWithoutExposingSecret`
 	- `secondaryCandidate=keepReadOnlyDiagnosticPausedUntilSameSessionUriConfigured`
+
+- Checkpoint documental curto da decisao sobre como configurar `MONGO_URI` ou `MONGODB_URI` na mesma sessao sem expor segredo, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem configurar URI agora, sem pedir segredo, sem colar segredo, sem imprimir URI, sem executar script, sem conectar Mongo real, sem criar `.env`, sem alterar `.gitignore`, sem npm manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:atlas`, sem `start:gestor`, sem `start:mem`, sem `start:mem:seed`, sem seed/master, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos e sem nova acao de push.
+- Comparacao de opcoes desta rodada:
+	- `powershellSessionEnvAssignment`: configura variavel temporaria apenas na sessao atual do PowerShell, sem imprimir valor e sem salvar em arquivo; opcao recomendada para a proxima tentativa;
+	- `processPrefixInlineEnv`: usa variavel inline no mesmo processo, mas aumenta risco de vazamento em historico ou na linha de comando; opcao nao recomendada;
+	- `dotEnvLocalFile`: depende de arquivo local e de disciplina extra de ignore/segredo; opcao considerada, mas nao autorizada agora;
+	- `systemEnvironmentVariable`: cria persistencia mais ampla no Windows; opcao considerada, mas nao recomendada neste momento;
+	- `pasteSecretInChatOrLedger`: opcao proibida.
+- Justificativa consolidada desta rodada:
+	- as tres tentativas abortadas por `missing-uri` confirmam problema de entrega da URI ao processo Node;
+	- a forma mais segura e controlada para a proxima tentativa e disponibilizar a URI apenas na sessao ativa do PowerShell, sem persistencia ampla e sem arquivo versionado;
+	- a alternativa inline aumenta risco de exposicao no historico;
+	- arquivo `.env` local e variavel permanente de sistema ampliam superficie de persistencia e nao sao necessarios neste momento.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=decideHowToSetMongoUriInSameSessionWithoutExposingSecret`;
+	- `decisionScope=documentalOnly`;
+	- `previousDiagnosticResult=abort`;
+	- `previousBlockedReason=missing-uri`;
+	- `previousConnectionAttempted=false`;
+	- `sameSessionUriStillMissing=true`;
+	- `mongoUriDeliveryProblemConfirmed=true`;
+	- `powershellSessionEnvAssignmentConsidered=true`;
+	- `powershellSessionEnvAssignmentRecommended=true`;
+	- `processPrefixInlineEnvConsidered=true`;
+	- `processPrefixInlineEnvRecommended=false`;
+	- `dotEnvLocalFileConsidered=true`;
+	- `dotEnvLocalFileAuthorizedNow=false`;
+	- `systemEnvironmentVariableConsidered=true`;
+	- `systemEnvironmentVariableRecommended=false`;
+	- `pasteSecretInChatOrLedgerBlocked=true`;
+	- `recommendedLocalConfigurationMethod=PowerShell session env assignment without printing value`;
+	- `uriMustBeConfiguredInSameExecutionSession=true`;
+	- `uriMustBeConfiguredOutsideChat=true`;
+	- `uriMustNotBePastedInChat=true`;
+	- `uriMustNotBePrinted=true`;
+	- `uriMustNotBeCommitted=true`;
+	- `uriMustNotBeLogged=true`;
+	- `envFileChangeAuthorizedNow=false`;
+	- `gitignoreChangeAuthorizedNow=false`;
+	- `scriptExecutionAuthorizedNow=false`;
+	- `scriptExecutedNow=false`;
+	- `realMongoConnectionAuthorizedNow=false`;
+	- `realMongoConnected=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=configureMongoUriInSamePowerShellSessionOutsideChat`;
+	- `secondaryCandidate=authorizeReadOnlyDiagnosticAfterSameSessionUriConfiguredAgain`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao configura URI;
+	- este microcorte nao executa script;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte apenas decide o metodo seguro;
+	- a URI deve ser inserida localmente no PowerShell, fora do chat, sem imprimir o valor;
+	- nao criar `.env`;
+	- nao alterar `.gitignore`;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=decideHowToSetMongoUriInSameSessionWithoutExposingSecret`
+	- `decisionScope=documentalOnly`
+	- `previousDiagnosticResult=abort`
+	- `previousBlockedReason=missing-uri`
+	- `previousConnectionAttempted=false`
+	- `sameSessionUriStillMissing=true`
+	- `mongoUriDeliveryProblemConfirmed=true`
+	- `powershellSessionEnvAssignmentConsidered=true`
+	- `powershellSessionEnvAssignmentRecommended=true`
+	- `processPrefixInlineEnvConsidered=true`
+	- `processPrefixInlineEnvRecommended=false`
+	- `dotEnvLocalFileConsidered=true`
+	- `dotEnvLocalFileAuthorizedNow=false`
+	- `systemEnvironmentVariableConsidered=true`
+	- `systemEnvironmentVariableRecommended=false`
+	- `pasteSecretInChatOrLedgerBlocked=true`
+	- `recommendedLocalConfigurationMethod=PowerShell session env assignment without printing value`
+	- `uriMustBeConfiguredInSameExecutionSession=true`
+	- `uriMustBeConfiguredOutsideChat=true`
+	- `uriMustNotBePastedInChat=true`
+	- `uriMustNotBePrinted=true`
+	- `uriMustNotBeCommitted=true`
+	- `uriMustNotBeLogged=true`
+	- `envFileChangeAuthorizedNow=false`
+	- `gitignoreChangeAuthorizedNow=false`
+	- `scriptExecutionAuthorizedNow=false`
+	- `scriptExecutedNow=false`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `realMongoConnected=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=configureMongoUriInSamePowerShellSessionOutsideChat`
+	- `secondaryCandidate=authorizeReadOnlyDiagnosticAfterSameSessionUriConfiguredAgain`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
