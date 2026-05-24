@@ -23472,6 +23472,98 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da auditoria dos bypasses tenant, master/global scope e excecoes administrativas intencionais, consolidado nesta rodada apenas por leitura documental e de codigo em `docs/migration-status.md`, sem executar qualquer comando operacional, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Achados principais desta rodada:
+	- `src/shared/tenant/assertTenantScope.js` materializa o bypass global mais explicito desta trilha: `unitScope.type=global` continua legitimo quando `WDG_MULTI_TENANT` nao esta enforced ou quando `ALLOW_GLOBAL` esta ligado, e falha fechado apenas quando o enforcement tenant esta ativo sem essa liberacao;
+	- `src/modules/gestor/app/middlewares/requireUnitScope.js` trata `master/admin` e `global_role` canonicamente resolvido como corredor privilegiado controlado, permitindo que o `unidadeId` alvo venha do request para usuarios globais, enquanto usuarios contextuais sem `active_unidade_id` valido continuam bloqueados ou em `GESTOR_SELECTION_REQUIRED`;
+	- `src/modules/condominios/app/middlewares/requireUnitScope.js` preserva um fallback global deliberado quando `WDG_MULTI_TENANT` nao esta enforced, o que caracteriza bypass tenant por desenho legado, mas nao por excecao oculta;
+	- `src/server/createServer.js` reidrata `req.user` a partir da sessao real para middlewares que dependem de `role/isMaster` e pula o gate de modulo planejado para `master`, preservando visoes globais legitimas fora do fluxo contextual de unidade;
+	- `src/modules/gestor/app/controllers/authController.js` e a documentacao de auth-context mantem `master/admin` fora do fluxo obrigatorio de selecao de unidade, tratando `global_role` como privilegio global legitimo com `active context` nulo;
+	- `src/shared/routes/userApi.js` mantem superfices administrativas globais, em especial listagem de modulos e mutacoes legadas de usuarios, apoiadas em `admin/master` e compatibilidades do auth-context, nao em `req.unitScope` estrito;
+	- `src/modules/gestor/gestor-seeds.js`, `src/modules/gestor/index.js` e `scripts/set-master-password.js` concentram os caminhos mais sensiveis de criacao, correcao, cleanup ou redefinicao de credenciais master, inclusive com o email real `wallisondeyvid13@gmail.com` e o typo `wallisondeyvdi13@gmail.com` como alvos nominais;
+	- `docs/runbooks/real-master-user-protection.md` fecha a parte operacional desta analise ao explicitar que `master:set`, `master:set:win`, seeds, cleanup e qualquer acao que possa tocar o master real seguem bloqueados e nao autorizados nesta fase.
+- Classificacao dos achados desta rodada:
+	- `explicitAllowedBypasses`:
+		- `src/shared/tenant/assertTenantScope.js`, via `ALLOW_GLOBAL` e retorno de `GLOBAL_SCOPE` quando o enforcement multi-tenant nao esta ativo ou foi liberado explicitamente;
+		- `src/modules/gestor/app/controllers/authController.js` e a especificacao do auth-context, ao manter `master/admin` autenticados sem selecao obrigatoria de unidade;
+		- `src/server/createServer.js`, ao preservar `master` fora do gate de modulo planejado e reidratar `req.user` para guards legados dependentes de `role/isMaster`.
+	- `controlledMasterScopePaths`:
+		- `src/modules/gestor/app/middlewares/requireUnitScope.js`, que só libera escolha de `unidadeId` pelo request para usuario privilegiado ou `gestorAuthContext` canonico com `global_role=master|admin`;
+		- `src/shared/routes/userApi.js`, onde os ramos globais de modulos e mutacoes administrativas estao presos a `admin/master` e ao payload de selecao pendente do auth-context;
+		- `src/server/createServer.js`, que reidrata `req.user` de fonte persistida antes de marcar `isMaster`, em vez de confiar apenas em query ou body;
+		- `docs/runbooks/real-master-user-protection.md`, que documenta bloqueio explicito dos scripts e seeds sensiveis ligados ao usuario master real.
+	- `sensitiveMasterOrGlobalPaths`:
+		- `src/modules/condominios/app/middlewares/requireUnitScope.js`, porque o fallback global continua possivel quando `WDG_MULTI_TENANT` esta desligado;
+		- `src/modules/gestor/index.js` e `src/modules/gestor/gestor-seeds.js`, porque `GESTOR_SEEDS` ou `SEEDS` ainda podem acionar `ensureMasterUser` e `cleanupWrongEmail` em runtime se uma fase operacional futura os habilitar;
+		- `scripts/set-master-password.js`, porque conecta Mongo e cria/atualiza usuario master diretamente, fora de qualquer `unitScope`;
+		- `src/routes/usuario.js` e `src/modules/gestor/app/middlewares/requireApiAuth.js`, porque preservam heuristicas legadas de `isMaster` por role ou email real, mantendo uma superficie global hibrida que exige revisao posterior;
+		- `src/modules/gestor/app/controllers/debugApiController.js`, porque inclui `removeWrongMaster` master-only e acopla manutencao administrativa a um email hardcoded de cleanup.
+	- `blockedMasterOperationalPaths`:
+		- `scripts/set-master-password.js`, `master:set`, `master:set:win`, `src/modules/gestor/gestor-seeds.js`, `src/modules/gestor/index.js` quando `GESTOR_SEEDS|SEEDS=1`, `start:mem:seed`, `start:gestor`, `start:atlas`, Mongo real, Mongo em memoria manual e qualquer seed, cleanup, migration ou backfill;
+		- qualquer superficie que possa tocar o usuario master real `wallisondeyvid13@gmail.com`, credenciais reais, dados reais ou ambiente de producao.
+	- `unknownOrAmbiguousBypasses`:
+		- `src/routes/usuario.js`, porque o arquivo legado ainda expõe heuristicas de `isMaster` por email e fallback de unidade principal fora da cadeia canonica do auth-context;
+		- partes de `src/shared/routes/userApi.js` e do corredor legado do Gestor onde a garantia tenant-aware ainda depende da ordem de middlewares e da reidratacao de sessao, nao apenas do handler local;
+		- superficies administrativas antigas correlatas a `requireApiAuth` e `req.session.user`, nas quais o bypass global continua controlado, mas ainda nao esta totalmente reduzido a um unico corredor canonico.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=auditTenantBypassAndMasterScopeDocumentally`;
+	- `auditScope=documentalCodeReadOnly`;
+	- `tenantBypassAndMasterScopeAudited=true`;
+	- `codeReadOnly=true`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `allowGlobalMapped=true`;
+	- `isMasterBypassesMapped=true`;
+	- `masterEmailPathsMapped=true`;
+	- `masterScriptsMapped=true`;
+	- `seedMasterPathsMapped=true`;
+	- `privilegedMiddlewareMapped=true`;
+	- `tenantBypassCriticalGapFound=false`;
+	- `recommendedNextCandidate=closeTenantBoundaryAuditPlanningForExecutionDecision`;
+	- `secondaryCandidate=planTenantBoundaryGapFixDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas leitura e documentacao;
+	- nao executar `npm`, `npm run`, `npm test` ou guardrails;
+	- nao abrir servidor, navegador ou fazer HTTP;
+	- nao fazer login, nao enviar credenciais e nao fazer mutacao;
+	- nao conectar Mongo real nem Mongo em memoria;
+	- nao alterar codigo, nao alterar testes e nao criar arquivos;
+	- nao fazer push;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=auditTenantBypassAndMasterScopeDocumentally`
+	- `auditScope=documentalCodeReadOnly`
+	- `tenantBypassAndMasterScopeAudited=true`
+	- `codeReadOnly=true`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `allowGlobalMapped=true`
+	- `isMasterBypassesMapped=true`
+	- `masterEmailPathsMapped=true`
+	- `masterScriptsMapped=true`
+	- `seedMasterPathsMapped=true`
+	- `privilegedMiddlewareMapped=true`
+	- `tenantBypassCriticalGapFound=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
