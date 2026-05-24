@@ -20748,6 +20748,144 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da decisao sobre o escopo inicial do futuro `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada sem criar helper, sem criar arquivo, sem alterar codigo, sem criar fixture, sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=decideHelperScopeUserOnlyVsUnitMembership`.
+	- `decisionScope=documentalOnly`.
+	- `previousCheckpoint=planHelperFilePlacementDocumentally`.
+	- `currentLocalCheckpoint=1cc5c2a docs(ops): planeja local helper fixture`.
+	- `currentRemoteCheckpoint=9499455 docs(ops): fecha planejamento validacao ficticia`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo desta decisao:
+	- `helperScopeDecided=true`.
+	- `recommendedInitialScope=userOnlyInitialScope`.
+	- `userOnlyInitialScopeSelected=true`.
+	- `userWithUnitMembershipInitialScopeSelected=false`.
+	- `unitMembershipFutureExpansionRequiresSeparateMicrocut=true`.
+	- `helperCreatedNow=false`.
+	- `helperCreationExecutionAuthorizedNow=false`.
+	- `fixtureCreatedNow=false`.
+	- `fixtureCreationExecutionAuthorizedNow=false`.
+	- `codeChanged=false`.
+	- `newFileCreated=false`.
+	- `npmRunExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `loginExecuted=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `mongoRealConnected=false`.
+	- `memoryMongoConnectedManually=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Comparacao documental dos escopos futuros:
+	- `userOnlyInitialScope=[cria apenas User ficticio basico, menor superficie, suficiente para o primeiro helper controlado, Unidade/UserMembership ficam para microcorte separado]`.
+	- `userWithUnitMembershipInitialScope=[cria User + Unidade/UserMembership, mais util para fluxos com contexto de unidade, porem amplia superficie e exige decisoes adicionais sobre Unidade, Condominio, vinculos e permissoes]`.
+	- `splitScopeByHelperFunctions=[modelo possivel no futuro, com primeira funcao apenas User e expansoes de Unidade/UserMembership somente depois de autorizacao documental propria]`.
+- Leitura objetiva desta decisao de escopo:
+	- o helper futuro deve comecar com o menor escopo seguro possivel.
+	- a criacao inicial apenas de `User` basico ja cobre o primeiro degrau de fixture controlada em Mongo em memoria.
+	- `Unidade` e `UserMembership` ampliam risco e dependencias e, por isso, nao entram no primeiro escopo.
+	- qualquer expansao futura para contexto de unidade deve ocorrer em microcorte separado.
+- Justificativa consolidada:
+	- `User` basico aproveita os padroes seguros ja encontrados sem introduzir dependencias adicionais logo na primeira implementacao.
+	- incluir `Unidade/UserMembership` cedo demais exigiria decidir regras de vinculo, contexto e permissoes antes da hora.
+	- um escopo inicial menor reduz risco, facilita guardas e melhora reversibilidade da fixture controlada.
+- Decisao recomendada consolidada:
+	- `recommendedInitialScope=userOnlyInitialScope`.
+	- `recommendedFutureExpansion=userWithUnitMembershipInSeparateMicrocut`.
+	- `recommendedNextCandidate=designHelperApiContractDocumentally`.
+	- `secondaryCandidate=closeHelperPlanningBlockForPushDecision`.
+	- este microcorte e apenas documentacao.
+	- nao criar helper agora.
+	- nao criar arquivo.
+	- nao alterar codigo.
+	- nao criar fixture.
+	- nao executar nada.
+	- nao fazer login.
+	- nao enviar credenciais.
+	- nao criar, editar ou excluir dados.
+	- nao rodar seed.
+	- nao tocar usuario master real.
+	- nao executar `master:set` ou `master:set:win`.
+	- nao executar `start:mem:seed`.
+	- nao executar `start:gestor` ou `start:atlas`.
+	- nao conectar Mongo real.
+	- nao declarar producao pronta.
+	- nao fazer push.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- nenhum login foi executado neste microcorte.
+	- nenhuma credencial foi enviada neste microcorte.
+	- nenhuma mutacao foi executada neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum arquivo novo foi criado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=decideHelperScopeUserOnlyVsUnitMembership`
+	- `decisionScope=documentalOnly`
+	- `helperScopeDecided=true`
+	- `recommendedInitialScope=userOnlyInitialScope`
+	- `userOnlyInitialScopeSelected=true`
+	- `userWithUnitMembershipInitialScopeSelected=false`
+	- `unitMembershipFutureExpansionRequiresSeparateMicrocut=true`
+	- `helperCreatedNow=false`
+	- `helperCreationExecutionAuthorizedNow=false`
+	- `fixtureCreatedNow=false`
+	- `fixtureCreationExecutionAuthorizedNow=false`
+	- `codeChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=designHelperApiContractDocumentally`
+	- `secondaryCandidate=closeHelperPlanningBlockForPushDecision`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
