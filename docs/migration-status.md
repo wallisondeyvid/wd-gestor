@@ -19702,6 +19702,133 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da decisao sobre a prontidao da especificacao da fixture ficticia controlada, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=decideFixtureSpecReadiness`.
+	- `decisionScope=documentalOnly`.
+	- `previousCheckpoint=designControlledFictionalFixtureSpec`.
+	- `currentLocalCheckpoint=68654cf docs(ops): desenha fixture ficticia controlada`.
+	- `currentRemoteCheckpoint=9b44869 docs(ops): decide nivel pos endpoints passivos`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo desta decisao:
+	- `controlledFictionalFixtureSpecReviewed=true`.
+	- `fixtureSpecReadyForFuturePlanning=true`.
+	- `fixtureCreatedNow=false`.
+	- `fixtureCreationExecutionAuthorizedNow=false`.
+	- `recommendedMechanism=controlledMemoryOnlyFixtureHelper`.
+	- `blockedMechanismGestorSeeds=true`.
+	- `blockedMechanismStartMemSeed=true`.
+	- `blockedMechanismMasterScripts=true`.
+	- `blockedMechanismMongoReal=true`.
+	- `blockedMechanismRealMasterUser=true`.
+	- `testSessionEndpointReuseRecommended=false`.
+	- `loginExecuted=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `npmRunExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `mongoRealConnected=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Leitura objetiva desta prontidao:
+	- a especificacao atual ja define o conjunto minimo de dados ficticios necessarios para uma fixture controlada futura.
+	- a especificacao atual ja fixa o mecanismo preferencial como `controlledMemoryOnlyFixtureHelper`.
+	- a especificacao atual ja bloqueia explicitamente `gestor-seeds.js`, `start:mem:seed`, scripts de master, Mongo real e usuario master real.
+	- a especificacao atual ja mantem `testSessionEndpointReuse` como nao recomendado.
+	- por isso, a spec esta pronta para planejamento futuro do helper controlado, mas nao esta pronta para execucao operacional nem para criacao de dados nesta rodada.
+- Justificativa consolidada:
+	- a spec minima ja cobre identidade ficticia, credencial ficticia, CPF ficticio, isolamento em Mongo em memoria e proibicoes essenciais de seed/master/producao.
+	- ainda nao existe helper implementado nem autorizacao para criar fixture, portanto a prontidao reconhecida aqui e apenas para planejamento documental futuro.
+	- se surgir duvida sobre ampliar escopo, o caminho conservador continua sendo fechar o bloco para decisao de push antes de qualquer frente mais sensivel.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=planControlledMemoryOnlyFixtureHelper`.
+	- `secondaryCandidate=closeFictionalValidationPlanningBlockForPushDecision`.
+	- este microcorte e apenas decisao documental.
+	- nao criar fixture agora.
+	- nao executar nada.
+	- nao fazer login.
+	- nao enviar credenciais.
+	- nao criar, editar ou excluir dados.
+	- nao rodar seed.
+	- nao tocar usuario master real.
+	- nao executar `master:set` ou `master:set:win`.
+	- nao executar `start:mem:seed`.
+	- nao executar `start:gestor` ou `start:atlas`.
+	- nao conectar Mongo real.
+	- nao declarar producao pronta.
+	- nao fazer push neste microcorte.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- nenhum login foi executado neste microcorte.
+	- nenhuma credencial foi enviada neste microcorte.
+	- nenhuma mutacao foi executada neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=decideFixtureSpecReadiness`
+	- `decisionScope=documentalOnly`
+	- `controlledFictionalFixtureSpecReviewed=true`
+	- `fixtureSpecReadyForFuturePlanning=true`
+	- `fixtureCreatedNow=false`
+	- `fixtureCreationExecutionAuthorizedNow=false`
+	- `recommendedMechanism=controlledMemoryOnlyFixtureHelper`
+	- `blockedMechanismGestorSeeds=true`
+	- `blockedMechanismStartMemSeed=true`
+	- `blockedMechanismMasterScripts=true`
+	- `blockedMechanismMongoReal=true`
+	- `blockedMechanismRealMasterUser=true`
+	- `testSessionEndpointReuseRecommended=false`
+	- `loginExecuted=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `npmRunExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `mongoRealConnected=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=planControlledMemoryOnlyFixtureHelper`
+	- `secondaryCandidate=closeFictionalValidationPlanningBlockForPushDecision`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
