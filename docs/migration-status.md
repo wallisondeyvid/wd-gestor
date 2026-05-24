@@ -63732,6 +63732,71 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
 
+- Checkpoint documental curto da revisao pos-implementacao do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por leitura de `tests/helpers/controlledMemoryOnlyFixtureHelper.js` e `docs/migration-status.md`, sem usar o helper, sem criar teste, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
+- Verificacoes documentais confirmadas nesta rodada:
+	- exporta `createControlledMemoryOnlyUserFixture`;
+	- exige `UserModel` e `bcrypt` por injecao e valida `UserModel.create` e `bcrypt.hash`;
+	- nao abre conexao propria com Mongo;
+	- falha fechado sem `MONGO_MEMORY=1`;
+	- rejeita emails fora de `@example.com`, incluindo `wallisondeyvid13@gmail.com`;
+	- aceita apenas email ficcional `@example.com`;
+	- gera CPF ficcional numerico de 11 digitos;
+	- usa senha ficticia dedicada `Senha@123456` por padrao;
+	- usa `bcrypt.hash` para gerar a senha persistida;
+	- cria apenas `User` via `UserModel.create`;
+	- nao cria `Unidade` nem `UserMembership`;
+	- nao cria sessao;
+	- nao faz login;
+	- nao chama HTTP;
+	- nao importa `gestor-seeds.js`;
+	- nao chama `cleanupWrongEmail`;
+	- nao chama `ensureMasterUser`;
+	- nao chama `master:set` nem `master:set:win`;
+	- nao usa `TEST_SESSION_SEED_ENDPOINT` nem `installSessionSeedRoute`;
+	- nao toca Mongo real diretamente porque nao abre conexao e apenas valida contexto recebido.
+- Resultado objetivo da revisao nesta rodada:
+	- nenhum erro bloqueante obvio foi identificado no helper implementado;
+	- o helper respeita o contrato autorizado para um primeiro uso controlado, ainda nao executado nesta trilha;
+	- esta rodada permanece estritamente documental e nao autoriza uso imediato sem novo microcorte proprio.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=reviewControlledMemoryOnlyFixtureHelperImplementation`;
+	- `reviewScope=documentalOnly`;
+	- `helperImplementationReviewed=true`;
+	- `helperFile=tests/helpers/controlledMemoryOnlyFixtureHelper.js`;
+	- `helperContractRespected=true`;
+	- `helperReadyForFirstControlledAdoption=true`;
+	- `helperNeedsPatchBeforeUse=false`;
+	- `recommendedNextCandidate=planFirstControlledHelperAdoptionTest`;
+	- `secondaryCandidate=closeHelperImplementationBlockForPushDecision`.
+- Gates:
+	- `selectedTarget=reviewControlledMemoryOnlyFixtureHelperImplementation`
+	- `reviewScope=documentalOnly`
+	- `helperImplementationReviewed=true`
+	- `helperFile=tests/helpers/controlledMemoryOnlyFixtureHelper.js`
+	- `helperContractRespected=true`
+	- `helperReadyForFirstControlledAdoption=true`
+	- `helperNeedsPatchBeforeUse=false`
+	- `helperUsedNow=false`
+	- `testCreatedNow=false`
+	- `testExecutedNow=false`
+	- `fixtureRuntimeExecuted=false`
+	- `loginExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+
 
 
 
