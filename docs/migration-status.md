@@ -17456,6 +17456,106 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto do pos-push da autorizacao futura de `start:mem`, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem novo push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=recordPostPushStartMemFutureAuthorization`.
+	- `selectedTechnicalTarget=start:mem`.
+	- `previousCheckpoint=authorizeStartMemFutureOnly`.
+	- `currentLocalCheckpoint=924feb4 docs(ops): autoriza boot start mem futuro`.
+	- `currentRemoteCheckpoint=924feb4 docs(ops): autoriza boot start mem futuro`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Estado consolidado do pos-push nesta rodada:
+	- `localRemoteSynced=true`.
+	- `aheadCount=0`.
+	- `humanPushExecuted=true`.
+	- `pushedRange=8412a77..924feb4`.
+	- `pushedHead=924feb4`.
+	- `workingTreeClean=true`.
+	- `pushPrePushNpmTestResult=green`.
+	- `pushPrePushTests=2364`.
+	- `pushPrePushSuites=17`.
+	- `pushPrePushPass=2362`.
+	- `pushPrePushFail=0`.
+	- `pushPrePushSkipped=2`.
+	- `pushPrePushDurationMs=241501.2655`.
+	- `startMemFutureAuthorizationPublished=true`.
+	- `startMemExecutionAuthorizedDocumentally=true`.
+	- `nextExecutionAuthorized=false`.
+- Leitura objetiva deste checkpoint publicado:
+	- o push publicou a autorizacao documental futura de `npm run start:mem`.
+	- a publicacao nao executou `start:mem`.
+	- ainda nao ha autorizacao de execucao imediata neste microcorte.
+	- a proxima etapa recomendada pode ser planejar ou autorizar a execucao controlada de `npm run start:mem` em microcorte separado.
+	- `start:mem:seed`, `start:gestor` e `start:atlas` continuam bloqueados.
+	- qualquer execucao futura de `npm run start:mem` exige gates frescos, confirmacao humana explicita e plano de parada ou observacao.
+	- Mongo real segue bloqueado.
+	- `Portal` nao foi validado em runtime.
+	- producao continua nao pronta.
+- Confirmacoes obrigatorias desta rodada:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=recordPostPushStartMemFutureAuthorization`
+	- `localRemoteSynced=true`
+	- `aheadCount=0`
+	- `humanPushExecuted=true`
+	- `pushedRange=8412a77..924feb4`
+	- `pushedHead=924feb4`
+	- `pushPrePushNpmTestResult=green`
+	- `pushPrePushTests=2364`
+	- `pushPrePushSuites=17`
+	- `pushPrePushPass=2362`
+	- `pushPrePushFail=0`
+	- `pushPrePushSkipped=2`
+	- `pushPrePushDurationMs=241501.2655`
+	- `startMemFutureAuthorizationPublished=true`
+	- `startMemExecutionAuthorizedDocumentally=true`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `serverStarted=false`
+	- `portalRuntimeValidated=false`
+	- `masterSetExecuted=false`
+	- `masterSetWinExecuted=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=executeStartMemControlled`
+	- `nextExecutionAuthorized=false`
+	- `commandExecuted=false`
+	- `npmExecuted=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `guardrailExecuted=false`
+	- `parityExecutedManually=false`
+	- `bootExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
