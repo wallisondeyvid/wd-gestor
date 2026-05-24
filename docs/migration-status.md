@@ -30563,6 +30563,112 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=diagnosePostFixMissingUriWithoutPrintingSecret`
 	- `secondaryCandidate=inspectDiagnosticScriptRuntimeEnvSelectionDocumentally`
+
+- Checkpoint documental curto do diagnostico do `missing-uri` pos-fix sem imprimir segredo, consolidado nesta rodada apenas por leitura de `scripts/diagnostics/real-mongo-readonly-diagnostic.js` e registro em `docs/migration-status.md`, sem executar o script diagnostico real, sem conectar Mongo real, sem imprimir URI, sem pedir segredo, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos novos e sem nova acao de push.
+- Achado documental consolidado desta rodada:
+	- a variavel efetivamente usada pelo script continua sendo a normalizada por `selectMongoUriFromEnvironment()`;
+	- `runDiagnostic()` usa diretamente o retorno dessa funcao em `rawUri`, sem redefinicao posterior de `mongoUri` por outro ponto do script;
+	- o script le apenas `MONGO_URI` e `MONGODB_URI`, sem alias adicional ou nome alternativo;
+	- `blockedReason=missing-uri` so e emitido por `assertSafeEnvironment(rawUri)` quando `rawUri` ja chegou vazio apos a selecao e normalizacao;
+	- valores nao vazios mas invalidos, placeholders, protocolo nao suportado ou alvo local/teste cairiam em bloqueio diferente de `missing-uri`;
+	- `MONGO_MEMORY` geraria bloqueio `memory-flag-enabled`, nao `missing-uri`;
+	- o caminho executado autorizado coincide com o arquivo inspecionado `scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- a mensagem `URI real explicita ausente em MONGO_URI/MONGODB_URI.` nao esta sendo reutilizada para outros casos dentro deste arquivo.
+- Hipotese documental mais provavel desta rodada:
+	- o processo Node da execucao pos-fix provavelmente recebeu `MONGO_URI` e `MONGODB_URI` ausentes ou somente com espacos apos `trim()`, apesar da checagem previa de presenca ter retornado `true/true`;
+	- isso indica causa mais provavel em forma/propagacao do ambiente visivel ao processo executado, e nao em nova falha local evidente na logica do script corrigido.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=diagnosePostFixMissingUriWithoutPrintingSecret`;
+	- `diagnosticScope=documentalOnlyNoSecret`;
+	- `previousPostFixExecutionResult=abort`;
+	- `previousPostFixBlockedReason=missing-uri`;
+	- `previousPostFixConnectionAttempted=false`;
+	- `uriSelectionFixApplied=true`;
+	- `uriSelectionFixReviewed=true`;
+	- `scriptInspected=true`;
+	- `runtimePathInspectedDocumentally=true`;
+	- `uriSelectionPathInspected=true`;
+	- `missingUriGuardInspected=true`;
+	- `otherMissingUriSourcesInspected=true`;
+	- `placeholderOrInvalidUriHandlingInspected=true`;
+	- `mongoMemoryGuardInspected=true`;
+	- `possibleCauseIdentified=true`;
+	- `possibleCauseSummary=missing-uri pos-fix indica rawUri final vazia apos trim; a causa mais provavel e ambiente/runtime entregando variaveis ausentes ou so com espacos ao processo Node, nao outro ramo visivel do script`;
+	- `codeChanged=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=verifyNodeEnvShapeWithoutPrintingSecret`;
+	- `secondaryCandidate=keepRealMongoDiagnosticPaused`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so diagnostico documental;
+	- nao executa o script;
+	- nao imprime URI;
+	- nao imprime valor, tamanho, prefixo, host, usuario ou senha;
+	- nao conecta Mongo real;
+	- nao declara producao pronta;
+	- nao faz push agora.
+- Gates:
+	- `selectedTarget=diagnosePostFixMissingUriWithoutPrintingSecret`
+	- `diagnosticScope=documentalOnlyNoSecret`
+	- `previousPostFixExecutionResult=abort`
+	- `previousPostFixBlockedReason=missing-uri`
+	- `previousPostFixConnectionAttempted=false`
+	- `uriSelectionFixApplied=true`
+	- `uriSelectionFixReviewed=true`
+	- `scriptInspected=true`
+	- `runtimePathInspectedDocumentally=true`
+	- `uriSelectionPathInspected=true`
+	- `missingUriGuardInspected=true`
+	- `otherMissingUriSourcesInspected=true`
+	- `placeholderOrInvalidUriHandlingInspected=true`
+	- `mongoMemoryGuardInspected=true`
+	- `possibleCauseIdentified=true`
+	- `possibleCauseSummary=missing-uri pos-fix indica rawUri final vazia apos trim; a causa mais provavel e ambiente/runtime entregando variaveis ausentes ou so com espacos ao processo Node, nao outro ramo visivel do script`
+	- `codeChanged=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=verifyNodeEnvShapeWithoutPrintingSecret`
+	- `secondaryCandidate=keepRealMongoDiagnosticPaused`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
