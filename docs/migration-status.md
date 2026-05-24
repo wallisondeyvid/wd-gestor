@@ -28145,6 +28145,143 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=planLocalMongoUriConfigurationForReadOnlyDiagnostic`
 	- `secondaryCandidate=decideWhetherAbortResultClosesCurrentPhaseForPush`
+
+- Checkpoint documental curto do planejamento da configuracao local segura de `MONGO_URI` ou `MONGODB_URI` para futura execucao do diagnostico read-only Mongo real, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem configurar URI agora, sem pedir segredo no chat, sem colar segredo no chat, sem executar script, sem conectar Mongo real, sem alterar arquivos de ambiente, sem criar `.env`, sem alterar `.gitignore`, sem npm manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:atlas`, sem `start:gestor`, sem `start:mem`, sem `start:mem:seed`, sem seed/master, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos e sem nova acao de push.
+- Planejamento de `localSecretHandling` desta rodada:
+	- a URI real deve ser configurada somente no ambiente local;
+	- o segredo nao deve ser colado no chat;
+	- o segredo nao deve ser commitado;
+	- o segredo nao deve aparecer em logs;
+	- preferir variavel de ambiente temporaria da sessao;
+	- evitar salvar o valor em arquivos versionados;
+	- se vier a usar `.env` local em microcorte proprio futuro, garantir antes que o arquivo esteja ignorado e nao sera commitado.
+- Planejamento de `environmentVariableChoice` desta rodada:
+	- o script aceita `MONGO_URI` ou `MONGODB_URI`;
+	- a proxima execucao deve escolher apenas uma variavel para carregar o valor real;
+	- o valor real nao deve ser documentado no ledger;
+	- o ledger deve registrar apenas que a variavel precisa existir localmente.
+- Planejamento de `safetyPrechecksBeforeFutureExecution` desta rodada:
+	- confirmar `git status` limpo;
+	- confirmar que nao existe diff em `.env` ou em arquivos de segredo;
+	- confirmar que a URI nao aponta para `localhost`, `127.0.0.1` ou memoria;
+	- confirmar que `MONGO_MEMORY` nao esta ativo;
+	- confirmar que o script segue revisado;
+	- confirmar que nao havera `start:atlas`, `start:gestor` ou `start:mem:seed`;
+	- confirmar que nao havera seed, master scripts ou cleanup.
+- Planejamento de `futureExecutionLimits` desta rodada:
+	- executar somente `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- nao repetir se abortar ou falhar;
+	- nao contornar guardas;
+	- nao imprimir segredo;
+	- registrar o resultado imediatamente apos a futura execucao.
+- Planejamento de `forbiddenNow` desta rodada:
+	- configurar URI agora;
+	- executar script agora;
+	- conectar Mongo real agora;
+	- alterar arquivos de ambiente agora;
+	- criar `.env` agora;
+	- alterar `.gitignore` agora;
+	- alterar `package.json`, codigo ou testes agora;
+	- fazer push agora.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=planLocalMongoUriConfigurationForReadOnlyDiagnostic`;
+	- `planningScope=documentalOnly`;
+	- `localMongoUriConfigurationPlanCreated=true`;
+	- `previousDiagnosticResult=abort`;
+	- `previousBlockedReason=missing-uri`;
+	- `previousConnectionAttempted=false`;
+	- `localSecretHandlingMapped=true`;
+	- `environmentVariableChoiceMapped=true`;
+	- `safetyPrechecksBeforeFutureExecutionMapped=true`;
+	- `futureExecutionLimitsMapped=true`;
+	- `forbiddenNowMapped=true`;
+	- `uriMustBeConfiguredOutsideChat=true`;
+	- `uriMustNotBePastedInChat=true`;
+	- `uriMustNotBeCommitted=true`;
+	- `uriMustNotBeLogged=true`;
+	- `envFileChangeAuthorizedNow=false`;
+	- `gitignoreChangeAuthorizedNow=false`;
+	- `scriptExecutionAuthorizedNow=false`;
+	- `scriptExecutedNow=false`;
+	- `realMongoConnectionAuthorizedNow=false`;
+	- `realMongoConnected=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=authorizeReadOnlyDiagnosticWithLocalUriConfigured`;
+	- `secondaryCandidate=keepMongoUriConfigurationPaused`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa nada;
+	- este microcorte nao configura URI;
+	- este microcorte nao pede segredo;
+	- este microcorte nao cola segredo;
+	- este microcorte nao cria `.env`;
+	- este microcorte nao altera `.gitignore`;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao declara producao pronta;
+	- a URI real deve ser configurada localmente fora do chat e fora do Git;
+	- o proximo microcorte so podera autorizar execucao se a URI ja estiver configurada localmente de forma segura.
+- Gates:
+	- `selectedTarget=planLocalMongoUriConfigurationForReadOnlyDiagnostic`
+	- `planningScope=documentalOnly`
+	- `localMongoUriConfigurationPlanCreated=true`
+	- `previousDiagnosticResult=abort`
+	- `previousBlockedReason=missing-uri`
+	- `previousConnectionAttempted=false`
+	- `localSecretHandlingMapped=true`
+	- `environmentVariableChoiceMapped=true`
+	- `safetyPrechecksBeforeFutureExecutionMapped=true`
+	- `futureExecutionLimitsMapped=true`
+	- `forbiddenNowMapped=true`
+	- `uriMustBeConfiguredOutsideChat=true`
+	- `uriMustNotBePastedInChat=true`
+	- `uriMustNotBeCommitted=true`
+	- `uriMustNotBeLogged=true`
+	- `envFileChangeAuthorizedNow=false`
+	- `gitignoreChangeAuthorizedNow=false`
+	- `scriptExecutionAuthorizedNow=false`
+	- `scriptExecutedNow=false`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `realMongoConnected=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeReadOnlyDiagnosticWithLocalUriConfigured`
+	- `secondaryCandidate=keepMongoUriConfigurationPaused`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
