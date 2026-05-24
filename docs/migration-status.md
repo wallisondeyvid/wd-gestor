@@ -18550,6 +18550,99 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da execucao controlada da inspecao de endpoints passivos sem mutacao, consolidado nesta rodada usando somente `npm run start:mem`, com Mongo em memoria, com GETs apenas nos endpoints autorizados, sem GET em `/`, sem GET em `portal-morador/api/auth/condominios`, sem GET em `escalas/login`, sem POST, sem PUT, sem PATCH, sem DELETE, sem credenciais, sem login real, sem submissao de formularios, sem criacao de dados, sem alteracao de dados, sem exclusao de dados, sem tocar usuario master real, sem executar `start:mem:seed`, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `master:set`, sem executar `master:set:win`, sem push novo e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=executePassiveEndpointsInspectionWithoutMutation`.
+	- `selectedTechnicalTarget=start:mem`.
+	- `previousCheckpoint=inspectPassiveEndpointCandidatesDocumentally`.
+	- `currentLocalCheckpoint=eb36c22 docs(ops): inspeciona endpoints passivos candidatos`.
+	- `currentRemoteCheckpoint=25329cf docs(ops): decide pos observacao runtime sem seed`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Comando efetivamente executado nesta rodada:
+	- `commandExecuted=npm run start:mem`.
+	- `passiveEndpointsInspectionExecuted=true`.
+	- `startMemExecutedAgain=true`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `masterSetExecuted=false`.
+	- `masterSetWinExecuted=false`.
+- Evidencias observadas no boot:
+	- `memoryMongoObserved=true`.
+	- `mongoRealConnected=false`.
+	- `serverStarted=true`.
+	- `serverPortObserved=3000`.
+	- `mongoMemoryUriObserved=mongodb://127.0.0.1:54623/`.
+	- `mongoMemoryForcedObserved=true`.
+	- `ensureMasterUserExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `seedExecuted=false`.
+	- `httpGetOnly=true`.
+	- `dataMutationExecuted=false`.
+	- `realLoginUsed=false`.
+	- `credentialsSubmitted=false`.
+	- `postPutPatchDeleteExecuted=false`.
+	- `serverStopped=true`.
+	- `productionReady=false`.
+	- `pushExecuted=false`.
+	- `nextExecutionAuthorized=false`.
+- Endpoints observados nesta rodada:
+	- `endpointsObserved=[GET /health -> 200 json ok, GET /gestor/login -> 200 html title=Login - Módulo WDGestor, GET /gestor/contato -> 200 html title=Contato - WDGestor, GET /gestor/primeiroacesso -> 200 html title=Primeiro Acesso - Gestor, GET /gestor/esquecisenha -> 200 html title=Esqueci Minha Senha - WDGestor, GET /gestor/esquecisenha-avancada -> 200 html title=Recuperar Acesso - WDGestor, GET /portal-morador/ -> 200 html title=Portal do Morador - WD Gestor]`.
+	- `excludedEndpointsNotCalled=[/, portal-morador/api/auth/condominios, escalas/login]`.
+	- `passiveEndpointsInspectionResult=green`.
+- Leitura objetiva desta execucao controlada:
+	- o boot ocorreu somente por `npm run start:mem`.
+	- os logs confirmaram `MONGO_MEMORY=1` e `mongoUri efetiva = (in-memory)`.
+	- a conexao observada foi `mongodb://127.0.0.1:54623/`, marcada como in-memory.
+	- nao houve evidencia de tentativa de Mongo real nesta rodada.
+	- nao houve evidencia de seed nesta rodada.
+	- nao houve evidencia de `ensureMasterUser` nesta rodada.
+	- nao houve evidencia de `cleanupWrongEmail` nesta rodada.
+	- nao houve uso de `start:mem:seed`, `start:gestor` ou `start:atlas`.
+	- os GETs permaneceram limitados aos endpoints autorizados.
+	- nenhum endpoint proibido foi chamado.
+	- nenhum HTML completo foi carregado no ledger; apenas status, tipo e resumo curto.
+	- nenhuma mutacao de dados foi executada.
+	- nenhum login real foi usado.
+	- nenhuma credencial foi enviada.
+	- o usuario master real `wallisondeyvid13@gmail.com` permaneceu intocado.
+	- o servidor foi encerrado controladamente ao final da coleta.
+- Gates:
+	- `selectedTarget=executePassiveEndpointsInspectionWithoutMutation`
+	- `selectedTechnicalTarget=start:mem`
+	- `commandExecuted=npm run start:mem`
+	- `passiveEndpointsInspectionExecuted=true`
+	- `startMemExecutedAgain=true`
+	- `memoryMongoObserved=true`
+	- `mongoRealConnected=false`
+	- `serverStarted=true`
+	- `serverPortObserved=3000`
+	- `httpGetOnly=true`
+	- `dataMutationExecuted=false`
+	- `realLoginUsed=false`
+	- `credentialsSubmitted=false`
+	- `postPutPatchDeleteExecuted=false`
+	- `seedExecuted=false`
+	- `ensureMasterUserExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `masterSetExecuted=false`
+	- `masterSetWinExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `endpointsObserved=[GET /health -> 200 json ok, GET /gestor/login -> 200 html title=Login - Módulo WDGestor, GET /gestor/contato -> 200 html title=Contato - WDGestor, GET /gestor/primeiroacesso -> 200 html title=Primeiro Acesso - Gestor, GET /gestor/esquecisenha -> 200 html title=Esqueci Minha Senha - WDGestor, GET /gestor/esquecisenha-avancada -> 200 html title=Recuperar Acesso - WDGestor, GET /portal-morador/ -> 200 html title=Portal do Morador - WD Gestor]`
+	- `excludedEndpointsNotCalled=[/, portal-morador/api/auth/condominios, escalas/login]`
+	- `passiveEndpointsInspectionResult=green`
+	- `serverStopped=true`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
