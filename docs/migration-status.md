@@ -28282,6 +28282,163 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=authorizeReadOnlyDiagnosticWithLocalUriConfigured`
 	- `secondaryCandidate=keepMongoUriConfigurationPaused`
+
+- Checkpoint documental curto da autorizacao futura para executar o diagnostico read-only Mongo real com URI local ja configurada, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar o script agora, sem conectar Mongo real agora, sem pedir segredo, sem colar segredo, sem imprimir URI, sem configurar URI, sem criar `.env`, sem alterar `.gitignore`, sem npm manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:atlas`, sem `start:gestor`, sem `start:mem`, sem `start:mem:seed`, sem seed/master, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos e sem nova acao de push.
+- Escopo autorizado futuramente nesta rodada:
+	- somente executar `node scripts/diagnostics/real-mongo-readonly-diagnostic.js` em microcorte futuro separado;
+	- somente se a URI real ja estiver configurada localmente fora do chat e fora do Git;
+	- somente sem impressao do valor de `MONGO_URI` ou `MONGODB_URI`;
+	- somente com script revisado, logs sanitizados e validacao de zero writes;
+	- somente com registro imediato do resultado no ledger apos a futura execucao.
+- Resultado consolidado desta rodada:
+	- esta rodada autoriza apenas uma futura execucao separada com URI local previamente configurada;
+	- esta rodada nao executa o script;
+	- esta rodada nao configura nem imprime URI;
+	- esta rodada nao conecta Mongo real;
+	- esta rodada nao altera codigo, `package.json`, `src` ou `tests`;
+	- esta rodada nao autoriza `start:atlas`, `start:gestor`, seed/master, login real, HTTP ativo ou mutacao real.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=authorizeReadOnlyDiagnosticWithLocalUriConfigured`;
+	- `authorizationScope=documentalOnlyFutureExecution`;
+	- `previousDiagnosticResult=abort`;
+	- `previousBlockedReason=missing-uri`;
+	- `previousConnectionAttempted=false`;
+	- `localMongoUriConfigurationPlanExists=true`;
+	- `localUriMustAlreadyBeConfiguredBeforeExecution=true`;
+	- `uriMustBeConfiguredOutsideChat=true`;
+	- `uriMustNotBePastedInChat=true`;
+	- `uriMustNotBePrinted=true`;
+	- `uriMustNotBeCommitted=true`;
+	- `uriMustNotBeLogged=true`;
+	- `envFileChangeAuthorizedNow=false`;
+	- `gitignoreChangeAuthorizedNow=false`;
+	- `scriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- `authorizedFutureCommand=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- `authorizedFutureCommandScope=readOnlyDiagnosticWithLocalUri`;
+	- `scriptExecutionAuthorizedForFutureOnly=true`;
+	- `scriptExecutionAuthorizedNow=false`;
+	- `scriptExecutedNow=false`;
+	- `realMongoConnectionAuthorizedForFutureDiagnosticOnly=true`;
+	- `realMongoConnectionAuthorizedNow=false`;
+	- `realMongoConnected=false`;
+	- `futureExecutionRequiresCleanGitStatus=true`;
+	- `futureExecutionRequiresLocalUriConfigured=true`;
+	- `futureExecutionRequiresNoMongoMemory=true`;
+	- `futureExecutionRequiresReviewedScript=true`;
+	- `futureExecutionMustUseReviewedScript=true`;
+	- `futureExecutionMustBeReadOnly=true`;
+	- `futureExecutionMustSanitizeLogs=true`;
+	- `futureExecutionMustConfirmZeroWrites=true`;
+	- `futureExecutionMustConfirmNoSeedMasterCleanup=true`;
+	- `futureExecutionMustAbortOnAmbiguousEnvironment=true`;
+	- `futureExecutionMustNotStartServer=true`;
+	- `futureExecutionMustNotUseStartAtlas=true`;
+	- `futureExecutionMustNotUseStartGestor=true`;
+	- `futureExecutionMustNotUseStartMemSeed=true`;
+	- `futureExecutionMustNotTouchWallisonMaster=true`;
+	- `futureExecutionRequiresImmediateResultRegistration=true`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `nextExecutionAuthorized=true`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=executeReadOnlyDiagnosticWithLocalUriInSeparateMicrocut`;
+	- `secondaryCandidate=keepReadOnlyDiagnosticPausedUntilUriConfigured`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa nada;
+	- este microcorte nao configura URI;
+	- este microcorte nao pede segredo;
+	- este microcorte nao cola segredo;
+	- este microcorte nao imprime segredo;
+	- esta autorizacao so vale para microcorte futuro separado;
+	- a execucao futura autorizada e somente `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- a execucao futura so deve ocorrer se a URI estiver configurada localmente fora do chat e do Git;
+	- a autorizacao futura nao autoriza `start:atlas`;
+	- a autorizacao futura nao autoriza `start:gestor`;
+	- a autorizacao futura nao autoriza seed/master;
+	- a autorizacao futura nao autoriza login real;
+	- a autorizacao futura nao autoriza HTTP ativo;
+	- a autorizacao futura nao autoriza mutacao real;
+	- a autorizacao futura nao declara producao pronta;
+	- apos a futura execucao, registrar imediatamente o resultado no ledger;
+	- nao fazer push antes do resultado da futura execucao, salvo mudanca explicita do usuario.
+- Gates:
+	- `selectedTarget=authorizeReadOnlyDiagnosticWithLocalUriConfigured`
+	- `authorizationScope=documentalOnlyFutureExecution`
+	- `previousDiagnosticResult=abort`
+	- `previousBlockedReason=missing-uri`
+	- `previousConnectionAttempted=false`
+	- `localMongoUriConfigurationPlanExists=true`
+	- `localUriMustAlreadyBeConfiguredBeforeExecution=true`
+	- `uriMustBeConfiguredOutsideChat=true`
+	- `uriMustNotBePastedInChat=true`
+	- `uriMustNotBePrinted=true`
+	- `uriMustNotBeCommitted=true`
+	- `uriMustNotBeLogged=true`
+	- `envFileChangeAuthorizedNow=false`
+	- `gitignoreChangeAuthorizedNow=false`
+	- `scriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `authorizedFutureCommand=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `authorizedFutureCommandScope=readOnlyDiagnosticWithLocalUri`
+	- `scriptExecutionAuthorizedForFutureOnly=true`
+	- `scriptExecutionAuthorizedNow=false`
+	- `scriptExecutedNow=false`
+	- `realMongoConnectionAuthorizedForFutureDiagnosticOnly=true`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `realMongoConnected=false`
+	- `futureExecutionRequiresCleanGitStatus=true`
+	- `futureExecutionRequiresLocalUriConfigured=true`
+	- `futureExecutionRequiresNoMongoMemory=true`
+	- `futureExecutionRequiresReviewedScript=true`
+	- `futureExecutionMustUseReviewedScript=true`
+	- `futureExecutionMustBeReadOnly=true`
+	- `futureExecutionMustSanitizeLogs=true`
+	- `futureExecutionMustConfirmZeroWrites=true`
+	- `futureExecutionMustConfirmNoSeedMasterCleanup=true`
+	- `futureExecutionMustAbortOnAmbiguousEnvironment=true`
+	- `futureExecutionMustNotStartServer=true`
+	- `futureExecutionMustNotUseStartAtlas=true`
+	- `futureExecutionMustNotUseStartGestor=true`
+	- `futureExecutionMustNotUseStartMemSeed=true`
+	- `futureExecutionMustNotTouchWallisonMaster=true`
+	- `futureExecutionRequiresImmediateResultRegistration=true`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=true`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=executeReadOnlyDiagnosticWithLocalUriInSeparateMicrocut`
+	- `secondaryCandidate=keepReadOnlyDiagnosticPausedUntilUriConfigured`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
