@@ -22456,6 +22456,65 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da execucao isolada do teste dedicado de contrato do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada com a execucao exclusiva de `node --test tests/controlledMemoryOnlyFixtureHelper.contract.test.js`, sem executar qualquer outro teste, sem npm manual, sem boot, sem servidor, sem HTTP, sem login, sem sessao, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo e sem nova acao de push.
+- Resultado objetivo da execucao desta rodada:
+	- comando executado: `node --test tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- testes reportados: `4`;
+	- suites reportadas: `0`;
+	- passes reportados: `4`;
+	- falhas reportadas: `0`;
+	- skipped reportados: `0`;
+	- cancelled reportados: `0`;
+	- todo reportados: `0`;
+	- duration_ms reportado: `68.609`.
+- Garantias de escopo mantidas nesta rodada:
+	- nenhum outro teste foi executado;
+	- `npm test` completo nao foi executado;
+	- nenhum `npm run` foi executado;
+	- nenhum servidor foi iniciado;
+	- nao houve HTTP, navegador, login ou mutacao;
+	- nao houve conexao Mongo real nem conexao manual de Mongo em memoria;
+	- nao houve seed nem master scripts;
+	- nao houve alteracao em `tests`, helper, `src` ou `package.json`.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=executeDedicatedHelperContractTest`;
+	- `executionScope=dedicatedHelperContractTestOnly`;
+	- `executedCommand=node --test tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- `dedicatedHelperContractTestExecuted=true`;
+	- `dedicatedHelperContractTestResult=green`;
+	- `testFile=tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- `recommendedNextCandidate=closeHelperContractTestExecutionForPushDecision`;
+	- `secondaryCandidate=recordPostPushHelperFixtureAndContractTestExecutionBlock`.
+- Gates:
+	- `selectedTarget=executeDedicatedHelperContractTest`
+	- `executionScope=dedicatedHelperContractTestOnly`
+	- `executedCommand=node --test tests/controlledMemoryOnlyFixtureHelper.contract.test.js`
+	- `dedicatedHelperContractTestExecuted=true`
+	- `dedicatedHelperContractTestResult=green`
+	- `testFile=tests/controlledMemoryOnlyFixtureHelper.contract.test.js`
+	- `npmTestExecuted=false`
+	- `npmRunExecuted=false`
+	- `fullTestSuiteExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `sessionCreated=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `srcChanged=false`
+	- `packageJsonChanged=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
