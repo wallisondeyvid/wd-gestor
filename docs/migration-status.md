@@ -26202,6 +26202,129 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=decideWhetherRealMongoPlanningCanStartDocumentally`
 	- `secondaryCandidate=humanPushPostMemoryOnlyOperationalPlanningCheckpoint`
+
+- Checkpoint documental curto da decisao sobre se o planejamento de Mongo real pode começar, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando, sem conexao a Mongo real, sem npm manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:atlas`, sem `start:gestor`, sem `start:mem`, sem `start:mem:seed`, sem seed/master, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Candidatos comparados nesta rodada:
+	- `startRealMongoPlanningDocumentally`: candidato recomendado por iniciar apenas o planejamento documental de Mongo real, sem conexao, sem `start:atlas`, sem `start:gestor` e sem seed/master;
+	- `keepRealMongoPlanningPaused`: candidato mais conservador, considerado caso ainda existisse lacuna impeditiva de prontidao;
+	- `authorizeRealMongoConnectionNow`: candidato bloqueado por depender de plano proprio e por a conexao real continuar proibida agora;
+	- `authorizeStartAtlasOrGestorNow`: candidato bloqueado por `start:atlas` e `start:gestor` continuarem proibidos agora;
+	- `productionReadinessDecision`: candidato bloqueado por producao continuar nao pronta.
+- Resultado consolidado desta rodada:
+	- e seguro iniciar apenas o planejamento documental de Mongo real;
+	- nenhuma conexao real e autorizada agora;
+	- nenhum `start:atlas` ou `start:gestor` e autorizado agora;
+	- nenhum seed/master e autorizado agora;
+	- login real e mutacao real continuam fora de escopo;
+	- producao continua nao pronta.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=decideWhetherRealMongoPlanningCanStartDocumentally`;
+	- `decisionScope=documentalOnly`;
+	- `previousSubblock=controlledRuntimeValidationMemoryOnly`;
+	- `previousSubblockResult=green`;
+	- `memoryOnlyRuntimeValidated=true`;
+	- `realMongoPlanningDecisionCompleted=true`;
+	- `realMongoPlanningCanStartDocumentally=true`;
+	- `realMongoExecutionAuthorizedNow=false`;
+	- `startRealMongoPlanningDocumentallyRecommended=true`;
+	- `keepRealMongoPlanningPausedConsidered=true`;
+	- `authorizeRealMongoConnectionNowBlocked=true`;
+	- `authorizeStartAtlasOrGestorNowBlocked=true`;
+	- `productionReadinessDecisionBlockedForNow=true`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `mongoRealValidated=false`;
+	- `startGestorValidated=false`;
+	- `startAtlasValidated=false`;
+	- `loginRealValidated=false`;
+	- `realMutationValidated=false`;
+	- `productionReady=false`;
+	- `mongoRealAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `masterSetAuthorizedNow=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=planRealMongoTransitionDocumentally`;
+	- `secondaryCandidate=keepRealMongoPlanningPaused`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa nada;
+	- esta decisao nao autoriza conexao com Mongo real;
+	- esta decisao nao autoriza `start:atlas`;
+	- esta decisao nao autoriza `start:gestor`;
+	- esta decisao nao autoriza seed/master;
+	- esta decisao nao autoriza login real;
+	- esta decisao nao autoriza mutacao real;
+	- esta decisao nao declara producao pronta;
+	- o maximo permitido agora e iniciar planejamento documental de Mongo real.
+- Gates:
+	- `selectedTarget=decideWhetherRealMongoPlanningCanStartDocumentally`
+	- `decisionScope=documentalOnly`
+	- `previousSubblock=controlledRuntimeValidationMemoryOnly`
+	- `previousSubblockResult=green`
+	- `memoryOnlyRuntimeValidated=true`
+	- `realMongoPlanningDecisionCompleted=true`
+	- `realMongoPlanningCanStartDocumentally=true`
+	- `realMongoExecutionAuthorizedNow=false`
+	- `startRealMongoPlanningDocumentallyRecommended=true`
+	- `keepRealMongoPlanningPausedConsidered=true`
+	- `authorizeRealMongoConnectionNowBlocked=true`
+	- `authorizeStartAtlasOrGestorNowBlocked=true`
+	- `productionReadinessDecisionBlockedForNow=true`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `mongoRealValidated=false`
+	- `startGestorValidated=false`
+	- `startAtlasValidated=false`
+	- `loginRealValidated=false`
+	- `realMutationValidated=false`
+	- `productionReady=false`
+	- `mongoRealAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `startGestorAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `masterSetAuthorizedNow=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=planRealMongoTransitionDocumentally`
+	- `secondaryCandidate=keepRealMongoPlanningPaused`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
