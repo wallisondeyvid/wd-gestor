@@ -17556,6 +17556,87 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da execucao controlada de `start:mem`, consolidado nesta rodada com uma unica execucao autorizada de `npm run start:mem`, sem executar npm test, sem executar `start:mem:seed`, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `master:set`, sem executar `master:set:win`, sem seed manual, sem conexao com Mongo real, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem novo push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=executeStartMemControlled`.
+	- `selectedTechnicalTarget=start:mem`.
+	- `previousCheckpoint=recordPostPushStartMemFutureAuthorization`.
+	- `currentLocalCheckpoint=d2fb832 docs(ops): registra pos-push autorizacao start mem`.
+	- `currentRemoteCheckpoint=d2fb832 docs(ops): registra pos-push autorizacao start mem`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Estado consolidado desta execucao controlada:
+	- `commandExecuted=npm run start:mem`.
+	- `startMemExecuted=true`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `mongoRealConnected=false`.
+	- `memoryMongoConnectedManually=true`.
+	- `serverStarted=true`.
+	- `serverStopped=true`.
+	- `bootResult=green`.
+	- `bootOutputSummary=start:mem aplicou MONGO_MEMORY=1, resolveu mongoUri efetiva como in-memory, conectou em mongodb://127.0.0.1:55415/, montou gestor/clinica/condominios/portal-morador/escalas e ouviu na porta 3000 sem sinais de seed, ensureMasterUser, cleanupWrongEmail ou Mongo real`.
+	- `seedExecuted=false`.
+	- `ensureMasterUserExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `masterSetExecuted=false`.
+	- `masterSetWinExecuted=false`.
+	- `productionReady=false`.
+	- `pushExecuted=false`.
+	- `nextExecutionAuthorized=false`.
+- Leitura objetiva desta execucao:
+	- `start:mem` subiu com Mongo em memoria.
+	- o proprio script aplicou `MONGO_MEMORY=1` e registrou `mongoUri efetiva = (in-memory)`.
+	- a conexao observada ficou em `mongodb://127.0.0.1:55415/`, classificada pelo proprio boot como `(in-memory)`.
+	- nao houve indicio de tentativa de conexao com Mongo real.
+	- nao houve indicio de uso de `start:mem:seed`.
+	- nao houve indicio de execucao de `ensureMasterUser` ou `cleanupWrongEmail`.
+	- o servidor iniciou e passou a ouvir na porta `3000`.
+	- o processo foi encerrado de forma controlada apos a captura das evidencias suficientes.
+	- `start:mem:seed`, `start:gestor` e `start:atlas` continuam bloqueados.
+	- qualquer nova execucao futura de `npm run start:mem` continua exigindo gates frescos, confirmacao humana explicita e plano de parada ou observacao.
+	- producao continua nao pronta.
+- Confirmacoes obrigatorias desta rodada:
+	- nenhum `npm test` foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma seed manual foi executada neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=executeStartMemControlled`
+	- `selectedTechnicalTarget=start:mem`
+	- `commandExecuted=npm run start:mem`
+	- `startMemExecuted=true`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=true`
+	- `serverStarted=true`
+	- `serverStopped=true`
+	- `bootResult=green`
+	- `seedExecuted=false`
+	- `ensureMasterUserExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `masterSetExecuted=false`
+	- `masterSetWinExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
