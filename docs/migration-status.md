@@ -27739,6 +27739,84 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=humanPushRealMongoDiagnosticScriptPlanningBlock`
 	- `secondaryCandidate=implementReadOnlyDiagnosticScriptInSeparateMicrocut`
+
+- Checkpoint documental curto da implementacao local do script diagnostico read-only para Mongo real, consolidado nesta rodada com criacao apenas de `scripts/diagnostics/real-mongo-readonly-diagnostic.js` e registro em `docs/migration-status.md`, sem executar o script, sem conexao a Mongo real, sem npm manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:atlas`, sem `start:gestor`, sem `start:mem`, sem `start:mem:seed`, sem seed/master, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem nova acao de push.
+- Resultado consolidado desta rodada:
+	- o script read-only foi implementado em arquivo proprio e isolado;
+	- a implementacao usa apenas `mongoose` e modulos `node:`;
+	- a implementacao adiciona guardas fechadas para `MONGO_MEMORY`, URI ausente e alvos locais ou ambiguos;
+	- a implementacao sanitiza alvo e mensagem de erro para nao expor segredos;
+	- a implementacao conecta apenas para `ping` administrativo futuro, fecha conexao em `finally` e retorna `exit code` `0` ou `1` por design;
+	- o script nao foi executado neste microcorte.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=implementReadOnlyDiagnosticScriptInSeparateMicrocut`;
+	- `implementationScope=scriptOnly`;
+	- `implementedScriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- `readOnlyDiagnosticScriptImplemented=true`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `scriptExecutionAuthorizedNow=false`;
+	- `scriptExecutedNow=false`;
+	- `realMongoConnectionAuthorizedNow=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=reviewReadOnlyDiagnosticScriptImplementation`;
+	- `secondaryCandidate=authorizeReadOnlyDiagnosticScriptExecutionFutureMicrocut`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa nada;
+	- o script foi criado, mas nao foi executado;
+	- nao houve conexao Mongo real;
+	- nao houve HTTP, navegador, login ou mutacao real;
+	- nao houve `start:mem`, `start:mem:seed`, `start:gestor` ou `start:atlas`;
+	- nao houve seed/master nem `cleanupWrongEmail`;
+	- `package.json`, `src` e `tests` permanecem intocados;
+	- qualquer execucao futura exigira microcorte proprio, comando exato, autorizacao explicita e criterios de abortar.
+- Gates:
+	- `selectedTarget=implementReadOnlyDiagnosticScriptInSeparateMicrocut`
+	- `implementationScope=scriptOnly`
+	- `implementedScriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `readOnlyDiagnosticScriptImplemented=true`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `scriptExecutionAuthorizedNow=false`
+	- `scriptExecutedNow=false`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=reviewReadOnlyDiagnosticScriptImplementation`
+	- `secondaryCandidate=authorizeReadOnlyDiagnosticScriptExecutionFutureMicrocut`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
