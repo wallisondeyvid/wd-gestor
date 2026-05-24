@@ -22965,6 +22965,57 @@ Checkpoint tenant enforcement atual:
 	- `secondaryCandidate=planAuditTenantBoundariesDocumentally`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da abertura da fase `auditTenantBoundaries`, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando novo, sem auditoria automatizada, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem sessao, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Objetivo da fase `auditTenantBoundaries` definido nesta rodada:
+	- revisar isolamento por unidade e tenant;
+	- identificar pontos onde fluxo, consulta, escrita, sessao ou contexto podem atravessar unidade indevidamente;
+	- confirmar que fluxos criticos respeitam escopo tenant-aware;
+	- comecar apenas por leitura documental e de codigo, sem execucao.
+- Alvos iniciais mapeados nesta rodada:
+	- `auditTenantBoundaryEntryPoints`: revisar middlewares, sessao, auth context, resolucao de unidade e escopo global ou master;
+	- `auditTenantScopedRepositories`: revisar queries e repositories com `unidade_id`, `unitScope`, tenant context ou equivalentes;
+	- `auditTenantSensitiveModules`: revisar primeiro modulos mais sensiveis, como condominios, usuarios, gestor, portal-morador, escalas e assembleias;
+	- `auditTenantMutationSurfaces`: revisar pontos de escrita e mutacao que exigem tenant boundary, ainda apenas por leitura;
+	- `auditTenantBypassAndMasterScope`: revisar excecoes legitimas para master ou escopo global e confirmar que bypasses sao explicitos, controlados e documentados.
+- Justificativa consolidada nesta rodada:
+	- apos fechar a validacao local ficticia, a proxima fase segura e auditoria tenant-aware por leitura;
+	- isso deve ocorrer antes de qualquer `start:gestor`, `start:atlas`, Mongo real, seed, login real, mutacao real ou declaracao de producao pronta.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=openAuditTenantBoundariesPhase`;
+	- `planningScope=documentalOnly`;
+	- `auditTenantBoundariesPhaseOpened=true`;
+	- `previousPhase=finalizeLocalFictionalValidation`;
+	- `previousPhaseResult=closedWithoutRuntimeFixture`;
+	- `currentHead=6c7395d`;
+	- `localRemoteSynced=true`;
+	- `workingTreeClean=true`;
+	- `productionReady=false`;
+	- `recommendedNextCandidate=planTenantBoundaryAuditScope`;
+	- `secondaryCandidate=auditTenantBoundaryEntryPointsDocumentally`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- nao executar auditoria automatizada agora;
+	- nao executar `npm`, `npm run` ou `npm test`;
+	- nao abrir servidor, navegador ou fazer HTTP;
+	- nao fazer login, nao enviar credenciais e nao fazer mutacao;
+	- nao conectar Mongo real nem Mongo em memoria;
+	- nao alterar codigo, nao alterar testes e nao criar arquivos;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=openAuditTenantBoundariesPhase`
+	- `planningScope=documentalOnly`
+	- `auditTenantBoundariesPhaseOpened=true`
+	- `previousPhase=finalizeLocalFictionalValidation`
+	- `previousPhaseResult=closedWithoutRuntimeFixture`
+	- `currentHead=6c7395d`
+	- `localRemoteSynced=true`
+	- `workingTreeClean=true`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
