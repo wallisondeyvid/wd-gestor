@@ -27104,6 +27104,197 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=planDedicatedReadOnlyDiagnosticScriptForRealMongoDocumentally`
 	- `secondaryCandidate=decideNextPhaseAfterRealMongoTransitionPlanningPush`
+
+- Checkpoint documental curto do planejamento do futuro script diagnostico read-only dedicado para Mongo real, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem criar script, sem implementar codigo, sem executar qualquer comando, sem conexao a Mongo real, sem npm manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:atlas`, sem `start:gestor`, sem `start:mem`, sem `start:mem:seed`, sem seed/master, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos e sem nova acao de push.
+- Planejamento consolidado desta rodada:
+	- `diagnosticScriptPurpose`:
+		- diagnostico ou leitura;
+		- validar conectividade futura com Mongo real;
+		- confirmar ambiente sem expor segredo;
+		- confirmar zero writes;
+		- confirmar ausencia de seed/master/cleanup;
+		- nao iniciar servidor.
+	- `proposedFutureScriptShape`:
+		- script dedicado futuro;
+		- nome ainda documental;
+		- sugestao de caminho futuro: `scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+		- implementacao nao autorizada agora;
+		- execucao nao autorizada agora.
+	- `mandatoryGuards`:
+		- falhar fechado se URI ou ambiente estiverem ausentes ou ambiguos;
+		- nunca imprimir URI ou segredo completo;
+		- bloquear se detectar `MONGO_MEMORY=1` quando o alvo for Mongo real;
+		- bloquear se detectar seed/master/cleanup;
+		- bloquear qualquer operacao de escrita;
+		- nao iniciar Express ou server;
+		- nao importar `createServer` ou `start.js`;
+		- nao chamar `gestor-seeds.js`;
+		- nao chamar `cleanupWrongEmail`;
+		- nao chamar `set-master-password`;
+		- nao tocar `wallisondeyvid13@gmail.com`.
+	- `allowedReadOnlyDiagnostics`:
+		- conectar apenas em modo diagnostico futuro;
+		- obter metadados minimos sanitizados;
+		- confirmar database ou host de forma mascarada se necessario;
+		- listar colecoes apenas se explicitamente permitido no microcorte futuro;
+		- contar documentos apenas se explicitamente permitido no microcorte futuro;
+		- encerrar conexao ao final.
+	- `forbiddenOperations`:
+		- `create`, `update` ou `delete`;
+		- `insertMany`, `updateMany` ou `deleteMany`;
+		- `findOneAndUpdate` ou `findByIdAndUpdate`;
+		- seed;
+		- `cleanupWrongEmail`;
+		- `master:set` ou `master:set:win`;
+		- login real;
+		- HTTP;
+		- `start:gestor`;
+		- `start:atlas`;
+		- declarar producao pronta.
+	- `futureImplementationAcceptanceCriteria`:
+		- script criado em microcorte proprio;
+		- `package.json` so alterado se microcorte futuro autorizar;
+		- testes ou validacoes especificos definidos antes;
+		- logs sanitizados;
+		- zero writes garantido por design;
+		- execucao futura exigira autorizacao separada.
+- Resultado consolidado desta rodada:
+	- o futuro script diagnostico read-only dedicado para Mongo real fica planejado apenas documentalmente;
+	- o caminho sugerido fica registrado como candidato futuro, nao final;
+	- este microcorte nao cria script, nao implementa codigo e nao executa nada;
+	- este microcorte nao conecta Mongo real e nao libera runtime real;
+	- qualquer implementacao ou execucao futura continua exigindo microcorte proprio, comando exato, autorizacao explicita e criterios de abortar.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=planDedicatedReadOnlyDiagnosticScriptForRealMongoDocumentally`;
+	- `planningScope=documentalOnly`;
+	- `dedicatedReadOnlyDiagnosticScriptPlanned=true`;
+	- `proposedFutureScriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- `proposedFutureScriptPathFinal=false`;
+	- `scriptImplementationAuthorizedNow=false`;
+	- `scriptExecutionAuthorizedNow=false`;
+	- `packageJsonChangeAuthorizedNow=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `diagnosticScriptPurposeMapped=true`;
+	- `proposedFutureScriptShapeMapped=true`;
+	- `mandatoryGuardsMapped=true`;
+	- `allowedReadOnlyDiagnosticsMapped=true`;
+	- `forbiddenOperationsMapped=true`;
+	- `futureImplementationAcceptanceCriteriaMapped=true`;
+	- `realMongoExecutionAuthorizedNow=false`;
+	- `realMongoConnectionAuthorizedNow=false`;
+	- `commandCandidateExecutionAuthorizedNow=false`;
+	- `commandCandidateImplementationAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `cleanupWrongEmailAuthorizedNow=false`;
+	- `masterSetAuthorizedNow=false`;
+	- `httpAuthorizedNow=false`;
+	- `loginAuthorizedNow=false`;
+	- `mutationAuthorizedNow=false`;
+	- `productionReadinessDecisionAuthorizedNow=false`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `mongoRealValidated=false`;
+	- `startGestorValidated=false`;
+	- `startAtlasValidated=false`;
+	- `loginRealValidated=false`;
+	- `realMutationValidated=false`;
+	- `productionReady=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=decideWhetherImplementReadOnlyDiagnosticScriptNow`;
+	- `secondaryCandidate=keepRealMongoDiagnosticScriptPlanningPaused`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa nada;
+	- planejar script nao cria script;
+	- planejar script nao autoriza implementacao;
+	- planejar script nao autoriza execucao;
+	- planejar script nao conecta Mongo real;
+	- planejar script nao autoriza `start:atlas`;
+	- planejar script nao autoriza `start:gestor`;
+	- planejar script nao autoriza seed/master;
+	- planejar script nao autoriza login real;
+	- planejar script nao autoriza HTTP ativo;
+	- planejar script nao autoriza mutacao real;
+	- planejar script nao declara producao pronta;
+	- qualquer implementacao futura exigira microcorte proprio;
+	- qualquer execucao futura exigira microcorte proprio, comando exato, autorizacao explicita e criterios de abortar.
+- Gates:
+	- `selectedTarget=planDedicatedReadOnlyDiagnosticScriptForRealMongoDocumentally`
+	- `planningScope=documentalOnly`
+	- `dedicatedReadOnlyDiagnosticScriptPlanned=true`
+	- `proposedFutureScriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `proposedFutureScriptPathFinal=false`
+	- `scriptImplementationAuthorizedNow=false`
+	- `scriptExecutionAuthorizedNow=false`
+	- `packageJsonChangeAuthorizedNow=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `diagnosticScriptPurposeMapped=true`
+	- `proposedFutureScriptShapeMapped=true`
+	- `mandatoryGuardsMapped=true`
+	- `allowedReadOnlyDiagnosticsMapped=true`
+	- `forbiddenOperationsMapped=true`
+	- `futureImplementationAcceptanceCriteriaMapped=true`
+	- `realMongoExecutionAuthorizedNow=false`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `commandCandidateExecutionAuthorizedNow=false`
+	- `commandCandidateImplementationAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `startGestorAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `cleanupWrongEmailAuthorizedNow=false`
+	- `masterSetAuthorizedNow=false`
+	- `httpAuthorizedNow=false`
+	- `loginAuthorizedNow=false`
+	- `mutationAuthorizedNow=false`
+	- `productionReadinessDecisionAuthorizedNow=false`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `mongoRealValidated=false`
+	- `startGestorValidated=false`
+	- `startAtlasValidated=false`
+	- `loginRealValidated=false`
+	- `realMutationValidated=false`
+	- `productionReady=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=decideWhetherImplementReadOnlyDiagnosticScriptNow`
+	- `secondaryCandidate=keepRealMongoDiagnosticScriptPlanningPaused`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
