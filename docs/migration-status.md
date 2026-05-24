@@ -24298,6 +24298,149 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=mapSeedMasterProtectionPreconditionsDocumentally`
 	- `secondaryCandidate=defineOperationalRollbackAndAbortCriteriaDocumentally`
+
+- Checkpoint documental curto do mapeamento das pre-condicoes de protecao seed/master para qualquer futura execucao sensivel, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar runtime, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem `start:mem:seed`, sem `start:gestor`, sem `start:atlas`, sem conexao a Mongo real, sem conexao manual de Mongo em memoria, sem seed, sem cleanup, sem master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Pre-condicoes obrigatorias mapeadas nesta rodada para protecao de seed/master:
+	- `realMasterUserProtectionPreconditions`:
+		- `wallisondeyvid13@gmail.com` deve permanecer protegido como usuario master real e dado sensivel nominal;
+		- nenhuma operacao futura pode alterar senha, `role`, `ativo`, `primeiro_acesso` ou vinculos do master real sem autorizacao humana explicita em microcorte proprio;
+		- qualquer rotina que toque o usuario master real deve permanecer bloqueada por padrao.
+	- `seedExecutionPreconditions`:
+		- `gestor-seeds.js` deve permanecer bloqueado;
+		- `start:mem:seed` deve permanecer bloqueado;
+		- seeds em Mongo real devem permanecer bloqueados;
+		- qualquer seed futura deve ser explicitamente planejada, revisada e preferencialmente limitada a dados ficticios ou `memory-only`.
+	- `cleanupWrongEmailProtectionPreconditions`:
+		- `cleanupWrongEmail` deve permanecer bloqueado;
+		- qualquer cleanup que toque usuario real ou master deve exigir revisao isolada;
+		- nenhum cleanup pode rodar por consequencia automatica de `start`, `boot` ou runtime sem autorizacao explicita.
+	- `masterCredentialMutationPreconditions`:
+		- `master:set` e `master:set:win` devem permanecer bloqueados;
+		- `scripts/set-master-password.js` deve permanecer bloqueado;
+		- qualquer mutacao de credencial master deve exigir microcorte proprio, backup, rollback e confirmacao humana explicita.
+	- `operationalScriptProtectionPreconditions`:
+		- scripts operacionais sensiveis devem ser classificados antes de qualquer uso futuro;
+		- nenhum script pode ser executado por conveniencia;
+		- scripts que conectam Mongo real, fazem seed, cleanup ou alteracao master devem permanecer bloqueados.
+	- `auditAndRollbackPreconditions`:
+		- qualquer acao futura deve ter log, criterios de abortar, backup e rollback previamente definidos;
+		- qualquer sinal de tocar dado real sem intencao deve abortar imediatamente;
+		- producao continua nao pronta.
+- Resultado consolidado desta rodada:
+	- o usuario master real e `wallisondeyvid13@gmail.com` permanecem protegidos nominalmente;
+	- `gestor-seeds.js`, `start:mem:seed`, `cleanupWrongEmail`, `master:set`, `master:set:win` e `scripts/set-master-password.js` permanecem bloqueados agora;
+	- nenhuma execucao de seed/master fica autorizada neste microcorte;
+	- esta rodada nao autoriza runtime, Mongo real, mutacao de credencial, cleanup ou producao pronta.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=mapSeedMasterProtectionPreconditionsDocumentally`;
+	- `planningScope=documentalOnly`;
+	- `seedMasterProtectionPreconditionsMapped=true`;
+	- `realMasterUserProtectionPreconditionsMapped=true`;
+	- `seedExecutionPreconditionsMapped=true`;
+	- `cleanupWrongEmailProtectionPreconditionsMapped=true`;
+	- `masterCredentialMutationPreconditionsMapped=true`;
+	- `operationalScriptProtectionPreconditionsMapped=true`;
+	- `auditAndRollbackPreconditionsMapped=true`;
+	- `realMasterUserProtected=true`;
+	- `wallisondeyvid13Protected=true`;
+	- `gestorSeedsBlocked=true`;
+	- `startMemSeedBlocked=true`;
+	- `cleanupWrongEmailBlocked=true`;
+	- `masterSetBlocked=true`;
+	- `masterSetWinBlocked=true`;
+	- `setMasterPasswordBlocked=true`;
+	- `seedMasterAuthorizedNow=false`;
+	- `mongoRealAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `masterSetAuthorizedNow=false`;
+	- `productionReadinessDecisionAuthorizedNow=false`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=defineOperationalRollbackAndAbortCriteriaDocumentally`;
+	- `secondaryCandidate=defineProductionReadinessGateDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- nao executar runtime;
+	- nao executar `start:gestor`;
+	- nao executar `start:atlas`;
+	- nao executar `start:mem`;
+	- nao executar `start:mem:seed`;
+	- nao conectar Mongo real;
+	- nao executar seed/master;
+	- nao executar `cleanupWrongEmail`;
+	- nao executar `master:set` ou `master:set:win`;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=mapSeedMasterProtectionPreconditionsDocumentally`
+	- `planningScope=documentalOnly`
+	- `seedMasterProtectionPreconditionsMapped=true`
+	- `realMasterUserProtectionPreconditionsMapped=true`
+	- `seedExecutionPreconditionsMapped=true`
+	- `cleanupWrongEmailProtectionPreconditionsMapped=true`
+	- `masterCredentialMutationPreconditionsMapped=true`
+	- `operationalScriptProtectionPreconditionsMapped=true`
+	- `auditAndRollbackPreconditionsMapped=true`
+	- `realMasterUserProtected=true`
+	- `wallisondeyvid13Protected=true`
+	- `gestorSeedsBlocked=true`
+	- `startMemSeedBlocked=true`
+	- `cleanupWrongEmailBlocked=true`
+	- `masterSetBlocked=true`
+	- `masterSetWinBlocked=true`
+	- `setMasterPasswordBlocked=true`
+	- `seedMasterAuthorizedNow=false`
+	- `mongoRealAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `startGestorAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `masterSetAuthorizedNow=false`
+	- `productionReadinessDecisionAuthorizedNow=false`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=defineOperationalRollbackAndAbortCriteriaDocumentally`
+	- `secondaryCandidate=defineProductionReadinessGateDocumentally`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
