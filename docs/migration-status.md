@@ -22995,6 +22995,107 @@ Checkpoint tenant enforcement atual:
 	- `secondaryCandidate=auditTenantBoundaryEntryPointsDocumentally`;
 	- `nextExecutionAuthorized=false`;
 	- `pushExecuted=false`.
+
+- Checkpoint documental curto do planejamento do escopo inicial da auditoria `tenant boundaries`, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem inspecao adicional de codigo alem do necessario para manter a continuidade documental, sem auditoria automatizada, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem sessao, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Categorias da auditoria mapeadas nesta rodada:
+	- `tenantBoundaryEntryPoints`:
+		- middlewares;
+		- auth e session context;
+		- `req.unitScope`;
+		- resolucao de unidade atual;
+		- escopo master e global.
+	- `tenantScopedDataAccess`:
+		- repositories;
+		- queries com `unidade_id`;
+		- `unitScope`;
+		- filtros por unidade;
+		- `ModelRegistry` e `ConnectionFactory`, quando aplicavel.
+	- `tenantSensitiveModules`:
+		- condominios;
+		- usuarios;
+		- gestor;
+		- portal-morador;
+		- escalas;
+		- assembleias;
+		- feedback e ocorrencias, se aplicavel.
+	- `mutationSurfaces`:
+		- creates;
+		- updates;
+		- deletes;
+		- operacoes que precisam garantir unidade e tenant.
+	- `bypassAndMasterScope`:
+		- excecoes para master e global;
+		- bypasses intencionais;
+		- rotas e scripts administrativos;
+		- protecao do usuario master real.
+	- `runtimeAndOperationalBoundaries`:
+		- `start:gestor` e `start:atlas`;
+		- `start:mem`;
+		- seeds;
+		- master scripts;
+		- Mongo real;
+		- portal e runtime.
+- Ordem recomendada consolidada nesta rodada:
+	- `1. auditTenantBoundaryEntryPointsDocumentally`;
+	- `2. auditTenantScopedDataAccessDocumentally`;
+	- `3. auditTenantSensitiveModulesDocumentally`;
+	- `4. auditTenantMutationSurfacesDocumentally`;
+	- `5. auditTenantBypassAndMasterScopeDocumentally`;
+	- `6. closeTenantBoundaryAuditPlanningForExecutionDecision`.
+- Justificativa consolidada nesta rodada:
+	- antes de revisar modulos e mutacoes, e mais seguro entender os pontos de entrada do contexto tenant-aware;
+	- esses pontos determinam como unidade, sessao, usuario atual e escopo master ou global chegam ao restante do sistema.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=planTenantBoundaryAuditScope`;
+	- `planningScope=documentalOnly`;
+	- `tenantBoundaryAuditScopePlanned=true`;
+	- `auditPhase=auditTenantBoundaries`;
+	- `previousPhase=finalizeLocalFictionalValidation`;
+	- `previousPhaseResult=closedWithoutRuntimeFixture`;
+	- `codeInspectedNow=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `recommendedNextCandidate=auditTenantBoundaryEntryPointsDocumentally`;
+	- `secondaryCandidate=auditTenantScopedDataAccessDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- nao executar auditoria automatizada agora;
+	- nao executar `npm`, `npm run` ou `npm test`;
+	- nao abrir servidor, navegador ou fazer HTTP;
+	- nao fazer login, nao enviar credenciais e nao fazer mutacao;
+	- nao conectar Mongo real nem Mongo em memoria;
+	- nao alterar codigo, nao alterar testes e nao criar arquivos;
+	- nao fazer push;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=planTenantBoundaryAuditScope`
+	- `planningScope=documentalOnly`
+	- `tenantBoundaryAuditScopePlanned=true`
+	- `auditPhase=auditTenantBoundaries`
+	- `previousPhase=finalizeLocalFictionalValidation`
+	- `previousPhaseResult=closedWithoutRuntimeFixture`
+	- `codeInspectedNow=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Reforcos obrigatorios desta rodada:
 	- este microcorte e apenas documentacao;
 	- nao executar auditoria automatizada agora;
