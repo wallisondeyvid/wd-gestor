@@ -23117,6 +23117,91 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da auditoria dos entry points tenant-aware, consolidado nesta rodada apenas por leitura documental e de codigo em `docs/migration-status.md`, sem executar qualquer comando, sem auditoria automatizada, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem sessao nova, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Achados principais desta rodada:
+	- `createServer` reidrata `req.user` a partir de `req.session.user` e deriva `isMaster`, `role`, `unidade_id` e `funcionario_id` para middlewares e rotas dependentes;
+	- `createUnitScope` e `assertTenantScope` formalizam `unitScope` e o comportamento de escopo global sob `WDG_MULTI_TENANT` e `ALLOW_GLOBAL`;
+	- `requireUnitScope` do gestor resolve `unidadeId` a partir de `gestorAuthContext` ou fallback legado e grava `req.unitScope` apenas com `ObjectId` valido;
+	- `authController` persiste `gestorAuthContext` com `active_unidade_id`, `active_membership_id` e atualiza `req.session.user` com unidade e papel contextual;
+	- `requireUnitScope` de condominios aceita `unitScope` global quando multi-tenant nao esta enforced, o que pede revisao posterior de fronteira;
+	- rotas legadas em `src/routes/usuario.js` ainda reidratam `req.user` e tratam master por role e por email protegido, o que permanece como superficie ambigua a confirmar em microcorte posterior.
+- Classificacao dos achados desta rodada:
+	- `safeEntryPoints`:
+		- `src/server/createServer.js` reidratando `req.user` de sessao real;
+		- `src/shared/unitScope.js` criando `unitScope` explicito;
+		- `src/shared/tenant/assertTenantScope.js` exigindo `unitScope` valido em modo multi-tenant;
+		- `src/modules/gestor/app/middlewares/requireUnitScope.js` resolvendo `req.unitScope` por `gestorAuthContext` ou request ids validos;
+		- `src/modules/gestor/app/controllers/authController.js` persistindo `gestorAuthContext` canonical na sessao.
+	- `needsTenantBoundaryReview`:
+		- `src/shared/routes/userApi.js` por usar fallback master ou admin e combinar `req.user`, `req.session.user` e `gestorAuthContext` na resolucao de modulos;
+		- `src/modules/condominios/app/middlewares/requireUnitScope.js` por permitir escopo global quando multi-tenant nao esta enforced;
+		- rotas e controllers do gestor que consomem `req.unitScope?.unidadeId` e `req.session?.gestorAuthContext?.active_unidade_id`, exigindo revisao na proxima camada de data access.
+	- `masterOrGlobalScopeEntryPoints`:
+		- `src/shared/tenant/assertTenantScope.js` via `ALLOW_GLOBAL`;
+		- `src/server/createServer.js` via bypass para `isMaster` no gate de modulos planejados;
+		- `src/modules/gestor/app/middlewares/requireUnitScope.js` e middlewares correlatos via usuarios master ou admin;
+		- `src/routes/usuario.js` e `src/modules/gestor/app/middlewares/requireApiAuth.js` por tratarem master por role e, em alguns caminhos, por email protegido.
+	- `blockedOperationalEntryPoints`:
+		- `src/start.js` e `src/server/createServer.js` como bootstrap runtime;
+		- referencias de `start:gestor`, `start:atlas`, `start:mem`, seeds, master scripts e Mongo real permanecem bloqueadas para esta auditoria documental.
+	- `unknownOrAmbiguousEntryPoints`:
+		- `src/routes/usuario.js` por carregar comentarios de legado esvaziado mas ainda conter reidratacao e regras de master;
+		- pontos em portal-morador e repositories que reutilizam `req.unitScope` sem ainda termos auditado toda a cadeia de propagacao.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=auditTenantBoundaryEntryPointsDocumentally`;
+	- `auditScope=documentalCodeReadOnly`;
+	- `tenantBoundaryEntryPointsAudited=true`;
+	- `codeReadOnly=true`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `entryPointCategoriesMapped=true`;
+	- `authSessionContextMapped=true`;
+	- `unitScopeResolutionMapped=true`;
+	- `masterGlobalScopeEntryPointsMapped=true`;
+	- `tenantBoundaryEntryPointCriticalGapFound=false`;
+	- `recommendedNextCandidate=auditTenantScopedDataAccessDocumentally`;
+	- `secondaryCandidate=auditTenantSensitiveModulesDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas leitura e documentacao;
+	- nao executar `npm`, `npm run`, `npm test` ou guardrails;
+	- nao abrir servidor, navegador ou fazer HTTP;
+	- nao fazer login, nao enviar credenciais e nao fazer mutacao;
+	- nao conectar Mongo real nem Mongo em memoria;
+	- nao alterar codigo, nao alterar testes e nao criar arquivos;
+	- nao fazer push;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=auditTenantBoundaryEntryPointsDocumentally`
+	- `auditScope=documentalCodeReadOnly`
+	- `tenantBoundaryEntryPointsAudited=true`
+	- `codeReadOnly=true`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `entryPointCategoriesMapped=true`
+	- `authSessionContextMapped=true`
+	- `unitScopeResolutionMapped=true`
+	- `masterGlobalScopeEntryPointsMapped=true`
+	- `tenantBoundaryEntryPointCriticalGapFound=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
