@@ -30439,6 +30439,130 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=executeReadOnlyDiagnosticAfterUriSelectionFixInSeparateMicrocut`
 	- `secondaryCandidate=keepDiagnosticPausedBeforeExecution`
+
+- Checkpoint documental curto do registro do resultado da execucao autorizada do diagnostico read-only apos o fix da selecao de URI, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar o script novamente, sem conectar Mongo real, sem configurar URI, sem imprimir URI, sem pedir segredo, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos novos e sem nova acao de push.
+- Resultado consolidado desta rodada:
+	- a execucao autorizada ocorreu uma unica vez com `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- o resultado observado foi abort seguro antes de qualquer conexao;
+	- o bloqueio permaneceu `missing-uri` mesmo apos o fix da selecao da URI;
+	- a mensagem observada permaneceu sanitizada, sem expor valor de URI ou segredo;
+	- nao houve repeticao da execucao, nao houve contorno de guarda e nao houve conexao Mongo real.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=recordReadOnlyDiagnosticAfterUriSelectionFixExecutionResult`;
+	- `executionScope=authorizedReadOnlyDiagnosticAfterUriSelectionFix`;
+	- `executedCommand=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- `uriSelectionFixApplied=true`;
+	- `uriSelectionFixReviewed=true`;
+	- `diagnosticExecutionAttempted=true`;
+	- `diagnosticExecutionResult=abort`;
+	- `diagnosticResult=red`;
+	- `blockedReason=missing-uri`;
+	- `diagnosticMessageSanitized=true`;
+	- `connectionAttempted=false`;
+	- `readOnly=true`;
+	- `writesAttempted=false`;
+	- `seedMasterCleanupTouched=false`;
+	- `secretsPrinted=false`;
+	- `productionReady=false`;
+	- `realMongoConnected=false`;
+	- `realMongoDiagnosed=false`;
+	- `abortBeforeConnection=true`;
+	- `configuredUriStillRejectedAsMissing=true`;
+	- `postFixMissingUriStillOccurs=true`;
+	- `uriValueMustNotBePrinted=true`;
+	- `uriValueMustNotBeRecorded=true`;
+	- `uriValueMustNotBeCommitted=true`;
+	- `executionRepeated=false`;
+	- `guardBypassed=false`;
+	- `scriptExecutedNow=true`;
+	- `scriptExecutionCompleted=true`;
+	- `scriptExecutionGreen=false`;
+	- `scriptExecutionAbort=true`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=diagnosePostFixMissingUriWithoutPrintingSecret`;
+	- `secondaryCandidate=inspectDiagnosticScriptRuntimeEnvSelectionDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra resultado e nao executa de novo;
+	- o abort por `missing-uri` e resultado seguro da guarda;
+	- nao tentar configurar URI neste microcorte;
+	- nao colar segredo no chat;
+	- nao imprimir variavel;
+	- nao repetir execucao;
+	- nao conectar Mongo real;
+	- ainda nao houve diagnostico real do Mongo real;
+	- o proximo passo deve investigar por que o script ainda ve `missing-uri` apos o fix, sem imprimir segredo;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordReadOnlyDiagnosticAfterUriSelectionFixExecutionResult`
+	- `executionScope=authorizedReadOnlyDiagnosticAfterUriSelectionFix`
+	- `executedCommand=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `uriSelectionFixApplied=true`
+	- `uriSelectionFixReviewed=true`
+	- `diagnosticExecutionAttempted=true`
+	- `diagnosticExecutionResult=abort`
+	- `diagnosticResult=red`
+	- `blockedReason=missing-uri`
+	- `diagnosticMessageSanitized=true`
+	- `connectionAttempted=false`
+	- `readOnly=true`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `realMongoConnected=false`
+	- `realMongoDiagnosed=false`
+	- `abortBeforeConnection=true`
+	- `configuredUriStillRejectedAsMissing=true`
+	- `postFixMissingUriStillOccurs=true`
+	- `uriValueMustNotBePrinted=true`
+	- `uriValueMustNotBeRecorded=true`
+	- `uriValueMustNotBeCommitted=true`
+	- `executionRepeated=false`
+	- `guardBypassed=false`
+	- `scriptExecutedNow=true`
+	- `scriptExecutionCompleted=true`
+	- `scriptExecutionGreen=false`
+	- `scriptExecutionAbort=true`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=diagnosePostFixMissingUriWithoutPrintingSecret`
+	- `secondaryCandidate=inspectDiagnosticScriptRuntimeEnvSelectionDocumentally`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
