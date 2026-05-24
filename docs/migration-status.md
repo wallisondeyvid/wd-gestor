@@ -22738,6 +22738,73 @@ Checkpoint tenant enforcement atual:
 	- `secondaryCandidate=closeFinalizeLocalFictionalValidationCheckpoint`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da decisao sobre a necessidade de fixture runtime para a trilha `finalizeLocalFictionalValidation`, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando novo, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem sessao, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem criar arquivos e sem nova acao de push.
+- Comparacao de opcoes consolidada nesta rodada:
+	- `planFictionalFixtureRuntimeCreation`: opcao mais proxima de validacao funcional, mas mais sensivel por poder exigir execucao futura com fixture runtime em memoria;
+	- `closeFinalizeLocalFictionalValidationWithoutRuntimeFixture`: opcao recomendada por menor risco e por permitir fechar a validacao local controlada sem criar fixture runtime agora;
+	- `deferFixtureRuntimeAndAuditTenantBoundaries`: opcao secundaria valida para reduzir risco operacional e passar para auditoria tenant-aware;
+	- `planFictionalLoginOrMutation`: opcao bloqueada por ora por ser mais sensivel e nao dever ser o primeiro passo apos helper/teste.
+- Justificativa consolidada nesta rodada:
+	- o helper e o teste dedicado validaram o contrato necessario para fixture ficticia controlada;
+	- `start:mem`, Mongo em memoria e endpoints passivos ja foram validados antes nesta trilha;
+	- a opcao de menor risco agora e fechar a validacao local ficticia sem criar fixture runtime;
+	- fixture runtime, login ou mutacao devem virar blocos explicitos futuros apenas se realmente necessarios.
+- Reforcos obrigatorios desta rodada:
+	- esta decisao nao declara producao pronta;
+	- esta decisao nao valida Mongo real;
+	- esta decisao nao valida login real;
+	- esta decisao nao valida mutacao real;
+	- esta decisao nao executa fixture runtime;
+	- qualquer fixture, login ou mutacao futura deve abrir bloco proprio.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=decideWhetherFixtureRuntimeIsNeeded`;
+	- `decisionScope=documentalOnly`;
+	- `helperContractTestSubblockClosed=true`;
+	- `fixtureRuntimeNeededNow=false`;
+	- `fixtureRuntimeDeferred=true`;
+	- `closeFinalizeLocalFictionalValidationWithoutRuntimeFixtureRecommended=true`;
+	- `auditTenantBoundariesRecommendedNext=true`;
+	- `planFictionalFixtureRuntimeCreationDeferred=true`;
+	- `planFictionalLoginOrMutationBlockedForNow=true`;
+	- `recommendedNextCandidate=closeFinalizeLocalFictionalValidationWithoutRuntimeFixture`;
+	- `secondaryCandidate=auditTenantBoundaries`;
+	- `blockedForNow=planFictionalFixtureRuntimeCreation,planFictionalLoginOrMutation`.
+- Gates:
+	- `selectedTarget=decideWhetherFixtureRuntimeIsNeeded`
+	- `decisionScope=documentalOnly`
+	- `helperContractTestSubblockClosed=true`
+	- `fixtureRuntimeNeededNow=false`
+	- `fixtureRuntimeDeferred=true`
+	- `closeFinalizeLocalFictionalValidationWithoutRuntimeFixtureRecommended=true`
+	- `auditTenantBoundariesRecommendedNext=true`
+	- `planFictionalFixtureRuntimeCreationDeferred=true`
+	- `planFictionalLoginOrMutationBlockedForNow=true`
+	- `fixtureRuntimeCreated=false`
+	- `fixtureRuntimeExecuted=false`
+	- `loginFictionalExecuted=false`
+	- `memoryOnlyMutationExecuted=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `sessionCreated=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `srcChanged=false`
+	- `packageJsonChanged=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
