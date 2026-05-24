@@ -29344,6 +29344,136 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=executeReadOnlyDiagnosticWithConfiguredSameSessionUriInSeparateMicrocut`
 	- `secondaryCandidate=keepReadOnlyDiagnosticPausedBeforeExecution`
+
+- Checkpoint documental curto do registro da execucao autorizada do diagnostico read-only apos a URI supostamente configurada na mesma sessao PowerShell, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar o script novamente, sem conectar Mongo real, sem configurar URI, sem imprimir URI, sem pedir segredo, sem colar segredo no chat, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos novos e sem nova acao de push.
+- Resultado observado desta rodada:
+	- a execucao autorizada ocorreu uma unica vez com `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- o script abortou com seguranca antes de qualquer conexao;
+	- o resultado retornou `diagnosticResult=red` com `blockedReason=missing-uri`;
+	- a URI configurada continuou sem ficar visivel para o processo Node como `MONGO_URI` ou `MONGODB_URI`;
+	- ainda nao houve diagnostico real bem-sucedido do Mongo real.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=recordReadOnlyDiagnosticAfterConfiguredUriExecutionResult`;
+	- `executionScope=authorizedReadOnlyDiagnosticWithConfiguredSameSessionUri`;
+	- `executedCommand=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- `diagnosticExecutionAttempted=true`;
+	- `diagnosticExecutionResult=abort`;
+	- `diagnosticResult=red`;
+	- `blockedReason=missing-uri`;
+	- `sanitizedTarget=uri-missing`;
+	- `diagnosticMessageSanitized=true`;
+	- `connectionAttempted=false`;
+	- `readOnly=true`;
+	- `writesAttempted=false`;
+	- `seedMasterCleanupTouched=false`;
+	- `secretsPrinted=false`;
+	- `productionReady=false`;
+	- `realMongoConnected=false`;
+	- `realMongoDiagnosed=false`;
+	- `abortBeforeConnection=true`;
+	- `missingMongoUri=true`;
+	- `configuredUriNotVisibleToNodeProcess=true`;
+	- `sameSessionUriStillNotObservedByScript=true`;
+	- `uriVariableNameOrSessionPropagationNeedsReview=true`;
+	- `uriMustBeConfiguredInSameExecutionSession=true`;
+	- `uriMustBeConfiguredOutsideChat=true`;
+	- `uriMustNotBePastedInChat=true`;
+	- `uriMustNotBePrinted=true`;
+	- `uriMustNotBeCommitted=true`;
+	- `executionRepeated=false`;
+	- `guardBypassed=false`;
+	- `scriptExecutedNow=true`;
+	- `scriptExecutionCompleted=true`;
+	- `scriptExecutionGreen=false`;
+	- `scriptExecutionAbort=true`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=diagnoseMongoUriEnvironmentPropagationWithoutPrintingSecret`;
+	- `secondaryCandidate=keepReadOnlyDiagnosticPausedUntilUriVisibleToNode`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra resultado e nao executa de novo;
+	- o abort por `missing-uri` e resultado seguro da guarda;
+	- nao tentar configurar URI neste microcorte;
+	- nao colar segredo no chat;
+	- nao imprimir variavel;
+	- nao repetir execucao;
+	- nao conectar Mongo real;
+	- ainda nao houve diagnostico real do Mongo real;
+	- o proximo passo deve diagnosticar a propagacao da variavel sem imprimir segredo;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordReadOnlyDiagnosticAfterConfiguredUriExecutionResult`
+	- `executionScope=authorizedReadOnlyDiagnosticWithConfiguredSameSessionUri`
+	- `executedCommand=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `diagnosticExecutionAttempted=true`
+	- `diagnosticExecutionResult=abort`
+	- `diagnosticResult=red`
+	- `blockedReason=missing-uri`
+	- `sanitizedTarget=uri-missing`
+	- `diagnosticMessageSanitized=true`
+	- `connectionAttempted=false`
+	- `readOnly=true`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `realMongoConnected=false`
+	- `realMongoDiagnosed=false`
+	- `abortBeforeConnection=true`
+	- `missingMongoUri=true`
+	- `configuredUriNotVisibleToNodeProcess=true`
+	- `sameSessionUriStillNotObservedByScript=true`
+	- `uriVariableNameOrSessionPropagationNeedsReview=true`
+	- `uriMustBeConfiguredInSameExecutionSession=true`
+	- `uriMustBeConfiguredOutsideChat=true`
+	- `uriMustNotBePastedInChat=true`
+	- `uriMustNotBePrinted=true`
+	- `uriMustNotBeCommitted=true`
+	- `executionRepeated=false`
+	- `guardBypassed=false`
+	- `scriptExecutedNow=true`
+	- `scriptExecutionCompleted=true`
+	- `scriptExecutionGreen=false`
+	- `scriptExecutionAbort=true`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=diagnoseMongoUriEnvironmentPropagationWithoutPrintingSecret`
+	- `secondaryCandidate=keepReadOnlyDiagnosticPausedUntilUriVisibleToNode`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
