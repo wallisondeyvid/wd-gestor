@@ -19003,6 +19003,123 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto do mapeamento do escopo possivel de validacao funcional com dados ficticios, consolidado nesta rodada apenas por leitura de codigo e documentacao, sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=mapFictionalValidationScope`.
+	- `mappingScope=documentalOnly`.
+	- `previousCheckpoint=planFictionalDataFunctionalValidation`.
+	- `currentLocalCheckpoint=ba12fad docs(ops): planeja validacao funcional ficticia`.
+	- `currentRemoteCheckpoint=9b44869 docs(ops): decide nivel pos endpoints passivos`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo deste mapeamento:
+	- `fictionalValidationScopeMapped=true`.
+	- `fictionalValidationExecutedNow=false`.
+	- `loginExecuted=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `npmRunExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `mongoRealConnected=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Modulos, rotas e sinais mapeados nesta rodada:
+	- `mappedCandidateModules=[gestor, escalas, condominios]`.
+	- `mappedLowRiskReadOnlyRoutes=[/health, /gestor/login, /gestor/contato, /gestor/primeiroacesso, /gestor/esquecisenha, /gestor/esquecisenha-avancada]`.
+	- `mappedLoginDependentFlows=[/gestor/login POST, /escalas/api/escalas/diaria, /condominios/api/assembleias/:id/execution/status, /condominios/api/assembleias/:id/execution/open]`.
+	- `mappedPreexistingDataFlows=[escalas diaria exige escala/unidade/grupo/equipe/recurso preexistentes, assembleia execution exige assembleia preexistente e contexto autenticado]`.
+	- `mappedMutationFlows=[mutateAuthUnitContextService, assembleia execution open/presenca/votacao/close, rotas incrementais de funcionarios, APIs legacy admin update/toggle/delete]`.
+	- `mappedFixtureSignals=[tests criam usuarios sinteticos com email teste.*@example.com em Mongo em memoria, testes usam createServer com MONGO_MEMORY=1, smoke tests usam placeholders globais, nao ha confirmacao ainda de fixture compartilhada segura para uso operacional]`.
+	- `mappedSensitiveSignals=[gestor-seeds ensureMasterUser usa wallisondeyvid13@gmail.com por padrao, cleanupWrongEmail remove email incorreto relacionado ao master, scripts diagnosticos/backfill apontam para Mongo real ou mutacoes persistentes]`.
+- Categorias consolidadas deste mapeamento:
+	- `candidateLowRiskFictionalReadOnly=[gestor paginas publicas ja observadas, health simples, leitura documental de fluxos cobertos por testes sem reproduzir execucao]`.
+	- `candidateFictionalMutationMemoryOnly=[selecao de contexto autenticado, fluxo de assembleia execution, fluxos de escalas com documentos sinteticos, criacao controlada de usuario ficticio apenas em Mongo em memoria]`.
+	- `blockedUntilFixtureOrUserMapped=[qualquer fluxo que exija login com usuario ficticio ainda nao formalizado para o bloco, leituras autenticadas de escalas, leituras autenticadas de assembleias, validacoes que dependam de fixture compartilhada ainda nao inventariada]`.
+	- `blockedSensitive=[master, seed, Mongo real, usuario real, scripts diagnosticos/backfill persistentes, portal sensivel, master:set, master:set:win, start:mem:seed, start:gestor, start:atlas]`.
+- Leitura objetiva do mapeamento:
+	- o codebase ja contem padroes de testes que criam usuarios sinteticos com emails `teste.*@example.com` e senha local somente em Mongo em memoria.
+	- esses padroes indicam que existe caminho potencial para validacao funcional ficticia, mas ainda apenas no nivel de planejamento.
+	- os testes de `escala_diaria` e `assembleia_execution_flow` mostram que varios fluxos dependem de login e de dados preexistentes sinteticos.
+	- esses mesmos testes mostram que parte relevante dos fluxos envolve mutacao e, portanto, nao entra na faixa de baixo risco imediato.
+	- `gestor-seeds.js` continua sensivel porque referencia diretamente o usuario master real por padrao e faz manutencao de email incorreto associado a ele.
+	- scripts de diagnostico, contagem e backfill encontrados no repositorio apontam para Mongo persistente ou para mutacoes fora do escopo seguro deste bloco.
+	- ainda nao ha confirmacao documental suficiente de fixture compartilhada, mock padrao ou usuario ficticio operacionalmente seguro para reaproveitamento fora do ambiente de teste.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=inspectExistingFictionalFixtures`.
+	- `secondaryCandidate=authorizeOnlyDocumentalFixtureInspection`.
+	- este microcorte e apenas leitura e documentacao.
+	- nenhuma execucao fica autorizada nesta rodada.
+	- nenhum login fica autorizado nesta rodada.
+	- nenhuma credencial fica autorizada nesta rodada.
+	- nenhuma criacao, edicao ou exclusao de dados fica autorizada nesta rodada.
+	- seed continua bloqueado.
+	- usuario master real continua protegido.
+	- `master:set`, `master:set:win`, `start:mem:seed`, `start:gestor` e `start:atlas` continuam bloqueados.
+	- Mongo real continua bloqueado.
+	- producao continua nao pronta.
+	- nao fazer push neste microcorte.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- nenhum login foi executado neste microcorte.
+	- nenhuma credencial foi enviada neste microcorte.
+	- nenhuma mutacao foi executada neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=mapFictionalValidationScope`
+	- `mappingScope=documentalOnly`
+	- `fictionalValidationScopeMapped=true`
+	- `fictionalValidationExecutedNow=false`
+	- `loginExecuted=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `npmRunExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `mongoRealConnected=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=inspectExistingFictionalFixtures`
+	- `secondaryCandidate=authorizeOnlyDocumentalFixtureInspection`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
