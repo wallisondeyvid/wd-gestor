@@ -121,8 +121,19 @@ function assertSafeEnvironment(rawUri) {
   }
 }
 
+function selectMongoUriFromEnvironment() {
+  const mongoUriCandidate = typeof process.env.MONGO_URI === 'string'
+    ? process.env.MONGO_URI.trim()
+    : '';
+  const mongodbUriCandidate = typeof process.env.MONGODB_URI === 'string'
+    ? process.env.MONGODB_URI.trim()
+    : '';
+
+  return mongoUriCandidate || mongodbUriCandidate;
+}
+
 async function runDiagnostic() {
-  const rawUri = String(process.env.MONGO_URI || process.env.MONGODB_URI || '').trim();
+  const rawUri = selectMongoUriFromEnvironment();
   const sanitizedUri = sanitizeMongoUri(rawUri);
   let connectionAttempted = false;
 

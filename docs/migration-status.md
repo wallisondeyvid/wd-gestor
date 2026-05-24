@@ -30119,6 +30119,97 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=fixReadOnlyDiagnosticMissingUriLogicInSeparateMicrocut`
 	- `secondaryCandidate=reviewReadOnlyDiagnosticScriptImplementationAgain`
+
+- Checkpoint documental curto da correcao da logica de selecao da URI no script `scripts/diagnostics/real-mongo-readonly-diagnostic.js`, consolidado nesta rodada com alteracao restrita ao script diagnostico e ao ledger em `docs/migration-status.md`, sem executar o diagnostico real, sem conectar Mongo real, sem imprimir URI, sem pedir segredo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos novos e sem nova acao de push.
+- Correcao aplicada nesta rodada:
+	- `MONGO_URI` e `MONGODB_URI` agora sao normalizadas separadamente com `trim()` antes da escolha por precedencia;
+	- `MONGO_URI` continua preferida quando nao vazia apos normalizacao;
+	- `MONGODB_URI` passa a ser usada quando `MONGO_URI` existir, mas ficar vazia apos `trim()`;
+	- os logs sanitizados, guardas de ambiente, `ping()` read-only e fechamento em `finally` foram preservados.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=fixReadOnlyDiagnosticMissingUriLogicInSeparateMicrocut`;
+	- `fixScope=scriptOnlyPlusLedger`;
+	- `previousInspectionFoundLikelyBug=true`;
+	- `previousLikelyCause=mongoUriPrecedenceBeforeTrim`;
+	- `scriptChanged=true`;
+	- `diagnosticScriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`;
+	- `uriSelectionLogicFixed=true`;
+	- `mongoUriTrimBeforePrecedence=true`;
+	- `mongodbUriTrimBeforePrecedence=true`;
+	- `emptyMongoUriNoLongerShadowsMongodbUri=true`;
+	- `uriValuePrinted=false`;
+	- `uriValueRecorded=false`;
+	- `uriValueCommitted=false`;
+	- `uriSecretExposed=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=reviewReadOnlyDiagnosticUriSelectionFixDocumentally`;
+	- `secondaryCandidate=authorizeDiagnosticExecutionAfterUriSelectionFix`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa o diagnostico real;
+	- este microcorte nao imprime URI;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao altera `package.json`, `src` ou `tests`;
+	- a mudanca foi restrita a selecao correta da URI apos normalizacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=fixReadOnlyDiagnosticMissingUriLogicInSeparateMicrocut`
+	- `fixScope=scriptOnlyPlusLedger`
+	- `previousInspectionFoundLikelyBug=true`
+	- `previousLikelyCause=mongoUriPrecedenceBeforeTrim`
+	- `scriptChanged=true`
+	- `diagnosticScriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `uriSelectionLogicFixed=true`
+	- `mongoUriTrimBeforePrecedence=true`
+	- `mongodbUriTrimBeforePrecedence=true`
+	- `emptyMongoUriNoLongerShadowsMongodbUri=true`
+	- `uriValuePrinted=false`
+	- `uriValueRecorded=false`
+	- `uriValueCommitted=false`
+	- `uriSecretExposed=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=reviewReadOnlyDiagnosticUriSelectionFixDocumentally`
+	- `secondaryCandidate=authorizeDiagnosticExecutionAfterUriSelectionFix`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
