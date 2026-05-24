@@ -22182,6 +22182,66 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da criacao do teste dedicado de contrato do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada com criacao apenas de `tests/controlledMemoryOnlyFixtureHelper.contract.test.js`, sem executar teste manualmente, sem npm manual, sem boot, sem servidor, sem HTTP, sem login, sem sessao, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
+- Escopo implementado nesta rodada:
+	- teste novo em `tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- import direto de `createControlledMemoryOnlyUserFixture`;
+	- cobertura contratual e isolada de export da funcao;
+	- cobertura de falha fechada sem `MONGO_MEMORY=1`;
+	- cobertura de rejeicao de email fora de `@example.com`;
+	- cobertura consequente de rejeicao de `wallisondeyvid13@gmail.com`;
+	- uso apenas de mocks locais simples para `UserModel` e `bcrypt`, sem conexao.
+- Restricoes preservadas nesta rodada:
+	- nenhum teste foi executado manualmente;
+	- nenhum HTTP foi executado;
+	- nenhum login foi executado;
+	- nenhuma sessao foi criada;
+	- nenhuma `Unidade` foi criada;
+	- nenhum `UserMembership` foi criado;
+	- nenhum seed ou master script foi executado;
+	- nenhum Mongo real foi conectado;
+	- nenhum Mongo em memoria foi conectado manualmente;
+	- `tests/helpers/controlledMemoryOnlyFixtureHelper.js` permaneceu sem diff novo;
+	- `package.json` permaneceu sem diff;
+	- `src` permaneceu sem diff.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=createDedicatedHelperContractTest`;
+	- `implementationScope=testFileOnly`;
+	- `dedicatedHelperContractTestCreated=true`;
+	- `testFile=tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- `helperUsedInTestFile=true`.
+- Gates:
+	- `selectedTarget=createDedicatedHelperContractTest`
+	- `implementationScope=testFileOnly`
+	- `dedicatedHelperContractTestCreated=true`
+	- `testFile=tests/controlledMemoryOnlyFixtureHelper.contract.test.js`
+	- `helperUsedInTestFile=true`
+	- `testExecutedNow=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `sessionCreated=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `srcChanged=false`
+	- `packageJsonChanged=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
