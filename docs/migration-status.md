@@ -24035,6 +24035,139 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=classifyRuntimeCommandsRiskDocumentally`
 	- `secondaryCandidate=mapRealMongoTransitionPreconditionsDocumentally`
+
+- Checkpoint documental curto da classificacao de risco dos comandos de runtime para a fase de prontidao operacional, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando operacional, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Classificacao documental dos comandos desta rodada:
+	- `start:mem`:
+		- classificado como `controlledMemoryRuntime`;
+		- reconhecido como corredor que ja apareceu validado anteriormente em bloco controlado;
+		- permanece dependente de microcorte proprio e autorizacao explicita para qualquer nova execucao;
+		- nao esta autorizado agora.
+	- `start:mem:seed`:
+		- classificado como `seedSensitiveRuntime`;
+		- mais sensivel por combinar runtime em memoria com `GESTOR_SEEDS` ou `SEEDS` e por tangenciar `ensureMasterUser` e `cleanupWrongEmail`;
+		- permanece bloqueado nesta fase.
+	- `start:gestor`:
+		- classificado como `realOperationalRuntime`;
+		- corredor de runtime real/local com superficie operacional maior, exigindo gates de ambiente, logs, parada e rollback antes de qualquer futura liberacao;
+		- permanece bloqueado nesta fase.
+	- `start:atlas`:
+		- classificado como `realMongoAtlasRuntime`;
+		- corredor de maior sensibilidade por envolver Mongo real ou Atlas;
+		- permanece bloqueado nesta fase.
+	- `master:set` e `master:set:win`:
+		- classificados como `masterCredentialMutation`;
+		- scripts de mutacao sensivel de credencial e identidade master;
+		- permanecem bloqueados nesta fase.
+	- `npm test`, pre-push e hooks:
+		- classificados como `validationGate`;
+		- continuam uteis como gate automatizado de regressao e disciplina de merge, mas nao devem ser executados manualmente neste microcorte.
+	- `guardrails` e `parity`:
+		- classificados como `validationGate`;
+		- continuam relevantes como criterio futuro, sem execucao manual agora.
+- Resultado consolidado desta rodada:
+	- todos os comandos operacionais ou de mutacao sensivel continuam bloqueados para execucao neste microcorte;
+	- `start:mem` permaneceu como a opcao relativamente mais controlada entre os comandos de runtime, mas ainda nao autorizada agora;
+	- `start:mem:seed`, `start:gestor`, `start:atlas`, Mongo real e master scripts permanecem em faixas mais sensiveis e bloqueadas;
+	- a proxima rodada de menor risco deve mapear as pre-condicoes da transicao para Mongo real apenas em nivel documental.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=classifyRuntimeCommandsRiskDocumentally`;
+	- `classificationScope=documentalOnly`;
+	- `runtimeCommandsRiskClassified=true`;
+	- `startMemRisk=controlledMemoryRuntime`;
+	- `startMemPreviouslyValidated=true`;
+	- `startMemAuthorizedNow=false`;
+	- `startMemSeedRisk=seedSensitiveRuntime`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `startGestorRisk=realOperationalRuntime`;
+	- `startGestorAuthorizedNow=false`;
+	- `startAtlasRisk=realMongoAtlasRuntime`;
+	- `startAtlasAuthorizedNow=false`;
+	- `masterSetRisk=masterCredentialMutation`;
+	- `masterSetAuthorizedNow=false`;
+	- `npmTestRisk=validationGate`;
+	- `npmTestAuthorizedNow=false`;
+	- `guardrailRisk=validationGate`;
+	- `guardrailAuthorizedNow=false`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `mongoRealAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `productionReadinessDecisionAuthorizedNow=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=mapRealMongoTransitionPreconditionsDocumentally`;
+	- `secondaryCandidate=mapSeedMasterProtectionPreconditionsDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- nenhum comando deve ser executado;
+	- `start:mem` pode existir como comando previamente validado, mas nao esta autorizado agora;
+	- `start:mem:seed`, `start:gestor`, `start:atlas`, Mongo real e master scripts continuam bloqueados;
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=classifyRuntimeCommandsRiskDocumentally`
+	- `classificationScope=documentalOnly`
+	- `runtimeCommandsRiskClassified=true`
+	- `startMemRisk=controlledMemoryRuntime`
+	- `startMemPreviouslyValidated=true`
+	- `startMemAuthorizedNow=false`
+	- `startMemSeedRisk=seedSensitiveRuntime`
+	- `startMemSeedAuthorizedNow=false`
+	- `startGestorRisk=realOperationalRuntime`
+	- `startGestorAuthorizedNow=false`
+	- `startAtlasRisk=realMongoAtlasRuntime`
+	- `startAtlasAuthorizedNow=false`
+	- `masterSetRisk=masterCredentialMutation`
+	- `masterSetAuthorizedNow=false`
+	- `npmTestRisk=validationGate`
+	- `npmTestAuthorizedNow=false`
+	- `guardrailRisk=validationGate`
+	- `guardrailAuthorizedNow=false`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `mongoRealAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `productionReadinessDecisionAuthorizedNow=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=mapRealMongoTransitionPreconditionsDocumentally`
+	- `secondaryCandidate=mapSeedMasterProtectionPreconditionsDocumentally`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
