@@ -23202,6 +23202,91 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da auditoria do data access tenant-scoped, consolidado nesta rodada apenas por leitura documental e de codigo em `docs/migration-status.md`, sem executar qualquer comando, sem auditoria automatizada, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Achados principais desta rodada:
+	- `BaseRepository` e `enforceTenantFilter` estabelecem a camada base de isolamento, exigindo `unitScope` valido e injetando `unidadeId` em filtros quando o repositorio usa essa rota;
+	- repositories de condominios e portal-morador resolvem modelos por `unitScope`, mas nem sempre chamam `applyTenantFilter`, o que desloca parte da garantia para a conexao ou modelo resolvido e pede revisao posterior em queries sensiveis;
+	- `UserMembershipRepository` e `authContextReadDataFacade` mostram acesso por membership explicitamente modelado, inclusive com leitura global controlada para montar `gestorAuthContext`;
+	- `UserRepository` mistura buscas gerais por condicoes livres com consultas explicitamente filtradas por `unidade_id`, o que pede separar melhor onde o escopo vem de conexao e onde vem de filtro;
+	- `src/shared/routes/userApi.js` e partes de portal-morador fazem consultas diretas a modelos com composicao manual de `unidade_id`, sem passar sempre por repositories dedicados.
+- Classificacao dos achados desta rodada:
+	- `safeTenantScopedDataAccess`:
+		- `src/shared/repositories/BaseRepository.js` com `assertTenantScope` no construtor;
+		- `src/shared/db/queryIsolation.js` com injecao explicita de `unidadeId` no filtro;
+		- `src/modules/gestor/app/repositories/UserMembershipRepository.js` com consultas explicitamente ancoradas em `user_id` e `unidade_id`;
+		- `src/modules/gestor/app/data/auth/authContextReadDataFacade.js` usando `GLOBAL_SCOPE` somente para leitura controlada de memberships e `scopeFromUnidadeId` para carregar unidade especifica.
+	- `needsTenantScopedDataAccessReview`:
+		- `src/modules/condominios/app/repositories/BlocosRepository.js` e repositorios similares por fazerem `find`, `findOne` e `findByIdAndUpdate` com filtros livres, dependendo do modelo resolvido por `unitScope` sem reforco local do filtro;
+		- `src/modules/portal-morador/app/repositories/PortalAuthRepository.js` por resolver `unitScope`, mas consultar `GestorUserModel.findOne({ email })` e criar usuario portal sem filtro explicito adicional de unidade;
+		- `src/modules/gestor/app/repositories/UserRepository.js` por expor consultas livres (`findOne(cond)`, `find(query)`) ao lado de funcoes explicitamente filtradas por unidade;
+		- `src/shared/routes/userApi.js` por usar consultas diretas a `Funcionario`, `User` e `Unidade` fora de repositories dedicados, exigindo revisao posterior do encadeamento tenant-aware.
+	- `masterOrGlobalDataAccessBypasses`:
+		- `src/shared/tenant/assertTenantScope.js` via `ALLOW_GLOBAL`;
+		- `src/modules/gestor/app/data/auth/authContextReadDataFacade.js` via `GLOBAL_SCOPE` controlado para resolver memberships e auth context;
+		- funcoes de `UserRepository` que contam masters ou excluem master por role, indicando superficies privilegiadas a confirmar;
+		- caminhos de `userApi` e legado que fazem fallback master ou admin em consultas de modulos e usuarios.
+	- `blockedOperationalDataAccess`:
+		- `src/shared/db/resolveConnection.js` e superficies de registry de unidade, por fazerem parte do runtime operacional de conexoes;
+		- referencias a Mongo real, seeds, master scripts, `start:gestor`, `start:atlas` e `start:mem` permanecem bloqueadas para esta auditoria documental.
+	- `unknownOrAmbiguousDataAccess`:
+		- consultas diretas em `src/shared/routes/userApi.js` e `src/routes/usuario.js` que dependem de contexto previamente hidratado;
+		- pontos do portal-morador que agregam `unidadeIds` de varias fontes e depois consultam modelos fora de repository unico;
+		- repositories que usam `resolveModel(unitScope)` mas nao deixam claro no proprio metodo se o isolamento depende de conexao dedicada ou de filtro por unidade.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=auditTenantScopedDataAccessDocumentally`;
+	- `auditScope=documentalCodeReadOnly`;
+	- `tenantScopedDataAccessAudited=true`;
+	- `codeReadOnly=true`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `tenantScopedQueriesMapped=true`;
+	- `unitScopeFiltersMapped=true`;
+	- `membershipBasedAccessMapped=true`;
+	- `masterGlobalDataAccessBypassesMapped=true`;
+	- `tenantScopedDataAccessCriticalGapFound=false`;
+	- `recommendedNextCandidate=auditTenantSensitiveModulesDocumentally`;
+	- `secondaryCandidate=auditTenantMutationSurfacesDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas leitura e documentacao;
+	- nao executar `npm`, `npm run`, `npm test` ou guardrails;
+	- nao abrir servidor, navegador ou fazer HTTP;
+	- nao fazer login, nao enviar credenciais e nao fazer mutacao;
+	- nao conectar Mongo real nem Mongo em memoria;
+	- nao alterar codigo, nao alterar testes e nao criar arquivos;
+	- nao fazer push;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=auditTenantScopedDataAccessDocumentally`
+	- `auditScope=documentalCodeReadOnly`
+	- `tenantScopedDataAccessAudited=true`
+	- `codeReadOnly=true`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `tenantScopedQueriesMapped=true`
+	- `unitScopeFiltersMapped=true`
+	- `membershipBasedAccessMapped=true`
+	- `masterGlobalDataAccessBypassesMapped=true`
+	- `tenantScopedDataAccessCriticalGapFound=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
