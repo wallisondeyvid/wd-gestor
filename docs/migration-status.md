@@ -20044,6 +20044,155 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto do planejamento do helper controlado de fixture em Mongo em memoria, consolidado nesta rodada sem criar arquivo, sem alterar codigo, sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=planControlledMemoryOnlyFixtureHelper`.
+	- `planningScope=documentalPlanningOnly`.
+	- `previousCheckpoint=recordPostPushFictionalValidationPlanningBlock`.
+	- `currentLocalCheckpoint=753540b docs(ops): registra pos-push validacao ficticia`.
+	- `currentRemoteCheckpoint=9499455 docs(ops): fecha planejamento validacao ficticia`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo deste planejamento:
+	- `controlledMemoryOnlyFixtureHelperPlanned=true`.
+	- `helperCreatedNow=false`.
+	- `helperCreationExecutionAuthorizedNow=false`.
+	- `fixtureCreatedNow=false`.
+	- `fixtureCreationExecutionAuthorizedNow=false`.
+	- `recommendedRuntime=start:mem`.
+	- `recommendedDatabase=MongoMemoryOnly`.
+	- `allowMongoReal=false`.
+	- `allowSeedReal=false`.
+	- `allowGestorSeeds=false`.
+	- `allowCleanupWrongEmail=false`.
+	- `allowMasterRealUser=false`.
+	- `allowMasterScripts=false`.
+	- `allowStartMemSeed=false`.
+	- `allowStartGestor=false`.
+	- `allowStartAtlas=false`.
+	- `allowProductionReady=false`.
+	- `loginExecuted=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `npmRunExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Limites obrigatorios do helper futuro:
+	- deve ser explicito e isolado para ambiente controlado.
+	- deve criar somente dados ficticios descartaveis.
+	- deve operar somente em Mongo em memoria.
+	- deve rejeitar qualquer URI ou ambiente que pareca Mongo real.
+	- deve rejeitar qualquer uso de `wallisondeyvid13@gmail.com`.
+	- deve rejeitar usuario master real.
+	- deve nao chamar `gestor-seeds.js`.
+	- deve nao chamar `cleanupWrongEmail`.
+	- deve nao chamar `master:set` ou `master:set:win`.
+	- deve nao depender de `start:mem:seed`.
+	- deve nao tocar producao.
+	- deve permitir reversibilidade simples, preferencialmente descartando o Mongo em memoria ao encerrar o processo.
+- Dados minimos futuros planejados:
+	- usuario ficticio com email `@example.com`.
+	- senha ficticia dedicada.
+	- CPF ficticio gerado.
+	- nome claramente sintetico.
+	- unidade e condominio ficticios somente se necessarios.
+	- vinculo ficticio somente se necessario.
+	- marcacao clara de fixture controlada, se houver campo seguro para isso.
+	- nenhum dado real.
+- Comparacao documental das formas futuras de implementacao:
+	- `helperDocumentadoEmScriptDedicado=[possivel, exigiria criacao de arquivo em microcorte futuro, deve ter guardas fortes contra Mongo real e master real]`.
+	- `helperInternoReaproveitandoFactoriesDeTeste=[possivel se houver funcoes seguras reaproveitaveis, exige inspecao antes de qualquer uso]`.
+	- `endpointDeTesteOuDebug=[nao recomendado neste momento, TEST_SESSION_SEED_ENDPOINT e acoplado a testes e sem guarda compartilhada em src]`.
+	- `gestorSeedsOuStartMemSeed=[bloqueado]`.
+- Justificativa consolidada:
+	- antes de criar qualquer helper ou fixture, e necessario planejar o formato, as guardas obrigatorias e os candidatos de implementacao.
+	- a criacao futura deve ocorrer apenas em microcorte separado, com revisao de seguranca e sem tocar Mongo real, seed, master ou usuario real.
+	- este planejamento reduz o risco de improvisar mecanismo runtime sem guardas suficientes.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=inspectHelperImplementationCandidatesDocumentally`.
+	- `secondaryCandidate=decideControlledHelperPlanReadiness`.
+	- este microcorte e apenas planejamento documental.
+	- nao criar helper agora.
+	- nao criar fixture agora.
+	- nao alterar codigo.
+	- nao executar nada.
+	- nao fazer login.
+	- nao enviar credenciais.
+	- nao criar, editar ou excluir dados.
+	- nao rodar seed.
+	- nao tocar usuario master real.
+	- nao executar `master:set` ou `master:set:win`.
+	- nao executar `start:mem:seed`.
+	- nao executar `start:gestor` ou `start:atlas`.
+	- nao conectar Mongo real.
+	- nao declarar producao pronta.
+	- nao fazer push.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- nenhum login foi executado neste microcorte.
+	- nenhuma credencial foi enviada neste microcorte.
+	- nenhuma mutacao foi executada neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum arquivo novo foi criado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=planControlledMemoryOnlyFixtureHelper`
+	- `planningScope=documentalPlanningOnly`
+	- `controlledMemoryOnlyFixtureHelperPlanned=true`
+	- `helperCreatedNow=false`
+	- `helperCreationExecutionAuthorizedNow=false`
+	- `fixtureCreatedNow=false`
+	- `fixtureCreationExecutionAuthorizedNow=false`
+	- `recommendedRuntime=start:mem`
+	- `recommendedDatabase=MongoMemoryOnly`
+	- `allowMongoReal=false`
+	- `allowSeedReal=false`
+	- `allowGestorSeeds=false`
+	- `allowCleanupWrongEmail=false`
+	- `allowMasterRealUser=false`
+	- `allowMasterScripts=false`
+	- `allowStartMemSeed=false`
+	- `allowStartGestor=false`
+	- `allowStartAtlas=false`
+	- `allowProductionReady=false`
+	- `loginExecuted=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `npmRunExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `recommendedNextCandidate=inspectHelperImplementationCandidatesDocumentally`
+	- `secondaryCandidate=decideControlledHelperPlanReadiness`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
