@@ -29660,6 +29660,94 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=reviewPowerShellEnvAssignmentSyntaxWithoutPrintingSecret`
 	- `secondaryCandidate=keepDiagnosticPausedUntilNodeSeesUri`
+
+- Checkpoint documental curto do registro de que a propagacao da URI para o processo Node foi confirmada por checagem segura de presenca true/false, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem registrar valores, sem executar `scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real, sem imprimir URI, sem pedir segredo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos novos e sem nova acao de push.
+- Resultado da checagem de presenca sem segredo desta rodada:
+	- `MONGO_URI_PRESENT=true` no processo Node;
+	- `MONGODB_URI_PRESENT=true` no processo Node;
+	- a propagacao da variavel para o processo Node ficou confirmada apenas por true/false;
+	- nenhum valor da URI foi impresso, registrado ou commitado.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=recordMongoUriPresenceConfirmedForNode`;
+	- `diagnosticScope=envPresenceOnlyNoSecret`;
+	- `previousMongoUriPresentForNode=false`;
+	- `previousMongodbUriPresentForNode=false`;
+	- `nodeEnvPresenceCheckExecuted=true`;
+	- `mongoUriPresentForNode=true`;
+	- `mongodbUriPresentForNode=true`;
+	- `anyMongoUriVisibleToNode=true`;
+	- `uriValuePrinted=false`;
+	- `uriValueRecorded=false`;
+	- `uriValueCommitted=false`;
+	- `uriSecretExposed=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=authorizeDiagnosticExecutionAfterNodeEnvPresenceConfirmed`;
+	- `secondaryCandidate=executeReadOnlyDiagnosticWithConfirmedEnvInSeparateMicrocut`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra presenca true/false, nao valor;
+	- este microcorte nao executa o diagnostico real;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao declara producao pronta;
+	- a execucao real do diagnostico sera em microcorte separado;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordMongoUriPresenceConfirmedForNode`
+	- `diagnosticScope=envPresenceOnlyNoSecret`
+	- `previousMongoUriPresentForNode=false`
+	- `previousMongodbUriPresentForNode=false`
+	- `nodeEnvPresenceCheckExecuted=true`
+	- `mongoUriPresentForNode=true`
+	- `mongodbUriPresentForNode=true`
+	- `anyMongoUriVisibleToNode=true`
+	- `uriValuePrinted=false`
+	- `uriValueRecorded=false`
+	- `uriValueCommitted=false`
+	- `uriSecretExposed=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeDiagnosticExecutionAfterNodeEnvPresenceConfirmed`
+	- `secondaryCandidate=executeReadOnlyDiagnosticWithConfirmedEnvInSeparateMicrocut`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
