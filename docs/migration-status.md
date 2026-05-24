@@ -18458,6 +18458,98 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da inspecao dos endpoints candidatos a observacao passiva futura, consolidado nesta rodada apenas por leitura de codigo, sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem novo push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=inspectPassiveEndpointCandidatesDocumentally`.
+	- `inspectionScope=documentalOnly`.
+	- `previousCheckpoint=authorizePassiveEndpointsInspectionWithoutMutation`.
+	- `currentLocalCheckpoint=b07cfea docs(ops): autoriza endpoints passivos sem mutacao`.
+	- `currentRemoteCheckpoint=25329cf docs(ops): decide pos observacao runtime sem seed`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Estado consolidado desta inspecao documental:
+	- `passiveEndpointCandidatesInspected=true`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `serverStarted=false`.
+	- `startMemExecuted=false`.
+	- `candidateEndpoints=[GET /health, GET /gestor/login, GET /gestor/contato, GET /gestor/primeiroacesso, GET /gestor/esquecisenha, GET /gestor/esquecisenha-avancada, GET /portal-morador/]`.
+	- `candidateEndpointsNeedRuntimeConfirmation=true`.
+	- `allowOnlyHttpGet=true`.
+	- `allowLoginReal=false`.
+	- `allowCredentialsSubmission=false`.
+	- `allowDataMutation=false`.
+	- `allowPostPutPatchDelete=false`.
+	- `allowSeed=false`.
+	- `allowMongoReal=false`.
+	- `allowMasterScripts=false`.
+	- `productionReady=false`.
+	- `recommendedNextCandidate=executePassiveEndpointsInspectionControlled`.
+	- `nextExecutionAuthorized=false`.
+- Leitura objetiva desta inspecao:
+	- esta inspecao e apenas documental.
+	- nenhum endpoint foi executado nesta rodada.
+	- a lista foi mantida pequena e conservadora, limitada a handlers publicos ou redirects publicos confirmados por leitura de codigo.
+	- `GET /health` foi identificado no app pai como health simples publico.
+	- `GET /gestor/login`, `GET /gestor/contato`, `GET /gestor/primeiroacesso`, `GET /gestor/esquecisenha` e `GET /gestor/esquecisenha-avancada` aparecem como rotas publicas em `pagesRouter.js`.
+	- `GET /portal-morador/` foi identificado como redirect publico para login em `portal-morador-app.js`.
+	- `GET /` raiz do app pai nao entrou na lista por falta de handler publico inequivoco nesta leitura.
+	- `GET /portal-morador/api/auth/condominios` ficou fora da lista por depender de email e de leitura de dados em banco.
+	- rotas de `escalas/login` ficaram fora por ambiguidade de comportamento quando o modulo esta ativo, incluindo consulta de `Modulo`.
+	- qualquer endpoint com duvida ou possivel efeito colateral foi excluido.
+	- nenhuma rota autenticada com usuario real foi incluida.
+	- nenhuma rota de criacao, edicao, exclusao, seed, master ou administracao sensivel foi incluida.
+- Confirmacoes obrigatorias desta rodada:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=inspectPassiveEndpointCandidatesDocumentally`
+	- `inspectionScope=documentalOnly`
+	- `passiveEndpointCandidatesInspected=true`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `serverStarted=false`
+	- `startMemExecuted=false`
+	- `candidateEndpoints=[GET /health, GET /gestor/login, GET /gestor/contato, GET /gestor/primeiroacesso, GET /gestor/esquecisenha, GET /gestor/esquecisenha-avancada, GET /portal-morador/]`
+	- `candidateEndpointsNeedRuntimeConfirmation=true`
+	- `allowOnlyHttpGet=true`
+	- `allowLoginReal=false`
+	- `allowCredentialsSubmission=false`
+	- `allowDataMutation=false`
+	- `allowPostPutPatchDelete=false`
+	- `allowSeed=false`
+	- `allowMongoReal=false`
+	- `allowMasterScripts=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=executePassiveEndpointsInspectionControlled`
+	- `nextExecutionAuthorized=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
