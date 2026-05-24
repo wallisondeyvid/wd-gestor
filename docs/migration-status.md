@@ -22515,6 +22515,61 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da decisao pos-execucao do teste dedicado de contrato do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando novo, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem sessao, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem criar arquivos e sem nova acao de push.
+- Comparacao de opcoes consolidada nesta rodada:
+	- `closeHelperContractTestSubblock`: opcao recomendada por fechar o subbloco helper/teste dedicado como verde sem avancar automaticamente para superfices mais sensiveis;
+	- `planFictionalFixtureRuntimeCreation`: opcao mantida para bloco proprio futuro por envolver criacao runtime em Mongo em memoria;
+	- `planFictionalLoginValidation`: opcao nao recomendada agora por envolver login ficticio e escopo mais sensivel;
+	- `planMemoryOnlyMutationValidation`: opcao nao recomendada agora por envolver mutacao memory-only e escopo mais sensivel.
+- Reforcos obrigatorios desta rodada:
+	- o teste dedicado passou isoladamente e valida o contrato do helper;
+	- isso nao valida login real, login ficticio, sessao, mutacao, Mongo real ou producao;
+	- nao ha avanco automatico para fixture runtime, login ou mutacao;
+	- qualquer avanco para fixture runtime, login ou mutacao deve abrir bloco proprio.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=decideAfterDedicatedHelperContractTestExecution`;
+	- `decisionScope=documentalOnly`;
+	- `dedicatedHelperContractTestExecuted=true`;
+	- `dedicatedHelperContractTestResult=green`;
+	- `helperContractTestSubblockGreen=true`;
+	- `helperContractTestSubblockReadyToClose=true`;
+	- `fixtureRuntimeCreationAuthorizedNow=false`;
+	- `loginFictionalAuthorizedNow=false`;
+	- `mutationMemoryOnlyAuthorizedNow=false`;
+	- `recommendedNextCandidate=closeHelperContractTestSubblock`;
+	- `secondaryCandidate=decideWhetherFixtureRuntimeIsNeeded`.
+- Gates:
+	- `selectedTarget=decideAfterDedicatedHelperContractTestExecution`
+	- `decisionScope=documentalOnly`
+	- `dedicatedHelperContractTestExecuted=true`
+	- `dedicatedHelperContractTestResult=green`
+	- `helperContractTestSubblockGreen=true`
+	- `helperContractTestSubblockReadyToClose=true`
+	- `fixtureRuntimeCreationAuthorizedNow=false`
+	- `loginFictionalAuthorizedNow=false`
+	- `mutationMemoryOnlyAuthorizedNow=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `sessionCreated=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `srcChanged=false`
+	- `packageJsonChanged=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
