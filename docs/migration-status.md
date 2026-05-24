@@ -18839,6 +18839,76 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da decisao de nivel apos endpoints passivos verdes, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=decideNextValidationLevelAfterPassiveEndpoints`.
+	- `previousCheckpoint=recordPostPushPassiveEndpointsBlock`.
+	- `currentLocalCheckpoint=3e5bceb docs(ops): registra pos-push endpoints passivos`.
+	- `currentRemoteCheckpoint=03435fe docs(ops): decide pos endpoints passivos sem mutacao`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Caminhos comparados nesta rodada:
+	- `candidateComparison=[stopAndPublishCurrentCheckpoint, planFictionalDataFunctionalValidation, planPortalRuntimeReadOnlyDeeperInspection, inspectSeedAndMasterRisksDocumentally, keepOperationalReadinessPaused]`.
+	- `stopAndPublishCurrentCheckpointRisk=lowest`.
+	- `stopAndPublishCurrentCheckpointEffect=apenas consolida auditoria do checkpoint 3e5bceb com push humano futuro`.
+	- `planFictionalDataFunctionalValidationRisk=controlled`.
+	- `planFictionalDataFunctionalValidationConstraints=[sem Mongo real, sem usuario master real, sem seed real, exige microcorte proprio]`.
+	- `planPortalRuntimeReadOnlyDeeperInspectionRisk=controlled`.
+	- `planPortalRuntimeReadOnlyDeeperInspectionConstraints=[sem login real, sem mutacao, sem credenciais reais]`.
+	- `inspectSeedAndMasterRisksDocumentallyRisk=controlled`.
+	- `inspectSeedAndMasterRisksDocumentallyConstraints=[sem executar start:mem:seed, sem executar master:set, sem executar master:set:win]`.
+	- `keepOperationalReadinessPausedRisk=minimal`.
+	- `keepOperationalReadinessPausedEffect=mantem estado publicado e verde sem ampliar superficie operacional`.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=stopAndPublishCurrentCheckpoint`.
+	- `secondaryCandidateAfterPush=planFictionalDataFunctionalValidation`.
+	- o menor risco imediato e publicar o checkpoint documental local `3e5bceb` antes de abrir um bloco mais sensivel.
+	- depois do push humano, o proximo bloco recomendado passa a ser planejamento de validacao funcional com dados ficticios.
+	- esse proximo bloco recomendado continua sem Mongo real, sem seed real e sem usuario master real.
+	- nao avancar agora para login real.
+	- nao avancar agora para mutacoes.
+	- nao avancar agora para seed.
+	- nao avancar agora para Mongo real.
+	- nao avancar agora para master.
+	- nao declarar producao pronta.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=decideNextValidationLevelAfterPassiveEndpoints`
+	- `candidateComparison=[stopAndPublishCurrentCheckpoint, planFictionalDataFunctionalValidation, planPortalRuntimeReadOnlyDeeperInspection, inspectSeedAndMasterRisksDocumentally, keepOperationalReadinessPaused]`
+	- `recommendedNextCandidate=stopAndPublishCurrentCheckpoint`
+	- `secondaryCandidateAfterPush=planFictionalDataFunctionalValidation`
+	- `nextExecutionAuthorized=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
