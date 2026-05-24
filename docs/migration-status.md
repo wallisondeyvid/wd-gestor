@@ -63668,6 +63668,70 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `gitPushExecuted=false`
 	- `blockedReasons=[]`
 
+- Checkpoint documental curto da implementacao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada com criacao apenas de `tests/helpers/controlledMemoryOnlyFixtureHelper.js`, sem alteracao em `package.json`, sem alteracao em `src`, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem Mongo real e sem execucao runtime de fixture.
+- Escopo implementado nesta rodada:
+	- helper novo em `tests/helpers/controlledMemoryOnlyFixtureHelper.js`;
+	- funcao principal `createControlledMemoryOnlyUserFixture`;
+	- guardas fechadas para `MONGO_MEMORY=1`, email ficcional `@example.com` e dependencia explicita de `UserModel.create` e `bcrypt.hash`;
+	- criacao apenas de `User` basico com retorno controlado de `userId`, `email`, `cpf`, `senhaFicticia` e `memoryOnly`.
+- Restricoes preservadas nesta rodada:
+	- nenhum `UserMembership` foi criado;
+	- nenhuma sessao foi criada;
+	- nenhum login foi executado;
+	- nenhuma requisicao HTTP foi executada;
+	- nenhuma fixture foi executada em runtime;
+	- nenhum Mongo real foi conectado;
+	- nenhum seed foi executado;
+	- `start:mem` nao foi executado manualmente;
+	- `start:mem:seed` nao foi executado;
+	- `start:gestor` nao foi executado;
+	- `start:atlas` nao foi executado;
+	- `master:set` e `master:set:win` nao foram executados;
+	- `package.json` permaneceu inalterado;
+	- `src/start.js` permaneceu inalterado;
+	- `src/server/createServer.js` permaneceu inalterado;
+	- nenhum arquivo adicional fora do helper e deste ledger foi alterado.
+- Validacao objetiva desta rodada:
+	- `get_errors` do helper novo retornou sem erros;
+	- a implementacao permaneceu confinada ao helper autorizado;
+	- este checkpoint apenas registra a criacao do helper, nao autoriza execucao operacional.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=implementControlledMemoryOnlyFixtureHelper`;
+	- `implementationScope=helperFileOnly`;
+	- `helperImplemented=true`;
+	- `helperFileCreated=true`;
+	- `helperFile=tests/helpers/controlledMemoryOnlyFixtureHelper.js`;
+	- `helperName=controlledMemoryOnlyFixtureHelper`;
+	- `primaryFunction=createControlledMemoryOnlyUserFixture`;
+	- `initialScope=userOnly`;
+	- `recommendedNextAct=validateDiffAndCreateLocalCommit`.
+- Gates:
+	- `selectedTarget=implementControlledMemoryOnlyFixtureHelper`
+	- `implementationScope=helperFileOnly`
+	- `helperImplemented=true`
+	- `helperFileCreated=true`
+	- `helperFile=tests/helpers/controlledMemoryOnlyFixtureHelper.js`
+	- `helperName=controlledMemoryOnlyFixtureHelper`
+	- `primaryFunction=createControlledMemoryOnlyUserFixture`
+	- `initialScope=userOnly`
+	- `userMembershipCreated=false`
+	- `sessionCreated=false`
+	- `loginExecuted=false`
+	- `httpExecuted=false`
+	- `fixtureRuntimeExecuted=false`
+	- `mongoRealConnected=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `packageJsonChanged=false`
+	- `srcChanged=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+
 
 
 
