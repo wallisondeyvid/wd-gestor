@@ -26325,6 +26325,170 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=planRealMongoTransitionDocumentally`
 	- `secondaryCandidate=keepRealMongoPlanningPaused`
+
+- Checkpoint documental curto do plano de transicao futura para Mongo real, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando, sem conexao a Mongo real, sem npm manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:atlas`, sem `start:gestor`, sem `start:mem`, sem `start:mem:seed`, sem seed/master, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Planejamento consolidado desta rodada:
+	- `realMongoTransitionPlanningScope`:
+		- apenas documental;
+		- sem conexao;
+		- sem `start:atlas`;
+		- sem `start:gestor`;
+		- sem seed;
+		- sem login;
+		- sem mutacao;
+		- sem producao pronta.
+	- `requiredBeforeRealMongoContact`:
+		- confirmar variavel exata `MONGO_URI` ou `MONGODB_URI`;
+		- confirmar ambiente;
+		- confirmar backup;
+		- confirmar rollback;
+		- confirmar usuario master real protegido;
+		- confirmar seeds/master scripts bloqueados;
+		- confirmar `cleanupWrongEmail` bloqueado;
+		- confirmar criterios de abortar.
+	- `futureFirstContactMode`:
+		- primeiro contato futuro deve ser diagnostico ou leitura;
+		- sem seed;
+		- sem criacao, alteracao ou exclusao;
+		- sem login real;
+		- sem `start:gestor` ou `start:atlas` inicialmente, salvo decisao posterior propria;
+		- comando futuro deve ser definido em microcorte separado.
+	- `blockedNow`:
+		- Mongo real;
+		- Atlas;
+		- `start:gestor`;
+		- `start:atlas`;
+		- `start:mem:seed`;
+		- seed/master;
+		- `cleanupWrongEmail`;
+		- `master:set` e `master:set:win`;
+		- producao pronta.
+	- `abortCriteria`:
+		- abortar se ambiente for ambiguo;
+		- abortar se a URI real nao for a esperada;
+		- abortar se houver seed, master ou `cleanupWrongEmail`;
+		- abortar se houver tentativa de mutacao;
+		- abortar se houver necessidade de credencial real nao prevista.
+	- `evidenceRequiredForNextStep`:
+		- plano de ambiente;
+		- plano de segredo;
+		- plano de backup;
+		- plano de rollback;
+		- comando exato futuro;
+		- criterio de parada;
+		- escopo de leitura ou diagnostico.
+- Resultado consolidado desta rodada:
+	- a transicao para Mongo real fica planejada apenas em nivel documental;
+	- nenhuma conexao real e autorizada agora;
+	- nenhum `start:atlas` ou `start:gestor` e autorizado agora;
+	- nenhum seed/master e autorizado agora;
+	- nenhum login real ou mutacao real e autorizado agora;
+	- producao continua nao pronta.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=planRealMongoTransitionDocumentally`;
+	- `planningScope=documentalOnly`;
+	- `realMongoTransitionPlanned=true`;
+	- `realMongoPlanningCanStartDocumentally=true`;
+	- `realMongoExecutionAuthorizedNow=false`;
+	- `realMongoConnectionAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `cleanupWrongEmailAuthorizedNow=false`;
+	- `masterSetAuthorizedNow=false`;
+	- `productionReadinessDecisionAuthorizedNow=false`;
+	- `requiredBeforeRealMongoContactMapped=true`;
+	- `futureFirstContactModeMapped=true`;
+	- `blockedNowMapped=true`;
+	- `abortCriteriaMapped=true`;
+	- `evidenceRequiredForNextStepMapped=true`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `mongoRealValidated=false`;
+	- `startGestorValidated=false`;
+	- `startAtlasValidated=false`;
+	- `loginRealValidated=false`;
+	- `realMutationValidated=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=defineRealMongoFirstContactReadOnlyPlanDocumentally`;
+	- `secondaryCandidate=closeRealMongoTransitionPlanningBlockForPushDecision`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa nada;
+	- planejamento de Mongo real nao e conexao com Mongo real;
+	- planejamento de Mongo real nao autoriza `start:atlas`;
+	- planejamento de Mongo real nao autoriza `start:gestor`;
+	- planejamento de Mongo real nao autoriza seed/master;
+	- planejamento de Mongo real nao autoriza login real;
+	- planejamento de Mongo real nao autoriza mutacao real;
+	- planejamento de Mongo real nao declara producao pronta.
+- Gates:
+	- `selectedTarget=planRealMongoTransitionDocumentally`
+	- `planningScope=documentalOnly`
+	- `realMongoTransitionPlanned=true`
+	- `realMongoPlanningCanStartDocumentally=true`
+	- `realMongoExecutionAuthorizedNow=false`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `startGestorAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `cleanupWrongEmailAuthorizedNow=false`
+	- `masterSetAuthorizedNow=false`
+	- `productionReadinessDecisionAuthorizedNow=false`
+	- `requiredBeforeRealMongoContactMapped=true`
+	- `futureFirstContactModeMapped=true`
+	- `blockedNowMapped=true`
+	- `abortCriteriaMapped=true`
+	- `evidenceRequiredForNextStepMapped=true`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `mongoRealValidated=false`
+	- `startGestorValidated=false`
+	- `startAtlasValidated=false`
+	- `loginRealValidated=false`
+	- `realMutationValidated=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=defineRealMongoFirstContactReadOnlyPlanDocumentally`
+	- `secondaryCandidate=closeRealMongoTransitionPlanningBlockForPushDecision`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
