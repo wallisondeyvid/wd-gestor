@@ -18909,6 +18909,100 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto do planejamento da validacao funcional com dados ficticios, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=planFictionalDataFunctionalValidation`.
+	- `planningScope=documentalPlanningOnly`.
+	- `previousCheckpoint=decideNextValidationLevelAfterPassiveEndpoints`.
+	- `currentLocalCheckpoint=9b44869 docs(ops): decide nivel pos endpoints passivos`.
+	- `currentRemoteCheckpoint=9b44869 docs(ops): decide nivel pos endpoints passivos`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo deste planejamento:
+	- `previousPassiveEndpointsBlockResult=green`.
+	- `fictionalDataValidationPlanningOpened=true`.
+	- `fictionalDataValidationExecutedNow=false`.
+	- `allowMongoReal=false`.
+	- `allowSeedReal=false`.
+	- `allowMasterRealUser=false`.
+	- `allowMasterScripts=false`.
+	- `allowStartMemSeed=false`.
+	- `allowStartGestor=false`.
+	- `allowStartAtlas=false`.
+	- `allowProductionReady=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Caminhos futuros mapeados nesta rodada, sem autorizar execucao:
+	- `futurePlanningCandidates=[mapFictionalValidationScope, inspectExistingFictionalFixtures, planControlledFictionalLogin, planFictionalMutationBoundaries]`.
+	- `mapFictionalValidationScope=[mapear fluxos testaveis com dados ficticios/controlados, sem usuario master real, sem Mongo real, sem seed real]`.
+	- `inspectExistingFictionalFixtures=[procurar fixtures, mocks, seeds ficticios ou usuarios de teste seguros, apenas leitura documental, sem execucao]`.
+	- `planControlledFictionalLogin=[se houver usuario ficticio seguro, planejar login controlado, ainda sem executar login agora, sem credenciais reais]`.
+	- `planFictionalMutationBoundaries=[mapear mutacoes potencialmente aceitaveis apenas em Mongo em memoria, sem tocar dados reais, sem seed/master]`.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=mapFictionalValidationScope`.
+	- `secondaryCandidate=inspectExistingFictionalFixtures`.
+	- apos endpoints passivos verdes, o proximo nivel natural e planejar validacao funcional com dados ficticios.
+	- antes de qualquer login ou mutacao, e necessario mapear escopo, fixtures ou usuarios ficticios e limites de seguranca.
+	- nenhuma execucao fica autorizada neste microcorte.
+	- nenhum login fica autorizado neste microcorte.
+	- nenhuma credencial fica autorizada neste microcorte.
+	- nenhuma criacao, edicao ou exclusao de dados fica autorizada neste microcorte.
+	- seed continua bloqueado.
+	- usuario master real continua protegido.
+	- `master:set`, `master:set:win`, `start:mem:seed`, `start:gestor` e `start:atlas` continuam bloqueados.
+	- Mongo real continua bloqueado.
+	- producao continua nao pronta.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- nenhum login foi executado neste microcorte.
+	- nenhuma credencial foi enviada neste microcorte.
+	- nenhuma mutacao foi executada neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=planFictionalDataFunctionalValidation`
+	- `planningScope=documentalPlanningOnly`
+	- `previousPassiveEndpointsBlockResult=green`
+	- `fictionalDataValidationPlanningOpened=true`
+	- `fictionalDataValidationExecutedNow=false`
+	- `allowMongoReal=false`
+	- `allowSeedReal=false`
+	- `allowMasterRealUser=false`
+	- `allowMasterScripts=false`
+	- `allowStartMemSeed=false`
+	- `allowStartGestor=false`
+	- `allowStartAtlas=false`
+	- `allowProductionReady=false`
+	- `recommendedNextCandidate=mapFictionalValidationScope`
+	- `secondaryCandidate=inspectExistingFictionalFixtures`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
