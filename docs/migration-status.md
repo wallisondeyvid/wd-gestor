@@ -23909,6 +23909,132 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=inventoryOperationalReadinessCriteriaDocumentally`
 	- `secondaryCandidate=classifyRuntimeCommandsRiskDocumentally`
+
+- Checkpoint documental curto do inventario inicial dos criterios de prontidao operacional, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando operacional, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Criterios inventariados nesta rodada:
+	- `environmentReadinessCriteria`:
+		- distinguir claramente os comandos e contextos de `start:mem`, `start:mem:seed`, `start:gestor` e `start:atlas`, todos ainda bloqueados nesta fase;
+		- tratar `NODE_ENV`, `MONGO_URI`, `MONGODB_URI`, `MONGO_MEMORY`, `GESTOR_SEEDS`, `SEEDS`, `MASTER_EMAIL`, `MASTER_PASSWORD`, `SESSION_SECRET` e correlatas como variaveis sensiveis e parte do gate de ambiente;
+		- considerar `WDG_MULTI_TENANT` e flags correlatas como pre-condicoes de semantica e nao como liberacao automatica para runtime real;
+		- exigir branch correta, HEAD esperado, working tree limpa e escopo/ambiente declarados antes de qualquer futura execucao.
+	- `validationGatesCriteria`:
+		- manter `npm test` e o pre-push verde como gate minimo de regressao antes de qualquer runtime futuro;
+		- considerar hooks automaticos, guardrails e suites criticas como parte do gate, mesmo quando a rodada atual continua read-only;
+		- tratar parity OFF/ON e contratos criticos dos corredores tenant-sensitive como criterios documentais previos a qualquer runtime real;
+		- nao interpretar verde de teste como autorizacao automatica para boot, Mongo real ou producao.
+	- `runtimeReadinessCriteria`:
+		- definir previamente logs esperados, ponto de parada, sinais de tentativa de Mongo e diferenca entre servidor iniciado ou nao;
+		- limitar uma futura validacao inicial a healthchecks e endpoints passivos, mantendo login e mutacao bloqueados nas primeiras rodadas;
+		- exigir clareza sobre o que seria evidência suficiente de boot seguro antes de qualquer passo alem de observabilidade passiva.
+	- `dataProtectionCriteria`:
+		- manter protecao explicita do usuario master real `wallisondeyvid13@gmail.com`;
+		- manter `master:set`, `master:set:win`, `ensureMasterUser`, `cleanupWrongEmail`, seeds, reset, cleanup, migration e backfill bloqueados;
+		- exigir backup, rollback e plano de abortar antes de qualquer transicao envolvendo Mongo real;
+		- proibir exposicao de segredos, URIs, credenciais ou dados reais em qualquer futura rodada operacional.
+	- `tenantReadinessCriteria`:
+		- considerar a auditoria `auditTenantBoundaries` publicada e fechada como pre-condicao ja satisfeita;
+		- preservar `tenantBoundaryCriticalGapFound=false` como sinal de que nao ha bloqueio critico imediato na trilha documental;
+		- reconhecer que ainda existem pendencias documentais nao bloqueantes em corredores hibridos e globais, sem tratar isso como autorizacao para runtime real;
+		- manter limites explicitos para bypasses `ALLOW_GLOBAL`, master/global scope e rotas administrativas.
+	- `abortRollbackCriteria`:
+		- parar imediatamente diante de qualquer tentativa de Mongo real sem microcorte proprio, qualquer segredo exposto, qualquer seed/master, qualquer working tree suja ou qualquer ambiguidade de ambiente;
+		- nao prosseguir para Mongo real enquanto pre-condicoes de ambiente, dados, rollback e observabilidade nao estiverem fechadas documentalmente;
+		- manter producao nao pronta e reverter a uma decisao puramente documental se qualquer gate critico ficar ambíguo ou vermelho.
+- Resultado consolidado desta rodada:
+	- os criterios minimos de prontidao operacional ficaram inventariados apenas em nivel documental;
+	- prontidao operacional segue nao validada e runtime real segue nao validado;
+	- `start:gestor`, `start:atlas`, `start:mem:seed`, Mongo real e seed/master continuam nao autorizados agora;
+	- a proxima rodada de menor risco deve classificar risco dos comandos de runtime ainda sem executa-los.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=inventoryOperationalReadinessCriteriaDocumentally`;
+	- `inventoryScope=documentalOnly`;
+	- `operationalReadinessCriteriaInventoried=true`;
+	- `environmentReadinessCriteriaMapped=true`;
+	- `validationGatesCriteriaMapped=true`;
+	- `runtimeReadinessCriteriaMapped=true`;
+	- `dataProtectionCriteriaMapped=true`;
+	- `tenantReadinessCriteriaMapped=true`;
+	- `abortRollbackCriteriaMapped=true`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `mongoRealAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `productionReadinessDecisionAuthorizedNow=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=classifyRuntimeCommandsRiskDocumentally`;
+	- `secondaryCandidate=mapRealMongoTransitionPreconditionsDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- nao executar runtime;
+	- nao executar `start:gestor`;
+	- nao executar `start:atlas`;
+	- nao executar `start:mem`;
+	- nao executar `start:mem:seed`;
+	- nao conectar Mongo real;
+	- nao executar seed/master;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=inventoryOperationalReadinessCriteriaDocumentally`
+	- `inventoryScope=documentalOnly`
+	- `operationalReadinessCriteriaInventoried=true`
+	- `environmentReadinessCriteriaMapped=true`
+	- `validationGatesCriteriaMapped=true`
+	- `runtimeReadinessCriteriaMapped=true`
+	- `dataProtectionCriteriaMapped=true`
+	- `tenantReadinessCriteriaMapped=true`
+	- `abortRollbackCriteriaMapped=true`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `startGestorAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `mongoRealAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `productionReadinessDecisionAuthorizedNow=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=classifyRuntimeCommandsRiskDocumentally`
+	- `secondaryCandidate=mapRealMongoTransitionPreconditionsDocumentally`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
