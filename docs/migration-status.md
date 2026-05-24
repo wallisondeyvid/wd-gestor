@@ -24441,6 +24441,141 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=defineOperationalRollbackAndAbortCriteriaDocumentally`
 	- `secondaryCandidate=defineProductionReadinessGateDocumentally`
+
+- Checkpoint documental curto da definicao dos criterios obrigatorios de abortar, rollback e parada segura operacional antes de qualquer acao operacional futura sensivel, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar runtime, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem conectar Mongo real, sem executar seed/master, sem executar `cleanupWrongEmail`, sem executar `master:set`, sem executar `master:set:win`, sem fazer HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Criterios obrigatorios definidos nesta rodada:
+	- `abortBeforeExecutionCriteria`:
+		- abortar se houver duvida sobre ambiente;
+		- abortar se `MONGO_URI` ou `MONGODB_URI` apontar para Mongo real sem autorizacao explicita;
+		- abortar se houver risco de tocar o master real `wallisondeyvid13@gmail.com`;
+		- abortar se houver seed, cleanup ou master script implicito;
+		- abortar se o comando nao for exatamente o comando autorizado.
+	- `abortDuringExecutionCriteria`:
+		- abortar se logs indicarem Mongo real inesperado;
+		- abortar se houver tentativa de seed;
+		- abortar se houver tentativa de `cleanupWrongEmail`;
+		- abortar se houver mutacao nao autorizada;
+		- abortar se houver login real ou uso de credencial real.
+	- `rollbackPreconditions`:
+		- backup obrigatorio antes de qualquer acao real futura;
+		- plano de restauracao previamente definido;
+		- ponto de retorno documentado antes de qualquer execucao sensivel;
+		- comandos de rollback revisados antes de qualquer uso futuro;
+		- sem rollback improvisado em producao.
+	- `stopAndObserveCriteria`:
+		- parar apos a primeira evidencia util;
+		- nao encadear comandos sensiveis;
+		- nao transformar diagnostico em execucao operacional;
+		- manter logs minimos e sem segredos.
+	- `postFailureContainmentCriteria`:
+		- registrar a falha no ledger;
+		- nao tentar correcao automatica;
+		- nao rodar scripts corretivos sem microcorte proprio;
+		- manter producao nao pronta.
+	- `humanConfirmationCriteria`:
+		- qualquer avanco para Mongo real, `start:gestor`, `start:atlas`, seed ou master exige confirmacao humana explicita;
+		- a autorizacao futura deve citar o comando exato;
+		- a autorizacao futura deve citar o ambiente exato;
+		- a autorizacao futura deve citar o criterio de parada.
+- Resultado consolidado desta rodada:
+	- os criterios obrigatorios de abortar antes da execucao, abortar durante a execucao, rollback, parada segura, contencao pos-falha e confirmacao humana ficaram definidos apenas em nivel documental;
+	- qualquer futura acao operacional sensivel continua dependendo de microcorte proprio, comando explicitamente autorizado, ambiente explicitamente citado e criterio de parada explicitamente definido;
+	- Mongo real, `start:gestor`, `start:atlas`, `start:mem:seed`, seed/master, `cleanupWrongEmail`, `master:set` e `master:set:win` continuam bloqueados agora;
+	- producao continua nao pronta, prontidao operacional continua nao validada e runtime real continua nao validado.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=defineOperationalRollbackAndAbortCriteriaDocumentally`;
+	- `planningScope=documentalOnly`;
+	- `operationalRollbackAndAbortCriteriaDefined=true`;
+	- `abortBeforeExecutionCriteriaMapped=true`;
+	- `abortDuringExecutionCriteriaMapped=true`;
+	- `rollbackPreconditionsMapped=true`;
+	- `stopAndObserveCriteriaMapped=true`;
+	- `postFailureContainmentCriteriaMapped=true`;
+	- `humanConfirmationCriteriaMapped=true`;
+	- `mongoRealAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `masterSetAuthorizedNow=false`;
+	- `productionReadinessDecisionAuthorizedNow=false`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=defineProductionReadinessGateDocumentally`;
+	- `secondaryCandidate=closeValidateOperationalReadinessPlanningForPushDecision`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- nao executar runtime;
+	- nao executar `start:gestor`;
+	- nao executar `start:atlas`;
+	- nao executar `start:mem`;
+	- nao executar `start:mem:seed`;
+	- nao conectar Mongo real;
+	- nao executar seed/master;
+	- nao executar `cleanupWrongEmail`;
+	- nao executar `master:set` ou `master:set:win`;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=defineOperationalRollbackAndAbortCriteriaDocumentally`
+	- `planningScope=documentalOnly`
+	- `operationalRollbackAndAbortCriteriaDefined=true`
+	- `abortBeforeExecutionCriteriaMapped=true`
+	- `abortDuringExecutionCriteriaMapped=true`
+	- `rollbackPreconditionsMapped=true`
+	- `stopAndObserveCriteriaMapped=true`
+	- `postFailureContainmentCriteriaMapped=true`
+	- `humanConfirmationCriteriaMapped=true`
+	- `mongoRealAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `startGestorAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `masterSetAuthorizedNow=false`
+	- `productionReadinessDecisionAuthorizedNow=false`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=defineProductionReadinessGateDocumentally`
+	- `secondaryCandidate=closeValidateOperationalReadinessPlanningForPushDecision`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
