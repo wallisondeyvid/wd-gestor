@@ -22182,6 +22182,73 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
+- Candidatos comparados nesta rodada:
+	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
+	- `adaptExistingRuntimeFlow`: candidato bloqueado para primeira adocao por misturar escopos e aumentar o risco de contaminar um fluxo funcional maior;
+	- `staticContractOnlyTest`: candidato secundario por reduzir risco e validar guardas e exports, mas sem provar a criacao controlada de `User`.
+- Justificativa consolidada nesta rodada:
+	- a primeira adocao do helper deve ser isolada e dedicada, sem reaproveitar um fluxo runtime maior como primeiro consumidor;
+	- a criacao e a execucao do teste devem ficar para microcorte futuro, especifico e autorizado;
+	- a opcao estatica continua util como fallback de risco menor, mas nao cobre a criacao controlada do `User` com o mesmo valor da opcao dedicada.
+- Criterios do futuro teste planejados nesta rodada:
+	- deve ficar isolado em arquivo proprio;
+	- deve usar somente Mongo em memoria ou test harness controlado se precisar criar `User`;
+	- deve usar apenas email `@example.com`;
+	- deve nao usar `wallisondeyvid13@gmail.com`;
+	- deve nao fazer HTTP;
+	- deve nao fazer login;
+	- deve nao criar sessao;
+	- deve nao criar `Unidade` nem `UserMembership`;
+	- deve nao tocar seed nem master scripts;
+	- deve nao tocar Mongo real;
+	- deve nao alterar `src`;
+	- deve nao alterar `package.json`;
+	- deve ser criado e executado somente em microcorte futuro autorizado.
+- Resultado objetivo desta rodada:
+	- o primeiro uso do helper foi planejado apenas documentalmente;
+	- nenhum teste foi criado nesta rodada;
+	- nenhum teste foi executado nesta rodada;
+	- o helper permanece sem uso real na trilha atual.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=planFirstControlledHelperAdoptionTest`;
+	- `planningScope=documentalOnly`;
+	- `firstHelperAdoptionPlanned=true`;
+	- `recommendedFirstAdoption=dedicatedHelperContractTest`;
+	- `recommendedFutureTestFile=tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- `staticContractOnlyTestCandidate=true`;
+	- `adaptExistingRuntimeFlowBlockedForFirstAdoption=true`;
+	- `helperPatchNeededNow=false`.
+- Gates:
+	- `selectedTarget=planFirstControlledHelperAdoptionTest`
+	- `planningScope=documentalOnly`
+	- `firstHelperAdoptionPlanned=true`
+	- `helperUsedNow=false`
+	- `testCreatedNow=false`
+	- `testExecutedNow=false`
+	- `recommendedFirstAdoption=dedicatedHelperContractTest`
+	- `recommendedFutureTestFile=tests/controlledMemoryOnlyFixtureHelper.contract.test.js`
+	- `staticContractOnlyTestCandidate=true`
+	- `adaptExistingRuntimeFlowBlockedForFirstAdoption=true`
+	- `helperPatchNeededNow=false`
+	- `fixtureRuntimeExecuted=false`
+	- `loginExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 	- `gitPushExecuted=false`
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
