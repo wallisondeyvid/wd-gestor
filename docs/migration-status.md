@@ -29474,6 +29474,93 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=diagnoseMongoUriEnvironmentPropagationWithoutPrintingSecret`
 	- `secondaryCandidate=keepReadOnlyDiagnosticPausedUntilUriVisibleToNode`
+
+- Checkpoint documental curto do diagnostico de propagacao da variavel de ambiente Mongo para o processo Node, consolidado nesta rodada com checagem apenas de presenca sem segredo e documentacao em `docs/migration-status.md`, sem executar `scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real, sem imprimir `MONGO_URI`, sem imprimir `MONGODB_URI`, sem imprimir valor, tamanho, prefixo, host, usuario ou senha, sem pedir segredo, sem colar segredo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos novos e sem nova acao de push.
+- Resultado da checagem segura desta rodada:
+	- `MONGO_URI_PRESENT=false` no processo Node;
+	- `MONGODB_URI_PRESENT=false` no processo Node;
+	- nenhuma das duas variaveis ficou visivel para o processo Node nesta sessao de checagem;
+	- hipoteses abertas permanecem: variavel configurada em terminal diferente, nome divergente, escopo nao herdado pelo processo Node ou comando executado em sessao diferente.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=diagnoseMongoUriEnvironmentPropagationWithoutPrintingSecret`;
+	- `diagnosticScope=envPresenceOnlyNoSecret`;
+	- `nodeEnvPresenceCheckExecuted=true`;
+	- `mongoUriPresenceValuePrinted=false`;
+	- `mongoUriValuePrinted=false`;
+	- `mongoUriValueRecorded=false`;
+	- `mongoUriValueCommitted=false`;
+	- `mongoUriSecretExposed=false`;
+	- `mongoUriPresentForNode=false`;
+	- `mongodbUriPresentForNode=false`;
+	- `anyMongoUriVisibleToNode=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=configureMongoUriInCurrentPowerShellAndRecheckPresence`;
+	- `secondaryCandidate=keepDiagnosticPausedUntilNodeSeesUri`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa o script diagnostico real;
+	- este microcorte nao imprime valor da URI;
+	- este microcorte nao conecta Mongo real;
+	- a checagem foi somente de presenca true/false no ambiente do Node;
+	- nao houve exposicao de segredo;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=diagnoseMongoUriEnvironmentPropagationWithoutPrintingSecret`
+	- `diagnosticScope=envPresenceOnlyNoSecret`
+	- `nodeEnvPresenceCheckExecuted=true`
+	- `mongoUriPresenceValuePrinted=false`
+	- `mongoUriValuePrinted=false`
+	- `mongoUriValueRecorded=false`
+	- `mongoUriValueCommitted=false`
+	- `mongoUriSecretExposed=false`
+	- `mongoUriPresentForNode=false`
+	- `mongodbUriPresentForNode=false`
+	- `anyMongoUriVisibleToNode=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=configureMongoUriInCurrentPowerShellAndRecheckPresence`
+	- `secondaryCandidate=keepDiagnosticPausedUntilNodeSeesUri`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
