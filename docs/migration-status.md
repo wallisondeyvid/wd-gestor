@@ -30014,6 +30014,111 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=diagnoseWhyScriptSeesMissingUriWithoutPrintingSecret`
 	- `secondaryCandidate=inspectDiagnosticScriptUriValidationDocumentally`
+
+- Checkpoint documental curto da inspecao da logica de `missing-uri` no script `scripts/diagnostics/real-mongo-readonly-diagnostic.js`, consolidado nesta rodada apenas por leitura documental e registro em `docs/migration-status.md`, sem executar script, sem conectar Mongo real, sem imprimir URI, sem pedir segredo, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos novos e sem nova acao de push.
+- Achado principal desta rodada:
+	- o script le `process.env.MONGO_URI || process.env.MONGODB_URI || ''` e so depois aplica `trim()`;
+	- isso cria uma precedencia em que `MONGO_URI` vence `MONGODB_URI` antes da normalizacao final;
+	- se `MONGO_URI` estiver presente, mas vazio ou contendo apenas espacos, ele ainda vence no operador `||` por ser string truthy antes do `trim()`;
+	- apos o `trim()`, o valor vira vazio e a guarda retorna `blockedReason=missing-uri`, mesmo que `MONGODB_URI` contenha um valor utilizavel;
+	- a mensagem de `missing-uri` acaba ficando generica para ausencia real e para esse caso de valor whitespace-only no campo prioritario.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=inspectReadOnlyDiagnosticMissingUriLogicDocumentally`;
+	- `inspectionScope=documentalOnly`;
+	- `previousEnvPresenceConfirmed=true`;
+	- `previousMongoUriPresentForNode=true`;
+	- `previousMongodbUriPresentForNode=true`;
+	- `previousDiagnosticResult=red`;
+	- `previousDiagnosticExecutionResult=abort`;
+	- `previousBlockedReason=missing-uri`;
+	- `previousConnectionAttempted=false`;
+	- `scriptInspected=true`;
+	- `uriReadLogicInspected=true`;
+	- `missingUriGuardInspected=true`;
+	- `placeholderRejectionInspected=false`;
+	- `uriSchemeValidationInspected=true`;
+	- `localUriRejectionInspected=true`;
+	- `mongoMemoryGuardInspected=true`;
+	- `possibleCauseIdentified=true`;
+	- `possibleCauseSummary=precedencia de MONGO_URI sobre MONGODB_URI antes do trim pode transformar valor whitespace-only em missing-uri mesmo com MONGODB_URI valido`;
+	- `codeChanged=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=fixReadOnlyDiagnosticMissingUriLogicInSeparateMicrocut`;
+	- `secondaryCandidate=reviewReadOnlyDiagnosticScriptImplementationAgain`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so inspecao documental;
+	- nao executa o script;
+	- nao imprime URI;
+	- nao imprime valor, tamanho, prefixo, host, usuario ou senha;
+	- nao conecta Mongo real;
+	- nao altera codigo;
+	- nao declara producao pronta;
+	- nao faz push agora.
+- Gates:
+	- `selectedTarget=inspectReadOnlyDiagnosticMissingUriLogicDocumentally`
+	- `inspectionScope=documentalOnly`
+	- `previousEnvPresenceConfirmed=true`
+	- `previousMongoUriPresentForNode=true`
+	- `previousMongodbUriPresentForNode=true`
+	- `previousDiagnosticResult=red`
+	- `previousDiagnosticExecutionResult=abort`
+	- `previousBlockedReason=missing-uri`
+	- `previousConnectionAttempted=false`
+	- `scriptInspected=true`
+	- `uriReadLogicInspected=true`
+	- `missingUriGuardInspected=true`
+	- `placeholderRejectionInspected=false`
+	- `uriSchemeValidationInspected=true`
+	- `localUriRejectionInspected=true`
+	- `mongoMemoryGuardInspected=true`
+	- `possibleCauseIdentified=true`
+	- `possibleCauseSummary=precedencia de MONGO_URI sobre MONGODB_URI antes do trim pode transformar valor whitespace-only em missing-uri mesmo com MONGODB_URI valido`
+	- `codeChanged=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=fixReadOnlyDiagnosticMissingUriLogicInSeparateMicrocut`
+	- `secondaryCandidate=reviewReadOnlyDiagnosticScriptImplementationAgain`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
