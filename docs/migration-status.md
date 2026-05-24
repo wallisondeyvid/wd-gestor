@@ -22390,6 +22390,72 @@ Checkpoint tenant enforcement atual:
 	- `secondaryCandidate=closeFinalizeLocalFictionalValidationCheckpoint`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da autorizacao futura e isolada para executar o teste dedicado de contrato do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar teste, sem npm manual, sem boot, sem servidor, sem HTTP, sem login, sem sessao, sem mutacao, sem `start:mem`, sem Mongo real, sem seed ou master script e sem nova acao de push.
+- Limites da autorizacao futura desta rodada:
+	- executar somente `node --test tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- nao executar `npm test` completo;
+	- nao executar `npm run`;
+	- nao executar `start:mem`;
+	- nao iniciar servidor;
+	- nao fazer HTTP;
+	- nao fazer login;
+	- nao conectar Mongo real;
+	- nao conectar Mongo em memoria manualmente;
+	- nao tocar seed nem master scripts;
+	- nao alterar codigo;
+	- nao alterar o teste;
+	- nao alterar o helper;
+	- nao alterar `src`;
+	- nao alterar `package.json`;
+	- nao declarar producao pronta.
+- Criterios esperados para a execucao futura desta rodada:
+	- o teste deve passar isoladamente;
+	- se falhar, deve parar e registrar a falha sem correcao automatica;
+	- se passar, deve registrar o resultado em microcorte separado;
+	- nenhum outro teste deve ser executado junto;
+	- nenhum servidor deve ser iniciado.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=authorizeDedicatedHelperContractTestExecution`;
+	- `authorizationScope=documentalOnlyFutureExecution`;
+	- `dedicatedHelperContractTestExecutionAuthorizedDocumentally=true`;
+	- `authorizedFutureCommand=node --test tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- `authorizedFutureTestFile=tests/controlledMemoryOnlyFixtureHelper.contract.test.js`;
+	- `authorizedFutureExecutionScope=dedicatedHelperContractTestOnly`;
+	- `recommendedNextCandidate=executeDedicatedHelperContractTest`;
+	- `secondaryCandidate=closeHelperContractTestAuthorizationForPushDecision`.
+- Gates:
+	- `selectedTarget=authorizeDedicatedHelperContractTestExecution`
+	- `authorizationScope=documentalOnlyFutureExecution`
+	- `dedicatedHelperContractTestExecutionAuthorizedDocumentally=true`
+	- `authorizedFutureCommand=node --test tests/controlledMemoryOnlyFixtureHelper.contract.test.js`
+	- `authorizedFutureTestFile=tests/controlledMemoryOnlyFixtureHelper.contract.test.js`
+	- `authorizedFutureExecutionScope=dedicatedHelperContractTestOnly`
+	- `testExecutedNow=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `helperChangedNow=false`
+	- `testChangedNow=false`
+	- `fixtureRuntimeExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `sessionCreated=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `srcChanged=false`
+	- `packageJsonChanged=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
