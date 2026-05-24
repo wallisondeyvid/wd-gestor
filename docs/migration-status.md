@@ -19829,6 +19829,107 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da decisao de fechamento do bloco de planejamento da validacao funcional ficticia, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=closeFictionalValidationPlanningBlockForPushDecision`.
+	- `decisionScope=documentalOnly`.
+	- `previousCheckpoint=decideFixtureSpecReadiness`.
+	- `currentLocalCheckpoint=7d6f59a docs(ops): decide prontidao spec fixture ficticia`.
+	- `currentRemoteCheckpoint=9b44869 docs(ops): decide nivel pos endpoints passivos`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo desta decisao:
+	- `fictionalValidationPlanningBlockReadyForPush=true`.
+	- `controlledFictionalFixtureSpecReady=true`.
+	- `fixtureCreatedNow=false`.
+	- `fixtureCreationExecutionAuthorizedNow=false`.
+	- `loginExecuted=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `npmRunExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `mongoRealConnected=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `recommendedNextCandidate=humanPushFictionalValidationPlanningBlock`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Leitura objetiva deste fechamento:
+	- o bloco documental local de validacao funcional ficticia ja cobre planejamento, escopo, inspecao de fixtures, decisao de prontidao, desenho da fixture controlada e decisao sobre a prontidao da spec.
+	- a especificacao da fixture ficticia controlada foi considerada pronta para planejamento futuro e permanece sem autorizacao de criacao ou execucao.
+	- nao ha pendencia documental minima necessaria dentro deste mesmo bloco antes de uma decisao humana de push.
+	- por isso, o bloco fica marcado como pronto para push humano, sem avancar para helper, seed, Mongo real, master ou runtime.
+- Decisao recomendada consolidada:
+	- o bloco documental de validacao funcional ficticia esta pronto para push humano.
+	- nao avancar para criacao de helper ainda.
+	- nao autorizar criacao de fixture agora.
+	- nao autorizar login.
+	- nao autorizar mutacao.
+	- nao avancar para seed, Mongo real ou master.
+	- apos push humano, abrir novo bloco para planejar o `controlledMemoryOnlyFixtureHelper`.
+	- este microcorte e apenas decisao documental.
+	- nao fazer push neste microcorte.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- nenhum login foi executado neste microcorte.
+	- nenhuma credencial foi enviada neste microcorte.
+	- nenhuma mutacao foi executada neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=closeFictionalValidationPlanningBlockForPushDecision`
+	- `decisionScope=documentalOnly`
+	- `fictionalValidationPlanningBlockReadyForPush=true`
+	- `controlledFictionalFixtureSpecReady=true`
+	- `fixtureCreatedNow=false`
+	- `fixtureCreationExecutionAuthorizedNow=false`
+	- `loginExecuted=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `npmRunExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `mongoRealConnected=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=humanPushFictionalValidationPlanningBlock`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
