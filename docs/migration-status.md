@@ -25864,6 +25864,117 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=closeControlledRuntimeValidationMemoryOnlySubblock`
 	- `secondaryCandidate=planNextOperationalReadinessStepAfterMemoryOnlyGreen`
+
+- Checkpoint documental curto do fechamento do subbloco runtime `memory-only` como `green`, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando, sem npm manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem `start:mem:seed`, sem `start:gestor`, sem `start:atlas`, sem conexao a Mongo real, sem conexao manual de Mongo em memoria, sem seed, sem master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Resultado consolidado desta rodada:
+	- o subbloco runtime `memory-only` fica fechado como `green`;
+	- o fechamento usa como base a execucao anterior de `npm run start:mem` ja observada e publicada;
+	- este fechamento nao valida Mongo real;
+	- este fechamento nao valida `start:gestor`;
+	- este fechamento nao valida `start:atlas`;
+	- este fechamento nao valida login real;
+	- este fechamento nao valida mutacao real;
+	- este fechamento nao declara producao pronta;
+	- Mongo real, `start:gestor`, `start:atlas`, seed/master e producao continuam bloqueados.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=closeControlledRuntimeValidationMemoryOnlySubblock`;
+	- `decisionScope=documentalOnly`;
+	- `controlledRuntimeValidationMemoryOnlySubblockClosed=true`;
+	- `controlledRuntimeValidationMemoryOnlyResult=green`;
+	- `controlledRuntimeValidationMemoryOnlyPublished=true`;
+	- `controlledRuntimeValidationMemoryOnlyPostPushPublished=true`;
+	- `executedCommand=npm run start:mem`;
+	- `runtimeValidationMode=memoryOnly`;
+	- `startMemExecutedPreviously=true`;
+	- `memoryOnlyRuntimeValidated=true`;
+	- `mongoMemoryObserved=true`;
+	- `mongoRealConnected=false`;
+	- `atlasConnected=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `productionReady=false`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `mongoRealValidated=false`;
+	- `startGestorValidated=false`;
+	- `startAtlasValidated=false`;
+	- `loginRealValidated=false`;
+	- `realMutationValidated=false`;
+	- `planRealMongoTransitionBlockedForNow=true`;
+	- `authorizeStartGestorOrAtlasNowBlocked=true`;
+	- `productionReadinessDecisionBlockedForNow=true`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=humanPushRuntimeMemoryOnlyGreenSubblock`;
+	- `secondaryCandidate=planNextOperationalReadinessStepAfterMemoryOnlyGreen`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa nada;
+	- este fechamento nao valida Mongo real;
+	- este fechamento nao valida `start:gestor`;
+	- este fechamento nao valida `start:atlas`;
+	- este fechamento nao valida login real;
+	- este fechamento nao valida mutacao real;
+	- este fechamento nao declara producao pronta;
+	- Mongo real, `start:gestor`, `start:atlas`, seed/master e producao continuam bloqueados.
+- Gates:
+	- `selectedTarget=closeControlledRuntimeValidationMemoryOnlySubblock`
+	- `decisionScope=documentalOnly`
+	- `controlledRuntimeValidationMemoryOnlySubblockClosed=true`
+	- `controlledRuntimeValidationMemoryOnlyResult=green`
+	- `controlledRuntimeValidationMemoryOnlyPublished=true`
+	- `controlledRuntimeValidationMemoryOnlyPostPushPublished=true`
+	- `executedCommand=npm run start:mem`
+	- `runtimeValidationMode=memoryOnly`
+	- `startMemExecutedPreviously=true`
+	- `memoryOnlyRuntimeValidated=true`
+	- `mongoMemoryObserved=true`
+	- `mongoRealConnected=false`
+	- `atlasConnected=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `productionReady=false`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `mongoRealValidated=false`
+	- `startGestorValidated=false`
+	- `startAtlasValidated=false`
+	- `loginRealValidated=false`
+	- `realMutationValidated=false`
+	- `planRealMongoTransitionBlockedForNow=true`
+	- `authorizeStartGestorOrAtlasNowBlocked=true`
+	- `productionReadinessDecisionBlockedForNow=true`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=humanPushRuntimeMemoryOnlyGreenSubblock`
+	- `secondaryCandidate=planNextOperationalReadinessStepAfterMemoryOnlyGreen`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
