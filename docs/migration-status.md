@@ -18643,6 +18643,97 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da decisao pos-execucao da inspecao de endpoints passivos sem mutacao, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=decideAfterPassiveEndpointsInspectionWithoutMutation`.
+	- `previousCheckpoint=executePassiveEndpointsInspectionWithoutMutation`.
+	- `currentLocalCheckpoint=7468c5c docs(ops): registra endpoints passivos sem mutacao`.
+	- `currentRemoteCheckpoint=25329cf docs(ops): decide pos observacao runtime sem seed`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo da decisao desta rodada:
+	- `previousPassiveEndpointsInspectionResult=green`.
+	- `startMemExecutedAgain=true`.
+	- `memoryMongoObserved=true`.
+	- `serverStarted=true`.
+	- `serverStopped=true`.
+	- `mongoRealConnected=false`.
+	- `seedExecuted=false`.
+	- `ensureMasterUserExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `realLoginUsed=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `forbiddenEndpointCalled=false`.
+	- `passiveEndpointsObserved=true`.
+	- `observedEndpointsAllGreen=true`.
+	- `passiveEndpointsBlockReadyForPush=true`.
+	- `recommendedNextCandidate=humanPushPassiveEndpointsBlock`.
+	- `nextExecutionAuthorized=false`.
+	- `productionReady=false`.
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada:
+	- o bloco de endpoints passivos sem mutacao esta pronto para push humano.
+	- nenhuma nova execucao fica autorizada nesta rodada.
+	- nao avancar para login real.
+	- nao avancar para mutacoes.
+	- nao avancar para seed.
+	- nao avancar para Mongo real.
+	- nao avancar para master.
+	- nao declarar producao pronta.
+	- apos o push humano, abrir novo bloco para decidir o proximo nivel de validacao.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=decideAfterPassiveEndpointsInspectionWithoutMutation`
+	- `previousPassiveEndpointsInspectionResult=green`
+	- `startMemExecutedAgain=true`
+	- `memoryMongoObserved=true`
+	- `serverStarted=true`
+	- `serverStopped=true`
+	- `mongoRealConnected=false`
+	- `seedExecuted=false`
+	- `ensureMasterUserExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `realLoginUsed=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `forbiddenEndpointCalled=false`
+	- `passiveEndpointsObserved=true`
+	- `observedEndpointsAllGreen=true`
+	- `passiveEndpointsBlockReadyForPush=true`
+	- `recommendedNextCandidate=humanPushPassiveEndpointsBlock`
+	- `nextExecutionAuthorized=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
