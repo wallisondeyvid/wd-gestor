@@ -23287,6 +23287,103 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da auditoria dos modulos tenant-sensitive, consolidado nesta rodada apenas por leitura documental e de codigo em `docs/migration-status.md`, sem executar qualquer comando, sem auditoria automatizada, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem Mongo real, sem conexao manual de Mongo em memoria, sem seed ou master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Achados principais desta rodada:
+	- `condominios` concentra boa parte do risco por manter corredor V2 com `req.unitScope` e repositories escopados, mas ainda conviver com fallback global quando `WDG_MULTI_TENANT` nao esta enforced, services com filtros manuais por `unidade_id` e um modulo principal grande com queries diretas;
+	- `usuarios` e `userApi` continuam sensiveis por combinarem auth-context canonicamente resolvido com queries diretas a `User`, `Funcionario`, `Unidade` e `Modulo`, mais mutacoes administrativas e caminhos legados por role ou master;
+	- `gestor/auth/contexto` aparece como o modulo mais claramente canonico desta rodada, com `authContextResolver`, memberships, `active_unidade_id` e `req.unitScope` formando a cadeia principal de contexto tenant-aware;
+	- `portal-morador` depende de unidade selecionada, vinculos e sessao portal, mas ainda agrega `unidadeIds` de varias fontes e faz consultas diretas para compor sessao, login e vinculos;
+	- `escalas` segue hibrido, com varios handlers apoiados em `req.user` ou `sessionUser`, consultas diretas por `unidade_id`, cluster permitido manual e bypass master explicito;
+	- `assembleias` mistura repository V2 baseado em `resolveModel(unitScope)` com logicas shared e rotas antigas ainda apoiadas em queries diretas e excecoes para `isMaster`;
+	- `feedback` administrativo usa `req.unitScope` ou `active_unidade_id` semeado por auth-context, mas continua dependendo de pontes e data access hibrido ja classificado em auditoria anterior;
+	- `ocorrencias` nao apareceu como modulo proprio relevante nesta leitura; para este microcorte fica classificado como `notApplicableNow`, sem impedir revisao futura se surgir superficie especifica.
+- Classificacao dos achados desta rodada:
+	- `saferTenantSensitiveModules`:
+		- `gestor/auth/contexto`, com `src/modules/gestor/app/services/authContextResolver.js`, `authContextReadDataFacade.js`, `UserMembershipRepository.js` e middlewares correlatos ancorando memberships, `active_unidade_id` e auth-context canonico;
+		- partes do `feedback` administrativo, com `src/modules/gestor/app/routes/feedbackApi.js` semeando `req.unitScope` a partir de `active_unidade_id` antes dos handlers administrativos;
+		- corredores V2 de `condominios` e `assembleias` que ja entram por `req.unitScope` ou repository com `resolveModel(unitScope)`.
+	- `needsTenantSensitiveModuleReview`:
+		- `condominios`, por combinar `requireUnitScope`, repositories escopados e varios services ou handlers com filtro manual de `unidade_id`, alem de um modulo principal ainda grande em `src/modules/condominios/app/condominios-app.js`;
+		- `usuarios/userApi/usuario`, por misturar auth-context, sessao legada, queries diretas, lookups globais e mutacoes administrativas;
+		- `portal-morador`, por compor sessao e vinculos a partir de multiplas fontes de `unidade_id` e consultas diretas a modelos;
+		- `escalas`, por apoiar controle de acesso em `req.user` ou `sessionUser`, cluster permitido manual e consultas diretas;
+		- `assembleias`, por ainda depender de coexistencia entre repository V2 e rotas ou logicas shared com acesso direto a modelos;
+		- `feedback`, por usar ponte administrativa contextual, mas ainda depender de data access hibrido e facades ja classificados como revisao pendente.
+	- `masterOrGlobalSensitiveModuleBypasses`:
+		- `src/shared/tenant/assertTenantScope.js` via `ALLOW_GLOBAL`;
+		- `userApi`, `usuarios` e `gestor` auxiliar com ramos globais legitimos para `master` e `admin`;
+		- `portal-morador` e `assembleias` com usos explicitos de `isMaster` em partes do fluxo;
+		- `escalas` com bypass master e consultas globais condicionadas ao perfil;
+		- `condominios` com fallback para escopo global quando multi-tenant nao esta enforced.
+	- `blockedOperationalSensitiveModules`:
+		- superfices ligadas a `start:gestor`, `start:atlas`, `start:mem`, Mongo real, seeds, master scripts e producao;
+		- pontos de provisioning, bootstrap e runtime global ja classificados como fora do escopo desta leitura documental;
+		- protecao do usuario master real `wallisondeyvid13@gmail.com` continua obrigatoria e fora de qualquer uso operacional nesta rodada.
+	- `unknownOrAmbiguousSensitiveModules`:
+		- `src/routes/usuario.js` e superficies legadas correlatas, por dependerem de contexto previamente reidratado e regras antigas de autorizacao;
+		- partes do `condominios-app.js`, `portalAuth.js`, `escalas/app/routes/userApi.js` e `assembleias/routes/execution.routes.js` em que o isolamento ainda depende da cadeia completa e nao apenas do metodo local;
+		- `feedback/ocorrencias`, porque feedback apareceu como aplicavel e ocorrencias nao se materializou como modulo proprio revisavel nesta rodada.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=auditTenantSensitiveModulesDocumentally`;
+	- `auditScope=documentalCodeReadOnly`;
+	- `tenantSensitiveModulesAudited=true`;
+	- `codeReadOnly=true`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `condominiosModuleReviewed=true`;
+	- `usuariosModuleReviewed=true`;
+	- `gestorModuleReviewed=true`;
+	- `portalMoradorModuleReviewed=true`;
+	- `escalasModuleReviewed=true`;
+	- `assembleiasModuleReviewed=true`;
+	- `feedbackOcorrenciasReviewed=true`;
+	- `tenantSensitiveModuleCriticalGapFound=false`;
+	- `recommendedNextCandidate=auditTenantMutationSurfacesDocumentally`;
+	- `secondaryCandidate=auditTenantBypassAndMasterScopeDocumentally`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas leitura e documentacao;
+	- nao executar `npm`, `npm run`, `npm test` ou guardrails;
+	- nao abrir servidor, navegador ou fazer HTTP;
+	- nao fazer login, nao enviar credenciais e nao fazer mutacao;
+	- nao conectar Mongo real nem Mongo em memoria;
+	- nao alterar codigo, nao alterar testes e nao criar arquivos;
+	- nao fazer push;
+	- nao declarar producao pronta.
+- Gates:
+	- `selectedTarget=auditTenantSensitiveModulesDocumentally`
+	- `auditScope=documentalCodeReadOnly`
+	- `tenantSensitiveModulesAudited=true`
+	- `codeReadOnly=true`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `condominiosModuleReviewed=true`
+	- `usuariosModuleReviewed=true`
+	- `gestorModuleReviewed=true`
+	- `portalMoradorModuleReviewed=true`
+	- `escalasModuleReviewed=true`
+	- `assembleiasModuleReviewed=true`
+	- `feedbackOcorrenciasReviewed=true`
+	- `tenantSensitiveModuleCriticalGapFound=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
