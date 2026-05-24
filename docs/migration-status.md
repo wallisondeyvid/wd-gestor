@@ -20320,6 +20320,141 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto da decisao sobre a prontidao da implementacao futura do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada sem criar helper, sem criar arquivo, sem alterar codigo, sem criar fixture, sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem fazer login, sem enviar credenciais, sem fazer mutacoes, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=decideControlledHelperImplementationReadiness`.
+	- `decisionScope=documentalOnly`.
+	- `previousCheckpoint=inspectHelperImplementationCandidatesDocumentally`.
+	- `currentLocalCheckpoint=110f9a1 docs(ops): inspeciona candidatos helper fixture`.
+	- `currentRemoteCheckpoint=9499455 docs(ops): fecha planejamento validacao ficticia`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo desta decisao:
+	- `helperImplementationCandidatesInspected=true`.
+	- `safeReusablePatternsFound=true`.
+	- `blockedImplementationSourcesMapped=true`.
+	- `missingPiecesForHelperMapped=true`.
+	- `controlledHelperImplementationReadyForPlanning=true`.
+	- `controlledHelperCreationReadyNow=false`.
+	- `helperCreatedNow=false`.
+	- `helperCreationExecutionAuthorizedNow=false`.
+	- `fixtureCreatedNow=false`.
+	- `fixtureCreationExecutionAuthorizedNow=false`.
+	- `codeChanged=false`.
+	- `newFileCreated=false`.
+	- `npmRunExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `loginExecuted=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `mongoRealConnected=false`.
+	- `memoryMongoConnectedManually=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Leitura objetiva desta prontidao:
+	- a inspecao ja encontrou padroes seguros suficientes para orientar o desenho do helper futuro.
+	- as fontes bloqueadas estao suficientemente mapeadas para excluir seed, master, debug endpoint e Mongo real da futura implementacao.
+	- as lacunas restantes ainda sao estruturais e de guardrails, nao de ausencia total de materia-prima tecnica.
+	- por isso, a implementacao futura esta pronta apenas para planejamento detalhado, nao para criacao imediata de arquivo ou codigo.
+	- antes de qualquer implementacao, ainda faltam guardas documentadas, decisao de localizacao do helper, definicao do escopo exato entre `User` simples e `User` com `Unidade/UserMembership`, e decisao sobre marcador seguro de fixture controlada.
+- Justificativa consolidada:
+	- os padroes seguros existentes em testes reduzem o risco de partir do zero.
+	- ao mesmo tempo, a fragmentacao atual e a ausencia de guardas compartilhadas tornam precipitado criar helper agora.
+	- a proxima etapa deve consolidar guardrails documentais antes de qualquer mudanca de codigo.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=designHelperGuardrailsDocumentally`.
+	- `secondaryCandidate=planHelperFilePlacementDocumentally`.
+	- este microcorte e apenas decisao documental.
+	- nao criar helper agora.
+	- nao criar arquivo.
+	- nao alterar codigo.
+	- nao criar fixture.
+	- nao executar nada.
+	- nao fazer login.
+	- nao enviar credenciais.
+	- nao criar, editar ou excluir dados.
+	- nao rodar seed.
+	- nao tocar usuario master real.
+	- nao executar `master:set` ou `master:set:win`.
+	- nao executar `start:mem:seed`.
+	- nao executar `start:gestor` ou `start:atlas`.
+	- nao conectar Mongo real.
+	- nao declarar producao pronta.
+	- nao fazer push.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- nenhum login foi executado neste microcorte.
+	- nenhuma credencial foi enviada neste microcorte.
+	- nenhuma mutacao foi executada neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum arquivo novo foi criado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=decideControlledHelperImplementationReadiness`
+	- `decisionScope=documentalOnly`
+	- `helperImplementationCandidatesInspected=true`
+	- `safeReusablePatternsFound=true`
+	- `blockedImplementationSourcesMapped=true`
+	- `missingPiecesForHelperMapped=true`
+	- `controlledHelperImplementationReadyForPlanning=true`
+	- `controlledHelperCreationReadyNow=false`
+	- `helperCreatedNow=false`
+	- `helperCreationExecutionAuthorizedNow=false`
+	- `fixtureCreatedNow=false`
+	- `fixtureCreationExecutionAuthorizedNow=false`
+	- `codeChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=designHelperGuardrailsDocumentally`
+	- `secondaryCandidate=planHelperFilePlacementDocumentally`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
