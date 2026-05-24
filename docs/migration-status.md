@@ -25559,6 +25559,87 @@ Checkpoint tenant enforcement atual:
 	- `secondaryCandidate=reviewRuntimeMemoryOnlyAuthorizationBeforeExecution`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto da execucao controlada e isolada de `npm run start:mem`, consolidado nesta rodada com observacao exclusiva de boot e logs, sem HTTP, sem navegador, sem login, sem mutacao, sem Mongo real, sem seed, sem master script, sem `cleanupWrongEmail`, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Evidencias observadas nesta rodada:
+	- `npm run start:mem` executado como unico comando runtime autorizado;
+	- `MONGO_MEMORY=1` apareceu no boot;
+	- `mongoUri efetiva = (in-memory)` apareceu nos logs;
+	- conexao ocorreu em `mongodb://127.0.0.1:50948/` com marcacao explicita de `(in-memory)`;
+	- servidor subiu e registrou `Servidor ouvindo na porta 3000`;
+	- o processo foi interrompido apos evidencia suficiente de boot seguro;
+	- nao houve indicio de Mongo real, Atlas, seed, master script ou `cleanupWrongEmail`.
+- Resultado consolidado desta rodada:
+	- a execucao controlada `memory-only` foi validada por observacao de boot e logs;
+	- o runtime subiu em modo `memory-only`;
+	- nenhum Mongo real foi usado;
+	- nenhuma seed foi executada;
+	- nenhum master script foi executado;
+	- nenhum `cleanupWrongEmail` foi executado;
+	- nenhuma credencial real foi usada;
+	- nenhum login foi feito;
+	- nenhuma mutacao foi feita;
+	- producao continua nao pronta.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=executeControlledRuntimeValidationMemoryOnlyInSeparateMicrocut`;
+	- `executedCommand=npm run start:mem`;
+	- `controlledRuntimeExecuted=true`;
+	- `controlledRuntimeResult=green`;
+	- `runtimeValidationMode=memoryOnly`;
+	- `startMemExecuted=true`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmTestExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`.
+- Reforcos obrigatorios desta rodada:
+	- a execucao realizada foi somente `npm run start:mem`;
+	- nao houve HTTP, navegador, login ou mutacao;
+	- nao houve Mongo real, Atlas, seed, master script ou `cleanupWrongEmail`;
+	- `start:mem:seed`, `start:gestor` e `start:atlas` permanecem nao executados;
+	- producao continua nao pronta;
+	- este microcorte nao faz push.
+- Gates:
+	- `selectedTarget=executeControlledRuntimeValidationMemoryOnlyInSeparateMicrocut`
+	- `executedCommand=npm run start:mem`
+	- `controlledRuntimeExecuted=true`
+	- `controlledRuntimeResult=green`
+	- `runtimeValidationMode=memoryOnly`
+	- `startMemExecuted=true`
+	- `cleanupWrongEmailExecuted=false`
+	- `mongoRealConnected=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmTestExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `mongoRealConnected=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
