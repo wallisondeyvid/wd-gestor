@@ -25075,6 +25075,126 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=decideWhetherControlledRuntimeValidationIsNeeded`
 	- `secondaryCandidate=planControlledRuntimeValidationMemoryOnly`
+
+- Checkpoint documental curto da decisao sobre a necessidade de validacao runtime controlada, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando operacional, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem `start:mem:seed`, sem `start:gestor`, sem `start:atlas`, sem conexao a Mongo real, sem conexao manual de Mongo em memoria, sem seed, sem master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Comparacao documental das opcoes desta rodada:
+	- `keepRuntimeValidationPaused`:
+		- manter runtime pausado e seguir apenas com documentacao e planejamento;
+		- e o caminho de menor risco absoluto;
+		- porem nao avanca a validacao operacional.
+	- `planControlledRuntimeValidationMemoryOnly`:
+		- planeja uma futura validacao com `start:mem` ou equivalente `memory-only`;
+		- continua sem execucao nesta rodada;
+		- valida apenas runtime controlado, nao producao;
+		- e a opcao recomendada se quisermos avancar com seguranca.
+	- `authorizeStartMemExecutionNow`:
+		- permanece prematuro neste microcorte;
+		- exige microcorte proprio e autorizacao explicita de comando;
+		- permanece bloqueado agora.
+	- `authorizeStartGestorOrAtlasNow`:
+		- permanece proibido agora;
+		- envolve runtime real e Mongo real;
+		- permanece bloqueado.
+	- `productionReadinessDecision`:
+		- permanece prematuro;
+		- producao continua nao pronta;
+		- permanece bloqueado.
+- Resultado consolidado desta rodada:
+	- a decisao sobre necessidade de validacao runtime controlada fica concluida apenas em nivel documental;
+	- existe necessidade de trilha futura para validacao runtime controlada se o objetivo for avancar a prontidao operacional com o menor risco disponivel;
+	- essa trilha futura deve ser planejada em ambiente `memory-only`, sem runtime real, sem Mongo real e sem declaracao de producao pronta;
+	- qualquer autorizacao de execucao futura continua exigindo microcorte proprio, comando exato, ambiente definido e criterios de abortar.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=decideWhetherControlledRuntimeValidationIsNeeded`;
+	- `decisionScope=documentalOnly`;
+	- `controlledRuntimeValidationDecisionCompleted=true`;
+	- `controlledRuntimeValidationNeeded=true`;
+	- `recommendedRuntimeValidationPath=planControlledRuntimeValidationMemoryOnly`;
+	- `planControlledRuntimeValidationMemoryOnlyRecommended=true`;
+	- `keepRuntimeValidationPausedConsidered=true`;
+	- `authorizeStartMemExecutionNowBlocked=true`;
+	- `authorizeStartGestorOrAtlasNowBlocked=true`;
+	- `productionReadinessDecisionBlockedForNow=true`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `controlledRuntimeExecutedNow=false`;
+	- `startMemAuthorizedNow=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `mongoRealAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=planControlledRuntimeValidationMemoryOnly`;
+	- `secondaryCandidate=humanPushPostReadinessDecisionCheckpoint`.
+- Reforcos obrigatorios desta rodada:
+	- esta decisao nao executa nada;
+	- esta decisao nao autoriza `start:mem`;
+	- esta decisao nao autoriza `start:gestor`;
+	- esta decisao nao autoriza `start:atlas`;
+	- esta decisao nao autoriza Mongo real;
+	- esta decisao nao autoriza seed/master;
+	- esta decisao nao declara producao pronta;
+	- qualquer execucao futura deve ter microcorte proprio, comando exato, ambiente definido e criterios de abortar.
+- Gates:
+	- `selectedTarget=decideWhetherControlledRuntimeValidationIsNeeded`
+	- `decisionScope=documentalOnly`
+	- `controlledRuntimeValidationDecisionCompleted=true`
+	- `controlledRuntimeValidationNeeded=true`
+	- `recommendedRuntimeValidationPath=planControlledRuntimeValidationMemoryOnly`
+	- `planControlledRuntimeValidationMemoryOnlyRecommended=true`
+	- `keepRuntimeValidationPausedConsidered=true`
+	- `authorizeStartMemExecutionNowBlocked=true`
+	- `authorizeStartGestorOrAtlasNowBlocked=true`
+	- `productionReadinessDecisionBlockedForNow=true`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `controlledRuntimeExecutedNow=false`
+	- `startMemAuthorizedNow=false`
+	- `startGestorAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `mongoRealAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=planControlledRuntimeValidationMemoryOnly`
+	- `secondaryCandidate=humanPushPostReadinessDecisionCheckpoint`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
