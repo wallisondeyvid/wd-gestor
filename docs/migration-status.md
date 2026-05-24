@@ -18734,6 +18734,111 @@ Checkpoint tenant enforcement atual:
 	- `productionReadyDeclared=false`
 	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
 
+- Checkpoint documental curto do registro pos-push do bloco de endpoints passivos sem mutacao, consolidado nesta rodada sem executar npm, sem executar npm run, sem executar npm test, sem executar guardrail, sem executar parity manual, sem executar boot, sem iniciar servidor, sem conectar Mongo real, sem conectar Mongo em memoria manualmente, sem executar `start:gestor`, sem executar `start:atlas`, sem executar `start:mem`, sem executar `start:mem:seed`, sem executar `master:set`, sem executar `master:set:win`, sem fazer requisicoes HTTP, sem abrir navegador, sem alterar `package.json`, sem alterar `src/start.js`, sem alterar `src/server/createServer.js`, sem alterar `src`, sem alterar `tests`, sem fazer push e sem declarar producao pronta.
+- Identificacao deste checkpoint:
+	- `phase=controlledLocalBootPlanning`.
+	- `selectedTarget=recordPostPushPassiveEndpointsBlock`.
+	- `previousCheckpoint=decideAfterPassiveEndpointsInspectionWithoutMutation`.
+	- `currentLocalCheckpoint=03435fe docs(ops): decide pos endpoints passivos sem mutacao`.
+	- `currentRemoteCheckpoint=03435fe docs(ops): decide pos endpoints passivos sem mutacao`.
+	- `chosenApproach=mongodbControlledValidation`.
+	- `postgresOutOfRoadmap=true`.
+- Consolidado objetivo do pos-push desta rodada:
+	- `localRemoteSynced=true`.
+	- `aheadCount=0`.
+	- `humanPushExecuted=true`.
+	- `pushedRange=25329cf..03435fe`.
+	- `pushedHead=03435fe`.
+	- `pushPrePushNpmTestResult=green`.
+	- `pushPrePushTests=2364`.
+	- `pushPrePushSuites=17`.
+	- `pushPrePushPass=2362`.
+	- `pushPrePushFail=0`.
+	- `pushPrePushSkipped=2`.
+	- `pushPrePushDurationMs=232013.8291`.
+	- `passiveEndpointsBlockPublished=true`.
+	- `passiveEndpointsInspectionResult=green`.
+	- `observedEndpointsAllGreen=true`.
+	- `mongoRealConnected=false`.
+	- `seedExecuted=false`.
+	- `ensureMasterUserExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `realLoginUsed=false`.
+	- `credentialsSubmitted=false`.
+	- `dataMutationExecuted=false`.
+	- `forbiddenEndpointCalled=false`.
+	- `productionReady=false`.
+	- `recommendedNextCandidate=decideNextValidationLevelAfterPassiveEndpoints`.
+	- `nextExecutionAuthorized=false`.
+- Leitura objetiva deste checkpoint pos-push:
+	- o bloco de endpoints passivos sem mutacao foi publicado.
+	- a publicacao nao autoriza nenhuma nova execucao automatica.
+	- nao avancar para login real.
+	- nao avancar para mutacoes.
+	- nao avancar para seed.
+	- nao avancar para Mongo real.
+	- nao avancar para master.
+	- nao declarar producao pronta.
+	- nao fazer push neste microcorte.
+	- o pre-push humano registrou `npm test` verde com `tests=2364`, `suites=17`, `pass=2362`, `fail=0`, `skipped=2` e `duration_ms=232013.8291`.
+- Confirmacoes obrigatorias deste microcorte:
+	- nenhum comando npm foi executado neste microcorte.
+	- nenhum comando npm run foi executado neste microcorte.
+	- nenhum npm test foi executado neste microcorte.
+	- nenhum guardrail foi executado neste microcorte.
+	- nenhuma parity manual foi executada neste microcorte.
+	- nenhum boot foi executado neste microcorte.
+	- nenhum servidor foi iniciado neste microcorte.
+	- nenhum Mongo real foi conectado neste microcorte.
+	- nenhum Mongo em memoria foi conectado manualmente neste microcorte.
+	- `start:gestor` nao foi executado neste microcorte.
+	- `start:atlas` nao foi executado neste microcorte.
+	- `start:mem` nao foi executado neste microcorte.
+	- `start:mem:seed` nao foi executado neste microcorte.
+	- `master:set` nao foi executado neste microcorte.
+	- `master:set:win` nao foi executado neste microcorte.
+	- nenhuma requisicao HTTP foi feita neste microcorte.
+	- nenhum navegador foi aberto neste microcorte.
+	- `package.json` nao foi alterado.
+	- `src/start.js` nao foi alterado.
+	- `src/server/createServer.js` nao foi alterado.
+	- nenhum arquivo em `src` foi alterado.
+	- nenhum arquivo em `tests` foi alterado.
+	- nenhum push novo foi executado neste microcorte.
+	- producao continua nao pronta.
+- Gates:
+	- `selectedTarget=recordPostPushPassiveEndpointsBlock`
+	- `localRemoteSynced=true`
+	- `aheadCount=0`
+	- `humanPushExecuted=true`
+	- `pushedRange=25329cf..03435fe`
+	- `pushedHead=03435fe`
+	- `pushPrePushNpmTestResult=green`
+	- `pushPrePushTests=2364`
+	- `pushPrePushSuites=17`
+	- `pushPrePushPass=2362`
+	- `pushPrePushFail=0`
+	- `pushPrePushSkipped=2`
+	- `pushPrePushDurationMs=232013.8291`
+	- `passiveEndpointsBlockPublished=true`
+	- `passiveEndpointsInspectionResult=green`
+	- `observedEndpointsAllGreen=true`
+	- `mongoRealConnected=false`
+	- `seedExecuted=false`
+	- `ensureMasterUserExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `realLoginUsed=false`
+	- `credentialsSubmitted=false`
+	- `dataMutationExecuted=false`
+	- `forbiddenEndpointCalled=false`
+	- `productionReady=false`
+	- `recommendedNextCandidate=decideNextValidationLevelAfterPassiveEndpoints`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `gitPushExecuted=false`
+	- `productionReadyDeclared=false`
+	- `blockedReasons=[start:mem:seed,start:gestor,start:atlas]`
+
 - Checkpoint documental curto da validacao verde dos testes adjacentes de detalhe feedback apos a protecao focal tenant-aware, consolidado nesta rodada sem alteracao em `src`, sem alteracao em `tests`, sem alteracao em `package.json`, sem Mongo real, sem query real e sem relatorio real.
 - Testes adjacentes validados nesta rodada:
 	- `tests/gestor-feedback-detail-owner-structural-seam.test.js`;
