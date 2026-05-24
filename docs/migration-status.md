@@ -30779,6 +30779,117 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=reconfigureMongoUriValueInCurrentPowerShellWithoutPrintingSecret`
 	- `secondaryCandidate=keepDiagnosticPausedUntilEnvShapeValid`
+
+- Checkpoint documental curto do registro da reconfiguracao da URI Mongo no PowerShell atual com shape valida para Node, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar o diagnostico real, sem conectar Mongo real, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos novos e sem nova acao de push.
+- Resultado seguro consolidado desta rodada:
+	- `MONGO_URI_PRESENT=true`;
+	- `MONGO_URI_TRIM_NONEMPTY=true`;
+	- `MONGO_URI_MONGO_SCHEME=true`;
+	- `MONGODB_URI_PRESENT=true`;
+	- `MONGODB_URI_TRIM_NONEMPTY=true`;
+	- `MONGODB_URI_MONGO_SCHEME=true`;
+	- portanto, no processo Node observado apos a reconfiguracao, ambas as variaveis ficaram presentes, nao vazias apos `trim()` e com esquema Mongo valido.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=reconfigureMongoUriValueInCurrentPowerShellWithoutPrintingSecret`;
+	- `diagnosticScope=envShapeOnlyNoSecretAfterReconfiguration`;
+	- `previousMongoUriPresentForNode=false`;
+	- `previousMongodbUriPresentForNode=false`;
+	- `currentPowerShellUriAssignmentAttempted=true`;
+	- `nodeEnvShapeCheckExecuted=true`;
+	- `mongoUriPresentForNode=true`;
+	- `mongoUriTrimNonEmpty=true`;
+	- `mongoUriMongoScheme=true`;
+	- `mongodbUriPresentForNode=true`;
+	- `mongodbUriTrimNonEmpty=true`;
+	- `mongodbUriMongoScheme=true`;
+	- `anyMongoUriTrimNonEmpty=true`;
+	- `anyMongoUriMongoScheme=true`;
+	- `uriValuePrinted=false`;
+	- `uriLengthPrinted=false`;
+	- `uriPrefixPrinted=false`;
+	- `uriHostPrinted=false`;
+	- `uriUserPrinted=false`;
+	- `uriPasswordPrinted=false`;
+	- `uriDatabasePrinted=false`;
+	- `uriSecretExposed=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=authorizeReadOnlyDiagnosticAfterEnvShapeConfirmed`;
+	- `secondaryCandidate=executeReadOnlyDiagnosticAfterEnvShapeConfirmedInSeparateMicrocut`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte apenas registra shape valida;
+	- nao executa o diagnostico real;
+	- nao imprime URI;
+	- nao conecta Mongo real;
+	- nao declara producao pronta;
+	- nao faz push agora.
+- Gates:
+	- `selectedTarget=reconfigureMongoUriValueInCurrentPowerShellWithoutPrintingSecret`
+	- `diagnosticScope=envShapeOnlyNoSecretAfterReconfiguration`
+	- `previousMongoUriPresentForNode=false`
+	- `previousMongodbUriPresentForNode=false`
+	- `currentPowerShellUriAssignmentAttempted=true`
+	- `nodeEnvShapeCheckExecuted=true`
+	- `mongoUriPresentForNode=true`
+	- `mongoUriTrimNonEmpty=true`
+	- `mongoUriMongoScheme=true`
+	- `mongodbUriPresentForNode=true`
+	- `mongodbUriTrimNonEmpty=true`
+	- `mongodbUriMongoScheme=true`
+	- `anyMongoUriTrimNonEmpty=true`
+	- `anyMongoUriMongoScheme=true`
+	- `uriValuePrinted=false`
+	- `uriLengthPrinted=false`
+	- `uriPrefixPrinted=false`
+	- `uriHostPrinted=false`
+	- `uriUserPrinted=false`
+	- `uriPasswordPrinted=false`
+	- `uriDatabasePrinted=false`
+	- `uriSecretExposed=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeReadOnlyDiagnosticAfterEnvShapeConfirmed`
+	- `secondaryCandidate=executeReadOnlyDiagnosticAfterEnvShapeConfirmedInSeparateMicrocut`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
