@@ -25195,6 +25195,150 @@ Checkpoint tenant enforcement atual:
 	- `pushExecuted=false`
 	- `recommendedNextCandidate=planControlledRuntimeValidationMemoryOnly`
 	- `secondaryCandidate=humanPushPostReadinessDecisionCheckpoint`
+
+- Checkpoint documental curto do planejamento da validacao runtime controlada `memory-only`, consolidado nesta rodada apenas por documentacao em `docs/migration-status.md`, sem executar qualquer comando operacional, sem npm manual, sem guardrail manual, sem parity manual, sem boot, sem servidor, sem HTTP, sem navegador, sem login, sem mutacao, sem `start:mem`, sem `start:mem:seed`, sem `start:gestor`, sem `start:atlas`, sem conexao a Mongo real, sem conexao manual de Mongo em memoria, sem seed, sem master script, sem alterar codigo, sem alterar testes, sem criar arquivos e sem nova acao de push.
+- Planejamento documental desta rodada:
+	- `runtimeValidationMode`:
+		- `memory-only`;
+		- sem Mongo real;
+		- sem seed;
+		- sem login real;
+		- sem mutacao;
+		- sem producao pronta.
+	- `candidateCommand`:
+		- comando candidato futuro: `npm run start:mem`;
+		- ainda nao executar agora;
+		- exigir microcorte proprio para autorizacao e execucao futura.
+	- `allowedObservationScope`:
+		- observar boot;
+		- observar logs;
+		- se autorizado futuramente, healthcheck ou endpoint passivo apenas;
+		- sem credenciais;
+		- sem login;
+		- sem `POST`, `PUT`, `PATCH` ou `DELETE`;
+		- sem seed.
+	- `successCriteria`:
+		- boot sobe em Mongo em memoria;
+		- logs nao indicam Mongo real;
+		- nenhuma seed executada;
+		- nenhum master script executado;
+		- nenhum `cleanupWrongEmail` executado;
+		- parada limpa;
+		- producao continua nao pronta.
+	- `abortCriteria`:
+		- abortar se `MONGO_URI` ou `MONGODB_URI` real aparecer;
+		- abortar se seed, master ou `cleanupWrongEmail` aparecer;
+		- abortar se exigir login real;
+		- abortar se houver mutacao;
+		- abortar se o comando divergir do autorizado.
+	- `postRunDocumentationRequirements`:
+		- registrar logs principais;
+		- registrar se subiu;
+		- registrar se parou;
+		- registrar se houve erro;
+		- registrar explicitamente que nao houve Mongo real, seed, master, login ou mutacao.
+- Resultado consolidado desta rodada:
+	- a validacao runtime controlada `memory-only` fica planejada apenas em nivel documental;
+	- o comando candidato futuro fica definido como `npm run start:mem`, mas continua nao autorizado agora;
+	- o escopo permitido permanece estritamente observacional e passivo, sem credenciais, login ou mutacoes;
+	- qualquer futura execucao continua exigindo microcorte proprio, comando exato, ambiente definido e criterios de abortar.
+- Decisao principal consolidada nesta rodada:
+	- `selectedTarget=planControlledRuntimeValidationMemoryOnly`;
+	- `planningScope=documentalOnly`;
+	- `controlledRuntimeValidationPlanned=true`;
+	- `runtimeValidationMode=memoryOnly`;
+	- `candidateFutureCommand=npm run start:mem`;
+	- `candidateFutureCommandAuthorizedNow=false`;
+	- `startMemAuthorizedNow=false`;
+	- `startMemSeedAuthorizedNow=false`;
+	- `startGestorAuthorizedNow=false`;
+	- `startAtlasAuthorizedNow=false`;
+	- `mongoRealAuthorizedNow=false`;
+	- `seedMasterAuthorizedNow=false`;
+	- `loginAuthorizedNow=false`;
+	- `mutationAuthorizedNow=false`;
+	- `allowedObservationScopeMapped=true`;
+	- `successCriteriaMapped=true`;
+	- `abortCriteriaMapped=true`;
+	- `postRunDocumentationRequirementsMapped=true`;
+	- `operationalReadinessValidated=false`;
+	- `runtimeRealValidated=false`;
+	- `controlledRuntimeExecutedNow=false`;
+	- `productionReady=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `mongoRealConnected=false`;
+	- `memoryMongoConnectedManually=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `nextExecutionAuthorized=false`;
+	- `pushExecuted=false`;
+	- `recommendedNextCandidate=authorizeControlledRuntimeValidationMemoryOnlyFutureMicrocut`;
+	- `secondaryCandidate=humanPushControlledRuntimeValidationPlanningBlock`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documentacao;
+	- esta decisao nao autoriza `start:mem` agora;
+	- esta decisao nao autoriza `start:gestor`;
+	- esta decisao nao autoriza `start:atlas`;
+	- esta decisao nao autoriza Mongo real;
+	- esta decisao nao autoriza seed/master;
+	- esta decisao nao declara producao pronta;
+	- qualquer execucao futura deve ter microcorte proprio, comando exato, ambiente definido e criterios de abortar.
+- Gates:
+	- `selectedTarget=planControlledRuntimeValidationMemoryOnly`
+	- `planningScope=documentalOnly`
+	- `controlledRuntimeValidationPlanned=true`
+	- `runtimeValidationMode=memoryOnly`
+	- `candidateFutureCommand=npm run start:mem`
+	- `candidateFutureCommandAuthorizedNow=false`
+	- `startMemAuthorizedNow=false`
+	- `startMemSeedAuthorizedNow=false`
+	- `startGestorAuthorizedNow=false`
+	- `startAtlasAuthorizedNow=false`
+	- `mongoRealAuthorizedNow=false`
+	- `seedMasterAuthorizedNow=false`
+	- `loginAuthorizedNow=false`
+	- `mutationAuthorizedNow=false`
+	- `allowedObservationScopeMapped=true`
+	- `successCriteriaMapped=true`
+	- `abortCriteriaMapped=true`
+	- `postRunDocumentationRequirementsMapped=true`
+	- `operationalReadinessValidated=false`
+	- `runtimeRealValidated=false`
+	- `controlledRuntimeExecutedNow=false`
+	- `productionReady=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `mongoRealConnected=false`
+	- `memoryMongoConnectedManually=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeControlledRuntimeValidationMemoryOnlyFutureMicrocut`
+	- `secondaryCandidate=humanPushControlledRuntimeValidationPlanningBlock`
 - Checkpoint documental curto do planejamento da primeira adocao controlada do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por decisao documental em `docs/migration-status.md`, sem criar teste, sem usar o helper, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Candidatos comparados nesta rodada:
 	- `dedicatedHelperContractTest`: candidato recomendado para primeira adocao por manter o uso do helper isolado, dedicado e controlado em microcorte proprio futuro;
