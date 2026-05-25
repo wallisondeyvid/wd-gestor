@@ -18835,6 +18835,104 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=planReadOnlyDatabaseInventoryWithoutSecrets`
 	- `secondaryCandidate=pushMongoReadOnlyGreenCheckpoint`
 	- `tertiaryCandidate=planControlledStartAtlasReadinessCriteriaDocumentally`
+
+- Checkpoint documental curto do pos-push publicado do bloco Mongo real pos-rotacao green, consolidado nesta rodada sem executar diagnostico, sem conectar Mongo real, sem executar `start:atlas`, sem executar `start:gestor`, sem executar `start:mem`, sem executar `start:mem:seed`, sem seed/master, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer novo push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordPostPushMongoReadOnlyGreenCheckpoint`
+	- `checkpointScope=documentalOnly`
+	- `pushedRange=c1cb2da..1264374`
+	- `pushedBranch=migration/refactor-core`
+	- `pushExecuted=true`
+	- `pushCommand=git push --no-verify`
+	- `pushNoVerifyUsed=true`
+	- `pushNoVerifyReason=pre-push-hook-stalled-on-normal-push`
+	- `normalPushAttemptedBeforeNoVerify=true`
+	- `normalPushCompleted=false`
+	- `normalPushInterrupted=true`
+	- `workingTreeCleanBeforeNoVerifyPush=true`
+	- `workingTreeCleanAfterPush=true`
+	- `localRemoteSyncedAfterPush=true`
+	- `headAfterPush=1264374`
+	- `originHeadAfterPush=1264374`
+	- `aheadAfterPush=0`
+	- `mongoReadOnlyGreenCheckpointPublished=true`
+	- `postRotationDiagnosticGreenPublished=true`
+	- `credentialRotationBlockPublished=true`
+	- `postRotationUriBlockPublished=true`
+	- `nextStepPlanningPublished=true`
+	- `previousPostRotationGreenCommit=551cf53`
+	- `previousNextStepPlanCommit=1264374`
+	- `realMongoConnectedReadOnlyPreviously=true`
+	- `postRotationDiagnosticGreenPreviously=true`
+	- `productionReady=false`
+	- `runtimeAtlasStillBlocked=true`
+	- `startAtlasStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `startMemSeedStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `loginStillBlocked=true`
+	- `httpStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `prePushHookNeedsInvestigationLater=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecutedInThisMicrocut=false`
+- Resultado consolidado desta rodada:
+	- o bloco Mongo real pos-rotacao green foi publicado no remoto em `migration/refactor-core`;
+	- o range publicado foi `c1cb2da..1264374`;
+	- o push humano ocorreu com `git push --no-verify` apos a tentativa normal anterior travar no hook `pre-push`;
+	- a tentativa normal de push foi interrompida com `Ctrl+C` e nao concluiu envio;
+	- o working tree permaneceu limpo antes do push com `--no-verify` e continuou limpo apos o push;
+	- o HEAD local e o HEAD remoto ficaram sincronizados em `1264374` apos o push;
+	- os marcos de rotacao de credencial, URI local pos-rotacao, diagnostico read-only green e planejamento do proximo passo ficaram publicados;
+	- producao continua nao pronta;
+	- runtime Atlas, `start:atlas`, `start:gestor`, `start:mem:seed`, seed/master, login, HTTP e mutacao real seguem bloqueados;
+	- nenhuma execucao operacional foi realizada neste microcorte.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental pos-push;
+	- nao executar diagnostico;
+	- nao conectar Mongo real;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- o uso de `--no-verify` ja aconteceu e fica apenas registrado, sem repeticao agora;
+	- nao fazer novo push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=planReadOnlyDatabaseInventoryWithoutSecrets`
+	- `secondaryCandidate=investigatePrePushHookStallDocumentally`
+	- `tertiaryCandidate=planControlledStartAtlasReadinessCriteriaDocumentally`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
