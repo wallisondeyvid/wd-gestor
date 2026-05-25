@@ -18507,6 +18507,97 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=authorizePostRotationPreflightOnly`
 	- `secondaryCandidate=planPostRotationReadOnlyDiagnosticAfterPreflight`
+
+- Checkpoint documental curto da autorizacao futura para executar somente o preflight pos-rotacao, consolidado nesta rodada sem executar `node -e` agora, sem executar diagnostico, sem conectar Mongo real, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizePostRotationPreflightOnly`
+	- `authorizationScope=documentalOnlyFutureExecution`
+	- `previousPostRotationLocalUriRecordCommit=96a3fe2`
+	- `atlasCredentialRotationCompleted=true`
+	- `postRotationLocalUriConfigured=true`
+	- `postRotationPreflightAuthorizedForFutureOnly=true`
+	- `postRotationPreflightExecutedNow=false`
+	- `diagnosticExecutionAuthorized=false`
+	- `diagnosticExecutedNow=false`
+	- `realMongoConnectionAuthorized=false`
+	- `realMongoConnectionAttempted=false`
+	- `futurePreflightMustEmitBooleans=true`
+	- `futurePreflightMustEmitPreflightOk=true`
+	- `futurePreflightMustUseStartsWithSchemeCheck=true`
+	- `futurePreflightMustCheckPresent=true`
+	- `futurePreflightMustCheckTrimNonEmpty=true`
+	- `futurePreflightMustCheckMongoScheme=true`
+	- `futurePreflightMustPrintOnlyBooleans=true`
+	- `futurePreflightMustNotPrintValue=true`
+	- `futurePreflightMustNotPrintLength=true`
+	- `futurePreflightMustNotPrintPrefix=true`
+	- `futurePreflightMustNotPrintHost=true`
+	- `futurePreflightMustNotPrintUser=true`
+	- `futurePreflightMustNotPrintPassword=true`
+	- `futurePreflightMustNotPrintDatabase=true`
+	- `futurePreflightMustNotRunDiagnostic=true`
+	- `futurePreflightMustNotConnectMongoReal=true`
+	- `futurePreflightMustNotStartServer=true`
+	- `futurePreflightMustNotUseStartAtlas=true`
+	- `futurePreflightMustNotUseStartGestor=true`
+	- `futurePreflightMustNotUseStartMemSeed=true`
+	- `futurePreflightRequiresCleanGitStatus=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Autorizacao segura consolidada desta rodada:
+	- a execucao futura autorizada neste checkpoint e somente um preflight pos-rotacao que valide a visibilidade da URI para o Node por meio de booleans sanitizados;
+	- esse preflight futuro nao autoriza diagnostico;
+	- esse preflight futuro nao autoriza conexao com Mongo real;
+	- esse preflight futuro nao autoriza start de servidor nem qualquer comando `start:*` bloqueado;
+	- o preflight futuro deve emitir apenas booleans sanitizados, incluindo `PREFLIGHT_OK`, sem imprimir valor, tamanho, prefixo, host, usuario, senha ou database;
+	- a execucao futura continua condicionada a worktree limpa e microcorte proprio;
+	- este microcorte apenas autoriza documentalmente a futura checagem de preflight e nao executa nada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar preflight agora;
+	- nao executar diagnostico;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- a execucao futura autorizada e somente preflight, nao diagnostico;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=executePostRotationPreflightOnlyInSeparateMicrocut`
+	- `secondaryCandidate=keepPostRotationDiagnosticPausedUntilPreflightGreen`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
