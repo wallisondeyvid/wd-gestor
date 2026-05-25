@@ -17673,6 +17673,60 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=reconfigureMongoUriInExecutionShellWithoutPrintingSecret`.
 	- `secondaryCandidate=diagnoseWhyExecutionShellEnvMissing`.
+
+- Checkpoint documental curto do registro da reconfiguracao manual da URI Mongo no shell de execucao observado, consolidado nesta rodada sem executar preflight, sem executar diagnostico, sem conectar Mongo real, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=reconfigureMongoUriInExecutionShellWithoutPrintingSecret`.
+	- `executionShellReconfigurationScope=documentalOnlyHumanLocalAction`.
+	- `previousObservablePreflightMongoUriPresent=false`.
+	- `previousObservablePreflightMongodbUriPresent=false`.
+	- `previousObservablePreflightOk=false`.
+	- `previousDiagnosticSkipped=true`.
+	- `userConfirmedUriConfiguredInExecutionShell=true`.
+	- `uriConfiguredInSameShellExpectedForNextPreflight=true`.
+	- `uriValuePrinted=false`.
+	- `uriLengthPrinted=false`.
+	- `uriPrefixPrinted=false`.
+	- `uriHostPrinted=false`.
+	- `uriUserPrinted=false`.
+	- `uriPasswordPrinted=false`.
+	- `uriDatabasePrinted=false`.
+	- `uriSecretExposed=false`.
+	- `envFileCreated=false`.
+	- `gitignoreChanged=false`.
+	- `realDiagnosticScriptExecuted=false`.
+	- `realMongoConnectionAttempted=false`.
+	- `realMongoConnected=false`.
+	- `packageJsonChanged=false`.
+	- `sourceChanged=false`.
+	- `testsChanged=false`.
+	- `newFileCreated=false`.
+	- `npmRunExecuted=false`.
+	- `npmTestExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `loginExecuted=false`.
+	- `dataMutationExecuted=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `startMemExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `pushExecuted=false`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte apenas registra a acao humana ou local;
+	- este microcorte nao executa preflight agora;
+	- este microcorte nao executa diagnostico agora;
+	- este microcorte nao imprime URI;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao declara producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=authorizeObservablePreflightAfterExecutionShellUriConfigured`.
+	- `secondaryCandidate=keepDiagnosticPausedUntilExecutionShellShapeConfirmed`.
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
