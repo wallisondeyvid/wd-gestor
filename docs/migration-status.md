@@ -19559,6 +19559,124 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeDedicatedReadOnlyDatabaseInventoryScriptExecution`
 	- `secondaryCandidate=pushInventoryScriptPlanningAndReviewCheckpoint`
 	- `tertiaryCandidate=keepInventoryExecutionPaused`
+
+- Checkpoint documental curto da autorizacao futura de execucao do script dedicado de inventario read-only do banco real, consolidado nesta rodada sem executar o script agora, sem executar inventario agora, sem conectar Mongo real agora, sem executar diagnostico, sem executar `start:atlas`, sem executar `start:gestor`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizeDedicatedReadOnlyDatabaseInventoryScriptExecution`
+	- `authorizationScope=documentalOnlyFutureExecution`
+	- `previousInventoryScriptReviewCommit=b683768`
+	- `inventoryScriptReviewed=true`
+	- `inventoryScriptAcceptedForFutureExecutionAuthorization=true`
+	- `blockingDefectFound=false`
+	- `blockingDefectSummary=none`
+	- `inventoryScriptPath=scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `inventoryScriptExecutionAuthorizedForFutureOnly=true`
+	- `inventoryScriptExecutionAuthorizedNow=false`
+	- `inventoryScriptExecutedNow=false`
+	- `inventoryExecutionAuthorizedForFutureOnly=true`
+	- `inventoryExecutionAuthorizedNow=false`
+	- `inventoryExecutedNow=false`
+	- `futureExecutionCommand=node scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `futureExecutionMustBeSingleRun=true`
+	- `futureExecutionMustNotRepeatOnError=true`
+	- `futureExecutionMustUseCleanGitStatus=true`
+	- `futureExecutionMustUseReviewedScript=true`
+	- `futureExecutionMustBeReadOnly=true`
+	- `futureExecutionMustConfirmZeroWrites=true`
+	- `futureExecutionMustConfirmNoSeedMasterCleanup=true`
+	- `futureExecutionMustUseSanitizedOutput=true`
+	- `futureExecutionMustNotPrintUri=true`
+	- `futureExecutionMustNotPrintCredentials=true`
+	- `futureExecutionMustNotPrintDocuments=true`
+	- `futureExecutionMustNotPrintPersonalData=true`
+	- `futureExecutionMustNotPrintEmails=true`
+	- `futureExecutionMustNotPrintCpfs=true`
+	- `futureExecutionMustNotPrintPasswords=true`
+	- `futureExecutionMustNotPrintTokens=true`
+	- `futureExecutionMustNotPrintFullNames=true`
+	- `futureExecutionMustNotPrintPhones=true`
+	- `futureExecutionMustNotPrintAddresses=true`
+	- `futureExecutionMustNotPrintRawObjectIds=true`
+	- `futureExecutionMayPrintCollectionNames=true`
+	- `futureExecutionMayPrintSanitizedCounts=true`
+	- `futureExecutionMayPrintCollectionExistsBooleans=true`
+	- `futureExecutionMayPrintZeroOrNonZeroFlags=true`
+	- `futureExecutionMustAbortOnAmbiguousEnvironment=true`
+	- `futureExecutionMustRefuseMongoMemory=true`
+	- `futureExecutionMustFailClosedWithoutExplicitRealUri=true`
+	- `futureExecutionMustNotStartServer=true`
+	- `futureExecutionMustNotUseHttp=true`
+	- `futureExecutionMustNotUseBrowser=true`
+	- `futureExecutionMustNotLogin=true`
+	- `futureExecutionMustNotMutateData=true`
+	- `futureExecutionMustNotUseStartAtlas=true`
+	- `futureExecutionMustNotUseStartGestor=true`
+	- `futureExecutionMustNotUseStartMemSeed=true`
+	- `futureExecutionMustNotUseSeed=true`
+	- `futureExecutionMustNotUseMasterSet=true`
+	- `futureExecutionMustNotUseCleanupWrongEmail=true`
+	- `futureExecutionMustNotTouchWallisonMaster=true`
+	- `futureExecutionMustRecordResultImmediately=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `inventoryScriptExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Autorizacao consolidada desta rodada:
+	- a futura execucao do script revisado fica autorizada somente para um microcorte separado e controlado;
+	- essa autorizacao nao executa o script agora e nao autoriza repeticoes automaticas em caso de erro;
+	- a futura execucao deve acontecer uma unica vez, com git status limpo, usando exatamente o script revisado e mantendo escopo read-only;
+	- a futura execucao deve manter saida sanitizada e nao pode imprimir URI, credenciais, documentos, dados pessoais, emails, CPFs, senhas, tokens, nomes completos, telefones, enderecos ou ObjectIds brutos;
+	- a futura execucao deve abortar em ambiente ambiguo, recusar `MONGO_MEMORY=1`, falhar fechado sem URI real explicita e nao pode iniciar servidor, usar HTTP, login, mutacao, seed, master:set, cleanup ou start scripts;
+	- o resultado da futura execucao devera ser registrado imediatamente em microcorte proprio;
+	- este microcorte apenas registra a autorizacao documental futura e mantem a execucao bloqueada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar o script agora;
+	- nao executar inventario agora;
+	- nao conectar Mongo real agora;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=executeDedicatedReadOnlyDatabaseInventoryScriptInSeparateMicrocut`
+	- `secondaryCandidate=pushInventoryScriptAndReviewCheckpointBeforeExecution`
+	- `tertiaryCandidate=keepInventoryExecutionPaused`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
