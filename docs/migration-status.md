@@ -17108,6 +17108,124 @@ Checkpoint tenant enforcement atual:
 	- `startAtlasExecuted=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+- Checkpoint documental curto do planejamento do comando PowerShell-safe para preflight no mesmo processo com diagnostico read-only condicional, consolidado nesta rodada sem executar `node -e`, sem executar `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=planPowerShellSafePreflightCommandDocumentally`.
+	- `planningScope=documentalOnly`.
+	- `previousPreflightFailureRecorded=true`.
+	- `previousPreflightFailureCause=quoting-or-syntax-error`.
+	- `previousDiagnosticSkipped=true`.
+	- `previousRealDiagnosticScriptExecuted=false`.
+	- `powershellSafePreflightNeeded=true`.
+	- `avoidRegexLiteralInInlineCommand=true`.
+	- `avoidUnsafeQuoting=true`.
+	- `preferStartsWithSchemeCheck=true`.
+	- `futurePreflightMustCheckPresent=true`.
+	- `futurePreflightMustCheckTrimNonEmpty=true`.
+	- `futurePreflightMustCheckMongoScheme=true`.
+	- `futurePreflightMustNotPrintValue=true`.
+	- `futurePreflightMustNotPrintLength=true`.
+	- `futurePreflightMustNotPrintPrefix=true`.
+	- `futurePreflightMustNotPrintHost=true`.
+	- `futurePreflightMustNotPrintUser=true`.
+	- `futurePreflightMustNotPrintPassword=true`.
+	- `futurePreflightMustNotPrintDatabase=true`.
+	- `futureExecutionMustAbortIfPreflightInvalid=true`.
+	- `futureExecutionMayRunDiagnosticOnlyIfPreflightValid=true`.
+	- `futureExecutionMustUseSameShellProcessChain=true`.
+	- `realDiagnosticScriptExecuted=false`.
+	- `realMongoConnectionAttempted=false`.
+	- `realMongoConnected=false`.
+	- `uriValuePrinted=false`.
+	- `uriSecretExposed=false`.
+	- `codeChanged=false`.
+	- `packageJsonChanged=false`.
+	- `sourceChanged=false`.
+	- `testsChanged=false`.
+	- `newFileCreated=false`.
+	- `npmRunExecuted=false`.
+	- `npmTestExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `loginExecuted=false`.
+	- `dataMutationExecuted=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `startMemExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `pushExecuted=false`.
+- Abordagem recomendada consolidada desta rodada:
+	- evitar regex literal com barras no comando inline;
+	- preferir checagem de esquema com `startsWith('mongodb://')` ou `startsWith('mongodb+srv://')`;
+	- evitar aspas simples externas conflitantes no PowerShell;
+	- manter o preflight emitindo apenas booleans para `MONGO_URI_PRESENT`, `MONGO_URI_TRIM_NONEMPTY`, `MONGO_URI_MONGO_SCHEME`, `MONGODB_URI_PRESENT`, `MONGODB_URI_TRIM_NONEMPTY`, `MONGODB_URI_MONGO_SCHEME`, `PREFLIGHT_OK` e `DIAGNOSTIC_SKIPPED` quando aplicavel;
+	- abortar sem diagnostico se o preflight falhar;
+	- executar o diagnostico somente se o preflight passar;
+	- manter a execucao para microcorte separado e explicitamente autorizado.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- este microcorte nao executa `node -e`;
+	- este microcorte nao executa o script diagnostico;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao imprime URI;
+	- este microcorte nao declara producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=authorizePowerShellSafePreflightThenDiagnostic`.
+	- `secondaryCandidate=keepDiagnosticPausedUntilPowerShellSafeCommandAuthorized`.
+- Gates:
+	- `selectedTarget=planPowerShellSafePreflightCommandDocumentally`
+	- `planningScope=documentalOnly`
+	- `previousPreflightFailureRecorded=true`
+	- `previousPreflightFailureCause=quoting-or-syntax-error`
+	- `previousDiagnosticSkipped=true`
+	- `previousRealDiagnosticScriptExecuted=false`
+	- `powershellSafePreflightNeeded=true`
+	- `avoidRegexLiteralInInlineCommand=true`
+	- `avoidUnsafeQuoting=true`
+	- `preferStartsWithSchemeCheck=true`
+	- `futurePreflightMustCheckPresent=true`
+	- `futurePreflightMustCheckTrimNonEmpty=true`
+	- `futurePreflightMustCheckMongoScheme=true`
+	- `futurePreflightMustNotPrintValue=true`
+	- `futurePreflightMustNotPrintLength=true`
+	- `futurePreflightMustNotPrintPrefix=true`
+	- `futurePreflightMustNotPrintHost=true`
+	- `futurePreflightMustNotPrintUser=true`
+	- `futurePreflightMustNotPrintPassword=true`
+	- `futurePreflightMustNotPrintDatabase=true`
+	- `futureExecutionMustAbortIfPreflightInvalid=true`
+	- `futureExecutionMayRunDiagnosticOnlyIfPreflightValid=true`
+	- `futureExecutionMustUseSameShellProcessChain=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposed=false`
+	- `codeChanged=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
