@@ -18092,6 +18092,87 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=authorizeAtlasCredentialRotationHumanAction`
 	- `secondaryCandidate=planNextReadOnlyMongoValidationAfterCredentialRotation`
+
+- Checkpoint documental curto da autorizacao da acao humana futura para rotacionar a credencial Atlas `wdgestorapp`, consolidado nesta rodada sem trocar senha, sem pedir nova senha, sem registrar nova URI, sem executar diagnostico, sem conectar Mongo real, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizeAtlasCredentialRotationHumanAction`
+	- `authorizationScope=documentalOnlyHumanFutureAction`
+	- `previousCredentialRotationPlanCommit=05f3e6f`
+	- `atlasCredentialExposureAcknowledged=true`
+	- `uriWasPastedInChatByUserPreviously=true`
+	- `wdgestorappCredentialRotationAuthorizedForHuman=true`
+	- `wdgestorappCredentialRotationExecutedNow=false`
+	- `rotationMustBeDoneByHumanInAtlas=true`
+	- `newPasswordMustNotBePastedInChat=true`
+	- `newUriMustNotBePastedInChat=true`
+	- `newUriMustNotBeCommitted=true`
+	- `newUriMustBeConfiguredOnlyLocally=true`
+	- `oldCredentialShouldBeInvalidated=true`
+	- `localEnvMustBeUpdatedAfterRotation=true`
+	- `futurePostRotationPreflightRequired=true`
+	- `futurePostRotationReadOnlyDiagnosticRequiresSeparateAuthorization=true`
+	- `futurePostRotationDiagnosticMustBeReadOnly=true`
+	- `futurePostRotationDiagnosticMustSanitizeLogs=true`
+	- `futurePostRotationDiagnosticMustConfirmZeroWrites=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Autorizacao segura consolidada desta rodada:
+	- a proxima acao humana autorizada e rotacionar a senha do usuario Atlas `wdgestorapp` diretamente no Atlas, fora do chat;
+	- a nova senha nao deve ser colada no chat;
+	- a nova URI nao deve ser colada no chat;
+	- a nova URI nao deve ser commitada;
+	- a atualizacao da URI deve ocorrer apenas no ambiente local apropriado apos a rotacao;
+	- a credencial antiga deve ser invalidada depois da rotacao;
+	- qualquer diagnostico posterior a rotacao exige preflight previo e autorizacao separada;
+	- qualquer diagnostico posterior a rotacao deve continuar read-only, com logs sanitizados e confirmacao explicita de zero writes;
+	- este microcorte apenas autoriza documentalmente a acao humana futura e nao executa nada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao trocar senha agora;
+	- nao pedir senha nova no chat;
+	- nao colar URI nova no chat;
+	- nao executar diagnostico;
+	- nao conectar Mongo real;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=performAtlasCredentialRotationHumanOutsideChat`
+	- `secondaryCandidate=planPostRotationReadOnlyDiagnostic`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
