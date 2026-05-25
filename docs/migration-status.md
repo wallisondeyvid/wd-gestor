@@ -20250,6 +20250,114 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=planControlledStartAtlasReadinessCriteriaDocumentally`
 	- `secondaryCandidate=planReadOnlyAtlasRuntimeEnvValidation`
 	- `tertiaryCandidate=investigatePrePushHookStallDocumentally`
+
+- Checkpoint documental curto do planejamento dos criterios de prontidao para um futuro `start:atlas` controlado, consolidado nesta rodada sem executar `start:atlas`, sem executar `start:gestor`, sem executar `start:mem`, sem executar `start:mem:seed`, sem iniciar servidor, sem fazer boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem fazer HTTP, sem abrir navegador, sem fazer login, sem fazer mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivos e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=planControlledStartAtlasReadinessCriteriaDocumentally`
+	- `planningScope=documentalOnly`
+	- `previousMongoInventoryGreenPushCheckpoint=5d95fb9`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `mongoReadOnlyDiagnosticGreen=true`
+	- `mongoReadOnlyInventoryGreen=true`
+	- `realMongoConnectedReadOnlyPreviously=true`
+	- `realMongoInventoryReadOnlyGreenPreviously=true`
+	- `productionReady=false`
+	- `controlledStartAtlasPlanningStarted=true`
+	- `controlledStartAtlasExecutionAuthorizedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `httpExecuted=false`
+	- `loginExecuted=false`
+	- `mutationExecuted=false`
+	- `seedMasterExecuted=false`
+	- `runtimeAtlasStillBlocked=true`
+	- `startAtlasStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `startMemSeedStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `loginStillBlocked=true`
+	- `httpStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `productionReadinessStillBlocked=true`
+	- `controlledStartAtlasRequiresSeparateAuthorization=true`
+	- `controlledStartAtlasRequiresCleanGitStatus=true`
+	- `controlledStartAtlasRequiresNoPendingLedgerDiff=true`
+	- `controlledStartAtlasRequiresExplicitEnvShapeValidation=true`
+	- `controlledStartAtlasRequiresNoSecretsPrinted=true`
+	- `controlledStartAtlasRequiresReadOnlyFirstObservation=true`
+	- `controlledStartAtlasRequiresNoLoginInitially=true`
+	- `controlledStartAtlasRequiresNoMutationInitially=true`
+	- `controlledStartAtlasRequiresNoSeedMaster=true`
+	- `controlledStartAtlasRequiresNoCleanupWrongEmail=true`
+	- `controlledStartAtlasRequiresAbortCriteria=true`
+	- `controlledStartAtlasRequiresResultLedgerImmediately=true`
+	- `controlledStartAtlasAbortIfMissingUri=true`
+	- `controlledStartAtlasAbortIfMongoMemory=true`
+	- `controlledStartAtlasAbortIfAmbiguousEnvironment=true`
+	- `controlledStartAtlasAbortIfSeedOrMasterWouldRun=true`
+	- `controlledStartAtlasAbortIfUnexpectedWriteDetected=true`
+	- `controlledStartAtlasAbortIfSecretsWouldPrint=true`
+	- `controlledStartAtlasInitialObservationShouldBePassive=true`
+	- `controlledStartAtlasInitialObservationShouldAvoidBrowser=true`
+	- `controlledStartAtlasInitialObservationShouldAvoidHttpUntilAuthorized=true`
+	- `controlledStartAtlasInitialObservationShouldAvoidLoginUntilAuthorized=true`
+	- `controlledStartAtlasInitialObservationShouldAvoidDataMutationUntilAuthorized=true`
+	- `requiredEvidenceBeforeFutureStartAtlas=cleanGitStatus,envShapeBooleanOnly,uriNotPrinted,productionReadyFalse,seedMasterBlocked`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `browserOpened=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+- Plano consolidado desta rodada:
+	- o proximo marco nao e executar `start:atlas`, e sim definir criterios objetivos para um futuro runtime controlado, mantendo o Atlas bloqueado ate autorizacao separada;
+	- qualquer futura tentativa de `start:atlas` devera partir de git limpo, sem diff pendente no ledger, com validacao booleana da forma do ambiente e sem impressao de segredos;
+	- a primeira observacao de runtime, quando autorizada em microcorte separado, devera permanecer passiva e read-only, sem browser, sem HTTP, sem login, sem mutacao, sem seed/master e com criterios claros de abort;
+	- a execucao futura devera abortar imediatamente se houver URI ausente, `MONGO_MEMORY`, ambiente ambiguo, risco de seed/master, write inesperado ou qualquer possibilidade de impressao de segredos;
+	- este microcorte apenas documenta os criterios e mantem runtime Atlas, `start:gestor`, seed/master e prontidao de producao bloqueados.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao iniciar servidor;
+	- nao fazer boot;
+	- nao conectar Mongo real;
+	- nao executar diagnostico;
+	- nao executar inventario;
+	- nao fazer HTTP;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=planReadOnlyAtlasRuntimeEnvValidation`
+	- `secondaryCandidate=authorizeControlledStartAtlasReadinessPreflight`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRuntimeCriteriaApproved`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
