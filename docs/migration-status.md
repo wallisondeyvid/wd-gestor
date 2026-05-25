@@ -19880,6 +19880,87 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=executeInventoryRetryWithVisibleUriInSeparateMicrocut`
 	- `secondaryCandidate=keepInventoryPausedUntilRetry`
 	- `tertiaryCandidate=pushInventoryScriptCheckpointBeforeRetry`
+
+- Checkpoint documental curto do resultado do retry autorizado do inventario read-only, consolidado nesta rodada sem repetir inventario, sem configurar URI, sem executar inventario novamente, sem conectar Mongo real, sem executar diagnostico, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordInventoryRetryStillMissingUriResult`
+	- `executionScope=authorizedReadOnlyInventoryRetrySingleRun`
+	- `previousInventoryRetryAuthorizationCommit=98a4b16`
+	- `retryCommandExecuted=node scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `retryExecutionAttempted=true`
+	- `retryExecutionRepeated=false`
+	- `inventoryResult=red`
+	- `inventoryExecutionResult=abort`
+	- `blockedReason=missing-uri`
+	- `connectionAttempted=false`
+	- `readOnly=true`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `sanitizedTarget=[uri-missing]`
+	- `sanitizedDbNameEmitted=false`
+	- `inventoryCollectionsEmitted=false`
+	- `collectionExistsLinesEmitted=false`
+	- `collectionCountLinesEmitted=false`
+	- `collectionNonEmptyLinesEmitted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `inventoryEffectiveResult=not-run-due-to-missing-uri`
+	- `abortBeforeConnection=true`
+	- `scriptFailedClosedAsDesigned=true`
+	- `previousManualPreflightHadUriVisible=true`
+	- `retryProcessStillMissingUri=true`
+	- `envPropagationMismatchObserved=true`
+	- `documentsPrinted=false`
+	- `personalDataPrinted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `pushExecuted=false`
+- Resultado consolidado desta rodada:
+	- a unica nova tentativa autorizada do inventario read-only foi executada exatamente uma vez e abortou novamente de forma segura por `missing-uri` antes de qualquer conexao;
+	- o processo desta execucao emitiu `inventoryResult=red`, `connectionAttempted=false`, `readOnly=true`, `writesAttempted=false`, `seedMasterCleanupTouched=false`, `secretsPrinted=false` e `productionReady=false`;
+	- `sanitizedTarget=[uri-missing]` foi emitido, `sanitizedDbName` nao foi emitido e nenhuma linha `collection:<nome>:exists`, `collection:<nome>:count` ou `collection:<nome>:nonEmpty` apareceu;
+	- nao houve inventario efetivo, nao houve conexao Mongo real, nao houve diagnostico adicional e o script falhou fechado como esperado;
+	- nao houve impressao de URI, segredo, documento ou dado pessoal, e nao houve HTTP, navegador, login ou mutacao;
+	- apesar do preflight manual anterior ter indicado URI visivel ao Node, o processo usado neste retry voltou a enxergar URI ausente, caracterizando divergencia de propagacao de ambiente entre o preflight manual e a execucao do inventario.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir inventario;
+	- nao configurar URI neste microcorte;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=diagnoseInventoryExecutionEnvPropagationWithoutSecret`
+	- `secondaryCandidate=executeInventoryDirectlyInHumanPowerShellAfterRecording`
+	- `tertiaryCandidate=keepInventoryPausedUntilExecutionShellConfirmed`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
