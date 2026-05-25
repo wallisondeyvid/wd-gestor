@@ -17921,6 +17921,93 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=diagnoseWhyExecutionShellEnvMissing`
 	- `secondaryCandidate=reconfigureMongoUriInExecutionShellWithoutPrintingSecret`
+
+- Checkpoint documental curto do resultado green do diagnostico Mongo real read-only apos o ajuste de acesso de rede no Atlas, consolidado nesta rodada sem repetir o diagnostico, sem executar novamente `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real novamente, sem configurar URI, sem imprimir URI, sem pedir segredo, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordReadOnlyDiagnosticAtlasGreenResult`
+	- `executionScope=readOnlyDiagnosticAfterAtlasNetworkAccessFixed`
+	- `publicIpObserved=177.10.146.2`
+	- `atlasNetworkAccessUpdated=true`
+	- `atlasNetworkAccessIp=177.10.146.2/32`
+	- `dnsSrvCheckExecuted=true`
+	- `dnsSrvResolved=true`
+	- `dnsSrvTargetsObserved=true`
+	- `diagnosticCommandExecuted=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `diagnosticExecutionAttempted=true`
+	- `diagnosticExecutionRepeated=false`
+	- `diagnosticExecutionResult=green`
+	- `diagnosticResult=green`
+	- `connectionAttempted=true`
+	- `readOnly=true`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `realMongoConnected=true`
+	- `realMongoDiagnosed=true`
+	- `abortBeforeConnection=false`
+	- `blockedReason=none`
+	- `atlasConnectionFailed=false`
+	- `atlasNetworkAccessIssueResolved=true`
+	- `sanitizedTargetEmitted=true`
+	- `uriCredentialsRedactedInDiagnosticOutput=true`
+	- `sanitizedDbName=test`
+	- `uriValuePrinted=false`
+	- `uriLengthPrinted=false`
+	- `uriHostPrinted=false`
+	- `uriUserPrinted=false`
+	- `uriPasswordPrinted=false`
+	- `uriDatabasePrinted=false`
+	- `uriSecretExposedInDiagnosticOutput=false`
+	- `uriWasPastedInChatByUserPreviously=true`
+	- `atlasCredentialRotationRecommended=true`
+	- `wdgestorappPasswordShouldBeRotated=true`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+- Resultado objetivo consolidado desta rodada:
+	- o IP publico observado foi `177.10.146.2` e o acesso de rede correspondente foi liberado no Atlas como `177.10.146.2/32`;
+	- a checagem `Resolve-DnsName -Type SRV _mongodb._tcp.cluster1.rusv6pm.mongodb.net` resolveu com sucesso os shards SRV esperados na porta 27017;
+	- o diagnostico `node scripts/diagnostics/real-mongo-readonly-diagnostic.js` foi executado uma unica vez nesta rodada;
+	- o diagnostico retornou `diagnosticResult=green`;
+	- o diagnostico tentou conexao e conectou com sucesso ao Mongo real em modo minimo read-only;
+	- o diagnostico emitiu apenas alvo sanitizado com credenciais redigidas e `sanitizedDbName=test`;
+	- nao houve escrita, seed, master, HTTP, navegador, login, mutacao real nem start de servidor;
+	- a producao continua nao pronta;
+	- este microcorte apenas registra o resultado e nao executa de novo.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra resultado, nao executa de novo;
+	- nao repetir diagnostico;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- o green e somente do diagnostico read-only minimo;
+	- a senha do usuario Atlas `wdgestorapp` deve ser rotacionada porque a URI foi colada no chat anteriormente;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=planAtlasCredentialRotationAfterSecretExposure`
+	- `secondaryCandidate=planNextReadOnlyMongoValidationAfterGreenDiagnostic`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
