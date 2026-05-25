@@ -19766,6 +19766,120 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeInventoryRetryAfterUriVisible`
 	- `secondaryCandidate=executeDedicatedReadOnlyDatabaseInventoryScriptWithVisibleUriInSeparateMicrocut`
 	- `tertiaryCandidate=keepInventoryPausedUntilRetryAuthorized`
+
+- Checkpoint documental curto da autorizacao futura do retry do inventario read-only com URI visivel ao Node, consolidado nesta rodada sem executar o script agora, sem executar inventario agora, sem conectar Mongo real agora, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizeInventoryRetryAfterUriVisible`
+	- `authorizationScope=documentalOnlyFutureExecution`
+	- `previousInventoryMissingUriResultCommit=c4656af`
+	- `previousInventoryResult=red`
+	- `previousBlockedReason=missing-uri`
+	- `previousInventoryAbortedBeforeConnection=true`
+	- `previousInventoryFailedClosedAsDesigned=true`
+	- `postAbortPreflightOk=true`
+	- `postAbortMongodbUriVisibleToNode=true`
+	- `inventoryRetryAuthorizedForFutureOnly=true`
+	- `inventoryRetryAuthorizedNow=false`
+	- `inventoryRetryExecutedNow=false`
+	- `futureRetryCommand=node scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `futureRetryMustBeSingleRun=true`
+	- `futureRetryMustNotRepeatOnError=true`
+	- `futureRetryMustUseCleanGitStatus=true`
+	- `futureRetryMustUseReviewedScript=true`
+	- `futureRetryMustBeReadOnly=true`
+	- `futureRetryMustConfirmZeroWrites=true`
+	- `futureRetryMustConfirmNoSeedMasterCleanup=true`
+	- `futureRetryMustUseSanitizedOutput=true`
+	- `futureRetryMustNotPrintUri=true`
+	- `futureRetryMustNotPrintCredentials=true`
+	- `futureRetryMustNotPrintDocuments=true`
+	- `futureRetryMustNotPrintPersonalData=true`
+	- `futureRetryMustNotPrintEmails=true`
+	- `futureRetryMustNotPrintCpfs=true`
+	- `futureRetryMustNotPrintPasswords=true`
+	- `futureRetryMustNotPrintTokens=true`
+	- `futureRetryMustNotPrintFullNames=true`
+	- `futureRetryMustNotPrintPhones=true`
+	- `futureRetryMustNotPrintAddresses=true`
+	- `futureRetryMustNotPrintRawObjectIds=true`
+	- `futureRetryMayPrintCollectionNames=true`
+	- `futureRetryMayPrintSanitizedCounts=true`
+	- `futureRetryMayPrintCollectionExistsBooleans=true`
+	- `futureRetryMayPrintZeroOrNonZeroFlags=true`
+	- `futureRetryMustAbortOnAmbiguousEnvironment=true`
+	- `futureRetryMustRefuseMongoMemory=true`
+	- `futureRetryMustFailClosedWithoutExplicitRealUri=true`
+	- `futureRetryMustNotStartServer=true`
+	- `futureRetryMustNotUseHttp=true`
+	- `futureRetryMustNotUseBrowser=true`
+	- `futureRetryMustNotLogin=true`
+	- `futureRetryMustNotMutateData=true`
+	- `futureRetryMustNotUseStartAtlas=true`
+	- `futureRetryMustNotUseStartGestor=true`
+	- `futureRetryMustNotUseStartMemSeed=true`
+	- `futureRetryMustNotUseSeed=true`
+	- `futureRetryMustNotUseMasterSet=true`
+	- `futureRetryMustNotUseCleanupWrongEmail=true`
+	- `futureRetryMustNotTouchWallisonMaster=true`
+	- `futureRetryMustRecordResultImmediately=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `inventoryScriptExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Autorizacao consolidada desta rodada:
+	- o retry futuro do inventario fica autorizado apenas para microcorte separado, agora que o preflight posterior confirmou `MONGODB_URI` visivel ao Node e `PREFLIGHT_OK=true`;
+	- esta autorizacao nao executa o script agora e preserva a exigencia de execucao unica, sem repeticao automatica em caso de erro;
+	- a futura execucao devera manter git limpo, usar o script revisado e continuar em modo estritamente read-only, com output sanitizado e sem documentos ou dados pessoais;
+	- a futura execucao segue proibida de iniciar servidor, usar HTTP, navegador, login, mutacao, `start:atlas`, `start:gestor`, `start:mem:seed`, seed, master:set ou cleanup;
+	- este microcorte apenas registra a autorizacao documental do retry futuro e mantem a execucao bloqueada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar o script agora;
+	- nao executar inventario agora;
+	- nao conectar Mongo real agora;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=executeInventoryRetryWithVisibleUriInSeparateMicrocut`
+	- `secondaryCandidate=keepInventoryPausedUntilRetry`
+	- `tertiaryCandidate=pushInventoryScriptCheckpointBeforeRetry`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
