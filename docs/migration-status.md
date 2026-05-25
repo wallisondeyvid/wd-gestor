@@ -17324,6 +17324,91 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=executePowerShellSafePreflightThenDiagnosticInSeparateMicrocut`
 	- `secondaryCandidate=keepDiagnosticPausedBeforePowerShellSafeExecution`
+
+- Checkpoint documental curto do resultado da cadeia PowerShell-safe autorizada de preflight com diagnostico read-only condicional, consolidado nesta rodada sem repetir a cadeia, sem executar novamente `node -e`, sem executar novamente `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real, sem configurar URI, sem imprimir URI, sem pedir segredo, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordPowerShellSafePreflightSkippedDiagnosticResult`.
+	- `executionScope=authorizedPowerShellSafePreflightThenDiagnostic`.
+	- `chainExecutionAttempted=true`.
+	- `chainExecutionRepeated=false`.
+	- `preflightCommandAttempted=true`.
+	- `preflightStdoutCapturedByVariable=true`.
+	- `preflightIndividualBooleansObservable=false`.
+	- `mongoUriPresentObserved=false`.
+	- `mongoUriTrimNonEmptyObserved=false`.
+	- `mongoUriMongoSchemeObserved=false`.
+	- `mongodbUriPresentObserved=false`.
+	- `mongodbUriTrimNonEmptyObserved=false`.
+	- `mongodbUriMongoSchemeObserved=false`.
+	- `preflightLogicalCheckCompleted=unknown`.
+	- `preflightResult=false`.
+	- `diagnosticSkipped=true`.
+	- `diagnosticSkippedReason=preflight-not-confirmed-observable-pass`.
+	- `realDiagnosticScriptExecuted=false`.
+	- `diagnosticExecutionAttempted=false`.
+	- `diagnosticResult=not-applicable`.
+	- `diagnosticExecutionResult=not-run`.
+	- `blockedReason=not-applicable-script-not-run`.
+	- `connectionAttempted=false`.
+	- `readOnly=false`.
+	- `writesAttempted=false`.
+	- `seedMasterCleanupTouched=false`.
+	- `secretsPrinted=false`.
+	- `productionReady=false`.
+	- `realMongoConnected=false`.
+	- `realMongoDiagnosed=false`.
+	- `abortBeforeConnection=true`.
+	- `uriValuePrinted=false`.
+	- `uriLengthPrinted=false`.
+	- `uriPrefixPrinted=false`.
+	- `uriHostPrinted=false`.
+	- `uriUserPrinted=false`.
+	- `uriPasswordPrinted=false`.
+	- `uriDatabasePrinted=false`.
+	- `uriSecretExposed=false`.
+	- `guardBypassed=false`.
+	- `packageJsonChanged=false`.
+	- `sourceChanged=false`.
+	- `testsChanged=false`.
+	- `newFileCreated=false`.
+	- `npmRunExecuted=false`.
+	- `npmTestExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `loginExecuted=false`.
+	- `dataMutationExecuted=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `startMemExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Resultado objetivo consolidado desta rodada:
+	- a cadeia PowerShell-safe autorizada foi executada uma unica vez;
+	- a saida observada marcou `DIAGNOSTIC_SKIPPED=true`;
+	- o fluxo tratou `PREFLIGHT_OK` como falso para fins de execucao;
+	- os booleans individuais do preflight nao ficaram observaveis porque o stdout do `node -e` foi capturado em `$preflight`;
+	- o script `scripts/diagnostics/real-mongo-readonly-diagnostic.js` nao foi executado nesta rodada;
+	- nao houve tentativa de conexao com Mongo real;
+	- nao houve exposicao de segredo;
+	- nao houve repeticao da cadeia;
+	- este microcorte apenas registra o resultado, sem corrigir e sem reexecutar.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra resultado e nao executa de novo;
+	- este microcorte nao repete `node -e`;
+	- este microcorte nao tenta corrigir e executar no mesmo microcorte;
+	- este microcorte nao executa o diagnostico real;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao imprime URI;
+	- o proximo passo deve planejar um comando PowerShell-safe observavel, que nao capture silenciosamente os booleans ou que reemita apenas booleans sanitizados;
+	- producao continua nao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=planObservablePowerShellSafePreflightCommandDocumentally`.
+	- `secondaryCandidate=keepDiagnosticPausedUntilObservablePreflightAuthorized`.
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
