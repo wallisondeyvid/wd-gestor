@@ -18933,6 +18933,117 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=planReadOnlyDatabaseInventoryWithoutSecrets`
 	- `secondaryCandidate=investigatePrePushHookStallDocumentally`
 	- `tertiaryCandidate=planControlledStartAtlasReadinessCriteriaDocumentally`
+
+- Checkpoint documental curto do planejamento de um futuro inventario read-only do banco real sem segredos, consolidado nesta rodada sem executar inventario, sem conectar Mongo real, sem executar diagnostico, sem executar `start:atlas`, sem executar `start:gestor`, sem executar `start:mem`, sem executar `start:mem:seed`, sem seed/master, sem HTTP, sem navegador, sem login, sem mutacao, sem criar script, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=planReadOnlyDatabaseInventoryWithoutSecrets`
+	- `planningScope=documentalOnly`
+	- `previousMongoGreenCheckpointCommit=bda1aa0`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `realMongoReadOnlyDiagnosticGreenPublished=true`
+	- `postRotationDiagnosticGreenPublished=true`
+	- `productionReady=false`
+	- `readOnlyDatabaseInventoryNeeded=true`
+	- `readOnlyDatabaseInventoryPlanned=true`
+	- `inventoryExecutionAuthorizedNow=false`
+	- `inventoryExecutionRequiresSeparateAuthorization=true`
+	- `inventoryMustBeReadOnly=true`
+	- `inventoryMustNotPrintDocuments=true`
+	- `inventoryMustNotPrintSecrets=true`
+	- `inventoryMustNotPrintEmails=true`
+	- `inventoryMustNotPrintCpfs=true`
+	- `inventoryMustNotPrintPasswords=true`
+	- `inventoryMustNotPrintTokens=true`
+	- `inventoryMustNotPrintFullNames=true`
+	- `inventoryMustNotPrintRawIds=true`
+	- `inventoryMustNotPrintPersonalData=true`
+	- `inventoryMayPrintCollectionNames=true`
+	- `inventoryMayPrintSanitizedCounts=true`
+	- `inventoryMayPrintSchemaPresenceBooleans=true`
+	- `inventoryMayPrintIndexPresenceBooleans=true`
+	- `inventoryMayPrintRequiredCollectionsPresence=true`
+	- `inventoryMayPrintZeroOrNonZeroFlags=true`
+	- `inventoryMustUseSanitizedOutput=true`
+	- `inventoryMustConfirmZeroWrites=true`
+	- `inventoryMustConfirmNoSeedMasterCleanup=true`
+	- `inventoryMustAbortOnAmbiguousEnvironment=true`
+	- `inventoryMustNotUseStartAtlas=true`
+	- `inventoryMustNotUseStartGestor=true`
+	- `inventoryMustNotStartServer=true`
+	- `inventoryMustNotUseHttp=true`
+	- `inventoryMustNotUseBrowser=true`
+	- `inventoryMustNotLogin=true`
+	- `inventoryMustNotMutateData=true`
+	- `inventoryMustNotTouchWallisonMaster=true`
+	- `inventoryMustNotUseCleanupWrongEmail=true`
+	- `inventoryMustNotUseMasterSet=true`
+	- `inventoryMustNotUseSeed=true`
+	- `futureInventoryShouldPreferDedicatedReadOnlyScript=true`
+	- `futureInventoryShouldUseExplicitAllowlistOfCollections=true`
+	- `futureInventoryShouldUseOnlyMetadataAndCounts=true`
+	- `futureInventoryShouldAvoidRawFindOutput=true`
+	- `futureInventoryShouldAvoidAggregationReturningDocuments=true`
+	- `futureInventoryShouldRecordResultImmediately=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Planejamento consolidado desta rodada:
+	- o inventario read-only do banco real continua necessario, mas permanece apenas planejado documentalmente;
+	- qualquer execucao futura deve usar saida sanitizada e nao pode imprimir documentos, segredos, emails, CPFs, senhas, tokens, nomes completos, IDs brutos ou quaisquer dados pessoais;
+	- o inventario futuro pode registrar somente nomes de colecoes, contagens sanitizadas, flags zero ou nao-zero, booleans de presenca de schema, booleans de presenca de indices e presenca de colecoes obrigatorias;
+	- o inventario futuro deve confirmar zero writes, ausencia de seed/master/cleanup e abortar diante de ambiente ambiguo;
+	- o caminho preferencial futuro e um script dedicado read-only com allowlist explicita de colecoes e foco exclusivo em metadata e contagens;
+	- esse futuro inventario nao deve usar `start:atlas`, `start:gestor`, servidor, HTTP, navegador, login, mutacao, `master:set`, cleanup ou seed;
+	- este microcorte apenas registra o plano seguro do inventario e nao executa nenhuma acao operacional.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar inventario;
+	- nao conectar Mongo real;
+	- nao executar diagnostico;
+	- nao criar script ainda;
+	- nao imprimir dados reais;
+	- nao imprimir URI;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=decideReadOnlyDatabaseInventoryImplementationApproach`
+	- `secondaryCandidate=authorizeDedicatedReadOnlyDatabaseInventoryScriptPlanning`
+	- `tertiaryCandidate=keepInventoryPausedUntilInventoryScriptScopeDefined`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
