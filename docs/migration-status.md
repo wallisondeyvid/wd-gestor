@@ -18008,6 +18008,90 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=planAtlasCredentialRotationAfterSecretExposure`
 	- `secondaryCandidate=planNextReadOnlyMongoValidationAfterGreenDiagnostic`
+
+- Checkpoint documental curto do planejamento da rotacao da credencial Atlas `wdgestorapp` apos exposicao previa da URI no chat, consolidado nesta rodada sem trocar senha, sem pedir nova senha, sem colar nova URI, sem executar diagnostico, sem conectar Mongo real, sem configurar URI, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=planAtlasCredentialRotationAfterSecretExposure`
+	- `planningScope=documentalOnly`
+	- `previousGreenDiagnosticCommit=8f4a70a`
+	- `previousDiagnosticResult=green`
+	- `previousRealMongoConnected=true`
+	- `previousReadOnly=true`
+	- `previousWritesAttempted=false`
+	- `atlasCredentialExposureAcknowledged=true`
+	- `uriWasPastedInChatByUserPreviously=true`
+	- `wdgestorappCredentialShouldBeRotated=true`
+	- `atlasCredentialRotationRequiredBeforeFutureSensitiveUse=true`
+	- `rotationMustBeDoneByHumanInAtlas=true`
+	- `newPasswordMustNotBePastedInChat=true`
+	- `newUriMustNotBePastedInChat=true`
+	- `newUriMustBeConfiguredOnlyLocally=true`
+	- `oldCredentialShouldBeInvalidated=true`
+	- `localEnvMustBeUpdatedAfterRotation=true`
+	- `futureDiagnosticAfterRotationRequiresPreflight=true`
+	- `futureDiagnosticAfterRotationRequiresSeparateAuthorization=true`
+	- `futureDiagnosticAfterRotationMustBeReadOnly=true`
+	- `futureDiagnosticAfterRotationMustSanitizeLogs=true`
+	- `futureDiagnosticAfterRotationMustConfirmZeroWrites=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Plano seguro consolidado desta rodada:
+	- a credencial Atlas `wdgestorapp` fica tratada como exposta para usos futuros sensiveis por causa da colagem previa da URI no chat;
+	- a rotacao deve ser feita manualmente por humano diretamente no Atlas, fora deste microcorte;
+	- a nova senha nao deve ser colada no chat;
+	- a nova URI nao deve ser colada no chat;
+	- a nova configuracao deve ser aplicada somente no ambiente local apropriado apos a rotacao;
+	- a credencial antiga deve ser invalidada apos a rotacao;
+	- qualquer novo diagnostico depois da rotacao exige preflight previo e autorizacao separada;
+	- qualquer validacao futura depois da rotacao deve continuar read-only, com logs sanitizados e confirmacao explicita de zero writes;
+	- este microcorte apenas registra o plano e nao executa nenhuma acao operacional.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao trocar senha agora;
+	- nao pedir senha nova no chat;
+	- nao colar URI nova no chat;
+	- nao executar diagnostico;
+	- nao conectar Mongo real;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=authorizeAtlasCredentialRotationHumanAction`
+	- `secondaryCandidate=planNextReadOnlyMongoValidationAfterCredentialRotation`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
