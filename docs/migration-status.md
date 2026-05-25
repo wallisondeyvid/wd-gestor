@@ -19044,6 +19044,114 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=decideReadOnlyDatabaseInventoryImplementationApproach`
 	- `secondaryCandidate=authorizeDedicatedReadOnlyDatabaseInventoryScriptPlanning`
 	- `tertiaryCandidate=keepInventoryPausedUntilInventoryScriptScopeDefined`
+
+- Checkpoint documental curto da decisao da abordagem de implementacao do inventario read-only do banco real, consolidado nesta rodada sem criar script, sem executar inventario, sem conectar Mongo real, sem executar diagnostico, sem executar `start:atlas`, sem executar `start:gestor`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo fora do ledger, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=decideReadOnlyDatabaseInventoryImplementationApproach`
+	- `decisionScope=documentalOnly`
+	- `previousInventoryPlanCommit=c6db149`
+	- `readOnlyDatabaseInventoryPlanned=true`
+	- `implementationApproachDecisionMade=true`
+	- `selectedInventoryApproach=dedicatedReadOnlyInventoryScript`
+	- `selectedInventoryApproachReason=saferThanInlineNodeCommandAndAuditableBeforeExecution`
+	- `inlineNodeCommandRejected=true`
+	- `runtimeRouteRejected=true`
+	- `startAtlasInventoryRejected=true`
+	- `startGestorInventoryRejected=true`
+	- `manualMongoShellInventoryRejected=true`
+	- `directRawFindRejected=true`
+	- `dedicatedScriptPreferred=true`
+	- `dedicatedScriptMustBeReviewedBeforeExecution=true`
+	- `dedicatedScriptExecutionRequiresSeparateAuthorization=true`
+	- `dedicatedScriptPathCandidate=scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `scriptMustUseExistingRealMongoConnectionPattern=true`
+	- `scriptMustFailClosedWithoutExplicitRealUri=true`
+	- `scriptMustRefuseMongoMemory=true`
+	- `scriptMustBeReadOnly=true`
+	- `scriptMustUseSanitizedOutput=true`
+	- `scriptMustConfirmZeroWrites=true`
+	- `scriptMustConfirmNoSeedMasterCleanup=true`
+	- `scriptMustAvoidRawFindOutput=true`
+	- `scriptMustAvoidReturningDocuments=true`
+	- `scriptMustAvoidPrintingPersonalData=true`
+	- `scriptMustUseExplicitCollectionAllowlist=true`
+	- `scriptMayPrintCollectionNames=true`
+	- `scriptMayPrintSanitizedCounts=true`
+	- `scriptMayPrintCollectionExistsBooleans=true`
+	- `scriptMayPrintIndexExistsBooleans=true`
+	- `scriptMayPrintRequiredCollectionsPresence=true`
+	- `scriptMayPrintZeroOrNonZeroFlags=true`
+	- `scriptMustNotPrintEmails=true`
+	- `scriptMustNotPrintCpfs=true`
+	- `scriptMustNotPrintPasswords=true`
+	- `scriptMustNotPrintTokens=true`
+	- `scriptMustNotPrintFullNames=true`
+	- `scriptMustNotPrintRawIds=true`
+	- `scriptMustNotPrintDocuments=true`
+	- `scriptMustNotPrintUri=true`
+	- `scriptMustNotPrintDbCredentials=true`
+	- `scriptMustNotTouchWallisonMaster=true`
+	- `scriptMustNotUseCleanupWrongEmail=true`
+	- `scriptMustNotUseSeed=true`
+	- `scriptMustNotUseMasterSet=true`
+	- `scriptMustNotUseHttp=true`
+	- `scriptMustNotStartServer=true`
+	- `scriptMustNotUseStartAtlas=true`
+	- `scriptMustNotUseStartGestor=true`
+	- `inventoryExecutionAuthorizedNow=false`
+	- `inventoryScriptCreationAuthorizedNow=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Decisao consolidada desta rodada:
+	- a abordagem escolhida para o inventario futuro e um script dedicado read-only auditavel antes da execucao;
+	- comandos inline com `node -e`, rotas de runtime, uso de `start:atlas`, uso de `start:gestor`, shell manual do Mongo e `find` bruto ficam rejeitados por ampliar risco operacional e de exposicao;
+	- o script futuro deve reutilizar o padrao existente de conexao real apenas quando houver URI real explicita e deve falhar fechado em ambiente ambiguo ou em Mongo em memoria;
+	- a saida futura deve ficar limitada a nomes de colecoes, contagens sanitizadas, booleans de existencia de colecao, booleans de existencia de indices, presenca de colecoes obrigatorias e flags zero ou nao-zero;
+	- o script futuro nao pode imprimir documentos, URI, credenciais, emails, CPFs, senhas, tokens, nomes completos, IDs brutos ou outros dados pessoais;
+	- o script futuro nao pode tocar Wallison master, cleanup, seed, master:set, HTTP, servidor, `start:atlas` ou `start:gestor`;
+	- este microcorte apenas decide a abordagem futura e nao autoriza criacao de script nem execucao.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so decisao documental;
+	- nao criar script ainda;
+	- nao executar inventario;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=planDedicatedReadOnlyDatabaseInventoryScript`
+	- `secondaryCandidate=authorizeDedicatedReadOnlyDatabaseInventoryScriptImplementation`
+	- `tertiaryCandidate=keepInventoryPausedUntilScriptScopeApproved`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
