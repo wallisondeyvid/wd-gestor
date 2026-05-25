@@ -18173,6 +18173,85 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=performAtlasCredentialRotationHumanOutsideChat`
 	- `secondaryCandidate=planPostRotationReadOnlyDiagnostic`
+
+- Checkpoint documental curto do registro de conclusao da rotacao humana da credencial Atlas `wdgestorapp`, consolidado nesta rodada sem pedir nova senha, sem pedir nova URI, sem registrar nova URI, sem configurar URI, sem executar diagnostico, sem conectar Mongo real, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordAtlasCredentialRotationHumanCompleted`
+	- `executionScope=documentalOnlyHumanActionAlreadyCompleted`
+	- `previousCredentialRotationAuthorizationCommit=404a4d3`
+	- `atlasCredentialExposureAcknowledged=true`
+	- `wdgestorappCredentialRotationAuthorized=true`
+	- `wdgestorappCredentialRotationReportedByUser=true`
+	- `wdgestorappCredentialRotationCompleted=true`
+	- `rotationPerformedByHumanInAtlas=true`
+	- `oldCredentialShouldBeConsideredInvalidated=true`
+	- `newPasswordPastedInChat=false`
+	- `newUriPastedInChat=false`
+	- `newUriCommitted=false`
+	- `newUriRecordedInLedger=false`
+	- `localEnvNeedsUpdateWithRotatedCredential=true`
+	- `futurePostRotationPreflightRequired=true`
+	- `futurePostRotationReadOnlyDiagnosticRequiresSeparateAuthorization=true`
+	- `futurePostRotationDiagnosticMustBeReadOnly=true`
+	- `futurePostRotationDiagnosticMustSanitizeLogs=true`
+	- `futurePostRotationDiagnosticMustConfirmZeroWrites=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Registro consolidado desta rodada:
+	- o usuario informou que a rotacao da senha do usuario Atlas `wdgestorapp` foi concluida diretamente no Atlas;
+	- a nova senha nao foi colada no chat;
+	- a nova URI nao foi colada no chat;
+	- a nova URI nao foi registrada no ledger nem commitada;
+	- a credencial antiga deve ser considerada invalidada;
+	- o ambiente local ainda precisa ser atualizado com a credencial rotacionada antes de qualquer validacao futura;
+	- qualquer preflight ou diagnostico posterior a rotacao continua exigindo microcorte proprio, autorizacao separada, logs sanitizados e confirmacao explicita de zero writes;
+	- este microcorte apenas registra documentalmente a conclusao da acao humana e nao executa nada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao pedir senha nova no chat;
+	- nao colar URI nova no chat;
+	- nao executar diagnostico;
+	- nao conectar Mongo real;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=planPostRotationLocalUriUpdateWithoutSecret`
+	- `secondaryCandidate=authorizePostRotationPreflightOnly`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
