@@ -16974,6 +16974,140 @@ Checkpoint tenant enforcement atual:
 	- nenhum Mongo real conectado;
 	- nenhuma query real executada;
 	- nenhum relatorio real gerado.
+
+- Checkpoint documental curto do resultado da cadeia autorizada de preflight no mesmo processo com diagnostico read-only condicional, consolidado nesta rodada sem repetir a cadeia, sem executar novamente `node -e`, sem executar `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real, sem configurar URI, sem imprimir URI, sem pedir segredo, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordSameProcessPreflightChainSyntaxFailureResult`.
+	- `executionScope=authorizedSameProcessPreflightThenReadOnlyDiagnostic`.
+	- `previousCheckpoint=e6e4aff docs(ops): autoriza preflight diagnostico mongo`.
+	- `chainExecutionAttempted=true`.
+	- `chainExecutionRepeated=false`.
+	- `preflightCommandAttempted=true`.
+	- `preflightLogicalCheckCompleted=false`.
+	- `preflightResult=syntax-error`.
+	- `preflightFailedBeforeLogicalShapeCheck=true`.
+	- `preflightFailureCause=quoting-or-syntax-error`.
+	- `diagnosticSkipped=true`.
+	- `diagnosticSkippedReason=preflight-command-failed-before-logical-check`.
+	- `realDiagnosticScriptExecuted=false`.
+	- `diagnosticExecutionAttempted=false`.
+	- `diagnosticResult=not-applicable`.
+	- `diagnosticExecutionResult=not-run`.
+	- `blockedReason=not-applicable-script-not-run`.
+	- `connectionAttempted=false`.
+	- `readOnly=not-applicable-script-not-run`.
+	- `writesAttempted=false`.
+	- `seedMasterCleanupTouched=false`.
+	- `secretsPrinted=false`.
+	- `productionReady=false`.
+	- `realMongoConnected=false`.
+	- `realMongoDiagnosed=false`.
+	- `abortBeforeConnection=true`.
+	- `uriValuePrinted=false`.
+	- `uriLengthPrinted=false`.
+	- `uriPrefixPrinted=false`.
+	- `uriHostPrinted=false`.
+	- `uriUserPrinted=false`.
+	- `uriPasswordPrinted=false`.
+	- `uriDatabasePrinted=false`.
+	- `uriSecretExposed=false`.
+	- `guardBypassed=false`.
+	- `packageJsonChanged=false`.
+	- `sourceChanged=false`.
+	- `testsChanged=false`.
+	- `newFileCreated=false`.
+	- `npmRunExecuted=false`.
+	- `npmTestExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `loginExecuted=false`.
+	- `dataMutationExecuted=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `startMemExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `nextExecutionAuthorized=false`.
+	- `pushExecuted=false`.
+- Resultado objetivo consolidado desta rodada:
+	- a cadeia autorizada foi tentada uma unica vez;
+	- o `node -e` do preflight falhou por quoting ou sintaxe antes da checagem logica da shape;
+	- o preflight nao foi logicamente concluido;
+	- a saida observada marcou `DIAGNOSTIC_SKIPPED=true`;
+	- o script `scripts/diagnostics/real-mongo-readonly-diagnostic.js` nao foi executado nesta rodada;
+	- nao houve tentativa de conexao com Mongo real;
+	- nao houve exposicao de segredo;
+	- nao houve repeticao da cadeia;
+	- este microcorte apenas registra o resultado, sem corrigir e sem reexecutar.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra resultado e nao executa de novo;
+	- este microcorte nao repete `node -e`;
+	- este microcorte nao tenta corrigir e executar no mesmo microcorte;
+	- este microcorte nao executa o diagnostico real;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao imprime URI;
+	- o proximo passo deve planejar um comando de preflight PowerShell-safe;
+	- producao continua nao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=planPowerShellSafePreflightCommandDocumentally`.
+	- `secondaryCandidate=keepDiagnosticPausedUntilPreflightCommandFixed`.
+- Gates:
+	- `selectedTarget=recordSameProcessPreflightChainSyntaxFailureResult`
+	- `executionScope=authorizedSameProcessPreflightThenReadOnlyDiagnostic`
+	- `chainExecutionAttempted=true`
+	- `chainExecutionRepeated=false`
+	- `preflightCommandAttempted=true`
+	- `preflightLogicalCheckCompleted=false`
+	- `preflightResult=syntax-error`
+	- `preflightFailedBeforeLogicalShapeCheck=true`
+	- `preflightFailureCause=quoting-or-syntax-error`
+	- `diagnosticSkipped=true`
+	- `diagnosticSkippedReason=preflight-command-failed-before-logical-check`
+	- `realDiagnosticScriptExecuted=false`
+	- `diagnosticExecutionAttempted=false`
+	- `diagnosticResult=not-applicable`
+	- `diagnosticExecutionResult=not-run`
+	- `blockedReason=not-applicable-script-not-run`
+	- `connectionAttempted=false`
+	- `readOnly=not-applicable-script-not-run`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `realMongoConnected=false`
+	- `realMongoDiagnosed=false`
+	- `abortBeforeConnection=true`
+	- `uriValuePrinted=false`
+	- `uriLengthPrinted=false`
+	- `uriPrefixPrinted=false`
+	- `uriHostPrinted=false`
+	- `uriUserPrinted=false`
+	- `uriPasswordPrinted=false`
+	- `uriDatabasePrinted=false`
+	- `uriSecretExposed=false`
+	- `guardBypassed=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
