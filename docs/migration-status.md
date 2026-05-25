@@ -19385,6 +19385,80 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=implementDedicatedReadOnlyDatabaseInventoryScript`
 	- `secondaryCandidate=defineExactInventoryCollectionAllowlistDocumentally`
 	- `tertiaryCandidate=keepInventoryImplementationPaused`
+
+- Checkpoint documental curto da implementacao do script dedicado de inventario read-only do banco real, consolidado nesta rodada sem executar o script, sem executar inventario, sem conectar Mongo real, sem executar diagnostico, sem executar `start:atlas`, sem executar `start:gestor`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=implementDedicatedReadOnlyDatabaseInventoryScript`
+	- `implementationScope=scriptCreationOnlyNoExecution`
+	- `previousInventoryScriptAuthorizationCommit=8286a7a`
+	- `inventoryScriptCreated=true`
+	- `inventoryScriptPath=scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `inventoryScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `scriptUsesExplicitCollectionAllowlist=true`
+	- `scriptUsesSanitizedOutput=true`
+	- `scriptFailsClosedWithoutExplicitRealUri=true`
+	- `scriptRefusesMongoMemory=true`
+	- `scriptReadOnlyByDesign=true`
+	- `scriptPrintsOnlyCountsBooleansAndCollectionNames=true`
+	- `scriptDoesNotPrintDocuments=true`
+	- `scriptDoesNotPrintPersonalData=true`
+	- `scriptDoesNotPrintUri=true`
+	- `scriptDoesNotPrintCredentials=true`
+	- `scriptDoesNotStartServer=true`
+	- `scriptDoesNotUseHttp=true`
+	- `scriptDoesNotUseStartAtlas=true`
+	- `scriptDoesNotUseStartGestor=true`
+	- `scriptDoesNotUseSeed=true`
+	- `scriptDoesNotUseMasterSet=true`
+	- `scriptDoesNotUseCleanupWrongEmail=true`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=true`
+	- `newFilePath=scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Implementacao consolidada desta rodada:
+	- o arquivo `scripts/diagnostics/real-mongo-readonly-inventory.js` foi criado sem execucao;
+	- o script reutiliza o padrao de seguranca do diagnostico read-only para escolher URI explicita, falhar fechado e recusar `MONGO_MEMORY=1`;
+	- a saida foi limitada a status gerais sanitizados e a linhas por colecao contendo apenas `exists`, `count`, `nonEmpty` e `hasIndexes`;
+	- a allowlist inicial foi implementada de forma explicita e conservadora com `users`, `usuarios`, `condominios`, `unidades`, `moradores`, `comunicados`, `blocos`, `sessions`, `refreshTokens` e `auditLogs`;
+	- o script nao importa `src/start.js`, nao importa `src/server/createServer.js`, nao inicia servidor e nao executa writes, seed, cleanup ou master;
+	- este microcorte cria o script, mas mantem execucao e inventario bloqueados.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte cria o script, mas nao executa;
+	- nao executar inventario;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=reviewDedicatedReadOnlyDatabaseInventoryScript`
+	- `secondaryCandidate=authorizeDedicatedReadOnlyDatabaseInventoryScriptExecution`
+	- `tertiaryCandidate=keepInventoryExecutionPausedUntilReview`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
