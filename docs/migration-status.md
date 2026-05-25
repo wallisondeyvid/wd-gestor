@@ -19459,6 +19459,106 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=reviewDedicatedReadOnlyDatabaseInventoryScript`
 	- `secondaryCandidate=authorizeDedicatedReadOnlyDatabaseInventoryScriptExecution`
 	- `tertiaryCandidate=keepInventoryExecutionPausedUntilReview`
+
+- Checkpoint documental curto da revisao do script dedicado de inventario read-only do banco real, consolidado nesta rodada sem executar o script, sem executar inventario, sem conectar Mongo real, sem executar diagnostico, sem executar `start:atlas`, sem executar `start:gestor`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar o script neste microcorte, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=reviewDedicatedReadOnlyDatabaseInventoryScript`
+	- `reviewScope=documentalOnlyNoExecution`
+	- `previousInventoryScriptImplementationCommit=9590fcf`
+	- `scriptPath=scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `scriptExists=true`
+	- `nodeCheckAlreadyPassedInPreviousCommit=true`
+	- `scriptUsesExplicitCollectionAllowlist=true`
+	- `scriptFailsClosedWithoutExplicitRealUri=true`
+	- `scriptRefusesMongoMemory=true`
+	- `scriptRefusesMissingUri=true`
+	- `scriptReadOnlyByDesign=true`
+	- `scriptUsesSanitizedOutput=true`
+	- `scriptConfirmsZeroWrites=true`
+	- `scriptConfirmsNoSeedMasterCleanup=true`
+	- `scriptAvoidsRawFindOutput=true`
+	- `scriptAvoidsReturningDocuments=true`
+	- `scriptAvoidsPrintingPersonalData=true`
+	- `scriptAvoidsPrintingRawObjectIds=true`
+	- `scriptAvoidsPrintingEmails=true`
+	- `scriptAvoidsPrintingCpfs=true`
+	- `scriptAvoidsPrintingPasswords=true`
+	- `scriptAvoidsPrintingTokens=true`
+	- `scriptAvoidsPrintingFullNames=true`
+	- `scriptAvoidsPrintingPhones=true`
+	- `scriptAvoidsPrintingAddresses=true`
+	- `scriptAvoidsPrintingDocuments=true`
+	- `scriptAvoidsPrintingUri=true`
+	- `scriptAvoidsPrintingDbCredentials=true`
+	- `scriptDoesNotTouchWallisonMaster=true`
+	- `scriptDoesNotUseCleanupWrongEmail=true`
+	- `scriptDoesNotUseSeed=true`
+	- `scriptDoesNotUseMasterSet=true`
+	- `scriptDoesNotUseHttp=true`
+	- `scriptDoesNotStartServer=true`
+	- `scriptDoesNotUseStartAtlas=true`
+	- `scriptDoesNotUseStartGestor=true`
+	- `scriptUsesMongooseReadOnlyConnection=true`
+	- `scriptClosesConnectionInFinally=true`
+	- `scriptSetsExitCodeOnRed=true`
+	- `scriptExecutionStillBlocked=true`
+	- `inventoryExecutionStillBlocked=true`
+	- `inventoryScriptReviewed=true`
+	- `inventoryScriptAcceptedForFutureExecutionAuthorization=true`
+	- `blockingDefectFound=false`
+	- `blockingDefectSummary=none`
+	- `scriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Revisao consolidada desta rodada:
+	- o script existe no caminho planejado e permaneceu sem execucao nesta rodada;
+	- a allowlist explicita esta presente e a coleta ficou limitada a `exists`, `count`, `nonEmpty` e `hasIndexes`, sem retorno de documentos;
+	- a selecao de URI continua fechada, com recusa de `MONGO_MEMORY=1`, recusa de URI ausente e bloqueio para alvos locais ou ambiguos;
+	- a saida permanece sanitizada, com `sanitizedTarget`, `sanitizedDbName`, booleans e contagens, sem impressao de URI bruta, credenciais ou dados pessoais;
+	- a conexao usa mongoose apenas para leitura, fecha em `finally` e sinaliza red por `process.exitCode=1` quando houver falha;
+	- nao foi encontrado defeito bloqueante para uma futura autorizacao separada de execucao;
+	- este microcorte apenas registra a revisao documental e mantem a execucao bloqueada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so revisao documental;
+	- nao executar o script;
+	- nao executar inventario;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=authorizeDedicatedReadOnlyDatabaseInventoryScriptExecution`
+	- `secondaryCandidate=pushInventoryScriptPlanningAndReviewCheckpoint`
+	- `tertiaryCandidate=keepInventoryExecutionPaused`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
