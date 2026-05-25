@@ -18664,6 +18664,96 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=diagnosePostRotationShellEnvMissingWithoutSecret`
 	- `secondaryCandidate=reconfigurePostRotationMongoUriInExecutionShell`
+
+- Checkpoint documental curto do resultado green do diagnostico Mongo real read-only apos preflight manual pos-rotacao bem-sucedido, consolidado nesta rodada sem repetir preflight, sem repetir diagnostico, sem conectar Mongo real novamente, sem configurar URI, sem imprimir URI, sem pedir segredo, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordPostRotationReadOnlyDiagnosticGreenResult`
+	- `executionScope=postRotationManualPreflightThenReadOnlyDiagnostic`
+	- `previousPostRotationPreflightNoEnvCommit=1ea4a17`
+	- `previousPostRotationPreflightNoEnvSupersededByManualShellConfiguration=true`
+	- `postRotationUriReconfiguredLocallyBeforeDiagnostic=true`
+	- `postRotationPreflightExecuted=true`
+	- `postRotationPreflightExecutionRepeated=false`
+	- `mongoUriPresentForNode=false`
+	- `mongoUriTrimNonEmpty=false`
+	- `mongoUriMongoScheme=false`
+	- `mongodbUriPresentForNode=true`
+	- `mongodbUriTrimNonEmpty=true`
+	- `mongodbUriMongoScheme=true`
+	- `preflightOk=true`
+	- `diagnosticCommandExecuted=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `diagnosticExecutionAttempted=true`
+	- `diagnosticExecutionRepeated=false`
+	- `diagnosticExecutionResult=green`
+	- `diagnosticResult=green`
+	- `connectionAttempted=true`
+	- `readOnly=true`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `realMongoConnected=true`
+	- `realMongoDiagnosed=true`
+	- `abortBeforeConnection=false`
+	- `blockedReason=none`
+	- `atlasConnectionFailed=false`
+	- `sanitizedTargetEmitted=true`
+	- `uriCredentialsRedactedInDiagnosticOutput=true`
+	- `sanitizedDbName=test`
+	- `uriValuePrinted=false`
+	- `uriLengthPrinted=false`
+	- `uriHostPrinted=false`
+	- `uriUserPrinted=false`
+	- `uriPasswordPrinted=false`
+	- `uriDatabasePrinted=false`
+	- `uriSecretExposedInDiagnosticOutput=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+- Resultado consolidado desta rodada:
+	- o estado anterior de preflight pos-rotacao sem env registrado em `1ea4a17` foi superado por nova configuracao local da URI no shell observado;
+	- o preflight manual pos-rotacao confirmou `MONGO_URI_PRESENT=false`, `MONGO_URI_TRIM_NONEMPTY=false` e `MONGO_URI_MONGO_SCHEME=false` no processo Node;
+	- o preflight manual pos-rotacao confirmou `MONGODB_URI_PRESENT=true`, `MONGODB_URI_TRIM_NONEMPTY=true` e `MONGODB_URI_MONGO_SCHEME=true` no processo Node;
+	- o preflight manual pos-rotacao confirmou `PREFLIGHT_OK=true`;
+	- o diagnostico `node scripts/diagnostics/real-mongo-readonly-diagnostic.js` foi executado uma unica vez nesta rodada;
+	- o diagnostico retornou `diagnosticResult=green`;
+	- houve conexao bem-sucedida com Mongo real em modo minimo read-only;
+	- o alvo emitido permaneceu sanitizado com credenciais redigidas e `sanitizedDbName=test`;
+	- nao houve escrita, seed, master, HTTP, navegador, login, mutacao real nem start de servidor;
+	- a producao continua nao pronta.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra resultado, nao executa de novo;
+	- nao repetir preflight;
+	- nao repetir diagnostico;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- o green e somente do diagnostico read-only minimo pos-rotacao;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=planNextMongoReadinessStepAfterPostRotationGreen`
+	- `secondaryCandidate=pushPostRotationGreenCheckpoint`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
