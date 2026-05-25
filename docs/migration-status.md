@@ -19274,6 +19274,117 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeDedicatedReadOnlyDatabaseInventoryScriptImplementation`
 	- `secondaryCandidate=defineExactInventoryCollectionAllowlistDocumentally`
 	- `tertiaryCandidate=keepInventoryImplementationPaused`
+
+- Checkpoint documental curto da autorizacao futura para implementar o script dedicado de inventario read-only do banco real, consolidado nesta rodada sem criar o script, sem executar inventario, sem conectar Mongo real, sem executar diagnostico, sem executar `start:atlas`, sem executar `start:gestor`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo neste microcorte, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizeDedicatedReadOnlyDatabaseInventoryScriptImplementation`
+	- `authorizationScope=documentalOnlyFutureImplementation`
+	- `previousInventoryScriptPlanCommit=eeceb05`
+	- `dedicatedInventoryScriptPlanned=true`
+	- `dedicatedInventoryScriptPath=scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `dedicatedInventoryScriptImplementationAuthorizedForFutureOnly=true`
+	- `dedicatedInventoryScriptImplementationAuthorizedNow=false`
+	- `dedicatedInventoryScriptCreationAuthorizedNow=false`
+	- `dedicatedInventoryScriptExecutionAuthorizedNow=false`
+	- `inventoryExecutionAuthorizedNow=false`
+	- `futureImplementationMustUsePlannedPath=true`
+	- `futureImplementationMustReuseRealMongoDiagnosticSafetyPattern=true`
+	- `futureImplementationMustFailClosedWithoutExplicitRealUri=true`
+	- `futureImplementationMustRefuseMongoMemory=true`
+	- `futureImplementationMustRefuseMissingUri=true`
+	- `futureImplementationMustBeReadOnly=true`
+	- `futureImplementationMustUseSanitizedOutput=true`
+	- `futureImplementationMustConfirmZeroWrites=true`
+	- `futureImplementationMustConfirmNoSeedMasterCleanup=true`
+	- `futureImplementationMustAvoidRawFindOutput=true`
+	- `futureImplementationMustAvoidReturningDocuments=true`
+	- `futureImplementationMustAvoidPrintingPersonalData=true`
+	- `futureImplementationMustAvoidPrintingRawObjectIds=true`
+	- `futureImplementationMustAvoidPrintingEmails=true`
+	- `futureImplementationMustAvoidPrintingCpfs=true`
+	- `futureImplementationMustAvoidPrintingPasswords=true`
+	- `futureImplementationMustAvoidPrintingTokens=true`
+	- `futureImplementationMustAvoidPrintingFullNames=true`
+	- `futureImplementationMustAvoidPrintingPhones=true`
+	- `futureImplementationMustAvoidPrintingAddresses=true`
+	- `futureImplementationMustAvoidPrintingDocuments=true`
+	- `futureImplementationMustAvoidPrintingUri=true`
+	- `futureImplementationMustAvoidPrintingDbCredentials=true`
+	- `futureImplementationMustNotTouchWallisonMaster=true`
+	- `futureImplementationMustNotUseCleanupWrongEmail=true`
+	- `futureImplementationMustNotUseSeed=true`
+	- `futureImplementationMustNotUseMasterSet=true`
+	- `futureImplementationMustNotUseHttp=true`
+	- `futureImplementationMustNotStartServer=true`
+	- `futureImplementationMustNotUseStartAtlas=true`
+	- `futureImplementationMustNotUseStartGestor=true`
+	- `futureImplementationMustUseExplicitCollectionAllowlist=true`
+	- `futureImplementationMustDocumentAllowlistInCodeCommentsOrConstants=true`
+	- `futureImplementationMustOutputOnlyBooleansCountsAndCollectionNames=true`
+	- `futureImplementationMustBeReviewableBeforeExecution=true`
+	- `futureReviewRequiresSeparateMicrocut=true`
+	- `futureExecutionRequiresSeparateAuthorization=true`
+	- `futureExecutionMustRecordResultImmediately=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `inventoryScriptCreated=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Autorizacao consolidada desta rodada:
+	- a futura implementacao do arquivo `scripts/diagnostics/real-mongo-readonly-inventory.js` fica autorizada apenas para um microcorte separado de implementacao;
+	- essa autorizacao nao cria o arquivo agora e nao autoriza execucao do inventario;
+	- a futura implementacao deve seguir integralmente o plano ja documentado, reutilizando o padrao de seguranca do diagnostico read-only e falhando fechado sem URI real explicita;
+	- a futura implementacao deve recusar Mongo em memoria, recusar ambiente ambiguo e limitar a saida a booleans, contagens sanitizadas e nomes de colecoes;
+	- a futura implementacao deve documentar a allowlist exata em comentarios ou constantes do proprio codigo antes de qualquer execucao;
+	- revisao e execucao futuras continuam exigindo microcortes e autorizacoes separadas;
+	- este microcorte apenas registra a autorizacao documental futura da implementacao e mantem a execucao bloqueada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao criar script ainda;
+	- nao executar inventario;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=implementDedicatedReadOnlyDatabaseInventoryScript`
+	- `secondaryCandidate=defineExactInventoryCollectionAllowlistDocumentally`
+	- `tertiaryCandidate=keepInventoryImplementationPaused`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
