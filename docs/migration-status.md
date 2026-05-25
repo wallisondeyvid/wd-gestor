@@ -18422,6 +18422,91 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=performPostRotationLocalUriUpdateHumanOutsideChat`
 	- `secondaryCandidate=keepPostRotationDiagnosticPausedUntilLocalUriUpdated`
+
+- Checkpoint documental curto do registro da configuracao local da URI apos a rotacao da credencial Atlas, consolidado nesta rodada sem executar `node -e`, sem executar diagnostico, sem conectar Mongo real, sem pedir nova URI, sem registrar nova URI, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordPostRotationLocalUriConfigured`
+	- `executionScope=documentalOnlyHumanLocalActionAlreadyCompleted`
+	- `previousPostRotationLocalUriAuthorizationCommit=8415d9d`
+	- `atlasCredentialRotationCompleted=true`
+	- `localUriUpdateAuthorized=true`
+	- `localUriUpdateReportedByUser=true`
+	- `localUriUpdateCompleted=true`
+	- `newUriConfiguredLocally=true`
+	- `newUriConfiguredOnlyLocally=true`
+	- `newUriPastedInChat=false`
+	- `newUriPrinted=false`
+	- `newUriCommitted=false`
+	- `newUriRecordedInLedger=false`
+	- `newPasswordPastedInChat=false`
+	- `preferredLocalConfigurationMethod=PowerShellSessionEnvAssignmentWithoutPrintingValue`
+	- `envFileCreated=false`
+	- `gitignoreChanged=false`
+	- `futurePostRotationPreflightRequired=true`
+	- `futurePostRotationPreflightRequiresSeparateAuthorization=true`
+	- `futurePostRotationDiagnosticRequiresSeparateAuthorization=true`
+	- `futurePostRotationDiagnosticMustBeReadOnly=true`
+	- `futurePostRotationDiagnosticMustSanitizeLogs=true`
+	- `futurePostRotationDiagnosticMustConfirmZeroWrites=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Registro consolidado desta rodada:
+	- o usuario informou que a nova URI pos-rotacao foi configurada localmente;
+	- a nova URI nao foi colada no chat;
+	- a nova URI nao foi impressa;
+	- a nova URI nao foi registrada no ledger nem commitada;
+	- nao houve preflight apos essa configuracao;
+	- nao houve diagnostico apos essa configuracao;
+	- nao houve conexao Mongo real apos essa configuracao;
+	- qualquer proximo preflight ou diagnostico continua exigindo microcorte proprio e autorizacao separada;
+	- este microcorte apenas registra documentalmente a acao humana local ja concluida e nao executa nada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao pedir senha nova no chat;
+	- nao colar URI nova no chat;
+	- nao executar preflight;
+	- nao executar diagnostico;
+	- nao conectar Mongo real;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=authorizePostRotationPreflightOnly`
+	- `secondaryCandidate=planPostRotationReadOnlyDiagnosticAfterPreflight`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
