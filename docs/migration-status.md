@@ -18335,6 +18335,93 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=authorizePostRotationLocalUriUpdateHumanAction`
 	- `secondaryCandidate=keepPostRotationDiagnosticPausedUntilLocalUriUpdated`
+
+- Checkpoint documental curto da autorizacao da acao humana futura para atualizar localmente a URI apos a rotacao da credencial Atlas, consolidado nesta rodada sem pedir nova senha, sem pedir nova URI, sem registrar nova URI, sem configurar URI agora, sem executar diagnostico, sem conectar Mongo real, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizePostRotationLocalUriUpdateHumanAction`
+	- `authorizationScope=documentalOnlyHumanFutureAction`
+	- `previousPostRotationLocalUriPlanCommit=80f3782`
+	- `atlasCredentialRotationCompleted=true`
+	- `localUriUpdateNeededAfterRotation=true`
+	- `localUriUpdateAuthorizedForHuman=true`
+	- `localUriUpdateExecutedNow=false`
+	- `localUriUpdateMustBeDoneByHuman=true`
+	- `preferredLocalConfigurationMethod=PowerShellSessionEnvAssignmentWithoutPrintingValue`
+	- `newPasswordMustNotBePastedInChat=true`
+	- `newUriMustNotBePastedInChat=true`
+	- `newUriMustNotBeCommitted=true`
+	- `newUriMustNotBeRecordedInLedger=true`
+	- `newUriMustBeConfiguredOnlyLocally=true`
+	- `dotEnvFileCreationAuthorized=false`
+	- `gitignoreChangeAuthorized=false`
+	- `futurePostRotationPreflightRequired=true`
+	- `futurePostRotationPreflightRequiresSeparateAuthorization=true`
+	- `futurePostRotationDiagnosticRequiresSeparateAuthorization=true`
+	- `futurePostRotationDiagnosticMustBeReadOnly=true`
+	- `futurePostRotationDiagnosticMustSanitizeLogs=true`
+	- `futurePostRotationDiagnosticMustConfirmZeroWrites=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Autorizacao segura consolidada desta rodada:
+	- a atualizacao local da URI usando a credencial rotacionada fica autorizada para execucao humana futura fora do chat e fora do Git;
+	- o metodo preferencial continua sendo atribuicao de variavel de ambiente em sessao PowerShell sem imprimir valor;
+	- a nova senha nao deve ser colada no chat;
+	- a nova URI nao deve ser colada no chat;
+	- a nova URI nao deve ser commitada nem registrada no ledger;
+	- nao esta autorizada criacao de `.env` neste microcorte;
+	- nao esta autorizada alteracao de `.gitignore` neste microcorte;
+	- qualquer preflight ou diagnostico posterior a essa atualizacao continua exigindo microcorte proprio e autorizacao separada;
+	- qualquer diagnostico futuro deve permanecer read-only, com logs sanitizados e confirmacao explicita de zero writes;
+	- este microcorte apenas autoriza documentalmente a acao humana futura e nao executa nada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao pedir senha nova no chat;
+	- nao colar URI nova no chat;
+	- nao criar `.env`;
+	- nao alterar `.gitignore`;
+	- nao configurar URI neste microcorte;
+	- nao executar diagnostico;
+	- nao conectar Mongo real;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=performPostRotationLocalUriUpdateHumanOutsideChat`
+	- `secondaryCandidate=keepPostRotationDiagnosticPausedUntilLocalUriUpdated`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
