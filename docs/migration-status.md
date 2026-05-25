@@ -19961,6 +19961,122 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=diagnoseInventoryExecutionEnvPropagationWithoutSecret`
 	- `secondaryCandidate=executeInventoryDirectlyInHumanPowerShellAfterRecording`
 	- `tertiaryCandidate=keepInventoryPausedUntilExecutionShellConfirmed`
+
+- Checkpoint documental curto do resultado green do inventario read-only executado manualmente no PowerShell local apos liberacao do IP Atlas, consolidado nesta rodada sem repetir inventario, sem conectar Mongo real novamente, sem executar diagnostico, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordReadOnlyDatabaseInventoryGreenResult`
+	- `executionScope=humanPowerShellReadOnlyInventorySingleRun`
+	- `previousInventoryRetryMissingUriCommit=b0e8013`
+	- `atlasIpAllowlistIssueIdentifiedByUser=true`
+	- `atlasIpAllowedByUserBeforeSuccessfulInventory=true`
+	- `inventoryCommandExecuted=node scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `inventoryExecutionAttempted=true`
+	- `inventoryExecutionRepeated=false`
+	- `inventoryResult=green`
+	- `inventoryExecutionResult=green`
+	- `blockedReason=none`
+	- `connectionAttempted=true`
+	- `readOnly=true`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `sanitizedTargetEmitted=true`
+	- `sanitizedDbName=test`
+	- `realMongoConnectionAttempted=true`
+	- `realMongoConnected=true`
+	- `inventoryExecuted=true`
+	- `inventoryEffectiveResult=green`
+	- `abortBeforeConnection=false`
+	- `scriptFailedClosedAsDesigned=false`
+	- `documentsPrinted=false`
+	- `personalDataPrinted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `collectionInventoryEmitted=true`
+	- `collectionUsersExists=true`
+	- `collectionUsersCount=0`
+	- `collectionUsersNonEmpty=false`
+	- `collectionUsersHasIndexes=true`
+	- `collectionUsuariosExists=false`
+	- `collectionUsuariosCount=0`
+	- `collectionUsuariosNonEmpty=false`
+	- `collectionUsuariosHasIndexes=false`
+	- `collectionCondominiosExists=false`
+	- `collectionCondominiosCount=0`
+	- `collectionCondominiosNonEmpty=false`
+	- `collectionCondominiosHasIndexes=false`
+	- `collectionUnidadesExists=true`
+	- `collectionUnidadesCount=0`
+	- `collectionUnidadesNonEmpty=false`
+	- `collectionUnidadesHasIndexes=true`
+	- `collectionMoradoresExists=false`
+	- `collectionMoradoresCount=0`
+	- `collectionMoradoresNonEmpty=false`
+	- `collectionMoradoresHasIndexes=false`
+	- `collectionComunicadosExists=false`
+	- `collectionComunicadosCount=0`
+	- `collectionComunicadosNonEmpty=false`
+	- `collectionComunicadosHasIndexes=false`
+	- `collectionBlocosExists=false`
+	- `collectionBlocosCount=0`
+	- `collectionBlocosNonEmpty=false`
+	- `collectionBlocosHasIndexes=false`
+	- `collectionSessionsExists=false`
+	- `collectionSessionsCount=0`
+	- `collectionSessionsNonEmpty=false`
+	- `collectionSessionsHasIndexes=false`
+	- `collectionRefreshTokensExists=false`
+	- `collectionRefreshTokensCount=0`
+	- `collectionRefreshTokensNonEmpty=false`
+	- `collectionRefreshTokensHasIndexes=false`
+	- `collectionAuditLogsExists=false`
+	- `collectionAuditLogsCount=0`
+	- `collectionAuditLogsNonEmpty=false`
+	- `collectionAuditLogsHasIndexes=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `pushExecuted=false`
+- Resultado consolidado desta rodada:
+	- o inventario read-only foi executado manualmente uma unica vez pelo humano no PowerShell local, apos liberacao do IP Atlas, e concluiu com `inventoryResult=green`;
+	- houve tentativa de conexao e conexao real com Mongo, mas a execucao permaneceu read-only, sem writes, sem seed/master cleanup e sem declarar producao pronta;
+	- `sanitizedTarget` foi emitido de forma sanitizada e `sanitizedDbName=test` foi emitido sem expor URI, host, usuario, senha ou database bruto;
+	- a colecao `users` existe com `count=0` e indexes presentes, e a colecao `unidades` existe com `count=0` e indexes presentes;
+	- as demais colecoes da allowlist apareceram ausentes, com `count=0`, `nonEmpty=false` e sem indexes;
+	- nao houve impressao de documentos, dados pessoais, URI ou segredos, e nao houve HTTP, navegador, login ou mutacao.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir inventario;
+	- nao conectar Mongo real novamente;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=planNextReadinessStepAfterInventoryGreen`
+	- `secondaryCandidate=pushMongoInventoryGreenCheckpoint`
+	- `tertiaryCandidate=planControlledStartAtlasReadinessCriteriaDocumentally`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
