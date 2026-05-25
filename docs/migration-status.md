@@ -18598,6 +18598,72 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=executePostRotationPreflightOnlyInSeparateMicrocut`
 	- `secondaryCandidate=keepPostRotationDiagnosticPausedUntilPreflightGreen`
+
+- Checkpoint documental curto do resultado do preflight pos-rotacao executado sem diagnostico, consolidado nesta rodada sem repetir preflight, sem executar diagnostico, sem conectar Mongo real, sem configurar URI, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordPostRotationPreflightOnlyResult`
+	- `executionScope=authorizedPostRotationPreflightOnly`
+	- `previousPostRotationPreflightAuthorizationCommit=01f2f33`
+	- `preflightExecuted=true`
+	- `preflightExecutionRepeated=false`
+	- `mongoUriPresentForNode=false`
+	- `mongoUriTrimNonEmpty=false`
+	- `mongoUriMongoScheme=false`
+	- `mongodbUriPresentForNode=false`
+	- `mongodbUriTrimNonEmpty=false`
+	- `mongodbUriMongoScheme=false`
+	- `preflightOk=false`
+	- `postRotationLocalUriStillNotVisibleToNode=true`
+	- `diagnosticExecuted=false`
+	- `diagnosticExecutionResult=not-run`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `realMongoDiagnosed=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Resultado consolidado desta rodada:
+	- o preflight pos-rotacao foi executado uma unica vez;
+	- `MONGO_URI_PRESENT=false` no processo Node;
+	- `MONGO_URI_TRIM_NONEMPTY=false` no processo Node;
+	- `MONGO_URI_MONGO_SCHEME=false` no processo Node;
+	- `MONGODB_URI_PRESENT=false` no processo Node;
+	- `MONGODB_URI_TRIM_NONEMPTY=false` no processo Node;
+	- `MONGODB_URI_MONGO_SCHEME=false` no processo Node;
+	- `PREFLIGHT_OK=false`;
+	- a nova URI pos-rotacao ainda nao estava visivel ao processo Node no contexto observado;
+	- nenhum diagnostico foi executado;
+	- nao houve conexao Mongo real;
+	- nao houve alteracao de arquivos.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir preflight;
+	- nao executar diagnostico;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=diagnosePostRotationShellEnvMissingWithoutSecret`
+	- `secondaryCandidate=reconfigurePostRotationMongoUriInExecutionShell`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
