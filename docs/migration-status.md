@@ -17727,6 +17727,111 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=authorizeObservablePreflightAfterExecutionShellUriConfigured`.
 	- `secondaryCandidate=keepDiagnosticPausedUntilExecutionShellShapeConfirmed`.
+
+- Checkpoint documental curto da autorizacao futura para executar novamente o preflight PowerShell-safe observavel apos a URI ter sido configurada no shell de execucao observado, consolidado nesta rodada sem executar nada, sem imprimir URI, sem registrar valor da URI, sem conectar Mongo real, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte nao executa nada;
+	- este microcorte nao imprime URI;
+	- este microcorte nao registra valor da URI;
+	- esta autorizacao so vale para microcorte futuro separado;
+	- a execucao futura deve abortar se o preflight nao confirmar shape valida;
+	- a execucao futura so pode chamar o diagnostico se o preflight passar;
+	- a autorizacao futura nao autoriza `start:atlas`;
+	- a autorizacao futura nao autoriza `start:gestor`;
+	- a autorizacao futura nao autoriza seed/master;
+	- a autorizacao futura nao autoriza login real;
+	- a autorizacao futura nao autoriza HTTP ativo;
+	- a autorizacao futura nao autoriza mutacao real;
+	- a autorizacao futura nao declara producao pronta;
+	- apos a execucao futura, registrar imediatamente o resultado no ledger;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeObservablePreflightAfterExecutionShellUriConfigured`
+	- `authorizationScope=documentalOnlyFutureExecution`
+	- `previousObservablePreflightMongoUriPresent=false`
+	- `previousObservablePreflightMongodbUriPresent=false`
+	- `previousObservablePreflightOk=false`
+	- `previousDiagnosticSkipped=true`
+	- `executionShellUriConfigured=true`
+	- `executionShellUriConfigurationRecordedCommit=b172cff`
+	- `observablePreflightAuthorizedForFutureOnly=true`
+	- `futurePreflightMustEmitBooleans=true`
+	- `futurePreflightMustEmitPreflightOk=true`
+	- `futurePreflightMustNotCaptureStdoutSilently=true`
+	- `futurePreflightMustUseLastExitCodeForBranching=true`
+	- `futurePreflightMustUseStartsWithSchemeCheck=true`
+	- `futurePreflightMustAvoidRegexLiteralInline=true`
+	- `futurePreflightMustAvoidUnsafeQuoting=true`
+	- `futurePreflightMustCheckPresent=true`
+	- `futurePreflightMustCheckTrimNonEmpty=true`
+	- `futurePreflightMustCheckMongoScheme=true`
+	- `futurePreflightMustPrintOnlyBooleans=true`
+	- `futurePreflightMustNotPrintValue=true`
+	- `futurePreflightMustNotPrintLength=true`
+	- `futurePreflightMustNotPrintPrefix=true`
+	- `futurePreflightMustNotPrintHost=true`
+	- `futurePreflightMustNotPrintUser=true`
+	- `futurePreflightMustNotPrintPassword=true`
+	- `futurePreflightMustNotPrintDatabase=true`
+	- `futureExecutionMustAbortIfPreflightInvalid=true`
+	- `futureExecutionMayRunDiagnosticOnlyIfPreflightValid=true`
+	- `futureExecutionMustUseSameShellProcessChain=true`
+	- `authorizedFutureCommandType=observablePowerShellSafePreflightThenReadOnlyDiagnosticAfterShellUriConfigured`
+	- `authorizedFutureDiagnosticCommand=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `authorizedFutureDiagnosticScope=readOnlyDiagnosticAfterObservablePreflightWithExecutionShellUri`
+	- `scriptExecutionAuthorizedForFutureOnly=true`
+	- `scriptExecutionAuthorizedNow=false`
+	- `scriptExecutedNow=false`
+	- `preflightExecutedNow=false`
+	- `realMongoConnectionAuthorizedForFutureDiagnosticOnly=true`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `realMongoConnected=false`
+	- `futureExecutionRequiresCleanGitStatus=true`
+	- `futureExecutionRequiresNoMongoMemory=true`
+	- `futureExecutionRequiresReviewedFixedScript=true`
+	- `futureExecutionMustUseReviewedFixedScript=true`
+	- `futureExecutionMustBeReadOnly=true`
+	- `futureExecutionMustSanitizeLogs=true`
+	- `futureExecutionMustConfirmZeroWrites=true`
+	- `futureExecutionMustConfirmNoSeedMasterCleanup=true`
+	- `futureExecutionMustAbortOnAmbiguousEnvironment=true`
+	- `futureExecutionMustNotStartServer=true`
+	- `futureExecutionMustNotUseStartAtlas=true`
+	- `futureExecutionMustNotUseStartGestor=true`
+	- `futureExecutionMustNotUseStartMemSeed=true`
+	- `futureExecutionMustNotTouchWallisonMaster=true`
+	- `futureExecutionRequiresImmediateResultRegistration=true`
+	- `uriValuePrinted=false`
+	- `uriLengthPrinted=false`
+	- `uriPrefixPrinted=false`
+	- `uriHostPrinted=false`
+	- `uriUserPrinted=false`
+	- `uriPasswordPrinted=false`
+	- `uriDatabasePrinted=false`
+	- `uriSecretExposed=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=true`
+	- `pushExecuted=false`
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=executeObservablePreflightAfterExecutionShellUriConfiguredInSeparateMicrocut`
+	- `secondaryCandidate=keepDiagnosticPausedBeforeObservablePreflightExecution`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
