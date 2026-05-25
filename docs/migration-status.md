@@ -17409,6 +17409,80 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=planObservablePowerShellSafePreflightCommandDocumentally`.
 	- `secondaryCandidate=keepDiagnosticPausedUntilObservablePreflightAuthorized`.
+
+- Checkpoint documental curto do planejamento do comando PowerShell-safe observavel para preflight no mesmo processo com diagnostico read-only condicional, consolidado nesta rodada sem executar `node -e`, sem executar `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=planObservablePowerShellSafePreflightCommandDocumentally`.
+	- `planningScope=documentalOnly`.
+	- `previousPowerShellSafePreflightExecuted=true`.
+	- `previousDiagnosticSkipped=true`.
+	- `previousPreflightStdoutCapturedByVariable=true`.
+	- `previousPreflightIndividualBooleansObservable=false`.
+	- `observablePreflightNeeded=true`.
+	- `observablePreflightMustEmitBooleans=true`.
+	- `observablePreflightMustEmitPreflightOk=true`.
+	- `observablePreflightMustNotCaptureStdoutSilently=true`.
+	- `observablePreflightMayUseLastExitCodeForBranching=true`.
+	- `futurePreflightMustUseStartsWithSchemeCheck=true`.
+	- `futurePreflightMustAvoidRegexLiteralInline=true`.
+	- `futurePreflightMustAvoidUnsafeQuoting=true`.
+	- `futurePreflightMustCheckPresent=true`.
+	- `futurePreflightMustCheckTrimNonEmpty=true`.
+	- `futurePreflightMustCheckMongoScheme=true`.
+	- `futurePreflightMustPrintOnlyBooleans=true`.
+	- `futurePreflightMustNotPrintValue=true`.
+	- `futurePreflightMustNotPrintLength=true`.
+	- `futurePreflightMustNotPrintPrefix=true`.
+	- `futurePreflightMustNotPrintHost=true`.
+	- `futurePreflightMustNotPrintUser=true`.
+	- `futurePreflightMustNotPrintPassword=true`.
+	- `futurePreflightMustNotPrintDatabase=true`.
+	- `futureExecutionMustAbortIfPreflightInvalid=true`.
+	- `futureExecutionMayRunDiagnosticOnlyIfPreflightValid=true`.
+	- `futureExecutionMustUseSameShellProcessChain=true`.
+	- `realDiagnosticScriptExecuted=false`.
+	- `realMongoConnectionAttempted=false`.
+	- `realMongoConnected=false`.
+	- `uriValuePrinted=false`.
+	- `uriSecretExposed=false`.
+	- `codeChanged=false`.
+	- `packageJsonChanged=false`.
+	- `sourceChanged=false`.
+	- `testsChanged=false`.
+	- `newFileCreated=false`.
+	- `npmRunExecuted=false`.
+	- `npmTestExecuted=false`.
+	- `httpExecuted=false`.
+	- `browserOpened=false`.
+	- `loginExecuted=false`.
+	- `dataMutationExecuted=false`.
+	- `seedExecuted=false`.
+	- `masterScriptsExecuted=false`.
+	- `cleanupWrongEmailExecuted=false`.
+	- `startMemExecuted=false`.
+	- `startMemSeedExecuted=false`.
+	- `startGestorExecuted=false`.
+	- `startAtlasExecuted=false`.
+	- `productionReady=false`.
+	- `pushExecuted=false`.
+- Abordagem recomendada consolidada desta rodada:
+	- usar `node -e` com `startsWith` para a validacao de esquema;
+	- nao atribuir a saida inteira do preflight a `$preflight` sem reemissao;
+	- confiar em `$LASTEXITCODE` para decidir se executa o diagnostico;
+	- deixar o stdout do `node -e` aparecer naturalmente quando ele contiver apenas booleans sanitizados;
+	- manter `DIAGNOSTIC_SKIPPED=true` quando o preflight falhar;
+	- manter a execucao do diagnostico para microcorte separado e explicitamente autorizado.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- este microcorte nao executa `node -e`;
+	- este microcorte nao executa o script diagnostico;
+	- este microcorte nao conecta Mongo real;
+	- este microcorte nao imprime URI;
+	- este microcorte nao declara producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=authorizeObservablePowerShellSafePreflightThenDiagnostic`.
+	- `secondaryCandidate=keepDiagnosticPausedUntilObservablePreflightAuthorized`.
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
