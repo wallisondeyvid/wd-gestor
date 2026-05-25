@@ -19677,6 +19677,95 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=executeDedicatedReadOnlyDatabaseInventoryScriptInSeparateMicrocut`
 	- `secondaryCandidate=pushInventoryScriptAndReviewCheckpointBeforeExecution`
 	- `tertiaryCandidate=keepInventoryExecutionPaused`
+
+- Checkpoint documental curto do resultado da execucao unica do inventario read-only com abort seguro por missing-uri, consolidado nesta rodada sem repetir execucao, sem configurar URI neste microcorte, sem conectar Mongo real, sem executar diagnostico, sem executar `start:atlas`, sem executar `start:gestor`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordReadOnlyDatabaseInventoryMissingUriResult`
+	- `executionScope=authorizedReadOnlyInventorySingleRun`
+	- `previousInventoryExecutionAuthorizationCommit=7fad079`
+	- `inventoryCommandExecuted=node scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `inventoryExecutionAttempted=true`
+	- `inventoryExecutionRepeated=false`
+	- `inventoryResult=red`
+	- `inventoryExecutionResult=abort`
+	- `blockedReason=missing-uri`
+	- `connectionAttempted=false`
+	- `readOnly=true`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `sanitizedTarget=[uri-missing]`
+	- `sanitizedDbNameEmitted=false`
+	- `inventoryCollectionsEmitted=false`
+	- `collectionExistsLinesEmitted=false`
+	- `collectionCountLinesEmitted=false`
+	- `collectionNonEmptyLinesEmitted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `inventoryEffectiveResult=not-run-due-to-missing-uri`
+	- `abortBeforeConnection=true`
+	- `scriptFailedClosedAsDesigned=true`
+	- `documentsPrinted=false`
+	- `personalDataPrinted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `postAbortPreflightExecutedByUser=true`
+	- `postAbortMongoUriPresentForNode=false`
+	- `postAbortMongoUriTrimNonEmpty=false`
+	- `postAbortMongoUriMongoScheme=false`
+	- `postAbortMongodbUriPresentForNode=true`
+	- `postAbortMongodbUriTrimNonEmpty=true`
+	- `postAbortMongodbUriMongoScheme=true`
+	- `postAbortPreflightOk=true`
+	- `uriNowVisibleToNodeAfterAbort=true`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Resultado consolidado desta rodada:
+	- a execucao unica autorizada do script ocorreu exatamente uma vez e abortou de forma segura antes de qualquer conexao;
+	- o resultado emitido foi `inventoryResult=red` com `blockedReason=missing-uri` e `connectionAttempted=false`;
+	- nenhum nome de colecao, count ou flag `nonEmpty` foi emitido porque o abort ocorreu antes da fase de inventario efetivo;
+	- nao houve inventario efetivo, nao houve diagnostico adicional e nao houve conexao com Mongo real;
+	- nao houve impressao de URI, segredo, documento ou dado pessoal;
+	- apos o abort, um preflight manual do usuario mostrou `MONGODB_URI_PRESENT=true`, `MONGODB_URI_TRIM_NONEMPTY=true`, `MONGODB_URI_MONGO_SCHEME=true` e `PREFLIGHT_OK=true`, indicando que a URI passou a ficar visivel ao Node;
+	- este microcorte apenas registra documentalmente o abort seguro e o preflight posterior, sem repetir a execucao.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir inventario;
+	- nao configurar URI neste microcorte;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao imprimir dados reais;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao executar seed/master;
+	- nao fazer login real;
+	- nao fazer HTTP ativo;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada:
+	- `recommendedNextCandidate=authorizeInventoryRetryAfterUriVisible`
+	- `secondaryCandidate=executeDedicatedReadOnlyDatabaseInventoryScriptWithVisibleUriInSeparateMicrocut`
+	- `tertiaryCandidate=keepInventoryPausedUntilRetryAuthorized`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
