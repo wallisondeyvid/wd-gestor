@@ -17832,6 +17832,95 @@ Checkpoint tenant enforcement atual:
 - Decisao recomendada consolidada:
 	- `recommendedNextCandidate=executeObservablePreflightAfterExecutionShellUriConfiguredInSeparateMicrocut`
 	- `secondaryCandidate=keepDiagnosticPausedBeforeObservablePreflightExecution`
+
+- Checkpoint documental curto do resultado da cadeia PowerShell-safe observavel apos a URI ter sido configurada no shell de execucao observado, consolidado nesta rodada sem repetir a cadeia, sem executar novamente `node -e`, sem executar `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real, sem configurar URI, sem imprimir URI, sem pedir segredo, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordObservablePreflightAfterExecutionShellUriConfiguredResult`
+	- `executionScope=authorizedObservablePreflightAfterExecutionShellUriConfigured`
+	- `chainExecutionAttempted=true`
+	- `chainExecutionRepeated=false`
+	- `preflightCommandAttempted=true`
+	- `preflightIndividualBooleansObservable=true`
+	- `mongoUriPresentForNode=false`
+	- `mongoUriTrimNonEmpty=false`
+	- `mongoUriMongoScheme=false`
+	- `mongodbUriPresentForNode=false`
+	- `mongodbUriTrimNonEmpty=false`
+	- `mongodbUriMongoScheme=false`
+	- `anyMongoUriTrimNonEmpty=false`
+	- `anyMongoUriMongoScheme=false`
+	- `preflightLogicalCheckCompleted=true`
+	- `preflightResult=false`
+	- `preflightOk=false`
+	- `diagnosticSkipped=true`
+	- `diagnosticSkippedReason=observable-preflight-env-shape-invalid`
+	- `realDiagnosticScriptExecuted=false`
+	- `diagnosticExecutionAttempted=false`
+	- `diagnosticResult=not-applicable`
+	- `diagnosticExecutionResult=not-run`
+	- `blockedReason=PREFLIGHT_OK=false`
+	- `connectionAttempted=false`
+	- `readOnly=false`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `productionReady=false`
+	- `realMongoConnected=false`
+	- `realMongoDiagnosed=false`
+	- `abortBeforeConnection=true`
+	- `uriValuePrinted=false`
+	- `uriLengthPrinted=false`
+	- `uriPrefixPrinted=false`
+	- `uriHostPrinted=false`
+	- `uriUserPrinted=false`
+	- `uriPasswordPrinted=false`
+	- `uriDatabasePrinted=false`
+	- `uriSecretExposed=false`
+	- `guardBypassed=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `nextExecutionAuthorized=false`
+	- `pushExecuted=false`
+- Resultado objetivo consolidado desta rodada:
+	- a cadeia PowerShell-safe observavel autorizada foi executada uma unica vez apos a autorizacao pos-URI no shell de execucao;
+	- o preflight confirmou `MONGO_URI_PRESENT=false` no processo Node atual;
+	- o preflight confirmou `MONGODB_URI_PRESENT=false` no processo Node atual;
+	- o preflight confirmou `PREFLIGHT_OK=false`;
+	- a saida observada marcou `DIAGNOSTIC_SKIPPED=true`;
+	- o script `scripts/diagnostics/real-mongo-readonly-diagnostic.js` nao foi executado nesta rodada;
+	- nao houve tentativa de conexao com Mongo real;
+	- nao houve exposicao de URI nem de segredo;
+	- nao houve alteracao de arquivos;
+	- este microcorte apenas registra o resultado e nao executa de novo.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra resultado, nao executa de novo;
+	- nao repetir `node -e`;
+	- nao tentar configurar e executar no mesmo microcorte;
+	- nao executar o diagnostico real;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- o proximo passo deve diagnosticar por que o shell de execucao continua sem env Mongo, ou reconfigurar novamente a URI no shell efetivo, sem imprimir segredo;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Decisao recomendada consolidada:
+	- `recommendedNextCandidate=diagnoseWhyExecutionShellEnvMissing`
+	- `secondaryCandidate=reconfigureMongoUriInExecutionShellWithoutPrintingSecret`
 - Proxima etapa recomendada nesta rodada:
 	- `runCreateAdminFeedbackDetailHandlerAdjacentTestsAfterProtection`.
 - Decisao principal consolidada nesta rodada:
