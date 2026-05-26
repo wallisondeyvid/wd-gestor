@@ -22913,6 +22913,7 @@ Checkpoint tenant enforcement atual:
 	- `masterUserWillNotBeUsedForInitialLoginValidation=true`
 	- `masterUserProtected=true`
 	- `loginTestUserNeeded=true`
+	- `existingFictionalLoginUserInspectionNeeded=true`
 	- `existingFictionalLoginUserKnown=false`
 	- `fictionalLoginUserCandidateEmail=teste.login@example.com`
 	- `fictionalLoginUserMustBeNonMaster=true`
@@ -22921,6 +22922,19 @@ Checkpoint tenant enforcement atual:
 	- `fictionalLoginUserCreationIsMutation=true`
 	- `fictionalLoginUserCreationRequiresSeparateAuthorization=true`
 	- `fictionalLoginUserCreationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `passwordMutationExecutedNow=false`
+	- `roleMutationExecutedNow=false`
+	- `activeFlagMutationExecutedNow=false`
+	- `primeiroAcessoMutationExecutedNow=false`
+	- `membershipMutationExecutedNow=false`
+	- `readOnlyInspectionMustAvoidDocumentsDump=true`
+	- `readOnlyInspectionMustAvoidPasswordHashPrinting=true`
+	- `readOnlyInspectionMustAvoidSensitiveFieldsPrinting=true`
+	- `readOnlyInspectionMustUseSanitizedOutputOnly=true`
+	- `safeOutputAllowedFields=email-domain-only-or-boolean-counts`
+	- `futureCreationStillRequiresSeparateAuthorization=true`
+	- `futureLoginStillRequiresSeparateAuthorization=true`
 	- `futureCreationMustNotUseSeedMaster=true`
 	- `futureCreationMustNotUseMasterSet=true`
 	- `futureCreationMustNotTouchRealMasterUser=true`
