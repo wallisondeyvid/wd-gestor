@@ -17897,6 +17897,191 @@ Checkpoint tenant enforcement atual:
 	- `productionReady=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+- Checkpoint documental curto do planejamento da validacao read-only do ambiente runtime Atlas antes de qualquer autorizacao futura de `start:atlas`, consolidado nesta rodada sem executar `node`, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem seed, sem master script, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem `push`.
+- Estado base consolidado nesta rodada:
+	- `selectedTarget=planReadOnlyAtlasRuntimeEnvValidation`;
+	- `planningScope=documentalOnly`;
+	- `previousStartAtlasCriteriaPlanCommit=eb190f1`;
+	- `currentLocalHeadBeforeThisCommit=eb190f1`;
+	- `currentRemoteHead=5d95fb9`;
+	- `currentBranch=migration/refactor-core`;
+	- `aheadCountBeforeThisCommit=1`;
+	- `workingTreeCleanAtStart=true`;
+	- `readOnlyAtlasRuntimeEnvValidationPlanned=true`;
+	- `runtimeAtlasEnvValidationExecutionAuthorizedNow=false`;
+	- `startAtlasExecutionAuthorizedNow=false`;
+	- `startGestorExecutionAuthorizedNow=false`;
+	- `serverStartAuthorizedNow=false`;
+	- `bootAuthorizedNow=false`;
+	- `realMongoConnectionAuthorizedNow=false`;
+	- `productionReady=false`.
+- Proposito e foco exclusivo deste microcorte:
+	- `validationPurpose=confirmRuntimeAtlasEnvShapeBeforeAnyStartAtlas`;
+	- `validationMustBeReadOnly=true`;
+	- este microcorte e apenas planejamento documental;
+	- o foco futuro permitido e apenas checar shape de ambiente e criterios de seguranca antes de qualquer autorizacao separada de `start:atlas`.
+- Requisitos obrigatorios do futuro plano de validacao:
+	- `validationMustPrintOnlyBooleans=true`;
+	- `validationMustNotPrintUri=true`;
+	- `validationMustNotPrintSecrets=true`;
+	- `validationMustNotPrintHost=true`;
+	- `validationMustNotPrintUser=true`;
+	- `validationMustNotPrintPassword=true`;
+	- `validationMustNotPrintDatabase=true`;
+	- `validationMustCheckMongoUriPresent=true`;
+	- `validationMustCheckMongoUriTrimNonEmpty=true`;
+	- `validationMustCheckMongoUriScheme=true`;
+	- `validationMustCheckMongoMemoryAbsent=true`;
+	- `validationMustCheckNodeEnvShape=true`;
+	- `validationMustCheckSeedMasterBlocked=true`;
+	- `validationMustCheckProductionReadyFalse=true`.
+- Restricoes de seguranca que permanecem bloqueadas:
+	- `validationMustNotConnectMongo=true`;
+	- `validationMustNotStartServer=true`;
+	- `validationMustNotUseStartAtlas=true`;
+	- `validationMustNotUseStartGestor=true`;
+	- `validationMustNotUseHttp=true`;
+	- `validationMustNotUseBrowser=true`;
+	- `validationMustNotLogin=true`;
+	- `validationMustNotMutateData=true`;
+	- nao executar `node`;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao iniciar servidor;
+	- nao fazer boot;
+	- nao conectar Mongo real;
+	- nao fazer HTTP;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta.
+- Criterios de abort obrigatorios para qualquer autorizacao futura:
+	- `validationMustAbortIfUriMissing=true`;
+	- `validationMustAbortIfMongoMemory=true`;
+	- `validationMustAbortIfAmbiguousEnvironment=true`;
+	- `validationMustAbortIfSecretsWouldPrint=true`.
+- Pre-condicoes obrigatorias para qualquer execucao futura:
+	- `validationRequiresSeparateAuthorization=true`;
+	- `validationRequiresCleanGitStatus=true`;
+	- `validationRequiresResultLedgerImmediately=true`.
+- Bloqueios operacionais reafirmados nesta rodada:
+	- `noRuntimeStartAuthorized=true`;
+	- `noStartAtlasAuthorized=true`;
+	- `noStartGestorAuthorized=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorized=true`;
+	- `noMutationAuthorized=true`.
+- Registro factual deste microcorte:
+	- `realDiagnosticScriptExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `inventoryExecuted=false`;
+	- `nodeExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=authorizeReadOnlyAtlasRuntimeEnvValidation`;
+	- `secondaryCandidate=pushStartAtlasCriteriaPlanningCheckpoint`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilEnvValidationAuthorized`.
+- Gates:
+	- `selectedTarget=planReadOnlyAtlasRuntimeEnvValidation`
+	- `planningScope=documentalOnly`
+	- `previousStartAtlasCriteriaPlanCommit=eb190f1`
+	- `readOnlyAtlasRuntimeEnvValidationPlanned=true`
+	- `runtimeAtlasEnvValidationExecutionAuthorizedNow=false`
+	- `startAtlasExecutionAuthorizedNow=false`
+	- `startGestorExecutionAuthorizedNow=false`
+	- `serverStartAuthorizedNow=false`
+	- `bootAuthorizedNow=false`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `productionReady=false`
+	- `validationPurpose=confirmRuntimeAtlasEnvShapeBeforeAnyStartAtlas`
+	- `validationMustBeReadOnly=true`
+	- `validationMustPrintOnlyBooleans=true`
+	- `validationMustNotPrintUri=true`
+	- `validationMustNotPrintSecrets=true`
+	- `validationMustNotPrintHost=true`
+	- `validationMustNotPrintUser=true`
+	- `validationMustNotPrintPassword=true`
+	- `validationMustNotPrintDatabase=true`
+	- `validationMustCheckMongoUriPresent=true`
+	- `validationMustCheckMongoUriTrimNonEmpty=true`
+	- `validationMustCheckMongoUriScheme=true`
+	- `validationMustCheckMongoMemoryAbsent=true`
+	- `validationMustCheckNodeEnvShape=true`
+	- `validationMustCheckSeedMasterBlocked=true`
+	- `validationMustCheckProductionReadyFalse=true`
+	- `validationMustNotConnectMongo=true`
+	- `validationMustNotStartServer=true`
+	- `validationMustNotUseStartAtlas=true`
+	- `validationMustNotUseStartGestor=true`
+	- `validationMustNotUseHttp=true`
+	- `validationMustNotUseBrowser=true`
+	- `validationMustNotLogin=true`
+	- `validationMustNotMutateData=true`
+	- `validationMustAbortIfUriMissing=true`
+	- `validationMustAbortIfMongoMemory=true`
+	- `validationMustAbortIfAmbiguousEnvironment=true`
+	- `validationMustAbortIfSecretsWouldPrint=true`
+	- `validationRequiresSeparateAuthorization=true`
+	- `validationRequiresCleanGitStatus=true`
+	- `validationRequiresResultLedgerImmediately=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `nodeExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeReadOnlyAtlasRuntimeEnvValidation`
+	- `secondaryCandidate=pushStartAtlasCriteriaPlanningCheckpoint`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilEnvValidationAuthorized`
 - Resultado objetivo consolidado desta rodada:
 	- a cadeia PowerShell-safe observavel autorizada foi executada uma unica vez apos a autorizacao pos-URI no shell de execucao;
 	- o preflight confirmou `MONGO_URI_PRESENT=false` no processo Node atual;
