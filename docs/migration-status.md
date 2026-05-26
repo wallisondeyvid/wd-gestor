@@ -21547,6 +21547,158 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=planNextReadOnlyRuntimeAtlasValidationAfterGreenDryRun`
 	- `secondaryCandidate=planReadOnlyHttpHealthCheckWithoutLogin`
 	- `tertiaryCandidate=keepProductionNotReadyUntilHttpLoginMutationPlan`
+
+- Checkpoint documental curto do planejamento da proxima validacao runtime read-only apos o dry-run Atlas green, consolidado nesta rodada apenas para planejamento documental, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=planNextReadOnlyRuntimeAtlasValidationAfterGreenDryRun`;
+	- `planningScope=documentalOnly`;
+	- `previousPostPushAtlasDryRunGreenCheckpoint=a98dd8c`;
+	- `atlasDryRunGreenPublished=true`;
+	- `runtimeMongoConnectedPreviously=true`;
+	- `startAtlasPreviouslyGreen=true`;
+	- `serverPreviouslyStartedOnPort3000=true`;
+	- `runtimeLogsSanitizedPreviously=true`;
+	- `rawUriPrintedPreviously=false`;
+	- `rawHostPrintedPreviously=false`;
+	- `rawUserPrintedPreviously=false`;
+	- `rawPasswordPrintedPreviously=false`;
+	- `rawDatabasePrintedPreviously=false`;
+	- `httpNotYetValidated=true`;
+	- `loginNotYetValidated=true`;
+	- `mutationNotYetValidated=true`;
+	- `seedMasterNotExecuted=true`;
+	- `productionReady=false`.
+- Escopo planejado para a proxima validacao:
+	- `nextValidationMustRemainReadOnly=true`;
+	- `nextValidationMustAvoidMutation=true`;
+	- `nextValidationMustAvoidLoginUntilPlanned=true`;
+	- `nextValidationMustAvoidSeedMaster=true`;
+	- `nextValidationMustAvoidCleanupWrongEmail=true`;
+	- `nextValidationMustRequireSeparateAuthorization=true`;
+	- `nextValidationMayPlanReadOnlyHttpHealthCheck=true`;
+	- `nextValidationMayPlanServerHealthOnly=true`;
+	- `nextValidationMayPlanDbHealthOnly=true`;
+	- `nextValidationMustNotDeclareProductionReady=true`;
+	- `startAtlasStillRequiresSeparateExecutionAuthorization=true`;
+	- `startGestorStillBlocked=true`.
+- Registro factual deste microcorte:
+	- `noRuntimeStartAuthorized=true`;
+	- `noStartAtlasAuthorized=true`;
+	- `noStartGestorAuthorized=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorizedNow=true`;
+	- `noMutationAuthorized=true`;
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=planReadOnlyHttpHealthCheckWithoutLogin`;
+	- `secondaryCandidate=authorizeReadOnlyRuntimeHealthValidation`;
+	- `tertiaryCandidate=keepProductionNotReadyUntilHttpLoginMutationPlan`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar `start:atlas`;
+	- nao fazer HTTP agora;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=planNextReadOnlyRuntimeAtlasValidationAfterGreenDryRun`
+	- `planningScope=documentalOnly`
+	- `previousPostPushAtlasDryRunGreenCheckpoint=a98dd8c`
+	- `atlasDryRunGreenPublished=true`
+	- `runtimeMongoConnectedPreviously=true`
+	- `startAtlasPreviouslyGreen=true`
+	- `serverPreviouslyStartedOnPort3000=true`
+	- `runtimeLogsSanitizedPreviously=true`
+	- `rawUriPrintedPreviously=false`
+	- `rawHostPrintedPreviously=false`
+	- `rawUserPrintedPreviously=false`
+	- `rawPasswordPrintedPreviously=false`
+	- `rawDatabasePrintedPreviously=false`
+	- `httpNotYetValidated=true`
+	- `loginNotYetValidated=true`
+	- `mutationNotYetValidated=true`
+	- `seedMasterNotExecuted=true`
+	- `productionReady=false`
+	- `nextValidationMustRemainReadOnly=true`
+	- `nextValidationMustAvoidMutation=true`
+	- `nextValidationMustAvoidLoginUntilPlanned=true`
+	- `nextValidationMustAvoidSeedMaster=true`
+	- `nextValidationMustAvoidCleanupWrongEmail=true`
+	- `nextValidationMustRequireSeparateAuthorization=true`
+	- `nextValidationMayPlanReadOnlyHttpHealthCheck=true`
+	- `nextValidationMayPlanServerHealthOnly=true`
+	- `nextValidationMayPlanDbHealthOnly=true`
+	- `nextValidationMustNotDeclareProductionReady=true`
+	- `startAtlasStillRequiresSeparateExecutionAuthorization=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noMutationAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=planReadOnlyHttpHealthCheckWithoutLogin`
+	- `secondaryCandidate=authorizeReadOnlyRuntimeHealthValidation`
+	- `tertiaryCandidate=keepProductionNotReadyUntilHttpLoginMutationPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
