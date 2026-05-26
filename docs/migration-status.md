@@ -82854,6 +82854,106 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `secondaryCandidate=inspectDiagnosticScriptForCandidateSpecificSupportDocumentally`
 	- `tertiaryCandidate=authorizeControlledFictionalLoginUserCreationOnlyAfterCandidateAbsenceConfirmed`
 
+## Microcorte: Planejar consulta realmente especifica read-only do candidato
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `4618638` no inicio desta rodada;
+	- a tentativa anterior foi green e read-only, porem sem informar existencia especifica do candidato;
+	- este microcorte planeja somente a consulta realmente especifica do candidato, sem execucao agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar consulta agora;
+	- nao criar usuario;
+	- nao usar master;
+	- nao imprimir URI;
+	- nao usar PowerShell aninhado;
+	- nao executar HTTP/login/mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planTrueCandidateSpecificReadOnlyQuery`
+	- `planningScope=documentalOnly`
+	- `previousCandidateSpecificAttemptCommit=4618638`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `candidateEmailPlanned=teste.login@example.com`
+	- `previousAttemptDiagnosticGreen=true`
+	- `previousAttemptReadOnly=true`
+	- `previousAttemptCandidateSpecificExistenceReported=false`
+	- `previousAttemptCandidateSpecificExistenceKnown=false`
+	- `currentDiagnosticScriptInsufficientForCandidateExistence=true`
+	- `trueCandidateSpecificQueryNeeded=true`
+	- `trueCandidateSpecificQueryPlanned=true`
+	- `trueCandidateSpecificQueryExecutedNow=false`
+	- `trueCandidateSpecificQueryMustBeReadOnly=true`
+	- `trueCandidateSpecificQueryMustUseSamePowerShellSession=true`
+	- `trueCandidateSpecificQueryMustAvoidNestedPowerShell=true`
+	- `trueCandidateSpecificQueryMustNotPrintMongoUri=true`
+	- `trueCandidateSpecificQueryMustNotPrintDocuments=true`
+	- `trueCandidateSpecificQueryMustNotPrintPasswordHashes=true`
+	- `trueCandidateSpecificQueryMustNotPrintTokens=true`
+	- `trueCandidateSpecificQueryMustNotPrintSessionData=true`
+	- `trueCandidateSpecificQueryMustNotPrintPersonalData=true`
+	- `trueCandidateSpecificQueryMustNotPrintMasterEmail=true`
+	- `trueCandidateSpecificQueryMustNotPrintRealUserEmails=true`
+	- `trueCandidateSpecificQueryMustReportCandidateExistsBoolean=true`
+	- `trueCandidateSpecificQueryMustReportCandidateDomain=true`
+	- `trueCandidateSpecificQueryMustReportSafeCountsOnly=true`
+	- `trueCandidateSpecificQueryMustAvoidWrites=true`
+	- `trueCandidateSpecificQueryMustAvoidSeedMaster=true`
+	- `trueCandidateSpecificQueryMustAvoidCleanupWrongEmail=true`
+	- `trueCandidateSpecificQueryMustAbortIfUriMissing=true`
+	- `trueCandidateSpecificQueryMustAbortIfMongoMemoryEnabled=true`
+	- `trueCandidateSpecificQueryRequiresSeparateAuthorization=true`
+	- `userCreationStillRequiresSeparateAuthorization=true`
+	- `futureLoginStillRequiresSeparateAuthorization=true`
+	- `userCreationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `passwordMutationExecutedNow=false`
+	- `roleMutationExecutedNow=false`
+	- `activeFlagMutationExecutedNow=false`
+	- `primeiroAcessoMutationExecutedNow=false`
+	- `membershipMutationExecutedNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `productionReady=false`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=inspectDiagnosticScriptForCandidateSpecificSupportDocumentally`
+	- `secondaryCandidate=planDedicatedCandidateSpecificReadOnlyQueryCommand`
+	- `tertiaryCandidate=authorizeControlledFictionalLoginUserCreationOnlyAfterCandidateAbsenceConfirmed`
+
 - Checkpoint documental curto da revisao pos-implementacao do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por leitura de `tests/helpers/controlledMemoryOnlyFixtureHelper.js` e `docs/migration-status.md`, sem usar o helper, sem criar teste, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Verificacoes documentais confirmadas nesta rodada:
 	- exporta `createControlledMemoryOnlyUserFixture`;
