@@ -82379,6 +82379,85 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `secondaryCandidate=recordSafeRetryAuthorizationCheckpoint`
 	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
 
+## Microcorte: Registrar resultado green do retry seguro read-only
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `66c7044` no inicio desta rodada;
+	- o retry seguro foi executado pelo usuario no mesmo PowerShell, sem PowerShell aninhado;
+	- este microcorte registra apenas o resultado observado, sem nova execucao.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir a inspecao;
+	- nao criar usuario agora;
+	- nao usar master;
+	- nao executar HTTP/login/mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordSafeRetryReadOnlyExistingUsersInspectionGreenResult`
+	- `checkpointScope=documentalOnly`
+	- `previousSafeRetryAuthorizationCommit=66c7044`
+	- `safeRetryExecutedByHuman=true`
+	- `safeRetryExecutedOnce=true`
+	- `safeRetryRepeated=false`
+	- `safeRetryUsedNestedPowerShell=false`
+	- `safeRetryUsedSamePowerShellSession=true`
+	- `baselineGitStatusClean=true`
+	- `baselineLocalRemoteSynced=true`
+	- `readOnlySafeOutputEnabled=true`
+	- `fictionalCandidateEmailConfigured=true`
+	- `fictionalCandidateEmailValue=teste.login@example.com`
+	- `inspectionScriptExecuted=true`
+	- `inspectionCommand=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `diagnosticResult=green`
+	- `connectionAttempted=true`
+	- `readOnly=true`
+	- `writesAttempted=false`
+	- `seedMasterCleanupTouched=false`
+	- `secretsPrinted=false`
+	- `sanitizedTargetPrinted=true`
+	- `rawMongoUriPrinted=false`
+	- `rawHostPrinted=false`
+	- `rawUserPrinted=false`
+	- `rawPasswordPrinted=false`
+	- `rawDatabasePrinted=false`
+	- `sanitizedDbName=test`
+	- `candidateSpecificExistenceReported=false`
+	- `candidateSpecificExistenceKnown=false`
+	- `existingFictionalLoginUserKnown=false`
+	- `userCreationExecuted=false`
+	- `userMutationExecuted=false`
+	- `passwordMutationExecuted=false`
+	- `roleMutationExecuted=false`
+	- `activeFlagMutationExecuted=false`
+	- `primeiroAcessoMutationExecuted=false`
+	- `membershipMutationExecuted=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `finalGitStatusClean=true`
+	- `finalLocalRemoteSynced=true`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=planCandidateSpecificReadOnlyUserInspection`
+	- `secondaryCandidate=authorizeControlledFictionalLoginUserCreation`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+
 - Checkpoint documental curto da revisao pos-implementacao do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por leitura de `tests/helpers/controlledMemoryOnlyFixtureHelper.js` e `docs/migration-status.md`, sem usar o helper, sem criar teste, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Verificacoes documentais confirmadas nesta rodada:
 	- exporta `createControlledMemoryOnlyUserFixture`;
