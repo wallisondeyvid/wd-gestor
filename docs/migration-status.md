@@ -82954,6 +82954,89 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `secondaryCandidate=planDedicatedCandidateSpecificReadOnlyQueryCommand`
 	- `tertiaryCandidate=authorizeControlledFictionalLoginUserCreationOnlyAfterCandidateAbsenceConfirmed`
 
+## Microcorte: Inspecionar suporte do script para consulta especifica do candidato
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `23e57bf` no inicio desta rodada;
+	- a inspecao especifica previa executou diagnostico green/read-only, mas sem boolean de existencia do candidato;
+	- este microcorte realiza apenas inspeção estatica/documental do script, sem execucao.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so inspecao estatica/documental;
+	- nao executar script;
+	- nao conectar Mongo;
+	- nao criar usuario;
+	- nao usar master;
+	- nao imprimir URI;
+	- nao executar HTTP/login/mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=inspectDiagnosticScriptForCandidateSpecificSupportDocumentally`
+	- `inspectionScope=staticReadOnly`
+	- `previousTrueCandidateSpecificQueryPlanCommit=23e57bf`
+	- `localRemoteSyncedBeforeInspection=true`
+	- `diagnosticScriptInspected=true`
+	- `diagnosticScriptExecutedNow=false`
+	- `mongoConnectionAttempted=false`
+	- `nodeExecuted=false`
+	- `npmRunExecuted=false`
+	- `candidateEmailPlanned=teste.login@example.com`
+	- `diagnosticScriptPath=scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `readOnlyInventoryScriptPath=scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `supportsFictionalCandidateEmailEnv=false`
+	- `supportsCandidateSpecificExistenceBoolean=false`
+	- `supportsCandidateDomainOutput=false`
+	- `supportsSafeCountsOnly=false`
+	- `currentScriptSufficientForCandidateExistence=false`
+	- `dedicatedCandidateSpecificQueryNeeded=true`
+	- `userModelOrRepositoryCandidate=src/modules/gestor/app/repositories/UserRepository.js:findUserByEmailRepo`
+	- `safeQueryCandidateApproach=dedicated-readonly-query-by-normalized-email-returning-candidateExists-and-safe-counts-only`
+	- `safeOutputRequired=booleans-counts-domain-only`
+	- `candidateSpecificQueryExecutedNow=false`
+	- `userCreationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `passwordMutationExecutedNow=false`
+	- `roleMutationExecutedNow=false`
+	- `activeFlagMutationExecutedNow=false`
+	- `primeiroAcessoMutationExecutedNow=false`
+	- `membershipMutationExecutedNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `productionReady=false`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=planDedicatedCandidateSpecificReadOnlyQueryCommand`
+	- `secondaryCandidate=authorizeControlledFictionalLoginUserCreationOnlyAfterCandidateAbsenceConfirmed`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+
 - Checkpoint documental curto da revisao pos-implementacao do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por leitura de `tests/helpers/controlledMemoryOnlyFixtureHelper.js` e `docs/migration-status.md`, sem usar o helper, sem criar teste, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Verificacoes documentais confirmadas nesta rodada:
 	- exporta `createControlledMemoryOnlyUserFixture`;
