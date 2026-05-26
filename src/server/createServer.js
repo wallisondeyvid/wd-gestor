@@ -19,6 +19,7 @@ import { DocumentosPort } from '#shared/ports/documentos.port.js';
 import { loadConfig } from '#core/config/index.js';
 import { connectMongo } from '#core/db/connect.js';
 import { disconnectMongo } from '#core/db/connect.js';
+import { sanitizeMongoDebugInfoForLog, sanitizeMongoErrorForLog, sanitizeMongoUriForLog } from '#core/db/connect.js';
 import { centralErrorHandler, notFoundHandler } from '#core/middlewares/errorHandler.js';
 import { envelopeNormalizer } from '#core/middlewares/envelopeNormalizer.js';
 import { rememberRestore } from '#core/middlewares/rememberRestore.js';
@@ -713,7 +714,7 @@ export async function createServer(options = {}) {
       const mongoUrl = config.mongoUri || process.env.MONGO_URI || process.env.MONGODB_URI;
       await connectMongo(mongoUrl);
     } catch (err) {
-      console.warn('[server][db] Falha ao conectar ao MongoDB — executando em modo sem DB (skipDb=true):', err?.message);
+      console.warn('[server][db] Falha ao conectar ao MongoDB — executando em modo sem DB (skipDb=true):', sanitizeMongoErrorForLog(err));
       app.locals.skipDb = true;
       // Evita Mongoose "buffering timed out" ao executar sem DB (testes/páginas em modo leve)
       mongoose.set('bufferCommands', false);
@@ -1306,7 +1307,7 @@ export async function createServer(options = {}) {
         const stateMap = { 0:'disconnected', 1:'connected', 2:'connecting', 3:'disconnecting' };
         const cn = mongoose.connection;
         const status = stateMap[cn.readyState] || String(cn.readyState);
-        const info = {
+        const info = sanitizeMongoDebugInfoForLog({
           ok: status === 'connected',
           status,
           host: cn?.host || null,
@@ -1314,16 +1315,16 @@ export async function createServer(options = {}) {
           name: cn?.name || null,
           user: cn?.user || null,
           uriHint: (process.env.MONGO_URI || process.env.MONGODB_URI || (typeof cn?.client?.s?.url === 'string' ? cn.client.s.url : null)) || null,
-        };
+        });
         // Contagens básicas
         const Unidade = await importWithFallback('#models/unidade.js', '#models/unidade.js');
         const User = await importWithFallback('#models/user.js', '#models/user.js');
         let counts = {};
         try { counts.unidades = Unidade ? await Unidade.countDocuments({}) : null; } catch { counts.unidades = null; }
         try { counts.usuarios = User ? await User.countDocuments({}) : null; } catch { counts.usuarios = null; }
-        return res.json({ ...info, counts });
+        return res.json({ ok: status === 'connected', status, ...info, counts });
       } catch (e) {
-        return res.status(500).json({ ok:false, error:e.message });
+        return res.status(500).json({ ok:false, error:sanitizeMongoErrorForLog(e).message });
       }
     });
   }
@@ -1390,15 +1391,17 @@ export async function createServer(options = {}) {
         res.json({
           ok: status === 'connected',
           status,
-          host: conn.host || null,
-          port: conn.port || null,
-          name: conn.name || null,
-          user: conn.user || null,
-          uriHint: config.mongoUri ? config.mongoUri.replace(/:([^:@]{4})[^:@]*@/, ':$1****@') : null,
+          ...sanitizeMongoDebugInfoForLog({
+            host: conn.host || null,
+            port: conn.port || null,
+            name: conn.name || null,
+            user: conn.user || null,
+            uriHint: config.mongoUri ? sanitizeMongoUriForLog(config.mongoUri) : null,
+          }),
           counts
         });
       } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
+        res.status(500).json({ ok: false, error: sanitizeMongoErrorForLog(e).message });
       }
     });
   }

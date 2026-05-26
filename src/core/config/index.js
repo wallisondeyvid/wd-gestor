@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { loadFeatureFlagsFromEnv } from './featureFlags.js';
+import { sanitizeMongoUriForLog } from '#core/db/connect.js';
 
 function loadJsonIfExists(p){
   try { return JSON.parse(fs.readFileSync(p,'utf8')); } catch { return {}; }
@@ -43,7 +44,7 @@ export function loadConfig() {
       console.log('[mongo] modo memória forçado via MONGO_MEMORY=' + (process.env.MONGO_MEMORY || '1'));
       console.log('[config] mongoUri efetiva = (in-memory)');
     } else {
-      console.log('[config] mongoUri efetiva =', cfg.mongoUri.replace(/:\/\/[\w-]+:[^@]+@/,'://<hidden>:<hidden>@'));
+      console.log('[config] mongoUri efetiva =', sanitizeMongoUriForLog(cfg.mongoUri));
     }
   } catch {}
   return cfg;

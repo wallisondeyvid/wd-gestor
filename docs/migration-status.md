@@ -19685,6 +19685,135 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=implementRuntimeMongoUriLogSanitizationCodeFix`
 	- `secondaryCandidate=planMinimalRuntimeMongoUriLogSanitizationPatch`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilUriLoggingFixed`
+
+- Checkpoint documental curto da implementacao da correcao minima logging-only para sanitizacao dos logs de URI runtime Mongo/Atlas, consolidado nesta rodada com alteracao apenas das superficies de runtime logging estritamente necessarias e do ledger, sem alterar `package.json`, sem alterar `tests`, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `npm test`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=implementRuntimeMongoUriLogSanitizationCodeFix`;
+	- `implementationScope=loggingOnly`;
+	- `previousAuthorizationCommit=affda9d`;
+	- `codeFixImplemented=true`;
+	- `productionReady=false`.
+- Resultado consolidado da implementacao:
+	- `packageJsonChanged=false`;
+	- `dependenciesChanged=false`;
+	- `connectionSemanticsChanged=false`;
+	- `envResolutionChanged=false`;
+	- `seedMasterChanged=false`;
+	- `authFlowChanged=false`;
+	- `httpRoutesChanged=false`;
+	- `dataModelsChanged=false`;
+	- `rawMongoUriLoggingRemoved=true`;
+	- `effectiveMongoUriLogSanitized=true`;
+	- `mongoConnectionAttemptLogSanitized=true`;
+	- `healthDbUriHintSanitized=true`;
+	- `mongoErrorContextSanitized=true`;
+	- `rawHostLoggingRemoved=true`;
+	- `rawUserLoggingRemoved=true`;
+	- `rawPasswordLoggingRemoved=true`;
+	- `rawDatabaseLoggingRemoved=true`;
+	- `sanitizerHelperAddedOrReused=added`;
+	- `changedFiles=src/core/db/connect.js,src/core/config/index.js,src/server/createServer.js,docs/migration-status.md`;
+	- `noSecretInDiff=true`;
+	- `startAtlasStillBlocked=true`.
+- Escopo efetivamente alterado nesta rodada:
+	- `connect.js` passou a reutilizar helper pequeno para sanitizar URI, contexto de erro e campos de debug Mongo;
+	- `index.js` passou a logar apenas alvo Mongo sanitizado na configuracao efetiva;
+	- `createServer.js` passou a sanitizar `uriHint`, `host`, `user`, `name` e mensagens de erro no endpoint de debug e no aviso de fallback `skipDb=true`;
+	- nenhuma alteracao de semantica de conexao, selecao de URI, fallback, `skipDb`, rotas ou modelos foi introduzida.
+- Registro factual deste microcorte:
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=reviewRuntimeMongoUriLogSanitizationCodeFix`;
+	- `secondaryCandidate=authorizeStaticValidationForUriLogSanitization`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilSanitizationReviewed`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte permite alteracao de codigo apenas para sanitizacao de logs;
+	- nao executar `start:atlas`;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao pedir nova URI;
+	- nao colar segredo no chat;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=implementRuntimeMongoUriLogSanitizationCodeFix`
+	- `implementationScope=loggingOnly`
+	- `previousAuthorizationCommit=affda9d`
+	- `codeFixImplemented=true`
+	- `packageJsonChanged=false`
+	- `dependenciesChanged=false`
+	- `connectionSemanticsChanged=false`
+	- `envResolutionChanged=false`
+	- `seedMasterChanged=false`
+	- `authFlowChanged=false`
+	- `httpRoutesChanged=false`
+	- `dataModelsChanged=false`
+	- `rawMongoUriLoggingRemoved=true`
+	- `effectiveMongoUriLogSanitized=true`
+	- `mongoConnectionAttemptLogSanitized=true`
+	- `healthDbUriHintSanitized=true`
+	- `mongoErrorContextSanitized=true`
+	- `rawHostLoggingRemoved=true`
+	- `rawUserLoggingRemoved=true`
+	- `rawPasswordLoggingRemoved=true`
+	- `rawDatabaseLoggingRemoved=true`
+	- `sanitizerHelperAddedOrReused=added`
+	- `changedFiles=src/core/db/connect.js,src/core/config/index.js,src/server/createServer.js,docs/migration-status.md`
+	- `noSecretInDiff=true`
+	- `startAtlasStillBlocked=true`
+	- `productionReady=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=reviewRuntimeMongoUriLogSanitizationCodeFix`
+	- `secondaryCandidate=authorizeStaticValidationForUriLogSanitization`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilSanitizationReviewed`
 - Reforcos obrigatorios desta rodada:
 	- este microcorte e so autorizacao documental futura;
 	- nao executar `start:atlas` agora;

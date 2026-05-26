@@ -33,13 +33,69 @@ function isServerlessRuntime() {
   return !!(process.env.VERCEL || process.env.VERCEL_URL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 }
 
-function redactMongoUri(mongoUri) {
+function sanitizeMongoTextForLog(rawValue) {
+  const value = String(rawValue || '').trim();
+  if (!value) return 'mongo-error';
+
+  return value
+    .replace(/mongodb(?:\+srv)?:\/\/[^\s'"`]+/gi, '[mongo-uri-redacted]')
+    .replace(/([A-Za-z0-9._%+-]+):([^@\s]+)@/g, '$1:[redacted]@')
+    .replace(/\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi, '[host-redacted]');
+}
+
+export function sanitizeMongoUriForLog(mongoUri) {
   try {
-    const s = String(mongoUri || '');
-    // mongodb+srv://user:pass@host/db?x=y
-    return s.replace(/(mongodb(?:\+srv)?:\/\/)([^@/\s]+)@/i, (_m, p1) => `${p1}***:***@`);
+    const value = String(mongoUri || '').trim();
+    if (!value) return '[mongo-uri-missing]';
+    if (value === '(in-memory)') return '(in-memory)';
+
+    const parsed = new URL(value);
+    const protocol = /^mongodb(?:\+srv)?:$/i.test(parsed.protocol) ? parsed.protocol : 'mongodb:';
+    return `${protocol}//[credentials-redacted]@[host-redacted]/[db-redacted]`;
   } catch {
-    return '[mongo-uri]';
+    return '[mongo-uri-redacted]';
+  }
+}
+
+export function sanitizeMongoErrorForLog(error) {
+  const safeError = {};
+
+  if (error && typeof error === 'object') {
+    if (typeof error.name === 'string' && error.name.trim()) safeError.name = error.name.trim();
+    if (typeof error.code === 'string' || typeof error.code === 'number') safeError.code = error.code;
+    if (typeof error.codeName === 'string' && error.codeName.trim()) safeError.codeName = error.codeName.trim();
+  }
+
+  const message = sanitizeMongoTextForLog(error instanceof Error ? error.message : error);
+  if (message) safeError.message = message;
+
+  return safeError;
+}
+
+function sanitizeMongoFieldForLog(value, placeholder) {
+  if (value === undefined || value === null || value === '') return null;
+  return placeholder;
+}
+
+function sanitizeMongoRuntimeInfoForLog(info = {}) {
+  return {
+    host: sanitizeMongoFieldForLog(info.host, '[host-redacted]'),
+    port: info.port ?? null,
+    name: sanitizeMongoFieldForLog(info.name, '[db-redacted]'),
+    user: sanitizeMongoFieldForLog(info.user, '[user-redacted]'),
+    uriHint: sanitizeMongoUriForLog(info.uriHint),
+  };
+}
+
+export function sanitizeMongoDebugInfoForLog(info = {}) {
+  return sanitizeMongoRuntimeInfoForLog(info);
+}
+
+function sanitizeMongoUriPresenceForLog(mongoUri) {
+  const value = String(mongoUri || '').trim();
+  return {
+    uriPresent: value.length > 0,
+    sanitizedTarget: sanitizeMongoUriForLog(mongoUri),
   }
 }
 
@@ -52,7 +108,7 @@ function installMongooseListenersOnce(cache, mongoUri) {
     conn.on('connected', () => {
       cache.conn = conn;
       try {
-        console.log('[mongo] connected:', redactMongoUri(mongoUri));
+        console.log('[mongo] connected:', sanitizeMongoUriForLog(mongoUri));
       } catch {
         /* noop */
       }
@@ -67,7 +123,7 @@ function installMongooseListenersOnce(cache, mongoUri) {
     });
     conn.on('error', (err) => {
       try {
-        console.error('[mongo] error:', err?.message || err);
+        console.error('[mongo] error:', sanitizeMongoErrorForLog(err));
       } catch {
         console.error('[mongo] error');
       }
@@ -182,23 +238,23 @@ export async function connectMongo(uri, options = {}) {
         if (mongoose.connection.readyState === 3) {
           try { await mongoose.disconnect(); } catch { /* noop */ }
         }
-        console.log("🔎 Tentando conectar no Mongo:", mongoUri);
+        console.log('🔎 Tentando conectar no Mongo:', sanitizeMongoUriPresenceForLog(mongoUri));
         await mongoose.connect(mongoUri, { ...defaultOpts, ...options });
         console.log("✅ Mongo conectado");
         const conn = mongoose.connection;
         cache.conn = conn;
         return conn;
       } catch (err) {
-        console.error("❌ Falha conexão Mongo:", err);
-        console.warn('[mongo] falha conexão primária:', err?.message || err);
+        console.error('❌ Falha conexão Mongo:', sanitizeMongoErrorForLog(err));
+        console.warn('[mongo] falha conexão primária:', sanitizeMongoErrorForLog(err));
         const fbFlag = (process.env.FALLBACK_MEM_ON_FAIL || '').toString().trim().toLowerCase();
         const allowFallback = fbFlag === '1' || fbFlag === 'true' || fbFlag === 'on' || fbFlag === 'yes';
         if (!allowFallback) {
           throw new Error(
-            `[mongo] Não foi possível conectar em "${redactMongoUri(mongoUri)}". ` +
+            `[mongo] Não foi possível conectar em "${sanitizeMongoUriForLog(mongoUri)}". ` +
             'Verifique MONGO_URI (ou MONGODB_URI) e o acesso de rede no Atlas (IP Access List / Private Networking). ' +
             'Para usar banco em memória SOMENTE em dev/teste, defina MONGO_MEMORY=1.\n' +
-            `Erro original: ${err?.message || err}`
+            `Erro original: ${sanitizeMongoErrorForLog(err).message}`
           );
         }
         console.warn('[mongo] fallback para memória habilitado (FALLBACK_MEM_ON_FAIL).');
@@ -215,11 +271,11 @@ export async function connectMongo(uri, options = {}) {
         const memUri = mem.getUri();
         cache.mem = mem;
         cache.memUri = memUri;
-        console.log("🔎 Tentando conectar no Mongo:", memUri);
+        console.log('🔎 Tentando conectar no Mongo:', sanitizeMongoUriPresenceForLog(memUri));
         await mongoose.connect(memUri, { ...defaultOpts, ...options });
         console.log("✅ Mongo conectado");
         const conn = mongoose.connection;
-        console.log('[mongo] conectado em memória (fallback):', memUri);
+        console.log('[mongo] conectado em memória (fallback):', sanitizeMongoUriForLog(memUri));
         cache.conn = conn;
         return conn;
       }
@@ -240,11 +296,11 @@ export async function connectMongo(uri, options = {}) {
     const memUri = mem.getUri();
     cache.mem = mem;
     cache.memUri = memUri;
-    console.log("🔎 Tentando conectar no Mongo:", memUri);
+    console.log('🔎 Tentando conectar no Mongo:', sanitizeMongoUriPresenceForLog(memUri));
     await mongoose.connect(memUri, { ...defaultOpts, ...options });
     console.log("✅ Mongo conectado");
     const conn = mongoose.connection;
-    console.log('[mongo] conectado em memória:', memUri);
+    console.log('[mongo] conectado em memória:', sanitizeMongoUriForLog(memUri));
     cache.conn = conn;
     return conn;
   })();
