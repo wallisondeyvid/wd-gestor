@@ -22792,6 +22792,100 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeCredentialHandlingForLoginValidationHumanLocalAction`
 	- `secondaryCandidate=planExactLoginValidationCommandWithoutSecret`
 	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
+
+## Microcorte: Autorizar preparo local de credencial de login
+
+- Contexto executivo desta rodada:
+	- branch migration/refactor-core com HEAD local/remoto sincronizados em 0a49722 no inicio desta rodada;
+	- o plano de credencial sem segredo ja estava definido e este microcorte apenas autoriza a futura acao humana/local correspondente;
+	- a autorizacao cobre somente preparo local de credencial fora do chat, sem executar validacao de login neste momento;
+	- nenhum segredo pode ser solicitado, colado, registrado em git/ledger/.env ou impresso em logs;
+	- login, runtime, HTTP e mutacao permanecem bloqueados ate autorizacao separada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao pedir senha;
+	- nao colar segredo no chat;
+	- nao executar start:atlas;
+	- nao fazer HTTP agora;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeCredentialHandlingForLoginValidationHumanLocalAction`
+	- `authorizationScope=documentalOnlyHumanLocalCredentialAction`
+	- `previousCredentialHandlingPlanCommit=0a49722`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `loginRouteCandidate=/gestor/login`
+	- `loginRouteMethod=POST`
+	- `loginCredentialHumanLocalActionAuthorized=true`
+	- `loginCredentialHumanLocalActionAuthorizedForFutureOnly=true`
+	- `loginCredentialHumanLocalActionExecutedNow=false`
+	- `loginCredentialSecretRequestedInChat=false`
+	- `loginCredentialSecretPastedInChat=false`
+	- `loginCredentialSecretStoredInGit=false`
+	- `loginCredentialSecretStoredInLedger=false`
+	- `loginCredentialSecretStoredInEnvFile=false`
+	- `loginCredentialSecretPrinted=false`
+	- `loginCredentialSecretLogged=false`
+	- `futureCredentialMustBeHumanLocalOnly=true`
+	- `futureCredentialMustBeEnteredOnlyInLocalPowerShell=true`
+	- `futureCredentialMustNotBePastedInChat=true`
+	- `futureCredentialMustNotBeStoredInGit=true`
+	- `futureCredentialMustNotBeStoredInLedger=true`
+	- `futureCredentialMustNotBeStoredInEnvFile=true`
+	- `futureCredentialMustNotBePrinted=true`
+	- `futureCredentialMustNotBeLogged=true`
+	- `futureLoginValidationRequiresSeparateAuthorization=true`
+	- `futureLoginValidationMustUseFreshStartAtlasAuthorization=true`
+	- `futureLoginValidationMustUseFreshEnvPreflight=true`
+	- `futureLoginValidationMustUseSanitizedLogs=true`
+	- `futureLoginValidationMustRecordOnlyStatusAndCookiePresence=true`
+	- `futureLoginValidationMustNotRecordPassword=true`
+	- `futureLoginValidationMustNotRecordSessionValue=true`
+	- `futureLoginValidationMustNotRecordCookieValue=true`
+	- `futureLoginValidationMustAvoidMutationRoutes=true`
+	- `futureLoginValidationMustAvoidSeedMaster=true`
+	- `futureLoginValidationMustAvoidCleanupWrongEmail=true`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `productionReady=false`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `httpExecuted=false`
+	- `httpPostExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `authenticatedRouteExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=performLoginCredentialLocalPreparationHumanOutsideChat`
+	- `secondaryCandidate=planExactLoginValidationCommandWithoutSecret`
+	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
