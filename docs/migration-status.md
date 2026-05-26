@@ -20707,6 +20707,187 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeAtlasCredentialOrUriLocalCorrectionHumanAction`
 	- `secondaryCandidate=pushDryRunAfterSanitizationCheckpoint`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilCredentialPreflightGreen`
+
+- Checkpoint documental curto da autorizacao da acao humana local futura para corrigir a credencial ou URI Atlas no PowerShell atual, consolidado nesta rodada apenas para autorizacao documental, sem configurar URI agora pelo agente, sem pedir URI no chat, sem colar URI no chat, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizeAtlasCredentialOrUriLocalCorrectionHumanAction`;
+	- `authorizationScope=documentalOnlyHumanLocalAction`;
+	- `previousCredentialCorrectionPlanCommit=9de35a5`;
+	- `dryRunAfterSanitizationResult=red`;
+	- `dryRunFailureReason=bad-auth`;
+	- `mongoAuthFailed=true`;
+	- `mongoErrorCode=8000`;
+	- `mongoErrorCodeName=AtlasError`;
+	- `runtimeLogsSanitized=true`;
+	- `uriSecretExposedInLatestDryRun=false`.
+- Escopo autorizado para a futura acao humana/local:
+	- `atlasCredentialOrUriCorrectionNeeded=true`;
+	- `atlasCredentialOrUriCorrectionAuthorizedForHumanLocalAction=true`;
+	- `atlasCredentialOrUriCorrectionExecutedNow=false`;
+	- `atlasCredentialOrUriCorrectionMustBeHumanLocalOnly=true`;
+	- `atlasCredentialOrUriMustNotBePastedInChat=true`;
+	- `atlasCredentialOrUriMustNotBeStoredInGit=true`;
+	- `atlasCredentialOrUriMustNotBeStoredInLedger=true`;
+	- `atlasCredentialOrUriMustNotBeStoredInEnvFile=true`;
+	- `atlasCredentialOrUriMustNotBePrinted=true`;
+	- `atlasCredentialOrUriMustNotBeLogged=true`;
+	- `atlasCredentialOrUriShouldBeSetOnlyInCurrentPowerShell=true`;
+	- `recommendedPowerShellShape=$env:MONGODB_URI = "<secret only in terminal>"`;
+	- `credentialFormatMustIncludeUsernameColonPassword=true`;
+	- `credentialPasswordMustBeCurrentAtlasPassword=true`;
+	- `credentialPasswordMayNeedUrlEncoding=true`;
+	- `mongodbUriMustUseMongoSrvScheme=true`;
+	- `mongodbUriMustTargetExpectedAtlasCluster=true`;
+	- `mongodbUriMustNotUseOldRotatedPassword=true`;
+	- `futurePreflightMustConfirmOnlyBooleans=true`;
+	- `futurePreflightMustNotPrintUri=true`;
+	- `futurePreflightMustNotPrintHost=true`;
+	- `futurePreflightMustNotPrintUser=true`;
+	- `futurePreflightMustNotPrintPassword=true`;
+	- `futurePreflightMustNotPrintDatabase=true`;
+	- `futurePreflightMustConfirmMongodbUriPresent=true`;
+	- `futurePreflightMustConfirmMongodbUriTrimNonEmpty=true`;
+	- `futurePreflightMustConfirmMongodbUriMongoScheme=true`;
+	- `futurePreflightMustConfirmMongoMemoryDisabled=true`;
+	- `futurePreflightMustConfirmSeedEnvAbsent=true`;
+	- `futurePreflightMustConfirmProductionReadyFalse=true`;
+	- `futureMongoDiagnosticOrStartAtlasRequiresSeparateAuthorization=true`;
+	- `startAtlasStillBlocked=true`;
+	- `startGestorStillBlocked=true`;
+	- `productionReady=false`.
+- Registro factual deste microcorte:
+	- `noRuntimeStartAuthorized=true`;
+	- `noStartAtlasAuthorized=true`;
+	- `noStartGestorAuthorized=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorized=true`;
+	- `noMutationAuthorized=true`;
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=performAtlasCredentialOrUriLocalCorrectionHumanOutsideChat`;
+	- `secondaryCandidate=recordAtlasCredentialOrUriLocalCorrectionCompleted`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilCredentialPreflightGreen`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao pedir URI;
+	- nao colar segredo no chat;
+	- nao configurar URI neste microcorte pelo agente;
+	- nao executar `start:atlas`;
+	- nao conectar Mongo real;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=authorizeAtlasCredentialOrUriLocalCorrectionHumanAction`
+	- `authorizationScope=documentalOnlyHumanLocalAction`
+	- `previousCredentialCorrectionPlanCommit=9de35a5`
+	- `dryRunAfterSanitizationResult=red`
+	- `dryRunFailureReason=bad-auth`
+	- `mongoAuthFailed=true`
+	- `mongoErrorCode=8000`
+	- `mongoErrorCodeName=AtlasError`
+	- `runtimeLogsSanitized=true`
+	- `uriSecretExposedInLatestDryRun=false`
+	- `atlasCredentialOrUriCorrectionNeeded=true`
+	- `atlasCredentialOrUriCorrectionAuthorizedForHumanLocalAction=true`
+	- `atlasCredentialOrUriCorrectionExecutedNow=false`
+	- `atlasCredentialOrUriCorrectionMustBeHumanLocalOnly=true`
+	- `atlasCredentialOrUriMustNotBePastedInChat=true`
+	- `atlasCredentialOrUriMustNotBeStoredInGit=true`
+	- `atlasCredentialOrUriMustNotBeStoredInLedger=true`
+	- `atlasCredentialOrUriMustNotBeStoredInEnvFile=true`
+	- `atlasCredentialOrUriMustNotBePrinted=true`
+	- `atlasCredentialOrUriMustNotBeLogged=true`
+	- `atlasCredentialOrUriShouldBeSetOnlyInCurrentPowerShell=true`
+	- `recommendedPowerShellShape=$env:MONGODB_URI = "<secret only in terminal>"`
+	- `credentialFormatMustIncludeUsernameColonPassword=true`
+	- `credentialPasswordMustBeCurrentAtlasPassword=true`
+	- `credentialPasswordMayNeedUrlEncoding=true`
+	- `mongodbUriMustUseMongoSrvScheme=true`
+	- `mongodbUriMustTargetExpectedAtlasCluster=true`
+	- `mongodbUriMustNotUseOldRotatedPassword=true`
+	- `futurePreflightMustConfirmOnlyBooleans=true`
+	- `futurePreflightMustNotPrintUri=true`
+	- `futurePreflightMustNotPrintHost=true`
+	- `futurePreflightMustNotPrintUser=true`
+	- `futurePreflightMustNotPrintPassword=true`
+	- `futurePreflightMustNotPrintDatabase=true`
+	- `futurePreflightMustConfirmMongodbUriPresent=true`
+	- `futurePreflightMustConfirmMongodbUriTrimNonEmpty=true`
+	- `futurePreflightMustConfirmMongodbUriMongoScheme=true`
+	- `futurePreflightMustConfirmMongoMemoryDisabled=true`
+	- `futurePreflightMustConfirmSeedEnvAbsent=true`
+	- `futurePreflightMustConfirmProductionReadyFalse=true`
+	- `futureMongoDiagnosticOrStartAtlasRequiresSeparateAuthorization=true`
+	- `startAtlasStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=performAtlasCredentialOrUriLocalCorrectionHumanOutsideChat`
+	- `secondaryCandidate=recordAtlasCredentialOrUriLocalCorrectionCompleted`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilCredentialPreflightGreen`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
