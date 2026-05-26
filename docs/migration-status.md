@@ -19814,6 +19814,146 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=reviewRuntimeMongoUriLogSanitizationCodeFix`
 	- `secondaryCandidate=authorizeStaticValidationForUriLogSanitization`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilSanitizationReviewed`
+
+- Checkpoint documental curto da revisao estatica da correcao logging-only de sanitizacao dos logs de URI runtime Mongo/Atlas implementada em `93edcdf`, consolidado nesta rodada com leitura estatica dos arquivos alterados, leitura estatica do diff do commit e busca textual controlada, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=reviewRuntimeMongoUriLogSanitizationCodeFix`;
+	- `reviewScope=staticReadOnly`;
+	- `reviewedCommit=93edcdf`;
+	- `reviewedFiles=src/core/db/connect.js,src/core/config/index.js,src/server/createServer.js`;
+	- `docsUpdated=true`;
+	- `productionReady=false`.
+- Resultado consolidado da revisao:
+	- `codeChanged=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `connectionSemanticsChanged=false`;
+	- `envResolutionChanged=false`;
+	- `seedMasterChanged=false`;
+	- `authFlowChanged=false`;
+	- `httpRoutesChanged=false`;
+	- `dataModelsChanged=false`;
+	- `rawMongoUriLoggingRemovedReview=true`;
+	- `effectiveMongoUriLogSanitizedReview=true`;
+	- `mongoConnectionAttemptLogSanitizedReview=true`;
+	- `healthDbUriHintSanitizedReview=true`;
+	- `mongoErrorContextSanitizedReview=true`;
+	- `rawHostLoggingRemovedReview=true`;
+	- `rawUserLoggingRemovedReview=true`;
+	- `rawPasswordLoggingRemovedReview=true`;
+	- `rawDatabaseLoggingRemovedReview=true`;
+	- `noSecretInReviewedDiff=true`;
+	- `blockingDefectFound=false`;
+	- `blockingDefectSummary=none`;
+	- `startAtlasStillBlocked=true`.
+- Leitura consolidada desta revisao:
+	- `src/core/db/connect.js` agora usa helper dedicado para redigir URI, mensagem de erro e campos de debug antes de qualquer log relevante;
+	- o log de `Tentando conectar no Mongo` preserva apenas `uriPresent` e `sanitizedTarget`, sem host, usuario, senha ou database brutos;
+	- o log de `mongoUri efetiva` em `src/core/config/index.js` passou a emitir alvo sanitizado em vez de URI parcialmente mascarada;
+	- os dois handlers `/health/db` em `src/server/createServer.js` passaram a devolver `uriHint`, `host`, `user` e `name` redigidos;
+	- os contextos de erro Mongo revisados passaram a expor apenas `name`, `code`, `codeName` e `message` sanitizada, sem objeto bruto do driver;
+	- a revisao estatica nao encontrou reintroducao de URI crua nem segredo real no diff do commit revisado.
+- Registro factual deste microcorte:
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=authorizeStaticValidationForUriLogSanitization`;
+	- `secondaryCandidate=authorizeControlledStartAtlasDryRunRetryAfterLogSanitizationReview`;
+	- `tertiaryCandidate=pushUriLogSanitizationFixCheckpoint`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so revisao estatica e registro documental;
+	- nao alterar codigo;
+	- nao executar `start:atlas`;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao pedir nova URI;
+	- nao colar segredo no chat;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=reviewRuntimeMongoUriLogSanitizationCodeFix`
+	- `reviewScope=staticReadOnly`
+	- `reviewedCommit=93edcdf`
+	- `reviewedFiles=src/core/db/connect.js,src/core/config/index.js,src/server/createServer.js`
+	- `docsUpdated=true`
+	- `codeChanged=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `connectionSemanticsChanged=false`
+	- `envResolutionChanged=false`
+	- `seedMasterChanged=false`
+	- `authFlowChanged=false`
+	- `httpRoutesChanged=false`
+	- `dataModelsChanged=false`
+	- `rawMongoUriLoggingRemovedReview=true`
+	- `effectiveMongoUriLogSanitizedReview=true`
+	- `mongoConnectionAttemptLogSanitizedReview=true`
+	- `healthDbUriHintSanitizedReview=true`
+	- `mongoErrorContextSanitizedReview=true`
+	- `rawHostLoggingRemovedReview=true`
+	- `rawUserLoggingRemovedReview=true`
+	- `rawPasswordLoggingRemovedReview=true`
+	- `rawDatabaseLoggingRemovedReview=true`
+	- `noSecretInReviewedDiff=true`
+	- `blockingDefectFound=false`
+	- `blockingDefectSummary=none`
+	- `startAtlasStillBlocked=true`
+	- `productionReady=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeStaticValidationForUriLogSanitization`
+	- `secondaryCandidate=authorizeControlledStartAtlasDryRunRetryAfterLogSanitizationReview`
+	- `tertiaryCandidate=pushUriLogSanitizationFixCheckpoint`
 - Reforcos obrigatorios desta rodada:
 	- este microcorte e so autorizacao documental futura;
 	- nao executar `start:atlas` agora;
