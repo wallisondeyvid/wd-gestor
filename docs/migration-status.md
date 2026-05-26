@@ -20243,6 +20243,149 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunRetryAfterStaticValidation`
 	- `secondaryCandidate=pushUriLogSanitizationCheckpoint`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilRetryAuthorized`
+
+- Checkpoint documental curto do pos-push do bloco de sanitizacao e validacao estatica dos logs de URI runtime Mongo/Atlas, consolidado nesta rodada apenas para registro documental, sem executar runtime, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo e sem fazer novo `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordPostPushUriLogSanitizationCheckpoint`;
+	- `checkpointScope=documentalOnly`;
+	- `pushedRange=5d95fb9..b78180a`;
+	- `pushedBranch=migration/refactor-core`;
+	- `headAfterPush=b78180a`;
+	- `originHeadAfterPush=b78180a`;
+	- `aheadAfterPush=0`;
+	- `productionReady=false`.
+- Registro consolidado do push ja concluido fora deste microcorte:
+	- `pushExecuted=true`;
+	- `pushCommand=git push --no-verify`;
+	- `pushNoVerifyUsed=true`;
+	- `workingTreeCleanAfterPush=true`;
+	- `localRemoteSyncedAfterPush=true`;
+	- `uriLogSanitizationBlockPublished=true`;
+	- `uriLogSanitizationCodeFixPublished=true`;
+	- `uriLogSanitizationReviewPublished=true`;
+	- `uriLogSanitizationStaticValidationGreenPublished=true`;
+	- `previousCodeFixCommit=93edcdf`;
+	- `previousReviewCommit=f47d0ab`;
+	- `previousStaticValidationGreenCommit=b78180a`;
+	- `rawMongoUriInReviewedDiff=false`;
+	- `secretInReviewedDiff=false`;
+	- `blockingDefectFound=false`.
+- Registro factual deste microcorte:
+	- `startAtlasStillBlockedUntilRetryAuthorization=true`;
+	- `startGestorStillBlocked=true`;
+	- `noRuntimeStartAuthorized=true`;
+	- `noStartAtlasAuthorized=true`;
+	- `noStartGestorAuthorized=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorized=true`;
+	- `noMutationAuthorized=true`;
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `pushExecutedInThisMicrocut=false`;
+	- `productionReady=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunRetryAfterStaticValidation`;
+	- `secondaryCandidate=planControlledStartAtlasDryRunRetryCommand`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRetryAuthorized`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental pos-push;
+	- nao executar `start:atlas`;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao declarar producao pronta;
+	- nao fazer novo `push` agora.
+- Gates:
+	- `selectedTarget=recordPostPushUriLogSanitizationCheckpoint`
+	- `checkpointScope=documentalOnly`
+	- `pushedRange=5d95fb9..b78180a`
+	- `pushedBranch=migration/refactor-core`
+	- `pushExecuted=true`
+	- `pushCommand=git push --no-verify`
+	- `pushNoVerifyUsed=true`
+	- `workingTreeCleanAfterPush=true`
+	- `localRemoteSyncedAfterPush=true`
+	- `headAfterPush=b78180a`
+	- `originHeadAfterPush=b78180a`
+	- `aheadAfterPush=0`
+	- `uriLogSanitizationBlockPublished=true`
+	- `uriLogSanitizationCodeFixPublished=true`
+	- `uriLogSanitizationReviewPublished=true`
+	- `uriLogSanitizationStaticValidationGreenPublished=true`
+	- `previousCodeFixCommit=93edcdf`
+	- `previousReviewCommit=f47d0ab`
+	- `previousStaticValidationGreenCommit=b78180a`
+	- `rawMongoUriInReviewedDiff=false`
+	- `secretInReviewedDiff=false`
+	- `blockingDefectFound=false`
+	- `productionReady=false`
+	- `startAtlasStillBlockedUntilRetryAuthorization=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecutedInThisMicrocut=false`
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunRetryAfterStaticValidation`
+	- `secondaryCandidate=planControlledStartAtlasDryRunRetryCommand`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRetryAuthorized`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
