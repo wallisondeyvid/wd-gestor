@@ -22512,6 +22512,100 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=planLoginValidationWithoutMutation`
 	- `secondaryCandidate=inspectLoginAndAuthRoutesDocumentally`
 	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
+
+## Microcorte: Planejar validacao de login sem mutacao
+
+- Contexto executivo desta rodada:
+	- branch migration/refactor-core com HEAD local/remoto sincronizados em 152578f no inicio desta rodada;
+	- o bloco anterior consolidou que o proximo passo seguro apos o health green e planejar uma validacao de login sem mutacao;
+	- este microcorte permanece estritamente documental e nao autoriza execucao de login, HTTP, navegador, runtime ou mutacao;
+	- a futura validacao de login deve continuar separada de qualquer acao mutante e de qualquer declaracao de producao pronta;
+	- nenhum segredo deve ser exposto em chat, ledger, git ou logs durante o futuro planejamento operacional.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar start:atlas;
+	- nao fazer HTTP agora;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planLoginValidationWithoutMutation`
+	- `planningScope=documentalOnly`
+	- `previousPostHealthPlanCommit=152578f`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `atlasDryRunGreenPreviously=true`
+	- `httpHealthGreenPreviously=true`
+	- `loginValidationPlanned=true`
+	- `loginValidationExecutedNow=false`
+	- `authenticatedRoutesValidationExecutedNow=false`
+	- `mutationValidationExecutedNow=false`
+	- `productionReady=false`
+	- `loginValidationMustRequireSeparateAuthorization=true`
+	- `loginValidationMustUseFreshStartAtlasAuthorization=true`
+	- `loginValidationMustUseFreshEnvPreflight=true`
+	- `loginValidationMustUseSanitizedLogs=true`
+	- `loginValidationMustNotUseBrowserUntilExplicitlyAuthorized=true`
+	- `loginValidationMustPreferDocumentalRouteInspectionFirst=true`
+	- `loginValidationMustIdentifyExactRouteBeforeExecution=true`
+	- `loginValidationMustIdentifyCredentialStrategyWithoutSecret=true`
+	- `loginValidationMustNotPastePasswordInChat=true`
+	- `loginValidationMustNotStoreCredentialsInGit=true`
+	- `loginValidationMustNotStoreCredentialsInLedger=true`
+	- `loginValidationMustNotUseSeedMaster=true`
+	- `loginValidationMustNotCallMutationRoutes=true`
+	- `loginValidationMustNotCreateData=true`
+	- `loginValidationMustNotUpdateData=true`
+	- `loginValidationMustNotDeleteData=true`
+	- `loginValidationMustNotCleanupWrongEmail=true`
+	- `loginValidationDoesNotMakeProductionReady=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `possibleNextStepInspectLoginAndAuthRoutes=true`
+	- `possibleNextStepAuthorizeLoginReadOnlyAttempt=false`
+	- `possibleNextStepMutationPlanning=false`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `httpGetExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `authenticatedRouteExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=inspectLoginAndAuthRoutesDocumentally`
+	- `secondaryCandidate=planCredentialHandlingForLoginValidationWithoutSecret`
+	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
