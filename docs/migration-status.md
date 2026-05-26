@@ -82665,6 +82665,113 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `secondaryCandidate=executeCandidateSpecificReadOnlyInspectionInSeparateMicrocut`
 	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
 
+## Microcorte: Planejar comando exato da inspecao especifica read-only
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `22b99cc` no inicio desta rodada;
+	- a inspecao especifica read-only do candidato foi planejada e autorizada documentalmente no microcorte anterior;
+	- este microcorte define apenas o comando exato futuro, sem execucao agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar inspecao agora;
+	- nao criar usuario;
+	- nao usar master;
+	- nao imprimir URI;
+	- nao usar PowerShell aninhado;
+	- nao pedir senha;
+	- nao colar segredo no chat;
+	- nao executar start:atlas;
+	- nao fazer HTTP;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planExactCandidateSpecificReadOnlyInspectionCommand`
+	- `planningScope=documentalOnly`
+	- `previousCandidateSpecificInspectionAuthorizationCommit=22b99cc`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `candidateEmailPlanned=teste.login@example.com`
+	- `exactCandidateSpecificInspectionCommandPlanned=true`
+	- `candidateSpecificInspectionExecutionAuthorizedNow=false`
+	- `candidateSpecificInspectionExecutedNow=false`
+	- `candidateSpecificInspectionMustUseSamePowerShellSession=true`
+	- `candidateSpecificInspectionMustAvoidNestedPowerShell=true`
+	- `candidateSpecificInspectionMustNotPrintMongoUri=true`
+	- `candidateSpecificInspectionMustNotEchoMongoUri=true`
+	- `candidateSpecificInspectionMustNotInterpolateMongoUriIntoNestedCommand=true`
+	- `candidateSpecificInspectionMustSetReadOnlySafeOutputDirectly=true`
+	- `candidateSpecificInspectionMustSetFictionalCandidateEmailDirectly=true`
+	- `futureInspectionStep1=$ErrorActionPreference='Stop'`
+	- `futureInspectionStep2=if ([string]::IsNullOrWhiteSpace($env:MONGODB_URI)) { throw 'MONGODB_URI missing' }`
+	- `futureInspectionStep3=if ($env:MONGO_MEMORY -eq '1') { throw 'MONGO_MEMORY must be disabled' }`
+	- `futureInspectionStep4=$env:READ_ONLY_SAFE_OUTPUT='1'`
+	- `futureInspectionStep5=$env:FICTIONAL_CANDIDATE_EMAIL='teste.login@example.com'`
+	- `futureInspectionStep6=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `futureInspectionMustReportCandidateExistsBoolean=true`
+	- `futureInspectionMustReportCandidateDomain=true`
+	- `futureInspectionMustReportSafeCountsOnly=true`
+	- `futureInspectionMustNotPrintDocuments=true`
+	- `futureInspectionMustNotPrintPasswordHashes=true`
+	- `futureInspectionMustNotPrintTokens=true`
+	- `futureInspectionMustNotPrintSessionData=true`
+	- `futureInspectionMustNotPrintPersonalData=true`
+	- `futureInspectionMustNotPrintMasterEmail=true`
+	- `futureInspectionMustNotPrintRealUserEmails=true`
+	- `futureInspectionMustAvoidWrites=true`
+	- `futureInspectionMustRunOnceOnly=true`
+	- `futureInspectionMustNotRepeatOnError=true`
+	- `futureInspectionMustRecordResultImmediately=true`
+	- `userCreationStillRequiresSeparateAuthorization=true`
+	- `futureLoginStillRequiresSeparateAuthorization=true`
+	- `userCreationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `passwordMutationExecutedNow=false`
+	- `roleMutationExecutedNow=false`
+	- `activeFlagMutationExecutedNow=false`
+	- `primeiroAcessoMutationExecutedNow=false`
+	- `membershipMutationExecutedNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `productionReady=false`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=executeCandidateSpecificReadOnlyInspectionInSeparateMicrocut`
+	- `secondaryCandidate=authorizeControlledFictionalLoginUserCreation`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+
 - Checkpoint documental curto da revisao pos-implementacao do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por leitura de `tests/helpers/controlledMemoryOnlyFixtureHelper.js` e `docs/migration-status.md`, sem usar o helper, sem criar teste, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Verificacoes documentais confirmadas nesta rodada:
 	- exporta `createControlledMemoryOnlyUserFixture`;
