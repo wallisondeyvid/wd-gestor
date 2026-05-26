@@ -22326,6 +22326,103 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=executeReadOnlyHttpHealthCheckWithoutLoginInSeparateMicrocut`
 	- `secondaryCandidate=recordHealthCheckAuthorizationCheckpoint`
 	- `tertiaryCandidate=keepProductionNotReadyUntilHttpHealthGreenAndLoginPlan`
+
+## Microcorte: Registrar resultado green do health check HTTP read-only
+
+- Contexto executivo desta rodada:
+	- branch migration/refactor-core com HEAD local/remoto sincronizados em e39eb3c no inicio desta rodada;
+	- a execucao controlada do health check HTTP read-only foi realizada manualmente pelo humano conforme autorizacao previa;
+	- preflight booleano foi executado e retornou green com `ENV_VALIDATION_OK=true`;
+	- houve uma unica execucao de `npm run start:atlas`, com Mongo real conectado e logs sanitizados;
+	- houve uma unica chamada HTTP GET para `/health` via PowerShell, retornando `ok=True` e `ts=1779812347399`;
+	- nao houve navegador, login, cookie, token, body, chamadas de mutacao ou endpoints nao autorizados;
+	- servidor foi encerrado apos observacao e git final permaneceu limpo/sincronizado;
+	- este microcorte apenas registra documentalmente o resultado green observado, sem repetir execucoes.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir start:atlas;
+	- nao repetir HTTP;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=recordReadOnlyHttpHealthCheckGreenResult`
+	- `checkpointScope=documentalOnly`
+	- `previousHealthCheckAuthorizationCommit=e39eb3c`
+	- `healthCheckExecutedByHuman=true`
+	- `healthCheckExecutedOnce=true`
+	- `healthCheckRepeated=false`
+	- `baselineGitStatusClean=true`
+	- `baselineLocalRemoteSynced=true`
+	- `freshPreflightExecuted=true`
+	- `freshPreflightResult=green`
+	- `envValidationOk=true`
+	- `mongoUriPresent=false`
+	- `mongodbUriPresent=true`
+	- `mongodbUriTrimNonEmpty=true`
+	- `mongodbUriMongoScheme=true`
+	- `mongoMemoryEnabled=false`
+	- `nodeEnvPresent=false`
+	- `nodeEnvKnownShape=true`
+	- `seedEnvPresent=false`
+	- `productionReady=false`
+	- `startAtlasExecutedForHealthCheck=true`
+	- `startAtlasExecutedOnce=true`
+	- `runtimeMongoConnectionAttempted=true`
+	- `runtimeMongoConnected=true`
+	- `runtimeLogsSanitized=true`
+	- `rawUriPrinted=false`
+	- `rawHostPrinted=false`
+	- `rawUserPrinted=false`
+	- `rawPasswordPrinted=false`
+	- `rawDatabasePrinted=false`
+	- `serverStarted=true`
+	- `serverPortObserved=3000`
+	- `httpExecuted=true`
+	- `httpGetExecuted=true`
+	- `httpMethod=GET`
+	- `healthEndpoint=/health`
+	- `healthUrl=http://127.0.0.1:3000/health`
+	- `healthCheckResult=green`
+	- `healthCheckStatus=200`
+	- `healthCheckBodyShape=ok-ts`
+	- `healthCheckOk=true`
+	- `healthCheckTsObserved=true`
+	- `healthCheckTsValue=1779812347399`
+	- `healthDbExecuted=false`
+	- `rootEndpointExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `cookiesUsed=false`
+	- `authTokenUsed=false`
+	- `requestBodyUsed=false`
+	- `credentialsSent=false`
+	- `httpPostExecuted=false`
+	- `httpPutExecuted=false`
+	- `httpPatchExecuted=false`
+	- `httpDeleteExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `unexpectedWriteDetected=false`
+	- `serverStoppedAfterObservation=true`
+	- `finalGitStatusClean=true`
+	- `finalLocalRemoteSynced=true`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `startGestorExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=planNextValidationAfterHttpHealthGreen`
+	- `secondaryCandidate=pushHttpHealthGreenCheckpoint`
+	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
