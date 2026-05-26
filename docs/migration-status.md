@@ -22606,6 +22606,82 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=inspectLoginAndAuthRoutesDocumentally`
 	- `secondaryCandidate=planCredentialHandlingForLoginValidationWithoutSecret`
 	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
+
+## Microcorte: Inspecionar rotas de login e autenticacao
+
+- Contexto executivo desta rodada:
+	- branch migration/refactor-core com HEAD local/remoto sincronizados em ee8c388 no inicio desta rodada;
+	- a inspeção foi estritamente estática, limitada a grep e leitura de código das superfícies de login/auth;
+	- o corredor principal de autenticacao do Gestor fica montado sob `/gestor`, com página publica `GET /gestor/login` e autenticação efetiva em `POST /gestor/login`;
+	- o fluxo utiliza sessao local em `req.session`, cookie de sessao `wdg.sid` e cookie opcional de remember-me `wdg_remember` quando `lembrar` estiver ativo;
+	- não foram encontrados sinais de JWT de login, rota de refresh token ou token bearer como mecanismo principal desse corredor;
+	- `POST /gestor/login` exige credenciais no body e altera estado de autenticacao, então a futura validacao precisa de plano separado de segredo;
+	- `GET /gestor/logout` existe, mas nao e candidato seguro para futura validacao de login porque encerra sessao.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so inspecao estatica e registro documental;
+	- nao executar HTTP;
+	- nao iniciar servidor;
+	- nao executar start:atlas;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=inspectLoginAndAuthRoutesDocumentally`
+	- `inspectionScope=staticReadOnly`
+	- `previousLoginValidationPlanCommit=ee8c388`
+	- `localRemoteSyncedBeforeInspection=true`
+	- `loginAuthRouteInspectionExecuted=true`
+	- `codeChanged=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `httpExecuted=false`
+	- `httpGetExecuted=false`
+	- `httpPostExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `authenticatedRouteExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `loginRouteCandidate=/gestor/login`
+	- `loginRouteMethod=POST`
+	- `loginRouteRequiresBody=true`
+	- `loginRouteRequiresCredentials=true`
+	- `loginRouteIssuesToken=false`
+	- `loginRouteIssuesCookie=true`
+	- `loginRouteIssuesSession=true`
+	- `loginRouteMutationRisk=medium`
+	- `authMiddlewareCandidate=src/modules/gestor/app/middlewares/requireLogin.js#requireLogin`
+	- `tokenStorageCandidate=req.session+wdg.sid+optional-wdg_remember`
+	- `refreshTokenRouteCandidate=none`
+	- `logoutRouteCandidate=/gestor/logout`
+	- `safestFutureLoginValidationCandidate=/gestor/login`
+	- `futureLoginValidationRequiresSecretHandling=true`
+	- `futureLoginValidationCanAvoidBrowser=true`
+	- `futureLoginValidationCanAvoidMutation=true`
+	- `futureLoginValidationNeedsSeparateCredentialPlan=true`
+	- `recommendedNextCandidate=planCredentialHandlingForLoginValidationWithoutSecret`
+	- `secondaryCandidate=authorizeLoginRouteValidationWithoutMutation`
+	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
