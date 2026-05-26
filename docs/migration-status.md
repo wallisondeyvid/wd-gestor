@@ -22886,6 +22886,94 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=performLoginCredentialLocalPreparationHumanOutsideChat`
 	- `secondaryCandidate=planExactLoginValidationCommandWithoutSecret`
 	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
+
+## Microcorte: Planejar usuario ficticio de login
+
+- Contexto executivo desta rodada:
+	- branch migration/refactor-core com HEAD local/remoto sincronizados em 1e899bf no inicio desta rodada;
+	- o usuario master fica explicitamente protegido e nao sera usado na validacao inicial de login;
+	- ainda nao ha confirmacao de existencia de usuario ficticio valido para esse primeiro login controlado;
+	- este microcorte apenas planeja a criacao controlada futura de usuario ficticio minimo, preferencialmente `teste.login@example.com`;
+	- a criacao de usuario e mutacao e segue bloqueada ate autorizacao separada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao criar usuario agora;
+	- nao usar o master;
+	- nao pedir senha;
+	- nao colar segredo no chat;
+	- nao executar start:atlas;
+	- nao fazer HTTP;
+	- nao fazer login;
+	- nao fazer mutacao agora;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planControlledFictionalLoginUserCreation`
+	- `planningScope=documentalOnly`
+	- `masterUserWillNotBeUsedForInitialLoginValidation=true`
+	- `masterUserProtected=true`
+	- `loginTestUserNeeded=true`
+	- `existingFictionalLoginUserKnown=false`
+	- `fictionalLoginUserCandidateEmail=teste.login@example.com`
+	- `fictionalLoginUserMustBeNonMaster=true`
+	- `fictionalLoginUserMustBeFictional=true`
+	- `fictionalLoginUserMustBeMinimal=true`
+	- `fictionalLoginUserCreationIsMutation=true`
+	- `fictionalLoginUserCreationRequiresSeparateAuthorization=true`
+	- `fictionalLoginUserCreationExecutedNow=false`
+	- `futureCreationMustNotUseSeedMaster=true`
+	- `futureCreationMustNotUseMasterSet=true`
+	- `futureCreationMustNotTouchRealMasterUser=true`
+	- `futureCreationMustNotUseCleanupWrongEmail=true`
+	- `futureCreationMustUseSanitizedLogs=true`
+	- `futureCreationMustRecordOnlySafeBooleansAndResult=true`
+	- `futureCreationMustAvoidPrintingPassword=true`
+	- `futureCreationMustAvoidPrintingHash=true`
+	- `futureCreationMustAvoidPrintingSecrets=true`
+	- `futureCreationMustUseHumanLocalPasswordOnly=true`
+	- `futureCreationMustNotStorePasswordInGit=true`
+	- `futureCreationMustNotStorePasswordInLedger=true`
+	- `futureCreationMustNotStorePasswordInChat=true`
+	- `futureCreationMustNotStorePasswordInEnvFile=true`
+	- `productionReady=false`
+	- `loginStillBlocked=true`
+	- `mutationStillBlockedUntilCreationAuthorized=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `authenticatedRouteExecuted=false`
+	- `dataMutationExecuted=false`
+	- `userCreated=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=inspectExistingUsersForSafeFictionalLoginCandidateReadOnly`
+	- `secondaryCandidate=authorizeControlledFictionalLoginUserCreation`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
