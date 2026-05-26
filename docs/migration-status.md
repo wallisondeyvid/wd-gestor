@@ -19016,6 +19016,166 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=executeControlledStartAtlasDryRunInSeparateMicrocut`;
 	- `secondaryCandidate=pushRuntimeEnvAndDryRunAuthorizationCheckpoint`;
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilHumanExecutionWindow`.
+
+- Checkpoint documental curto do registro da rotacao da credencial Atlas apos exposicao de segredo no dry-run de `start:atlas`, consolidado nesta rodada sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordAtlasCredentialRotationAfterStartAtlasSecretExposure`;
+	- `checkpointScope=documentalOnly`;
+	- `previousDryRunAuthorizationCommit=a1bd714`;
+	- `dryRunStartAtlasExecutedByHuman=true`;
+	- `dryRunPreflightOkBeforeStart=true`;
+	- `startAtlasExecutedPreviously=true`;
+	- `startAtlasAttemptedRuntimeMongoConnection=true`;
+	- `dryRunResult=red`;
+	- `dryRunFailureReason=bad-auth`;
+	- `mongoAuthFailed=true`;
+	- `runtimeEnteredSkipDbMode=true`;
+	- `serverStartedInSkipDbMode=true`;
+	- `productionReady=false`.
+- Registro da exposicao e da rotacao posterior:
+	- `uriWasPrintedInRuntimeLogs=true`;
+	- `uriSecretExposedInPreviousMicrocut=true`;
+	- `atlasCredentialRotatedByHuman=true`;
+	- `atlasCredentialRotationCompleted=true`;
+	- `rotatedCredentialValueRecorded=false`;
+	- `rotatedCredentialPrinted=false`;
+	- `rotatedCredentialPastedInChat=false`;
+	- `rotatedUriStoredInGit=false`;
+	- `rotatedUriStoredInLedger=false`;
+	- `rotatedUriStoredInEnvFile=false`;
+	- `currentWorkingTreeClean=true`;
+	- `currentBranchAhead=9`.
+- Bloqueios e corretivos obrigatorios apos a exposicao:
+	- `startAtlasStillBlocked=true`;
+	- `startGestorStillBlocked=true`;
+	- `runtimeAtlasStillBlockedUntilUriLoggingFixed=true`;
+	- `mustFixUriLoggingBeforeNextStartAtlas=true`;
+	- `mustSanitizeMongoUriEffectiveLog=true`;
+	- `mustSanitizeMongoConnectionAttemptLog=true`;
+	- `mustNotRepeatStartAtlasBeforeLogFix=true`;
+	- `noRuntimeStartAuthorized=true`;
+	- `noStartAtlasAuthorized=true`;
+	- `noStartGestorAuthorized=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorized=true`;
+	- `noMutationAuthorized=true`.
+- Registro factual deste microcorte:
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=planRuntimeMongoUriLogSanitizationFix`;
+	- `secondaryCandidate=inspectRuntimeUriLoggingSourcesDocumentally`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilSecretLoggingFixed`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental da rotacao pos-exposicao;
+	- nao repetir `start:atlas`;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao pedir nova URI;
+	- nao colar segredo no chat;
+	- nao alterar codigo neste microcorte;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=recordAtlasCredentialRotationAfterStartAtlasSecretExposure`
+	- `checkpointScope=documentalOnly`
+	- `previousDryRunAuthorizationCommit=a1bd714`
+	- `dryRunStartAtlasExecutedByHuman=true`
+	- `dryRunPreflightOkBeforeStart=true`
+	- `startAtlasExecutedPreviously=true`
+	- `startAtlasAttemptedRuntimeMongoConnection=true`
+	- `dryRunResult=red`
+	- `dryRunFailureReason=bad-auth`
+	- `mongoAuthFailed=true`
+	- `runtimeEnteredSkipDbMode=true`
+	- `serverStartedInSkipDbMode=true`
+	- `productionReady=false`
+	- `uriWasPrintedInRuntimeLogs=true`
+	- `uriSecretExposedInPreviousMicrocut=true`
+	- `atlasCredentialRotatedByHuman=true`
+	- `atlasCredentialRotationCompleted=true`
+	- `rotatedCredentialValueRecorded=false`
+	- `rotatedCredentialPrinted=false`
+	- `rotatedCredentialPastedInChat=false`
+	- `rotatedUriStoredInGit=false`
+	- `rotatedUriStoredInLedger=false`
+	- `rotatedUriStoredInEnvFile=false`
+	- `currentWorkingTreeClean=true`
+	- `currentBranchAhead=9`
+	- `startAtlasStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `runtimeAtlasStillBlockedUntilUriLoggingFixed=true`
+	- `mustFixUriLoggingBeforeNextStartAtlas=true`
+	- `mustSanitizeMongoUriEffectiveLog=true`
+	- `mustSanitizeMongoConnectionAttemptLog=true`
+	- `mustNotRepeatStartAtlasBeforeLogFix=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=planRuntimeMongoUriLogSanitizationFix`
+	- `secondaryCandidate=inspectRuntimeUriLoggingSourcesDocumentally`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilSecretLoggingFixed`
 - Reforcos obrigatorios desta rodada:
 	- este microcorte e so autorizacao documental futura;
 	- nao executar `start:atlas` agora;
