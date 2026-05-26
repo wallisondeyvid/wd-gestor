@@ -19499,6 +19499,192 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeRuntimeMongoUriLogSanitizationCodeFix`
 	- `secondaryCandidate=planMinimalRuntimeMongoUriLogSanitizationPatch`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilUriLoggingSourcesFixed`
+
+- Checkpoint documental curto da autorizacao futura para correcao logging-only de sanitizacao dos logs de URI runtime Mongo/Atlas, consolidado nesta rodada sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizeRuntimeMongoUriLogSanitizationCodeFix`;
+	- `authorizationScope=documentalOnlyFutureCodeFix`;
+	- `previousRuntimeUriLoggingInspectionCommit=5479f92`;
+	- `runtimeUriLoggingSourcesInspected=true`;
+	- `rawUriLoggingConfirmed=true`;
+	- `rawUriLoggingFixNeeded=true`;
+	- `blockingIssueForNextStartAtlas=true`;
+	- `startAtlasStillBlocked=true`;
+	- `productionReady=false`.
+- Escopo autorizado para futura correcao:
+	- `codeFixAuthorizedForFutureOnly=true`;
+	- `codeFixAuthorizedNow=false`;
+	- `codeFixExecutedNow=false`;
+	- `allowedFutureFixScope=logging-only`;
+	- `allowedFutureFilesMayInclude=src/core/db/connect.js,src/core/config/index.js,src/server/createServer.js`;
+	- `allowedFutureReferenceFiles=scripts/diagnostics/real-mongo-readonly-diagnostic.js,scripts/diagnostics/real-mongo-readonly-inventory.js`.
+- Requisitos obrigatorios da futura correcao:
+	- `futureFixMustSanitizeEffectiveMongoUriLog=true`;
+	- `futureFixMustSanitizeMongoConnectionAttemptLog=true`;
+	- `futureFixMustSanitizeHealthDbUriHint=true`;
+	- `futureFixMustSanitizeMongoErrorContext=true`;
+	- `futureFixMustNeverPrintRawMongoUri=true`;
+	- `futureFixMustNeverPrintRawMongodbUri=true`;
+	- `futureFixMustNeverPrintRawHost=true`;
+	- `futureFixMustNeverPrintRawUser=true`;
+	- `futureFixMustNeverPrintRawPassword=true`;
+	- `futureFixMustNeverPrintRawDatabase=true`;
+	- `futureFixShouldUseCredentialsRedacted=true`;
+	- `futureFixShouldUseHostMasked=true`;
+	- `futureFixShouldAvoidFullUri=true`;
+	- `futureFixShouldPreferSharedSanitizerIfExisting=true`;
+	- `futureFixMayAddSmallSharedSanitizerIfNeeded=true`.
+- Guardrails tecnicos da futura correcao:
+	- `futureFixMustNotChangeConnectionSemantics=true`;
+	- `futureFixMustNotChangeEnvResolution=true`;
+	- `futureFixMustNotChangeStartAtlasBehaviorExceptLogging=true`;
+	- `futureFixMustNotTouchSeedMaster=true`;
+	- `futureFixMustNotTouchAuthFlow=true`;
+	- `futureFixMustNotTouchHttpRoutes=true`;
+	- `futureFixMustNotTouchDataModels=true`;
+	- `futureFixMustNotTouchPackageJson=true`;
+	- `futureFixMustNotAddDependencies=true`.
+- Condicoes de revisao e validacao para a futura correcao:
+	- `futureFixRequiresStaticReview=true`;
+	- `futureFixRequiresNoSecretInDiff=true`;
+	- `futureFixRequiresDiffRestrictedToLoggingAndLedger=true`;
+	- `futureFixRequiresNodeCheckOrTestsOnlyIfSeparatelyAuthorized=true`.
+- Bloqueios operacionais reafirmados nesta rodada:
+	- `noRuntimeStartAuthorized=true`;
+	- `noStartAtlasAuthorized=true`;
+	- `noStartGestorAuthorized=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorized=true`;
+	- `noMutationAuthorized=true`.
+- Registro factual deste microcorte:
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=implementRuntimeMongoUriLogSanitizationCodeFix`;
+	- `secondaryCandidate=planMinimalRuntimeMongoUriLogSanitizationPatch`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilUriLoggingFixed`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao alterar codigo agora;
+	- nao executar `start:atlas`;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao pedir nova URI;
+	- nao colar segredo no chat;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=authorizeRuntimeMongoUriLogSanitizationCodeFix`
+	- `authorizationScope=documentalOnlyFutureCodeFix`
+	- `previousRuntimeUriLoggingInspectionCommit=5479f92`
+	- `runtimeUriLoggingSourcesInspected=true`
+	- `rawUriLoggingConfirmed=true`
+	- `rawUriLoggingFixNeeded=true`
+	- `blockingIssueForNextStartAtlas=true`
+	- `startAtlasStillBlocked=true`
+	- `codeFixAuthorizedForFutureOnly=true`
+	- `codeFixAuthorizedNow=false`
+	- `codeFixExecutedNow=false`
+	- `allowedFutureFixScope=logging-only`
+	- `allowedFutureFilesMayInclude=src/core/db/connect.js,src/core/config/index.js,src/server/createServer.js`
+	- `allowedFutureReferenceFiles=scripts/diagnostics/real-mongo-readonly-diagnostic.js,scripts/diagnostics/real-mongo-readonly-inventory.js`
+	- `futureFixMustSanitizeEffectiveMongoUriLog=true`
+	- `futureFixMustSanitizeMongoConnectionAttemptLog=true`
+	- `futureFixMustSanitizeHealthDbUriHint=true`
+	- `futureFixMustSanitizeMongoErrorContext=true`
+	- `futureFixMustNeverPrintRawMongoUri=true`
+	- `futureFixMustNeverPrintRawMongodbUri=true`
+	- `futureFixMustNeverPrintRawHost=true`
+	- `futureFixMustNeverPrintRawUser=true`
+	- `futureFixMustNeverPrintRawPassword=true`
+	- `futureFixMustNeverPrintRawDatabase=true`
+	- `futureFixShouldUseCredentialsRedacted=true`
+	- `futureFixShouldUseHostMasked=true`
+	- `futureFixShouldAvoidFullUri=true`
+	- `futureFixShouldPreferSharedSanitizerIfExisting=true`
+	- `futureFixMayAddSmallSharedSanitizerIfNeeded=true`
+	- `futureFixMustNotChangeConnectionSemantics=true`
+	- `futureFixMustNotChangeEnvResolution=true`
+	- `futureFixMustNotChangeStartAtlasBehaviorExceptLogging=true`
+	- `futureFixMustNotTouchSeedMaster=true`
+	- `futureFixMustNotTouchAuthFlow=true`
+	- `futureFixMustNotTouchHttpRoutes=true`
+	- `futureFixMustNotTouchDataModels=true`
+	- `futureFixMustNotTouchPackageJson=true`
+	- `futureFixMustNotAddDependencies=true`
+	- `futureFixRequiresStaticReview=true`
+	- `futureFixRequiresNoSecretInDiff=true`
+	- `futureFixRequiresDiffRestrictedToLoggingAndLedger=true`
+	- `futureFixRequiresNodeCheckOrTestsOnlyIfSeparatelyAuthorized=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=implementRuntimeMongoUriLogSanitizationCodeFix`
+	- `secondaryCandidate=planMinimalRuntimeMongoUriLogSanitizationPatch`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilUriLoggingFixed`
 - Reforcos obrigatorios desta rodada:
 	- este microcorte e so autorizacao documental futura;
 	- nao executar `start:atlas` agora;
