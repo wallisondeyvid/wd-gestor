@@ -18718,6 +18718,208 @@ Checkpoint tenant enforcement atual:
 	- `secondaryCandidate=pushRuntimeEnvValidationGreenCheckpoint`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilDryRunCommandApproved`
 
+- Checkpoint documental curto do planejamento do comando e do procedimento de parada do futuro dry-run controlado de `start:atlas`, consolidado nesta rodada sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real agora, sem executar `node`, sem executar `node -e`, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=planControlledStartAtlasDryRunCommandAndStopProcedure`;
+	- `planningScope=documentalOnly`;
+	- `previousDryRunPlanningAuthorizationCommit=78b9cb1`;
+	- `controlledStartAtlasDryRunCommandPlanned=true`;
+	- `controlledStartAtlasDryRunExecutionAuthorizedNow=false`;
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `productionReady=false`.
+- Comando candidato e preflight obrigatorio do futuro dry-run:
+	- `candidateDryRunCommand=npm run start:atlas`;
+	- `candidateDryRunCommandRequiresSeparateAuthorization=true`;
+	- `candidateDryRunMustBeExecutedOnlyAfterFreshPreflight=true`;
+	- `candidateDryRunFreshPreflightMustConfirmEnvValidationOk=true`;
+	- `candidateDryRunFreshPreflightMustConfirmMongodbUriPresent=true`;
+	- `candidateDryRunFreshPreflightMustConfirmMongodbUriTrimNonEmpty=true`;
+	- `candidateDryRunFreshPreflightMustConfirmMongodbUriMongoScheme=true`;
+	- `candidateDryRunFreshPreflightMustConfirmMongoMemoryDisabled=true`;
+	- `candidateDryRunFreshPreflightMustConfirmSeedEnvAbsent=true`;
+	- `candidateDryRunFreshPreflightMustConfirmProductionReadyFalse=true`;
+	- `candidateDryRunMustUseSamePowerShellAsFreshPreflight=true`.
+- Observacao, timeout e parada planejados:
+	- `candidateDryRunMustNotPrintUri=true`;
+	- `candidateDryRunMustNotPrintSecrets=true`;
+	- `candidateDryRunMustNotPrintHost=true`;
+	- `candidateDryRunMustNotPrintUser=true`;
+	- `candidateDryRunMustNotPrintPassword=true`;
+	- `candidateDryRunMustNotPrintDatabase=true`;
+	- `candidateDryRunObservationMode=startupLogsOnly`;
+	- `candidateDryRunHttpAllowed=false`;
+	- `candidateDryRunBrowserAllowed=false`;
+	- `candidateDryRunLoginAllowed=false`;
+	- `candidateDryRunMutationAllowed=false`;
+	- `candidateDryRunSeedAllowed=false`;
+	- `candidateDryRunMasterSetAllowed=false`;
+	- `candidateDryRunCleanupWrongEmailAllowed=false`;
+	- `candidateDryRunRecommendedTimeoutSeconds=60`;
+	- `candidateDryRunStopProcedure=manualCtrlCOrTerminalStopAfterStartupObservation`;
+	- `candidateDryRunMustStopAfterInitialObservation=true`;
+	- `candidateDryRunMustNotLeaveServerRunningUnobserved=true`.
+- Criterios de abort e registro obrigatorio do futuro dry-run:
+	- `candidateDryRunAbortIfGitDirty=true`;
+	- `candidateDryRunAbortIfUriMissing=true`;
+	- `candidateDryRunAbortIfMongoMemoryEnabled=true`;
+	- `candidateDryRunAbortIfSeedEnvPresent=true`;
+	- `candidateDryRunAbortIfProductionReadyTrue=true`;
+	- `candidateDryRunAbortIfSecretsWouldPrint=true`;
+	- `candidateDryRunAbortIfSeedMasterPathDetected=true`;
+	- `candidateDryRunAbortIfUnexpectedWriteDetected=true`;
+	- `candidateDryRunAbortIfHttpRequestWouldBeNeeded=true`;
+	- `candidateDryRunResultMustBeRecordedImmediately=true`;
+	- `controlledStartAtlasDryRunDoesNotMakeProductionReady=true`;
+	- `productionReady=false`.
+- Bloqueios operacionais reafirmados nesta rodada:
+	- `noRuntimeStartAuthorizedNow=true`;
+	- `noStartAtlasAuthorizedNow=true`;
+	- `noStartGestorAuthorizedNow=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorized=true`;
+	- `noMutationAuthorized=true`.
+- Registro factual deste microcorte:
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunExecution`;
+	- `secondaryCandidate=pushRuntimeEnvAndDryRunPlanningCheckpoint`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilExplicitExecutionAuthorization`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao iniciar servidor;
+	- nao executar `npm run start:atlas`;
+	- nao executar `npm`;
+	- nao executar `npm run`;
+	- nao executar `node`;
+	- nao executar `node -e`;
+	- nao conectar Mongo real;
+	- nao fazer HTTP;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=planControlledStartAtlasDryRunCommandAndStopProcedure`
+	- `planningScope=documentalOnly`
+	- `previousDryRunPlanningAuthorizationCommit=78b9cb1`
+	- `controlledStartAtlasDryRunCommandPlanned=true`
+	- `controlledStartAtlasDryRunExecutionAuthorizedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `candidateDryRunCommand=npm run start:atlas`
+	- `candidateDryRunCommandRequiresSeparateAuthorization=true`
+	- `candidateDryRunMustBeExecutedOnlyAfterFreshPreflight=true`
+	- `candidateDryRunFreshPreflightMustConfirmEnvValidationOk=true`
+	- `candidateDryRunFreshPreflightMustConfirmMongodbUriPresent=true`
+	- `candidateDryRunFreshPreflightMustConfirmMongodbUriTrimNonEmpty=true`
+	- `candidateDryRunFreshPreflightMustConfirmMongodbUriMongoScheme=true`
+	- `candidateDryRunFreshPreflightMustConfirmMongoMemoryDisabled=true`
+	- `candidateDryRunFreshPreflightMustConfirmSeedEnvAbsent=true`
+	- `candidateDryRunFreshPreflightMustConfirmProductionReadyFalse=true`
+	- `candidateDryRunMustUseSamePowerShellAsFreshPreflight=true`
+	- `candidateDryRunMustNotPrintUri=true`
+	- `candidateDryRunMustNotPrintSecrets=true`
+	- `candidateDryRunMustNotPrintHost=true`
+	- `candidateDryRunMustNotPrintUser=true`
+	- `candidateDryRunMustNotPrintPassword=true`
+	- `candidateDryRunMustNotPrintDatabase=true`
+	- `candidateDryRunObservationMode=startupLogsOnly`
+	- `candidateDryRunHttpAllowed=false`
+	- `candidateDryRunBrowserAllowed=false`
+	- `candidateDryRunLoginAllowed=false`
+	- `candidateDryRunMutationAllowed=false`
+	- `candidateDryRunSeedAllowed=false`
+	- `candidateDryRunMasterSetAllowed=false`
+	- `candidateDryRunCleanupWrongEmailAllowed=false`
+	- `candidateDryRunRecommendedTimeoutSeconds=60`
+	- `candidateDryRunStopProcedure=manualCtrlCOrTerminalStopAfterStartupObservation`
+	- `candidateDryRunMustStopAfterInitialObservation=true`
+	- `candidateDryRunMustNotLeaveServerRunningUnobserved=true`
+	- `candidateDryRunAbortIfGitDirty=true`
+	- `candidateDryRunAbortIfUriMissing=true`
+	- `candidateDryRunAbortIfMongoMemoryEnabled=true`
+	- `candidateDryRunAbortIfSeedEnvPresent=true`
+	- `candidateDryRunAbortIfProductionReadyTrue=true`
+	- `candidateDryRunAbortIfSecretsWouldPrint=true`
+	- `candidateDryRunAbortIfSeedMasterPathDetected=true`
+	- `candidateDryRunAbortIfUnexpectedWriteDetected=true`
+	- `candidateDryRunAbortIfHttpRequestWouldBeNeeded=true`
+	- `candidateDryRunResultMustBeRecordedImmediately=true`
+	- `controlledStartAtlasDryRunDoesNotMakeProductionReady=true`
+	- `productionReady=false`
+	- `noRuntimeStartAuthorizedNow=true`
+	- `noStartAtlasAuthorizedNow=true`
+	- `noStartGestorAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunExecution`
+	- `secondaryCandidate=pushRuntimeEnvAndDryRunPlanningCheckpoint`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilExplicitExecutionAuthorization`
+
 - Checkpoint documental curto do planejamento da validacao read-only do ambiente runtime Atlas antes de qualquer autorizacao futura de `start:atlas`, consolidado nesta rodada sem executar `node`, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem seed, sem master script, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem `push`.
 - Estado base consolidado nesta rodada:
 	- `selectedTarget=planReadOnlyAtlasRuntimeEnvValidation`;
