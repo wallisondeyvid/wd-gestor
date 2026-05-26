@@ -17898,6 +17898,186 @@ Checkpoint tenant enforcement atual:
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
 
+- Checkpoint documental curto da autorizacao futura da validacao read-only do env runtime Atlas, consolidado nesta rodada sem executar a validacao agora, sem executar `node`, sem executar `node -e`, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem fazer `push`.
+- Identificacao desta autorizacao documental:
+	- `selectedTarget=authorizeReadOnlyAtlasRuntimeEnvValidation`;
+	- `authorizationScope=documentalOnlyFutureValidation`;
+	- `previousRuntimeEnvValidationPlanCommit=2f06d2a`;
+	- `readOnlyAtlasRuntimeEnvValidationPlanned=true`;
+	- `readOnlyAtlasRuntimeEnvValidationAuthorizedForFutureOnly=true`;
+	- `readOnlyAtlasRuntimeEnvValidationAuthorizedNow=false`;
+	- `readOnlyAtlasRuntimeEnvValidationExecutedNow=false`;
+	- `productionReady=false`.
+- Restricoes obrigatorias da futura validacao autorizada apenas para microcorte separado:
+	- `futureValidationMustBeSingleRun=true`;
+	- `futureValidationMustNotRepeatOnError=true`;
+	- `futureValidationMustUseCleanGitStatus=true`;
+	- `futureValidationMustPrintOnlyBooleans=true`;
+	- `futureValidationMustNotPrintUri=true`;
+	- `futureValidationMustNotPrintSecrets=true`;
+	- `futureValidationMustNotPrintHost=true`;
+	- `futureValidationMustNotPrintUser=true`;
+	- `futureValidationMustNotPrintPassword=true`;
+	- `futureValidationMustNotPrintDatabase=true`;
+	- `futureValidationMustCheckMongoUriPresent=true`;
+	- `futureValidationMustCheckMongoUriTrimNonEmpty=true`;
+	- `futureValidationMustCheckMongoUriScheme=true`;
+	- `futureValidationMustCheckMongoMemoryAbsent=true`;
+	- `futureValidationMustCheckNodeEnvShape=true`;
+	- `futureValidationMustCheckSeedMasterBlocked=true`;
+	- `futureValidationMustCheckProductionReadyFalse=true`.
+- Proibicoes que permanecem vigentes nesta autorizacao:
+	- `futureValidationMustNotConnectMongo=true`;
+	- `futureValidationMustNotStartServer=true`;
+	- `futureValidationMustNotUseStartAtlas=true`;
+	- `futureValidationMustNotUseStartGestor=true`;
+	- `futureValidationMustNotUseHttp=true`;
+	- `futureValidationMustNotUseBrowser=true`;
+	- `futureValidationMustNotLogin=true`;
+	- `futureValidationMustNotMutateData=true`;
+	- `futureValidationMustAbortIfUriMissing=true`;
+	- `futureValidationMustAbortIfMongoMemory=true`;
+	- `futureValidationMustAbortIfAmbiguousEnvironment=true`;
+	- `futureValidationMustAbortIfSecretsWouldPrint=true`;
+	- `futureValidationRequiresResultLedgerImmediately=true`.
+- Bloqueios operacionais reafirmados nesta rodada:
+	- `startAtlasExecutionAuthorizedNow=false`;
+	- `startGestorExecutionAuthorizedNow=false`;
+	- `serverStartAuthorizedNow=false`;
+	- `bootAuthorizedNow=false`;
+	- `realMongoConnectionAuthorizedNow=false`;
+	- `noRuntimeStartAuthorized=true`;
+	- `noStartAtlasAuthorized=true`;
+	- `noStartGestorAuthorized=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorized=true`;
+	- `noMutationAuthorized=true`.
+- Registro factual deste microcorte:
+	- `nodeExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `startAtlasExecuted=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=executeReadOnlyAtlasRuntimeEnvValidationInSeparateMicrocut`;
+	- `secondaryCandidate=pushStartAtlasCriteriaAndEnvValidationPlanningCheckpoint`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilEnvValidationExecuted`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar `node`;
+	- nao executar `node -e`;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao iniciar servidor;
+	- nao fazer boot;
+	- nao conectar Mongo real;
+	- nao fazer HTTP;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=authorizeReadOnlyAtlasRuntimeEnvValidation`
+	- `authorizationScope=documentalOnlyFutureValidation`
+	- `previousRuntimeEnvValidationPlanCommit=2f06d2a`
+	- `readOnlyAtlasRuntimeEnvValidationPlanned=true`
+	- `readOnlyAtlasRuntimeEnvValidationAuthorizedForFutureOnly=true`
+	- `readOnlyAtlasRuntimeEnvValidationAuthorizedNow=false`
+	- `readOnlyAtlasRuntimeEnvValidationExecutedNow=false`
+	- `futureValidationMustBeSingleRun=true`
+	- `futureValidationMustNotRepeatOnError=true`
+	- `futureValidationMustUseCleanGitStatus=true`
+	- `futureValidationMustPrintOnlyBooleans=true`
+	- `futureValidationMustNotPrintUri=true`
+	- `futureValidationMustNotPrintSecrets=true`
+	- `futureValidationMustNotPrintHost=true`
+	- `futureValidationMustNotPrintUser=true`
+	- `futureValidationMustNotPrintPassword=true`
+	- `futureValidationMustNotPrintDatabase=true`
+	- `futureValidationMustCheckMongoUriPresent=true`
+	- `futureValidationMustCheckMongoUriTrimNonEmpty=true`
+	- `futureValidationMustCheckMongoUriScheme=true`
+	- `futureValidationMustCheckMongoMemoryAbsent=true`
+	- `futureValidationMustCheckNodeEnvShape=true`
+	- `futureValidationMustCheckSeedMasterBlocked=true`
+	- `futureValidationMustCheckProductionReadyFalse=true`
+	- `futureValidationMustNotConnectMongo=true`
+	- `futureValidationMustNotStartServer=true`
+	- `futureValidationMustNotUseStartAtlas=true`
+	- `futureValidationMustNotUseStartGestor=true`
+	- `futureValidationMustNotUseHttp=true`
+	- `futureValidationMustNotUseBrowser=true`
+	- `futureValidationMustNotLogin=true`
+	- `futureValidationMustNotMutateData=true`
+	- `futureValidationMustAbortIfUriMissing=true`
+	- `futureValidationMustAbortIfMongoMemory=true`
+	- `futureValidationMustAbortIfAmbiguousEnvironment=true`
+	- `futureValidationMustAbortIfSecretsWouldPrint=true`
+	- `futureValidationRequiresResultLedgerImmediately=true`
+	- `startAtlasExecutionAuthorizedNow=false`
+	- `startGestorExecutionAuthorizedNow=false`
+	- `serverStartAuthorizedNow=false`
+	- `bootAuthorizedNow=false`
+	- `realMongoConnectionAuthorizedNow=false`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `nodeExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `startGestorExecuted=false`
+	- `startAtlasExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=executeReadOnlyAtlasRuntimeEnvValidationInSeparateMicrocut`
+	- `secondaryCandidate=pushStartAtlasCriteriaAndEnvValidationPlanningCheckpoint`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilEnvValidationExecuted`
+
 - Checkpoint documental curto do planejamento da validacao read-only do ambiente runtime Atlas antes de qualquer autorizacao futura de `start:atlas`, consolidado nesta rodada sem executar `node`, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem seed, sem master script, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem `push`.
 - Estado base consolidado nesta rodada:
 	- `selectedTarget=planReadOnlyAtlasRuntimeEnvValidation`;
