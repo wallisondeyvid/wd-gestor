@@ -22682,6 +22682,116 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=planCredentialHandlingForLoginValidationWithoutSecret`
 	- `secondaryCandidate=authorizeLoginRouteValidationWithoutMutation`
 	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
+
+## Microcorte: Planejar credencial de login sem segredo
+
+- Contexto executivo desta rodada:
+	- branch migration/refactor-core com HEAD local/remoto sincronizados em 9696d0a no inicio desta rodada;
+	- a rota candidata para validacao futura de login permanece `POST /gestor/login`, com sessao/cookie e sem mecanismo principal de JWT/refresh;
+	- este microcorte define somente a estrategia documental de manuseio de credencial, sem qualquer execucao de login;
+	- o segredo deve permanecer exclusivamente em acao humana local futura, fora do chat, fora do git e fora do ledger;
+	- login, autenticacao runtime e mutacao seguem bloqueados ate autorizacao separada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao pedir senha;
+	- nao colar segredo no chat;
+	- nao executar start:atlas;
+	- nao fazer HTTP agora;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planCredentialHandlingForLoginValidationWithoutSecret`
+	- `planningScope=documentalOnly`
+	- `previousLoginAuthInspectionCommit=9696d0a`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `loginRouteCandidate=/gestor/login`
+	- `loginRouteMethod=POST`
+	- `loginRouteRequiresBody=true`
+	- `loginRouteRequiresCredentials=true`
+	- `loginRouteIssuesSession=true`
+	- `loginRouteIssuesCookie=true`
+	- `loginRouteIssuesToken=false`
+	- `loginRouteMutationRisk=medium`
+	- `loginCredentialHandlingPlanned=true`
+	- `loginCredentialHandlingExecutedNow=false`
+	- `loginValidationExecutedNow=false`
+	- `credentialSecretRequestedInChat=false`
+	- `credentialSecretPastedInChat=false`
+	- `credentialSecretStoredInGit=false`
+	- `credentialSecretStoredInLedger=false`
+	- `credentialSecretStoredInEnvFile=false`
+	- `credentialSecretPrinted=false`
+	- `credentialSecretLogged=false`
+	- `futureCredentialMustBeHumanLocalOnly=true`
+	- `futureCredentialMustBeEnteredOnlyInLocalPowerShell=true`
+	- `futureCredentialMustNotBePastedInChat=true`
+	- `futureCredentialMustNotBeStoredInGit=true`
+	- `futureCredentialMustNotBeStoredInLedger=true`
+	- `futureCredentialMustNotBeStoredInEnvFile=true`
+	- `futureCredentialMustNotBePrinted=true`
+	- `futureCredentialMustNotBeLogged=true`
+	- `futureLoginValidationMustUseSeparateAuthorization=true`
+	- `futureLoginValidationMustUseFreshStartAtlasAuthorization=true`
+	- `futureLoginValidationMustUseFreshEnvPreflight=true`
+	- `futureLoginValidationMustUseSanitizedLogs=true`
+	- `futureLoginValidationMustAvoidBrowserUnlessSeparatelyAuthorized=true`
+	- `futureLoginValidationMustAvoidMutationRoutes=true`
+	- `futureLoginValidationMustAvoidSeedMaster=true`
+	- `futureLoginValidationMustAvoidCleanupWrongEmail=true`
+	- `futureLoginValidationMustRecordOnlyStatusAndCookiePresence=true`
+	- `futureLoginValidationMustNotRecordPassword=true`
+	- `futureLoginValidationMustNotRecordSessionValue=true`
+	- `futureLoginValidationMustNotRecordCookieValue=true`
+	- `futureLoginValidationMustStopServerAfterObservation=true`
+	- `futureLoginValidationDoesNotMakeProductionReady=true`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `productionReady=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `httpPostExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `authenticatedRouteExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeCredentialHandlingForLoginValidationHumanLocalAction`
+	- `secondaryCandidate=planExactLoginValidationCommandWithoutSecret`
+	- `tertiaryCandidate=keepProductionNotReadyUntilLoginAndMutationPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
