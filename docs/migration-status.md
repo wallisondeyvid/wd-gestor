@@ -17109,6 +17109,108 @@ Checkpoint tenant enforcement atual:
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
 
+## Microcorte: Planejar comando exato de inspecao read-only de usuarios
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `38b1f56` no inicio desta rodada;
+	- o commit `38b1f56` autorizou documentalmente uma futura inspecao read-only de usuarios existentes;
+	- houve comando malformado `git --no-pager log --oneline --decorate -5git push --no-verify`, sem efeito no repositorio;
+	- este microcorte planeja apenas o comando exato futuro da inspecao read-only, sem executar nada agora;
+	- producao permanece nao pronta.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar inspecao agora;
+	- nao criar usuario;
+	- nao usar master;
+	- nao pedir senha;
+	- nao colar segredo no chat;
+	- nao executar start:atlas;
+	- nao fazer HTTP;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planExactReadOnlyExistingUsersInspectionCommand`
+	- `planningScope=documentalOnly`
+	- `previousReadOnlyExistingUsersInspectionAuthorizationCommit=38b1f56`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `commandTypoObservedPreviously=true`
+	- `commandTypoHadNoRepoEffect=true`
+	- `candidateEmailPlanned=teste.login@example.com`
+	- `masterUserWillNotBeUsedForInitialLoginValidation=true`
+	- `masterUserProtected=true`
+	- `exactFutureInspectionCommandPlanned=true`
+	- `futureInspectionExactCommand=powershell -NoProfile -Command "$ErrorActionPreference='Stop'; if ([string]::IsNullOrWhiteSpace($env:MONGODB_URI)) { throw 'MONGODB_URI missing'; }; if ($env:MONGO_MEMORY -eq '1') { throw 'MONGO_MEMORY must be disabled'; }; $env:READ_ONLY_SAFE_OUTPUT='1'; $env:FICTIONAL_CANDIDATE_EMAIL='teste.login@example.com'; node scripts/diagnostics/real-mongo-readonly-diagnostic.js"`
+	- `futureInspectionCommandExecutionAuthorizedNow=false`
+	- `futureInspectionExecutedNow=false`
+	- `futureInspectionMustUseReadOnlyMongoConnection=true`
+	- `futureInspectionMustNotDumpDocuments=true`
+	- `futureInspectionMustNotPrintPasswordHashes=true`
+	- `futureInspectionMustNotPrintTokens=true`
+	- `futureInspectionMustNotPrintSessionData=true`
+	- `futureInspectionMustNotPrintPersonalData=true`
+	- `futureInspectionMustNotPrintMasterEmail=true`
+	- `futureInspectionMustNotPrintRealUserEmails=true`
+	- `futureInspectionMustReportOnlySafeCounts=true`
+	- `futureInspectionMustReportOnlyCandidateExistsBoolean=true`
+	- `futureInspectionMustReportOnlyCandidateDomain=true`
+	- `futureInspectionMustReportOnlyMasterProtectionBoolean=true`
+	- `futureInspectionMustAvoidWrites=true`
+	- `futureInspectionMustAvoidSeedMaster=true`
+	- `futureInspectionMustAvoidCleanupWrongEmail=true`
+	- `futureInspectionMustAbortIfUriMissing=true`
+	- `futureInspectionMustAbortIfMongoMemoryEnabled=true`
+	- `futureInspectionMustUseSanitizedLogs=true`
+	- `futureInspectionMustRecordResultImmediately=true`
+	- `userCreationStillRequiresSeparateAuthorization=true`
+	- `loginStillRequiresSeparateAuthorization=true`
+	- `userCreationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `passwordMutationExecutedNow=false`
+	- `roleMutationExecutedNow=false`
+	- `activeFlagMutationExecutedNow=false`
+	- `primeiroAcessoMutationExecutedNow=false`
+	- `membershipMutationExecutedNow=false`
+	- `productionReady=false`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=executeReadOnlyExistingUsersInspectionInSeparateMicrocut`
+	- `secondaryCandidate=authorizeControlledFictionalLoginUserCreation`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+
 ## Microcorte: Autorizar inspecao read-only de usuarios existentes
 
 - Contexto executivo desta rodada:
