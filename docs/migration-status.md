@@ -17108,6 +17108,95 @@ Checkpoint tenant enforcement atual:
 	- `startAtlasExecuted=false`
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
+
+## Microcorte: Autorizar inspecao read-only de usuarios existentes
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `322203a` no inicio desta rodada;
+	- o commit `322203a` planejou a inspecao read-only para verificar candidato ficticio aproveitavel;
+	- este microcorte autoriza apenas uma futura inspecao read-only, sem executar nada agora;
+	- o usuario master permanece protegido e nao sera usado na validacao inicial de login;
+	- a criacao/mutacao de usuario segue bloqueada ate autorizacao separada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar inspecao agora;
+	- nao criar usuario;
+	- nao usar master;
+	- nao pedir senha;
+	- nao colar segredo no chat;
+	- nao executar start:atlas;
+	- nao fazer HTTP;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeReadOnlyExistingUsersInspectionForFictionalLoginCandidate`
+	- `authorizationScope=documentalOnlyFutureReadOnlyInspection`
+	- `previousFictionalLoginUserInspectionPlanCommit=322203a`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `masterUserWillNotBeUsedForInitialLoginValidation=true`
+	- `masterUserProtected=true`
+	- `candidateEmailPlanned=teste.login@example.com`
+	- `existingFictionalLoginUserInspectionAuthorized=true`
+	- `existingFictionalLoginUserInspectionAuthorizedForFutureOnly=true`
+	- `existingFictionalLoginUserInspectionExecutedNow=false`
+	- `readOnlyInspectionMustUseMongoReadOnly=true`
+	- `readOnlyInspectionMustAvoidDocumentsDump=true`
+	- `readOnlyInspectionMustAvoidPasswordHashPrinting=true`
+	- `readOnlyInspectionMustAvoidSensitiveFieldsPrinting=true`
+	- `readOnlyInspectionMustUseSanitizedOutputOnly=true`
+	- `safeOutputAllowedFields=emailDomainOnlyOrBooleanCounts`
+	- `futureInspectionMustReportOnlyUserExistsBoolean=true`
+	- `futureInspectionMustReportOnlyFictionalCandidateExistsBoolean=true`
+	- `futureInspectionMustReportOnlySafeCounts=true`
+	- `futureInspectionMustNotPrintMasterEmail=true`
+	- `futureInspectionMustNotPrintRealUserEmails=true`
+	- `futureInspectionMustNotPrintHashes=true`
+	- `futureInspectionMustNotPrintTokens=true`
+	- `futureInspectionMustNotPrintSessionData=true`
+	- `futureInspectionMustNotPrintPersonalData=true`
+	- `futureCreationStillRequiresSeparateAuthorization=true`
+	- `futureLoginStillRequiresSeparateAuthorization=true`
+	- `userCreationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `passwordMutationExecutedNow=false`
+	- `roleMutationExecutedNow=false`
+	- `activeFlagMutationExecutedNow=false`
+	- `primeiroAcessoMutationExecutedNow=false`
+	- `membershipMutationExecutedNow=false`
+	- `productionReady=false`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=planExactReadOnlyExistingUsersInspectionCommand`
+	- `secondaryCandidate=executeReadOnlyExistingUsersInspectionInSeparateMicrocut`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
 - Checkpoint documental curto do planejamento do comando PowerShell-safe para preflight no mesmo processo com diagnostico read-only condicional, consolidado nesta rodada sem executar `node -e`, sem executar `node scripts/diagnostics/real-mongo-readonly-diagnostic.js`, sem conectar Mongo real, sem imprimir URI, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests` e sem fazer push.
 - Identificacao deste checkpoint:
 	- `selectedTarget=planPowerShellSafePreflightCommandDocumentally`.
