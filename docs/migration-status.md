@@ -21237,6 +21237,161 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=executeControlledStartAtlasDryRunRetryAfterCredentialFix`
 	- `secondaryCandidate=pushCredentialCorrectionCheckpointBeforeRetry`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilHumanExecutionWindow`
+
+- Checkpoint documental curto do resultado green do retry dry-run de `start:atlas` apos a correcao da credencial ou URI Atlas, consolidado nesta rodada apenas para registro documental, sem executar `start:atlas` neste microcorte, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real neste microcorte, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordControlledStartAtlasDryRunRetryGreenAfterCredentialFix`;
+	- `checkpointScope=documentalOnly`;
+	- `previousDryRunRetryAuthorizationCommit=48032fe`;
+	- `previousCredentialCorrectionPreflightGreenCommit=a19a29a`;
+	- `productionReady=false`.
+- Registro consolidado do dry-run humano subsequente:
+	- `dryRunExecutedByHuman=true`;
+	- `dryRunCommand=npm run start:atlas`;
+	- `dryRunExecutedOnce=true`;
+	- `dryRunRepeated=false`;
+	- `freshPreflightExecuted=true`;
+	- `freshPreflightResult=green`;
+	- `envValidationOk=true`;
+	- `mongoUriPresent=false`;
+	- `mongodbUriPresent=true`;
+	- `mongodbUriTrimNonEmpty=true`;
+	- `mongodbUriMongoScheme=true`;
+	- `mongoMemoryEnabled=false`;
+	- `nodeEnvPresent=false`;
+	- `nodeEnvKnownShape=true`;
+	- `seedEnvPresent=false`;
+	- `startAtlasExecutedPreviously=true`;
+	- `startAtlasStarted=true`;
+	- `startupLogsObserved=true`;
+	- `runtimeLogsSanitized=true`;
+	- `effectiveMongoUriLogSanitized=true`;
+	- `connectionAttemptLogSanitized=true`;
+	- `mongoConnectedLogSanitized=true`;
+	- `rawUriPrinted=false`;
+	- `rawHostPrinted=false`;
+	- `rawUserPrinted=false`;
+	- `rawPasswordPrinted=false`;
+	- `rawDatabasePrinted=false`;
+	- `uriSecretExposedInThisDryRun=false`;
+	- `runtimeMongoConnectionAttempted=true`;
+	- `runtimeMongoConnected=true`;
+	- `mongoAuthFailed=false`;
+	- `dryRunResult=green`;
+	- `dryRunFailureReason=none`;
+	- `runtimeEnteredSkipDbMode=false`;
+	- `serverStarted=true`;
+	- `serverPortObserved=3000`;
+	- `serverModulesMounted=true`;
+	- `gestorModuleMounted=true`;
+	- `clinicaModuleMounted=true`;
+	- `condominiosModuleMounted=true`;
+	- `portalMoradorModuleMounted=true`;
+	- `escalasModuleMounted=true`;
+	- `serverLeftRunning=false`;
+	- `finalGitStatusClean=true`;
+	- `branchAheadAfterDryRun=5`;
+	- `unexpectedWriteDetected=false`.
+- Registro factual deste microcorte:
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `startGestorExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=planNextReadOnlyRuntimeAtlasValidationAfterGreenDryRun`;
+	- `secondaryCandidate=pushAtlasDryRunGreenCheckpoint`;
+	- `tertiaryCandidate=keepProductionNotReadyUntilHttpLoginMutationPlan`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir `start:atlas`;
+	- nao executar HTTP;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=recordControlledStartAtlasDryRunRetryGreenAfterCredentialFix`
+	- `checkpointScope=documentalOnly`
+	- `previousDryRunRetryAuthorizationCommit=48032fe`
+	- `previousCredentialCorrectionPreflightGreenCommit=a19a29a`
+	- `dryRunExecutedByHuman=true`
+	- `dryRunCommand=npm run start:atlas`
+	- `dryRunExecutedOnce=true`
+	- `dryRunRepeated=false`
+	- `freshPreflightExecuted=true`
+	- `freshPreflightResult=green`
+	- `envValidationOk=true`
+	- `mongoUriPresent=false`
+	- `mongodbUriPresent=true`
+	- `mongodbUriTrimNonEmpty=true`
+	- `mongodbUriMongoScheme=true`
+	- `mongoMemoryEnabled=false`
+	- `nodeEnvPresent=false`
+	- `nodeEnvKnownShape=true`
+	- `seedEnvPresent=false`
+	- `productionReady=false`
+	- `startAtlasExecutedPreviously=true`
+	- `startAtlasStarted=true`
+	- `startupLogsObserved=true`
+	- `runtimeLogsSanitized=true`
+	- `effectiveMongoUriLogSanitized=true`
+	- `connectionAttemptLogSanitized=true`
+	- `mongoConnectedLogSanitized=true`
+	- `rawUriPrinted=false`
+	- `rawHostPrinted=false`
+	- `rawUserPrinted=false`
+	- `rawPasswordPrinted=false`
+	- `rawDatabasePrinted=false`
+	- `uriSecretExposedInThisDryRun=false`
+	- `runtimeMongoConnectionAttempted=true`
+	- `runtimeMongoConnected=true`
+	- `mongoAuthFailed=false`
+	- `dryRunResult=green`
+	- `dryRunFailureReason=none`
+	- `runtimeEnteredSkipDbMode=false`
+	- `serverStarted=true`
+	- `serverPortObserved=3000`
+	- `serverModulesMounted=true`
+	- `gestorModuleMounted=true`
+	- `clinicaModuleMounted=true`
+	- `condominiosModuleMounted=true`
+	- `portalMoradorModuleMounted=true`
+	- `escalasModuleMounted=true`
+	- `serverLeftRunning=false`
+	- `finalGitStatusClean=true`
+	- `branchAheadAfterDryRun=5`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `unexpectedWriteDetected=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `startGestorExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=planNextReadOnlyRuntimeAtlasValidationAfterGreenDryRun`
+	- `secondaryCandidate=pushAtlasDryRunGreenCheckpoint`
+	- `tertiaryCandidate=keepProductionNotReadyUntilHttpLoginMutationPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
