@@ -21882,6 +21882,138 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=inspectReadOnlyHealthEndpointsDocumentally`
 	- `secondaryCandidate=authorizeReadOnlyHttpHealthCheckWithoutLogin`
 	- `tertiaryCandidate=keepProductionNotReadyUntilHttpHealthGreenAndLoginPlan`
+
+- Checkpoint documental curto da inspecao estatica de endpoints candidatos para futuro health check HTTP read-only sem login, consolidado nesta rodada apenas por leitura estatica de codigo e rotas, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem fazer HTTP, sem abrir navegador, sem fazer login, sem fazer mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=inspectReadOnlyHealthEndpointsDocumentally`;
+	- `inspectionScope=staticReadOnly`;
+	- `previousHttpHealthPlanningCommit=d2f44db`;
+	- `localRemoteSyncedBeforeInspection=true`;
+	- `endpointInspectionExecuted=true`;
+	- `productionReady=false`.
+- Leitura estatica consolidada nesta rodada:
+	- endpoints inspecionados por leitura estatica em `src/server/createServer.js`: `GET /health`, `GET /health/db`, `GET /`, `GET /index`;
+	- `candidateHealthEndpoint=/health`;
+	- `candidateHealthDbEndpoint=/health/db`;
+	- `candidateRootEndpoint=/`;
+	- `candidateEndpointsRequireLogin=false`;
+	- `candidateEndpointsRequireCookie=false`;
+	- `candidateEndpointsRequireToken=false`;
+	- `candidateEndpointsUseOnlyGet=true`;
+	- `candidateEndpointsMutationRisk=low`;
+	- `safestReadOnlyEndpointCandidate=/health`;
+	- `healthEndpointStaticRisk=baixo`;
+	- `healthDbEndpointStaticRisk=médio`;
+	- `rootEndpointStaticRisk=médio`.
+- Justificativa estatica consolidada:
+	- `GET /health` retorna apenas payload JSON minimo `{ ok:true, ts }` e nao depende de sessao, cookie, token, body ou login;
+	- `GET /health/db` tambem e publico por definicao estatica, mas so existe quando `EXPOSE_DB_DEBUG=1` e expande a superficie ao ler estado de conexao e contagens, mesmo com sanitizacao;
+	- `GET /` e `GET /index` sao publicos, mas renderizam HTML e podem consultar modulos quando Mongo estiver conectado, aumentando superficie funcional em comparacao com `/health`;
+	- as rotas candidatas aparecem em `src/server/createServer.js` antes do middleware de `session`, antes de `cookieParser()` e antes de `rememberRestore`, portanto a leitura estatica atual nao indica dependencia de cookie, token ou login para esses handlers.
+- Recomendacao futura consolidada:
+	- `recommendedFutureHttpMethod=GET`;
+	- `recommendedFutureRequestBodyAllowed=false`;
+	- `recommendedFutureAuthHeadersAllowed=false`;
+	- `recommendedFutureCookiesAllowed=false`;
+	- `recommendedFutureBrowserAllowed=false`;
+	- `recommendedFutureLoginAllowed=false`;
+	- `recommendedFutureMutationAllowed=false`.
+- Registro factual deste microcorte:
+	- `codeChanged=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `httpExecuted=false`;
+	- `httpGetExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=authorizeReadOnlyHttpHealthCheckWithoutLogin`;
+	- `secondaryCandidate=planExactReadOnlyHttpHealthCheckCommand`;
+	- `tertiaryCandidate=keepProductionNotReadyUntilHttpHealthGreenAndLoginPlan`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so inspecao estatica e registro documental;
+	- nao executar HTTP;
+	- nao iniciar servidor;
+	- nao executar `start:atlas`;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=inspectReadOnlyHealthEndpointsDocumentally`
+	- `inspectionScope=staticReadOnly`
+	- `previousHttpHealthPlanningCommit=d2f44db`
+	- `localRemoteSyncedBeforeInspection=true`
+	- `endpointInspectionExecuted=true`
+	- `candidateHealthEndpoint=/health`
+	- `candidateHealthDbEndpoint=/health/db`
+	- `candidateRootEndpoint=/`
+	- `candidateEndpointsRequireLogin=false`
+	- `candidateEndpointsRequireCookie=false`
+	- `candidateEndpointsRequireToken=false`
+	- `candidateEndpointsUseOnlyGet=true`
+	- `candidateEndpointsMutationRisk=low`
+	- `safestReadOnlyEndpointCandidate=/health`
+	- `healthEndpointStaticRisk=baixo`
+	- `healthDbEndpointStaticRisk=médio`
+	- `rootEndpointStaticRisk=médio`
+	- `recommendedFutureHttpMethod=GET`
+	- `recommendedFutureRequestBodyAllowed=false`
+	- `recommendedFutureAuthHeadersAllowed=false`
+	- `recommendedFutureCookiesAllowed=false`
+	- `recommendedFutureBrowserAllowed=false`
+	- `recommendedFutureLoginAllowed=false`
+	- `recommendedFutureMutationAllowed=false`
+	- `codeChanged=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `httpExecuted=false`
+	- `httpGetExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeReadOnlyHttpHealthCheckWithoutLogin`
+	- `secondaryCandidate=planExactReadOnlyHttpHealthCheckCommand`
+	- `tertiaryCandidate=keepProductionNotReadyUntilHttpHealthGreenAndLoginPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
