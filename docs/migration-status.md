@@ -19954,6 +19954,154 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeStaticValidationForUriLogSanitization`
 	- `secondaryCandidate=authorizeControlledStartAtlasDryRunRetryAfterLogSanitizationReview`
 	- `tertiaryCandidate=pushUriLogSanitizationFixCheckpoint`
+
+- Checkpoint documental curto da autorizacao futura para validacao estatica da sanitizacao dos logs de URI runtime Mongo/Atlas, consolidado nesta rodada sem alterar codigo, sem executar a validacao agora, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=authorizeStaticValidationForUriLogSanitization`;
+	- `authorizationScope=documentalOnlyFutureStaticValidation`;
+	- `previousUriLogSanitizationReviewCommit=f47d0ab`;
+	- `previousUriLogSanitizationCodeFixCommit=93edcdf`;
+	- `previousReviewBlockingDefectFound=false`;
+	- `productionReady=false`.
+- Escopo autorizado para futura validacao estatica:
+	- `staticValidationAuthorizedForFutureOnly=true`;
+	- `staticValidationAuthorizedNow=false`;
+	- `staticValidationExecutedNow=false`;
+	- `futureStaticValidationMustBeReadOnly=true`;
+	- `futureStaticValidationMustUseGrepOnly=true`;
+	- `futureStaticValidationMustInspectDiffAndRuntimeFiles=true`;
+	- `futureStaticValidationMustSearchForRawMongoSrv=true`;
+	- `futureStaticValidationMustSearchForCredentialPatterns=true`;
+	- `futureStaticValidationMustSearchForRawHostPatterns=true`;
+	- `futureStaticValidationMustSearchForUnsafeUriHint=true`.
+- Restricoes obrigatorias da futura validacao:
+	- `futureStaticValidationMustNotExecuteRuntime=true`;
+	- `futureStaticValidationMustNotConnectMongo=true`;
+	- `futureStaticValidationMustNotStartServer=true`;
+	- `futureStaticValidationMustNotRunStartAtlas=true`;
+	- `futureStaticValidationMustNotPrintSecrets=true`;
+	- `futureStaticValidationRequiresCleanGitStatus=true`;
+	- `futureStaticValidationRequiresResultLedgerImmediately=true`.
+- Bloqueios operacionais reafirmados nesta rodada:
+	- `startAtlasStillBlocked=true`;
+	- `startGestorStillBlocked=true`;
+	- `noRuntimeStartAuthorized=true`;
+	- `noStartAtlasAuthorized=true`;
+	- `noStartGestorAuthorized=true`;
+	- `noSeedMasterAuthorized=true`;
+	- `noLoginAuthorized=true`;
+	- `noHttpAuthorized=true`;
+	- `noMutationAuthorized=true`.
+- Registro factual deste microcorte:
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=executeStaticValidationForUriLogSanitization`;
+	- `secondaryCandidate=authorizeControlledStartAtlasDryRunRetryAfterStaticValidation`;
+	- `tertiaryCandidate=pushUriLogSanitizationCheckpoint`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao alterar codigo;
+	- nao executar validacao agora;
+	- nao executar `start:atlas`;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao pedir nova URI;
+	- nao colar segredo no chat;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=authorizeStaticValidationForUriLogSanitization`
+	- `authorizationScope=documentalOnlyFutureStaticValidation`
+	- `previousUriLogSanitizationReviewCommit=f47d0ab`
+	- `previousUriLogSanitizationCodeFixCommit=93edcdf`
+	- `previousReviewBlockingDefectFound=false`
+	- `staticValidationAuthorizedForFutureOnly=true`
+	- `staticValidationAuthorizedNow=false`
+	- `staticValidationExecutedNow=false`
+	- `futureStaticValidationMustBeReadOnly=true`
+	- `futureStaticValidationMustUseGrepOnly=true`
+	- `futureStaticValidationMustInspectDiffAndRuntimeFiles=true`
+	- `futureStaticValidationMustSearchForRawMongoSrv=true`
+	- `futureStaticValidationMustSearchForCredentialPatterns=true`
+	- `futureStaticValidationMustSearchForRawHostPatterns=true`
+	- `futureStaticValidationMustSearchForUnsafeUriHint=true`
+	- `futureStaticValidationMustNotExecuteRuntime=true`
+	- `futureStaticValidationMustNotConnectMongo=true`
+	- `futureStaticValidationMustNotStartServer=true`
+	- `futureStaticValidationMustNotRunStartAtlas=true`
+	- `futureStaticValidationMustNotPrintSecrets=true`
+	- `futureStaticValidationRequiresCleanGitStatus=true`
+	- `futureStaticValidationRequiresResultLedgerImmediately=true`
+	- `startAtlasStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `productionReady=false`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `noLoginAuthorized=true`
+	- `noHttpAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=executeStaticValidationForUriLogSanitization`
+	- `secondaryCandidate=authorizeControlledStartAtlasDryRunRetryAfterStaticValidation`
+	- `tertiaryCandidate=pushUriLogSanitizationCheckpoint`
 - Reforcos obrigatorios desta rodada:
 	- este microcorte e so autorizacao documental futura;
 	- nao executar `start:atlas` agora;
