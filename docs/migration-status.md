@@ -20119,6 +20119,130 @@ Checkpoint tenant enforcement atual:
 	- nao fazer mutacao real;
 	- nao declarar producao pronta;
 	- nao fazer `push` agora.
+
+- Checkpoint documental curto da execucao da validacao estatica read-only da sanitizacao dos logs de URI runtime Mongo/Atlas, consolidado nesta rodada com grep, diff e leitura estatica, sem alterar codigo durante a validacao, sem executar runtime, sem conectar Mongo real, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=executeStaticValidationForUriLogSanitization`;
+	- `validationScope=staticReadOnly`;
+	- `previousStaticValidationAuthorizationCommit=53fef3a`;
+	- `reviewedCodeFixCommit=93edcdf`;
+	- `reviewedReviewCommit=f47d0ab`;
+	- `productionReady=false`.
+- Resultado consolidado da validacao estatica:
+	- `staticValidationExecuted=true`;
+	- `staticValidationResult=green`;
+	- `rawMongoSrvInRuntimeLogsFound=false`;
+	- `rawMongoUriInRuntimeLogsFound=false`;
+	- `rawCredentialPatternInRuntimeLogsFound=false`;
+	- `rawHostPatternUnsafeFound=false`;
+	- `unsafeUriHintFound=false`;
+	- `mongoConnectionAttemptLogSafe=true`;
+	- `effectiveMongoUriLogSafe=true`;
+	- `healthDbUriHintSafe=true`;
+	- `mongoErrorContextSafe=true`;
+	- `noSecretInReviewedDiff=true`;
+	- `grepOnlyValidation=true`;
+	- `blockingDefectFound=false`;
+	- `blockingDefectSummary=none`.
+- Evidencias estaticas consolidadas nesta rodada:
+	- diff `5479f92..93edcdf` revisado apenas em `src/core/db/connect.js`, `src/core/config/index.js` e `src/server/createServer.js`;
+	- os pontos de log revisados usam `sanitizeMongoUriForLog`, `sanitizeMongoErrorForLog`, `sanitizeMongoDebugInfoForLog` ou `sanitizeMongoUriPresenceForLog`;
+	- a busca estatica por padroes sensiveis no diff revisado nao encontrou URI crua nem segredo real introduzido pelo fix;
+	- as ocorrencias remanescentes de `mongodb://` ou `mongodb+srv://` fora do diff revisado pertencem a constantes, comentarios, scripts read-only ou documentacao, nao a logs de runtime validados neste microcorte.
+- Registro factual deste microcorte:
+	- `runtimeExecuted=false`;
+	- `mongoConnected=false`;
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunRetryAfterStaticValidation`;
+	- `secondaryCandidate=pushUriLogSanitizationCheckpoint`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRetryAuthorized`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e validacao estatica e registro documental;
+	- nao executar runtime;
+	- nao executar `start:atlas`;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao conectar Mongo real;
+	- nao imprimir URI;
+	- nao pedir nova URI;
+	- nao colar segredo no chat;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=executeStaticValidationForUriLogSanitization`
+	- `validationScope=staticReadOnly`
+	- `previousStaticValidationAuthorizationCommit=53fef3a`
+	- `reviewedCodeFixCommit=93edcdf`
+	- `reviewedReviewCommit=f47d0ab`
+	- `staticValidationExecuted=true`
+	- `staticValidationResult=green`
+	- `rawMongoSrvInRuntimeLogsFound=false`
+	- `rawMongoUriInRuntimeLogsFound=false`
+	- `rawCredentialPatternInRuntimeLogsFound=false`
+	- `rawHostPatternUnsafeFound=false`
+	- `unsafeUriHintFound=false`
+	- `mongoConnectionAttemptLogSafe=true`
+	- `effectiveMongoUriLogSafe=true`
+	- `healthDbUriHintSafe=true`
+	- `mongoErrorContextSafe=true`
+	- `noSecretInReviewedDiff=true`
+	- `grepOnlyValidation=true`
+	- `runtimeExecuted=false`
+	- `mongoConnected=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `blockingDefectFound=false`
+	- `blockingDefectSummary=none`
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunRetryAfterStaticValidation`
+	- `secondaryCandidate=pushUriLogSanitizationCheckpoint`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRetryAuthorized`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
