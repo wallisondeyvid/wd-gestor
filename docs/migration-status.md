@@ -22014,6 +22014,109 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=authorizeReadOnlyHttpHealthCheckWithoutLogin`
 	- `secondaryCandidate=planExactReadOnlyHttpHealthCheckCommand`
 	- `tertiaryCandidate=keepProductionNotReadyUntilHttpHealthGreenAndLoginPlan`
+
+## Microcorte: Autorizar health check HTTP read-only (sem login, sem mutação)
+
+- Contexto executivo desta rodada:
+	- branch migration/refactor-core com HEAD local/remoto sincronizados em 8de3c9d;
+	- dry-run start:atlas já passou com Mongo real conectado e servidor na porta 3000 com logs sanitizados;
+	- inspeção estática de endpoints já mapeou /health como candidato mais seguro;
+	- este microcorte formaliza a autorização documental para uma futura execução controlada de health check HTTP com GET /health;
+	- nenhuma execução real de HTTP, nenhum start:atlas, nenhum navegador, nenhum login, nenhuma mutação neste microcorte;
+	- todos os campos booleanos de execução neste microcorte marcados como false, confirmando escopo puramente documental;
+	- produção permanece não pronta até que health check HTTP passe com sucesso em futuro microcorte separado.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar start:atlas;
+	- nao fazer HTTP agora;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=authorizeReadOnlyHttpHealthCheckWithoutLogin`
+	- `authorizationScope=documentalOnlyFutureHttpHealthCheck`
+	- `previousHealthEndpointInspectionCommit=8de3c9d`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `selectedHealthEndpoint=/health`
+	- `selectedHealthMethod=GET`
+	- `selectedHealthEndpointReason=safest-read-only-candidate`
+	- `selectedHealthEndpointRequiresLogin=false`
+	- `selectedHealthEndpointRequiresCookie=false`
+	- `selectedHealthEndpointRequiresToken=false`
+	- `selectedHealthEndpointRequiresBody=false`
+	- `selectedHealthEndpointMutationRisk=none`
+	- `healthDbEndpointDeferred=true`
+	- `rootEndpointDeferred=true`
+	- `futureHealthCheckAuthorizedForFutureOnly=true`
+	- `futureHealthCheckAuthorizedNow=false`
+	- `futureHealthCheckExecutedNow=false`
+	- `futureHealthCheckMustUseFreshStartAtlasAuthorization=true`
+	- `futureHealthCheckMustUseFreshEnvPreflight=true`
+	- `futureHealthCheckMustStartServerOnlyInSeparateMicrocut=true`
+	- `futureHealthCheckMustUseGetOnly=true`
+	- `futureHealthCheckUrl=http://127.0.0.1:3000/health`
+	- `futureHealthCheckMustNotUseBrowser=true`
+	- `futureHealthCheckMustNotUseCookies=true`
+	- `futureHealthCheckMustNotUseAuthToken=true`
+	- `futureHealthCheckMustNotUseRequestBody=true`
+	- `futureHealthCheckMustNotUseCredentials=true`
+	- `futureHealthCheckMustNotCallLoginRoute=true`
+	- `futureHealthCheckMustNotCallMutationRoute=true`
+	- `futureHealthCheckMustNotCallHealthDbUnlessSeparatelyAuthorized=true`
+	- `futureHealthCheckMustStopServerAfterObservation=true`
+	- `futureHealthCheckMustRecordStatusCodeAndBodyShapeOnly=true`
+	- `futureHealthCheckExpectedStatus=200`
+	- `futureHealthCheckExpectedBodyShape=ok-ts`
+	- `futureHealthCheckDoesNotMakeProductionReady=true`
+	- `productionReady=false`
+	- `startAtlasStillRequiresSeparateExecutionAuthorization=true`
+	- `httpStillRequiresSeparateExecutionAuthorization=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorizedNow=true`
+	- `noStartAtlasAuthorizedNow=true`
+	- `noStartGestorAuthorizedNow=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorized=true`
+	- `noMutationAuthorized=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `httpExecuted=false`
+	- `httpGetExecuted=false`
+	- `httpPostExecuted=false`
+	- `httpPutExecuted=false`
+	- `httpPatchExecuted=false`
+	- `httpDeleteExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=planExactReadOnlyHttpHealthCheckCommand`
+	- `secondaryCandidate=executeReadOnlyHttpHealthCheckWithoutLoginInSeparateMicrocut`
+	- `tertiaryCandidate=keepProductionNotReadyUntilHttpHealthGreenAndLoginPlan`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
