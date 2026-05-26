@@ -20888,6 +20888,141 @@ Checkpoint tenant enforcement atual:
 	- `recommendedNextCandidate=performAtlasCredentialOrUriLocalCorrectionHumanOutsideChat`
 	- `secondaryCandidate=recordAtlasCredentialOrUriLocalCorrectionCompleted`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilCredentialPreflightGreen`
+
+- Checkpoint documental curto do registro da correcao humana/local da credencial ou URI Atlas e do preflight booleano green apos a correcao, consolidado nesta rodada apenas para registro documental, sem repetir preflight, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem executar `npm`, sem executar `npm run`, sem executar `node`, sem executar `node -e`, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordAtlasCredentialOrUriLocalCorrectionPreflightGreen`;
+	- `checkpointScope=documentalOnly`;
+	- `previousCredentialCorrectionAuthorizationCommit=52779aa`;
+	- `productionReady=false`.
+- Registro consolidado da correcao humana/local e do preflight subsequente:
+	- `atlasCredentialOrUriCorrectedByHumanLocalOnly=true`;
+	- `atlasCredentialOrUriCorrectionCompleted=true`;
+	- `correctedCredentialOrUriValueRecorded=false`;
+	- `correctedCredentialOrUriPrinted=false`;
+	- `correctedCredentialOrUriPastedInChat=false`;
+	- `correctedCredentialOrUriStoredInGit=false`;
+	- `correctedCredentialOrUriStoredInLedger=false`;
+	- `correctedCredentialOrUriStoredInEnvFile=false`;
+	- `correctedCredentialOrUriLogged=false`;
+	- `postCorrectionPreflightExecutedByHuman=true`;
+	- `postCorrectionPreflightRepeated=false`;
+	- `postCorrectionPreflightResult=green`;
+	- `envValidationOk=true`;
+	- `mongoUriPresent=false`;
+	- `mongoUriTrimNonEmpty=false`;
+	- `mongoUriMongoScheme=false`;
+	- `mongodbUriPresent=true`;
+	- `mongodbUriTrimNonEmpty=true`;
+	- `mongodbUriMongoScheme=true`;
+	- `mongoMemoryEnabled=false`;
+	- `nodeEnvPresent=false`;
+	- `nodeEnvKnownShape=true`;
+	- `seedEnvPresent=false`;
+	- `uriVisibleToNodeInHumanPowerShell=true`;
+	- `outputOnlyBooleans=true`.
+- Registro factual deste microcorte:
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `realMongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunRetryAfterCredentialFix`;
+	- `secondaryCandidate=pushCredentialCorrectionPreflightCheckpoint`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRetryAuthorized`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao pedir URI;
+	- nao colar segredo no chat;
+	- nao executar `start:atlas`;
+	- nao conectar Mongo real;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=recordAtlasCredentialOrUriLocalCorrectionPreflightGreen`
+	- `checkpointScope=documentalOnly`
+	- `previousCredentialCorrectionAuthorizationCommit=52779aa`
+	- `atlasCredentialOrUriCorrectedByHumanLocalOnly=true`
+	- `atlasCredentialOrUriCorrectionCompleted=true`
+	- `correctedCredentialOrUriValueRecorded=false`
+	- `correctedCredentialOrUriPrinted=false`
+	- `correctedCredentialOrUriPastedInChat=false`
+	- `correctedCredentialOrUriStoredInGit=false`
+	- `correctedCredentialOrUriStoredInLedger=false`
+	- `correctedCredentialOrUriStoredInEnvFile=false`
+	- `correctedCredentialOrUriLogged=false`
+	- `postCorrectionPreflightExecutedByHuman=true`
+	- `postCorrectionPreflightRepeated=false`
+	- `postCorrectionPreflightResult=green`
+	- `envValidationOk=true`
+	- `mongoUriPresent=false`
+	- `mongoUriTrimNonEmpty=false`
+	- `mongoUriMongoScheme=false`
+	- `mongodbUriPresent=true`
+	- `mongodbUriTrimNonEmpty=true`
+	- `mongodbUriMongoScheme=true`
+	- `mongoMemoryEnabled=false`
+	- `nodeEnvPresent=false`
+	- `nodeEnvKnownShape=true`
+	- `seedEnvPresent=false`
+	- `productionReady=false`
+	- `uriVisibleToNodeInHumanPowerShell=true`
+	- `outputOnlyBooleans=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunRetryAfterCredentialFix`
+	- `secondaryCandidate=pushCredentialCorrectionPreflightCheckpoint`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRetryAuthorized`
 - Gates:
 	- `selectedTarget=authorizeControlledStartAtlasDryRunExecution`
 	- `authorizationScope=documentalOnlyFutureExecution`
