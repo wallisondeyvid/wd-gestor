@@ -18078,6 +18078,148 @@ Checkpoint tenant enforcement atual:
 	- `secondaryCandidate=pushStartAtlasCriteriaAndEnvValidationPlanningCheckpoint`
 	- `tertiaryCandidate=keepStartAtlasBlockedUntilEnvValidationExecuted`
 
+- Checkpoint documental curto do registro do resultado da validacao read-only do env runtime Atlas, consolidado nesta rodada sem repetir validacao, sem executar `node`, sem executar `node -e`, sem conectar Mongo real, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordReadOnlyAtlasRuntimeEnvValidationResult`;
+	- `executionScope=authorizedReadOnlyEnvValidationSingleRun`;
+	- `previousRuntimeEnvValidationAuthorizationCommit=611e8fb`;
+	- `envValidationCommandExecuted=node -e boolean-only runtime env validation`;
+	- `envValidationExecuted=true`;
+	- `envValidationRepeated=false`;
+	- `envValidationResult=red`;
+	- `envValidationOk=false`;
+	- `productionReady=false`.
+- Resultado booleano observado na execucao unica autorizada:
+	- `mongoUriPresent=false`;
+	- `mongoUriTrimNonEmpty=false`;
+	- `mongoUriMongoScheme=false`;
+	- `mongodbUriPresent=false`;
+	- `mongodbUriTrimNonEmpty=false`;
+	- `mongodbUriMongoScheme=false`;
+	- `mongoMemoryEnabled=false`;
+	- `nodeEnvPresent=false`;
+	- `nodeEnvKnownShape=true`;
+	- `seedEnvPresent=false`;
+	- `productionReady=false`;
+	- `envValidationFailedReason=missing-runtime-uri`;
+	- `uriMissingInExecutionProcess=true`.
+- Garantias de seguranca preservadas nesta execucao:
+	- `mongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `hostPrinted=false`;
+	- `userPrinted=false`;
+	- `passwordPrinted=false`;
+	- `databasePrinted=false`;
+	- `outputOnlyBooleans=true`.
+- Registro factual deste microcorte documental:
+	- `filesChanged=false`;
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=true`;
+	- `nodeEExecuted=true`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=configureRuntimeAtlasEnvInExecutionShellWithoutSecret`;
+	- `secondaryCandidate=authorizeReadOnlyAtlasRuntimeEnvValidationRetryAfterUriVisible`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRuntimeEnvValidationGreen`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir validacao;
+	- nao configurar URI neste microcorte;
+	- nao executar `node` novamente;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao iniciar servidor;
+	- nao conectar Mongo real;
+	- nao fazer HTTP;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=recordReadOnlyAtlasRuntimeEnvValidationResult`
+	- `executionScope=authorizedReadOnlyEnvValidationSingleRun`
+	- `previousRuntimeEnvValidationAuthorizationCommit=611e8fb`
+	- `envValidationCommandExecuted=node -e boolean-only runtime env validation`
+	- `envValidationExecuted=true`
+	- `envValidationRepeated=false`
+	- `envValidationResult=red`
+	- `envValidationOk=false`
+	- `mongoUriPresent=false`
+	- `mongoUriTrimNonEmpty=false`
+	- `mongoUriMongoScheme=false`
+	- `mongodbUriPresent=false`
+	- `mongodbUriTrimNonEmpty=false`
+	- `mongodbUriMongoScheme=false`
+	- `mongoMemoryEnabled=false`
+	- `nodeEnvPresent=false`
+	- `nodeEnvKnownShape=true`
+	- `seedEnvPresent=false`
+	- `productionReady=false`
+	- `envValidationFailedReason=missing-runtime-uri`
+	- `uriMissingInExecutionProcess=true`
+	- `mongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `hostPrinted=false`
+	- `userPrinted=false`
+	- `passwordPrinted=false`
+	- `databasePrinted=false`
+	- `outputOnlyBooleans=true`
+	- `filesChanged=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=true`
+	- `nodeEExecuted=true`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=configureRuntimeAtlasEnvInExecutionShellWithoutSecret`
+	- `secondaryCandidate=authorizeReadOnlyAtlasRuntimeEnvValidationRetryAfterUriVisible`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilRuntimeEnvValidationGreen`
+
 - Checkpoint documental curto do planejamento da validacao read-only do ambiente runtime Atlas antes de qualquer autorizacao futura de `start:atlas`, consolidado nesta rodada sem executar `node`, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem seed, sem master script, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem `push`.
 - Estado base consolidado nesta rodada:
 	- `selectedTarget=planReadOnlyAtlasRuntimeEnvValidation`;
