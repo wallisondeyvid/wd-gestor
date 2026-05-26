@@ -82089,6 +82089,75 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
 
+## Microcorte: Registrar rotacao de credencial apos exposicao em comando
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `995104c` no inicio desta rodada;
+	- tentativa anterior de inspecao read-only falhou no parser do PowerShell antes da execucao do script;
+	- houve exposicao da URI antiga por expansao insegura em comando PowerShell aninhado;
+	- a credencial exposta foi rotacionada por acao humana fora do chat;
+	- a nova URI foi configurada somente no PowerShell local e nao foi colada em chat, git, ledger, `.env` ou logs.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e apenas documental;
+	- nao executar inspecao agora;
+	- nao executar `start:atlas`;
+	- nao conectar Mongo real;
+	- nao fazer HTTP;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao criar usuario;
+	- nao usar master;
+	- nao alterar codigo;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordAtlasCredentialRotationAfterInspectionCommandExposure`
+	- `checkpointScope=documentalOnly`
+	- `previousInspectionCommandPlanCommit=995104c`
+	- `priorCommandFailedBeforeScriptExecution=true`
+	- `priorFailureType=powershell-parser-error`
+	- `priorUriExposureOccurred=true`
+	- `exposedCredentialTreatedAsCompromised=true`
+	- `atlasCredentialRotatedByHuman=true`
+	- `newUriConfiguredLocally=true`
+	- `newUriPastedInChat=false`
+	- `newUriStoredInGit=false`
+	- `newUriStoredInLedger=false`
+	- `newUriStoredInEnvFile=false`
+	- `newUriPrinted=false`
+	- `preflightAfterRotationExecuted=true`
+	- `preflightAfterRotationResult=green`
+	- `mongodbUriPresent=true`
+	- `mongodbUriTrimNonEmpty=true`
+	- `mongodbUriMongoScheme=true`
+	- `inspectionScriptExecuted=false`
+	- `inspectionExecuted=false`
+	- `userCreationExecuted=false`
+	- `userMutationExecuted=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=planSafeRetryReadOnlyExistingUsersInspectionWithoutNestedPowerShell`
+	- `secondaryCandidate=authorizeSafeRetryReadOnlyExistingUsersInspection`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+
 - Checkpoint documental curto da revisao pos-implementacao do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por leitura de `tests/helpers/controlledMemoryOnlyFixtureHelper.js` e `docs/migration-status.md`, sem usar o helper, sem criar teste, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Verificacoes documentais confirmadas nesta rodada:
 	- exporta `createControlledMemoryOnlyUserFixture`;
