@@ -82268,6 +82268,117 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `secondaryCandidate=executeReadOnlyExistingUsersInspectionInSeparateMicrocut`
 	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
 
+## Microcorte: Autorizar retry seguro da inspecao read-only sem PowerShell aninhado
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `2f4c2dc` no inicio desta rodada;
+	- o commit `2f4c2dc` planejou retry seguro da inspecao read-only sem PowerShell aninhado;
+	- este microcorte autoriza apenas a futura execucao desse retry seguro;
+	- nenhuma execucao ocorre agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar inspecao agora;
+	- nao criar usuario;
+	- nao usar master;
+	- nao imprimir URI;
+	- nao usar PowerShell aninhado;
+	- nao pedir senha;
+	- nao colar segredo no chat;
+	- nao executar start:atlas;
+	- nao fazer HTTP;
+	- nao fazer login;
+	- nao fazer mutacao;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeSafeRetryReadOnlyExistingUsersInspection`
+	- `authorizationScope=documentalOnlyFutureSafeRetry`
+	- `previousSafeRetryPlanCommit=2f4c2dc`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `safeRetryAuthorizedForFutureOnly=true`
+	- `safeRetryAuthorizedNow=false`
+	- `safeRetryExecutedNow=false`
+	- `nestedPowerShellStillBlocked=true`
+	- `safeRetryMustAvoidNestedPowerShell=true`
+	- `safeRetryMustUseSamePowerShellSession=true`
+	- `safeRetryMustNotPrintMongoUri=true`
+	- `safeRetryMustNotEchoMongoUri=true`
+	- `safeRetryMustNotInterpolateMongoUriIntoNestedCommand=true`
+	- `safeRetryMustSetReadOnlySafeOutputDirectly=true`
+	- `safeRetryMustSetFictionalCandidateEmailDirectly=true`
+	- `safeRetryCandidateEmail=teste.login@example.com`
+	- `futureSafeRetryStep1=$ErrorActionPreference='Stop'`
+	- `futureSafeRetryStep2=if ([string]::IsNullOrWhiteSpace($env:MONGODB_URI)) { throw 'MONGODB_URI missing' }`
+	- `futureSafeRetryStep3=if ($env:MONGO_MEMORY -eq '1') { throw 'MONGO_MEMORY must be disabled' }`
+	- `futureSafeRetryStep4=$env:READ_ONLY_SAFE_OUTPUT='1'`
+	- `futureSafeRetryStep5=$env:FICTIONAL_CANDIDATE_EMAIL='teste.login@example.com'`
+	- `futureSafeRetryStep6=node scripts/diagnostics/real-mongo-readonly-diagnostic.js`
+	- `futureSafeRetryMustRunOnceOnly=true`
+	- `futureSafeRetryMustNotRepeatOnError=true`
+	- `futureSafeRetryMustRecordResultImmediately=true`
+	- `readOnlyInspectionMustAvoidDocumentsDump=true`
+	- `readOnlyInspectionMustAvoidPasswordHashPrinting=true`
+	- `readOnlyInspectionMustAvoidSensitiveFieldsPrinting=true`
+	- `readOnlyInspectionMustUseSanitizedOutputOnly=true`
+	- `readOnlyInspectionMustNotPrintMasterEmail=true`
+	- `readOnlyInspectionMustNotPrintRealUserEmails=true`
+	- `readOnlyInspectionMustNotPrintTokens=true`
+	- `readOnlyInspectionMustNotPrintSessionData=true`
+	- `readOnlyInspectionMustNotPrintPersonalData=true`
+	- `readOnlyInspectionMustReportOnlySafeCounts=true`
+	- `readOnlyInspectionMustReportOnlyCandidateExistsBoolean=true`
+	- `readOnlyInspectionMustReportOnlyCandidateDomain=true`
+	- `readOnlyInspectionMustAvoidWrites=true`
+	- `userCreationStillRequiresSeparateAuthorization=true`
+	- `futureLoginStillRequiresSeparateAuthorization=true`
+	- `userCreationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `passwordMutationExecutedNow=false`
+	- `roleMutationExecutedNow=false`
+	- `activeFlagMutationExecutedNow=false`
+	- `primeiroAcessoMutationExecutedNow=false`
+	- `membershipMutationExecutedNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `productionReady=false`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=executeReadOnlyExistingUsersInspectionInSeparateMicrocut`
+	- `secondaryCandidate=recordSafeRetryAuthorizationCheckpoint`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+
 - Checkpoint documental curto da revisao pos-implementacao do helper `controlledMemoryOnlyFixtureHelper`, consolidado nesta rodada apenas por leitura de `tests/helpers/controlledMemoryOnlyFixtureHelper.js` e `docs/migration-status.md`, sem usar o helper, sem criar teste, sem executar teste, sem npm manual, sem boot, sem HTTP, sem login, sem seed, sem master script, sem Mongo real e sem conexao manual de Mongo em memoria.
 - Verificacoes documentais confirmadas nesta rodada:
 	- exporta `createControlledMemoryOnlyUserFixture`;
