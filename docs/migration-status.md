@@ -18390,6 +18390,148 @@ Checkpoint tenant enforcement atual:
 	- `secondaryCandidate=keepStartAtlasBlockedUntilRuntimeEnvValidationGreen`
 	- `tertiaryCandidate=pushRuntimeEnvValidationCheckpoint`
 
+- Checkpoint documental curto do registro do resultado green do preflight booleano do env runtime Atlas, consolidado nesta rodada sem repetir validacao, sem executar `node`, sem executar `node -e`, sem conectar Mongo real, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem alterar codigo, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem fazer `push`.
+- Identificacao deste checkpoint:
+	- `selectedTarget=recordReadOnlyAtlasRuntimeEnvValidationGreenResult`;
+	- `executionScope=humanPowerShellBooleanOnlyEnvPreflight`;
+	- `previousRuntimeUriShellPlanCommit=a1fcd3c`;
+	- `runtimeUriConfiguredByHumanInLocalPowerShell=true`;
+	- `atlasIpAlreadyAllowedByUser=true`;
+	- `envValidationExecutedByHuman=true`;
+	- `envValidationRepeated=false`;
+	- `envValidationResult=green`;
+	- `envValidationOk=true`;
+	- `productionReady=false`.
+- Resultado booleano observado no preflight humano:
+	- `mongoUriPresent=false`;
+	- `mongoUriTrimNonEmpty=false`;
+	- `mongoUriMongoScheme=false`;
+	- `mongodbUriPresent=true`;
+	- `mongodbUriTrimNonEmpty=true`;
+	- `mongodbUriMongoScheme=true`;
+	- `mongoMemoryEnabled=false`;
+	- `nodeEnvPresent=false`;
+	- `nodeEnvKnownShape=true`;
+	- `seedEnvPresent=false`;
+	- `productionReady=false`;
+	- `envValidationFailedReason=none`;
+	- `uriVisibleInHumanPowerShell=true`;
+	- `outputOnlyBooleans=true`.
+- Garantias de seguranca preservadas nesta rodada:
+	- `mongoConnectionAttempted=false`;
+	- `realMongoConnected=false`;
+	- `startAtlasExecuted=false`;
+	- `startGestorExecuted=false`;
+	- `serverStarted=false`;
+	- `bootExecuted=false`;
+	- `httpExecuted=false`;
+	- `browserOpened=false`;
+	- `loginExecuted=false`;
+	- `dataMutationExecuted=false`;
+	- `uriValuePrinted=false`;
+	- `uriSecretExposedInThisMicrocut=false`;
+	- `hostPrinted=false`;
+	- `userPrinted=false`;
+	- `passwordPrinted=false`;
+	- `databasePrinted=false`.
+- Registro factual deste microcorte:
+	- `packageJsonChanged=false`;
+	- `sourceChanged=false`;
+	- `testsChanged=false`;
+	- `newFileCreated=false`;
+	- `npmRunExecuted=false`;
+	- `npmTestExecuted=false`;
+	- `nodeExecuted=false`;
+	- `nodeEExecuted=false`;
+	- `realDiagnosticScriptExecuted=false`;
+	- `inventoryExecuted=false`;
+	- `seedExecuted=false`;
+	- `masterScriptsExecuted=false`;
+	- `cleanupWrongEmailExecuted=false`;
+	- `startMemExecuted=false`;
+	- `startMemSeedExecuted=false`;
+	- `productionReady=false`;
+	- `pushExecuted=false`.
+- Decisao recomendada consolidada nesta rodada:
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunPlanning`;
+	- `secondaryCandidate=pushRuntimeEnvValidationGreenCheckpoint`;
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilDryRunPlanApproved`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir validacao;
+	- nao configurar URI neste microcorte;
+	- nao executar `node`;
+	- nao executar `start:atlas`;
+	- nao executar `start:gestor`;
+	- nao iniciar servidor;
+	- nao conectar Mongo real;
+	- nao fazer HTTP;
+	- nao abrir navegador;
+	- nao fazer login;
+	- nao fazer mutacao real;
+	- nao declarar producao pronta;
+	- nao fazer `push` agora.
+- Gates:
+	- `selectedTarget=recordReadOnlyAtlasRuntimeEnvValidationGreenResult`
+	- `executionScope=humanPowerShellBooleanOnlyEnvPreflight`
+	- `previousRuntimeUriShellPlanCommit=a1fcd3c`
+	- `runtimeUriConfiguredByHumanInLocalPowerShell=true`
+	- `atlasIpAlreadyAllowedByUser=true`
+	- `envValidationExecutedByHuman=true`
+	- `envValidationRepeated=false`
+	- `envValidationResult=green`
+	- `envValidationOk=true`
+	- `mongoUriPresent=false`
+	- `mongoUriTrimNonEmpty=false`
+	- `mongoUriMongoScheme=false`
+	- `mongodbUriPresent=true`
+	- `mongodbUriTrimNonEmpty=true`
+	- `mongodbUriMongoScheme=true`
+	- `mongoMemoryEnabled=false`
+	- `nodeEnvPresent=false`
+	- `nodeEnvKnownShape=true`
+	- `seedEnvPresent=false`
+	- `productionReady=false`
+	- `envValidationFailedReason=none`
+	- `uriVisibleInHumanPowerShell=true`
+	- `outputOnlyBooleans=true`
+	- `mongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `uriValuePrinted=false`
+	- `uriSecretExposedInThisMicrocut=false`
+	- `hostPrinted=false`
+	- `userPrinted=false`
+	- `passwordPrinted=false`
+	- `databasePrinted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecuted=false`
+	- `nodeEExecuted=false`
+	- `realDiagnosticScriptExecuted=false`
+	- `inventoryExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `startMemExecuted=false`
+	- `startMemSeedExecuted=false`
+	- `productionReady=false`
+	- `pushExecuted=false`
+	- `recommendedNextCandidate=authorizeControlledStartAtlasDryRunPlanning`
+	- `secondaryCandidate=pushRuntimeEnvValidationGreenCheckpoint`
+	- `tertiaryCandidate=keepStartAtlasBlockedUntilDryRunPlanApproved`
+
 - Checkpoint documental curto do planejamento da validacao read-only do ambiente runtime Atlas antes de qualquer autorizacao futura de `start:atlas`, consolidado nesta rodada sem executar `node`, sem executar `start:atlas`, sem executar `start:gestor`, sem iniciar servidor, sem boot, sem conectar Mongo real, sem executar diagnostico, sem executar inventario, sem HTTP, sem navegador, sem login, sem mutacao, sem seed, sem master script, sem alterar `package.json`, sem alterar `src`, sem alterar `tests`, sem criar arquivo novo e sem `push`.
 - Estado base consolidado nesta rodada:
 	- `selectedTarget=planReadOnlyAtlasRuntimeEnvValidation`;
