@@ -17292,6 +17292,67 @@ Checkpoint tenant enforcement atual:
 		- `testsChanged=false`
 		- `newFileCreated=false`
 		- `pushExecuted=false`
+	- Checkpoint documental curto do resultado green da execucao humana unica do script dedicado de criacao controlada do usuario ficticio consolidado nesta rodada, sem repeticao, sem novo acesso Mongo e sem alteracao de codigo.
+	- Resultado consolidado deste microcorte:
+		- `selectedTarget=recordControlledFictionalUserCreationGreen`
+		- `checkpointScope=documentalOnly`
+		- `previousRetryAuthorizationCommit=b00dca4`
+		- `controlledCreationExecutedByHuman=true`
+		- `controlledCreationExecutedOnce=true`
+		- `controlledCreationRepeated=false`
+		- `scriptPath=scripts/diagnostics/controlled-fictional-login-user-create.js`
+		- `creationResult=green`
+		- `connectionAttempted=true`
+		- `allowedMutation=user-insert-fictional-only`
+		- `writesAttempted=true`
+		- `created=true`
+		- `candidateDomain=example.com`
+		- `createdUserIdRedacted=redacted`
+		- `secretsPrinted=false`
+		- `productionReady=false`
+		- `userCreationSucceeded=true`
+		- `fictionalLoginUserCreated=true`
+		- `candidateEmailPlanned=teste.login@example.com`
+		- `rawMongoUriPrinted=false`
+		- `rawHostPrinted=false`
+		- `rawUserPrinted=false`
+		- `rawPasswordPrinted=false`
+		- `rawDatabasePrinted=false`
+		- `passwordPrinted=false`
+		- `passwordHashPrinted=false`
+		- `documentsPrinted=false`
+		- `masterEmailPrinted=false`
+		- `realUserEmailsPrinted=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `httpExecuted=false`
+		- `browserOpened=false`
+		- `loginExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `finalGitStatusClean=true`
+		- `finalLocalRemoteSynced=true`
+		- `productionReady=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planLoginValidationWithFictionalUserWithoutMutation`
+		- `secondaryCandidate=authorizeLoginValidationWithFictionalUser`
+		- `tertiaryCandidate=keepMasterUserProtected`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalRecordOnly=true`
+		- `doNotRepeatCreationNow=true`
+		- `doNotExecuteLoginNow=true`
+		- `doNotUseMasterNow=true`
+		- `doNotAskPasswordInChatNow=true`
+		- `doNotPastePasswordInChatNow=true`
+		- `doNotPrintMongoUriNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro e unico da criacao controlada do usuario ficticio apos autorizacao do IP Atlas, sem execucao, sem conexao Mongo e sem alteracao de codigo.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafeRetryControlledFictionalUserCreationAfterAtlasIpAuthorization`
