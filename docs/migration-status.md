@@ -17769,6 +17769,70 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto do resultado green de `start:atlas` controlado e `GET /health` para validacao futura de login com o usuario ficticio, sem executar login, sem abrir navegador, sem mutacao, sem uso do master e sem expor segredo nesta rodada.
+	- Resultado consolidado deste microcorte:
+		- `selectedTarget=recordControlledStartAtlasAndHealthCheckForLoginValidationResult`
+		- `checkpointScope=documentalOnlyAfterExecution`
+		- `previousStartAtlasAuthorizationCommit=bfdc870`
+		- `preflightMongodbUriPresent=true`
+		- `preflightMongoMemoryDisabled=true`
+		- `controlledStartAtlasExecutionLogsProvided=true`
+		- `controlledStartAtlasExecutionLogsSanitized=true`
+		- `serverRespondedOnLocalhost=true`
+		- `serverStartedInferredFromHealthCheck=true`
+		- `startAtlasExecutedByHuman=true`
+		- `startAtlasExecuted=true`
+		- `startGestorExecuted=false`
+		- `serverStarted=true`
+		- `serverPort=3000`
+		- `realMongoConnectionAttempted=true`
+		- `realMongoConnected=true`
+		- `mongoLogsSanitized=true`
+		- `rawMongoUriPrinted=false`
+		- `rawHostPrinted=false`
+		- `rawUserPrinted=false`
+		- `rawPasswordPrinted=false`
+		- `rawDatabasePrinted=false`
+		- `secretsPrinted=false`
+		- `healthCheckExecuted=true`
+		- `healthEndpoint=GET /health`
+		- `healthStatusCode=200`
+		- `healthBodyShapePresent=true`
+		- `healthResult=green`
+		- `productionReady=false`
+		- `loginExecuted=false`
+		- `httpLoginExecuted=false`
+		- `browserOpened=false`
+		- `passwordPrinted=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `userMutationExecuted=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `finalGitStatusClean=true`
+		- `finalLocalRemoteSynced=true`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=executeExactLoginValidationWithFictionalUserInSeparateMicrocut`
+		- `secondaryCandidate=recordHealthCheckCheckpointBeforeLogin`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalResultRecordOnly=true`
+		- `doNotExecuteLoginNow=true`
+		- `doNotExecuteHttpLoginNow=true`
+		- `doNotOpenBrowserNow=true`
+		- `doNotPrintCookieTokenSessionNow=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto do planejamento futuro da validacao de login com o usuario ficticio criado, sem login, sem servidor, sem HTTP e sem mutacao nesta rodada.
 	- Planejamento consolidado deste microcorte:
 		- `selectedTarget=planLoginValidationWithFictionalUserWithoutMutation`
