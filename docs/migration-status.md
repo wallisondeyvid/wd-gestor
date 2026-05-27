@@ -17199,6 +17199,94 @@ Checkpoint tenant enforcement atual:
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
 
+	- Checkpoint documental curto da inspecao estatica do modelo de usuario para criacao ficticia controlada consolidado nesta rodada, sem execucao, sem mutacao real e sem alteracao de codigo.
+	- Resultado consolidado da inspecao:
+		- `selectedTarget=inspectUserModelForControlledFictionalCreationDocumentally`
+		- `inspectionScope=staticReadOnly`
+		- `previousControlledFictionalCreationPlanCommit=7303c38`
+		- `localRemoteSyncedBeforeInspection=true`
+		- `candidateEmailPlanned=teste.login@example.com`
+		- `candidateAbsenceConfirmed=true`
+		- `userModelInspected=true`
+		- `userRepositoryInspected=true`
+		- `authLoginFlowInspected=true`
+		- `passwordHashingPathInspected=true`
+		- `requiredUserFieldsIdentified=true`
+		- `requiredLoginFieldsIdentified=true`
+		- `requiredTenantOrMembershipFieldsIdentified=true`
+		- `controlledCreationCanBePlannedSafely=true`
+		- `dedicatedCreationScriptNeeded=true`
+		- `safeCreationApproach=dedicated-script-using-User-create-with-bcrypt-and-no-master-seed-or-cleanup`
+		- `forbiddenCreationPaths=master-set,seed,cleanupWrongEmail,real-user-update`
+		- `masterUserMustRemainUntouched=true`
+		- `futureCreationMustUseFictionalEmailOnly=true`
+		- `futureCreationMustUseExampleDotComDomain=true`
+		- `futureCreationMustUseSyntheticName=true`
+		- `futureCreationPasswordMustRemainLocalHumanOnly=true`
+		- `futureCreationMustNotPrintPasswordHash=true`
+		- `futureCreationMustNotPrintMongoUri=true`
+		- `futureCreationMustNotPrintDocuments=true`
+		- `futureCreationMustNotPrintMasterEmail=true`
+		- `futureCreationMustNotPrintRealUserEmails=true`
+		- `futureCreationStillRequiresSeparateAuthorization=true`
+		- `userCreationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `passwordMutationExecutedNow=false`
+		- `roleMutationExecutedNow=false`
+		- `activeFlagMutationExecutedNow=false`
+		- `primeiroAcessoMutationExecutedNow=false`
+		- `membershipMutationExecutedNow=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `productionReady=false`
+		- `loginStillBlocked=true`
+		- `mutationStillBlocked=true`
+		- `seedMasterStillBlocked=true`
+		- `startGestorStillBlocked=true`
+		- `noRuntimeStartAuthorized=true`
+		- `noStartAtlasAuthorized=true`
+		- `noStartGestorAuthorized=true`
+		- `noHttpAuthorizedNow=true`
+		- `noLoginAuthorizedNow=true`
+		- `noMutationAuthorizedNow=true`
+		- `noSeedMasterAuthorized=true`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `bootExecuted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `npmRunExecuted=false`
+		- `npmTestExecuted=false`
+		- `nodeExecuted=false`
+		- `nodeEExecuted=false`
+		- `httpExecuted=false`
+		- `browserOpened=false`
+		- `loginExecuted=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planDedicatedControlledFictionalUserCreationScript`
+		- `secondaryCandidate=authorizeControlledFictionalLoginUserCreationInSeparateMicrocut`
+		- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+	- Reforcos deste microcorte:
+		- `microcutIsStaticDocumentalInspectionOnly=true`
+		- `doNotCreateUserNow=true`
+		- `doNotUseMasterNow=true`
+		- `doNotAskPasswordNow=true`
+		- `doNotPastePasswordInChatNow=true`
+		- `doNotPrintMongoUriNow=true`
+		- `doNotExecuteMongoHttpLoginMutationNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
+
 	- Checkpoint documental curto do planejamento da criacao controlada do usuario ficticio de login consolidado nesta rodada, sem execucao, sem mutacao real e sem alteracao de codigo.
 	- Planejamento consolidado deste microcorte:
 		- `selectedTarget=planControlledFictionalLoginUserCreation`
