@@ -469,6 +469,96 @@ Checkpoint tenant enforcement atual:
 - Objetivo inicial consolidado desta fase: definir ritual, alvo admissivel, evidencias, criterios de sucesso, criterios de abortar, baseline e fronteiras do futuro piloto controlado nao produtivo por unidade, sem tocar em runtime, writer, registry, owner, entrypoint, rota, CLI, script, job, bootstrap ou request path.
 - Regra operacional consolidada desta abertura: os commits desta frente podem acumular localmente, sem push em microcortes; qualquer publicacao futura continua dependente de baseline final completa e autorizacao explicita posterior.
 
+- Checkpoint documental curto da implementacao do script dedicado read-only do candidato consolidado nesta rodada, com escopo estrito de script + ledger, sem execucao de script, sem conexao Mongo e sem alteracoes em package.json/src/tests.
+- Implementacao consolidada deste microcorte:
+	- `selectedTarget=implementDedicatedCandidateSpecificReadOnlyQueryScript`
+	- `implementationScope=scriptOnlyNoExecution`
+	- `previousDedicatedCandidateSpecificQueryAuthorizationCommit=8edd635`
+	- `localRemoteSyncedBeforeImplementation=true`
+	- `createdScriptPath=scripts/diagnostics/real-mongo-readonly-candidate-user.js`
+	- `candidateEmailPlanned=teste.login@example.com`
+	- `dedicatedCandidateSpecificQueryImplemented=true`
+	- `dedicatedCandidateSpecificQueryExecutedNow=false`
+	- `mongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `nodeExecuted=false`
+	- `npmRunExecuted=false`
+	- `scriptExecutionBlockedNow=true`
+	- `scriptRequiresMongodbUri=true`
+	- `scriptBlocksMongoMemory=true`
+	- `scriptRequiresReadOnlySafeOutput=true`
+	- `scriptUsesFictionalCandidateEmail=true`
+	- `scriptNormalizesCandidateEmail=true`
+	- `scriptRequiresExampleDotComDomain=true`
+	- `scriptReportsCandidateExistsBoolean=true`
+	- `scriptReportsCandidateDomain=true`
+	- `scriptReportsMatchingCandidateCount=true`
+	- `scriptReportsTotalSafeCount=true`
+	- `scriptDoesNotPrintDocuments=true`
+	- `scriptDoesNotPrintPasswordHashes=true`
+	- `scriptDoesNotPrintTokens=true`
+	- `scriptDoesNotPrintSessionData=true`
+	- `scriptDoesNotPrintPersonalData=true`
+	- `scriptDoesNotPrintMasterEmail=true`
+	- `scriptDoesNotPrintRealUserEmails=true`
+	- `scriptDoesNotPrintMongoUri=true`
+	- `scriptAvoidsWrites=true`
+	- `scriptAvoidsSeedMaster=true`
+	- `scriptAvoidsCleanupWrongEmail=true`
+	- `userCreationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `passwordMutationExecutedNow=false`
+	- `roleMutationExecutedNow=false`
+	- `activeFlagMutationExecutedNow=false`
+	- `primeiroAcessoMutationExecutedNow=false`
+	- `membershipMutationExecutedNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `productionReady=false`
+	- `loginStillBlocked=true`
+	- `mutationStillBlocked=true`
+	- `seedMasterStillBlocked=true`
+	- `startGestorStillBlocked=true`
+	- `noRuntimeStartAuthorized=true`
+	- `noStartAtlasAuthorized=true`
+	- `noStartGestorAuthorized=true`
+	- `noHttpAuthorizedNow=true`
+	- `noLoginAuthorizedNow=true`
+	- `noMutationAuthorizedNow=true`
+	- `noSeedMasterAuthorized=true`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `bootExecuted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `httpExecuted=false`
+	- `browserOpened=false`
+	- `loginExecuted=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=true`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=reviewDedicatedCandidateSpecificReadOnlyQueryScript`
+	- `secondaryCandidate=authorizeDedicatedCandidateSpecificReadOnlyQueryExecution`
+	- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+- Reforcos deste microcorte:
+	- `microcutImplementsScriptOnly=true`
+	- `doNotExecuteScriptNow=true`
+	- `doNotConnectMongoNow=true`
+	- `doNotCreateUserNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPrintMongoUriNow=true`
+	- `doNotExecuteHttpLoginMutationNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
+
 ## Fase 1 - controlledBootRunbookWithoutExecution
 - Checkpoint documental curto de abertura da Fase 1 consolidado nesta rodada, sem execucao operacional, sem alteracao de codigo-fonte, sem alteracao de testes, sem alteracao de scripts, sem alteracao de package.json, sem boot, sem servidor, sem Mongo real, sem Mongo em memoria, sem query, sem seed, sem reset, sem cleanup, sem migration, sem backfill, sem master:set, sem Portal e sem push.
 - A. Identificacao:
