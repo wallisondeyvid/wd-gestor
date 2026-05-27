@@ -17199,6 +17199,90 @@ Checkpoint tenant enforcement atual:
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
 
+	- Checkpoint documental curto do registro do resultado da consulta dedicada read-only do candidato consolidado nesta rodada, em modo estritamente documental, sem nova execucao e sem alteracao de codigo.
+	- Registro consolidado deste microcorte:
+		- `selectedTarget=recordDedicatedCandidateSpecificReadOnlyQueryResult`
+		- `checkpointScope=documentalOnly`
+		- `previousCandidateQueryExecutionAuthorizationCommit=747c10b`
+		- `candidateQueryExecutedByHuman=true`
+		- `candidateQueryExecutedOnce=true`
+		- `candidateQueryRepeated=false`
+		- `candidateQueryUsedNestedPowerShell=false`
+		- `candidateQueryUsedSamePowerShellSession=true`
+		- `baselineGitStatusClean=true`
+		- `baselineLocalRemoteSynced=true`
+		- `readOnlySafeOutputEnabled=true`
+		- `fictionalCandidateEmailConfigured=true`
+		- `fictionalCandidateEmailValue=teste.login@example.com`
+		- `candidateQueryScriptExecuted=true`
+		- `candidateQueryScriptPath=scripts/diagnostics/real-mongo-readonly-candidate-user.js`
+		- `diagnosticResult=red`
+		- `diagnosticRedReason=candidate-not-found`
+		- `connectionAttempted=true`
+		- `readOnly=true`
+		- `writesAttempted=false`
+		- `seedMasterCleanupTouched=false`
+		- `secretsPrinted=false`
+		- `productionReady=false`
+		- `candidateExists=false`
+		- `candidateDomain=example.com`
+		- `matchingCandidateCount=0`
+		- `totalSafeCount=0`
+		- `candidateEmailConfigured=true`
+		- `candidateEmailNormalized=false`
+		- `rawMongoUriPrinted=false`
+		- `rawHostPrinted=false`
+		- `rawUserPrinted=false`
+		- `rawPasswordPrinted=false`
+		- `rawDatabasePrinted=false`
+		- `documentsPrinted=false`
+		- `passwordHashesPrinted=false`
+		- `tokensPrinted=false`
+		- `sessionDataPrinted=false`
+		- `personalDataPrinted=false`
+		- `masterEmailPrinted=false`
+		- `realUserEmailsPrinted=false`
+		- `userCreationExecuted=false`
+		- `userMutationExecuted=false`
+		- `passwordMutationExecuted=false`
+		- `roleMutationExecuted=false`
+		- `activeFlagMutationExecuted=false`
+		- `primeiroAcessoMutationExecuted=false`
+		- `membershipMutationExecuted=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `bootExecuted=false`
+		- `httpExecuted=false`
+		- `browserOpened=false`
+		- `loginExecuted=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `finalGitStatusClean=true`
+		- `finalLocalRemoteSynced=true`
+		- `productionReady=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planControlledFictionalLoginUserCreation`
+		- `secondaryCandidate=authorizeControlledFictionalLoginUserCreationInSeparateMicrocut`
+		- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalRecordOnly=true`
+		- `doNotRepeatQueryNow=true`
+		- `doNotCreateUserNow=true`
+		- `doNotUseMasterNow=true`
+		- `doNotExecuteHttpLoginMutationNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
+
 	- Checkpoint documental curto da autorizacao futura da execucao unica do script dedicado read-only do candidato consolidado nesta rodada, sem execucao de script, sem conexao Mongo e sem alteracao de codigo.
 	- Contexto consolidado deste microcorte:
 		- `selectedTarget=authorizeDedicatedCandidateSpecificReadOnlyQueryExecution`
