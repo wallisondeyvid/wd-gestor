@@ -17883,6 +17883,60 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto do login green do usuario ficticio apos servidor disponivel e health green, sem repetir login, sem novo HTTP, sem mutacao, sem uso do master e sem repetir valor bruto de senha nesta rodada.
+	- Resultado consolidado deste microcorte:
+		- `selectedTarget=recordFictionalUserLoginGreen`
+		- `checkpointScope=documentalOnlyAfterExecution`
+		- `previousLoginUnavailableCommit=6aacfe4`
+		- `fictionalLoginUserCreated=true`
+		- `candidateEmailPlanned=teste.login@example.com`
+		- `loginAttemptExecutedByHuman=true`
+		- `loginAttemptRepeatedAfterOperationalFix=true`
+		- `loginUsedUseBasicParsing=true`
+		- `loginUsedWebSession=true`
+		- `loginEndpoint=POST /gestor/login`
+		- `loginTarget=http://127.0.0.1:3000/gestor/login`
+		- `loginStatusCode=303`
+		- `loginResultBoolean=true`
+		- `redirectOrLocationShapePresent=true`
+		- `cookiePresentBoolean=true`
+		- `loginResult=green`
+		- `sessionCookieCreated=true`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrintedEarlier=true`
+		- `passwordPrintedEarlierContext=fictional-user-low-risk`
+		- `passwordRawValueMustNotBeRepeated=true`
+		- `fictionalPasswordRotationRequiredAfterValidation=true`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `userMutationExecuted=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `productionReady=false`
+		- `finalGitStatusClean=true`
+		- `finalLocalRemoteSynced=true`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planFictionalUserPasswordRotationAfterLoginValidation`
+		- `secondaryCandidate=planPostLoginSafeSessionValidation`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalLoginGreenRecordOnly=true`
+		- `doNotRepeatLoginNow=true`
+		- `doNotExecuteHttpNow=true`
+		- `doNotPrintCookieTokenSessionNow=true`
+		- `doNotRepeatRawPasswordInLedger=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto do planejamento futuro da validacao de login com o usuario ficticio criado, sem login, sem servidor, sem HTTP e sem mutacao nesta rodada.
 	- Planejamento consolidado deste microcorte:
 		- `selectedTarget=planLoginValidationWithFictionalUserWithoutMutation`
