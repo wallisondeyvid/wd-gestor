@@ -17833,6 +17833,56 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto da tentativa de validacao de login que nao conectou ao servidor local, sem repetir login, sem executar novo HTTP, sem iniciar runtime, sem mutacao, sem uso do master e sem expor segredo nesta rodada.
+	- Resultado consolidado deste microcorte:
+		- `selectedTarget=recordLoginValidationAttemptServerUnavailable`
+		- `checkpointScope=documentalOnlyAfterAttempt`
+		- `previousHealthGreenCommit=0577302`
+		- `loginAttemptExecutedByHuman=true`
+		- `loginAttemptRepeated=false`
+		- `loginEndpoint=POST /gestor/login`
+		- `loginTarget=http://127.0.0.1:3000/gestor/login`
+		- `loginStatusCode=0`
+		- `loginResultBoolean=false`
+		- `redirectOrLocationShapePresent=false`
+		- `cookiePresentBoolean=false`
+		- `productionReady=false`
+		- `loginFailureReason=server-unavailable-or-not-listening`
+		- `remoteServerConnectionFailed=true`
+		- `serverLikelyNotRunningAtLoginAttempt=true`
+		- `postProbablyDidNotReachApplication=true`
+		- `loginExecutedEffectively=false`
+		- `sessionCookieCreated=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `userMutationExecuted=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `finalGitStatusClean=true`
+		- `finalLocalRemoteSynced=true`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=ensureStartAtlasRunningThenHealthBeforeLoginRetry`
+		- `secondaryCandidate=authorizeLoginRetryAfterFreshHealthGreen`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalAttemptRecordOnly=true`
+		- `doNotRepeatLoginNow=true`
+		- `freshStartAtlasAndHealthGreenRequiredBeforeRetry=true`
+		- `doNotPrintCookieTokenSessionNow=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto do planejamento futuro da validacao de login com o usuario ficticio criado, sem login, sem servidor, sem HTTP e sem mutacao nesta rodada.
 	- Planejamento consolidado deste microcorte:
 		- `selectedTarget=planLoginValidationWithFictionalUserWithoutMutation`
