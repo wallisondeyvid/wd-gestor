@@ -17109,6 +17109,110 @@ Checkpoint tenant enforcement atual:
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
 
+	- Checkpoint documental curto de autorizacao futura da implementacao da consulta dedicada read-only do candidato `teste.login@example.com`, consolidado nesta rodada em modo estritamente documental, sem implementacao, sem execucao e sem alteracao de codigo.
+	- Contexto consolidado deste microcorte:
+		- `selectedTarget=authorizeDedicatedCandidateSpecificReadOnlyQueryImplementation`
+		- `authorizationScope=documentalOnlyFutureImplementation`
+		- `previousDedicatedCandidateSpecificQueryPlanCommit=6a9927c`
+		- `localRemoteSyncedBeforeAuthorization=true`
+		- `candidateEmailPlanned=teste.login@example.com`
+	- Autorizacao consolidada:
+		- `dedicatedCandidateSpecificQueryImplementationAuthorized=true`
+		- `dedicatedCandidateSpecificQueryImplementationAuthorizedForFutureOnly=true`
+		- `dedicatedCandidateSpecificQueryImplementedNow=false`
+		- `dedicatedCandidateSpecificQueryExecutedNow=false`
+		- `dedicatedQueryApproach=dedicated-readonly-query-by-normalized-email`
+		- `dedicatedQueryMustNormalizeCandidateEmail=true`
+		- `dedicatedQueryMustUseSamePowerShellSession=true`
+		- `dedicatedQueryMustAvoidNestedPowerShell=true`
+		- `dedicatedQueryMustNotPrintMongoUri=true`
+		- `dedicatedQueryMustNotEchoMongoUri=true`
+		- `dedicatedQueryMustNotInterpolateMongoUriIntoNestedCommand=true`
+		- `dedicatedQueryMustAbortIfUriMissing=true`
+		- `dedicatedQueryMustAbortIfMongoMemoryEnabled=true`
+		- `dedicatedQueryMustUseReadOnlySafeOutput=true`
+		- `dedicatedQueryMustReportCandidateExistsBoolean=true`
+		- `dedicatedQueryMustReportCandidateDomain=true`
+		- `dedicatedQueryMustReportSafeCountsOnly=true`
+		- `dedicatedQueryMustNotPrintDocuments=true`
+		- `dedicatedQueryMustNotPrintPasswordHashes=true`
+		- `dedicatedQueryMustNotPrintTokens=true`
+		- `dedicatedQueryMustNotPrintSessionData=true`
+		- `dedicatedQueryMustNotPrintPersonalData=true`
+		- `dedicatedQueryMustNotPrintMasterEmail=true`
+		- `dedicatedQueryMustNotPrintRealUserEmails=true`
+		- `dedicatedQueryMustAvoidWrites=true`
+		- `dedicatedQueryMustAvoidSeedMaster=true`
+		- `dedicatedQueryMustAvoidCleanupWrongEmail=true`
+		- `dedicatedQueryMustRunOnceOnly=true`
+		- `dedicatedQueryMustNotRepeatOnError=true`
+		- `dedicatedQueryMustRecordResultImmediately=true`
+		- `proposedScriptPath=scripts/diagnostics/real-mongo-readonly-candidate-user.js`
+		- `proposedSafeOutputs=candidateExists,candidateDomain,totalSafeCount,matchingCandidateCount,readOnly,writesAttempted,secretsPrinted`
+		- `proposedCandidateDomain=example.com`
+		- `proposedCandidateExistsKnown=false`
+	- Dependencias e bloqueios preservados:
+		- `userCreationStillRequiresSeparateAuthorization=true`
+		- `futureLoginStillRequiresSeparateAuthorization=true`
+		- `userCreationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `passwordMutationExecutedNow=false`
+		- `roleMutationExecutedNow=false`
+		- `activeFlagMutationExecutedNow=false`
+		- `primeiroAcessoMutationExecutedNow=false`
+		- `membershipMutationExecutedNow=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `productionReady=false`
+		- `loginStillBlocked=true`
+		- `mutationStillBlocked=true`
+		- `seedMasterStillBlocked=true`
+		- `startGestorStillBlocked=true`
+		- `noRuntimeStartAuthorized=true`
+		- `noStartAtlasAuthorized=true`
+		- `noStartGestorAuthorized=true`
+		- `noHttpAuthorizedNow=true`
+		- `noLoginAuthorizedNow=true`
+		- `noMutationAuthorizedNow=true`
+		- `noSeedMasterAuthorized=true`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `bootExecuted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `npmRunExecuted=false`
+		- `npmTestExecuted=false`
+		- `nodeExecuted=false`
+		- `nodeEExecuted=false`
+		- `httpExecuted=false`
+		- `browserOpened=false`
+		- `loginExecuted=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=implementDedicatedCandidateSpecificReadOnlyQueryScript`
+		- `secondaryCandidate=planInlineReadOnlyCandidateQueryWithoutNewFile`
+		- `tertiaryCandidate=keepMasterUserProtectedAndLoginBlocked`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentationAuthorizationOnly=true`
+		- `doNotImplementScriptNow=true`
+		- `doNotExecuteDedicatedQueryNow=true`
+		- `doNotCreateUserNow=true`
+		- `doNotUseMasterNow=true`
+		- `doNotPrintMongoUriNow=true`
+		- `doNotUseNestedPowerShellNow=true`
+		- `doNotExecuteHttpLoginMutationNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
+
 ## Microcorte: Planejar comando exato de inspecao read-only de usuarios
 
 - Contexto executivo desta rodada:
