@@ -18640,6 +18640,70 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto do fechamento do bloco de validacao do usuario ficticio, login, rotacao de senha e login pos-rotacao, sem executar login, sem HTTP, sem start:atlas, sem conexao Mongo, sem node, sem npm, sem alterar senha, sem mutacao, sem usar master e sem alterar codigo.
+	- Fechamento consolidado deste microcorte:
+		- `selectedTarget=closeFictionalUserLoginAndPasswordRotationValidationBlock`
+		- `closingScope=documentalOnly`
+		- `previousPostRotationLoginGreenCommit=b4565e8`
+		- `localRemoteSyncedBeforeClosing=true`
+		- `fictionalLoginUserCreated=true`
+		- `preRotationLoginGreen=true`
+		- `passwordRotationGreen=true`
+		- `postRotationLoginGreen=true`
+		- `healthGreenBeforePostRotationLogin=true`
+		- `fictionalPasswordExposureRemediated=true`
+		- `candidateEmailValidated=teste.login@example.com`
+		- `userCreationValidated=true`
+		- `loginSessionValidated=true`
+		- `passwordRotationValidated=true`
+		- `postRotationAuthenticationValidated=true`
+		- `sessionCookieCreated=true`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `rawPasswordValuePrinted=false`
+		- `rawPasswordValueSentToChat=false`
+		- `passwordHashPrinted=false`
+		- `rawMongoUriPrinted=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `productionReady=false`
+		- `validationBlockClosed=true`
+		- `closureResult=green`
+		- `loginExecutedNow=false`
+		- `httpExecutedNow=false`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `npmRunExecuted=false`
+		- `npmTestExecuted=false`
+		- `nodeExecuted=false`
+		- `browserOpened=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planNextPostLoginSafeValidation`
+		- `secondaryCandidate=planFictionalUserSessionReadOnlyValidation`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalClosureOnly=true`
+		- `doNotExecuteLoginNow=true`
+		- `doNotAskOrPastePasswordNow=true`
+		- `doNotPrintCookieTokenOrSession=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro da rotacao da senha ficticia, condicionado a preflight explicito, sem executar o script agora, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafePasswordRotationRetryAfterPreflight`
