@@ -20201,6 +20201,76 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto do resultado green do gate npm test completo, sem repetir npm test, sem npm, sem node, sem login, sem HTTP, sem start:atlas, sem Mongo real, sem mutacao, sem usar master operacional e sem alterar codigo.
+	- Resultado consolidado deste microcorte:
+		- `selectedTarget=recordFreshFullNpmTestGateGreen`
+		- `checkpointScope=documentalOnlyAfterExecution`
+		- `previousFreshFullNpmTestAuthorizationCommit=c9465d0`
+		- `freshFullTestGateExecutedByHuman=true`
+		- `freshFullTestGateRepeated=false`
+		- `commandExecuted=npm test`
+		- `commandExitCode=0`
+		- `tests=2368`
+		- `suites=17`
+		- `pass=2366`
+		- `fail=0`
+		- `skipped=2`
+		- `todo=0`
+		- `duration_ms=240449.3055`
+		- `freshFullTestGateResult=green`
+		- `testsAndHooksGateStatusAfter=green`
+		- `workingTreeCleanAfterExecution=true`
+		- `finalGitStatusClean=true`
+		- `finalLocalRemoteSynced=true`
+		- `filesChangedByTest=false`
+		- `productionReady=false`
+		- `productionReadyDecisionChanged=false`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `httpExecutedManually=false`
+		- `browserOpened=false`
+		- `seedExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `masterScriptsExecutedManually=false`
+		- `operationalMasterUserUsed=false`
+		- `testSuiteUsedFixtures=true`
+		- `testSuiteUsedMemoryMongo=true`
+		- `testSuiteMayExerciseMasterRoleInTestEnvironment=true`
+		- `realMongoAtlasConnectedByTest=false`
+		- `manualMongoConnectionExecuted=false`
+		- `npmCommandExecutedNow=true`
+		- `npmCommandExecutedNowName=npm test`
+		- `additionalNpmCommandExecuted=false`
+		- `manualNodeCommandExecuted=false`
+		- `loginExecutedNow=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `dataMutationExecuted=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `passwordHashPrinted=false`
+		- `rawUnitIdPrinted=false`
+		- `tenantRawUnitDataPrinted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+		- `masterUserProtected=true`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=classifyGateStatusAfterFreshFullNpmTestGreen`
+		- `secondaryCandidate=planRollbackAndAbortRunbookConsolidation`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalRecordOnly=true`
+		- `doNotRepeatNpmTestNow=true`
+		- `doNotExecuteRuntimeNow=true`
+		- `doNotExecuteHttpNow=true`
+		- `doNotUseOperationalMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro da rotacao da senha ficticia, condicionado a preflight explicito, sem executar o script agora, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafePasswordRotationRetryAfterPreflight`
