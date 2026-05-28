@@ -11,6 +11,20 @@ const SERVER_SELECTION_TIMEOUT_MS = 8000;
 const ALLOWED_MUTATION = 'password-rotate-fictional-user-only';
 const EXPECTED_EMAIL = 'teste.login@example.com';
 const EXPECTED_DOMAIN = 'example.com';
+const SAFE_RED_REASONS = new Set([
+  'missing-uri',
+  'mongo-memory-enabled',
+  'missing-allow-flag',
+  'missing-email',
+  'master-email-blocked',
+  'invalid-candidate-email',
+  'invalid-candidate-domain',
+  'missing-password',
+  'candidate-missing',
+  'candidate-multiple',
+  'update-failed',
+  'unexpected-error',
+]);
 
 function printSummary(fields) {
   for (const [key, value] of Object.entries(fields)) {
@@ -32,10 +46,19 @@ function extractDomain(normalizedEmail) {
   return normalizedEmail.slice(atIndex + 1);
 }
 
-function buildAbortError(reason) {
+function buildAbortError(reason, safeReason = 'unexpected-error') {
   const error = new Error(reason);
   error.name = 'ControlledFictionalPasswordRotateAbortError';
+  error.safeReason = SAFE_RED_REASONS.has(safeReason) ? safeReason : 'unexpected-error';
   return error;
+}
+
+function getSafeRedReason(error) {
+  if (SAFE_RED_REASONS.has(error?.safeReason)) {
+    return error.safeReason;
+  }
+
+  return 'unexpected-error';
 }
 
 function isKnownMasterEmail(normalizedEmail) {
@@ -50,38 +73,38 @@ function isKnownMasterEmail(normalizedEmail) {
 function assertSafeEnvironment() {
   const mongoUri = String(process.env.MONGODB_URI || '').trim();
   if (!mongoUri) {
-    throw buildAbortError('MONGODB_URI ausente ou vazio.');
+    throw buildAbortError('MONGODB_URI ausente ou vazio.', 'missing-uri');
   }
 
   if (isEnabledFlag(process.env.MONGO_MEMORY)) {
-    throw buildAbortError('MONGO_MEMORY=1 bloqueia rotacao controlada em Mongo real.');
+    throw buildAbortError('MONGO_MEMORY=1 bloqueia rotacao controlada em Mongo real.', 'mongo-memory-enabled');
   }
 
   if (!isEnabledFlag(process.env.WDG_ALLOW_FICTIONAL_USER_PASSWORD_ROTATE)) {
-    throw buildAbortError('WDG_ALLOW_FICTIONAL_USER_PASSWORD_ROTATE=1 e obrigatorio.');
+    throw buildAbortError('WDG_ALLOW_FICTIONAL_USER_PASSWORD_ROTATE=1 e obrigatorio.', 'missing-allow-flag');
   }
 
   const normalizedCandidateEmail = normalizeEmail(process.env.WDG_LOGIN_EMAIL || '');
   if (!normalizedCandidateEmail) {
-    throw buildAbortError('WDG_LOGIN_EMAIL ausente ou vazio.');
+    throw buildAbortError('WDG_LOGIN_EMAIL ausente ou vazio.', 'missing-email');
   }
 
   if (isKnownMasterEmail(normalizedCandidateEmail)) {
-    throw buildAbortError('WDG_LOGIN_EMAIL nao pode apontar para usuario master.');
+    throw buildAbortError('WDG_LOGIN_EMAIL nao pode apontar para usuario master.', 'master-email-blocked');
   }
 
   if (normalizedCandidateEmail !== EXPECTED_EMAIL) {
-    throw buildAbortError('WDG_LOGIN_EMAIL deve ser exatamente o candidato ficticio permitido.');
+    throw buildAbortError('WDG_LOGIN_EMAIL deve ser exatamente o candidato ficticio permitido.', 'invalid-candidate-email');
   }
 
   const candidateDomain = extractDomain(normalizedCandidateEmail);
   if (candidateDomain !== EXPECTED_DOMAIN) {
-    throw buildAbortError('Dominio do candidato invalido; apenas example.com e permitido.');
+    throw buildAbortError('Dominio do candidato invalido; apenas example.com e permitido.', 'invalid-candidate-domain');
   }
 
   const candidatePassword = String(process.env.WDG_LOGIN_PASSWORD || '');
   if (!candidatePassword.trim()) {
-    throw buildAbortError('WDG_LOGIN_PASSWORD ausente ou vazio.');
+    throw buildAbortError('WDG_LOGIN_PASSWORD ausente ou vazio.', 'missing-password');
   }
 
   return {
@@ -110,6 +133,7 @@ async function runControlledPasswordRotation() {
   let candidateDomain = 'unknown';
   let candidateExists = false;
   let matchingCandidateCountSafe = 0;
+  let rotationRedReason = 'unexpected-error';
 
   try {
     const safeInput = assertSafeEnvironment();
@@ -136,11 +160,11 @@ async function runControlledPasswordRotation() {
     candidateExists = matchingCandidateCountSafe > 0;
 
     if (!candidateExists) {
-      throw buildAbortError('Candidato ficticio ausente; rotacao bloqueada.');
+      throw buildAbortError('Candidato ficticio ausente; rotacao bloqueada.', 'candidate-missing');
     }
 
     if (matchingCandidateCountSafe !== 1) {
-      throw buildAbortError('Quantidade de candidatos ficticios invalida; rotacao bloqueada.');
+      throw buildAbortError('Quantidade de candidatos ficticios invalida; rotacao bloqueada.', 'candidate-multiple');
     }
 
     const candidateUser = candidateUsers[0];
@@ -164,7 +188,7 @@ async function runControlledPasswordRotation() {
 
     rotated = Number(updateResult?.modifiedCount || 0) === 1;
     if (!rotated) {
-      throw buildAbortError('Rotacao nao confirmou exatamente uma senha atualizada.');
+      throw buildAbortError('Rotacao nao confirmou exatamente uma senha atualizada.', 'update-failed');
     }
 
     printSummary({
@@ -182,9 +206,12 @@ async function runControlledPasswordRotation() {
     });
 
     return SUCCESS_EXIT_CODE;
-  } catch {
+  } catch (error) {
+    rotationRedReason = getSafeRedReason(error);
+
     printSummary({
       rotationResult: 'red',
+      rotationRedReason,
       connectionAttempted,
       allowedMutation: ALLOWED_MUTATION,
       writesAttempted,
