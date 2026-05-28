@@ -19714,6 +19714,74 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto do fechamento do bloco tenant boundary read-only como green, sem repetir login, sem repetir GET tenant, sem novo HTTP, sem start:atlas, sem Mongo, sem node, sem npm, sem mutacao, sem usar master e sem alterar codigo.
+	- Fechamento consolidado deste microcorte:
+		- `selectedTarget=closeTenantBoundaryReadOnlyRuntimeValidationBlock`
+		- `closingScope=documentalOnly`
+		- `previousTenantBoundaryGreenCommit=178ec35`
+		- `previousTenantBoundaryBlockedCommit=b47c4eb`
+		- `localRemoteSyncedBeforeClosing=true`
+		- `tenantBoundaryReadOnlyValidationBlockClosed=true`
+		- `tenantBoundaryReadOnlyValidationResult=green`
+		- `selectedTenantBoundaryReadOnlyRoute=GET /api/unidades/:id/modulos`
+		- `selectedTenantBoundaryReadOnlyRouteSource=src/modules/gestor/app/routes/unidadeApi.js`
+		- `selectedTenantBoundaryReadOnlyHandler=src/modules/gestor/app/controllers/unidadeApiController.js`
+		- `selectedTenantBoundaryReadOnlyRouteTenantAwareEvidence=requireUnitScope-and-ensureCanAccessUnidade`
+		- `loginStatusCode=303`
+		- `loginResultBoolean=true`
+		- `tenantSafeUnitIdInputPresent=true`
+		- `rawUnitIdPrinted=false`
+		- `rawUnitIdSentToChat=false`
+		- `tenantReadOnlyRouteStatusCode=307`
+		- `tenantReadOnlyRouteResultBoolean=true`
+		- `tenantReadOnlyRouteBodyShapePresent=true`
+		- `tenantReadOnlyRouteBodyPrinted=false`
+		- `tenantRawUnitDataPrinted=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `rawPasswordValueSentToChat=false`
+		- `wdgLoginPasswordPresentAfterExecution=false`
+		- `mutationExecuted=false`
+		- `dataMutationExecuted=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `productionReady=false`
+		- `closureResult=green`
+		- `loginExecutedNow=false`
+		- `httpExecutedNow=false`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `npmRunExecuted=false`
+		- `npmTestExecuted=false`
+		- `nodeExecuted=false`
+		- `browserOpened=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planNextRuntimeValidationAfterTenantBoundaryGreen`
+		- `secondaryCandidate=planFictionalUserLogoutValidation`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalClosureOnly=true`
+		- `doNotRepeatLoginOrGetNow=true`
+		- `doNotAskOrPastePasswordNow=true`
+		- `doNotPrintRawUnitIdCookieTokenSessionBodyOrPassword=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro da rotacao da senha ficticia, condicionado a preflight explicito, sem executar o script agora, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafePasswordRotationRetryAfterPreflight`
