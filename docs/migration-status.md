@@ -19987,6 +19987,74 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto da classificacao dos itens bloqueantes dos gates de producao, sem executar login, sem HTTP, sem start:atlas, sem Mongo, sem node, sem npm, sem mutacao, sem usar master e sem alterar codigo.
+	- Classificacao consolidada deste microcorte:
+		- `selectedTarget=classifyProductionGateBlockingItems`
+		- `classificationScope=documentalOnlyNoRuntime`
+		- `previousProductionGateChecklistCommit=3a24f65`
+		- `localRemoteSyncedBeforeClassification=true`
+		- `productionReady=false`
+		- `blockingItemsClassificationStarted=true`
+		- `blockingItemsClassificationCompleted=true`
+		- `testsAndHooksGateBlockingItems=fresh-full-npm-test-or-pre-push-required-before-production-decision`
+		- `runtimeGreenEvidenceGateBlockingItems=runtime-coverage-still-limited-to-controlled-health-login-session-tenant-readonly`
+		- `mutationSafetyGateBlockingItems=domain-mutations-not-validated-and-remain-blocked`
+		- `secretsAndLogsGateBlockingItems=ongoing-sanitization-watch-required-before-production`
+		- `realMongoAtlasGateBlockingItems=real-atlas-runtime-used-in-controlled-slices-but-not-production-homologated`
+		- `rollbackAndAbortGateBlockingItems=final-abort-rollback-runbook-not-yet-consolidated`
+		- `productionDecisionGateBlockingItems=productionReady-must-remain-false-until-all-gates-complete`
+		- `highestPriorityBlockingItem=testsAndHooksGate`
+		- `secondPriorityBlockingItem=runtimeGreenEvidenceGate`
+		- `thirdPriorityBlockingItem=rollbackAndAbortGate`
+		- `blockedItemsRequireRuntimeNow=false`
+		- `nextExecutionAuthorized=false`
+		- `selectedNextSafeCandidate=planFreshFullTestAndPrePushGate`
+		- `selectedNextSafeCandidateReason=fresh-complete-test-gate-is-required-before-any-production-readiness-decision-and-can-be-planned-without-runtime`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `loginExecutedNow=false`
+		- `httpExecutedNow=false`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `npmRunExecuted=false`
+		- `npmTestExecuted=false`
+		- `nodeExecuted=false`
+		- `browserOpened=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `passwordHashPrinted=false`
+		- `rawUnitIdPrinted=false`
+		- `tenantRawUnitDataPrinted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planFreshFullTestAndPrePushGate`
+		- `secondaryCandidate=planRollbackAndAbortRunbookConsolidation`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalClassificationOnly=true`
+		- `doNotExecuteRuntimeNow=true`
+		- `doNotExecuteNpmTestNow=true`
+		- `doNotExecuteHttpNow=true`
+		- `doNotAskOrPastePasswordNow=true`
+		- `doNotPrintCookieTokenSessionBodyOrRawTenantData=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro da rotacao da senha ficticia, condicionado a preflight explicito, sem executar o script agora, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafePasswordRotationRetryAfterPreflight`
