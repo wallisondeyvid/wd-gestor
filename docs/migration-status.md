@@ -18017,6 +18017,85 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto da inspecao estatica do caminho seguro para rotacao/reset da senha do usuario ficticio, sem executar reset, sem alterar senha, sem conectar Mongo, sem node, sem npm, sem HTTP/login, sem usar master, sem alterar codigo e sem repetir valor bruto de senha nesta rodada.
+	- Resultado consolidado da inspecao:
+		- `selectedTarget=inspectFictionalUserPasswordRotationPathDocumentally`
+		- `inspectionScope=staticReadOnlyNoExecution`
+		- `previousPasswordRotationPlanCommit=4ba96e6`
+		- `localRemoteSyncedBeforeInspection=true`
+		- `fictionalLoginUserCreated=true`
+		- `fictionalLoginGreen=true`
+		- `candidateEmailPlanned=teste.login@example.com`
+		- `fictionalPasswordWasExposedEarlier=true`
+		- `rawPasswordValueRepeated=false`
+		- `userModelInspected=true`
+		- `passwordHashingPathInspected=true`
+		- `existingPasswordResetPathInspected=true`
+		- `existingAdminResetPathSafeForFictionalUser=unknown`
+		- `dedicatedFictionalPasswordRotationScriptNeeded=true`
+		- `safeRotationApproach=dedicated-script-email-locked-to-fictional-user-with-local-env-password-and-safe-output-only`
+		- `futureRotationMustUseFictionalUserOnly=true`
+		- `futureRotationMustNotUseMasterUser=true`
+		- `futureRotationMustRequireSeparateAuthorization=true`
+		- `futureRotationMustUseLocalHumanPasswordOnly=true`
+		- `futureRotationMustNotPrintPassword=true`
+		- `futureRotationMustNotPrintPasswordHash=true`
+		- `passwordRotationExecutedNow=false`
+		- `passwordResetExecutedNow=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `productionReady=false`
+		- `loginExecutedNow=false`
+		- `httpExecutedNow=false`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `npmRunExecuted=false`
+		- `npmTestExecuted=false`
+		- `nodeExecuted=false`
+		- `nodeEExecuted=false`
+		- `browserOpened=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `passwordHashPrinted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Leitura tecnica consolidada:
+		- `controlledFictionalCreatePathHashesPassword=true`
+		- `userModelDoesNotHashPasswordAutomatically=true`
+		- `passwordRecoveryFlowIsGenericTokenFlow=true`
+		- `passwordRecoveryFlowDependsOnCpfOrExistingToken=true`
+		- `passwordRecoveryFlowMayExposeDebugResetLinkOutsideProduction=true`
+		- `selfPasswordUpdateRequiresAuthenticatedCurrentPassword=true`
+		- `primeiroAcessoPathNotApplicableToCurrentFictionalUser=true`
+		- `noCandidateLockedRotationCommandFound=true`
+		- `existingGenericFlowsNotSelectedForFictionalRotation=true`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planDedicatedFictionalUserPasswordRotationScript`
+		- `secondaryCandidate=authorizeDedicatedFictionalUserPasswordRotationScriptImplementation`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsStaticDocumentalInspectionOnly=true`
+		- `doNotExecutePasswordResetNow=true`
+		- `doNotAlterPasswordNow=true`
+		- `doNotRepeatRawPasswordInChat=true`
+		- `doNotPrintPasswordHash=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto do planejamento futuro da validacao de login com o usuario ficticio criado, sem login, sem servidor, sem HTTP e sem mutacao nesta rodada.
 	- Planejamento consolidado deste microcorte:
 		- `selectedTarget=planLoginValidationWithFictionalUserWithoutMutation`
