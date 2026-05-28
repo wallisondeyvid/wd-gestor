@@ -20480,6 +20480,67 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto da classificacao do gate de rollback e abort apos a consolidacao do runbook, sem executar npm test, sem npm, sem node, sem login, sem HTTP, sem start:atlas, sem Mongo, sem mutacao, sem usar master e sem alterar codigo.
+	- Classificacao consolidada deste microcorte:
+		- `selectedTarget=classifyRollbackAndAbortGateAfterConsolidation`
+		- `classificationScope=documentalOnlyNoRuntime`
+		- `previousRollbackAndAbortConsolidationCommit=07ad705`
+		- `localRemoteSyncedBeforeClassification=true`
+		- `productionReady=false`
+		- `rollbackAndAbortGateStatusBefore=partial`
+		- `rollbackAndAbortGateClassificationPerformed=true`
+		- `rollbackAndAbortGateStatusAfter=green`
+		- `rollbackAndAbortGateBlockingItemResolved=true`
+		- `rollbackAndAbortGateGreenReason=abort-criteria-and-no-retry-secret-dirty-tree-runtime-red-post-abort-git-status-and-human-push-rules-consolidated`
+		- `remainingBlockingGatesAfterRollbackGate=runtimeGreenEvidenceGate,mutationSafetyGate,secretsAndLogsGate,realMongoAtlasGate,productionDecisionGate`
+		- `highestPriorityBlockingItemAfterRollbackGate=runtimeGreenEvidenceGate`
+		- `secondPriorityBlockingItemAfterRollbackGate=mutationSafetyGate`
+		- `thirdPriorityBlockingItemAfterRollbackGate=realMongoAtlasGate`
+		- `nextExecutionAuthorized=false`
+		- `selectedNextSafeCandidate=planRuntimeGreenEvidenceExpansion`
+		- `selectedNextSafeCandidateReason=rollback-abort-gate-is-green-so-next-blocking-area-is-runtime-evidence-coverage`
+		- `recommendedNextCandidate=planRuntimeGreenEvidenceExpansion`
+		- `secondaryCandidate=classifyMutationSafetyGateAfterControlledFictionalMutation`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `npmTestExecutedNow=false`
+		- `npmRunExecutedNow=false`
+		- `nodeExecutedNow=false`
+		- `loginExecutedNow=false`
+		- `httpExecutedNow=false`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `browserOpened=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `passwordHashPrinted=false`
+		- `rawUnitIdPrinted=false`
+		- `tenantRawUnitDataPrinted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalClassificationOnly=true`
+		- `doNotExecuteRuntimeNow=true`
+		- `doNotExecuteNpmTestNow=true`
+		- `doNotExecuteHttpNow=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro da rotacao da senha ficticia, condicionado a preflight explicito, sem executar o script agora, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafePasswordRotationRetryAfterPreflight`
