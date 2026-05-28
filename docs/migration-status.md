@@ -18354,6 +18354,72 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto da revisao estatica da correcao `rotationRedReason` no script dedicado de rotacao da senha ficticia, sem executar o script, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
+	- Revisao consolidada deste microcorte:
+		- `selectedTarget=reviewPasswordRotationScriptAfterSafeReasonFix`
+		- `reviewScope=staticReadOnlyNoExecution`
+		- `previousSafeRedReasonFixCommit=065dc05`
+		- `localRemoteSyncedBeforeReview=true`
+		- `scriptPath=scripts/diagnostics/controlled-fictional-login-user-password-rotate.js`
+		- `safeRedReasonEmissionReviewed=true`
+		- `rotationRedReasonFieldPresent=true`
+		- `safeRedReasonsLimitedToAllowlist=true`
+		- `rawErrorMessagePrinted=false`
+		- `stackTracePrinted=false`
+		- `rawPasswordValueRepeated=false`
+		- `passwordPrinted=false`
+		- `passwordHashPrinted=false`
+		- `rawMongoUriPrinted=false`
+		- `rawDocumentPrinted=false`
+		- `realUserEmailsPrinted=false`
+		- `guardrailsRelaxed=false`
+		- `scriptExecutionAuthorizedNow=false`
+		- `scriptExecutedNow=false`
+		- `passwordRotationExecutedNow=false`
+		- `passwordResetExecutedNow=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `reviewResult=green`
+		- `blockingIssueFound=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `productionReady=false`
+		- `loginExecutedNow=false`
+		- `httpExecutedNow=false`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `npmRunExecuted=false`
+		- `npmTestExecuted=false`
+		- `nodeExecuted=false`
+		- `nodeEExecuted=false`
+		- `browserOpened=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=authorizeSafePasswordRotationRetryAfterPreflight`
+		- `secondaryCandidate=executeDedicatedFictionalUserPasswordRotationInSeparateMicrocut`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsStaticDocumentalReviewOnly=true`
+		- `doNotExecuteScriptNow=true`
+		- `doNotAskOrPastePasswordNow=true`
+		- `doNotPrintPasswordHash=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint tecnico/documental curto da correcao da emissao segura do motivo red no script dedicado de rotacao da senha ficticia, sem executar o script, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar outros corredores nesta rodada.
 	- Implementacao consolidada deste microcorte:
 		- `selectedTarget=fixPasswordRotationScriptSafeRedReasonEmission`
