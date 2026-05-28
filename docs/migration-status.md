@@ -20130,6 +20130,77 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto da autorizacao futura da execucao do npm test completo, sem executar npm test, sem npm, sem node, sem login, sem HTTP, sem start:atlas, sem Mongo, sem mutacao, sem usar master e sem alterar codigo.
+	- Autorizacao consolidada deste microcorte:
+		- `selectedTarget=authorizeFreshFullNpmTestGate`
+		- `authorizationScope=documentalOnlyFutureExecution`
+		- `previousFreshFullTestGatePlanningCommit=db701e2`
+		- `localRemoteSyncedBeforeAuthorization=true`
+		- `productionReady=false`
+		- `testsAndHooksGateStatusBefore=partial`
+		- `freshFullTestGatePlanned=true`
+		- `freshFullTestGateAuthorized=true`
+		- `freshFullTestGateAuthorizedForFutureOnly=true`
+		- `npmTestExecutionAuthorized=true`
+		- `npmTestExecutedNow=false`
+		- `npmRunExecutedNow=false`
+		- `nodeExecutedNow=false`
+		- `selectedFutureCommand=npm test`
+		- `futureTestGateMustStartFromCleanWorkingTree=true`
+		- `futureTestGateMustRecordCommandExactly=true`
+		- `futureTestGateMustRecordTotalTests=true`
+		- `futureTestGateMustRecordPassFailSkip=true`
+		- `futureTestGateMustRecordDuration=true`
+		- `futureTestGateMustNotTouchMaster=true`
+		- `futureTestGateMustNotRunSeed=true`
+		- `futureTestGateMustNotRunStartAtlas=true`
+		- `futureTestGateMustNotRunStartGestor=true`
+		- `futureTestGateMustNotRunHttp=true`
+		- `futureTestGateMustNotOpenBrowser=true`
+		- `futureTestGateMustNotPrintSecrets=true`
+		- `nextExecutionAuthorized=true`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `loginExecutedNow=false`
+		- `httpExecutedNow=false`
+		- `startAtlasExecuted=false`
+		- `startGestorExecuted=false`
+		- `serverStarted=false`
+		- `realMongoConnectionAttempted=false`
+		- `realMongoConnected=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `browserOpened=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `passwordHashPrinted=false`
+		- `rawUnitIdPrinted=false`
+		- `tenantRawUnitDataPrinted=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=executeFreshFullNpmTestGateInSeparateMicrocut`
+		- `secondaryCandidate=recordFreshFullNpmTestGateResult`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalAuthorizationOnly=true`
+		- `doNotExecuteNpmTestNow=true`
+		- `doNotExecuteRuntimeNow=true`
+		- `doNotExecuteHttpNow=true`
+		- `doNotAskOrPastePasswordNow=true`
+		- `doNotPrintCookieTokenSessionBodyOrRawTenantData=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro da rotacao da senha ficticia, condicionado a preflight explicito, sem executar o script agora, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafePasswordRotationRetryAfterPreflight`
