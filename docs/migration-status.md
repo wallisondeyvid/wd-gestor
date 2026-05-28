@@ -19658,6 +19658,62 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto do resultado green da validacao tenant boundary read-only executada manualmente, sem repetir login, sem repetir GET tenant, sem novo HTTP, sem node, sem npm, sem mutacao, sem usar master e sem alterar codigo.
+	- Resultado consolidado deste microcorte:
+		- `selectedTarget=recordTenantBoundaryReadOnlyRuntimeValidationGreen`
+		- `checkpointScope=documentalOnlyAfterManualExecution`
+		- `previousTenantBoundaryBlockedCommit=b47c4eb`
+		- `previousTenantBoundaryAuthorizationCommit=7759a0f`
+		- `tenantBoundaryReadOnlyValidationExecutedByHuman=true`
+		- `tenantBoundaryReadOnlyValidationRepeated=false`
+		- `selectedTenantBoundaryReadOnlyRoute=GET /api/unidades/:id/modulos`
+		- `selectedTenantBoundaryReadOnlyRouteSource=src/modules/gestor/app/routes/unidadeApi.js`
+		- `selectedTenantBoundaryReadOnlyHandler=src/modules/gestor/app/controllers/unidadeApiController.js`
+		- `selectedTenantBoundaryReadOnlyRouteTenantAwareEvidence=requireUnitScope-and-ensureCanAccessUnidade`
+		- `loginExecutedForTenantValidation=true`
+		- `loginStatusCode=303`
+		- `loginResultBoolean=true`
+		- `redirectOrLocationShapePresent=true`
+		- `cookiePresentBoolean=true`
+		- `tenantSafeUnitIdInputPresent=true`
+		- `rawUnitIdPrinted=false`
+		- `rawUnitIdSentToChat=false`
+		- `tenantReadOnlyRouteStatusCode=307`
+		- `tenantReadOnlyRouteResultBoolean=true`
+		- `tenantReadOnlyRouteBodyShapePresent=true`
+		- `tenantReadOnlyRouteBodyPrinted=false`
+		- `tenantRawUnitDataPrinted=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `rawPasswordValueSentToChat=false`
+		- `wdgLoginPasswordPresentAfterExecution=false`
+		- `tenantBoundaryReadOnlyValidationResult=green`
+		- `mutationExecuted=false`
+		- `dataMutationExecuted=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `productionReady=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=closeTenantBoundaryReadOnlyRuntimeValidationBlock`
+		- `secondaryCandidate=planNextRuntimeValidationAfterTenantBoundaryGreen`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalRecordOnly=true`
+		- `doNotRepeatLoginOrGetNow=true`
+		- `doNotAskOrPastePasswordNow=true`
+		- `doNotPrintRawUnitIdCookieTokenSessionBodyOrPassword=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro da rotacao da senha ficticia, condicionado a preflight explicito, sem executar o script agora, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafePasswordRotationRetryAfterPreflight`
