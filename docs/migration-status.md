@@ -19598,6 +19598,66 @@ Checkpoint tenant enforcement atual:
 		- `doNotUseMasterNow=true`
 		- `doNotDeclareProductionReadyNow=true`
 		- `doNotPushNow=true`
+	- Checkpoint documental curto do bloqueio seguro da tentativa tenant read-only por ausencia de input local de unidade, sem repetir login, sem repetir GET, sem novo HTTP, sem node, sem npm, sem mutacao, sem usar master e sem alterar codigo.
+	- Resultado consolidado deste microcorte:
+		- `selectedTarget=recordTenantBoundaryReadOnlyValidationBlockedMissingUnitInput`
+		- `checkpointScope=documentalOnlyAfterAttempt`
+		- `previousTenantBoundaryAuthorizationCommit=7759a0f`
+		- `tenantBoundaryReadOnlyValidationAttempted=true`
+		- `healthCheckExecutedBeforeValidation=true`
+		- `healthStatusCode=200`
+		- `healthBodyShapePresent=true`
+		- `tenantValidationBlockedBeforeLogin=true`
+		- `tenantValidationBlockedReason=missing-local-safe-unit-id-input`
+		- `loginExecutedForTenantValidation=false`
+		- `tenantReadOnlyGetExecuted=false`
+		- `tenantSafeUnitIdInputPresent=false`
+		- `tenantReadOnlyRouteStatusCode=not-executed`
+		- `tenantReadOnlyRouteResultBoolean=not-executed`
+		- `tenantReadOnlyRouteBodyShapePresent=not-executed`
+		- `tenantReadOnlyRouteBodyPrinted=false`
+		- `tenantRawUnitDataPrinted=false`
+		- `cookieValuePrinted=false`
+		- `tokenPrinted=false`
+		- `sessionDataPrinted=false`
+		- `passwordPrinted=false`
+		- `rawUnitIdSentToChat=false`
+		- `rawPasswordValueSentToChat=false`
+		- `wdgLoginPasswordPresentAfterExecution=false`
+		- `processPromptClosed=true`
+		- `gitStatusFinalClean=true`
+		- `finalLocalRemoteSynced=true`
+		- `masterUserUsed=false`
+		- `masterUserProtected=true`
+		- `productionReady=false`
+		- `passwordMutationExecutedNow=false`
+		- `userMutationExecutedNow=false`
+		- `dataMutationExecuted=false`
+		- `seedExecuted=false`
+		- `masterScriptsExecuted=false`
+		- `cleanupWrongEmailExecuted=false`
+		- `npmRunExecuted=false`
+		- `npmTestExecuted=false`
+		- `nodeExecutedByAgent=false`
+		- `browserOpened=false`
+		- `packageJsonChanged=false`
+		- `sourceChanged=false`
+		- `testsChanged=false`
+		- `newFileCreated=false`
+		- `pushExecuted=false`
+	- Decisao recomendada:
+		- `recommendedNextCandidate=planManualTenantBoundaryReadOnlyValidationWithLocalUnitInput`
+		- `secondaryCandidate=executeTenantBoundaryReadOnlyRuntimeValidationManuallyInTerminal`
+		- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- Reforcos deste microcorte:
+		- `microcutIsDocumentalRecordOnly=true`
+		- `doNotRepeatLoginOrGetNow=true`
+		- `doNotExecuteHttpNow=true`
+		- `doNotAskOrPastePasswordNow=true`
+		- `doNotPrintCookieTokenSessionBodyOrUnitRawData=true`
+		- `doNotUseMasterNow=true`
+		- `doNotDeclareProductionReadyNow=true`
+		- `doNotPushNow=true`
 	- Checkpoint documental curto da autorizacao futura de retry seguro da rotacao da senha ficticia, condicionado a preflight explicito, sem executar o script agora, sem reset, sem alterar senha, sem conexao Mongo, sem node, sem npm, sem HTTP/login, sem usar master e sem alterar codigo nesta rodada.
 	- Autorizacao consolidada deste microcorte:
 		- `selectedTarget=authorizeSafePasswordRotationRetryAfterPreflight`
