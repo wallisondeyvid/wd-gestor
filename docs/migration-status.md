@@ -88461,6 +88461,84 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotSendNewRequestNow=true`
 	- `doNotAskPasswordNow=true`
 	- `doNotUseMasterNow=true`
+
+## Microcorte: Inspecionar rota estaticamente antes de novo retry de logout
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `e3830ca` no inicio desta rodada;
+	- o retry controlado de logout com Atlas e health ficou red em `e3830ca` por rota ou metodo nao encontrado;
+	- o endpoint anteriormente tentado foi `POST /gestor/logout`;
+	- este microcorte faz apenas inspecao estatica das rotas e handlers do Gestor para identificar a rota e o metodo corretos de logout antes de qualquer novo retry.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so inspecao estatica ou documental;
+	- nao executar HTTP;
+	- nao repetir logout;
+	- nao iniciar `Start Atlas`;
+	- nao pedir nem colar senha;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=inspectLogoutRouteBeforeRetry`
+	- `inspectionScope=staticOnlyNoRuntime`
+	- `previousLogoutRedCommit=e3830ca`
+	- `localRemoteSyncedBeforeInspection=true`
+	- `productionReady=false`
+	- `logoutRedReasonPreviouslyRecorded=logout-route-not-found-or-method-mismatch`
+	- `logoutEndpointPreviouslyAttempted=POST /gestor/logout`
+	- `staticLogoutRouteInspectionPerformed=true`
+	- `logoutRouteFound=true`
+	- `logoutRouteMethodCandidate=GET`
+	- `logoutRoutePathCandidate=/gestor/logout`
+	- `logoutHandlerCandidate=src/modules/gestor/app/controllers/authController.js:logout`
+	- `logoutSessionCleanupEvidence=req.session.destroy-callback-clears-wdg-sid-and-redirects-to-login`
+	- `logoutCookieCleanupEvidence=res.clearCookie-remember-cookie-and-wdg.sid`
+	- `correctLogoutRetryCanBeAuthorizedNow=false`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=authorizeLogoutRetryWithCorrectRouteAfterStaticInspection`
+	- `selectedNextSafeCandidateReason=static-inspection-found-get-gestor-logout-but-retry-still-needs-separate-authorization`
+	- `recommendedNextCandidate=authorizeLogoutRetryWithCorrectRouteAfterStaticInspection`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `passwordHashPrinted=false`
+	- `rawUnitIdPrinted=false`
+	- `tenantRawUnitDataPrinted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsStaticInspectionOnly=true`
+	- `doNotExecuteHttpNow=true`
+	- `doNotRepeatLogoutNow=true`
+	- `doNotStartAtlasNow=true`
+	- `doNotAskPasswordNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
