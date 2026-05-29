@@ -88389,6 +88389,80 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotExecuteHttpNow=true`
 	- `doNotAskPasswordNow=true`
 	- `doNotUseMasterNow=true`
+
+## Microcorte: Registrar red do retry de logout por rota ausente
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `dd2b322` no inicio desta rodada;
+	- o retry controlado de logout com Atlas e health foi autorizado em `dd2b322`;
+	- a execucao manual foi feita pelo terminal;
+	- `health` ficou green com `healthStatusCode=200` e `healthBodyShapePresent=true`;
+	- a senha ficticia foi digitada localmente no terminal e nao foi enviada ao chat;
+	- a tentativa chegou ate o logout em `POST /gestor/logout`;
+	- o resultado observado foi `404 Recurso nao encontrado`;
+	- o bloco `finally` limpou `WDG_LOGIN_PASSWORD`;
+	- este microcorte registra apenas o resultado red ou bloqueado do retry por rota ou metodo nao encontrado, sem repetir execucao agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir execucao;
+	- nao executar nova requisicao;
+	- nao pedir nem colar senha;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordControlledLogoutRetryRedRouteNotFound`
+	- `checkpointScope=documentalOnlyAfterAttempt`
+	- `previousControlledLogoutRetryAuthorizationCommit=dd2b322`
+	- `controlledLogoutRetryAttempted=true`
+	- `healthCheckExecutedBeforeLogout=true`
+	- `healthStatusCode=200`
+	- `healthBodyShapePresent=true`
+	- `loginAttemptedBeforeLogout=true`
+	- `logoutAttempted=true`
+	- `logoutEndpointAttempted=POST /gestor/logout`
+	- `logoutStatusCode=404`
+	- `logoutResult=red`
+	- `logoutRedReason=logout-route-not-found-or-method-mismatch`
+	- `logoutBodyPrinted=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `headersPrinted=false`
+	- `wdgLoginPasswordPresentAfterExecution=false`
+	- `gitStatusFinalClean=true`
+	- `finalLocalRemoteSynced=true`
+	- `productionReady=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecutedByAgent=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=inspectLogoutRouteBeforeRetry`
+	- `secondaryCandidate=authorizeLogoutRetryWithCorrectRouteAfterStaticInspection`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `doNotRepeatExecutionNow=true`
+	- `doNotSendNewRequestNow=true`
+	- `doNotAskPasswordNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
