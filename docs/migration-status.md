@@ -88285,6 +88285,112 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotExecuteHttpNow=true`
 	- `doNotAskPasswordNow=true`
 	- `doNotUseMasterNow=true`
+
+## Microcorte: Autorizar retry controlado do logout ficticio com Atlas
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `aa64503` no inicio desta rodada;
+	- a validacao de logout ficticio foi planejada em `fd2302a`;
+	- a validacao foi autorizada em `99cd14d`;
+	- a primeira tentativa foi bloqueada por health ou servidor indisponivel e publicada em `9ea0a08`;
+	- o retry com `Start Atlas` e `health` green foi planejado em `aa64503`;
+	- este microcorte registra apenas a autorizacao futura e separada para executar o retry de logout somente com `Start Atlas` ativo, `health` green, usuario ficticio e saida sanitizada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao iniciar `Start Atlas` agora;
+	- nao repetir `health` agora;
+	- nao executar login;
+	- nao executar logout;
+	- nao executar HTTP;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao conectar Mongo agora;
+	- nao fazer mutacao;
+	- nao pedir nem colar senha;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeControlledStartAtlasForLogoutValidationRetry`
+	- `authorizationScope=documentalOnlyFutureExecution`
+	- `previousLogoutRetryPlanningCommit=aa64503`
+	- `previousLogoutBlockedCommit=9ea0a08`
+	- `previousLogoutAuthorizationCommit=99cd14d`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `productionReady=false`
+	- `retryLogoutValidationPlanned=true`
+	- `retryLogoutValidationAuthorized=true`
+	- `retryLogoutValidationAuthorizedForFutureOnly=true`
+	- `retryLogoutValidationExecutedNow=false`
+	- `futureRetryMustStartFromCleanWorkingTree=true`
+	- `futureRetryMustRequireStartAtlasRunning=true`
+	- `futureRetryMustRequireHealthStatusCode200=true`
+	- `futureRetryMustRequireHealthBodyShapePresent=true`
+	- `futureRetryMustUseFictionalUserOnly=true`
+	- `futureRetryMustUseRotatedFictionalPasswordLocalOnly=true`
+	- `futureRetryMustLoginBeforeLogout=true`
+	- `futureRetryMustExecuteLogoutOnlyAfterSessionCookiePresent=true`
+	- `futureRetryMustNotPrintPassword=true`
+	- `futureRetryMustNotPrintCookie=true`
+	- `futureRetryMustNotPrintToken=true`
+	- `futureRetryMustNotPrintSession=true`
+	- `futureRetryMustNotPrintBody=true`
+	- `futureRetryMustReturnOnlySafeBooleans=true`
+	- `futureRetryMustRecordHealthStatus=true`
+	- `futureRetryMustRecordLoginStatus=true`
+	- `futureRetryMustRecordLogoutStatus=true`
+	- `futureRetryMustRecordPasswordEnvCleaned=true`
+	- `futureRetryMustNotMutateDomainData=true`
+	- `futureRetrySessionStateMutationAllowed=true`
+	- `nextExecutionAuthorized=true`
+	- `selectedNextSafeCandidate=executeControlledLogoutRetryWithAtlasInSeparateMicrocut`
+	- `selectedNextSafeCandidateReason=retry-authorized-only-after-documental-planning-and-requires-health-green-before-login`
+	- `recommendedNextCandidate=executeControlledLogoutRetryWithAtlasInSeparateMicrocut`
+	- `secondaryCandidate=recordControlledLogoutRetryResult`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `passwordHashPrinted=false`
+	- `rawUnitIdPrinted=false`
+	- `tenantRawUnitDataPrinted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalAuthorizationOnly=true`
+	- `doNotStartAtlasNow=true`
+	- `doNotRepeatHealthNow=true`
+	- `doNotExecuteLoginNow=true`
+	- `doNotExecuteLogoutNow=true`
+	- `doNotExecuteHttpNow=true`
+	- `doNotAskPasswordNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
