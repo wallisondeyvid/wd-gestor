@@ -88101,6 +88101,89 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotExecuteLoginNow=true`
 	- `doNotExecuteHttpNow=true`
 	- `doNotUseMasterNow=true`
+
+## Microcorte: Registrar bloqueio do logout ficticio por health indisponivel
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `99cd14d` no inicio desta rodada;
+	- a validacao runtime de logout do usuario ficticio foi autorizada em `99cd14d`;
+	- houve uma tentativa controlada de execucao;
+	- a tentativa parou no pre-requisito de health check;
+	- `GET http://127.0.0.1:3000/health` nao conseguiu conectar ao servidor remoto;
+	- nao houve login, nao houve logout e nenhuma credencial foi enviada no chat;
+	- este microcorte registra apenas o bloqueio seguro da validacao por health ou servidor indisponivel, sem repetir execucao agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir execucao;
+	- nao iniciar servidor agora;
+	- nao iniciar `start:atlas`;
+	- nao executar login;
+	- nao executar logout;
+	- nao executar HTTP;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao fazer mutacao;
+	- nao pedir nem colar senha;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordFictionalUserLogoutValidationBlockedByHealth`
+	- `checkpointScope=documentalOnlyAfterAttempt`
+	- `previousFictionalLogoutAuthorizationCommit=99cd14d`
+	- `fictionalUserLogoutValidationAttempted=true`
+	- `healthCheckExecutedBeforeLogout=true`
+	- `healthStatusCode=0`
+	- `healthBodyShapePresent=false`
+	- `logoutValidationBlockedBeforeLogin=true`
+	- `logoutValidationBlockedReason=health-server-unreachable`
+	- `loginExecutedForLogoutValidation=false`
+	- `logoutExecuted=false`
+	- `loginStatusCode=not-executed`
+	- `loginResultBoolean=not-executed`
+	- `redirectOrLocationShapePresent=not-executed`
+	- `cookiePresentBeforeLogoutBoolean=not-executed`
+	- `logoutStatusCode=not-executed`
+	- `logoutResultBoolean=not-executed`
+	- `logoutRedirectOrLocationShapePresent=not-executed`
+	- `logoutBodyPrinted=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `wdgLoginPasswordPresentAfterExecution=false`
+	- `gitStatusFinalClean=true`
+	- `finalLocalRemoteSynced=true`
+	- `productionReady=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecutedByAgent=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=planControlledStartAtlasForLogoutValidationRetry`
+	- `secondaryCandidate=executeFictionalUserLogoutValidationAfterHealthGreen`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `doNotRepeatExecutionNow=true`
+	- `doNotStartServerNow=true`
+	- `doNotAskPasswordNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
