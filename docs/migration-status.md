@@ -88636,6 +88636,88 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotExecuteLogoutNow=true`
 	- `doNotAskPasswordNow=true`
 	- `doNotUseMasterNow=true`
+
+## Microcorte: Registrar green do logout com a rota correta
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `e8cc4b5` no inicio desta rodada;
+	- o retry com rota correta foi autorizado em `e8cc4b5`;
+	- o retry controlado foi executado manualmente pelo terminal;
+	- `health` permaneceu green com `healthStatusCode=200` e `healthBodyShapePresent=true`;
+	- o login ocorreu com `loginStatusCode=303`, `loginResultBoolean=true`, `redirectOrLocationShapePresent=true` e `cookiePresentBeforeLogoutBoolean=true`;
+	- o logout ocorreu com `logoutMethod=GET`, `logoutPath=/gestor/logout`, `logoutStatusCode=200` e `logoutResultBoolean=true`;
+	- a senha foi digitada localmente no terminal e limpa ao final;
+	- este microcorte registra apenas o resultado green do retry de logout com a rota correta, sem repetir execucao agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao repetir execucao;
+	- nao executar nova requisicao;
+	- nao pedir nem colar senha;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordLogoutRetryWithCorrectRouteGreen`
+	- `checkpointScope=documentalOnlyAfterExecution`
+	- `previousLogoutRetryCorrectRouteAuthorizationCommit=e8cc4b5`
+	- `logoutRetryWithCorrectRouteExecutedByHuman=true`
+	- `logoutRetryWithCorrectRouteRepeated=false`
+	- `healthCheckExecutedBeforeLogout=true`
+	- `healthStatusCode=200`
+	- `healthBodyShapePresent=true`
+	- `loginExecutedBeforeLogout=true`
+	- `loginStatusCode=303`
+	- `loginResultBoolean=true`
+	- `redirectOrLocationShapePresent=true`
+	- `cookiePresentBeforeLogoutBoolean=true`
+	- `logoutExecuted=true`
+	- `logoutMethod=GET`
+	- `logoutPath=/gestor/logout`
+	- `logoutStatusCode=200`
+	- `logoutResultBoolean=true`
+	- `logoutRedirectOrLocationShapePresent=false`
+	- `logoutRetryWithCorrectRouteResult=green`
+	- `logoutBodyPrinted=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `headersPrinted=false`
+	- `wdgLoginPasswordPresentAfterExecution=false`
+	- `gitStatusFinalClean=true`
+	- `finalLocalRemoteSynced=true`
+	- `productionReady=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `sessionStateMutationAllowed=true`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `npmRunExecuted=false`
+	- `npmTestExecuted=false`
+	- `nodeExecutedByAgent=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=closeFictionalUserLogoutValidationBlock`
+	- `secondaryCandidate=classifyRuntimeGreenEvidenceGateAfterLogoutGreen`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `doNotRepeatExecutionNow=true`
+	- `doNotSendNewRequestNow=true`
+	- `doNotAskPasswordNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
