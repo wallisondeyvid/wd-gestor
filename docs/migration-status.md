@@ -87824,6 +87824,93 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- nao declarar producao pronta;
 	- nao fazer push agora.
 - Gates:
+
+## Microcorte: Planejar expansao documental da evidencia runtime
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `b0381a7` no inicio desta rodada;
+	- `testsAndHooksGate` permanece green apos `npm test` completo ja registrado anteriormente;
+	- `rollbackAndAbortGate` permanece green apos consolidacao e classificacao do runbook;
+	- producao continua nao pronta;
+	- os gates bloqueantes remanescentes continuam sendo `runtimeGreenEvidenceGate`, `mutationSafetyGate`, `secretsAndLogsGate`, `realMongoAtlasGate` e `productionDecisionGate`;
+	- este microcorte define apenas qual expansao documental de evidencia runtime e a mais segura e util para a proxima rodada, sem executar nada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar runtime;
+	- nao executar `npm test`;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao executar login;
+	- nao executar HTTP;
+	- nao executar `start:atlas`;
+	- nao conectar Mongo;
+	- nao fazer mutacao;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planRuntimeGreenEvidenceExpansion`
+	- `planningScope=documentalOnly`
+	- `previousRollbackAndAbortGateGreenCommit=b0381a7`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `productionReady=false`
+	- `runtimeGreenEvidenceGateStatusBefore=partial`
+	- `testsAndHooksGateGreen=true`
+	- `rollbackAndAbortGateGreen=true`
+	- `runtimeEvidenceAlreadyGreen=health-login-password-rotation-session-readonly-tenant-readonly-npm-test`
+	- `runtimeGreenEvidenceExpansionPlanned=true`
+	- `candidateFictionalUserLogoutValidationConsidered=true`
+	- `candidateBroaderPostLoginReadOnlyValidationConsidered=true`
+	- `candidateSecondTenantBoundaryReadOnlyValidationConsidered=true`
+	- `candidateRuntimeHealthAndBootRepeatabilityValidationConsidered=true`
+	- `candidatePauseRuntimeExpansionAndClassifyMutationSafetyGateConsidered=true`
+	- `selectedRuntimeEvidenceExpansionCandidate=planFictionalUserLogoutValidation`
+	- `selectedRuntimeEvidenceExpansionCandidateReason=logout-e-o-menor-bloco-runtime-restante-para-fechar-ciclo-de-sessao-sem-mutacao-de-dominio`
+	- `selectedRuntimeEvidenceExpansionCanExecuteNow=false`
+	- `nextExecutionAuthorized=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `passwordHashPrinted=false`
+	- `rawUnitIdPrinted=false`
+	- `tenantRawUnitDataPrinted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Decisao recomendada:
+	- `recommendedNextCandidate=planFictionalUserLogoutValidation`
+	- `secondaryCandidate=planBroaderPostLoginReadOnlyValidation`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalPlanningOnly=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotExecuteNpmTestNow=true`
+	- `doNotExecuteHttpNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `selectedTarget=recordSafeRetryReadOnlyExistingUsersInspectionGreenResult`
 	- `checkpointScope=documentalOnly`
 	- `previousSafeRetryAuthorizationCommit=66c7044`
