@@ -88004,6 +88004,105 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotExecuteLoginNow=true`
 	- `doNotExecuteHttpNow=true`
 	- `doNotUseMasterNow=true`
+
+## Microcorte: Autorizar validacao documental de logout do usuario ficticio
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `fd2302a` no inicio desta rodada;
+	- `testsAndHooksGate` permanece green apos `npm test` completo green ja registrado anteriormente;
+	- `rollbackAndAbortGate` permanece green apos consolidacao e classificacao do runbook;
+	- o planejamento de expansao de evidencia runtime foi publicado em `226e491`;
+	- o planejamento da validacao de logout ficticio foi publicado em `fd2302a`;
+	- o objetivo do logout permanece fechar o ciclo de sessao do usuario ficticio sem mutacao de dominio;
+	- este microcorte registra apenas a autorizacao futura e separada para executar essa validacao em runtime, sem executar nada agora.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar runtime;
+	- nao executar logout;
+	- nao executar login;
+	- nao executar `npm test`;
+	- nao executar `npm`;
+	- nao executar `node`;
+	- nao executar HTTP;
+	- nao executar `start:atlas`;
+	- nao conectar Mongo;
+	- nao fazer mutacao de dominio;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeFictionalUserLogoutValidation`
+	- `authorizationScope=documentalOnlyFutureExecution`
+	- `previousFictionalLogoutPlanningCommit=fd2302a`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `productionReady=false`
+	- `runtimeGreenEvidenceGateStatusBefore=partial`
+	- `fictionalUserLogoutValidationPlanned=true`
+	- `fictionalUserLogoutValidationAuthorized=true`
+	- `fictionalUserLogoutValidationAuthorizedForFutureOnly=true`
+	- `fictionalUserLogoutValidationExecutedNow=false`
+	- `logoutValidationPurpose=close-fictional-user-session-lifecycle-without-domain-mutation`
+	- `futureLogoutValidationMustRequireStartAtlasRunning=true`
+	- `futureLogoutValidationMustRequireFreshHealthGreen=true`
+	- `futureLogoutValidationMustUseFictionalUserOnly=true`
+	- `futureLogoutValidationMustUseFreshOrExistingWebSession=true`
+	- `futureLogoutValidationMustLoginBeforeLogoutIfNoSession=true`
+	- `futureLogoutValidationMustCallLogoutEndpointOnlyAfterSession=true`
+	- `futureLogoutValidationMustNotPrintCookie=true`
+	- `futureLogoutValidationMustNotPrintToken=true`
+	- `futureLogoutValidationMustNotPrintSession=true`
+	- `futureLogoutValidationMustNotPrintBody=true`
+	- `futureLogoutValidationMustReturnOnlySafeBooleans=true`
+	- `futureLogoutValidationExpectedResult=logout-status-2xx-or-3xx-and-session-cookie-cleared-or-redirect-shape-present`
+	- `futureLogoutValidationMustNotMutateDomainData=true`
+	- `futureLogoutValidationSessionStateMutationAllowed=true`
+	- `nextExecutionAuthorized=true`
+	- `selectedNextSafeCandidate=executeFictionalUserLogoutValidationInSeparateMicrocut`
+	- `selectedNextSafeCandidateReason=logout-validation-authorized-for-future-runtime-only-after-documental-planning`
+	- `recommendedNextCandidate=executeFictionalUserLogoutValidationInSeparateMicrocut`
+	- `secondaryCandidate=recordFictionalUserLogoutValidationResult`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `passwordHashPrinted=false`
+	- `rawUnitIdPrinted=false`
+	- `tenantRawUnitDataPrinted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalAuthorizationOnly=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotExecuteLogoutNow=true`
+	- `doNotExecuteLoginNow=true`
+	- `doNotExecuteHttpNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
