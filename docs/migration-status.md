@@ -88716,6 +88716,101 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotSendNewRequestNow=true`
 	- `doNotAskPasswordNow=true`
 	- `doNotUseMasterNow=true`
+
+## Microcorte: Fechar bloco de validacao de logout ficticio
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `c67bc76` no inicio desta rodada;
+	- o green do retry com a rota correta foi publicado em `c67bc76`;
+	- este microcorte encerra apenas o bloco documental da validacao de logout ficticio, sem executar runtime agora;
+	- o gate de `runtimeGreenEvidence` permanece sujeito a classificacao posterior;
+	- producao continua nao pronta.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so fechamento documental;
+	- nao executar runtime;
+	- nao executar logout;
+	- nao repetir health/login;
+	- nao pedir nem colar senha;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=closeFictionalUserLogoutValidationBlock`
+	- `closureScope=documentalOnlyNoRuntime`
+	- `previousLogoutGreenCommit=c67bc76`
+	- `localRemoteSyncedBeforeClosure=true`
+	- `productionReady=false`
+	- `fictionalUserLogoutValidationBlockClosed=true`
+	- `fictionalUserLogoutValidationBlockResult=green`
+	- `logoutValidationEvidenceHealthStatusCode=200`
+	- `logoutValidationEvidenceLoginStatusCode=303`
+	- `logoutValidationEvidenceLogoutStatusCode=200`
+	- `logoutValidationEvidenceMethod=GET`
+	- `logoutValidationEvidencePath=/gestor/logout`
+	- `logoutValidationEvidenceRouteCorrectedAfterStaticInspection=true`
+	- `previousLogoutWrongRouteRedRecorded=true`
+	- `previousLogoutWrongRoute=POST /gestor/logout`
+	- `correctLogoutRoute=GET /gestor/logout`
+	- `logoutValidationPasswordPrinted=false`
+	- `logoutValidationCookiePrinted=false`
+	- `logoutValidationTokenPrinted=false`
+	- `logoutValidationSessionPrinted=false`
+	- `logoutValidationBodyPrinted=false`
+	- `logoutValidationHeadersPrinted=false`
+	- `logoutValidationDomainMutationExecuted=false`
+	- `logoutValidationSessionStateMutationAllowed=true`
+	- `logoutValidationMasterUserUsed=false`
+	- `runtimeGreenEvidenceGateCanBeReclassifiedAfterLogoutGreen=true`
+	- `runtimeGreenEvidenceGateStatusAfterClosure=partial`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=classifyRuntimeGreenEvidenceGateAfterLogoutGreen`
+	- `selectedNextSafeCandidateReason=logout-validation-block-is-green-and-runtime-evidence-gate-can-now-be-reassessed-documentally`
+	- `recommendedNextCandidate=classifyRuntimeGreenEvidenceGateAfterLogoutGreen`
+	- `secondaryCandidate=classifyMutationSafetyGateAfterControlledFictionalMutation`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `passwordHashPrinted=false`
+	- `rawUnitIdPrinted=false`
+	- `tenantRawUnitDataPrinted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalClosureOnly=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotExecuteLogoutNow=true`
+	- `doNotRepeatHealthNow=true`
+	- `doNotRepeatLoginNow=true`
+	- `doNotAskPasswordNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
