@@ -1,3 +1,27 @@
+## Checkpoint documental curto do resultado green do redeploy pos-push do fix de /gestor/unidades.
+- selectedTarget=recordRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPush
+- baseAuthorizationCommit=385f1d6
+- redeployExecuted=true
+- redeployCommand=vercel --prod
+- redeployResult=green
+- redeployPromptInteractive=false
+- inspectUrl=https://vercel.com/wallison-deyvid-duraes-guimaraes-projects/wdgestor/9XvHU91o8jT3m8Xgz73xhf9RFAx4
+- productionUrl=https://wdgestor-mtlhwxxft-wallison-deyvid-duraes-guimaraes-projects.vercel.app
+- aliasUrl=https://wdgestor.vercel.app
+- warningBuildsProjectSettingsIgnored=true
+- workingTreeCleanAfterRedeploy=true
+- branchAheadAfterRedeploy=3
+- manualHttpExecuted=false
+- browserUsed=false
+- loginExecuted=false
+- onlineValidationExecuted=false
+- npmTestExecuted=false
+- manualNpmNodeExecuted=false
+- pushExecuted=false
+- sourceChanged=false
+- productionReady=false
+- recommendedNextCandidate=planOnlineValidationAfterPagesRouterRequireUnitScopeContextMismatchFixRedeploy
+
 ## Checkpoint documental curto da autorizacao futura e separada do redeploy pos-push do fix de /gestor/unidades.
 - selectedTarget=authorizeRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPush
 - baseRedeployPlanCommit=a2abced
