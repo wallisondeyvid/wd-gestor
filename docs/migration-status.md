@@ -1,3 +1,33 @@
+## Checkpoint documental curto da autorizacao futura e separada do npm test completo apos o fix de /gestor/unidades master/admin sem unidade, sem execucao de teste agora e sem alteracao de codigo.
+- selectedTarget=authorizeFullNpmTestAfterUnidadesMasterReadOnlyFix
+- checkpointScope=documentalAuthorizationOnlyFullNpmTest
+- authorizationScope=futureSeparateFullNpmTestOnly
+- basePlanCommit=bc76825
+- baseImplementationCommit=cf82ed6
+- baseTargetedValidationCommit=f420c4f
+- targetedValidationResult=green
+- targetedValidationTests=35
+- targetedValidationPass=35
+- fullNpmTestAuthorized=true
+- fullNpmTestExecutedNow=false
+- onlineValidationAuthorized=false
+- vercelAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecutedNow=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=executeFullNpmTestAfterUnidadesMasterReadOnlyFixInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do npm test completo apos o fix de /gestor/unidades master/admin sem unidade, sem execucao de teste agora e sem alteracao de codigo.
 - selectedTarget=planFullNpmTestAfterUnidadesMasterReadOnlyFix
 - checkpointScope=documentalOnlyFullNpmTestPlanning
