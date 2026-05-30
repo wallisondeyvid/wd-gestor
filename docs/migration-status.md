@@ -1,3 +1,18 @@
+## Checkpoint documental curto do planejamento do redeploy Vercel pos-push da correcao de unidades master, sem execucao operacional agora.
+- selectedTarget=planRedeployAfterUnidadesMasterReadOnlyFixPush
+- basePublishedCommit=4274354
+- postPushCheckpointCommit=b9a4c21
+- originHead=4274354
+- localHead=b9a4c21
+- branchAhead=1
+- workingTreeClean=true
+- redeployPlanned=true
+- redeployExecutedNow=false
+- vercelAuthorized=false
+- onlineValidationAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=authorizeRedeployAfterUnidadesMasterReadOnlyFixPush
+
 ## Checkpoint documental curto do pos-push do bloco green da correcao de unidades master, sem nova execucao operacional manual.
 - selectedTarget=recordPostPushUnidadesMasterReadOnlyFix
 - pushExecuted=true
