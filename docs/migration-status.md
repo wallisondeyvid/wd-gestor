@@ -1,3 +1,40 @@
+## Checkpoint documental curto do resultado green da validacao online publica/read-only pos-redeploy do fix de /gestor/unidades.
+- selectedTarget=recordOnlineValidationAfterPagesRouterRequireUnitScopeContextMismatchFixRedeploy
+- baseAuthorizationCommit=41febc5
+- onlineValidationExecuted=true
+- onlineValidationResult=green
+- rootStatusCode=200
+- rootContentType=text/html; charset=utf-8
+- rootHasLocationHeader=false
+- rootBodyLengthApprox=17438
+- rootPageShapePresent=true
+- healthStatusCode=200
+- healthContentType=application/json; charset=utf-8
+- healthHasLocationHeader=false
+- healthBodyLengthApprox=30
+- healthBodyShapePresent=true
+- loginStatusCode=200
+- loginContentType=text/html; charset=utf-8
+- loginHasLocationHeader=false
+- loginBodyLengthApprox=15913
+- loginPageShapePresent=true
+- fullBodyPrinted=false
+- fullHeadersPrinted=false
+- cookieTokenSessionSecretPrinted=false
+- browserUsed=false
+- loginExecuted=false
+- masterUsed=false
+- passwordUsed=false
+- postExecuted=false
+- mutationExecuted=false
+- gestorUnidadesAccessed=false
+- vercelExecuted=false
+- npmTestExecuted=false
+- pushExecuted=false
+- sourceChanged=false
+- productionReady=false
+- recommendedNextCandidate=planAuthenticatedUnidadesMasterOnlineValidationAfterPublicGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada da validacao online publica/read-only pos-redeploy do fix de /gestor/unidades.
 - selectedTarget=authorizeOnlineValidationAfterPagesRouterRequireUnitScopeContextMismatchFixRedeploy
 - baseOnlineValidationPlanCommit=9587574
