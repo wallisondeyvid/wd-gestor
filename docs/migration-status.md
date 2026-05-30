@@ -91633,6 +91633,101 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Registrar achado de master bloqueado em /gestor/unidades
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `7ce58f0` no inicio desta rodada;
+	- a revisao visual online controlada ja estava autorizada;
+	- durante a revisao online controlada, a rota `/gestor/unidades` retornou erro `UNIDADE_ID_REQUIRED` mesmo sob papel `master`;
+	- o achado bloqueia o fluxo de bootstrap e gestao global de unidades para perfis globais;
+	- este microcorte registra apenas documentalmente o achado, sem corrigir codigo, sem repetir navegacao e sem alterar `productionReady`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental do achado;
+	- nao corrigir codigo agora;
+	- nao repetir navegacao agora;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordOnlineNavigationFindingMasterBlockedOnUnidades`
+	- `checkpointScope=documentalOnlyAfterNavigationFinding`
+	- `previousOnlineNavigationAuthorizationCommit=7ce58f0`
+	- `onlineReviewUrl=https://wdgestor.vercel.app/gestor/unidades`
+	- `onlineNavigationFindingObserved=true`
+	- `findingRoute=/gestor/unidades`
+	- `findingStatusCode=400`
+	- `findingError=UNIDADE_ID_REQUIRED`
+	- `findingConsoleShape=failed-to-load-resource-status-400`
+	- `findingUserRole=master`
+	- `findingAlsoAffectsBootstrapFlow=true`
+	- `findingType=global-role-unit-scope-rule-mismatch`
+	- `findingSeverity=high`
+	- `masterRequiresUnit=false`
+	- `adminRequiresUnit=false`
+	- `directorRequiresUnit=true`
+	- `userRequiresUnit=true`
+	- `commonUserSelectsUnit=false`
+	- `unitIsIntrinsicToUser=true`
+	- `functionsDependOnUnit=true`
+	- `permissionsDependOnFunctions=true`
+	- `gestorUnidadesShouldAllowMasterWithoutUnit=true`
+	- `gestorUnidadesShouldAllowAdminWithoutUnit=true`
+	- `gestorUnidadesIsBootstrapAllowedRoute=true`
+	- `unitScopeRequiredShouldNotBlockMasterBootstrap=true`
+	- `directorWithoutUnitShouldNotLogin=true`
+	- `userWithoutUnitShouldNotLogin=true`
+	- `userVisibleProblem=json-error-displayed-instead-of-friendly-screen`
+	- `expectedBehaviorForMaster=access-unidades-and-create-first-unit`
+	- `expectedBehaviorForAdmin=access-unidades-without-linked-unit`
+	- `expectedBehaviorForDirector=requires-linked-directed-unit`
+	- `expectedBehaviorForUser=requires-linked-unit`
+	- `suspectedCause=unit-scope-guard-applied-before-or-without-global-role-exception`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=planStaticInspectionOfGestorUnidadesUnitScopeGuard`
+	- `selectedNextSafeCandidateReason=must-locate-where-UNIDADE_ID_REQUIRED-is-thrown-and-add-safe-master-admin-bootstrap-exception`
+	- `recommendedNextCandidate=planStaticInspectionOfGestorUnidadesUnitScopeGuard`
+	- `secondaryCandidate=inspectGestorUnidadesRouteAndRequireUnitScope`
+	- `tertiaryCandidate=keepProductionReadyFalseAndMasterProtected`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `commercialProductionReady=false`
+	- `paidClientProduction=false`
+	- `realPayingClients=false`
+	- `productStillUnderConstruction=true`
+	- `masterUserUsedForMutation=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `vercelDeployCompletedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `masterBlockedOnUnidadesFindingIsDocumentalOnly=true`
+	- `doNotFixCodeNow=true`
+	- `doNotRepeatNavigationNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotPushNow=true`
+
 
 
 
