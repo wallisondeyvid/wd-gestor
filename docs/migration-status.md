@@ -1,3 +1,19 @@
+## Checkpoint documental curto da autorizacao futura e separada do npm test completo apos o fix de /gestor/unidades.
+- selectedTarget=authorizeFullNpmTestForPagesRouterRequireUnitScopeContextMismatchFix
+- baseFullNpmTestPlanCommit=2a83ca0
+- baseImplementationCommit=11527e8
+- baseTargetedValidationCommit=7d6e375
+- targetedValidationResult=green
+- targetedValidationTests=40
+- targetedValidationPass=40
+- fullNpmTestAuthorized=true
+- fullNpmTestExecutedNow=false
+- onlineValidationAuthorized=false
+- vercelAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=executeFullNpmTestForPagesRouterRequireUnitScopeContextMismatchFixInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do npm test completo apos o fix de /gestor/unidades.
 - selectedTarget=planFullNpmTestForPagesRouterRequireUnitScopeContextMismatchFix
 - baseImplementationCommit=11527e8
