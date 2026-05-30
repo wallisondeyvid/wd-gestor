@@ -1,3 +1,19 @@
+## Checkpoint documental curto do planejamento da validacao online autenticada de /gestor/unidades com master apos o green publico, sem execucao agora.
+- selectedTarget=planAuthenticatedUnidadesMasterOnlineValidationAfterPublicGreen
+- basePublicOnlineValidationRecordCommit=88ba141
+- aliasTarget=https://wdgestor.vercel.app
+- authenticatedUnidadesValidationPlanned=true
+- authenticatedUnidadesValidationExecutedNow=false
+- masterLoginPlannedSeparately=true
+- masterLoginAuthorizedNow=false
+- gestorUnidadesAccessAuthorizedNow=false
+- passwordSecretPrintingForbidden=true
+- cookieTokenSessionSecretPrintingForbidden=true
+- fullBodyHeadersPrintingForbidden=true
+- mutationAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=authorizeAuthenticatedUnidadesMasterOnlineValidationAfterPublicGreen
+
 ## Checkpoint documental curto do resultado green da validacao online publica/read-only pos-redeploy da correcao de unidades master.
 - selectedTarget=recordOnlineValidationAfterUnidadesMasterReadOnlyFixRedeploy
 - baseAuthorizationCommit=7cb2163
