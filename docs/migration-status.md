@@ -1,3 +1,17 @@
+## Checkpoint documental curto do planejamento da proxima etapa de prontidao apos o green autenticado de /gestor/unidades.
+- selectedTarget=planNextProductionReadinessStepAfterAuthenticatedUnidadesGreen
+- basePostPushCheckpointCommit=fe5d801
+- authenticatedUnidadesValidationResult=green
+- previous400JsonReproduced=false
+- localHead=fe5d801
+- originHead=8d37e22
+- branchAhead=1
+- workingTreeClean=true
+- productionReady=false
+- productionReadinessDecisionMade=false
+- possibleNextOptions=publishLocalCheckpoint, planAdditionalOperationalValidation, consolidateReadinessHandoff, pauseOperationalWork
+- recommendedNextCandidate=authorizePushPostPushCheckpointOrPlanReadinessHandoff
+
 ## Checkpoint documental curto do pos-push dos registros documentais apos o green autenticado de /gestor/unidades.
 - selectedTarget=recordPostPushAuthenticatedUnidadesMasterGreen
 - pushExecuted=true
