@@ -91873,6 +91873,89 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotPushNow=true`
 	- `keepProductionReadyFalseNow=true`
 
+## Microcorte: Inspecionar candidatos do travamento do npm test completo
+
+- Contexto executivo desta rodada:
+	- a inspecao desta rodada foi estatica e limitada a buscas filtradas e leitura curta dos testes relacionados a `requireUnitScope`, `blocos`, `comunicados` e `restricoes`;
+	- a leitura confirmou que a ultima area visivel do log converge para arquivos runtime-contract com `createServer`, `request.agent`, supressao de teardown via `process.emit`/`prependListener` e, em alguns casos, `registerHooks` globais;
+	- nao foi encontrado, nesta rodada, um `server.listen` sem `close` nem um `mongoose.connect` sem caminho visivel de cleanup dentro dos arquivos inspecionados;
+	- o risco mais plausivel permaneceu concentrado em teardown incompleto, estado global persistente entre arquivos ou handle residual associado a server/session/error-handlers em testes runtime mais complexos.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e somente inspecao documental estatica;
+	- `npm test` completo nao foi repetido;
+	- nao houve execucao manual de `npm`, `node`, runtime, HTTP ou navegador;
+	- nao fazer push;
+	- manter `productionReady=false`.
+- Gates:
+	- `selectedTarget=inspectNpmTestHangCandidatesDocumentally`
+	- `inspectionScope=staticOnlyNoTestExecution`
+	- `previousInvestigationPlanCommit=037f29e`
+	- `localAheadBeforeInspection=3`
+	- `workingTreeCleanBeforeInspection=true`
+	- `pushStillBlocked=true`
+	- `npmTestRepeatedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `fullNpmTestExecutedNow=false`
+	- `runtimeExecutedNow=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `packageJsonChanged=false`
+	- `productionReady=false`
+	- `inspectedAreas=requireUnitScope,blocos,comunicados,restricoes`
+	- `candidateFilesInspected=tests/condominios-comunicados-restricoes-runtime-contract.test.js,tests/condominios-blocos-get-runtime-contract.test.js,tests/condominios.blocos.microcut.test.js,tests/condominios-blocos-put-global-scope-runtime-contract.test.js,tests/condominios-blocos-delete-global-scope-runtime-contract.test.js,tests/condominios.requireUnitScope.test.js`
+	- `highRiskHangCandidates=none-confirmed-statically`
+	- `mediumRiskHangCandidates=tests/condominios-comunicados-restricoes-runtime-contract.test.js,tests/condominios-blocos-get-runtime-contract.test.js,tests/condominios.blocos.microcut.test.js`
+	- `lowRiskHangCandidates=tests/condominios-blocos-put-global-scope-runtime-contract.test.js,tests/condominios-blocos-delete-global-scope-runtime-contract.test.js,tests/condominios.requireUnitScope.test.js`
+	- `suspectedHangClass=teardown-incompleto-ou-estado-global-persistente-em-runtime-contracts`
+	- `nextExecutionAuthorized=false`
+	- `recommendedNextCandidate=planTargetedTestExecutionForRuntimeContractsWithCreateServerAndSessionAgent`
+	- `pushExecuted=false`
+- Classificacao documental desta rodada:
+	- `tests/condominios-comunicados-restricoes-runtime-contract.test.js`:
+		- padroes encontrados: `createServer`, `request.agent`, `deferErrorHandlers`, `session.save`, patch global de `process.emit`, listeners globais de `unhandledRejection`/`uncaughtException`, teardown centralizado e creates offline por teste;
+		- risco de hang: medio;
+		- motivo: combinacao de server offline, session agent e manipulação global de erro aumenta a chance de teardown residual, embora haja `close({ stopMemoryServer: true })` visivel;
+		- precisa de execucao direcionada depois: sim;
+		- sugestao de proximo microcorte: planejar execucao direcionada isolando este arquivo com foco em handles de sessao/error-handlers.
+	- `tests/condominios-blocos-get-runtime-contract.test.js`:
+		- padroes encontrados: `createServer`, `request.agent`, patch global de `process.emit`, listeners globais e teardown compartilhado via `runtimeContextPromise`;
+		- risco de hang: medio;
+		- motivo: suite runtime com estado compartilhado e teardown global pode deixar handle residual se alguma ramificacao falhar antes do fechamento final;
+		- precisa de execucao direcionada depois: sim;
+		- sugestao de proximo microcorte: planejar execucao direcionada do arquivo com observacao de handles ao final.
+	- `tests/condominios.blocos.microcut.test.js`:
+		- padroes encontrados: `registerHooks` global de `node:module`, `createServer({ skipDb: true })` repetido, patch global de `process.emit` e listeners globais;
+		- risco de hang: medio;
+		- motivo: `registerHooks` permanece process-wide e nao ha reversao explicita do hook, o que pode sustentar estado global entre arquivos, mesmo sem listener de rede visivel;
+		- precisa de execucao direcionada depois: sim;
+		- sugestao de proximo microcorte: inspecionar especificamente efeitos residuais de `registerHooks` entre arquivos consecutivos.
+	- `tests/condominios-blocos-put-global-scope-runtime-contract.test.js`:
+		- padroes encontrados: `registerHooks` global e cleanup apenas do estado em `globalThis`;
+		- risco de hang: baixo;
+		- motivo: nao ha `createServer`, timer, sessao ou conexao visivel no arquivo, embora o hook global mereca atencao por poluicao de estado;
+		- precisa de execucao direcionada depois: nao;
+		- sugestao de proximo microcorte: manter apenas como candidato secundario de estado global.
+	- `tests/condominios-blocos-delete-global-scope-runtime-contract.test.js`:
+		- padroes encontrados: `registerHooks` global e cleanup apenas do estado em `globalThis`;
+		- risco de hang: baixo;
+		- motivo: mesmo perfil enxuto do arquivo de PUT, sem server, timer ou conexao visivel;
+		- precisa de execucao direcionada depois: nao;
+		- sugestao de proximo microcorte: manter apenas como candidato secundario de estado global.
+	- `tests/condominios.requireUnitScope.test.js`:
+		- padroes encontrados: `createServer({ skipDb: true })` por teste, teardown em `finally`, patch global de `process.emit` e listeners removidos por teste;
+		- risco de hang: baixo;
+		- motivo: o cleanup esta visivel e simetrico em cada teste, sem `request.agent` persistente nem `registerHooks` global;
+		- precisa de execucao direcionada depois: nao;
+		- sugestao de proximo microcorte: usar apenas como referencia de teardown simetrico.
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `inspectionWasStaticOnly=true`
+	- `fullNpmTestNotRepeated=true`
+	- `noManualNpmOrNodeExecution=true`
+	- `doNotPushNow=true`
+	- `keepProductionReadyFalseNow=true`
+
 
 
 
