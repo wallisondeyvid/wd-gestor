@@ -1,3 +1,16 @@
+## Checkpoint documental curto da autorizacao futura e separada da validacao direcionada do fix de /gestor/unidades.
+- selectedTarget=authorizeTargetedValidationForPagesRouterRequireUnitScopeContextMismatchFix
+- baseImplementationCommit=11527e8
+- basePlanningCommit=f42af0c
+- targetedValidationAuthorized=true
+- targetedValidationExecutedNow=false
+- npmTestFullAuthorized=false
+- onlineValidationAuthorized=false
+- vercelAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=executeTargetedValidationForPagesRouterRequireUnitScopeContextMismatchFixInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da validacao direcionada apos a implementacao minima do fix de /gestor/unidades.
 - selectedTarget=planTargetedValidationForPagesRouterRequireUnitScopeContextMismatchFix
 - implementationCommit=11527e8
