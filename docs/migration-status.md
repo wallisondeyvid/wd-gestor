@@ -1,3 +1,21 @@
+## Checkpoint documental curto da autorizacao futura e separada do push do bloco green do fix de /gestor/unidades.
+- selectedTarget=authorizePushAfterPagesRouterRequireUnitScopeContextMismatchFixGreen
+- basePushPlanCommit=aea8d11
+- baseImplementationCommit=11527e8
+- baseTargetedValidationCommit=7d6e375
+- baseFullNpmTestRecordCommit=3bab8b7
+- branchAhead=22
+- workingTreeClean=true
+- pushAuthorized=true
+- pushExecutedNow=false
+- npmTestFullGreen=true
+- npmTestFullTests=2385
+- npmTestFullPass=2383
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- productionReady=false
+- recommendedNextCandidate=executePushAfterPagesRouterRequireUnitScopeContextMismatchFixGreenInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do push do bloco green do fix de /gestor/unidades.
 - selectedTarget=planPushAfterPagesRouterRequireUnitScopeContextMismatchFixGreen
 - baseImplementationCommit=11527e8
