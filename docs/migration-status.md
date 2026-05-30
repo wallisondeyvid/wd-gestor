@@ -1,3 +1,46 @@
+## Checkpoint documental curto da inspecao e correcao da falha estrutural unica apos o npm test completo red da normalizacao master/admin em /gestor/unidades, com patch minimo e teste direcionado, sem npm test completo, sem mutacao real e sem push.
+- selectedTarget=inspectFreshFullNpmTestAfterMasterAdminRoleShapeNormalizationPatchFailure
+- checkpointScope=smallFailureFixAfterFullNpmTestRed
+- previousFullNpmTestResultCommit=afb71cd
+- localAheadBeforeFix=13
+- workingTreeCleanBeforeFix=true
+- freshFullNpmTestPreviousResult=red
+- freshFullNpmTestPreviousFailCount=1
+- failingTestFile=tests/gestor-modulos-list-owner-structural-seam.test.js
+- failingError=ReferenceError-isPrivilegedGestorUser-is-not-defined
+- suspectedCause=structural-seam-reference-not-aligned-with-privileged-helper-after-normalization
+- correctionImplementedNow=true
+- correctionScope=test-structural-seam-aligned-with-pagesController-helper-dependencies
+- packageJsonChanged=false
+- sourceChanged=false
+- testsChanged=true
+- targetedTestsExecuted=true
+- targetedTestsCommand=node --test tests/gestor-modulos-list-owner-structural-seam.test.js
+- targetedTestsResult=green
+- targetedTestsExitCode=0
+- targetedTestsSummaryObserved=true
+- npmTestFullExecutedNow=false
+- npmTestFullRequiredLater=true
+- productionReady=false
+- productionReadySetNow=false
+- masterUserUsed=false
+- masterUserProtected=true
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- logoutExecutedNow=false
+- vercelExecutedNow=false
+- realMongoConnectionAttempted=false
+- realMongoConnected=false
+- dataMutationExecuted=false
+- domainMutationExecuted=false
+- seedExecuted=false
+- masterScriptsExecuted=false
+- cleanupWrongEmailExecuted=false
+- pushExecuted=false
+- nextExecutionAuthorized=false
+- recommendedNextCandidate=planFreshNpmTestAfterFixingRoleNormalizationStructuralFailure
+
 ## Checkpoint documental curto do registro do npm test completo fresco apos o patch de normalizacao master/admin em /gestor/unidades, executado exatamente uma vez neste microcorte, sem comandos npm adicionais, sem node manual fora do npm test, sem alteracao de codigo e sem push.
 - selectedTarget=recordFreshFullNpmTestAfterMasterAdminRoleShapeNormalizationPatchResult
 - checkpointScope=documentalOnlyAfterFreshFullNpmTestExecution

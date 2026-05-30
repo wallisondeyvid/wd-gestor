@@ -6,9 +6,11 @@ import vm from 'node:vm';
 
 const CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/moduloApiController.js');
 const PAGES_CONTROLLER_PATH = path.join(process.cwd(), 'src/modules/gestor/app/controllers/views/pagesController.js');
+const REQUIRE_UNIT_SCOPE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/middlewares/requireUnitScope.js');
 const SERVICE_PATH = path.join(process.cwd(), 'src/modules/gestor/app/services/modulos/listModulosOwner.service.js');
 const CONTROLLER_SOURCE = fs.readFileSync(CONTROLLER_PATH, 'utf8');
 const PAGES_CONTROLLER_SOURCE = fs.readFileSync(PAGES_CONTROLLER_PATH, 'utf8');
+const REQUIRE_UNIT_SCOPE_SOURCE = fs.readFileSync(REQUIRE_UNIT_SCOPE_PATH, 'utf8');
 const SERVICE_SOURCE = fs.readFileSync(SERVICE_PATH, 'utf8');
 
 function extractFunction(source, signature) {
@@ -201,9 +203,25 @@ test('listModulosOwnerService nao aceita unidade legada concorrente quando o aut
 
 test('paginaModulos delega ao owner service e preserva a borda HTML atual para usuario privilegiado', async () => {
   const calls = [];
+  const normalizePageRole = buildFunction(PAGES_CONTROLLER_SOURCE, 'function normalizeRole', {});
+  const isMasterLike = buildFunction(PAGES_CONTROLLER_SOURCE, 'function isMasterLike', {
+    normalizeRole: normalizePageRole,
+  });
+  const normalizeScopeRole = buildFunction(REQUIRE_UNIT_SCOPE_SOURCE, 'function normalizeRole', {});
+  const isPrivilegedRole = buildFunction(REQUIRE_UNIT_SCOPE_SOURCE, 'function isPrivilegedRole', {
+    normalizeRole: normalizeScopeRole,
+  });
+  const isPrivilegedGestorContext = buildFunction(REQUIRE_UNIT_SCOPE_SOURCE, 'export function isPrivilegedGestorContext', {
+    isPrivilegedRole,
+  });
+  const isPrivilegedGestorUser = buildFunction(PAGES_CONTROLLER_SOURCE, 'function isPrivilegedGestorUser', {
+    isPrivilegedGestorContext,
+  });
   const paginaModulos = buildFunction(PAGES_CONTROLLER_SOURCE, 'export async function paginaModulos', {
     isDbOff: () => false,
     stubCtx: () => ({ modulos: [] }),
+    isMasterLike,
+    isPrivilegedGestorUser,
     listModulosOwnerService: async (input) => {
       calls.push(input);
       return { kind: 'ok', modulos: [{ _id: 'm-html-1', nome: 'HTML Gestor' }] };
