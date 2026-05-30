@@ -89742,6 +89742,102 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `nextExecutionAuthorized=false`
 	- `pushExecuted=false`
 
+## Microcorte: Classificar gate de mutacoes ficticias controladas
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `ba76e38` no inicio desta rodada;
+	- o `runtimeGreenEvidenceGate` foi classificado como green em `ba76e38`;
+	- as mutacoes reais controladas previamente aceitas permaneceram restritas ao usuario ficticio `teste.login@example.com` e a rotacao/reset de senha ficticia;
+	- nao houve mutacao de dominio real, uso de master, seed, `cleanupWrongEmail` ou impressao de segredos;
+	- este microcorte reclassifica apenas o `mutationSafetyGate`, sem executar runtime ou nova mutacao agora;
+	- producao continua nao pronta porque ainda restam gates bloqueantes.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so classificacao documental;
+	- nao executar runtime;
+	- nao executar logout;
+	- nao repetir health/login;
+	- nao fazer nova mutacao;
+	- nao pedir nem colar senha;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=classifyMutationSafetyGateAfterControlledFictionalMutation`
+	- `classificationScope=documentalOnlyNoRuntime`
+	- `previousRuntimeEvidenceGateGreenCommit=ba76e38`
+	- `localRemoteSyncedBeforeClassification=true`
+	- `productionReady=false`
+	- `mutationSafetyGateStatusBefore=partial`
+	- `controlledFictionalUserCreationGreen=true`
+	- `controlledFictionalPasswordRotationGreen=true`
+	- `postRotationLoginGreen=true`
+	- `logoutValidationGreen=true`
+	- `domainMutationExecuted=false`
+	- `realDomainDataMutationExecuted=false`
+	- `fictionalUserMutationExecuted=true`
+	- `fictionalPasswordMutationExecuted=true`
+	- `mutationScopeLimitedToFictionalUser=true`
+	- `mutationScopeLimitedToExampleDomain=true`
+	- `mutationTargetEmail=teste.login@example.com`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `secretsPrinted=false`
+	- `passwordHashPrinted=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `rawUnitIdPrinted=false`
+	- `tenantRawUnitDataPrinted=false`
+	- `mutationSafetyGateClassificationPerformed=true`
+	- `mutationSafetyGateStatusAfter=green`
+	- `mutationSafetyGateBlockingItemResolved=true`
+	- `mutationSafetyGateGreenReason=controlled-mutations-were-limited-to-fictional-user-and-fictional-password-rotation-with-master-protected-no-domain-mutation-no-seed-no-cleanup-and-sanitized-outputs`
+	- `remainingBlockingGatesAfterMutationSafety=secretsAndLogsGate,realMongoAtlasGate,productionDecisionGate`
+	- `highestPriorityBlockingItemAfterMutationSafety=secretsAndLogsGate`
+	- `secondPriorityBlockingItemAfterMutationSafety=realMongoAtlasGate`
+	- `thirdPriorityBlockingItemAfterMutationSafety=productionDecisionGate`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=classifySecretsAndLogsGateAfterSanitizedRuntimeEvidence`
+	- `selectedNextSafeCandidateReason=mutation-safety-gate-is-green-so-next-blocking-area-is-secrets-and-logs-sanitization`
+	- `recommendedNextCandidate=classifySecretsAndLogsGateAfterSanitizedRuntimeEvidence`
+	- `secondaryCandidate=classifyRealMongoAtlasGateAfterControlledRuntimeEvidence`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `seedExecutedNow=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalClassificationOnly=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotExecuteLogoutNow=true`
+	- `doNotRepeatHealthNow=true`
+	- `doNotRepeatLoginNow=true`
+	- `doNotExecuteNewMutationNow=true`
+	- `doNotAskPasswordNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
+
 
 
 
