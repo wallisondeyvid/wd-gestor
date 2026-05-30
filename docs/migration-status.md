@@ -1,3 +1,19 @@
+## Checkpoint documental curto da autorizacao futura e separada do redeploy Vercel pos-push da correcao de unidades master, sem execucao operacional agora.
+- selectedTarget=authorizeRedeployAfterUnidadesMasterReadOnlyFixPush
+- basePublishedCommit=4274354
+- baseRedeployPlanCommit=39d93ae
+- originHead=4274354
+- localHead=39d93ae
+- branchAhead=2
+- workingTreeClean=true
+- redeployAuthorized=true
+- redeployExecutedNow=false
+- vercelCommandPlanned=vercel --prod
+- onlineValidationAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=executeRedeployAfterUnidadesMasterReadOnlyFixPushInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do redeploy Vercel pos-push da correcao de unidades master, sem execucao operacional agora.
 - selectedTarget=planRedeployAfterUnidadesMasterReadOnlyFixPush
 - basePublishedCommit=4274354
