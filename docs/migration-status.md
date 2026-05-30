@@ -1,3 +1,17 @@
+## Checkpoint documental curto do planejamento de publicacao do checkpoint final local de /gestor/unidades.
+- selectedTarget=planNextReadinessHandoffAfterUnidadesGreenCyclePublished
+- baseFinalPostPushCheckpointCommit=907abaf
+- originHead=88715df
+- localHead=907abaf
+- branchAhead=1
+- workingTreeClean=true
+- authenticatedUnidadesGreenCycleStatus=closedAndPublished
+- finalPostPushCheckpointLocalOnly=true
+- publishFinalCheckpointPlanned=true
+- pushExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=authorizePushFinalPostPushUnidadesGreenCheckpoint
+
 ## Checkpoint documental curto do pos-push final do ciclo green de /gestor/unidades.
 - selectedTarget=recordPostPushFinalUnidadesGreenCycle
 - pushExecuted=true
