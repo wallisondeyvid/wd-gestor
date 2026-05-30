@@ -1,3 +1,17 @@
+## Checkpoint documental curto do planejamento da inspecao estatica do 400 JSON autenticado em /gestor/unidades.
+- selectedTarget=planStaticInspectionAuthenticatedUnidadesOnline400Json
+- baseRedRecordCommit=7e6fea6
+- authenticatedOnlineResult=red
+- loginSucceeded=true
+- unidadesStatusCode=400
+- unidadesContentType=application/json
+- unidadeIdRequiredTextConfirmed=false
+- staticInspectionPlanned=true
+- staticInspectionExecutedNow=false
+- codeFixAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=inspectAuthenticatedUnidadesOnline400JsonStaticOnly
+
 ## Checkpoint documental curto do resultado red da validacao online autenticada de /gestor/unidades com master.
 - selectedTarget=recordAuthenticatedUnidadesMasterOnlineValidationRed
 - baseAuthorizationCommit=d88d7e4
