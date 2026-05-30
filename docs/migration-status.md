@@ -1,3 +1,18 @@
+## Checkpoint documental curto do planejamento da validacao direcionada apos a implementacao minima do fix de /gestor/unidades.
+- selectedTarget=planTargetedValidationForPagesRouterRequireUnitScopeContextMismatchFix
+- implementationCommit=11527e8
+- implementationResult=completed
+- changedFiles=src/modules/gestor/app/routes/pagesRouter.js, tests/gestor-unidades-unit-scope-canonical.test.js
+- requireUnitScopeChanged=false
+- targetedValidationAlreadyExecuted=true
+- targetedValidationCommand=node --test tests/gestor-unidades-unit-scope-canonical.test.js
+- targetedValidationResult=green
+- targetedValidationTests=13
+- targetedValidationPass=13
+- targetedValidationFail=0
+- productionReady=false
+- recommendedNextCandidate=authorizeTargetedValidationForPagesRouterRequireUnitScopeContextMismatchFix
+
 ## Checkpoint documental curto da autorizacao futura e separada da correcao minima para o 400 JSON autenticado em /gestor/unidades.
 - selectedTarget=authorizeMinimalFixForPagesRouterRequireUnitScopeContextMismatch
 - baseFixPlanCommit=d30be22
