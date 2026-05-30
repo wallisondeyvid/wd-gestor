@@ -1,3 +1,18 @@
+## Checkpoint documental curto da autorizacao futura e separada do push dos checkpoints locais apos o green autenticado de /gestor/unidades.
+- selectedTarget=authorizePushAfterAuthenticatedUnidadesMasterGreen
+- basePostGreenPlanCommit=ad9df34
+- baseAuthenticatedGreenRecordCommit=2e224a9
+- authenticatedUnidadesValidationResult=green
+- previous400JsonReproduced=false
+- localHead=ad9df34
+- originHead=2162608
+- branchAhead=11
+- workingTreeClean=true
+- pushAuthorized=true
+- pushExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=executePushAfterAuthenticatedUnidadesMasterGreenInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da decisao pos-green autenticado de /gestor/unidades.
 - selectedTarget=planPostAuthenticatedUnidadesGreenPublicationOrPushDecision
 - baseAuthenticatedGreenRecordCommit=2e224a9
