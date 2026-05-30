@@ -1,3 +1,18 @@
+## Checkpoint documental curto da autorizacao futura e separada para o push final dos checkpoints locais de /gestor/unidades.
+- selectedTarget=authorizePushFinalPostPushUnidadesGreenCheckpoint
+- baseFinalPostPushCheckpointCommit=907abaf
+- baseFinalCheckpointPushPlanCommit=f4560f6
+- originHead=88715df
+- localHead=f4560f6
+- branchAhead=2
+- workingTreeClean=true
+- pushAuthorized=true
+- pushExecutedNow=false
+- authenticatedUnidadesGreenCycleStatus=closedAndPublished
+- previous400JsonReproduced=false
+- productionReady=false
+- recommendedNextCandidate=executePushFinalPostPushUnidadesGreenCheckpointInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento de publicacao do checkpoint final local de /gestor/unidades.
 - selectedTarget=planNextReadinessHandoffAfterUnidadesGreenCyclePublished
 - baseFinalPostPushCheckpointCommit=907abaf
