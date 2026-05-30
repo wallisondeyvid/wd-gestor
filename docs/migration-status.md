@@ -1,3 +1,40 @@
+## Checkpoint documental curto do resultado green do redeploy Vercel apos a normalizacao master/admin em /gestor/unidades, registrado antes de qualquer validacao online, sem nova execucao de vercel e sem alteracao de codigo.
+- selectedTarget=recordVercelRedeployResultBeforeOnlineValidation
+- checkpointScope=documentalOnlyAfterVercelRedeployBeforeOnlineValidation
+- previousRedeployAuthorizationCommit=9fa2c80
+- previousRedeployPlanningCommit=38bf4a8
+- localAheadBeforeRecord=3
+- workingTreeCleanBeforeRecord=true
+- originHeadBeforeRecord=ea086d0
+- localHeadBeforeRecord=9fa2c80
+- vercelRedeployExecuted=true
+- vercelRedeployCommand=vercel --prod
+- vercelRedeployResult=green
+- vercelPromptInteractive=false
+- vercelInspectUrl=https://vercel.com/wallison-deyvid-duraes-guimaraes-projects/wdgestor/CU4aWfLJQmDfNZiwrJYUfoAUZutf
+- vercelProductionUrl=https://wdgestor-ks3toxofp-wallison-deyvid-duraes-guimaraes-projects.vercel.app
+- vercelAliasUrl=https://wdgestor.vercel.app
+- vercelBuildsConfigWarningObserved=true
+- vercelBuildsConfigWarningShape=builds-config-present-project-settings-not-applied
+- gitStatusCleanAfterRedeploy=true
+- branchAheadAfterRedeploy=3
+- productionReady=false
+- productionReadySetNow=false
+- vercelExecutedNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- logoutExecutedNow=false
+- onlineValidationExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- packageJsonChanged=false
+- sourceChanged=false
+- testsChanged=false
+- recommendedNextCandidate=planOnlineValidationAfterVercelRedeployMasterAdminNormalization
+
 ## Checkpoint documental curto da autorizacao futura e separada do redeploy Vercel prod apos a normalizacao master/admin em /gestor/unidades, sem execucao de vercel agora, sem redeploy agora, sem validacao online agora e sem alteracao de codigo.
 - selectedTarget=authorizeVercelRedeployAfterMasterAdminRoleNormalizationPatch
 - checkpointScope=documentalAuthorizationOnlyNoRedeployExecution
