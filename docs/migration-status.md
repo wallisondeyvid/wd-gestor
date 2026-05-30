@@ -90373,6 +90373,90 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Manter decisao de producao em not-ready ate aprovacao humana
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `59648db` no inicio desta rodada;
+	- todos os gates tecnicos permanecem green;
+	- o checklist final de aprovacao de producao ja foi preparado, mas ainda depende de aprovacoes explicitas;
+	- este microcorte registra documentalmente que a decisao de producao permanece `not-ready`;
+	- `productionReady` deve continuar falso.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao executar runtime;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=keepProductionDecisionNotReadyUntilHumanApproval`
+	- `decisionScope=documentalOnlyNoRuntime`
+	- `previousFinalProductionDecisionApprovalChecklistCommit=59648db`
+	- `localRemoteSyncedBeforeDecisionRecord=true`
+	- `allTechnicalGatesGreenBeforeDecision=true`
+	- `finalProductionDecisionApprovalChecklistPrepared=true`
+	- `productionDecisionGateStatusBefore=not-ready`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `productionDecisionKeptNotReady=true`
+	- `productionDecisionGateStatusAfter=not-ready`
+	- `productionDecisionGateStillBlocking=true`
+	- `productionNotReadyReason=explicit-human-business-operational-approval-still-required`
+	- `productionReadyCannotBeInferredFromTechnicalGates=true`
+	- `productionReadyRequiresExplicitHumanApproval=true`
+	- `productionReadyRequiresBusinessApproval=true`
+	- `productionReadyRequiresOperationalApproval=true`
+	- `productionReadyRequiresBackupConfirmation=true`
+	- `productionReadyRequiresRollbackConfirmation=true`
+	- `productionReadyRequiresEnvironmentVariablesReview=true`
+	- `productionReadyRequiresDomainDeploymentReview=true`
+	- `productionReadyRequiresPilotClientScopeConfirmation=true`
+	- `productionReadyRequiresMonitoringPlanConfirmation=true`
+	- `productionReadyRequiresSupportPlanConfirmation=true`
+	- `productionReadyRequiresMasterUserProtectionConfirmation=true`
+	- `productionReadyRequiresNoSecretsInLogsConfirmation=true`
+	- `productionReadyRequiresFinalGitCleanSyncedConfirmation=true`
+	- `productionReadyRequiresNoPendingLedgerContradiction=true`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=preparePilotOperationalHandoffWithoutProductionFlag`
+	- `selectedNextSafeCandidateReason=production-decision-remains-not-ready-but-pilot-handoff-can-be-documented-without-productionReady`
+	- `recommendedNextCandidate=preparePilotOperationalHandoffWithoutProductionFlag`
+	- `secondaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `tertiaryCandidate=awaitExplicitHumanProductionApproval`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
