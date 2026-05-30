@@ -1,3 +1,23 @@
+## Checkpoint documental curto da correção do comando combinado canônico dos testes direcionados consolidado nesta rodada, sem execução de teste, sem execução de node, sem execução de npm, sem alteração de package.json, sem alteração de src, sem alteração de tests e sem push.
+- previousCombinedTargetedCommandHadPathAmbiguity=true
+- previousCombinedTargetedCommand=node --test condominios-comunicados-restricoes-runtime-contract.test.js condominios-blocos-get-runtime-contract.test.js tests/condominios.blocos.microcut.test.js
+- canonicalCombinedTargetedCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js tests/condominios-blocos-get-runtime-contract.test.js tests/condominios.blocos.microcut.test.js
+- canonicalCombinedTargetedCommandUsesTestsPrefixForAllFiles=true
+- firstCombinedFileExists=true
+- secondCombinedFileExists=true
+- thirdCombinedFileExists=true
+- bareFirstCombinedFileExists=false
+- bareSecondCombinedFileExists=false
+- canonicalCommandCorrectionRequired=true
+- canonicalCommandCorrectionRecorded=true
+- combinedTargetedExecutionExecutedNow=false
+- targetedTestExecutedNow=false
+- fullNpmTestExecutedNow=false
+- nodeExecutedNow=false
+- npmRunExecutedNow=false
+- pushExecuted=false
+- productionReady=false
+
 ## Checkpoint Global
 Status: TRILHA ATIVA PAUSADA
 Escopo: WD Gestor inteiro
