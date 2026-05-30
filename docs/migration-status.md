@@ -1,3 +1,47 @@
+## Checkpoint documental curto da autorizacao futura e separada do redeploy Vercel prod apos a normalizacao master/admin em /gestor/unidades, sem execucao de vercel agora, sem redeploy agora, sem validacao online agora e sem alteracao de codigo.
+- selectedTarget=authorizeVercelRedeployAfterMasterAdminRoleNormalizationPatch
+- checkpointScope=documentalAuthorizationOnlyNoRedeployExecution
+- publishedFunctionalBaseCommit=ea086d0
+- previousRedeployPlanningCommit=38bf4a8
+- localAheadBeforeAuthorization=2
+- workingTreeCleanBeforeAuthorization=true
+- masterAdminRoleNormalizationPublished=true
+- publishedRange=f03d6c1..ea086d0
+- freshFullNpmTestPublishedGreen=true
+- freshFullNpmTestCommand=npm test
+- freshFullNpmTestExitCode=0
+- freshFullNpmTestTests=2378
+- freshFullNpmTestPass=2376
+- freshFullNpmTestFail=0
+- freshFullNpmTestSkipped=2
+- freshFullNpmTestDurationApprox=238.85s
+- vercelRedeployAuthorized=true
+- vercelRedeployAuthorizedForFutureOnly=true
+- vercelRedeployExecutedNow=false
+- vercelCommandPlanned=vercel --prod
+- nextExecutionAuthorized=true
+- selectedNextSafeCandidate=executeVercelRedeployAfterMasterAdminRoleNormalizationPatchInSeparateMicrocut
+- recommendedNextCandidate=executeVercelRedeployAfterMasterAdminRoleNormalizationPatchInSeparateMicrocut
+- productionReady=false
+- productionReadySetNow=false
+- vercelExecutedNow=false
+- onlineValidationExecutedNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- logoutExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- realMongoConnectionAttempted=false
+- realMongoConnected=false
+- dataMutationExecuted=false
+- domainMutationExecuted=false
+- packageJsonChanged=false
+- sourceChanged=false
+- testsChanged=false
+- pushExecuted=false
+
 ## Checkpoint documental curto do planejamento do redeploy Vercel prod apos a publicacao do bloco de normalizacao master/admin em /gestor/unidades, sem execucao de vercel agora, sem redeploy agora, sem validacao online agora e sem alteracao de codigo.
 - selectedTarget=planVercelRedeployAfterMasterAdminRoleNormalizationPatch
 - checkpointScope=documentalPlanningOnlyNoRedeploy
