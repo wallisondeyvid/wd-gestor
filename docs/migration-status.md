@@ -1,3 +1,20 @@
+## Checkpoint documental curto da autorizacao futura e separada do push do bloco green da correcao de unidades master, sem execucao de push agora e sem nova execucao operacional.
+- selectedTarget=authorizePushAfterUnidadesMasterReadOnlyFixGreen
+- basePushPlanCommit=d24c835
+- baseImplementationCommit=cf82ed6
+- baseFullNpmTestRecordCommit=a2ec097
+- branchAhead=20
+- workingTreeClean=true
+- pushAuthorized=true
+- pushExecutedNow=false
+- npmTestFullGreen=true
+- npmTestFullTests=2384
+- npmTestFullPass=2382
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- productionReady=false
+- recommendedNextCandidate=executePushAfterUnidadesMasterReadOnlyFixGreenInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do push do bloco green da correcao de unidades master, sem execucao de push agora e sem nova execucao operacional.
 - selectedTarget=planPushAfterUnidadesMasterReadOnlyFixGreen
 - baseImplementationCommit=cf82ed6
