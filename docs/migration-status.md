@@ -1,3 +1,19 @@
+## Checkpoint documental curto da autorizacao futura e separada do redeploy pos-push do fix de /gestor/unidades.
+- selectedTarget=authorizeRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPush
+- baseRedeployPlanCommit=a2abced
+- basePublishedCommit=2162608
+- originHead=2162608
+- localHead=a2abced
+- branchAhead=2
+- workingTreeClean=true
+- redeployAuthorized=true
+- redeployExecutedNow=false
+- vercelCommandPlanned=vercel --prod
+- onlineValidationAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=executeRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPushInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do redeploy pos-push do fix de /gestor/unidades.
 - selectedTarget=planRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPush
 - basePublishedCommit=2162608
