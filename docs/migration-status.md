@@ -1,3 +1,40 @@
+## Checkpoint documental curto do planejamento da validacao online controlada apos o redeploy vercel da normalizacao master/admin em /gestor/unidades, sem execucao de HTTP agora, sem navegador, sem login e sem alteracao de codigo.
+- selectedTarget=planOnlineValidationAfterVercelRedeployMasterAdminNormalization
+- checkpointScope=documentalPlanningOnlyNoOnlineValidationExecution
+- previousRedeployResultCommit=de0d00b
+- localAheadBeforePlanning=4
+- workingTreeCleanBeforePlanning=true
+- vercelRedeployRecordedGreen=true
+- vercelRedeployResultCommit=de0d00b
+- onlineValidationAliasTarget=https://wdgestor.vercel.app
+- onlineValidationMode=passive-read-only
+- onlineValidationCandidateEndpointRoot=/
+- onlineValidationCandidateEndpointHealth=/health
+- onlineValidationCandidateEndpointGestorLogin=/gestor/login
+- onlineValidationLoginAllowed=false
+- onlineValidationMasterAllowed=false
+- onlineValidationPasswordAllowed=false
+- onlineValidationMutationAllowed=false
+- onlineValidationMustNotPrintCookies=true
+- onlineValidationMustNotPrintTokens=true
+- onlineValidationMustNotPrintSessionData=true
+- onlineValidationMustNotPrintFullHeaders=true
+- onlineValidationMustNotPrintFullBody=true
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- packageJsonChanged=false
+- sourceChanged=false
+- testsChanged=false
+- recommendedNextCandidate=authorizeOnlineValidationAfterVercelRedeployMasterAdminNormalization
+
 ## Checkpoint documental curto do resultado green do redeploy Vercel apos a normalizacao master/admin em /gestor/unidades, registrado antes de qualquer validacao online, sem nova execucao de vercel e sem alteracao de codigo.
 - selectedTarget=recordVercelRedeployResultBeforeOnlineValidation
 - checkpointScope=documentalOnlyAfterVercelRedeployBeforeOnlineValidation
