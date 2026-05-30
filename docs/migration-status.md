@@ -90118,6 +90118,93 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `keepProductionReadyFalseNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Executar checklist de decisao de producao documentalmente
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `da7e0dc` no inicio desta rodada;
+	- o checklist documental de decisao de producao foi preparado em `da7e0dc`;
+	- todos os gates tecnicos permanecem green antes da decisao final;
+	- a decisao de producao ainda depende de aprovacoes humanas, de negocio e operacionais nao finalizadas;
+	- este microcorte executa apenas a revisao documental do checklist final, mantendo `productionReady=false`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so execucao documental do checklist;
+	- nao executar runtime;
+	- nao conectar Mongo;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=performProductionReadinessDecisionChecklistDocumentally`
+	- `checklistExecutionScope=documentalOnlyNoRuntime`
+	- `previousProductionReadinessChecklistCommit=da7e0dc`
+	- `localRemoteSyncedBeforeChecklistExecution=true`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `allTechnicalGatesGreenBeforeDecision=true`
+	- `testsAndHooksGateStatus=green`
+	- `rollbackAndAbortGateStatus=green`
+	- `runtimeGreenEvidenceGateStatus=green`
+	- `mutationSafetyGateStatus=green`
+	- `secretsAndLogsGateStatus=green`
+	- `realMongoAtlasGateStatus=green`
+	- `productionDecisionGateStatusBefore=not-ready`
+	- `productionDecisionChecklistExecuted=true`
+	- `productionDecisionHumanApprovalPresent=false`
+	- `productionDecisionFinalBusinessApprovalPresent=false`
+	- `productionDecisionBackupOrRollbackConfirmed=false`
+	- `productionDecisionEnvironmentVariablesReviewed=false`
+	- `productionDecisionDomainAndDeploymentReviewed=false`
+	- `productionDecisionPilotClientScopeDefined=false`
+	- `productionDecisionMonitoringPlanConfirmed=false`
+	- `productionDecisionSupportPlanConfirmed=false`
+	- `productionDecisionMasterUserProtectionConfirmed=true`
+	- `productionDecisionNoSecretsInLogsConfirmed=true`
+	- `productionDecisionFinalGitCleanAndSyncedRequired=true`
+	- `productionDecisionGateStatusAfter=not-ready`
+	- `productionDecisionGateStillBlocking=true`
+	- `productionDecisionNotReadyReason=human-business-backup-env-domain-pilot-monitoring-and-support-approvals-not-finalized`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=preparePilotReadinessScopeWithoutProductionFlag`
+	- `selectedNextSafeCandidateReason=technical-gates-are-green-but-production-decision-requires-human-business-and-operational-approval-before-productionReady`
+	- `recommendedNextCandidate=preparePilotReadinessScopeWithoutProductionFlag`
+	- `secondaryCandidate=prepareFinalProductionDecisionApprovalChecklist`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalChecklistExecutionOnly=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotConnectMongoNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
