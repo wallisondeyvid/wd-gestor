@@ -1,3 +1,16 @@
+## Checkpoint documental curto da autorizacao futura e separada do push dos checkpoints locais pos-prontidao de /gestor/unidades.
+- selectedTarget=authorizePushPostPushCheckpointOrPlanReadinessHandoff
+- basePostPushCheckpointCommit=fe5d801
+- baseReadinessPlanCommit=b38cde0
+- originHead=8d37e22
+- localHead=b38cde0
+- branchAhead=2
+- workingTreeClean=true
+- pushAuthorized=true
+- pushExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=executePushPostPushCheckpointAndReadinessPlanInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da proxima etapa de prontidao apos o green autenticado de /gestor/unidades.
 - selectedTarget=planNextProductionReadinessStepAfterAuthenticatedUnidadesGreen
 - basePostPushCheckpointCommit=fe5d801
