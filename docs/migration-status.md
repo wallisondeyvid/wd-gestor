@@ -91956,6 +91956,95 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotPushNow=true`
 	- `keepProductionReadyFalseNow=true`
 
+## Microcorte: Planejar execucao direcionada dos testes candidatos de medio risco
+
+- Contexto executivo desta rodada:
+	- este microcorte permaneceu estritamente documental e leu apenas `package.json`, o ledger e os tres arquivos de medio risco ja classificados na rodada anterior;
+	- a leitura de `package.json` confirmou que o runner atual da suite usa `node --test tests/*.test.js tests/architecture/*.test.js`, precedido por guards no script `test`;
+	- com base nisso, o plano futuro mais seguro e iniciar por execucoes isoladas em `node --test` por arquivo, sem reabrir de imediato a suite ampla e sem prosseguir apos qualquer novo travamento;
+	- o push continua bloqueado ate existir teste completo green ou causa identificada para o travamento observado antes do push.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar teste agora;
+	- nao executar `npm` ou `node` agora;
+	- nao fazer push;
+	- manter `productionReady=false`.
+- Gates:
+	- `selectedTarget=planTargetedTestExecutionForRuntimeContractsWithCreateServerAndSessionAgent`
+	- `planningScope=documentalOnlyNoTestExecution`
+	- `previousHangCandidateInspectionCommit=5df5ee6`
+	- `localAheadBeforePlanning=4`
+	- `workingTreeCleanBeforePlanning=true`
+	- `pushStillBlocked=true`
+	- `npmTestFullGreenRequiredBeforePush=true`
+	- `npmTestStalledPreviously=true`
+	- `highRiskHangCandidates=none-confirmed`
+	- `mediumRiskHangCandidates=condominios-comunicados-restricoes-runtime-contract,condominios-blocos-get-runtime-contract,condominios-blocos-microcut`
+	- `lowRiskHangCandidates=condominios-blocos-put-global-scope-runtime-contract,condominios-blocos-delete-global-scope-runtime-contract,condominios-requireUnitScope`
+	- `suspectedHangClass=open-handles-or-global-state-in-runtime-contracts`
+	- `suspectedPatterns=createServer,request.agent,deferErrorHandlers,process-emit-patch,process-prependListener,registerHooks-process-wide`
+	- `targetedExecutionPlanCreated=true`
+	- `targetedExecutionWillBeFutureOnly=true`
+	- `targetedExecutionStep1=run-comunicados-restricoes-runtime-contract-alone`
+	- `targetedExecutionStep2=run-blocos-get-runtime-contract-alone`
+	- `targetedExecutionStep3=run-blocos-microcut-alone`
+	- `targetedExecutionStep4=run-three-medium-risk-tests-together-only-if-isolated-green`
+	- `targetedExecutionAbortOnFirstHang=true`
+	- `targetedExecutionMustCaptureFinalSummary=true`
+	- `targetedExecutionMustCaptureExitCode=true`
+	- `targetedExecutionMustCheckNodeProcessesAfter=true`
+	- `targetedExecutionMustNotProceedAfterHangWithoutLedger=true`
+	- `packageJsonInspectedForTestCommand=true`
+	- `exactFutureCommandCandidate=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js`
+	- `exactFutureCommandExecutedNow=false`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=authorizeTargetedExecutionForFirstRuntimeContractCandidate`
+	- `selectedNextSafeCandidateReason=need-start-with-one-medium-risk-test-and-capture-summary-exit-code-before-retrying-full-suite`
+	- `recommendedNextCandidate=authorizeTargetedExecutionForFirstRuntimeContractCandidate`
+	- `secondaryCandidate=inspectPackageJsonTestScriptsBeforeAuthorization`
+	- `tertiaryCandidate=keepPushBlockedUntilFreshGreenFullNpmTest`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestRepeatedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `targetedTestExecutedNow=false`
+	- `fullNpmTestExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Plano documental de execucao futura:
+	- etapa 1: executar isoladamente `tests/condominios-comunicados-restricoes-runtime-contract.test.js` e registrar resumo final, exit code e estado de processos `node` ao final;
+	- etapa 2: somente se a etapa 1 fechar green com encerramento observavel, executar isoladamente `tests/condominios-blocos-get-runtime-contract.test.js` com o mesmo protocolo de captura;
+	- etapa 3: somente se a etapa 2 tambem fechar green, executar isoladamente `tests/condominios.blocos.microcut.test.js` com o mesmo protocolo de captura;
+	- etapa 4: somente se as tres execucoes isoladas encerrarem green, planejar microcorte posterior para rodar os tres arquivos juntos;
+	- regra de abortar: se qualquer etapa travar, ficar sem resumo final ou sem exit code confirmado, abortar a sequencia, registrar no ledger e nao prosseguir para o proximo arquivo sem novo microcorte.
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `targetedExecutionPlanIsDocumentalOnly=true`
+	- `noTestsExecutedNow=true`
+	- `noManualNpmOrNodeExecution=true`
+	- `doNotPushNow=true`
+	- `keepProductionReadyFalseNow=true`
+
 
 
 
