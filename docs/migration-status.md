@@ -1,3 +1,23 @@
+## Checkpoint documental curto do resultado green da validacao direcionada do fix de /gestor/unidades.
+- selectedTarget=recordTargetedValidationForPagesRouterRequireUnitScopeContextMismatchFix
+- baseImplementationCommit=11527e8
+- baseAuthorizationCommit=3146c1c
+- targetedValidationExecuted=true
+- targetedValidationCommand=node --test tests/gestor-unidades-unit-scope-canonical.test.js tests/gestor-pages-router-wrapper-structural.test.js tests/gestor-unidades-list-bootstrap-route-runtime-contract.test.js tests/gestor-unidades-provisioning-route-runtime-contract.test.js tests/gestor-unidades-provisioning-events-runtime-contract.test.js tests/gestor-api-unidades-cluster-runtime-contract.test.js
+- targetedValidationResult=green
+- targetedValidationTests=40
+- targetedValidationPass=40
+- targetedValidationFail=0
+- targetedValidationSkipped=0
+- workingTreeCleanAfterValidation=true
+- branchAheadAfterValidation=17
+- npmTestFullExecuted=false
+- onlineValidationExecuted=false
+- vercelExecuted=false
+- pushExecuted=false
+- productionReady=false
+- recommendedNextCandidate=planFullNpmTestForPagesRouterRequireUnitScopeContextMismatchFix
+
 ## Checkpoint documental curto da autorizacao futura e separada da validacao direcionada do fix de /gestor/unidades.
 - selectedTarget=authorizeTargetedValidationForPagesRouterRequireUnitScopeContextMismatchFix
 - baseImplementationCommit=11527e8
