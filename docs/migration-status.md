@@ -1,3 +1,18 @@
+## Checkpoint documental curto do planejamento da decisao pos-green autenticado de /gestor/unidades.
+- selectedTarget=planPostAuthenticatedUnidadesGreenPublicationOrPushDecision
+- baseAuthenticatedGreenRecordCommit=2e224a9
+- authenticatedUnidadesValidationResult=green
+- previous400JsonReproduced=false
+- localHead=2e224a9
+- originHead=2162608
+- branchAhead=10
+- workingTreeClean=true
+- documentationCheckpointsLocalOnly=true
+- pushDecisionPlanned=true
+- pushExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=authorizePushAfterAuthenticatedUnidadesMasterGreen
+
 ## Checkpoint documental curto do resultado green da validacao autenticada online de /gestor/unidades com master apos o fix.
 - selectedTarget=recordAuthenticatedUnidadesMasterOnlineValidationGreenAfterFix
 - baseAuthorizationCommit=18270dd
