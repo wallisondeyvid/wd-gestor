@@ -1,3 +1,29 @@
+## Checkpoint documental curto do pos-push finalissimo do ciclo de /gestor/unidades.
+- selectedTarget=recordPostPushFinalCheckpointAfterUnidadesGreenCycle
+- pushExecuted=true
+- pushedRange=88715df..cadebb9
+- localHeadAfterPush=cadebb9
+- remoteHeadAfterPush=cadebb9
+- aheadAfterPush=0
+- workingTreeCleanAfterPush=true
+- prePushHookResult=green
+- prePushHookTests=2385
+- prePushHookPass=2383
+- prePushHookFail=0
+- prePushHookSkipped=2
+- prePushHookDurationMs=255106.152
+- authenticatedUnidadesGreenCycleStatus=closedAndPublished
+- previous400JsonReproduced=false
+- manualHttpExecuted=false
+- browserUsed=false
+- loginExecuted=false
+- masterUsed=false
+- passwordUsed=false
+- vercelExecuted=false
+- sourceChanged=false
+- productionReady=false
+- recommendedNextCandidate=planNextReadinessHandoffAfterFinalUnidadesGreenCyclePublished
+
 ## Checkpoint documental curto da autorizacao futura e separada para o push final dos checkpoints locais de /gestor/unidades.
 - selectedTarget=authorizePushFinalPostPushUnidadesGreenCheckpoint
 - baseFinalPostPushCheckpointCommit=907abaf
