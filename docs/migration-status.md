@@ -92290,6 +92290,80 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotPushNow=true`
 	- `keepProductionReadyFalseNow=true`
 
+## Microcorte: Registrar resultado do segundo teste direcionado
+
+- Contexto executivo desta rodada:
+	- foi executado exatamente uma vez o comando autorizado `node --test tests/condominios-blocos-get-runtime-contract.test.js`;
+	- o terminal retornou normalmente, com resumo final observavel, `exit code 0` e duracao aproximada de 7,5 segundos;
+	- apos o termino, o branch permaneceu limpo, `WDG_LOGIN_PASSWORD_PRESENT` continuou `False` e nao houve processos `node` remanescentes observados;
+	- como este microcorte era restrito ao segundo candidato, nao houve execucao do terceiro nem de qualquer combinacao entre arquivos.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte registra apenas o resultado da execucao unica do segundo teste direcionado;
+	- `npm test` completo nao foi executado;
+	- o terceiro candidato nao foi executado nesta rodada;
+	- nao fazer push;
+	- manter `productionReady=false`.
+- Gates:
+	- `selectedTarget=recordSecondTargetedRuntimeContractTestResult`
+	- `checkpointScope=documentalOnlyAfterSingleTargetedExecution`
+	- `previousSecondTargetedAuthorizationCommit=4807309`
+	- `localAheadBeforeExecution=8`
+	- `workingTreeCleanBeforeExecution=true`
+	- `targetedTestCommand=node --test tests/condominios-blocos-get-runtime-contract.test.js`
+	- `targetedTestFile=tests/condominios-blocos-get-runtime-contract.test.js`
+	- `targetedTestExecuted=true`
+	- `targetedTestExecutedOnce=true`
+	- `targetedTestRepeated=false`
+	- `fullNpmTestExecutedNow=false`
+	- `npmTestFullGreenRequiredBeforePush=true`
+	- `pushStillBlocked=true`
+	- `targetedTestResult=green`
+	- `targetedTestExitCode=0`
+	- `targetedTestFinalSummaryObserved=true`
+	- `targetedTestDurationApprox=7.5-seconds`
+	- `targetedTestHung=false`
+	- `targetedTestAborted=false`
+	- `nodeProcessesRemainingObserved=false`
+	- `wdgLoginPasswordPresentAfterTest=false`
+	- `gitStatusCleanAfterTest=true`
+	- `proceedToThirdCandidateNow=false`
+	- `thirdCandidateExecutedNow=false`
+	- `combinedTargetedExecutionExecutedNow=false`
+	- `nextExecutionAuthorized=false`
+	- `recommendedNextCandidate=planThirdTargetedRuntimeContractTestExecution`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=true`
+	- `vercelDeployExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `singleTargetedExecutionRecorded=true`
+	- `secondTargetedRuntimeContractFinishedGreen=true`
+	- `fullNpmTestNotExecutedNow=true`
+	- `noThirdCandidateExecutionNow=true`
+	- `pushRemainsBlockedUntilFullSuiteGreenOrCauseIdentified=true`
+	- `keepProductionReadyFalseNow=true`
+
 
 
 
