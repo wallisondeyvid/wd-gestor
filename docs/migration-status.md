@@ -1,3 +1,43 @@
+## Checkpoint documental curto da autorizacao futura e separada da validacao online controlada apos o redeploy vercel da normalizacao master/admin em /gestor/unidades, sem execucao de HTTP agora, sem navegador, sem login e sem alteracao de codigo.
+- selectedTarget=authorizeOnlineValidationAfterVercelRedeployMasterAdminNormalization
+- checkpointScope=documentalAuthorizationOnlyNoOnlineValidationExecution
+- previousOnlineValidationPlanningCommit=466a69f
+- localAheadBeforeAuthorization=5
+- workingTreeCleanBeforeAuthorization=true
+- onlineValidationAuthorized=true
+- onlineValidationAuthorizedForFutureOnly=true
+- onlineValidationAliasTarget=https://wdgestor.vercel.app
+- onlineValidationAllowedEndpointRoot=GET /
+- onlineValidationAllowedEndpointHealth=GET /health
+- onlineValidationAllowedEndpointGestorLogin=GET /gestor/login
+- onlineValidationMode=passive-read-only
+- onlineValidationAllowedOutput=status-code-basic-redirect-content-type-safe-booleans
+- onlineValidationMustNotPrintFullBody=true
+- onlineValidationMustNotPrintFullHeaders=true
+- onlineValidationMustNotPrintCookies=true
+- onlineValidationMustNotPrintTokens=true
+- onlineValidationMustNotPrintSessionData=true
+- onlineValidationMustNotPrintSecrets=true
+- onlineValidationLoginAllowed=false
+- onlineValidationMasterAllowed=false
+- onlineValidationPasswordAllowed=false
+- onlineValidationMutationAllowed=false
+- onlineValidationProtectedRoutesAllowed=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- packageJsonChanged=false
+- sourceChanged=false
+- testsChanged=false
+- recommendedNextCandidate=executeOnlineValidationAfterVercelRedeployMasterAdminNormalizationInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da validacao online controlada apos o redeploy vercel da normalizacao master/admin em /gestor/unidades, sem execucao de HTTP agora, sem navegador, sem login e sem alteracao de codigo.
 - selectedTarget=planOnlineValidationAfterVercelRedeployMasterAdminNormalization
 - checkpointScope=documentalPlanningOnlyNoOnlineValidationExecution
