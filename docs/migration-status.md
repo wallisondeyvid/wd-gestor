@@ -91799,6 +91799,80 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotPushNow=true`
 	- `keepProductionReadyFalseNow=true`
 
+## Microcorte: Planejar investigacao do travamento do npm test completo antes do push
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` permanece com os commits locais `98297b3` e `154e42b` ainda nao publicados;
+	- o push segue bloqueado porque o `npm test` completo anterior nao apresentou resumo final da suite nem exit code 0 confirmado antes do push;
+	- o hook automatico green observado no commit `154e42b` nao substitui a necessidade de confirmar o resultado do `npm test` completo;
+	- este microcorte registra apenas um plano seguro e documental para investigar a causa provavel do travamento antes de qualquer nova execucao ampla da suite.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao repetir `npm test` agora;
+	- nao executar `npm`, `node`, runtime, HTTP, navegador, login ou logout;
+	- nao fazer push;
+	- manter `productionReady=false`.
+- Gates:
+	- `selectedTarget=planInvestigationOfNpmTestHangBeforePush`
+	- `planningScope=documentalOnlyNoTestExecution`
+	- `previousStalledNpmTestRecordCommit=154e42b`
+	- `localAheadBeforePlanning=2`
+	- `workingTreeCleanBeforePlanning=true`
+	- `pushStillBlocked=true`
+	- `npmTestFullGreenRequiredBeforePush=true`
+	- `npmTestStalledPreviously=true`
+	- `npmTestFinalSummaryObservedPreviously=false`
+	- `npmTestExitCodeZeroConfirmedPreviously=false`
+	- `hookAutomaticGreenDoesNotReplaceFullNpmTest=true`
+	- `suspectedHangArea=blocos-comunicados-restricoes-or-open-handles-after-that-area`
+	- `suspectedHangClass=open-handle-or-test-runner-not-exiting`
+	- `investigationShouldCheckOpenHandles=true`
+	- `investigationShouldCheckLastVisibleTestFiles=true`
+	- `investigationShouldCheckNodeTestTimeouts=true`
+	- `investigationShouldCheckMongoMemoryTeardown=true`
+	- `investigationShouldCheckServerListenersTimersSessions=true`
+	- `investigationShouldCheckRecentTestsAroundRequireUnitScopeBlocosComunicadosRestricoes=true`
+	- `investigationShouldAvoidFullNpmTestUntilPlanReady=true`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=inspectNpmTestHangCandidatesDocumentally`
+	- `selectedNextSafeCandidateReason=need-identify-likely-test-or-open-handle-before-repeating-full-suite`
+	- `recommendedNextCandidate=inspectNpmTestHangCandidatesDocumentally`
+	- `secondaryCandidate=planTargetedTestExecutionForLastVisibleArea`
+	- `tertiaryCandidate=keepPushBlockedUntilFreshGreenFullNpmTest`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestRepeatedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `investigationPlanIsDocumentalOnly=true`
+	- `doNotRepeatNpmTestNow=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotPushNow=true`
+	- `keepProductionReadyFalseNow=true`
+
 
 
 
