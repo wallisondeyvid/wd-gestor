@@ -1,3 +1,17 @@
+## Checkpoint documental curto do fechamento tecnico do ciclo green de /gestor/unidades antes de nova frente.
+- selectedTarget=closeAuthenticatedUnidadesGreenCycleOrPlanNextReadinessHandoff
+- authenticatedUnidadesGreenCycleStatus=closedTechnically
+- previous400JsonReproduced=false
+- basePostPushReadinessCheckpointCommit=1b5fc10
+- originHead=c3f76bf
+- localHead=1b5fc10
+- branchAhead=1
+- workingTreeClean=true
+- publishLocalCheckpointBeforeNewFront=true
+- pushExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=authorizePushPostPushReadinessCheckpoint
+
 ## Checkpoint documental curto do pos-push dos registros documentais pos-green/prontidao de /gestor/unidades.
 - selectedTarget=recordPostPushReadinessCheckpointAfterAuthenticatedUnidadesGreen
 - pushExecuted=true
