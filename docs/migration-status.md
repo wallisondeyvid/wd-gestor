@@ -1,3 +1,19 @@
+## Checkpoint documental curto da autorizacao futura e separada da correcao minima para o 400 JSON autenticado em /gestor/unidades.
+- selectedTarget=authorizeMinimalFixForPagesRouterRequireUnitScopeContextMismatch
+- baseFixPlanCommit=d30be22
+- rootCauseCandidate=pagesRouterBypassAndRequireUnitScopeContextMismatch
+- authorizationScope=futureSeparateImplementationOnly
+- preferredAllowedCodeTarget=src/modules/gestor/app/routes/pagesRouter.js
+- secondaryAllowedCodeTarget=src/modules/gestor/app/middlewares/requireUnitScope.js only if strictly necessary
+- testsAllowed=true
+- reqUserUnidadeIdShouldNotBlockPrivilegedBypass=true
+- masterAdminPageRouteShouldBypassStrictUnitScopeWhenNoRequestUnidadeId=true
+- diretorUserStillRequireUnitScope=true
+- mutationRoutesRemainProtected=true
+- implementationExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=implementMinimalFixForPagesRouterRequireUnitScopeContextMismatchInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da correcao minima para o 400 JSON autenticado em /gestor/unidades.
 - selectedTarget=planMinimalFixForPagesRouterRequireUnitScopeContextMismatch
 - baseInspectionCommit=a329edb
