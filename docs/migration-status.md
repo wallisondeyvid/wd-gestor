@@ -91728,6 +91728,77 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `keepProductionReadyFalseNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Registrar npm test completo travado antes do push
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local em `98297b3` e origin ainda em `7ce58f0` no inicio desta rodada;
+	- antes de qualquer push novo, foi iniciado `npm test` como gate completo;
+	- a execucao permaneceu rodando por mais de 10 horas sem resumo final observavel nem confirmacao de exit code 0;
+	- a ultima saida visivel mostrou testes individuais passando em blocos/comunicados/restricoes, mas sem confirmacao de conclusao da suite completa;
+	- este microcorte registra apenas documentalmente que o push segue bloqueado por teste completo travado ou nao confirmado, sem repetir `npm test` e sem alterar `productionReady`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental do teste travado/indeterminado;
+	- nao repetir `npm test` agora;
+	- nao fazer push;
+	- manter `productionReady=false`.
+- Gates:
+	- `selectedTarget=recordFullNpmTestStalledBeforePush`
+	- `checkpointScope=documentalOnlyAfterStalledTest`
+	- `pendingCommitBeforePush=98297b3`
+	- `localAheadBeforeCheckpoint=1`
+	- `workingTreeCleanAfterTest=true`
+	- `npmTestStartedBeforePush=true`
+	- `npmTestFinalSummaryObserved=false`
+	- `npmTestExitCodeObserved=false`
+	- `npmTestExitCodeZeroConfirmed=false`
+	- `npmTestGreen=false`
+	- `npmTestFinalResult=stalled-or-not-confirmed`
+	- `npmTestDurationApprox=more-than-10-hours`
+	- `npmTestOutputLastObservedArea=blocos-comunicados-restricoes`
+	- `npmTestShowedSomeIndividualPassingTests=true`
+	- `npmTestSuiteCompletionConfirmed=false`
+	- `nodeProcessesRemainingObserved=false`
+	- `wdgLoginPasswordPresentAfterTest=false`
+	- `pushBlockedByUnconfirmedTest=true`
+	- `pushExecuted=false`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=planInvestigationOfNpmTestHangBeforePush`
+	- `selectedNextSafeCandidateReason=full-npm-test-did-not-produce-final-summary-or-exit-code-zero-before-push`
+	- `recommendedNextCandidate=planInvestigationOfNpmTestHangBeforePush`
+	- `secondaryCandidate=inspectOpenHandlesOrLastTestAreaDocumentally`
+	- `tertiaryCandidate=keepPushBlockedUntilFreshGreenTest`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestRepeatedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `stalledFullNpmTestCheckpointIsDocumentalOnly=true`
+	- `doNotRepeatNpmTestNow=true`
+	- `doNotPushNow=true`
+	- `keepProductionReadyFalseNow=true`
+
 
 
 
