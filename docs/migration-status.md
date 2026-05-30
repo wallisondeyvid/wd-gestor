@@ -91260,6 +91260,97 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Autorizar smoke check online controlado no Vercel
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `6b0fec5` no inicio desta rodada;
+	- o deploy Vercel prod para revisao online controlada ja foi concluido e registrado;
+	- o plano documental do smoke check online controlado ja foi publicado em `6b0fec5`;
+	- as URLs publicadas continuam disponiveis apenas para revisao online controlada;
+	- este microcorte registra apenas a autorizacao documental futura e separada do smoke check online controlado, sem executar checagens agora e sem alterar `productionReady`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar smoke check agora;
+	- nao abrir navegador agora;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeOnlineControlledReviewSmokeCheck`
+	- `authorizationScope=documentalOnlyFutureSmoke`
+	- `previousOnlineControlledReviewSmokePlanCommit=6b0fec5`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `workingTreeCleanBeforeAuthorization=true`
+	- `vercelOnlineControlledReviewAvailable=true`
+	- `vercelProductionUrl=https://wdgestor-h042yk662-wallison-deyvid-duraes-guimaraes-projects.vercel.app`
+	- `vercelAliasUrl=https://wdgestor.vercel.app`
+	- `onlineControlledReviewSmokeCheckAuthorized=true`
+	- `onlineControlledReviewSmokeCheckAuthorizedForFutureOnly=true`
+	- `onlineControlledReviewPurpose=access-online-map-missing-features-and-finish-building-applications`
+	- `commercialProductionReady=false`
+	- `paidClientProduction=false`
+	- `realPayingClients=false`
+	- `productStillUnderConstruction=true`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `smokeCheckExecutedNow=false`
+	- `smokeCheckMustBePassiveFirst=true`
+	- `smokeCheckMustPreferAliasUrl=true`
+	- `smokeCheckAllowedInitialTargets=GET /,GET /health,GET /gestor/login`
+	- `smokeCheckBlocksRealLogin=true`
+	- `smokeCheckBlocksMasterLogin=true`
+	- `smokeCheckBlocksRealClientMutation=true`
+	- `smokeCheckBlocksSeedScripts=true`
+	- `smokeCheckBlocksCleanupWrongEmail=true`
+	- `smokeCheckBlocksProductionReadyFlag=true`
+	- `smokeCheckMustNotPrintSecrets=true`
+	- `smokeCheckMustNotPrintCookies=true`
+	- `smokeCheckMustNotPrintTokens=true`
+	- `smokeCheckMustNotPrintSessionData=true`
+	- `smokeCheckMustNotPrintMongoUri=true`
+	- `smokeCheckMustRecordOnlyStatusAndBooleanShapes=true`
+	- `nextExecutionAuthorized=true`
+	- `selectedNextSafeCandidate=executePassiveOnlineSmokeCheckInSeparateMicrocut`
+	- `selectedNextSafeCandidateReason=smoke-check-is-authorized-only-for-passive-online-review-without-login-or-mutation`
+	- `recommendedNextCandidate=executePassiveOnlineSmokeCheckInSeparateMicrocut`
+	- `secondaryCandidate=recordOnlineSmokeCheckResult`
+	- `tertiaryCandidate=keepProductionReadyFalseAndMasterProtected`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `vercelDeployCompletedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `onlineControlledReviewSmokeCheckAuthorizationIsDocumentalOnly=true`
+	- `doNotExecuteSmokeCheckNow=true`
+	- `doNotOpenBrowserNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
