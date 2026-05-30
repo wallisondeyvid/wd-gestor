@@ -91171,6 +91171,95 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Planejar smoke check online controlado no Vercel
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `f9c876d` no inicio desta rodada;
+	- o deploy Vercel prod para revisao online controlada ja foi concluido e registrado;
+	- a URL production e o alias ja estao publicados para revisao online controlada;
+	- isso continua nao sendo producao comercial e nao ha cliente pagante real;
+	- este microcorte registra apenas o plano documental do smoke check online controlado, sem abrir navegador, sem acessar URLs e sem alterar `productionReady`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar smoke check agora;
+	- nao abrir navegador agora;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planOnlineControlledReviewSmokeCheck`
+	- `planningScope=documentalOnlyNoRuntime`
+	- `previousVercelDeployRecordCommit=f9c876d`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `workingTreeCleanBeforePlanning=true`
+	- `vercelOnlineControlledReviewAvailable=true`
+	- `vercelProductionUrl=https://wdgestor-h042yk662-wallison-deyvid-duraes-guimaraes-projects.vercel.app`
+	- `vercelAliasUrl=https://wdgestor.vercel.app`
+	- `onlineControlledReviewSmokeCheckPlanned=true`
+	- `onlineControlledReviewPurpose=access-online-map-missing-features-and-finish-building-applications`
+	- `commercialProductionReady=false`
+	- `paidClientProduction=false`
+	- `realPayingClients=false`
+	- `productStillUnderConstruction=true`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `smokeCheckMustBePassiveFirst=true`
+	- `smokeCheckMustPreferAliasUrl=true`
+	- `smokeCheckAllowedInitialTargets=GET /,GET /health,GET /gestor/login`
+	- `smokeCheckBlocksRealLogin=true`
+	- `smokeCheckBlocksMasterLogin=true`
+	- `smokeCheckBlocksRealClientMutation=true`
+	- `smokeCheckBlocksSeedScripts=true`
+	- `smokeCheckBlocksCleanupWrongEmail=true`
+	- `smokeCheckBlocksProductionReadyFlag=true`
+	- `smokeCheckMustNotPrintSecrets=true`
+	- `smokeCheckMustNotPrintCookies=true`
+	- `smokeCheckMustNotPrintTokens=true`
+	- `smokeCheckMustNotPrintSessionData=true`
+	- `smokeCheckMustNotPrintMongoUri=true`
+	- `smokeCheckMustRecordOnlyStatusAndBooleanShapes=true`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=authorizeOnlineControlledReviewSmokeCheck`
+	- `selectedNextSafeCandidateReason=online-deploy-is-available-and-first-review-step-should-be-passive-smoke-check-without-login-or-mutation`
+	- `recommendedNextCandidate=authorizeOnlineControlledReviewSmokeCheck`
+	- `secondaryCandidate=recordVercelBuildSettingsWarningReview`
+	- `tertiaryCandidate=keepProductionReadyFalseAndMasterProtected`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `vercelDeployCompletedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `onlineControlledReviewSmokeCheckPlanIsDocumentalOnly=true`
+	- `doNotExecuteSmokeCheckNow=true`
+	- `doNotOpenBrowserNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
