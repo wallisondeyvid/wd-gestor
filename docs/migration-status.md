@@ -1,3 +1,28 @@
+## Checkpoint documental curto do resultado green do npm test completo apos o fix de /gestor/unidades.
+- selectedTarget=recordFullNpmTestForPagesRouterRequireUnitScopeContextMismatchFix
+- baseImplementationCommit=11527e8
+- baseAuthorizationCommit=53a941d
+- npmTestFullExecuted=true
+- npmTestFullCommand=npm test
+- npmTestFullExitCode=0
+- npmTestFullResult=green
+- npmTestFullTests=2385
+- npmTestFullPass=2383
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- npmTestFullDurationMs=251669.018
+- workingTreeCleanAfter=true
+- branchAheadAfter=20
+- externalHttpExecuted=false
+- browserUsed=false
+- vercelExecuted=false
+- pushExecuted=false
+- sourceChanged=false
+- packageJsonChanged=false
+- automatedSuiteIncludesLoginMasterScenarios=true
+- productionReady=false
+- recommendedNextCandidate=planPushAfterPagesRouterRequireUnitScopeContextMismatchFixGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada do npm test completo apos o fix de /gestor/unidades.
 - selectedTarget=authorizeFullNpmTestForPagesRouterRequireUnitScopeContextMismatchFix
 - baseFullNpmTestPlanCommit=2a83ca0
