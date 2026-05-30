@@ -1,3 +1,28 @@
+## Checkpoint documental curto do pos-push do bloco green do fix de /gestor/unidades.
+- selectedTarget=recordPostPushPagesRouterRequireUnitScopeContextMismatchFix
+- pushExecuted=true
+- pushedRange=4274354..2162608
+- localHeadAfterPush=2162608
+- remoteHeadAfterPush=2162608
+- aheadAfterPush=0
+- workingTreeCleanAfterPush=true
+- prePushHookResult=green
+- prePushHookTests=2385
+- prePushHookPass=2383
+- prePushHookFail=0
+- prePushHookSkipped=2
+- prePushHookDurationMs=241653.5642
+- manualNpmTestExecuted=false
+- manualNpmNodeExecuted=false
+- manualHttpExecuted=false
+- browserUsed=false
+- loginExecuted=false
+- vercelExecuted=false
+- redeployExecuted=false
+- sourceChanged=false
+- productionReady=false
+- recommendedNextCandidate=planRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPush
+
 ## Checkpoint documental curto da autorizacao futura e separada do push do bloco green do fix de /gestor/unidades.
 - selectedTarget=authorizePushAfterPagesRouterRequireUnitScopeContextMismatchFixGreen
 - basePushPlanCommit=aea8d11
