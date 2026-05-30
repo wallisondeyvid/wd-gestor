@@ -89931,6 +89931,98 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Classificar gate de mongo atlas apos evidencias controladas
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `525e9d3` no inicio desta rodada;
+	- `testsAndHooksGate`, `rollbackAndAbortGate`, `runtimeGreenEvidenceGate`, `mutationSafetyGate` e `secretsAndLogsGate` ja estao green;
+	- as evidencias controladas ja registradas em Atlas/Mongo real cobrem `health`, login ficticio, sessao read-only, tenant boundary read-only, logout green e `npm test` completo green;
+	- os logs e saidas permaneceram sanitizados, sem impressao de URI real ou credenciais;
+	- nao houve seed, uso de master ou mutacao de dominio real nas validacoes aceitas;
+	- este microcorte reclassifica apenas o `realMongoAtlasGate`, sem executar runtime nem conectar Mongo agora;
+	- producao continua nao pronta porque a decisao final ainda permanece pendente.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so classificacao documental;
+	- nao executar runtime;
+	- nao repetir health/login/logout;
+	- nao fazer nova mutacao;
+	- nao conectar Mongo agora;
+	- nao pedir nem colar segredo;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=classifyRealMongoAtlasGateAfterControlledRuntimeEvidence`
+	- `classificationScope=documentalOnlyNoRuntime`
+	- `previousSecretsAndLogsGateGreenCommit=525e9d3`
+	- `localRemoteSyncedBeforeClassification=true`
+	- `productionReady=false`
+	- `realMongoAtlasGateStatusBefore=partial`
+	- `atlasRuntimeEvidenceHealthGreen=true`
+	- `atlasRuntimeEvidenceLoginGreen=true`
+	- `atlasRuntimeEvidenceSessionReadOnlyGreen=true`
+	- `atlasRuntimeEvidenceTenantReadOnlyGreen=true`
+	- `atlasRuntimeEvidenceLogoutGreen=true`
+	- `atlasRuntimeEvidenceNpmTestGreen=true`
+	- `atlasRuntimeSecretsSanitized=true`
+	- `atlasRuntimeUriPrinted=false`
+	- `atlasRuntimeCredentialPrinted=false`
+	- `atlasRuntimeDomainMutationExecuted=false`
+	- `atlasRuntimeSeedExecuted=false`
+	- `atlasRuntimeMasterScriptsExecuted=false`
+	- `atlasRuntimeMasterUserUsed=false`
+	- `atlasRuntimeMasterUserProtected=true`
+	- `realMongoAtlasGateClassificationPerformed=true`
+	- `realMongoAtlasGateStatusAfter=green`
+	- `realMongoAtlasGateBlockingItemResolved=true`
+	- `realMongoAtlasGateGreenReason=controlled-atlas-runtime-evidence-covers-health-login-session-readonly-tenant-readonly-logout-and-full-npm-test-with-sanitized-logs-no-uri-printing-no-seed-no-master-and-no-domain-mutation`
+	- `remainingBlockingGatesAfterRealMongoAtlas=productionDecisionGate`
+	- `highestPriorityBlockingItemAfterRealMongoAtlas=productionDecisionGate`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=prepareProductionReadinessDecisionChecklist`
+	- `selectedNextSafeCandidateReason=all-technical-gates-are-green-so-next-step-is-production-decision-checklist-with-productionReady-still-false`
+	- `recommendedNextCandidate=prepareProductionReadinessDecisionChecklist`
+	- `secondaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `tertiaryCandidate=planExternalPilotReadinessReview`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalClassificationOnly=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotRepeatHealthNow=true`
+	- `doNotRepeatLoginNow=true`
+	- `doNotRepeatLogoutNow=true`
+	- `doNotConnectMongoNow=true`
+	- `doNotExecuteNewMutationNow=true`
+	- `doNotAskSecretNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
+
 
 
 
