@@ -90984,6 +90984,98 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Registrar bloqueio do deploy Vercel prod por token invalido
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `b092108` no inicio desta rodada;
+	- o deploy Vercel prod para revisao online controlada ja estava autorizado documentalmente;
+	- foi tentado `vercel --prod`, mas o deploy nao foi concluido;
+	- o Vercel CLI retornou erro de token invalido antes de qualquer URL publica, build ou deployment online;
+	- este microcorte registra apenas o bloqueio documental dessa tentativa, sem repetir deploy, sem login no Vercel e sem alterar `productionReady`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental do bloqueio;
+	- nao repetir deploy agora;
+	- nao fazer login no Vercel neste microcorte;
+	- nao colar token no chat;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordVercelProdDeployBlockedInvalidToken`
+	- `checkpointScope=documentalOnlyAfterBlockedDeployAttempt`
+	- `previousVercelProdDeployAuthorizationCommit=b092108`
+	- `localRemoteSyncedBeforeAttempt=true`
+	- `workingTreeCleanBeforeAttempt=true`
+	- `vercelProdDeployPurpose=online-controlled-review`
+	- `vercelCliExecuted=true`
+	- `vercelCliVersion=50.1.5`
+	- `vercelProdDeployCommandAttempted=true`
+	- `vercelProdDeployCommand=vercel --prod`
+	- `vercelProdDeployCompleted=false`
+	- `vercelProdDeployBlocked=true`
+	- `vercelProdDeployBlockedReason=invalid-vercel-token`
+	- `vercelErrorShape=specified-token-is-not-valid-use-vercel-login`
+	- `vercelPublicUrlGenerated=false`
+	- `vercelBuildStarted=false`
+	- `vercelDeploymentCreated=false`
+	- `vercelLoginRequired=true`
+	- `vercelLoginExecutedNow=false`
+	- `vercelTokenPrinted=false`
+	- `vercelSecretPrinted=false`
+	- `commercialProductionReady=false`
+	- `paidClientProduction=false`
+	- `realPayingClients=false`
+	- `productStillUnderConstruction=true`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=planVercelLoginAndTokenRefreshForOnlineControlledReview`
+	- `selectedNextSafeCandidateReason=deploy-blocked-before-build-by-invalid-token-and-login-refresh-must-be-handled-locally-without-printing-secrets`
+	- `recommendedNextCandidate=planVercelLoginAndTokenRefreshForOnlineControlledReview`
+	- `secondaryCandidate=keepProductionReadyFalseAndMasterProtected`
+	- `tertiaryCandidate=retryVercelProdDeployOnlyAfterLocalLoginRefresh`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `vercelDeployCompletedNow=false`
+	- `vercelLoginExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `blockedVercelDeployCheckpointIsDocumentalOnly=true`
+	- `doNotRepeatDeployNow=true`
+	- `doNotRunVercelLoginNow=true`
+	- `doNotPrintTokenNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
