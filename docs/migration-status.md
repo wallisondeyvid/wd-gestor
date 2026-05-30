@@ -1,3 +1,38 @@
+## Checkpoint documental curto da autorizacao futura e separada da correcao minima para /gestor/unidades master/admin sem unidade, sem implementacao de codigo e sem execucao operacional.
+- selectedTarget=authorizeMinimalFixForUnidadesProvisioningAndApiCanonicalPrivilege
+- checkpointScope=documentalAuthorizationOnly
+- authorizationScope=futureSeparateImplementationOnly
+- basePlanCommit=5d663dc
+- localAheadBeforeAuthorization=11
+- workingTreeCleanBeforeAuthorization=true
+- allowedFutureCodeTargetPrimary=src/modules/gestor/app/routes/unidadeApi.js
+- allowedFutureCodeTargetSecondary=tests-related-if-needed
+- primaryFixTarget=unidadesProvisioningReadOnlyEndpoint
+- secondaryFixTarget=GET /api/unidades canonical privilege alignment
+- masterAdminNoUnitReadOnlyAllowed=true
+- diretorUserStillRequireUnitScope=true
+- mutationRoutesRemainProtected=true
+- testsExpected=true
+- candidateFutureTestProvisioningPrivilegedNoUnitNoUnidadeIdRequired=true
+- candidateFutureTestDiretorUserWithoutUnitStillBlocked=true
+- candidateFutureTestApiUnidadesPrivilegeViaGlobalRoleOrAuthContext=true
+- candidateFutureTestTenantScopedUserNoRegression=true
+- implementationExecutedNow=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=implementMinimalFixForUnidadesProvisioningAndApiCanonicalPrivilegeInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da correcao minima para /gestor/unidades master/admin sem unidade, sem implementacao de codigo e sem execucao operacional.
 - selectedTarget=planMinimalFixForUnidadesProvisioningAndApiCanonicalPrivilege
 - checkpointScope=documentalOnly
