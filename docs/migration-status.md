@@ -92202,6 +92202,94 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `pushRemainsBlockedUntilFullSuiteGreenOrCauseIdentified=true`
 	- `keepProductionReadyFalseNow=true`
 
+## Microcorte: Autorizar segundo teste direcionado do travamento
+
+- Contexto executivo desta rodada:
+	- este microcorte registra apenas a autorizacao futura e separada do segundo teste direcionado de medio risco;
+	- o primeiro candidato isolado fechou green com `exit code 0`, sem hang, sem abort e sem processos `node` remanescentes, entao ele deixa de ser o principal suspeito imediato para o travamento amplo;
+	- o proximo alvo passa a ser `tests/condominios-blocos-get-runtime-contract.test.js`, ainda dentro do recorte de runtime-contracts com risco medio e com necessidade de observacao de resumo final, exit code, duracao e estado do ambiente ao final;
+	- o push continua bloqueado ate existir teste completo green ou causa identificada para o travamento do `npm test` completo.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar teste agora;
+	- nao executar `npm` ou `node` agora;
+	- nao fazer push;
+	- manter `productionReady=false`.
+- Gates:
+	- `selectedTarget=authorizeSecondTargetedRuntimeContractTestExecution`
+	- `authorizationScope=documentalOnlyFutureTargetedExecution`
+	- `previousFirstTargetedResultCommit=fda0c7e`
+	- `localAheadBeforeAuthorization=7`
+	- `workingTreeCleanBeforeAuthorization=true`
+	- `pushStillBlocked=true`
+	- `npmTestFullGreenRequiredBeforePush=true`
+	- `firstTargetedCandidate=tests/condominios-comunicados-restricoes-runtime-contract.test.js`
+	- `firstTargetedResult=green`
+	- `firstTargetedExitCode=0`
+	- `firstTargetedHung=false`
+	- `firstTargetedAborted=false`
+	- `firstTargetedNodeProcessesRemainingObserved=false`
+	- `secondTargetedCandidate=tests/condominios-blocos-get-runtime-contract.test.js`
+	- `secondTargetedCandidateRiskLevel=medium`
+	- `secondTargetedCandidateReason=runtime-contract-with-createServer-or-related-runtime-contract-risk`
+	- `secondTargetedCommand=node --test tests/condominios-blocos-get-runtime-contract.test.js`
+	- `secondTargetedExecutionAuthorized=true`
+	- `secondTargetedExecutionAuthorizedForFutureOnly=true`
+	- `secondTargetedExecutionExecutedNow=false`
+	- `targetedExecutionMustBeSingleFileOnly=true`
+	- `targetedExecutionMustNotRunFullNpmTest=true`
+	- `targetedExecutionMustCaptureFinalSummary=true`
+	- `targetedExecutionMustCaptureExitCode=true`
+	- `targetedExecutionMustCaptureDuration=true`
+	- `targetedExecutionMustCheckGitStatusAfter=true`
+	- `targetedExecutionMustCheckNodeProcessesAfter=true`
+	- `targetedExecutionMustCheckWdgLoginPasswordEnvAfter=true`
+	- `targetedExecutionMustAbortOnHang=true`
+	- `targetedExecutionMustNotRepeatOnHang=true`
+	- `targetedExecutionMustNotProceedToThirdCandidateOnHang=true`
+	- `targetedExecutionMustRecordResultBeforeNextStep=true`
+	- `nextExecutionAuthorized=true`
+	- `selectedNextSafeCandidate=executeSecondTargetedRuntimeContractTestInSeparateMicrocut`
+	- `selectedNextSafeCandidateReason=first-medium-risk-candidate-was-green-and-second-medium-risk-candidate-is-now-authorized-for-single-file-execution`
+	- `recommendedNextCandidate=executeSecondTargetedRuntimeContractTestInSeparateMicrocut`
+	- `secondaryCandidate=recordSecondTargetedRuntimeContractTestResult`
+	- `tertiaryCandidate=keepPushBlockedUntilFreshGreenFullNpmTest`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestRepeatedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `targetedTestExecutedNow=false`
+	- `fullNpmTestExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `secondTargetedAuthorizationIsDocumentalOnly=true`
+	- `noTestsExecutedNow=true`
+	- `noManualNpmOrNodeExecution=true`
+	- `doNotPushNow=true`
+	- `keepProductionReadyFalseNow=true`
+
 
 
 
