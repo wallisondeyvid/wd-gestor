@@ -1,3 +1,29 @@
+## Checkpoint documental curto do planejamento do npm test completo apos o fix de /gestor/unidades master/admin sem unidade, sem execucao de teste agora e sem alteracao de codigo.
+- selectedTarget=planFullNpmTestAfterUnidadesMasterReadOnlyFix
+- checkpointScope=documentalOnlyFullNpmTestPlanning
+- baseImplementationCommit=cf82ed6
+- baseTargetedValidationCommit=f420c4f
+- targetedValidationResult=green
+- targetedValidationTests=35
+- targetedValidationPass=35
+- fullNpmTestPlanned=true
+- fullNpmTestExecutedNow=false
+- npmTestFullAuthorized=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecutedNow=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=authorizeFullNpmTestAfterUnidadesMasterReadOnlyFix
+
 ## Checkpoint documental curto do resultado green da validacao direcionada do fix de /gestor/unidades master/admin sem unidade, sem nova execucao de testes e sem alteracao de codigo.
 - selectedTarget=recordTargetedValidationForUnidadesMasterReadOnlyFix
 - checkpointScope=documentalOnlyTargetedValidationResult
