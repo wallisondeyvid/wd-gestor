@@ -17,23 +17,22 @@ import {
 	getUnidadePublic,
 } from '#modules/gestor/app/controllers/unidadeApiController.js';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
-import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
+import { isPrivilegedGestorContext, requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 const router = express.Router();
 
-function isPrivilegedGestorUser(user) {
-	return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+function isPrivilegedGestorRequest(req) {
+	return isPrivilegedGestorContext({
+		user: req?.user || null,
+		sessionUser: req?.session?.user || null,
+		authContext: req?.session?.gestorAuthContext || null,
+	});
 }
 
-function hasCanonicalUnitContext(req) {
+function hasCanonicalActiveUnitContext(req) {
 	return Boolean(
 		req?.session?.gestorAuthContext?.active_unidade_id
 		|| req?.user?.unidade_id
-		|| req?.query?.unidadeId
-		|| req?.query?.unidade_id
-		|| req?.params?.unidadeId
-		|| req?.params?.unidade_id
-		|| req?.body?.unidadeId
-		|| req?.body?.unidade_id
+		|| req?.session?.user?.unidade_id
 	);
 }
 
@@ -53,7 +52,18 @@ function withLoginAndRequiredUnitScope(handler) {
 
 function withLoginAndBootstrapUnidadesListScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => {
-		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+		if (isPrivilegedGestorRequest(req) && !hasCanonicalActiveUnitContext(req)) {
+			return handler(req, res, next);
+		}
+
+		normalizeUnidadeIdParam(req);
+		return requireUnitScope(req, res, () => handler(req, res, next));
+	});
+}
+
+function withLoginAndReadOnlyProvisioningScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => {
+		if (isPrivilegedGestorRequest(req) && !hasCanonicalActiveUnitContext(req)) {
 			return handler(req, res, next);
 		}
 
@@ -77,8 +87,8 @@ router.get('/api/public/unidades/:id', getUnidadePublic);
 // Leitura da logo (binário) — retorna imagem a partir do armazenamento atual (Data URL ou legado em disco)
 router.get('/api/unidades/:id/logo', withLoginAndRequiredUnitScope(getUnidadeLogo));
 router.get('/api/unidades/:id/modulos', withLoginAndRequiredUnitScope(getUnidadeModulos));
-router.get('/api/unidades/:id/provisioning', withLoginAndRequiredUnitScope(getUnidadeProvisioningStatus));
-router.get('/api/unidades/:id/provisioning/events', withLoginAndRequiredUnitScope(getUnidadeProvisioningEvents));
+router.get('/api/unidades/:id/provisioning', withLoginAndReadOnlyProvisioningScope(getUnidadeProvisioningStatus));
+router.get('/api/unidades/:id/provisioning/events', withLoginAndReadOnlyProvisioningScope(getUnidadeProvisioningEvents));
 router.post('/api/unidades/:id/provisioning/retry', withLoginAndRequiredUnitScope(retryUnidadeProvisioning));
 router.delete('/api/unidades/:id', withLoginAndRequiredUnitScope(deleteUnidade));
 export default router;
