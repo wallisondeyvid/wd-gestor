@@ -90023,6 +90023,101 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Preparar checklist de decisao final de producao
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `584732f` no inicio desta rodada;
+	- todos os gates tecnicos anteriores ja estao classificados como green;
+	- o gate ainda bloqueante e `productionDecisionGate`, que depende de decisao humana explicita;
+	- este microcorte consolida somente o checklist documental final antes de qualquer eventual decisao futura sobre producao;
+	- `productionReady` deve permanecer falso nesta rodada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so preparacao documental;
+	- nao executar runtime;
+	- nao repetir health/login/logout;
+	- nao fazer nova mutacao;
+	- nao conectar Mongo;
+	- nao pedir nem colar segredo;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=prepareProductionReadinessDecisionChecklist`
+	- `checklistScope=documentalOnlyNoRuntime`
+	- `previousRealMongoAtlasGateGreenCommit=584732f`
+	- `localRemoteSyncedBeforeChecklist=true`
+	- `productionReady=false`
+	- `productionDecisionGateStatusBefore=not-ready`
+	- `productionReadinessDecisionChecklistPrepared=true`
+	- `allTechnicalGatesGreenBeforeDecision=true`
+	- `testsAndHooksGateStatus=green`
+	- `rollbackAndAbortGateStatus=green`
+	- `runtimeGreenEvidenceGateStatus=green`
+	- `mutationSafetyGateStatus=green`
+	- `secretsAndLogsGateStatus=green`
+	- `realMongoAtlasGateStatus=green`
+	- `productionDecisionGateStatusAfter=not-ready`
+	- `productionDecisionGateStillBlocking=true`
+	- `productionDecisionRequiresHumanApproval=true`
+	- `productionDecisionRequiresFinalBusinessApproval=true`
+	- `productionDecisionRequiresBackupOrRollbackConfirmation=true`
+	- `productionDecisionRequiresEnvironmentVariablesReview=true`
+	- `productionDecisionRequiresDomainAndDeploymentReview=true`
+	- `productionDecisionRequiresPilotClientScopeDefinition=true`
+	- `productionDecisionRequiresMonitoringPlan=true`
+	- `productionDecisionRequiresSupportPlan=true`
+	- `productionDecisionRequiresMasterUserProtectionConfirmation=true`
+	- `productionDecisionRequiresNoSecretsInLogsConfirmation=true`
+	- `productionDecisionRequiresFinalGitCleanAndSyncedState=true`
+	- `productionReadyMustRemainFalseUntilExplicitDecision=true`
+	- `productionReadySetNow=false`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=performProductionReadinessDecisionChecklistDocumentally`
+	- `selectedNextSafeCandidateReason=all-technical-gates-green-but-production-decision-requires-explicit-final-checklist-and-human-approval`
+	- `recommendedNextCandidate=performProductionReadinessDecisionChecklistDocumentally`
+	- `secondaryCandidate=preparePilotReadinessScopeWithoutProductionFlag`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalPreparationOnly=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotRepeatHealthNow=true`
+	- `doNotRepeatLoginNow=true`
+	- `doNotRepeatLogoutNow=true`
+	- `doNotConnectMongoNow=true`
+	- `doNotExecuteNewMutationNow=true`
+	- `doNotAskSecretNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotPushNow=true`
+
 
 
 
