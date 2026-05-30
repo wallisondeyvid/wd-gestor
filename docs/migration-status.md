@@ -1,3 +1,44 @@
+## Checkpoint documental curto do resultado green da validacao online publica/read-only pos-redeploy da correcao de unidades master.
+- selectedTarget=recordOnlineValidationAfterUnidadesMasterReadOnlyFixRedeploy
+- baseAuthorizationCommit=7cb2163
+- aliasTarget=https://wdgestor.vercel.app
+- onlineValidationExecuted=true
+- onlineValidationResult=green
+- rootStatusCode=200
+- rootContentType=text/html
+- rootHasLocationHeader=false
+- rootBodyLengthApprox=17438
+- rootPageShapePresent=true
+- healthStatusCode=200
+- healthContentType=application/json
+- healthHasLocationHeader=false
+- healthBodyLengthApprox=30
+- healthBodyShapePresent=true
+- loginStatusCode=200
+- loginContentType=text/html
+- loginHasLocationHeader=false
+- loginBodyLengthApprox=15913
+- loginPageShapePresent=true
+- bodyFullPrinted=false
+- headersFullPrinted=false
+- cookieTokenSessionSecretPrinted=false
+- browserUsed=false
+- loginExecuted=false
+- masterUsed=false
+- passwordUsed=false
+- postExecuted=false
+- mutationExecuted=false
+- gestorUnidadesAccessed=false
+- vercelExecuted=false
+- npmTestExecuted=false
+- pushExecuted=false
+- tempSanitizedSummaryFileUsed=true
+- projectFilesChangedByValidation=false
+- workingTreeCleanAfterValidation=true
+- branchAheadAfterValidation=6
+- productionReady=false
+- recommendedNextCandidate=planAuthenticatedUnidadesMasterOnlineValidationAfterPublicGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada da validacao online publica/read-only pos-redeploy da correcao de unidades master, sem execucao agora.
 - selectedTarget=authorizeOnlineValidationAfterUnidadesMasterReadOnlyFixRedeploy
 - basePlanCommit=5c18206
