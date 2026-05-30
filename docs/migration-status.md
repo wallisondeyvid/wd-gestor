@@ -1,3 +1,27 @@
+## Checkpoint documental curto do pos-push do bloco green da correcao de unidades master, sem nova execucao operacional manual.
+- selectedTarget=recordPostPushUnidadesMasterReadOnlyFix
+- pushExecuted=true
+- pushedRange=ea086d0..4274354
+- localHeadAfterPush=4274354
+- remoteHeadAfterPush=4274354
+- aheadAfterPush=0
+- workingTreeCleanAfterPush=true
+- prePushHookResult=green
+- prePushHookTests=2384
+- prePushHookPass=2382
+- prePushHookFail=0
+- prePushHookSkipped=2
+- hookHttpTrafficOnly=true
+- manualNpmTestExecuted=false
+- manualNpmNodeExecuted=false
+- browserUsed=false
+- loginExecuted=false
+- vercelExecuted=false
+- redeployExecuted=false
+- sourceChanged=false
+- productionReady=false
+- recommendedNextCandidate=planRedeployAfterUnidadesMasterReadOnlyFixPush
+
 ## Checkpoint documental curto da autorizacao futura e separada do push do bloco green da correcao de unidades master, sem execucao de push agora e sem nova execucao operacional.
 - selectedTarget=authorizePushAfterUnidadesMasterReadOnlyFixGreen
 - basePushPlanCommit=d24c835
