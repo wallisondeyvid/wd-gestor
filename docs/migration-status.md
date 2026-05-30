@@ -1,3 +1,44 @@
+## Checkpoint documental curto do planejamento da correcao minima para /gestor/unidades master/admin sem unidade, sem implementacao de codigo e sem execucao operacional.
+- selectedTarget=planMinimalFixForUnidadesProvisioningAndApiCanonicalPrivilege
+- checkpointScope=documentalOnly
+- redBaseCommit=fb6bd99
+- inspectionResultCommit=dcc213f
+- localAheadBeforePlanning=10
+- workingTreeCleanBeforePlanning=true
+- fixPlanScope=documentalOnly
+- primaryFixTarget=unidadesProvisioningReadOnlyEndpoint
+- secondaryFixTarget=GET /api/unidades canonical privilege alignment
+- primaryFixStep1=locateProvisioningAuxiliaryEndpointInUnidadeApi
+- primaryFixStep2=allowMasterAdminWithoutActiveUnitToBypassStrictRequireUnitScopeForReadOnlyUnidadesSummaryCall
+- primaryFixStep3=preserveDiretorUserUnitRequirementInProvisioningCorridor
+- primaryFixStep4=preserveMutationRouteProtection
+- secondaryFixStep1=replaceOrAdjustWeakLocalPrivilegeHelperBasedOnlyOnReqUserRoleOrIsMaster
+- secondaryFixStep2=useExistingCanonicalPrivilegeHelperCompatibleWithGlobalRoleAndAuthContext
+- secondaryFixStep3=guaranteeMasterAdminWithoutActiveUnitRemainPrivilegedOnGET /api/unidades
+- secondaryFixStep4=guaranteeDiretorUserRemainTenantScopedOnGET /api/unidades
+- masterAdminNoUnitShouldBypassStrictUnitScopeForReadOnlyUnidadesAuxiliaryCalls=true
+- diretorUserStillRequireUnitScope=true
+- mutationRoutesRemainProtected=true
+- testsNeeded=true
+- candidateTestProvisioningPrivilegedNoUnitNoUnidadeIdRequired=true
+- candidateTestProvisioningDiretorUserWithoutUnitStillBlocked=true
+- candidateTestApiUnidadesPrivilegeViaGlobalRoleOrAuthContext=true
+- candidateTestTenantScopedUserNoRegression=true
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=authorizeMinimalFixForUnidadesProvisioningAndApiCanonicalPrivilege
+
 ## Checkpoint documental curto do resultado da inspecao estatica do red em /gestor/unidades para master/admin sem unidade, sem execucao operacional e sem alteracao de codigo.
 - selectedTarget=recordStaticInspectionGestorUnidadesMasterUnitScope400
 - checkpointScope=documentalOnlyStaticInspectionResult
