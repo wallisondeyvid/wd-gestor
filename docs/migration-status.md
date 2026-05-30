@@ -90289,6 +90289,90 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Preparar checklist final de aprovacao de producao
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `635e44b` no inicio desta rodada;
+	- todos os gates tecnicos permanecem green e o escopo de piloto sem flag de producao ja foi preparado;
+	- `productionDecisionGate` continua `not-ready` e ainda exige aprovacoes finais explicitas;
+	- este microcorte consolida apenas o checklist final de aprovacao necessario antes de qualquer eventual decisao futura sobre producao;
+	- `productionReady` deve permanecer falso nesta rodada.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so preparacao documental;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao executar runtime;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=prepareFinalProductionDecisionApprovalChecklist`
+	- `planningScope=documentalOnlyNoRuntime`
+	- `previousPilotReadinessScopeCommit=635e44b`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `allTechnicalGatesGreenBeforeDecision=true`
+	- `pilotReadinessScopePrepared=true`
+	- `pilotScopeDoesNotEnableProduction=true`
+	- `productionDecisionGateStatusBefore=not-ready`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `finalProductionDecisionApprovalChecklistPrepared=true`
+	- `finalProductionDecisionRequiresExplicitHumanApproval=true`
+	- `finalProductionDecisionRequiresBusinessApproval=true`
+	- `finalProductionDecisionRequiresBackupConfirmation=true`
+	- `finalProductionDecisionRequiresRollbackConfirmation=true`
+	- `finalProductionDecisionRequiresEnvironmentVariablesReview=true`
+	- `finalProductionDecisionRequiresDomainDeploymentReview=true`
+	- `finalProductionDecisionRequiresPilotClientScopeConfirmation=true`
+	- `finalProductionDecisionRequiresMonitoringPlanConfirmation=true`
+	- `finalProductionDecisionRequiresSupportPlanConfirmation=true`
+	- `finalProductionDecisionRequiresMasterUserProtectionConfirmation=true`
+	- `finalProductionDecisionRequiresNoSecretsInLogsConfirmation=true`
+	- `finalProductionDecisionRequiresFinalGitCleanSyncedConfirmation=true`
+	- `finalProductionDecisionRequiresNoPendingLedgerContradiction=true`
+	- `finalProductionDecisionCannotBeImplicit=true`
+	- `finalProductionDecisionCannotBeAutomatic=true`
+	- `finalProductionDecisionGateStatusAfter=not-ready`
+	- `productionDecisionGateStillBlocking=true`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=keepProductionDecisionNotReadyUntilHumanApproval`
+	- `selectedNextSafeCandidateReason=productionReady-can-only-change-after-explicit-human-business-operational-approval`
+	- `recommendedNextCandidate=keepProductionDecisionNotReadyUntilHumanApproval`
+	- `secondaryCandidate=preparePilotOperationalHandoffWithoutProductionFlag`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalPlanningOnly=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
