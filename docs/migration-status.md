@@ -1,3 +1,20 @@
+## Checkpoint documental curto do planejamento do push do bloco green do fix de /gestor/unidades.
+- selectedTarget=planPushAfterPagesRouterRequireUnitScopeContextMismatchFixGreen
+- baseImplementationCommit=11527e8
+- baseTargetedValidationCommit=7d6e375
+- baseFullNpmTestRecordCommit=3bab8b7
+- npmTestFullResult=green
+- npmTestFullTests=2385
+- npmTestFullPass=2383
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- branchAhead=21
+- workingTreeClean=true
+- pushPlanned=true
+- pushExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=authorizePushAfterPagesRouterRequireUnitScopeContextMismatchFixGreen
+
 ## Checkpoint documental curto do resultado green do npm test completo apos o fix de /gestor/unidades.
 - selectedTarget=recordFullNpmTestForPagesRouterRequireUnitScopeContextMismatchFix
 - baseImplementationCommit=11527e8
