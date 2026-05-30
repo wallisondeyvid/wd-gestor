@@ -1,3 +1,44 @@
+## Checkpoint documental curto do resultado green da validacao online controlada apos o redeploy vercel da normalizacao master/admin em /gestor/unidades, sem nova execucao de HTTP, sem navegador, sem login e sem alteracao de codigo.
+- selectedTarget=recordOnlineValidationAfterVercelRedeployMasterAdminNormalization
+- checkpointScope=documentalOnlyAfterOnlineValidation
+- previousOnlineValidationAuthorizationCommit=55d8d6d
+- localAheadBeforeRecord=6
+- workingTreeCleanBeforeRecord=true
+- onlineValidationExecuted=true
+- onlineValidationResult=green
+- onlineValidationAliasTarget=https://wdgestor.vercel.app
+- attemptedSystemNetHttp=true
+- systemNetHttpResult=hostFailureBeforeValidHttpReading
+- validValidationMethod=HttpWebRequest
+- rootStatusCode=200
+- rootContentType=text/html
+- rootHasLocationHeader=false
+- rootPageShapePresent=true
+- healthStatusCode=200
+- healthContentType=application/json
+- healthHasLocationHeader=false
+- healthBodyShapePresent=true
+- gestorLoginStatusCode=200
+- gestorLoginContentType=text/html
+- gestorLoginHasLocationHeader=false
+- loginPageShapePresent=true
+- bodyFullPrinted=false
+- headersFullPrinted=false
+- cookieTokenSessionSecretPrinted=false
+- browserUsed=false
+- loginExecuted=false
+- masterUsed=false
+- passwordUsed=false
+- postExecuted=false
+- mutationExecuted=false
+- vercelExecutedAgain=false
+- npmTestExecuted=false
+- nodeManualExecuted=false
+- pushExecuted=false
+- sourceChanged=false
+- productionReady=false
+- recommendedNextCandidate=planPostOnlineValidationPublicationOrPushDecision
+
 ## Checkpoint documental curto da autorizacao futura e separada da validacao online controlada apos o redeploy vercel da normalizacao master/admin em /gestor/unidades, sem execucao de HTTP agora, sem navegador, sem login e sem alteracao de codigo.
 - selectedTarget=authorizeOnlineValidationAfterVercelRedeployMasterAdminNormalization
 - checkpointScope=documentalAuthorizationOnlyNoOnlineValidationExecution
