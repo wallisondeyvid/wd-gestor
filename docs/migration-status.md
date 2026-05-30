@@ -90205,6 +90205,90 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Preparar escopo de piloto sem flag de producao
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `bcb2018` no inicio desta rodada;
+	- todos os gates tecnicos permanecem green, mas `productionDecisionGate` continua `not-ready`;
+	- este microcorte define apenas um escopo seguro de piloto operacional e negocial, sem ligar `productionReady`;
+	- o objetivo e separar o estado tecnicamente green da decisao formal de producao.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao executar runtime;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=preparePilotReadinessScopeWithoutProductionFlag`
+	- `planningScope=documentalOnlyNoRuntime`
+	- `previousProductionDecisionChecklistCommit=bcb2018`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `allTechnicalGatesGreenBeforeDecision=true`
+	- `productionDecisionGateStatusBefore=not-ready`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `pilotReadinessScopePrepared=true`
+	- `pilotScopeDoesNotEnableProduction=true`
+	- `pilotScopeRequiresHumanApproval=true`
+	- `pilotScopeRequiresClientSelection=true`
+	- `pilotScopeRequiresBackupPlan=true`
+	- `pilotScopeRequiresRollbackPlan=true`
+	- `pilotScopeRequiresMonitoringPlan=true`
+	- `pilotScopeRequiresSupportPlan=true`
+	- `pilotScopeRequiresEnvironmentReview=true`
+	- `pilotScopeRequiresDomainDeploymentReview=true`
+	- `pilotScopeRequiresMasterUserProtection=true`
+	- `pilotScopeRequiresNoSecretsInLogs=true`
+	- `pilotScopeAllowsControlledReadOnlyObservation=true`
+	- `pilotScopeAllowsFictionalUserOnlyValidation=true`
+	- `pilotScopeBlocksRealClientMutationUntilApproval=true`
+	- `pilotScopeBlocksMasterUsage=true`
+	- `pilotScopeBlocksSeedScripts=true`
+	- `pilotScopeBlocksCleanupWrongEmail=true`
+	- `pilotScopeBlocksProductionReadyFlag=true`
+	- `productionDecisionGateStatusAfter=not-ready`
+	- `productionDecisionGateStillBlocking=true`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=prepareFinalProductionDecisionApprovalChecklist`
+	- `selectedNextSafeCandidateReason=pilot-scope-can-be-prepared-without-production-flag-but-final-production-decision-still-requires-human-business-and-operational-approval`
+	- `recommendedNextCandidate=prepareFinalProductionDecisionApprovalChecklist`
+	- `secondaryCandidate=keepPilotScopeDocumentalOnly`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalPlanningOnly=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
