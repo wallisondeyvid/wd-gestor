@@ -1,3 +1,29 @@
+## Checkpoint documental curto da autorizacao futura e separada da validacao direcionada do fix de /gestor/unidades master/admin sem unidade, sem execucao de testes e sem alteracao de codigo.
+- selectedTarget=authorizeTargetedValidationForUnidadesMasterReadOnlyFix
+- checkpointScope=documentalAuthorizationOnlyTargetedValidation
+- authorizationScope=futureSeparateTargetedValidationOnly
+- baseImplementationCommit=cf82ed6
+- basePlanningCommit=b17449d
+- targetedValidationAuthorized=true
+- npmTestFullAuthorized=false
+- onlineValidationAuthorized=false
+- vercelAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecutedNow=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=executeTargetedValidationForUnidadesMasterReadOnlyFixInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da validacao direcionada apos a implementacao minima do fix de /gestor/unidades master/admin sem unidade, sem nova execucao de testes e sem alteracao de codigo.
 - selectedTarget=planTargetedValidationForUnidadesMasterReadOnlyFix
 - checkpointScope=documentalOnlyPostImplementationValidationPlanning
