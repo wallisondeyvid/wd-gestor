@@ -1,3 +1,33 @@
+## Checkpoint documental curto do resultado red da validacao online autenticada de /gestor/unidades com master.
+- selectedTarget=recordAuthenticatedUnidadesMasterOnlineValidationRed
+- baseAuthorizationCommit=d88d7e4
+- authenticatedValidationExecuted=true
+- authenticatedValidationResult=red
+- loginAttempted=true
+- loginCrashed=false
+- loginStatusCode=303
+- loginHasLocationHeader=true
+- cookiePresent=true
+- loginSucceededShape=true
+- unidadesAttempted=true
+- unidadesCrashed=false
+- unidadesStatusCode=400
+- unidadesContentType=application/json
+- unidadesHasLocationHeader=false
+- unidadesBodyLength=0
+- hasUnidadeIdRequired=false
+- unidadeIdRequiredTextConfirmed=false
+- pageShapePresent=false
+- jsonErrorShapePresent=true
+- passwordPrinted=false
+- cookiePrinted=false
+- tokenPrinted=false
+- sessionPrinted=false
+- fullBodyPrinted=false
+- fullHeadersPrinted=false
+- productionReady=false
+- nextCandidate=planStaticInspectionAuthenticatedUnidadesOnline400Json
+
 ## Checkpoint documental curto da autorizacao futura e separada da validacao online autenticada de /gestor/unidades com master apos o green publico, sem execucao agora.
 - selectedTarget=authorizeAuthenticatedUnidadesMasterOnlineValidationAfterPublicGreen
 - basePlanCommit=983f01e
