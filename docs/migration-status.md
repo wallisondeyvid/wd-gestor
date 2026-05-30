@@ -1,3 +1,45 @@
+## Checkpoint documental curto do resultado da inspecao estatica do red em /gestor/unidades para master/admin sem unidade, sem execucao operacional e sem alteracao de codigo.
+- selectedTarget=recordStaticInspectionGestorUnidadesMasterUnitScope400
+- checkpointScope=documentalOnlyStaticInspectionResult
+- previousStaticInspectionPlanningCommit=030e03a
+- localAheadBeforeRecord=9
+- workingTreeCleanBeforeRecord=true
+- staticInspectionExecuted=true
+- staticInspectionResult=completed
+- noCodeChanged=true
+- noOperationalExecution=true
+- inspectedFilePagesRouter=src/modules/gestor/app/routes/pagesRouter.js
+- inspectedFileRequireUnitScope=src/modules/gestor/app/middlewares/requireUnitScope.js
+- inspectedFileUnidadeApi=src/modules/gestor/app/routes/unidadeApi.js
+- inspectedFileAuthContextResolver=src/modules/gestor/app/services/authContextResolver.js
+- inspectedFilePagesController=src/modules/gestor/app/controllers/views/pagesController.js
+- inspectedFileRequireLogin=src/modules/gestor/app/middlewares/requireLogin.js
+- inspectedFilePublicGestorUnidadesJs=public/gestor/js/pages/unidades.js
+- inspectedFileLoadPaginaUnidadesBundle=src/modules/gestor/app/services/unidades/loadPaginaUnidadesBundle.service.js
+- inspectedFileResolveRequireLoginCanonicalResolvedUser=src/modules/gestor/app/services/auth/resolveRequireLoginCanonicalResolvedUser.service.js
+- inspectedRepoMemoryRead=true
+- createdRepoMemory=unidades-api-canonical-privilege-guardrail.md
+- primaryFinding=clientSideProvisioningFetchStillHitsStrictRequireUnitScope
+- secondaryFinding=GET /api/unidades helper local may diverge from canonical privilege helper
+- probable400Origin=auxiliaryEndpointInUnidadeApiStillPassingThroughRequireUnitScope
+- primarySsrGateStrongestCandidate=false
+- ssrMainRouteIsNotStrongestCandidate=true
+- middlewareStillReturning400=requireUnitScope.js
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=planMinimalFixForUnidadesProvisioningAndApiCanonicalPrivilege
+
 ## Checkpoint documental curto do planejamento da inspecao estatica do red em /gestor/unidades para master/admin sem unidade, sem execucao de HTTP, sem navegador, sem login e sem alteracao de codigo.
 - selectedTarget=planStaticInspectionGestorUnidadesMasterUnitScope400
 - checkpointScope=documentalPlanningOnlyStaticInspection
