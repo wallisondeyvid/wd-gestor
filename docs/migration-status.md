@@ -91351,6 +91351,103 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Registrar smoke online passivo green
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `02963d3` no inicio desta rodada;
+	- o smoke online controlado ja estava autorizado documentalmente;
+	- foi executado smoke online passivo no alias `https://wdgestor.vercel.app` apenas nos alvos permitidos de leitura;
+	- os checks de `GET /`, `GET /health` e `GET /gestor/login` retornaram status 200 com shape presente e booleano verdadeiro;
+	- este microcorte registra apenas documentalmente o resultado green desse smoke passivo, sem repetir smoke, sem login e sem alterar `productionReady`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so registro documental do smoke green;
+	- nao repetir smoke;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=recordPassiveOnlineSmokeCheckGreen`
+	- `checkpointScope=documentalOnlyAfterPassiveSmoke`
+	- `previousOnlineSmokeAuthorizationCommit=02963d3`
+	- `localRemoteSyncedBeforeSmoke=true`
+	- `workingTreeCleanBeforeSmoke=true`
+	- `vercelAliasUrl=https://wdgestor.vercel.app`
+	- `smokeCheckExecuted=true`
+	- `smokeCheckType=passive-read-only-online`
+	- `smokeCheckUsedAliasUrl=true`
+	- `rootGetExecuted=true`
+	- `rootStatusCode=200`
+	- `rootResultBoolean=true`
+	- `rootBodyShapePresent=true`
+	- `healthGetExecuted=true`
+	- `healthStatusCode=200`
+	- `healthResultBoolean=true`
+	- `healthBodyShapePresent=true`
+	- `gestorLoginGetExecuted=true`
+	- `gestorLoginStatusCode=200`
+	- `gestorLoginResultBoolean=true`
+	- `gestorLoginBodyShapePresent=true`
+	- `smokeCheckResult=green`
+	- `onlineControlledReviewSmokeGreen=true`
+	- `commercialProductionReady=false`
+	- `paidClientProduction=false`
+	- `realPayingClients=false`
+	- `productStillUnderConstruction=true`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `realLoginExecuted=false`
+	- `masterLoginExecuted=false`
+	- `fictionalLoginExecuted=false`
+	- `mutationExecuted=false`
+	- `cookiePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `headersPrinted=false`
+	- `bodyPrinted=false`
+	- `mongoUriPrinted=false`
+	- `finalGitStatusClean=true`
+	- `finalLocalRemoteSynced=true`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=planOnlineControlledReviewNavigationChecklist`
+	- `selectedNextSafeCandidateReason=passive-online-smoke-is-green-and-next-step-should-map-navigation-and-missing-features-without-login-real-or-mutation`
+	- `recommendedNextCandidate=planOnlineControlledReviewNavigationChecklist`
+	- `secondaryCandidate=recordOnlineSmokeGreenAndKeepProductionReadyFalse`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `vercelDeployCompletedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `passiveOnlineSmokeGreenCheckpointIsDocumentalOnly=true`
+	- `doNotRepeatSmokeNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
