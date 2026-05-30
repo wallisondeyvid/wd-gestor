@@ -90888,6 +90888,102 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Autorizar deploy Vercel prod para revisao online controlada
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `a5f8711` no inicio desta rodada;
+	- o WD Gestor continua em revisao controlada;
+	- nem todas as funcionalidades estao concluidas;
+	- ainda nao ha clientes pagantes reais;
+	- o deploy Vercel prod foi planejado em `a5f8711` como `online-controlled-review`;
+	- este microcorte registra apenas a autorizacao documental futura e separada para executar esse deploy como revisao online controlada, sem producao comercial e sem alterar `productionReady`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar deploy agora;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeVercelProdDeployForOnlineControlledReview`
+	- `authorizationScope=documentalOnlyFutureDeploy`
+	- `previousVercelProdDeployPlanningCommit=a5f8711`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `workingTreeCleanBeforeAuthorization=true`
+	- `vercelProdDeployPurpose=online-controlled-review`
+	- `vercelProdDeployDoesNotMeanCommercialProduction=true`
+	- `onlineControlledReviewAuthorized=true`
+	- `onlineControlledReviewAuthorizedForFutureOnly=true`
+	- `vercelProdDeployExecutedNow=false`
+	- `commercialProductionReady=false`
+	- `paidClientProduction=false`
+	- `realPayingClients=false`
+	- `productStillUnderConstruction=true`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `futureDeployMustKeepProductionReadyFalse=true`
+	- `futureDeployMustUseSanitizedEnv=true`
+	- `futureDeployMustNotPrintSecrets=true`
+	- `futureDeployMustCheckVercelEnvVars=true`
+	- `futureDeployMustCheckMongoUriConfiguredInVercelOnly=true`
+	- `futureDeployMustCheckNoSecretsInLogs=true`
+	- `futureDeployMustUseFictionalUserForValidation=true`
+	- `futureDeployMustAvoidRealClientDataMutation=true`
+	- `futureDeployMustNotUseMasterUser=true`
+	- `futureDeployMustNotRunSeedScripts=true`
+	- `futureDeployMustNotRunCleanupWrongEmail=true`
+	- `futureDeployMustHaveRollbackAwareness=true`
+	- `futureDeployMustHaveBackupPlanBeforeRealClientUse=true`
+	- `futureDeployCanProceedOnlyAsOnlineControlledReview=true`
+	- `realClientMutationStillBlocked=true`
+	- `masterUserStillProtected=true`
+	- `seedScriptsStillBlocked=true`
+	- `cleanupWrongEmailStillBlocked=true`
+	- `productionReadyFlagStillBlocked=true`
+	- `nextExecutionAuthorized=true`
+	- `selectedNextSafeCandidate=executeVercelProdDeployForOnlineControlledReviewInSeparateMicrocut`
+	- `selectedNextSafeCandidateReason=deploy-is-authorized-only-for-online-controlled-review-to-map-remaining-product-work-without-productionReady`
+	- `recommendedNextCandidate=executeVercelProdDeployForOnlineControlledReviewInSeparateMicrocut`
+	- `secondaryCandidate=recordVercelProdDeployResultForOnlineControlledReview`
+	- `tertiaryCandidate=keepProductionReadyFalseAndMasterProtected`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `vercelCliExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `vercelProdDeployAuthorizationIsDocumentalOnly=true`
+	- `doNotExecuteDeployNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
