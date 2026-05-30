@@ -1,3 +1,19 @@
+## Checkpoint documental curto do planejamento do redeploy pos-push do fix de /gestor/unidades.
+- selectedTarget=planRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPush
+- basePublishedCommit=2162608
+- postPushCheckpointCommit=bf4033d
+- pushedRange=4274354..2162608
+- localHead=bf4033d
+- originHead=2162608
+- branchAhead=1
+- workingTreeClean=true
+- redeployPlanned=true
+- redeployExecutedNow=false
+- vercelAuthorized=false
+- onlineValidationAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=authorizeRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPush
+
 ## Checkpoint documental curto do pos-push do bloco green do fix de /gestor/unidades.
 - selectedTarget=recordPostPushPagesRouterRequireUnitScopeContextMismatchFix
 - pushExecuted=true
