@@ -1,3 +1,19 @@
+## Checkpoint documental curto do planejamento da validacao online publica/read-only pos-redeploy do fix de /gestor/unidades.
+- selectedTarget=planOnlineValidationAfterPagesRouterRequireUnitScopeContextMismatchFixRedeploy
+- baseRedeployRecordCommit=c1a345a
+- aliasTarget=https://wdgestor.vercel.app
+- onlineValidationPlanned=true
+- onlineValidationExecutedNow=false
+- plannedPublicReadOnlyEndpoints=GET /, GET /health, GET /gestor/login
+- authenticatedUnidadesValidationPlannedSeparately=true
+- loginAuthorized=false
+- masterUseAuthorized=false
+- mutationAuthorized=false
+- cookieTokenSessionPrintingForbidden=true
+- fullBodyHeadersPrintingForbidden=true
+- productionReady=false
+- recommendedNextCandidate=authorizeOnlineValidationAfterPagesRouterRequireUnitScopeContextMismatchFixRedeploy
+
 ## Checkpoint documental curto do resultado green do redeploy pos-push do fix de /gestor/unidades.
 - selectedTarget=recordRedeployAfterPagesRouterRequireUnitScopeContextMismatchFixPush
 - baseAuthorizationCommit=385f1d6
