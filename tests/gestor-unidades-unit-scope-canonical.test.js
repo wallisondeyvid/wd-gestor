@@ -400,6 +400,43 @@ test('GET /gestor/unidades com admin apenas por global_role sem unidade ativa re
   assert.match(res.text, new RegExp(unidadePrincipalC.nome));
 });
 
+test('GET /gestor/unidades com admin legado e req.user.unidade_id sem unidade explicita na request preserva o branch global', async () => {
+  const unidadePrincipalA = await createUnit({ nome: `Principal Admin Legado A ${nextSequence()}` });
+  const unidadeFilialB = await createUnit({
+    nome: `Filial Admin Legado B ${nextSequence()}`,
+    principalUnitId: unidadePrincipalA._id,
+  });
+  const unidadePrincipalC = await createUnit({ nome: `Principal Admin Legado C ${nextSequence()}` });
+
+  const user = await createUser({
+    email: buildUniqueEmail('unidades-admin-legado-global'),
+    nome: 'Admin Legado Global de Unidades',
+    role: 'admin',
+    unidadeId: unidadeFilialB._id,
+  });
+
+  const agent = request.agent(app);
+
+  await seedSession(agent, {
+    email: user.email,
+    role: 'admin',
+    unidadeId: normalizeId(unidadeFilialB._id),
+    unidadePrincipalId: normalizeId(unidadePrincipalA._id),
+  });
+
+  const res = await agent
+    .get('/gestor/unidades')
+    .set('Accept', 'text/html')
+    .set('Connection', 'close');
+
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'] || '', /text\/html/i);
+  assert.match(res.text, new RegExp(unidadePrincipalA.nome));
+  assert.match(res.text, new RegExp(unidadeFilialB.nome));
+  assert.match(res.text, new RegExp(unidadePrincipalC.nome));
+  assert.doesNotMatch(res.text, /UNIDADE_ID_REQUIRED/i);
+});
+
 test('GET /gestor/unidades com usuário privilegiado e unidade ativa continua contextual', async () => {
   const unidadePrincipalA = await createUnit({ nome: `Principal Contextual A ${nextSequence()}` });
   const unidadeFilialB = await createUnit({

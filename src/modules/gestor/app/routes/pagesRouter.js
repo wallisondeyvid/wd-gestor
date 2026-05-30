@@ -20,7 +20,6 @@ function isPrivilegedGestorRequest(req) {
 function hasCanonicalUnitContext(req) {
 	return Boolean(
 		req?.session?.gestorAuthContext?.active_unidade_id
-		|| req?.user?.unidade_id
 		|| req?.query?.unidadeId
 		|| req?.query?.unidade_id
 		|| req?.params?.unidadeId
