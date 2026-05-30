@@ -90796,6 +90796,98 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Planejar deploy Vercel prod para revisao online controlada
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `8670e65` no inicio desta rodada;
+	- todos os gates tecnicos permanecem green;
+	- o resumo humano de revisao do piloto ja foi publicado;
+	- `productionReady` deve continuar falso;
+	- `productionDecisionGateStatus` permanece `not-ready`;
+	- a necessidade humana agora e subir o WD Gestor no Vercel prod apenas para revisao online controlada, mapeamento de telas, fluxos e itens ainda faltantes;
+	- este microcorte registra apenas o planejamento documental seguro desse deploy controlado, sem executar deploy e sem tratar isso como liberacao de producao para cliente real.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so planejamento documental;
+	- nao executar deploy agora;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=planVercelProdDeployForOnlineControlledReview`
+	- `planningScope=documentalOnlyNoDeploy`
+	- `previousHumanPilotReviewSummaryCommit=8670e65`
+	- `localRemoteSyncedBeforePlanning=true`
+	- `workingTreeCleanBeforePlanning=true`
+	- `allTechnicalGatesGreen=true`
+	- `productionReady=false`
+	- `productionDecisionGateStatus=not-ready`
+	- `vercelProdDeployPurpose=online-controlled-review`
+	- `vercelProdDeployDoesNotMeanProductionReady=true`
+	- `onlineControlledReviewPlanned=true`
+	- `onlineControlledReviewGoal=access-online-map-missing-features-and-finish-building-applications`
+	- `backupStillImportant=true`
+	- `backupBlocksRealClientProduction=true`
+	- `backupDoesNotBlockControlledOnlineReviewWithoutRealClientMutation=true`
+	- `realClientMutationStillBlocked=true`
+	- `masterUserStillProtected=true`
+	- `seedScriptsStillBlocked=true`
+	- `cleanupWrongEmailStillBlocked=true`
+	- `productionReadyFlagStillBlocked=true`
+	- `deployMustUseSanitizedEnv=true`
+	- `deployMustNotPrintSecrets=true`
+	- `deployMustCheckVercelEnvVars=true`
+	- `deployMustCheckMongoUriConfiguredInVercelOnly=true`
+	- `deployMustCheckNoSecretsInLogs=true`
+	- `deployMustKeepUserFictionalForValidation=true`
+	- `deployMustAvoidRealClientDataMutation=true`
+	- `deployMustHaveRollbackAwareness=true`
+	- `deployMustHaveBackupPlanBeforeRealClientUse=true`
+	- `deployCanProceedOnlyAsTechnicalOnlineReview=true`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=authorizeVercelProdDeployForOnlineControlledReview`
+	- `selectedNextSafeCandidateReason=online-review-is-needed-to-map-remaining-product-work-but-deploy-must-be-authorized-separately-and-not-change-productionReady`
+	- `recommendedNextCandidate=authorizeVercelProdDeployForOnlineControlledReview`
+	- `secondaryCandidate=prepareVercelEnvChecklistBeforeDeploy`
+	- `tertiaryCandidate=keepProductionReadyFalseAndMasterProtected`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `vercelCliExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `vercelProdDeployPlanIsDocumentalOnly=true`
+	- `doNotExecuteDeployNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
