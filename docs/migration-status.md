@@ -1,3 +1,20 @@
+## Checkpoint documental curto do planejamento do push do bloco green da correcao de unidades master, sem execucao de push agora e sem nova execucao operacional.
+- selectedTarget=planPushAfterUnidadesMasterReadOnlyFixGreen
+- baseImplementationCommit=cf82ed6
+- baseTargetedValidationCommit=f420c4f
+- baseFullNpmTestRecordCommit=a2ec097
+- branchAhead=19
+- workingTreeClean=true
+- pushPlanned=true
+- pushExecutedNow=false
+- npmTestFullGreen=true
+- npmTestFullTests=2384
+- npmTestFullPass=2382
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- productionReady=false
+- recommendedNextCandidate=authorizePushAfterUnidadesMasterReadOnlyFixGreen
+
 ## Checkpoint documental curto do resultado green do npm test completo apos o fix de /gestor/unidades master/admin sem unidade, sem nova execucao operacional e sem alteracao de codigo.
 - selectedTarget=recordFullNpmTestAfterUnidadesMasterReadOnlyFix
 - checkpointScope=documentalOnlyFullNpmTestResult
