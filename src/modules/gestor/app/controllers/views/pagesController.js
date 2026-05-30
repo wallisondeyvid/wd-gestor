@@ -11,6 +11,7 @@ import { loadPaginaRecursosBundle } from '#modules/gestor/app/services/recursos/
 import { loadPaginaSetoresBundle } from '#modules/gestor/app/services/setores/loadPaginaSetoresBundle.service.js';
 import { listModulosOwnerService } from '#modules/gestor/app/services/modulos/listModulosOwner.service.js';
 import { loadPaginaUnidadesBundle } from '#modules/gestor/app/services/unidades/loadPaginaUnidadesBundle.service.js';
+import { isPrivilegedGestorContext } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 import {
   findAllUnidades,
   findUnidadesByMatrizOuPrincipal,
@@ -93,17 +94,39 @@ export const estados = [
 ];
 
 // Helper robusto de privilégio master/admin
-function isMasterLike(user){
-  if(!user) return false;
-  return user.isMaster === true || user.role === 'master';
+function normalizeRole(value) {
+  const role = String(value || '').trim().toLowerCase();
+  return role || null;
+}
+
+function isMasterLike(req){
+  return [
+    req?.user?.isMaster === true ? 'master' : null,
+    req?.user?.role,
+    req?.user?.globalRole,
+    req?.user?.global_role,
+    req?.user?.effectiveRole,
+    req?.session?.user?.role,
+    req?.session?.user?.globalRole,
+    req?.session?.user?.global_role,
+    req?.session?.user?.effectiveRole,
+    req?.session?.gestorAuthContext?.effectiveRole,
+    req?.session?.gestorAuthContext?.effective_role,
+    req?.session?.gestorAuthContext?.globalRole,
+    req?.session?.gestorAuthContext?.global_role,
+  ].some((value) => normalizeRole(value) === 'master');
 }
 
 function normalizeId(value) {
   return String(value || '').trim();
 }
 
-function isPrivilegedGestorUser(user) {
-  return isMasterLike(user) || user?.role === 'admin';
+function isPrivilegedGestorUser(req) {
+  return isPrivilegedGestorContext({
+    user: req?.user || null,
+    sessionUser: req?.session?.user || null,
+    authContext: req?.session?.gestorAuthContext || null,
+  });
 }
 
 function getScopedUnitId(req) {
@@ -250,11 +273,11 @@ export async function paginaUsuarios(req, res, next) {
     if (isDbOff(req)) {
       return res.status(200).render('usuarios', stubCtx(req));
     }
-    const isGlobalScope = !!(req.user?.isMaster || req.user?.role === 'admin');
+    const isGlobalScope = isPrivilegedGestorUser(req);
     if (!isGlobalScope) return res.status(403).send('Acesso negado');
     const result = await listUsuariosOwnerService({
       req,
-      isMaster: req.user.isMaster,
+      isMaster: isMasterLike(req),
       isGlobalScope,
     });
     return res.render('usuarios', buildUsuariosViewRenderPayload({ user: req.user, result }));
@@ -263,11 +286,11 @@ export async function paginaUsuarios(req, res, next) {
 
 export async function paginaUnidades(req, res) {
   try {
-    const isMaster = isMasterLike(req.user);
-    const privilegedUser = isPrivilegedGestorUser(req.user);
+    const isMaster = isMasterLike(req);
+    const privilegedUser = isPrivilegedGestorUser(req);
     console.log('[paginaUnidades] Iniciando carregamento, user:', req.user ? { email: req.user.email, role: req.user.role, isMaster } : 'null');
     if (isDbOff(req)) {
-      return res.status(200).render('unidades', stubCtx(req, { unidadesFiltradas: [], principalUnits: [], isMaster: !!req.user?.isMaster, modulos: [], usuariosDiretor: [] }));
+      return res.status(200).render('unidades', stubCtx(req, { unidadesFiltradas: [], principalUnits: [], isMaster, modulos: [], usuariosDiretor: [] }));
     }
 
     const locals = await loadPaginaUnidadesBundle({
@@ -282,7 +305,7 @@ export async function paginaUnidades(req, res) {
     console.error('[pagesController] /unidades erro:', e && (e.stack || e.message || e));
     // Fallback: renderizar página vazia para evitar 500 e permitir diagnóstico de front
     try {
-      const safeMaster = isMasterLike(req.user);
+      const safeMaster = isMasterLike(req);
       return res.status(200).render('unidades', { unidadesFiltradas: [], principalUnits: [], isMaster: safeMaster, user: req.user || null, estados, modulos: [], usuariosDiretor: [] });
     } catch (e2) {
       console.error('[pagesController] /unidades fallback render falhou:', e2 && (e2.stack || e2.message || e2));
@@ -294,7 +317,7 @@ export async function paginaUnidades(req, res) {
 export async function paginaEditarUnidade(req, res) {
   try {
     const unidadeId = req.params.id;
-    const privilegedUser = isPrivilegedGestorUser(req.user);
+    const privilegedUser = isPrivilegedGestorUser(req);
     let unidadesFiltradas;
     const scopedContext = await loadScopedUnidadesClusterForPage(req);
 
@@ -320,9 +343,9 @@ export async function paginaModulos(req, res) {
   if (isDbOff(req)) {
     return res.status(200).render('slots-modulos', stubCtx(req, { modulos: [] }));
   }
-  if (!req.user.isMaster && req.user.role !== 'admin') return res.status(403).send('Acesso negado');
+  if (!isPrivilegedGestorUser(req)) return res.status(403).send('Acesso negado');
   const result = await listModulosOwnerService({
-    userRole: req.user?.role || null,
+    userRole: isMasterLike(req) ? 'master' : (req.user?.role || null),
     activeUnitId: req.unitScope?.unidadeId || null,
     authContext: req.session?.gestorAuthContext || null,
     requestUser: req.user || null,
@@ -333,7 +356,7 @@ export async function paginaModulos(req, res) {
 
 export async function paginaFuncoes(req, res) {
   try {
-    const privilegedUser = isPrivilegedGestorUser(req.user);
+    const privilegedUser = isPrivilegedGestorUser(req);
     const result = await loadPaginaFuncoesOwnerBundle({
       req,
       privilegedUser,
@@ -351,7 +374,7 @@ export async function paginaFuncoes(req, res) {
 export async function paginaFuncionarios(req, res) {
   try {
     console.log('[paginaFuncionarios] Iniciando carregamento, user:', req.user ? { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster } : 'null');
-    const privilegedUser = isPrivilegedGestorUser(req.user);
+    const privilegedUser = isPrivilegedGestorUser(req);
     if (isDbOff(req)) {
       const unidadeContextualId = getScopedUnitId(req);
       return res.status(200).render('funcionarios/funcionarios_index', {
@@ -373,7 +396,7 @@ export async function paginaFuncionarios(req, res) {
     console.error('[pagesController] /funcionarios erro:', e && (e.stack || e.message || e));
     // Fallback: renderizar página vazia para evitar 500 e permitir diagnóstico no front
     try {
-      const privilegedUser = isPrivilegedGestorUser(req.user);
+      const privilegedUser = isPrivilegedGestorUser(req);
       const unidadeContextualId = getScopedUnitId(req);
       return res.status(200).render('funcionarios/funcionarios_index', {
         ...stubCtx(req, { unidadesFiltradas: [], funcoesFiltradas: [], setoresFiltrados: [], funcionarios: [], unidadeContextualId }),
@@ -388,7 +411,7 @@ export async function paginaFuncionarios(req, res) {
 
 export async function paginaRecursos(req, res) {
   try {
-    const privilegedUser = isPrivilegedGestorUser(req.user);
+    const privilegedUser = isPrivilegedGestorUser(req);
     if (isDbOff(req)) {
       return res.status(200).render('recursos', stubCtx(req, { unidadesFiltradas: [] }));
     }
@@ -450,7 +473,7 @@ export async function partialEndereco(req, res) {
 
 export async function paginaSetores(req, res) {
   try {
-    const privilegedUser = isPrivilegedGestorUser(req.user);
+    const privilegedUser = isPrivilegedGestorUser(req);
     if (isDbOff(req)) {
       return res.status(200).render('setor', stubCtx(req, { setoresFiltrados: [], unidadesFiltradas: [] }));
     }

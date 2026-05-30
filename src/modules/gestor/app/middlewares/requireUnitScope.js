@@ -24,12 +24,42 @@ function resolveUser(req) {
   return req?.user || null;
 }
 
+function normalizeRole(value) {
+  const role = String(value || '').trim().toLowerCase();
+  return role || null;
+}
+
+function isPrivilegedRole(value) {
+  const role = normalizeRole(value);
+  return role === 'master' || role === 'admin';
+}
+
+export function isPrivilegedGestorContext({ user = null, authContext = null, sessionUser = null } = {}) {
+  if (user?.isMaster === true) return true;
+  if (sessionUser?.isMaster === true) return true;
+
+  return [
+    user?.role,
+    user?.globalRole,
+    user?.global_role,
+    user?.effectiveRole,
+    sessionUser?.role,
+    sessionUser?.globalRole,
+    sessionUser?.global_role,
+    sessionUser?.effectiveRole,
+    authContext?.effectiveRole,
+    authContext?.effective_role,
+    authContext?.globalRole,
+    authContext?.global_role,
+  ].some(isPrivilegedRole);
+}
+
 function isPrivilegedGestorUser(user) {
-  return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+  return isPrivilegedGestorContext({ user });
 }
 
 function normalizeGlobalRole(authContext) {
-  const role = String(authContext?.globalRole || authContext?.global_role || '').trim().toLowerCase();
+  const role = normalizeRole(authContext?.globalRole || authContext?.global_role);
   return role || null;
 }
 
@@ -38,8 +68,8 @@ function isCanonicalAuthContext(authContext) {
 }
 
 function isCanonicalGlobalPrivilegedAuthContext(authContext) {
-  const globalRole = normalizeGlobalRole(authContext);
-  return globalRole === 'master' || globalRole === 'admin';
+  if (!isCanonicalAuthContext(authContext)) return false;
+  return isPrivilegedGestorContext({ authContext });
 }
 
 function resolveRequestUnidadeId(req) {

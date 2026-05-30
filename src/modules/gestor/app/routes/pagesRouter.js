@@ -1,7 +1,7 @@
 // (migrado) pagesRouter.js
 import express from 'express';
 import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
-import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
+import { isPrivilegedGestorContext, requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 import { paginaDashboard, paginaLogin, paginaContato, paginaPrimeiroAcesso, paginaEsqueciSenha, paginaErro, paginaUsuarios, paginaUnidades, paginaEditarUnidade, paginaModulos, paginaFuncoes, paginaFuncionarios, paginaRecursos, partialEndereco, paginaSetores, paginaFeedback } from '#modules/gestor/app/controllers/views/pagesController.js';
 // Wrapper inline para advanced recovery (reutiliza template compartilhado)
 function paginaEsqueciSenhaAvancada(req,res){
@@ -9,8 +9,12 @@ function paginaEsqueciSenhaAvancada(req,res){
 	return res.render('gestor/esquecisenha-avancada', { basePath, moduleLabel: 'WDGestor' });
 }
 
-function isPrivilegedGestorUser(user) {
-	return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+function isPrivilegedGestorRequest(req) {
+	return isPrivilegedGestorContext({
+		user: req?.user || null,
+		sessionUser: req?.session?.user || null,
+		authContext: req?.session?.gestorAuthContext || null,
+	});
 }
 
 function hasCanonicalUnitContext(req) {
@@ -32,7 +36,7 @@ function withLoginAndRequiredUnitScope(handler) {
 
 function withLoginAndUnidadesScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => {
-		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+		if (isPrivilegedGestorRequest(req) && !hasCanonicalUnitContext(req)) {
 			return handler(req, res, next);
 		}
 
@@ -42,7 +46,7 @@ function withLoginAndUnidadesScope(handler) {
 
 function withLoginAndFuncoesScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => {
-		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+		if (isPrivilegedGestorRequest(req) && !hasCanonicalUnitContext(req)) {
 			return handler(req, res, next);
 		}
 
@@ -52,7 +56,7 @@ function withLoginAndFuncoesScope(handler) {
 
 function withLoginAndFuncionariosScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => {
-		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+		if (isPrivilegedGestorRequest(req) && !hasCanonicalUnitContext(req)) {
 			return handler(req, res, next);
 		}
 
@@ -62,7 +66,7 @@ function withLoginAndFuncionariosScope(handler) {
 
 function withLoginAndRecursosScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => {
-		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+		if (isPrivilegedGestorRequest(req) && !hasCanonicalUnitContext(req)) {
 			return handler(req, res, next);
 		}
 

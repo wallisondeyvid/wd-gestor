@@ -22,10 +22,10 @@ test('pagesRouter congela os wrappers residuais com branch privilegiado/global a
   assert.match(source, /router\.get\(\s*['"]\/funcionarios['"]\s*,\s*withLoginAndFuncionariosScope\(paginaFuncionarios\)\s*\)/);
   assert.match(source, /router\.get\(\s*['"]\/recursos['"]\s*,\s*withLoginAndRecursosScope\(paginaRecursos\)\s*\)/);
 
-  assert.match(source, /function withLoginAndUnidadesScope\(handler\) \{[\s\S]*?isPrivilegedGestorUser\(req\.user\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
-  assert.match(source, /function withLoginAndFuncoesScope\(handler\) \{[\s\S]*?isPrivilegedGestorUser\(req\.user\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
-  assert.match(source, /function withLoginAndFuncionariosScope\(handler\) \{[\s\S]*?isPrivilegedGestorUser\(req\.user\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
-  assert.match(source, /function withLoginAndRecursosScope\(handler\) \{[\s\S]*?isPrivilegedGestorUser\(req\.user\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
+  assert.match(source, /function withLoginAndUnidadesScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
+  assert.match(source, /function withLoginAndFuncoesScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
+  assert.match(source, /function withLoginAndFuncionariosScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
+  assert.match(source, /function withLoginAndRecursosScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
 });
 
 test('pagesRouter congela as paginas que continuam exigindo requireUnitScope sem branch global', () => {
@@ -40,7 +40,7 @@ test('pagesRouter congela as paginas que continuam exigindo requireUnitScope sem
 test('pagesRouter restringe o branch global residual a perfis privilegiados explicitos e mantem o resto fail-closed', () => {
   const source = PAGES_ROUTE_SOURCE_NO_COMMENTS;
 
-  assert.match(source, /function isPrivilegedGestorUser\(user\) \{[\s\S]*?user\?\.isMaster === true[\s\S]*?user\?\.role === ['"]master['"][\s\S]*?user\?\.role === ['"]admin['"][\s\S]*?\}/);
+  assert.match(source, /function isPrivilegedGestorRequest\(req\) \{[\s\S]*?isPrivilegedGestorContext\(\{[\s\S]*?user: req\?\.user \|\| null,[\s\S]*?sessionUser: req\?\.session\?\.user \|\| null,[\s\S]*?authContext: req\?\.session\?\.gestorAuthContext \|\| null,[\s\S]*?\}\);[\s\S]*?\}/);
 
   assert.doesNotMatch(source, /if \(!hasCanonicalUnitContext\(req\)\) \{[\s\S]*?return handler\(req, res, next\);/);
   assert.doesNotMatch(source, /if \(hasCanonicalUnitContext\(req\)\) \{[\s\S]*?return handler\(req, res, next\);/);

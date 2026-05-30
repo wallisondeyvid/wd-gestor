@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { requireUnitScope } from '../src/modules/gestor/app/middlewares/requireUnitScope.js';
+import { isPrivilegedGestorContext, requireUnitScope } from '../src/modules/gestor/app/middlewares/requireUnitScope.js';
 
 const IDS = Object.freeze({
   unitA: '65f100000000000000000002',
@@ -27,6 +27,60 @@ function createResponse() {
     },
   };
 }
+
+test('isPrivilegedGestorContext reconhece master/admin pelo shape canônico de req.user', () => {
+  assert.equal(isPrivilegedGestorContext({ user: { isMaster: true } }), true);
+  assert.equal(isPrivilegedGestorContext({ user: { role: 'MASTER' } }), true);
+  assert.equal(isPrivilegedGestorContext({ user: { role: 'AdMiN' } }), true);
+  assert.equal(isPrivilegedGestorContext({ user: { globalRole: 'MASTER' } }), true);
+  assert.equal(isPrivilegedGestorContext({ user: { global_role: 'admin' } }), true);
+  assert.equal(isPrivilegedGestorContext({ user: { effectiveRole: 'MASTER' } }), true);
+  assert.equal(isPrivilegedGestorContext({ user: { role: 'diretor', global_role: null } }), false);
+});
+
+test('isPrivilegedGestorContext reconhece master/admin pelo auth-context quando req.user ainda nao reflete o papel global', () => {
+  assert.equal(
+    isPrivilegedGestorContext({
+      user: { role: 'user', isMaster: false },
+      authContext: { source: 'auth-context-v1', global_role: 'MASTER' },
+    }),
+    true,
+  );
+
+  assert.equal(
+    isPrivilegedGestorContext({
+      user: { role: 'user', isMaster: false },
+      authContext: { source: 'auth-context-v1', effectiveRole: 'AdMiN' },
+    }),
+    true,
+  );
+
+  assert.equal(
+    isPrivilegedGestorContext({
+      user: { role: 'user', isMaster: false },
+      authContext: { source: 'auth-context-v1', effectiveRole: 'diretor' },
+    }),
+    false,
+  );
+});
+
+test('isPrivilegedGestorContext reconhece master/admin pelo fallback de sessionUser quando req.user ainda nao foi normalizado', () => {
+  assert.equal(
+    isPrivilegedGestorContext({
+      user: { role: 'user', isMaster: false },
+      sessionUser: { role: 'user', global_role: 'MASTER' },
+    }),
+    true,
+  );
+
+  assert.equal(
+    isPrivilegedGestorContext({
+      user: { role: 'user', isMaster: false },
+      sessionUser: { role: 'user', effectiveRole: 'AdMiN' },
+    }),
+    true,
+  );
+});
 
 test('requireUnitScope usa apenas a unidade ativa canônica do auth-context-v1 para usuário contextual', async () => {
   const req = {
