@@ -20,19 +20,51 @@ import requireLogin from '#modules/gestor/app/middlewares/requireLogin.js';
 import { requireUnitScope } from '#modules/gestor/app/middlewares/requireUnitScope.js';
 const router = express.Router();
 
+function isPrivilegedGestorUser(user) {
+	return user?.isMaster === true || user?.role === 'master' || user?.role === 'admin';
+}
+
+function hasCanonicalUnitContext(req) {
+	return Boolean(
+		req?.session?.gestorAuthContext?.active_unidade_id
+		|| req?.user?.unidade_id
+		|| req?.query?.unidadeId
+		|| req?.query?.unidade_id
+		|| req?.params?.unidadeId
+		|| req?.params?.unidade_id
+		|| req?.body?.unidadeId
+		|| req?.body?.unidade_id
+	);
+}
+
+function normalizeUnidadeIdParam(req) {
+	if (!req.params?.unidadeId && req.params?.id) {
+		req.params.unidadeId = req.params.id;
+	}
+}
+
 function withLoginAndRequiredUnitScope(handler) {
 	return (req, res, next) => requireLogin(req, res, () => {
-		if (!req.params?.unidadeId && req.params?.id) {
-			req.params.unidadeId = req.params.id;
+		normalizeUnidadeIdParam(req);
+
+		return requireUnitScope(req, res, () => handler(req, res, next));
+	});
+}
+
+function withLoginAndBootstrapUnidadesListScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => {
+		if (isPrivilegedGestorUser(req.user) && !hasCanonicalUnitContext(req)) {
+			return handler(req, res, next);
 		}
 
+		normalizeUnidadeIdParam(req);
 		return requireUnitScope(req, res, () => handler(req, res, next));
 	});
 }
 
 router.post('/api/unidades', withLoginAndRequiredUnitScope(createUnidade));
 // Listagem para hidratação client-side quando SSR vier vazio
-router.get('/api/unidades', withLoginAndRequiredUnitScope(listUnidades));
+router.get('/api/unidades', withLoginAndBootstrapUnidadesListScope(listUnidades));
 router.put('/api/unidades/:id', withLoginAndRequiredUnitScope(updateUnidade));
 // Upload de logo (imagem) da unidade
 router.post('/api/unidades/:id/logo', withLoginAndRequiredUnitScope(uploadLogoUnidade));
