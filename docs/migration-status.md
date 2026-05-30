@@ -1,3 +1,40 @@
+## Checkpoint documental curto do resultado green da validacao autenticada online de /gestor/unidades com master apos o fix.
+- selectedTarget=recordAuthenticatedUnidadesMasterOnlineValidationGreenAfterFix
+- baseAuthorizationCommit=18270dd
+- authenticatedUnidadesValidationExecuted=true
+- authenticatedUnidadesValidationResult=green
+- loginAttempted=true
+- loginCrashed=false
+- loginStatusCode=303
+- loginContentType=
+- loginHasLocationHeader=true
+- cookiePresent=true
+- loginSucceededShape=true
+- unidadesAttempted=true
+- unidadesCrashed=false
+- unidadesStatusCode=200
+- unidadesContentType=text/html; charset=utf-8
+- unidadesHasLocationHeader=false
+- unidadesBodyLengthApprox=170988
+- hasUnidadeIdRequired=false
+- pageShapePresent=true
+- jsonErrorShapePresent=false
+- previous400JsonReproduced=false
+- passwordPrinted=false
+- cookiePrinted=false
+- tokenPrinted=false
+- sessionPrinted=false
+- fullBodyPrinted=false
+- fullHeadersPrinted=false
+- browserUsed=false
+- vercelExecuted=false
+- npmTestExecuted=false
+- pushExecuted=false
+- sourceChanged=false
+- workingTreeCleanAfterValidation=true
+- productionReady=false
+- recommendedNextCandidate=planPostAuthenticatedUnidadesGreenPublicationOrPushDecision
+
 ## Checkpoint documental curto da autorizacao futura e separada da validacao autenticada online de /gestor/unidades com master apos o green publico.
 - selectedTarget=authorizeAuthenticatedUnidadesMasterOnlineValidationAfterPublicGreen
 - baseAuthenticatedValidationPlanCommit=4d5779d
