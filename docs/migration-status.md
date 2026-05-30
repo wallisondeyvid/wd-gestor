@@ -1,3 +1,35 @@
+## Checkpoint documental curto do planejamento da validacao direcionada apos a implementacao minima do fix de /gestor/unidades master/admin sem unidade, sem nova execucao de testes e sem alteracao de codigo.
+- selectedTarget=planTargetedValidationForUnidadesMasterReadOnlyFix
+- checkpointScope=documentalOnlyPostImplementationValidationPlanning
+- implementationCommit=cf82ed6
+- implementationResult=completed
+- changedFilePrimary=src/modules/gestor/app/routes/unidadeApi.js
+- changedFileTestBootstrap=tests/gestor-unidades-list-bootstrap-route-runtime-contract.test.js
+- changedFileTestProvisioningRoute=tests/gestor-unidades-provisioning-route-runtime-contract.test.js
+- focusedValidationAlreadyExecuted=true
+- focusedValidationCommand=node --test tests/gestor-unidades-list-bootstrap-route-runtime-contract.test.js tests/gestor-unidades-provisioning-route-runtime-contract.test.js
+- focusedValidationResult=green
+- focusedValidationTests=11
+- focusedValidationPass=11
+- hookAutomaticResult=green
+- hookAutomaticTests=136
+- hookAutomaticPass=136
+- hookAutomaticFail=0
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=authorizeTargetedValidationForUnidadesMasterReadOnlyFix
+
 ## Checkpoint documental curto da autorizacao futura e separada da correcao minima para /gestor/unidades master/admin sem unidade, sem implementacao de codigo e sem execucao operacional.
 - selectedTarget=authorizeMinimalFixForUnidadesProvisioningAndApiCanonicalPrivilege
 - checkpointScope=documentalAuthorizationOnly
