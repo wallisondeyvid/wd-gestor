@@ -91540,6 +91540,99 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotUseMasterNow=true`
 	- `doNotPushNow=true`
 
+## Microcorte: Autorizar revisao de navegacao online controlada
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `190f31c` no inicio desta rodada;
+	- o deploy Vercel prod para revisao online controlada ja foi concluido;
+	- o smoke online passivo ficou green e o plano de revisao de navegacao online ja foi publicado em `190f31c`;
+	- o objetivo humano continua sendo mapear telas, menus, fluxos e funcionalidades faltantes no WD Gestor publicado;
+	- este microcorte registra apenas a autorizacao documental futura e separada da revisao de navegacao online controlada, sem executar navegacao agora e sem alterar `productionReady`.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar navegacao agora;
+	- nao abrir navegador agora;
+	- nao declarar producao pronta;
+	- manter `productionReady=false`;
+	- nao usar master;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=authorizeOnlineControlledNavigationReview`
+	- `authorizationScope=documentalOnlyFutureNavigationReview`
+	- `previousOnlineNavigationReviewPlanCommit=190f31c`
+	- `localRemoteSyncedBeforeAuthorization=true`
+	- `workingTreeCleanBeforeAuthorization=true`
+	- `onlineControlledReviewAvailable=true`
+	- `onlineControlledReviewSmokeGreen=true`
+	- `vercelAliasUrl=https://wdgestor.vercel.app`
+	- `navigationReviewAuthorized=true`
+	- `navigationReviewAuthorizedForFutureOnly=true`
+	- `navigationReviewPurpose=map-screens-menus-flows-and-missing-features`
+	- `commercialProductionReady=false`
+	- `paidClientProduction=false`
+	- `realPayingClients=false`
+	- `productStillUnderConstruction=true`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `navigationReviewExecutedNow=false`
+	- `navigationReviewMustBeControlled=true`
+	- `navigationReviewMustPreferAliasUrl=true`
+	- `navigationReviewAllowsPublicLandingAndLoginScreenReview=true`
+	- `navigationReviewAllowsReadOnlyVisualInspection=true`
+	- `navigationReviewAllowsMissingFeatureMapping=true`
+	- `navigationReviewBlocksRealLogin=true`
+	- `navigationReviewBlocksMasterLogin=true`
+	- `navigationReviewBlocksRealClientMutation=true`
+	- `navigationReviewBlocksSeedScripts=true`
+	- `navigationReviewBlocksCleanupWrongEmail=true`
+	- `navigationReviewBlocksProductionReadyFlag=true`
+	- `navigationReviewMustNotPrintSecrets=true`
+	- `navigationReviewMustNotPrintCookies=true`
+	- `navigationReviewMustNotPrintTokens=true`
+	- `navigationReviewMustNotPrintSessionData=true`
+	- `navigationReviewMustNotPrintMongoUri=true`
+	- `navigationReviewMustRecordOnlyScreensFlowsAndMissingItems=true`
+	- `nextExecutionAuthorized=true`
+	- `selectedNextSafeCandidate=executeOnlineControlledNavigationReviewInSeparateMicrocut`
+	- `selectedNextSafeCandidateReason=navigation-review-is-authorized-only-for-controlled-visual-review-without-real-login-or-mutation`
+	- `recommendedNextCandidate=executeOnlineControlledNavigationReviewInSeparateMicrocut`
+	- `secondaryCandidate=recordOnlineNavigationReviewFindings`
+	- `tertiaryCandidate=prepareFeatureGapInventoryTemplate`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `vercelDeployCompletedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `onlineControlledNavigationReviewAuthorizationIsDocumentalOnly=true`
+	- `doNotExecuteNavigationNow=true`
+	- `doNotOpenBrowserNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `keepProductionReadyFalseNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotPushNow=true`
+
 
 
 
