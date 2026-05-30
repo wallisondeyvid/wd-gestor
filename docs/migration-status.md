@@ -1,3 +1,46 @@
+## Checkpoint documental curto do planejamento da inspecao estatica do red em /gestor/unidades para master/admin sem unidade, sem execucao de HTTP, sem navegador, sem login e sem alteracao de codigo.
+- selectedTarget=planStaticInspectionGestorUnidadesMasterUnitScope400
+- checkpointScope=documentalPlanningOnlyStaticInspection
+- redBaseCommit=fb6bd99
+- localAheadBeforePlanning=8
+- workingTreeCleanBeforePlanning=true
+- observedRoute=/gestor/unidades
+- observedError=UNIDADE_ID_REQUIRED
+- observedUserProfile=master
+- expectedRuleMasterNeedsUnit=false
+- expectedRuleAdminNeedsUnit=false
+- expectedRuleDiretorNeedsUnit=true
+- expectedRuleUserNeedsUnit=true
+- futureScopeStaticInspectionOnly=true
+- candidateInspectionAreaRoutes=routes
+- candidateInspectionAreaSrc=src
+- candidateInspectionAreaServices=services
+- candidateInspectionAreaMiddleware=middleware
+- candidateInspectionFilePagesRouter=src/modules/gestor/app/routes/pagesRouter.js
+- candidateInspectionFileUnidadeApi=src/modules/gestor/app/routes/unidadeApi.js
+- candidateInspectionFileAuthContextResolver=src/modules/gestor/app/services/authContextResolver.js
+- candidateInspectionFileRequireUnitScope=src/modules/gestor/app/middlewares/requireUnitScope.js
+- candidateInspectionAreaCanonicalUserResolver=resolver-de-usuario-canonico-conforme-existir-no-projeto
+- routeMayPassRequireUnitScopeIndevidamente=true
+- controllerOrServiceMayRequireUnitIdBeforePrivilegedCheck=true
+- frontendMayCallUnitScopedEndpointInsteadOfGlobalFlow=true
+- roleNormalizationMayNotBeUsedBySpecificScreen=true
+- correctionAuthorizedNow=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=inspectGestorUnidadesMasterUnitScopeStaticOnly
+
 ## Checkpoint documental curto da observacao operacional separada de regressao red em /gestor/unidades apos a validacao online read-only green, sem nova execucao de HTTP agora, sem novo login agora e sem alteracao de codigo.
 - selectedTarget=recordSeparateHumanObservationGestorUnidadesMasterStillReturnsUnidadeIdRequired
 - checkpointScope=documentalOnlySeparateOperationalObservation
