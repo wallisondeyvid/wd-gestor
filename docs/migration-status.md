@@ -1,3 +1,20 @@
+## Checkpoint documental curto da autorizacao futura e separada da validacao online publica/read-only pos-redeploy da correcao de unidades master, sem execucao agora.
+- selectedTarget=authorizeOnlineValidationAfterUnidadesMasterReadOnlyFixRedeploy
+- basePlanCommit=5c18206
+- aliasTarget=https://wdgestor.vercel.app
+- onlineValidationAuthorized=true
+- onlineValidationExecutedNow=false
+- authorizedPublicReadOnlyEndpoints=GET /, GET /health, GET /gestor/login
+- authenticatedUnidadesValidationAuthorized=false
+- loginAuthorized=false
+- masterUseAuthorized=false
+- mutationAuthorized=false
+- bodyFullPrintingForbidden=true
+- headersFullPrintingForbidden=true
+- cookieTokenSessionSecretPrintingForbidden=true
+- productionReady=false
+- recommendedNextCandidate=executeOnlineValidationAfterUnidadesMasterReadOnlyFixRedeployInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da validacao online controlada pos-redeploy da correcao de unidades master, sem execucao agora.
 - selectedTarget=planOnlineValidationAfterUnidadesMasterReadOnlyFixRedeploy
 - baseRedeployRecordCommit=3f6e962
