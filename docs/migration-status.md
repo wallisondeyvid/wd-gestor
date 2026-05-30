@@ -1,3 +1,35 @@
+## Checkpoint documental curto do resultado green da validacao direcionada do fix de /gestor/unidades master/admin sem unidade, sem nova execucao de testes e sem alteracao de codigo.
+- selectedTarget=recordTargetedValidationForUnidadesMasterReadOnlyFix
+- checkpointScope=documentalOnlyTargetedValidationResult
+- baseAuthorizationCommit=a0d03a1
+- baseImplementationCommit=cf82ed6
+- targetedValidationExecuted=true
+- targetedValidationCommand=node --test tests/gestor-unidades-list-bootstrap-route-runtime-contract.test.js tests/gestor-unidades-provisioning-route-runtime-contract.test.js tests/gestor-unidades-unit-scope-canonical.test.js tests/gestor-unidades-provisioning-events-runtime-contract.test.js tests/gestor-api-unidades-cluster-runtime-contract.test.js
+- targetedValidationResult=green
+- targetedValidationTests=35
+- targetedValidationPass=35
+- targetedValidationFail=0
+- targetedValidationSkipped=0
+- workingTreeCleanAfterValidation=true
+- npmTestFullExecuted=false
+- onlineValidationExecuted=false
+- vercelExecuted=false
+- pushExecuted=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecutedNow=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=planFullNpmTestAfterUnidadesMasterReadOnlyFix
+
 ## Checkpoint documental curto da autorizacao futura e separada da validacao direcionada do fix de /gestor/unidades master/admin sem unidade, sem execucao de testes e sem alteracao de codigo.
 - selectedTarget=authorizeTargetedValidationForUnidadesMasterReadOnlyFix
 - checkpointScope=documentalAuthorizationOnlyTargetedValidation
