@@ -88809,6 +88809,103 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotRepeatLoginNow=true`
 	- `doNotAskPasswordNow=true`
 	- `doNotUseMasterNow=true`
+
+## Microcorte: Classificar gate de evidencia runtime apos logout green
+
+- Contexto executivo desta rodada:
+	- branch `migration/refactor-core` com HEAD local/remoto sincronizados em `ef0a87e` no inicio desta rodada;
+	- o bloco de validacao de logout ficticio foi fechado como green em `ef0a87e`;
+	- as evidencias runtime green acumuladas cobrem `health`, login ficticio, rotacao/reset de senha ficticia, login pos-rotacao, sessao autenticada read-only, tenant boundary read-only, logout ficticio e `npm test` completo green;
+	- este microcorte reclassifica apenas o `runtimeGreenEvidenceGate`, sem executar runtime agora;
+	- producao continua nao pronta porque outros gates permanecem pendentes ou parciais.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so classificacao documental;
+	- nao executar runtime;
+	- nao executar logout;
+	- nao repetir health/login;
+	- nao pedir nem colar senha;
+	- nao usar master;
+	- nao declarar producao pronta;
+	- nao fazer push agora.
+- Gates:
+	- `selectedTarget=classifyRuntimeGreenEvidenceGateAfterLogoutGreen`
+	- `classificationScope=documentalOnlyNoRuntime`
+	- `previousLogoutValidationClosureCommit=ef0a87e`
+	- `localRemoteSyncedBeforeClassification=true`
+	- `productionReady=false`
+	- `runtimeGreenEvidenceGateStatusBefore=partial`
+	- `logoutValidationBlockClosed=true`
+	- `logoutValidationBlockResult=green`
+	- `logoutEvidenceHealthStatusCode=200`
+	- `logoutEvidenceLoginStatusCode=303`
+	- `logoutEvidenceLogoutStatusCode=200`
+	- `logoutEvidenceMethod=GET`
+	- `logoutEvidencePath=/gestor/logout`
+	- `runtimeEvidenceHealthGreen=true`
+	- `runtimeEvidenceLoginGreen=true`
+	- `runtimeEvidencePasswordRotationGreen=true`
+	- `runtimeEvidencePostRotationLoginGreen=true`
+	- `runtimeEvidenceSessionReadOnlyGreen=true`
+	- `runtimeEvidenceTenantReadOnlyGreen=true`
+	- `runtimeEvidenceLogoutGreen=true`
+	- `runtimeEvidenceNpmTestGreen=true`
+	- `runtimeGreenEvidenceGateClassificationPerformed=true`
+	- `runtimeGreenEvidenceGateStatusAfter=green`
+	- `runtimeGreenEvidenceGateBlockingItemResolved=true`
+	- `runtimeGreenEvidenceGateGreenReason=controlled-runtime-evidence-now-covers-health-login-password-rotation-post-rotation-login-session-readonly-tenant-readonly-logout-and-full-npm-test`
+	- `remainingBlockingGatesAfterRuntimeEvidence=mutationSafetyGate,secretsAndLogsGate,realMongoAtlasGate,productionDecisionGate`
+	- `highestPriorityBlockingItemAfterRuntimeEvidence=mutationSafetyGate`
+	- `secondPriorityBlockingItemAfterRuntimeEvidence=secretsAndLogsGate`
+	- `thirdPriorityBlockingItemAfterRuntimeEvidence=realMongoAtlasGate`
+	- `nextExecutionAuthorized=false`
+	- `selectedNextSafeCandidate=classifyMutationSafetyGateAfterControlledFictionalMutation`
+	- `selectedNextSafeCandidateReason=runtime-evidence-gate-is-green-so-next-blocking-area-is-mutation-safety`
+	- `recommendedNextCandidate=classifyMutationSafetyGateAfterControlledFictionalMutation`
+	- `secondaryCandidate=classifySecretsAndLogsGateAfterSanitizedRuntimeEvidence`
+	- `tertiaryCandidate=keepMasterUserProtectedAndProductionNotReady`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestExecutedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `startAtlasExecuted=false`
+	- `startGestorExecuted=false`
+	- `serverStarted=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `browserOpened=false`
+	- `cookieValuePrinted=false`
+	- `tokenPrinted=false`
+	- `sessionDataPrinted=false`
+	- `passwordPrinted=false`
+	- `passwordHashPrinted=false`
+	- `rawUnitIdPrinted=false`
+	- `tenantRawUnitDataPrinted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalClassificationOnly=true`
+	- `doNotExecuteRuntimeNow=true`
+	- `doNotExecuteLogoutNow=true`
+	- `doNotRepeatHealthNow=true`
+	- `doNotRepeatLoginNow=true`
+	- `doNotAskPasswordNow=true`
+	- `doNotUseMasterNow=true`
+	- `doNotDeclareProductionReadyNow=true`
+	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
 	- `doNotPushNow=true`
 	- `doNotDeclareProductionReadyNow=true`
