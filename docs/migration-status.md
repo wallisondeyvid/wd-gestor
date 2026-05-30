@@ -1,3 +1,37 @@
+## Checkpoint documental curto do resultado green do npm test completo apos o fix de /gestor/unidades master/admin sem unidade, sem nova execucao operacional e sem alteracao de codigo.
+- selectedTarget=recordFullNpmTestAfterUnidadesMasterReadOnlyFix
+- checkpointScope=documentalOnlyFullNpmTestResult
+- baseAuthorizationCommit=8f2a2f1
+- baseImplementationCommit=cf82ed6
+- npmTestFullExecuted=true
+- npmTestFullCommand=npm test
+- npmTestFullExitCode=0
+- npmTestFullResult=green
+- npmTestFullTests=2384
+- npmTestFullPass=2382
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- npmTestFullDurationMs=245268.6245
+- workingTreeCleanAfter=true
+- branchAheadAfter=18
+- onlineValidationExecuted=false
+- vercelExecuted=false
+- pushExecuted=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecutedNow=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- recommendedNextCandidate=planPushAfterUnidadesMasterReadOnlyFixGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada do npm test completo apos o fix de /gestor/unidades master/admin sem unidade, sem execucao de teste agora e sem alteracao de codigo.
 - selectedTarget=authorizeFullNpmTestAfterUnidadesMasterReadOnlyFix
 - checkpointScope=documentalAuthorizationOnlyFullNpmTest
