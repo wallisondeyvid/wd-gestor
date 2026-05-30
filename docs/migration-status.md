@@ -1,3 +1,21 @@
+## Checkpoint documental curto do resultado da inspecao estatica do 400 JSON autenticado em /gestor/unidades.
+- selectedTarget=recordStaticInspectionAuthenticatedUnidadesOnline400Json
+- baseRedRecordCommit=7e6fea6
+- baseInspectionPlanCommit=afb2956
+- staticInspectionExecuted=true
+- staticInspectionResult=completed
+- authenticatedOnlineResult=red
+- rootCauseCandidate=pagesRouterBypassAndRequireUnitScopeContextMismatch
+- failureLayer=middleware/page-routing-before-controller
+- frontendSuspected=false
+- controllerViewSuspected=false
+- internalBundleApiSuspected=false
+- primaryFinding=pagesRouterConsidersReqUserUnidadeIdCanonicalButRequireUnitScopeDoesNotConsumeItForPrivilegedUser
+- secondaryFinding=possibleMasterSessionProjectionMismatchButLessLikely
+- codeFixExecuted=false
+- productionReady=false
+- recommendedNextCandidate=planMinimalFixForPagesRouterRequireUnitScopeContextMismatch
+
 ## Checkpoint documental curto do planejamento da inspecao estatica do 400 JSON autenticado em /gestor/unidades.
 - selectedTarget=planStaticInspectionAuthenticatedUnidadesOnline400Json
 - baseRedRecordCommit=7e6fea6
