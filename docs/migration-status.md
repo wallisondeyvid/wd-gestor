@@ -1,3 +1,42 @@
+## Checkpoint documental curto da observacao operacional separada de regressao red em /gestor/unidades apos a validacao online read-only green, sem nova execucao de HTTP agora, sem novo login agora e sem alteracao de codigo.
+- selectedTarget=recordSeparateHumanObservationGestorUnidadesMasterStillReturnsUnidadeIdRequired
+- checkpointScope=documentalOnlySeparateOperationalObservation
+- previousOnlineValidationRecordCommit=2bb63a5
+- localAheadBeforeObservationRecord=7
+- workingTreeCleanBeforeObservationRecord=true
+- separateHumanObservationRecorded=true
+- observationSeparatedFromReadonlyValidation=true
+- newBugBlockDetected=true
+- observedEnvironment=online-alias
+- observedAlias=https://wdgestor.vercel.app
+- observedModule=gestor
+- observedRoute=/gestor/unidades
+- observedUserProfile=master
+- observedResult=red
+- observedHttpErrorShape={"success":false,"error":"UNIDADE_ID_REQUIRED"}
+- observedConsoleSignal=Failed-to-load-resource-status-400-em-unidades:1
+- readonlyValidationPreviouslyGreen=true
+- readonlyValidationDidNotCoverAuthenticatedFlow=true
+- businessRuleMasterNeedsUnit=false
+- businessRuleAdminNeedsUnit=false
+- businessRuleDiretorNeedsUnit=true
+- businessRuleUserNeedsUnit=true
+- correctionImplementedNow=false
+- sourceChanged=false
+- testsChanged=false
+- packageJsonChanged=false
+- productionReady=false
+- productionReadySetNow=false
+- httpExecutedNow=false
+- browserOpened=false
+- loginExecutedNow=false
+- vercelExecutedNow=false
+- npmTestExecutedNow=false
+- npmRunExecutedNow=false
+- nodeExecutedNow=false
+- pushExecuted=false
+- recommendedNextCandidate=planStaticInspectionGestorUnidadesMasterUnitScope400
+
 ## Checkpoint documental curto do resultado green da validacao online controlada apos o redeploy vercel da normalizacao master/admin em /gestor/unidades, sem nova execucao de HTTP, sem navegador, sem login e sem alteracao de codigo.
 - selectedTarget=recordOnlineValidationAfterVercelRedeployMasterAdminNormalization
 - checkpointScope=documentalOnlyAfterOnlineValidation
