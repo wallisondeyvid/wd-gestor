@@ -1,3 +1,29 @@
+## Checkpoint documental curto do pos-push dos registros documentais pos-green/prontidao de /gestor/unidades.
+- selectedTarget=recordPostPushReadinessCheckpointAfterAuthenticatedUnidadesGreen
+- pushExecuted=true
+- pushedRange=8d37e22..c3f76bf
+- localHeadAfterPush=c3f76bf
+- remoteHeadAfterPush=c3f76bf
+- aheadAfterPush=0
+- workingTreeCleanAfterPush=true
+- prePushHookResult=green
+- prePushHookTests=2385
+- prePushHookPass=2383
+- prePushHookFail=0
+- prePushHookSkipped=2
+- prePushHookDurationMs=257428.2572
+- authenticatedUnidadesValidationResult=green
+- previous400JsonReproduced=false
+- manualHttpExecuted=false
+- browserUsed=false
+- loginExecuted=false
+- masterUsed=false
+- passwordUsed=false
+- vercelExecuted=false
+- sourceChanged=false
+- productionReady=false
+- recommendedNextCandidate=closeAuthenticatedUnidadesGreenCycleOrPlanNextReadinessHandoff
+
 ## Checkpoint documental curto da autorizacao futura e separada do push dos checkpoints locais pos-prontidao de /gestor/unidades.
 - selectedTarget=authorizePushPostPushCheckpointOrPlanReadinessHandoff
 - basePostPushCheckpointCommit=fe5d801
