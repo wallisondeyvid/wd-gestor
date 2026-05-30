@@ -1,3 +1,20 @@
+## Checkpoint documental curto do planejamento da correcao minima de Setores e Recursos para modo global privilegiado read-only.
+- selectedTarget=planMinimalFixForSetoresAndRecursosGlobalReadOnlyScope
+- affectedRoutes=/gestor/setores,/gestor/api/setores,/gestor/api/recursos
+- setoresPageBlockedByRouteWrapper=true
+- setoresApiBlockedByRouteWrapper=true
+- recursosPageAlreadyBypassesPrivilegedGlobal=true
+- recursosApiBlockedByRouteWrapper=true
+- internalControllersAlreadySupportPrivilegedGlobal=true
+- preferredFixTargets=pagesRouter.js,setorApi.js,recursoApi.js
+- requireUnitScopeChangePreferred=false
+- mutationRoutesRemainProtected=true
+- nonPrivilegedUsersStillRequireUnitScope=true
+- implementationExecutedNow=false
+- testsExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=authorizeMinimalFixForSetoresAndRecursosGlobalReadOnlyScope
+
 ## Checkpoint documental curto da autorizacao futura e separada para o push finalissimo dos checkpoints locais de /gestor/unidades.
 - selectedTarget=authorizePushFinalissimoUnidadesGreenCheckpoint
 - baseFinalissimoCheckpointCommit=885a29d
