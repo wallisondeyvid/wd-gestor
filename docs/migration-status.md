@@ -92045,6 +92045,88 @@ Proximo alvo tenant-aware pos-Funcionarios disponiveis selecionado documentalmen
 	- `doNotPushNow=true`
 	- `keepProductionReadyFalseNow=true`
 
+## Microcorte: Autorizar primeiro teste direcionado do travamento
+
+- Contexto executivo desta rodada:
+	- este microcorte registra apenas a autorizacao futura e separada para executar o primeiro teste de medio risco identificado na investigacao documental;
+	- o candidato priorizado continua sendo `tests/condominios-comunicados-restricoes-runtime-contract.test.js`, por combinar `createServer`, `request.agent`, `deferErrorHandlers` e manipulacoes globais que podem sustentar handle residual ou estado global persistente;
+	- a execucao futura autorizada devera permanecer limitada a um unico arquivo, com captura obrigatoria de resumo final, exit code, duracao e checagens de ambiente apos o termino;
+	- o push continua bloqueado ate existir teste completo green ou causa identificada para o travamento do `npm test` completo.
+- Reforcos obrigatorios desta rodada:
+	- este microcorte e so autorizacao documental;
+	- nao executar teste agora;
+	- nao executar `npm` ou `node` agora;
+	- nao fazer push;
+	- manter `productionReady=false`.
+- Gates:
+	- `selectedTarget=authorizeTargetedExecutionForFirstRuntimeContractCandidate`
+	- `authorizationScope=documentalOnlyFutureTargetedExecution`
+	- `previousTargetedExecutionPlanCommit=3da1144`
+	- `localAheadBeforeAuthorization=5`
+	- `workingTreeCleanBeforeAuthorization=true`
+	- `pushStillBlocked=true`
+	- `npmTestFullGreenRequiredBeforePush=true`
+	- `firstTargetedCandidate=tests/condominios-comunicados-restricoes-runtime-contract.test.js`
+	- `firstTargetedCandidateRiskLevel=medium`
+	- `firstTargetedCandidateReason=runtime-contract-with-createServer-request-agent-or-global-state-risk`
+	- `firstTargetedCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js`
+	- `firstTargetedExecutionAuthorized=true`
+	- `firstTargetedExecutionAuthorizedForFutureOnly=true`
+	- `firstTargetedExecutionExecutedNow=false`
+	- `targetedExecutionMustBeSingleFileOnly=true`
+	- `targetedExecutionMustNotRunFullNpmTest=true`
+	- `targetedExecutionMustCaptureFinalSummary=true`
+	- `targetedExecutionMustCaptureExitCode=true`
+	- `targetedExecutionMustCaptureDuration=true`
+	- `targetedExecutionMustCheckGitStatusAfter=true`
+	- `targetedExecutionMustCheckNodeProcessesAfter=true`
+	- `targetedExecutionMustCheckWdgLoginPasswordEnvAfter=true`
+	- `targetedExecutionMustAbortOnHang=true`
+	- `targetedExecutionMustNotRepeatOnHang=true`
+	- `targetedExecutionMustNotProceedToSecondCandidateOnHang=true`
+	- `targetedExecutionMustRecordResultBeforeNextStep=true`
+	- `nextExecutionAuthorized=true`
+	- `selectedNextSafeCandidate=executeFirstTargetedRuntimeContractTestInSeparateMicrocut`
+	- `selectedNextSafeCandidateReason=first-medium-risk-candidate-is-authorized-for-single-file-execution-with-final-summary-exit-code-and-node-process-check`
+	- `recommendedNextCandidate=executeFirstTargetedRuntimeContractTestInSeparateMicrocut`
+	- `secondaryCandidate=recordFirstTargetedRuntimeContractTestResult`
+	- `tertiaryCandidate=keepPushBlockedUntilFreshGreenFullNpmTest`
+	- `productionReady=false`
+	- `productionReadySetNow=false`
+	- `masterUserUsed=false`
+	- `masterUserProtected=true`
+	- `npmTestRepeatedNow=false`
+	- `npmRunExecutedNow=false`
+	- `nodeExecutedNow=false`
+	- `targetedTestExecutedNow=false`
+	- `fullNpmTestExecutedNow=false`
+	- `vercelDeployExecutedNow=false`
+	- `loginExecutedNow=false`
+	- `logoutExecutedNow=false`
+	- `httpExecutedNow=false`
+	- `browserOpened=false`
+	- `realMongoConnectionAttempted=false`
+	- `realMongoConnected=false`
+	- `passwordMutationExecutedNow=false`
+	- `userMutationExecutedNow=false`
+	- `dataMutationExecuted=false`
+	- `domainMutationExecuted=false`
+	- `seedExecuted=false`
+	- `masterScriptsExecuted=false`
+	- `cleanupWrongEmailExecuted=false`
+	- `packageJsonChanged=false`
+	- `sourceChanged=false`
+	- `testsChanged=false`
+	- `newFileCreated=false`
+	- `pushExecuted=false`
+- Reforcos deste microcorte:
+	- `microcutIsDocumentalOnly=true`
+	- `firstTargetedAuthorizationIsDocumentalOnly=true`
+	- `noTestsExecutedNow=true`
+	- `noManualNpmOrNodeExecution=true`
+	- `doNotPushNow=true`
+	- `keepProductionReadyFalseNow=true`
+
 
 
 
