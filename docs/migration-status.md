@@ -1,3 +1,37 @@
+## Checkpoint documental curto da autorizacao futura e separada para inventario read-only do dominio ficticio de testes.
+- selectedTarget=authorizeControlledFictionalDomainCleanupInventoryReadOnly
+- baseHumanConfirmationCommit=9997680
+- baseInventoryPlanCommit=29cefa9
+- cleanupDomain=fictional-units-dependent-data-and-non-master-users
+- inventoryAuthorized=true
+- inventoryExecutedNow=false
+- mongoReadExecutedNow=false
+- mongoWriteExecutedNow=false
+- cleanupExecutedNow=false
+- scriptsExecutedNow=false
+- deleteExecutedNow=false
+- dropExecutedNow=false
+- updateExecutedNow=false
+- dryRunExecutedNow=false
+- futureInventoryReadOnlyRequired=true
+- futureInventorySanitizedRequired=true
+- futureInventoryCanCountUnits=true
+- futureInventoryCanCountNonMasterUsers=true
+- futureInventoryCanInspectUnitDependencies=true
+- futureInventoryCanInspectTenantProvisioning=true
+- futureInventoryCanInspectDatabaseOrTenantRefs=true
+- futureInventoryMustNotPrintSecrets=true
+- futureInventoryMustNotPrintRawDocuments=true
+- futureInventoryMustNotPrintMongoUri=true
+- masterUserMustBePreserved=true
+- masterCredentialsMustBePreserved=true
+- globalSettingsMustBePreserved=true
+- infrastructureMustBePreserved=true
+- secretsAndLogsMustBePreserved=true
+- unrelatedDataMustBePreserved=true
+- productionReady=false
+- proximoCandidatoRecomendado=executeControlledFictionalDomainCleanupInventoryReadOnlyInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do inventario read-only para futura limpeza controlada do dominio ficticio.
 - selectedTarget=planControlledFictionalDomainCleanupInventoryReadOnly
 - baseHumanConfirmationCommit=9997680
