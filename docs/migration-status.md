@@ -1,3 +1,42 @@
+## Checkpoint documental curto da autorizacao futura e separada para implementar a correcao minima do vazamento/reidratacao Mongo no fluxo offline autenticado de comunicados restricoes.
+- selectedTarget=authorizeMinimalFixForComunicadosRestricoesMongoConfigLeak
+- baseMinimalFixPlanCommit=944617b
+- baseFocusedPrimaryTestRedCommit=0652a03
+- staticInspectionResult=cause-probable-identified
+- minimalFixAuthorized=true
+- minimalFixImplementedNow=false
+- preferredFixTarget=src/modules/condominios/app/condominios-app.js
+- preferredFixStrategy=make-effective-skipDb-block-reconnect-in-ensureCondominiosMongoOnline
+- alternativeFixTarget=src/server/bootstrapRegistry.js
+- alternativeFixStrategy=propagate-__skipDbForced-to-mounted-subapp
+- testOnlyFixNotPreferred=true
+- futureImplementationScope=src/modules/condominios/app/condominios-app.js-only-if-possible
+- futureImplementationMustBeMinimal=true
+- futureImplementationMustNotChangeRouteContract=true
+- futureImplementationMustNotTouchPackageJson=true
+- futureImplementationMustNotTouchHusky=true
+- futureImplementationMustNotTouchScripts=true
+- futureValidationMustStartWithFocusedPrimaryTest=true
+- focusedTestExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: implementMinimalFixForComunicadosRestricoesMongoConfigLeakInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da correcao minima do vazamento/reidratacao Mongo no fluxo offline autenticado de comunicados restricoes.
 - selectedTarget=planMinimalFixForComunicadosRestricoesMongoConfigLeak
 - baseFocusedPrimaryTestRedCommit=0652a03
