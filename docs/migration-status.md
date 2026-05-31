@@ -1,3 +1,48 @@
+## Checkpoint documental curto da autorizacao futura e separada para executar a validacao focada primaria do refinamento skipDb/bootstrap.
+- selectedTarget=authorizePrimaryFocusedValidationForRefinedSkipDbBootstrapFix
+- baseRefinedFixCommit=98ffbce
+- baseFocusedValidationPlanCommit=47573e4
+- baseBootstrapRegressionRedCommit=472b9b1
+- refinedFixImplemented=true
+- refinedFixTarget1=src/server/bootstrapRegistry.js
+- refinedFixTarget2=src/modules/condominios/app/condominios-app.js
+- refinedFixSummary=propagate-__skipDbForced-only-when-forced-real-and-block-reconnect-only-on-local-forced-skipDb
+- primaryFocusedValidationAuthorized=true
+- primaryFocusedValidationExecutedNow=false
+- primaryFocusedValidationCommand=node --test tests/createServer.bootstrap.characterization.test.js
+- primaryFocusedValidationPurpose=verify-bootstrap-skipDb-reconnect-contract-restored
+- expectedFormerRedTest=condominios: parent.locals.__skipDbForced nao impede limpar req.app.locals.skipDb apos reconnect
+- expectedFormerRedActualStatus=503
+- expectedFormerRedExpectedStatus=200
+- secondaryFocusedValidationAuthorized=false
+- secondaryFocusedValidationExecutedNow=false
+- secondaryFocusedValidationCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- fullNpmTestAuthorized=false
+- fullNpmTestExecutedNow=false
+- pushAuthorizedNow=false
+- pushExecutedNow=false
+- futurePrimaryValidationMustRecordPassFailOrHang=true
+- futurePrimaryValidationMustRecordDuration=true
+- futureSecondaryValidationRequiresSeparateAuthorization=true
+- futureFullNpmTestRequiresFocusedPairGreen=true
+- testExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: executePrimaryFocusedValidationForRefinedSkipDbBootstrapFixInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da validacao focada do refinamento skipDb/bootstrap.
 - selectedTarget=planFocusedValidationForRefinedSkipDbBootstrapFix
 - baseRefinedFixCommit=98ffbce
