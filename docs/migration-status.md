@@ -1,3 +1,43 @@
+## Checkpoint documental curto da autorizacao futura e separada para executar o teste focado primario da area provavel do hang do pre-push.
+- selectedTarget=authorizeFocusedTestForPrePushHangArea
+- baseFocusedTestPlanCommit=bb18db4
+- basePushNotCompletedRecordCommit=34cc6da
+- prePushCommandIdentified=true
+- prePushCommand=npm test
+- hangOrNotCompletedHypothesis=true
+- suspectedArea=requireUnitScope-blocos-comunicados
+- primaryFocusedTestCandidate=tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- focusedPrimaryTestAuthorized=true
+- focusedPrimaryTestExecutedNow=false
+- secondaryFocusedTestAuthorized=false
+- tertiaryFocusedTestAuthorized=false
+- npmTestFullAuthorized=false
+- pushAuthorizedNow=false
+- focusedTestCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- futureFocusedTestMustMeasureDuration=true
+- futureFocusedTestMustRecordPassFailOrHang=true
+- futureFocusedTestMustNotAlterFiles=true
+- futureFocusedTestMustNotRunFullNpmTest=true
+- futureFocusedTestMustNotPush=true
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: executeFocusedPrimaryTestForPrePushHangAreaInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento de validacao focada da area provavel do hang do pre-push.
 - selectedTarget=planFocusedTestForPrePushHangArea
 - basePushNotCompletedRecordCommit=34cc6da
