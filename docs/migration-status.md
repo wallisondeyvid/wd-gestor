@@ -1,3 +1,49 @@
+## Checkpoint documental curto da autorizacao futura e separada para executar npm test completo apos o par focado green do refinamento skipDb/bootstrap.
+- selectedTarget=authorizeFullNpmTestAfterRefinedSkipDbFocusedPairGreen
+- baseFullNpmTestPlanCommit=23df135
+- baseRefinedFixCommit=98ffbce
+- basePrimaryFocusedValidationGreenCommit=d34daad
+- baseSecondaryFocusedValidationGreenCommit=0585fa0
+- focusedPairGreen=true
+- primaryFocusedValidationGreen=true
+- primaryFocusedValidationCommand=node --test tests/createServer.bootstrap.characterization.test.js
+- primaryFocusedValidationTests=8
+- primaryFocusedValidationPass=8
+- primaryFocusedValidationFail=0
+- secondaryFocusedValidationGreen=true
+- secondaryFocusedValidationCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- secondaryFocusedValidationTests=8
+- secondaryFocusedValidationPass=8
+- secondaryFocusedValidationFail=0
+- mongoSrvObservedInOfflineSecondaryValidation=false
+- fullNpmTestAuthorized=true
+- fullNpmTestExecutedNow=false
+- fullNpmTestCommand=npm test
+- futureFullNpmTestMustRecordPassFailOrHang=true
+- futureFullNpmTestMustRecordTotals=true
+- futureFullNpmTestMustRecordDuration=true
+- futureFullNpmTestMustPreserveWorkingTreeClean=true
+- futurePushRequiresFullNpmTestGreen=true
+- pushAuthorizedNow=false
+- pushExecutedNow=false
+- testExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: executeFullNpmTestAfterRefinedSkipDbFocusedPairGreenInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do npm test completo apos o par focado green do refinamento skipDb/bootstrap.
 - selectedTarget=planFullNpmTestAfterRefinedSkipDbFocusedPairGreen
 - baseRefinedFixCommit=98ffbce
