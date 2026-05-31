@@ -1,3 +1,47 @@
+## Checkpoint documental curto da autorizacao futura e separada para validar o login master online apos health green no cluster limpo.
+- selectedTarget=authorizeMasterLoginValidationAfterCleanClusterHealthGreen
+- baseOnlineHealthGreenCommit=064f33c
+- baseMasterLoginValidationPlanCommit=94eec2c
+- healthCheckGreen=true
+- healthStatusCode=200
+- healthBodyOk=true
+- masterLoginValidationAuthorized=true
+- masterLoginValidationExecutedNow=false
+- loginExecutedNow=false
+- masterUsedNow=false
+- passwordUsedNow=false
+- authenticatedRequestExecutedNow=false
+- httpExecutedNow=false
+- browserOpenedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- seedExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- expectedNewClusterState=master-only
+- expectedUsers=1
+- expectedUnits=0
+- futureLoginCanUseCredentials=true
+- futureLoginMustUseLocalSecretOnly=true
+- futureLoginMustNotPrintPassword=true
+- futureLoginMustNotPrintCookie=true
+- futureLoginMustNotPrintSession=true
+- futureLoginMustNotPrintToken=true
+- futureLoginMustNotPrintHtmlRaw=true
+- futureLoginMustReportOnlyStatusRedirectAndBooleans=true
+- futureLoginMustNotMutateDomainData=true
+- futureLoginMutationAllowedOnlySessionCookie=true
+- productionReady=false
+- próximo candidato recomendado: executeMasterLoginValidationAfterCleanClusterHealthGreenInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da validacao futura do login master online apos health green no cluster limpo.
 - selectedTarget=planMasterLoginValidationAfterCleanClusterHealthGreen
 - baseOnlineHealthGreenCommit=064f33c
