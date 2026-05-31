@@ -1,3 +1,35 @@
+## Checkpoint documental curto do planejamento da futura atualizacao da URI Mongo da Vercel para o novo cluster limpo.
+- selectedTarget=planVercelMongoUriUpdateToNewCleanCluster
+- basePostSeedDiagnosticGreenCommit=d9d0194
+- newClusterContainsOnlyMaster=true
+- newClusterReadyForVercelUriPlanning=true
+- vercelMongoUriUpdatePlanned=true
+- vercelMongoUriUpdateExecutedNow=false
+- vercelEnvUpdatedNow=false
+- vercelCliExecutedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- newMongoUriMustNotBePrinted=true
+- newMongoUriMustNotBeCommitted=true
+- newMongoUriMustBeAppliedOnlyByHumanControlledAction=true
+- futureVercelUpdateRequiresExplicitAuthorization=true
+- futureRedeployRequiresExplicitAuthorization=true
+- futureOnlineValidationRequiresExplicitAuthorization=true
+- futureOldClustersDeletionRequiresSeparateAuthorizationAfterGreen=true
+- productionReady=false
+- proximoCandidatoRecomendado=authorizeVercelMongoUriUpdateToNewCleanCluster
+
 ## Checkpoint documental curto do resultado green do diagnostico read-only pos-seed no novo cluster Mongo limpo.
 - selectedTarget=recordPostSeedReadOnlyDiagnosticForNewCleanMongoClusterGreen
 - baseNewCleanClusterDiagnosticCommit=3a320bf
