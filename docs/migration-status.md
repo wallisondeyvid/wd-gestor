@@ -1,3 +1,52 @@
+## Checkpoint documental curto do planejamento do push dos commits documentais locais pendentes apos a revisao de readiness pos-refinamento skipDb/bootstrap.
+- selectedTarget=planPushPostReadinessChecklistDocumentalCommit
+- baseReadinessChecklistCommit=15aa78d
+- basePostPushReadinessPlanCommit=2deb30a
+- lastPublishedRemoteCommit=179b3d8
+- localDocumentalCommitsPending=true
+- pendingDocumentalRange=179b3d8..15aa78d
+- pendingDocumentalCommit1=2deb30a
+- pendingDocumentalCommit2=15aa78d
+- pendingDocumentalCommitsCount=2
+- branchAheadBeforePlan=2
+- workingTreeCleanBeforePlan=true
+- pushPlanned=true
+- pushExecutedNow=false
+- pushRequiresSeparateAuthorization=true
+- pushTargetBranch=migration/refactor-core
+- futurePushMayUseNoVerifyForDocOnlyRange=true
+- futurePushMustConfirmRemoteBeforeAndAfter=true
+- futurePushMustRecordPublishedRange=true
+- futurePushMustPreserveWorkingTreeClean=true
+- vercelProdNeededNow=false
+- redeployNeededNow=false
+- smokeOnlineNeededNow=false
+- productionReady=false
+- codePublishedGate=green
+- focusedValidationGate=green
+- fullNpmTestGate=green
+- prePushGate=green
+- remoteSyncGate=partial-because-local-documental-commit-pending
+- expectedRemoteSyncGateAfterFuturePush=green
+- testExecutedNow=false
+- npmTestFullExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- proximo candidato recomendado: authorizePushPostReadinessChecklistDocumentalCommit
+
 ## Checkpoint documental curto da revisao do checklist de readiness pos-refinamento skipDb/bootstrap.
 - selectedTarget=reviewPostRefinedSkipDbReadinessChecklistDocumentally
 - basePostPushReadinessPlanCommit=2deb30a
