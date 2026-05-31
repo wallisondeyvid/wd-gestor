@@ -1,3 +1,23 @@
+## Checkpoint documental curto do planejamento do npm test completo para a correcao de Setores e Recursos em modo global privilegiado read-only.
+- selectedTarget=planFullNpmTestForSetoresAndRecursosGlobalReadOnlyFix
+- baseImplementationCommit=bef997c
+- baseTargetedValidationRecordCommit=eebf486
+- targetedValidationResult=green
+- targetedValidationTests=23
+- targetedValidationPass=23
+- targetedValidationFail=0
+- fullNpmTestPlanned=true
+- fullNpmTestExecutedNow=false
+- npmTestFullAuthorized=false
+- httpAuthorized=false
+- browserAuthorized=false
+- loginAuthorized=false
+- masterUseAuthorized=false
+- vercelAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- recommendedNextCandidate=authorizeFullNpmTestForSetoresAndRecursosGlobalReadOnlyFix
+
 ## Checkpoint documental curto do resultado green da validacao direcionada de Setores e Recursos para modo global privilegiado read-only.
 - selectedTarget=recordTargetedValidationForSetoresAndRecursosGlobalReadOnlyFix
 - baseImplementationCommit=bef997c
