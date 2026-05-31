@@ -1,3 +1,29 @@
+## Checkpoint documental curto da autorizacao futura e separada para executar o push dos checkpoints do cluster limpo.
+- selectedTarget=authorizePushCleanClusterCheckpointsAfterMasterLoginGreen
+- basePushPlanCommit=c6a0688
+- baseMasterLoginGreenCommit=d9a7003
+- cleanClusterFlowGreen=true
+- newClusterReadOnlyDiagnosticGreen=true
+- masterOnlySeedGreen=true
+- postSeedReadOnlyDiagnosticGreen=true
+- vercelMongoUriUpdated=true
+- onlineHealthCheckGreen=true
+- onlineMasterLoginGreen=true
+- pushAuthorized=true
+- pushExecutedNow=false
+- productionReady=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- authenticatedReadOnlySmokeStillPending=true
+- finalProductionDecisionStillBlocked=true
+- futurePushMustPublishLocalAheadRange=true
+- futurePushMustNotUseSecrets=true
+- futurePushMustNotTriggerManualVercelChanges=true
+- futurePushMayRunPrePushHook=true
+- futurePushResultMustBeRecordedOnlyIfNeeded=true
+- próximo candidato recomendado: executePushCleanClusterCheckpointsAfterMasterLoginGreenInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do push dos checkpoints do cluster limpo apos login master green.
 - selectedTarget=planPushCleanClusterCheckpointsAfterMasterLoginGreen
 - baseMasterLoginGreenCommit=d9a7003
