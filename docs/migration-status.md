@@ -1,3 +1,26 @@
+## Checkpoint documental curto da confirmacao humana sobre o dominio ficticio atual para futura limpeza controlada.
+- selectedTarget=recordHumanConfirmationFictionalUnitsAndUsers
+- humanConfirmedCurrentUnitsAreFictional=true
+- humanConfirmedDependentDataAreFictional=true
+- humanConfirmedOnlyRealUserIsMaster=true
+- humanConfirmedNonMasterUsersAreFictional=true
+- cleanupDomainCandidate=fictional-units-and-dependent-test-data
+- futureCleanupCanTargetUnits=true
+- futureCleanupCanTargetUnitDependentData=true
+- futureCleanupCanTargetNonMasterUsers=true
+- masterUserMustBePreserved=true
+- masterCredentialsMustBePreserved=true
+- globalSettingsMustBePreserved=true
+- infrastructureMustBePreserved=true
+- secretsAndLogsMustBePreserved=true
+- unrelatedDataMustBePreserved=true
+- cleanupExecutedNow=false
+- mongoReadExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- productionReady=false
+- proximoCandidatoRecomendado=planControlledFictionalDomainCleanupInventoryReadOnly
+
 ## Checkpoint documental curto da autorizacao futura e separada para push do bloco green de Setores e Recursos em modo global read-only.
 - selectedTarget=authorizePushAfterSetoresRecursosGlobalReadOnlyGreen
 - baseRoutesFixCommit=bef997c
