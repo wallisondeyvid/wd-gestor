@@ -1,3 +1,55 @@
+## Checkpoint documental curto da autorizacao futura e separada para executar o push dos commits documentais locais pendentes apos a revisao de readiness pos-refinamento skipDb/bootstrap.
+- selectedTarget=authorizePushPostReadinessChecklistDocumentalCommit
+- basePushPlanCommit=d4ef30c
+- baseReadinessChecklistCommit=15aa78d
+- basePostPushReadinessPlanCommit=2deb30a
+- lastPublishedRemoteCommit=179b3d8
+- localDocumentalCommitsPending=true
+- pendingDocumentalRange=179b3d8..d4ef30c
+- pendingDocumentalCommit1=2deb30a
+- pendingDocumentalCommit2=15aa78d
+- pendingDocumentalCommit3=d4ef30c
+- pendingDocumentalCommitsCount=3
+- branchAheadBeforeAuthorization=3
+- workingTreeCleanBeforeAuthorization=true
+- pushAuthorized=true
+- pushExecutedNow=false
+- pushTargetBranch=migration/refactor-core
+- futurePushMayUseNoVerifyForDocOnlyRange=true
+- futurePushMustConfirmRemoteBeforeAndAfter=true
+- futurePushMustRecordPublishedRange=true
+- futurePushMustPreserveWorkingTreeClean=true
+- futurePushExpectedRange=179b3d8..d4ef30c
+- expectedRemoteSyncGateAfterFuturePush=green
+- vercelProdNeededNow=false
+- redeployNeededNow=false
+- smokeOnlineNeededNow=false
+- productionReady=false
+- codePublishedGate=green
+- focusedValidationGate=green
+- fullNpmTestGate=green
+- prePushGate=green
+- remoteSyncGate=partial-because-local-documental-commit-pending
+- testExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- proximo candidato recomendado: executePushPostReadinessChecklistDocumentalCommitInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do push dos commits documentais locais pendentes apos a revisao de readiness pos-refinamento skipDb/bootstrap.
 - selectedTarget=planPushPostReadinessChecklistDocumentalCommit
 - baseReadinessChecklistCommit=15aa78d
