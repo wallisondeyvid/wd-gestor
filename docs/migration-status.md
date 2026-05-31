@@ -1,3 +1,45 @@
+## Checkpoint documental curto do planejamento da inspecao estatica do vazamento de configuracao Mongo no teste focado de comunicados restricoes.
+- selectedTarget=planStaticInspectionOfComunicadosRestricoesTestMongoConfigLeak
+- baseFocusedPrimaryTestRedCommit=0652a03
+- focusedPrimaryTestResult=red
+- failedCasesCount=2
+- failedCase1=GET /condominios/api/comunicados/restricoes/habitacoes preserva contrato offline autenticado
+- failedCase2=GET /condominios/api/comunicados/restricoes/moradores preserva contrato offline autenticado
+- mongoMemoryInitiallyForced=true
+- inMemoryMongoObserved=true
+- sanitizedRealMongoSrvObservedDuringTest=true
+- possibleRealMongoConfigLeakDuringTest=true
+- staticInspectionPlanned=true
+- staticInspectionExecutedNow=false
+- suspectedTestFile=tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- suspectedAreas=test-bootstrap-login-server-config-env-mongo
+- inspectProcessEnvMongoMemory=true
+- inspectMongoUriRehydration=true
+- inspectServerBootstrap=true
+- inspectLateImports=true
+- inspectModuleCacheOrConfigReload=true
+- inspectCreateServerUsage=true
+- inspectMongoConnectionHelpers=true
+- focusedTestExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: executeStaticInspectionOfComunicadosRestricoesTestMongoConfigLeak
+
 ## Checkpoint documental curto do resultado red do teste focado primario da area provavel do hang do pre-push.
 - selectedTarget=recordFocusedPrimaryTestForPrePushHangAreaRed
 - baseFocusedTestAuthorizationCommit=6381c5e
