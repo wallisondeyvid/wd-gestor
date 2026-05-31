@@ -1,3 +1,47 @@
+## Checkpoint documental curto do planejamento da validacao focada secundaria do refinamento skipDb/bootstrap.
+- selectedTarget=planSecondaryFocusedValidationForRefinedSkipDbBootstrapFix
+- baseRefinedFixCommit=98ffbce
+- basePrimaryFocusedValidationGreenCommit=d34daad
+- baseComunicadosRestricoesFocusedGreenCommit=547353e
+- refinedFixImplemented=true
+- primaryFocusedValidationGreen=true
+- primaryFocusedValidationCommand=node --test tests/createServer.bootstrap.characterization.test.js
+- primaryFocusedValidationTests=8
+- primaryFocusedValidationPass=8
+- primaryFocusedValidationFail=0
+- formerRedBootstrapCaseNowPassed=true
+- secondaryFocusedValidationPlanned=true
+- secondaryFocusedValidationExecutedNow=false
+- secondaryFocusedValidationCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- secondaryFocusedValidationPurpose=verify-comunicados-restricoes-focused-green-preserved-after-refined-skipDb-fix
+- expectedOfflineCase1=GET /condominios/api/comunicados/restricoes/habitacoes preserva contrato offline autenticado
+- expectedOfflineCase2=GET /condominios/api/comunicados/restricoes/moradores preserva contrato offline autenticado
+- futureSecondaryValidationMustCheckOfflineCases=true
+- futureSecondaryValidationMustCheckNoMongoSrvLeak=true
+- futureSecondaryValidationMustCheckNoHang=true
+- futureSecondaryValidationMustRecordPassFailOrHang=true
+- futureSecondaryValidationMustRecordDuration=true
+- fullNpmTestPlannedAfterFocusedPairGreen=true
+- fullNpmTestExecutedNow=false
+- pushExecutedNow=false
+- testExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: authorizeSecondaryFocusedValidationForRefinedSkipDbBootstrapFix
+
 ## Checkpoint documental curto do resultado green da validacao focada primaria do refinamento skipDb/bootstrap.
 - selectedTarget=recordPrimaryFocusedValidationForRefinedSkipDbBootstrapFixGreen
 - baseRefinedFixCommit=98ffbce
