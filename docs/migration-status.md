@@ -1,3 +1,49 @@
+## Checkpoint documental curto do planejamento da inspecao estatica da regressao no contrato de bootstrap createServer.
+- selectedTarget=planStaticInspectionOfCreateServerBootstrapCharacterizationRegression
+- baseFullNpmTestRedCommit=472b9b1
+- baseMinimalFixCommit=b2c8d8a
+- baseFocusedPostFixGreenCommit=547353e
+- fullNpmTestResult=red
+- tests=2391
+- pass=2388
+- fail=1
+- failingTestFile=tests/createServer.bootstrap.characterization.test.js
+- failingTestLocation=tests/createServer.bootstrap.characterization.test.js:405:1
+- failingTestName=condominios: parent.locals.__skipDbForced nao impede limpar req.app.locals.skipDb apos reconnect
+- failingAssertion=sem forced no parent durante reconnect, a rota deve seguir fluxo normal
+- failingActualStatus=503
+- failingExpectedStatus=200
+- suspectedRegressionFromMinimalFix=true
+- staticInspectionPlanned=true
+- staticInspectionExecutedNow=false
+- inspectCreateServerBootstrapCharacterizationTest=true
+- inspectCreateServerSkipDbReconnect=true
+- inspectBootstrapRegistrySkipDbPropagation=true
+- inspectCondominiosEnsureMongoOnlineFix=true
+- inspectParentLocalsSkipDbForcedContract=true
+- inspectReqAppLocalsSkipDbCleanupContract=true
+- inspectReconnectClearsSkipDbContract=true
+- fixImplementedNow=false
+- testExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: executeStaticInspectionOfCreateServerBootstrapCharacterizationRegression
+
 ## Checkpoint documental curto do resultado red do npm test completo apos o fix do vazamento/reidratacao Mongo.
 - selectedTarget=recordFullNpmTestAfterComunicadosRestricoesFocusedGreenRed
 - baseFullNpmTestAuthorizationCommit=048523a
