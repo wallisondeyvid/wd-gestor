@@ -1,3 +1,22 @@
+## Checkpoint documental curto do planejamento do push do bloco green de Setores e Recursos em modo global read-only.
+- selectedTarget=planPushAfterSetoresRecursosGlobalReadOnlyGreen
+- baseRoutesFixCommit=bef997c
+- baseRequireUnitScopeTestFixCommit=5fd2d57
+- baseGreenNpmTestRecordCommit=51c257a
+- npmTestFullResult=green
+- npmTestFullTests=2391
+- npmTestFullPass=2389
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- branchAheadBeforePushPlan=15
+- workingTreeClean=true
+- pushPlanned=true
+- pushExecutedNow=false
+- redeployAuthorized=false
+- onlineValidationAuthorized=false
+- productionReady=false
+- proximoCandidatoRecomendado=authorizePushAfterSetoresRecursosGlobalReadOnlyGreen
+
 ## Checkpoint documental curto do resultado green do npm test completo apos o ajuste do contrato requireUnitScope.
 - selectedTarget=recordFullNpmTestAfterFixingRequireUnitScopeContractTest
 - baseRoutesFixCommit=bef997c
