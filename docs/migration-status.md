@@ -1,3 +1,49 @@
+## Checkpoint documental curto do planejamento do refinamento da correcao skipDb/bootstrap para preservar focused green e contrato de bootstrap.
+- selectedTarget=planRefinedFixForCreateServerBootstrapSkipDbRegression
+- baseBootstrapRegressionPlanCommit=f87920a
+- baseFullNpmTestRedCommit=472b9b1
+- baseMinimalFixCommit=b2c8d8a
+- staticInspectionExecuted=true
+- staticInspectionResult=cause-probable-identified
+- failingTestFile=tests/createServer.bootstrap.characterization.test.js
+- failingTestName=condominios: parent.locals.__skipDbForced nao impede limpar req.app.locals.skipDb apos reconnect
+- failingActualStatus=503
+- failingExpectedStatus=200
+- probableCause=effective-skipDb-used-too-broadly-as-absolute-reconnect-block
+- bootstrapContractRequiresTransientLocalSkipDbRecoverable=true
+- focusedGreenRequiresForcedSkipDbBlockReconnect=true
+- refinedFixPlanned=true
+- refinedFixImplementedNow=false
+- preferredFixPart1Target=src/server/bootstrapRegistry.js
+- preferredFixPart1Strategy=propagate-__skipDbForced-to-mounted-subapp-when-parent-skipDb-is-forced
+- preferredFixPart2Target=src/modules/condominios/app/condominios-app.js
+- preferredFixPart2Strategy=block-reconnect-only-on-local-forced-skipDb-not-transient-local-skipDb
+- createServerPrimaryFixTarget=false
+- mustPreserveFocusedComunicadosRestricoesGreen=true
+- mustRestoreCreateServerBootstrapCharacterizationGreen=true
+- mustNotChangeRouteContracts=true
+- futureValidation1=focused-createServer-bootstrap-characterization-test
+- futureValidation2=focused-comunicados-restricoes-runtime-contract-test
+- testExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: authorizeRefinedFixForCreateServerBootstrapSkipDbRegression
+
 ## Checkpoint documental curto do planejamento da inspecao estatica da regressao no contrato de bootstrap createServer.
 - selectedTarget=planStaticInspectionOfCreateServerBootstrapCharacterizationRegression
 - baseFullNpmTestRedCommit=472b9b1
