@@ -1,3 +1,38 @@
+## Checkpoint documental curto do resultado green do diagnostico read-only contra o novo cluster Mongo limpo.
+- selectedTarget=recordNewCleanMongoClusterReadOnlyDiagnosticGreen
+- baseClusterReplacementPlanCommit=6472653
+- baseClusterInstructionsAuthorizationCommit=d7b8d0e
+- newCleanClusterCreatedByHuman=true
+- newMongoUserCreatedByHuman=true
+- newMongoPasswordDefinedByHuman=true
+- newMongoUriCopiedByHuman=true
+- newMongoUriPastedInChat=false
+- newMongoUriConfiguredLocally=true
+- mongoConfigured=true
+- diagnosticExecuted=true
+- diagnosticResult=green
+- readOnly=true
+- connectedToMongo=true
+- writesAttempted=false
+- deleteExecuted=false
+- dropExecuted=false
+- updateExecuted=false
+- secretsPrinted=false
+- rawDocumentsPrinted=false
+- mongoUriPrinted=false
+- databaseNameSanitized=[present]
+- collectionsFoundCount=0
+- collectionNamesSanitized=[]
+- expectedCleanCluster=true
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- vercelEnvUpdatedNow=false
+- localEnvUpdatedInRepo=false
+- seedExecutedNow=false
+- masterCreatedNow=false
+- productionReady=false
+- proximoCandidatoRecomendado=planControlledMasterOnlySeedForNewCleanMongoCluster
+
 ## Checkpoint documental curto da autorizacao para preparar instrucoes humanas de criacao de um novo cluster Mongo limpo no Atlas.
 - selectedTarget=authorizeNewCleanMongoClusterCreationInstructions
 - baseClusterReplacementPlanCommit=6472653
