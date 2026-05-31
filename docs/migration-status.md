@@ -1,3 +1,23 @@
+## Checkpoint documental curto da autorizacao futura e separada para push do bloco green de Setores e Recursos em modo global read-only.
+- selectedTarget=authorizePushAfterSetoresRecursosGlobalReadOnlyGreen
+- baseRoutesFixCommit=bef997c
+- baseRequireUnitScopeTestFixCommit=5fd2d57
+- baseGreenNpmTestRecordCommit=51c257a
+- basePushPlanCommit=e1f8d89
+- npmTestFullResult=green
+- npmTestFullTests=2391
+- npmTestFullPass=2389
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- branchAheadBeforePushAuthorization=16
+- workingTreeClean=true
+- pushAuthorized=true
+- pushExecutedNow=false
+- redeployAuthorized=false
+- onlineValidationAuthorized=false
+- productionReady=false
+- proximoCandidatoRecomendado=executePushAfterSetoresRecursosGlobalReadOnlyGreenInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do push do bloco green de Setores e Recursos em modo global read-only.
 - selectedTarget=planPushAfterSetoresRecursosGlobalReadOnlyGreen
 - baseRoutesFixCommit=bef997c
