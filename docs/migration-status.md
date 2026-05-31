@@ -1,3 +1,20 @@
+## Checkpoint documental curto da implementacao do script master-only para o cluster clean.
+- selectedTarget=implementMasterOnlyScriptForCleanCluster
+- baseAuthorizationCommit=ea5374e
+- masterOnlyScriptCreated=true
+- masterOnlyScriptPath=scripts/migrations/2026-05-31_seed-clean-cluster-master-only.js
+- masterOnlyScriptExecutedNow=false
+- masterCreatedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- applyExecutedNow=false
+- dryRunExecutedNow=false
+- passwordPrinted=false
+- passwordHashPrinted=false
+- rawMasterDocumentPrinted=false
+- productionReady=false
+- proximo candidato recomendado: planMasterOnlyScriptDryRunForCleanCluster
+
 ## Checkpoint documental curto da autorizacao futura/separada para implementar o script master-only do cluster clean.
 - selectedTarget=authorizeMasterOnlyImplementationForCleanCluster
 - baseMasterOnlyImplementationPlanCommit=e87983f
