@@ -1,3 +1,23 @@
+## Checkpoint documental curto da autorizacao futura e separada da validacao direcionada de Setores e Recursos para modo global privilegiado read-only.
+- selectedTarget=authorizeTargetedValidationForSetoresAndRecursosGlobalReadOnlyFix
+- baseImplementationCommit=bef997c
+- baseValidationPlanCommit=4183632
+- targetedValidationAuthorized=true
+- targetedValidationExecutedNow=false
+- fullNpmTestAuthorized=false
+- httpAuthorized=false
+- browserAuthorized=false
+- loginAuthorized=false
+- masterUseAuthorized=false
+- vercelAuthorized=false
+- pushAuthorized=false
+- validationScope=setores-recursos-global-readonly-routes-and-unit-scope-contracts
+- expectedTestFiles=gestor-pages-router-wrapper-structural.test.js,gestor-setor-recurso-global-readonly-route-runtime-contract.test.js,gestor-setor-recurso-unit-scope-canonical.test.js
+- mutationRoutesMustRemainProtected=true
+- nonPrivilegedUsersStillRequireUnitScope=true
+- productionReady=false
+- recommendedNextCandidate=executeTargetedValidationForSetoresAndRecursosGlobalReadOnlyFixInSeparateMicrocut
+
 ## Checkpoint documental curto do resultado da implementacao minima de Setores e Recursos e do planejamento da validacao direcionada seguinte.
 - selectedTarget=planTargetedValidationForSetoresAndRecursosGlobalReadOnlyFix
 - basePlanCommit=58b861b
