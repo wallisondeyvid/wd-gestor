@@ -1,3 +1,42 @@
+## Checkpoint documental curto do planejamento da validacao focada pos-fix do vazamento/reidratacao Mongo em comunicados restricoes.
+- selectedTarget=planFocusedValidationAfterComunicadosRestricoesMongoConfigLeakFix
+- baseMinimalFixCommit=b2c8d8a
+- baseFocusedPrimaryTestRedCommit=0652a03
+- fixImplemented=true
+- fixTarget=src/modules/condominios/app/condominios-app.js
+- fixSummary=ensureCondominiosMongoOnline-short-circuits-when-effective-skipDb-is-active
+- focusedPostFixValidationPlanned=true
+- focusedPostFixValidationExecutedNow=false
+- focusedPostFixCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- expectedFormerRedCase1=GET /condominios/api/comunicados/restricoes/habitacoes preserva contrato offline autenticado
+- expectedFormerRedCase2=GET /condominios/api/comunicados/restricoes/moradores preserva contrato offline autenticado
+- futureValidationMustCheckFormerRedCases=true
+- futureValidationMustCheckNoHang=true
+- futureValidationMustObserveMongoSrvLeak=false
+- futureValidationMustRecordPassFailOrHang=true
+- futureValidationMustRecordDuration=true
+- npmTestFullPlanned=false
+- pushPlanned=false
+- focusedTestExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: authorizeFocusedValidationAfterComunicadosRestricoesMongoConfigLeakFix
+
 ## Checkpoint documental curto da autorizacao futura e separada para implementar a correcao minima do vazamento/reidratacao Mongo no fluxo offline autenticado de comunicados restricoes.
 - selectedTarget=authorizeMinimalFixForComunicadosRestricoesMongoConfigLeak
 - baseMinimalFixPlanCommit=944617b
