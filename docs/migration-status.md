@@ -1,3 +1,39 @@
+## Checkpoint documental curto do resultado do inventario read-only sanitizado do dominio ficticio e da inconsistencia semantica detectada.
+- selectedTarget=recordControlledFictionalDomainCleanupInventoryReadOnlyResult
+- baseInventoryAuthorizationCommit=932d3aa
+- inventoryExecuted=true
+- inventoryResult=green-read-only-with-semantic-warning
+- readOnly=true
+- connectedToMongo=true
+- writesAttempted=false
+- cleanupExecuted=false
+- deleteExecuted=false
+- dropExecuted=false
+- updateExecuted=false
+- secretsPrinted=false
+- rawDocumentsPrinted=false
+- mongoUriPrinted=false
+- collectionsFoundCount=50
+- unitCollectionDetected=unidades
+- userCollectionDetected=users
+- totalUnits=0
+- unitsWithTenantRefCount=0
+- unitsWithoutTenantRefCount=0
+- databaseOrTenantRefsFound=false
+- totalUsers=1
+- masterUserCount=0
+- nonMasterUserCount=1
+- userCollectionHasRoleLikeFields=true
+- unitDependencyCountsOnlyUsersUnidadeIdZero=true
+- tenantProvisioningRefsCountEmpty=true
+- safeForFutureDryRunCandidate=false
+- semanticWarning=uiShowedUnitsButInventoryFoundZeroUnits
+- semanticWarningRequiresFollowUp=true
+- cleanupStillBlocked=true
+- reasonCleanupBlocked=inventoryDidNotFindDisplayedUnitsAndMasterDetectionReturnedZero
+- productionReady=false
+- proximoCandidatoRecomendado=planReadOnlyConnectionParityInspectionForDisplayedUnits
+
 ## Checkpoint documental curto da autorizacao futura e separada para inventario read-only do dominio ficticio de testes.
 - selectedTarget=authorizeControlledFictionalDomainCleanupInventoryReadOnly
 - baseHumanConfirmationCommit=9997680
