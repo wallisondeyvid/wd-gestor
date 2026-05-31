@@ -1,3 +1,38 @@
+## Checkpoint documental curto da autorizacao futura e separada para execucao do seed controlado exclusivamente do usuario master real no novo cluster Mongo limpo.
+- selectedTarget=authorizeControlledMasterOnlySeedForNewCleanMongoCluster
+- baseNewCleanClusterDiagnosticCommit=3a320bf
+- baseMasterOnlySeedPlanCommit=ded9b94
+- newCleanClusterReadyForMasterSeed=true
+- masterOnlySeedAuthorized=true
+- masterOnlySeedExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- seedExecutedNow=false
+- masterCreatedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- seedScope=master-user-only
+- unitsCreationAllowed=false
+- nonMasterUsersCreationAllowed=false
+- fictionalDataCreationAllowed=false
+- tenantProvisioningAllowed=false
+- condominiumDataCreationAllowed=false
+- masterEmailMustNotBePrintedInLogs=true
+- masterPasswordMustNotBePrintedInLogs=true
+- rawSecretsMustNotBePrinted=true
+- futureSeedMustUseLocalShellSecretOnly=true
+- futureSeedMustNotCommitSecrets=true
+- futureSeedMustBeIdempotent=true
+- futureSeedMustFailIfMasterAlreadyExistsUnlessExplicitlyAllowed=true
+- futureSeedMustReportOnlySanitizedResult=true
+- productionReady=false
+- proximoCandidatoRecomendado=executeControlledMasterOnlySeedForNewCleanMongoClusterInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do seed controlado exclusivamente do usuario master real no novo cluster Mongo limpo.
 - selectedTarget=planControlledMasterOnlySeedForNewCleanMongoCluster
 - baseNewCleanClusterDiagnosticCommit=3a320bf
