@@ -1,3 +1,33 @@
+## Checkpoint documental curto do resultado red do npm test completo para a correcao de Setores e Recursos em modo global read-only.
+- selectedTarget=recordFullNpmTestFailureForSetoresAndRecursosGlobalReadOnlyFix
+- baseImplementationCommit=bef997c
+- baseFullNpmTestAuthorizationCommit=592af3a
+- npmTestFullExecuted=true
+- npmTestFullCommand=npm test
+- npmTestFullExitCode=1
+- npmTestFullResult=red
+- npmTestFullTests=2391
+- npmTestFullPass=2388
+- npmTestFullFail=1
+- npmTestFullSkipped=2
+- npmTestFullDurationMs=243687.8187
+- failingTestFile=gestor.requireUnitScope.test.js
+- failingTestName=gestor requireUnitScope: sem unidadeId retorna 400 em modo multi-tenant enforced
+- expectedStatus=400
+- observedStatus=500
+- workingTreeCleanAfter=true
+- branchAheadAfter=8
+- externalHttpExecuted=false
+- browserUsed=false
+- manualLoginExecuted=false
+- realMasterUsed=false
+- realPasswordUsed=false
+- vercelExecuted=false
+- pushExecuted=false
+- sourceChanged=false
+- productionReady=false
+- proximoCandidatoRecomendado=inspectRequireUnitScope500InsteadOf400StaticOnly
+
 ## Checkpoint documental curto da autorizacao futura e separada do npm test completo para a correcao de Setores e Recursos em modo global privilegiado read-only.
 - selectedTarget=authorizeFullNpmTestForSetoresAndRecursosGlobalReadOnlyFix
 - baseImplementationCommit=bef997c
