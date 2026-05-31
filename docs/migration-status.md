@@ -1,3 +1,50 @@
+## Checkpoint documental curto do pos-push green do bloco refinamento skipDb/bootstrap.
+- selectedTarget=recordPostPushRefinedSkipDbBlockGreen
+- basePushAuthorizationCommit=207c505
+- baseFullNpmTestGreenCommit=43bff2a
+- baseRefinedFixCommit=98ffbce
+- pushExecuted=true
+- pushResult=green
+- prePushExecuted=true
+- prePushResult=green
+- prePushCommand=npm test
+- prePushTests=2391
+- prePushSuites=17
+- prePushPass=2389
+- prePushFail=0
+- prePushCancelled=0
+- prePushSkipped=2
+- prePushTodo=0
+- prePushDurationMs=240270.6541
+- publishedRange=ba5a128..207c505
+- targetBranch=migration/refactor-core
+- remoteRepository=https://github.com/wallisondeyvid/wd-gestor.git
+- localRemoteSyncedAfterPush=true
+- aheadAfterPush=0
+- workingTreeCleanAfterPush=true
+- focusedPairGreen=true
+- npmTestFullGreen=true
+- pushCheckpointRecorded=true
+- pushExecutedNow=false
+- testExecutedNow=false
+- npmTestFullExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: planNextPostPushReadinessCheckpointAfterRefinedSkipDbGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada para executar o push apos npm test completo green do refinamento skipDb/bootstrap.
 - selectedTarget=authorizePushAfterRefinedSkipDbFullNpmTestGreen
 - basePushPlanCommit=bce97df
