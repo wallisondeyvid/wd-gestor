@@ -1,3 +1,25 @@
+## Checkpoint documental curto da inspecao estatica e do planejamento da correcao minima para o caso requireUnitScope 500 em vez de 400.
+- selectedTarget=planMinimalFixForRequireUnitScope500InsteadOf400
+- baseRedRecordCommit=4e5db6c
+- staticInspectionExecuted=true
+- staticInspectionResult=completed
+- failingTestFile=gestor.requireUnitScope.test.js
+- failingTestName=gestor requireUnitScope: sem unidadeId retorna 400 em modo multi-tenant enforced
+- expectedStatus=400
+- observedStatus=500
+- rootCauseCandidate=testUsesRecursosApiAsRequireUnitScopeProxyButRouteNowBypassesForPrivilegedGlobalReadOnly
+- requireUnitScopeBodyBugFound=false
+- recursoApiBypassChangesFlow=true
+- recursosGlobalListPathReached=true
+- preferredFixTarget=gestor.requireUnitScope.test.js
+- secondaryFixTarget=gestor-setor-recurso-global-readonly-route-runtime-contract.test.js only if strictly necessary
+- requireUnitScopeChangePreferred=false
+- routeCodeChangePreferred=false
+- implementationExecutedNow=false
+- testsExecutedNow=false
+- productionReady=false
+- proximoCandidatoRecomendado=authorizeMinimalFixForRequireUnitScope500InsteadOf400
+
 ## Checkpoint documental curto do resultado red do npm test completo para a correcao de Setores e Recursos em modo global read-only.
 - selectedTarget=recordFullNpmTestFailureForSetoresAndRecursosGlobalReadOnlyFix
 - baseImplementationCommit=bef997c
