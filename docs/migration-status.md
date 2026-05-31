@@ -1,3 +1,40 @@
+## Checkpoint documental curto do planejamento do push apos npm test completo green do refinamento skipDb/bootstrap.
+- selectedTarget=planPushAfterRefinedSkipDbFullNpmTestGreen
+- baseFullNpmTestGreenCommit=43bff2a
+- baseRefinedFixCommit=98ffbce
+- focusedPairGreen=true
+- npmTestFullGreen=true
+- npmTestFullTests=2391
+- npmTestFullPass=2389
+- npmTestFullFail=0
+- pushPlanned=true
+- pushExecutedNow=false
+- pushRequiresSeparateAuthorization=true
+- previousPushAttemptNotCompletedKnown=true
+- futurePushMustConfirmRemoteBeforeAndAfter=true
+- futurePushMustRecordPrePushOutcome=true
+- futurePushMustRecordPublishedRange=true
+- futurePushMustPreserveWorkingTreeClean=true
+- futurePushTargetBranch=migration/refactor-core
+- productionReady=false
+- testExecutedNow=false
+- npmTestFullExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- próximo candidato recomendado: authorizePushAfterRefinedSkipDbFullNpmTestGreen
+
 ## Checkpoint documental curto do resultado green do npm test completo apos o par focado green do refinamento skipDb/bootstrap.
 - selectedTarget=recordFullNpmTestAfterRefinedSkipDbFocusedPairGreen
 - baseFullNpmTestAuthorizationCommit=82799f3
