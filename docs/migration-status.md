@@ -1,3 +1,40 @@
+## Checkpoint documental curto do planejamento da substituicao controlada dos clusters Mongo antigos por um cluster limpo para o WD Gestor.
+- selectedTarget=planCleanMongoClusterReplacementForWDGestor
+- baseHumanConfirmationCommit=9997680
+- baseInventoryAuthorizationCommit=932d3aa
+- baseClusterDivergenceCommit=4e55341
+- clusterDivergenceHypothesis=true
+- oldCluster0Label=Projeto O
+- oldCluster1Label=wdgestorweb
+- oldClustersDeletionPlannedOnlyAfterReplacementGreen=true
+- deleteOldClustersNow=false
+- createNewClusterNow=false
+- updateVercelEnvNow=false
+- updateLocalEnvNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- cleanupExecutedNow=false
+- controlledReplacementPlanned=true
+- replacementStrategy=create-new-clean-cluster-before-deleting-old-clusters
+- newClusterWillBecomeSingleSourceOfTruth=true
+- masterUserMustBePreservedOrRecreatedSafely=true
+- nonMasterUsersCanBeDiscarded=true
+- currentUnitsCanBeDiscarded=true
+- unitDependentDataCanBeDiscarded=true
+- futureStepsRequired.1=createNewMongoClusterManually
+- futureStepsRequired.2=configureNewMongoUserAndNetworkAccess
+- futureStepsRequired.3=obtainNewMongoUriWithoutPrintingSecret
+- futureStepsRequired.4=updateLocalShellUriOnly
+- futureStepsRequired.5=runReadOnlyConnectionDiagnosticAgainstNewCluster
+- futureStepsRequired.6=createOrSeedMasterOnlyWithExplicitAuthorization
+- futureStepsRequired.7=updateVercelMongoUriWithExplicitAuthorization
+- futureStepsRequired.8=redeployWithExplicitAuthorization
+- futureStepsRequired.9=validateHealthAndLoginWithExplicitAuthorization
+- futureStepsRequired.10=onlyThenPlanOldClustersDeletion
+- oldClustersDeletionBlockedUntilNewClusterGreen=true
+- productionReady=false
+- proximoCandidatoRecomendado=authorizeCleanMongoClusterReplacementPlanningCheckpointOrPlanNewClusterCreationInstructions
+
 ## Checkpoint documental curto da hipotese de divergencia entre Cluster 0 e Cluster 1 apos inventario read-only do dominio ficticio.
 - selectedTarget=recordClusterDivergenceHypothesisAfterFictionalDomainInventory
 - baseInventoryAuthorizationCommit=932d3aa
