@@ -399,6 +399,14 @@ function getEffectiveSkipDb(req) {
   }
 }
 
+function hasForcedLocalSkipDb(req) {
+  try {
+    return !!req?.app?.locals?.__skipDbForced;
+  } catch {
+    return false;
+  }
+}
+
 function respondDbOffline(res, req) {
   try {
     if (!res.get('X-Condominios-Db-Mode')) res.set('X-Condominios-Db-Mode', 'offline');
@@ -732,21 +740,9 @@ async function tryReconnectMongo() {
 
 async function ensureCondominiosMongoOnline(req, res) {
   try {
-    if (getEffectiveSkipDb(req)) {
+    if (hasForcedLocalSkipDb(req)) {
       respondDbOffline(res, req);
       return false;
-    }
-
-    // prioridade absoluta: skipDb forçado pelo createServer
-    try {
-      const forced = !!req?.app?.locals?.__skipDbForced;
-
-      if (forced) {
-        respondDbOffline(res, req);
-        return false;
-      }
-    } catch {
-      /* noop */
     }
 
     if (mongoose.connection.readyState === 1) return true;
@@ -774,7 +770,7 @@ async function ensureCondominiosMongoOnline(req, res) {
     }
 
     try {
-      if (!getEffectiveSkipDb(req)) {
+      if (!hasForcedLocalSkipDb(req)) {
         if (req?.app?.locals) req.app.locals.skipDb = false;
       }
     } catch {

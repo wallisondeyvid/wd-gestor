@@ -63,6 +63,12 @@ export function mountBootstrapRegistry({
     try {
       if (built && built.locals) {
         built.locals.skipDb = getEffectiveSkipDb();
+
+        if (app?.locals?.__skipDbForced) {
+          built.locals.__skipDbForced = true;
+        } else {
+          delete built.locals.__skipDbForced;
+        }
       }
     } catch {
       /* noop */
