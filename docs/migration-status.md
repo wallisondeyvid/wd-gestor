@@ -1,3 +1,40 @@
+## Checkpoint documental curto do resultado red do teste focado primario da area provavel do hang do pre-push.
+- selectedTarget=recordFocusedPrimaryTestForPrePushHangAreaRed
+- baseFocusedTestAuthorizationCommit=6381c5e
+- focusedPrimaryTestExecuted=true
+- focusedPrimaryTestCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- focusedPrimaryTestResult=red
+- failedCasesCount=2
+- failedCase1=GET /condominios/api/comunicados/restricoes/habitacoes preserva contrato offline autenticado
+- failedCase2=GET /condominios/api/comunicados/restricoes/moradores preserva contrato offline autenticado
+- mongoMemoryInitiallyForced=true
+- inMemoryMongoObserved=true
+- sanitizedRealMongoSrvObservedDuringTest=true
+- possibleRealMongoConfigLeakDuringTest=true
+- credentialsPrinted=false
+- rawMongoUriPrinted=false
+- filesChangedByTest=false
+- workingTreeCleanAfterTest=true
+- npmTestFullExecutedNow=false
+- secondaryFocusedTestsExecutedNow=false
+- pushExecutedNow=false
+- pushStillBlocked=true
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: planStaticInspectionOfComunicadosRestricoesTestMongoConfigLeak
+
 ## Checkpoint documental curto da autorizacao futura e separada para executar o teste focado primario da area provavel do hang do pre-push.
 - selectedTarget=authorizeFocusedTestForPrePushHangArea
 - baseFocusedTestPlanCommit=bb18db4
