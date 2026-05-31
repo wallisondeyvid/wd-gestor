@@ -1,3 +1,45 @@
+## Checkpoint documental curto do planejamento da proxima validacao apos o focused green de comunicados restricoes.
+- selectedTarget=planNextValidationAfterComunicadosRestricoesFocusedGreen
+- baseFocusedPostFixGreenCommit=547353e
+- baseMinimalFixCommit=b2c8d8a
+- focusedPostFixValidationGreen=true
+- focusedPostFixTests=8
+- focusedPostFixPass=8
+- focusedPostFixFail=0
+- formerRedCasesNowPassed=true
+- mongoSrvObservedInOfflinePostFix=false
+- prePushCommandIdentified=npm test
+- nextValidationSelected=npm test completo
+- fullNpmTestPlanned=true
+- fullNpmTestExecutedNow=false
+- pushPlannedAfterFullNpmTestGreen=true
+- pushExecutedNow=false
+- secondaryFocusedTestPlannedNow=false
+- rationale=pre-push-runs-npm-test-and-focused-red-is-now-green
+- npmTestFullMustRunInSeparateMicrocut=true
+- npmTestFullMustRecordPassFailOrHang=true
+- npmTestFullMustRecordDuration=true
+- npmTestFullMustPreserveWorkingTreeClean=true
+- futurePushRequiresFullNpmTestGreen=true
+- focusedTestExecutedNow=false
+- npmTestFullExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: authorizeFullNpmTestAfterComunicadosRestricoesFocusedGreen
+
 ## Checkpoint documental curto do resultado green da validacao focada pos-fix do vazamento/reidratacao Mongo em comunicados restricoes.
 - selectedTarget=recordFocusedValidationAfterComunicadosRestricoesMongoConfigLeakFixGreen
 - baseMinimalFixCommit=b2c8d8a
