@@ -1,3 +1,51 @@
+## Checkpoint documental curto do resultado green da validacao focada pos-fix do vazamento/reidratacao Mongo em comunicados restricoes.
+- selectedTarget=recordFocusedValidationAfterComunicadosRestricoesMongoConfigLeakFixGreen
+- baseMinimalFixCommit=b2c8d8a
+- baseFocusedPostFixValidationAuthorizationCommit=7109321
+- baseFocusedPrimaryTestRedCommit=0652a03
+- fixImplemented=true
+- fixTarget=src/modules/condominios/app/condominios-app.js
+- fixSummary=ensureCondominiosMongoOnline-short-circuits-when-effective-skipDb-is-active
+- focusedPostFixValidationExecuted=true
+- focusedPostFixValidationResult=green
+- focusedPostFixCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- tests=8
+- suites=0
+- pass=8
+- fail=0
+- cancelled=0
+- skipped=0
+- todo=0
+- duration_ms=6596.5116
+- formerRedCase1NowPassed=true
+- formerRedCase2NowPassed=true
+- formerRedCase1=GET /condominios/api/comunicados/restricoes/habitacoes preserva contrato offline autenticado
+- formerRedCase2=GET /condominios/api/comunicados/restricoes/moradores preserva contrato offline autenticado
+- mongoSrvObservedInOfflinePostFix=false
+- localFallbackMongoSanitizedObserved=true
+- realAtlasReconnectObservedInOfflinePostFix=false
+- mongoDisconnectedAtEnd=true
+- workingTreeCleanAfterValidation=true
+- npmTestFullExecutedNow=false
+- secondaryFocusedTestsExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoManualConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: planNextValidationAfterComunicadosRestricoesFocusedGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada para executar a validacao focada pos-fix do vazamento/reidratacao Mongo em comunicados restricoes.
 - selectedTarget=authorizeFocusedValidationAfterComunicadosRestricoesMongoConfigLeakFix
 - baseMinimalFixCommit=b2c8d8a
