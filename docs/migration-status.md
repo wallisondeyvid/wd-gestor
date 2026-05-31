@@ -1,3 +1,48 @@
+## Checkpoint documental curto do planejamento do proximo checkpoint de prontidao apos a sincronizacao completa do bloco refinamento skipDb/bootstrap.
+- selectedTarget=planNextPostPushReadinessCheckpointAfterRefinedSkipDbGreen
+- basePostPushCheckpointCommit=179b3d8
+- basePublishedTechnicalRange=ba5a128..207c505
+- basePublishedDocumentalRange=207c505..179b3d8
+- localRemoteSynced=true
+- aheadAfterPush=0
+- workingTreeClean=true
+- headLocalEqualsOrigin=true
+- headLocalAndOrigin=179b3d8
+- refinedSkipDbBlockPublished=true
+- refinedSkipDbPrePushGreen=true
+- refinedSkipDbPrePushTests=2391
+- refinedSkipDbPrePushPass=2389
+- refinedSkipDbPrePushFail=0
+- lastDocumentalPushUsedNoVerify=true
+- lastDocumentalPushPrePushExecuted=false
+- vercelProdNeededNow=false
+- redeployNeededNow=false
+- nextReadinessCheckpointPlanned=true
+- nextReadinessCheckpointExecutedNow=false
+- productionReady=false
+- possibleNextPath1=reviewPostRefinedSkipDbReadinessChecklist
+- possibleNextPath2=planControlledOnlineSmokeOnlyIfNeeded
+- possibleNextPath3=awaitHumanDecisionForNextTechnicalOrReadinessBlock
+- testExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- proximo candidato recomendado: reviewPostRefinedSkipDbReadinessChecklistDocumentally
+
 ## Checkpoint documental curto do pos-push green do bloco refinamento skipDb/bootstrap.
 - selectedTarget=recordPostPushRefinedSkipDbBlockGreen
 - basePushAuthorizationCommit=207c505
