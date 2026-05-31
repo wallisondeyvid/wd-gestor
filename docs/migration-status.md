@@ -1,3 +1,31 @@
+## Checkpoint documental curto do resultado da correcao minima do teste requireUnitScope e do planejamento do npm test completo seguinte.
+- selectedTarget=planFullNpmTestAfterFixingRequireUnitScopeContractTest
+- baseRedRecordCommit=4e5db6c
+- baseInspectionPlanCommit=a8bb2c4
+- baseAuthorizationCommit=3645877
+- testFixCommit=5fd2d57
+- testFixResult=completed
+- changedFiles=tests/gestor.requireUnitScope.test.js
+- sourceChanged=false
+- packageJsonChanged=false
+- docsChangedDuringImplementation=false
+- requireUnitScopeChanged=false
+- routeCodeChanged=false
+- recursosGlobalReadOnlyContractPreserved=true
+- strictRequireUnitScopeContractPreserved=true
+- targetedValidationAlreadyExecuted=true
+- targetedValidationCommand=node --test tests/gestor.requireUnitScope.test.js tests/gestor-setor-recurso-global-readonly-route-runtime-contract.test.js
+- targetedValidationResult=green
+- targetedValidationTests=9
+- targetedValidationPass=9
+- targetedValidationFail=0
+- targetedValidationSkipped=0
+- fullNpmTestPlanned=true
+- fullNpmTestExecutedNow=false
+- npmTestFullAuthorized=false
+- productionReady=false
+- proximoCandidatoRecomendado=authorizeFullNpmTestAfterFixingRequireUnitScopeContractTest
+
 ## Checkpoint documental curto da autorizacao futura e separada para a correcao minima do teste requireUnitScope 500 em vez de 400.
 - selectedTarget=authorizeMinimalFixForRequireUnitScope500InsteadOf400
 - baseRedRecordCommit=4e5db6c
