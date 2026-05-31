@@ -1,3 +1,28 @@
+## Checkpoint documental curto da autorizacao futura e separada para a correcao minima do teste requireUnitScope 500 em vez de 400.
+- selectedTarget=authorizeMinimalFixForRequireUnitScope500InsteadOf400
+- baseRedRecordCommit=4e5db6c
+- baseInspectionPlanCommit=a8bb2c4
+- minimalFixAuthorized=true
+- implementationExecutedNow=false
+- allowedTarget=tests/gestor.requireUnitScope.test.js
+- preferredFixTarget=gestor.requireUnitScope.test.js
+- requireUnitScopeChangeAllowedOnlyIfStrictlyNecessary=true
+- requireUnitScopeChangePreferred=false
+- routeCodeChangeAllowedOnlyIfStrictlyNecessary=true
+- routeCodeChangePreferred=false
+- recursosGlobalReadOnlyContractMustBePreserved=true
+- strictRequireUnitScopeContractMustRemain400=true
+- testsAllowedForFutureImplementation=true
+- npmTestFullAuthorized=false
+- httpAuthorized=false
+- browserAuthorized=false
+- loginAuthorized=false
+- masterUseAuthorized=false
+- vercelAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- proximoCandidatoRecomendado=implementMinimalFixForRequireUnitScope500InsteadOf400InSeparateMicrocut
+
 ## Checkpoint documental curto da inspecao estatica e do planejamento da correcao minima para o caso requireUnitScope 500 em vez de 400.
 - selectedTarget=planMinimalFixForRequireUnitScope500InsteadOf400
 - baseRedRecordCommit=4e5db6c
