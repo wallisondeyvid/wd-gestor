@@ -121,12 +121,13 @@ test('gestor requireUnitScope: sem unidadeId retorna 400 em modo multi-tenant en
   const { app, close, registerErrorHandlers } = await createServer({ skipDb: true, deferErrorHandlers: true });
   const teardownGuard = installTeardownSuppression();
   installSessionSeedRoute(app);
+  installRequireUnitScopeEchoRoute(app);
   registerErrorHandlers();
   const agent = await createAuthenticatedAgent(app);
 
   try {
     const res = await withEnforcedMultiTenant(() => agent
-      .get('/gestor/api/recursos')
+      .get('/__tests__/require-unit-scope')
       .set('Accept', 'application/json')
       .set('Connection', 'close'));
 
@@ -146,17 +147,19 @@ test('gestor requireUnitScope: com unidadeId valido nao retorna 400', async () =
   const { app, close, registerErrorHandlers } = await createServer({ skipDb: true, deferErrorHandlers: true });
   const teardownGuard = installTeardownSuppression();
   installSessionSeedRoute(app);
+  installRequireUnitScopeEchoRoute(app);
   registerErrorHandlers();
   const agent = await createAuthenticatedAgent(app);
 
   try {
     const res = await withEnforcedMultiTenant(() => agent
-      .get('/gestor/api/recursos')
+      .get('/__tests__/require-unit-scope')
       .query({ unidadeId: '000000000000000000000010' })
       .set('Accept', 'application/json')
       .set('Connection', 'close'));
 
-    assert.notEqual(res.status, 400);
+    assert.equal(res.status, 200);
+    assert.equal(res.body?.unidadeId, '000000000000000000000010');
   } finally {
     try {
       await closeWithTeardownGuard(close, teardownGuard);
