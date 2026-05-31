@@ -1,3 +1,27 @@
+## Checkpoint documental curto da autorizacao futura e separada do npm test completo apos o ajuste do contrato requireUnitScope.
+- selectedTarget=authorizeFullNpmTestAfterFixingRequireUnitScopeContractTest
+- baseRedRecordCommit=4e5db6c
+- baseTestFixCommit=5fd2d57
+- baseFullNpmTestPlanCommit=cb211fb
+- testFixResult=completed
+- targetedValidationResult=green
+- targetedValidationTests=9
+- targetedValidationPass=9
+- targetedValidationFail=0
+- strictRequireUnitScopeContractPreserved=true
+- recursosGlobalReadOnlyContractPreserved=true
+- fullNpmTestAuthorized=true
+- fullNpmTestExecutedNow=false
+- httpAuthorized=false
+- browserAuthorized=false
+- loginAuthorized=false
+- masterUseAuthorized=false
+- realPasswordAuthorized=false
+- vercelAuthorized=false
+- pushAuthorized=false
+- productionReady=false
+- proximoCandidatoRecomendado=executeFullNpmTestAfterFixingRequireUnitScopeContractTestInSeparateMicrocut
+
 ## Checkpoint documental curto do resultado da correcao minima do teste requireUnitScope e do planejamento do npm test completo seguinte.
 - selectedTarget=planFullNpmTestAfterFixingRequireUnitScopeContractTest
 - baseRedRecordCommit=4e5db6c
