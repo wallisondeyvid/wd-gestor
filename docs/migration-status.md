@@ -1,3 +1,42 @@
+## Checkpoint documental curto do planejamento da validacao online read-only do endpoint /health apos a atualizacao da MONGODB_URI na Vercel.
+- selectedTarget=planOnlineReadOnlyHealthCheckAfterVercelMongoUriUpdate
+- baseVercelMongoUriUpdateRecordCommit=d4edec2
+- vercelMongoUriUpdatedByHuman=true
+- vercelDeploymentStatus=ReadyLatest
+- onlineHealthCheckPlanned=true
+- onlineHealthCheckExecutedNow=false
+- healthEndpoint=/health
+- healthCheckMethod=GET
+- healthCheckReadOnly=true
+- loginExecutedNow=false
+- masterUsedNow=false
+- passwordUsedNow=false
+- authenticatedRequestExecutedNow=false
+- httpExecutedNow=false
+- browserOpenedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- seedExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- expectedNewClusterState=master-only
+- expectedUsers=1
+- expectedUnits=0
+- futureHealthCheckMustNotPrintSecrets=true
+- futureHealthCheckMustBeSanitized=true
+- futureHealthCheckMustNotUseCredentials=true
+- futureLoginValidationRequiresSeparateAuthorization=true
+- productionReady=false
+- proximoCandidatoRecomendado=authorizeOnlineReadOnlyHealthCheckAfterVercelMongoUriUpdate
+
 ## Checkpoint documental curto do registro da atualizacao manual da MONGODB_URI na Vercel e do deploy observado para o novo cluster limpo.
 - selectedTarget=recordVercelMongoUriUpdateAndDeploymentToNewCleanCluster
 - basePostSeedDiagnosticGreenCommit=d9d0194
