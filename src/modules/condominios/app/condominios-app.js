@@ -732,6 +732,11 @@ async function tryReconnectMongo() {
 
 async function ensureCondominiosMongoOnline(req, res) {
   try {
+    if (getEffectiveSkipDb(req)) {
+      respondDbOffline(res, req);
+      return false;
+    }
+
     // prioridade absoluta: skipDb forçado pelo createServer
     try {
       const forced = !!req?.app?.locals?.__skipDbForced;
@@ -769,8 +774,7 @@ async function ensureCondominiosMongoOnline(req, res) {
     }
 
     try {
-      const forced = !!req?.app?.locals?.__skipDbForced;
-      if (!forced) {
+      if (!getEffectiveSkipDb(req)) {
         if (req?.app?.locals) req.app.locals.skipDb = false;
       }
     } catch {
