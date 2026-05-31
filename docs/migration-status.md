@@ -1,3 +1,28 @@
+## Checkpoint documental curto do resultado da implementacao minima de Setores e Recursos e do planejamento da validacao direcionada seguinte.
+- selectedTarget=planTargetedValidationForSetoresAndRecursosGlobalReadOnlyFix
+- basePlanCommit=58b861b
+- baseAuthorizationCommit=3f7879d
+- implementationCommit=bef997c
+- implementationResult=completed
+- changedFiles=pagesRouter.js,setorApi.js,recursoApi.js,gestor-pages-router-wrapper-structural.test.js,gestor-setor-recurso-global-readonly-route-runtime-contract.test.js
+- requireUnitScopeChanged=false
+- packageJsonChanged=false
+- docsChangedDuringImplementation=false
+- setoresPageGlobalReadOnlyFixImplemented=true
+- setoresApiGlobalReadOnlyFixImplemented=true
+- recursosApiGlobalReadOnlyFixImplemented=true
+- mutationRoutesRemainProtected=true
+- targetedValidationAlreadyExecuted=true
+- targetedValidationCommand=node --test tests/gestor-pages-router-wrapper-structural.test.js tests/gestor-setor-recurso-global-readonly-route-runtime-contract.test.js tests/gestor-setor-recurso-unit-scope-canonical.test.js
+- targetedValidationResult=green
+- targetedValidationTests=23
+- targetedValidationPass=23
+- targetedValidationFail=0
+- additionalTargetedValidationPlanned=true
+- additionalTargetedValidationExecutedNow=false
+- productionReady=false
+- recommendedNextCandidate=authorizeTargetedValidationForSetoresAndRecursosGlobalReadOnlyFix
+
 ## Checkpoint documental curto da autorizacao futura e separada da correcao minima de Setores e Recursos para modo global privilegiado read-only.
 - selectedTarget=authorizeMinimalFixForSetoresAndRecursosGlobalReadOnlyScope
 - basePlanCommit=58b861b
