@@ -1,3 +1,45 @@
+## Checkpoint documental curto do resultado bloqueado do retry do cleanup do master acidental em test.users.
+- selectedTarget=recordCleanupAccidentalTestUsersMasterBlockedAfterRetry
+- baseCleanupBlockedCommit=cb3aa36
+- cleanupRetryExecuted=true
+- cleanupRetryResult=blocked-no-users-collection
+- cleanUriPresent=true
+- masterEmailProvided=true
+- derivedTestUriPresent=true
+- connectionAttempted=true
+- connected=true
+- dbName=test
+- hasUsers=false
+- usersCountBefore=null
+- masterFound=false
+- masterRoleSanitized=null
+- cleanupCriteriaPassed=false
+- deleteAttempted=false
+- deletedCount=0
+- usersCountAfter=null
+- dropDatabaseAttempted=false
+- dropCollectionAttempted=false
+- wdgestorTouched=false
+- cluster0Touched=false
+- cluster1Touched=false
+- secretsPrinted=false
+- rawDocumentsPrinted=false
+- uriPrinted=false
+- passwordPrinted=false
+- passwordHashPrinted=false
+- errorName=null
+- errorMessageSanitized=null
+- cleanupCompleted=false
+- cleanupNoActionBecauseTestUsersMissing=true
+- productionReady=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelProdExecutedNow=false
+- mongoWriteExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- proximo candidato recomendado: decideWhetherCleanupCanBeClosedAsNoopOrNeedsAtlasVisualConfirmation
+
 ## Checkpoint documental curto do bloqueio do cleanup do master acidental em test.users.
 - selectedTarget=recordCleanupAccidentalTestUsersMasterBlocked
 - baseCleanupAccidentalTestUsersMasterAuthorizationCommit=442ce8a
