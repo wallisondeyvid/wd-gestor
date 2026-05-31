@@ -1,3 +1,36 @@
+## Checkpoint documental curto da autorizacao futura e separada para atualizar a URI Mongo da Vercel para o novo cluster limpo.
+- selectedTarget=authorizeVercelMongoUriUpdateToNewCleanCluster
+- basePostSeedDiagnosticGreenCommit=d9d0194
+- baseVercelMongoUriUpdatePlanCommit=aa635df
+- newClusterContainsOnlyMaster=true
+- newClusterReadyForVercelUriUpdate=true
+- vercelMongoUriUpdateAuthorized=true
+- vercelMongoUriUpdateExecutedNow=false
+- vercelEnvUpdatedNow=false
+- vercelCliExecutedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- newMongoUriMustNotBePrinted=true
+- newMongoUriMustNotBeCommitted=true
+- newMongoUriMustBeAppliedOnlyByHumanControlledAction=true
+- futureVercelUpdateCanBeExecutedOnlyInSeparateMicrocut=true
+- futureRedeployRequiresExplicitAuthorization=true
+- futureOnlineValidationRequiresExplicitAuthorization=true
+- futureOldClustersDeletionRequiresSeparateAuthorizationAfterGreen=true
+- productionReady=false
+- proximoCandidatoRecomendado=executeVercelMongoUriUpdateToNewCleanClusterInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da futura atualizacao da URI Mongo da Vercel para o novo cluster limpo.
 - selectedTarget=planVercelMongoUriUpdateToNewCleanCluster
 - basePostSeedDiagnosticGreenCommit=d9d0194
