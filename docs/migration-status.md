@@ -1,3 +1,33 @@
+## Checkpoint documental curto do resultado green do npm test completo apos o ajuste do contrato requireUnitScope.
+- selectedTarget=recordFullNpmTestAfterFixingRequireUnitScopeContractTest
+- baseRoutesFixCommit=bef997c
+- baseTestFixCommit=5fd2d57
+- baseFullNpmTestAuthorizationCommit=925a6d7
+- npmTestFullExecuted=true
+- npmTestFullCommand=npm test
+- npmTestFullExitCode=0
+- npmTestFullResult=green
+- npmTestFullTests=2391
+- npmTestFullPass=2389
+- npmTestFullFail=0
+- npmTestFullSkipped=2
+- npmTestFullDurationMs=247087.4002
+- workingTreeCleanAfter=true
+- branchAheadAfter=14
+- previousRequireUnitScopeFailureResolved=true
+- strictRequireUnitScopeContractPreserved=true
+- recursosGlobalReadOnlyContractPreserved=true
+- externalHttpExecuted=false
+- browserUsed=false
+- manualLoginExecuted=false
+- realMasterUsed=false
+- realPasswordUsed=false
+- vercelExecuted=false
+- pushExecuted=false
+- sourceChanged=false
+- productionReady=false
+- proximoCandidatoRecomendado=planPushAfterSetoresRecursosGlobalReadOnlyGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada do npm test completo apos o ajuste do contrato requireUnitScope.
 - selectedTarget=authorizeFullNpmTestAfterFixingRequireUnitScopeContractTest
 - baseRedRecordCommit=4e5db6c
