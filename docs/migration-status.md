@@ -1,3 +1,26 @@
+## Checkpoint documental curto da autorizacao para preparar instrucoes humanas de criacao de um novo cluster Mongo limpo no Atlas.
+- selectedTarget=authorizeNewCleanMongoClusterCreationInstructions
+- baseClusterReplacementPlanCommit=6472653
+- instructionsAuthorized=true
+- newClusterCreationExecutedNow=false
+- oldCluster0DeletionExecutedNow=false
+- oldCluster1DeletionExecutedNow=false
+- localEnvUpdatedNow=false
+- vercelEnvUpdatedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- productionReady=false
+- instructionScope=create-new-clean-mongo-cluster-manually-without-touching-old-clusters
+- oldClustersMustRemainIntact=true
+- newClusterMustBeEmpty=true
+- newClusterWillBecomeSingleSourceOfTruthAfterValidation=true
+- masterCreationMustRequireSeparateAuthorization=true
+- vercelEnvUpdateMustRequireSeparateAuthorization=true
+- redeployMustRequireSeparateAuthorization=true
+- oldClustersDeletionMustRequireSeparateAuthorizationAfterGreen=true
+- proximoCandidatoRecomendado=provideHumanInstructionsForNewCleanMongoClusterCreation
+
 ## Checkpoint documental curto do planejamento da substituicao controlada dos clusters Mongo antigos por um cluster limpo para o WD Gestor.
 - selectedTarget=planCleanMongoClusterReplacementForWDGestor
 - baseHumanConfirmationCommit=9997680
