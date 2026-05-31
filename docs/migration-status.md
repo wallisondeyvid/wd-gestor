@@ -1,3 +1,56 @@
+## Checkpoint documental curto do resultado green da validacao online controlada do login master apos health green no cluster limpo.
+- selectedTarget=recordMasterLoginValidationAfterCleanClusterHealthGreen
+- baseOnlineHealthGreenCommit=064f33c
+- baseMasterLoginValidationAuthorizationCommit=d8d28eb
+- masterLoginValidationExecuted=true
+- masterLoginValidationResult=green
+- loginMethod=POST
+- loginUrl=https://wdgestor.vercel.app/gestor/login
+- loginStatusCode=303
+- redirectOrLocationShapePresent=true
+- cookiePresentBoolean=true
+- loginResultBoolean=true
+- emailConfigured=true
+- passwordConfigured=true
+- passwordPrinted=false
+- cookiePrinted=false
+- sessionPrinted=false
+- tokenPrinted=false
+- htmlRawPrinted=false
+- credentialsUsed=true
+- mutationExecuted=false
+- domainDataMutated=false
+- errorName=null
+- errorMessageSanitized=null
+- masterPasswordClearedAfterLogin=true
+- onlineMasterLoginGreen=true
+- newCleanClusterOnlineLoginConfirmed=true
+- onlySessionCookieMutationAllowed=true
+- domainMutationExecuted=false
+- unitsCreated=false
+- usersCreated=false
+- seedExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- browserOpenedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- expectedNewClusterState=master-only
+- expectedUsers=1
+- expectedUnits=0
+- productionReady=false
+- próximo candidato recomendado: planAuthenticatedReadOnlySmokeAfterMasterLoginGreenOrPlanPushCleanClusterCheckpoints
+
 ## Checkpoint documental curto da autorizacao futura e separada para validar o login master online apos health green no cluster limpo.
 - selectedTarget=authorizeMasterLoginValidationAfterCleanClusterHealthGreen
 - baseOnlineHealthGreenCommit=064f33c
