@@ -1,3 +1,39 @@
+## Checkpoint documental curto do resultado green do npm test completo apos o par focado green do refinamento skipDb/bootstrap.
+- selectedTarget=recordFullNpmTestAfterRefinedSkipDbFocusedPairGreen
+- baseFullNpmTestAuthorizationCommit=82799f3
+- baseFocusedPairGreenCommit=0585fa0
+- baseRefinedFixCommit=98ffbce
+- focusedPairGreen=true
+- npmTestFullExecuted=true
+- npmTestFullResult=green
+- tests=2391
+- suites=17
+- pass=2389
+- fail=0
+- cancelled=0
+- skipped=2
+- todo=0
+- duration_ms=234431.8187
+- workingTreeCleanAfterNpmTest=true
+- pushExecutedNow=false
+- pushStillBlockedUntilSeparatePlanning=true
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoManualConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: planPushAfterRefinedSkipDbFullNpmTestGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada para executar npm test completo apos o par focado green do refinamento skipDb/bootstrap.
 - selectedTarget=authorizeFullNpmTestAfterRefinedSkipDbFocusedPairGreen
 - baseFullNpmTestPlanCommit=23df135
