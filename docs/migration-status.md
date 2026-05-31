@@ -1,3 +1,45 @@
+## Checkpoint documental curto do resultado red do npm test completo apos o fix do vazamento/reidratacao Mongo.
+- selectedTarget=recordFullNpmTestAfterComunicadosRestricoesFocusedGreenRed
+- baseFullNpmTestAuthorizationCommit=048523a
+- baseFocusedPostFixGreenCommit=547353e
+- baseMinimalFixCommit=b2c8d8a
+- fullNpmTestExecuted=true
+- fullNpmTestResult=red
+- tests=2391
+- suites=17
+- pass=2388
+- fail=1
+- cancelled=0
+- skipped=2
+- todo=0
+- duration_ms=248152.8254
+- failingTestFile=tests/createServer.bootstrap.characterization.test.js
+- failingTestLocation=tests/createServer.bootstrap.characterization.test.js:405:1
+- failingTestName=condominios: parent.locals.__skipDbForced nao impede limpar req.app.locals.skipDb apos reconnect
+- failingAssertion=sem forced no parent durante reconnect, a rota deve seguir fluxo normal
+- failingActualStatus=503
+- failingExpectedStatus=200
+- likelyRegressionFromMinimalFix=true
+- focusedPostFixValidationStillGreen=true
+- pushStillBlocked=true
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoManualConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: planStaticInspectionOfCreateServerBootstrapCharacterizationRegression
+
 ## Checkpoint documental curto da autorizacao futura e separada para executar npm test completo apos o focused green de comunicados restricoes.
 - selectedTarget=authorizeFullNpmTestAfterComunicadosRestricoesFocusedGreen
 - baseFocusedPostFixGreenCommit=547353e
