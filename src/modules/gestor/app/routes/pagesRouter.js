@@ -73,6 +73,16 @@ function withLoginAndRecursosScope(handler) {
 	});
 }
 
+function withLoginAndSetoresScope(handler) {
+	return (req, res, next) => requireLogin(req, res, () => {
+		if (isPrivilegedGestorRequest(req) && !hasCanonicalUnitContext(req)) {
+			return handler(req, res, next);
+		}
+
+		return requireUnitScope(req, res, () => handler(req, res, next));
+	});
+}
+
 const router = express.Router();
 // Métricas de adoção de rotas
 router.use((req,res,next)=> {
@@ -102,7 +112,7 @@ router.get('/modulos', requireLogin, paginaModulos);
 router.get('/funcoes', withLoginAndFuncoesScope(paginaFuncoes));
 router.get('/funcionarios', withLoginAndFuncionariosScope(paginaFuncionarios));
 router.get('/recursos', withLoginAndRecursosScope(paginaRecursos));
-router.get('/setores', withLoginAndRequiredUnitScope(paginaSetores));
+router.get('/setores', withLoginAndSetoresScope(paginaSetores));
 router.get('/endereco', partialEndereco);
 router.get('/erro', paginaErro);
 // Debug: quem sou eu (para validar isMaster/role)

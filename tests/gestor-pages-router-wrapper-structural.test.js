@@ -21,18 +21,19 @@ test('pagesRouter congela os wrappers residuais com branch privilegiado/global a
   assert.match(source, /router\.get\(\s*['"]\/funcoes['"]\s*,\s*withLoginAndFuncoesScope\(paginaFuncoes\)\s*\)/);
   assert.match(source, /router\.get\(\s*['"]\/funcionarios['"]\s*,\s*withLoginAndFuncionariosScope\(paginaFuncionarios\)\s*\)/);
   assert.match(source, /router\.get\(\s*['"]\/recursos['"]\s*,\s*withLoginAndRecursosScope\(paginaRecursos\)\s*\)/);
+  assert.match(source, /router\.get\(\s*['"]\/setores['"]\s*,\s*withLoginAndSetoresScope\(paginaSetores\)\s*\)/);
 
   assert.match(source, /function withLoginAndUnidadesScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
   assert.match(source, /function withLoginAndFuncoesScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
   assert.match(source, /function withLoginAndFuncionariosScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
   assert.match(source, /function withLoginAndRecursosScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
+  assert.match(source, /function withLoginAndSetoresScope\(handler\) \{[\s\S]*?isPrivilegedGestorRequest\(req\) && !hasCanonicalUnitContext\(req\)[\s\S]*?return handler\(req, res, next\);[\s\S]*?return requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\);[\s\S]*?\}/);
 });
 
 test('pagesRouter congela as paginas que continuam exigindo requireUnitScope sem branch global', () => {
   const source = PAGES_ROUTE_SOURCE_NO_COMMENTS;
 
   assert.match(source, /router\.get\(\s*['"]\/editar-unidades\/:id['"]\s*,\s*withLoginAndRequiredUnitScope\(paginaEditarUnidade\)\s*\)/);
-  assert.match(source, /router\.get\(\s*['"]\/setores['"]\s*,\s*withLoginAndRequiredUnitScope\(paginaSetores\)\s*\)/);
 
   assert.match(source, /function withLoginAndRequiredUnitScope\(handler\) \{[\s\S]*?requireLogin\(req, res, \(\) => requireUnitScope\(req, res, \(\) => handler\(req, res, next\)\)\);[\s\S]*?\}/);
 });
