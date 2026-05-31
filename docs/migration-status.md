@@ -1,3 +1,49 @@
+## Checkpoint documental curto do resultado green da validacao focada secundaria do refinamento skipDb/bootstrap.
+- selectedTarget=recordSecondaryFocusedValidationForRefinedSkipDbBootstrapFixGreen
+- baseRefinedFixCommit=98ffbce
+- basePrimaryFocusedValidationGreenCommit=d34daad
+- baseSecondaryFocusedValidationAuthorizationCommit=ae6c09e
+- refinedFixImplemented=true
+- primaryFocusedValidationGreen=true
+- secondaryFocusedValidationExecuted=true
+- secondaryFocusedValidationResult=green
+- secondaryFocusedValidationCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- tests=8
+- suites=0
+- pass=8
+- fail=0
+- cancelled=0
+- skipped=0
+- todo=0
+- duration_ms=6848.9116
+- offlineCase1NowPassed=true
+- offlineCase2NowPassed=true
+- offlineCase1=GET /condominios/api/comunicados/restricoes/habitacoes preserva contrato offline autenticado
+- offlineCase2=GET /condominios/api/comunicados/restricoes/moradores preserva contrato offline autenticado
+- mongoSrvObservedInOfflineSecondaryValidation=false
+- localFallbackMongoSanitizedObserved=true
+- mongoDisconnectedAtEnd=true
+- focusedPairGreen=true
+- workingTreeCleanAfterValidation=true
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoManualConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: planFullNpmTestAfterRefinedSkipDbFocusedPairGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada para executar a validacao focada secundaria do refinamento skipDb/bootstrap.
 - selectedTarget=authorizeSecondaryFocusedValidationForRefinedSkipDbBootstrapFix
 - baseRefinedFixCommit=98ffbce
