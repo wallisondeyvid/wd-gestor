@@ -1,3 +1,38 @@
+## Checkpoint documental curto do planejamento de validacao focada da area provavel do hang do pre-push.
+- selectedTarget=planFocusedTestForPrePushHangArea
+- basePushNotCompletedRecordCommit=34cc6da
+- prePushCommandIdentified=true
+- prePushCommand=npm test
+- npmTestChainIdentified=true
+- prePushHasExplicitTimeout=false
+- preCommitHasTimeoutWrapper=true
+- definitiveTestFailureObserved=false
+- hangOrNotCompletedHypothesis=true
+- suspectedArea=requireUnitScope-blocos-comunicados
+- primaryFocusedTestCandidate=tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- secondaryFocusedTestCandidate=tests/condominios-blocos-get-runtime-contract.test.js
+- tertiaryFocusedTestCandidate=tests/condominios.blocos.microcut.test.js
+- focusedTestPlanned=true
+- focusedTestExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: authorizeFocusedTestForPrePushHangArea
+
 ## Checkpoint documental curto do registro da tentativa de push autorizada que nao foi concluida por pre-push nao finalizado.
 - selectedTarget=recordPushAttemptPrePushHookNotCompletedAfterCleanClusterCheckpoints
 - basePushAuthorizationCommit=8d5ce4b
