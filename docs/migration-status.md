@@ -1,3 +1,39 @@
+## Checkpoint documental curto do planejamento da validacao focada do refinamento skipDb/bootstrap.
+- selectedTarget=planFocusedValidationForRefinedSkipDbBootstrapFix
+- baseRefinedFixCommit=98ffbce
+- baseBootstrapRegressionRedCommit=472b9b1
+- baseComunicadosRestricoesFocusedGreenCommit=547353e
+- refinedFixImplemented=true
+- refinedFixTarget1=src/server/bootstrapRegistry.js
+- refinedFixTarget2=src/modules/condominios/app/condominios-app.js
+- refinedFixSummary=propagate-__skipDbForced-only-when-forced-real-and-block-reconnect-only-on-local-forced-skipDb
+- focusedValidationPlanned=true
+- focusedValidationExecutedNow=false
+- primaryFocusedValidationCommand=node --test tests/createServer.bootstrap.characterization.test.js
+- primaryFocusedValidationPurpose=verify-bootstrap-skipDb-reconnect-contract-restored
+- secondaryFocusedValidationCommand=node --test tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- secondaryFocusedValidationPurpose=verify-comunicados-restricoes-focused-green-preserved
+- fullNpmTestPlannedAfterFocusedPairGreen=true
+- fullNpmTestExecutedNow=false
+- pushExecutedNow=false
+- testExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: authorizePrimaryFocusedValidationForRefinedSkipDbBootstrapFix
+
 ## Checkpoint documental curto da autorizacao futura e separada para implementar o refinamento da correcao skipDb/bootstrap.
 - selectedTarget=authorizeRefinedFixForCreateServerBootstrapSkipDbRegression
 - baseRefinedFixPlanCommit=584402a
