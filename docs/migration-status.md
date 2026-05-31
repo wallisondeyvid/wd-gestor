@@ -1,3 +1,39 @@
+## Checkpoint documental curto do resultado green do seed controlado exclusivamente do usuario master real no novo cluster Mongo limpo.
+- selectedTarget=recordControlledMasterOnlySeedForNewCleanMongoClusterGreen
+- baseNewCleanClusterDiagnosticCommit=3a320bf
+- baseMasterOnlySeedPlanCommit=ded9b94
+- baseMasterOnlySeedAuthorizationCommit=2db20d1
+- seedExecuted=true
+- seedResult=green
+- connectedToMongo=true
+- writeAttempted=true
+- masterCreated=true
+- usersBefore=0
+- usersAfter=1
+- masterCountBefore=0
+- masterCountAfter=1
+- emailConfigured=true
+- passwordConfigured=true
+- emailPrinted=false
+- passwordPrinted=false
+- hashPrinted=false
+- mongoUriPrinted=false
+- rawDocumentPrinted=false
+- unitsCreated=false
+- nonMasterUsersCreated=false
+- fictionalDataCreated=false
+- tenantProvisioningCreated=false
+- oldClustersTouched=false
+- vercelUpdated=false
+- masterPasswordClearedAfterSeed=true
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- seedExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- productionReady=false
+- proximoCandidatoRecomendado=planPostSeedReadOnlyDiagnosticForNewCleanMongoCluster
+
 ## Checkpoint documental curto da autorizacao futura e separada para execucao do seed controlado exclusivamente do usuario master real no novo cluster Mongo limpo.
 - selectedTarget=authorizeControlledMasterOnlySeedForNewCleanMongoCluster
 - baseNewCleanClusterDiagnosticCommit=3a320bf
