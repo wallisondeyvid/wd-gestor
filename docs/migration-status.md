@@ -1,3 +1,33 @@
+## Checkpoint documental curto da hipotese de divergencia entre Cluster 0 e Cluster 1 apos inventario read-only do dominio ficticio.
+- selectedTarget=recordClusterDivergenceHypothesisAfterFictionalDomainInventory
+- baseInventoryAuthorizationCommit=932d3aa
+- manualInventoryExecuted=true
+- manualInventoryReadOnly=true
+- manualInventoryConnectedToMongo=true
+- manualInventoryTotalUnits=0
+- manualInventoryTotalUsers=1
+- manualInventoryMasterUserCount=0
+- manualInventorySafeForFutureDryRunCandidate=false
+- clusterDivergenceHypothesis=true
+- atlasCluster0Observed=true
+- atlasCluster0ProjectLabel=Projeto O
+- atlasCluster0ApproxDataSizeMb=8.4
+- atlasCluster1Observed=true
+- atlasCluster1ProjectLabel=wdgestorweb
+- atlasCluster1ApproxDataSizeMb=117.04
+- migrationTestsLikelyUsedCluster1=true
+- displayedUnitsLikelyComeFromCluster0=true
+- cleanupStillBlocked=true
+- reasonCleanupBlocked=clusterConnectionParityNotConfirmed
+- mongoReadExecutedNow=false
+- mongoWriteExecutedNow=false
+- cleanupExecutedNow=false
+- deleteExecutedNow=false
+- dropExecutedNow=false
+- updateExecutedNow=false
+- productionReady=false
+- proximoCandidatoRecomendado=planReadOnlyClusterConnectionParityInspection
+
 ## Checkpoint documental curto do resultado do inventario read-only sanitizado do dominio ficticio e da inconsistencia semantica detectada.
 - selectedTarget=recordControlledFictionalDomainCleanupInventoryReadOnlyResult
 - baseInventoryAuthorizationCommit=932d3aa
