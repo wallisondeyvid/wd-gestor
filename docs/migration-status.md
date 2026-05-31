@@ -1,3 +1,41 @@
+## Checkpoint documental curto da autorizacao futura e separada para execucao do diagnostico read-only pos-seed no novo cluster Mongo limpo.
+- selectedTarget=authorizePostSeedReadOnlyDiagnosticForNewCleanMongoCluster
+- baseNewCleanClusterDiagnosticCommit=3a320bf
+- baseMasterOnlySeedGreenCommit=1b8db35
+- basePostSeedDiagnosticPlanCommit=a6d8211
+- postSeedReadOnlyDiagnosticAuthorized=true
+- postSeedReadOnlyDiagnosticExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- seedExecutedNow=false
+- masterCreatedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- expectedUsersAfterSeed=1
+- expectedMasterCountAfterSeed=1
+- expectedNonMasterUsersAfterSeed=0
+- expectedUnitsAfterSeed=0
+- expectedFictionalDataAfterSeed=false
+- futureDiagnosticMustBeReadOnly=true
+- futureDiagnosticMustBeSanitized=true
+- futureDiagnosticCanInspectUsersCount=true
+- futureDiagnosticCanInspectMasterCount=true
+- futureDiagnosticCanInspectUnitsCount=true
+- futureDiagnosticCanInspectFictionalCollectionsCount=true
+- futureDiagnosticMustNotPrintEmail=true
+- futureDiagnosticMustNotPrintPassword=true
+- futureDiagnosticMustNotPrintHash=true
+- futureDiagnosticMustNotPrintMongoUri=true
+- futureDiagnosticMustNotPrintRawDocuments=true
+- futureDiagnosticMustReportOnlyCountsAndBooleans=true
+- productionReady=false
+- proximoCandidatoRecomendado=executePostSeedReadOnlyDiagnosticForNewCleanMongoClusterInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento do diagnostico read-only pos-seed no novo cluster Mongo limpo.
 - selectedTarget=planPostSeedReadOnlyDiagnosticForNewCleanMongoCluster
 - baseNewCleanClusterDiagnosticCommit=3a320bf
