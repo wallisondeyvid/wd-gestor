@@ -1,3 +1,46 @@
+## Checkpoint documental curto do resultado green do diagnostico read-only pos-seed no novo cluster Mongo limpo.
+- selectedTarget=recordPostSeedReadOnlyDiagnosticForNewCleanMongoClusterGreen
+- baseNewCleanClusterDiagnosticCommit=3a320bf
+- baseMasterOnlySeedGreenCommit=1b8db35
+- basePostSeedDiagnosticAuthorizationCommit=cbf1c27
+- postSeedDiagnosticExecuted=true
+- postSeedDiagnosticResult=green
+- readOnly=true
+- connectedToMongo=true
+- writesAttempted=false
+- deleteExecuted=false
+- dropExecuted=false
+- updateExecuted=false
+- seedExecuted=false
+- masterCreated=false
+- secretsPrinted=false
+- rawDocumentsPrinted=false
+- mongoUriPrinted=false
+- emailPrinted=false
+- passwordPrinted=false
+- hashPrinted=false
+- collectionsFoundCount=1
+- collectionNamesSanitized=["users"]
+- usersCollectionExists=true
+- unidadesCollectionExists=false
+- totalUsers=1
+- totalUnits=0
+- masterUserCount=1
+- nonMasterUserCount=0
+- fictionalCollectionsCountsEmpty=true
+- fictionalCollectionsTotalDocuments=0
+- postSeedDiagnosticGreen=true
+- newClusterContainsOnlyMaster=true
+- noUnitsInNewCluster=true
+- noNonMasterUsersInNewCluster=true
+- noFictionalDataInNewCluster=true
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- productionReady=false
+- proximoCandidatoRecomendado=planVercelMongoUriUpdateToNewCleanCluster
+
 ## Checkpoint documental curto da autorizacao futura e separada para execucao do diagnostico read-only pos-seed no novo cluster Mongo limpo.
 - selectedTarget=authorizePostSeedReadOnlyDiagnosticForNewCleanMongoCluster
 - baseNewCleanClusterDiagnosticCommit=3a320bf
