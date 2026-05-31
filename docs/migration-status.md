@@ -1,3 +1,49 @@
+## Checkpoint documental curto do resultado green do health check online read-only apos a atualizacao da MONGODB_URI na Vercel.
+- selectedTarget=recordOnlineReadOnlyHealthCheckAfterVercelMongoUriUpdateGreen
+- baseVercelMongoUriUpdateRecordCommit=d4edec2
+- baseOnlineHealthCheckAuthorizationCommit=2dcf173
+- vercelMongoUriUpdatedByHuman=true
+- vercelDeploymentStatus=ReadyLatest
+- onlineHealthCheckExecuted=true
+- onlineHealthCheckResult=green
+- healthEndpoint=/health
+- healthCheckUrl=https://wdgestor.vercel.app/health
+- healthCheckMethod=GET
+- healthCheckReadOnly=true
+- healthStatusCode=200
+- healthContentType="application/json; charset=utf-8"
+- healthBodyLength=30
+- healthBodyShapePresent=true
+- healthBodyOk=true
+- healthBodyTimestampPresent=true
+- secretsPrinted=false
+- credentialsUsed=false
+- loginExecuted=false
+- masterUsed=false
+- passwordUsed=false
+- authenticatedRequestExecuted=false
+- mutationExecuted=false
+- browserOpened=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- seedExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- expectedNewClusterState=master-only
+- expectedUsers=1
+- expectedUnits=0
+- futureLoginValidationRequiresSeparateAuthorization=true
+- productionReady=false
+- próximo candidato recomendado: planMasterLoginValidationAfterCleanClusterHealthGreen
+
 ## Checkpoint documental curto da autorizacao futura e separada para execucao do health check online read-only apos a atualizacao da MONGODB_URI na Vercel.
 - selectedTarget=authorizeOnlineReadOnlyHealthCheckAfterVercelMongoUriUpdate
 - baseVercelMongoUriUpdateRecordCommit=d4edec2
