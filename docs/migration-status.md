@@ -1,3 +1,56 @@
+## Checkpoint documental curto da decisao sobre o cleanup do master acidental em test.users.
+- selectedTarget=decideWhetherCleanupCanBeClosedAsNoopOrNeedsAtlasVisualConfirmation
+- baseCleanupRetryBlockedCommit=f6b3f7c
+- cleanupDecisionRecorded=true
+- cleanupDecision=noop-technical-provisional
+- cleanupCanBeClosedAsNoopProvisionally=true
+- cleanupMustNotBeForced=true
+- cleanupRetryDbName=test
+- cleanupRetryHasUsers=false
+- cleanupRetryCriteriaPassed=false
+- cleanupRetryDeleteAttempted=false
+- cleanupRetryDeletedCount=0
+- cleanupRetryWdgestorTouched=false
+- cleanupRetryDropDatabaseAttempted=false
+- cleanupRetryDropCollectionAttempted=false
+- noSafeCleanupTargetFound=true
+- accidentalMasterInTestUsersNotConfirmedByRetry=true
+- cleanupReopenOnlyIfConcreteEvidenceOfTestUsersMaster=true
+- atlasVisualConfirmationOptional=true
+- atlasVisualConfirmationMustBeReadOnly=true
+- atlasVisualConfirmationMustNotDelete=true
+- atlasVisualConfirmationMustNotDrop=true
+- atlasVisualConfirmationMustNotUpdate=true
+- wdgestorStillValidated=true
+- wdgestorUsersCount=1
+- wdgestorMasterFound=true
+- wdgestorModulosCount=5
+- wdgestorWidgetsettingsCount=5
+- wdgestorHasUnidades=false
+- wdgestorHasUserMemberships=false
+- productionReady=false
+- cleanupExecutedNow=false
+- deleteAttemptedNow=false
+- dropAttemptedNow=false
+- updateAttemptedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelProdExecutedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- readOnlyMigrationUserSecretExposedInChat=true
+- readOnlyMigrationUserMustBeRotatedOrDeletedAfterProcess=true
+- futurePostMigrationLoginValidationRequiresSeparateAuthorization=true
+- futureVercelDeployRequiresSeparateAuthorization=true
+- proximo candidato recomendado: planPostCleanupNoopNextValidationStep ou planReadOnlyAtlasVisualConfirmationIfHumanWants
+
 ## Checkpoint documental curto do resultado bloqueado do retry do cleanup do master acidental em test.users.
 - selectedTarget=recordCleanupAccidentalTestUsersMasterBlockedAfterRetry
 - baseCleanupBlockedCommit=cb3aa36
