@@ -1,3 +1,28 @@
+## Checkpoint documental curto do resultado green da validacao direcionada de Setores e Recursos para modo global privilegiado read-only.
+- selectedTarget=recordTargetedValidationForSetoresAndRecursosGlobalReadOnlyFix
+- baseImplementationCommit=bef997c
+- baseValidationAuthorizationCommit=5dd9aa0
+- targetedValidationExecuted=true
+- targetedValidationCommand=node --test tests/gestor-pages-router-wrapper-structural.test.js tests/gestor-setor-recurso-global-readonly-route-runtime-contract.test.js tests/gestor-setor-recurso-unit-scope-canonical.test.js
+- targetedValidationResult=green
+- targetedValidationTests=23
+- targetedValidationPass=23
+- targetedValidationFail=0
+- targetedValidationSkipped=0
+- workingTreeCleanAfterValidation=true
+- branchAheadAfterValidation=5
+- npmTestFullExecuted=false
+- externalHttpExecuted=false
+- browserUsed=false
+- manualLoginExecuted=false
+- realMasterUsed=false
+- realPasswordUsed=false
+- vercelExecuted=false
+- pushExecuted=false
+- sourceChanged=false
+- productionReady=false
+- recommendedNextCandidate=planFullNpmTestForSetoresAndRecursosGlobalReadOnlyFix
+
 ## Checkpoint documental curto da autorizacao futura e separada da validacao direcionada de Setores e Recursos para modo global privilegiado read-only.
 - selectedTarget=authorizeTargetedValidationForSetoresAndRecursosGlobalReadOnlyFix
 - baseImplementationCommit=bef997c
