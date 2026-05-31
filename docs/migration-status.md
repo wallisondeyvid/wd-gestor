@@ -1,3 +1,46 @@
+## Checkpoint documental curto do planejamento da correcao minima do vazamento/reidratacao Mongo no fluxo offline autenticado de comunicados restricoes.
+- selectedTarget=planMinimalFixForComunicadosRestricoesMongoConfigLeak
+- baseFocusedPrimaryTestRedCommit=0652a03
+- baseStaticInspectionPlanCommit=c201875
+- staticInspectionExecuted=true
+- staticInspectionResult=cause-probable-identified
+- suspectedTestFile=tests/condominios-comunicados-restricoes-runtime-contract.test.js
+- failedCasesCount=2
+- failedCase1=GET /condominios/api/comunicados/restricoes/habitacoes preserva contrato offline autenticado
+- failedCase2=GET /condominios/api/comunicados/restricoes/moradores preserva contrato offline autenticado
+- probableCause=createOfflineSessionAgent-uses-createServer-skipDb-without-MONGO_MEMORY-and-condominios-subapp-reconnects-using-real-uri
+- getRuntimeContextUsesWithEnvMongoMemory=true
+- createOfflineSessionAgentDoesNotForceMongoMemory=true
+- ensureCondominiosMongoOnlineReconnectsWhenUriPresent=true
+- bootstrapRegistryCopiesSkipDbButNotSkipDbForced=true
+- noStrongDeleteRequireCacheCauseFound=true
+- preferredFixTarget=src/modules/condominios/app/condominios-app.js
+- preferredFixStrategy=make-effective-skipDb-block-reconnect-in-ensureCondominiosMongoOnline
+- alternativeFixTarget=src/server/bootstrapRegistry.js
+- alternativeFixStrategy=propagate-__skipDbForced-to-mounted-subapp
+- testOnlyFixNotPreferred=true
+- minimalFixPlanned=true
+- minimalFixImplementedNow=false
+- focusedTestExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- productionReady=false
+- próximo candidato recomendado: authorizeMinimalFixForComunicadosRestricoesMongoConfigLeak
+
 ## Checkpoint documental curto do planejamento da inspecao estatica do vazamento de configuracao Mongo no teste focado de comunicados restricoes.
 - selectedTarget=planStaticInspectionOfComunicadosRestricoesTestMongoConfigLeak
 - baseFocusedPrimaryTestRedCommit=0652a03
