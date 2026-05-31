@@ -1,3 +1,27 @@
+## Checkpoint documental curto do planejamento do push dos checkpoints do cluster limpo apos login master green.
+- selectedTarget=planPushCleanClusterCheckpointsAfterMasterLoginGreen
+- baseMasterLoginGreenCommit=d9a7003
+- cleanClusterFlowGreen=true
+- newClusterReadOnlyDiagnosticGreen=true
+- masterOnlySeedGreen=true
+- postSeedReadOnlyDiagnosticGreen=true
+- vercelMongoUriUpdated=true
+- onlineHealthCheckGreen=true
+- onlineMasterLoginGreen=true
+- pushPlanned=true
+- pushExecutedNow=false
+- productionReady=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- authenticatedReadOnlySmokeStillPending=true
+- finalProductionDecisionStillBlocked=true
+- futurePushMustPublishLocalAheadRange=true
+- futurePushMustNotUseSecrets=true
+- futurePushMustNotTriggerManualVercelChanges=true
+- futurePushMayRunPrePushHook=true
+- próximo candidato recomendado: authorizePushCleanClusterCheckpointsAfterMasterLoginGreen
+
 ## Checkpoint documental curto do resultado green da validacao online controlada do login master apos health green no cluster limpo.
 - selectedTarget=recordMasterLoginValidationAfterCleanClusterHealthGreen
 - baseOnlineHealthGreenCommit=064f33c
