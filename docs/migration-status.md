@@ -1,3 +1,45 @@
+## Checkpoint documental curto do registro da tentativa de push autorizada que nao foi concluida por pre-push nao finalizado.
+- selectedTarget=recordPushAttemptPrePushHookNotCompletedAfterCleanClusterCheckpoints
+- basePushAuthorizationCommit=8d5ce4b
+- pushAttempted=true
+- pushCompleted=false
+- pushPublished=false
+- prePushHookStarted=true
+- prePushHookCompleted=false
+- prePushHookResult=not-completed-or-interrupted
+- prePushFailureType=hang-or-interruption-without-published-push
+- observedLocalHead=8d5ce4b
+- observedOriginHead=ba5a128
+- branchAheadAfterAttempt=25
+- workingTreeCleanAfterAttempt=true
+- lastObservedHookArea=requireUnitScope-blocos-comunicados
+- lastObservedHookLinesWereGreen=true
+- definitiveTestFailureObserved=false
+- pushMustRemainBlockedUntilHookInspection=true
+- productionReady=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- cleanClusterFlowGreenStillValid=true
+- onlineHealthCheckGreenStillValid=true
+- onlineMasterLoginGreenStillValid=true
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- nextInspectionShouldBeStaticFirst=true
+- nextInspectionShouldIdentifyPrePushCommand=true
+- nextExecutionShouldBeFocusedOnlyIfAuthorized=true
+- próximo candidato recomendado: inspectPrePushHookAfterCleanClusterPushAttemptNotCompletedStaticOnly
+
 ## Checkpoint documental curto da autorizacao futura e separada para executar o push dos checkpoints do cluster limpo.
 - selectedTarget=authorizePushCleanClusterCheckpointsAfterMasterLoginGreen
 - basePushPlanCommit=c6a0688
