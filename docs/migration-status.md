@@ -1,3 +1,39 @@
+## Checkpoint documental curto do planejamento do seed controlado exclusivamente do usuario master real no novo cluster Mongo limpo.
+- selectedTarget=planControlledMasterOnlySeedForNewCleanMongoCluster
+- baseNewCleanClusterDiagnosticCommit=3a320bf
+- newCleanClusterReadyForMasterSeedPlanning=true
+- masterOnlySeedPlanned=true
+- masterOnlySeedExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- seedExecutedNow=false
+- masterCreatedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- newClusterCollectionsFoundBeforeSeed=0
+- seedScope=master-user-only
+- unitsCreationAllowed=false
+- nonMasterUsersCreationAllowed=false
+- fictionalDataCreationAllowed=false
+- tenantProvisioningAllowed=false
+- condominiumDataCreationAllowed=false
+- masterEmailMustNotBePrintedInLogs=true
+- masterPasswordMustNotBePrintedInLogs=true
+- rawSecretsMustNotBePrinted=true
+- futureSeedMustRequireExplicitAuthorization=true
+- futureSeedMustUseLocalShellSecretOnly=true
+- futureSeedMustNotCommitSecrets=true
+- futureSeedMustBeIdempotent=true
+- futureSeedMustFailIfMasterAlreadyExistsUnlessExplicitlyAllowed=true
+- futureSeedMustReportOnlySanitizedResult=true
+- productionReady=false
+- proximoCandidatoRecomendado=authorizeControlledMasterOnlySeedForNewCleanMongoCluster
+
 ## Checkpoint documental curto do resultado green do diagnostico read-only contra o novo cluster Mongo limpo.
 - selectedTarget=recordNewCleanMongoClusterReadOnlyDiagnosticGreen
 - baseClusterReplacementPlanCommit=6472653
