@@ -1,3 +1,36 @@
+## Checkpoint documental curto do planejamento do inventario read-only para futura limpeza controlada do dominio ficticio.
+- selectedTarget=planControlledFictionalDomainCleanupInventoryReadOnly
+- baseHumanConfirmationCommit=9997680
+- cleanupDomain=fictional-units-dependent-data-and-non-master-users
+- inventoryPlanned=true
+- inventoryExecutedNow=false
+- mongoReadExecutedNow=false
+- mongoWriteExecutedNow=false
+- cleanupExecutedNow=false
+- scriptsExecutedNow=false
+- deleteExecutedNow=false
+- dropExecutedNow=false
+- updateExecutedNow=false
+- dryRunExecutedNow=false
+- futureInventoryMustBeReadOnly=true
+- futureInventoryMustBeSanitized=true
+- futureInventoryMustCountUnits=true
+- futureInventoryMustCountNonMasterUsers=true
+- futureInventoryMustPreserveMaster=true
+- futureInventoryMustInspectUnitDependencies=true
+- futureInventoryMustInspectTenantProvisioning=true
+- futureInventoryMustInspectDatabaseOrTenantRefs=true
+- futureInventoryMustNotPrintSecrets=true
+- futureInventoryMustNotPrintRawDocuments=true
+- masterUserMustBePreserved=true
+- masterCredentialsMustBePreserved=true
+- globalSettingsMustBePreserved=true
+- infrastructureMustBePreserved=true
+- secretsAndLogsMustBePreserved=true
+- unrelatedDataMustBePreserved=true
+- productionReady=false
+- proximoCandidatoRecomendado=authorizeControlledFictionalDomainCleanupInventoryReadOnly
+
 ## Checkpoint documental curto da confirmacao humana sobre o dominio ficticio atual para futura limpeza controlada.
 - selectedTarget=recordHumanConfirmationFictionalUnitsAndUsers
 - humanConfirmedCurrentUnitsAreFictional=true
