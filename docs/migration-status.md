@@ -1,3 +1,45 @@
+## Checkpoint documental curto do planejamento da validacao futura do login master online apos health green no cluster limpo.
+- selectedTarget=planMasterLoginValidationAfterCleanClusterHealthGreen
+- baseOnlineHealthGreenCommit=064f33c
+- healthCheckGreen=true
+- healthStatusCode=200
+- healthBodyOk=true
+- masterLoginValidationPlanned=true
+- masterLoginValidationExecutedNow=false
+- loginExecutedNow=false
+- masterUsedNow=false
+- passwordUsedNow=false
+- authenticatedRequestExecutedNow=false
+- httpExecutedNow=false
+- browserOpenedNow=false
+- vercelEnvUpdatedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- seedExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- oldClustersDeletionStillBlocked=true
+- expectedNewClusterState=master-only
+- expectedUsers=1
+- expectedUnits=0
+- futureLoginMustUseLocalShellSecretOnly=true
+- futureLoginMustNotPrintPassword=true
+- futureLoginMustNotPrintCookie=true
+- futureLoginMustNotPrintSession=true
+- futureLoginMustNotPrintToken=true
+- futureLoginMustNotPrintHtmlRaw=true
+- futureLoginMustReportOnlyStatusRedirectAndBooleans=true
+- futureLoginMustNotMutateDomainData=true
+- futureLoginValidationRequiresExplicitAuthorization=true
+- productionReady=false
+- próximo candidato recomendado: authorizeMasterLoginValidationAfterCleanClusterHealthGreen
+
 ## Checkpoint documental curto do resultado green do health check online read-only apos a atualizacao da MONGODB_URI na Vercel.
 - selectedTarget=recordOnlineReadOnlyHealthCheckAfterVercelMongoUriUpdateGreen
 - baseVercelMongoUriUpdateRecordCommit=d4edec2
