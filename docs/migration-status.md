@@ -1,3 +1,57 @@
+## Checkpoint documental curto da revisao do checklist de readiness pos-refinamento skipDb/bootstrap.
+- selectedTarget=reviewPostRefinedSkipDbReadinessChecklistDocumentally
+- basePostPushReadinessPlanCommit=2deb30a
+- publishedTechnicalRange=ba5a128..207c505
+- publishedDocumentalRange=207c505..179b3d8
+- localDocumentalCommitPending=true
+- localDocumentalPendingCommit=2deb30a
+- refinedSkipDbBlockPublished=true
+- refinedSkipDbFocusedPrimaryGreen=true
+- refinedSkipDbFocusedSecondaryGreen=true
+- refinedSkipDbFullNpmTestGreen=true
+- refinedSkipDbPrePushGreen=true
+- npmTestFullTests=2391
+- npmTestFullPass=2389
+- npmTestFullFail=0
+- prePushTests=2391
+- prePushPass=2389
+- prePushFail=0
+- readinessChecklistReviewed=true
+- readinessChecklistExecutedNow=false
+- codePublishedGate=green
+- focusedValidationGate=green
+- fullNpmTestGate=green
+- prePushGate=green
+- remoteSyncGate=partial-because-local-documental-commit-pending
+- vercelDeployGate=not-needed-for-doc-only-change
+- onlineSmokeGate=not-authorized-now
+- productionDecisionGate=not-ready
+- productionReady=false
+- recommendedNextDecision=syncLocalDocumentalCommitOrPlanNextReadinessBlock
+- recommendedImmediateNextCandidate=planPushPostReadinessChecklistDocumentalCommit
+- vercelProdNeededNow=false
+- redeployNeededNow=false
+- smokeOnlineNeededNow=false
+- testExecutedNow=false
+- npmTestFullExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelEnvUpdatedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- scriptsExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- seedExecutedNow=false
+- oldCluster0StillIntact=true
+- oldCluster1StillIntact=true
+- proximo candidato recomendado: planPushPostReadinessChecklistDocumentalCommit
+
 ## Checkpoint documental curto do planejamento do proximo checkpoint de prontidao apos a sincronizacao completa do bloco refinamento skipDb/bootstrap.
 - selectedTarget=planNextPostPushReadinessCheckpointAfterRefinedSkipDbGreen
 - basePostPushCheckpointCommit=179b3d8
