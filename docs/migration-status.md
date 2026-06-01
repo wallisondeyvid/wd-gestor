@@ -1,3 +1,50 @@
+## Checkpoint documental curto do resultado green do mapeamento runtime apos reexport em terminal fresh.
+- selectedTarget=recordRuntimeUriMappingGreenAfterFreshTerminalReexport
+- baseRuntimeMappingBlockedCommit=7fe8db4
+- cleanMongoUriReexported=true
+- runtimeUriReprepared=true
+- runtimeUriReprepareResult=green
+- cleanMongoUriConfigured=true
+- mongoDbUriConfigured=true
+- mongoUriConfigured=false
+- preferredRuntimeUriVariable=MONGODB_URI
+- mongoDbUriEqualsClean=true
+- runtimeUriPresent=true
+- hasWdgestorPath=true
+- hasEmptyDbPath=false
+- hasTestePath=false
+- countNetQuestion=0
+- countWdgestorPath=1
+- uriNormalizedWithoutPrintingSecret=true
+- runtimeUriReadyForControlledStart=true
+- gitStatusAfterMapping=ahead53-clean
+- startExecutedNow=false
+- healthExecutedNow=false
+- loginExecutedNow=false
+- httpExecutedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- pushExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- productionReady=false
+- futureStartCommand=npm run start:atlas
+- futureStartRequiresSeparatePlanning=true
+- futureStartRequiresSeparateAuthorization=true
+- futureStartMustRepeatRuntimeUriPrechecks=true
+- futureStartMustAbortIfRuntimeUriMissing=true
+- futureStartMustAbortIfWdgestorPathMissing=true
+- futureHealthCheckMustRunAfterStart=true
+- futureLoginRetryRequiresSeparateAuthorization=true
+- proximo candidato recomendado: planControlledStartAtlasRetryAfterRuntimeUriReexportGreen
+
 ## Checkpoint documental curto do fechamento do bloqueio da repreparacao do mapeamento runtime.
 - selectedTarget=recordRuntimeUriMappingReprepareBlocked
 - baseRuntimeUriMappingReprepareCommit=ac90120
