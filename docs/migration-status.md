@@ -1,3 +1,55 @@
+## Checkpoint documental curto do planejamento do proximo passo pos-noop do cleanup.
+- selectedTarget=planPostCleanupNoopNextValidationStep
+- baseCleanupNoopDecisionCommit=2587445
+- postCleanupNoopNextValidationPlanned=true
+- cleanupClosedAsNoopTechnicalProvisional=true
+- atlasManualDeleteRecommendedNow=false
+- atlasVisualConfirmationOptional=true
+- atlasVisualConfirmationMustBeReadOnly=true
+- atlasVisualConfirmationMustNotDelete=true
+- atlasVisualConfirmationMustNotDrop=true
+- atlasVisualConfirmationMustNotUpdate=true
+- wdgestorStillValidated=true
+- wdgestorUsersCount=1
+- wdgestorMasterFound=true
+- wdgestorModulosCount=5
+- wdgestorWidgetsettingsCount=5
+- wdgestorHasUnidades=false
+- wdgestorHasUserMemberships=false
+- cleanClusterStructuralMinimumReady=true
+- nextValidationCandidate=planMasterLoginValidationAfterCleanClusterStructuralGreen
+- masterLoginValidationPlannedNow=false
+- masterLoginValidationRequiresSeparatePlanning=true
+- masterLoginValidationRequiresSeparateAuthorization=true
+- futureLoginMustNotPrintPassword=true
+- futureLoginMustNotPrintCookie=true
+- futureLoginMustNotPrintToken=true
+- futureLoginMustNotPrintSession=true
+- futureLoginMustNotPrintRawHtml=true
+- futureLoginMayReportOnlyStatusRedirectCookieBooleans=true
+- futureVercelDeployRequiresSeparateAuthorization=true
+- futurePushRequiresSeparateAuthorization=true
+- productionReady=false
+- cleanupExecutedNow=false
+- deleteAttemptedNow=false
+- dropAttemptedNow=false
+- updateAttemptedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- pushExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- vercelProdExecutedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- readOnlyMigrationUserSecretExposedInChat=true
+- readOnlyMigrationUserMustBeRotatedOrDeletedAfterProcess=true
+- proximo candidato recomendado: planMasterLoginValidationAfterCleanClusterStructuralGreen
+
 ## Checkpoint documental curto da decisao sobre o cleanup do master acidental em test.users.
 - selectedTarget=decideWhetherCleanupCanBeClosedAsNoopOrNeedsAtlasVisualConfirmation
 - baseCleanupRetryBlockedCommit=f6b3f7c
