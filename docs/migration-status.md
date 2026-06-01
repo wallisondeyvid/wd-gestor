@@ -1,3 +1,47 @@
+## Checkpoint documental curto do bloqueio do retry controlado de start atlas por ausencia de URI runtime no terminal atual.
+- selectedTarget=recordControlledStartAtlasRetryBlockedAfterRuntimeUriMapping
+- baseControlledStartAtlasRetryAuthorizationCommit=8a10ce3
+- controlledStartAtlasRetryAttempted=true
+- controlledStartAtlasRetryResult=blocked
+- blockedBeforeStart=true
+- blockedReason=runtime-uri-missing-in-current-terminal
+- cleanMongoUriConfigured=false
+- mongoDbUriConfigured=false
+- mongoUriConfigured=false
+- mongoDbUriEqualsClean=false
+- runtimeUriPresent=false
+- hasWdgestorPath=false
+- hasEmptyDbPath=false
+- hasTestePath=false
+- countNetQuestion=0
+- countWdgestorPath=0
+- startCommand=npm run start:atlas
+- startExecutedNow=false
+- mongoConnectionAttempted=false
+- mongoBadAuthObservedNow=false
+- serverSkipDbObservedNow=false
+- serverPort3000ObservedNow=false
+- healthAttempted=false
+- healthOkBoolean=false
+- loginAttempted=false
+- passwordPrinted=false
+- cookiePrinted=false
+- tokenPrinted=false
+- sessionPrinted=false
+- rawHtmlPrinted=false
+- domainMutationAttempted=false
+- vercelExecutedNow=false
+- pushExecutedNow=false
+- gitStatusAfterAttempt=ahead50-clean
+- productionReady=false
+- futureRetryRequiresReexportCleanMongoUri=true
+- futureRetryRequiresMapCleanUriToMongoDbUri=true
+- futureRetryMustRepeatRuntimeUriPrechecks=true
+- futureRetryMustNotStartIfRuntimeUriMissing=true
+- futureRetryMustNotStartIfWdgestorPathMissing=true
+- futureRetryRequiresSeparateAuthorization=true
+- proximo candidato recomendado: reprepareRuntimeUriMappingBeforeStartAtlasRetry ou reauthorizeControlledStartAtlasRetryAfterRuntimeUriReexport
+
 ## Checkpoint documental curto da autorizacao futura e separada do retry controlado de start atlas apos o mapeamento green da URI runtime.
 - selectedTarget=authorizeControlledStartAtlasRetryAfterRuntimeUriMapping
 - baseControlledStartAtlasRetryPlanCommit=88a253d
