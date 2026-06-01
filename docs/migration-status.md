@@ -1,3 +1,46 @@
+## Checkpoint documental curto da inspecao do comando start local canonico para o clean wdgestor.
+- selectedTarget=inspectCanonicalLocalStartCommandForCleanWdgestor
+- baseControlledLocalHealthBlockedCommit=eee059e
+- canonicalLocalStartCommandInspectionExecuted=true
+- canonicalLocalStartCommandInspectionOnly=true
+- serverStartedNow=false
+- healthExecutedNow=false
+- loginExecutedNow=false
+- packageJsonInspected=true
+- srcStartInspected=true
+- startScriptsPreviouslyAmbiguous=true
+- candidateStartScripts=start,start:gestor,start:atlas,dev
+- candidateStartEntrypoint=node src/start.js
+- cleanClusterStructuralGreenConfirmed=true
+- wdgestorUsersCount=1
+- wdgestorMasterFound=true
+- wdgestorModulosCount=5
+- wdgestorWidgetsettingsCount=5
+- productionReady=false
+- canonicalLocalStartCommandIdentified=true
+- canonicalLocalStartCommand=npm run start:atlas
+- canonicalLocalStartCommandDecisionReason=README_RUN documenta start:atlas para Atlas persistente; start,start:gestor e start:atlas apontam para o mesmo src/start.js; o runtime usa MONGO_URI ou MONGODB_URI, entao CLEAN_MONGODB_URI exigira mapeamento previo em microcorte separado
+- futureStartRequiresSeparateAuthorization=true
+- futureStartMustUseCleanMongoUriWdgestor=true
+- futureHealthCheckMustRunBeforeLoginRetry=true
+- futureLoginRetryMustNotRunBeforeHealthGreen=true
+- futureLoginRetryRequiresSeparateAuthorization=true
+- startExecutedNow=false
+- httpExecutedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- pushExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- proximo candidato recomendado: planControlledLocalStartWithCanonicalCommandBeforeMasterLoginRetry
+
 ## Checkpoint documental curto do bloqueio do start health local antes do retry de login master.
 - selectedTarget=recordControlledLocalHealthBlockedBeforeMasterLoginRetry
 - baseControlledLocalStartOrHealthAuthorizationCommit=565646a
