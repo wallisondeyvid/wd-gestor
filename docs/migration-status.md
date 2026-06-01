@@ -1,3 +1,53 @@
+## Checkpoint documental curto da autorizacao da validacao de login do master no clean.
+- selectedTarget=authorizeMasterLoginValidationAfterCleanClusterStructuralGreen
+- baseMasterLoginValidationPlanCommit=63f2081
+- masterLoginValidationAuthorized=true
+- masterLoginValidationExecutedNow=false
+- cleanClusterStructuralGreenConfirmed=true
+- correctedCleanMongoDbName=wdgestor
+- wdgestorUsersCount=1
+- wdgestorMasterFound=true
+- wdgestorModulosCount=5
+- wdgestorWidgetsettingsCount=5
+- wdgestorHasUnidades=false
+- wdgestorHasUserMemberships=false
+- cleanupTestUsersClosedAsNoopTechnicalProvisional=true
+- atlasManualDeleteExecutedNow=false
+- productionReady=false
+- futureLoginMustUseMasterCredentialsOnlyInTerminal=true
+- futureLoginMustCheckHealthFirst=true
+- futureLoginMustAbortIfHealthUnavailable=true
+- futureLoginMustNotPrintPassword=true
+- futureLoginMustNotPrintCookie=true
+- futureLoginMustNotPrintToken=true
+- futureLoginMustNotPrintSession=true
+- futureLoginMustNotPrintRawHtml=true
+- futureLoginMayReportOnlyStatusRedirectCookieBooleans=true
+- futureLoginMustNotMutateDomainData=true
+- futureLoginMustNotCreateUnidades=true
+- futureLoginMustNotCreateMoradores=true
+- futureLoginMustNotCreateUserMemberships=true
+- futureLoginMustNotModifyMaster=true
+- futureVercelDeployRequiresSeparateAuthorization=true
+- futurePushRequiresSeparateAuthorization=true
+- loginExecutedNow=false
+- httpExecutedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- pushExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- readOnlyMigrationUserSecretExposedInChat=true
+- readOnlyMigrationUserMustBeRotatedOrDeletedAfterProcess=true
+- proximo candidato recomendado: executeMasterLoginValidationAfterCleanClusterStructuralGreenInSeparateMicrocut
+
 ## Checkpoint documental curto do planejamento da validacao de login do master no clean.
 - selectedTarget=planMasterLoginValidationAfterCleanClusterStructuralGreen
 - basePostCleanupNoopNextValidationCommit=98c3187
