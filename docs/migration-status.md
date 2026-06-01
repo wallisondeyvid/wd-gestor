@@ -1,3 +1,54 @@
+## Checkpoint documental curto do planejamento da validacao de login do master no clean.
+- selectedTarget=planMasterLoginValidationAfterCleanClusterStructuralGreen
+- basePostCleanupNoopNextValidationCommit=98c3187
+- masterLoginValidationPlanned=true
+- masterLoginValidationExecutedNow=false
+- cleanClusterStructuralGreenConfirmed=true
+- correctedCleanMongoDbName=wdgestor
+- wdgestorUsersCount=1
+- wdgestorMasterFound=true
+- wdgestorModulosCount=5
+- wdgestorWidgetsettingsCount=5
+- wdgestorHasUnidades=false
+- wdgestorHasUserMemberships=false
+- cleanupTestUsersClosedAsNoopTechnicalProvisional=true
+- atlasManualDeleteExecutedNow=false
+- productionReady=false
+- futureLoginRequiresSeparateAuthorization=true
+- futureLoginMustUseMasterCredentialsOnlyInTerminal=true
+- futureLoginMustNotPrintPassword=true
+- futureLoginMustNotPrintCookie=true
+- futureLoginMustNotPrintToken=true
+- futureLoginMustNotPrintSession=true
+- futureLoginMustNotPrintRawHtml=true
+- futureLoginMayReportOnlyStatusRedirectCookieBooleans=true
+- futureLoginShouldCheckHealthFirst=true
+- futureLoginShouldAbortIfHealthUnavailable=true
+- futureLoginMustNotMutateDomainData=true
+- futureLoginMustNotCreateUnidades=true
+- futureLoginMustNotCreateMoradores=true
+- futureLoginMustNotCreateUserMemberships=true
+- futureLoginMustNotModifyMaster=true
+- futureVercelDeployRequiresSeparateAuthorization=true
+- futurePushRequiresSeparateAuthorization=true
+- loginExecutedNow=false
+- httpExecutedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- pushExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- readOnlyMigrationUserSecretExposedInChat=true
+- readOnlyMigrationUserMustBeRotatedOrDeletedAfterProcess=true
+- proximo candidato recomendado: authorizeMasterLoginValidationAfterCleanClusterStructuralGreen
+
 ## Checkpoint documental curto do planejamento do proximo passo pos-noop do cleanup.
 - selectedTarget=planPostCleanupNoopNextValidationStep
 - baseCleanupNoopDecisionCommit=2587445
