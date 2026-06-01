@@ -1,3 +1,49 @@
+## Checkpoint documental curto do resultado green do mapeamento da URI runtime antes de novo start atlas controlado.
+- selectedTarget=recordRuntimeUriMappingBeforeControlledStartRetry
+- baseRuntimeUriMappingAuthorizationCommit=8942275
+- runtimeUriMappingExecuted=true
+- runtimeUriMappingResult=green
+- cleanMongoUriConfigured=true
+- mongoDbUriConfigured=true
+- mongoUriConfigured=false
+- preferredRuntimeUriVariable=MONGODB_URI
+- mongoDbUriEqualsClean=true
+- runtimeUriPresent=true
+- hasWdgestorPath=true
+- hasEmptyDbPath=false
+- hasTestePath=false
+- countNetQuestion=0
+- countWdgestorPath=1
+- uriNormalizedWithoutPrintingSecret=true
+- emptyDbPathFixed=true
+- duplicateWdgestorPathFixed=true
+- runtimeUriReadyForControlledStart=true
+- futureStartCommand=npm run start:atlas
+- futureStartRequiresSeparatePlanning=true
+- futureStartRequiresSeparateAuthorization=true
+- futureHealthCheckMustRunBeforeLoginRetry=true
+- futureLoginRetryRequiresSeparateAuthorization=true
+- futureLoginRetryMustNotRunBeforeHealthGreen=true
+- cleanClusterStructuralGreenConfirmed=true
+- productionReady=false
+- startExecutedNow=false
+- healthExecutedNow=false
+- loginExecutedNow=false
+- httpExecutedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- pushExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- proximo candidato recomendado: planControlledStartAtlasRetryAfterRuntimeUriMapping
+
 ## Checkpoint documental curto da autorizacao futura e separada do mapeamento explicito da URI runtime antes de novo start atlas controlado.
 - selectedTarget=authorizeRuntimeUriMappingBeforeControlledStartRetry
 - baseRuntimeUriMappingPlanCommit=e88269c
