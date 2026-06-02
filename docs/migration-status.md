@@ -1,3 +1,53 @@
+## Checkpoint documental curto da inspecao estatica da rota protegida read-only candidata apos login master green.
+- selectedTarget=inspectProtectedReadOnlyRouteCandidateAfterMasterLoginGreen
+- baseReadOnlyRouteValidationPlanCommit=a82cc24
+- baseMasterLoginGreenCommit=ba6838e
+- protectedRouteCandidateInspectionExecuted=true
+- runtimeExecutedNow=false
+- httpExecutedNow=false
+- loginExecutedNow=false
+- protectedRouteAccessedNow=false
+- candidateRouteInspected=true
+- candidateRoutePath=/gestor/dashboard
+- candidateRouteMethod=GET
+- candidateRouteRequiresAuth=true
+- candidateRouteReadOnly=true
+- candidateRouteMutationRisk=low
+- candidateRouteCanBeValidatedWithSanitizedOutput=true
+- candidateRouteMustNotPrintRawHtml=true
+- candidateRouteMustNotPrintCookie=true
+- candidateRouteMustNotPrintToken=true
+- candidateRouteMustNotPrintSession=true
+- candidateRouteMustNotPrintFullHeaders=true
+- candidateRouteMustReportOnlyStatusShapeBooleans=true
+- noCreateUnidadesPathConfirmed=true
+- noCreateMoradoresPathConfirmed=true
+- noCreateUserMembershipsPathConfirmed=true
+- noMasterModificationPathConfirmed=true
+- noSeedOrCleanupPathConfirmed=true
+- recommendedProtectedReadOnlyRoute=/gestor/dashboard
+- recommendedFutureValidationMethod=GET
+- futureValidationRequiresSeparatePlanning=true
+- futureValidationRequiresSeparateAuthorization=true
+- productionReady=false
+- startExecutedNow=false
+- healthExecutedNow=false
+- postGestorLoginExecutedNow=false
+- vercelProdExecutedNow=false
+- redeployExecutedNow=false
+- pushExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- domainMutationAttemptedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- proximo candidato recomendado: planExecutionOfProtectedReadOnlyRouteValidationAfterMasterLoginGreen
+
 ## Checkpoint documental curto do planejamento da futura validacao read-only de rota protegida apos login master green.
 - selectedTarget=planReadOnlyProtectedRouteValidationAfterMasterLoginGreen
 - basePostMasterLoginGreenPlanningCommit=a6d9707
