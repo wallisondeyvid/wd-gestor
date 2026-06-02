@@ -1,3 +1,8 @@
+const LOGIN_ERROR_MESSAGES = Object.freeze({
+  muitas_tentativas: 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.',
+  'rate-limit': 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.',
+});
+
 const PRIMEIRO_ACESSO_ERROR_MESSAGES = Object.freeze({
   campos: 'Preencha todos os campos.',
   confirmacao: 'Confirmação de senha não confere.',
@@ -16,12 +21,18 @@ export function resolvePrimeiroAcessoMensagem(erro) {
   return PRIMEIRO_ACESSO_ERROR_MESSAGES[String(erro || '')] || null;
 }
 
+export function resolveLoginMensagem(erro) {
+  return LOGIN_ERROR_MESSAGES[String(erro || '')] || null;
+}
+
 export function resolveLoginPrimeiroAcessoState(url, { isLogin = false, isPA = false, includeRaw = false } = {}) {
   const queryStr = extractAuthQueryString(url);
   const params = new URLSearchParams(queryStr);
   const erro = params.get('erro') || null;
   const raw = includeRaw ? (params.get('raw') || null) : null;
-  const mensagem = (!isLogin && isPA && erro) ? resolvePrimeiroAcessoMensagem(erro) : null;
+  const mensagem = isLogin
+    ? resolveLoginMensagem(erro)
+    : ((!isLogin && isPA && erro) ? resolvePrimeiroAcessoMensagem(erro) : null);
 
   return {
     queryStr,

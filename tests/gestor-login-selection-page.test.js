@@ -28,3 +28,25 @@ test('GET /gestor/login renderiza o shell de seleção de unidade sem quebrar o 
     }
   }
 });
+
+test('GET /gestor/login renderiza mensagem genérica para erro de muitas tentativas', async () => {
+  process.env.NODE_ENV = 'test';
+
+  const built = await createServer({ skipDb: true, deferErrorHandlers: true });
+  await Promise.resolve(built.registerErrorHandlers());
+
+  try {
+    const res = await request(built.app)
+      .get('/gestor/login?erro=muitas_tentativas')
+      .set('Accept', 'text/html');
+
+    assert.equal(res.status, 200);
+    assert.match(res.text, /Muitas tentativas de login\. Aguarde alguns minutos e tente novamente\./i);
+  } finally {
+    try {
+      await built.close({ stopMemoryServer: true });
+    } catch {
+      // noop
+    }
+  }
+});

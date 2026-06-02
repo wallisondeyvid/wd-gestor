@@ -246,36 +246,13 @@
           senhaEl && (senhaEl.value = '');
           emailEl?.focus();
         }
-        if (erro === 'rate-limit') {
-          // Mostrar alerta de rate limit
-          const alertDiv = document.createElement('div');
-          alertDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #ff4444;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            z-index: 10000;
-            font-family: Arial, sans-serif;
-            max-width: 300px;
-          `;
-          alertDiv.innerHTML = `
-            <strong>🚫 Muitas Tentativas</strong><br>
-            <small>Limite de tentativas excedido. Aguarde 15 minutos antes de tentar novamente.</small>
-          `;
-          document.body.appendChild(alertDiv);
-
-          // Remover alerta após 10 segundos
-          setTimeout(() => {
-            if (alertDiv.parentNode) {
-              alertDiv.remove();
-            }
-          }, 10000);
-
-          // Limpar campos e focar no email
+        if (erro === 'muitas_tentativas' || erro === 'rate-limit') {
+          showToast({
+            title: 'Login temporariamente indisponível',
+            body: 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.',
+            variant: 'warning',
+            delay: 12000
+          });
           emailEl && (emailEl.value = '');
           senhaEl && (senhaEl.value = '');
           emailEl?.focus();

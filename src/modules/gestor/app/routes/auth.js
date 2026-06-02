@@ -1,6 +1,7 @@
 // (migrado) Rotas de auth
 import express from 'express';
 import { getAuthContext, login, logout, renderResetPassword, postResetPassword, postEsqueciSenha, primeiroAcessoPost, listarEmailsPorCPF, selectAuthUnit, switchAuthUnit } from '#modules/gestor/app/controllers/authController.js';
+import { gestorLoginHttpLimiter } from '#modules/gestor/app/middlewares/rateLimit.js';
 const router = express.Router();
 // Métricas simples de adoção de rotas prefixadas vs raiz
 router.use((req,res,next)=> {
@@ -20,7 +21,7 @@ const disableRoot = process.env.DISABLE_ROOT_AUTH_ROUTES === 'true';
 router.get('/auth/context', getAuthContext);
 router.post('/auth/select-unit', selectAuthUnit);
 router.post('/auth/switch-unit', switchAuthUnit);
-router.post('/login', login);
+router.post('/login', gestorLoginHttpLimiter, login);
 router.get('/logout', logout);
 // Reset password no sub-app Gestor: o redirect sem prefixo pertence ao app raiz.
 router.get('/reset-password/:token', renderResetPassword);
