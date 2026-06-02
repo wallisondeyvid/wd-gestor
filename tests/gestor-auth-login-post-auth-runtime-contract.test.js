@@ -529,7 +529,7 @@ test('app real: gate necessario do login continua redirecionando erro de credenc
     });
 
     assert.equal(response.status, 303);
-    assert.equal(response.headers.get('location'), '/gestor/login?erro=usuario');
+    assert.equal(response.headers.get('location'), '/gestor/login?erro=credenciais');
   } finally {
     await server.close();
   }
@@ -699,7 +699,7 @@ test('owner real: erro interno do resolvedor cai no catch geral e mantem apenas 
 
   assert.equal(response.redirectStatus, 303);
   assert.equal(response.redirectLocation, '/gestor/login?erro=servidor');
-  assert.equal(response.getHeader('x-login-error'), 'resolver-boom');
+  assert.equal(response.getHeader('x-login-error'), undefined);
   assert.deepEqual(session.user, {
     id: '507f1f77bcf86cd799439901',
     email: 'login@gestor.test',

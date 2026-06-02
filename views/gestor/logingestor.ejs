@@ -171,7 +171,7 @@
       tpl.addEventListener('hidden.bs.toast', () => tpl.remove());
     }
 
-    // Foco/limpeza conforme parâmetro de erro (?erro=usuario|senha|bloqueado|servidor)
+    // Foco/limpeza conforme parâmetro de erro (?erro=credenciais|bloqueado|servidor)
     (() => {
       try {
         const params = new URLSearchParams(window.location.search);
@@ -180,24 +180,24 @@
         const restantes = params.get('restantes');
   const emailEl = document.getElementById('email');
         const senhaEl = document.getElementById('senha');
-        if (erro === 'usuario') { emailEl && (emailEl.value = ''); senhaEl && (senhaEl.value = ''); emailEl?.focus(); }
-        if (erro === 'senha') {
+        if (erro === 'credenciais' || erro === 'usuario' || erro === 'senha') {
+          emailEl && (emailEl.value = '');
           senhaEl && (senhaEl.value = '');
-          senhaEl?.focus();
+          emailEl?.focus();
           if (restantes) {
             const r = parseInt(restantes,10);
             if (!isNaN(r)) {
               showToast({
-                title: 'Senha incorreta',
-                body: r > 0 ? `Verifique seus dados. Restam ${r} tentativa${r>1?'s':''} antes do bloqueio.` : 'Última tentativa restante antes do bloqueio.',
+                title: 'Falha no login',
+                body: r > 0 ? `E-mail ou senha inválidos. Restam ${r} tentativa${r>1?'s':''} antes do bloqueio.` : 'E-mail ou senha inválidos. Última tentativa restante antes do bloqueio.',
                 // Regra: amarelo (warning) para 5,4,3,2 restantes; vermelho (danger) somente quando restar 1
                 variant: r === 1 ? 'danger' : 'warning'
               });
             } else {
-              showToast({ title: 'Senha incorreta', body: 'Verifique seus dados e tente novamente.' });
+              showToast({ title: 'Falha no login', body: 'E-mail ou senha inválidos.' });
             }
           } else {
-            showToast({ title: 'Senha incorreta', body: 'Verifique seus dados e tente novamente.' });
+            showToast({ title: 'Falha no login', body: 'E-mail ou senha inválidos.' });
           }
         }
         if (erro === 'servidor') {

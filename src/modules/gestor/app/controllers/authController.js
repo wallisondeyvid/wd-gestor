@@ -52,6 +52,17 @@ function escapeRegex(s) {
   return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function maskEmail(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!normalized) return 'anon';
+  const atIndex = normalized.indexOf('@');
+  if (atIndex <= 0) return normalized.slice(0, 1) + '***';
+  const local = normalized.slice(0, atIndex);
+  const domain = normalized.slice(atIndex + 1);
+  const maskedLocal = local.slice(0, 1) + '***';
+  return `${maskedLocal}@${domain || 'dominio.local'}`;
+}
+
 // -----------------------------------------------------------------------------
 // Login Lockout (proteção contra força bruta)
 // Variáveis de ambiente suportadas:
@@ -102,7 +113,7 @@ export async function login(req, res) {
     const moduloAlvo = body.modulo || req.query.modulo || 'gestor';
   let email = rawEmail ? String(rawEmail).toLowerCase() : '';
   email = rawEmail ? String(rawEmail).trim().toLowerCase() : '';
-  if (!email || !senha) return res.redirect(303, basePath + '/login?erro=usuario');
+  if (!email || !senha) return res.redirect(303, basePath + '/login?erro=credenciais');
     // Se DB não está conectado, responder imediatamente para evitar timeout longo
     if (req?.app?.locals?.skipDb || mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
   return res.redirect(303, basePath + '/login?erro=servidor');
@@ -115,8 +126,11 @@ export async function login(req, res) {
       if (preAuthResult.code === 'bloqueado') {
         return res.redirect(303, basePath + '/login?erro=bloqueado&min=' + preAuthResult.min);
       }
-      if (preAuthResult.code === 'senha') {
-        return res.redirect(303, basePath + '/login?erro=senha&restantes=' + preAuthResult.restantes);
+      if (preAuthResult.code === 'senha' || preAuthResult.code === 'usuario') {
+        const query = preAuthResult.restantes != null
+          ? `?erro=credenciais&restantes=${preAuthResult.restantes}`
+          : '?erro=credenciais';
+        return res.redirect(303, basePath + '/login' + query);
       }
       return res.redirect(303, basePath + '/login?erro=' + preAuthResult.code);
     }
@@ -177,7 +191,7 @@ export async function login(req, res) {
         if (!isNaN(rounds) && rounds < minRounds) {
           user.senha = await bcrypt.hash(senha, minRounds);
           await saveUserDocument(user);
-          console.info('[login] hash de senha atualizado (fortalecido)', { user: user.email, from: rounds, to: minRounds });
+          console.info('[login] hash de senha atualizado (fortalecido)', { user: maskEmail(user.email), from: rounds, to: minRounds });
         }
       }
     } catch (rehashErr) { console.warn('[login] falha ao tentar rehash seguro:', rehashErr.message); }
@@ -204,7 +218,7 @@ export async function login(req, res) {
       new Promise(resolve=> setTimeout(()=> resolve({ permitido:false, motivo:'timeout_modulo' }), Number(process.env.MONGO_QUERY_TIMEOUT_MS||3000)))
     ]);
     if (!checagem.permitido) {
-      console.warn('[login] acesso negado ao modulo', { email: user.email, moduloAlvo, motivo: checagem.motivo });
+      console.warn('[login] acesso negado ao modulo', { user: maskEmail(user.email), moduloAlvo, motivo: checagem.motivo });
     }
 
     const finalLoginSuccessOutcome = await resolveLoginSuccessOutcome({
@@ -230,7 +244,6 @@ export async function login(req, res) {
   } catch (e) {
     console.error('[login] erro:', e);
   const safeBase = req.baseUrl || '';
-  res.setHeader('X-Login-Error', e.message || 'unknown');
   return res.redirect(303, safeBase + '/login?erro=servidor');
   }
 }

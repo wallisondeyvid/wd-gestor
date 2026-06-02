@@ -23,6 +23,16 @@ function withHeader(result, name, value) {
   };
 }
 
+function maskEmail(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!normalized) return 'anon';
+  const atIndex = normalized.indexOf('@');
+  if (atIndex <= 0) return normalized.slice(0, 1) + '***';
+  const local = normalized.slice(0, atIndex);
+  const domain = normalized.slice(atIndex + 1);
+  return `${local.slice(0, 1)}***@${domain || 'dominio.local'}`;
+}
+
 async function applyDelay(delayMs) {
   if (!delayMs) return;
   await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -52,7 +62,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
 
   if (user.lock_until && user.lock_until > agora && !(isMasterRole && masterBypassLockout)) {
     const minutosRestantes = Math.ceil((user.lock_until.getTime() - agora.getTime()) / 60000);
-    console.warn('[login] tentativa durante bloqueio', { email: user.email, ate: user.lock_until });
+    console.warn('[login] tentativa durante bloqueio', { user: maskEmail(user.email), ate: user.lock_until });
     const retrySeconds = Math.max(1, Math.ceil((user.lock_until.getTime() - agora.getTime()) / 1000));
     let result = buildErrorResult('bloqueado', { min: minutosRestantes });
     result = withHeader(result, 'Retry-After', retrySeconds);
@@ -82,7 +92,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
 
   if (!senhaCorreta) {
     try {
-      console.warn('[login] senha incorreta', { email: user.email, attempts_next: (user.failed_login_attempts || 0) + 1 });
+      console.warn('[login] credenciais invalidas', { user: maskEmail(user.email), attempts_next: (user.failed_login_attempts || 0) + 1 });
     } catch {}
 
     user.failed_login_attempts = (user.failed_login_attempts || 0) + 1;
@@ -98,7 +108,7 @@ export async function evaluateLoginPreAuthGateService({ email, senha } = {}) {
         console.warn('[login] falha ao salvar bloqueio:', error.message);
       }
       console.warn('[login] usuario bloqueado por tentativas', {
-        email: user.email,
+        user: maskEmail(user.email),
         lock_until: user.lock_until,
         attempts: user.failed_login_attempts,
       });

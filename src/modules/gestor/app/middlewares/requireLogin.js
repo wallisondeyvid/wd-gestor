@@ -18,6 +18,16 @@ import {
 import { resolveRequireLoginCanonicalResolvedUser } from '#modules/gestor/app/services/auth/resolveRequireLoginCanonicalResolvedUser.service.js';
 import { resolveRequireLoginLegacyHydration } from '#modules/gestor/app/services/auth/resolveRequireLoginLegacyHydration.service.js';
 
+function maskEmail(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!normalized) return 'anon';
+  const atIndex = normalized.indexOf('@');
+  if (atIndex <= 0) return normalized.slice(0, 1) + '***';
+  const local = normalized.slice(0, atIndex);
+  const domain = normalized.slice(atIndex + 1);
+  return `${local.slice(0, 1)}***@${domain || 'dominio.local'}`;
+}
+
 export const requireLogin = async (req, res, next) => { /* implementação original mantida + resposta JSON para API (ajustada para evitar loop em /login) */
   // Permitir bypass em suites de teste que não precisam de auth
   if (req.skipAuth) return next();
@@ -239,7 +249,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
         hasSessionUser: Boolean(req.session?.user),
       });
       if (transientErrorDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.SESSION_FALLBACK) {
-        console.warn('[requireLogin] DB timeout/seleção — usando sessão como fallback para', req.session.user?.email);
+        console.warn('[requireLogin] DB timeout/seleção — usando sessão como fallback para', maskEmail(req.session.user?.email));
         req.user = buildUserFromSession(req.session.user);
         return next();
       }
@@ -258,10 +268,10 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     });
     if (resolvedUserDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.FIRST_ACCESS_REQUIRED) {
       if (wantsJson) {
-        try { console.warn('[requireLogin] 403 FIRST_LOGIN (api)', { original, path, basePath, email: user.email }); } catch {}
+        try { console.warn('[requireLogin] 403 FIRST_LOGIN (api)', { original, path, basePath, user: maskEmail(user.email) }); } catch {}
         return res.status(403).json({ success:false, error:'FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED', code:'FIRST_LOGIN' });
       }
-      try { console.warn('[requireLogin] redirect primeiroacesso (FIRST_LOGIN)', { original, path, basePath, email: user.email }); } catch {}
+      try { console.warn('[requireLogin] redirect primeiroacesso (FIRST_LOGIN)', { original, path, basePath, user: maskEmail(user.email) }); } catch {}
       return res.redirect(basePath + '/primeiroacesso');
     }
     if (resolvedUserDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.AUTHENTICATED_USER) {
@@ -286,13 +296,13 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
           if (canonicalResolvedUser.kind === 'authenticated') {
             req.session.user = canonicalResolvedUser.sessionUser;
             req.user = canonicalResolvedUser.reqUser;
-            console.log('[requireLogin] autenticado', { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster });
+            console.log('[requireLogin] autenticado', { user: maskEmail(req.user.email), role: req.user.role, isMaster: req.user.isMaster });
             return next();
           }
 
           if (hasAuthoritativeSessionProjection(req.session?.user)) {
             req.user = buildUserFromSession(req.session.user);
-            console.log('[requireLogin] autenticado', { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster });
+            console.log('[requireLogin] autenticado', { user: maskEmail(req.user.email), role: req.user.role, isMaster: req.user.isMaster });
             return next();
           }
         } catch (e) {
@@ -302,11 +312,11 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
             hasSessionUser: Boolean(req.session?.user),
           });
           if (transientErrorDecision.reason !== REQUIRE_LOGIN_ENTRY_REASON.SESSION_FALLBACK) throw e;
-          console.warn('[requireLogin] auth-context resolver transitório — usando fallback legado para', req.session.user?.email);
+          console.warn('[requireLogin] auth-context resolver transitório — usando fallback legado para', maskEmail(req.session.user?.email));
 
           if (hasAuthoritativeSessionProjection(req.session?.user)) {
             req.user = buildUserFromSession(req.session.user);
-            console.log('[requireLogin] autenticado', { email: req.user.email, role: req.user.role, isMaster: req.user.isMaster });
+            console.log('[requireLogin] autenticado', { user: maskEmail(req.user.email), role: req.user.role, isMaster: req.user.isMaster });
             return next();
           }
         }
@@ -325,7 +335,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
           ...legacyHydration.sessionUserPatch,
         };
       }
-  console.log('[requireLogin] autenticado', { email: user.email, role: user.role, isMaster: (user.role === 'master') });
+  console.log('[requireLogin] autenticado', { user: maskEmail(user.email), role: user.role, isMaster: (user.role === 'master') });
       return next();
     }
   const sessionFuncionarioId = req.session.user?.funcionario_id || null;
@@ -335,7 +345,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     hasReliableFuncionarioId,
   });
   if (missingFuncionarioDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.LOGIN_REQUIRED) {
-    try { console.warn('[requireLogin] redirect login (sem funcionario_id confiável no fallback)', { original, path, basePath, email: req.session?.user?.email, funcionario_id: sessionFuncionarioId }); } catch {}
+    try { console.warn('[requireLogin] redirect login (sem funcionario_id confiável no fallback)', { original, path, basePath, user: maskEmail(req.session?.user?.email), funcionario_id: sessionFuncionarioId }); } catch {}
     return res.redirect(basePath + '/login');
   }
 
@@ -352,7 +362,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
       hasSessionUser: Boolean(req.session?.user),
     });
     if (transientErrorDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.SESSION_FALLBACK) {
-      console.warn('[requireLogin] DB timeout ao buscar Funcionario por funcionario_id — usando sessão como fallback para', req.session.user?.email);
+      console.warn('[requireLogin] DB timeout ao buscar Funcionario por funcionario_id — usando sessão como fallback para', maskEmail(req.session.user?.email));
       req.user = buildUserFromSession(req.session.user);
       return next();
     }
@@ -364,7 +374,7 @@ export const requireLogin = async (req, res, next) => { /* implementação origi
     hasFuncionario: Boolean(funcionario),
   });
   if (funcionarioFallbackDecision.reason === REQUIRE_LOGIN_ENTRY_REASON.LOGIN_REQUIRED) {
-    try { console.warn('[requireLogin] redirect login (funcionario fallback não encontrado)', { original, path, basePath, email: req.session?.user?.email, funcionario_id: sessionFuncionarioId }); } catch {}
+    try { console.warn('[requireLogin] redirect login (funcionario fallback não encontrado)', { original, path, basePath, user: maskEmail(req.session?.user?.email), funcionario_id: sessionFuncionarioId }); } catch {}
     return res.redirect(basePath + '/login');
   }
     // Funcionário autenticado não passa por fluxo de primeiro acesso de usuário
