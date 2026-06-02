@@ -201,6 +201,37 @@ test('listModulosOwnerService nao aceita unidade legada concorrente quando o aut
   assert.equal(unidadeCalls.length, 0);
 });
 
+test('listModulosOwnerService usa branch global quando o privilegio vem de authContext global admin', async () => {
+  const globalCalls = [];
+  const unidadeCalls = [];
+  const normalizeModuloList = buildFunction(SERVICE_SOURCE, 'function normalizeModuloList', {});
+
+  const listModulosOwnerService = buildFunction(SERVICE_SOURCE, 'export async function listModulosOwnerService', {
+    findAllModulosBaseLean: async (...args) => {
+      globalCalls.push(args);
+      return [{ _id: 'm-admin-global', nome: 'Modulo Global Admin', descricao: 'd', status: 'ativo', url_base: '/gestor' }];
+    },
+    findUnidadeByIdWithModulosAcessiveisLean: async (...args) => {
+      unidadeCalls.push(args);
+      return { modulosAcessiveis: [] };
+    },
+    normalizeModuloList,
+  });
+
+  const result = await listModulosOwnerService({
+    userRole: 'diretor',
+    activeUnitId: '',
+    authContext: { source: 'auth-context-v1', globalRole: 'admin', active_unidade_id: '' },
+    requestUser: { role: 'diretor' },
+  });
+
+  assert.equal(result.kind, 'ok');
+  assert.equal(result.modulos.length, 1);
+  assert.equal(result.modulos[0]._id, 'm-admin-global');
+  assert.equal(globalCalls.length, 1);
+  assert.equal(unidadeCalls.length, 0);
+});
+
 test('paginaModulos delega ao owner service e preserva a borda HTML atual para usuario privilegiado', async () => {
   const calls = [];
   const normalizePageRole = buildFunction(PAGES_CONTROLLER_SOURCE, 'function normalizeRole', {});
@@ -251,4 +282,53 @@ test('paginaModulos delega ao owner service e preserva a borda HTML atual para u
   assert.equal(res.locals.modulos[0]._id, 'm-html-1');
   assert.equal(res.locals.modulos[0].nome, 'HTML Gestor');
   assert.equal(res.locals.user, req.user);
+});
+
+test('paginaModulos com isMaster true delega como master e nao depende de activeUnitId para listar global', async () => {
+  const calls = [];
+  const normalizePageRole = buildFunction(PAGES_CONTROLLER_SOURCE, 'function normalizeRole', {});
+  const isMasterLike = buildFunction(PAGES_CONTROLLER_SOURCE, 'function isMasterLike', {
+    normalizeRole: normalizePageRole,
+  });
+  const normalizeScopeRole = buildFunction(REQUIRE_UNIT_SCOPE_SOURCE, 'function normalizeRole', {});
+  const isPrivilegedRole = buildFunction(REQUIRE_UNIT_SCOPE_SOURCE, 'function isPrivilegedRole', {
+    normalizeRole: normalizeScopeRole,
+  });
+  const isPrivilegedGestorContext = buildFunction(REQUIRE_UNIT_SCOPE_SOURCE, 'export function isPrivilegedGestorContext', {
+    isPrivilegedRole,
+  });
+  const isPrivilegedGestorUser = buildFunction(PAGES_CONTROLLER_SOURCE, 'function isPrivilegedGestorUser', {
+    isPrivilegedGestorContext,
+  });
+  const paginaModulos = buildFunction(PAGES_CONTROLLER_SOURCE, 'export async function paginaModulos', {
+    isDbOff: () => false,
+    stubCtx: () => ({ modulos: [] }),
+    isMasterLike,
+    isPrivilegedGestorUser,
+    listModulosOwnerService: async (input) => {
+      calls.push(input);
+      return { kind: 'ok', modulos: [{ _id: 'm-master-global', nome: 'HTML Master' }] };
+    },
+  });
+
+  const req = {
+    user: { isMaster: true, role: 'user' },
+    unitScope: null,
+    session: { gestorAuthContext: { source: 'auth-context-v1', active_unidade_id: '' } },
+  };
+  const res = createPageRes();
+
+  await paginaModulos(req, res);
+
+  assert.equal(calls.length, 1);
+  assert.equal(JSON.stringify(calls[0]), JSON.stringify({
+    userRole: 'master',
+    activeUnitId: null,
+    authContext: { source: 'auth-context-v1', active_unidade_id: '' },
+    requestUser: req.user,
+  }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.view, 'slots-modulos');
+  assert.equal(res.locals.modulos.length, 1);
+  assert.equal(res.locals.modulos[0]._id, 'm-master-global');
 });

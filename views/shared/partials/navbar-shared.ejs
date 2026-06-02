@@ -12,6 +12,15 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
 <%
   const _prefix = (typeof prefixMenuPaths === 'boolean') ? prefixMenuPaths : true; // default true para módulos novos
   const _isMaster = (user && (user.isMaster || user.role === 'master' || user.role === 'Master')) ? true : false;
+  function _normalizeRole(value){
+    return (value || '').toString().trim().toLowerCase();
+  }
+  function _isMasterOrAdmin(userObj){
+    if(!userObj) return false;
+    if(userObj.isMaster) return true;
+    return [userObj.role, userObj.globalRole, userObj.global_role, userObj.effectiveRole]
+      .some(function(role){ const normalized = _normalizeRole(role); return normalized === 'master' || normalized === 'admin'; });
+  }
   const _displayName = _isMaster ? 'Master' : ((user && user.nome) ? user.nome : null);
   function buildHref(p){
     if(!p) return '#';
@@ -46,7 +55,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     { path: '/recursos', label: 'Recursos' }
   ];
   const __rawAdmin = (typeof adminItems !== 'undefined') ? adminItems : undefined;
-  const _admin = (user && (user.isMaster || user.role==='admin' || user.role==='master')) ? (Array.isArray(__rawAdmin)? __rawAdmin : [
+  const _admin = _isMasterOrAdmin(user) ? (Array.isArray(__rawAdmin)? __rawAdmin : [
     { path: '/modulos', label: 'Módulos' },
     { path: '/usuarios', label: 'Usuários' },
     { path: '/feedback', label: 'Feedback' }
@@ -56,7 +65,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   (function ensureFeedbackAdminItem(){
     try {
       if(__nbBase !== '/gestor') return;
-      if(!(user && (user.isMaster || user.role==='admin' || user.role==='master'))) return;
+      if(!_isMasterOrAdmin(user)) return;
       if(!Array.isArray(_admin)) return;
       const has = _admin.some(it => it && (it.path === '/feedback' || it.path === (__nbBase + '/feedback')));
       if(!has) _admin.push({ path: '/feedback', label: 'Feedback' });
@@ -136,7 +145,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   function ensureFeedbackEntry(tree){
     // Somente para o módulo Gestor e apenas para Master/Admin
     if(__nbBase !== '/gestor') return tree;
-    if(!(user && (user.isMaster || user.role === 'admin' || user.role === 'master'))) return tree;
+    if(!_isMasterOrAdmin(user)) return tree;
     if(!Array.isArray(tree)) return tree;
     const normalizeLabel = (label) => (label||'').toString().trim().toLowerCase();
     const desiredPath = '/feedback';

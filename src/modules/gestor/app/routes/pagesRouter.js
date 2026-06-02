@@ -17,6 +17,14 @@ function isPrivilegedGestorRequest(req) {
 	});
 }
 
+function requireGestorMasterOrAdmin(req, res, next) {
+	if (isPrivilegedGestorRequest(req)) {
+		return next();
+	}
+
+	return res.status(403).send('Acesso negado');
+}
+
 function hasCanonicalUnitContext(req) {
 	return Boolean(
 		req?.session?.gestorAuthContext?.active_unidade_id
@@ -108,7 +116,7 @@ router.get('/usuarios', requireLogin, paginaUsuarios);
 router.get('/feedback', requireLogin, paginaFeedback);
 router.get('/unidades', withLoginAndUnidadesScope(paginaUnidades));
 router.get('/editar-unidades/:id', withLoginAndRequiredUnitScope(paginaEditarUnidade));
-router.get('/modulos', requireLogin, paginaModulos);
+router.get('/modulos', requireLogin, requireGestorMasterOrAdmin, paginaModulos);
 router.get('/funcoes', withLoginAndFuncoesScope(paginaFuncoes));
 router.get('/funcionarios', withLoginAndFuncionariosScope(paginaFuncionarios));
 router.get('/recursos', withLoginAndRecursosScope(paginaRecursos));

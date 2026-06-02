@@ -54,6 +54,31 @@ export function isPrivilegedGestorContext({ user = null, authContext = null, ses
   ].some(isPrivilegedRole);
 }
 
+export function isGestorMasterOrAdmin(req) {
+  return isPrivilegedGestorContext({
+    user: req?.user || null,
+    sessionUser: req?.session?.user || null,
+    authContext: req?.session?.gestorAuthContext || null,
+  });
+}
+
+export function requireGestorMasterOrAdmin(req, res, next) {
+  if (isGestorMasterOrAdmin(req)) {
+    return next();
+  }
+
+  const transport = getRequestTransport(req);
+  if (transport.isApiRequest) {
+    return res.status(403).json({
+      success: false,
+      code: 'FORBIDDEN',
+      message: 'Acesso negado',
+    });
+  }
+
+  return res.status(403).send('Acesso negado');
+}
+
 function isPrivilegedGestorUser(user) {
   return isPrivilegedGestorContext({ user });
 }
