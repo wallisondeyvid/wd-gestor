@@ -305,7 +305,8 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
           <% } %>
           <% 
             let __foto = (user && user.foto) ? String(user.foto).trim() : '';
-            let __src = _fotoUrlEJS(__foto);
+            let __placeholderAvatar = __nbBase + '/img/user-placeholder.svg';
+            let __src = __placeholderAvatar;
           %>
           <li class="nav-item d-flex align-items-center">
             <a class="nav-link nav-wd-profile d-flex align-items-center gap-1" href="#" onclick="if(window.abrirModalPerfil){abrirModalPerfil();}/* fallback: modal abre via data-bs-* */" data-bs-toggle="modal" data-bs-target="#modalPerfil" aria-label="Perfil">
@@ -330,7 +331,7 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   <div class="offcanvas-header align-items-center">
     <div class="d-flex align-items-center gap-2">
     <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-dark" style="width:32px;height:32px;overflow:hidden;">
-  <img src="<%= _fotoUrlEJS(user && user.foto ? user.foto : '') %>" alt="Avatar" style="width:32px;height:32px;object-fit:cover;" onerror="this.onerror=null; this.src='<%= __nbBase %>/img/user-placeholder.svg'">
+  <img id="offcanvasAvatarShared" src="<%= __nbBase %>/img/user-placeholder.svg" data-user-foto="<%= user && user.foto ? String(user.foto).trim() : '' %>" alt="Avatar" loading="lazy" decoding="async" style="width:32px;height:32px;object-fit:cover;" onerror="this.onerror=null; this.src='<%= __nbBase %>/img/user-placeholder.svg'">
       </div>
   <h6 class="m-0" id="offcanvasNavTitle"><%= user ? ('Olá, ' + (_displayName||'usuário')) : 'Olá, entre' %></h6>
     </div>
@@ -413,26 +414,49 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
     } catch(_){ }
   })();
   var __NB_HAS_USER = (function(){ var nav = document.querySelector('.navbar.navbar-wd'); return !!(nav && nav.getAttribute('data-has-user')==='1'); })();
+  function __resolveAvatarUrl(foto){
+    if(!foto) return __NB_BASE + '/img/user-placeholder.svg';
+    if(typeof window.buildUserFotoUrl === 'function') return window.buildUserFotoUrl(foto);
+    return __NB_BASE + '/api/usuario/foto';
+  }
+  function __hydrateAvatar(el, opts){
+    try {
+      if(!el) return;
+      var foto = String(el.getAttribute('data-user-foto') || '').trim();
+      if(!foto){
+        el.dataset.avatarLoaded = '1';
+        el.src = __NB_BASE + '/img/user-placeholder.svg';
+        return;
+      }
+      var force = !!(opts && opts.force);
+      if(!force && el.dataset.avatarLoaded === '1') return;
+      var url = __resolveAvatarUrl(foto);
+      if(!url || url === (__NB_BASE + '/img/user-placeholder.svg')){
+        el.dataset.avatarLoaded = '1';
+        el.src = __NB_BASE + '/img/user-placeholder.svg';
+        return;
+      }
+      if(force){
+        var sep = url.indexOf('?') > -1 ? '&' : '?';
+        url = url + sep + 'v=' + Date.now();
+      }
+      el.dataset.avatarLoaded = '1';
+      el.src = url;
+    } catch(_){ /* silencioso */ }
+  }
   // Ajusta avatar pós load se helper global existir (buildUserFotoUrl)
   document.addEventListener('DOMContentLoaded', function(){
     try {
       var el = document.getElementById('navbarAvatarShared');
       if(!el) return;
-      var f = el.getAttribute('data-user-foto');
-      // Sempre força um refresh com cache-buster, mesmo se não houver 'foto' já embutida na sessão
-      (function refreshAvatar(){
-        try{
-          var url;
-          if (f && typeof window.buildUserFotoUrl === 'function') {
-            url = window.buildUserFotoUrl(f);
-          } else {
-            url = __NB_BASE + '/api/usuario/foto';
-          }
-          var sep = url.indexOf('?')>-1?'&':'?';
-          el.src = url + sep + 'v=' + Date.now();
-        } catch(_){ /* silencioso */ }
-      })();
+      __hydrateAvatar(el);
       el.onerror = function(){ if(!this.dataset.fallback){ this.dataset.fallback='1'; this.src = __NB_BASE + '/img/user-placeholder.svg'; } };
+      var offcanvas = document.getElementById('offcanvasNavShared');
+      if(offcanvas){
+        offcanvas.addEventListener('show.bs.offcanvas', function(){
+          __hydrateAvatar(document.getElementById('offcanvasAvatarShared'));
+        });
+      }
     } catch(e){ console.warn('[navbar-shared] falha avatar', e); }
     // Submenus via CLICK (remove comportamento por hover para estabilidade)
     document.querySelectorAll('.dropdown-submenu > a.dropdown-toggle').forEach(function(trigger){
@@ -462,12 +486,25 @@ const __nbBase = (typeof moduleBasePath === 'string' && moduleBasePath) ? module
   });
   window.addEventListener('perfil:fotoAtualizada', function(){
     try {
-      var el = document.getElementById('navbarAvatarShared');
-      if(!el) return;
+      var eventFoto = String((event && event.detail && event.detail.foto) || '').trim();
+      var applyFoto = function(foto){
+        [document.getElementById('navbarAvatarShared'), document.getElementById('offcanvasAvatarShared')]
+          .filter(Boolean)
+          .forEach(function(img){
+            img.setAttribute('data-user-foto', foto || '');
+            img.dataset.avatarLoaded = '';
+            if(foto) __hydrateAvatar(img, { force: true });
+            else img.src = __NB_BASE + '/img/user-placeholder.svg';
+          });
+      };
+      if(eventFoto){
+        applyFoto(eventFoto);
+        return;
+      }
       fetch(__NB_BASE + '/api/usuario', { credentials:'same-origin', cache:'no-store' })
         .then(r=> r.ok ? r.json(): null)
         .then(data => {
-          if(!data || !data.foto) return; var f = data.foto; if(typeof window.buildUserFotoUrl==='function'){ var url = window.buildUserFotoUrl(f); var sep = url.indexOf('?')>-1?'&':'?'; el.src = url + sep + 'v=' + Date.now(); }
+          applyFoto(String((data && data.foto) || '').trim());
         }).catch(()=>{});
     } catch(e){ console.warn('[navbar-shared] falha refresh avatar', e); }
   });

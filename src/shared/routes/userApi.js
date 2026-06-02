@@ -202,11 +202,14 @@ const router = express.Router();
 // Se não houver sessão/usuário, responde placeholder (ou 204 se não existir placeholder local).
 router.get('/api/usuario/foto', async (req, res) => {
 	try {
-		const email = String(req.user?.email || (req.session && req.session.user && req.session.user.email) || '').toLowerCase();
+		const requestUser = req.user && typeof req.user === 'object' ? req.user : null;
+		const sessionUser = req.session?.user && typeof req.session.user === 'object' ? req.session.user : null;
+		const email = String(requestUser?.email || sessionUser?.email || '').toLowerCase();
 		// Placeholders
 		const ROOT = process.cwd();
 		const placeholderSvg = path.join(ROOT, 'public', 'img', 'user-placeholder.svg');
 		const placeholderPng = path.join(ROOT, 'images', 'usuario.png');
+		const hasOwnFoto = (value) => !!value && Object.prototype.hasOwnProperty.call(value, 'foto');
 		const sendPlaceholder = () => {
 			const target = fs.existsSync(placeholderSvg) ? placeholderSvg : (fs.existsSync(placeholderPng) ? placeholderPng : null);
 			if (!target) return res.status(204).end();
@@ -218,8 +221,11 @@ router.get('/api/usuario/foto', async (req, res) => {
 		};
 		if (!email) return sendPlaceholder();
 
-		// Preferir a foto já presente em sessão (evita dependência do DB para um endpoint de imagem)
-		let foto = req.user?.foto || (req.session && req.session.user && req.session.user.foto) || null;
+		// Preferir a foto já conhecida em req.user/sessão; se a ausência já for conhecida, cair direto no placeholder.
+		let foto = requestUser?.foto || sessionUser?.foto || null;
+		if (!foto && (hasOwnFoto(requestUser) || hasOwnFoto(sessionUser))) {
+			return sendPlaceholder();
+		}
 		if (!foto) {
 			try {
 				const queryTimeout = Number(process.env.MONGO_QUERY_TIMEOUT_MS || 3000);

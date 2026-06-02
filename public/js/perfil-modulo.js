@@ -222,16 +222,14 @@
     const ph = (BASE_PATH || '') + '/img/user-placeholder.svg';
     if(user.foto){
       // Sempre usar API para servir a imagem, evitando data URLs no src
-      const apiUrl = BASE_PATH + '/api/usuario/foto';
-      const sep = apiUrl.includes('?') ? '&' : '?';
-      img.src = apiUrl + sep + 'v=' + Date.now();
+      img.src = BASE_PATH + '/api/usuario/foto';
     } else {
       img.src=ph;
     }
     img.onerror=function(){
       if(!this.dataset.fallback){
         this.dataset.fallback='1';
-        this.src=ph + '?v=' + Date.now();
+        this.src=ph;
       }
     };
   }
