@@ -1,3 +1,57 @@
+## Checkpoint documental curto do planejamento do proximo passo apos o checkpoint pos-push runtime green.
+- selectedTarget=planPostPushRuntimeGreenNextStep
+- basePostPushRuntimeGreenCheckpointCommit=7fca55d
+- remoteHeadKnown=f5f68c1
+- localHeadKnown=7fca55d
+- branchAheadCount=1
+- workingTreeClean=true
+- postPushRuntimeGreenNextStepPlanned=true
+- previousPushPublishedRange=42cf252..f5f68c1
+- previousPushResult=green
+- previousPushCommand=git push
+- previousPushNoVerifyUsed=false
+- previousPrePushTestsResult=green
+- previousPrePushTests=2391
+- previousPrePushPass=2389
+- previousPrePushFail=0
+- previousPrePushSkipped=2
+- localRuntimeGreenSequencePublished=true
+- postPushCheckpointLocalOnly=true
+- postPushCheckpointNeedsPublication=true
+- possibleNextCandidatePushCheckpoint=planPushPostPushRuntimeGreenCheckpoint
+- possibleNextCandidateVercel=planVercelDeployAfterRuntimeGreenPublished
+- possibleNextCandidateReadiness=planProductionReadinessDecisionAfterRuntimeGreenPublished
+- recommendedNextCandidate=planPushPostPushRuntimeGreenCheckpoint
+- pushRequiresSeparateAuthorization=true
+- pushShouldPreferNormalPush=true
+- pushNoVerifyOnlyIfHookBlocksOrHumanAuthorizes=true
+- vercelDeployRequiresSeparatePlanning=true
+- productionReadinessRequiresSeparateDecision=true
+- productionReady=false
+- pushExecutedNow=false
+- gitPushExecutedNow=false
+- gitPushNoVerifyExecutedNow=false
+- vercelProdExecutedNow=false
+- deployExecutedNow=false
+- redeployExecutedNow=false
+- startExecutedNow=false
+- healthExecutedNow=false
+- loginExecutedNow=false
+- postGestorLoginExecutedNow=false
+- protectedRouteValidationExecutedNow=false
+- httpExecutedNow=false
+- mongoConnectionExecutedNow=false
+- mongoWriteExecutedNow=false
+- nodeExecutedNow=false
+- npmExecutedNow=false
+- testsExecutedNow=false
+- deleteDropUpdateExecutedNow=false
+- domainMutationAttemptedNow=false
+- wdgestorTouchedNow=false
+- cluster0Touched=false
+- cluster1Touched=false
+- proximo candidato recomendado: planPushPostPushRuntimeGreenCheckpoint
+
 ## Checkpoint documental curto do pos-push dos checkpoints locais runtime green.
 - selectedTarget=recordPostPushAfterLocalRuntimeGreenCheckpoints
 - pushAfterLocalRuntimeGreenCheckpointsExecuted=true
