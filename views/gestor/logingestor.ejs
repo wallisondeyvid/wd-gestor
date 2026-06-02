@@ -89,7 +89,7 @@
                   autocomplete="current-password"
                   required
                 />
-                <button class="btn btn-outline-secondary toggle-pass" type="button" aria-label="Mostrar/ocultar senha">
+                <button id="toggleSenha" class="btn btn-outline-secondary toggle-pass" type="button" aria-label="Mostrar senha" aria-pressed="false">
                   <i class="bi bi-eye"></i>
                 </button>
               </div>
@@ -341,18 +341,6 @@
         });
       } catch (e) { console.warn('Erro inicializando lembrar-me:', e.message); }
     })();
-
-    // Mostrar/ocultar senha
-    document.querySelector('.toggle-pass')?.addEventListener('click', (e) => {
-      const input = document.getElementById('senha');
-      const icon = e.currentTarget.querySelector('i');
-      if (!input) return;
-      const showing = input.type === 'text';
-      input.type = showing ? 'password' : 'text';
-      icon.classList.toggle('bi-eye', showing);
-      icon.classList.toggle('bi-eye-slash', !showing);
-    });
-
     // Observação: o backend já redireciona corretamente para primeiro acesso quando necessário.
     // Mantemos submissão nativa do form para evitar loops de redirecionamento em alguns navegadores.
   </script>
