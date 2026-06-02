@@ -61,3 +61,5 @@ WDGestor.zip
 _baseline_routes_*.txt
 
 activate.bat
+
+.env*.local
