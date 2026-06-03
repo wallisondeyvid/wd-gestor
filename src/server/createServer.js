@@ -2,6 +2,7 @@
 // Captura automaticamente erros de handlers async (Promise rejeitada) e encaminha para o error handler do Express.
 import 'express-async-errors';
 import express from 'express';
+import helmet from 'helmet';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -104,6 +105,35 @@ export async function createServer(options = {}) {
   const isParityEnv = String(process.env.PARITY || '').trim() === '1';
   const isTestEnv = ['test','ci','jest','mocha'].includes(String(process.env.NODE_ENV||'').toLowerCase()) || isNodeTestRuntime() || options.skipDb === true || isParityEnv;
   const app = express();
+  // Vercel/Proxies: habilita confiança no proxy para que req.secure reflita HTTPS.
+  app.set('trust proxy', 1);
+  app.disable('x-powered-by');
+
+  const securityHeaders = helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
+    originAgentCluster: false,
+    strictTransportSecurity: false,
+    frameguard: { action: 'deny' },
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    hidePoweredBy: true,
+    dnsPrefetchControl: { allow: false },
+  });
+  const strictTransportSecurity = helmet.hsts({
+    maxAge: 15552000,
+    includeSubDomains: true,
+    preload: false,
+  });
+
+  app.use(securityHeaders);
+  app.use((req, res, next) => {
+    if (process.env.NODE_ENV !== 'production' || !req.secure) return next();
+    return strictTransportSecurity(req, res, next);
+  });
+
   const closeState = getServerCloseState();
   closeState.activeInstances += 1;
   let closeCalled = false;
@@ -213,10 +243,7 @@ export async function createServer(options = {}) {
     ]);
     app.set('view engine', 'ejs');
   } catch(_) { /* noop */ }
-  // Vercel/Proxies: habilita confiança no proxy para que req.secure reflita HTTPS e cookies 'secure' funcionem
-  // Sem isso, em ambientes atrás de proxy (como Vercel), express-session pode RECUSAR setar o cookie de sessão
-  // e causar loop de redirecionamento no login.
-  app.set('trust proxy', 1);
+  // Em ambientes atrás de proxy (como Vercel), req.secure e cookies 'secure' dependem de trust proxy.
   app.locals.skipDb = !!skipDb;
   // Quando o caller passa skipDb=true explicitamente (ex.: testes), não tentamos reconectar no middleware de retry.
   app.locals.__skipDbForced = !!skipDbForced;
